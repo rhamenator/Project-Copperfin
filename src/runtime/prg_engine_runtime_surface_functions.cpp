@@ -6,6 +6,7 @@
 
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/invariant_numeric.h"
+#include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
@@ -202,6 +203,52 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             ? window_state_callback(arguments.empty() ? std::string{} : value_as_string(arguments[0]))
             : std::nullopt;
         return make_boolean_value(window_state.has_value());
+    }
+    if (function == "cfjsonvalid") {
+        if (arguments.empty()) {
+            return make_boolean_value(false);
+        }
+        return make_boolean_value(
+            copperfin::platform::select_json_value(
+                value_as_string(arguments[0])).ok());
+    }
+    if (function == "cfjsontype") {
+        if (arguments.empty()) {
+            return make_string_value("invalid");
+        }
+        const std::string pointer = arguments.size() >= 2U
+            ? value_as_string(arguments[1])
+            : std::string{};
+        const auto selected = copperfin::platform::select_json_value(
+            value_as_string(arguments[0]), pointer);
+        if (selected.error == copperfin::platform::JsonSelectionError::value_not_found) {
+            return make_string_value("missing");
+        }
+        return make_string_value(selected.ok()
+            ? std::string(copperfin::platform::json_value_kind_name(selected.kind))
+            : std::string("invalid"));
+    }
+    if (function == "cfjsonget") {
+        const auto fallback = [&]() {
+            return arguments.size() >= 3U
+                ? arguments[2]
+                : make_string_value(std::string{});
+        };
+        if (arguments.empty()) {
+            return fallback();
+        }
+        const std::string pointer = arguments.size() >= 2U
+            ? value_as_string(arguments[1])
+            : std::string{};
+        const auto selected = copperfin::platform::select_json_value(
+            value_as_string(arguments[0]), pointer);
+        if (!selected.ok()) {
+            return fallback();
+        }
+        return make_string_value(
+            selected.kind == copperfin::platform::JsonValueKind::string
+                ? selected.decoded_string
+                : selected.raw_json);
     }
 
     auto safe_int_argument = [&](std::size_t index, int default_value) {

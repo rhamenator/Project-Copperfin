@@ -28,6 +28,7 @@ Interop maturity:
 - Version 1 is anchored on Visual FoxPro 9 compatibility. VFP 6, VFP 7, and VFP 8 assets may work through shared DBF/FPT/CDX/DBC readers, but they are best-effort and untested rather than separate targets. Older Fox Software and xBase-family assets may become wishlist interpretation/inspection targets, but producing binaries for those products is not in the current scope.
 - Current .NET support is an early modernization path, not a general managed-runtime surface: the build host can publish a generated C# launcher/stub that the native runtime pipeline starts as a child process, while generated C# transpilation output is only an emitted artifact today. Portable bridge prerequisites now include bounded process ownership, deterministic invocation-request serialization, strict response-envelope admission, and a PRG task-supervision seam, but no admitted external-artifact adapter is connected to that seam yet.
 - Polyglot capability use does not require foreign-language syntax inside FP/VFP source files. PRG code can supervise existing `SPAWN` work through nonblocking `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and `CFTASKOUTPUT()` calls; future external adapters must reuse this runtime-owned boundary, and foreign runtime threads must not enter Copperfin runtime state directly.
+- PRG can inspect immutable structured results through the native bounded `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` facade. JSON Pointer selection, exact non-string bytes, decoded strings, explicit missing/invalid states, and fixed byte/depth ceilings let PRG make orchestration decisions without embedding foreign-language source or coercing large JSON numbers through binary floating point. This is a payload helper, not an external-artifact execution route.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook. These capabilities should stay behind a user-selected modernization target until they are implemented and tested end-to-end.
 
 Requirements Recovery:
@@ -107,6 +108,7 @@ License documents:
 - [`docs/26-localization-and-release-readiness.md`](docs/26-localization-and-release-readiness.md)
 - [`docs/27-known-vfp9-bug-exceptions.md`](docs/27-known-vfp9-bug-exceptions.md)
 - [`docs/32-recovered-requirements-traceability.md`](docs/32-recovered-requirements-traceability.md)
+- [`docs/39-prg-json-control-plane.md`](docs/39-prg-json-control-plane.md)
 - [`assets/copperfin-logo.png`](assets/copperfin-logo.png)
 
 Current implementation focus:

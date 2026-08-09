@@ -33,6 +33,11 @@ Current maturity:
   `31307387144` at `326/326`, macOS Native `31307387146` at `326/326` plus
   four locales at `8/8`, and Windows Native `31307387195` at `325/325`; no
   external artifact adapter is connected to it yet.
+- PRG now has a portable bounded JSON control-plane facade:
+  `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` validate and inspect an
+  immutable result document through RFC 6901 JSON Pointer selection. Strings
+  are decoded; other selected values retain exact JSON bytes so large numbers
+  are not silently rounded. This adds no artifact admission or execution.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook today.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 

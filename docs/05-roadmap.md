@@ -402,6 +402,15 @@ passes on every platform and all eight protected checks are green. This closes
 only the PRG supervision seam; artifact admission, adapter dispatch, and
 external-language execution remain separate.
 
+The first unblocked native parity facade now gives that PRG control plane a
+bounded structured-result reader. `CFJSONVALID()`, `CFJSONTYPE()`, and
+`CFJSONGET()` validate strict UTF-8 JSON, select through RFC 6901 pointers,
+distinguish missing from invalid data, decode strings, and preserve all other
+selected values as exact JSON bytes. The parser rejects duplicate keys and
+enforces 1 MiB/64-level runtime limits. This does not bypass artifact admission
+or connect an external runtime; regex, safe HTTP, cryptographic helpers, and
+the first admitted adapter remain separate.
+
 Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
 VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.
 Display-only formatting now applies current data-session `POINT` and

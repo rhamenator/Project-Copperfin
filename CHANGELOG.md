@@ -1,3 +1,14 @@
+- 2026-08-09: Added the first native PRG JSON parity facade for supervised
+  interop results. `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` provide
+  bounded strict validation, invariant kind/missing/invalid classification,
+  RFC 6901 selection, decoded strings, exact non-string bytes, and optional
+  typed fallbacks. Duplicate decoded keys, malformed UTF-8/grammar/pointers,
+  non-canonical array indexes, trailing bytes, and limit violations fail
+  closed. Focused platform and real PRG-session regressions pass under GCC and
+  Clang 21 ASan/UBSan; broader runtime-surface, isolation, and document-install
+  checks pass under GCC, and focused analyzer checks are clean. This does not
+  admit or execute an external artifact; hosted evidence remains pending.
+
 - 2026-08-09: Added the PRG-owned asynchronous task-supervision seam for the v1
   interop lane. `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and
   `CFTASKOUTPUT()` observe existing `SPAWN` workers without blocking or

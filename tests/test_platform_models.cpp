@@ -66,6 +66,74 @@ void test_json_escape_string_is_locale_invariant() {
         "JSON escaping should preserve canonical control escapes and UTF-8 under every-digit grouping");
 }
 
+void test_bounded_json_selection_contract() {
+    using copperfin::platform::JsonSelectionError;
+    using copperfin::platform::JsonValueKind;
+    using copperfin::platform::select_json_value;
+
+    const std::string document =
+        " {\"status\":\"ready\\nnow\",\"items\":[10,{\"a/b\":true}],"
+        "\"tilde~key\":null,\"exact\":9007199254740993} ";
+    const auto root = select_json_value(document);
+    expect(root.ok() && root.kind == JsonValueKind::object,
+           "bounded JSON selection should classify a valid root object");
+    expect(root.raw_json == document.substr(1U, document.size() - 2U),
+           "bounded JSON selection should preserve the exact selected root bytes");
+
+    const auto text = select_json_value(document, "/status");
+    expect(text.ok() && text.kind == JsonValueKind::string,
+           "JSON Pointer should select a string member");
+    expect(text.decoded_string == "ready\nnow" && text.raw_json == "\"ready\\nnow\"",
+           "string selection should expose decoded text and exact JSON bytes separately");
+
+    const auto escaped_key = select_json_value(document, "/items/1/a~1b");
+    expect(escaped_key.ok() && escaped_key.kind == JsonValueKind::boolean &&
+               escaped_key.raw_json == "true",
+           "JSON Pointer should decode slash escapes and traverse arrays");
+    const auto tilde_key = select_json_value(document, "/tilde~0key");
+    expect(tilde_key.ok() && tilde_key.kind == JsonValueKind::null_value,
+           "JSON Pointer should decode tilde escapes");
+    const auto exact_number = select_json_value(document, "/exact");
+    expect(exact_number.ok() && exact_number.raw_json == "9007199254740993",
+           "JSON selection should preserve integers beyond exact binary floating-point range");
+
+    expect(select_json_value(document, "/items/01").error ==
+               JsonSelectionError::value_not_found,
+           "array selection should reject non-canonical leading-zero indexes");
+    expect(select_json_value(document, "items/0").error ==
+               JsonSelectionError::invalid_pointer,
+           "selection should reject a non-empty pointer without a leading slash");
+    expect(select_json_value(document, "/bad~2escape").error ==
+               JsonSelectionError::invalid_pointer,
+           "selection should reject malformed JSON Pointer escapes");
+    expect(select_json_value("{\"duplicate\":1,\"duplicate\":2}").error ==
+               JsonSelectionError::invalid_json,
+           "the bounded parser should fail closed on duplicate object keys");
+    expect(select_json_value("{\"a\":1,\"\\u0061\":2}").error ==
+               JsonSelectionError::invalid_json,
+           "duplicate detection should compare decoded object keys");
+    const auto empty_key = select_json_value("{\"\":42}", "/");
+    expect(empty_key.ok() && empty_key.raw_json == "42",
+           "a single slash JSON Pointer should select an empty object key");
+    expect(select_json_value("[1,]").error == JsonSelectionError::invalid_json,
+           "the bounded parser should reject trailing commas");
+
+    copperfin::platform::JsonDocumentLimits tiny_limit;
+    tiny_limit.max_document_bytes = 4U;
+    expect(select_json_value("[1,2]", {}, tiny_limit).error ==
+               JsonSelectionError::document_too_large,
+           "the bounded parser should enforce caller-provided document limits");
+    copperfin::platform::JsonDocumentLimits shallow_limit;
+    shallow_limit.max_nesting_depth = 2U;
+    expect(select_json_value("[[[]]]", {}, shallow_limit).error ==
+               JsonSelectionError::invalid_json,
+           "the bounded parser should enforce caller-provided nesting limits");
+
+    const std::string invalid_utf8{static_cast<char>(0xC0), static_cast<char>(0xAF)};
+    expect(select_json_value(invalid_utf8).error == JsonSelectionError::invalid_utf8,
+           "the bounded parser should reject malformed UTF-8 before parsing");
+}
+
 void test_default_security_profile() {
     const auto profile = copperfin::security::default_native_security_profile();
     expect(profile.available, "security profile should be available");
@@ -934,6 +1002,7 @@ void test_platform_environment_helper_reads_and_clears_variables() {
 
 int main() {
     test_json_escape_string_is_locale_invariant();
+    test_bounded_json_selection_contract();
     test_default_security_profile();
     test_default_extensibility_profile();
     test_dotnet_interop_policy_gateway();
