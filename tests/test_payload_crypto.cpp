@@ -55,6 +55,11 @@ void test_base64_vectors_and_binary_round_trip() {
     }
 
     const std::string binary{"\0\xff\x10", 3U};
+    const auto binary_digest = copperfin::security::payload_sha256_hex(binary);
+    expect(binary_digest.ok() &&
+               binary_digest.text ==
+                   "2da45f2cd1f9c8e69a67abf7a6b26c282533d0a7686787a9533265418680d4d2",
+           "SHA-256 should hash every embedded zero and high byte");
     const auto encoded = payload_base64_encode(binary);
     expect(encoded.ok() && encoded.text == "AP8Q",
            "Base64 should preserve zero and high bytes");

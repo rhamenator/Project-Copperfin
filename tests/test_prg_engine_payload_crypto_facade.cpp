@@ -29,6 +29,7 @@ void test_prg_payload_crypto_facade() {
         "cEncoded = CFBASE64ENCODE(cPayload)\n"
         "cDecoded = CFBASE64DECODE(cEncoded)\n"
         "cBinary = CHR(0) + CHR(255) + CHR(16)\n"
+        "cBinaryDigest = CFSHA256(cBinary)\n"
         "cBinaryEncoded = CFBASE64ENCODE(cBinary)\n"
         "cBinaryDecoded = CFBASE64DECODE(cBinaryEncoded)\n"
         "nBinaryLength = LEN(cBinaryDecoded)\n"
@@ -64,6 +65,9 @@ void test_prg_payload_crypto_facade() {
            "CFBASE64DECODE should restore the exact payload");
     expect(formatted("cbinaryencoded") == "AP8Q",
            "PRG Base64 should preserve binary bytes");
+    expect(formatted("cbinarydigest") ==
+               "2da45f2cd1f9c8e69a67abf7a6b26c282533d0a7686787a9533265418680d4d2",
+           "PRG SHA-256 should hash every embedded zero and high byte");
     expect(formatted("nbinarylength") == "3" && formatted("nfirst") == "0" &&
                formatted("nsecond") == "255" && formatted("nthird") == "16",
            "decoded PRG byte strings should retain zero and high bytes");
