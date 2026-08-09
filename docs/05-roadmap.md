@@ -46,7 +46,10 @@ an audited policy allow remains `pending_audit` until a trusted, non-owning func
 sink callback commits the structured event and returns a non-empty receipt.
 Absent, failing, empty-receipt, and throwing sinks fail closed. A focused
 adapter regression uses the contained hash-chained audit stream; managed
-execution and runtime-host/PRG wiring remain separate.
+execution and runtime-host/PRG wiring remain separate. Exact implementation
+head `af99a3af5` passes Linux and macOS at `326/326`, Windows at `325/325`, the
+macOS four-locale SET POINT matrix at `8/8`, and all eight protected checks;
+both focused policy/audit targets pass on every native platform.
 
 Current standalone Open evidence includes #4890 at product/test head
 `9e4b5a286`: localized File > Open exposes Ctrl+O through the existing picker
