@@ -59,8 +59,9 @@ use without inventing a second task lifecycle.
 Focused coverage in `test_prg_engine_control_flow` proves nonblocking running
 observation, retained terminal status/result/ordered output, cancellation,
 unknown-handle behavior, and unchanged `AWAIT` consumption. The local GCC
-control-flow suite passes in 95.20 seconds. The same suite passes under Clang
-21 ASan/UBSan in 345.26 seconds with no sanitizer finding, and the package
+control-flow suite passes at implementation head `92f96dd64` in 95.20 seconds.
+The same suite passes under Clang 21 ASan/UBSan in 345.26 seconds with no
+sanitizer finding, and the package
 document-install contract passes. Focused static analysis reports no finding
 in this slice; its only emitted advisories are pre-existing unrelated struct
 padding observations in the monolithic engine translation unit.
