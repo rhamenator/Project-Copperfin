@@ -4672,6 +4672,16 @@ copperfin_add_test(test_polyglot_bridge_invocation cf_platform_profile
     test_polyglot_bridge_invocation.cpp
 )
 
+copperfin_add_test(test_polyglot_interop_envelope cf_platform_profile
+    test_polyglot_interop_envelope.cpp
+)
+target_compile_definitions(
+    test_polyglot_interop_envelope
+    PRIVATE
+        COPPERFIN_POLYGLOT_SUCCESS_ENVELOPE_PATH="${CMAKE_SOURCE_DIR}/docs/contracts/polyglot-success-envelope-v1.json"
+        COPPERFIN_POLYGLOT_ERROR_ENVELOPE_PATH="${CMAKE_SOURCE_DIR}/docs/contracts/polyglot-error-envelope-v1.json"
+)
+
 copperfin_add_test(test_bounded_process cf_platform_profile
     test_bounded_process.cpp
 )
