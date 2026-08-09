@@ -19,7 +19,11 @@ cancellation, unknown handles, non-reuse, and unchanged `AWAIT` behavior. The
 document-install contract passes and static analysis reports no slice finding.
 The complete contract is in `docs/38-prg-task-supervision.md`. This does not
 connect or execute an external artifact and introduces no stub/no-op. Hosted
-native and protected-PR evidence remains to be recorded.
+evidence is complete at exact candidate head `09c1b1046`: Linux Native
+`31307387144` passes `326/326`, macOS Native `31307387146` passes `326/326`
+plus the four-locale SET POINT matrix at `8/8`, and Windows Native
+`31307387195` passes `325/325`. The control-flow target passes on every
+platform and all eight protected PR checks are green.
 
 ## V1 .NET interop durable-audit boundary candidate
 

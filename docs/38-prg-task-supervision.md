@@ -65,3 +65,10 @@ sanitizer finding, and the package
 document-install contract passes. Focused static analysis reports no finding
 in this slice; its only emitted advisories are pre-existing unrelated struct
 padding observations in the monolithic engine translation unit.
+
+At exact implementation-and-local-evidence head `09c1b1046`, Linux Native run
+`31307387144` passes `326/326`, macOS Native run `31307387146` passes
+`326/326` plus both SET POINT targets under four locales (`8/8`), and Windows
+Native run `31307387195` passes `325/325`. Every platform executes
+`test_prg_engine_control_flow` successfully, and all eight protected PR checks
+pass at that head.
