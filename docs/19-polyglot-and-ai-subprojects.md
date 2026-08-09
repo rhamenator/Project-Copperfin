@@ -24,6 +24,9 @@ Current maturity:
   invocation, an explicit child environment, timeout and cancellation handling,
   and descendant cleanup. It is infrastructure for a future artifact adapter,
   not a runtime route or language integration by itself.
+- A portable serializer now emits the versioned invocation request in fixed,
+  compact field order after strict identity and arguments-object admission; the
+  matching response parser admits only the checked-in success/error shapes.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook today.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 
@@ -36,6 +39,7 @@ The canonical machine-readable schema and examples are maintained at:
 
 - `docs/contracts/polyglot-migration-contract-v1.schema.json`
 - `docs/contracts/polyglot-migration-contract-v1.json`
+- `docs/contracts/polyglot-invocation-request-v1.json`
 - `docs/contracts/polyglot-success-envelope-v1.json`
 - `docs/contracts/polyglot-error-envelope-v1.json`
 
@@ -123,6 +127,36 @@ contracts or typed envelopes, capture standard output/error, implement retries o
 fallback, choose a route, emit migration telemetry, or connect any external language
 to the PRG runtime. Those remain separately reviewable adapter and dispatch work.
 
+## Invocation Request Serialization v1
+
+`serialize_polyglot_invocation_request` emits one compact UTF-8 JSON document
+with the fixed field order `envelope_version`, `kind`, `capability_id`,
+`correlation_id`, `protocol_version`, and `arguments`. Version `1.0` uses the
+invariant kind `invocation`. Capability IDs and semantic protocol versions use
+the same machine grammar as the migration contract. Correlation IDs are
+required, validated UTF-8 strings and are JSON-escaped without localization.
+
+The caller supplies an arguments object as JSON. Before serialization, the
+object must pass complete grammar, UTF-8/escape, unique-key-at-every-depth,
+object-shape, trailing-byte, byte-budget, and nesting-budget checks. Its bytes,
+including admitted whitespace and escape choices, are embedded exactly; this
+layer does not reorder its keys or coerce/localize its values. The complete
+outer document uses a 1 MiB/32-level default budget and non-disableable 16
+MiB/64-level ceilings. Stable `polyglot.request.*` codes classify every failure.
+
+The checked-in request fixture and focused GCC/Clang tests prove fixed ordering,
+repeat-byte determinism, escaping and Unicode, exact argument preservation,
+malformed/ambiguous/non-object rejection, and byte/depth limits. Clang
+ASan/UBSan and the native isolation contract also pass at implementation commit
+`1cecc2c8e`; focused static analysis reports no findings.
+
+This is serialization only. It does not choose or authorize an artifact, write
+or send the request, capture output, dispatch from PRG, or implement
+asynchronous supervision. The intended later runtime boundary keeps FP/VFP
+source in control through capability operations and bounded status,
+cancellation, and result retrieval; foreign runtime threads must not enter
+mutable Copperfin runtime state directly.
+
 ## Response Envelope Admission v1
 
 `parse_polyglot_interop_envelope` is the next host-safe seam for #91/#4700. It
@@ -148,9 +182,10 @@ GCC, Clang, and Clang ASan/UBSan. Hosted Linux/macOS runs `31287594685` and
 head `09284457e` preserves either LF or CRLF fixture bytes, explicitly covers both
 forms under fresh local GCC/Clang builds, and passes hosted Windows Native
 `31289912992` at `324/324`, including this regression; all eight final-head
-protected checks pass. This seam does not serialize invocation requests, capture
-process output, authorize/hash artifacts, connect to the runtime host or PRG dispatch,
-apply fallback, or execute a route. Those remain separately reviewable work.
+protected checks pass. Together, the adjacent request serializer and this response
+parser still do not send requests, capture process output, authorize/hash artifacts,
+connect to the runtime host or PRG dispatch, apply fallback, or execute a route.
+Those remain separately reviewable work.
 
 ## Shadow Parity v1
 

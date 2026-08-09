@@ -1,3 +1,17 @@
+- 2026-08-08: Added deterministic Polyglot Invocation Request v1 serialization
+  under #4920/#91/#4700. The portable API validates invariant capability and
+  protocol identities, required UTF-8 correlation identity, and a JSON
+  arguments object with strict grammar, unique keys at every depth, object
+  shape, and bounded byte/depth use. It emits compact fixed-order outer fields
+  while preserving admitted argument bytes exactly and reports stable
+  `polyglot.request.*` failures. The checked-in request fixture/schema,
+  focused GCC and Clang tests, Clang ASan/UBSan, native isolation contract, and
+  static analysis pass at implementation commit `1cecc2c8e`. This is not
+  artifact trust/selection, transport or output capture, runtime-host/PRG
+  dispatch, fallback, or route execution. The planned runtime boundary keeps
+  FP/VFP source in control through future PRG-callable capability supervision;
+  foreign runtime threads do not directly enter mutable runtime state.
+
 - 2026-08-08: Added a bounded polyglot response-envelope admission seam under
   #91/#4700. The portable parser validates the versioned success/error JSON
   shapes, UTF-8 and escape correctness, unique object keys, exact required
