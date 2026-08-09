@@ -44,6 +44,15 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+copperfin::platform::DotNetInteropCallRequest authorized_interop_request(
+    copperfin::platform::DotNetInteropCallRequest request) {
+    request.actor_id = "prg:main";
+    request.granted_capabilities = {request.capability_id};
+    request.policy_context_verified = true;
+    request.audit_sink_available = true;
+    return request;
+}
+
 void test_json_escape_string_is_locale_invariant() {
     const std::locale grouping_locale(std::locale::classic(), new every_digit_numpunct());
     const global_locale_guard locale_guard(grouping_locale);
@@ -393,12 +402,12 @@ void test_dotnet_interop_policy_gateway() {
 
     const auto allowed = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
-        copperfin::platform::DotNetInteropCallRequest{
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "task-primitives",
             .estimated_latency_ms = 10U,
             .requires_reflection = false,
             .untrusted_input = false,
-            .security_sensitive = false});
+            .security_sensitive = false}));
     expect(
         allowed.decision == copperfin::platform::DotNetInteropDecision::allow,
         "policy gateway should allow listed .NET parity capabilities within budget");
@@ -408,15 +417,102 @@ void test_dotnet_interop_policy_gateway() {
     expect(
         allowed.reason == "allowed by policy with audit-required path",
         "#2493: allowed .NET interop reason should preserve default en-US prose");
+    expect(allowed.diagnostic_code == "dotnet.interop.allowed",
+           "#279: allowed interop should expose a stable diagnostic code");
+    expect(allowed.audit_commit_required,
+           "#279: an allowed audited call must require durable audit commit before execution");
+    expect(allowed.audit_event.actor_id == "prg:main" &&
+               allowed.audit_event.capability_id == "task-primitives" &&
+               allowed.audit_event.decision == copperfin::platform::DotNetInteropDecision::allow &&
+               allowed.audit_event.outcome == "allow",
+           "#279: audit event should bind actor, capability, decision, and outcome");
+    auto escaped_event = allowed.audit_event;
+    escaped_event.actor_id = "prg:\"main\"\nsecond-line";
+    expect(
+        copperfin::platform::serialize_dotnet_interop_audit_event(escaped_event) ==
+            "{\"schema_version\":1,\"actor\":\"prg:\\\"main\\\"\\nsecond-line\","
+            "\"capability\":\"task-primitives\",\"decision\":\"allow\","
+            "\"outcome\":\"allow\",\"diagnostic_code\":\"dotnet.interop.allowed\"}",
+        "#279: audit serialization should be deterministic and prevent line/JSON injection");
+
+    const auto missing_actor = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .granted_capabilities = {"task-primitives"},
+            .policy_context_verified = true,
+            .audit_sink_available = true});
+    expect(missing_actor.decision == copperfin::platform::DotNetInteropDecision::reject &&
+               missing_actor.diagnostic_code == "dotnet.interop.actor_required",
+           "#279: missing actor identity should hard-fail with a stable diagnostic");
+
+    auto unverified_context_request = authorized_interop_request(
+        copperfin::platform::DotNetInteropCallRequest{.capability_id = "task-primitives"});
+    unverified_context_request.policy_context_verified = false;
+    const auto unverified_context = copperfin::platform::evaluate_dotnet_interop_call(
+        profile, unverified_context_request);
+    expect(unverified_context.decision == copperfin::platform::DotNetInteropDecision::reject &&
+               unverified_context.diagnostic_code == "dotnet.interop.policy_context_unverified",
+           "#279: unverified policy context should hard-fail");
+
+    auto missing_audit_request = authorized_interop_request(
+        copperfin::platform::DotNetInteropCallRequest{.capability_id = "task-primitives"});
+    missing_audit_request.audit_sink_available = false;
+    const auto missing_audit = copperfin::platform::evaluate_dotnet_interop_call(
+        profile, missing_audit_request);
+    expect(missing_audit.decision == copperfin::platform::DotNetInteropDecision::reject &&
+               missing_audit.diagnostic_code == "dotnet.interop.audit_unavailable",
+           "#279: required but unavailable auditing should hard-fail");
+
+    auto out_of_scope_request = authorized_interop_request(
+        copperfin::platform::DotNetInteropCallRequest{.capability_id = "task-primitives"});
+    out_of_scope_request.granted_capabilities = {"json-helpers"};
+    const auto out_of_scope = copperfin::platform::evaluate_dotnet_interop_call(
+        profile, out_of_scope_request);
+    expect(out_of_scope.decision == copperfin::platform::DotNetInteropDecision::reject &&
+               out_of_scope.diagnostic_code == "dotnet.interop.capability_scope_denied",
+           "#279: a capability outside the verified actor scope should hard-fail");
+
+    const auto assembly_denied = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .requires_assembly_loading = true}));
+    expect(assembly_denied.diagnostic_code == "dotnet.interop.assembly_loading_denied",
+           "#279: assembly loading should be denied unless capability-scoped policy allows it");
+
+    const auto external_io_denied = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .requires_external_io = true}));
+    expect(external_io_denied.diagnostic_code == "dotnet.interop.external_io_denied",
+           "#279: external I/O should be denied unless capability-scoped policy allows it");
+
+    const auto secret_access_denied = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .requires_secret_access = true}));
+    expect(secret_access_denied.diagnostic_code == "dotnet.interop.secret_access_denied",
+           "#279: secret access should be denied unless capability-scoped policy allows it");
+
+    const auto scoped_external_io = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "safe-http-helpers",
+            .requires_external_io = true}));
+    expect(scoped_external_io.decision == copperfin::platform::DotNetInteropDecision::allow,
+           "#279: explicitly capability-scoped external I/O should remain available");
 
     const auto denied = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
-        copperfin::platform::DotNetInteropCallRequest{
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "unsafe-reflection-load",
             .estimated_latency_ms = 5U,
             .requires_reflection = true,
             .untrusted_input = true,
-            .security_sensitive = true});
+            .security_sensitive = true}));
     expect(
         denied.decision == copperfin::platform::DotNetInteropDecision::reject,
         "policy gateway should reject denylisted capabilities");
@@ -429,12 +525,12 @@ void test_dotnet_interop_policy_gateway() {
 
     const auto fallback = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
-        copperfin::platform::DotNetInteropCallRequest{
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "json-helpers",
             .estimated_latency_ms = 250U,
             .requires_reflection = false,
             .untrusted_input = false,
-            .security_sensitive = false});
+            .security_sensitive = false}));
     expect(
         fallback.decision == copperfin::platform::DotNetInteropDecision::fallback_native,
         "policy gateway should fall back to native when estimated latency exceeds budget");
@@ -449,7 +545,7 @@ void test_dotnet_interop_policy_gateway() {
     unavailable_profile.dotnet_output.available = false;
     const auto unavailable = copperfin::platform::evaluate_dotnet_interop_call(
         unavailable_profile,
-        copperfin::platform::DotNetInteropCallRequest{.capability_id = "task-primitives"});
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{.capability_id = "task-primitives"}));
     expect(
         unavailable.reason == "dotnet output profile unavailable",
         "#2493: unavailable .NET output reason should preserve default en-US prose");
@@ -463,30 +559,30 @@ void test_dotnet_interop_policy_gateway() {
 
     const auto not_allowlisted = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
-        copperfin::platform::DotNetInteropCallRequest{.capability_id = "legacy-helper"});
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{.capability_id = "legacy-helper"}));
     expect(
         not_allowlisted.reason == "capability not in allowlist",
         "#2493: non-allowlisted capability reason should preserve default en-US prose");
 
     const auto reflection_denied = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
-        copperfin::platform::DotNetInteropCallRequest{
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "task-primitives",
             .estimated_latency_ms = 5U,
             .requires_reflection = true,
             .untrusted_input = true,
-            .security_sensitive = true});
+            .security_sensitive = true}));
     expect(
-        reflection_denied.reason == "reflection on untrusted input is blocked",
+        reflection_denied.reason == "reflection is not authorized for this capability",
         "#2493: untrusted reflection reason should preserve default en-US prose");
 
     auto unaudited_profile = profile;
     unaudited_profile.dotnet_output.policy.require_policy_audit = false;
     const auto unaudited_allowed = copperfin::platform::evaluate_dotnet_interop_call(
         unaudited_profile,
-        copperfin::platform::DotNetInteropCallRequest{
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "task-primitives",
-            .estimated_latency_ms = 10U});
+            .estimated_latency_ms = 10U}));
     expect(
         unaudited_allowed.reason == "allowed by policy",
         "#2493: unaudited allowed reason should preserve default en-US prose");
@@ -498,9 +594,9 @@ void test_dotnet_interop_policy_gateway() {
         copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const auto spanish_allowed = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
-        copperfin::platform::DotNetInteropCallRequest{
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "task-primitives",
-            .estimated_latency_ms = 10U},
+            .estimated_latency_ms = 10U}),
         spanish_catalog);
     expect(spanish_allowed.reason == "permitida por politica con ruta que requiere auditoria",
            "#2599: es-419 allowed .NET interop reason should localize the prose");
@@ -509,12 +605,12 @@ void test_dotnet_interop_policy_gateway() {
 
     const auto portuguese_denied = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
-        copperfin::platform::DotNetInteropCallRequest{
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "unsafe-reflection-load",
             .estimated_latency_ms = 5U,
             .requires_reflection = true,
             .untrusted_input = true,
-            .security_sensitive = true},
+            .security_sensitive = true}),
         portuguese_catalog);
     expect(portuguese_denied.reason == "capacidade negada pela politica de allowlist/denylist",
            "#2599: pt-BR denylisted .NET interop reason should localize the prose");
@@ -523,9 +619,9 @@ void test_dotnet_interop_policy_gateway() {
 
     const auto pseudo_allowed = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
-        copperfin::platform::DotNetInteropCallRequest{
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "task-primitives",
-            .estimated_latency_ms = 10U},
+            .estimated_latency_ms = 10U}),
         pseudo_catalog);
     expect(
         pseudo_allowed.decision == copperfin::platform::DotNetInteropDecision::allow,
@@ -542,12 +638,12 @@ void test_dotnet_interop_policy_gateway() {
 
     const auto pseudo_denied = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
-        copperfin::platform::DotNetInteropCallRequest{
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "unsafe-reflection-load",
             .estimated_latency_ms = 5U,
             .requires_reflection = true,
             .untrusted_input = true,
-            .security_sensitive = true},
+            .security_sensitive = true}),
         pseudo_catalog);
     expect(
         pseudo_denied.decision == copperfin::platform::DotNetInteropDecision::reject,
@@ -561,9 +657,9 @@ void test_dotnet_interop_policy_gateway() {
 
     const auto pseudo_fallback = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
-        copperfin::platform::DotNetInteropCallRequest{
+        authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "json-helpers",
-            .estimated_latency_ms = 250U},
+            .estimated_latency_ms = 250U}),
         pseudo_catalog);
     expect(
         pseudo_fallback.decision == copperfin::platform::DotNetInteropDecision::fallback_native,

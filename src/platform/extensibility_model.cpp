@@ -5,10 +5,12 @@
 #include "copperfin/platform/extensibility_model.h"
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/json.h"
 
 #include <algorithm>
 #include <filesystem>
 #include <mutex>
+#include <sstream>
 
 namespace copperfin::platform {
 
@@ -16,6 +18,40 @@ namespace {
 
 bool contains_case_sensitive(const std::vector<std::string>& values, const std::string& candidate) {
     return std::find(values.begin(), values.end(), candidate) != values.end();
+}
+
+std::string decision_name(DotNetInteropDecision decision) {
+    switch (decision) {
+        case DotNetInteropDecision::allow:
+            return "allow";
+        case DotNetInteropDecision::fallback_native:
+            return "fallback_native";
+        case DotNetInteropDecision::reject:
+            return "reject";
+    }
+    return "reject";
+}
+
+DotNetInteropCallDecision make_decision(
+    const DotNetInteropCallRequest& request,
+    DotNetInteropDecision value,
+    std::string execution_path,
+    std::string reason,
+    std::string diagnostic_code,
+    bool audit_required) {
+    DotNetInteropCallDecision result;
+    result.decision = value;
+    result.execution_path = std::move(execution_path);
+    result.reason = std::move(reason);
+    result.diagnostic_code = std::move(diagnostic_code);
+    result.audit_event = DotNetInteropAuditEvent{
+        .actor_id = request.actor_id,
+        .capability_id = request.capability_id,
+        .decision = value,
+        .outcome = decision_name(value),
+        .diagnostic_code = result.diagnostic_code};
+    result.audit_commit_required = audit_required;
+    return result;
 }
 
 localization::LocalizedCatalog extensibility_profile_catalog() {
@@ -89,6 +125,10 @@ ExtensibilityProfile default_extensibility_profile(const localization::Localized
         "insecure-binary-deserialization",
         "legacy-cas-interop"
     };
+    profile.dotnet_output.policy.reflection_allowlist = {};
+    profile.dotnet_output.policy.assembly_loading_allowlist = {};
+    profile.dotnet_output.policy.external_io_allowlist = {"safe-http-helpers"};
+    profile.dotnet_output.policy.secret_access_allowlist = {};
     profile.dotnet_output.policy.max_in_process_latency_budget_ms = 25U;
     profile.dotnet_output.policy.require_policy_audit = true;
     profile.dotnet_output.policy.allow_reflection_for_untrusted = false;
@@ -155,57 +195,98 @@ DotNetInteropCallDecision evaluate_dotnet_interop_call(
     const ExtensibilityProfile& profile,
     const DotNetInteropCallRequest& request,
     const localization::LocalizedCatalog& catalog) {
-    DotNetInteropCallDecision decision;
-
     if (!profile.dotnet_output.available) {
-        decision.decision = DotNetInteropDecision::fallback_native;
-        decision.execution_path = "native";
-        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.DotNetProfileUnavailable");
-        return decision;
+        return make_decision(request, DotNetInteropDecision::fallback_native, "native",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.DotNetProfileUnavailable"),
+            "dotnet.interop.profile_unavailable", false);
     }
 
     if (request.capability_id.empty()) {
-        decision.decision = DotNetInteropDecision::reject;
-        decision.execution_path = "none";
-        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityIdRequired");
-        return decision;
+        return make_decision(request, DotNetInteropDecision::reject, "none",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityIdRequired"),
+            "dotnet.interop.capability_required", true);
     }
 
     const DotNetInteropPolicyRules& rules = profile.dotnet_output.policy;
+    if (request.actor_id.empty()) {
+        return make_decision(request, DotNetInteropDecision::reject, "none",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.ActorIdRequired"),
+            "dotnet.interop.actor_required", rules.require_policy_audit);
+    }
+    if (!request.policy_context_verified) {
+        return make_decision(request, DotNetInteropDecision::reject, "none",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.PolicyContextUnverified"),
+            "dotnet.interop.policy_context_unverified", rules.require_policy_audit);
+    }
+    if (rules.require_policy_audit && !request.audit_sink_available) {
+        return make_decision(request, DotNetInteropDecision::reject, "none",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.AuditSinkUnavailable"),
+            "dotnet.interop.audit_unavailable", true);
+    }
+    if (!contains_case_sensitive(request.granted_capabilities, request.capability_id)) {
+        return make_decision(request, DotNetInteropDecision::reject, "none",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityOutsideActorScope"),
+            "dotnet.interop.capability_scope_denied", rules.require_policy_audit);
+    }
     if (contains_case_sensitive(rules.denylist, request.capability_id)) {
-        decision.decision = DotNetInteropDecision::reject;
-        decision.execution_path = "none";
-        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityDeniedByPolicy");
-        return decision;
+        return make_decision(request, DotNetInteropDecision::reject, "none",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityDeniedByPolicy"),
+            "dotnet.interop.capability_denied", rules.require_policy_audit);
     }
 
     if (!rules.allowlist.empty() && !contains_case_sensitive(rules.allowlist, request.capability_id)) {
-        decision.decision = DotNetInteropDecision::fallback_native;
-        decision.execution_path = "native";
-        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityNotInAllowlist");
-        return decision;
+        return make_decision(request, DotNetInteropDecision::fallback_native, "native",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityNotInAllowlist"),
+            "dotnet.interop.capability_not_allowlisted", rules.require_policy_audit);
     }
 
-    if (request.security_sensitive && request.untrusted_input && request.requires_reflection && !rules.allow_reflection_for_untrusted) {
-        decision.decision = DotNetInteropDecision::reject;
-        decision.execution_path = "none";
-        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.ReflectionOnUntrustedInputDenied");
-        return decision;
+    if (request.requires_reflection &&
+        (!contains_case_sensitive(rules.reflection_allowlist, request.capability_id) ||
+         (request.untrusted_input && !rules.allow_reflection_for_untrusted))) {
+        return make_decision(request, DotNetInteropDecision::reject, "none",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.ReflectionOnUntrustedInputDenied"),
+            "dotnet.interop.reflection_denied", rules.require_policy_audit);
+    }
+    if (request.requires_assembly_loading &&
+        !contains_case_sensitive(rules.assembly_loading_allowlist, request.capability_id)) {
+        return make_decision(request, DotNetInteropDecision::reject, "none",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.AssemblyLoadingDenied"),
+            "dotnet.interop.assembly_loading_denied", rules.require_policy_audit);
+    }
+    if (request.requires_external_io &&
+        !contains_case_sensitive(rules.external_io_allowlist, request.capability_id)) {
+        return make_decision(request, DotNetInteropDecision::reject, "none",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.ExternalIoDenied"),
+            "dotnet.interop.external_io_denied", rules.require_policy_audit);
+    }
+    if (request.requires_secret_access &&
+        !contains_case_sensitive(rules.secret_access_allowlist, request.capability_id)) {
+        return make_decision(request, DotNetInteropDecision::reject, "none",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.SecretAccessDenied"),
+            "dotnet.interop.secret_access_denied", rules.require_policy_audit);
     }
 
     if (request.estimated_latency_ms > rules.max_in_process_latency_budget_ms) {
-        decision.decision = DotNetInteropDecision::fallback_native;
-        decision.execution_path = "native";
-        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.EstimatedLatencyExceedsBudget");
-        return decision;
+        return make_decision(request, DotNetInteropDecision::fallback_native, "native",
+            extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.EstimatedLatencyExceedsBudget"),
+            "dotnet.interop.latency_budget_exceeded", rules.require_policy_audit);
     }
 
-    decision.decision = DotNetInteropDecision::allow;
-    decision.execution_path = "dotnet";
-    decision.reason = rules.require_policy_audit
-        ? extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedWithAuditRequired")
-        : extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedByPolicy");
-    return decision;
+    return make_decision(request, DotNetInteropDecision::allow, "dotnet",
+        rules.require_policy_audit
+            ? extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedWithAuditRequired")
+            : extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedByPolicy"),
+        "dotnet.interop.allowed", rules.require_policy_audit);
+}
+
+std::string serialize_dotnet_interop_audit_event(const DotNetInteropAuditEvent& event) {
+    std::ostringstream stream;
+    stream << "{\"schema_version\":1,\"actor\":\"" << json_escape_string(event.actor_id)
+           << "\",\"capability\":\"" << json_escape_string(event.capability_id)
+           << "\",\"decision\":\"" << json_escape_string(decision_name(event.decision))
+           << "\",\"outcome\":\"" << json_escape_string(event.outcome)
+           << "\",\"diagnostic_code\":\"" << json_escape_string(event.diagnostic_code) << "\"}";
+    return stream.str();
 }
 
 }  // namespace copperfin::platform

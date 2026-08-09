@@ -2618,7 +2618,11 @@ std::string build_debug_manifest_text(
             .estimated_latency_ms = 10U,
             .requires_reflection = false,
             .untrusted_input = false,
-            .security_sensitive = false});
+            .security_sensitive = false,
+            .actor_id = "build-manifest",
+            .granted_capabilities = {"task-primitives"},
+            .policy_context_verified = true,
+            .audit_sink_available = true});
     stream << "dotnet_gateway_task_primitives=" << quote_manifest_value(launcher_decision.execution_path + ":" + launcher_decision.reason) << "\n";
 
     const platform::DotNetInteropCallDecision denied_decision = platform::evaluate_dotnet_interop_call(
@@ -2628,7 +2632,11 @@ std::string build_debug_manifest_text(
             .estimated_latency_ms = 2U,
             .requires_reflection = true,
             .untrusted_input = true,
-            .security_sensitive = true});
+            .security_sensitive = true,
+            .actor_id = "build-manifest",
+            .granted_capabilities = {"unsafe-reflection-load"},
+            .policy_context_verified = true,
+            .audit_sink_available = true});
     stream << "dotnet_gateway_unsafe_reflection=" << quote_manifest_value(denied_decision.execution_path + ":" + denied_decision.reason) << "\n";
     stream << "language_integration_count=" << extensibility_profile.languages.size() << "\n";
     for (const auto& language : extensibility_profile.languages) {

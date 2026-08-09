@@ -308,18 +308,26 @@ matches the events `cf_security`'s `audit_stream` emits today.
 
 ### docs/11 — Engineering Spec: Copperfin .NET Bridge
 
-**Status: spec'd in full, seeded at one corner.** The document specs four native
+**Status: spec'd in full, with a portable policy gateway and execution still
+absent.** The document specs four native
 modules (`cf_dotnet_host`, `cf_dotnet_marshaler`, `cf_dotnet_policy`,
 `cf_dotnet_codegen`), three managed surfaces, a typed marshaling contract for 11
 value kinds, a policy-driven call gateway with three outcomes
 (`allow`/`fallback_native`/`reject`), and a three-tier parity matrix
 (`exact`/`adapted`/`intentionally_not_supported`).
 
-**What it will take:** none of the four named native modules exist yet. What
-exists today, per `docs/28-repository-ontology.md` §3, is
+The portable profile now enforces verified actor, exact capability scope,
+required audit readiness, and separate reflection/assembly/I/O/secret scopes;
+it emits stable diagnostics and a structured audit record. The threat model in
+`docs/37-dotnet-interop-threat-model.md` also fixes the future PRG-supervised
+job and foreign-thread boundary.
+
+**What it will take:** none of the four named native execution/marshaling
+modules exist yet. What exists today, per `docs/28-repository-ontology.md` §3, is
 `cf_runtime_pipeline`'s `_csharp_and_launcher` — a generated C# launcher stub
 spawned as a child process. That is the entire current footprint of a
-fully-specified CLR-hosting-and-marshaling subsystem. This is corroborated
+fully-specified CLR-hosting-and-marshaling subsystem beyond the portable policy
+model. This is corroborated
 verbatim in three places — `docs/01` (charter), `docs/19` (polyglot), and here —
 all stating the same thing in nearly identical language: **the transpiled C#
 output is emitted, never executed, by the runtime host.**

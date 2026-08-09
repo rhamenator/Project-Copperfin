@@ -1,3 +1,15 @@
+- 2026-08-09: Added the #279 .NET interop threat model and fail-closed policy
+  context gates. Candidate calls now require a trusted host to bind actor,
+  verified policy context, audit readiness, and exact capability scope;
+  reflection, assembly loading, external I/O, and secret access have separate
+  capability allowlists with closed defaults except the explicitly scoped
+  `safe-http-helpers` I/O path. Stable `dotnet.interop.*` diagnostics and a
+  canonical injection-safe JSON audit event bind actor, capability, decision,
+  and outcome. The documented future boundary keeps PRG in control through
+  supervised status/wait/cancel/result/output operations and forbids foreign
+  threads from directly mutating VFP-compatible runtime state. This slice does
+  not load or run managed code and does not implement the PRG job facade.
+
 - 2026-08-08: Added deterministic Polyglot Invocation Request v1 serialization
   under #4920/#91/#4700. The portable API validates invariant capability and
   protocol identities, required UTF-8 correlation identity, and a JSON
