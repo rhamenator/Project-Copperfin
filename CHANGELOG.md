@@ -1,3 +1,18 @@
+- 2026-08-09: Extended the bounded native PRG payload facade with
+  `CFHMACSHA256()` and `CFHMACVERIFY()`. Exact binary key/data bytes produce
+  canonical lowercase HMAC-SHA256; verification admits only 64 lowercase hex
+  characters, examines every admitted digest character, returns logical false
+  for an ordinary mismatch, and preserves an optional typed fallback for
+  malformed input or internal failure. Hard 1 MiB key and payload ceilings
+  remain non-disableable. Focused native and real-session GCC tests pass `2/2`
+  with RFC 4231, long-key, embedded zero/high-byte, exact-bound, mismatch, and
+  malformed-input coverage. The helpers do not generate, store, rotate,
+  erase, or distribute keys and add no file, network, artifact-admission, or
+  external-execution route. The final-source GCC package, isolation,
+  audit-stream, security-control, focused, and broad runtime-surface set passes
+  `7/7`; both focused targets pass Clang 21 ASan/UBSan `2/2`, and focused
+  analyzer checks are clean. Hosted evidence remains pending.
+
 - 2026-08-09: Added bounded native PRG payload-integrity and transport helpers.
   `CFSHA256()` returns invariant lowercase SHA-256 for exact PRG string bytes;
   `CFBASE64ENCODE()` emits canonical padded RFC 4648 text; and strict

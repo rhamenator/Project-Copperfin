@@ -42,9 +42,10 @@ Current maturity:
   text. Its byte-oriented subset uses fixed input/pattern/state ceilings and a
   non-backtracking state machine; unsupported advanced constructs fail closed
   and remain available only through a future separately approved capability.
-- PRG now has bounded exact-byte `CFSHA256()`, `CFBASE64ENCODE()`, and strict
-  `CFBASE64DECODE()` helpers for immutable result identity and text transport.
-  They do not authenticate a sender, encrypt data, or admit an artifact.
+- PRG now has bounded exact-byte `CFSHA256()`, `CFHMACSHA256()`,
+  `CFHMACVERIFY()`, `CFBASE64ENCODE()`, and strict `CFBASE64DECODE()` helpers
+  for immutable result identity, shared-key authentication, and text transport.
+  The HMAC helpers do not manage keys; none encrypt data or admit an artifact.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook today.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 

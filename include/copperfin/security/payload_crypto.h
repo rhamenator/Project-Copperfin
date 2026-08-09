@@ -18,6 +18,7 @@ enum class PayloadCryptoError {
     none,
     input_too_large,
     invalid_base64,
+    invalid_digest,
     hash_failed,
 };
 
@@ -30,7 +31,23 @@ struct PayloadCryptoResult {
     }
 };
 
+struct PayloadCryptoVerificationResult {
+    PayloadCryptoError error = PayloadCryptoError::none;
+    bool matches = false;
+
+    [[nodiscard]] bool ok() const noexcept {
+        return error == PayloadCryptoError::none;
+    }
+};
+
 [[nodiscard]] PayloadCryptoResult payload_sha256_hex(std::string_view input);
+[[nodiscard]] PayloadCryptoResult payload_hmac_sha256_hex(
+    std::string_view key,
+    std::string_view input);
+[[nodiscard]] PayloadCryptoVerificationResult payload_hmac_sha256_verify(
+    std::string_view key,
+    std::string_view input,
+    std::string_view expected_hex_digest);
 [[nodiscard]] PayloadCryptoResult payload_base64_encode(std::string_view input);
 [[nodiscard]] PayloadCryptoResult payload_base64_decode(std::string_view input);
 

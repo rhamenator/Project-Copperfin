@@ -443,6 +443,16 @@ protected checks are green. File hashing, signing, message authentication, key
 handling, safe HTTP, collection utilities, artifact admission, and external
 dispatch remain separate.
 
+The adjacent payload-authentication slice adds `CFHMACSHA256()` and
+`CFHMACVERIFY()` over exact binary key/data strings. Canonical lowercase output,
+strict expected-digest admission, typed failure fallbacks, ordinary false
+mismatch results, and fixed 1 MiB key/payload ceilings give PRG a bounded
+message-authentication primitive without adding key lifecycle, files, network,
+artifact admission, or external execution. Focused native and real-session GCC
+tests pass `2/2`, both targets pass Clang 21 ASan/UBSan `2/2`, a broader
+seven-test GCC contract set passes, and focused analyzer checks are clean.
+Hosted evidence remains pending.
+
 Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
 VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.
 Display-only formatting now applies current data-session `POINT` and

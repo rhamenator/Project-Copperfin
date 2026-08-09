@@ -32,6 +32,13 @@ void test_prg_payload_crypto_facade() {
         "cBinaryDigest = CFSHA256(cBinary)\n"
         "cBinaryEncoded = CFBASE64ENCODE(cBinary)\n"
         "cBinaryDecoded = CFBASE64DECODE(cBinaryEncoded)\n"
+        "cHmacKey = CHR(0) + CHR(255)\n"
+        "cHmacData = CHR(16) + 'Copperfin'\n"
+        "cHmac = CFHMACSHA256(cHmacKey, cHmacData)\n"
+        "lHmacMatch = CFHMACVERIFY(cHmacKey, cHmacData, cHmac)\n"
+        "lHmacMismatch = CFHMACVERIFY(cHmacKey, cHmacData + 'x', cHmac)\n"
+        "nInvalidHmac = CFHMACVERIFY(cHmacKey, cHmacData, UPPER(cHmac), 37)\n"
+        "nNonstrHmac = CFHMACSHA256(42, cHmacData, 73)\n"
         "nBinaryLength = LEN(cBinaryDecoded)\n"
         "nFirst = ASC(SUBSTR(cBinaryDecoded, 1, 1))\n"
         "nSecond = ASC(SUBSTR(cBinaryDecoded, 2, 1))\n"
@@ -68,6 +75,29 @@ void test_prg_payload_crypto_facade() {
     expect(formatted("cbinarydigest") ==
                "2da45f2cd1f9c8e69a67abf7a6b26c282533d0a7686787a9533265418680d4d2",
            "PRG SHA-256 should hash every embedded zero and high byte");
+    expect(formatted("chmac") ==
+               "b430e659ea210279fe3993dbed0634f76edb1e35ff5a8f13ecd6ddcf63ea55f8",
+           "PRG HMAC-SHA256 should preserve embedded key and payload bytes");
+    const auto hmac_match = state.globals.find("lhmacmatch");
+    expect(hmac_match != state.globals.end() &&
+               hmac_match->second.kind == copperfin::runtime::PrgValueKind::boolean &&
+               hmac_match->second.boolean_value,
+           "CFHMACVERIFY should accept an exact authenticated payload");
+    const auto hmac_mismatch = state.globals.find("lhmacmismatch");
+    expect(hmac_mismatch != state.globals.end() &&
+               hmac_mismatch->second.kind == copperfin::runtime::PrgValueKind::boolean &&
+               !hmac_mismatch->second.boolean_value,
+           "CFHMACVERIFY should return false for a valid ordinary mismatch");
+    const auto invalid_hmac = state.globals.find("ninvalidhmac");
+    expect(invalid_hmac != state.globals.end() &&
+               invalid_hmac->second.kind == copperfin::runtime::PrgValueKind::number &&
+               invalid_hmac->second.number_value == 37.0,
+           "malformed HMAC text should preserve the typed failure fallback");
+    const auto nonstr_hmac = state.globals.find("nnonstrhmac");
+    expect(nonstr_hmac != state.globals.end() &&
+               nonstr_hmac->second.kind == copperfin::runtime::PrgValueKind::number &&
+               nonstr_hmac->second.number_value == 73.0,
+           "HMAC generation should reject non-character keys without stringification");
     expect(formatted("nbinarylength") == "3" && formatted("nfirst") == "0" &&
                formatted("nsecond") == "255" && formatted("nthird") == "16",
            "decoded PRG byte strings should retain zero and high bytes");
