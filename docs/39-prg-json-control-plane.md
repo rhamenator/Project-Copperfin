@@ -53,9 +53,11 @@ silently round it.
 
 ## Bounds And Failure Policy
 
-The reusable native parser defaults to 1 MiB per document and 64 nested
-container levels. Callers may lower either bound, but cannot raise the hard
-ceilings above 16 MiB or 64 levels. The PRG facade uses the defaults.
+The reusable native parser defaults to 1 MiB per document, 64 nested container
+levels, and 65,536 JSON values. Callers may lower any bound, but cannot raise
+the hard ceilings above 16 MiB, 64 levels, or 65,536 values. The value-count
+ceiling bounds memory amplification from dense arrays and objects. The PRG
+facade uses the defaults.
 
 The parser accepts one complete JSON value and rejects:
 
@@ -64,7 +66,7 @@ The parser accepts one complete JSON value and rejects:
 - trailing commas or trailing non-whitespace bytes;
 - malformed numbers;
 - malformed JSON Pointer escapes and non-canonical array indexes;
-- byte or nesting limit violations.
+- byte, nesting, or value-count limit violations.
 
 No filesystem, environment, child-process, network, sample, locale, or secret
 access occurs. Machine type tokens are intentionally not localized. Document

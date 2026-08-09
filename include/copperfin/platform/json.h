@@ -30,6 +30,7 @@ enum class JsonSelectionError {
     invalid_limits,
     invalid_utf8,
     invalid_json,
+    value_count_exceeded,
     invalid_pointer,
     value_not_found
 };
@@ -37,6 +38,7 @@ enum class JsonSelectionError {
 struct JsonDocumentLimits final {
     std::size_t max_document_bytes = 1024U * 1024U;
     std::uint32_t max_nesting_depth = 64U;
+    std::size_t max_value_count = 65536U;
 };
 
 struct JsonSelectionResult final {
