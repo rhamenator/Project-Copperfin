@@ -1,3 +1,18 @@
+- 2026-08-09: Extended the #4700 bounded artifact-process prerequisite with
+  exact-byte stdout and stderr capture. Independent positive budgets default to
+  1 MiB and cannot exceed the fixed 16 MiB hard ceiling; overflow retains only
+  the admitted prefix, returns invariant `output-limit-exceeded` status with a
+  stream-specific machine error, and closes the entire owned process tree.
+  Dedicated concurrent readers prevent either pipe from blocking the other.
+  Timeout and cooperative cancellation retain bytes emitted before shutdown.
+  Windows uses an explicit process handle list so enabling capture inherits
+  only null stdin and the two pipe writers, not unrelated agent/host handles.
+  Focused GCC, Clang 21 ASan/UBSan, and Clang 21 ThreadSanitizer runs pass; the
+  GCC regression also passes 20 consecutive executions, and focused analyzer
+  checks are clean. This slice does not authorize or hash an artifact, write a
+  request, validate the captured envelope, choose a route, apply fallback,
+  expose PRG dispatch, or connect any external language runtime.
+
 - 2026-08-09: Extended the bounded native PRG payload facade with
   `CFHMACSHA256()` and `CFHMACVERIFY()`. Exact binary key/data bytes produce
   canonical lowercase HMAC-SHA256; verification admits only 64 lowercase hex

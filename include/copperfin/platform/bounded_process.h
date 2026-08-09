@@ -15,6 +15,7 @@ enum class BoundedProcessStatus {
     exited,
     cancelled,
     timed_out,
+    output_limit_exceeded,
     invalid_request,
     launch_failed
 };
@@ -33,6 +34,10 @@ struct BoundedProcessRequest {
     std::vector<BoundedProcessEnvironmentVariable> environment;
     std::uint32_t timeout_ms = 5000U;
     std::uint32_t poll_interval_ms = 10U;
+    // Output is captured as exact bytes. Limits must be positive and cannot
+    // exceed the implementation hard ceiling.
+    std::uint32_t stdout_limit_bytes = 1024U * 1024U;
+    std::uint32_t stderr_limit_bytes = 1024U * 1024U;
     // Must return promptly. true, or an exception, fails closed as cancellation.
     std::function<bool()> cancellation_requested;
 };
@@ -45,6 +50,8 @@ struct BoundedProcessResult {
     int native_error = 0;
     std::uint64_t elapsed_ms = 0U;
     std::string error_code = "polyglot.process.invalid_request";
+    std::string standard_output;
+    std::string standard_error;
 
     [[nodiscard]] bool completed() const noexcept {
         return status == BoundedProcessStatus::exited;
@@ -52,9 +59,10 @@ struct BoundedProcessResult {
 };
 
 // Starts an absolute executable directly without a shell, polls cancellation
-// while it runs, and owns one process group/job. Paths and arguments containing
-// NUL are rejected. Closing the invocation always removes descendants so an
-// artifact cannot leave helpers behind after returning.
+// while it runs, captures stdout/stderr under fixed byte ceilings, and owns one
+// process group/job. Paths and arguments containing NUL are rejected. Closing
+// the invocation always removes descendants so an artifact cannot leave helpers
+// behind after returning.
 [[nodiscard]] BoundedProcessResult run_bounded_process(
     const BoundedProcessRequest& request);
 

@@ -328,6 +328,12 @@ cooperative cancellation, retained return values, and completed print output.
 Per-task completion publication is synchronized and directly exercised by two
 sibling supervisors polling the same handle under ThreadSanitizer; unrelated
 tasks remain independently scheduled.
+The portable external-process prerequisite now captures exact stdout/stderr
+bytes under independent fixed ceilings while preserving timeout, cancellation,
+and complete descendant cleanup. Cross-stream drainers prevent pipe deadlock,
+and Windows restricts inherited handles to the three explicit standard handles.
+This is transport evidence only: captured bytes are not yet tied to an admitted
+artifact, request, route, or PRG dispatch.
 It also exposes bounded native JSON validation, type inspection, and JSON
 Pointer selection so PRG can examine immutable structured completion payloads
 without embedding foreign source or losing exact number spelling.

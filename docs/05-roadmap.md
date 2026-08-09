@@ -358,9 +358,17 @@ ASan/UBSan evidence passes locally. At exact implementation/test head
 `36f25b1e5`, Linux Native run `31284210937` passes `324/324`, macOS Native run
 `31284210940` passes `324/324` plus the existing four-locale matrix, and
 Windows Native run `31284210974` passes `323/323`; all three execute the
-bounded-process regression. This slice does not yet
-authorize/hash an artifact, validate envelopes, capture output, implement
-fallback/telemetry, select a route, or connect external code to PRG execution.
+bounded-process regression. The adjacent v1 transport slice now captures exact
+stdout and stderr bytes under independent 1 MiB defaults and fixed 16 MiB hard
+ceilings. Concurrent readers prevent cross-stream pipe deadlock; overflow
+retains the admitted prefix, returns a stream-specific invariant failure, and
+closes the owned descendant tree. Timeout and cancellation retain bytes emitted
+before shutdown. Windows restricts inherited handles to null stdin and the two
+pipe writers. Focused GCC, Clang 21 ASan/UBSan, ThreadSanitizer, 20-run stress,
+and analyzer evidence passes locally; hosted native evidence remains required.
+These slices still do not authorize/hash an artifact, write a request, validate
+captured envelopes, implement fallback/telemetry, select a route, or connect
+external code to PRG execution.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are

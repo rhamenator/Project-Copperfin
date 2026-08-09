@@ -1,5 +1,36 @@
 # Agent Handoff
 
+## V1 bounded artifact-process output-capture candidate
+
+The approved #4700 transport prerequisite now captures exact stdout and stderr
+bytes from the already-bounded child process. Each stream has an independent
+positive budget, defaults to 1 MiB, and is capped at a non-disableable 16 MiB.
+The result retains each admitted prefix separately. Crossing a limit returns
+invariant `output-limit-exceeded` plus
+`polyglot.process.stdout_limit_exceeded` or
+`polyglot.process.stderr_limit_exceeded`, terminates the owned job/process
+group, and preserves the existing descendant-cleanup guarantee. Timeout and
+cancellation retain bytes emitted before shutdown.
+
+The two streams are drained concurrently so a candidate cannot deadlock the
+parent by filling one pipe while the other is read. Windows creates the root
+suspended and uses `PROC_THREAD_ATTRIBUTE_HANDLE_LIST`: the child receives
+only null stdin and the stdout/stderr pipe writers before job assignment and
+resume. It does not inherit other host or agent handles. POSIX duplicates only
+the two writers onto standard output/error and retains the close-on-exec launch
+status pipe. Capture-reader creation and read failures fail closed.
+
+Focused `test_bounded_process` passes under GCC and repeats successfully 20
+times. It separately proves embedded-NUL/high-byte/newline and CRLF capture,
+256 KiB simultaneous stream saturation, stdout and stderr overflow, retained
+pre-cancellation/pre-timeout output, and invalid-budget rejection while
+retaining the existing argv/environment/tree tests. Clang 21 ASan/UBSan and
+ThreadSanitizer runs pass without findings, and focused analyzer checks are
+clean. Hosted native evidence is still required. No artifact authorization,
+hashing, request transport, envelope admission, route selection, fallback,
+telemetry, PRG dispatch, or external-language adapter is added; the runtime
+stub inventory is unchanged.
+
 ## V1 PRG HMAC payload-authentication candidate
 
 The approved native parity pack now adds `CFHMACSHA256()` and
