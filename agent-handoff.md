@@ -1,5 +1,30 @@
 # Agent Handoff
 
+## V1 PRG payload-integrity and Base64 candidate
+
+The approved native parity pack now includes `CFSHA256()`,
+`CFBASE64ENCODE()`, and `CFBASE64DECODE()` over exact PRG byte strings.
+SHA-256 returns invariant lowercase hex; encoding emits canonical padded RFC
+4648 text; and decoding accepts only canonical complete standard-alphabet text,
+including zero unused padding bits. Every function has an optional typed
+failure fallback, and non-character inputs fail instead of being silently
+stringified. Fixed hard ceilings cover a 1 MiB payload and its 1,398,104-byte
+Base64 representation.
+
+Focused `test_payload_crypto` and real-session
+`test_prg_engine_payload_crypto_facade` pass under GCC and under Clang 21
+ASan/UBSan (`2/2`). The final-source GCC package, isolation, audit-stream,
+security-control, focused, and broad runtime-surface set passes `7/7` in
+187.80 seconds. Focused Clang analyzer checks report no project diagnostic.
+The isolation contract classifies both targets as portable, parallel-safe,
+network-free, and child-process-free. The full contract and security nonclaims are in
+`docs/41-prg-payload-integrity-and-base64.md`. SHA-256 does not authenticate a
+sender and Base64 is not encryption; this slice does not hash files, handle
+keys, sign or authenticate messages, admit artifacts, access the network, or
+execute external code. Hosted evidence remains to be recorded before merge. No
+stub or no-op was added, so the runtime stub
+inventory is unchanged.
+
 ## V1 PRG safe-regex control-plane candidate
 
 PRG now has bounded native `CFREGEXVALID()`, `CFREGEXTEST()`,

@@ -99,6 +99,6 @@ display targets under four locales (`8/8`). Windows Native run `31316775761`
 passes `328/328`. Both focused regex targets pass on every native platform,
 and all eight candidate-head protected checks are green.
 
-This is one native facade under the broader parity pack. Safe HTTP,
+This is one native facade under the broader parity pack. Safe HTTP, remaining
 cryptographic helpers, collection utilities, external artifact admission,
 dispatch, and automatic route promotion remain separate acceptance criteria.

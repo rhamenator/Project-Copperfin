@@ -139,6 +139,7 @@ add_library(cf_security
     src/security/authorization.cpp
     src/security/external_process_policy.cpp
     src/security/localized_text.cpp
+    src/security/payload_crypto.cpp
     src/security/physical_path_containment.cpp
     src/security/process_hardening.cpp
     src/security/secret_provider.cpp
@@ -433,6 +434,7 @@ target_link_libraries(cf_xbase_runtime
         cf_design_model
     PRIVATE
         cf_localization
+        cf_security
 )
 
 if(WIN32)
