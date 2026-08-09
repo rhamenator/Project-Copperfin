@@ -10,8 +10,13 @@
   GCC and Clang 21 ASan/UBSan, including a full-bound overlapping-repetition
   case; the broader
   runtime-surface, document, and isolation contracts pass under GCC, and
-  focused Clang analyzer checks are clean. This does not admit or execute an
-  external artifact; hosted evidence remains pending.
+  focused Clang analyzer checks are clean. At exact candidate head
+  `fca07640c`, Linux Native run `31316773955` and macOS Native run
+  `31316774878` pass `329/329`, macOS also passes the four-locale SET POINT
+  matrix at `8/8`, and Windows Native run `31316775761` passes `328/328`.
+  Both regex-focused targets pass everywhere, and all eight candidate-head
+  protected checks are green. This does not admit or execute an external
+  artifact.
 
 - 2026-08-09: Added the first native PRG JSON parity facade for supervised
   interop results. `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` provide

@@ -93,6 +93,12 @@ ASan/UBSan; focused Clang analyzer checks report no project diagnostic. The
 broader runtime-surface, document-install, and native-isolation contracts pass
 under GCC.
 
+At exact candidate head `fca07640c`, Linux Native run `31316773955` and macOS
+Native run `31316774878` pass `329/329`; macOS also passes both SET POINT
+display targets under four locales (`8/8`). Windows Native run `31316775761`
+passes `328/328`. Both focused regex targets pass on every native platform,
+and all eight candidate-head protected checks are green.
+
 This is one native facade under the broader parity pack. Safe HTTP,
 cryptographic helpers, collection utilities, external artifact admission,
 dispatch, and automatic route promotion remain separate acceptance criteria.

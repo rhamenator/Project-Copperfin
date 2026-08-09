@@ -19,8 +19,12 @@ runtime-surface regression pass. Both focused targets also pass under Clang 21
 ASan/UBSan, and focused Clang analyzer checks report no project diagnostic. The
 complete contract is in `docs/40-prg-safe-regex-control-plane.md`. This
 performs no artifact admission, process launch, network access,
-external-language execution, or runtime-state callback. Hosted evidence
-remains to be recorded before merge.
+external-language execution, or runtime-state callback. Hosted evidence is
+complete at exact candidate head `fca07640c`: Linux Native `31316773955` and
+macOS Native `31316774878` pass `329/329`, macOS also passes the four-locale
+SET POINT matrix at `8/8`, and Windows Native `31316775761` passes `328/328`.
+Both focused targets pass on every native platform, and all eight
+candidate-head protected checks are green.
 
 ## V1 PRG JSON control-plane candidate
 
