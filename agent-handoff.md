@@ -1,5 +1,28 @@
 # Agent Handoff
 
+## V1 polyglot invocation-request serialization candidate
+
+Trusted #4920 under #91/#4700 now has a portable deterministic request seam at
+implementation commit `1cecc2c8e`. `serialize_polyglot_invocation_request`
+validates capability/correlation/protocol identities plus a caller-supplied
+arguments object, then emits the compact v1 `invocation` envelope in one fixed
+outer-field order. JSON grammar, UTF-8 and escapes, duplicate keys at every
+arguments depth, object shape, trailing bytes, and caller budgets fail closed
+with stable `polyglot.request.*` codes. Admitted argument bytes remain exact;
+their keys, whitespace, escapes, and values are neither reordered nor coerced.
+
+The request fixture and schema check pass. Focused GCC passes the serializer,
+contract, and native-isolation tests `3/3`; Clang passes the serializer/contract
+pair `2/2`; Clang ASan/UBSan passes `1/1`; and focused static analysis reports
+no findings. Defaults remain 1 MiB/32 levels with 16 MiB/64-level hard ceilings.
+This candidate does not authorize or select an artifact, send/write the request,
+capture output, wire the runtime host or PRG dispatch, apply fallback, or execute
+a route. The planned later boundary keeps FP/VFP source in control through
+PRG-callable capabilities and bounded status/cancel/result operations; foreign
+threads must not enter mutable runtime state directly. No stub or no-op was
+introduced, so the runtime stub inventory is unchanged. Hosted platform and
+protected-PR evidence remain pending.
+
 ## V1 polyglot response-envelope admission candidate
 
 Trusted #91 now has a portable first response-admission seam for the #4700
@@ -20,7 +43,7 @@ and surrogate pairs, identity/version mismatch, wrong response shape, and
 byte/depth ceilings. Clang ASan/UBSan also passes without findings, focused
 analyzer checks produce no project diagnostics, and the isolation audit marks
 the test portable, parallel-safe, and free of filesystem, environment, child-
-process, sample, resource, and network use. This candidate does not serialize
+process, sample, resource, and network use. This response seam does not send
 requests, capture process output, authorize/hash an artifact, render candidate
 messages, connect to the runtime host or PRG dispatch, or close #91/#4700.
 Those remain separate slices; the runtime stub inventory is unchanged.
