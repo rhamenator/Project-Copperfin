@@ -108,5 +108,5 @@ changes end at `0176d0531`; the final candidate delta is test-only coverage
 proving that a numeric fallback remains numeric.
 
 This is the first native JSON-helper slice of the broader parity-facade work.
-Regex, safe HTTP, cryptographic helpers, external artifact admission, dispatch,
+Regex, safe HTTP, remaining cryptographic helpers, external artifact admission, dispatch,
 and automatic route promotion remain separate acceptance criteria.

@@ -331,6 +331,9 @@ without embedding foreign source or losing exact number spelling.
 The native safe-regex facade additionally provides bounded byte-oriented text
 validation/extraction without a backtracking engine; advanced regex features
 remain unsupported unless a future separately approved route supplies them.
+The native payload-integrity facade also exposes bounded exact-byte SHA-256 and
+strict canonical Base64 encode/decode for PRG-controlled immutable results,
+without claiming sender authentication, encryption, or artifact admission.
 External artifact admission, dispatch, and managed execution remain absent.
 
 **What it will take:** none of the four named native execution/marshaling

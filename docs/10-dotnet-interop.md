@@ -49,6 +49,11 @@ byte-oriented subset. It does not load managed code or authorize an artifact;
 unsupported advanced regex features remain eligible for a separately approved
 external route. See `docs/40-prg-safe-regex-control-plane.md`.
 
+The native payload-integrity facade lets PRG hash exact immutable result bytes
+and carry binary bytes through canonical Base64 text. Its fixed ceilings and
+strict decoder do not authorize or authenticate an artifact, and Base64 is not
+encryption. See `docs/41-prg-payload-integrity-and-base64.md`.
+
 A dedicated interop layer provides:
 
 - CLR hosting

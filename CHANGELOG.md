@@ -1,3 +1,20 @@
+- 2026-08-09: Added bounded native PRG payload-integrity and transport helpers.
+  `CFSHA256()` returns invariant lowercase SHA-256 for exact PRG string bytes;
+  `CFBASE64ENCODE()` emits canonical padded RFC 4648 text; and strict
+  `CFBASE64DECODE()` rejects whitespace, alternate alphabets, malformed
+  padding, and nonzero unused padding bits. Optional typed fallbacks distinguish
+  failure from valid empty output; non-character inputs fail instead of being
+  silently stringified. Fixed ceilings admit at most 1 MiB of
+  payload bytes and its 1,398,104-byte canonical Base64 representation.
+  Focused portable and real-session tests pass under GCC and Clang 21
+  ASan/UBSan, including binary bytes, standard vectors, exact-ceiling round
+  trips, and above-ceiling rejection. The final-source GCC package, isolation,
+  audit-stream, security-control, focused, and broad runtime-surface set passes
+  `7/7`, and focused Clang analyzer checks are clean. This adds no file hashing,
+  key handling, authentication,
+  encryption, signing, artifact admission, network access, or external
+  execution; broader cross-platform evidence remains pending.
+
 - 2026-08-09: Added a bounded native PRG safe-regex facade for immutable
   control-plane text. `CFREGEXVALID()`, `CFREGEXTEST()`, `CFREGEXFIND()`, and
   `CFREGEXGET()` expose a byte-oriented, locale-invariant subset with

@@ -425,8 +425,19 @@ head `fca07640c` passes Linux Native `31316773955` and macOS Native
 `31316774878` at `329/329`, the macOS four-locale SET POINT matrix at `8/8`,
 and Windows Native `31316775761` at `328/328`; both regex targets pass
 everywhere and all eight candidate-head protected checks are green. Safe HTTP,
-cryptographic helpers, collection utilities, artifact admission, and dispatch
-remain separate.
+remaining cryptographic helpers, collection utilities, artifact admission, and
+dispatch remain separate.
+
+The next pure native parity facade provides bounded payload identity and
+text transport through `CFSHA256()`, `CFBASE64ENCODE()`, and strict
+`CFBASE64DECODE()`. Exact byte strings, canonical RFC 4648 syntax, typed
+fallbacks, and fixed 1 MiB payload ceilings make the helpers suitable for PRG
+control-plane envelopes without implying authentication or encryption.
+Focused portable and real-session tests pass under GCC and Clang 21
+ASan/UBSan; a broader seven-test GCC contract set and focused analyzer checks
+also pass. File hashing, signing, message authentication, key handling, safe
+HTTP, collection utilities, artifact admission, and external dispatch remain
+separate.
 
 Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
 VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.

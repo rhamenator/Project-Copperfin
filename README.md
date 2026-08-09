@@ -30,6 +30,7 @@ Interop maturity:
 - Polyglot capability use does not require foreign-language syntax inside FP/VFP source files. PRG code can supervise existing `SPAWN` work through nonblocking `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and `CFTASKOUTPUT()` calls; future external adapters must reuse this runtime-owned boundary, and foreign runtime threads must not enter Copperfin runtime state directly.
 - PRG can inspect immutable structured results through the native bounded `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` facade. JSON Pointer selection, exact non-string bytes, decoded strings, explicit missing/invalid states, and fixed byte/depth/value-count ceilings let PRG make orchestration decisions without embedding foreign-language source or coercing large JSON numbers through binary floating point. This is a payload helper, not an external-artifact execution route.
 - PRG can validate and extract immutable result text through bounded native `CFREGEXVALID()`, `CFREGEXTEST()`, `CFREGEXFIND()`, and `CFREGEXGET()` helpers. The documented byte-oriented subset uses a non-backtracking state machine with fixed input/pattern/state ceilings; unsupported advanced regex constructs fail closed and can later route through a separately approved external capability.
+- PRG can identify and transport immutable byte payloads through bounded native `CFSHA256()`, `CFBASE64ENCODE()`, and strict `CFBASE64DECODE()` helpers. Typed failure fallbacks and fixed 1 MiB payload ceilings keep this a deterministic control-plane utility; hashing does not authenticate a sender, and Base64 is not encryption.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook. These capabilities should stay behind a user-selected modernization target until they are implemented and tested end-to-end.
 
 Requirements Recovery:
@@ -111,6 +112,7 @@ License documents:
 - [`docs/32-recovered-requirements-traceability.md`](docs/32-recovered-requirements-traceability.md)
 - [`docs/39-prg-json-control-plane.md`](docs/39-prg-json-control-plane.md)
 - [`docs/40-prg-safe-regex-control-plane.md`](docs/40-prg-safe-regex-control-plane.md)
+- [`docs/41-prg-payload-integrity-and-base64.md`](docs/41-prg-payload-integrity-and-base64.md)
 - [`assets/copperfin-logo.png`](assets/copperfin-logo.png)
 
 Current implementation focus:

@@ -179,7 +179,8 @@ function(copperfin_configure_native_test_isolation)
 
     foreach(test_name IN ITEMS
             test_platform_models
-            test_platform_safe_regex)
+            test_platform_safe_regex
+            test_payload_crypto)
         copperfin_set_test_isolation(${test_name}
             PARALLEL_SAFE
             FILESYSTEM none
@@ -990,6 +991,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_functions
             test_prg_engine_index_seek_optimization
             test_prg_engine_json_facade
+            test_prg_engine_payload_crypto_facade
             test_prg_engine_regex_facade
             test_prg_engine_locale_code_page
             test_prg_engine_parser_classes

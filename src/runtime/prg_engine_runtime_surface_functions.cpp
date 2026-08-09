@@ -9,6 +9,7 @@
 #include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/platform/safe_regex.h"
+#include "copperfin/security/payload_crypto.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
 #include "prg_engine_locale_code_page.h"
@@ -332,6 +333,30 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_number_value(static_cast<double>(matched.byte_offset + 1U));
         }
         return make_string_value(input.substr(matched.byte_offset, matched.byte_length));
+    }
+    if (function == "cfsha256" || function == "cfbase64encode" ||
+        function == "cfbase64decode") {
+        const auto fallback = [&]() {
+            return arguments.size() >= 2U
+                ? arguments[1]
+                : make_string_value(std::string{});
+        };
+        if (arguments.empty() || arguments[0].kind != PrgValueKind::string) {
+            return fallback();
+        }
+
+        const std::string& input = arguments[0].string_value;
+        copperfin::security::PayloadCryptoResult result;
+        if (function == "cfsha256") {
+            result = copperfin::security::payload_sha256_hex(input);
+        } else if (function == "cfbase64encode") {
+            result = copperfin::security::payload_base64_encode(input);
+        } else {
+            result = copperfin::security::payload_base64_decode(input);
+        }
+        return result.ok()
+            ? make_string_value(std::move(result.text))
+            : fallback();
     }
 
     auto safe_int_argument = [&](std::size_t index, int default_value) {
