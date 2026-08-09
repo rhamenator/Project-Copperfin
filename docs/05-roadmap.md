@@ -357,8 +357,13 @@ now serializes a validated arguments object into a compact, fixed-order
 invocation envelope with exact argument-byte preservation, stable fail-closed
 codes, and the same 1 MiB/32-level defaults plus 16 MiB/64-level hard ceilings.
 Focused GCC/Clang, Clang ASan/UBSan, schema/fixture, isolation, and analyzer
-evidence passes at implementation commit `1cecc2c8e`. This serializer does not
-select or authorize an artifact, send the request, capture process output, or
+evidence passes at implementation commit `1cecc2c8e`. Exact candidate head
+`282d3a3e5` passes Linux Native `31292774286` and macOS Native `31292774288`
+at `325/325`, Windows Native `31294519761` at `324/324`, and the named
+interop-envelope regression on every platform. The macOS four-locale
+`SET POINT` matrix passes `8/8`, and all eight protected PR checks pass. This
+serializer does not select or authorize an artifact, send the request, capture
+process output, or
 wire runtime-host/PRG dispatch. The intended later PRG boundary keeps FP/VFP
 source in control through bounded capability status/cancel/result operations;
 foreign runtime threads do not directly enter mutable runtime state.

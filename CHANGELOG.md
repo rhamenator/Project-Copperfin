@@ -6,7 +6,11 @@
   while preserving admitted argument bytes exactly and reports stable
   `polyglot.request.*` failures. The checked-in request fixture/schema,
   focused GCC and Clang tests, Clang ASan/UBSan, native isolation contract, and
-  static analysis pass at implementation commit `1cecc2c8e`. This is not
+  static analysis pass at implementation commit `1cecc2c8e`. Exact candidate
+  head `282d3a3e5` passes Linux Native `31292774286` and macOS Native
+  `31292774288` at `325/325`, Windows Native `31294519761` at `324/324`, and
+  the named interop regression on every platform; the macOS four-locale matrix
+  passes `8/8`, and all eight protected PR checks pass. This is not
   artifact trust/selection, transport or output capture, runtime-host/PRG
   dispatch, fallback, or route execution. The planned runtime boundary keeps
   FP/VFP source in control through future PRG-callable capability supervision;

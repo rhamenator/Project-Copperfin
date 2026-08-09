@@ -150,6 +150,12 @@ malformed/ambiguous/non-object rejection, and byte/depth limits. Clang
 ASan/UBSan and the native isolation contract also pass at implementation commit
 `1cecc2c8e`; focused static analysis reports no findings.
 
+Exact candidate head `282d3a3e5` passes Linux Native `31292774286` and macOS
+Native `31292774288` at `325/325`, Windows Native `31294519761` at `324/324`,
+and `test_polyglot_interop_envelope` on every platform. The macOS run also
+passes both `SET POINT` targets under `C`, `en_US.UTF-8`, `pt_BR.UTF-8`, and
+`de_DE.UTF-8` (`8/8`). All eight protected PR checks pass.
+
 This is serialization only. It does not choose or authorize an artifact, write
 or send the request, capture output, dispatch from PRG, or implement
 asynchronous supervision. The intended later runtime boundary keeps FP/VFP
