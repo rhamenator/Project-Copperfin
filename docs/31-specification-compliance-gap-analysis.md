@@ -325,6 +325,9 @@ The threat model in `docs/37-dotnet-interop-threat-model.md` fixes the
 PRG-supervised job and foreign-thread boundary. The runtime now implements the
 nonblocking supervision half for existing `SPAWN` tasks, including status,
 cooperative cancellation, retained return values, and completed print output.
+It also exposes bounded native JSON validation, type inspection, and JSON
+Pointer selection so PRG can examine immutable structured completion payloads
+without embedding foreign source or losing exact number spelling.
 External artifact admission, dispatch, and managed execution remain absent.
 
 **What it will take:** none of the four named native execution/marshaling

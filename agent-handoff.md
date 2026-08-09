@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 PRG JSON control-plane candidate
+
+PRG now has a native bounded structured-result facade through
+`CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()`. It validates a complete
+UTF-8 JSON value, classifies the root or an RFC 6901 JSON Pointer selection,
+distinguishes missing from invalid selections, decodes selected strings, and
+preserves every other selection as exact JSON bytes. This avoids large-number
+rounding and keeps foreign-language source out of `.prg` files.
+
+The reusable parser rejects duplicate decoded keys, malformed grammar/UTF-8/
+pointer escapes, non-canonical array indexes, trailing bytes, and byte/depth
+limit violations. PRG defaults are 1 MiB and 64 container levels. Focused
+`test_platform_models` and real-session `test_prg_engine_json_facade` pass
+under GCC and Clang 21 ASan/UBSan; the broader runtime-surface, native-isolation,
+and document-install checks also pass under GCC. Focused Clang analyzer checks
+report no project diagnostics. The complete contract is in
+`docs/39-prg-json-control-plane.md`. This slice performs no artifact admission,
+process launch, network access, external-language execution, or runtime-state
+callback; hosted cross-platform evidence still must be attached before merge.
+
 ## V1 PRG task-supervision candidate
 
 The existing isolated `SPAWN`/`AWAIT` registry now exposes nonblocking

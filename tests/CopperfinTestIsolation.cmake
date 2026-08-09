@@ -988,6 +988,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_file_io_functions
             test_prg_engine_functions
             test_prg_engine_index_seek_optimization
+            test_prg_engine_json_facade
             test_prg_engine_locale_code_page
             test_prg_engine_parser_classes
             test_prg_engine_path_functions

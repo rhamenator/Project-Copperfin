@@ -37,6 +37,12 @@ operation handle with status, cancellation, and result retrieval. Foreign
 runtime threads must not call directly into mutable Copperfin runtime state;
 completion must return through a controlled host/scheduler boundary.
 
+The native `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` facade gives PRG
+code a bounded way to inspect immutable structured results from that boundary.
+It preserves exact non-string JSON bytes, including large numbers, and does not
+load managed code or authorize an artifact. See
+`docs/39-prg-json-control-plane.md`.
+
 A dedicated interop layer provides:
 
 - CLR hosting
