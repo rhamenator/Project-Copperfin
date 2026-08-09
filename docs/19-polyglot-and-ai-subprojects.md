@@ -138,7 +138,9 @@ from making progress. An overflow retains only that stream's admitted prefix, re
 `polyglot.process.stderr_limit_exceeded`, and closes the complete owned tree. Timeout
 and cancellation retain bytes captured before shutdown. Windows restricts inherited
 handles with `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` to null stdin and the two pipe writers;
-unrelated inheritable host/agent handles remain outside the child.
+unrelated inheritable host/agent handles remain outside the child. POSIX readers drain
+nonblocking and accept an explicit shutdown signal, so a retained writer cannot make
+capture cleanup wait indefinitely.
 
 Focused synthetic tests cover exact exit status, shell-metacharacter arguments, a
 Unicode working path and environment value, absence of ambient `PATH`, live and

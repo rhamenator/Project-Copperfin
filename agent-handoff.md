@@ -18,7 +18,9 @@ suspended and uses `PROC_THREAD_ATTRIBUTE_HANDLE_LIST`: the child receives
 only null stdin and the stdout/stderr pipe writers before job assignment and
 resume. It does not inherit other host or agent handles. POSIX duplicates only
 the two writers onto standard output/error and retains the close-on-exec launch
-status pipe. Capture-reader creation and read failures fail closed.
+status pipe. Its readers drain nonblocking and honor an explicit parent shutdown
+signal, preventing a retained pipe writer from making process cleanup wait
+indefinitely. Capture-reader creation and read failures fail closed.
 
 Focused `test_bounded_process` passes under GCC and repeats successfully 20
 times. It separately proves embedded-NUL/high-byte/newline and CRLF capture,
