@@ -99,7 +99,13 @@ I/O beyond that fixture.
 Both focused targets pass with GCC and with Clang 21 ASan/UBSan. The broader
 runtime-surface regression, native-isolation contract, and document-install
 contract pass under GCC, and focused Clang analyzer checks report no project
-diagnostics.
+diagnostics. At exact candidate head `b507572d1`, Linux Native run
+`31312190207` and macOS Native run `31312191221` pass `327/327`, macOS also
+passes the four-locale SET POINT matrix at `8/8`, and Windows Native run
+`31312192368` passes `326/326`. Both focused targets pass on all three hosted
+platforms, and all eight protected checks are green. Product and documentation
+changes end at `0176d0531`; the final candidate delta is test-only coverage
+proving that a numeric fallback remains numeric.
 
 This is the first native JSON-helper slice of the broader parity-facade work.
 Regex, safe HTTP, cryptographic helpers, external artifact admission, dispatch,

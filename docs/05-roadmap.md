@@ -409,7 +409,11 @@ distinguish missing from invalid data, decode strings, and preserve all other
 selected values as exact JSON bytes. The parser rejects duplicate keys and
 enforces 1 MiB/64-level/65,536-value runtime limits. This does not bypass artifact admission
 or connect an external runtime; regex, safe HTTP, cryptographic helpers, and
-the first admitted adapter remain separate.
+the first admitted adapter remain separate. Exact candidate head `b507572d1`
+passes Linux Native `31312190207` and macOS Native `31312191221` at `327/327`,
+macOS locale coverage at `8/8`, and Windows Native `31312192368` at `326/326`;
+both JSON-focused targets pass everywhere and all eight protected checks are
+green.
 
 Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
 VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.

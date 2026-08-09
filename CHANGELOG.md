@@ -6,8 +6,14 @@
   non-canonical array indexes, trailing bytes, and byte/depth/value-count limit violations fail
   closed. Focused platform and real PRG-session regressions pass under GCC and
   Clang 21 ASan/UBSan; broader runtime-surface, isolation, and document-install
-  checks pass under GCC, and focused analyzer checks are clean. This does not
-  admit or execute an external artifact; hosted evidence remains pending.
+  checks pass under GCC, and focused analyzer checks are clean. At exact
+  candidate head `b507572d1` (product/documentation head `0176d0531` plus a
+  test-only typed-fallback assertion), Linux Native run `31312190207` and
+  macOS Native run `31312191221` pass `327/327`, macOS also passes the
+  four-locale SET POINT matrix at `8/8`, and Windows Native run `31312192368`
+  passes `326/326`; both JSON-focused targets pass everywhere and all eight
+  protected checks are green. This does not admit or execute an external
+  artifact.
 
 - 2026-08-09: Added the PRG-owned asynchronous task-supervision seam for the v1
   interop lane. `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and
