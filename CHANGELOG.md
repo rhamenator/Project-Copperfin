@@ -1,3 +1,14 @@
+- 2026-08-08: Added a bounded polyglot response-envelope admission seam under
+  #91/#4700. The portable parser validates the versioned success/error JSON
+  shapes, UTF-8 and escape correctness, unique object keys, exact required
+  fields, success/error exclusivity, invariant error codes, and exact
+  capability/correlation/protocol identity. It applies 1 MiB/32-level defaults
+  plus non-disableable 16 MiB/64-level ceilings and preserves an admitted
+  success payload as exact validated JSON bytes. GCC, Clang, and Clang
+  ASan/UBSan focused tests pass. Request serialization, process-output capture,
+  artifact authorization/hashing, message rendering, runtime-host/PRG wiring,
+  fallback, and route execution remain unimplemented.
+
 - 2026-08-08: Added the v1 bounded-process prerequisite for the artifact-first
   polyglot bridge. The portable API launches an absolute executable directly
   without a shell, rejects relative paths and embedded-NUL inputs, and supplies
