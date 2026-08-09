@@ -13,7 +13,11 @@
   `7/7`, and focused Clang analyzer checks are clean. This adds no file hashing,
   key handling, authentication,
   encryption, signing, artifact admission, network access, or external
-  execution; broader cross-platform evidence remains pending.
+  execution. Exact candidate head `08fe8dd98` passes Linux Native
+  `31321075915` and macOS Native `31321075953` at `331/331`, the macOS
+  four-locale SET POINT matrix at `8/8`, and Windows Native `31321075911` at
+  `330/330`. Both payload-focused targets pass everywhere, and all eight
+  candidate-head protected checks are green.
 
 - 2026-08-09: Added a bounded native PRG safe-regex facade for immutable
   control-plane text. `CFREGEXVALID()`, `CFREGEXTEST()`, `CFREGEXFIND()`, and
