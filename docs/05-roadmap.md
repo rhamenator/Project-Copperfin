@@ -345,6 +345,13 @@ exclusive; all JSON objects have unique keys; unknown top-level/error fields,
 malformed UTF-8/escapes/numbers, trailing bytes, and excessive byte/depth use
 fail closed. Capability, correlation, and protocol identities must exactly
 match caller expectations. Focused GCC, Clang, and Clang ASan/UBSan tests pass.
+Hosted Linux Native `31287594685` and macOS Native `31287594735` pass
+`325/325` at implementation head `171a1652b`. A Windows-only LF fixture
+expectation exposed by run `31287594747` was corrected without changing the
+parser: final head `09284457e` follows the fixture's LF/CRLF convention and
+directly tests exact preservation of both forms. Fresh local GCC/Clang focused
+tests pass, exact-final-head Windows Native `31289912992` passes `324/324`, and
+all eight final-head protected checks pass.
 This is admission of already-captured bytes only: request serialization,
 process-output capture, artifact authorization/hash verification, runtime-host
 or PRG dispatch, and actual fallback/route execution remain open.

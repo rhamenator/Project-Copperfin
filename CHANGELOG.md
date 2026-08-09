@@ -5,9 +5,17 @@
   capability/correlation/protocol identity. It applies 1 MiB/32-level defaults
   plus non-disableable 16 MiB/64-level ceilings and preserves an admitted
   success payload as exact validated JSON bytes. GCC, Clang, and Clang
-  ASan/UBSan focused tests pass. Request serialization, process-output capture,
-  artifact authorization/hashing, message rendering, runtime-host/PRG wiring,
-  fallback, and route execution remain unimplemented.
+  ASan/UBSan focused tests pass. Hosted Linux Native run `31287594685` and
+  macOS Native run `31287594735` passed `325/325` at implementation head
+  `171a1652b`. Windows run `31287594747` then exposed only an LF-hard-coded
+  fixture expectation while the parser correctly preserved checked-out CRLF
+  bytes. Test-only final head `09284457e` accepts either fixture convention,
+  independently proves exact LF and CRLF payload preservation under fresh
+  local GCC and Clang builds, and passes hosted Windows Native `324/324` in
+  run `31289912992`, including `test_polyglot_interop_envelope`. All eight
+  protected checks pass at the final head. Request serialization,
+  process-output capture, artifact authorization/hashing, message rendering,
+  runtime-host/PRG wiring, fallback, and route execution remain unimplemented.
 
 - 2026-08-08: Added the v1 bounded-process prerequisite for the artifact-first
   polyglot bridge. The portable API launches an absolute executable directly

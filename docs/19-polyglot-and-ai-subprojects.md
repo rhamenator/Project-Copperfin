@@ -143,9 +143,14 @@ this layer. Stable `polyglot.envelope.*` machine codes classify admission failur
 
 Focused coverage consumes the checked-in success/error examples and rejects malformed,
 ambiguous, oversized, over-nested, identity-mismatched, and wrong-shape responses under
-GCC, Clang, and Clang ASan/UBSan. This seam does not serialize invocation requests,
-capture process output, authorize/hash artifacts, connect to the runtime host or PRG
-dispatch, apply fallback, or execute a route. Those remain separately reviewable work.
+GCC, Clang, and Clang ASan/UBSan. Hosted Linux/macOS runs `31287594685` and
+`31287594735` pass `325/325` at implementation head `171a1652b`. Test-only final
+head `09284457e` preserves either LF or CRLF fixture bytes, explicitly covers both
+forms under fresh local GCC/Clang builds, and passes hosted Windows Native
+`31289912992` at `324/324`, including this regression; all eight final-head
+protected checks pass. This seam does not serialize invocation requests, capture
+process output, authorize/hash artifacts, connect to the runtime host or PRG dispatch,
+apply fallback, or execute a route. Those remain separately reviewable work.
 
 ## Shadow Parity v1
 
