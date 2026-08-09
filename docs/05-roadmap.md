@@ -365,16 +365,26 @@ retains the admitted prefix, returns a stream-specific invariant failure, and
 closes the owned descendant tree. Timeout and cancellation retain bytes emitted
 before shutdown. POSIX nonblocking drains honor an explicit shutdown signal so
 a retained writer cannot stall capture cleanup. Windows restricts inherited
-handles to null stdin and the two pipe writers. Focused GCC, Clang 21
+handles to the stdin pipe reader and two output pipe writers. Focused GCC, Clang 21
 ASan/UBSan, ThreadSanitizer, 20-run stress,
 and analyzer evidence passes locally. At exact candidate head `93350a1a6`,
 Linux Native `31334334063` and macOS Native `31334334101` pass `331/331`,
 macOS also passes the four-locale SET POINT matrix at `8/8`, and Windows Native
 `31334334089` passes `330/330`; all three execute `test_bounded_process`
 successfully. All eight candidate-head protected checks pass.
-These slices still do not authorize/hash an artifact, write a request, validate
-captured envelopes, implement fallback/telemetry, select a route, or connect
-external code to PRG execution.
+The next adjacent transport increment delivers exact caller-supplied stdin bytes
+under its own 1 MiB default and fixed 16 MiB ceiling. A dedicated writer runs
+with both readers; POSIX uses nonblocking writes with thread-local `SIGPIPE`
+blocking, while Windows cancels outstanding synchronous writer I/O during
+shutdown. Premature child stdin closure fails closed, and unread 1 MiB requests
+cannot delay timeout or cancellation. Focused GCC passes `3/3` with package and
+isolation contracts and repeats the bounded-process target 20 times; Clang 21
+ASan/UBSan and ThreadSanitizer also pass. Focused analyzer coverage reports no
+diagnostic in the owned files and one pre-existing dead store in unchanged
+`query_translator.cpp`. Hosted input-transport evidence remains required. These slices still do not
+authorize/hash an artifact, automatically connect the serializer or response
+parser, implement fallback/telemetry, select a route, or connect external code
+to PRG execution.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are

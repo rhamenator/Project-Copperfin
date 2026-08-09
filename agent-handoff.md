@@ -1,10 +1,11 @@
 # Agent Handoff
 
-## V1 bounded artifact-process output-capture candidate
+## V1 bounded artifact-process request transport candidate
 
-The approved #4700 transport prerequisite now captures exact stdout and stderr
-bytes from the already-bounded child process. Each stream has an independent
-positive budget, defaults to 1 MiB, and is capped at a non-disableable 16 MiB.
+The approved #4700 transport prerequisite now delivers exact caller-supplied
+bytes to child stdin while retaining exact stdout and stderr capture. Input and
+each output stream have independent positive budgets, default to 1 MiB, and are
+capped at a non-disableable 16 MiB.
 The result retains each admitted prefix separately. Crossing a limit returns
 invariant `output-limit-exceeded` plus
 `polyglot.process.stdout_limit_exceeded` or
@@ -12,29 +13,35 @@ invariant `output-limit-exceeded` plus
 group, and preserves the existing descendant-cleanup guarantee. Timeout and
 cancellation retain bytes emitted before shutdown.
 
-The two streams are drained concurrently so a candidate cannot deadlock the
-parent by filling one pipe while the other is read. Windows creates the root
-suspended and uses `PROC_THREAD_ATTRIBUTE_HANDLE_LIST`: the child receives
-only null stdin and the stdout/stderr pipe writers before job assignment and
-resume. It does not inherit other host or agent handles. POSIX duplicates only
-the two writers onto standard output/error and retains the close-on-exec launch
-status pipe. Its readers drain nonblocking and honor an explicit parent shutdown
-signal, preventing a retained pipe writer from making process cleanup wait
-indefinitely. Capture-reader creation and read failures fail closed.
+The input writer and two output readers run concurrently so a candidate cannot
+deadlock the parent by filling one pipe while another is idle. Windows creates
+the root suspended and uses `PROC_THREAD_ATTRIBUTE_HANDLE_LIST`: the child receives
+only the stdin pipe reader and stdout/stderr pipe writers before job assignment
+and resume. It does not inherit other host or agent handles. POSIX duplicates
+only those three endpoints onto the standard streams and retains the
+close-on-exec launch-status pipe. The POSIX writer and readers are nonblocking;
+all workers honor explicit shutdown, preventing unread input or a retained
+output writer from stalling cleanup. Premature stdin closure and transport
+worker creation/read/write failures fail closed.
 
 Focused `test_bounded_process` passes under GCC and repeats successfully 20
-times. It separately proves embedded-NUL/high-byte/newline and CRLF capture,
-256 KiB simultaneous stream saturation, stdout and stderr overflow, retained
-pre-cancellation/pre-timeout output, and invalid-budget rejection while
-retaining the existing argv/environment/tree tests. Clang 21 ASan/UBSan and
-ThreadSanitizer runs pass without findings, and focused analyzer checks are
-clean. Exact candidate head `93350a1a6` passes Linux Native `31334334063` and
+times at the input-transport source. It separately proves exact binary stdin,
+256 KiB simultaneous three-pipe saturation, premature stdin-close failure,
+prompt cancellation/timeout with an unread 1 MiB request, invalid input budgets,
+embedded-NUL/high-byte/newline and CRLF capture, output overflow, and retained
+pre-cancellation/pre-timeout output while retaining the existing
+argv/environment/tree tests. The input extension also passes Clang 21
+ASan/UBSan and ThreadSanitizer. Focused analyzer coverage reports no diagnostic
+in the owned files; its one report is the pre-existing dead store in unchanged
+`query_translator.cpp`. The preceding output candidate `93350a1a6`
+passes Linux Native `31334334063` and
 macOS Native `31334334101` at `331/331`, the macOS four-locale SET POINT
 matrix at `8/8`, and Windows Native `31334334089` at `330/330`;
 `test_bounded_process` passes on every platform. All eight candidate-head
-protected checks pass. No artifact authorization, hashing, request transport,
-envelope admission, route selection, fallback, telemetry, PRG dispatch, or
-external-language adapter is added; the runtime stub inventory is unchanged.
+protected checks pass. The input extension still requires hosted validation.
+No artifact authorization/hashing, automatic serializer/parser connection,
+route selection, fallback, telemetry, PRG dispatch, or external-language
+adapter is added; the runtime stub inventory is unchanged.
 
 ## V1 PRG HMAC payload-authentication candidate
 

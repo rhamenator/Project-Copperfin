@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -58,6 +59,7 @@ void write_marker(const std::filesystem::path& path, const std::string& value) {
 
 void configure_binary_standard_streams() {
 #if defined(_WIN32)
+    (void)::_setmode(::_fileno(stdin), _O_BINARY);
     (void)::_setmode(::_fileno(stdout), _O_BINARY);
     (void)::_setmode(::_fileno(stderr), _O_BINARY);
 #endif
@@ -156,6 +158,34 @@ int run_helper(
         const std::string stderr_bytes{"err\r\n", 5U};
         std::cout.write(stdout_bytes.data(), static_cast<std::streamsize>(stdout_bytes.size()));
         std::cerr.write(stderr_bytes.data(), static_cast<std::streamsize>(stderr_bytes.size()));
+        return 0;
+    }
+    if (arguments[0] == "--echo-input" && arguments.size() == 1U) {
+        configure_binary_standard_streams();
+        const std::string input{
+            std::istreambuf_iterator<char>(std::cin),
+            std::istreambuf_iterator<char>()};
+        std::cout.write(input.data(), static_cast<std::streamsize>(input.size()));
+        return 0;
+    }
+    if (arguments[0] == "--duplex" && arguments.size() == 2U) {
+        configure_binary_standard_streams();
+        const std::size_t count = static_cast<std::size_t>(std::stoul(arguments[1]));
+        const std::string stdout_block(4096U, 'O');
+        const std::string stderr_block(4096U, 'E');
+        std::size_t emitted = 0U;
+        while (emitted < count) {
+            const std::size_t next = std::min(stdout_block.size(), count - emitted);
+            std::cout.write(stdout_block.data(), static_cast<std::streamsize>(next));
+            std::cout.flush();
+            std::cerr.write(stderr_block.data(), static_cast<std::streamsize>(next));
+            std::cerr.flush();
+            emitted += next;
+        }
+        const std::string input{
+            std::istreambuf_iterator<char>(std::cin),
+            std::istreambuf_iterator<char>()};
+        std::cout.write(input.data(), static_cast<std::streamsize>(input.size()));
         return 0;
     }
     if (arguments[0] == "--flood" && arguments.size() == 3U) {
@@ -271,6 +301,60 @@ int run_tests(const std::filesystem::path& executable) {
            "#4700: stdout capture should preserve NUL, high-byte, and newline bytes");
     expect(emitted.standard_error == std::string{"err\r\n", 5U},
            "#4700: stderr capture should preserve exact CRLF bytes separately");
+
+    const std::string binary_input{"in\0\xFE\r\n", 6U};
+    const auto echoed = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {"--echo-input"},
+        .working_directory = root_path,
+        .environment = {},
+        .standard_input = binary_input,
+        .timeout_ms = 2000U,
+        .poll_interval_ms = 5U,
+        .stdin_limit_bytes = 1024U,
+        .stdout_limit_bytes = 1024U,
+        .stderr_limit_bytes = 1024U,
+        .cancellation_requested = {}});
+    expect(echoed.completed() && echoed.exit_code == 0 &&
+               echoed.standard_output == binary_input && echoed.standard_error.empty(),
+           "#4700: stdin transport should preserve NUL, high-byte, CR, and LF bytes exactly");
+
+    constexpr std::uint32_t duplex_bytes = 256U * 1024U;
+    const std::string duplex_input(duplex_bytes, 'I');
+    const auto duplex = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {"--duplex", std::to_string(duplex_bytes)},
+        .working_directory = root_path,
+        .environment = {},
+        .standard_input = duplex_input,
+        .timeout_ms = 5000U,
+        .poll_interval_ms = 5U,
+        .stdin_limit_bytes = duplex_bytes,
+        .stdout_limit_bytes = duplex_bytes * 2U,
+        .stderr_limit_bytes = duplex_bytes,
+        .cancellation_requested = {}});
+    expect(duplex.completed() && duplex.exit_code == 0,
+           "#4700: simultaneous stdin/stdout/stderr saturation should not deadlock");
+    expect(duplex.standard_output ==
+               std::string(duplex_bytes, 'O') + duplex_input &&
+               duplex.standard_error == std::string(duplex_bytes, 'E'),
+           "#4700: three-pipe saturation should preserve every admitted byte");
+
+    const std::string rejected_input(1024U * 1024U, 'R');
+    const auto input_closed = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {"--exit", "0"},
+        .working_directory = root_path,
+        .environment = {},
+        .standard_input = rejected_input,
+        .timeout_ms = 2000U,
+        .poll_interval_ms = 5U,
+        .stdin_limit_bytes = static_cast<std::uint32_t>(rejected_input.size()),
+        .cancellation_requested = {}});
+    expect(input_closed.status == copperfin::platform::BoundedProcessStatus::launch_failed &&
+               input_closed.started && input_closed.process_tree_closed &&
+               input_closed.error_code == "polyglot.process.input_write_failed",
+           "#4700: a child that closes stdin before consuming the request should fail closed");
 
     constexpr std::uint32_t saturation_bytes = 256U * 1024U;
     const auto saturated = copperfin::platform::run_bounded_process({
@@ -408,6 +492,37 @@ int run_tests(const std::filesystem::path& executable) {
             output_timed_out.standard_error == "diagnostic",
         "#4700: timeout should retain bounded bytes emitted before tree shutdown");
 
+    const auto input_timed_out = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {"--sleep", "2000"},
+        .working_directory = root_path,
+        .environment = {},
+        .standard_input = rejected_input,
+        .timeout_ms = 100U,
+        .poll_interval_ms = 5U,
+        .stdin_limit_bytes = static_cast<std::uint32_t>(rejected_input.size()),
+        .cancellation_requested = {}});
+    expect(input_timed_out.status == copperfin::platform::BoundedProcessStatus::timed_out &&
+               input_timed_out.process_tree_closed && input_timed_out.elapsed_ms < 1000U,
+           "#4700: timeout should stop a writer blocked by a child that does not read stdin");
+
+    std::atomic_int input_cancellation_polls{0};
+    const auto input_cancelled = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {"--sleep", "2000"},
+        .working_directory = root_path,
+        .environment = {},
+        .standard_input = rejected_input,
+        .timeout_ms = 3000U,
+        .poll_interval_ms = 5U,
+        .stdin_limit_bytes = static_cast<std::uint32_t>(rejected_input.size()),
+        .cancellation_requested = [&input_cancellation_polls]() {
+            return input_cancellation_polls.fetch_add(1) >= 2;
+        }});
+    expect(input_cancelled.status == copperfin::platform::BoundedProcessStatus::cancelled &&
+               input_cancelled.process_tree_closed && input_cancelled.elapsed_ms < 1000U,
+           "#4700: cancellation should stop a writer blocked by unread child stdin");
+
     std::atomic_int throwing_cancellation_polls{0};
     const auto callback_failed = copperfin::platform::run_bounded_process({
         .executable_path = executable_path,
@@ -530,6 +645,49 @@ int run_tests(const std::filesystem::path& executable) {
                 copperfin::platform::BoundedProcessStatus::invalid_request &&
             !excessive_output_limit.started,
         "#4700: an above-hard-ceiling output budget should reject before launch");
+
+    const auto zero_input_limit = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 100U,
+        .poll_interval_ms = 1U,
+        .stdin_limit_bytes = 0U,
+        .cancellation_requested = {}});
+    expect(zero_input_limit.status ==
+               copperfin::platform::BoundedProcessStatus::invalid_request &&
+               !zero_input_limit.started,
+           "#4700: a zero stdin budget should reject before launch");
+
+    const auto input_above_budget = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {},
+        .working_directory = root_path,
+        .environment = {},
+        .standard_input = "too-large",
+        .timeout_ms = 100U,
+        .poll_interval_ms = 1U,
+        .stdin_limit_bytes = 4U,
+        .cancellation_requested = {}});
+    expect(input_above_budget.status ==
+               copperfin::platform::BoundedProcessStatus::invalid_request &&
+               !input_above_budget.started,
+           "#4700: request bytes above the caller stdin budget should reject before launch");
+
+    const auto excessive_input_limit = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 100U,
+        .poll_interval_ms = 1U,
+        .stdin_limit_bytes = 16U * 1024U * 1024U + 1U,
+        .cancellation_requested = {}});
+    expect(excessive_input_limit.status ==
+               copperfin::platform::BoundedProcessStatus::invalid_request &&
+               !excessive_input_limit.started,
+           "#4700: an above-hard-ceiling stdin budget should reject before launch");
 
     const auto invalid_environment = copperfin::platform::run_bounded_process({
         .executable_path = executable_path,

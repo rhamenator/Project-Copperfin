@@ -1,3 +1,20 @@
+- 2026-08-09: Extended the #4700 bounded artifact-process transport with exact
+  caller-supplied stdin bytes under an independent 1 MiB default and fixed
+  16 MiB hard ceiling. A dedicated writer runs concurrently with both output
+  readers, empty input closes immediately, premature child closure fails
+  closed, and unread 1 MiB requests cannot delay timeout or cancellation.
+  POSIX uses nonblocking writes with writer-thread-only `SIGPIPE` blocking;
+  Windows cancels outstanding synchronous writer I/O during shutdown. Request
+  bytes are never staged in a temporary file. Focused GCC package, isolation,
+  and bounded-process tests pass `3/3`, and the focused target repeats 20 times.
+  Clang 21 ASan/UBSan and ThreadSanitizer runs pass. Focused analyzer coverage
+  reports no diagnostic in the owned files; its one report is the pre-existing
+  dead store in unchanged `query_translator.cpp`.
+  This remains a low-level transport: it does not authorize/hash an artifact,
+  automatically connect the request serializer or response parser, choose a
+  route, apply fallback/telemetry, expose PRG dispatch, or connect an external
+  language runtime.
+
 - 2026-08-09: Extended the #4700 bounded artifact-process prerequisite with
   exact-byte stdout and stderr capture. Independent positive budgets default to
   1 MiB and cannot exceed the fixed 16 MiB hard ceiling; overflow retains only

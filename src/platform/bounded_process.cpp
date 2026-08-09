@@ -30,6 +30,7 @@
 #else
 #include <csignal>
 #include <fcntl.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -38,7 +39,7 @@
 namespace copperfin::platform {
 namespace {
 
-constexpr std::uint32_t kMaximumCapturedOutputBytes = 16U * 1024U * 1024U;
+constexpr std::uint32_t kMaximumTransportBytes = 16U * 1024U * 1024U;
 
 #if defined(_WIN32)
 constexpr DWORD kTerminationWaitMilliseconds = 5000U;
@@ -147,6 +148,12 @@ struct CapturedStreamState {
     std::atomic_int native_error{0};
 };
 
+struct InputStreamState {
+    std::atomic_bool stop_requested{false};
+    std::atomic_bool complete{false};
+    std::atomic_int native_error{0};
+};
+
 void append_captured_bytes(
     std::string& output,
     const char* bytes,
@@ -185,6 +192,22 @@ bool apply_capture_failure(
         return true;
     }
     return false;
+}
+
+bool apply_input_failure(
+    const InputStreamState& input_state,
+    BoundedProcessResult& result,
+    const bool require_complete = false) {
+    const int input_error = input_state.native_error.load(std::memory_order_acquire);
+    if (input_error == 0 &&
+        (!require_complete ||
+         input_state.complete.load(std::memory_order_acquire))) {
+        return false;
+    }
+    result.status = BoundedProcessStatus::launch_failed;
+    result.error_code = "polyglot.process.input_write_failed";
+    result.native_error = input_error;
+    return true;
 }
 
 #if defined(_WIN32)
@@ -281,6 +304,25 @@ bool create_windows_capture_pipe(HANDLE& read_handle, HANDLE& write_handle) {
     return true;
 }
 
+bool create_windows_input_pipe(HANDLE& read_handle, HANDLE& write_handle) {
+    SECURITY_ATTRIBUTES attributes{};
+    attributes.nLength = sizeof(attributes);
+    attributes.bInheritHandle = TRUE;
+    if (::CreatePipe(&read_handle, &write_handle, &attributes, 0U) == FALSE) {
+        return false;
+    }
+    if (::SetHandleInformation(write_handle, HANDLE_FLAG_INHERIT, 0U) == FALSE) {
+        const DWORD error = ::GetLastError();
+        (void)::CloseHandle(read_handle);
+        (void)::CloseHandle(write_handle);
+        read_handle = nullptr;
+        write_handle = nullptr;
+        ::SetLastError(error);
+        return false;
+    }
+    return true;
+}
+
 void read_windows_capture_pipe(
     const HANDLE read_handle,
     std::string& output,
@@ -314,6 +356,43 @@ void read_windows_capture_pipe(
             static_cast<int>(ERROR_NOT_ENOUGH_MEMORY), std::memory_order_release);
     }
     (void)::CloseHandle(read_handle);
+}
+
+void write_windows_input_pipe(
+    const HANDLE write_handle,
+    const std::string_view input,
+    InputStreamState& state) noexcept {
+    std::size_t written = 0U;
+    while (written < input.size()) {
+        if (state.stop_requested.load(std::memory_order_acquire)) {
+            break;
+        }
+        const DWORD requested = static_cast<DWORD>(std::min<std::size_t>(
+            8192U, input.size() - written));
+        DWORD count = 0U;
+        if (::WriteFile(
+                write_handle, input.data() + written, requested,
+                &count, nullptr) == FALSE) {
+            const DWORD error = ::GetLastError();
+            if (!state.stop_requested.load(std::memory_order_acquire)) {
+                state.native_error.store(
+                    static_cast<int>(error == ERROR_NO_DATA ? ERROR_BROKEN_PIPE : error),
+                    std::memory_order_release);
+            }
+            break;
+        }
+        if (count == 0U) {
+            state.native_error.store(
+                static_cast<int>(ERROR_WRITE_FAULT), std::memory_order_release);
+            break;
+        }
+        written += static_cast<std::size_t>(count);
+    }
+    if (written == input.size() &&
+        state.native_error.load(std::memory_order_acquire) == 0) {
+        state.complete.store(true, std::memory_order_release);
+    }
+    (void)::CloseHandle(write_handle);
 }
 
 BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
@@ -389,8 +468,11 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
     HANDLE stdout_write = nullptr;
     HANDLE stderr_read = nullptr;
     HANDLE stderr_write = nullptr;
+    HANDLE stdin_read = nullptr;
+    HANDLE stdin_write = nullptr;
     if (!create_windows_capture_pipe(stdout_read, stdout_write) ||
-        !create_windows_capture_pipe(stderr_read, stderr_write)) {
+        !create_windows_capture_pipe(stderr_read, stderr_write) ||
+        !create_windows_input_pipe(stdin_read, stdin_write)) {
         const int pipe_error = static_cast<int>(::GetLastError());
         if (stdout_read != nullptr) {
             (void)::CloseHandle(stdout_read);
@@ -400,26 +482,13 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
             (void)::CloseHandle(stderr_read);
             (void)::CloseHandle(stderr_write);
         }
+        if (stdin_read != nullptr) {
+            (void)::CloseHandle(stdin_read);
+            (void)::CloseHandle(stdin_write);
+        }
         result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.output_pipe_failed";
+        result.error_code = "polyglot.process.transport_pipe_failed";
         result.native_error = pipe_error;
-        return result;
-    }
-
-    SECURITY_ATTRIBUTES input_attributes{};
-    input_attributes.nLength = sizeof(input_attributes);
-    input_attributes.bInheritHandle = TRUE;
-    const HANDLE null_input = ::CreateFileW(
-        L"NUL", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-        &input_attributes, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (null_input == INVALID_HANDLE_VALUE) {
-        result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.output_pipe_failed";
-        result.native_error = static_cast<int>(::GetLastError());
-        (void)::CloseHandle(stdout_read);
-        (void)::CloseHandle(stdout_write);
-        (void)::CloseHandle(stderr_read);
-        (void)::CloseHandle(stderr_write);
         return result;
     }
 
@@ -428,7 +497,8 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         result.status = BoundedProcessStatus::launch_failed;
         result.error_code = "polyglot.process.job_create_failed";
         result.native_error = static_cast<int>(::GetLastError());
-        (void)::CloseHandle(null_input);
+        (void)::CloseHandle(stdin_read);
+        (void)::CloseHandle(stdin_write);
         (void)::CloseHandle(stdout_read);
         (void)::CloseHandle(stdout_write);
         (void)::CloseHandle(stderr_read);
@@ -446,7 +516,8 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         result.error_code = "polyglot.process.job_configure_failed";
         result.native_error = static_cast<int>(::GetLastError());
         (void)::CloseHandle(job);
-        (void)::CloseHandle(null_input);
+        (void)::CloseHandle(stdin_read);
+        (void)::CloseHandle(stdin_write);
         (void)::CloseHandle(stdout_read);
         (void)::CloseHandle(stdout_write);
         (void)::CloseHandle(stderr_read);
@@ -457,7 +528,7 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
     STARTUPINFOEXW startup_info{};
     startup_info.StartupInfo.cb = sizeof(startup_info);
     startup_info.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
-    startup_info.StartupInfo.hStdInput = null_input;
+    startup_info.StartupInfo.hStdInput = stdin_read;
     startup_info.StartupInfo.hStdOutput = stdout_write;
     startup_info.StartupInfo.hStdError = stderr_write;
     SIZE_T attribute_bytes = 0U;
@@ -473,7 +544,8 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
                 ? ERROR_INVALID_PARAMETER
                 : attribute_sizing_error);
         (void)::CloseHandle(job);
-        (void)::CloseHandle(null_input);
+        (void)::CloseHandle(stdin_read);
+        (void)::CloseHandle(stdin_write);
         (void)::CloseHandle(stdout_read);
         (void)::CloseHandle(stdout_write);
         (void)::CloseHandle(stderr_read);
@@ -483,7 +555,7 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
     std::vector<std::uint8_t> attribute_storage(attribute_bytes);
     startup_info.lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(
         attribute_storage.data());
-    HANDLE inherited_handles[]{null_input, stdout_write, stderr_write};
+    HANDLE inherited_handles[]{stdin_read, stdout_write, stderr_write};
     if (::InitializeProcThreadAttributeList(
             startup_info.lpAttributeList, 1U, 0U, &attribute_bytes) == FALSE ||
         ::UpdateProcThreadAttribute(
@@ -496,7 +568,8 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
             ::DeleteProcThreadAttributeList(startup_info.lpAttributeList);
         }
         (void)::CloseHandle(job);
-        (void)::CloseHandle(null_input);
+        (void)::CloseHandle(stdin_read);
+        (void)::CloseHandle(stdin_write);
         (void)::CloseHandle(stdout_read);
         (void)::CloseHandle(stdout_write);
         (void)::CloseHandle(stderr_read);
@@ -518,7 +591,7 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         &process_info);
     const DWORD create_error = created == FALSE ? ::GetLastError() : ERROR_SUCCESS;
     ::DeleteProcThreadAttributeList(startup_info.lpAttributeList);
-    (void)::CloseHandle(null_input);
+    (void)::CloseHandle(stdin_read);
     (void)::CloseHandle(stdout_write);
     (void)::CloseHandle(stderr_write);
     if (created == FALSE) {
@@ -526,6 +599,7 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         result.error_code = "polyglot.process.launch_failed";
         result.native_error = static_cast<int>(create_error);
         (void)::CloseHandle(job);
+        (void)::CloseHandle(stdin_write);
         (void)::CloseHandle(stdout_read);
         (void)::CloseHandle(stderr_read);
         return result;
@@ -533,9 +607,28 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
     result.started = true;
     CapturedStreamState stdout_state;
     CapturedStreamState stderr_state;
+    InputStreamState input_state;
     std::thread stdout_thread;
     std::thread stderr_thread;
-    const auto finish_capture = [&]() {
+    std::thread input_thread;
+    const auto finish_transport = [&]() {
+        input_state.stop_requested.store(true, std::memory_order_release);
+        if (input_thread.joinable() &&
+            !input_state.complete.load(std::memory_order_acquire)) {
+            const HANDLE thread_handle = input_thread.native_handle();
+            if (::CancelSynchronousIo(thread_handle) == FALSE) {
+                const DWORD cancellation_error = ::GetLastError();
+                if (cancellation_error != ERROR_NOT_FOUND) {
+                    int expected = 0;
+                    (void)input_state.native_error.compare_exchange_strong(
+                        expected, static_cast<int>(cancellation_error),
+                        std::memory_order_acq_rel);
+                }
+            }
+        }
+        if (input_thread.joinable()) {
+            input_thread.join();
+        }
         if (stdout_thread.joinable()) {
             stdout_thread.join();
         }
@@ -556,6 +649,7 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         (void)::CloseHandle(process_info.hThread);
         (void)::CloseHandle(process_info.hProcess);
         (void)::CloseHandle(job);
+        (void)::CloseHandle(stdin_write);
         (void)::CloseHandle(stdout_read);
         (void)::CloseHandle(stderr_read);
         result.process_tree_closed = true;
@@ -569,9 +663,14 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         stderr_thread = std::thread(
             read_windows_capture_pipe, stderr_read, std::ref(result.standard_error),
             request.stderr_limit_bytes, std::ref(stderr_state));
+        input_thread = std::thread(
+            write_windows_input_pipe, stdin_write,
+            std::string_view{request.standard_input}, std::ref(input_state));
     } catch (...) {
         result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.output_reader_create_failed";
+        result.error_code = stdout_thread.joinable() && stderr_thread.joinable()
+            ? "polyglot.process.input_writer_create_failed"
+            : "polyglot.process.output_reader_create_failed";
         if (::TerminateJobObject(job, 1U) == FALSE &&
             ::TerminateProcess(process_info.hProcess, 1U) == FALSE) {
             result.error_code = "polyglot.process.tree_termination_failed";
@@ -585,7 +684,10 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         if (!stderr_thread.joinable()) {
             (void)::CloseHandle(stderr_read);
         }
-        finish_capture();
+        if (!input_thread.joinable()) {
+            (void)::CloseHandle(stdin_write);
+        }
+        finish_transport();
         (void)::CloseHandle(process_info.hThread);
         (void)::CloseHandle(process_info.hProcess);
         result.process_tree_closed = true;
@@ -605,8 +707,9 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         (void)::CloseHandle(process_info.hThread);
         (void)::CloseHandle(process_info.hProcess);
         (void)::CloseHandle(job);
-        finish_capture();
+        finish_transport();
         (void)apply_capture_failure(stdout_state, stderr_state, result);
+        (void)apply_input_failure(input_state, result);
         result.process_tree_closed = true;
         result.elapsed_ms = elapsed_milliseconds(started_at);
         return result;
@@ -661,6 +764,17 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
             result.process_tree_closed = true;
             break;
         }
+        if (apply_input_failure(input_state, result)) {
+            if (::TerminateJobObject(job, 1U) == FALSE) {
+                result.status = BoundedProcessStatus::launch_failed;
+                result.error_code = "polyglot.process.tree_termination_failed";
+                result.native_error = static_cast<int>(::GetLastError());
+            } else {
+                (void)wait_for_terminated_process(process_info.hProcess, result);
+            }
+            result.process_tree_closed = true;
+            break;
+        }
         if (elapsed_milliseconds(started_at) >= request.timeout_ms) {
             result.status = BoundedProcessStatus::timed_out;
             result.error_code = "polyglot.process.timeout";
@@ -681,9 +795,11 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
     (void)::CloseHandle(job);
     result.process_tree_closed = true;
     (void)::CloseHandle(process_info.hProcess);
-    finish_capture();
+    finish_transport();
     if (result.status == BoundedProcessStatus::exited) {
-        (void)apply_capture_failure(stdout_state, stderr_state, result);
+        if (!apply_capture_failure(stdout_state, stderr_state, result)) {
+            (void)apply_input_failure(input_state, result, true);
+        }
     }
     result.elapsed_ms = elapsed_milliseconds(started_at);
     return result;
@@ -736,6 +852,35 @@ bool create_posix_capture_pipe(int descriptors[2]) {
     return true;
 }
 
+bool create_posix_input_pipe(int descriptors[2]) {
+    if (::pipe(descriptors) != 0) {
+        return false;
+    }
+    const int read_descriptor_flags = ::fcntl(descriptors[0], F_GETFD, 0);
+    const int write_status_flags = ::fcntl(descriptors[1], F_GETFL, 0);
+    const int write_descriptor_flags = ::fcntl(descriptors[1], F_GETFD, 0);
+    if (read_descriptor_flags == -1 || write_status_flags == -1 ||
+        write_descriptor_flags == -1 ||
+        ::fcntl(
+            descriptors[0], F_SETFD,
+            read_descriptor_flags | FD_CLOEXEC) == -1 ||
+        ::fcntl(
+            descriptors[1], F_SETFL,
+            write_status_flags | O_NONBLOCK) == -1 ||
+        ::fcntl(
+            descriptors[1], F_SETFD,
+            write_descriptor_flags | FD_CLOEXEC) == -1) {
+        const int pipe_error = errno;
+        (void)::close(descriptors[0]);
+        (void)::close(descriptors[1]);
+        descriptors[0] = -1;
+        descriptors[1] = -1;
+        errno = pipe_error;
+        return false;
+    }
+    return true;
+}
+
 void read_posix_capture_pipe(
     const int descriptor,
     std::string& output,
@@ -774,6 +919,54 @@ void read_posix_capture_pipe(
     (void)::close(descriptor);
 }
 
+void write_posix_input_pipe(
+    const int descriptor,
+    const std::string_view input,
+    InputStreamState& state) noexcept {
+    sigset_t blocked_signals;
+    (void)::sigemptyset(&blocked_signals);
+    (void)::sigaddset(&blocked_signals, SIGPIPE);
+    const int signal_error = ::pthread_sigmask(SIG_BLOCK, &blocked_signals, nullptr);
+    if (signal_error != 0) {
+        state.native_error.store(signal_error, std::memory_order_release);
+        (void)::close(descriptor);
+        return;
+    }
+
+    std::size_t written = 0U;
+    while (written < input.size()) {
+        if (state.stop_requested.load(std::memory_order_acquire)) {
+            break;
+        }
+        const std::size_t requested = std::min<std::size_t>(
+            8192U, input.size() - written);
+        const ssize_t count = ::write(descriptor, input.data() + written, requested);
+        if (count < 0 && errno == EINTR) {
+            continue;
+        }
+        if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1U));
+            continue;
+        }
+        if (count < 0) {
+            if (!state.stop_requested.load(std::memory_order_acquire)) {
+                state.native_error.store(errno, std::memory_order_release);
+            }
+            break;
+        }
+        if (count == 0) {
+            state.native_error.store(EIO, std::memory_order_release);
+            break;
+        }
+        written += static_cast<std::size_t>(count);
+    }
+    if (written == input.size() &&
+        state.native_error.load(std::memory_order_acquire) == 0) {
+        state.complete.store(true, std::memory_order_release);
+    }
+    (void)::close(descriptor);
+}
+
 BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
     BoundedProcessResult result;
     const auto started_at = Clock::now();
@@ -794,10 +987,12 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
     }
     int stdout_pipe[2]{-1, -1};
     int stderr_pipe[2]{-1, -1};
+    int stdin_pipe[2]{-1, -1};
     if (!create_posix_capture_pipe(stdout_pipe) ||
-        !create_posix_capture_pipe(stderr_pipe)) {
+        !create_posix_capture_pipe(stderr_pipe) ||
+        !create_posix_input_pipe(stdin_pipe)) {
         result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.output_pipe_failed";
+        result.error_code = "polyglot.process.transport_pipe_failed";
         result.native_error = errno;
         (void)::close(launch_pipe[0]);
         (void)::close(launch_pipe[1]);
@@ -808,6 +1003,10 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         if (stderr_pipe[0] != -1) {
             (void)::close(stderr_pipe[0]);
             (void)::close(stderr_pipe[1]);
+        }
+        if (stdin_pipe[0] != -1) {
+            (void)::close(stdin_pipe[0]);
+            (void)::close(stdin_pipe[1]);
         }
         return result;
     }
@@ -823,6 +1022,8 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         (void)::close(stdout_pipe[1]);
         (void)::close(stderr_pipe[0]);
         (void)::close(stderr_pipe[1]);
+        (void)::close(stdin_pipe[0]);
+        (void)::close(stdin_pipe[1]);
         return result;
     }
 
@@ -854,7 +1055,9 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         (void)::close(launch_pipe[0]);
         (void)::close(stdout_pipe[0]);
         (void)::close(stderr_pipe[0]);
-        if (::dup2(stdout_pipe[1], STDOUT_FILENO) == -1 ||
+        (void)::close(stdin_pipe[1]);
+        if (::dup2(stdin_pipe[0], STDIN_FILENO) == -1 ||
+            ::dup2(stdout_pipe[1], STDOUT_FILENO) == -1 ||
             ::dup2(stderr_pipe[1], STDERR_FILENO) == -1 ||
             ::setpgid(0, 0) != 0 ||
             ::chdir(request.working_directory.c_str()) != 0) {
@@ -862,6 +1065,7 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
             (void)write_child_error(launch_pipe[1], child_error);
             _exit(127);
         }
+        (void)::close(stdin_pipe[0]);
         (void)::close(stdout_pipe[1]);
         (void)::close(stderr_pipe[1]);
         ::execve(request.executable_path.c_str(), argv.data(), environment.data());
@@ -872,6 +1076,7 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
     (void)::close(launch_pipe[1]);
     (void)::close(stdout_pipe[1]);
     (void)::close(stderr_pipe[1]);
+    (void)::close(stdin_pipe[0]);
     if (process_id < 0) {
         result.status = BoundedProcessStatus::launch_failed;
         result.error_code = "polyglot.process.launch_failed";
@@ -879,15 +1084,22 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         (void)::close(launch_pipe[0]);
         (void)::close(stdout_pipe[0]);
         (void)::close(stderr_pipe[0]);
+        (void)::close(stdin_pipe[1]);
         return result;
     }
     CapturedStreamState stdout_state;
     CapturedStreamState stderr_state;
+    InputStreamState input_state;
     std::thread stdout_thread;
     std::thread stderr_thread;
-    const auto finish_capture = [&]() {
+    std::thread input_thread;
+    const auto finish_transport = [&]() {
+        input_state.stop_requested.store(true, std::memory_order_release);
         stdout_state.stop_requested.store(true, std::memory_order_release);
         stderr_state.stop_requested.store(true, std::memory_order_release);
+        if (input_thread.joinable()) {
+            input_thread.join();
+        }
         if (stdout_thread.joinable()) {
             stdout_thread.join();
         }
@@ -905,6 +1117,7 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         (void)::close(launch_pipe[0]);
         (void)::close(stdout_pipe[0]);
         (void)::close(stderr_pipe[0]);
+        (void)::close(stdin_pipe[1]);
         result.process_tree_closed = true;
         result.elapsed_ms = elapsed_milliseconds(started_at);
         return result;
@@ -916,9 +1129,14 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         stderr_thread = std::thread(
             read_posix_capture_pipe, stderr_pipe[0], std::ref(result.standard_error),
             request.stderr_limit_bytes, std::ref(stderr_state));
+        input_thread = std::thread(
+            write_posix_input_pipe, stdin_pipe[1],
+            std::string_view{request.standard_input}, std::ref(input_state));
     } catch (...) {
         result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.output_reader_create_failed";
+        result.error_code = stdout_thread.joinable() && stderr_thread.joinable()
+            ? "polyglot.process.input_writer_create_failed"
+            : "polyglot.process.output_reader_create_failed";
         terminate_process_group(process_id);
         int ignored_status = 0;
         (void)::waitpid(process_id, &ignored_status, 0);
@@ -929,7 +1147,10 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         if (!stderr_thread.joinable()) {
             (void)::close(stderr_pipe[0]);
         }
-        finish_capture();
+        if (!input_thread.joinable()) {
+            (void)::close(stdin_pipe[1]);
+        }
+        finish_transport();
         result.process_tree_closed = true;
         result.elapsed_ms = elapsed_milliseconds(started_at);
         return result;
@@ -967,7 +1188,7 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
             result.process_tree_closed = true;
             result.elapsed_ms = elapsed_milliseconds(started_at);
             (void)::close(launch_pipe[0]);
-            finish_capture();
+            finish_transport();
             return result;
         }
         if (apply_capture_failure(stdout_state, stderr_state, result)) {
@@ -977,7 +1198,7 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
             result.process_tree_closed = true;
             result.elapsed_ms = elapsed_milliseconds(started_at);
             (void)::close(launch_pipe[0]);
-            finish_capture();
+            finish_transport();
             return result;
         }
         if (elapsed_milliseconds(started_at) >= request.timeout_ms) {
@@ -989,7 +1210,7 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
             result.process_tree_closed = true;
             result.elapsed_ms = elapsed_milliseconds(started_at);
             (void)::close(launch_pipe[0]);
-            finish_capture();
+            finish_transport();
             return result;
         }
         std::this_thread::sleep_for(
@@ -1007,7 +1228,7 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         (void)::waitpid(process_id, &ignored_status, 0);
         result.process_tree_closed = true;
         result.elapsed_ms = elapsed_milliseconds(started_at);
-        finish_capture();
+        finish_transport();
         return result;
     }
     result.started = true;
@@ -1045,6 +1266,11 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
             (void)::waitpid(process_id, &status, 0);
             break;
         }
+        if (apply_input_failure(input_state, result)) {
+            terminate_process_group(process_id);
+            (void)::waitpid(process_id, &status, 0);
+            break;
+        }
         if (elapsed_milliseconds(started_at) >= request.timeout_ms) {
             result.status = BoundedProcessStatus::timed_out;
             result.error_code = "polyglot.process.timeout";
@@ -1060,9 +1286,11 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
     // artifact is a bounded call, never a daemon-launch boundary.
     terminate_process_group(process_id);
     result.process_tree_closed = true;
-    finish_capture();
+    finish_transport();
     if (result.status == BoundedProcessStatus::exited) {
-        (void)apply_capture_failure(stdout_state, stderr_state, result);
+        if (!apply_capture_failure(stdout_state, stderr_state, result)) {
+            (void)apply_input_failure(input_state, result, true);
+        }
     }
     result.elapsed_ms = elapsed_milliseconds(started_at);
     return result;
@@ -1079,9 +1307,12 @@ BoundedProcessResult run_bounded_process(const BoundedProcessRequest& request) {
         !valid_arguments(request.arguments) ||
         request.timeout_ms == 0U || request.poll_interval_ms == 0U ||
         request.poll_interval_ms > request.timeout_ms ||
+        request.stdin_limit_bytes == 0U ||
         request.stdout_limit_bytes == 0U || request.stderr_limit_bytes == 0U ||
-        request.stdout_limit_bytes > kMaximumCapturedOutputBytes ||
-        request.stderr_limit_bytes > kMaximumCapturedOutputBytes ||
+        request.standard_input.size() > request.stdin_limit_bytes ||
+        request.stdin_limit_bytes > kMaximumTransportBytes ||
+        request.stdout_limit_bytes > kMaximumTransportBytes ||
+        request.stderr_limit_bytes > kMaximumTransportBytes ||
         !valid_environment(request.environment)) {
         return invalid_request();
     }
