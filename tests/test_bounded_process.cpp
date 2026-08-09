@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstdio>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -24,6 +25,8 @@
 #endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <fcntl.h>
+#include <io.h>
 #else
 #include <sys/types.h>
 #include <unistd.h>
@@ -51,6 +54,13 @@ void expect(const bool condition, const std::string& message) {
 void write_marker(const std::filesystem::path& path, const std::string& value) {
     std::ofstream output(path, std::ios::binary | std::ios::trunc);
     output << value;
+}
+
+void configure_binary_standard_streams() {
+#if defined(_WIN32)
+    (void)::_setmode(::_fileno(stdout), _O_BINARY);
+    (void)::_setmode(::_fileno(stderr), _O_BINARY);
+#endif
 }
 
 #if defined(_WIN32)
@@ -141,6 +151,7 @@ int run_helper(
         return 0;
     }
     if (arguments[0] == "--emit" && arguments.size() == 1U) {
+        configure_binary_standard_streams();
         const std::string stdout_bytes{"out\0\xFF\n", 6U};
         const std::string stderr_bytes{"err\r\n", 5U};
         std::cout.write(stdout_bytes.data(), static_cast<std::streamsize>(stdout_bytes.size()));
@@ -148,6 +159,7 @@ int run_helper(
         return 0;
     }
     if (arguments[0] == "--flood" && arguments.size() == 3U) {
+        configure_binary_standard_streams();
         std::ostream& output = arguments[1] == "stdout" ? std::cout : std::cerr;
         const std::size_t count = static_cast<std::size_t>(std::stoul(arguments[2]));
         const std::string block(8192U, arguments[1] == "stdout" ? 'O' : 'E');
@@ -161,6 +173,7 @@ int run_helper(
         return 0;
     }
     if (arguments[0] == "--flood-both" && arguments.size() == 2U) {
+        configure_binary_standard_streams();
         const std::size_t count = static_cast<std::size_t>(std::stoul(arguments[1]));
         const std::string stdout_block(4096U, 'O');
         const std::string stderr_block(4096U, 'E');
@@ -177,6 +190,7 @@ int run_helper(
     }
     if (arguments[0] == "--emit-sleep" &&
         (arguments.size() == 2U || arguments.size() == 3U)) {
+        configure_binary_standard_streams();
         std::cout << "before-wait" << std::flush;
         std::cerr << "diagnostic" << std::flush;
         if (arguments.size() == 3U) {
