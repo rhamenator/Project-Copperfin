@@ -128,5 +128,9 @@ three native runs, and all eight candidate-head protected checks are green.
 The adjacent HMAC extension passes both focused targets under local GCC and
 Clang 21 ASan/UBSan. Its final-source GCC package, isolation, audit-stream,
 security-control, focused, and broad runtime-surface set passes `7/7` in
-175.73 seconds; focused analyzer checks are clean. Exact-head hosted evidence
-is pending and does not alter the earlier recorded SHA-256/Base64 matrix.
+175.73 seconds; focused analyzer checks are clean. Exact candidate head
+`4ebcc8ca3` passes Linux Native `31325459240` and macOS Native `31325460029`
+at `331/331`, the macOS four-locale SET POINT matrix at `8/8`, and Windows
+Native `31325460842` at `330/330`. Both HMAC-bearing targets pass everywhere.
+Candidate-head checks complete with seven success conclusions and the
+non-failing Socket PR-alert check neutral.

@@ -451,7 +451,11 @@ message-authentication primitive without adding key lifecycle, files, network,
 artifact admission, or external execution. Focused native and real-session GCC
 tests pass `2/2`, both targets pass Clang 21 ASan/UBSan `2/2`, a broader
 seven-test GCC contract set passes, and focused analyzer checks are clean.
-Hosted evidence remains pending.
+Exact candidate head `4ebcc8ca3` passes Linux Native `31325459240` and macOS
+Native `31325460029` at `331/331`, the macOS four-locale SET POINT matrix at
+`8/8`, and Windows Native `31325460842` at `330/330`; both HMAC-bearing targets
+pass everywhere. Candidate-head checks complete with seven success conclusions
+and the non-failing Socket PR-alert check neutral.
 
 Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
 VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.
