@@ -1,5 +1,27 @@
 # Agent Handoff
 
+## V1 PRG safe-regex control-plane candidate
+
+PRG now has bounded native `CFREGEXVALID()`, `CFREGEXTEST()`,
+`CFREGEXFIND()`, and `CFREGEXGET()` helpers for immutable completion text. The
+byte-oriented, locale-invariant subset supports literals, dot, byte classes,
+ASCII shorthands, outer anchors, and greedy `?`/`*`/`+`; searches are
+leftmost-longest, positions are one-based, and `CFREGEXGET()` preserves a
+caller's typed fallback. Unsupported advanced constructs fail closed.
+
+The implementation compiles a Thompson-style state machine and propagates
+bounded state vectors rather than using recursive/exponential backtracking.
+Hard ceilings are 64 KiB input, 256 pattern bytes, and 512 states. Focused
+`test_platform_safe_regex` and real-session `test_prg_engine_regex_facade`
+pass under GCC, including a full-bound overlapping-repetition case; document
+installation, the fail-closed isolation inventory, and the broader
+runtime-surface regression pass. Both focused targets also pass under Clang 21
+ASan/UBSan, and focused Clang analyzer checks report no project diagnostic. The
+complete contract is in `docs/40-prg-safe-regex-control-plane.md`. This
+performs no artifact admission, process launch, network access,
+external-language execution, or runtime-state callback. Hosted evidence
+remains to be recorded before merge.
+
 ## V1 PRG JSON control-plane candidate
 
 PRG now has a native bounded structured-result facade through

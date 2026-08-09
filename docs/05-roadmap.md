@@ -415,6 +415,15 @@ macOS locale coverage at `8/8`, and Windows Native `31312192368` at `326/326`;
 both JSON-focused targets pass everywhere and all eight protected checks are
 green.
 
+The next unblocked native parity facade adds bounded byte-oriented result-text
+matching through `CFREGEXVALID()`, `CFREGEXTEST()`, `CFREGEXFIND()`, and
+`CFREGEXGET()`. A Thompson-style state machine avoids recursive/exponential
+backtracking, while 64 KiB input, 256-byte pattern, and 512-state hard ceilings
+bound work and heap use. Unsupported advanced regex constructs fail closed and
+remain eligible only for a separately approved external route. Safe HTTP,
+cryptographic helpers, collection utilities, artifact admission, and dispatch
+remain separate.
+
 Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
 VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.
 Display-only formatting now applies current data-session `POINT` and

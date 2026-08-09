@@ -5095,6 +5095,15 @@ copperfin_add_test(test_prg_engine_json_facade cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_platform_safe_regex cf_platform_support
+    test_platform_safe_regex.cpp
+)
+
+copperfin_add_test(test_prg_engine_regex_facade cf_xbase_runtime
+    test_prg_engine_regex_facade.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_data_io cf_xbase_runtime
     test_prg_engine_data_io.cpp
     test_prg_engine_data_io_shared_test_helpers.cpp
