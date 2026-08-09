@@ -332,6 +332,9 @@ The portable external-process prerequisite now delivers exact bounded stdin and
 captures exact stdout/stderr bytes while preserving timeout, cancellation, and
 complete descendant cleanup. Three concurrent workers prevent pipe deadlock,
 and Windows restricts inherited handles to the three explicit standard handles.
+Exact candidate `301d74bf5` passes the full Linux and macOS native suites at
+`331/331`, the macOS locale matrix at `8/8`, and the Windows native suite at
+`330/330`; the bounded-process regression and all eight protected checks pass.
 This is transport evidence only: caller-supplied request and captured response
 bytes are not yet tied to an admitted artifact, serializer/parser connection,
 route, or PRG dispatch.
