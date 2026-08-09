@@ -14,6 +14,11 @@
   checks are clean. This slice does not authorize or hash an artifact, write a
   request, validate the captured envelope, choose a route, apply fallback,
   expose PRG dispatch, or connect any external language runtime.
+  Exact candidate head `93350a1a6` passes Linux Native `31334334063` and macOS
+  Native `31334334101` at `331/331`, the macOS four-locale SET POINT matrix at
+  `8/8`, and Windows Native `31334334089` at `330/330`;
+  `test_bounded_process` passes on every platform. All eight candidate-head
+  protected checks pass.
 
 - 2026-08-09: Extended the bounded native PRG payload facade with
   `CFHMACSHA256()` and `CFHMACVERIFY()`. Exact binary key/data bytes produce

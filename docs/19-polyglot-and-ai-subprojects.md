@@ -158,7 +158,10 @@ The capture extension adds exact binary/CRLF tests, 256 KiB simultaneous stream
 saturation, independent overflow, retained pre-timeout/pre-cancellation bytes, and
 invalid output budgets. Focused GCC passes and repeats 20 times; Clang 21 ASan/UBSan
 and ThreadSanitizer pass without findings, and focused analyzer checks are clean.
-Hosted Linux/macOS/Windows native evidence remains required for this extension.
+Exact candidate head `93350a1a6` passes Linux Native `31334334063` and macOS
+Native `31334334101` at `331/331`, the macOS four-locale SET POINT matrix at
+`8/8`, and Windows Native `31334334089` at `330/330`; the bounded-process
+regression passes on every platform. All eight candidate-head protected checks pass.
 
 This primitive does **not** authorize or hash an artifact, validate migration
 contracts or typed envelopes, write a request to the child, validate captured output,
