@@ -33,6 +33,11 @@ machine status values are invariant and are not localized.
   that handle therefore return the documented unknown values.
 - A child owns its runtime state. The parent observes only the immutable
   `RuntimePauseState` published through the future after the child returns.
+- Completion publication is serialized by a mutex owned by that task. Multiple
+  sibling supervisors may poll one handle concurrently, but exactly one copies
+  the ready future into the retained result; every successful observer crosses
+  the same synchronization boundary before reading that immutable record.
+  Unrelated tasks do not share this publication mutex.
 
 `runtime.task.cancel_requested` records an accepted cancellation request with
 the task handle. Existing `runtime.task.spawn`, `runtime.task.await`, and child
@@ -72,3 +77,12 @@ At exact implementation-and-local-evidence head `09c1b1046`, Linux Native run
 Native run `31307387195` passes `325/325`. Every platform executes
 `test_prg_engine_control_flow` successfully, and all eight protected PR checks
 pass at that head.
+
+A later concurrency audit reproduced an unsynchronized same-handle completion
+publication under ThreadSanitizer. The corrective regression spawns one target
+and two sibling watchers that simultaneously poll it, then proves retained
+result/output integrity and unchanged `AWAIT` consumption. The focused GCC
+control-flow target passes in 6.94 seconds. The complete target passes under
+Clang 21 ThreadSanitizer in 382.70 seconds with no race or deadlock finding.
+This correction changes synchronization only; all public task-supervision
+semantics above remain unchanged.

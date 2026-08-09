@@ -94,6 +94,15 @@
   `8/8`, and Windows Native `31307387195` at `325/325`; the control-flow target
   passes everywhere and all eight protected checks are green.
 
+- 2026-08-09: Serialized one-time task-completion publication for concurrent
+  PRG supervisors. Each task now owns a narrow completion mutex, so sibling
+  `CFTASK*()` callers polling the same handle cannot race while copying the
+  completed `RuntimePauseState`; unrelated tasks remain independent. An
+  end-to-end regression uses two spawned watchers on one target and verifies
+  retained result/output plus unchanged final `AWAIT` consumption. The focused
+  GCC control-flow test passes in 6.94 seconds, and the full target passes under
+  Clang 21 ThreadSanitizer in 382.70 seconds with no race or deadlock finding.
+
 - 2026-08-09: Added the #279 durable .NET policy-audit boundary. Audited policy
   allows now expose `pending_audit`, not an executable route, until
   `evaluate_and_commit_dotnet_interop_call` receives a successful non-empty

@@ -836,6 +836,7 @@ namespace copperfin::runtime
             std::string source_path;
             std::shared_ptr<std::atomic<bool>> cancel_requested;
             std::shared_future<RuntimePauseState> future;
+            std::mutex completion_mutex;
             bool finished = false;
             RuntimePauseState result{};
         };

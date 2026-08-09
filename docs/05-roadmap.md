@@ -394,6 +394,12 @@ task, and monotonic non-reused handles prevent stale-task aliasing. No external
 artifact is connected yet, and foreign runtime threads do not directly enter
 mutable runtime state.
 
+Concurrent same-handle polling now uses a per-task synchronization boundary
+for the one-time immutable completion publication. A two-sibling watcher
+regression passes under GCC and the complete control-flow target passes under
+Clang 21 ThreadSanitizer with no race or deadlock finding. This correction does
+not serialize unrelated tasks or broaden the interop execution surface.
+
 The task-supervision implementation is directly validated at candidate head
 `09c1b1046`: Linux Native `31307387144` passes `326/326`, macOS Native
 `31307387146` passes `326/326` plus the four-locale SET POINT matrix at `8/8`,
