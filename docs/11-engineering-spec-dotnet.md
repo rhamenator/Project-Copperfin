@@ -205,9 +205,17 @@ Decision outcomes:
 Current gate checks:
 
 - allowlist/denylist capability matching
+- host-verified actor and exact granted-capability scoping
+- required audit-sink availability with a structured actor/capability/decision/outcome event
+- reflection, assembly-loading, external-I/O, and secret-access capability scopes that default closed
 - latency-budget eligibility for in-process managed path
 - reflection restrictions for untrusted or security-sensitive inputs
 - audit-required decision annotation
+
+The complete threat model and PRG-supervised-job/thread boundary are defined in
+[37-dotnet-interop-threat-model.md](37-dotnet-interop-threat-model.md). FP/VFP
+source remains the control plane; foreign threads publish immutable completion
+records and never mutate VFP-compatible runtime state directly.
 
 This policy gateway is surfaced in runtime packaging diagnostics via manifest keys:
 

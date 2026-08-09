@@ -28,6 +28,16 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+Current .NET interop security work now has a fail-closed policy-context
+candidate: trusted host state must bind actor, verified policy, audit readiness,
+and exact capability scope before a managed route can be allowed. Reflection,
+assembly loading, external I/O, and secret access are independently scoped, and
+the gateway emits stable machine diagnostics plus a canonical audit record.
+The accompanying threat model keeps FP/VFP source in control through a future
+supervised-job facade; foreign threads cannot directly mutate runtime state.
+Focused GCC policy/runtime/locale checks and Clang ASan/UBSan pass. Managed
+execution, the PRG job facade, and hosted platform evidence remain separate.
+
 Current standalone Open evidence includes #4890 at product/test head
 `9e4b5a286`: localized File > Open exposes Ctrl+O through the existing picker
 without changing filters, path admission, tab identity, or Close Ctrl+F4. The

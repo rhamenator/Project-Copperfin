@@ -1,5 +1,28 @@
 # Agent Handoff
 
+## V1 .NET interop security-gate candidate
+
+Trusted #279 now has a fail-closed policy-gateway candidate. A .NET route can
+be allowed only when trusted host state supplies a non-empty actor, a verified
+policy context, an available required audit sink, and exact capability scope.
+Reflection, assembly loading, external I/O, and secret access are separately
+capability-scoped; defaults deny reflection, assembly loading, and secret
+access, while external I/O is initially limited to `safe-http-helpers`.
+Decisions expose invariant `dotnet.interop.*` diagnostics plus a canonical JSON
+audit event binding actor, capability, decision, and outcome. An audited allow
+is conditional on durable event commit before execution.
+
+The threat model in `docs/37-dotnet-interop-threat-model.md` records the owner
+direction that FP/VFP source remains the control plane. Future PRG-callable
+jobs supervise status/wait/cancel/result/output while foreign threads publish
+immutable completion records and never enter mutable runtime state directly.
+This slice neither executes managed code nor implements that PRG job facade.
+Focused GCC passes the policy model, runtime pipeline, and locale-install
+contracts (`3/3`); Clang 21 ASan/UBSan passes the policy model (`1/1`), and a
+focused Clang static-analysis pass reports no findings. Hosted evidence remains
+to be recorded before merge. No stub or no-op was added, so the runtime stub
+inventory is unchanged.
+
 ## V1 polyglot invocation-request serialization candidate
 
 Trusted #4920 under #91/#4700 now has a portable deterministic request seam at

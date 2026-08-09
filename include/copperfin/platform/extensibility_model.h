@@ -37,6 +37,10 @@ struct DotNetParityCapability {
 struct DotNetInteropPolicyRules {
     std::vector<std::string> allowlist;
     std::vector<std::string> denylist;
+    std::vector<std::string> reflection_allowlist;
+    std::vector<std::string> assembly_loading_allowlist;
+    std::vector<std::string> external_io_allowlist;
+    std::vector<std::string> secret_access_allowlist;
     std::size_t max_in_process_latency_budget_ms = 25U;
     bool require_policy_audit = true;
     bool allow_reflection_for_untrusted = false;
@@ -48,12 +52,30 @@ struct DotNetInteropCallRequest {
     bool requires_reflection = false;
     bool untrusted_input = false;
     bool security_sensitive = false;
+    std::string actor_id{};
+    std::vector<std::string> granted_capabilities{};
+    bool policy_context_verified = false;
+    bool audit_sink_available = false;
+    bool requires_assembly_loading = false;
+    bool requires_external_io = false;
+    bool requires_secret_access = false;
+};
+
+struct DotNetInteropAuditEvent {
+    std::string actor_id;
+    std::string capability_id;
+    DotNetInteropDecision decision = DotNetInteropDecision::reject;
+    std::string outcome;
+    std::string diagnostic_code;
 };
 
 struct DotNetInteropCallDecision {
     DotNetInteropDecision decision = DotNetInteropDecision::fallback_native;
     std::string execution_path;
     std::string reason;
+    std::string diagnostic_code;
+    DotNetInteropAuditEvent audit_event{};
+    bool audit_commit_required = false;
 };
 
 struct LanguageIntegration {
@@ -101,5 +123,7 @@ struct ExtensibilityProfile {
     const ExtensibilityProfile& profile,
     const DotNetInteropCallRequest& request,
     const localization::LocalizedCatalog& catalog);
+[[nodiscard]] std::string serialize_dotnet_interop_audit_event(
+    const DotNetInteropAuditEvent& event);
 
 }  // namespace copperfin::platform
