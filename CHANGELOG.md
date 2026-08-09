@@ -10,7 +10,11 @@
   same suite in 345.26 seconds without
   a sanitizer finding; and the document-install contract passes. Static
   analysis reports no slice finding. This does not execute or admit an
-  external-language artifact and adds no runtime stub or no-op.
+  external-language artifact and adds no runtime stub or no-op. Exact candidate
+  head `09c1b1046` passes Linux Native `31307387144` at `326/326`, macOS
+  Native `31307387146` at `326/326` plus the four-locale SET POINT matrix at
+  `8/8`, and Windows Native `31307387195` at `325/325`; the control-flow target
+  passes everywhere and all eight protected checks are green.
 
 - 2026-08-09: Added the #279 durable .NET policy-audit boundary. Audited policy
   allows now expose `pending_audit`, not an executable route, until

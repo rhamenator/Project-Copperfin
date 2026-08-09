@@ -29,7 +29,10 @@ Current maturity:
   matching response parser admits only the checked-in success/error shapes.
 - Existing `SPAWN` tasks now have a nonblocking PRG supervision seam for
   status, cooperative cancellation, retained return values, and completed
-  print output. No external artifact adapter is connected to it yet.
+  print output. Exact candidate head `09c1b1046` passes Linux Native
+  `31307387144` at `326/326`, macOS Native `31307387146` at `326/326` plus
+  four locales at `8/8`, and Windows Native `31307387195` at `325/325`; no
+  external artifact adapter is connected to it yet.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook today.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 

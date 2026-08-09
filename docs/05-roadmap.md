@@ -394,6 +394,14 @@ task, and monotonic non-reused handles prevent stale-task aliasing. No external
 artifact is connected yet, and foreign runtime threads do not directly enter
 mutable runtime state.
 
+The task-supervision implementation is directly validated at candidate head
+`09c1b1046`: Linux Native `31307387144` passes `326/326`, macOS Native
+`31307387146` passes `326/326` plus the four-locale SET POINT matrix at `8/8`,
+and Windows Native `31307387195` passes `325/325`. The control-flow regression
+passes on every platform and all eight protected checks are green. This closes
+only the PRG supervision seam; artifact admission, adapter dispatch, and
+external-language execution remain separate.
+
 Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
 VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.
 Display-only formatting now applies current data-session `POINT` and
