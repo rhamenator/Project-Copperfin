@@ -3,7 +3,7 @@
   bounded strict validation, invariant kind/missing/invalid classification,
   RFC 6901 selection, decoded strings, exact non-string bytes, and optional
   typed fallbacks. Duplicate decoded keys, malformed UTF-8/grammar/pointers,
-  non-canonical array indexes, trailing bytes, and limit violations fail
+  non-canonical array indexes, trailing bytes, and byte/depth/value-count limit violations fail
   closed. Focused platform and real PRG-session regressions pass under GCC and
   Clang 21 ASan/UBSan; broader runtime-surface, isolation, and document-install
   checks pass under GCC, and focused analyzer checks are clean. This does not

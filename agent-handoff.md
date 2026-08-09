@@ -11,7 +11,8 @@ rounding and keeps foreign-language source out of `.prg` files.
 
 The reusable parser rejects duplicate decoded keys, malformed grammar/UTF-8/
 pointer escapes, non-canonical array indexes, trailing bytes, and byte/depth
-limit violations. PRG defaults are 1 MiB and 64 container levels. Focused
+limit violations. PRG defaults are 1 MiB, 64 container levels, and 65,536
+values, bounding dense-document memory amplification. Focused
 `test_platform_models` and real-session `test_prg_engine_json_facade` pass
 under GCC and Clang 21 ASan/UBSan; the broader runtime-surface, native-isolation,
 and document-install checks also pass under GCC. Focused Clang analyzer checks

@@ -44,6 +44,7 @@ namespace {
 constexpr std::size_t hard_max_document_bytes =
     std::size_t{16U} * 1024U * 1024U;
 constexpr std::uint32_t hard_max_nesting_depth = 64U;
+constexpr std::size_t hard_max_value_count = 65536U;
 
 bool append_utf8(std::string& output, const std::uint32_t codepoint) {
     if (codepoint <= 0x7FU) {
@@ -132,11 +133,18 @@ class JsonDocumentParser final {
 public:
     JsonDocumentParser(
         const std::string_view document,
-        const std::uint32_t max_depth)
-        : document_(document), max_depth_(max_depth) {}
+        const std::uint32_t max_depth,
+        const std::size_t max_value_count)
+        : document_(document),
+          max_depth_(max_depth),
+          max_value_count_(max_value_count) {}
 
     [[nodiscard]] bool parse(JsonNode& root) {
         return parse_value(root, 1U) && at_end();
+    }
+
+    [[nodiscard]] bool value_count_exceeded() const noexcept {
+        return value_count_exceeded_;
     }
 
 private:
@@ -360,6 +368,11 @@ private:
         if (position_ >= document_.size()) {
             return false;
         }
+        if (value_count_ >= max_value_count_) {
+            value_count_exceeded_ = true;
+            return false;
+        }
+        ++value_count_;
         node.start = position_;
         const char character = document_[position_];
         bool parsed = false;
@@ -445,6 +458,9 @@ private:
     std::string_view document_;
     std::size_t position_ = 0U;
     std::uint32_t max_depth_ = 0U;
+    std::size_t max_value_count_ = 0U;
+    std::size_t value_count_ = 0U;
+    bool value_count_exceeded_ = false;
 };
 
 bool decode_pointer_token(const std::string_view encoded, std::string& decoded) {
@@ -505,7 +521,9 @@ JsonSelectionResult select_json_value(
     if (limits.max_document_bytes == 0U ||
         limits.max_document_bytes > hard_max_document_bytes ||
         limits.max_nesting_depth == 0U ||
-        limits.max_nesting_depth > hard_max_nesting_depth) {
+        limits.max_nesting_depth > hard_max_nesting_depth ||
+        limits.max_value_count == 0U ||
+        limits.max_value_count > hard_max_value_count) {
         return error_result(JsonSelectionError::invalid_limits);
     }
     if (document.size() > limits.max_document_bytes) {
@@ -516,8 +534,14 @@ JsonSelectionResult select_json_value(
     }
 
     JsonNode root;
-    JsonDocumentParser parser(document, limits.max_nesting_depth);
+    JsonDocumentParser parser(
+        document,
+        limits.max_nesting_depth,
+        limits.max_value_count);
     if (!parser.parse(root)) {
+        if (parser.value_count_exceeded()) {
+            return error_result(JsonSelectionError::value_count_exceeded);
+        }
         return error_result(JsonSelectionError::invalid_json);
     }
 

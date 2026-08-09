@@ -128,6 +128,16 @@ void test_bounded_json_selection_contract() {
     expect(select_json_value("[[[]]]", {}, shallow_limit).error ==
                JsonSelectionError::invalid_json,
            "the bounded parser should enforce caller-provided nesting limits");
+    copperfin::platform::JsonDocumentLimits sparse_limit;
+    sparse_limit.max_value_count = 2U;
+    expect(select_json_value("[1,2]", {}, sparse_limit).error ==
+               JsonSelectionError::value_count_exceeded,
+           "the bounded parser should enforce caller-provided value-count limits");
+    copperfin::platform::JsonDocumentLimits excessive_limit;
+    excessive_limit.max_value_count = 65537U;
+    expect(select_json_value("null", {}, excessive_limit).error ==
+               JsonSelectionError::invalid_limits,
+           "callers should not be able to disable the hard value-count ceiling");
 
     const std::string invalid_utf8{static_cast<char>(0xC0), static_cast<char>(0xAF)};
     expect(select_json_value(invalid_utf8).error == JsonSelectionError::invalid_utf8,
