@@ -46,12 +46,18 @@ void expect_error(
 void test_versioned_examples_and_field_order() {
     using copperfin::platform::PolyglotInteropEnvelopeKind;
     auto expected = expectation();
+    const auto success_document = read_text(COPPERFIN_POLYGLOT_SUCCESS_ENVELOPE_PATH);
     const auto success = copperfin::platform::parse_polyglot_interop_envelope(
-        read_text(COPPERFIN_POLYGLOT_SUCCESS_ENVELOPE_PATH), expected);
+        success_document, expected);
     expect(success.ok() && success.envelope.kind == PolyglotInteropEnvelopeKind::success,
            "#91: versioned success example should parse");
-    expect(success.envelope.payload_json ==
-               "{\n    \"artifact_id\": \"invoice-preview-001\",\n    \"content_type\": \"application/pdf\"\n  }",
+    const std::string fixture_newline =
+        success_document.find("\r\n") == std::string::npos ? "\n" : "\r\n";
+    const std::string expected_fixture_payload =
+        "{" + fixture_newline +
+        "    \"artifact_id\": \"invoice-preview-001\"," + fixture_newline +
+        "    \"content_type\": \"application/pdf\"" + fixture_newline + "  }";
+    expect(success.envelope.payload_json == expected_fixture_payload,
            "#91: success payload should remain exact validated JSON bytes");
 
     expected.correlation_id = "example-correlation-002";
@@ -68,6 +74,22 @@ void test_versioned_examples_and_field_order() {
     expect(reordered.ok() &&
                reordered.envelope.payload_json == "{\"nested\":[true,null,-1.25e+3]}",
            "#91: field order should not affect a valid exact response");
+}
+
+void test_payload_line_endings_remain_exact() {
+    for (const std::string& newline : {std::string("\n"), std::string("\r\n")}) {
+        const std::string payload =
+            "{" + newline + "  \"value\": true" + newline + "}";
+        const std::string document =
+            "{\"envelope_version\":\"1.0\",\"kind\":\"success\","
+            "\"capability_id\":\"reports.invoice.render\","
+            "\"correlation_id\":\"example-correlation-001\","
+            "\"protocol_version\":\"1.0.0\",\"payload\":" + payload + "}";
+        const auto result = copperfin::platform::parse_polyglot_interop_envelope(
+            document, expectation());
+        expect(result.ok() && result.envelope.payload_json == payload,
+               "#91: LF and CRLF payload bytes should remain exact");
+    }
 }
 
 void test_identity_and_shape_fail_closed() {
@@ -263,6 +285,7 @@ void test_expectation_validation() {
 
 int main() {
     test_versioned_examples_and_field_order();
+    test_payload_line_endings_remain_exact();
     test_identity_and_shape_fail_closed();
     test_ambiguous_and_malformed_json_rejected();
     test_unicode_and_resource_bounds();
