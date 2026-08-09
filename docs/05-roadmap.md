@@ -420,7 +420,11 @@ matching through `CFREGEXVALID()`, `CFREGEXTEST()`, `CFREGEXFIND()`, and
 `CFREGEXGET()`. A Thompson-style state machine avoids recursive/exponential
 backtracking, while 64 KiB input, 256-byte pattern, and 512-state hard ceilings
 bound work and heap use. Unsupported advanced regex constructs fail closed and
-remain eligible only for a separately approved external route. Safe HTTP,
+remain eligible only for a separately approved external route. Exact candidate
+head `fca07640c` passes Linux Native `31316773955` and macOS Native
+`31316774878` at `329/329`, the macOS four-locale SET POINT matrix at `8/8`,
+and Windows Native `31316775761` at `328/328`; both regex targets pass
+everywhere and all eight candidate-head protected checks are green. Safe HTTP,
 cryptographic helpers, collection utilities, artifact admission, and dispatch
 remain separate.
 
