@@ -1,5 +1,30 @@
 # Agent Handoff
 
+## V1 polyglot response-envelope admission candidate
+
+Trusted #91 now has a portable first response-admission seam for the #4700
+artifact bridge. `parse_polyglot_interop_envelope` accepts only the versioned
+success/error shapes already defined in `docs/contracts`, validates JSON and
+UTF-8, rejects duplicate keys at every object depth, rejects unknown
+top-level/error fields, and enforces success-payload versus structured-error
+exclusivity. Capability id, correlation id, and protocol version must exactly
+match caller-supplied expectations before a result is admitted. Default limits
+are 1 MiB and 32 container levels, with non-disableable hard ceilings of 16 MiB
+and 64 levels. A validated success payload remains exact JSON bytes; candidate
+error code/message/retryability remain separate structured fields.
+
+Focused GCC and Clang tests pass, including the checked-in success/error
+examples, reordered fields, nested values, 4,096 unique payload fields,
+duplicate and unknown fields, malformed numbers/trailing bytes, invalid UTF-8
+and surrogate pairs, identity/version mismatch, wrong response shape, and
+byte/depth ceilings. Clang ASan/UBSan also passes without findings, focused
+analyzer checks produce no project diagnostics, and the isolation audit marks
+the test portable, parallel-safe, and free of filesystem, environment, child-
+process, sample, resource, and network use. This candidate does not serialize
+requests, capture process output, authorize/hash an artifact, render candidate
+messages, connect to the runtime host or PRG dispatch, or close #91/#4700.
+Those remain separate slices; the runtime stub inventory is unchanged.
+
 ## V1 bounded polyglot process prerequisite
 
 The trusted #4700 lane now has a rebased product/test candidate for the first

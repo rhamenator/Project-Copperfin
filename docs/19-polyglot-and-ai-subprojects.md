@@ -123,6 +123,30 @@ contracts or typed envelopes, capture standard output/error, implement retries o
 fallback, choose a route, emit migration telemetry, or connect any external language
 to the PRG runtime. Those remain separately reviewable adapter and dispatch work.
 
+## Response Envelope Admission v1
+
+`parse_polyglot_interop_envelope` is the next host-safe seam for #91/#4700. It
+accepts already-captured response bytes and admits only the success/error shapes
+defined by the checked-in v1 examples. The parser validates JSON grammar, raw and
+escaped UTF-8, unique keys at every object depth, exact top-level and structured-error
+fields, success-payload versus error exclusivity, machine error-code syntax, and the
+`1.0` envelope version. Capability id, correlation id, and semantic protocol version
+must exactly match the invocation expectations, preventing cross-capability,
+cross-request, and cross-protocol response confusion.
+
+The default admission budget is 1 MiB and 32 container levels. Callers can select a
+smaller budget, but cannot exceed the hard 16 MiB and 64-level ceilings. A successful
+payload must be an object and remains exact validated JSON bytes so this seam does not
+invent type coercion or localization. Candidate error code, message, and retryability
+are returned separately; the message is untrusted display data and is not rendered by
+this layer. Stable `polyglot.envelope.*` machine codes classify admission failures.
+
+Focused coverage consumes the checked-in success/error examples and rejects malformed,
+ambiguous, oversized, over-nested, identity-mismatched, and wrong-shape responses under
+GCC, Clang, and Clang ASan/UBSan. This seam does not serialize invocation requests,
+capture process output, authorize/hash artifacts, connect to the runtime host or PRG
+dispatch, apply fallback, or execute a route. Those remain separately reviewable work.
+
 ## Shadow Parity v1
 
 Shadow comparison is caller-neutral: the comparison result always preserves the native
