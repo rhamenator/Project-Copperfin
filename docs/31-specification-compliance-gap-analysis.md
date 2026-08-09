@@ -321,9 +321,11 @@ required audit readiness, and separate reflection/assembly/I/O/secret scopes;
 it emits stable diagnostics and a structured audit record. An audited allow is
 non-executable until a trusted sink commits the event and returns a non-empty
 receipt; the focused adapter exercises the contained hash-chained audit stream.
-The threat model in
-`docs/37-dotnet-interop-threat-model.md` also fixes the future PRG-supervised
-job and foreign-thread boundary.
+The threat model in `docs/37-dotnet-interop-threat-model.md` fixes the
+PRG-supervised job and foreign-thread boundary. The runtime now implements the
+nonblocking supervision half for existing `SPAWN` tasks, including status,
+cooperative cancellation, retained return values, and completed print output.
+External artifact admission, dispatch, and managed execution remain absent.
 
 **What it will take:** none of the four named native execution/marshaling
 modules exist yet. What exists today, per `docs/28-repository-ontology.md` §3, is

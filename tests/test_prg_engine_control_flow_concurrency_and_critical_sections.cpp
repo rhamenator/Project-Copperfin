@@ -249,6 +249,135 @@ void test_spawn_and_await_command_runs_task_to_completion() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_spawn_task_supervision_observes_status_result_and_output_without_consuming_task() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_task_supervision";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "task_supervision_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    ? 'alpha'\n"
+        "    SLEEP 25\n"
+        "    ? 'beta'\n"
+        "    RETURN 42\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nTask\n"
+        "cInitialStatus = CFTASKSTATUS(nTask)\n"
+        "uEarlyResult = CFTASKRESULT(nTask)\n"
+        "DO WHILE CFTASKSTATUS(nTask) == 'running'\n"
+        "    YIELD\n"
+        "ENDDO\n"
+        "cFinalStatus = CFTASKSTATUS(nTask)\n"
+        "nTaskResult = CFTASKRESULT(nTask)\n"
+        "cTaskOutput = CFTASKOUTPUT(nTask)\n"
+        "lCancelFinished = CFTASKCANCEL(nTask)\n"
+        "AWAIT nTask TO lAwaitDone\n"
+        "cAfterAwaitStatus = CFTASKSTATUS(nTask)\n"
+        "SPAWN worker TO nNextTask\n"
+        "lHandleAdvanced = nNextTask > nTask\n"
+        "AWAIT nNextTask TO lNextDone\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "nonblocking task-supervision script should complete: " + state.message);
+
+    const auto initial_status = state.globals.find("cinitialstatus");
+    const auto early_result = state.globals.find("uearlyresult");
+    const auto final_status = state.globals.find("cfinalstatus");
+    const auto task_result = state.globals.find("ntaskresult");
+    const auto task_output = state.globals.find("ctaskoutput");
+    const auto cancel_finished = state.globals.find("lcancelfinished");
+    const auto await_done = state.globals.find("lawaitdone");
+    const auto after_await_status = state.globals.find("cafterawaitstatus");
+    const auto handle_advanced = state.globals.find("lhandleadvanced");
+    const auto next_done = state.globals.find("lnextdone");
+    expect(initial_status != state.globals.end() && initial_status->second.string_value == "running",
+           "CFTASKSTATUS should observe a sleeping task without blocking");
+    expect(early_result != state.globals.end() &&
+               early_result->second.kind == copperfin::runtime::PrgValueKind::empty,
+           "CFTASKRESULT should return EMPTY while a task is still running");
+    expect(final_status != state.globals.end() && final_status->second.string_value == "completed",
+           "CFTASKSTATUS should retain the terminal completion state");
+    expect(task_result != state.globals.end() &&
+               copperfin::runtime::format_value(task_result->second) == "42",
+           "CFTASKRESULT should expose the retained PRG return value");
+    expect(task_output != state.globals.end() && task_output->second.string_value == "alpha\nbeta",
+           "CFTASKOUTPUT should expose retained print output in emission order");
+    expect(cancel_finished != state.globals.end() && !cancel_finished->second.boolean_value,
+           "CFTASKCANCEL should reject a terminal task");
+    expect(await_done != state.globals.end() && await_done->second.boolean_value,
+           "supervision reads must not consume the task before legacy AWAIT");
+    expect(after_await_status != state.globals.end() && after_await_status->second.string_value == "unknown",
+           "legacy AWAIT should retain its existing consume-and-erase behavior");
+    expect(handle_advanced != state.globals.end() && handle_advanced->second.boolean_value,
+           "SPAWN should not recycle a consumed task handle");
+    expect(next_done != state.globals.end() && next_done->second.boolean_value,
+           "a later monotonically allocated task should remain awaitable");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_spawn_task_supervision_requests_cooperative_cancellation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_task_supervision_cancel";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "task_supervision_cancel_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    SLEEP 5000\n"
+        "    RETURN 99\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nTask\n"
+        "ENTER CRITICAL supervision\n"
+        "lCancelAccepted = CFTASKCANCEL(nTask)\n"
+        "cCancelStatus = CFTASKSTATUS(nTask)\n"
+        "EXIT CRITICAL supervision\n"
+        "AWAIT nTask TO lAwaitDone\n"
+        "lCancelUnknown = CFTASKCANCEL(nTask)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "cooperative task-cancellation script should complete: " + state.message);
+
+    const auto cancel_accepted = state.globals.find("lcancelaccepted");
+    const auto cancel_status = state.globals.find("ccancelstatus");
+    const auto await_done = state.globals.find("lawaitdone");
+    const auto cancel_unknown = state.globals.find("lcancelunknown");
+    expect(cancel_accepted != state.globals.end() && cancel_accepted->second.boolean_value,
+           "CFTASKCANCEL should accept a request for a running task");
+    expect(cancel_status != state.globals.end() &&
+               (cancel_status->second.string_value == "cancel-requested" ||
+                cancel_status->second.string_value == "error"),
+           "CFTASKSTATUS should deterministically expose cancellation progress or completion");
+    expect(await_done != state.globals.end() && !await_done->second.boolean_value,
+           "AWAIT should report a cooperatively cancelled task as incomplete");
+    expect(cancel_unknown != state.globals.end() && !cancel_unknown->second.boolean_value,
+           "CFTASKCANCEL should reject an erased task handle");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.task.cancel_requested" &&
+               event.detail.find("handle=") != std::string::npos;
+    }), "accepted CFTASKCANCEL should emit a traceable cancellation-request event");
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.critical.blocking_violation";
+    }), "nonblocking CFTASK supervision should remain allowed inside a critical section");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_spawn_arguments_use_heap_backed_frame_continuations() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_argument_continuation";

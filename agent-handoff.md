@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 PRG task-supervision candidate
+
+The existing isolated `SPAWN`/`AWAIT` registry now exposes nonblocking
+`CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and `CFTASKOUTPUT()`
+functions. PRG remains the control plane: status/result/output reads use a
+zero-duration completion probe, cancellation only sets the child's cooperative
+token, and the parent observes the child's immutable pause record after return.
+Completion reads do not consume the task; legacy `AWAIT` still merges events,
+assigns its Boolean completion result, and erases the handle. Handles are
+monotonic exact integers and never reused during the runtime session.
+
+Focused `test_prg_engine_control_flow` passes under GCC in 95.20 seconds and
+under Clang 21 ASan/UBSan in 345.26 seconds, covering running and terminal
+observations, retained return and ordered print output, cooperative
+cancellation, unknown handles, non-reuse, and unchanged `AWAIT` behavior. The
+document-install contract passes and static analysis reports no slice finding.
+The complete contract is in `docs/38-prg-task-supervision.md`. This does not
+connect or execute an external artifact and introduces no stub/no-op. Hosted
+native and protected-PR evidence remains to be recorded.
+
 ## V1 .NET interop durable-audit boundary candidate
 
 Trusted #279 now has a follow-on candidate that removes the last executable

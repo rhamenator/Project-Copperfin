@@ -424,12 +424,21 @@
             return true;
         }
 
-        int allocate_async_task_handle()
+        long long allocate_async_task_handle()
         {
+            // VFP numeric values represent every integer through 2^53 exactly.
+            // Never wrap or recycle within a runtime session: stale handles must
+            // remain unable to observe or cancel a later task.
+            constexpr long long maximum_exact_prg_integer = 9007199254740991LL;
             std::lock_guard<std::mutex> lock(concurrency_state->mutex);
-            int &handle = concurrency_state->next_async_task_handle_by_session[current_data_session];
-            handle = std::max(1, handle);
-            return handle++;
+            long long &next_handle =
+                concurrency_state->next_async_task_handle_by_session[current_data_session];
+            next_handle = std::max(1LL, next_handle);
+            if (next_handle > maximum_exact_prg_integer)
+            {
+                throw std::runtime_error("Copperfin task handle space exhausted");
+            }
+            return next_handle++;
         }
 
         void register_async_task(const std::shared_ptr<AsyncTaskState> &task)
@@ -438,7 +447,7 @@
             concurrency_state->async_tasks_by_session[current_data_session][task->handle] = task;
         }
 
-        std::shared_ptr<AsyncTaskState> find_async_task(int handle)
+        std::shared_ptr<AsyncTaskState> find_async_task(long long handle)
         {
             std::lock_guard<std::mutex> lock(concurrency_state->mutex);
             const auto session_found = concurrency_state->async_tasks_by_session.find(current_data_session);
@@ -456,7 +465,7 @@
             return task_found->second;
         }
 
-        void erase_async_task(int handle)
+        void erase_async_task(long long handle)
         {
             std::lock_guard<std::mutex> lock(concurrency_state->mutex);
             const auto session_found = concurrency_state->async_tasks_by_session.find(current_data_session);
@@ -496,6 +505,120 @@
             {
                 token->store(true, std::memory_order_relaxed);
             }
+        }
+
+        bool refresh_async_task_completion(const std::shared_ptr<AsyncTaskState> &task)
+        {
+            if (task == nullptr)
+            {
+                return false;
+            }
+            if (task->finished)
+            {
+                return true;
+            }
+            if (!task->future.valid() ||
+                task->future.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready)
+            {
+                return false;
+            }
+            task->result = task->future.get();
+            task->finished = true;
+            return true;
+        }
+
+        std::optional<PrgValue> async_task_control_function(
+            const std::string &function,
+            const std::vector<PrgValue> &arguments)
+        {
+            if (function != "cftaskstatus" &&
+                function != "cftaskcancel" &&
+                function != "cftaskresult" &&
+                function != "cftaskoutput")
+            {
+                return std::nullopt;
+            }
+            if (arguments.size() != 1U)
+            {
+                if (function == "cftaskstatus")
+                {
+                    return make_string_value("unknown");
+                }
+                if (function == "cftaskcancel")
+                {
+                    return make_boolean_value(false);
+                }
+                return make_empty_value();
+            }
+
+            const long long handle = std::llround(value_as_number(arguments.front()));
+            const std::shared_ptr<AsyncTaskState> task = find_async_task(handle);
+            if (task == nullptr)
+            {
+                if (function == "cftaskstatus")
+                {
+                    return make_string_value("unknown");
+                }
+                if (function == "cftaskcancel")
+                {
+                    return make_boolean_value(false);
+                }
+                return make_empty_value();
+            }
+
+            const bool finished = refresh_async_task_completion(task);
+            if (function == "cftaskstatus")
+            {
+                if (finished)
+                {
+                    return make_string_value(debug_pause_reason_name(task->result.reason));
+                }
+                if (task->cancel_requested != nullptr &&
+                    task->cancel_requested->load(std::memory_order_relaxed))
+                {
+                    return make_string_value("cancel-requested");
+                }
+                return make_string_value("running");
+            }
+
+            if (function == "cftaskcancel")
+            {
+                if (finished || task->cancel_requested == nullptr)
+                {
+                    return make_boolean_value(false);
+                }
+                task->cancel_requested->store(true, std::memory_order_relaxed);
+                events.push_back({.category = "runtime.task.cancel_requested",
+                                  .detail = "handle=" + std::to_string(handle),
+                                  .location = current_statement() == nullptr
+                                                  ? SourceLocation{}
+                                                  : current_statement()->location});
+                return make_boolean_value(true);
+            }
+
+            if (!finished)
+            {
+                return make_empty_value();
+            }
+            if (function == "cftaskresult")
+            {
+                return task->result.last_return_value.value_or(make_empty_value());
+            }
+
+            std::string output;
+            for (const RuntimeEvent &event : task->result.events)
+            {
+                if (event.category != "runtime.print")
+                {
+                    continue;
+                }
+                if (!output.empty())
+                {
+                    output.push_back('\n');
+                }
+                output += event.detail;
+            }
+            return make_string_value(std::move(output));
         }
 
         std::shared_ptr<std::recursive_mutex> critical_section_mutex(const std::string &name)

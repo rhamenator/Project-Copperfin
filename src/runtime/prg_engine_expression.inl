@@ -148,6 +148,7 @@
                 bool require_verified_file_byte_overrides,
                 std::function<std::optional<std::string>(const std::filesystem::path &)> read_verified_file_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &)> cursor_buffering_callback,
+                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &)> async_task_control_callback,
                 std::function<void(const std::string &, const std::string &)> record_event_callback,
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
                 std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback,
@@ -228,6 +229,7 @@
                   require_verified_file_byte_overrides_(require_verified_file_byte_overrides),
                   read_verified_file_callback_(std::move(read_verified_file_callback)),
                   cursor_buffering_callback_(std::move(cursor_buffering_callback)),
+                  async_task_control_callback_(std::move(async_task_control_callback)),
                   record_event_callback_(std::move(record_event_callback)),
                   resolve_object_callback_(std::move(resolve_object_callback)),
                   resolve_object_path_callback_(std::move(resolve_object_path_callback)),
@@ -1868,6 +1870,13 @@
                     if (const auto cursor_buffering_result = cursor_buffering_callback_(function, arguments))
                     {
                         return *cursor_buffering_result;
+                    }
+                }
+                if (async_task_control_callback_)
+                {
+                    if (const auto task_control_result = async_task_control_callback_(function, arguments))
+                    {
+                        return *task_control_result;
                     }
                 }
                 if (const auto runtime_surface_result =
@@ -3565,6 +3574,7 @@
             bool require_verified_file_byte_overrides_ = false;
             std::function<std::optional<std::string>(const std::filesystem::path &)> read_verified_file_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &)> cursor_buffering_callback_;
+            std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &)> async_task_control_callback_;
             std::function<void(const std::string &, const std::string &)> record_event_callback_;
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
             std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback_;

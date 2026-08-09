@@ -1,3 +1,16 @@
+- 2026-08-09: Added the PRG-owned asynchronous task-supervision seam for the v1
+  interop lane. `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and
+  `CFTASKOUTPUT()` observe existing `SPAWN` workers without blocking or
+  consuming them; terminal return values and ordered print output remain
+  available until the unchanged `AWAIT` join erases the task. Handles are
+  monotonic, data-session scoped, non-reused for the runtime lifetime, and
+  bounded to VFP's exact numeric-integer range. Accepted cancellation emits
+  `runtime.task.cancel_requested`. The GCC control-flow suite passes in 95.20
+  seconds; Clang 21 ASan/UBSan passes the same suite in 345.26 seconds without
+  a sanitizer finding; and the document-install contract passes. Static
+  analysis reports no slice finding. This does not execute or admit an
+  external-language artifact and adds no runtime stub or no-op.
+
 - 2026-08-09: Added the #279 durable .NET policy-audit boundary. Audited policy
   allows now expose `pending_audit`, not an executable route, until
   `evaluate_and_commit_dotnet_interop_call` receives a successful non-empty
