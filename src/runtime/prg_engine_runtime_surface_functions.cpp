@@ -8,6 +8,7 @@
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/safe_regex.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
 #include "prg_engine_locale_code_page.h"
@@ -249,6 +250,88 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             selected.kind == copperfin::platform::JsonValueKind::string
                 ? selected.decoded_string
                 : selected.raw_json);
+    }
+    if (function == "cfregexvalid") {
+        if (arguments.empty()) {
+            return make_boolean_value(false);
+        }
+        return make_boolean_value(
+            copperfin::platform::validate_safe_regex(
+                value_as_string(arguments[0])) == copperfin::platform::SafeRegexError::none);
+    }
+    if (function == "cfregextest") {
+        if (arguments.size() < 2U) {
+            return make_boolean_value(false);
+        }
+        const bool ignore_ascii_case = arguments.size() >= 3U && value_as_bool(arguments[2]);
+        const auto matched = copperfin::platform::search_safe_regex(
+            value_as_string(arguments[0]),
+            value_as_string(arguments[1]),
+            0U,
+            ignore_ascii_case);
+        return make_boolean_value(matched.ok() && matched.matched);
+    }
+    if (function == "cfregexfind" || function == "cfregexget") {
+        const auto fallback = [&]() {
+            return function == "cfregexget" && arguments.size() >= 5U
+                ? arguments[4]
+                : make_string_value(std::string{});
+        };
+        const auto failure = [&]() {
+            return function == "cfregexfind"
+                ? make_number_value(0.0)
+                : fallback();
+        };
+        if (arguments.size() < 2U) {
+            return failure();
+        }
+        const std::string input = value_as_string(arguments[0]);
+        std::size_t start_offset = 0U;
+        if (arguments.size() >= 3U) {
+            const PrgValue& start_value = arguments[2];
+            std::optional<double> one_based;
+            switch (start_value.kind) {
+                case PrgValueKind::boolean:
+                    one_based = start_value.boolean_value ? 1.0 : 0.0;
+                    break;
+                case PrgValueKind::number:
+                    one_based = start_value.number_value;
+                    break;
+                case PrgValueKind::currency:
+                    one_based = value_as_number(start_value);
+                    break;
+                case PrgValueKind::int64:
+                    one_based = static_cast<double>(start_value.int64_value);
+                    break;
+                case PrgValueKind::uint64:
+                    one_based = static_cast<double>(start_value.uint64_value);
+                    break;
+                case PrgValueKind::string:
+                    one_based = try_parse_invariant_double(trim_copy(start_value.string_value));
+                    break;
+                case PrgValueKind::empty:
+                    break;
+            }
+            if (!one_based.has_value() || !std::isfinite(*one_based) ||
+                std::trunc(*one_based) != *one_based || *one_based < 1.0 ||
+                *one_based > static_cast<double>(input.size() + 1U)) {
+                return failure();
+            }
+            start_offset = static_cast<std::size_t>(*one_based - 1.0);
+        }
+        const bool ignore_ascii_case = arguments.size() >= 4U && value_as_bool(arguments[3]);
+        const auto matched = copperfin::platform::search_safe_regex(
+            input,
+            value_as_string(arguments[1]),
+            start_offset,
+            ignore_ascii_case);
+        if (!matched.ok() || !matched.matched) {
+            return failure();
+        }
+        if (function == "cfregexfind") {
+            return make_number_value(static_cast<double>(matched.byte_offset + 1U));
+        }
+        return make_string_value(input.substr(matched.byte_offset, matched.byte_length));
     }
 
     auto safe_int_argument = [&](std::size_t index, int default_value) {

@@ -43,6 +43,12 @@ It preserves exact non-string JSON bytes, including large numbers, and does not
 load managed code or authorize an artifact. See
 `docs/39-prg-json-control-plane.md`.
 
+The sibling native safe-regex facade lets the same PRG control plane validate
+and extract bounded immutable text through a documented non-backtracking,
+byte-oriented subset. It does not load managed code or authorize an artifact;
+unsupported advanced regex features remain eligible for a separately approved
+external route. See `docs/40-prg-safe-regex-control-plane.md`.
+
 A dedicated interop layer provides:
 
 - CLR hosting

@@ -1,3 +1,18 @@
+- 2026-08-09: Added a bounded native PRG safe-regex facade for immutable
+  control-plane text. `CFREGEXVALID()`, `CFREGEXTEST()`, `CFREGEXFIND()`, and
+  `CFREGEXGET()` expose a byte-oriented, locale-invariant subset with
+  leftmost-longest search, one-based positions, ASCII case folding, exact
+  matched bytes, and typed fallbacks. A Thompson-style state machine plus
+  64 KiB input, 256-byte pattern, and 512-state hard ceilings avoids recursive
+  or exponential backtracking. Unsupported grouping, alternation, captures,
+  backreferences, lookaround, and counted repetition fail closed; replacement
+  APIs are not provided. Focused platform and real-session tests pass under
+  GCC and Clang 21 ASan/UBSan, including a full-bound overlapping-repetition
+  case; the broader
+  runtime-surface, document, and isolation contracts pass under GCC, and
+  focused Clang analyzer checks are clean. This does not admit or execute an
+  external artifact; hosted evidence remains pending.
+
 - 2026-08-09: Added the first native PRG JSON parity facade for supervised
   interop results. `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` provide
   bounded strict validation, invariant kind/missing/invalid classification,

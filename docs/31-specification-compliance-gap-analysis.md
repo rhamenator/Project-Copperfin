@@ -328,6 +328,9 @@ cooperative cancellation, retained return values, and completed print output.
 It also exposes bounded native JSON validation, type inspection, and JSON
 Pointer selection so PRG can examine immutable structured completion payloads
 without embedding foreign source or losing exact number spelling.
+The native safe-regex facade additionally provides bounded byte-oriented text
+validation/extraction without a backtracking engine; advanced regex features
+remain unsupported unless a future separately approved route supplies them.
 External artifact admission, dispatch, and managed execution remain absent.
 
 **What it will take:** none of the four named native execution/marshaling
