@@ -454,6 +454,38 @@ void test_timeout_and_cancellation(
                cancelled.candidate_invocation_count == 1U &&
                cancelled.candidate.process.process_tree_closed,
            "#4937: propagated cancellation should close candidate and never fall back");
+
+    polls.store(0U);
+    auto ignored = base_request(
+        routes, &admission, root, "--route-sleep");
+    ignored.candidate_request.policy.cancellation =
+        PolyglotCancellationPolicy::ignore;
+    ignored.candidate_request.policy.fallback =
+        PolyglotFallbackPolicy::fallback_native;
+    ignored.candidate_request.cancellation_requested = [&polls]() {
+        return polls.fetch_add(1U) >= 2U;
+    };
+    const auto ignored_native = execute_polyglot_route(ignored);
+    expect(ignored_native.ok() && ignored_native.native_fallback_executed &&
+               ignored_native.candidate.decision.failure ==
+                   PolyglotBridgeFailure::cancellation &&
+               !ignored_native.candidate.decision.cancellation_propagated &&
+               ignored_native.native_invocation_count == 1U &&
+               ignored_native.candidate_invocation_count == 1U,
+           "#4937: ignored cancellation may use one policy-permitted native fallback");
+
+    polls.store(0U);
+    auto ignored_artifact = ignored;
+    ignored_artifact.candidate_request.policy.fallback =
+        PolyglotFallbackPolicy::fallback_artifact;
+    const auto unsupported = execute_polyglot_route(ignored_artifact);
+    expect(unsupported.status == PolyglotRouteExecutionStatus::candidate_failed &&
+               unsupported.error_code ==
+                   "polyglot.execution.artifact_fallback_unsupported" &&
+               unsupported.native_invocation_count == 0U &&
+               unsupported.candidate_invocation_count == 1U &&
+               !has_event(unsupported, "polyglot.fallback.executed"),
+           "#4937: ignored cancellation must not disguise unsupported artifact fallback");
 }
 
 void test_fail_closed_configuration(

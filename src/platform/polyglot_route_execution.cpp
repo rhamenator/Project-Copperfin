@@ -124,7 +124,7 @@ void finish_candidate(PolyglotRouteExecutionResult& result) {
     if (result.candidate.ok()) {
         result.status = PolyglotRouteExecutionStatus::success;
         result.error_code = "polyglot.execution.candidate_success";
-    } else if (result.candidate.status == PolyglotArtifactInvocationStatus::cancelled) {
+    } else if (result.candidate.decision.cancellation_propagated) {
         result.status = PolyglotRouteExecutionStatus::cancelled;
         result.error_code = result.candidate.error_code;
     } else {
