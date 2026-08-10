@@ -1,3 +1,20 @@
+- 2026-08-09: Added the #4700 portable artifact-admission prerequisite. A
+  canonical capability ID, explicit rooted external-process policy, exact
+  lowercase SHA-256, and physical file identity now produce an opaque token;
+  revalidation repeats policy, identity, and hashing and revokes the token in
+  place on any failure. File SHA-256 now streams in fixed 64 KiB chunks through
+  incremental BCrypt on Windows or the portable implementation elsewhere.
+  Focused GCC/adjacent coverage passes `12/12` plus `100/100` repeated admission;
+  Clang 21 ASan/UBSan passes `2/2`, static analysis is clean, and standard
+  vectors, root denial, digest mismatch, mutation, and identity-stable physical
+  replacement regressions pass. This does not launch an artifact, choose a
+  route, connect transport or envelopes, expose PRG dispatch, or add an
+  external-language adapter. Exact candidate `e5f974df2` passes Linux Native
+  `31354311198` and macOS Native `31354312629` at `332/332`, the macOS locale
+  matrix at `8/8`, and Windows Native `31354314025` at `331/331`; the focused
+  regression passes everywhere and all eight candidate-head protected checks
+  are green.
+
 - 2026-08-09: Made POSIX external-process allowed-root containment follow the
   containing filesystem's identity and case semantics. The executable's
   canonical path prefix is now compared with the canonical allowed root using

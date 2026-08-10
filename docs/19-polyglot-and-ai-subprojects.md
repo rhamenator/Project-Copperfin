@@ -25,6 +25,10 @@ Current maturity:
   descendant cleanup, and independently bounded exact-byte stdout/stderr
   capture. It is infrastructure for a future artifact adapter, not a runtime
   route or language integration by itself.
+- A separate portable admission boundary now binds a canonical capability ID
+  and rooted external-process authorization to one exact lowercase SHA-256 and
+  physical file identity. Its opaque token must be revalidated before a later
+  execution boundary; admission itself does not launch the artifact.
 - A portable serializer now emits the versioned invocation request in fixed,
   compact field order after strict identity and arguments-object admission; the
   matching response parser admits only the checked-in success/error shapes.
@@ -113,6 +117,41 @@ primitive described below supplies a low-level execution boundary; adapter-speci
 retry and the connection from policy decisions to an authorized artifact remain
 outside the policy model.
 
+## Artifact Admission v1
+
+`admit_polyglot_artifact` validates one configured external executable before a
+future adapter may consider it trusted. The request must contain a canonical
+capability ID, an explicit nonempty allowed-root list in the existing
+external-process policy, and an exact 64-character lowercase SHA-256. Admission
+first applies the existing path, executable, signature, and publisher policy;
+it then hashes the resolved file and revalidates its physical identity after
+the read. Stable `polyglot.artifact.*` codes distinguish invalid identity,
+missing root, policy denial, hashing failure, digest mismatch, and detected
+change. Any denial clears the trusted digest and revokes the embedded process
+authorization.
+
+The result is an opaque, non-default-constructible token. Immediately before a
+future execution boundary, `revalidate_polyglot_artifact_admission` repeats the
+original external-process policy, requires the same physical file identity,
+rehashes the exact bytes, and revalidates identity again after hashing. A
+failure revokes the token in place and a revoked token cannot be restored by a
+later revalidation. SHA-256 file reads use fixed 64 KiB chunks rather than
+buffering the whole artifact in memory; Windows uses incremental BCrypt and
+other native hosts use the portable incremental SHA-256 implementation.
+
+Focused coverage includes standard SHA-256 vectors, valid rooted admission,
+noncanonical capability/digest rejection, missing and sibling roots, digest
+mismatch, same-file content mutation, and identical-byte physical replacement.
+Exact candidate `e5f974df2` passes Linux Native `31354311198` and macOS Native
+`31354312629` at `332/332`, the macOS four-locale SET POINT matrix at `8/8`,
+and Windows Native `31354314025` at `331/331`; the artifact-admission
+regression passes on every host. All eight candidate-head protected checks
+pass.
+This seam does not launch a process, choose a route, connect the request or
+response contracts, apply fallback or telemetry, expose PRG dispatch, or add a
+language adapter. Revalidation narrows the validation-to-use interval but a
+future adapter must still keep it immediately adjacent to its owned launch.
+
 ## Bounded Artifact Process Primitive
 
 `run_bounded_process` is the first execution prerequisite for an artifact-invoked
@@ -185,11 +224,12 @@ pre-existing dead store in unchanged `query_translator.cpp`. Exact candidate hea
 `31340581094` at `330/330`; the bounded-process regression passes on every
 platform. All eight candidate-head protected checks pass.
 
-This primitive does **not** authorize or hash an artifact, validate migration
-contracts or typed envelopes, automatically connect the request serializer or response
-parser, implement retries or fallback, choose a route, emit migration telemetry, or
-connect any external language to the PRG runtime. Those remain separately reviewable
-adapter and dispatch work.
+This primitive does **not** itself authorize or hash an artifact. The separate
+admission boundary above now supplies that prerequisite, but it is not yet
+connected to this process primitive. Migration-contract and typed-envelope
+validation, automatic serializer/parser connection, retries or fallback, route
+selection, migration telemetry, PRG dispatch, and external-language adapters
+remain separately reviewable work.
 
 ## Invocation Request Serialization v1
 

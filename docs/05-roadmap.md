@@ -402,10 +402,23 @@ diagnostic in the owned files and one pre-existing dead store in unchanged
 `31340579206` and macOS Native `31340580178` pass `331/331`, macOS also passes
 the four-locale SET POINT matrix at `8/8`, and Windows Native `31340581094`
 passes `330/330`; all three execute `test_bounded_process` successfully. All
-eight candidate-head protected checks pass. These slices still do not
-authorize/hash an artifact, automatically connect the serializer or response
-parser, implement fallback/telemetry, select a route, or connect external code
-to PRG execution.
+eight candidate-head protected checks pass. A separate artifact-admission seam
+now authorizes and hashes an exact rooted executable, but it is not yet
+connected to this transport. Automatic serializer/response-parser connection,
+fallback/telemetry, route selection, and external-code PRG dispatch remain.
+
+The artifact-admission prerequisite binds a canonical capability ID, explicit
+rooted external-process authorization, exact lowercase SHA-256, and physical
+file identity in an opaque token. Revalidation repeats the original policy,
+identity, and exact-byte hash and revokes the token in place on any failure.
+File hashing is incremental and fixed-memory on Windows and POSIX. This closes
+the trust-admission prerequisite only: no process is launched, no route is
+selected, no serializer/parser is connected, and no external language enters
+the PRG runtime. Exact candidate `e5f974df2` passes Linux Native
+`31354311198` and macOS Native `31354312629` at `332/332`, the macOS locale
+matrix at `8/8`, and Windows Native `31354314025` at `331/331`; the focused
+regression passes everywhere and all eight candidate-head protected checks are
+green.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are
@@ -733,7 +746,7 @@ standalone Studio shell, and FoxPro language-service layer."
 | E | `#111` (`E1`/`#22`, `E2`/`#23`, `E3`/`#24`) | Shared design model and designer fidelity (`E3` = report/label parity, the single largest lane in the repo) | Closed 2026-07-24 | Phase C |
 | F | `#112` (`F1`/`#25`, `F2`/`#26`) | VS extension parity + utility panes; standalone Studio as a full IDE | MVP implementation complete for standalone shell; hosted UI evidence remains under the RC gate | Phase C |
 | G | `#112` (`G1`/`#27`, `G2`/`#28`, `G3`/`#29`) | FoxPro language service: semantic resolution, navigation/refactoring, IntelliSense metadata | Recorded G1/G2/G3 slices closed; broader MVP scope remains under the live tree | Phase C |
-| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Contract/model foundation, bounded process, deterministic request serialization, and response admission implemented; artifact trust, transport, and PRG-controlled dispatch remain | v1 item 3 |
+| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Contract/model foundation, bounded process, artifact admission, deterministic request serialization, and response admission implemented; seam connection and PRG-controlled dispatch remain | v1 item 3 |
 | I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | Seeded (see gap analysis) | v1 item 4 |
 | J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Studio launch-error and POSIX root-identity seams shipped; broader ports open | v1 item 5 |
 

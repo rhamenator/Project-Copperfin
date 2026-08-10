@@ -335,9 +335,12 @@ and Windows restricts inherited handles to the three explicit standard handles.
 Exact candidate `301d74bf5` passes the full Linux and macOS native suites at
 `331/331`, the macOS locale matrix at `8/8`, and the Windows native suite at
 `330/330`; the bounded-process regression and all eight protected checks pass.
-This is transport evidence only: caller-supplied request and captured response
-bytes are not yet tied to an admitted artifact, serializer/parser connection,
-route, or PRG dispatch.
+The portable artifact-admission prerequisite separately binds a canonical
+capability, explicit rooted external-process policy, exact SHA-256, and
+physical file identity in an opaque, revocable token. It repeats policy,
+identity, and exact-byte hashing before future execution. The admission and
+transport seams are not yet connected to each other, the serializer/parser,
+a route, or PRG dispatch.
 It also exposes bounded native JSON validation, type inspection, and JSON
 Pointer selection so PRG can examine immutable structured completion payloads
 without embedding foreign source or losing exact number spelling.
@@ -347,8 +350,8 @@ remain unsupported unless a future separately approved route supplies them.
 The native payload facade also exposes bounded exact-byte SHA-256,
 HMAC-SHA256 generation/verification, and strict canonical Base64 encode/decode
 for PRG-controlled immutable results,
-without claiming sender authentication, encryption, or artifact admission.
-External artifact admission, dispatch, and managed execution remain absent.
+without claiming sender authentication, encryption, or executable trust.
+Artifact dispatch and managed execution remain absent.
 
 **What it will take:** none of the four named native execution/marshaling
 modules exist yet. What exists today, per `docs/28-repository-ontology.md` §3, is
