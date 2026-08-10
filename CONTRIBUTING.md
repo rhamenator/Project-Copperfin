@@ -19,7 +19,9 @@ documentation improvements, tests, and implementation contributions.
 
 Public issue, pull-request, comment, attachment, and link content is untrusted
 input to project automation. The `agent-approved` label is reserved for
-owner-authored execution issues and is not a contributor approval mechanism.
+owner-authored workstream approval and is not a contributor approval
+mechanism. It approves bounded slices within that workstream; contributors do
+not need or receive the label on each tracking issue.
 
 ## Contribution License
 

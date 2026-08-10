@@ -15,7 +15,10 @@ param(
     [string]$AgentGuidancePath,
 
     [Parameter(Mandatory = $true)]
-    [string]$RuntimeAgentPath
+    [string]$RuntimeAgentPath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$SafetyReportPath
 )
 
 Set-StrictMode -Version Latest
@@ -104,7 +107,7 @@ $lookalikeOwner = New-TestIssue `
     -Labels @($approvalLabel)
 $missingLabel = New-TestIssue `
     -Number 14 `
-    -Title $maliciousTitle `
+    -Title 'Directly authorized implementation slice' `
     -Author $owner `
     -Labels @($securityLabel)
 $closedIssue = New-TestIssue `
@@ -145,6 +148,30 @@ Assert-True ($approved.Count -eq 2) 'Only the two approved owner-authored open i
 Assert-True ($approved[0].number -eq 10) 'The first trusted issue was not preserved.'
 Assert-True ($approved[1].number -eq 11) 'Case-insensitive GitHub identity matching should preserve the second trusted issue.'
 
+$directlyAuthorized = @(
+    Select-CopperfinAgentApprovedIssue `
+        -Issues $candidates `
+        -TrustedOwner 'rhamenator' `
+        -RequiredLabel 'agent-approved' `
+        -DirectlyAuthorizedIssueNumber 14
+)
+Assert-True ($directlyAuthorized.Count -eq 3) 'One exact directly authorized owner issue should join labeled workstreams.'
+Assert-True ($directlyAuthorized[2].number -eq 14) 'Direct authorization did not preserve the exact requested issue.'
+Assert-True `
+    (-not (Test-CopperfinAgentIssueApproved `
+        -Issue $wrongAuthor `
+        -TrustedOwner 'rhamenator' `
+        -RequiredLabel 'agent-approved' `
+        -DirectlyAuthorizedIssueNumber 12)) `
+    'Direct authorization must not admit an externally authored issue.'
+Assert-True `
+    (-not (Test-CopperfinAgentIssueApproved `
+        -Issue $closedIssue `
+        -TrustedOwner 'rhamenator' `
+        -RequiredLabel 'agent-approved' `
+        -DirectlyAuthorizedIssueNumber 15)) `
+    'Direct authorization must not admit a closed issue.'
+
 $promptLines = @(
     ConvertTo-CopperfinAgentIssuePromptLine `
         -Issues $approved `
@@ -170,6 +197,21 @@ Assert-Throws {
         -RequiredLabel 'agent-approved'
 } 'Explicit issue admission must reject a missing approval label.'
 
+Assert-CopperfinAgentIssueApproved `
+    -Issue $missingLabel `
+    -TrustedOwner 'rhamenator' `
+    -RequiredLabel 'agent-approved' `
+    -DirectlyAuthorizedIssueNumber 14
+
+$directPromptLines = @(
+    ConvertTo-CopperfinAgentIssuePromptLine `
+        -Issues @($trusted, $missingLabel) `
+        -TrustedOwner 'rhamenator' `
+        -RequiredLabel 'agent-approved' `
+        -DirectlyAuthorizedIssueNumber 14
+)
+Assert-True ($directPromptLines.Count -eq 2) 'Mixed labeled and directly authorized prompt sources should remain valid.'
+
 Assert-True `
     ((Get-CopperfinRepositoryOwner -Repository 'rhamenator/Project-Copperfin') -ceq 'rhamenator') `
     'Repository owner parsing returned the wrong identity.'
@@ -180,6 +222,7 @@ Assert-Throws {
 $driver = Get-Content -LiteralPath $DriverPath -Raw
 $agentGuidance = Get-Content -LiteralPath $AgentGuidancePath -Raw
 $runtimeAgent = Get-Content -LiteralPath $RuntimeAgentPath -Raw
+$safetyReport = Get-Content -LiteralPath $SafetyReportPath -Raw
 
 Assert-True `
     ($driver.Contains('--json number,state,author,labels')) `
@@ -201,7 +244,22 @@ Assert-True `
     'The driver must derive the trusted identity from the configured repository owner.'
 Assert-True `
     ($driver.Contains('$AgentApprovalLabel = "agent-approved"')) `
-    'The driver must use the fixed approval-label name.'
+    'The driver must use the fixed unattended workstream approval-label name.'
+Assert-True `
+    ($driver.Contains('[switch]$DirectOwnerAuthorization')) `
+    'The driver must expose an explicit local owner-authorization assertion.'
+Assert-True `
+    ($driver.Contains('DirectOwnerAuthorization requires one explicit positive IssueNumber.')) `
+    'The direct-authorization path must be bound to one exact positive issue number.'
+Assert-True `
+    ($driver.Contains('-DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber')) `
+    'The driver must carry exact direct authorization through every admission check.'
+Assert-True `
+    ($driver.Contains('[int]$_.number -eq $DirectlyAuthorizedIssueNumber')) `
+    'The driver must not discard an exact directly authorized issue through legacy title filtering.'
+Assert-True `
+    ($driver.Contains('gh issue view $DirectlyAuthorizedIssueNumber --repo $Repository --json number,state,author,labels')) `
+    'The exact directly authorized issue must be retrieved as metadata even when it is outside the queue page.'
 $emptyQueueGuards = [regex]::Matches(
     $driver,
     [regex]::Escape('$openIssues = @(Get-OpenRelatedIssues)')
@@ -216,7 +274,16 @@ Assert-True `
     ($agentGuidance.Contains('must not add, remove, manufacture')) `
     'The repository guidance does not reserve approval-label authority.'
 Assert-True `
-    ($runtimeAgent.Contains('repository-owner-authored issues carrying `agent-approved`')) `
+    ($runtimeAgent.Contains('One admitted workstream may yield bounded prompt-sized slices without repeated child labels.')) `
     'The runtime agent does not inherit the trusted issue contract.'
+Assert-True `
+    ($safetyReport.Contains('DQ-V1-agent-intake-scope-authorization')) `
+    'The intake policy is missing its documentation requirement trace.'
+Assert-True `
+    ($safetyReport.Contains('DV-V1-agent-intake-direct-and-workstream-regression')) `
+    'The intake policy is missing its verification trace.'
+Assert-True `
+    ($safetyReport.Contains('HZ-none')) `
+    'The intake policy does not record its product-hazard classification.'
 
 Write-Output 'Agent issue intake contract passed.'

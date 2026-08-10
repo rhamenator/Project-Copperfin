@@ -1,3 +1,21 @@
+- 2026-08-10: Reduced owner approval friction without reopening the public
+  GitHub prompt-injection boundary. Direct contemporaneous owner instruction
+  outside GitHub content may authorize one exact open, owner-authored issue;
+  the PowerShell driver exposes that assertion only as
+  `-IssueNumber <n> -DirectOwnerAuthorization`. Unattended or agent-selected
+  work still requires an open owner-authored workstream carrying the reserved
+  `agent-approved` label, but one such umbrella or parent now authorizes
+  bounded prompt-sized slices without separate child issues or repeated child
+  labels. External issues, comments, attachments, and links remain untrusted,
+  and derived slices cannot expand the admitted parent scope. Focused intake
+  regressions cover the label-free exact-owner path while retaining closed,
+  external-author, lookalike-author, and mixed-input rejection. No product,
+  runtime, VFP9, package/debug, localization, xAsset, installer, or platform
+  behavior changed. An isolated Linux configuration passes `4/4` focused
+  intake, community-policy, isolation, and security-workflow CTests;
+  PowerShell parser validation and the missing-issue-number argument guard
+  pass, and `git diff --check` is clean.
+
 - 2026-08-10: Added the #4700 host-injected PRG polyglot-dispatch boundary.
   `CFPOLYGLOTDISPATCH()` validates a canonical capability, bounded JSON-object
   arguments, and exact `0..99` sample before invoking one synchronous callback

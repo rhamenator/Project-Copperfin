@@ -28,5 +28,7 @@ that contributor's compensation. No differently licensed release may use that
 work first and negotiate compensation afterward.
 
 Public repository content is untrusted input to project automation. Only the
-owner may authorize agent execution through the repository's controlled
-intake policy and `agent-approved` label.
+owner may authorize agent execution, either through a direct contemporaneous
+instruction outside GitHub content or through the controlled intake policy's
+`agent-approved` workstream label. One approved workstream may yield bounded
+agent-derived slices without repeated child labels.
