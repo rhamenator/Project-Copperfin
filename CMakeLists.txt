@@ -236,6 +236,7 @@ add_library(cf_platform_profile
     src/platform/extensibility_model.cpp
     src/platform/federation_execution.cpp
     src/platform/localized_text.cpp
+    src/platform/polyglot_artifact_admission.cpp
     src/platform/polyglot_bridge_invocation.cpp
     src/platform/polyglot_interop_envelope.cpp
     src/platform/polyglot_migration_telemetry.cpp
@@ -255,7 +256,7 @@ else()
     target_compile_options(cf_platform_profile PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-target_link_libraries(cf_platform_profile PRIVATE cf_localization)
+target_link_libraries(cf_platform_profile PRIVATE cf_localization cf_security)
 
 add_library(cf_vfp_assets
     src/vfp/asset_inspector.cpp
