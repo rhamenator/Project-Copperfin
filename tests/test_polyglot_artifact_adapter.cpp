@@ -345,8 +345,9 @@ void test_prelaunch_rejection(
     const auto mismatch = copperfin::platform::invoke_polyglot_artifact(
         admission, mismatch_request);
     expect(!mismatch.artifact_revalidated && !mismatch.process.started &&
-               mismatch.error_code == "polyglot.adapter.capability_id_mismatch",
-           "#4700: capability confusion should reject before revalidation or launch");
+               mismatch.error_code == "polyglot.adapter.capability_id_mismatch" &&
+               mismatch.telemetry.events.empty(),
+           "#4700: capability confusion should reject without launch or untrusted telemetry");
 
     auto retry_request = invocation(root, "--adapter-success");
     retry_request.policy.max_attempts = 2U;
@@ -362,8 +363,9 @@ void test_prelaunch_rejection(
     const auto invalid = copperfin::platform::invoke_polyglot_artifact(
         admission, invalid_request);
     expect(!invalid.artifact_revalidated && !invalid.process.started &&
-               invalid.error_code == "polyglot.request.arguments_object_required",
-           "#4700: invalid arguments should reject before artifact revalidation");
+               invalid.error_code == "polyglot.request.arguments_object_required" &&
+               invalid.telemetry.events.empty(),
+           "#4700: invalid arguments should reject before revalidation or telemetry");
 
     const auto changed_path = root /
         (std::string("changed-") + running_executable.filename().string());
