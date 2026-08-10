@@ -28,15 +28,20 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
-The first bounded macOS/Linux standalone-host portability seam is now
-implemented at exact product/test head `d08c1aa61`. The POSIX Studio command
-runner reports a missing or unlaunchable executable as `-1`, matching the
-unchanged Windows pre-start-failure contract, while preserving a real child
-exit status of 127. Exact-head Linux Native `31344376346` and macOS Native
-`31344376360` pass `331/331`, the macOS four-locale SET POINT matrix passes
-`8/8`, and Windows Native `31344376357` passes `330/330`; the focused Studio
-host regression passes everywhere. This closes one launch-error seam, not the
-broader macOS or Linux standalone-host ports.
+Two bounded portable-core seams are now implemented. At exact product/test head
+`d08c1aa61`, the POSIX Studio command runner reports a missing or unlaunchable
+executable as `-1`, matching the unchanged Windows pre-start-failure contract,
+while preserving a real child exit status of 127. At exact product/test head
+`e36285163`, POSIX external-process allowed-root containment uses canonical
+prefix construction and filesystem identity instead of raw UTF-8 string
+prefixes, so existing case-equivalent roots follow the containing volume's case
+semantics while empty, unavailable, shorter, and sibling roots fail closed.
+Linux Native `31348227285` and macOS Native `31348227298` pass `331/331` at the
+second seam, including its focused security regression; macOS also passes the
+four-locale SET POINT matrix at `8/8`, and Windows Native `31348227289` passes
+`330/330`. The focused security regression passes everywhere and Windows
+behavior is unchanged. These close focused launch-error and root-identity
+seams, not the broader macOS or Linux standalone-host ports.
 
 Current .NET interop security work now has a fail-closed policy-context
 candidate: trusted host state must bind actor, verified policy, audit readiness,
@@ -730,7 +735,7 @@ standalone Studio shell, and FoxPro language-service layer."
 | G | `#112` (`G1`/`#27`, `G2`/`#28`, `G3`/`#29`) | FoxPro language service: semantic resolution, navigation/refactoring, IntelliSense metadata | Recorded G1/G2/G3 slices closed; broader MVP scope remains under the live tree | Phase C |
 | H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Contract/model foundation, bounded process, deterministic request serialization, and response admission implemented; artifact trust, transport, and PRG-controlled dispatch remain | v1 item 3 |
 | I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | Seeded (see gap analysis) | v1 item 4 |
-| J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | First Studio launch-error seam shipped; broader ports open | v1 item 5 |
+| J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Studio launch-error and POSIX root-identity seams shipped; broader ports open | v1 item 5 |
 
 Current G1 evidence includes #4874 at product/test head `e70c89e87`: editor
 project-symbol discovery follows the unquoted `#INCLUDE` form used by the real

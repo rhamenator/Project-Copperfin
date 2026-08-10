@@ -1,5 +1,32 @@
 # Agent Handoff
 
+## V1 macOS external-process root identity candidate
+
+The next bounded macOS portable-core seam is complete at exact product/test
+head `e36285163`. POSIX external-process authorization now constructs the
+canonical executable prefix at the allowed root's component depth and requires
+that prefix to be filesystem-equivalent to the canonical allowed root. This
+replaces a raw UTF-8 string prefix comparison: an existing case-equivalent root
+works when the containing volume treats the spellings as identical, while a
+case-sensitive volume continues to reject the variant. Empty, unavailable,
+shorter, and sibling-prefix roots fail closed. The executable is still
+revalidated after authorization, and the Windows implementation is unchanged.
+
+The local GCC Release package, isolation, and focused security selection passes
+`3/3`; the focused regression repeats `20/20`. Clang 21 ASan/UBSan passes, and
+focused static analysis plus `git diff --check` report no finding. Exact-head
+Linux Native `31348227285` and macOS Native `31348227298` pass `331/331`, with
+`test_security_controls` passing on both. macOS also passes the four-locale SET
+POINT matrix at `8/8`. Windows Native `31348227289` passes `330/330`, including
+the focused regression. All eight candidate-head protected checks pass.
+Windows annotations are pre-existing warnings in unchanged runtime sources,
+with none in this slice's implementation or regression.
+
+This is one external-process root-identity seam, not completion of the broader
+macOS or Linux ports. It changes no user-facing string, localization catalog,
+public machine-readable contract, package format, runtime surface, artifact,
+or Windows behavior.
+
 ## V1 POSIX Studio launch-failure parity candidate
 
 The first bounded macOS/Linux standalone-host portability seam is complete at
