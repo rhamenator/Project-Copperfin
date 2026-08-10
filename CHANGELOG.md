@@ -1,3 +1,20 @@
+- 2026-08-09: Made POSIX external-process allowed-root containment follow the
+  containing filesystem's identity and case semantics. The executable's
+  canonical path prefix is now compared with the canonical allowed root using
+  filesystem equivalence instead of a raw UTF-8 string prefix. Empty,
+  unavailable, shorter, and sibling-prefix roots continue to fail closed;
+  case-equivalent existing roots are accepted only when the volume identifies
+  them as the same directory. Windows authorization behavior is unchanged.
+  Focused GCC Release tests pass `3/3`, the security regression repeats
+  `20/20`, Clang 21 ASan/UBSan passes, and focused static analysis reports no
+  finding. Exact product/test head `e36285163` passes Linux Native
+  `31348227285` and macOS Native `31348227298` at `331/331`; macOS also passes
+  the four-locale SET POINT matrix at `8/8`, and Windows Native `31348227289`
+  passes `330/330`; `test_security_controls` passes on every platform. All
+  eight candidate-head protected checks pass. Windows annotations are
+  pre-existing warnings in unchanged runtime sources. This closes one macOS
+  portable-core security seam, not the broader macOS or Linux ports.
+
 - 2026-08-09: Began the macOS/Linux standalone-host portability lane by making
   Studio command-launch failure reporting invariant across native platforms.
   POSIX now uses `posix_spawnp`, so a missing or otherwise unlaunchable
