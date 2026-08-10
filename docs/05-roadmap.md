@@ -442,9 +442,20 @@ Clang 21 ASan/UBSan plus focused static analysis are clean. Exact candidate
 `333/333`, the macOS locale matrix at `8/8`, and Windows Native `31363043544`
 at `332/332`; the focused regression passes everywhere and all eight
 candidate-head protected checks pass. Path revalidation narrows TOCTOU exposure
-but is not atomic handle-bound execution. Route execution, native/shadow calls,
-retry, fallback execution, PRG dispatch, mutable-runtime callbacks, and
-language-specific adapters remain open.
+but is not atomic handle-bound execution.
+
+The next portable polyglot seam now composes existing route selection with
+synchronous caller-owned native work and the admitted-artifact adapter. It
+applies `off`, `shadow`, deterministic `canary`, `on`, and `retire-legacy`;
+shadow preserves native authority and records normalized parity, while native
+fallback runs at most once only when both route and bridge policy permit it.
+Retire-legacy never invokes native, and no second artifact is executed. Stable
+status, authority, invocation counts, route/bridge/parity events, and distinct
+selected-versus-executed fallback evidence are retained. Local GCC focused and
+adjacent contracts pass `9/9`, the regression repeats `20/20`, and Clang 21
+ASan/UBSan plus focused static analysis pass. Hosted native matrices remain
+pending. Retry, PRG dispatch, mutable-runtime worker callbacks, language-
+specific adapters, and atomic handle-bound launch remain open.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are

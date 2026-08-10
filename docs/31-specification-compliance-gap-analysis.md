@@ -308,8 +308,9 @@ matches the events `cf_security`'s `audit_stream` emits today.
 
 ### docs/11 — Engineering Spec: Copperfin .NET Bridge
 
-**Status: spec'd in full, with a portable policy gateway and one artifact-first
-invocation adapter; CLR hosting and parity-call execution remain absent.** The
+**Status: spec'd in full, with a portable policy gateway, artifact-first
+invocation adapter, and route executor; CLR hosting and PRG-facing parity-call
+execution remain absent.** The
 document specs four native modules (`cf_dotnet_host`, `cf_dotnet_marshaler`,
 `cf_dotnet_policy`,
 `cf_dotnet_codegen`), three managed surfaces, a typed marshaling contract for 11
@@ -340,13 +341,17 @@ The portable artifact-admission prerequisite separately binds a canonical
 capability, explicit rooted external-process policy, exact SHA-256, and
 physical file identity in an opaque, revocable token. It repeats policy,
 identity, and exact-byte hashing before execution. The portable artifact
-invocation adapter now connects that token to deterministic request
+invocation adapter connects that token to deterministic request
 serialization, one bounded child-process attempt, strict response admission,
 bridge outcome/fallback reporting, and migration telemetry. It revalidates
 immediately beside its owned path-based launch, but this is not an atomic
-handle-bound execution primitive. It does not select a route, invoke native or
-shadow behavior, execute fallback, retry, expose PRG dispatch, call mutable
-runtime state, or supply a language-specific adapter.
+handle-bound execution primitive. The portable route executor now applies the
+existing lifecycle decisions, invokes synchronous caller-owned native work,
+uses only that adapter for candidate work, preserves native authority during
+shadow comparison, and performs one native fallback only when route and bridge
+policy both allow it. It does not retry, execute a second artifact, expose PRG
+dispatch, call mutable runtime state from a foreign worker, or supply a
+language-specific adapter.
 It also exposes bounded native JSON validation, type inspection, and JSON
 Pointer selection so PRG can examine immutable structured completion payloads
 without embedding foreign source or losing exact number spelling.
@@ -357,7 +362,7 @@ The native payload facade also exposes bounded exact-byte SHA-256,
 HMAC-SHA256 generation/verification, and strict canonical Base64 encode/decode
 for PRG-controlled immutable results,
 without claiming sender authentication, encryption, or executable trust.
-Artifact dispatch and managed execution remain absent.
+PRG-facing artifact dispatch and managed execution remain absent.
 
 **What it will take:** none of the four named native execution/marshaling
 modules exist yet. What exists today, per `docs/28-repository-ontology.md` §3, is
@@ -461,11 +466,11 @@ excluded from the compliance map above:
 | 01 | Product Charter | Partial | Empty exception registry makes the Compatibility Fidelity Rule unfalsifiable |
 | 03 | Compatibility And Migration | Scaffold-only (migrator) | Zero code toward the 9-file migration tool output contract |
 | 04 | Security Model | Scaffold (aspirational) | No enterprise identity/Shield product surface distinct from `cf_security` |
-| 11 | .NET Bridge Spec | Partial (Windows DECLARE plus portable policy/adapter) | None of the four named native `cf_dotnet_*` modules exist |
+| 11 | .NET Bridge Spec | Partial (Windows DECLARE plus portable policy/adapter/route executor) | None of the four named native `cf_dotnet_*` modules exist |
 | 12 | VFP Asset Editing And Execution | Partial | xAsset execution is first-pass, bounded by language-surface coverage |
 | 13 | Index Format Notes | Partial | No index write fidelity; collation hints are heuristic, not named |
 | 18 | Native Security And RBAC | Partial (real baseline) | Not yet verified against docs/04's fuller vision |
-| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary) | No PRG route or language-specific runtime hook; AI/MCP policy has little to govern yet |
+| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary and route executor) | No PRG dispatch or language-specific runtime hook; AI/MCP policy has little to govern yet |
 | 20 | Runtime Build And Debug Pipeline | Partial | Engine is PRG-first, not the full command surface |
 | 21 | Database Federation And Query Translation | Partial (real seed) | No live connector execution behind the translator/planner |
 | 22 | VFP Language Reference Coverage | Partial, measured | 1,411 documented items; official surface exceeds current runtime |
