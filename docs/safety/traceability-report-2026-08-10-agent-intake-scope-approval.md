@@ -54,10 +54,15 @@ The misuse cases are:
 
 ### DV-V1-agent-intake-procedural-review
 
-The policy and implementation require read-only review before merge, focused
-PowerShell execution, parser validation, repository-community validation, and
-protected contribution checks. Exact review and hosted-check evidence is added
-to the handoff before closure; this report does not claim it prematurely.
+The policy and implementation receive a read-only review request alongside
+focused PowerShell execution, parser validation, repository-community
+validation, and protected contribution checks. Exact candidate `1edabd98f` passes all eight
+hosted checks: Contributor Sign-Off `31440757051`, GCC/Clang Executable Path
+Validation `31440757018`, Win32/x64 Windows DECLARE ABI Validation
+`31440757104`, Windows Environment and Executable Path Validation
+`31440757056`, and both Socket checks. Read-only review was requested through
+coordination sequence 1535 and may report a follow-up without blocking the
+protected contribution workflow.
 
 ## Severity, Rollback, And Notification
 

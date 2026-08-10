@@ -14,7 +14,11 @@
   behavior changed. An isolated Linux configuration passes `4/4` focused
   intake, community-policy, isolation, and security-workflow CTests;
   PowerShell parser validation and the missing-issue-number argument guard
-  pass, and `git diff --check` is clean.
+  pass, and `git diff --check` is clean. Exact candidate `1edabd98f` passes all
+  eight hosted PR checks: Contributor Sign-Off `31440757051`, GCC/Clang
+  Executable Path Validation `31440757018`, Win32/x64 Windows DECLARE ABI
+  Validation `31440757104`, Windows Environment and Executable Path
+  Validation `31440757056`, and both Socket checks.
 
 - 2026-08-10: Added the #4700 host-injected PRG polyglot-dispatch boundary.
   `CFPOLYGLOTDISPATCH()` validates a canonical capability, bounded JSON-object
