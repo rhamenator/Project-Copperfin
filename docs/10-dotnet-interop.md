@@ -14,12 +14,17 @@ Current maturity:
 - Windows builds provide a bounded in-process .NET Framework v4 `DECLARE ... IN <assembly>` path for public static methods named as `Namespace.Type.Method`. The native host loads the exact resolved assembly through `Assembly.LoadFrom`, resolves overloads through the CLR binder, and currently marshals the supported scalar `DECLARE` values through `VARIANT`/`SAFEARRAY` boundaries.
 - The managed `DECLARE` path is tested on Win32 and x64 for absolute, explicit-relative, and parentless loader-resolved paths, sibling dependency resolution, integer/floating/string values, repeat success/failure, localized failures, and mixed-mode assemblies whose native export must take precedence. It is not a general managed object, event, callback, or by-reference interop surface.
 - The build pipeline can also generate a C# launcher/stub that is invoked as a child process by the native runtime pipeline in `src/runtime/runtime_pipeline.cpp`.
-- The portable artifact-bridge foundation can now serialize a deterministic, versioned invocation request and admit its matching structured response. It does not yet connect that exchange to the runtime host or expose PRG dispatch, asynchronous status, cancellation, or result retrieval.
+- The portable artifact-bridge foundation now composes a deterministic,
+  versioned request, one admitted external artifact, bounded
+  stdin/stdout/stderr execution, strict matching response admission, bridge
+  outcome reporting, and migration telemetry. It does not select a route,
+  identify a managed runtime, or expose this exchange through PRG dispatch.
 - A portable artifact-admission prerequisite now binds a canonical capability,
   explicit rooted external-process policy, exact SHA-256, and physical file
   identity in an opaque token that is revocable on pre-execution revalidation.
-  It does not load or launch managed code and is not yet connected to the
-  bounded-process transport or PRG control plane.
+  The artifact invocation adapter revalidates and consumes that token for one
+  bounded candidate process attempt. It does not itself load managed code or
+  connect the artifact boundary to the PRG control plane.
 - Generated C# transpilation output is currently an emitted artifact, not code executed by the runtime host.
 - macOS and Linux builds do not compile or host this Windows .NET Framework `DECLARE` path; their native runtime and packaging paths remain guarded from the Windows-only implementation. Broader cross-platform CLR/.NET hosting, managed wrappers, object lifetime, callbacks, policy enforcement, and generated strongly typed bindings remain v1 work.
 
@@ -41,6 +46,10 @@ For asynchronous work, PRG code should retain orchestration through a bounded
 operation handle with status, cancellation, and result retrieval. Foreign
 runtime threads must not call directly into mutable Copperfin runtime state;
 completion must return through a controlled host/scheduler boundary.
+
+Existing `SPAWN` tasks separately provide PRG-supervised status, cooperative
+cancellation, completed result, and print-output retrieval. The artifact
+invocation adapter is not yet routed through that task boundary.
 
 The native `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` facade gives PRG
 code a bounded way to inspect immutable structured results from that boundary.

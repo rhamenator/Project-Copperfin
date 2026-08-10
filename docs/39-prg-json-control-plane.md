@@ -75,11 +75,13 @@ contents are not written to runtime audit events.
 ## Concurrency And Interop Boundary
 
 The parser owns only call-local state. It does not mutate a data session and is
-safe to use while PRG code polls a supervised task. A future external adapter
-may publish a JSON result into the existing immutable task-completion record;
-PRG can then use `CFTASKSTATUS()`, `CFTASKRESULT()`, `CFTASKOUTPUT()`, and these
-JSON helpers to decide what happens next. The external worker still cannot
-call back into mutable Copperfin runtime state.
+safe to use while PRG code polls a supervised task. The portable artifact
+invocation adapter now admits a JSON result, but it is not yet submitted through
+the PRG task registry. A future PRG-facing route must publish that result into
+the existing immutable task-completion record; PRG can then use
+`CFTASKSTATUS()`, `CFTASKRESULT()`, `CFTASKOUTPUT()`, and these JSON helpers to
+decide what happens next. The external worker still cannot call back into
+mutable Copperfin runtime state.
 
 In-process Windows interop, if later approved, must preserve this same PRG
 contract. Out-of-process adapters remain the preferred isolation boundary.

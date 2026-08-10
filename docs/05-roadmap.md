@@ -343,7 +343,13 @@ or a claim that the external release authorities are satisfied. Immutable
 but published no final bundle because the scanner detected its own literal
 private-key sentinel in the exact source archive. No secret was present. The
 tag remains immutable, the scanner regression is corrected for sequential
-`v0.1.0-rc.N` candidates, and RC2 is the next candidate. The complete
+`v0.1.0-rc.N` candidates, and immutable `v0.1.0-rc.2` now peels to
+`fd6bd94f85f198d09d8829a4ff24a20c855650ab`. Exact-tag assembly run
+`31244558839` succeeded and uploaded the private
+`copperfin-v0.1.0-rc.2-evaluation-bundle` artifact with GitHub-reported
+SHA-256 `501ba26642af4fb58c69e3c69ca0f29b7eb5e242a4980ea31770e83bd84605df`;
+no GitHub Release exists. This is private-evaluation availability, not human
+acceptance or authority for an official release. The complete
 official-release evidence gate remains open until #4403 receives genuine
 arm's-length safety sign-off, closes, and passes strict validation, and until
 #4409 receives the approved protected launcher-trust signer/registry secrets
@@ -403,22 +409,42 @@ diagnostic in the owned files and one pre-existing dead store in unchanged
 the four-locale SET POINT matrix at `8/8`, and Windows Native `31340581094`
 passes `330/330`; all three execute `test_bounded_process` successfully. All
 eight candidate-head protected checks pass. A separate artifact-admission seam
-now authorizes and hashes an exact rooted executable, but it is not yet
-connected to this transport. Automatic serializer/response-parser connection,
-fallback/telemetry, route selection, and external-code PRG dispatch remain.
+authorizes and hashes an exact rooted executable, and the artifact invocation
+adapter now composes that token with deterministic request serialization, this
+single-attempt transport, strict response admission, bridge decisions, and
+migration telemetry. Route selection, native/shadow invocation, fallback
+execution, retries, external-code PRG dispatch, and language-specific adapters
+remain.
 
 The artifact-admission prerequisite binds a canonical capability ID, explicit
 rooted external-process authorization, exact lowercase SHA-256, and physical
 file identity in an opaque token. Revalidation repeats the original policy,
 identity, and exact-byte hash and revokes the token in place on any failure.
-File hashing is incremental and fixed-memory on Windows and POSIX. This closes
-the trust-admission prerequisite only: no process is launched, no route is
-selected, no serializer/parser is connected, and no external language enters
-the PRG runtime. Exact candidate `e5f974df2` passes Linux Native
+File hashing is incremental and fixed-memory on Windows and POSIX. The admission
+primitive alone launches nothing; the adjacent invocation adapter now consumes
+its opaque token at one bounded process boundary. No route is selected and no
+external language enters the PRG runtime. Exact admission candidate `e5f974df2`
+passes Linux Native
 `31354311198` and macOS Native `31354312629` at `332/332`, the macOS locale
 matrix at `8/8`, and Windows Native `31354314025` at `331/331`; the focused
 regression passes everywhere and all eight candidate-head protected checks are
 green.
+
+The artifact invocation adapter requires the request capability to equal the
+admitted canonical capability, rejects denied identity and invalid request data
+before telemetry, permits exactly one candidate attempt, revalidates immediately
+beside the owned launch call, sends exact serialized request bytes, admits only
+the expected response identity/protocol, and records bounded outcome/fallback
+telemetry. It returns but never executes a fallback decision. Local GCC focused
+and adjacent contracts pass `8/8`, the focused regression repeats `25/25`, and
+Clang 21 ASan/UBSan plus focused static analysis are clean. Exact candidate
+`0ac427755` passes Linux Native `31363043514` and macOS Native `31363043490` at
+`333/333`, the macOS locale matrix at `8/8`, and Windows Native `31363043544`
+at `332/332`; the focused regression passes everywhere and all eight
+candidate-head protected checks pass. Path revalidation narrows TOCTOU exposure
+but is not atomic handle-bound execution. Route execution, native/shadow calls,
+retry, fallback execution, PRG dispatch, mutable-runtime callbacks, and
+language-specific adapters remain open.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are

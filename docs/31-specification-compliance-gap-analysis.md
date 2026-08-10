@@ -308,9 +308,10 @@ matches the events `cf_security`'s `audit_stream` emits today.
 
 ### docs/11 — Engineering Spec: Copperfin .NET Bridge
 
-**Status: spec'd in full, with a portable policy gateway and parity-call
-execution still absent.** The document specs four native
-modules (`cf_dotnet_host`, `cf_dotnet_marshaler`, `cf_dotnet_policy`,
+**Status: spec'd in full, with a portable policy gateway and one artifact-first
+invocation adapter; CLR hosting and parity-call execution remain absent.** The
+document specs four native modules (`cf_dotnet_host`, `cf_dotnet_marshaler`,
+`cf_dotnet_policy`,
 `cf_dotnet_codegen`), three managed surfaces, a typed marshaling contract for 11
 value kinds, a policy-driven call gateway with three outcomes
 (`allow`/`fallback_native`/`reject`), and a three-tier parity matrix
@@ -338,9 +339,14 @@ Exact candidate `301d74bf5` passes the full Linux and macOS native suites at
 The portable artifact-admission prerequisite separately binds a canonical
 capability, explicit rooted external-process policy, exact SHA-256, and
 physical file identity in an opaque, revocable token. It repeats policy,
-identity, and exact-byte hashing before future execution. The admission and
-transport seams are not yet connected to each other, the serializer/parser,
-a route, or PRG dispatch.
+identity, and exact-byte hashing before execution. The portable artifact
+invocation adapter now connects that token to deterministic request
+serialization, one bounded child-process attempt, strict response admission,
+bridge outcome/fallback reporting, and migration telemetry. It revalidates
+immediately beside its owned path-based launch, but this is not an atomic
+handle-bound execution primitive. It does not select a route, invoke native or
+shadow behavior, execute fallback, retry, expose PRG dispatch, call mutable
+runtime state, or supply a language-specific adapter.
 It also exposes bounded native JSON validation, type inspection, and JSON
 Pointer selection so PRG can examine immutable structured completion payloads
 without embedding foreign source or losing exact number spelling.
@@ -455,11 +461,11 @@ excluded from the compliance map above:
 | 01 | Product Charter | Partial | Empty exception registry makes the Compatibility Fidelity Rule unfalsifiable |
 | 03 | Compatibility And Migration | Scaffold-only (migrator) | Zero code toward the 9-file migration tool output contract |
 | 04 | Security Model | Scaffold (aspirational) | No enterprise identity/Shield product surface distinct from `cf_security` |
-| 11 | .NET Bridge Spec | Seed only | None of the four named native `cf_dotnet_*` modules exist |
+| 11 | .NET Bridge Spec | Partial (Windows DECLARE plus portable policy/adapter) | None of the four named native `cf_dotnet_*` modules exist |
 | 12 | VFP Asset Editing And Execution | Partial | xAsset execution is first-pass, bounded by language-surface coverage |
 | 13 | Index Format Notes | Partial | No index write fidelity; collation hints are heuristic, not named |
 | 18 | Native Security And RBAC | Partial (real baseline) | Not yet verified against docs/04's fuller vision |
-| 19 | Polyglot And AI Subprojects | Seed only | No Python runtime hook; AI/MCP policy has little to govern yet |
+| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary) | No PRG route or language-specific runtime hook; AI/MCP policy has little to govern yet |
 | 20 | Runtime Build And Debug Pipeline | Partial | Engine is PRG-first, not the full command surface |
 | 21 | Database Federation And Query Translation | Partial (real seed) | No live connector execution behind the translator/planner |
 | 22 | VFP Language Reference Coverage | Partial, measured | 1,411 documented items; official surface exceeds current runtime |

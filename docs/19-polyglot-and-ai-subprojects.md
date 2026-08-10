@@ -23,8 +23,8 @@ Current maturity:
 - A portable bounded-process primitive now provides direct executable/argument
   invocation, an explicit child environment, timeout and cancellation handling,
   descendant cleanup, and independently bounded exact-byte stdout/stderr
-  capture. It is infrastructure for a future artifact adapter, not a runtime
-  route or language integration by itself.
+  capture. The artifact invocation adapter below now consumes this primitive;
+  neither layer is a PRG route or language integration by itself.
 - A separate portable admission boundary now binds a canonical capability ID
   and rooted external-process authorization to one exact lowercase SHA-256 and
   physical file identity. Its opaque token must be revalidated before a later
@@ -119,8 +119,8 @@ outside the policy model.
 
 ## Artifact Admission v1
 
-`admit_polyglot_artifact` validates one configured external executable before a
-future adapter may consider it trusted. The request must contain a canonical
+`admit_polyglot_artifact` validates one configured external executable before an
+invocation adapter may consider it trusted. The request must contain a canonical
 capability ID, an explicit nonempty allowed-root list in the existing
 external-process policy, and an exact 64-character lowercase SHA-256. Admission
 first applies the existing path, executable, signature, and publisher policy;
@@ -147,10 +147,46 @@ Exact candidate `e5f974df2` passes Linux Native `31354311198` and macOS Native
 and Windows Native `31354314025` at `331/331`; the artifact-admission
 regression passes on every host. All eight candidate-head protected checks
 pass.
-This seam does not launch a process, choose a route, connect the request or
-response contracts, apply fallback or telemetry, expose PRG dispatch, or add a
-language adapter. Revalidation narrows the validation-to-use interval but a
-future adapter must still keep it immediately adjacent to its owned launch.
+This admission seam does not itself launch a process. The adjacent adapter
+below now connects it to one bounded candidate invocation, but route selection,
+fallback execution, PRG dispatch, and language-specific runtime adapters remain
+separate work.
+
+## Artifact Invocation Adapter v1
+
+`invoke_polyglot_artifact` composes one opaque admitted-artifact token with the
+v1 request serializer, bounded child-process transport, strict response
+admission, bridge outcome policy, and migration telemetry. The invocation
+capability must exactly equal the admitted canonical capability. A denied token,
+capability mismatch, or invalid request fails before telemetry, so untrusted
+identity data cannot enter the migration event stream. A valid bridge policy is
+limited to exactly one attempt; this adapter never retries.
+
+The adapter revalidates policy, physical identity, and exact artifact bytes
+immediately beside its owned `run_bounded_process` call. The serialized request
+is sent as exact stdin bytes using a complete explicit environment; stdout and
+stderr remain separate and bounded. Cancellation, timeout, invalid process
+configuration, launch failure, output overflow, nonzero exit, malformed or
+identity-mismatched response, candidate error, success, and a late valid
+response are mapped to stable adapter status/error values and bridge telemetry.
+The result preserves the exact request document, bounded-process evidence,
+admitted response, bridge decision, and telemetry. A configured fallback may be
+reported by that decision but is never executed here.
+
+Local GCC focused and adjacent contracts pass `8/8`, and the adapter regression
+repeats `25/25`. Clang 21 ASan/UBSan passes, focused static analysis reports no
+diagnostic, and the test is portable, parallel-safe, synthetic, filesystem
+process-owned, and network-free. Exact candidate `0ac427755` passes Linux Native
+`31363043514` and macOS Native `31363043490` at `333/333`, the macOS four-locale
+`SET POINT` matrix at `8/8`, and Windows Native `31363043544` at `332/332`;
+the focused adapter regression passes on every host and all eight candidate-head
+protected checks pass.
+
+This boundary does not choose a route, invoke native or shadow behavior,
+execute a fallback, expose PRG dispatch, call mutable runtime state, or embed a
+language runtime. Revalidation materially narrows the validation-to-use window,
+but path-based execution is not an atomic handle-bound launch; that stronger
+operating-system binding remains separate work.
 
 ## Bounded Artifact Process Primitive
 
@@ -224,12 +260,12 @@ pre-existing dead store in unchanged `query_translator.cpp`. Exact candidate hea
 `31340581094` at `330/330`; the bounded-process regression passes on every
 platform. All eight candidate-head protected checks pass.
 
-This primitive does **not** itself authorize or hash an artifact. The separate
-admission boundary above now supplies that prerequisite, but it is not yet
-connected to this process primitive. Migration-contract and typed-envelope
-validation, automatic serializer/parser connection, retries or fallback, route
-selection, migration telemetry, PRG dispatch, and external-language adapters
-remain separately reviewable work.
+This primitive does **not** itself authorize or hash an artifact. The adapter
+above now composes admission, request serialization, this single-attempt
+transport, response admission, bridge decisions, and migration telemetry.
+Route selection, native/shadow execution, fallback execution, retries, PRG
+dispatch, atomic handle-bound launch, and external-language adapters remain
+separately reviewable work.
 
 ## Invocation Request Serialization v1
 
@@ -260,12 +296,14 @@ and `test_polyglot_interop_envelope` on every platform. The macOS run also
 passes both `SET POINT` targets under `C`, `en_US.UTF-8`, `pt_BR.UTF-8`, and
 `de_DE.UTF-8` (`8/8`). All eight protected PR checks pass.
 
-This is serialization only. It does not choose or authorize an artifact, write
-or send the request, capture process output, or dispatch an external route from
-PRG. The separate task-supervision seam now keeps FP/VFP source in control of
-existing `SPAWN` workers through bounded status, cancellation, result, and
-completed print-output retrieval; a later artifact adapter must reuse it, and
-foreign runtime threads must not enter mutable Copperfin runtime state directly.
+This serializer alone does not choose or authorize an artifact, send the
+request, capture process output, or dispatch an external route from PRG. The
+artifact invocation adapter above now composes it with admission and transport.
+The separate task-supervision seam keeps FP/VFP source in control of existing
+`SPAWN` workers through bounded status, cancellation, result, and completed
+print-output retrieval; a future PRG-facing artifact route must reuse that
+lifecycle, and foreign runtime threads must not enter mutable Copperfin runtime
+state directly.
 
 ## Response Envelope Admission v1
 
