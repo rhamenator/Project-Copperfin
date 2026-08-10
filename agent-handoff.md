@@ -1,5 +1,42 @@
 # Agent Handoff
 
+## V1 polyglot artifact-admission candidate
+
+The approved #4700 prerequisite now admits one external executable only after
+canonical capability-ID validation, an explicit rooted external-process policy,
+an exact lowercase SHA-256 match, and post-hash physical-identity revalidation.
+The returned token is opaque and cannot be default-constructed. Its
+pre-execution revalidation repeats the original policy, requires the same
+physical identity, rehashes the file, checks identity again, and revokes the
+token in place on any failure. SHA-256 file reads use bounded 64 KiB chunks;
+Windows uses incremental BCrypt and other native hosts use the portable
+incremental implementation.
+
+Local GCC focused and adjacent contracts pass `12/12`, and the final admission
+regression repeats `100/100`. Clang 21 ASan/UBSan passes `2/2`; focused static
+analysis reports no diagnostic in either owned implementation file, and
+`git diff --check` passes. Coverage includes standard SHA-256 vectors, valid
+rooted admission, noncanonical identity and digest rejection, missing/sibling
+roots, digest mismatch, in-place mutation, and identical-byte physical
+replacement. The replacement fixture retains the admitted file under a new
+name before creating its successor, preventing filesystem inode reuse from
+weakening the distinct-identity precondition.
+
+Exact candidate `e5f974df2` passes Linux Native `31354311198` and macOS Native
+`31354312629` at `332/332`; macOS also passes the four-locale SET POINT matrix
+at `8/8`. Windows Native `31354314025` passes `331/331`. The artifact-admission
+regression passes on every host, and all eight candidate-head protected checks
+pass. The earlier Linux run `31352961239` is excluded from evidence: it exposed
+the fixture's remove/copy inode-reuse precondition and led to the retained-file
+correction above. The earlier macOS pass and cancelled Windows run at that
+superseded head are likewise not final evidence.
+
+This prerequisite does not launch an artifact, connect the bounded-process
+transport or request/response contracts, select a route, apply fallback or
+telemetry, expose PRG dispatch, or connect an external-language runtime. A
+future adapter must place token revalidation immediately beside its owned
+launch boundary.
+
 ## V1 macOS external-process root identity candidate
 
 The next bounded macOS portable-core seam is complete at exact product/test

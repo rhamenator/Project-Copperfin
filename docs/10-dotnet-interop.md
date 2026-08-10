@@ -15,6 +15,11 @@ Current maturity:
 - The managed `DECLARE` path is tested on Win32 and x64 for absolute, explicit-relative, and parentless loader-resolved paths, sibling dependency resolution, integer/floating/string values, repeat success/failure, localized failures, and mixed-mode assemblies whose native export must take precedence. It is not a general managed object, event, callback, or by-reference interop surface.
 - The build pipeline can also generate a C# launcher/stub that is invoked as a child process by the native runtime pipeline in `src/runtime/runtime_pipeline.cpp`.
 - The portable artifact-bridge foundation can now serialize a deterministic, versioned invocation request and admit its matching structured response. It does not yet connect that exchange to the runtime host or expose PRG dispatch, asynchronous status, cancellation, or result retrieval.
+- A portable artifact-admission prerequisite now binds a canonical capability,
+  explicit rooted external-process policy, exact SHA-256, and physical file
+  identity in an opaque token that is revocable on pre-execution revalidation.
+  It does not load or launch managed code and is not yet connected to the
+  bounded-process transport or PRG control plane.
 - Generated C# transpilation output is currently an emitted artifact, not code executed by the runtime host.
 - macOS and Linux builds do not compile or host this Windows .NET Framework `DECLARE` path; their native runtime and packaging paths remain guarded from the Windows-only implementation. Broader cross-platform CLR/.NET hosting, managed wrappers, object lifetime, callbacks, policy enforcement, and generated strongly typed bindings remain v1 work.
 
