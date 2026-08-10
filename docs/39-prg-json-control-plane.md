@@ -76,12 +76,14 @@ contents are not written to runtime audit events.
 
 The parser owns only call-local state. It does not mutate a data session and is
 safe to use while PRG code polls a supervised task. The portable artifact
-invocation adapter now admits a JSON result, but it is not yet submitted through
-the PRG task registry. A future PRG-facing route must publish that result into
-the existing immutable task-completion record; PRG can then use
+invocation adapter now admits a JSON result. The host-injected
+`CFPOLYGLOTDISPATCH()` boundary publishes one validated evidence document
+directly or, when called by a spawned PRG worker, through the existing immutable
+task-completion record. PRG can then use
 `CFTASKSTATUS()`, `CFTASKRESULT()`, `CFTASKOUTPUT()`, and these JSON helpers to
 decide what happens next. The external worker still cannot call back into
-mutable Copperfin runtime state.
+mutable Copperfin runtime state. Production route/artifact provisioning remains
+separate; see `docs/42-prg-polyglot-dispatch.md`.
 
 In-process Windows interop, if later approved, must preserve this same PRG
 contract. Out-of-process adapters remain the preferred isolation boundary.
@@ -110,5 +112,5 @@ changes end at `0176d0531`; the final candidate delta is test-only coverage
 proving that a numeric fallback remains numeric.
 
 This is the first native JSON-helper slice of the broader parity-facade work.
-Regex, safe HTTP, key lifecycle, external artifact admission, dispatch,
-and automatic route promotion remain separate acceptance criteria.
+Regex, safe HTTP, key lifecycle, production host provisioning, and automatic
+route promotion remain separate acceptance criteria.

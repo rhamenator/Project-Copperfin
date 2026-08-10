@@ -532,10 +532,385 @@
             return true;
         }
 
+        static const char *runtime_polyglot_status_name(
+            RuntimePolyglotDispatchStatus status) noexcept
+        {
+            switch (status)
+            {
+            case RuntimePolyglotDispatchStatus::success:
+                return "success";
+            case RuntimePolyglotDispatchStatus::invalid_request:
+                return "invalid-request";
+            case RuntimePolyglotDispatchStatus::native_failed:
+                return "native-failed";
+            case RuntimePolyglotDispatchStatus::candidate_failed:
+                return "candidate-failed";
+            case RuntimePolyglotDispatchStatus::cancelled:
+                return "cancelled";
+            case RuntimePolyglotDispatchStatus::parity_failed:
+                return "parity-failed";
+            }
+            return nullptr;
+        }
+
+        static const char *runtime_polyglot_authority_name(
+            RuntimePolyglotDispatchAuthority authority) noexcept
+        {
+            switch (authority)
+            {
+            case RuntimePolyglotDispatchAuthority::none:
+                return "none";
+            case RuntimePolyglotDispatchAuthority::native:
+                return "native";
+            case RuntimePolyglotDispatchAuthority::candidate:
+                return "candidate";
+            }
+            return nullptr;
+        }
+
+        static const char *runtime_polyglot_selection_name(
+            RuntimePolyglotDispatchSelection selection) noexcept
+        {
+            switch (selection)
+            {
+            case RuntimePolyglotDispatchSelection::none:
+                return "none";
+            case RuntimePolyglotDispatchSelection::native:
+                return "native";
+            case RuntimePolyglotDispatchSelection::shadow:
+                return "shadow";
+            case RuntimePolyglotDispatchSelection::candidate:
+                return "candidate";
+            }
+            return nullptr;
+        }
+
+        static bool canonical_polyglot_machine_code(const std::string &value)
+        {
+            if (value.empty() || value.size() > 160U ||
+                value.front() < 'a' || value.front() > 'z')
+            {
+                return false;
+            }
+            return std::all_of(value.begin(), value.end(), [](unsigned char ch)
+            {
+                return (ch >= 'a' && ch <= 'z') ||
+                       (ch >= '0' && ch <= '9') ||
+                       ch == '.' || ch == '_' || ch == '-';
+            });
+        }
+
+        static bool canonical_polyglot_capability_id(const std::string &value)
+        {
+            if (value.empty() || value.front() < 'a' || value.front() > 'z')
+            {
+                return false;
+            }
+            return std::all_of(value.begin() + 1, value.end(), [](unsigned char ch)
+            {
+                return (ch >= 'a' && ch <= 'z') ||
+                       (ch >= '0' && ch <= '9') ||
+                       ch == '.' || ch == '_' || ch == '-';
+            });
+        }
+
+        static bool valid_runtime_polyglot_result(
+            const RuntimePolyglotDispatchResult &result)
+        {
+            if (runtime_polyglot_status_name(result.status) == nullptr ||
+                runtime_polyglot_authority_name(result.authority) == nullptr ||
+                runtime_polyglot_selection_name(result.selection) == nullptr ||
+                !canonical_polyglot_machine_code(result.error_code) ||
+                result.native_invocation_count > 1U ||
+                result.candidate_invocation_count > 1U)
+            {
+                return false;
+            }
+
+            if (result.selection == RuntimePolyglotDispatchSelection::none)
+            {
+                if (result.authority != RuntimePolyglotDispatchAuthority::none ||
+                    result.native_invocation_count != 0U ||
+                    result.candidate_invocation_count != 0U ||
+                    result.native_fallback_executed)
+                {
+                    return false;
+                }
+            }
+            else if (result.selection == RuntimePolyglotDispatchSelection::native)
+            {
+                if (result.authority != RuntimePolyglotDispatchAuthority::native ||
+                    result.native_invocation_count != 1U ||
+                    result.candidate_invocation_count != 0U ||
+                    result.native_fallback_executed)
+                {
+                    return false;
+                }
+            }
+            else if (result.selection == RuntimePolyglotDispatchSelection::shadow)
+            {
+                if (result.authority != RuntimePolyglotDispatchAuthority::native ||
+                    result.native_invocation_count != 1U ||
+                    result.candidate_invocation_count != 1U ||
+                    result.native_fallback_executed)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                const bool candidate_authoritative =
+                    result.authority == RuntimePolyglotDispatchAuthority::candidate &&
+                    result.native_invocation_count == 0U &&
+                    !result.native_fallback_executed;
+                const bool native_fallback_authoritative =
+                    result.authority == RuntimePolyglotDispatchAuthority::native &&
+                    result.native_invocation_count == 1U &&
+                    result.native_fallback_executed;
+                if (result.candidate_invocation_count != 1U ||
+                    (!candidate_authoritative && !native_fallback_authoritative))
+                {
+                    return false;
+                }
+            }
+
+            const bool native_primary =
+                result.selection == RuntimePolyglotDispatchSelection::native;
+            const bool shadow =
+                result.selection == RuntimePolyglotDispatchSelection::shadow;
+            const bool candidate_primary =
+                result.selection == RuntimePolyglotDispatchSelection::candidate;
+            const bool native_fallback = candidate_primary &&
+                result.authority == RuntimePolyglotDispatchAuthority::native &&
+                result.native_fallback_executed;
+            switch (result.status)
+            {
+            case RuntimePolyglotDispatchStatus::success:
+                if (result.authority == RuntimePolyglotDispatchAuthority::none)
+                {
+                    return false;
+                }
+                break;
+            case RuntimePolyglotDispatchStatus::invalid_request:
+                if (result.selection != RuntimePolyglotDispatchSelection::none)
+                {
+                    return false;
+                }
+                break;
+            case RuntimePolyglotDispatchStatus::native_failed:
+                if (!native_primary && !native_fallback)
+                {
+                    return false;
+                }
+                break;
+            case RuntimePolyglotDispatchStatus::candidate_failed:
+            case RuntimePolyglotDispatchStatus::cancelled:
+                if (!candidate_primary ||
+                    result.authority != RuntimePolyglotDispatchAuthority::candidate ||
+                    result.native_fallback_executed)
+                {
+                    return false;
+                }
+                break;
+            case RuntimePolyglotDispatchStatus::parity_failed:
+                if (!shadow)
+                {
+                    return false;
+                }
+                break;
+            default:
+                return false;
+            }
+            if (!result.payload_json.empty())
+            {
+                const auto payload = copperfin::platform::select_json_value(result.payload_json);
+                if (!payload.ok())
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        static std::string runtime_polyglot_dispatch_document(
+            const std::string &capability_id,
+            const std::string &status,
+            const std::string &error_code,
+            const RuntimePolyglotDispatchResult *result = nullptr)
+        {
+            const char *authority = result == nullptr
+                                        ? "none"
+                                        : runtime_polyglot_authority_name(result->authority);
+            const char *selection = result == nullptr
+                                        ? "none"
+                                        : runtime_polyglot_selection_name(result->selection);
+            const std::uint32_t native_count = result == nullptr
+                                                   ? 0U
+                                                   : result->native_invocation_count;
+            const std::uint32_t candidate_count = result == nullptr
+                                                      ? 0U
+                                                      : result->candidate_invocation_count;
+            const bool fallback_executed = result != nullptr &&
+                                           result->native_fallback_executed;
+            const std::string_view payload = result == nullptr
+                                                 ? std::string_view{}
+                                                 : std::string_view(result->payload_json);
+
+            std::ostringstream document;
+            document << "{\"schema_version\":1"
+                     << ",\"status\":\""
+                     << copperfin::platform::json_escape_string(status)
+                     << "\",\"error_code\":\""
+                     << copperfin::platform::json_escape_string(error_code)
+                     << "\",\"capability_id\":\""
+                     << copperfin::platform::json_escape_string(capability_id)
+                     << "\",\"authority\":\"" << authority
+                     << "\",\"route_selection\":\"" << selection
+                     << "\",\"native_invocation_count\":" << native_count
+                     << ",\"candidate_invocation_count\":" << candidate_count
+                     << ",\"native_fallback_executed\":"
+                     << (fallback_executed ? "true" : "false")
+                     << ",\"payload\":"
+                     << (payload.empty() ? "null" : payload)
+                     << '}';
+            return document.str();
+        }
+
+        std::optional<PrgValue> polyglot_dispatch_function(
+            const std::string &function,
+            const std::vector<PrgValue> &arguments)
+        {
+            if (function != "cfpolyglotdispatch")
+            {
+                return std::nullopt;
+            }
+
+            constexpr std::size_t maximum_result_document_bytes = 1024U * 1024U;
+            auto fail = [&](const std::string &capability_id,
+                            const std::string &status,
+                            const std::string &error_code)
+            {
+                events.push_back({.category = "runtime.polyglot.dispatch",
+                                  .detail = "capability=" + capability_id +
+                                            " status=" + status +
+                                            " reason=" + error_code,
+                                  .location = current_statement() == nullptr
+                                                  ? SourceLocation{}
+                                                  : current_statement()->location});
+                return make_string_value(runtime_polyglot_dispatch_document(
+                    capability_id, status, error_code));
+            };
+
+            if (arguments.size() < 2U || arguments.size() > 3U ||
+                arguments[0].kind != PrgValueKind::string ||
+                arguments[1].kind != PrgValueKind::string)
+            {
+                return fail({}, "invalid-request", "polyglot.prg.invalid_arguments");
+            }
+
+            const std::string capability_id = arguments[0].string_value;
+            if (!canonical_polyglot_capability_id(capability_id))
+            {
+                return fail({}, "invalid-request", "polyglot.prg.invalid_capability_id");
+            }
+
+            const auto input = copperfin::platform::select_json_value(
+                arguments[1].string_value);
+            if (!input.ok() || input.kind != copperfin::platform::JsonValueKind::object)
+            {
+                return fail(capability_id, "invalid-request", "polyglot.prg.invalid_arguments_json");
+            }
+
+            std::uint8_t selection_sample = 0U;
+            if (arguments.size() == 3U)
+            {
+                long double sample = -1.0L;
+                switch (arguments[2].kind)
+                {
+                case PrgValueKind::number:
+                    sample = arguments[2].number_value;
+                    break;
+                case PrgValueKind::int64:
+                    sample = static_cast<long double>(arguments[2].int64_value);
+                    break;
+                case PrgValueKind::uint64:
+                    sample = static_cast<long double>(arguments[2].uint64_value);
+                    break;
+                default:
+                    break;
+                }
+                if (!std::isfinite(sample) || std::trunc(sample) != sample ||
+                    sample < 0.0L || sample > 99.0L)
+                {
+                    return fail(capability_id, "invalid-request", "polyglot.prg.invalid_selection_sample");
+                }
+                selection_sample = static_cast<std::uint8_t>(sample);
+            }
+
+            const SourceLocation location = current_statement() == nullptr
+                                                ? SourceLocation{}
+                                                : current_statement()->location;
+            if (!ensure_non_blocking_critical_section_policy(
+                    "CFPOLYGLOTDISPATCH", location))
+            {
+                return fail(capability_id, "invalid-request", "polyglot.prg.blocked_in_critical_section");
+            }
+            if (!options.polyglot_dispatch_callback)
+            {
+                return fail(capability_id, "unavailable", "polyglot.prg.dispatch_unavailable");
+            }
+
+            RuntimePolyglotDispatchResult result;
+            try
+            {
+                const auto cancellation_token = task_cancel_requested;
+                result = options.polyglot_dispatch_callback(
+                    RuntimePolyglotDispatchRequest{
+                        capability_id,
+                        arguments[1].string_value,
+                        selection_sample,
+                        [cancellation_token]()
+                        {
+                            return cancellation_token != nullptr &&
+                                   cancellation_token->load(std::memory_order_relaxed);
+                        }});
+            }
+            catch (const std::exception &)
+            {
+                return fail(capability_id, "host-failed", "polyglot.prg.dispatch_exception");
+            }
+            catch (...)
+            {
+                return fail(capability_id, "host-failed", "polyglot.prg.dispatch_exception");
+            }
+
+            if (!valid_runtime_polyglot_result(result))
+            {
+                return fail(capability_id, "host-failed", "polyglot.prg.invalid_host_result");
+            }
+            const std::string status = runtime_polyglot_status_name(result.status);
+            std::string document = runtime_polyglot_dispatch_document(
+                capability_id, status, result.error_code, &result);
+            if (document.size() > maximum_result_document_bytes)
+            {
+                return fail(capability_id, "host-failed", "polyglot.prg.result_too_large");
+            }
+            events.push_back({.category = "runtime.polyglot.dispatch",
+                              .detail = "capability=" + capability_id +
+                                        " status=" + status +
+                                        " reason=" + result.error_code,
+                              .location = location});
+            return make_string_value(std::move(document));
+        }
+
         std::optional<PrgValue> async_task_control_function(
             const std::string &function,
             const std::vector<PrgValue> &arguments)
         {
+            if (const auto polyglot_result = polyglot_dispatch_function(function, arguments))
+            {
+                return polyglot_result;
+            }
             if (function != "cftaskstatus" &&
                 function != "cftaskcancel" &&
                 function != "cftaskresult" &&

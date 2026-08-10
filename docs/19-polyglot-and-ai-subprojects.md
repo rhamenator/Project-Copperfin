@@ -27,8 +27,12 @@ Current maturity:
   neither layer is a PRG route or language integration by itself.
 - A portable route-execution coordinator now applies the existing lifecycle
   decision to synchronous caller-owned native work and the admitted-artifact
-  adapter. It composes shadow parity and one permitted native fallback, but is
-  not yet exposed through PRG dispatch or a language-specific adapter.
+  adapter. It composes shadow parity and one permitted native fallback.
+- A host-injected `CFPOLYGLOTDISPATCH()` PRG seam now validates immutable
+  capability/JSON/sample input and returns bounded invariant evidence. It runs
+  on the current PRG task so existing `SPAWN`/`CFTASK*` supervision applies,
+  but the ordinary runtime host does not yet provision the callback from
+  trusted route/artifact state and no language-specific adapter exists.
 - A separate portable admission boundary now binds a canonical capability ID
   and rooted external-process authorization to one exact lowercase SHA-256 and
   physical file identity. Its opaque token must be revalidated before a later
@@ -240,11 +244,35 @@ matrix at `8/8`, and Windows Native `31415789688` at `333/333`; the focused
 regression passes on every host and all eight candidate-head protected checks
 pass.
 
-This seam does not expose PRG dispatch, introduce a second task lifecycle,
-permit inline foreign-language source, host a language runtime, or allow a
-foreign worker to call mutable Copperfin runtime state. It also does not provide
-retry, second-artifact fallback, discovery, dependency installation, or atomic
-handle-bound launch. Those remain separately reviewable work.
+This seam does not itself expose PRG dispatch, introduce a second task
+lifecycle, permit inline foreign-language source, host a language runtime, or
+allow a foreign worker to call mutable Copperfin runtime state. The adjacent
+PRG boundary below can delegate to a host callback but does not provision this
+coordinator. Retry, second-artifact fallback, discovery, dependency
+installation, and atomic handle-bound launch remain separately reviewable work.
+
+## PRG Polyglot Dispatch Boundary v1
+
+`CFPOLYGLOTDISPATCH()` is the PRG-facing orchestration contract. It accepts one
+canonical capability ID, one bounded UTF-8 JSON object, and an optional exact
+`0..99` selection sample. Invalid requests fail before work. A configured host
+callback receives only those immutable values and a read-only cancellation
+probe; it cannot enter mutable PRG state. Its result is validated and serialized
+as one deterministic JSON evidence document with invariant status, reason,
+authority, route, invocation-count, fallback, and payload fields.
+
+The callback executes synchronously on the current PRG task. Blocking it inside
+`ENTER CRITICAL` is rejected by the shared concurrency policy. A caller that
+wants nonblocking orchestration places the call in `SPAWN` and supervises it
+with `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and `AWAIT`.
+Arguments and payload bytes are excluded from runtime events.
+
+This boundary is unavailable unless a host injects the callback. It does not
+discover artifacts, load a runtime, authorize an executable, retry, or permit
+foreign threads to call the runtime. Production host construction from the
+trusted route registry, artifact admission token, and portable executor is a
+separate composition step. See `docs/42-prg-polyglot-dispatch.md` for the full
+machine contract and current evidence.
 
 ## Bounded Artifact Process Primitive
 

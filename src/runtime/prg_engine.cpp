@@ -6,6 +6,7 @@
 #include "copperfin/runtime/index_seek_optimizer.h"
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/invariant_numeric.h"
+#include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
 #include "localized_text.h"
 #include "prg_engine_command_helpers.h"

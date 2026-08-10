@@ -5,6 +5,7 @@ This document defines the runtime invariants for Copperfin's in-memory coordinat
 - `SPAWN`
 - `AWAIT`
 - `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and `CFTASKOUTPUT()`
+- `CFPOLYGLOTDISPATCH()`
 - `YIELD`
 - `ENTER CRITICAL`
 - `EXIT CRITICAL`
@@ -62,6 +63,8 @@ Current enforced examples:
 
 - `AWAIT`
 - positive-duration `SLEEP`
+- `CFPOLYGLOTDISPATCH()`, because the host callback may wait for bounded
+  external execution
 - lock retry/backoff reached from `RLOCK()`, `FLOCK()`, `LOCK()`, or mutation paths such as `REPLACE`, `APPEND BLANK`, `DELETE`, and `RECALL` when contention would otherwise trigger retry waits
 
 Engine diagnostic contract:

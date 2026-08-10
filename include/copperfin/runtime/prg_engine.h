@@ -208,6 +208,52 @@ enum class RuntimeKeyboardCompatibility {
     dos,
 };
 
+enum class RuntimePolyglotDispatchStatus {
+    success,
+    invalid_request,
+    native_failed,
+    candidate_failed,
+    cancelled,
+    parity_failed,
+};
+
+enum class RuntimePolyglotDispatchAuthority {
+    none,
+    native,
+    candidate,
+};
+
+enum class RuntimePolyglotDispatchSelection {
+    none,
+    native,
+    shadow,
+    candidate,
+};
+
+struct RuntimePolyglotDispatchRequest {
+    std::string capability_id;
+    std::string arguments_json;
+    std::uint8_t selection_sample = 0U;
+    // The host may pass this non-owning, read-only probe into a bounded bridge
+    // operation. It never exposes mutable PRG runtime state.
+    std::function<bool()> cancellation_requested;
+};
+
+struct RuntimePolyglotDispatchResult {
+    RuntimePolyglotDispatchStatus status =
+        RuntimePolyglotDispatchStatus::invalid_request;
+    std::string error_code;
+    RuntimePolyglotDispatchAuthority authority =
+        RuntimePolyglotDispatchAuthority::none;
+    RuntimePolyglotDispatchSelection selection =
+        RuntimePolyglotDispatchSelection::none;
+    std::uint32_t native_invocation_count = 0U;
+    std::uint32_t candidate_invocation_count = 0U;
+    bool native_fallback_executed = false;
+    // One complete bounded JSON value. Empty means JSON null.
+    std::string payload_json;
+};
+
 struct RuntimeSessionOptions {
     std::string startup_path;
     // Optional host-selected catalog. Null keeps the legacy environment lookup.
@@ -236,6 +282,11 @@ struct RuntimeSessionOptions {
     // explicit and unsupported until its distinct navigation semantics land.
     RuntimeKeyboardCompatibility keyboard_compatibility = RuntimeKeyboardCompatibility::windows;
     RushmorePlanningOptions rushmore_planning{};
+    // Optional host-owned bridge for CFPOLYGLOTDISPATCH(). The runtime invokes
+    // it synchronously on the current PRG task with immutable request data.
+    // Null fails closed; the callback receives no runtime/session reference.
+    std::function<RuntimePolyglotDispatchResult(
+        const RuntimePolyglotDispatchRequest&)> polyglot_dispatch_callback;
     // Called when QUIT executes. Return true to allow quit; false to cancel it
     // (e.g. show a dialog asking the user to confirm). Null means always quit.
     std::function<bool()> quit_confirm_callback;

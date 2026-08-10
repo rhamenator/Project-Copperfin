@@ -1022,6 +1022,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_index_seek_optimization
             test_prg_engine_json_facade
             test_prg_engine_payload_crypto_facade
+            test_prg_engine_polyglot_dispatch
             test_prg_engine_regex_facade
             test_prg_engine_locale_code_page
             test_prg_engine_parser_classes
