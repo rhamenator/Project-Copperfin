@@ -134,7 +134,13 @@ exact large-number payload preservation, invariant event data, and real
 portable, parallel-safe, test-owned, network-free, and process-free.
 
 Local GCC Release focused plus adjacent coverage passes `6/6`, and the focused
-regression repeats `20/20`. Clang 21 ASan/UBSan passes. Focused static analysis
-finds no issue in changed lines; its diagnostics are pre-existing in unchanged
-runtime lines. Hosted evidence is recorded in the roadmap and handoff when
-available.
+regression repeats `20/20`. Clang 21 ASan/UBSan and ThreadSanitizer pass.
+Focused static analysis finds no issue in changed lines; its diagnostics are
+pre-existing in unchanged runtime lines. Exact product/test candidate
+`0d77c83b8` passes Linux Native `31429006833` and macOS Native `31429008763` at
+`335/335`, and Windows Native `31429010944` at `334/334`; the focused regression
+passes on all three hosts, the macOS four-locale matrix passes `8/8`, and all
+eight candidate-head protected checks pass. A
+superseded macOS run found a timing assumption only in this test's cancellation
+fixture; the replacement waits for a test-owned callback-entry marker and
+atomically owns a unique temporary root without changing product behavior.

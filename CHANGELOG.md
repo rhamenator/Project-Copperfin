@@ -9,9 +9,15 @@
   blocking policy. Existing `SPAWN`/`CFTASK*` operations provide nonblocking
   supervision and cooperative cancellation propagation without exposing the
   task's mutable state. Local GCC Release focused plus adjacent coverage passes
-  `6/6`, the focused test repeats `20/20`, Clang 21
-  ASan/UBSan passes, and focused static analysis finds no issue in changed
-  lines. Hosted and protected-PR evidence remains pending. This does not
+  `6/6`, the focused test repeats `20/20`, Clang 21 ASan/UBSan and
+  ThreadSanitizer pass, and focused static analysis finds no issue in changed
+  lines. Exact product/test candidate `0d77c83b8` passes Linux Native
+  `31429006833` and macOS Native `31429008763` at `335/335`, and Windows Native
+  `31429010944` at `334/334`; its focused test passes on all three hosts, the
+  macOS four-locale matrix passes `8/8`, and all eight candidate-head protected
+  checks pass. A superseded macOS run found a timing
+  assumption only in the cancellation fixture; the test-only replacement
+  waits for callback entry and atomically owns a unique temporary root. This does not
   provision a production route/artifact host, add a language runtime, inline
   foreign source, retry, or mutable-runtime foreign callback; no runtime stub
   or no-op was added.

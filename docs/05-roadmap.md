@@ -469,11 +469,18 @@ callback sees immutable request data and a read-only cancellation probe, never
 mutable runtime state. Calls are blocked by the centralized no-wait-in-critical
 policy, while ordinary `SPAWN`/`CFTASK*` supervision remains available. Local
 GCC Release focused plus adjacent coverage passes `6/6`, and the focused
-regression repeats `20/20`. Clang 21 ASan/UBSan passes; focused static analysis
-finds no issue in changed lines. Coverage spans unavailable, invalid-input,
-malformed host evidence, size-boundary, exception, event-redaction, and
-spawned-task cases. Hosted and protected-PR evidence remains pending. The
-ordinary runtime host does
+regression repeats `20/20`. Clang 21 ASan/UBSan and ThreadSanitizer pass;
+focused static analysis finds no issue in changed lines. Coverage spans
+unavailable, invalid-input, malformed host evidence, size-boundary, exception,
+event-redaction, and spawned-task cases. Exact product/test candidate
+`0d77c83b8` passes Linux Native `31429006833` and macOS Native `31429008763` at
+`335/335`, and Windows Native `31429010944` at `334/334`; the focused regression
+passes on all three hosts, the macOS locale matrix passes `8/8`, and all eight
+candidate-head protected checks pass. A superseded
+macOS run found only a timing assumption in the cancellation fixture; the
+test-only correction waits for callback entry and atomically owns a unique
+temporary root without changing product code or contracts. The ordinary
+runtime host does
 not yet build this callback from trusted registry and admitted-artifact state,
 so unconfigured calls fail closed; language-specific hosting remains separate.
 
