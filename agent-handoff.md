@@ -29,6 +29,12 @@ module, driver, and regression; a direct invocation also proves the new switch
 fails immediately without a positive issue number. `git diff --check` is
 clean.
 
+Exact product/policy candidate `1edabd98f` passes all eight hosted checks on
+PR #4941. Contributor Sign-Off run `31440757051`, Executable Path Validation
+run `31440757018` (GCC and Clang), Windows DECLARE ABI Validation run
+`31440757104` (Win32 and x64), Windows Environment and Executable Path
+Validation run `31440757056`, and both Socket checks are green.
+
 ## V1 PRG polyglot-dispatch candidate
 
 The approved #4700 slice adds `CFPOLYGLOTDISPATCH(cCapabilityId,
