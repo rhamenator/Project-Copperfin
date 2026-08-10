@@ -48,12 +48,13 @@ function Test-CopperfinAgentIssueApproved {
         [Parameter(Mandatory = $true)]
         [string]$TrustedOwner,
 
-        [string]$RequiredLabel = 'agent-approved'
+        [string]$RequiredLabel = 'agent-approved',
+
+        [int]$DirectlyAuthorizedIssueNumber = 0
     )
 
     if ($null -eq $Issue -or
-        [string]::IsNullOrWhiteSpace($TrustedOwner) -or
-        [string]::IsNullOrWhiteSpace($RequiredLabel)) {
+        [string]::IsNullOrWhiteSpace($TrustedOwner)) {
         return $false
     }
 
@@ -79,6 +80,15 @@ function Test-CopperfinAgentIssueApproved {
             [string]$authorLogin,
             $TrustedOwner,
             [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $false
+    }
+
+    if ($DirectlyAuthorizedIssueNumber -gt 0 -and
+        $parsedNumber -eq $DirectlyAuthorizedIssueNumber) {
+        return $true
+    }
+
+    if ([string]::IsNullOrWhiteSpace($RequiredLabel)) {
         return $false
     }
 
@@ -109,14 +119,17 @@ function Assert-CopperfinAgentIssueApproved {
         [Parameter(Mandatory = $true)]
         [string]$TrustedOwner,
 
-        [string]$RequiredLabel = 'agent-approved'
+        [string]$RequiredLabel = 'agent-approved',
+
+        [int]$DirectlyAuthorizedIssueNumber = 0
     )
 
     if (-not (Test-CopperfinAgentIssueApproved `
             -Issue $Issue `
             -TrustedOwner $TrustedOwner `
-            -RequiredLabel $RequiredLabel)) {
-        throw "Issue is not an approved owner-authored open agent execution issue."
+            -RequiredLabel $RequiredLabel `
+            -DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber)) {
+        throw "Issue is not an owner-authorized open agent work source."
     }
 }
 
@@ -129,14 +142,17 @@ function Select-CopperfinAgentApprovedIssue {
         [Parameter(Mandatory = $true)]
         [string]$TrustedOwner,
 
-        [string]$RequiredLabel = 'agent-approved'
+        [string]$RequiredLabel = 'agent-approved',
+
+        [int]$DirectlyAuthorizedIssueNumber = 0
     )
 
     foreach ($issue in @($Issues)) {
         if (Test-CopperfinAgentIssueApproved `
                 -Issue $issue `
                 -TrustedOwner $TrustedOwner `
-                -RequiredLabel $RequiredLabel) {
+                -RequiredLabel $RequiredLabel `
+                -DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber) {
             Write-Output $issue
         }
     }
@@ -151,14 +167,17 @@ function ConvertTo-CopperfinAgentIssuePromptLine {
         [Parameter(Mandatory = $true)]
         [string]$TrustedOwner,
 
-        [string]$RequiredLabel = 'agent-approved'
+        [string]$RequiredLabel = 'agent-approved',
+
+        [int]$DirectlyAuthorizedIssueNumber = 0
     )
 
     foreach ($issue in @($Issues)) {
         Assert-CopperfinAgentIssueApproved `
             -Issue $issue `
             -TrustedOwner $TrustedOwner `
-            -RequiredLabel $RequiredLabel
+            -RequiredLabel $RequiredLabel `
+            -DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber
 
         $number = [int](Get-CopperfinObjectPropertyValue -InputObject $issue -Name 'number')
         $titleValue = Get-CopperfinObjectPropertyValue -InputObject $issue -Name 'title'

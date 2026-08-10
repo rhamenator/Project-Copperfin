@@ -8,6 +8,7 @@ param(
     [string]$StateDirectory,
     [string]$Repository,
     [int]$IssueNumber = 0,
+    [switch]$DirectOwnerAuthorization,
     [int]$MaxIterations = 0,
     [int]$IdleLimit = 2,
     [int]$CodexRetryCount = 3,
@@ -23,6 +24,11 @@ $ErrorActionPreference = "Stop"
 
 $issueIntakeModule = Join-Path $PSScriptRoot "Copperfin.AgentIssueIntake.psm1"
 Import-Module -Name $issueIntakeModule -Force
+
+if ($DirectOwnerAuthorization -and $IssueNumber -le 0) {
+    throw "DirectOwnerAuthorization requires one explicit positive IssueNumber."
+}
+$DirectlyAuthorizedIssueNumber = if ($DirectOwnerAuthorization) { $IssueNumber } else { 0 }
 
 if ([string]::IsNullOrWhiteSpace($PromptFile)) {
     $PromptFile = Join-Path $RepoRoot "agent-handoff.md"
@@ -121,11 +127,21 @@ function Get-OpenRelatedIssues {
     }
 
     $issues = $json | ConvertFrom-Json
+    if ($DirectlyAuthorizedIssueNumber -gt 0 -and
+        @($issues | Where-Object { [int]$_.number -eq $DirectlyAuthorizedIssueNumber }).Count -eq 0) {
+        $directMetadataJson = gh issue view $DirectlyAuthorizedIssueNumber --repo $Repository --json number,state,author,labels
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not retrieve directly authorized GitHub issue metadata."
+        }
+        $issues = @($issues) + @($directMetadataJson | ConvertFrom-Json)
+    }
+
     $approvedMetadata = @(
         Select-CopperfinAgentApprovedIssue `
             -Issues @($issues) `
             -TrustedOwner $TrustedIssueOwner `
-            -RequiredLabel $AgentApprovalLabel
+            -RequiredLabel $AgentApprovalLabel `
+            -DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber
     )
     $approvedIssues = @(
         foreach ($issueMetadata in $approvedMetadata) {
@@ -139,13 +155,19 @@ function Get-OpenRelatedIssues {
             Assert-CopperfinAgentIssueApproved `
                 -Issue $issue `
                 -TrustedOwner $TrustedIssueOwner `
-                -RequiredLabel $AgentApprovalLabel
+                -RequiredLabel $AgentApprovalLabel `
+                -DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber
             $issue
         }
     )
 
     return @(
         $approvedIssues | Where-Object {
+            if ($DirectlyAuthorizedIssueNumber -gt 0 -and
+                [int]$_.number -eq $DirectlyAuthorizedIssueNumber) {
+                return $true
+            }
+
             $title = $_.title
             foreach ($pattern in $relatedTitlePatterns) {
                 if ($title.IndexOf($pattern, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
@@ -272,7 +294,8 @@ function Get-TargetedPrompt {
     Assert-CopperfinAgentIssueApproved `
         -Issue $TargetIssue `
         -TrustedOwner $TrustedIssueOwner `
-        -RequiredLabel $AgentApprovalLabel
+        -RequiredLabel $AgentApprovalLabel `
+        -DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber
 
     $repoDocsPath = Join-Path $RepoRoot "agent-handoff.md"
     $coverageDocPath = Join-Path $RepoRoot "docs\22-vfp-language-reference-coverage.md"
@@ -296,7 +319,8 @@ function Get-TargetedPrompt {
         (ConvertTo-CopperfinAgentIssuePromptLine `
             -Issues $otherOpenIssues `
             -TrustedOwner $TrustedIssueOwner `
-            -RequiredLabel $AgentApprovalLabel) -join "`n"
+            -RequiredLabel $AgentApprovalLabel `
+            -DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber) -join "`n"
     }
     else {
         "- none"
@@ -305,7 +329,7 @@ function Get-TargetedPrompt {
     return @"
 You are continuing Project-Copperfin in the repository rooted at: $RepoRoot
 
-Work exactly one issue in this turn:
+Work exactly one prompt-sized slice within this owner-authorized work source:
 - #$($TargetIssue.number): $($TargetIssue.title)
 
 Requirements:
@@ -368,7 +392,8 @@ function Close-VerifiedCompletedIssues {
         Assert-CopperfinAgentIssueApproved `
             -Issue $issue `
             -TrustedOwner $TrustedIssueOwner `
-            -RequiredLabel $AgentApprovalLabel
+            -RequiredLabel $AgentApprovalLabel `
+            -DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber
 
         if ($allowedLookup.Count -gt 0 -and -not $allowedLookup.ContainsKey([int]$issue.number)) {
             continue
@@ -410,7 +435,8 @@ function Invoke-CodexPass {
             (ConvertTo-CopperfinAgentIssuePromptLine `
                 -Issues $OpenIssues `
                 -TrustedOwner $TrustedIssueOwner `
-                -RequiredLabel $AgentApprovalLabel) -join "`n"
+                -RequiredLabel $AgentApprovalLabel `
+                -DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber) -join "`n"
         }
         else {
             "- none"
@@ -419,7 +445,7 @@ function Invoke-CodexPass {
         $automationPrompt = @"
 
 Automation instructions:
-- Continue the highest-priority unfinished slice from approved owner-authored live GitHub issue state and the current repo guidance.
+- Continue one highest-priority prompt-sized unfinished slice from an owner-authorized live GitHub workstream or the owner's direct issue authorization and the current repo guidance.
 - Keep the repo buildable and run the narrow validation before you stop.
 - Update agent-handoff.md when the last shipped slice, current lane, or next action changes; update docs/22-vfp-language-reference-coverage.md only when runtime-language coverage changes.
 - End your final message with exactly one line in this format: COMPLETED_ISSUES: <comma-separated issue numbers or none>
@@ -494,7 +520,10 @@ $AgentApprovalLabel = "agent-approved"
 Write-History "Repo root: $RepoRoot"
 Write-History "Repository: $Repository"
 Write-History "Trusted issue owner: $TrustedIssueOwner"
-Write-History "Required agent approval label: $AgentApprovalLabel"
+Write-History "Unattended workstream approval label: $AgentApprovalLabel"
+if ($DirectlyAuthorizedIssueNumber -gt 0) {
+    Write-History "Direct owner authorization asserted for exact issue: $DirectlyAuthorizedIssueNumber"
+}
 Write-History "Stop file: $stopFile"
 
 if ($CloseCatchUpIssuesOnly) {
@@ -531,7 +560,8 @@ while ($true) {
     Assert-CopperfinAgentIssueApproved `
         -Issue $targetIssue `
         -TrustedOwner $TrustedIssueOwner `
-        -RequiredLabel $AgentApprovalLabel
+        -RequiredLabel $AgentApprovalLabel `
+        -DirectlyAuthorizedIssueNumber $DirectlyAuthorizedIssueNumber
     Write-History ("Targeting issue #{0}: {1}" -f $targetIssue.number, $targetIssue.title)
 
     $beforeStatus = Get-StatusSnapshot

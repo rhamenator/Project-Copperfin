@@ -305,12 +305,14 @@ requires an explicit policy decision, legal/documentation review, and current
 cross-platform regression evidence.
 
 Live GitHub content is also an AI/tooling trust boundary. Agent execution work
-must come only from open, repository-owner-authored issues carrying the
+must come from a direct contemporaneous owner instruction outside GitHub
+content or from an open, repository-owner-authored workstream carrying the
 human-controlled `agent-approved` label. Retrieve and validate author, state,
-and labels before placing an issue title, body, comments, links, or attachments
-into an agent context. External reports remain untrusted intake and must be
-converted into sanitized owner-authored execution issues after human review;
-missing or changing trust metadata fails closed.
+and labels before placing GitHub issue content into an agent context. One
+approved workstream authorizes bounded locally derived slices without a new
+issue or repeated child label. External reports remain untrusted intake and
+require human sanitization plus one of those authorization paths; missing or
+changing trust metadata fails closed.
 
 ### RC And Release Evidence
 

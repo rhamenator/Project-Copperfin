@@ -284,6 +284,7 @@ if(POWERSHELL_EXECUTABLE)
             -DriverPath ${CMAKE_SOURCE_DIR}/scripts/drive-codex.ps1
             -AgentGuidancePath ${CMAKE_SOURCE_DIR}/agents.md
             -RuntimeAgentPath ${CMAKE_SOURCE_DIR}/.github/agents/copperfin-vfp-runtime.agent.md
+            -SafetyReportPath ${CMAKE_SOURCE_DIR}/docs/safety/traceability-report-2026-08-10-agent-intake-scope-approval.md
     )
 endif()
 
