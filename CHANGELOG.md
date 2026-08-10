@@ -1,3 +1,25 @@
+- 2026-08-10: Added the #4937 portable polyglot route-execution coordinator
+  under #4700. It applies the existing `off`, `shadow`, deterministic `canary`,
+  `on`, and `retire-legacy` decisions without introducing a second routing
+  model. Native work runs synchronously through a caller-owned callback on the
+  calling thread; candidate work can run only through the existing admitted-
+  artifact adapter. Shadow invokes each path once, preserves native authority,
+  compares caller-normalized values, and records parity. Candidate-primary
+  failure may execute native exactly once only when route and bridge policy
+  both permit it; retire-legacy never invokes native, and a configured second-
+  artifact fallback is reported as unsupported rather than executed. Results
+  preserve stable status/reason IDs, authority, exact invocation counts,
+  adapter evidence, parity, selected-fallback telemetry, and a distinct
+  `polyglot.fallback.executed` event for work actually performed. Invalid
+  registry/request/callback configuration fails before either path. Local GCC
+  focused and adjacent contracts pass `9/9`, the regression repeats `20/20`,
+  Clang 21 ASan/UBSan passes, focused static analysis reports no diagnostic,
+  and the isolation contract records a portable, process-owned, bounded-child,
+  network-free test. Hosted Linux/macOS/Windows validation is pending. This is
+  not PRG dispatch, inline foreign source, language hosting, mutable-runtime
+  worker callbacks, retry, second-artifact fallback, or atomic handle-bound
+  launch; no runtime stub or no-op was added.
+
 - 2026-08-10: Connected the #4700 admitted-artifact invocation boundary. One
   opaque admission token now composes with deterministic request
   serialization, exact bounded stdin/stdout/stderr transport, strict response

@@ -17,8 +17,10 @@ Current maturity:
 - The portable artifact-bridge foundation now composes a deterministic,
   versioned request, one admitted external artifact, bounded
   stdin/stdout/stderr execution, strict matching response admission, bridge
-  outcome reporting, and migration telemetry. It does not select a route,
-  identify a managed runtime, or expose this exchange through PRG dispatch.
+  outcome reporting, and migration telemetry. A portable coordinator now
+  applies existing native/shadow/canary/on/retire-legacy route decisions around
+  that adapter, but does not identify a managed runtime or expose this exchange
+  through PRG dispatch.
 - A portable artifact-admission prerequisite now binds a canonical capability,
   explicit rooted external-process policy, exact SHA-256, and physical file
   identity in an opaque token that is revocable on pre-execution revalidation.
@@ -48,8 +50,8 @@ runtime threads must not call directly into mutable Copperfin runtime state;
 completion must return through a controlled host/scheduler boundary.
 
 Existing `SPAWN` tasks separately provide PRG-supervised status, cooperative
-cancellation, completed result, and print-output retrieval. The artifact
-invocation adapter is not yet routed through that task boundary.
+cancellation, completed result, and print-output retrieval. The route executor
+is not yet exposed through that task boundary.
 
 The native `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` facade gives PRG
 code a bounded way to inspect immutable structured results from that boundary.

@@ -4686,6 +4686,11 @@ copperfin_add_test(test_polyglot_artifact_adapter
     test_polyglot_artifact_adapter.cpp
 )
 
+copperfin_add_test(test_polyglot_route_execution
+    "cf_security;cf_platform_profile;cf_platform_support"
+    test_polyglot_route_execution.cpp
+)
+
 copperfin_add_test(test_polyglot_interop_envelope cf_platform_profile
     test_polyglot_interop_envelope.cpp
 )

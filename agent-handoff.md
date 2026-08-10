@@ -1,5 +1,40 @@
 # Agent Handoff
 
+## V1 polyglot route-execution candidate
+
+The approved #4937/#4700 slice now composes the existing route registry,
+admitted-artifact adapter, bridge policy, parity comparator, and telemetry as
+one portable execution contract. `off` and native-selected `canary` invoke only
+a synchronous caller-owned native callback on the calling thread. `shadow`
+invokes native and candidate once each, keeps native authoritative even when
+candidate fails or mismatches, and compares caller-supplied normalized values.
+Candidate-selected `canary` and `on` return candidate on success; a candidate
+failure executes native at most once only when both the route and bridge policy
+permit it. `retire-legacy` never invokes native. A selected second-artifact
+fallback is preserved as policy evidence but is not executed.
+
+The result records invariant status and reason IDs, native/candidate authority,
+exact invocation counts, adapter evidence, parity, route/bridge telemetry, and
+whether native fallback actually ran. `polyglot.fallback.applied` retains its
+existing meaning of a selected policy response; new
+`polyglot.fallback.executed` distinguishes performed native work. Missing or
+malformed registry state, noncanonical capability/sample, missing admission or
+required callback, and callback exceptions fail closed. Denied or changed
+artifact identity still fails through the existing adapter without launch.
+
+Local GCC focused plus adjacent package/isolation/polyglot contracts pass
+`9/9`, and the focused regression repeats `20/20`. Clang 21 ASan/UBSan passes;
+focused `clang-tidy` reports no diagnostic and `git diff --check` is clean. The
+test is portable, parallel-safe, synthetic, process-owned, bounded-child, and
+network-free. Hosted Linux/macOS/Windows validation remains pending before this
+candidate can merge.
+
+This is not PRG dispatch, a second task lifecycle, inline foreign source,
+language-specific hosting, retry, a second-artifact fallback, a foreign-thread
+callback into mutable runtime state, or atomic handle-bound launch. PRG-facing
+routing and language adapters remain under the broader polyglot workstream; no
+runtime stub or no-op was added.
+
 ## V1 polyglot artifact invocation adapter candidate
 
 The approved #4700 composition slice now connects one opaque admitted-artifact
@@ -35,12 +70,13 @@ pass. Final local package-document, package-signer, isolation, and adapter
 selection passes `4/4`; Clang 21 ASan/UBSan focused passes. The superseded runs
 are not final evidence.
 
-This is not route execution, native/shadow invocation, fallback execution,
-retry, PRG dispatch, a mutable-runtime callback, or a language-specific
-runtime. Adjacent path revalidation narrows TOCTOU exposure but does not make
-the launch atomic or handle-bound; that stronger operating-system binding
-remains separate work. No runtime stub or no-op was added, so the runtime stub
-inventory is unchanged.
+The newer route-execution candidate above now consumes this adapter for native,
+shadow, candidate-primary, and permitted native-fallback composition. This
+adapter itself still does not choose a route or execute fallback. Neither layer
+adds retry, PRG dispatch, a mutable-runtime worker callback, or a language-
+specific runtime. Adjacent path revalidation narrows TOCTOU exposure but does
+not make launch atomic or handle-bound. No runtime stub or no-op was added, so
+the runtime stub inventory is unchanged.
 
 ## V1 polyglot artifact-admission candidate
 

@@ -25,6 +25,10 @@ Current maturity:
   descendant cleanup, and independently bounded exact-byte stdout/stderr
   capture. The artifact invocation adapter below now consumes this primitive;
   neither layer is a PRG route or language integration by itself.
+- A portable route-execution coordinator now applies the existing lifecycle
+  decision to synchronous caller-owned native work and the admitted-artifact
+  adapter. It composes shadow parity and one permitted native fallback, but is
+  not yet exposed through PRG dispatch or a language-specific adapter.
 - A separate portable admission boundary now binds a canonical capability ID
   and rooted external-process authorization to one exact lowercase SHA-256 and
   physical file identity. Its opaque token must be revalidated before a later
@@ -187,6 +191,52 @@ execute a fallback, expose PRG dispatch, call mutable runtime state, or embed a
 language runtime. Revalidation materially narrows the validation-to-use window,
 but path-based execution is not an atomic handle-bound launch; that stronger
 operating-system binding remains separate work.
+
+## Route Execution Coordinator v1
+
+`execute_polyglot_route` applies one validated route registry to a canonical
+capability and deterministic `0..99` selection sample. Native work is a
+synchronous caller-owned callback invoked on the calling thread. Candidate work
+can enter only through `invoke_polyglot_artifact`, retaining its exact identity
+revalidation, one-attempt process ownership, bounded transport, strict response
+admission, cancellation, timeout, and invariant bridge evidence.
+
+Lifecycle behavior is exact:
+
+- `off` and a native-selected `canary` invoke native once and no candidate;
+- `shadow` invokes native and candidate once each, always keeps native
+  authoritative, and passes caller-normalized values to the parity comparator;
+- a candidate-selected `canary` and `on` invoke candidate once as primary;
+- candidate failure invokes native once only when both the route decision and
+  bridge decision allow native fallback; and
+- `retire-legacy` never invokes native, even when candidate policy selects it.
+
+The coordinator never retries and never executes a second-artifact fallback.
+Its result retains route decision, native and candidate results, parity,
+authority, exact invocation counts, and whether native fallback actually ran.
+Stable `polyglot.execution.*` identifiers classify invalid configuration and
+terminal outcome. Route, adapter/bridge, parity, and final status evidence are
+one ordered stream. Existing `polyglot.fallback.applied` means policy selected
+a fallback; `polyglot.fallback.executed` separately proves that the coordinator
+actually invoked native.
+
+Missing or malformed in-memory registry state, noncanonical capability, sample
+outside `0..99`, missing candidate admission, or a missing required native or
+shadow-normalizer callback fails before either path. Native and normalization
+exceptions are contained with invariant failure codes. A mismatched or changed
+artifact token is still rejected by the adapter and cannot be bypassed here.
+
+Local GCC focused and adjacent contracts pass `9/9`, and the focused regression
+repeats `20/20`. Clang 21 ASan/UBSan and focused static analysis pass. The
+portable isolation record is parallel-safe, synthetic, process-owned,
+bounded-child, and network-free. Hosted Linux, macOS, and Windows native
+validation is pending.
+
+This seam does not expose PRG dispatch, introduce a second task lifecycle,
+permit inline foreign-language source, host a language runtime, or allow a
+foreign worker to call mutable Copperfin runtime state. It also does not provide
+retry, second-artifact fallback, discovery, dependency installation, or atomic
+handle-bound launch. Those remain separately reviewable work.
 
 ## Bounded Artifact Process Primitive
 
@@ -360,13 +410,16 @@ mismatch count:
 | --- | --- | --- |
 | `polyglot.route.selected` | Route registry selected native, shadow, canary, on, or retire-legacy | `capability_id`, `reason_code`, `detail` |
 | `polyglot.fallback.applied` | A configured native or artifact fallback was selected | `capability_id`, `reason_code`, `detail` |
+| `polyglot.fallback.executed` | The route coordinator actually invoked native fallback | `capability_id`, `reason_code`, `detail` |
 | `polyglot.parity.checked` | Native/candidate comparison completed | `capability_id`, `reason_code`, `mismatch_count` |
 | `polyglot.parity.mismatch` | Comparison found a parity difference | `capability_id`, `reason_code`, `mismatch_count` |
 | `polyglot.latency.outcome` | Invocation latency or terminal outcome was classified | `capability_id`, `reason_code`, `latency_ms`, `detail` |
+| `polyglot.execution.completed` | One route execution reached a terminal authoritative outcome | `capability_id`, `reason_code`, `detail` |
 
 These event names, fields, reason codes, and enum values are machine contracts and are
-not localized. The telemetry model only records decisions; it does not make a route,
-start a bridge, or alter existing PRG runtime events by itself.
+not localized. The telemetry helpers only record evidence; the coordinator above is
+the separate component that applies a route and never alters existing PRG runtime
+events by itself.
 
 ## Developer Migration Playbook v1
 
