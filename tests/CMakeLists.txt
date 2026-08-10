@@ -4676,6 +4676,11 @@ copperfin_add_test(test_polyglot_bridge_invocation cf_platform_profile
     test_polyglot_bridge_invocation.cpp
 )
 
+copperfin_add_test(test_polyglot_artifact_admission
+    "cf_security;cf_platform_profile;cf_platform_support"
+    test_polyglot_artifact_admission.cpp
+)
+
 copperfin_add_test(test_polyglot_interop_envelope cf_platform_profile
     test_polyglot_interop_envelope.cpp
 )

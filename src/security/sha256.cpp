@@ -13,15 +13,20 @@
 #include <bcrypt.h>
 #endif
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
-#include <sstream>
+#include <limits>
 #include <vector>
 
 namespace copperfin::security {
 
 namespace {
+
+constexpr std::size_t kSha256BlockSize = 64U;
+constexpr std::size_t kFileReadChunkSize = 64U * 1024U;
 
 std::string to_hex(const std::uint8_t* bytes, std::size_t size) {
     static constexpr char kHex[] = "0123456789abcdef";
@@ -35,70 +40,211 @@ std::string to_hex(const std::uint8_t* bytes, std::size_t size) {
     return result;
 }
 
+Sha256Result file_read_failure(const std::string& path) {
+    return {
+        .ok = false,
+        .hex_digest = {},
+        .error = security_text(
+            "Security.Sha256.Error.OpenFileFailed",
+            {{"path", path}})};
+}
+
 #ifdef _WIN32
-Sha256Result hash_bytes(const std::uint8_t* bytes, std::size_t size) {
+
+struct WindowsSha256Context {
     BCRYPT_ALG_HANDLE algorithm = nullptr;
     BCRYPT_HASH_HANDLE hash = nullptr;
     std::vector<std::uint8_t> object_buffer;
-    std::array<std::uint8_t, 32U> digest{};
 
-    if (BCryptOpenAlgorithmProvider(&algorithm, BCRYPT_SHA256_ALGORITHM, nullptr, 0) != 0) {
-        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.BCryptOpenAlgorithmProviderFailed")};
+    ~WindowsSha256Context() {
+        if (hash != nullptr) {
+            BCryptDestroyHash(hash);
+        }
+        if (algorithm != nullptr) {
+            BCryptCloseAlgorithmProvider(algorithm, 0);
+        }
+    }
+
+    WindowsSha256Context() = default;
+    WindowsSha256Context(const WindowsSha256Context&) = delete;
+    WindowsSha256Context& operator=(const WindowsSha256Context&) = delete;
+};
+
+Sha256Result initialize_hash(WindowsSha256Context& context) {
+    if (BCryptOpenAlgorithmProvider(
+            &context.algorithm,
+            BCRYPT_SHA256_ALGORITHM,
+            nullptr,
+            0) != 0) {
+        return {
+            .ok = false,
+            .hex_digest = {},
+            .error = security_text(
+                "Security.Sha256.Error.BCryptOpenAlgorithmProviderFailed")};
     }
 
     DWORD object_size = 0;
     DWORD bytes_written = 0;
-    if (BCryptGetProperty(algorithm, BCRYPT_OBJECT_LENGTH, reinterpret_cast<PUCHAR>(&object_size), sizeof(object_size), &bytes_written, 0) != 0) {
-        BCryptCloseAlgorithmProvider(algorithm, 0);
-        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.BCryptGetPropertyObjectLengthFailed")};
+    if (BCryptGetProperty(
+            context.algorithm,
+            BCRYPT_OBJECT_LENGTH,
+            reinterpret_cast<PUCHAR>(&object_size),
+            sizeof(object_size),
+            &bytes_written,
+            0) != 0) {
+        return {
+            .ok = false,
+            .hex_digest = {},
+            .error = security_text(
+                "Security.Sha256.Error.BCryptGetPropertyObjectLengthFailed")};
     }
 
-    object_buffer.resize(object_size);
-
-    if (BCryptCreateHash(algorithm, &hash, object_buffer.data(), object_size, nullptr, 0, 0) != 0) {
-        BCryptCloseAlgorithmProvider(algorithm, 0);
-        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.BCryptCreateHashFailed")};
+    context.object_buffer.resize(object_size);
+    if (BCryptCreateHash(
+            context.algorithm,
+            &context.hash,
+            context.object_buffer.data(),
+            object_size,
+            nullptr,
+            0,
+            0) != 0) {
+        return {
+            .ok = false,
+            .hex_digest = {},
+            .error = security_text(
+                "Security.Sha256.Error.BCryptCreateHashFailed")};
     }
-
-    if (BCryptHashData(hash, const_cast<PUCHAR>(bytes), static_cast<ULONG>(size), 0) != 0) {
-        BCryptDestroyHash(hash);
-        BCryptCloseAlgorithmProvider(algorithm, 0);
-        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.BCryptHashDataFailed")};
-    }
-
-    if (BCryptFinishHash(hash, digest.data(), static_cast<ULONG>(digest.size()), 0) != 0) {
-        BCryptDestroyHash(hash);
-        BCryptCloseAlgorithmProvider(algorithm, 0);
-        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.BCryptFinishHashFailed")};
-    }
-
-    BCryptDestroyHash(hash);
-    BCryptCloseAlgorithmProvider(algorithm, 0);
-
-    return {.ok = true, .hex_digest = to_hex(digest.data(), digest.size()), .error = {}};
+    return {.ok = true, .hex_digest = {}, .error = {}};
 }
-#endif
 
-#ifndef _WIN32
+bool update_hash(
+    WindowsSha256Context& context,
+    const std::uint8_t* bytes,
+    std::size_t size) {
+    while (size > 0U) {
+        const ULONG chunk_size = static_cast<ULONG>(std::min<std::size_t>(
+            size,
+            std::numeric_limits<ULONG>::max()));
+        if (BCryptHashData(
+                context.hash,
+                const_cast<PUCHAR>(bytes),
+                chunk_size,
+                0) != 0) {
+            return false;
+        }
+        bytes += chunk_size;
+        size -= chunk_size;
+    }
+    return true;
+}
+
+Sha256Result finish_hash(WindowsSha256Context& context) {
+    std::array<std::uint8_t, 32U> digest{};
+    if (BCryptFinishHash(
+            context.hash,
+            digest.data(),
+            static_cast<ULONG>(digest.size()),
+            0) != 0) {
+        return {
+            .ok = false,
+            .hex_digest = {},
+            .error = security_text(
+                "Security.Sha256.Error.BCryptFinishHashFailed")};
+    }
+    return {
+        .ok = true,
+        .hex_digest = to_hex(digest.data(), digest.size()),
+        .error = {}};
+}
+
+Sha256Result hash_bytes(const std::uint8_t* bytes, std::size_t size) {
+    WindowsSha256Context context;
+    const auto initialized = initialize_hash(context);
+    if (!initialized.ok) {
+        return initialized;
+    }
+    if (!update_hash(context, bytes, size)) {
+        return {
+            .ok = false,
+            .hex_digest = {},
+            .error = security_text(
+                "Security.Sha256.Error.BCryptHashDataFailed")};
+    }
+    return finish_hash(context);
+}
+
+Sha256Result hash_file_stream(std::ifstream& input, const std::string& path) {
+    WindowsSha256Context context;
+    const auto initialized = initialize_hash(context);
+    if (!initialized.ok) {
+        return initialized;
+    }
+
+    std::array<std::uint8_t, kFileReadChunkSize> buffer{};
+    for (;;) {
+        input.read(
+            reinterpret_cast<char*>(buffer.data()),
+            static_cast<std::streamsize>(buffer.size()));
+        const auto count = input.gcount();
+        if (count > 0 && !update_hash(
+                context,
+                buffer.data(),
+                static_cast<std::size_t>(count))) {
+            return {
+                .ok = false,
+                .hex_digest = {},
+                .error = security_text(
+                    "Security.Sha256.Error.BCryptHashDataFailed")};
+        }
+        if (input.eof()) {
+            break;
+        }
+        if (!input) {
+            return file_read_failure(path);
+        }
+    }
+    return finish_hash(context);
+}
+
+#else
+
 std::uint32_t rotate_right(std::uint32_t value, unsigned int bits) {
     return (value >> bits) | (value << (32U - bits));
 }
 
-std::uint32_t read_be_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
-    return (static_cast<std::uint32_t>(bytes[offset]) << 24U) |
-        (static_cast<std::uint32_t>(bytes[offset + 1U]) << 16U) |
-        (static_cast<std::uint32_t>(bytes[offset + 2U]) << 8U) |
-        static_cast<std::uint32_t>(bytes[offset + 3U]);
+std::uint32_t read_be_u32(const std::uint8_t* bytes) {
+    return (static_cast<std::uint32_t>(bytes[0]) << 24U) |
+        (static_cast<std::uint32_t>(bytes[1]) << 16U) |
+        (static_cast<std::uint32_t>(bytes[2]) << 8U) |
+        static_cast<std::uint32_t>(bytes[3]);
 }
 
-void write_be_u32(std::array<std::uint8_t, 32U>& bytes, std::size_t offset, std::uint32_t value) {
+void write_be_u32(
+    std::array<std::uint8_t, 32U>& bytes,
+    std::size_t offset,
+    std::uint32_t value) {
     bytes[offset] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
     bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
     bytes[offset + 2U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
     bytes[offset + 3U] = static_cast<std::uint8_t>(value & 0xFFU);
 }
 
-Sha256Result hash_bytes(const std::uint8_t* bytes, std::size_t size) {
+struct PortableSha256Context {
+    std::array<std::uint32_t, 8U> state{
+        0x6a09e667U,
+        0xbb67ae85U,
+        0x3c6ef372U,
+        0xa54ff53aU,
+        0x510e527fU,
+        0x9b05688cU,
+        0x1f83d9abU,
+        0x5be0cd19U};
+    std::array<std::uint8_t, kSha256BlockSize> buffered{};
+    std::size_t buffered_size = 0U;
+    std::uint64_t total_bytes = 0U;
+};
+
+void process_block(PortableSha256Context& context, const std::uint8_t* block) {
     static constexpr std::array<std::uint32_t, 64U> kRoundConstants{
         0x428a2f98U, 0x71374491U, 0xb5c0fbcfU, 0xe9b5dba5U,
         0x3956c25bU, 0x59f111f1U, 0x923f82a4U, 0xab1c5ed5U,
@@ -115,89 +261,170 @@ Sha256Result hash_bytes(const std::uint8_t* bytes, std::size_t size) {
         0x19a4c116U, 0x1e376c08U, 0x2748774cU, 0x34b0bcb5U,
         0x391c0cb3U, 0x4ed8aa4aU, 0x5b9cca4fU, 0x682e6ff3U,
         0x748f82eeU, 0x78a5636fU, 0x84c87814U, 0x8cc70208U,
-        0x90befffaU, 0xa4506cebU, 0xbef9a3f7U, 0xc67178f2U
-    };
+        0x90befffaU, 0xa4506cebU, 0xbef9a3f7U, 0xc67178f2U};
 
-    std::vector<std::uint8_t> message(bytes, bytes + size);
-    const std::uint64_t bit_length = static_cast<std::uint64_t>(size) * 8ULL;
-    message.push_back(0x80U);
-    while ((message.size() % 64U) != 56U) {
-        message.push_back(0U);
+    std::array<std::uint32_t, 64U> schedule{};
+    for (std::size_t index = 0U; index < 16U; ++index) {
+        schedule[index] = read_be_u32(block + index * 4U);
     }
-    for (int shift = 56; shift >= 0; shift -= 8) {
-        message.push_back(static_cast<std::uint8_t>((bit_length >> shift) & 0xFFU));
+    for (std::size_t index = 16U; index < 64U; ++index) {
+        const std::uint32_t s0 = rotate_right(schedule[index - 15U], 7U) ^
+            rotate_right(schedule[index - 15U], 18U) ^
+            (schedule[index - 15U] >> 3U);
+        const std::uint32_t s1 = rotate_right(schedule[index - 2U], 17U) ^
+            rotate_right(schedule[index - 2U], 19U) ^
+            (schedule[index - 2U] >> 10U);
+        schedule[index] = schedule[index - 16U] + s0 +
+            schedule[index - 7U] + s1;
     }
 
-    std::array<std::uint32_t, 8U> hash{
-        0x6a09e667U, 0xbb67ae85U, 0x3c6ef372U, 0xa54ff53aU,
-        0x510e527fU, 0x9b05688cU, 0x1f83d9abU, 0x5be0cd19U
-    };
+    std::uint32_t a = context.state[0];
+    std::uint32_t b = context.state[1];
+    std::uint32_t c = context.state[2];
+    std::uint32_t d = context.state[3];
+    std::uint32_t e = context.state[4];
+    std::uint32_t f = context.state[5];
+    std::uint32_t g = context.state[6];
+    std::uint32_t h = context.state[7];
 
-    for (std::size_t offset = 0U; offset < message.size(); offset += 64U) {
-        std::array<std::uint32_t, 64U> schedule{};
-        for (std::size_t index = 0U; index < 16U; ++index) {
-            schedule[index] = read_be_u32(message, offset + index * 4U);
-        }
-        for (std::size_t index = 16U; index < 64U; ++index) {
-            const std::uint32_t s0 = rotate_right(schedule[index - 15U], 7U) ^
-                rotate_right(schedule[index - 15U], 18U) ^
-                (schedule[index - 15U] >> 3U);
-            const std::uint32_t s1 = rotate_right(schedule[index - 2U], 17U) ^
-                rotate_right(schedule[index - 2U], 19U) ^
-                (schedule[index - 2U] >> 10U);
-            schedule[index] = schedule[index - 16U] + s0 + schedule[index - 7U] + s1;
-        }
+    for (std::size_t index = 0U; index < 64U; ++index) {
+        const std::uint32_t s1 = rotate_right(e, 6U) ^
+            rotate_right(e, 11U) ^ rotate_right(e, 25U);
+        const std::uint32_t ch = (e & f) ^ ((~e) & g);
+        const std::uint32_t temp1 = h + s1 + ch +
+            kRoundConstants[index] + schedule[index];
+        const std::uint32_t s0 = rotate_right(a, 2U) ^
+            rotate_right(a, 13U) ^ rotate_right(a, 22U);
+        const std::uint32_t maj = (a & b) ^ (a & c) ^ (b & c);
+        const std::uint32_t temp2 = s0 + maj;
 
-        std::uint32_t a = hash[0];
-        std::uint32_t b = hash[1];
-        std::uint32_t c = hash[2];
-        std::uint32_t d = hash[3];
-        std::uint32_t e = hash[4];
-        std::uint32_t f = hash[5];
-        std::uint32_t g = hash[6];
-        std::uint32_t h = hash[7];
-
-        for (std::size_t index = 0U; index < 64U; ++index) {
-            const std::uint32_t s1 = rotate_right(e, 6U) ^ rotate_right(e, 11U) ^ rotate_right(e, 25U);
-            const std::uint32_t ch = (e & f) ^ ((~e) & g);
-            const std::uint32_t temp1 = h + s1 + ch + kRoundConstants[index] + schedule[index];
-            const std::uint32_t s0 = rotate_right(a, 2U) ^ rotate_right(a, 13U) ^ rotate_right(a, 22U);
-            const std::uint32_t maj = (a & b) ^ (a & c) ^ (b & c);
-            const std::uint32_t temp2 = s0 + maj;
-
-            h = g;
-            g = f;
-            f = e;
-            e = d + temp1;
-            d = c;
-            c = b;
-            b = a;
-            a = temp1 + temp2;
-        }
-
-        hash[0] += a;
-        hash[1] += b;
-        hash[2] += c;
-        hash[3] += d;
-        hash[4] += e;
-        hash[5] += f;
-        hash[6] += g;
-        hash[7] += h;
+        h = g;
+        g = f;
+        f = e;
+        e = d + temp1;
+        d = c;
+        c = b;
+        b = a;
+        a = temp1 + temp2;
     }
+
+    context.state[0] += a;
+    context.state[1] += b;
+    context.state[2] += c;
+    context.state[3] += d;
+    context.state[4] += e;
+    context.state[5] += f;
+    context.state[6] += g;
+    context.state[7] += h;
+}
+
+void update_hash(
+    PortableSha256Context& context,
+    const std::uint8_t* bytes,
+    std::size_t size) {
+    context.total_bytes += static_cast<std::uint64_t>(size);
+
+    if (context.buffered_size != 0U) {
+        const std::size_t copied = std::min(
+            size,
+            kSha256BlockSize - context.buffered_size);
+        std::copy_n(
+            bytes,
+            copied,
+            context.buffered.begin() +
+                static_cast<std::ptrdiff_t>(context.buffered_size));
+        context.buffered_size += copied;
+        bytes += copied;
+        size -= copied;
+        if (context.buffered_size == kSha256BlockSize) {
+            process_block(context, context.buffered.data());
+            context.buffered_size = 0U;
+        }
+    }
+
+    while (size >= kSha256BlockSize) {
+        process_block(context, bytes);
+        bytes += kSha256BlockSize;
+        size -= kSha256BlockSize;
+    }
+    if (size != 0U) {
+        std::copy_n(bytes, size, context.buffered.begin());
+        context.buffered_size = size;
+    }
+}
+
+Sha256Result finish_hash(PortableSha256Context& context) {
+    const std::uint64_t bit_length = context.total_bytes * 8ULL;
+    context.buffered[context.buffered_size++] = 0x80U;
+    if (context.buffered_size > 56U) {
+        std::fill(
+            context.buffered.begin() +
+                static_cast<std::ptrdiff_t>(context.buffered_size),
+            context.buffered.end(),
+            0U);
+        process_block(context, context.buffered.data());
+        context.buffered_size = 0U;
+    }
+    std::fill(
+        context.buffered.begin() +
+            static_cast<std::ptrdiff_t>(context.buffered_size),
+        context.buffered.begin() + 56,
+        0U);
+    for (std::size_t index = 0U; index < 8U; ++index) {
+        const unsigned int shift = static_cast<unsigned int>((7U - index) * 8U);
+        context.buffered[56U + index] =
+            static_cast<std::uint8_t>((bit_length >> shift) & 0xFFU);
+    }
+    process_block(context, context.buffered.data());
 
     std::array<std::uint8_t, 32U> digest{};
-    for (std::size_t index = 0U; index < hash.size(); ++index) {
-        write_be_u32(digest, index * 4U, hash[index]);
+    for (std::size_t index = 0U; index < context.state.size(); ++index) {
+        write_be_u32(digest, index * 4U, context.state[index]);
     }
-
-    return {.ok = true, .hex_digest = to_hex(digest.data(), digest.size()), .error = {}};
+    return {
+        .ok = true,
+        .hex_digest = to_hex(digest.data(), digest.size()),
+        .error = {}};
 }
+
+Sha256Result hash_bytes(const std::uint8_t* bytes, std::size_t size) {
+    PortableSha256Context context;
+    update_hash(context, bytes, size);
+    return finish_hash(context);
+}
+
+Sha256Result hash_file_stream(std::ifstream& input, const std::string& path) {
+    PortableSha256Context context;
+    std::array<std::uint8_t, kFileReadChunkSize> buffer{};
+    for (;;) {
+        input.read(
+            reinterpret_cast<char*>(buffer.data()),
+            static_cast<std::streamsize>(buffer.size()));
+        const auto count = input.gcount();
+        if (count > 0) {
+            update_hash(
+                context,
+                buffer.data(),
+                static_cast<std::size_t>(count));
+        }
+        if (input.eof()) {
+            break;
+        }
+        if (!input) {
+            return file_read_failure(path);
+        }
+    }
+    return finish_hash(context);
+}
+
 #endif
 
 }  // namespace
 
 Sha256Result sha256_hex_for_text(const std::string& text) {
-    return hash_bytes(reinterpret_cast<const std::uint8_t*>(text.data()), text.size());
+    return hash_bytes(
+        reinterpret_cast<const std::uint8_t*>(text.data()),
+        text.size());
 }
 
 Sha256Result sha256_hex_for_file(const std::string& path) {
@@ -205,13 +432,9 @@ Sha256Result sha256_hex_for_file(const std::string& path) {
         copperfin::platform::path_from_utf8_string(path),
         std::ios::binary);
     if (!input) {
-        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.OpenFileFailed", {{"path", path}})};
+        return file_read_failure(path);
     }
-
-    std::ostringstream stream;
-    stream << input.rdbuf();
-    const std::string contents = stream.str();
-    return sha256_hex_for_text(contents);
+    return hash_file_stream(input, path);
 }
 
 }  // namespace copperfin::security
