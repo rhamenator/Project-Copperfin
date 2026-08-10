@@ -826,6 +826,65 @@ void test_external_process_authorization_rejects_replacement() {
 
     fs::remove_all(temp_root, ignored);
 }
+
+void test_external_process_authorization_follows_posix_volume_case_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_external_process_root_case_tests";
+    const fs::path allowed_root = temp_root / "AllowedRoot";
+    const fs::path fixture_path = allowed_root / "authorized-tool";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(allowed_root, ignored);
+    fs::copy_file("/bin/sh", fixture_path, fs::copy_options::overwrite_existing, ignored);
+    if (ignored) {
+        expect(false, "#197: POSIX allowed-root case fixture should be created");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    fs::permissions(
+        fixture_path,
+        fs::perms::owner_exec | fs::perms::owner_read,
+        fs::perm_options::add,
+        ignored);
+
+    const copperfin::security::ExternalProcessPolicy exact_policy{
+        .executable_name = fixture_path.string(),
+        .allowed_path_roots = {allowed_root.string()},
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+    };
+    expect(copperfin::security::authorize_external_process(exact_policy).allowed,
+           "#197: POSIX external-process policy should accept its exact allowed root");
+
+    const fs::path sibling_root = temp_root / "AllowedRoot-sibling";
+    const copperfin::security::ExternalProcessPolicy sibling_policy{
+        .executable_name = fixture_path.string(),
+        .allowed_path_roots = {sibling_root.string()},
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+    };
+    expect(!copperfin::security::authorize_external_process(sibling_policy).allowed,
+           "#197: POSIX external-process policy should reject a sibling-prefix root");
+
+    const fs::path case_variant_root = temp_root / "aLLOWEDrOOT";
+    std::error_code equivalent_error;
+    const bool volume_is_case_insensitive =
+        fs::equivalent(case_variant_root, allowed_root, equivalent_error) &&
+        !equivalent_error;
+    const copperfin::security::ExternalProcessPolicy case_variant_policy{
+        .executable_name = fixture_path.string(),
+        .allowed_path_roots = {case_variant_root.string()},
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+    };
+    const auto case_variant_authorization =
+        copperfin::security::authorize_external_process(case_variant_policy);
+    expect(case_variant_authorization.allowed == volume_is_case_insensitive,
+           "#197: POSIX allowed-root comparison should follow the containing volume's case semantics");
+
+    fs::remove_all(temp_root, ignored);
+}
 #endif
 
 #ifdef _WIN32
@@ -1306,6 +1365,7 @@ int main() {
     test_external_process_and_process_hardening_diagnostics();
 #ifndef _WIN32
     test_external_process_authorization_rejects_replacement();
+    test_external_process_authorization_follows_posix_volume_case_semantics();
 #endif
 #ifdef _WIN32
     test_external_process_policy_preserves_unicode_paths();
