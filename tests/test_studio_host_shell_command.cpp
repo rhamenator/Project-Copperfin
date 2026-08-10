@@ -107,6 +107,20 @@ void test_execute_launch_command_retries_interrupted_wait() {
     expect(exit_code == 0,
            "#4325: POSIX Studio-host should retry an EINTR wait and reap the child successfully");
 }
+
+void test_execute_launch_command_distinguishes_spawn_failure_from_exit_127() {
+    const int missing_exit_code = cf_studio_host_main_detail::execute_launch_command(
+        "/copperfin/missing/studio-host-tool",
+        {});
+    expect(missing_exit_code == -1,
+           "#196: POSIX Studio-host should report a missing executable as a launch failure");
+
+    const int child_exit_code = cf_studio_host_main_detail::execute_launch_command(
+        "/bin/sh",
+        {"-c", "exit 127"});
+    expect(child_exit_code == 127,
+           "#196: POSIX Studio-host should preserve an actual child exit code of 127");
+}
 #else
 void test_execute_launch_command_preserves_unicode_paths_and_percent_arguments() {
     namespace fs = std::filesystem;
@@ -168,6 +182,7 @@ int main(int argc, char** argv) {
 #if !defined(_WIN32)
     test_execute_launch_command_handles_paths_and_arguments_with_spaces();
     test_execute_launch_command_retries_interrupted_wait();
+    test_execute_launch_command_distinguishes_spawn_failure_from_exit_127();
 #else
     test_execute_launch_command_preserves_unicode_paths_and_percent_arguments();
 #endif
