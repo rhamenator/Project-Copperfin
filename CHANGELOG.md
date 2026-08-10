@@ -1,3 +1,19 @@
+- 2026-08-09: Began the macOS/Linux standalone-host portability lane by making
+  Studio command-launch failure reporting invariant across native platforms.
+  POSIX now uses `posix_spawnp`, so a missing or otherwise unlaunchable
+  executable returns `-1` like the existing Windows `CreateProcessW` path,
+  while a real child that exits with status 127 remains distinguishable as
+  `127`. Direct argument transport, `PATH` lookup, inherited environment,
+  EINTR-safe wait/reap behavior, ordinary exit status, signal mapping, and the
+  Windows implementation remain unchanged. Focused GCC Release and Clang 21
+  ASan/UBSan tests pass, and static analysis reports no finding. Exact
+  product/test head `d08c1aa61` passes Linux Native `31344376346` and macOS
+  Native `31344376360` at `331/331`, the macOS four-locale SET POINT matrix at
+  `8/8`, and Windows Native `31344376357` at `330/330`;
+  `test_studio_host_shell_command` passes on every platform. All eight
+  candidate-head protected checks pass. Broader macOS/Linux standalone-host
+  functionality remains open.
+
 - 2026-08-09: Extended the #4700 bounded artifact-process transport with exact
   caller-supplied stdin bytes under an independent 1 MiB default and fixed
   16 MiB hard ceiling. A dedicated writer runs concurrently with both output

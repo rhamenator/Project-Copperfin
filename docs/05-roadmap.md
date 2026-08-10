@@ -28,6 +28,16 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+The first bounded macOS/Linux standalone-host portability seam is now
+implemented at exact product/test head `d08c1aa61`. The POSIX Studio command
+runner reports a missing or unlaunchable executable as `-1`, matching the
+unchanged Windows pre-start-failure contract, while preserving a real child
+exit status of 127. Exact-head Linux Native `31344376346` and macOS Native
+`31344376360` pass `331/331`, the macOS four-locale SET POINT matrix passes
+`8/8`, and Windows Native `31344376357` passes `330/330`; the focused Studio
+host regression passes everywhere. This closes one launch-error seam, not the
+broader macOS or Linux standalone-host ports.
+
 Current .NET interop security work now has a fail-closed policy-context
 candidate: trusted host state must bind actor, verified policy, audit readiness,
 and exact capability scope before a managed route can be allowed. Reflection,
@@ -671,8 +681,9 @@ cover:
    boundary.)*
 5. Port standalone/core host behavior to macOS and Linux while preserving the
    portable native contracts. *(This is lane **J** — `J1`/`#35` portable core
-   boundary, `J2`/`#36` macOS port, `J3`/`#37` Linux port. Still open with no
-   shipped evidence as of this writing.)*
+   boundary, `J2`/`#36` macOS port, `J3`/`#37` Linux port. The first bounded
+   Studio launch-error seam is shipped with three-platform evidence; the
+   broader ports remain open.)*
 6. Build the requirements-to-code-to-test traceability matrix from validated
    VFP9 behavior, shipped documentation, and documented Copperfin exceptions.
    *(No lane letter was ever assigned. The durable matrix has begun in
@@ -719,7 +730,7 @@ standalone Studio shell, and FoxPro language-service layer."
 | G | `#112` (`G1`/`#27`, `G2`/`#28`, `G3`/`#29`) | FoxPro language service: semantic resolution, navigation/refactoring, IntelliSense metadata | Recorded G1/G2/G3 slices closed; broader MVP scope remains under the live tree | Phase C |
 | H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Contract/model foundation, bounded process, deterministic request serialization, and response admission implemented; artifact trust, transport, and PRG-controlled dispatch remain | v1 item 3 |
 | I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | Seeded (see gap analysis) | v1 item 4 |
-| J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Open, no shipped evidence | v1 item 5 |
+| J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | First Studio launch-error seam shipped; broader ports open | v1 item 5 |
 
 Current G1 evidence includes #4874 at product/test head `e70c89e87`: editor
 project-symbol discovery follows the unquoted `#INCLUDE` form used by the real
