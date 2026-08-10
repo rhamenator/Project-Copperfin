@@ -258,8 +258,11 @@ void test_artifact_admission(const std::filesystem::path& running_executable) {
         copperfin::security::sha256_hex_for_file(utf8_path(artifact));
     auto identity_admission = copperfin::platform::admit_polyglot_artifact(
         admission_request(artifact, temp_root, restored_digest.hex_digest));
-    fs::remove(artifact, ignored);
-    expect(!ignored, "artifact replacement fixture should remove admitted identity");
+    const fs::path retained_identity = temp_root / "retained-admitted-identity";
+    fs::rename(artifact, retained_identity, ignored);
+    expect(
+        !ignored,
+        "artifact replacement fixture should retain the admitted physical identity");
     expect(
         copy_executable(running_executable, artifact),
         "artifact replacement fixture should create a new physical identity");
