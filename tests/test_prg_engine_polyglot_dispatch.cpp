@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <iostream>
 #include <mutex>
+#include <random>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <thread>
@@ -18,6 +20,24 @@
 namespace {
 
 using namespace copperfin::test_support;
+
+std::filesystem::path unique_temp_root(const char* stem) {
+    std::random_device random;
+    for (std::uint32_t attempt = 0U; attempt < 64U; ++attempt) {
+        const std::uint64_t token =
+            (static_cast<std::uint64_t>(random()) << 32U) ^
+            static_cast<std::uint64_t>(random());
+        const std::filesystem::path candidate =
+            std::filesystem::temp_directory_path() /
+            (std::string(stem) + "_" + std::to_string(token) + "_" +
+             std::to_string(attempt));
+        std::error_code error;
+        if (std::filesystem::create_directory(candidate, error)) {
+            return candidate;
+        }
+    }
+    throw std::runtime_error("could not create a unique test directory");
+}
 
 std::string formatted_global(
     const copperfin::runtime::RuntimePauseState& state,
@@ -31,11 +51,8 @@ std::string formatted_global(
 
 void test_prg_polyglot_dispatch_validates_and_publishes_bounded_evidence() {
     namespace fs = std::filesystem;
-    const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_prg_polyglot_dispatch";
+    const fs::path temp_root = unique_temp_root("copperfin_prg_polyglot_dispatch");
     std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
 
     const fs::path unavailable_path = temp_root / "unavailable.prg";
     write_text(
@@ -221,11 +238,8 @@ void test_prg_polyglot_dispatch_validates_and_publishes_bounded_evidence() {
 
 void test_prg_polyglot_dispatch_remains_supervisable_through_spawn() {
     namespace fs = std::filesystem;
-    const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_prg_polyglot_spawn";
+    const fs::path temp_root = unique_temp_root("copperfin_prg_polyglot_spawn");
     std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
 
     const fs::path main_path = temp_root / "spawn_dispatch.prg";
     write_text(
@@ -281,13 +295,16 @@ void test_prg_polyglot_dispatch_remains_supervisable_through_spawn() {
            "legacy AWAIT should still consume the supervised task");
 
     const fs::path cancel_path = temp_root / "cancel_dispatch.prg";
+    const fs::path callback_ready_path = temp_root / "callback.ready";
     write_text(
         cancel_path,
         "PROCEDURE bridgeworker\n"
         "    RETURN CFPOLYGLOTDISPATCH('interop.cancel-v1', '{}')\n"
         "ENDPROC\n"
         "SPAWN bridgeworker TO nTask\n"
-        "SLEEP 250\n"
+        "DO WHILE NOT FILE('" + callback_ready_path.string() + "')\n"
+        "    YIELD\n"
+        "ENDDO\n"
         "lCancelRequested = CFTASKCANCEL(nTask)\n"
         "DO WHILE CFTASKSTATUS(nTask) == 'running' OR CFTASKSTATUS(nTask) == 'cancel-requested'\n"
         "    YIELD\n"
@@ -302,6 +319,7 @@ void test_prg_polyglot_dispatch_remains_supervisable_through_spawn() {
     auto cancel_options = make_runtime_session_options(cancel_path, temp_root);
     cancel_options.polyglot_dispatch_callback =
         [&](const copperfin::runtime::RuntimePolyglotDispatchRequest& request) {
+            write_text(callback_ready_path, "ready\n");
             const auto deadline = std::chrono::steady_clock::now() +
                 std::chrono::seconds(2);
             while (std::chrono::steady_clock::now() < deadline &&
