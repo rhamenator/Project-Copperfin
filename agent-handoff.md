@@ -1,5 +1,47 @@
 # Agent Handoff
 
+## V1 polyglot artifact invocation adapter candidate
+
+The approved #4700 composition slice now connects one opaque admitted-artifact
+token to deterministic request serialization, exact bounded stdin/stdout/stderr
+child transport, strict response-envelope admission, bridge outcome/fallback
+reporting, and invariant migration telemetry. The invocation capability must
+exactly match the admitted canonical capability. A denied token, mismatched
+identity, or invalid request fails before telemetry. Valid bridge policy is
+limited to exactly one attempt, so this adapter does not retry.
+
+Artifact policy, physical identity, and exact bytes are revalidated immediately
+beside the adapter's owned launch call. The result preserves the request,
+process evidence, admitted response, bridge decision, and telemetry. Coverage
+maps cancellation, timeout, invalid process configuration, launch failure,
+output overflow and tree closure, nonzero exit, malformed response, candidate
+error, success, and a late valid response. A configured fallback is returned as
+a decision but never executed.
+
+Local GCC focused and adjacent contracts pass `8/8`; the focused adapter
+regression repeats `25/25`. Clang 21 ASan/UBSan passes, focused static analysis
+reports zero diagnostics, and `git diff --check` is clean. The regression is
+portable, parallel-safe, synthetic, filesystem process-owned, bounded-child,
+and network-free. Initial candidate `c8115e0fc` passed Linux and macOS Native at
+`333/333`, but Windows Native `31359613228` failed while
+compiling this test: MSVC does not implicitly convert `filesystem::path` to the
+UTF-8 string accepted by the SHA-256 helper. The owner-approved test-only
+correction at `0ac427755` reuses the fixture's existing portable path
+conversion. Exact corrected-head Linux Native `31363043514` and macOS Native
+`31363043490` pass `333/333`, the macOS four-locale `SET POINT` matrix passes
+`8/8`, and Windows Native `31363043544` passes `332/332`; the focused adapter
+regression passes on every host and all eight candidate-head protected checks
+pass. Final local package-document, package-signer, isolation, and adapter
+selection passes `4/4`; Clang 21 ASan/UBSan focused passes. The superseded runs
+are not final evidence.
+
+This is not route execution, native/shadow invocation, fallback execution,
+retry, PRG dispatch, a mutable-runtime callback, or a language-specific
+runtime. Adjacent path revalidation narrows TOCTOU exposure but does not make
+the launch atomic or handle-bound; that stronger operating-system binding
+remains separate work. No runtime stub or no-op was added, so the runtime stub
+inventory is unchanged.
+
 ## V1 polyglot artifact-admission candidate
 
 The approved #4700 prerequisite now admits one external executable only after
@@ -31,11 +73,11 @@ the fixture's remove/copy inode-reuse precondition and led to the retained-file
 correction above. The earlier macOS pass and cancelled Windows run at that
 superseded head are likewise not final evidence.
 
-This prerequisite does not launch an artifact, connect the bounded-process
-transport or request/response contracts, select a route, apply fallback or
-telemetry, expose PRG dispatch, or connect an external-language runtime. A
-future adapter must place token revalidation immediately beside its owned
-launch boundary.
+This prerequisite alone does not launch an artifact. The newer invocation
+adapter above now places token revalidation immediately beside its owned launch
+and connects request/response, outcome, and telemetry contracts. Route
+selection, fallback execution, PRG dispatch, and language-specific runtimes
+remain separate.
 
 ## V1 macOS external-process root identity candidate
 
@@ -134,9 +176,11 @@ at `330/330`; `test_bounded_process` passes on every platform. All eight
 candidate-head protected checks pass. Windows diagnostics are pre-existing
 warnings in unchanged runtime sources, with none in this slice's implementation
 or test.
-No artifact authorization/hashing, automatic serializer/parser connection,
-route selection, fallback, telemetry, PRG dispatch, or external-language
-adapter is added; the runtime stub inventory is unchanged.
+This low-level transport alone adds no artifact authorization or hashing. The
+newer invocation adapter above now composes admission, serializer/parser,
+single-attempt transport, outcome reporting, and telemetry. Route selection,
+fallback execution, retry, PRG dispatch, and language-specific adapters remain
+open; the runtime stub inventory is unchanged.
 
 ## V1 PRG HMAC payload-authentication candidate
 

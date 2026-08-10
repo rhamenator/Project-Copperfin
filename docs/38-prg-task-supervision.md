@@ -47,10 +47,11 @@ completion/error events retain their prior meanings.
 
 Current task output means the child's retained `runtime.print` events. Output
 is exposed only after completion, when the completion record is immutable.
-There is no live-streaming callback into runtime state. A future external
-artifact adapter may capture bounded standard output and error, but it must
-publish those bytes through the same completion boundary rather than entering
-the PRG evaluator from a worker thread.
+There is no live-streaming callback into runtime state. The portable artifact
+invocation adapter now captures bounded standard output and error outside this
+task registry. A future PRG-facing route must publish admitted results through
+this same completion boundary rather than entering the PRG evaluator from a
+worker thread.
 
 ## Compatibility And Nonclaims
 
@@ -58,8 +59,10 @@ Existing `SPAWN` and `AWAIT` source continues to behave as before. The new
 functions do not execute .NET, Python, R, or another external language; choose,
 authorize, or hash an artifact; route a polyglot request; or weaken the
 separate policy, audit, bounded-process, and response-admission requirements.
-They provide the PRG-owned supervision seam that a later admitted adapter can
-use without inventing a second task lifecycle.
+They provide the PRG-owned supervision seam that a future PRG-facing artifact
+route must reuse without inventing a second task lifecycle. The portable
+invocation adapter exists, but no PRG route submits it through this registry
+yet.
 
 Focused coverage in `test_prg_engine_control_flow` proves nonblocking running
 observation, retained terminal status/result/ordered output, cancellation,

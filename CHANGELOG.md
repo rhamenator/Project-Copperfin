@@ -1,3 +1,38 @@
+- 2026-08-10: Connected the #4700 admitted-artifact invocation boundary. One
+  opaque admission token now composes with deterministic request
+  serialization, exact bounded stdin/stdout/stderr transport, strict response
+  admission, bridge outcome/fallback reporting, and migration telemetry. The
+  request capability must match the admitted canonical capability; denied
+  identity, capability confusion, and invalid request data fail before
+  telemetry. The adapter permits exactly one candidate attempt and reports but
+  never executes fallback. Revalidation sits immediately beside the owned
+  launch call and detects a changed artifact before launch, while the
+  documented residual path-based validation-to-use window remains distinct
+  from future atomic handle-bound execution. Local GCC focused and adjacent
+  contracts pass `8/8`, the adapter repeats `25/25`, Clang 21 ASan/UBSan
+  passes, and focused static analysis reports no diagnostic. Route selection,
+  native/shadow invocation, fallback execution, retry, PRG dispatch,
+  mutable-runtime callbacks, and language-specific runtimes remain outside
+  this slice. No runtime stub or no-op was added, so the runtime stub inventory
+  is unchanged. Initial candidate `c8115e0fc` passed Linux and macOS Native at
+  `333/333`, but Windows Native `31359613228` exposed a test-only MSVC compile
+  failure from an implicit `filesystem::path`-to-UTF-8-string conversion. The
+  owner-approved correction at `0ac427755` reuses the existing portable path
+  helper. That exact product/test candidate passes Linux Native `31363043514`
+  and macOS Native `31363043490` at `333/333`, the macOS four-locale `SET POINT`
+  matrix at `8/8`, and Windows Native `31363043544` at `332/332`; the focused
+  adapter regression passes on every host and all eight candidate-head
+  protected checks pass. The superseded runs are excluded from final evidence.
+
+- 2026-08-10: Corrected the v1 roadmap's stale private-evaluation state without
+  changing an RC tag or artifact. Immutable `v0.1.0-rc.2` peels to
+  `fd6bd94f85f198d09d8829a4ff24a20c855650ab`; exact-tag assembly run
+  `31244558839` succeeded and uploaded the private evaluation bundle with
+  GitHub-reported SHA-256
+  `501ba26642af4fb58c69e3c69ca0f29b7eb5e242a4980ea31770e83bd84605df`.
+  No GitHub Release exists, and this evidence is not human acceptance or
+  official-release authority. RC2 remains immutable.
+
 - 2026-08-09: Added the #4700 portable artifact-admission prerequisite. A
   canonical capability ID, explicit rooted external-process policy, exact
   lowercase SHA-256, and physical file identity now produce an opaque token;
