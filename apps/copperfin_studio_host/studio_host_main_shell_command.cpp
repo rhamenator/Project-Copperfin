@@ -10,8 +10,14 @@
 #if defined(_WIN32)
 #include <windows.h>
 #else
+#include <spawn.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#if defined(__APPLE__)
+#include <crt_externs.h>
+#else
+extern char** environ;
+#endif
 #endif
 
 namespace cf_studio_host_main_detail {
@@ -176,19 +182,28 @@ int execute_launch_command(const std::string& launch_command, const std::vector<
     launch_arguments.push_back(launch_command);
     launch_arguments.insert(launch_arguments.end(), arguments.begin(), arguments.end());
 
-    std::vector<const char*> argv;
+    std::vector<char*> argv;
     argv.reserve(launch_arguments.size() + 1U);
-    for (const auto& argument : launch_arguments) {
-        argv.push_back(argument.c_str());
+    for (auto& argument : launch_arguments) {
+        argv.push_back(argument.data());
     }
     argv.push_back(nullptr);
 
-    const pid_t child = fork();
-    if (child == 0) {
-        execvp(launch_command.c_str(), const_cast<char* const*>(argv.data()));
-        _exit(127);
-    }
-    if (child < 0) {
+    char* const* environment =
+#if defined(__APPLE__)
+        *_NSGetEnviron();
+#else
+        environ;
+#endif
+    pid_t child = 0;
+    const int spawn_result = posix_spawnp(
+        &child,
+        launch_command.c_str(),
+        nullptr,
+        nullptr,
+        argv.data(),
+        environment);
+    if (spawn_result != 0) {
         return -1;
     }
 
