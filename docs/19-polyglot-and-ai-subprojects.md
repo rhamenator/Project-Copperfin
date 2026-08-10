@@ -201,6 +201,11 @@ can enter only through `invoke_polyglot_artifact`, retaining its exact identity
 revalidation, one-attempt process ownership, bounded transport, strict response
 admission, cancellation, timeout, and invariant bridge evidence.
 
+Propagated cancellation is terminal and never falls back. When policy
+explicitly ignores cancellation, the bridge decision instead follows its
+configured fail-fast, native-fallback, or unsupported second-artifact outcome;
+the coordinator does not misreport ignored cancellation as propagated.
+
 Lifecycle behavior is exact:
 
 - `off` and a native-selected `canary` invoke native once and no candidate;

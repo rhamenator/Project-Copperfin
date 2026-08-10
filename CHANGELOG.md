@@ -8,6 +8,8 @@
   failure may execute native exactly once only when route and bridge policy
   both permit it; retire-legacy never invokes native, and a configured second-
   artifact fallback is reported as unsupported rather than executed. Results
+  distinguish terminal propagated cancellation from ignored cancellation that
+  bridge policy converts to fail-fast or fallback handling. They also
   preserve stable status/reason IDs, authority, exact invocation counts,
   adapter evidence, parity, selected-fallback telemetry, and a distinct
   `polyglot.fallback.executed` event for work actually performed. Invalid

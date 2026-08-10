@@ -12,6 +12,8 @@ Candidate-selected `canary` and `on` return candidate on success; a candidate
 failure executes native at most once only when both the route and bridge policy
 permit it. `retire-legacy` never invokes native. A selected second-artifact
 fallback is preserved as policy evidence but is not executed.
+Propagated cancellation remains terminal; ignored cancellation follows the
+bridge's fail-fast or fallback decision without being mislabeled as propagated.
 
 The result records invariant status and reason IDs, native/candidate authority,
 exact invocation counts, adapter evidence, parity, route/bridge telemetry, and
