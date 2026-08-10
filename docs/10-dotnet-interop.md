@@ -51,7 +51,13 @@ completion must return through a controlled host/scheduler boundary.
 
 Existing `SPAWN` tasks separately provide PRG-supervised status, cooperative
 cancellation, completed result, and print-output retrieval. The route executor
-is not yet exposed through that task boundary.
+now has a host-injected `CFPOLYGLOTDISPATCH()` PRG boundary. It validates a
+canonical capability, bounded JSON-object arguments, and deterministic sample,
+then publishes a bounded invariant evidence document. A spawned PRG worker can
+call it while the parent uses the existing `CFTASK*` lifecycle. The callback
+receives no mutable runtime reference. Ordinary runtime-host provisioning from
+trusted route and artifact state remains open; see
+`docs/42-prg-polyglot-dispatch.md`.
 
 The native `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` facade gives PRG
 code a bounded way to inspect immutable structured results from that boundary.

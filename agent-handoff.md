@@ -1,5 +1,36 @@
 # Agent Handoff
 
+## V1 PRG polyglot-dispatch candidate
+
+The approved #4700 slice adds `CFPOLYGLOTDISPATCH(cCapabilityId,
+cArgumentsJson [, nSelectionSample])` as a fail-closed PRG boundary over one
+explicitly host-injected callback. The runtime validates the canonical
+capability, bounded JSON-object arguments, and exact `0..99` sample before the
+callback, then admits one invariant, bounded JSON evidence document. The
+callback runs synchronously on the current PRG task, receives immutable request
+data plus a read-only cancellation probe, and receives no mutable runtime
+reference. A direct call is rejected while a critical section is held; callers
+can place it in `SPAWN` and use the existing `CFTASK*` lifecycle for nonblocking
+supervision.
+
+Coverage includes unavailable configuration, invalid inputs, critical-section
+rejection, exact request transport, cooperative cancellation propagation, exception
+containment, malformed and inconsistent host results, exact large-number JSON,
+the 1 MiB final-evidence ceiling, redacted event data, and real spawned-task
+supervision. Local GCC Release focused plus adjacent coverage passes `6/6`, and
+the focused regression repeats `20/20`. Clang 21 ASan/UBSan passes. Focused
+`clang-tidy` reports only pre-existing diagnostics in unchanged runtime lines,
+and `git diff --check` is clean. Hosted and protected-PR evidence will be
+recorded here after it exists.
+
+This establishes the PRG-facing contract but does not provision the ordinary
+runtime host. It adds no inline foreign source, language runtime, artifact
+discovery or installation, retry, second task lifecycle, or foreign-thread
+callback into mutable PRG state. The next separately reviewed composition must
+construct the callback only from trusted route configuration and admitted
+artifact identity, then delegate to the portable route executor. No runtime
+stub or no-op was added.
+
 ## V1 polyglot route-execution candidate
 
 The approved #4937/#4700 slice now composes the existing route registry,

@@ -10,6 +10,10 @@ FP/VFP source remains the control plane. Foreign-language source does not need
 to appear inside `.prg` files. The existing `SPAWN` registry now exposes
 nonblocking `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and
 `CFTASKOUTPUT()` operations while `AWAIT` remains the explicit blocking join.
+The host-injected `CFPOLYGLOTDISPATCH()` boundary accepts only immutable bounded
+request data, returns one validated immutable evidence document, and supplies a
+read-only cancellation probe without exposing mutable runtime state. It can run
+inside a spawned PRG worker for supervision through that existing lifecycle.
 Out-of-process execution is the default boundary.
 Any later in-process Windows CLR bridge must implement the same authorization,
 audit, lifetime, and result contracts rather than creating a second bypass.
@@ -108,12 +112,14 @@ no finding.
 
 ## Nonclaims And Later Work
 
-This security slice does not load an assembly, launch a process, transport an
-invocation envelope, select or hash an artifact, or wire a runtime-host/PRG
-call. The separate task-supervision implementation in
+This security slice does not itself load an assembly, launch a process,
+transport an invocation envelope, select or hash an artifact, or provision a
+runtime-host route. The separate task-supervision implementation in
 `docs/38-prg-task-supervision.md` now supplies the PRG lifecycle facade for
-existing `SPAWN` workers and retained PRG print output, but it does not connect
-an external artifact. The policy API can now require and
+existing `SPAWN` workers and retained PRG print output. The host-injected PRG
+dispatch boundary in `docs/42-prg-polyglot-dispatch.md` supplies immutable
+request/result plumbing but remains unavailable until trusted host configuration
+connects it to the admitted-artifact route executor. The policy API can now require and
 prove an audit commit, and its regression uses the existing contained durable
 audit stream; a later runtime adapter must derive the verified context from
 trusted host state, bind that sink, enforce artifact identity at execution

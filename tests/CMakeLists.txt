@@ -5110,6 +5110,11 @@ copperfin_add_test(test_prg_engine_json_facade cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_polyglot_dispatch cf_xbase_runtime
+    test_prg_engine_polyglot_dispatch.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_platform_safe_regex cf_platform_support
     test_platform_safe_regex.cpp
 )

@@ -413,8 +413,8 @@ authorizes and hashes an exact rooted executable, and the artifact invocation
 adapter now composes that token with deterministic request serialization, this
 single-attempt transport, strict response admission, bridge decisions, and
 migration telemetry. Route selection, native/shadow invocation, fallback
-execution, retries, external-code PRG dispatch, and language-specific adapters
-remain.
+execution, retries, runtime-host provisioning of the PRG dispatch callback, and
+language-specific adapters remain.
 
 The artifact-admission prerequisite binds a canonical capability ID, explicit
 rooted external-process authorization, exact lowercase SHA-256, and physical
@@ -457,8 +457,25 @@ ASan/UBSan plus focused static analysis pass. Exact candidate `7aa16ffc4`
 passes Linux Native `31415789574` and macOS Native `31415789554` at `334/334`,
 the macOS locale matrix at `8/8`, and Windows Native `31415789688` at
 `333/333`; the focused regression and all eight candidate-head protected checks
-pass. Retry, PRG dispatch, mutable-runtime worker callbacks, language-specific
-adapters, and atomic handle-bound launch remain open.
+pass. Retry, production runtime-host route/artifact provisioning,
+language-specific adapters, and atomic handle-bound launch remain open.
+
+The next PRG orchestration seam adds
+`CFPOLYGLOTDISPATCH(cCapabilityId, cArgumentsJson [, nSelectionSample])` over an
+explicitly host-injected synchronous callback. The native runtime validates a
+canonical capability, bounded JSON-object arguments, and an exact `0..99`
+sample, then publishes one bounded invariant JSON evidence document. The
+callback sees immutable request data and a read-only cancellation probe, never
+mutable runtime state. Calls are blocked by the centralized no-wait-in-critical
+policy, while ordinary `SPAWN`/`CFTASK*` supervision remains available. Local
+GCC Release focused plus adjacent coverage passes `6/6`, and the focused
+regression repeats `20/20`. Clang 21 ASan/UBSan passes; focused static analysis
+finds no issue in changed lines. Coverage spans unavailable, invalid-input,
+malformed host evidence, size-boundary, exception, event-redaction, and
+spawned-task cases. Hosted and protected-PR evidence remains pending. The
+ordinary runtime host does
+not yet build this callback from trusted registry and admitted-artifact state,
+so unconfigured calls fail closed; language-specific hosting remains separate.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are

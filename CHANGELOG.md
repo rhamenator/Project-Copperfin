@@ -1,3 +1,21 @@
+- 2026-08-10: Added the #4700 host-injected PRG polyglot-dispatch boundary.
+  `CFPOLYGLOTDISPATCH()` validates a canonical capability, bounded JSON-object
+  arguments, and exact `0..99` sample before invoking one synchronous callback
+  on the current PRG task. The callback receives immutable request data and a
+  read-only cancellation probe, never mutable runtime state. The runtime
+  admits one bounded invariant JSON evidence document, rejects malformed or
+  inconsistent host results, contains callback exceptions, excludes request
+  and payload bytes from events, and applies the shared critical-section
+  blocking policy. Existing `SPAWN`/`CFTASK*` operations provide nonblocking
+  supervision and cooperative cancellation propagation without exposing the
+  task's mutable state. Local GCC Release focused plus adjacent coverage passes
+  `6/6`, the focused test repeats `20/20`, Clang 21
+  ASan/UBSan passes, and focused static analysis finds no issue in changed
+  lines. Hosted and protected-PR evidence remains pending. This does not
+  provision a production route/artifact host, add a language runtime, inline
+  foreign source, retry, or mutable-runtime foreign callback; no runtime stub
+  or no-op was added.
+
 - 2026-08-10: Added the #4937 portable polyglot route-execution coordinator
   under #4700. It applies the existing `off`, `shadow`, deterministic `canary`,
   `on`, and `retire-legacy` decisions without introducing a second routing
