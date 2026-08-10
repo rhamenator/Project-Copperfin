@@ -18,10 +18,16 @@ rejection, exact request transport, cooperative cancellation propagation, except
 containment, malformed and inconsistent host results, exact large-number JSON,
 the 1 MiB final-evidence ceiling, redacted event data, and real spawned-task
 supervision. Local GCC Release focused plus adjacent coverage passes `6/6`, and
-the focused regression repeats `20/20`. Clang 21 ASan/UBSan passes. Focused
-`clang-tidy` reports only pre-existing diagnostics in unchanged runtime lines,
-and `git diff --check` is clean. Hosted and protected-PR evidence will be
-recorded here after it exists.
+the focused regression repeats `20/20`. Clang 21 ASan/UBSan and ThreadSanitizer
+pass. Focused `clang-tidy` reports only pre-existing diagnostics in unchanged
+runtime lines, and `git diff --check` is clean. Exact product/test candidate
+`0d77c83b8` passes Linux Native `31429006833` and macOS Native `31429008763` at
+`335/335`, and Windows Native `31429010944` at `334/334`; the focused regression
+passes on all three hosts, the macOS four-locale matrix passes `8/8`, and all
+eight candidate-head protected checks pass. The
+earlier macOS run exposed only a timing assumption in the cancellation test;
+the replacement fixture waits for a test-owned callback-entry marker and uses
+atomically unique temporary roots without changing product code or contracts.
 
 This establishes the PRG-facing contract but does not provision the ordinary
 runtime host. It adds no inline foreign source, language runtime, artifact
