@@ -358,6 +358,18 @@ void test_prelaunch_rejection(
                    "polyglot.adapter.multiple_attempts_unsupported",
            "#4700: the single-attempt adapter must not silently implement retries");
 
+    auto invalid_policy_request = invocation(root, "--adapter-success");
+    invalid_policy_request.policy.timeout_ms = 0U;
+    const auto invalid_policy = copperfin::platform::invoke_polyglot_artifact(
+        admission, invalid_policy_request);
+    expect(
+        !invalid_policy.artifact_revalidated && !invalid_policy.process.started &&
+            invalid_policy.error_code ==
+                "polyglot.bridge.policy.timeout_required" &&
+            invalid_policy.telemetry.events.size() == 1U &&
+            invalid_policy.telemetry.events.front().capability_id == capability_id,
+        "#4700: invalid policy should report only under the already admitted canonical capability");
+
     auto invalid_request = invocation(root, "--adapter-success");
     invalid_request.invocation.arguments_json = "[]";
     const auto invalid = copperfin::platform::invoke_polyglot_artifact(
