@@ -453,9 +453,12 @@ Retire-legacy never invokes native, and no second artifact is executed. Stable
 status, authority, invocation counts, route/bridge/parity events, and distinct
 selected-versus-executed fallback evidence are retained. Local GCC focused and
 adjacent contracts pass `9/9`, the regression repeats `20/20`, and Clang 21
-ASan/UBSan plus focused static analysis pass. Hosted native matrices remain
-pending. Retry, PRG dispatch, mutable-runtime worker callbacks, language-
-specific adapters, and atomic handle-bound launch remain open.
+ASan/UBSan plus focused static analysis pass. Exact candidate `7aa16ffc4`
+passes Linux Native `31415789574` and macOS Native `31415789554` at `334/334`,
+the macOS locale matrix at `8/8`, and Windows Native `31415789688` at
+`333/333`; the focused regression and all eight candidate-head protected checks
+pass. Retry, PRG dispatch, mutable-runtime worker callbacks, language-specific
+adapters, and atomic handle-bound launch remain open.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are

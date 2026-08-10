@@ -17,10 +17,13 @@
   focused and adjacent contracts pass `9/9`, the regression repeats `20/20`,
   Clang 21 ASan/UBSan passes, focused static analysis reports no diagnostic,
   and the isolation contract records a portable, process-owned, bounded-child,
-  network-free test. Hosted Linux/macOS/Windows validation is pending. This is
-  not PRG dispatch, inline foreign source, language hosting, mutable-runtime
-  worker callbacks, retry, second-artifact fallback, or atomic handle-bound
-  launch; no runtime stub or no-op was added.
+  network-free test. Exact candidate `7aa16ffc4` passes Linux Native
+  `31415789574` and macOS Native `31415789554` at `334/334`, the macOS locale
+  matrix at `8/8`, and Windows Native `31415789688` at `333/333`; the focused
+  regression and all eight candidate-head protected checks pass. This is not
+  PRG dispatch, inline foreign source, language hosting, mutable-runtime worker
+  callbacks, retry, second-artifact fallback, or atomic handle-bound launch; no
+  runtime stub or no-op was added.
 
 - 2026-08-10: Connected the #4700 admitted-artifact invocation boundary. One
   opaque admission token now composes with deterministic request
