@@ -101,6 +101,16 @@ void test_streaming_sha256(const std::filesystem::path& temp_root) {
                 "b00361a396177a9cb410ff61f20015ad",
         "short SHA-256 should match the standard vector; observed=" +
             abc.hex_digest);
+    const auto two_block_padding = copperfin::security::sha256_hex_for_text(
+        "abcdbcdecdefdefgefghfghighijhijk"
+        "ijkljklmklmnlmnomnopnopq");
+    expect(
+        two_block_padding.ok &&
+            two_block_padding.hex_digest ==
+                "248d6a61d20638b8e5c026930c3e6039"
+                "a33ce45964ff2167f6ecedd419db06c1",
+        "56-byte SHA-256 should match the two-block padding vector; observed=" +
+            two_block_padding.hex_digest);
 
     const auto million_a_path = temp_root / "million-a.bin";
     std::ofstream output(million_a_path, std::ios::binary | std::ios::trunc);
