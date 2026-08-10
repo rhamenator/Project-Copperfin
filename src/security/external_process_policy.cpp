@@ -289,13 +289,11 @@ std::string resolve_executable_from_path(const std::string& executable_name) {
     return {};
 }
 
-std::string path_to_utf8_generic_string(const std::filesystem::path& path) {
-    std::string result = copperfin::platform::path_to_utf8_string(path);
-    std::replace(result.begin(), result.end(), '\\', '/');
-    return result;
-}
-
 bool path_under_root(const std::filesystem::path& path, const std::filesystem::path& root) {
+    if (path.empty() || root.empty()) {
+        return false;
+    }
+
     std::error_code path_error;
     const auto canonical_path = std::filesystem::weakly_canonical(path, path_error);
     if (path_error) {
@@ -308,12 +306,23 @@ bool path_under_root(const std::filesystem::path& path, const std::filesystem::p
         return false;
     }
 
-    const auto path_string = path_to_utf8_generic_string(canonical_path);
-    std::string root_string = path_to_utf8_generic_string(canonical_root);
-    if (!root_string.empty() && root_string.back() != '/') {
-        root_string.push_back('/');
+    auto path_component = canonical_path.begin();
+    std::filesystem::path candidate_root;
+    for (auto root_component = canonical_root.begin();
+         root_component != canonical_root.end();
+         ++root_component, ++path_component) {
+        if (path_component == canonical_path.end()) {
+            return false;
+        }
+        candidate_root /= *path_component;
     }
-    return path_string == root_string || path_string.rfind(root_string, 0) == 0;
+
+    std::error_code equivalent_error;
+    return std::filesystem::equivalent(
+               candidate_root,
+               canonical_root,
+               equivalent_error) &&
+        !equivalent_error;
 }
 #endif
 
