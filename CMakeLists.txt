@@ -237,6 +237,7 @@ add_library(cf_platform_profile
     src/platform/federation_execution.cpp
     src/platform/localized_text.cpp
     src/platform/polyglot_artifact_admission.cpp
+    src/platform/polyglot_artifact_adapter.cpp
     src/platform/polyglot_bridge_invocation.cpp
     src/platform/polyglot_interop_envelope.cpp
     src/platform/polyglot_migration_telemetry.cpp
