@@ -28,8 +28,10 @@ Local GCC focused plus adjacent package/isolation/polyglot contracts pass
 `9/9`, and the focused regression repeats `20/20`. Clang 21 ASan/UBSan passes;
 focused `clang-tidy` reports no diagnostic and `git diff --check` is clean. The
 test is portable, parallel-safe, synthetic, process-owned, bounded-child, and
-network-free. Hosted Linux/macOS/Windows validation remains pending before this
-candidate can merge.
+network-free. Exact candidate `7aa16ffc4` passes Linux Native `31415789574` and
+macOS Native `31415789554` at `334/334`, the macOS locale matrix at `8/8`, and
+Windows Native `31415789688` at `333/333`; the focused regression passes on all
+three hosts and all eight candidate-head protected checks pass.
 
 This is not PRG dispatch, a second task lifecycle, inline foreign source,
 language-specific hosting, retry, a second-artifact fallback, a foreign-thread

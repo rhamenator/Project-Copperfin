@@ -234,8 +234,11 @@ artifact token is still rejected by the adapter and cannot be bypassed here.
 Local GCC focused and adjacent contracts pass `9/9`, and the focused regression
 repeats `20/20`. Clang 21 ASan/UBSan and focused static analysis pass. The
 portable isolation record is parallel-safe, synthetic, process-owned,
-bounded-child, and network-free. Hosted Linux, macOS, and Windows native
-validation is pending.
+bounded-child, and network-free. Exact candidate `7aa16ffc4` passes Linux Native
+`31415789574` and macOS Native `31415789554` at `334/334`, the macOS locale
+matrix at `8/8`, and Windows Native `31415789688` at `333/333`; the focused
+regression passes on every host and all eight candidate-head protected checks
+pass.
 
 This seam does not expose PRG dispatch, introduce a second task lifecycle,
 permit inline foreign-language source, host a language runtime, or allow a
