@@ -52,12 +52,41 @@ PolyglotArtifactInvocationResult reject_before_launch(
     return result;
 }
 
+PolyglotArtifactInvocationResult reject_without_telemetry(
+    const PolyglotArtifactInvocationStatus status,
+    std::string error_code) {
+    PolyglotArtifactInvocationResult result;
+    result.status = status;
+    result.error_code = std::move(error_code);
+    return result;
+}
+
 }  // namespace
 
 PolyglotArtifactInvocationResult invoke_polyglot_artifact(
     PolyglotArtifactAdmissionResult& admission,
     const PolyglotArtifactInvocationRequest& request) {
     const std::string capability_id = request.invocation.capability_id;
+    if (!admission.ok()) {
+        return reject_without_telemetry(
+            PolyglotArtifactInvocationStatus::artifact_rejected,
+            admission.error_code().empty()
+                ? std::string("polyglot.adapter.artifact_not_admitted")
+                : admission.error_code());
+    }
+    if (capability_id != admission.capability_id()) {
+        return reject_without_telemetry(
+            PolyglotArtifactInvocationStatus::artifact_rejected,
+            "polyglot.adapter.capability_id_mismatch");
+    }
+
+    const auto serialized = serialize_polyglot_invocation_request(request.invocation);
+    if (!serialized.ok()) {
+        return reject_without_telemetry(
+            PolyglotArtifactInvocationStatus::invalid_request,
+            serialized.error_code);
+    }
+
     const auto policy_validation = validate_polyglot_bridge_policy(request.policy);
     if (!policy_validation.ok()) {
         return reject_before_launch(
@@ -71,34 +100,6 @@ PolyglotArtifactInvocationResult invoke_polyglot_artifact(
         return reject_before_launch(
             PolyglotArtifactInvocationStatus::invalid_request,
             "polyglot.adapter.multiple_attempts_unsupported",
-            capability_id,
-            request.policy,
-            PolyglotBridgeFailure::protocol_error);
-    }
-    if (!admission.ok()) {
-        return reject_before_launch(
-            PolyglotArtifactInvocationStatus::artifact_rejected,
-            admission.error_code().empty()
-                ? std::string("polyglot.adapter.artifact_not_admitted")
-                : admission.error_code(),
-            capability_id,
-            request.policy,
-            PolyglotBridgeFailure::unavailable);
-    }
-    if (capability_id != admission.capability_id()) {
-        return reject_before_launch(
-            PolyglotArtifactInvocationStatus::artifact_rejected,
-            "polyglot.adapter.capability_id_mismatch",
-            capability_id,
-            request.policy,
-            PolyglotBridgeFailure::protocol_error);
-    }
-
-    const auto serialized = serialize_polyglot_invocation_request(request.invocation);
-    if (!serialized.ok()) {
-        return reject_before_launch(
-            PolyglotArtifactInvocationStatus::invalid_request,
-            serialized.error_code,
             capability_id,
             request.policy,
             PolyglotBridgeFailure::protocol_error);
