@@ -150,7 +150,8 @@ bool copy_executable(
 copperfin::platform::PolyglotArtifactAdmissionResult admit(
     const std::filesystem::path& artifact,
     const std::filesystem::path& root) {
-    const auto digest = copperfin::security::sha256_hex_for_file(artifact);
+    const auto digest =
+        copperfin::security::sha256_hex_for_file(utf8_path(artifact));
     expect(digest.ok, "adapter fixture should have a readable SHA-256 identity");
     return copperfin::platform::admit_polyglot_artifact({
         .capability_id = capability_id,
