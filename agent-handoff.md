@@ -1,5 +1,31 @@
 # Agent Handoff
 
+## V1 POSIX Studio launch-failure parity candidate
+
+The first bounded macOS/Linux standalone-host portability seam is complete at
+exact product/test head `d08c1aa61`. The POSIX Studio command runner now uses
+`posix_spawnp`, allowing the parent to distinguish failure to start an
+executable (`-1`) from a real child that returns status 127 (`127`). Windows
+continues to use its unchanged `CreateProcessW` path and the same `-1`
+pre-start-failure contract. Direct argv bytes, `PATH` search, the inherited
+environment, EINTR-safe wait/reap behavior, ordinary exit values, and
+`128 + signal` mapping remain unchanged.
+
+Focused `test_studio_host_shell_command` passes under GCC Release and Clang 21
+ASan/UBSan; focused static analysis reports no finding. A clean local contract
+selection passes `test_package_document_install`,
+`test_native_test_isolation_contract`, and the focused regression at `3/3`.
+Exact-head Linux Native `31344376346` and macOS Native `31344376360` pass
+`331/331`; macOS also passes the four-locale SET POINT matrix at `8/8`.
+Windows Native `31344376357` passes `330/330`. The focused regression passes on
+all three hosts, and all eight candidate-head protected checks pass. Windows
+annotations are pre-existing warnings in unchanged runtime and launcher
+sources, with none in this slice's implementation or test.
+
+This is focused launch-contract evidence, not completion of the broader macOS
+or Linux standalone-host ports. No user-facing string, localization catalog,
+package contract, runtime behavior, or external-language integration changed.
+
 ## V1 bounded artifact-process request transport candidate
 
 The approved #4700 transport prerequisite now delivers exact caller-supplied
