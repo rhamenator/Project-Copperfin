@@ -43,7 +43,7 @@
         "required": [
           "implementation", "security_profile", "sample_count", "failure_count",
           "parity_mismatch_count", "p95_latency_us", "throughput_per_second",
-          "peak_memory_kib", "p95_startup_ms"
+          "peak_memory_kib", "peak_memory_source", "p95_startup_ms"
         ],
         "properties": {
           "implementation": {"enum": ["direct-cpp", "cpp-dotnet-wrapper", "csharp-service"]},
@@ -54,6 +54,13 @@
           "p95_latency_us": {"type": "integer", "minimum": 0},
           "throughput_per_second": {"type": "integer", "minimum": 0},
           "peak_memory_kib": {"type": "integer", "minimum": 0},
+          "peak_memory_source": {
+            "enum": [
+              "route-specific-additional",
+              "candidate-self-reported-peak-working-set",
+              "windows-owned-job"
+            ]
+          },
           "p95_startup_ms": {"type": "integer", "minimum": 0}
         }
       }

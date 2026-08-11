@@ -71,9 +71,12 @@ host/toolchain metadata, UTC capture time, policy, and limitations under the
 versioned schema in `docs/contracts/polyglot-benchmark-result-v1.schema.json`.
 Timing values are host-specific observations and must not be generalized.
 
-The first checked-in result was captured from exact signed source commit
-`cf4cd9573103096d915a211c9cd95aae413cb68c` on Linux x86_64. All 27 measured
+The checked-in corrected result was captured from exact signed source commit
+`deaa815ef1ccf74836676654d4108689d6422c8a` on Linux x86_64. All 27 measured
 executions completed with exact parity and no failures. The host-specific
 advisory order was direct C++, local C# endpoint boundary, then the full
-C++/.NET wrapper. The result and its explicit limitations are stored in
+C++/.NET wrapper. Each measurement records its memory source so a consumer
+cannot confuse the direct route-specific value, controlled candidate
+self-report, or a possible Windows owned-job observation. The result and its
+explicit limitations are stored in
 `docs/contracts/polyglot-benchmark-result-v1.json`; no route was changed.

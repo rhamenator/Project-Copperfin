@@ -38,13 +38,20 @@ if(NOT schema_version EQUAL 1 OR
 endif()
 
 set(expected_implementations direct-cpp cpp-dotnet-wrapper csharp-service)
+set(expected_memory_sources
+    route-specific-additional
+    candidate-self-reported-peak-working-set
+    candidate-self-reported-peak-working-set)
 foreach(index RANGE 0 2)
     list(GET expected_implementations ${index} expected)
+    list(GET expected_memory_sources ${index} expected_memory_source)
     string(JSON implementation GET "${result_json}" measurements ${index} implementation)
+    string(JSON memory_source GET "${result_json}" measurements ${index} peak_memory_source)
     string(JSON samples GET "${result_json}" measurements ${index} sample_count)
     string(JSON failures GET "${result_json}" measurements ${index} failure_count)
     string(JSON mismatches GET "${result_json}" measurements ${index} parity_mismatch_count)
     if(NOT implementation STREQUAL expected OR
+       NOT memory_source STREQUAL expected_memory_source OR
        NOT samples EQUAL 9 OR NOT failures EQUAL 0 OR NOT mismatches EQUAL 0)
         message(FATAL_ERROR "Polyglot benchmark evidence is incomplete for ${expected}")
     endif()
