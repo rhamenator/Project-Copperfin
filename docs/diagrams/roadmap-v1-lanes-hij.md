@@ -25,7 +25,7 @@ flowchart TB
         direction LR
         H1["H1 Deterministic Relational<br/>Backend Translators<br/>root #30 - SEEDED:<br/>see docs/21, cf_platform_profile"]
         H2["H2 Document/Vector Backend<br/>+ AI-Assisted Planning<br/>root #31"]
-        H3["H3 .NET Outputs, MCP/AI<br/>Hooks, Python/R Sidecars<br/>root #32 - SEEDED:<br/>admitted Native AOT leaf<br/>+ advisory route impact"]
+        H3["H3 .NET Outputs, MCP/AI<br/>Hooks, Python/R Sidecars<br/>root #32 - SEEDED:<br/>admitted Native AOT leaf<br/>+ benchmarked route impact"]
         H1 --> H2 --> H3
       end
 
@@ -68,13 +68,14 @@ flowchart TB
     class V1,LANEH,LANEI,LANEJ lane;
 ```
 
-**What's done:** `H1`'s relational backend translators, `H3`'s admitted Native
-AOT leaf and advisory measured-route strategy, and `I1`'s security baseline
-have real seeds — `cf_platform_profile`'s deterministic Fox-SQL
+**What's done:** `H1` has relational backend translators; `H3` has an admitted
+Native AOT leaf, advisory measured-route strategy, and versioned representative
+benchmark evidence; and `I1` has a security baseline. These real seeds are
+`cf_platform_profile`'s deterministic Fox-SQL
 translator/execution-planning lane, the trusted polyglot host and route-impact
 boundary, and `cf_security`'s RBAC/audit/secrets/signing baseline, respectively.
-`H3` still lacks its representative benchmark-result evidence and broader
-language/AI adapters. **What's left, and what it takes:** this is
+`H3` still lacks its broader language/AI adapters. **What's left, and what it
+takes:** this is
 covered in full, document-by-document, in
 [31-specification-compliance-gap-analysis.md](../31-specification-compliance-gap-analysis.md) —
 in particular its interop/federation/trust/security and language/data-fidelity

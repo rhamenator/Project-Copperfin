@@ -482,7 +482,7 @@ excluded from the compliance map above:
 | 12 | VFP Asset Editing And Execution | Partial | xAsset execution is first-pass, bounded by language-surface coverage |
 | 13 | Index Format Notes | Partial | No index write fidelity; collation hints are heuristic, not named |
 | 18 | Native Security And RBAC | Partial (real baseline) | Not yet verified against docs/04's fuller vision |
-| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, first Native AOT C# target, and advisory measured-route strategy) | No representative benchmark-result set or general CLR/Python/R runtime hook; AI/MCP policy has little to govern yet |
+| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, first Native AOT C# target, advisory measured-route strategy, and versioned representative benchmark evidence) | No general CLR/Python/R runtime hook; AI/MCP policy has little to govern yet |
 | 20 | Runtime Build And Debug Pipeline | Partial | Engine is PRG-first, not the full command surface |
 | 21 | Database Federation And Query Translation | Partial (real seed) | No live connector execution behind the translator/planner |
 | 22 | VFP Language Reference Coverage | Partial, measured | 1,411 documented items; official surface exceeds current runtime |
