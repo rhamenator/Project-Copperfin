@@ -37,6 +37,14 @@ contract protects the length guard and key explanations. Final pre-follow-up evi
 Environment and Executable Path Validation `31542720276` repeated them in its
 focused set.
 
+Corrected implementation head `e35830c30` passes all eleven protected checks.
+Generated Launcher Validation `31545471149` runs the path runtime and boundary
+contracts on Windows, Ubuntu, and macOS; Windows Environment and Executable
+Path Validation `31545471092` repeats them. Independent review passes and
+independently mutation-proves the length guard. The reviewer read-verified the
+Win32 API correction from Linux; the hosted Windows jobs provide direct
+build-and-execution evidence.
+
 ## V1 read-only SQLite federation execution
 
 The current H1 increment connects the deterministic SQLite translator/planner

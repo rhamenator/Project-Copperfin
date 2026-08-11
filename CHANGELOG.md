@@ -8,7 +8,13 @@
   closed. Representable path behavior is unchanged. Final pre-follow-up evidence head
   `e0fbdd11c` passed all eleven protected checks, including Generated Launcher
   Validation `31542720317` on Windows, Ubuntu, and macOS and Windows
-  Environment and Executable Path Validation `31542720276`.
+  Environment and Executable Path Validation `31542720276`. Corrected
+  implementation head `e35830c30` passes all eleven protected checks;
+  Generated Launcher Validation `31545471149` runs the path contracts on all
+  three hosts, and Windows Environment and Executable Path Validation
+  `31545471092` repeats them. Independent review passes and independently
+  mutation-proves the length guard, with direct Win32 execution supplied by
+  the hosted Windows jobs.
 
 - 2026-08-11: Seeded v1 portability lane J1 with an explicit public path
   boundary. The widely consumed `copperfin/platform/path.h` interface now

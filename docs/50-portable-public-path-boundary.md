@@ -64,6 +64,16 @@ now fail closed instead of reaching the comparison APIs. The source contract
 protects the length guard and key explanations alongside the implementation
 and explicit User32 link dependency. Representable path behavior is unchanged.
 
+Corrected implementation head `e35830c30` passes all eleven protected checks.
+Generated Launcher Validation run `31545471149` builds and runs the path
+runtime and boundary contracts on Windows, Ubuntu, and macOS; Windows
+Environment and Executable Path Validation run `31545471092` repeats them in
+its focused set. Independent review at that exact head passes, independently
+mutation-proves the length guard, and confirms the documentation scope. Its
+disclosed limitation is that the corrected Win32 branch was read-verified
+against the API contract rather than executed on the reviewer's Linux host;
+the hosted Windows jobs provide the direct build-and-execution evidence.
+
 ## Remaining J1 work
 
 This boundary is a seed, not a blanket portability claim. Later independently
