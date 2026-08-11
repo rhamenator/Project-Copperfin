@@ -7,6 +7,7 @@
 #include "copperfin/platform/polyglot_route_execution.h"
 #include "copperfin/runtime/prg_engine.h"
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>

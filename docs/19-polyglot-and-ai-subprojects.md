@@ -31,8 +31,9 @@ Current maturity:
 - A host-injected `CFPOLYGLOTDISPATCH()` PRG seam now validates immutable
   capability/JSON/sample input and returns bounded invariant evidence. It runs
   on the current PRG task so existing `SPAWN`/`CFTASK*` supervision applies,
-  but the ordinary runtime host does not yet provision the callback from
-  trusted route/artifact state and no language-specific adapter exists.
+  and `PolyglotRuntimeHost` now provisions that callback from an explicit
+  validated route registry and per-capability admitted-artifact state. No
+  language-specific adapter or embedded language runtime exists.
 - A separate portable admission boundary now binds a canonical capability ID
   and rooted external-process authorization to one exact lowercase SHA-256 and
   physical file identity. Its opaque token must be revalidated before a later
@@ -251,6 +252,52 @@ PRG boundary below can delegate to a host callback but does not provision this
 coordinator. Retry, second-artifact fallback, discovery, dependency
 installation, and atomic handle-bound launch remain separately reviewable work.
 
+## Trusted Runtime Host Composition v1
+
+`PolyglotRuntimeHost::create()` is the single reviewed production seam that
+turns trusted route/artifact configuration into the callback accepted by
+`PrgRuntimeSession::create()`. A capability binding contains the canonical
+capability ID, one opaque admitted-artifact token, one existing
+`PolyglotArtifactInvocationRequest` template, and the trusted native and shadow
+normalization callbacks required by its route. The template explicitly owns
+bridge policy, protocol version, correlation prefix, executable arguments,
+working directory, environment, and byte/time budgets.
+
+Construction reconstructs and validates the registry, requires a one-to-one
+route/binding set, and rejects missing, duplicate, extra, or mismatched
+capabilities; rejected admission; empty/invalid correlation or protocol
+identity; mutable pre-bound arguments/cancellation callbacks; invalid bridge
+policy or multiple attempts; and missing route-required callbacks. These
+failures occur before a callback is made available and before external launch.
+Unknown capabilities also return a zero-invocation unavailable result.
+
+The returned callback shares ownership of the validated registry and bindings,
+so it remains valid after the public host handle is released. It binds exact
+immutable PRG request data and delegates once to `execute_polyglot_route()`.
+Same-capability calls serialize around the admission token because immediate
+revalidation updates that opaque token in place; separate capabilities remain
+independent. A per-capability monotonic sequence extends the configured prefix
+into a unique correlation ID, including concurrent calls. Only the existing
+runtime result fields cross back into PRG: status/reason, authority, route
+selection, invocation counts, fallback-executed flag, and the authoritative
+JSON payload. Request, correlation, process, telemetry, and mutable runtime
+state are not exposed through that result.
+
+Portable focused coverage proves all five route states, both canary choices,
+parity, fail-fast/native-fallback outcomes, propagated and ignored
+cancellation, exact error/count/authority mapping, callback lifetime,
+concurrent correlation uniqueness, output bounds, telemetry redaction, and
+fail-closed configuration. A real spawned PRG session uses the production
+callback and `CFTASKCANCEL()` to stop a bounded synthetic candidate through the
+read-only probe. Local GCC Release focused and adjacent targets pass `6/6`;
+hosted Linux/macOS/Windows and protected contribution evidence remain pending.
+
+The host does not discover artifacts or language runtimes, authorize inline
+foreign source, retry, promote routes, invoke a second artifact, introduce a
+task model, or permit a foreign worker to enter mutable PRG state. Artifact
+execution retains the documented path-based revalidation boundary and does not
+claim atomic handle-bound launch.
+
 ## PRG Polyglot Dispatch Boundary v1
 
 `CFPOLYGLOTDISPATCH()` is the PRG-facing orchestration contract. It accepts one
@@ -267,12 +314,12 @@ wants nonblocking orchestration places the call in `SPAWN` and supervises it
 with `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and `AWAIT`.
 Arguments and payload bytes are excluded from runtime events.
 
-This boundary is unavailable unless a host injects the callback. It does not
-discover artifacts, load a runtime, authorize an executable, retry, or permit
-foreign threads to call the runtime. Production host construction from the
-trusted route registry, artifact admission token, and portable executor is a
-separate composition step. See `docs/42-prg-polyglot-dispatch.md` for the full
-machine contract and current evidence.
+This boundary is unavailable unless a host injects the callback. The trusted
+runtime-host composition above now supplies one from explicit admitted state,
+but the PRG boundary itself does not discover artifacts, load a runtime,
+authorize an executable, retry, or permit foreign threads to call the runtime.
+See `docs/42-prg-polyglot-dispatch.md` for the full machine contract and current
+evidence.
 
 ## Bounded Artifact Process Primitive
 

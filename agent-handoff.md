@@ -1,5 +1,48 @@
 # Agent Handoff
 
+## V1 trusted polyglot runtime-host composition candidate
+
+The approved #4940/#4700 slice adds `PolyglotRuntimeHost`, the portable
+production composition object between trusted host configuration and
+`RuntimeSessionOptions::polyglot_dispatch_callback`. Each explicit capability
+binding owns one admitted artifact token, one existing invocation-request
+template, and its trusted native/parity callbacks. Construction validates the
+route registry, exact route/config/admission/request capability identity,
+correlation prefix, protocol and bridge policy, single-attempt rule, and every
+callback required by the configured route before returning a callback.
+
+Callbacks retain shared ownership after the public host handle is released.
+Each call binds the immutable PRG capability, exact arguments JSON, selection
+sample, and read-only cancellation probe into the existing route executor and
+artifact request. A per-capability lock serializes the mutable admission token
+through immediate revalidation and launch, while a monotonic sequence supplies
+unique correlation identities to concurrent calls. The mapped result preserves
+the existing route selection, authority, status/error identity, exact native
+and candidate counts, fallback flag, and authoritative JSON payload; no second
+route or result model is introduced.
+
+Focused portable coverage exercises `off`, `shadow`, both `canary` outcomes,
+`on`, and `retire-legacy`; fail-fast and native fallback; parity; propagated
+and ignored cancellation policy; concurrent correlation identity; callback
+lifetime; output bounds and redaction; invalid/missing/duplicate/mismatched
+configuration; and real `PrgRuntimeSession::create()` integration. A spawned
+PRG task waits for a test-owned candidate-entry marker, calls
+`CFTASKCANCEL()`, and proves cancellation reaches the bounded child only through
+the read-only probe. Local GCC Release builds the new and adjacent targets;
+`test_polyglot_runtime_host`, `test_polyglot_route_execution`, and
+`test_prg_engine_polyglot_dispatch`, `test_polyglot_contract`,
+`test_native_test_isolation_contract`, and
+`test_security_supply_chain_workflow_contract` pass `6/6`. Hosted
+Linux, macOS, Windows, sanitizer/static-analysis, and protected-check evidence
+remain required before merge.
+
+This seam does not discover, download, install, or select a language runtime;
+allow inline foreign source; retry; invoke a second artifact; create a task
+lifecycle; permit a foreign-thread callback into mutable PRG state; or claim
+atomic handle-bound launch. Language-specific adapters remain separate. No
+stub or deterministic no-op was added, so the runtime stub inventory is
+unchanged.
+
 ## V1 agent-intake scope-approval correction
 
 The repository owner directly authorized replacing per-child
@@ -64,13 +107,14 @@ earlier macOS run exposed only a timing assumption in the cancellation test;
 the replacement fixture waits for a test-owned callback-entry marker and uses
 atomically unique temporary roots without changing product code or contracts.
 
-This establishes the PRG-facing contract but does not provision the ordinary
-runtime host. It adds no inline foreign source, language runtime, artifact
+This establishes the PRG-facing contract; the later #4940 composition above
+now provisions it from explicit trusted route/artifact state. It adds no inline
+foreign source, language runtime, artifact
 discovery or installation, retry, second task lifecycle, or foreign-thread
 callback into mutable PRG state. The next separately reviewed composition must
 construct the callback only from trusted route configuration and admitted
-artifact identity, then delegate to the portable route executor. No runtime
-stub or no-op was added.
+artifact identity, then delegate to the portable route executor; that follow-up
+is now the candidate recorded above. No runtime stub or no-op was added.
 
 ## V1 polyglot route-execution candidate
 

@@ -415,8 +415,9 @@ authorizes and hashes an exact rooted executable, and the artifact invocation
 adapter now composes that token with deterministic request serialization, this
 single-attempt transport, strict response admission, bridge decisions, and
 migration telemetry. Route selection, native/shadow invocation, fallback
-execution, retries, runtime-host provisioning of the PRG dispatch callback, and
-language-specific adapters remain.
+execution, and trusted runtime-host provisioning of the PRG dispatch callback
+now compose through the adjacent reviewed seams. Retries and language-specific
+adapters remain.
 
 The artifact-admission prerequisite binds a canonical capability ID, explicit
 rooted external-process authorization, exact lowercase SHA-256, and physical
@@ -459,8 +460,8 @@ ASan/UBSan plus focused static analysis pass. Exact candidate `7aa16ffc4`
 passes Linux Native `31415789574` and macOS Native `31415789554` at `334/334`,
 the macOS locale matrix at `8/8`, and Windows Native `31415789688` at
 `333/333`; the focused regression and all eight candidate-head protected checks
-pass. Retry, production runtime-host route/artifact provisioning,
-language-specific adapters, and atomic handle-bound launch remain open.
+pass. Retry, language-specific adapters, and atomic handle-bound launch remain
+open; the trusted production runtime-host composition is described below.
 
 The next PRG orchestration seam adds
 `CFPOLYGLOTDISPATCH(cCapabilityId, cArgumentsJson [, nSelectionSample])` over an
@@ -481,10 +482,22 @@ passes on all three hosts, the macOS locale matrix passes `8/8`, and all eight
 candidate-head protected checks pass. A superseded
 macOS run found only a timing assumption in the cancellation fixture; the
 test-only correction waits for callback entry and atomically owns a unique
-temporary root without changing product code or contracts. The ordinary
-runtime host does
-not yet build this callback from trusted registry and admitted-artifact state,
-so unconfigured calls fail closed; language-specific hosting remains separate.
+temporary root without changing product code or contracts.
+
+The trusted runtime-host composition now owns a validated route registry and
+one admitted artifact binding per configured capability for the callback
+lifetime. It validates exact route/config/admission/request identity, protocol,
+correlation prefix, bridge policy, single-attempt behavior, and route-required
+native/parity callbacks before enabling dispatch. Each call binds immutable PRG
+arguments, sample, and cancellation probe into the existing executor; same-
+capability calls serialize admission revalidation and receive unique
+correlation identities. Focused portable coverage includes every route state,
+fail-fast/fallback/parity/error mapping, both cancellation policies,
+concurrency, lifetime, bounds/redaction, construction failures, direct PRG
+integration, and real `CFTASKCANCEL()` propagation to a bounded candidate.
+Local GCC Release focused and adjacent targets pass `6/6`; hosted platform and
+protected evidence remain pending. Language-specific hosting, discovery,
+retry, second-artifact fallback, and atomic handle-bound launch remain separate.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are
@@ -509,13 +522,15 @@ evidence passes at implementation commit `1cecc2c8e`. Exact candidate head
 at `325/325`, Windows Native `31294519761` at `324/324`, and the named
 interop-envelope regression on every platform. The macOS four-locale
 `SET POINT` matrix passes `8/8`, and all eight protected PR checks pass. This
-serializer does not select or authorize an artifact, send the request, capture
-process output, or wire runtime-host/PRG dispatch. The existing `SPAWN` task
+serializer does not itself select or authorize an artifact, send the request,
+capture process output, or wire runtime-host/PRG dispatch; adjacent reviewed
+seams now perform those steps. The existing `SPAWN` task
 registry now supplies the nonblocking PRG half of that boundary through
 `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and `CFTASKOUTPUT()`;
 supervision reads retain completion data until legacy `AWAIT` consumes the
-task, and monotonic non-reused handles prevent stale-task aliasing. No external
-artifact is connected yet, and foreign runtime threads do not directly enter
+task, and monotonic non-reused handles prevent stale-task aliasing. No
+language-specific artifact is configured or discovered by default, and foreign
+runtime threads do not directly enter
 mutable runtime state.
 
 Concurrent same-handle polling now uses a per-task synchronization boundary
@@ -812,7 +827,7 @@ standalone Studio shell, and FoxPro language-service layer."
 | E | `#111` (`E1`/`#22`, `E2`/`#23`, `E3`/`#24`) | Shared design model and designer fidelity (`E3` = report/label parity, the single largest lane in the repo) | Closed 2026-07-24 | Phase C |
 | F | `#112` (`F1`/`#25`, `F2`/`#26`) | VS extension parity + utility panes; standalone Studio as a full IDE | MVP implementation complete for standalone shell; hosted UI evidence remains under the RC gate | Phase C |
 | G | `#112` (`G1`/`#27`, `G2`/`#28`, `G3`/`#29`) | FoxPro language service: semantic resolution, navigation/refactoring, IntelliSense metadata | Recorded G1/G2/G3 slices closed; broader MVP scope remains under the live tree | Phase C |
-| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Contract/model foundation, bounded process, artifact admission, deterministic request serialization, and response admission implemented; seam connection and PRG-controlled dispatch remain | v1 item 3 |
+| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Portable route/artifact execution, trusted runtime-host composition, and PRG dispatch implemented; language-specific adapters and live connector/runtime integrations remain | v1 item 3 |
 | I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | Seeded (see gap analysis) | v1 item 4 |
 | J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Studio launch-error and POSIX root-identity seams shipped; broader ports open | v1 item 5 |
 
