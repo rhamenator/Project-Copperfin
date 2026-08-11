@@ -4,11 +4,14 @@
 
 #include "copperfin/platform/bounded_process.h"
 #include "copperfin/platform/executable_path.h"
+#include "copperfin/platform/polyglot_benchmark.h"
 #include "copperfin/runtime/polyglot_runtime_host.h"
 #include "copperfin/security/sha256.h"
 #include "prg_engine_test_support.h"
 
+#include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -112,6 +115,185 @@ PolyglotRuntimeHostConfiguration configuration(
         .normalize_shadow_parity = {},
         .parity_policy = {}};
     return {std::move(routes.registry), {std::move(binding)}};
+}
+
+PolyglotArtifactInvocationRequest candidate_request(
+    const PolyglotBenchmarkInvocation& invocation) {
+    PolyglotArtifactInvocationRequest request;
+    request.invocation = {
+        .capability_id = capability_id,
+        .correlation_id = std::string("benchmark-") +
+            invocation.workload->workload_id + "-" +
+            polyglot_route_implementation_name(invocation.implementation) + "-" +
+            std::to_string(invocation.iteration) +
+            (invocation.warmup ? "-warmup" : "-measured"),
+        .protocol_version = protocol_version,
+        .arguments_json = invocation.workload->arguments_json};
+    request.policy = {
+        .timeout_ms = 5000U,
+        .latency_budget_ms = 5000U,
+        .cancellation = PolyglotCancellationPolicy::propagate,
+        .fallback = PolyglotFallbackPolicy::fail_fast,
+        .max_attempts = 1U};
+    request.poll_interval_ms = 1U;
+    request.stdin_limit_bytes = 64U * 1024U;
+    request.stdout_limit_bytes = 64U * 1024U;
+    request.stderr_limit_bytes = 4U * 1024U;
+    return request;
+}
+
+std::uint64_t elapsed_microseconds(
+    const std::chrono::steady_clock::time_point started) {
+    const auto value = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now() - started).count();
+    return static_cast<std::uint64_t>(std::max<std::int64_t>(1, value));
+}
+
+void test_representative_benchmark(
+    PolyglotArtifactAdmissionResult& admission,
+    const PublishedCandidate& published) {
+    PolyglotBenchmarkRequest request{
+        .capability_id = capability_id,
+        .warmup_iterations = 1U,
+        .measured_iterations = 3U,
+        .policy = {
+            .minimum_sample_count = 9U,
+            .maximum_p95_latency_us = 5'000'000U,
+            .minimum_throughput_per_second = 1U,
+            .maximum_peak_memory_kib = 1'048'576U,
+            .maximum_p95_startup_ms = 5000U,
+            .maximum_security_profile =
+                PolyglotRouteSecurityProfile::admitted_process,
+            .weights = {25U, 25U, 25U, 25U}},
+        .workloads = {
+            {"positive", R"({"left":20,"right":22})", R"({"sum":42})"},
+            {"negative", R"({"left":-20,"right":-22})", R"({"sum":-42})"},
+            {"zero", R"({"left":0,"right":0})", R"({"sum":0})"}},
+        .routes = {
+            {PolyglotRouteImplementation::direct_cpp,
+             PolyglotRouteSecurityProfile::trusted_native, true, true, true},
+            {PolyglotRouteImplementation::cpp_dotnet_wrapper,
+             PolyglotRouteSecurityProfile::admitted_process, true, true, true},
+            {PolyglotRouteImplementation::csharp_service,
+             PolyglotRouteSecurityProfile::admitted_process, true, true, true}},
+        .invoke = {}};
+
+    request.invoke = [&](const PolyglotBenchmarkInvocation& invocation) {
+        const auto started = std::chrono::steady_clock::now();
+        if (invocation.implementation ==
+            PolyglotRouteImplementation::direct_cpp) {
+            return PolyglotBenchmarkObservation{
+                true, true, elapsed_microseconds(started), 0U, 0U};
+        }
+
+        auto candidate = candidate_request(invocation);
+        candidate.working_directory = utf8_path(published.root);
+        if (invocation.implementation ==
+            PolyglotRouteImplementation::cpp_dotnet_wrapper) {
+            const auto result = invoke_polyglot_artifact(admission, candidate);
+            return PolyglotBenchmarkObservation{
+                result.ok(),
+                result.ok() && result.response.envelope.payload_json ==
+                    invocation.workload->expected_payload_json,
+                elapsed_microseconds(started),
+                result.process.peak_memory_kib,
+                result.process.elapsed_ms};
+        }
+
+        const auto serialized = serialize_polyglot_invocation_request(
+            candidate.invocation);
+        if (!serialized.ok()) {
+            return PolyglotBenchmarkObservation{
+                false, false, elapsed_microseconds(started), 0U, 0U};
+        }
+        const auto process = run_bounded_process({
+            .executable_path = utf8_path(published.executable),
+            .arguments = {},
+            .working_directory = utf8_path(published.root),
+            .environment = {},
+            .standard_input = serialized.document,
+            .timeout_ms = 5000U,
+            .poll_interval_ms = 1U,
+            .stdin_limit_bytes = 64U * 1024U,
+            .stdout_limit_bytes = 64U * 1024U,
+            .stderr_limit_bytes = 4U * 1024U,
+            .cancellation_requested = {}});
+        const auto parsed = parse_polyglot_interop_envelope(
+            process.standard_output,
+            {capability_id, candidate.invocation.correlation_id,
+             protocol_version, 64U * 1024U, 32U});
+        const bool succeeded = process.completed() && process.exit_code == 0 &&
+            process.process_tree_closed && parsed.ok();
+        return PolyglotBenchmarkObservation{
+            succeeded,
+            succeeded && parsed.envelope.payload_json ==
+                invocation.workload->expected_payload_json,
+            elapsed_microseconds(started),
+            process.peak_memory_kib,
+            process.elapsed_ms};
+    };
+
+    const auto result = run_polyglot_benchmark(request);
+    expect_local(result.ok() && result.impact.recommendation_ready,
+                 "representative native/.NET measurements should be advisory-ready");
+    expect_local(result.measurements.size() == 3U,
+                 "the representative benchmark should retain all route layers");
+    for (const auto& measurement : result.measurements) {
+        expect_local(
+            measurement.sample_count == 9U &&
+                measurement.failure_count == 0U &&
+                measurement.parity_mismatch_count == 0U &&
+                measurement.p95_latency_us > 0U &&
+                measurement.throughput_per_second > 0U,
+            std::string("representative evidence should be complete for ") +
+                polyglot_route_implementation_name(measurement.implementation));
+        if (measurement.implementation !=
+            PolyglotRouteImplementation::direct_cpp) {
+            expect_local(
+                measurement.peak_memory_kib > 0U,
+                "each external process layer should report peak resident memory");
+        }
+    }
+    std::cout << "COPPERFIN_POLYGLOT_BENCHMARK_V1={\"capability_id\":\""
+              << capability_id
+              << "\",\"warmup_iterations\":1,\"measured_iterations\":3,"
+                 "\"workload_count\":3,\"measurements\":[";
+    for (std::size_t index = 0U; index < result.measurements.size(); ++index) {
+        const auto& measurement = result.measurements[index];
+        if (index != 0U) {
+            std::cout << ',';
+        }
+        std::cout << "{\"implementation\":\""
+                  << polyglot_route_implementation_name(measurement.implementation)
+                  << "\",\"security_profile\":\""
+                  << polyglot_route_security_profile_name(measurement.security_profile)
+                  << "\",\"sample_count\":" << measurement.sample_count
+                  << ",\"failure_count\":" << measurement.failure_count
+                  << ",\"parity_mismatch_count\":"
+                  << measurement.parity_mismatch_count
+                  << ",\"p95_latency_us\":" << measurement.p95_latency_us
+                  << ",\"throughput_per_second\":"
+                  << measurement.throughput_per_second
+                  << ",\"peak_memory_kib\":" << measurement.peak_memory_kib
+                  << ",\"p95_startup_ms\":" << measurement.p95_startup_ms
+                  << '}';
+    }
+    std::cout << "],\"recommendation_ready\":"
+              << (result.impact.recommendation_ready ? "true" : "false")
+              << ",\"preferred\":\""
+              << polyglot_route_implementation_name(result.impact.preferred)
+              << "\",\"fallback_chain\":[";
+    for (std::size_t index = 0U;
+         index < result.impact.fallback_chain.size(); ++index) {
+        if (index != 0U) {
+            std::cout << ',';
+        }
+        std::cout << '\"'
+                  << polyglot_route_implementation_name(
+                         result.impact.fallback_chain[index])
+                  << '\"';
+    }
+    std::cout << "]}\n";
 }
 
 void test_publish_is_one_runtime_artifact(
@@ -249,9 +431,10 @@ int main() {
     if (!error) {
         test_publish_is_one_runtime_artifact(published);
         test_candidate_rejects_wrong_identity(published);
-        const auto admission = admit_candidate(published);
+        auto admission = admit_candidate(published);
         expect_local(admission.ok(), "the exact Native AOT candidate should be admitted");
         if (admission.ok()) {
+            test_representative_benchmark(admission, published);
             test_runtime_host_and_prg_dispatch(
                 admission, published, fixture_root);
         }

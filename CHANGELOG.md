@@ -7244,3 +7244,9 @@ passes `1/1`.
   Syft release `v1.50.0`; the checked workflow no longer depends on the
   action's stale implicit `v1.42.3` selection. The single CycloneDX artifact
   owner, read-only permissions, and Trivy gate remain unchanged.
+- 2026-08-11: Added the representative polyglot benchmark runner and versioned
+  evidence schema. Bounded warmup/measurement loops now aggregate nearest-rank
+  p95 latency/startup, throughput, peak process memory, failures, and exact
+  payload parity across direct C++, the admitted C++/.NET wrapper, and the local
+  Native AOT endpoint boundary. Recommendations remain advisory and cannot
+  modify the route registry or promote traffic.

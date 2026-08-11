@@ -4677,6 +4677,10 @@ copperfin_add_test(test_polyglot_route_impact cf_platform_profile
     test_polyglot_route_impact.cpp
 )
 
+copperfin_add_test(test_polyglot_benchmark cf_platform_profile
+    test_polyglot_benchmark.cpp
+)
+
 copperfin_add_test(test_polyglot_bridge_invocation cf_platform_profile
     test_polyglot_bridge_invocation.cpp
 )

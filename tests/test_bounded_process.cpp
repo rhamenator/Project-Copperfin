@@ -280,6 +280,8 @@ int run_tests(const std::filesystem::path& executable) {
         .cancellation_requested = {}});
     expect(exited.completed() && exited.started && exited.exit_code == 37,
            "#4700: direct invocation should preserve the candidate exit code");
+    expect(exited.peak_memory_kib > 0U,
+           "#4700: a completed child should report peak resident memory");
     expect(exited.process_tree_closed && exited.error_code == "polyglot.process.exited",
            "#4700: normal completion should close the owned process tree");
     expect(exited.standard_output.empty() && exited.standard_error.empty(),

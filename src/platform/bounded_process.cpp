@@ -31,6 +31,7 @@
 #include <csignal>
 #include <fcntl.h>
 #include <pthread.h>
+#include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -43,6 +44,18 @@ constexpr std::uint32_t kMaximumTransportBytes = 16U * 1024U * 1024U;
 
 #if defined(_WIN32)
 constexpr DWORD kTerminationWaitMilliseconds = 5000U;
+
+void capture_windows_peak_memory(
+    const HANDLE job,
+    BoundedProcessResult& result) noexcept {
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION information{};
+    if (::QueryInformationJobObject(
+            job, JobObjectExtendedLimitInformation, &information,
+            sizeof(information), nullptr) != FALSE) {
+        result.peak_memory_kib = static_cast<std::uint64_t>(
+            (information.PeakJobMemoryUsed + 1023U) / 1024U);
+    }
+}
 #endif
 
 using Clock = std::chrono::steady_clock;
@@ -792,6 +805,7 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
 
     // KILL_ON_JOB_CLOSE also removes descendants after an otherwise successful
     // root exit; artifact invocations never authorize persistent child jobs.
+    capture_windows_peak_memory(job, result);
     (void)::CloseHandle(job);
     result.process_tree_closed = true;
     (void)::CloseHandle(process_info.hProcess);
@@ -806,6 +820,19 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
 }
 
 #else
+
+void capture_posix_peak_memory(
+    const struct rusage& usage,
+    BoundedProcessResult& result) noexcept {
+#if defined(__APPLE__)
+    const std::uint64_t bytes = usage.ru_maxrss <= 0
+        ? 0U : static_cast<std::uint64_t>(usage.ru_maxrss);
+    result.peak_memory_kib = (bytes + 1023U) / 1024U;
+#else
+    result.peak_memory_kib = usage.ru_maxrss <= 0
+        ? 0U : static_cast<std::uint64_t>(usage.ru_maxrss);
+#endif
+}
 
 bool write_child_error(const int descriptor, const int child_error) {
     const auto* bytes = reinterpret_cast<const std::uint8_t*>(&child_error);
@@ -1282,8 +1309,10 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
 
     int status = 0;
     for (;;) {
-        const pid_t waited = ::waitpid(process_id, &status, WNOHANG);
+        struct rusage usage{};
+        const pid_t waited = ::wait4(process_id, &status, WNOHANG, &usage);
         if (waited == process_id) {
+            capture_posix_peak_memory(usage, result);
             result.status = BoundedProcessStatus::exited;
             result.error_code = "polyglot.process.exited";
             if (WIFEXITED(status)) {

@@ -54,6 +54,9 @@ struct BoundedProcessResult {
     int exit_code = -1;
     int native_error = 0;
     std::uint64_t elapsed_ms = 0U;
+    // Peak resident memory attributed to the owned root process on POSIX and
+    // to the owned job (including descendants) on Windows.
+    std::uint64_t peak_memory_kib = 0U;
     std::string error_code = "polyglot.process.invalid_request";
     std::string standard_output;
     std::string standard_error;
