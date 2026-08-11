@@ -446,6 +446,26 @@ require_text_count(".github/workflows/build-installers.yml"
     "cmake -E remove_directory build/package/_CPack_Packages"
     3
     "CPack internal staging cleanup")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "-DCOPPERFIN_REQUIRE_SQLITE_CONNECTOR=ON"
+    2
+    "fail-closed SQLite connector configure requirements")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_sqlite_federation_connector test_runtime_host_sqlite_federation"
+    2
+    "cross-platform SQLite connector build target pairs")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_sqlite_federation_connector|test_runtime_host_sqlite_federation"
+    2
+    "cross-platform SQLite connector test pairs")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "apps/copperfin_runtime_host/**"
+    2
+    "runtime-host path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/test_runtime_host_sqlite_federation.cpp"
+    2
+    "runtime-host SQLite test path triggers")
 require_text(".github/workflows/build-installers.yml"
     "Build standalone Studio shell"
     "Windows installer standalone Studio build")

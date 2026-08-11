@@ -409,21 +409,19 @@ auditing integration, and mutable development tools remain future work.
 
 ### docs/21 — Database Federation And Query Translation
 
-**Status: partial, real seed.** The document's own "Current Implementation
-Snapshot" states the platform already has "a deterministic Fox SQL translation
-lane for relational backends" and "a deterministic federation execution-planning
-lane that materializes backend/target/sql plans" — this matches
-`cf_platform_profile`'s `query_translator`/`federation_execution`/`database_model`
-in the real build graph. The same section states what's missing in one sentence:
-**"the live end-to-end connector layer: actual backend execution integration,
-broader provider/session behavior, and deeper non-relational connector slices."**
+**Status: partial, with one live connector.** The deterministic Fox SQL
+translator and execution planner now feed a bounded, explicitly enabled,
+read-only local SQLite connector in `copperfin_runtime_host`. It has direct and
+process-level regression coverage and a required Windows/Linux/macOS hosted
+build lane. Other relational providers, provider sessions, remote cursors,
+mutation/transactions, and non-relational connectors remain absent.
 
 **What it will take:** the document names its own near-term completion bar
-explicitly — live relational connector execution behind the existing
+explicitly — broader live relational connector execution behind the existing
 translator/planner, clearer provider-session/cursor capability contracts, and
-deeper local-to-relational mapping documentation. This is the cleanest-specified
-gap in the whole review because the source document already states its own exit
-criteria.
+deeper local-to-relational mapping documentation. The first SQLite increment is
+documented in `docs/49-read-only-sqlite-federation-execution.md`; it advances but
+does not close this criterion.
 
 ## Self-Reported Gaps
 

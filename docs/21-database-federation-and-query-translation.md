@@ -32,9 +32,10 @@ This area is no longer purely future-looking:
 
 - the platform already has a deterministic Fox SQL translation lane for relational backends
 - the runtime host already has a deterministic federation execution-planning lane that materializes backend/target/sql plans
+- the runtime host has a bounded, explicitly enabled, read-only connector for one local SQLite database, documented in [49-read-only-sqlite-federation-execution.md](49-read-only-sqlite-federation-execution.md)
 - SQL pass-through and remote-cursor behavior are implemented inside the runtime for the current local/synthetic cursor model
 
-What is still missing is the live end-to-end connector layer: actual backend execution integration, broader provider/session behavior, and deeper non-relational connector slices.
+What is still missing is broader live connector execution: PostgreSQL, SQL Server, and Oracle adapters, provider/session and remote-cursor behavior, mutable/transactional contracts, and deeper non-relational connector slices.
 
 ## Translation Tiers
 
@@ -107,6 +108,6 @@ This is how Copperfin goes beyond VFP 9 while staying credible:
 
 This document should be considered "meaningfully complete" only when Copperfin has:
 
-- live relational connector execution behind the current translator/planner surface
+- broader live relational connector execution behind the current translator/planner surface beyond the shipped read-only local SQLite slice
 - clearer capability/behavior contracts for provider-backed sessions and cursors
 - deeper documentation for how local xBase intent maps onto relational and non-relational targets

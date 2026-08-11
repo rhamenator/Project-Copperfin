@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 read-only SQLite federation execution
+
+The current H1 increment connects the deterministic SQLite translator/planner
+to one real local database. Execution is opt-in through
+`--federation-execute-read-only true`, requires an explicit target and the
+existing `project.open` permission, returns typed schema-v1 JSON, and emits a
+content-free audit event. Planning remains the default. The connector opens
+read-only, denies mutation/PRAGMA/multiple statements/extensions/attachments,
+and enforces file, SQL, row, column, cell, result, and VM-step limits.
+
+Focused GCC Release connector, runtime-host process, localization, and workflow
+contract tests pass locally. The generated-launcher workflow requires and runs
+the real connector on Windows, Linux, and macOS. Hosted evidence and independent
+review remain outstanding. Other relational providers, provider sessions,
+remote cursors, mutation/transactions, and non-relational execution are not
+claimed. See `docs/49-read-only-sqlite-federation-execution.md`.
+
 ## V1 read-only MCP DBF-header host
 
 The current H3 increment adds `copperfin_mcp_host`, an installed portable local

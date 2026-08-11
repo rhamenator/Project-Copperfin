@@ -338,6 +338,28 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    copperfin_set_test_isolation(test_sqlite_federation_connector
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
+    copperfin_set_test_isolation(test_runtime_host_sqlite_federation
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES bounded
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
     copperfin_set_test_isolation(test_xasset_methods
         PARALLEL_SAFE
         FILESYSTEM read-only

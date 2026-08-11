@@ -46,6 +46,9 @@ option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)
 option(COPPERFIN_BUILD_ROBUSTNESS_TESTS
     "Build optional bounded parser robustness tests (not a release gate)"
     OFF)
+option(COPPERFIN_REQUIRE_SQLITE_CONNECTOR
+    "Fail configuration when the read-only SQLite federation connector is unavailable"
+    OFF)
 option(COPPERFIN_MSVC_EXPLICIT_EXCEPTION_HANDLING
     "Apply MSVC exception flags per target for generators that cannot reconcile /EHsc with /clr"
     OFF)
@@ -262,6 +265,70 @@ else()
 endif()
 
 target_link_libraries(cf_platform_profile PRIVATE cf_localization cf_security)
+
+set(COPPERFIN_SQLITE_CONNECTOR_AVAILABLE OFF)
+set(COPPERFIN_SQLITE_CONNECTOR_SOURCE
+    src/platform/sqlite_federation_connector_unavailable.cpp)
+set(COPPERFIN_SQLITE_CONNECTOR_LIBRARY "")
+
+if(WIN32)
+    include(CheckCXXSourceCompiles)
+    set(CMAKE_REQUIRED_LIBRARIES winsqlite3)
+    check_cxx_source_compiles(
+        "#include <winsqlite3.h>\nint main() { return sqlite3_libversion_number() > 0 ? 0 : 1; }"
+        COPPERFIN_HAVE_WINSQLITE3)
+    unset(CMAKE_REQUIRED_LIBRARIES)
+    if(COPPERFIN_HAVE_WINSQLITE3)
+        set(COPPERFIN_SQLITE_CONNECTOR_AVAILABLE ON)
+        set(COPPERFIN_SQLITE_CONNECTOR_SOURCE
+            src/platform/sqlite_federation_connector.cpp)
+        set(COPPERFIN_SQLITE_CONNECTOR_LIBRARY winsqlite3)
+    endif()
+else()
+    find_package(SQLite3 QUIET)
+    if(SQLite3_FOUND)
+        set(COPPERFIN_SQLITE_CONNECTOR_AVAILABLE ON)
+        set(COPPERFIN_SQLITE_CONNECTOR_SOURCE
+            src/platform/sqlite_federation_connector.cpp)
+        set(COPPERFIN_SQLITE_CONNECTOR_LIBRARY SQLite::SQLite3)
+    endif()
+endif()
+
+if(COPPERFIN_REQUIRE_SQLITE_CONNECTOR AND NOT COPPERFIN_SQLITE_CONNECTOR_AVAILABLE)
+    message(FATAL_ERROR
+        "COPPERFIN_REQUIRE_SQLITE_CONNECTOR requires SQLite3 on POSIX or winsqlite3 in the Windows SDK")
+endif()
+
+add_library(cf_sqlite_connector
+    ${COPPERFIN_SQLITE_CONNECTOR_SOURCE}
+)
+
+target_include_directories(cf_sqlite_connector
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(MSVC)
+    target_compile_options(cf_sqlite_connector PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_sqlite_connector PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+target_link_libraries(cf_sqlite_connector
+    PUBLIC cf_platform_profile ${COPPERFIN_SQLITE_CONNECTOR_LIBRARY}
+    PRIVATE cf_security)
+
+if(COPPERFIN_SQLITE_CONNECTOR_AVAILABLE)
+    target_compile_definitions(cf_sqlite_connector PUBLIC
+        COPPERFIN_SQLITE_CONNECTOR_AVAILABLE=1)
+    if(WIN32)
+        target_compile_definitions(cf_sqlite_connector PUBLIC
+            COPPERFIN_SQLITE_USE_WINSQLITE3=1)
+    endif()
+else()
+    target_compile_definitions(cf_sqlite_connector PUBLIC
+        COPPERFIN_SQLITE_CONNECTOR_AVAILABLE=0)
+endif()
 
 add_library(cf_vfp_assets
     src/vfp/asset_inspector.cpp
@@ -573,7 +640,7 @@ add_executable(copperfin_runtime_host
     apps/copperfin_runtime_host/main.cpp
 )
 
-target_link_libraries(copperfin_runtime_host PRIVATE cf_xbase_runtime cf_security cf_platform_profile cf_licensing)
+target_link_libraries(copperfin_runtime_host PRIVATE cf_xbase_runtime cf_security cf_platform_profile cf_sqlite_connector cf_licensing)
 target_link_libraries(copperfin_runtime_host PRIVATE cf_localization)
 
 if(COPPERFIN_BUILD_TESTS)

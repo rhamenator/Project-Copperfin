@@ -121,6 +121,7 @@ License documents:
 - [`docs/46-python-polyglot-sidecar.md`](docs/46-python-polyglot-sidecar.md)
 - [`docs/47-r-polyglot-sidecar.md`](docs/47-r-polyglot-sidecar.md)
 - [`docs/48-mcp-read-only-dbf-header-host.md`](docs/48-mcp-read-only-dbf-header-host.md)
+- [`docs/49-read-only-sqlite-federation-execution.md`](docs/49-read-only-sqlite-federation-execution.md)
 - [`assets/copperfin-logo.png`](assets/copperfin-logo.png)
 
 Current implementation focus:
@@ -158,6 +159,7 @@ Current runnable artifacts:
   - supports real breakpoint and step-debugging actions for `PRG` startup paths
   - now emits richer debug state including call stack, locals, globals, and runtime events for debugger surfaces in Visual Studio and standalone Studio
   - now tracks richer VFP-style compatibility state for work areas, aliases, table cursors, data sessions, SQL pass-through cursors, and OLE automation objects in debug output
+  - can explicitly execute a deterministic translated query against one local SQLite database through a bounded, read-only, permission-checked connector; planning remains the default
   - runtime faults now pause on the offending source line and keep the host session alive for continued debugging
   - the VSIX now registers a FoxPro text content type for `PRG`, `H`, `QPR`, `MPR`, and `SPR` files with project-aware statement completion and first-pass hover help in Visual Studio
   - now bootstraps runnable `SCX/VCX/MNX` startup behavior through generated `PRG` wrappers

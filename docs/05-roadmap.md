@@ -1105,10 +1105,11 @@ Diagram moved to
 [diagrams/roadmap-v1-lanes-hij.md](diagrams/roadmap-v1-lanes-hij.md) — same
 rendering reason as above.
 
-**What's done:** `H1`'s relational backend translators and `I1`'s security
-baseline both have real seeds — `cf_platform_profile`'s deterministic Fox-SQL
-translator/execution-planning lane, and `cf_security`'s RBAC/audit/secrets/
-signing baseline, respectively. **What's left, and what it takes:** this is
+**What's done:** `H1`'s relational backend translators now include one live,
+bounded, read-only local SQLite execution slice behind the deterministic
+planner; `I1`'s security baseline has the `cf_security` RBAC/audit/secrets/
+signing seed. **What's left, and what it takes:** the other relational providers,
+provider sessions/cursors, and mutation contracts remain open. The wider view is
 covered in full, document-by-document, in
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md) —
 in particular its interop/federation/trust/security and language/data-fidelity
