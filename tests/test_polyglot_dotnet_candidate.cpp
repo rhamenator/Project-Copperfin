@@ -152,9 +152,9 @@ std::uint64_t elapsed_microseconds(
     return static_cast<std::uint64_t>(std::max<std::int64_t>(1, value));
 }
 
-std::optional<std::uint64_t> parse_self_reported_peak_memory(
+std::optional<std::uint64_t> parse_self_reported_working_set(
     const std::string_view document) {
-    constexpr std::string_view prefix = "COPPERFIN_PEAK_MEMORY_KIB=";
+    constexpr std::string_view prefix = "COPPERFIN_WORKING_SET_KIB=";
     if (!document.starts_with(prefix) || document.size() <= prefix.size() + 1U ||
         document.back() != '\n') {
         return std::nullopt;
@@ -214,15 +214,15 @@ void test_representative_benchmark(
         if (invocation.implementation ==
             PolyglotRouteImplementation::cpp_dotnet_wrapper) {
             const auto result = invoke_polyglot_artifact(admission, candidate);
-            const auto peak_memory = parse_self_reported_peak_memory(
+            const auto working_set = parse_self_reported_working_set(
                 result.process.standard_error);
             return PolyglotBenchmarkObservation{
-                result.ok() && peak_memory.has_value(),
-                result.ok() && peak_memory.has_value() &&
+                result.ok() && working_set.has_value(),
+                result.ok() && working_set.has_value() &&
                     result.response.envelope.payload_json ==
                     invocation.workload->expected_payload_json,
                 elapsed_microseconds(started),
-                peak_memory.value_or(0U),
+                working_set.value_or(0U),
                 result.process.elapsed_ms};
         }
 
@@ -250,15 +250,15 @@ void test_representative_benchmark(
              protocol_version, 64U * 1024U, 32U});
         const bool succeeded = process.completed() && process.exit_code == 0 &&
             process.process_tree_closed && parsed.ok();
-        const auto peak_memory = parse_self_reported_peak_memory(
+        const auto working_set = parse_self_reported_working_set(
             process.standard_error);
         return PolyglotBenchmarkObservation{
-            succeeded && peak_memory.has_value(),
-            succeeded && peak_memory.has_value() &&
+            succeeded && working_set.has_value(),
+            succeeded && working_set.has_value() &&
                 parsed.envelope.payload_json ==
                 invocation.workload->expected_payload_json,
             elapsed_microseconds(started),
-            peak_memory.value_or(0U),
+            working_set.value_or(0U),
             process.elapsed_ms};
     };
 

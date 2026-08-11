@@ -75,9 +75,8 @@ internal static class Program
         {
             return;
         }
-        using var process = System.Diagnostics.Process.GetCurrentProcess();
-        var peakMemoryKiB = checked((process.PeakWorkingSet64 + 1023L) / 1024L);
-        Console.Error.Write($"COPPERFIN_PEAK_MEMORY_KIB={peakMemoryKiB}\n");
+        var workingSetKiB = checked((Environment.WorkingSet + 1023L) / 1024L);
+        Console.Error.Write($"COPPERFIN_WORKING_SET_KIB={workingSetKiB}\n");
     }
 
     private static byte[]? ReadBoundedStandardInput()
