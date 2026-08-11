@@ -285,6 +285,33 @@ void test_default_extensibility_profile() {
     expect(!profile.dotnet_output.policy.allowlist.empty(), "extensibility profile should include a .NET interop allowlist");
     expect(!profile.dotnet_output.policy.denylist.empty(), "extensibility profile should include a .NET interop denylist");
 
+    const auto find_parity = [&profile](std::string_view id) {
+        return std::find_if(
+            profile.dotnet_output.parity_matrix.begin(),
+            profile.dotnet_output.parity_matrix.end(),
+            [id](const auto& capability) { return capability.id == id; });
+    };
+    for (const std::string_view id : {
+             "task-primitives", "json-helpers", "regex-helpers",
+             "collection-helpers", "crypto-safe-helpers", "safe-http-helpers"}) {
+        expect(find_parity(id) != profile.dotnet_output.parity_matrix.end(),
+               "#280: every first-pack capability should have an explicit parity disposition");
+    }
+    const auto safe_http = find_parity("safe-http-helpers");
+    expect(safe_http != profile.dotnet_output.parity_matrix.end() &&
+               safe_http->tier == copperfin::platform::DotNetParityTier::intentionally_not_supported,
+           "#280: the unimplemented HTTP facade should be explicitly unsupported");
+    expect(std::find(profile.dotnet_output.policy.allowlist.begin(),
+                     profile.dotnet_output.policy.allowlist.end(),
+                     "safe-http-helpers") == profile.dotnet_output.policy.allowlist.end(),
+           "#280: an unimplemented HTTP facade must not remain allowlisted");
+    expect(std::find(profile.dotnet_output.policy.denylist.begin(),
+                     profile.dotnet_output.policy.denylist.end(),
+                     "safe-http-helpers") != profile.dotnet_output.policy.denylist.end(),
+           "#280: the unsupported HTTP facade should fail closed through policy");
+    expect(profile.dotnet_output.policy.external_io_allowlist.empty(),
+           "#280: no .NET parity capability should receive external I/O before an HTTP facade ships");
+
     const auto python = std::find_if(profile.languages.begin(), profile.languages.end(), [](const auto& language) {
         return language.id == "python";
     });
@@ -400,6 +427,23 @@ void test_default_extensibility_profile() {
                    portuguese_task_primitives->reason_tags[0] == "ergonomics",
                "#2599: pt-BR parity entries should preserve reason tags");
     }
+
+    const auto portuguese_collections = std::find_if(
+        portuguese_profile.dotnet_output.parity_matrix.begin(),
+        portuguese_profile.dotnet_output.parity_matrix.end(),
+        [](const auto& capability) { return capability.id == "collection-helpers"; });
+    expect(portuguese_collections != portuguese_profile.dotnet_output.parity_matrix.end() &&
+               portuguese_collections->title == "Ajudantes de colecao e dicionario",
+           "#280: the collection facade disposition should localize in pt-BR");
+
+    const auto pseudo_safe_http = std::find_if(
+        pseudo_profile.dotnet_output.parity_matrix.begin(),
+        pseudo_profile.dotnet_output.parity_matrix.end(),
+        [](const auto& capability) { return capability.id == "safe-http-helpers"; });
+    expect(pseudo_safe_http != pseudo_profile.dotnet_output.parity_matrix.end() &&
+               pseudo_safe_http->rationale.find("[!! ") != std::string::npos &&
+               pseudo_safe_http->rationale.find("No general HTTP facade") == std::string::npos,
+           "#280: unsupported HTTP guidance should route through the pseudo locale");
 
     expect(
         pseudo_profile.languages.size() == profile.languages.size(),
@@ -577,13 +621,15 @@ void test_dotnet_interop_policy_gateway() {
     expect(secret_access_denied.diagnostic_code == "dotnet.interop.secret_access_denied",
            "#279: secret access should be denied unless capability-scoped policy allows it");
 
-    const auto scoped_external_io = copperfin::platform::evaluate_dotnet_interop_call(
+    const auto unsupported_http = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
         authorized_interop_request(copperfin::platform::DotNetInteropCallRequest{
             .capability_id = "safe-http-helpers",
             .requires_external_io = true}));
-    expect(scoped_external_io.decision == copperfin::platform::DotNetInteropDecision::allow,
-           "#279: explicitly capability-scoped external I/O should remain available");
+    expect(unsupported_http.decision == copperfin::platform::DotNetInteropDecision::reject &&
+               unsupported_http.execution_path == "none" &&
+               unsupported_http.diagnostic_code == "dotnet.interop.capability_denied",
+           "#280: the unimplemented HTTP facade should fail closed with stable guidance");
 
     const auto denied = copperfin::platform::evaluate_dotnet_interop_call(
         profile,

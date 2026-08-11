@@ -131,17 +131,18 @@ ExtensibilityProfile default_extensibility_profile(const localization::Localized
         "task-primitives",
         "json-helpers",
         "regex-helpers",
-        "safe-http-helpers",
+        "collection-helpers",
         "crypto-safe-helpers"
     };
     profile.dotnet_output.policy.denylist = {
+        "safe-http-helpers",
         "unsafe-reflection-load",
         "insecure-binary-deserialization",
         "legacy-cas-interop"
     };
     profile.dotnet_output.policy.reflection_allowlist = {};
     profile.dotnet_output.policy.assembly_loading_allowlist = {};
-    profile.dotnet_output.policy.external_io_allowlist = {"safe-http-helpers"};
+    profile.dotnet_output.policy.external_io_allowlist = {};
     profile.dotnet_output.policy.secret_access_allowlist = {};
     profile.dotnet_output.policy.max_in_process_latency_budget_ms = 25U;
     profile.dotnet_output.policy.require_policy_audit = true;
@@ -161,6 +162,34 @@ ExtensibilityProfile default_extensibility_profile(const localization::Localized
             .rationale = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.JsonHelpers.Rationale"),
             .verification_reference = "#280",
             .reason_tags = {"ergonomics"}},
+        DotNetParityCapability{
+            .id = "regex-helpers",
+            .title = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.RegexHelpers.Title"),
+            .tier = DotNetParityTier::adapted,
+            .rationale = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.RegexHelpers.Rationale"),
+            .verification_reference = "#280",
+            .reason_tags = {"ergonomics", "security"}},
+        DotNetParityCapability{
+            .id = "collection-helpers",
+            .title = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.CollectionHelpers.Title"),
+            .tier = DotNetParityTier::adapted,
+            .rationale = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.CollectionHelpers.Rationale"),
+            .verification_reference = "#280",
+            .reason_tags = {"ergonomics", "compatibility"}},
+        DotNetParityCapability{
+            .id = "crypto-safe-helpers",
+            .title = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.CryptoSafeHelpers.Title"),
+            .tier = DotNetParityTier::adapted,
+            .rationale = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.CryptoSafeHelpers.Rationale"),
+            .verification_reference = "#280",
+            .reason_tags = {"ergonomics", "security"}},
+        DotNetParityCapability{
+            .id = "safe-http-helpers",
+            .title = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.SafeHttpHelpers.Title"),
+            .tier = DotNetParityTier::intentionally_not_supported,
+            .rationale = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.SafeHttpHelpers.Rationale"),
+            .verification_reference = "#280",
+            .reason_tags = {"security", "external_io"}},
         DotNetParityCapability{
             .id = "unsafe-reflection-load",
             .title = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Title"),

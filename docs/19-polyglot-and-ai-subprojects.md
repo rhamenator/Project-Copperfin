@@ -73,6 +73,13 @@ Current maturity:
   `CFHMACVERIFY()`, `CFBASE64ENCODE()`, and strict `CFBASE64DECODE()` helpers
   for immutable result identity, shared-key authentication, and text transport.
   The HMAC helpers do not manage keys; none encrypt data or admit an artifact.
+- FP/VFP-shaped collection utilities remain native: `Collection` and the
+  seeded `Scripting.Dictionary` compatibility surface provide ordered and
+  keyed storage without importing managed collection types into PRG.
+- No general HTTP facade is shipped. `safe-http-helpers` is explicitly denied
+  by the parity policy and receives no external-I/O scope. A separately
+  reviewed host adapter admitted through the polyglot contract is the current
+  fallback for an application that deliberately needs network access.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook today.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 

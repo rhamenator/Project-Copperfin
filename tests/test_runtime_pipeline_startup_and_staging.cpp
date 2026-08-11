@@ -484,10 +484,19 @@ void test_materialize_runtime_package() {
                "debug manifest should preserve the .NET parity matrix summary");
         expect(debug_manifest.find("dotnet_policy_allowlist_item=task-primitives") != std::string::npos,
                "debug manifest should preserve task-primitives allowlist entries");
+        expect(debug_manifest.find("dotnet_policy_allowlist_item=safe-http-helpers") == std::string::npos,
+               "#280: debug manifest must not advertise the unimplemented HTTP facade as allowed");
         expect(debug_manifest.find("dotnet_policy_denylist_item=unsafe-reflection-load") != std::string::npos,
                "debug manifest should preserve unsafe-reflection-load denylist entries");
+        expect(debug_manifest.find("dotnet_policy_denylist_item=safe-http-helpers") != std::string::npos,
+               "#280: debug manifest should preserve the explicit HTTP denial");
         expect(debug_manifest.find("dotnet_parity_matrix_item=task-primitives") != std::string::npos,
                "debug manifest should preserve task-primitives parity matrix entries");
+        const auto safe_http_parity_items =
+            lines_with_prefix(debug_manifest, "dotnet_parity_matrix_item=safe-http-helpers|");
+        expect(safe_http_parity_items.size() == 1U &&
+                   safe_http_parity_items.front().find("|intentionally_not_supported|") != std::string::npos,
+               "#280: debug manifest should expose the HTTP parity disposition");
         expect(debug_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos,
                "debug manifest should preserve .NET gateway allow decision diagnostics");
         expect(

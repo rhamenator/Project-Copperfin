@@ -184,13 +184,22 @@ This repo now tracks .NET parity with an explicit allow/deny policy and capabili
 
 ### Initial Capability Matrix
 
-| capability id | tier | reason tags | rationale | verification reference |
+| capability id | tier | reason tags | rationale and fallback | verification reference |
 | --- | --- | --- | --- | --- |
-| `task-primitives` | adapted | ergonomics, performance | Async/task behavior is surfaced through native-friendly command/function shapes. | `#272` |
-| `json-helpers` | adapted | ergonomics | High-value JSON helpers are allowed with native null/blank semantic preservation. | `#280` |
-| `unsafe-reflection-load` | intentionally_not_supported | security, legacy_hazard | Arbitrary reflection loading crosses trust boundaries and is denied by default. | `#279` |
-| `insecure-binary-deserialization` | intentionally_not_supported | security, legacy_hazard | Legacy insecure serialization patterns are rejected. | `#279` |
-| `legacy-cas-interop` | intentionally_not_supported | performance, legacy_hazard | Retired CAS-era behavior is not reintroduced. | `#275` |
+| `task-primitives` | adapted | ergonomics, performance | Async/task behavior is surfaced through `SPAWN`, `AWAIT`, and the `CFTASK*()` supervision facade. | `#272` |
+| `json-helpers` | adapted | ergonomics | Use bounded native `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` rather than managed JSON object graphs. | `#280` |
+| `regex-helpers` | adapted | ergonomics, security | Use the bounded non-backtracking `CFREGEX*()` subset. Unsupported advanced syntax fails closed; a separately approved external capability is the documented fallback. | `#280` |
+| `collection-helpers` | adapted | ergonomics, compatibility | Use native `Collection` and the seeded `Scripting.Dictionary` compatibility surface rather than exposing managed collection types. | `#280` |
+| `crypto-safe-helpers` | adapted | ergonomics, security | Use bounded exact-byte `CFSHA256()`, `CFHMAC*()`, and `CFBASE64*()` functions; key storage, encryption, and signing remain caller/host responsibilities. | `#280` |
+| `safe-http-helpers` | intentionally_not_supported | security, external_io | No general HTTP facade ships in this pack. Policy rejects it; use a separately reviewed host adapter admitted through the polyglot contract when network access is required. | `#280` |
+| `unsafe-reflection-load` | intentionally_not_supported | security, legacy_hazard | Arbitrary reflection loading crosses trust boundaries and is denied by default; use an explicitly built and admitted artifact. | `#279` |
+| `insecure-binary-deserialization` | intentionally_not_supported | security, legacy_hazard | Legacy insecure serialization is rejected; exchange bounded contract-validated JSON instead. | `#279` |
+| `legacy-cas-interop` | intentionally_not_supported | performance, legacy_hazard | Retired CAS-era behavior is not reintroduced; use current host authorization and capability policy. | `#275` |
+
+The matrix describes actual product surfaces, not aspirational allowlisting. The
+first pack therefore denies `safe-http-helpers` and grants no external-I/O
+scope until a bounded HTTP contract and implementation receive their own
+review and regression evidence.
 
 ### Policy-Driven Call Gateway
 
