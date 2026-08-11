@@ -1,5 +1,37 @@
 # Agent Handoff
 
+## V1 .NET polyglot leaf-candidate implementation
+
+The current #4700/#91 slice supplies the first real language target over the
+existing artifact-first bridge. `samples/polyglot-dotnet-candidate` is a small
+C# `samples.dotnet.add-v1` capability that publishes with the .NET 10 SDK as a
+self-contained Native AOT executable for the supported Windows, Linux, and
+macOS x64/arm64 runtime identifiers. It accepts one exact v1 invocation object,
+requires unique fields and signed 64-bit `left`/`right` values, and emits one
+matching strict success or typed error envelope. Wrong identity, duplicate or
+unknown fields, malformed JSON, and input over 1 MiB fail without reflecting
+request bytes.
+
+`test_polyglot_dotnet_candidate` publishes the target for the current host,
+allows only the executable plus optional debug-symbol output, hashes and admits
+that exact executable under its publish root, and configures the production
+`PolyglotRuntimeHost` with an `on`/fail-fast route. It proves direct candidate
+success and bounded error mapping, then runs ordinary PRG that calls
+`CFPOLYGLOTDISPATCH()` and uses `CFJSONGET()` to inspect the authoritative sum.
+The process receives an empty environment; telemetry is checked for request and
+correlation redaction. The generated-launcher workflow now exercises this path
+on hosted Windows, Linux, and macOS whenever the relevant source or contract
+changes.
+
+Local Release focused and adjacent coverage currently passes `7/7`; direct
+publish probes prove exact success, typed overflow, and quiet identity
+rejection. Sanitizer, repeat, final-head protected, and hosted cross-platform
+evidence remain to be recorded before merge. This slice adds no inline C#,
+ambient CLR discovery, in-process CLR host, arbitrary assembly load, loose
+managed runtime sidecar, network/package dependency, new task lifecycle, or
+foreign callback into mutable PRG state. See
+`docs/43-dotnet-polyglot-candidate.md`.
+
 ## V1 trusted polyglot runtime-host composition candidate
 
 The approved #4940/#4700 slice adds `PolyglotRuntimeHost`, the portable

@@ -505,6 +505,17 @@ eight candidate-head protected checks without a blocking result.
 Language-specific hosting, discovery,
 retry, second-artifact fallback, and atomic handle-bound launch remain separate.
 
+The first language-specific target is now implemented as a checked-in C# leaf
+candidate for `samples.dotnet.add-v1`. The build publishes one self-contained
+Native AOT executable for the current supported Windows, Linux, or macOS
+x64/arm64 RID. The native regression hashes and admits those exact bytes,
+configures the trusted runtime host, exercises strict success/error behavior,
+and proves ordinary PRG dispatch plus bounded JSON inspection. This is an
+external capability template, not a general CLR host, inline foreign syntax,
+arbitrary assembly loading, or execution of emitted transpilation output.
+Final sanitizer, repeat, hosted cross-platform, and protected-merge evidence is
+still required for this candidate.
+
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are
 exclusive; all JSON objects have unique keys; unknown top-level/error fields,
@@ -833,7 +844,7 @@ standalone Studio shell, and FoxPro language-service layer."
 | E | `#111` (`E1`/`#22`, `E2`/`#23`, `E3`/`#24`) | Shared design model and designer fidelity (`E3` = report/label parity, the single largest lane in the repo) | Closed 2026-07-24 | Phase C |
 | F | `#112` (`F1`/`#25`, `F2`/`#26`) | VS extension parity + utility panes; standalone Studio as a full IDE | MVP implementation complete for standalone shell; hosted UI evidence remains under the RC gate | Phase C |
 | G | `#112` (`G1`/`#27`, `G2`/`#28`, `G3`/`#29`) | FoxPro language service: semantic resolution, navigation/refactoring, IntelliSense metadata | Recorded G1/G2/G3 slices closed; broader MVP scope remains under the live tree | Phase C |
-| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Portable route/artifact execution, trusted runtime-host composition, and PRG dispatch implemented; language-specific adapters and live connector/runtime integrations remain | v1 item 3 |
+| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Portable route/artifact execution, trusted runtime-host composition, PRG dispatch, and first Native AOT C# leaf target implemented; broader managed/Python/R adapters and live connector integrations remain | v1 item 3 |
 | I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | Seeded (see gap analysis) | v1 item 4 |
 | J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Studio launch-error and POSIX root-identity seams shipped; broader ports open | v1 item 5 |
 

@@ -169,6 +169,8 @@ candidate `b66e6085f` passes Linux Native `31453166584` and macOS Native
 focused regression on every host, the macOS locale matrix at `8/8`, and all
 eight candidate-head protected checks without a blocking result.
 
-This integration still adds no language-specific runtime, discovery/install,
-inline foreign source, retry, second artifact, new task lifecycle, mutable PRG
-callback, or atomic handle-bound launch.
+This PRG integration itself adds no language-specific runtime,
+discovery/install, inline foreign source, retry, second artifact, new task
+lifecycle, mutable PRG callback, or atomic handle-bound launch. The separate
+Native AOT C# leaf in `docs/43-dotnet-polyglot-candidate.md` is the first real
+external language target over this boundary.

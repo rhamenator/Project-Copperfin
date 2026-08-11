@@ -32,8 +32,12 @@ Current maturity:
   capability/JSON/sample input and returns bounded invariant evidence. It runs
   on the current PRG task so existing `SPAWN`/`CFTASK*` supervision applies,
   and `PolyglotRuntimeHost` now provisions that callback from an explicit
-  validated route registry and per-capability admitted-artifact state. No
-  language-specific adapter or embedded language runtime exists.
+  validated route registry and per-capability admitted-artifact state.
+- The first real language target is a checked-in C# leaf candidate for
+  `samples.dotnet.add-v1`. It publishes as a self-contained Native AOT
+  executable, is admitted by exact hash, and is exercised end to end through
+  the production host and ordinary PRG. It is not an embedded runtime or a
+  general assembly loader.
 - A separate portable admission boundary now binds a canonical capability ID
   and rooted external-process authorization to one exact lowercase SHA-256 and
   physical file identity. Its opaque token must be revalidated before a later
@@ -45,8 +49,9 @@ Current maturity:
   status, cooperative cancellation, retained return values, and completed
   print output. Exact candidate head `09c1b1046` passes Linux Native
   `31307387144` at `326/326`, macOS Native `31307387146` at `326/326` plus
-  four locales at `8/8`, and Windows Native `31307387195` at `325/325`; no
-  external artifact adapter is connected to it yet.
+  four locales at `8/8`, and Windows Native `31307387195` at `325/325`. At that
+  earlier task-supervision head no external adapter was connected; the later
+  runtime-host and Native AOT target above now complete that route.
 - PRG now has a portable bounded JSON control-plane facade:
   `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` validate and inspect an
   immutable result document through RFC 6901 JSON Pointer selection. Strings
@@ -304,6 +309,28 @@ foreign source, retry, promote routes, invoke a second artifact, introduce a
 task model, or permit a foreign worker to enter mutable PRG state. Artifact
 execution retains the documented path-based revalidation boundary and does not
 claim atomic handle-bound launch.
+
+## .NET Native AOT Leaf Candidate v1
+
+`samples/polyglot-dotnet-candidate` implements the fixed
+`samples.dotnet.add-v1` capability in C#. Publishing for a supported
+Windows/Linux/macOS x64/arm64 RID produces one self-contained Native AOT
+executable containing the candidate and its required .NET runtime. The host
+does not search for or install a CLR, and no loose managed/runtime sidecar is
+admitted.
+
+The candidate accepts exactly one bounded invocation envelope on standard
+input, requires exact unique identity and `left`/`right` fields, and emits one
+matching success or typed error envelope. The production adapter supplies an
+empty environment and one bounded attempt. The integration regression hashes
+and admits the exact published executable, invokes it through
+`PolyglotRuntimeHost`, and runs ordinary PRG through `CFPOLYGLOTDISPATCH()` and
+`CFJSONGET()`. Rebuilding with another SDK, runtime pack, source revision, RID,
+or option creates a different artifact that must be rehashed and readmitted.
+
+This proves one real external .NET target, not general CLR hosting, inline C#,
+reflection, arbitrary assembly loading, dependency resolution, or execution of
+generated transpilation output. See `docs/43-dotnet-polyglot-candidate.md`.
 
 ## PRG Polyglot Dispatch Boundary v1
 
