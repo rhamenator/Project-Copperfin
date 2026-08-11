@@ -121,6 +121,10 @@ else()
     target_compile_options(cf_platform_support PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+if(WIN32)
+    target_link_libraries(cf_platform_support PRIVATE user32)
+endif()
+
 add_library(cf_localization
     src/localization/localization.cpp
 )

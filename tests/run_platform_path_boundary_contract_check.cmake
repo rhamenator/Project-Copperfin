@@ -52,5 +52,11 @@ string(FIND "${cmake_text}" "src/platform/path.cpp" path_source_offset)
 if(path_source_offset EQUAL -1)
     message(FATAL_ERROR "Private path implementation is not registered in the platform library")
 endif()
+string(FIND "${cmake_text}"
+    "target_link_libraries(cf_platform_support PRIVATE user32)"
+    user32_link_offset)
+if(user32_link_offset EQUAL -1)
+    message(FATAL_ERROR "Windows path implementation must declare its User32 dependency")
+endif()
 
 message(STATUS "Portable public path boundary contract passed")
