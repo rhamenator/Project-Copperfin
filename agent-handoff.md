@@ -4607,3 +4607,19 @@ Anchore generates only, `actions/upload-artifact` publishes exactly one
 run `30490155212` passed at exact head `960fc8eb3`; the artifact API reports
 exactly one non-expired `cyclonedx-sbom` artifact of 3,838 bytes. #4847 is
 closed with this evidence.
+
+# 2026-08-11 Read-only MCP DBF-header host evidence
+
+PR #4952 exact signed/DCO implementation head `25c545907` has all eleven
+protected checks green. Generated Launcher Validation `31525167620` built and
+ran `copperfin_mcp_host`, `test_mcp_host`, and `test_mcp_host_stdio` on Windows,
+Ubuntu, and macOS. Executable Path Validation `31525167466`, Windows DECLARE
+ABI Validation `31525167468`, and Windows Environment and Executable Path
+Validation `31525167519` also passed. Independent Linux review rebuilt with
+GCC 15 plus ASan/UBSan, reran the focused tests, manually exercised the process
+boundary and failure modes, traced the fail-closed `ai.mcp` authorization and
+content-free audit paths, verified installer/CI wiring, and found no defect.
+The reviewer did not repeat hosted Windows/macOS execution, run TSan on the
+single-threaded host, or re-review the unchanged DBF parser. The broader MCP
+interoperability criterion remains open for future separately authorized tools
+and provider/mutable-runtime integration; this narrow product slice is ready.

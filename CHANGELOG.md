@@ -7331,6 +7331,13 @@ passes `1/1`.
   `ai.mcp` role permission, and has no caller-selected file, network,
   model-provider, shell, extension-loading, or mutable product-state access.
   Content-free audit events report tool identity and outcome without request
-  bytes. Native protocol and process-level stdio regressions pass locally on
-  Linux; hosted Windows and macOS evidence remains required before closing the
-  broader interoperability criterion.
+  bytes. At exact signed/DCO implementation head `25c545907`, Generated
+  Launcher Validation `31525167620` passes the host and both MCP tests on
+  Windows, Ubuntu, and macOS. Executable Path Validation `31525167466`,
+  Windows DECLARE ABI Validation `31525167468`, and Windows Environment and
+  Executable Path Validation `31525167519` also pass; all eleven protected PR
+  checks are green. Independent Linux review rebuilt with ASan/UBSan, exercised
+  RBAC, output isolation, audit redaction, bounded parsing, protocol/version
+  boundaries, malformed inputs, and installer wiring, and found no defect.
+  That review did not repeat Windows/macOS execution, run TSan on the
+  deliberately single-threaded host, or re-review the unchanged DBF parser.

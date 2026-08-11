@@ -96,3 +96,22 @@ Regression evidence lives in `test_mcp_host` and `test_mcp_host_stdio`.
 They cover both protocol eras, discovery, listing, successful DBF parsing,
 strict rejection paths, notification silence, exact JSON-RPC identifiers, and
 the newline-delimited process boundary.
+
+## Validation Evidence
+
+At exact signed/DCO implementation head `25c545907`, Generated Launcher
+Validation run `31525167620` built and exercised the host and both focused MCP
+tests on Windows, Ubuntu, and macOS. Executable Path Validation
+`31525167466`, Windows DECLARE ABI Validation `31525167468`, and Windows
+Environment and Executable Path Validation `31525167519` also passed; all
+eleven protected PR checks were green.
+
+Independent review at that same head rebuilt the host with GCC 15 and
+ASan/UBSan, reran both focused tests, and exercised the installed stdio process
+with permission-denial, stdout-isolation, audit-redaction, oversized-message,
+duplicate-key, exact-member, hexadecimal-boundary, unknown-tool,
+version-negotiation, and malformed-envelope probes. No defect or sanitizer
+finding was reproduced. The review host was Linux and did not repeat Windows
+or macOS execution; the hosted three-platform run above supplies that evidence.
+The process is deliberately single-threaded, so no TSan run was claimed. The
+underlying unchanged DBF parser was outside this review's implementation diff.
