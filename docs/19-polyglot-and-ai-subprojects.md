@@ -19,7 +19,9 @@ Everything else must integrate through explicit, auditable boundaries.
 
 Current maturity:
 
-- .NET integration currently exists as an early generated-launcher path: the native runtime pipeline can spawn a generated C# stub as a child process, but generated C# transpilation output is not executed by the runtime host.
+- Generated-launcher C# remains a separate early transpilation path and is not
+  executed by the runtime host. The production polyglot host instead exercises
+  the explicitly admitted Native AOT leaf described below.
 - A portable bounded-process primitive now provides direct executable/argument
   invocation, an explicit child environment, timeout and cancellation handling,
   descendant cleanup, and independently bounded exact-byte stdout/stderr
@@ -38,6 +40,12 @@ Current maturity:
   executable, is admitted by exact hash, and is exercised end to end through
   the production host and ordinary PRG. It is not an embedded runtime or a
   general assembly loader.
+- A deterministic advisory route-impact boundary now evaluates already-captured
+  direct-C++, C++/.NET-wrapper, and C#-service measurements against explicit
+  latency, throughput, memory, startup, security, parity, failure, and sample
+  gates. It produces a stable preferred route and fallback order but cannot
+  mutate the route registry or promote traffic. The representative benchmark
+  runner and checked-in workload results remain separate work.
 - A separate portable admission boundary now binds a canonical capability ID
   and rooted external-process authorization to one exact lowercase SHA-256 and
   physical file identity. Its opaque token must be revalidated before a later
@@ -561,6 +569,25 @@ These event names, fields, reason codes, and enum values are machine contracts a
 not localized. The telemetry helpers only record evidence; the coordinator above is
 the separate component that applies a route and never alters existing PRG runtime
 events by itself.
+
+## Route Impact Recommendation v1
+
+`evaluate_polyglot_route_impact` consumes one policy and exactly one
+already-captured measurement for direct C++, a C++/.NET wrapper, and a C#
+service. Hard gates require runtime availability, explicit security approval,
+a permitted security profile, contract compatibility, enough samples, zero
+failures and parity mismatches, and compliance with p95 latency, throughput,
+peak-memory, and p95-startup budgets. Eligible routes receive a deterministic
+integer weighted score; the lowest score is preferred and the remaining
+eligible routes form its fallback chain. Canonical route order breaks exact
+ties, so input order and locale cannot alter the machine decision.
+
+Invalid or wholly ineligible evidence returns no recommendation and retains the
+direct-C++/native no-promotion default. The evaluator is advisory only: it does
+not run workloads, invoke either route, mutate `PolyglotRouteRegistry`, or
+advance `off`/`shadow`/`canary`/`on` state. Human review remains mandatory.
+The complete contract, failure boundary, and remaining benchmark-runner gap are
+recorded in `docs/44-polyglot-route-impact.md`.
 
 ## Developer Migration Playbook v1
 

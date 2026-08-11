@@ -115,6 +115,7 @@ License documents:
 - [`docs/41-prg-payload-integrity-and-base64.md`](docs/41-prg-payload-integrity-and-base64.md)
 - [`docs/42-prg-polyglot-dispatch.md`](docs/42-prg-polyglot-dispatch.md)
 - [`docs/43-dotnet-polyglot-candidate.md`](docs/43-dotnet-polyglot-candidate.md)
+- [`docs/44-polyglot-route-impact.md`](docs/44-polyglot-route-impact.md)
 - [`assets/copperfin-logo.png`](assets/copperfin-logo.png)
 
 Current implementation focus:

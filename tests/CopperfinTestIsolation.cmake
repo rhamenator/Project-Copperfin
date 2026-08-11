@@ -116,6 +116,7 @@ function(copperfin_configure_native_test_isolation)
             test_polyglot_interop_envelope
             test_polyglot_migration_telemetry
             test_polyglot_parity_comparator
+            test_polyglot_route_impact
             test_polyglot_route_registry)
         copperfin_set_test_isolation(${test_name}
             PARALLEL_SAFE
