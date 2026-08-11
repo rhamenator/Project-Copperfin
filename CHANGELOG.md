@@ -7,8 +7,10 @@
   checklist, for ordinary bug-fix/feature/docs contributions). Also added
   `.github/DISCUSSION_TEMPLATE/q-a.yml` and `ideas.yml` structured forms for
   the existing Q&A and Ideas Discussion categories; General, Show and tell,
-  Polls, and Announcements remain freeform. No product, runtime, or workflow
-  behavior changed.
+  Polls, and Announcements remain freeform. The repository-community contract
+  now requires both selectable PR templates and both Discussion forms and
+  validates their critical provenance, localization, title, and prompt fields.
+  No product or runtime behavior changed.
 
 - 2026-08-08: Produced and independently inspected the corrected private
   evaluation candidate `v0.1.0-rc.2` under #4907. The protected annotated tag
