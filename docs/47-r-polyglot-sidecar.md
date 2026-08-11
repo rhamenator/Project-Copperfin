@@ -33,6 +33,15 @@ writable by untrusted principals, and readmit after every change. A production
 sidecar that loads data files, package trees, or other loose inputs must admit
 and bind those dependencies too.
 
+On Windows, configure the architecture-specific
+`<R_HOME>/bin/x64/Rscript.exe`, not the top-level
+`<R_HOME>/bin/Rscript.exe` dispatcher. The top-level executable delegates
+through `system()` and `cmd.exe`; Copperfin's shell-free, complete child
+environment intentionally does not support that path. Automatic test discovery
+replaces the dispatcher with the installed x64 front end and omits the R target
+if that direct executable is absent. The direct executable is the artifact that
+is hash/identity pinned and revalidated before launch.
+
 ## Runtime behavior
 
 - FP/VFP stays in control through `CFPOLYGLOTDISPATCH()` and may supervise the
@@ -67,6 +76,10 @@ authoritative candidate result. It also proves that script substitution and
 post-admission mutation prevent R from starting. Direct bounded-process cases
 prove the base-R reader rejects duplicate members, an unknown top-level field,
 an unpaired Unicode surrogate, and excessive nesting.
+`test_rscript_discovery_contract` independently proves that Windows automatic
+discovery selects the direct x64 front end, preserves an already-direct path,
+leaves POSIX discovery unchanged, and rejects the shell dispatcher when its
+direct companion is absent.
 
 Local Release testing uses an isolated unpacked R 4.5.2 runtime without a
 system installation. Hosted R 4.6.1 evidence remains pending and is not claimed

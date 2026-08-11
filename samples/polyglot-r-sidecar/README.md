@@ -12,6 +12,9 @@ binds it to its exact command-line argument position, and revalidates it before
 each launch. The child receives a complete explicit environment instead of
 ambient host or agent variables; that environment sets
 `R_DEFAULT_PACKAGES=base` so optional default packages are not loaded.
+On Windows, configure and admit `<R_HOME>/bin/x64/Rscript.exe`; the top-level
+`<R_HOME>/bin/Rscript.exe` is a shell-based architecture dispatcher and is not
+compatible with Copperfin's shell-free complete environment.
 
 The template uses base R only, processes one bounded request, performs no
 discovery, network access, package installation, callback into mutable runtime

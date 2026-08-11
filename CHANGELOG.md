@@ -7306,4 +7306,10 @@ passes `1/1`.
   Actions contract now safely admits pinned `owner/repository/subpath` actions
   while rejecting empty, `.` and `..` path segments. Generated Launcher
   Validation pins `r-lib/actions/setup-r` to commit `d3c5be51b` and exact R
-  4.6.1 on Windows, Ubuntu, and macOS; hosted evidence remains pending.
+  4.6.1 on Windows, Ubuntu, and macOS. The first hosted run exposed that
+  top-level Windows `bin/Rscript.exe` is a shell-based architecture dispatcher:
+  it returned `-1` under the intentionally complete environment while both
+  POSIX jobs passed. Automatic discovery now selects and admits the direct
+  `bin/x64/Rscript.exe` front end instead, refuses the dispatcher when the
+  direct executable is absent, and retains the one-variable environment.
+  Focused hosted rerun evidence remains pending.
