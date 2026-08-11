@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 portable public path boundary
+
+The first explicit J1 library-boundary increment moves all OS-specific path
+conversion and comparison code out of the widely consumed public
+`copperfin/platform/path.h` header and into `cf_platform_support`. The public
+interface now exposes only standard C++ declarations, so runtime, security,
+licensing, asset, Studio, and application consumers no longer inherit the
+Windows SDK through this abstraction. Windows UTF-16/UTF-8 and case-insensitive
+comparison behavior and POSIX byte conversion/case-sensitive comparison remain
+unchanged.
+
+Direct runtime and source-contract tests are registered in Generated Launcher
+Validation on Windows, Ubuntu, and macOS and in the focused Windows
+environment/path workflow. Local GCC Release focused plus adjacent licensing,
+security, VFP asset, environment, isolation, and workflow-contract tests pass
+`10/10`; Clang 21 ASan/UBSan passes the two new tests with leak detection.
+Hosted exact-head evidence remains outstanding. This seeds J1 only; broader
+native-boundary inventory and the J2/J3 ports remain open. See
+`docs/50-portable-public-path-boundary.md`.
+
 ## V1 read-only SQLite federation execution
 
 The current H1 increment connects the deterministic SQLite translator/planner

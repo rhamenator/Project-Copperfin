@@ -106,6 +106,7 @@ add_library(cf_platform_support
     src/platform/executable_path.cpp
     src/platform/invariant_numeric.cpp
     src/platform/json.cpp
+    src/platform/path.cpp
     src/platform/safe_regex.cpp
 )
 
@@ -193,6 +194,8 @@ if(MSVC)
 else()
     target_compile_options(cf_licensing PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+target_link_libraries(cf_licensing PRIVATE cf_platform_support)
 
 # Vendored third-party Ed25519 verify code: relax warnings so upstream
 # source (see src/licensing/third_party/ed25519_ref/README.md) doesn't need
