@@ -8,6 +8,13 @@
   old unconditional copy makes that exact assertion fail. No current native
   callback was known to populate failure payloads, so this is a fail-closed
   defense before future native adapters make the latent path reachable.
+  Local Release focused and adjacent tests pass `5/5`, the focused target
+  repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection, and the
+  mutation check proves the new assertion is load-bearing. Exact product/test
+  head `edbcecfeb` passes Linux Native `31465221620` and macOS Native
+  `31465221684` at `337/337`, Windows Native `31465221686` at `336/336`, the
+  focused regression on every host, and the macOS locale matrix at `8/8`; all
+  eleven protected checks pass at that head.
 
 - 2026-08-11: Added the first real cross-platform language target for the
   artifact-first polyglot bridge. The checked-in C# sample publishes with the

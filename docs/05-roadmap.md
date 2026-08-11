@@ -509,7 +509,12 @@ success before publishing those bytes while retaining the existing failure
 status, error, authority, route, counts, and fallback evidence. A focused
 regression supplies nonempty synthetic failure bytes and a mutation check proves
 the guard is load-bearing; no current native callback was known to exercise the
-latent path.
+latent path. Local Release focused and adjacent tests pass `5/5`, the focused
+target repeats `20/20`, and Clang 21 ASan/UBSan passes with leak detection.
+Exact product/test head `edbcecfeb` passes Linux Native `31465221620` and macOS
+Native `31465221684` at `337/337`, Windows Native `31465221686` at `336/336`,
+the focused regression everywhere, the macOS locale matrix at `8/8`, and all
+eleven protected checks.
 Language-specific hosting, discovery,
 retry, second-artifact fallback, and atomic handle-bound launch remain separate.
 

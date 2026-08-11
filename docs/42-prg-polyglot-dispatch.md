@@ -176,7 +176,13 @@ retains its canonical status, reason, authority, route selection, invocation
 counts, and fallback flag but exposes an empty payload, matching the existing
 candidate-failure rule. The focused regression supplies nonempty synthetic
 failure bytes; restoring the former unconditional copy makes that exact check
-fail. No current native callback was known to populate failure payloads.
+fail. No current native callback was known to populate failure payloads. Local
+Release focused and adjacent tests pass `5/5`, the focused target repeats
+`20/20`, and Clang 21 ASan/UBSan passes with leak detection. Exact product/test
+head `edbcecfeb` passes Linux Native `31465221620` and macOS Native
+`31465221684` at `337/337`, Windows Native `31465221686` at `336/336`, the
+focused regression on every host, the macOS locale matrix at `8/8`, and all
+eleven protected checks.
 
 This PRG integration itself adds no language-specific runtime,
 discovery/install, inline foreign source, retry, second artifact, new task
