@@ -7258,4 +7258,8 @@ passes `1/1`.
   the maximum observed value; Windows retains its reliable Job Object peak.
   Review also found that valid observations were rejected after cumulative
   latency crossed the per-observation ceiling; accumulation now guards the
-  actual `uint64_t` boundary, with a 100-observation regression.
+  actual `uint64_t` boundary, with a 100-observation regression. Final review
+  found that the direct-C++ fixture had been an empty timing callback and that
+  the evidence schema left policy unconstrained. The direct route now strictly
+  parses, executes, serializes, and parity-checks the same signed-add workload,
+  while the schema and contract check require a closed policy and weights shape.

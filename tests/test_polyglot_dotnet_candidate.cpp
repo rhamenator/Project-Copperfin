@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -171,6 +172,39 @@ std::optional<std::uint64_t> parse_self_reported_working_set(
     return value;
 }
 
+std::optional<std::string> execute_direct_cpp_add(
+    const std::string_view arguments_json) {
+    constexpr std::string_view left_prefix = R"({"left":)";
+    constexpr std::string_view right_prefix = R"(,"right":)";
+    if (!arguments_json.starts_with(left_prefix)) {
+        return std::nullopt;
+    }
+
+    std::int64_t left = 0;
+    const char* const left_begin = arguments_json.data() + left_prefix.size();
+    const char* const end = arguments_json.data() + arguments_json.size();
+    const auto left_parsed = std::from_chars(left_begin, end, left);
+    if (left_parsed.ec != std::errc{} ||
+        static_cast<std::size_t>(end - left_parsed.ptr) <
+            right_prefix.size() + 2U ||
+        std::string_view(left_parsed.ptr, right_prefix.size()) != right_prefix) {
+        return std::nullopt;
+    }
+
+    std::int64_t right = 0;
+    const char* const right_begin = left_parsed.ptr + right_prefix.size();
+    const auto right_parsed = std::from_chars(right_begin, end, right);
+    if (right_parsed.ec != std::errc{} || right_parsed.ptr == end ||
+        right_parsed.ptr + 1 != end || *right_parsed.ptr != '}') {
+        return std::nullopt;
+    }
+    if ((right > 0 && left > std::numeric_limits<std::int64_t>::max() - right) ||
+        (right < 0 && left < std::numeric_limits<std::int64_t>::min() - right)) {
+        return std::nullopt;
+    }
+    return std::string(R"({"sum":)") + std::to_string(left + right) + '}';
+}
+
 void test_representative_benchmark(
     PolyglotArtifactAdmissionResult& admission,
     const PublishedCandidate& published) {
@@ -200,12 +234,19 @@ void test_representative_benchmark(
              PolyglotRouteSecurityProfile::admitted_process, true, true, true}},
         .invoke = {}};
 
+    std::size_t direct_cpp_invocations = 0U;
     request.invoke = [&](const PolyglotBenchmarkInvocation& invocation) {
         const auto started = std::chrono::steady_clock::now();
         if (invocation.implementation ==
             PolyglotRouteImplementation::direct_cpp) {
+            ++direct_cpp_invocations;
+            const auto payload = execute_direct_cpp_add(
+                invocation.workload->arguments_json);
             return PolyglotBenchmarkObservation{
-                true, true, elapsed_microseconds(started), 0U, 0U};
+                payload.has_value(),
+                payload.has_value() &&
+                    *payload == invocation.workload->expected_payload_json,
+                elapsed_microseconds(started), 0U, 0U};
         }
 
         auto candidate = candidate_request(invocation);
@@ -267,6 +308,8 @@ void test_representative_benchmark(
                  "representative native/.NET measurements should be advisory-ready");
     expect_local(result.measurements.size() == 3U,
                  "the representative benchmark should retain all route layers");
+    expect_local(direct_cpp_invocations == 12U,
+                 "direct C++ must execute all three warmups and nine measurements");
     for (const auto& measurement : result.measurements) {
         expect_local(
             measurement.sample_count == 9U &&

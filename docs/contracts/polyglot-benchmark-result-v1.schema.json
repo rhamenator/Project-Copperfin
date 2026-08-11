@@ -35,7 +35,32 @@
         "workloads": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
       }
     },
-    "policy": {"type": "object"},
+    "policy": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "minimum_sample_count", "maximum_p95_latency_us",
+        "minimum_throughput_per_second", "maximum_peak_memory_kib",
+        "maximum_p95_startup_ms", "maximum_security_profile", "weights"
+      ],
+      "properties": {
+        "minimum_sample_count": {"type": "integer", "minimum": 1, "maximum": 4294967295},
+        "maximum_p95_latency_us": {"type": "integer", "minimum": 1, "maximum": 1000000000000},
+        "minimum_throughput_per_second": {"type": "integer", "minimum": 1, "maximum": 1000000000000},
+        "maximum_peak_memory_kib": {"type": "integer", "minimum": 1, "maximum": 1000000000000},
+        "maximum_p95_startup_ms": {"type": "integer", "minimum": 1, "maximum": 1000000000000},
+        "maximum_security_profile": {"enum": ["trusted-native", "admitted-process", "remote-service"]},
+        "weights": {
+          "type": "object", "additionalProperties": false,
+          "required": ["latency", "throughput", "memory", "startup"],
+          "properties": {
+            "latency": {"type": "integer", "minimum": 0, "maximum": 100},
+            "throughput": {"type": "integer", "minimum": 0, "maximum": 100},
+            "memory": {"type": "integer", "minimum": 0, "maximum": 100},
+            "startup": {"type": "integer", "minimum": 0, "maximum": 100}
+          }
+        }
+      }
+    },
     "measurements": {
       "type": "array", "minItems": 3, "maxItems": 3,
       "items": {

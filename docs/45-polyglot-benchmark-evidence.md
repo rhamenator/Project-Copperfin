@@ -68,6 +68,15 @@ different call layers, so their timing series are independently observed. Every
 sample must execute successfully and exactly match the expected payload before
 the advisory result is accepted.
 
+The direct C++ route is also an executed workload, not an empty timing control:
+it strictly reads the canonical signed-integer arguments, performs checked
+64-bit addition, serializes the resulting payload, and compares that payload
+with the same expected value used by the external routes. The integration test
+requires all three direct warmups and all nine direct measurements to run.
+The result schema closes the complete policy object and its nested weights, so
+a schema-valid evidence document cannot omit or invent the thresholds and
+security ceiling that produced its recommendation.
+
 The test prints a single `COPPERFIN_POLYGLOT_BENCHMARK_V1=` JSON payload for
 evidence capture. A checked-in evidence document adds the exact source commit,
 host/toolchain metadata, UTC capture time, policy, and limitations under the

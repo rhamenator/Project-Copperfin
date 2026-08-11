@@ -37,6 +37,33 @@ if(NOT schema_version EQUAL 1 OR
     message(FATAL_ERROR "Polyglot benchmark result identity or promotion contract is invalid")
 endif()
 
+string(JSON policy_additional GET "${schema_json}" properties policy additionalProperties)
+string(JSON policy_required_count LENGTH "${schema_json}" properties policy required)
+string(JSON weights_additional GET "${schema_json}" properties policy properties weights additionalProperties)
+string(JSON weights_required_count LENGTH "${schema_json}" properties policy properties weights required)
+if(policy_additional OR NOT policy_required_count EQUAL 7 OR
+   weights_additional OR NOT weights_required_count EQUAL 4)
+    message(FATAL_ERROR "Polyglot benchmark policy schema must be closed and complete")
+endif()
+
+set(expected_policy_fields
+    minimum_sample_count
+    maximum_p95_latency_us
+    minimum_throughput_per_second
+    maximum_peak_memory_kib
+    maximum_p95_startup_ms
+    maximum_security_profile
+    weights)
+foreach(field IN LISTS expected_policy_fields)
+    string(JSON field_index ERROR_VARIABLE field_error
+        GET "${schema_json}" properties policy properties "${field}")
+    string(JSON policy_value_error ERROR_VARIABLE value_error
+        GET "${result_json}" policy "${field}")
+    if(field_error OR value_error)
+        message(FATAL_ERROR "Polyglot benchmark policy field is missing: ${field}")
+    endif()
+endforeach()
+
 set(expected_implementations direct-cpp cpp-dotnet-wrapper csharp-service)
 set(expected_memory_sources
     route-specific-additional
