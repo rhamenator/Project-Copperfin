@@ -13,7 +13,7 @@ which were in the first version of this document.
 |---|---|---|
 | Native static libraries | `cf_platform_support`, `cf_localization`, `cf_security`, `cf_licensing`, `cf_package_trust`, `cf_platform_profile`, `cf_vfp_assets`, `cf_design_model`, `cf_prg_analysis`, `cf_runtime_text`, `cf_xbase_runtime`, `cf_runtime_pipeline` | `CMakeLists.txt`, `src/*`, `include/copperfin/*` |
 | Native executables ("hosts") | `copperfin_inspect`, `copperfin_studio_host`, `copperfin_runtime_host`, `copperfin_build_host`, `copperfin_launcher_guard` (Windows-only) | `apps/*/main.cpp` |
-| Managed (.NET) projects | `Copperfin.VisualStudio` (VSIX), `Copperfin.Studio` (standalone shell), `Copperfin.DesignerSmokeTests`, `Copperfin.LanguageServiceTests` | `vsix/*` |
+| Managed (.NET) projects | `Copperfin.VisualStudio` (VSIX), `Copperfin.Studio` (standalone shell), `Copperfin.DesignerSmokeTests`, `Copperfin.LanguageServiceTests`, `Copperfin.PolyglotCandidate` (Native AOT external leaf sample) | `vsix/*`, `samples/polyglot-dotnet-candidate/*` |
 | VFP-era asset formats (domain data) | `DBF/FPT`, `CDX/DCX/IDX/MDX`, `DBC`, `PJX/PJT`, `SCX/SCT`, `VCX/VCT`, `FRX/FRT`, `LBX/LBT`, `MNX/MNT`, `PRG/H/QPR/MPR/SPR` | parsed/edited across `cf_vfp_assets`, `cf_design_model`, `cf_xbase_runtime` |
 | Test suites | ~300 files under `tests/`, registered via `tests/CMakeLists.txt`, run through CTest | `tests/*` |
 | Governance/process docs | `agents.md`, `agent-handoff.md`, `docs/01`…`docs/31`, `docs/safety/hazard-register.md` | repo root, `docs/` |
@@ -138,6 +138,10 @@ These map onto pipeline stages: `studio_host` (design-time) → `build_host` (pa
 - `Copperfin.Studio` — standalone WinForms shell (`StudioMainForm`) reusing the same designer controls outside Visual Studio, now tabbed/multi-document.
 - `Copperfin.DesignerSmokeTests` — WinForms smoke tests exercising real sample assets (`invoice.frx`, `cust.lbx`, `solution.pjx`) against the shared designer controls.
 - `Copperfin.LanguageServiceTests` — tests for the FoxPro editor/language-service pieces.
+- `samples/polyglot-dotnet-candidate/Copperfin.PolyglotCandidate` — a separate
+  self-contained Native AOT C# leaf executable admitted by exact hash and
+  invoked through the generic polyglot host. It is not linked into the VSIX,
+  native libraries, or a general CLR host.
 
 Design rule stated in `docs/02-architecture.md`: the VS extension should *orchestrate* designers, not be their only implementation — consistent with the native `cf_design_model` + JSON contract split actually built.
 

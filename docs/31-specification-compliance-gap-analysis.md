@@ -349,9 +349,9 @@ handle-bound execution primitive. The portable route executor now applies the
 existing lifecycle decisions, invokes synchronous caller-owned native work,
 uses only that adapter for candidate work, preserves native authority during
 shadow comparison, and performs one native fallback only when route and bridge
-policy both allow it. It does not retry, execute a second artifact, expose PRG
-dispatch, call mutable runtime state from a foreign worker, or supply a
-language-specific adapter.
+policy both allow it. It does not retry, execute a second artifact, or call
+mutable runtime state from a foreign worker. The trusted runtime-host layer now
+exposes this route through bounded PRG dispatch.
 It also exposes bounded native JSON validation, type inspection, and JSON
 Pointer selection so PRG can examine immutable structured completion payloads
 without embedding foreign source or losing exact number spelling.
@@ -363,20 +363,20 @@ HMAC-SHA256 generation/verification, and strict canonical Base64 encode/decode
 for PRG-controlled immutable results,
 without claiming sender authentication, encryption, or executable trust.
 PRG now has a host-injected bounded dispatch contract plus trusted portable
-runtime-host composition from explicit route/admitted-artifact state. Managed
-execution and language-specific runtime adapters remain absent.
+runtime-host composition from explicit route/admitted-artifact state. A
+checked-in C# sample is the first real external language target: it publishes
+as a self-contained Native AOT executable and is hash-admitted and invoked end
+to end from ordinary PRG. General CLR hosting, arbitrary managed assembly
+loading, and broader language adapters remain absent.
 
 **What it will take:** none of the four named native execution/marshaling
 modules exist yet. What exists today, per `docs/28-repository-ontology.md` §3, is
-`cf_runtime_pipeline`'s `_csharp_and_launcher` — a generated C# launcher stub
-that runs as a child and forwards to the native runtime host. That is the
-entire current footprint of a
-fully-specified CLR-hosting-and-marshaling subsystem beyond the portable policy
-model. This is corroborated
-verbatim in three places — `docs/01` (charter), `docs/19` (polyglot), and here —
-all stating the same thing in nearly identical language: **the transpiled C#
-output is emitted, never executed, by the runtime host.** The runnable launcher
-and the separately emitted transpilation artifact are distinct outputs.
+`cf_runtime_pipeline`'s `_csharp_and_launcher` plus the separate Native AOT C#
+leaf sample. Neither is a fully specified CLR-hosting-and-marshaling subsystem:
+the launcher forwards to the native runtime host, while the sample is one
+strict external capability invoked through the generic bridge. Generated
+transpilation output remains emitted rather than executed; the runnable
+launcher, admitted sample, and transpilation artifact are distinct outputs.
 
 ### docs/19 — Polyglot And AI Subprojects
 
@@ -472,7 +472,7 @@ excluded from the compliance map above:
 | 12 | VFP Asset Editing And Execution | Partial | xAsset execution is first-pass, bounded by language-surface coverage |
 | 13 | Index Format Notes | Partial | No index write fidelity; collation hints are heuristic, not named |
 | 18 | Native Security And RBAC | Partial (real baseline) | Not yet verified against docs/04's fuller vision |
-| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, and PRG seam) | No language-specific runtime hook; AI/MCP policy has little to govern yet |
+| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, and first Native AOT C# target) | No general CLR/Python/R runtime hook; AI/MCP policy has little to govern yet |
 | 20 | Runtime Build And Debug Pipeline | Partial | Engine is PRG-first, not the full command surface |
 | 21 | Database Federation And Query Translation | Partial (real seed) | No live connector execution behind the translator/planner |
 | 22 | VFP Language Reference Coverage | Partial, measured | 1,411 documented items; official surface exceeds current runtime |

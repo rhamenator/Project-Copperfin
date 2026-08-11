@@ -118,10 +118,12 @@ runtime-host route. The separate task-supervision implementation in
 `docs/38-prg-task-supervision.md` now supplies the PRG lifecycle facade for
 existing `SPAWN` workers and retained PRG print output. The host-injected PRG
 dispatch boundary in `docs/42-prg-polyglot-dispatch.md` supplies immutable
-request/result plumbing but remains unavailable until trusted host configuration
-connects it to the admitted-artifact route executor. The policy API can now require and
-prove an audit commit, and its regression uses the existing contained durable
-audit stream; a later runtime adapter must derive the verified context from
-trusted host state, bind that sink, enforce artifact identity at execution
-time, and expose supervision to PRG without allowing foreign-thread runtime
-re-entry.
+request/result plumbing. `PolyglotRuntimeHost` now connects trusted route and
+admitted-artifact state to that boundary, and the Native AOT C# sample in
+`docs/43-dotnet-polyglot-candidate.md` exercises the complete out-of-process
+route. The policy API can require and prove an audit commit, and its regression
+uses the existing contained durable audit stream. These adjacent layers still
+must derive verified context from trusted host state, bind the audit sink,
+enforce exact artifact identity at execution time, and prevent foreign-thread
+runtime re-entry. No general CLR or arbitrary assembly loader is thereby
+authorized.

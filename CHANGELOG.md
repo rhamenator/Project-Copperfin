@@ -1,3 +1,20 @@
+- 2026-08-11: Added the first real cross-platform language target for the
+  artifact-first polyglot bridge. The checked-in C# sample publishes with the
+  .NET 10 SDK as one self-contained Native AOT executable for supported
+  Windows, Linux, and macOS x64/arm64 RIDs. It accepts only the exact v1
+  invocation identity for `samples.dotnet.add-v1`, rejects duplicate or
+  unknown fields and malformed/oversized input, and emits one strict success
+  or typed error envelope. A native end-to-end regression publishes and hashes
+  the exact executable, admits it under an explicit root, invokes it through
+  `PolyglotRuntimeHost`, and proves ordinary PRG can call and inspect the C#
+  leaf through `CFPOLYGLOTDISPATCH()` and `CFJSONGET()`. The candidate receives
+  an empty environment and performs no discovery, networking, package loading,
+  reflection, or callback into mutable runtime state. Local Release focused
+  and adjacent tests pass `7/7`; hosted and sanitizer evidence remains to be
+  recorded at the final candidate head. This is not inline C#, general CLR
+  hosting, arbitrary assembly loading, a loose managed sidecar, or execution
+  of generated transpilation output.
+
 - 2026-08-10: Added the #4940/#4700 trusted polyglot runtime-host composition.
   `PolyglotRuntimeHost` owns a validated route registry and explicit admitted-
   artifact binding per capability for every copied PRG callback. Construction

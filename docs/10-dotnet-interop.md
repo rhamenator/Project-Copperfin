@@ -19,16 +19,21 @@ Current maturity:
   stdin/stdout/stderr execution, strict matching response admission, bridge
   outcome reporting, and migration telemetry. A portable coordinator now
   applies existing native/shadow/canary/on/retire-legacy route decisions around
-  that adapter, but does not identify a managed runtime or expose this exchange
-  through PRG dispatch.
+  that adapter. `PolyglotRuntimeHost` provisions the host-injected
+  `CFPOLYGLOTDISPATCH()` callback from trusted route and admitted-artifact state.
 - A portable artifact-admission prerequisite now binds a canonical capability,
   explicit rooted external-process policy, exact SHA-256, and physical file
   identity in an opaque token that is revocable on pre-execution revalidation.
   The artifact invocation adapter revalidates and consumes that token for one
-  bounded candidate process attempt. It does not itself load managed code or
-  connect the artifact boundary to the PRG control plane.
+  bounded candidate process attempt. It does not itself load managed code.
+- The first cross-platform managed target is the checked-in
+  `samples.dotnet.add-v1` C# sample. It publishes as one self-contained Native
+  AOT executable for the supported target RID, and an end-to-end native
+  regression admits its exact hash, invokes it through the production runtime
+  host, and consumes its result from ordinary PRG. Copperfin does not discover
+  or install a runtime for this path.
 - Generated C# transpilation output is currently an emitted artifact, not code executed by the runtime host.
-- macOS and Linux builds do not compile or host this Windows .NET Framework `DECLARE` path; their native runtime and packaging paths remain guarded from the Windows-only implementation. Broader cross-platform CLR/.NET hosting, managed wrappers, object lifetime, callbacks, policy enforcement, and generated strongly typed bindings remain v1 work.
+- macOS and Linux builds do not compile or host the Windows .NET Framework `DECLARE` path; their native runtime and packaging paths remain guarded from that Windows-only implementation. The separate Native AOT leaf-candidate path is cross-platform and out of process. Broader CLR hosting, managed wrappers, object lifetime, callbacks, and generated strongly typed bindings remain v1 work.
 
 ## Why This Matters
 
@@ -51,13 +56,16 @@ completion must return through a controlled host/scheduler boundary.
 
 Existing `SPAWN` tasks separately provide PRG-supervised status, cooperative
 cancellation, completed result, and print-output retrieval. The route executor
-now has a host-injected `CFPOLYGLOTDISPATCH()` PRG boundary. It validates a
+has a host-injected `CFPOLYGLOTDISPATCH()` PRG boundary. It validates a
 canonical capability, bounded JSON-object arguments, and deterministic sample,
 then publishes a bounded invariant evidence document. A spawned PRG worker can
 call it while the parent uses the existing `CFTASK*` lifecycle. The callback
-receives no mutable runtime reference. Ordinary runtime-host provisioning from
-trusted route and artifact state remains open; see
-`docs/42-prg-polyglot-dispatch.md`.
+receives no mutable runtime reference. `PolyglotRuntimeHost` now provides
+ordinary runtime-host provisioning from trusted route and artifact state. The
+checked-in Native AOT C# leaf proves the complete external route without
+allowing foreign threads to enter mutable PRG state; see
+`docs/42-prg-polyglot-dispatch.md` and
+`docs/43-dotnet-polyglot-candidate.md`.
 
 The native `CFJSONVALID()`, `CFJSONTYPE()`, and `CFJSONGET()` facade gives PRG
 code a bounded way to inspect immutable structured results from that boundary.
@@ -77,7 +85,7 @@ Base64 text. Its fixed ceilings and strict decoder do not authorize an
 artifact. HMAC depends on caller-managed shared secret keys, and Base64 is not
 encryption. See `docs/41-prg-payload-integrity-and-base64.md`.
 
-A dedicated interop layer provides:
+A broader dedicated interop layer is still expected eventually to provide:
 
 - CLR hosting
 - managed assembly loading
@@ -172,5 +180,7 @@ The interop layer needs stable representations for:
 1. native-to-managed string, decimal, date, and cursor marshaling prototype
 2. CLR host proof-of-concept
 3. simple C# sample that calls Copperfin native APIs
-4. simple Copperfin sample that invokes a C# assembly
+4. simple Copperfin sample that invokes a bounded C# leaf artifact — delivered
+   as the Native AOT polyglot candidate; general assembly invocation is not
+   implied
 5. draft NuGet packaging strategy
