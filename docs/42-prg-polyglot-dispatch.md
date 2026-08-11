@@ -161,8 +161,9 @@ native/parity callbacks before enabling execution. Focused portable coverage
 also proves all route states, fallback/parity/error identities, both
 cancellation policies, bounds/redaction, callback lifetime, concurrency, real
 session creation, and a marker-synchronized `CFTASKCANCEL()` reaching the
-bounded candidate. Local GCC Release focused and adjacent tests pass `6/6`;
-hosted platform evidence remains pending.
+bounded candidate. Local GCC Release focused and adjacent tests pass `6/6`, the
+focused target repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection,
+and focused static analysis is clean; hosted platform evidence remains pending.
 
 This integration still adds no language-specific runtime, discovery/install,
 inline foreign source, retry, second artifact, new task lifecycle, mutable PRG

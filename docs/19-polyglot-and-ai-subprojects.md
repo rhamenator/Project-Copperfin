@@ -280,8 +280,10 @@ independent. A per-capability monotonic sequence extends the configured prefix
 into a unique correlation ID, including concurrent calls. Only the existing
 runtime result fields cross back into PRG: status/reason, authority, route
 selection, invocation counts, fallback-executed flag, and the authoritative
-JSON payload. Request, correlation, process, telemetry, and mutable runtime
-state are not exposed through that result.
+JSON payload. The host adds no request, correlation, process, telemetry, or
+mutable-runtime fields of its own; the authoritative candidate payload remains
+artifact-controlled and therefore may itself contain values such as a
+correlation ID when that capability's public contract permits them.
 
 Portable focused coverage proves all five route states, both canary choices,
 parity, fail-fast/native-fallback outcomes, propagated and ignored
@@ -289,8 +291,10 @@ cancellation, exact error/count/authority mapping, callback lifetime,
 concurrent correlation uniqueness, output bounds, telemetry redaction, and
 fail-closed configuration. A real spawned PRG session uses the production
 callback and `CFTASKCANCEL()` to stop a bounded synthetic candidate through the
-read-only probe. Local GCC Release focused and adjacent targets pass `6/6`;
-hosted Linux/macOS/Windows and protected contribution evidence remain pending.
+read-only probe. Local GCC Release focused and adjacent targets pass `6/6`, the
+focused target repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection,
+and focused static analysis is clean; hosted Linux/macOS/Windows and protected
+contribution evidence remain pending.
 
 The host does not discover artifacts or language runtimes, authorize inline
 foreign source, retry, promote routes, invoke a second artifact, introduce a
