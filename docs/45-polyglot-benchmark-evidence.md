@@ -84,7 +84,7 @@ versioned schema in `docs/contracts/polyglot-benchmark-result-v1.schema.json`.
 Timing values are host-specific observations and must not be generalized.
 
 The checked-in corrected result was captured from exact signed source commit
-`2ca80ab39135185b67f81b470ab500cf2c4d6a58` on Linux x86_64. All 27 measured
+`48930b970b14164308aee8fd035148925b2ae74b` on Linux x86_64. All 27 measured
 executions completed with exact parity and no failures. The host-specific
 advisory order was direct C++, local C# endpoint boundary, then the full
 C++/.NET wrapper. Each measurement records its memory source so a consumer
