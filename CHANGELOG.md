@@ -7287,5 +7287,9 @@ passes `1/1`.
   ordinary PRG control, argument-substitution rejection, and pre-launch token
   revocation after script mutation. Local Linux Release focused and adjacent
   tests pass `7/7`, the Python integration repeats `10/10`, and Clang 21
-  ASan/UBSan with leak detection is clean. Hosted Windows, Linux, and macOS
-  evidence remains pending.
+  ASan/UBSan with leak detection is clean. At exact implementation head
+  `648c02b1b`, Generated Launcher Validation `31509182243` passes the Python
+  target on Windows, Ubuntu, and macOS; Windows DECLARE ABI
+  `31509182280`, Windows Environment and Executable Path Validation
+  `31509182221`, and GCC/Clang Executable Path Validation `31509182231` also
+  pass. All eleven protected PR checks are green.
