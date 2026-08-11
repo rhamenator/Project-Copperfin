@@ -65,14 +65,25 @@ std::string extract_json_string(
         : document.substr(value_begin, end - value_begin);
 }
 
-int run_artifact(const std::string& mode) {
+int run_artifact(
+    const std::string& mode,
+    const std::string& ready_path = {}) {
     configure_binary_standard_streams();
     const std::string request{
         std::istreambuf_iterator<char>(std::cin),
         std::istreambuf_iterator<char>()};
     if (mode == "--host-sleep") {
+        if (!ready_path.empty()) {
+            std::ofstream ready(
+                copperfin::platform::path_from_utf8_string(ready_path),
+                std::ios::binary | std::ios::trunc);
+            ready << "ready\n";
+        }
         std::this_thread::sleep_for(std::chrono::seconds(2));
         return 0;
+    }
+    if (mode == "--host-error") {
+        return 42;
     }
     const std::string correlation = extract_json_string(
         request, "correlation_id");
@@ -87,7 +98,8 @@ int run_artifact(const std::string& mode) {
         << "\"capability_id\":\"" << capability_id << "\","
         << "\"correlation_id\":\"" << correlation << "\","
         << "\"protocol_version\":\"" << protocol_version << "\","
-        << "\"payload\":{\"source\":\"candidate\",\"value\":7}}";
+        << "\"payload\":{\"source\":\"candidate\",\"value\":7,"
+        << "\"correlation_id\":\"" << correlation << "\"}}";
     return 0;
 }
 
@@ -145,12 +157,15 @@ PolyglotArtifactAdmissionResult admit(
 }
 
 PolyglotRuntimeHostConfiguration configuration(
-    const fs::path& artifact,
+    const PolyglotArtifactAdmissionResult& admission,
     const fs::path& root,
     const std::string& state,
     const std::string& artifact_mode = "--host-success",
     const std::uint8_t canary_percentage = 0U,
-    const PolyglotFallbackPolicy fallback = PolyglotFallbackPolicy::fail_fast) {
+    const PolyglotFallbackPolicy fallback = PolyglotFallbackPolicy::fail_fast,
+    const PolyglotCancellationPolicy cancellation =
+        PolyglotCancellationPolicy::propagate,
+    const std::string& ready_path = {}) {
     auto routes = load_polyglot_route_registry({
         {capability_id, state, canary_percentage}});
     expect_local(routes.ok(), "runtime-host fixture route should load");
@@ -163,15 +178,18 @@ PolyglotRuntimeHostConfiguration configuration(
     candidate.policy = {
         .timeout_ms = 3000U,
         .latency_budget_ms = 2500U,
-        .cancellation = PolyglotCancellationPolicy::propagate,
+        .cancellation = cancellation,
         .fallback = fallback,
         .max_attempts = 1U};
     candidate.artifact_arguments = {artifact_mode};
+    if (!ready_path.empty()) {
+        candidate.artifact_arguments.push_back(ready_path);
+    }
     candidate.working_directory = utf8_path(root);
     candidate.poll_interval_ms = 2U;
     PolyglotRuntimeCapabilityBinding binding{
         .capability_id = capability_id,
-        .artifact_admission = admit(artifact, root),
+        .artifact_admission = admission,
         .candidate_request_template = std::move(candidate),
         .invoke_native = []() {
             return PolyglotNativeInvocationResult{
@@ -203,10 +221,10 @@ RuntimePolyglotDispatchResult dispatch_once(
 }
 
 void test_route_states_and_owned_callback_lifetime(
-    const fs::path& artifact,
+    const PolyglotArtifactAdmissionResult& admission,
     const fs::path& root) {
     auto off = PolyglotRuntimeHost::create(
-        configuration(artifact, root, "off"));
+        configuration(admission, root, "off"));
     expect_local(off.ok(), "off runtime host should compose");
     const auto off_result = dispatch_once(off.host);
     expect_local(
@@ -218,7 +236,7 @@ void test_route_states_and_owned_callback_lifetime(
         "off should preserve exact native route evidence");
 
     auto shadow = PolyglotRuntimeHost::create(
-        configuration(artifact, root, "shadow"));
+        configuration(admission, root, "shadow"));
     const auto shadow_result = dispatch_once(shadow.host);
     expect_local(
         shadow_result.status == RuntimePolyglotDispatchStatus::success &&
@@ -229,7 +247,7 @@ void test_route_states_and_owned_callback_lifetime(
         "shadow should preserve native authority and exact invocation counts");
 
     auto canary = PolyglotRuntimeHost::create(
-        configuration(artifact, root, "canary", "--host-success", 50U));
+        configuration(admission, root, "canary", "--host-success", 50U));
     expect_local(
         dispatch_once(canary.host, 50U).selection ==
             RuntimePolyglotDispatchSelection::native,
@@ -243,7 +261,7 @@ void test_route_states_and_owned_callback_lifetime(
 
     for (const char* state : {"on", "retire-legacy"}) {
         auto built = PolyglotRuntimeHost::create(
-            configuration(artifact, root, state));
+            configuration(admission, root, state));
         auto callback = built.host->dispatch_callback();
         built.host.reset();
         const auto result = callback({
@@ -260,23 +278,23 @@ void test_route_states_and_owned_callback_lifetime(
 }
 
 void test_configuration_fails_before_launch(
-    const fs::path& artifact,
+    const PolyglotArtifactAdmissionResult& admission,
     const fs::path& root) {
-    auto missing = configuration(artifact, root, "on");
+    auto missing = configuration(admission, root, "on");
     missing.capabilities.clear();
     expect_local(
         PolyglotRuntimeHost::create(std::move(missing)).error_code ==
             "polyglot.host.capability_binding_required",
         "a route without a capability binding should fail construction");
 
-    auto duplicate = configuration(artifact, root, "on");
+    auto duplicate = configuration(admission, root, "on");
     duplicate.capabilities.push_back(duplicate.capabilities.front());
     expect_local(
         PolyglotRuntimeHost::create(std::move(duplicate)).error_code ==
             "polyglot.host.duplicate_capability_binding",
         "duplicate capability bindings should fail construction");
 
-    auto mismatch = configuration(artifact, root, "on");
+    auto mismatch = configuration(admission, root, "on");
     mismatch.capabilities.front().candidate_request_template.invocation.capability_id =
         "interop.other-v1";
     expect_local(
@@ -284,7 +302,7 @@ void test_configuration_fails_before_launch(
             "polyglot.host.capability_binding_mismatch",
         "route, admission, and invocation capabilities should match exactly");
 
-    auto invalid_protocol = configuration(artifact, root, "on");
+    auto invalid_protocol = configuration(admission, root, "on");
     invalid_protocol.capabilities.front()
         .candidate_request_template.invocation.protocol_version = "1.0";
     expect_local(
@@ -292,15 +310,65 @@ void test_configuration_fails_before_launch(
             "polyglot.host.invalid_candidate_configuration",
         "invalid protocol identity should fail construction");
 
-    auto callback_gap = configuration(artifact, root, "shadow");
+    auto invalid_policy = configuration(admission, root, "on");
+    invalid_policy.capabilities.front().candidate_request_template.policy.timeout_ms = 0U;
+    expect_local(
+        PolyglotRuntimeHost::create(std::move(invalid_policy)).error_code ==
+            "polyglot.host.invalid_candidate_configuration",
+        "invalid bridge policy should fail construction");
+
+    auto mutable_binding = configuration(admission, root, "on");
+    mutable_binding.capabilities.front()
+        .candidate_request_template.invocation.arguments_json = "{}";
+    expect_local(
+        PolyglotRuntimeHost::create(std::move(mutable_binding)).error_code ==
+            "polyglot.host.mutable_request_binding_forbidden",
+        "trusted configuration must not pre-bind mutable PRG request data");
+
+    auto invalid_route = configuration(admission, root, "on");
+    invalid_route.route_registry.entries.front().state =
+        static_cast<PolyglotRouteState>(255);
+    expect_local(
+        PolyglotRuntimeHost::create(std::move(invalid_route)).error_code ==
+            "polyglot.host.invalid_route_registry",
+        "an invalid in-memory route state should fail construction");
+
+    auto absent_admission = configuration(admission, root, "on");
+    absent_admission.capabilities.front().artifact_admission =
+        admit_polyglot_artifact({
+            .capability_id = {},
+            .process_policy = {},
+            .expected_sha256 = {}});
+    expect_local(
+        PolyglotRuntimeHost::create(std::move(absent_admission)).error_code ==
+            "polyglot.host.artifact_admission_required",
+        "an absent or rejected admission token should fail construction");
+
+    auto native_gap = configuration(admission, root, "off");
+    native_gap.capabilities.front().invoke_native = {};
+    expect_local(
+        PolyglotRuntimeHost::create(std::move(native_gap)).error_code ==
+            "polyglot.host.native_invoker_required",
+        "a route that can invoke native work should require its trusted callback");
+
+    auto callback_gap = configuration(admission, root, "shadow");
     callback_gap.capabilities.front().normalize_shadow_parity = {};
     expect_local(
         PolyglotRuntimeHost::create(std::move(callback_gap)).error_code ==
             "polyglot.host.shadow_normalizer_required",
         "shadow callback gaps should fail construction before execution");
 
+    auto extra_binding = configuration(admission, root, "on");
+    auto extra = extra_binding.capabilities.front();
+    extra.capability_id = "interop.extra-v1";
+    extra_binding.capabilities.push_back(std::move(extra));
+    expect_local(
+        PolyglotRuntimeHost::create(std::move(extra_binding)).error_code ==
+            "polyglot.host.capability_route_required",
+        "a capability binding without an exact route should fail construction");
+
     auto built = PolyglotRuntimeHost::create(
-        configuration(artifact, root, "on"));
+        configuration(admission, root, "on"));
     const auto unknown = built.host->dispatch_callback()({
         "interop.unknown-v1", "{}", 0U, []() { return false; }});
     expect_local(
@@ -311,11 +379,103 @@ void test_configuration_fails_before_launch(
         "unknown capabilities should fail before native or candidate launch");
 }
 
+void test_fallback_error_and_correlation_identity(
+    const PolyglotArtifactAdmissionResult& admission,
+    const fs::path& root) {
+    auto fail_fast = PolyglotRuntimeHost::create(
+        configuration(admission, root, "on", "--host-error"));
+    const auto failed = dispatch_once(fail_fast.host);
+    expect_local(
+        failed.status == RuntimePolyglotDispatchStatus::candidate_failed &&
+        failed.error_code == "polyglot.adapter.nonzero_exit" &&
+        failed.selection == RuntimePolyglotDispatchSelection::candidate &&
+        failed.authority == RuntimePolyglotDispatchAuthority::candidate &&
+        failed.native_invocation_count == 0U &&
+        failed.candidate_invocation_count == 1U &&
+        !failed.native_fallback_executed,
+        "fail-fast should preserve the existing candidate error identity and counts");
+
+    auto fallback = PolyglotRuntimeHost::create(configuration(
+        admission, root, "on", "--host-error", 0U,
+        PolyglotFallbackPolicy::fallback_native));
+    const auto recovered = dispatch_once(fallback.host);
+    expect_local(
+        recovered.status == RuntimePolyglotDispatchStatus::success &&
+        recovered.error_code == "polyglot.execution.native_success" &&
+        recovered.selection == RuntimePolyglotDispatchSelection::candidate &&
+        recovered.authority == RuntimePolyglotDispatchAuthority::native &&
+        recovered.native_invocation_count == 1U &&
+        recovered.candidate_invocation_count == 1U &&
+        recovered.native_fallback_executed &&
+        recovered.payload_json.find("native") != std::string::npos,
+        "permitted native fallback should preserve authority, counts, and payload");
+
+    auto bounded_config = configuration(admission, root, "on");
+    bounded_config.capabilities.front()
+        .candidate_request_template.stdout_limit_bytes = 64U;
+    auto bounded = PolyglotRuntimeHost::create(std::move(bounded_config));
+    const auto bounded_result = dispatch_once(bounded.host);
+    expect_local(
+        bounded_result.status == RuntimePolyglotDispatchStatus::candidate_failed &&
+        bounded_result.error_code == "polyglot.process.stdout_limit_exceeded" &&
+        bounded_result.payload_json.empty() &&
+        bounded_result.candidate_invocation_count == 1U,
+        "candidate output beyond the explicit bound should fail without exposing bytes");
+
+    auto parity_config = configuration(admission, root, "shadow");
+    parity_config.capabilities.front().normalize_shadow_parity = [](
+        const PolyglotNativeInvocationResult&,
+        const PolyglotArtifactInvocationResult&) -> PolyglotShadowParityValues {
+        throw std::runtime_error("synthetic normalization failure");
+    };
+    auto parity = PolyglotRuntimeHost::create(std::move(parity_config));
+    const auto parity_result = dispatch_once(parity.host);
+    expect_local(
+        parity_result.status == RuntimePolyglotDispatchStatus::parity_failed &&
+        parity_result.error_code ==
+            "polyglot.execution.shadow_normalizer_exception" &&
+        parity_result.selection == RuntimePolyglotDispatchSelection::shadow &&
+        parity_result.authority == RuntimePolyglotDispatchAuthority::native &&
+        parity_result.native_invocation_count == 1U &&
+        parity_result.candidate_invocation_count == 1U,
+        "shadow parity failure should preserve the executor's exact identity and counts");
+
+    auto concurrent = PolyglotRuntimeHost::create(
+        configuration(admission, root, "on"));
+    const auto callback = concurrent.host->dispatch_callback();
+    RuntimePolyglotDispatchResult first;
+    RuntimePolyglotDispatchResult second;
+    std::thread first_thread([&]() {
+        first = callback({
+            capability_id, R"json({"value":7})json", 0U,
+            []() { return false; }});
+    });
+    std::thread second_thread([&]() {
+        second = callback({
+            capability_id, R"json({"value":7})json", 0U,
+            []() { return false; }});
+    });
+    first_thread.join();
+    second_thread.join();
+    const bool first_sequence =
+        first.payload_json.find("runtime-host-correlation-1") != std::string::npos;
+    const bool second_sequence =
+        second.payload_json.find("runtime-host-correlation-2") != std::string::npos;
+    const bool reversed_sequence =
+        first.payload_json.find("runtime-host-correlation-2") != std::string::npos &&
+        second.payload_json.find("runtime-host-correlation-1") != std::string::npos;
+    expect_local(
+        first.status == RuntimePolyglotDispatchStatus::success &&
+        second.status == RuntimePolyglotDispatchStatus::success &&
+        ((first_sequence && second_sequence) || reversed_sequence),
+        "concurrent dispatches should serialize admission use and receive unique correlation identities");
+}
+
 void test_cancellation_probe_reaches_bounded_candidate(
-    const fs::path& artifact,
+    const PolyglotArtifactAdmissionResult& admission,
     const fs::path& root) {
     auto built = PolyglotRuntimeHost::create(
-        configuration(artifact, root, "on", "--host-sleep"));
+        configuration(admission, root, "on", "--host-sleep"));
     std::atomic<std::uint32_t> polls{0U};
     const auto result = dispatch_once(built.host, 0U, [&]() {
         return polls.fetch_add(1U, std::memory_order_relaxed) >= 2U;
@@ -326,10 +486,26 @@ void test_cancellation_probe_reaches_bounded_candidate(
         result.authority == RuntimePolyglotDispatchAuthority::candidate &&
         result.candidate_invocation_count == 1U && polls.load() >= 3U,
         "the read-only cancellation probe should cooperatively stop one bounded candidate");
+
+    auto ignored = PolyglotRuntimeHost::create(configuration(
+        admission, root, "on", "--host-sleep", 0U,
+        PolyglotFallbackPolicy::fallback_native,
+        PolyglotCancellationPolicy::ignore));
+    std::atomic<std::uint32_t> ignored_polls{0U};
+    const auto ignored_result = dispatch_once(ignored.host, 0U, [&]() {
+        return ignored_polls.fetch_add(1U, std::memory_order_relaxed) >= 2U;
+    });
+    expect_local(
+        ignored_result.status == RuntimePolyglotDispatchStatus::success &&
+        ignored_result.authority == RuntimePolyglotDispatchAuthority::native &&
+        ignored_result.native_fallback_executed &&
+        ignored_result.native_invocation_count == 1U &&
+        ignored_result.candidate_invocation_count == 1U,
+        "ignored cancellation should remain governed by bridge fallback policy");
 }
 
 void test_prg_session_uses_production_host_callback(
-    const fs::path& artifact,
+    const PolyglotArtifactAdmissionResult& admission,
     const fs::path& root) {
     const fs::path program = root / "runtime-host.prg";
     write_text(
@@ -342,7 +518,7 @@ void test_prg_session_uses_production_host_callback(
         "nCalls = CFJSONGET(cDispatch, '/candidate_invocation_count')\n"
         "RETURN\n");
     auto built = PolyglotRuntimeHost::create(
-        configuration(artifact, root, "on"));
+        configuration(admission, root, "on"));
     auto options = make_runtime_session_options(program, root);
     options.polyglot_dispatch_callback = built.host->dispatch_callback();
     built.host.reset();
@@ -361,6 +537,64 @@ void test_prg_session_uses_production_host_callback(
         value("cauthority") == "candidate" &&
         value("csource") == "candidate" && value("ncalls") == "1",
         "PRG should receive only bounded invariant route evidence and candidate payload");
+    for (const auto& event : state.events) {
+        if (event.category == "runtime.polyglot.dispatch") {
+            expect_local(
+                event.detail.find("{\"value\":7}") == std::string::npos &&
+                event.detail.find("runtime-host-correlation") == std::string::npos,
+                "composed dispatch telemetry should redact request and correlation bytes");
+        }
+    }
+}
+
+void test_cftaskcancel_reaches_production_candidate(
+    const PolyglotArtifactAdmissionResult& admission,
+    const fs::path& root) {
+    const fs::path ready_path = root / "production-candidate.ready";
+    const fs::path program = root / "runtime-host-cancel.prg";
+    write_text(
+        program,
+        "PROCEDURE bridgeworker\n"
+        "    RETURN CFPOLYGLOTDISPATCH('interop.runtime-host-v1', "
+        "'{\"value\":7}', 0)\n"
+        "ENDPROC\n"
+        "SPAWN bridgeworker TO nTask\n"
+        "DO WHILE NOT FILE('" + ready_path.string() + "')\n"
+        "    YIELD\n"
+        "ENDDO\n"
+        "lCancelRequested = CFTASKCANCEL(nTask)\n"
+        "DO WHILE CFTASKSTATUS(nTask) == 'running' OR "
+        "CFTASKSTATUS(nTask) == 'cancel-requested'\n"
+        "    YIELD\n"
+        "ENDDO\n"
+        "cTaskStatus = CFTASKSTATUS(nTask)\n"
+        "cResult = CFTASKRESULT(nTask)\n"
+        "cDispatchStatus = CFJSONGET(cResult, '/status')\n"
+        "cReason = CFJSONGET(cResult, '/error_code')\n"
+        "AWAIT nTask TO lJoined\n"
+        "RETURN\n");
+    auto built = PolyglotRuntimeHost::create(configuration(
+        admission, root, "on", "--host-sleep", 0U,
+        PolyglotFallbackPolicy::fail_fast,
+        PolyglotCancellationPolicy::propagate,
+        utf8_path(ready_path)));
+    auto options = make_runtime_session_options(program, root);
+    options.polyglot_dispatch_callback = built.host->dispatch_callback();
+    auto session = PrgRuntimeSession::create(options);
+    const auto state = session.run(DebugResumeAction::continue_run);
+    const auto value = [&](const std::string& name) {
+        const auto found = state.globals.find(name);
+        return found == state.globals.end()
+            ? std::string{}
+            : format_value(found->second);
+    };
+    expect_local(
+        state.completed && value("lcancelrequested") == "true" &&
+        value("ctaskstatus") == "completed" &&
+        value("cdispatchstatus") == "cancelled" &&
+        value("creason") == "polyglot.process.cancelled" &&
+        value("ljoined") == "true",
+        "CFTASKCANCEL should reach bounded production candidate execution through the read-only probe");
 }
 
 int run_tests(const fs::path& running_executable) {
@@ -373,10 +607,14 @@ int run_tests(const fs::path& running_executable) {
     expect_local(copy_executable(running_executable, artifact),
                  "runtime-host fixture executable should be copied");
     if (!error && fs::exists(artifact)) {
-        test_route_states_and_owned_callback_lifetime(artifact, root);
-        test_configuration_fails_before_launch(artifact, root);
-        test_cancellation_probe_reaches_bounded_candidate(artifact, root);
-        test_prg_session_uses_production_host_callback(artifact, root);
+        const auto admission = admit(artifact, root);
+        expect_local(admission.ok(), "runtime-host fixture should be admitted once");
+        test_route_states_and_owned_callback_lifetime(admission, root);
+        test_configuration_fails_before_launch(admission, root);
+        test_fallback_error_and_correlation_identity(admission, root);
+        test_cancellation_probe_reaches_bounded_candidate(admission, root);
+        test_prg_session_uses_production_host_callback(admission, root);
+        test_cftaskcancel_reaches_production_candidate(admission, root);
     }
     fs::remove_all(root, error);
     return failures == 0 ? 0 : 1;
@@ -385,8 +623,8 @@ int run_tests(const fs::path& running_executable) {
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc == 2) {
-        return run_artifact(argv[1]);
+    if (argc == 2 || argc == 3) {
+        return run_artifact(argv[1], argc == 3 ? argv[2] : std::string{});
     }
     if (argc != 1) {
         return 40;

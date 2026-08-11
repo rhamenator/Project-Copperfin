@@ -1,3 +1,21 @@
+- 2026-08-10: Added the #4940/#4700 trusted polyglot runtime-host composition.
+  `PolyglotRuntimeHost` owns a validated route registry and explicit admitted-
+  artifact binding per capability for every copied PRG callback. Construction
+  rejects invalid/missing/duplicate/mismatched route, admission, protocol,
+  correlation, bridge-policy, attempt, or required-callback configuration
+  before enabling execution. Each dispatch binds exact immutable PRG request
+  data into the existing route executor, serializes same-capability admission
+  revalidation, supplies unique correlation identities, and maps only the
+  existing invariant status/error/authority/selection/count/fallback/payload
+  result. Focused portable coverage proves all route states, parity,
+  fail-fast/native fallback, both cancellation policies, concurrent calls,
+  lifetime, bounds/redaction, fail-closed configuration, direct session use,
+  and marker-synchronized `CFTASKCANCEL()` propagation to a bounded candidate.
+  Local GCC Release focused and adjacent tests pass `6/6`; hosted platform and
+  protected evidence remain pending. No language runtime, discovery/install,
+  inline foreign source, retry, second artifact, new task lifecycle, mutable
+  PRG callback, atomic handle-bound launch, stub, or no-op was added.
+
 - 2026-08-10: Reduced owner approval friction without reopening the public
   GitHub prompt-injection boundary. Direct contemporaneous owner instruction
   outside GitHub content may authorize one exact open, owner-authored issue;

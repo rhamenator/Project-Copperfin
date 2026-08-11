@@ -9,10 +9,10 @@ engine validates immutable request data, invokes one explicitly configured host
 callback synchronously on the current PRG task, and publishes one deterministic
 JSON evidence document.
 
-This slice establishes the runtime boundary. The ordinary runtime host does not
-yet provision the callback from a route registry, artifact admission record, or
-release configuration, so an unconfigured call reports `unavailable` and does
-not launch anything.
+This slice establishes the runtime boundary. The trusted runtime-host
+composition described below can now provision the callback from an explicit
+validated route registry and admitted-artifact bindings. A host that does not
+provide that state still reports `unavailable` and launches nothing.
 
 ## PRG Function
 
@@ -115,13 +115,11 @@ or payload bytes.
 
 ## Nonclaims And Next Wiring
 
-This boundary does not parse inline foreign source, discover or install an
+This PRG boundary does not parse inline foreign source, discover or install an
 artifact, load a language runtime, authorize an executable, retry, or permit a
-foreign worker to call mutable PRG state. It also does not itself provision the
-ordinary runtime host. The next host-wiring slice must build the callback only
-from trusted route configuration and admitted artifact identity, call the
-portable route executor, propagate its cancellation and exact evidence, and
-remain unavailable when that trusted state is absent.
+foreign worker to call mutable PRG state. The adjacent trusted host composition
+below owns explicit admitted state and delegates to the portable executor; it
+remains unavailable when that trusted state is absent.
 
 ## Verification
 
@@ -144,3 +142,28 @@ eight candidate-head protected checks pass. A
 superseded macOS run found a timing assumption only in this test's cancellation
 fixture; the replacement waits for a test-owned callback-entry marker and
 atomically owns a unique temporary root without changing product behavior.
+
+## Trusted runtime-host integration
+
+`PolyglotRuntimeHost::create()` now supplies this callback from a validated
+route registry and explicit per-capability admitted-artifact bindings. It owns
+that state for every copied callback, binds the exact immutable capability,
+arguments, sample, and cancellation probe into the existing portable route
+executor, and maps only the existing invariant result fields back to this PRG
+boundary. Same-capability calls serialize admission revalidation and receive
+unique correlation IDs; no runtime/session/frame/cursor/object reference is
+available to the host callback.
+
+Construction rejects invalid routes, missing/duplicate/mismatched bindings,
+rejected admission, invalid protocol/correlation/bridge policy, multiple
+attempts, mutable pre-bound request callbacks, and missing route-required
+native/parity callbacks before enabling execution. Focused portable coverage
+also proves all route states, fallback/parity/error identities, both
+cancellation policies, bounds/redaction, callback lifetime, concurrency, real
+session creation, and a marker-synchronized `CFTASKCANCEL()` reaching the
+bounded candidate. Local GCC Release focused and adjacent tests pass `6/6`;
+hosted platform evidence remains pending.
+
+This integration still adds no language-specific runtime, discovery/install,
+inline foreign source, retry, second artifact, new task lifecycle, mutable PRG
+callback, or atomic handle-bound launch.

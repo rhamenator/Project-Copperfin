@@ -80,6 +80,11 @@ Fast failure is intentional. The engine must not convert a critical section into
 - The `CFTASK*()` supervision functions are allowed while a critical section is
   held. They use a zero-duration readiness probe or an atomic cancellation
   request and never join a worker. `AWAIT` remains the blocking join.
+- A trusted polyglot runtime-host callback retains only immutable PRG request
+  data and the read-only cancellation probe. It serializes same-capability
+  artifact-admission revalidation/launch state internally; it never calls back
+  into mutable PRG state. `CFTASKCANCEL()` therefore remains cooperative and
+  governed by the configured bridge cancellation policy.
 - Pure computation, local state updates, and other non-blocking operations are allowed.
 
 The policy is specifically about blocking behavior, not about banning all coordination-aware statements inside critical sections.
