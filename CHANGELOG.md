@@ -7312,4 +7312,13 @@ passes `1/1`.
   POSIX jobs passed. Automatic discovery now selects and admits the direct
   `bin/x64/Rscript.exe` front end instead, refuses the dispatcher when the
   direct executable is absent, and retains the one-variable environment.
-  Focused hosted rerun evidence remains pending.
+  Local regenerated focused, adjacent, and isolation coverage passes `8/8`,
+  and the isolated real-R integration repeats `10/10`. At exact signed
+  implementation head `70c68bcfd`, Generated Launcher Validation
+  `31518107199` passes the real R 4.6.1 sidecar target on Windows, Ubuntu, and
+  macOS, including the architecture-specific Windows path. Independent review
+  exercised the discovery contract, proved its x64 assertion load-bearing by
+  mutation, and found no defect. Windows DECLARE ABI Validation
+  `31518107351`, Windows Environment and Executable Path Validation
+  `31518107306`, and GCC/Clang Executable Path Validation `31518107204` also
+  pass; all eleven protected PR checks are green at that implementation head.

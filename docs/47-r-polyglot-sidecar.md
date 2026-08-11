@@ -82,8 +82,21 @@ leaves POSIX discovery unchanged, and rejects the shell dispatcher when its
 direct companion is absent.
 
 Local Release testing uses an isolated unpacked R 4.5.2 runtime without a
-system installation. Hosted R 4.6.1 evidence remains pending and is not claimed
-by this document yet.
+system installation; the focused R integration repeats successfully `10/10`,
+and the regenerated focused, adjacent, and isolation set passes `8/8`.
+At exact signed implementation head `70c68bcfd`, Generated Launcher Validation
+`31518107199` passes the real R 4.6.1 sidecar target on Windows, Ubuntu, and
+macOS. The Windows job selects and launches the admitted direct x64 front end,
+closing the dispatcher incompatibility found by the preceding hosted run.
+Windows DECLARE ABI Validation `31518107351`, Windows Environment and
+Executable Path Validation `31518107306`, and GCC/Clang Executable Path
+Validation `31518107204` also pass; all eleven protected PR checks are green at
+that implementation head.
+Independent review at coordination sequence 1576 exercised all four discovery
+contract cases, deliberately broke the x64 lookup to prove the regression is
+load-bearing, and found no defect. The reviewer could not execute R itself on
+that Linux review host; the local real-R run and three hosted jobs provide that
+separate runtime evidence.
 
 ## Remaining H3 work
 
