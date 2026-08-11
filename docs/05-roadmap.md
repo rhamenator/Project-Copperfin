@@ -536,6 +536,17 @@ Generated Launcher Validation `31459366674` independently passes the candidate
 on Windows, Ubuntu, and macOS; all eleven protected PR checks pass at
 documentation head `d0c7ef408`.
 
+The next #277 routing-strategy increment adds a deterministic advisory impact
+evaluator for direct C++, C++/.NET-wrapper, and C#-service implementations.
+It hard-gates availability, security approval/profile, contract parity,
+failures, sample sufficiency, p95 latency, throughput, peak memory, and p95
+startup before ranking eligible routes with integer weighted scores. The
+result contains a stable preferred route and measured fallback chain but cannot
+change the live registry or promote traffic; invalid or insufficient evidence
+retains native/no-promotion behavior. This advances the measured-routing and
+fallback acceptance without claiming it complete: a representative workload
+runner and checked-in benchmark evidence remain open.
+
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are
 exclusive; all JSON objects have unique keys; unknown top-level/error fields,

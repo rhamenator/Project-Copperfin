@@ -1,5 +1,26 @@
 # Agent Handoff
 
+## V1 advisory polyglot route-impact candidate
+
+The current #277 increment adds a deterministic, advisory decision contract for
+already-captured direct-C++, C++/.NET-wrapper, and C#-service measurements. It
+hard-gates unavailable or unapproved runtimes, excessive security exposure,
+contract incompatibility, insufficient samples, execution failures, parity
+mismatches, and latency/throughput/memory/startup budget violations. Eligible
+routes receive locale-independent integer scores, a stable preferred route, and
+an ordered fallback chain. Invalid or wholly ineligible evidence fails closed
+to no recommendation and the native/no-promotion default. The evaluator cannot
+run workloads, invoke artifacts, mutate the route registry, or promote traffic.
+
+Fresh local Release coverage passes the focused target and adjacent route
+registry, route execution, and migration telemetry tests (`4/4`); the focused
+target repeats `20/20`; Clang 21 ASan/UBSan passes with leak detection; focused
+static analysis is clean; and the isolation-contract audit passes. Hosted
+Linux, macOS, and Windows evidence is still required before merge. This
+increment advances but does not close #277: the representative workload runner
+and checked-in benchmark results remain open acceptance work. See
+`docs/44-polyglot-route-impact.md`.
+
 ## V1 native-failure payload fail-closed correction
 
 Review of the trusted polyglot runtime-host composition found a latent mapping

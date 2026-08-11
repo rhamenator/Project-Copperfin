@@ -309,8 +309,9 @@ matches the events `cf_security`'s `audit_stream` emits today.
 ### docs/11 — Engineering Spec: Copperfin .NET Bridge
 
 **Status: spec'd in full, with a portable policy gateway, artifact-first
-invocation adapter, and route executor; CLR hosting and PRG-facing parity-call
-execution remain absent.** The
+invocation adapter, route executor, one PRG-facing Native AOT parity-call leaf,
+and an advisory measured-route decision contract; general CLR hosting remains
+absent.** The
 document specs four native modules (`cf_dotnet_host`, `cf_dotnet_marshaler`,
 `cf_dotnet_policy`,
 `cf_dotnet_codegen`), three managed surfaces, a typed marshaling contract for 11
@@ -368,6 +369,12 @@ checked-in C# sample is the first real external language target: it publishes
 as a self-contained Native AOT executable and is hash-admitted and invoked end
 to end from ordinary PRG. General CLR hosting, arbitrary managed assembly
 loading, and broader language adapters remain absent.
+
+The route-impact boundary can deterministically reject or rank already-captured
+direct-C++, C++/.NET-wrapper, and C#-service evidence and emit a measured
+fallback order. It is deliberately unable to execute benchmarks or promote a
+route. A representative workload runner and checked-in benchmark results remain
+open before the routing-strategy criterion can close.
 
 **What it will take:** none of the four named native execution/marshaling
 modules exist yet. What exists today, per `docs/28-repository-ontology.md` §3, is
@@ -472,7 +479,7 @@ excluded from the compliance map above:
 | 12 | VFP Asset Editing And Execution | Partial | xAsset execution is first-pass, bounded by language-surface coverage |
 | 13 | Index Format Notes | Partial | No index write fidelity; collation hints are heuristic, not named |
 | 18 | Native Security And RBAC | Partial (real baseline) | Not yet verified against docs/04's fuller vision |
-| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, and first Native AOT C# target) | No general CLR/Python/R runtime hook; AI/MCP policy has little to govern yet |
+| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, first Native AOT C# target, and advisory measured-route strategy) | No representative benchmark-result set or general CLR/Python/R runtime hook; AI/MCP policy has little to govern yet |
 | 20 | Runtime Build And Debug Pipeline | Partial | Engine is PRG-first, not the full command surface |
 | 21 | Database Federation And Query Translation | Partial (real seed) | No live connector execution behind the translator/planner |
 | 22 | VFP Language Reference Coverage | Partial, measured | 1,411 documented items; official surface exceeds current runtime |

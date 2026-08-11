@@ -4673,6 +4673,10 @@ target_compile_definitions(
         COPPERFIN_ROUTE_REGISTRY_EXAMPLE_PATH="${CMAKE_SOURCE_DIR}/docs/contracts/polyglot-route-registry-v1.json"
 )
 
+copperfin_add_test(test_polyglot_route_impact cf_platform_profile
+    test_polyglot_route_impact.cpp
+)
+
 copperfin_add_test(test_polyglot_bridge_invocation cf_platform_profile
     test_polyglot_bridge_invocation.cpp
 )
