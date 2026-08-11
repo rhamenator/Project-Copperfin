@@ -390,8 +390,10 @@ launcher, admitted sample, and transpilation artifact are distinct outputs.
 
 ### docs/19 — Polyglot And AI Subprojects
 
-Restates the same .NET gap and adds: **"Python and broader polyglot support are
-planning/scaffolding surfaces only; there is no Python runtime hook today."**
+Restates the same .NET gap. Python now has one bounded external leaf workflow:
+an admitted interpreter plus a separately admitted, exact-position-bound
+script, exercised end to end from ordinary PRG. This is not a general embedded
+Python runtime, and R remains unimplemented.
 Specifies 7 hard rules for MCP/AI tooling (opt-in only, provider-agnostic,
 policy-controlled, auditable, local-or-enterprise model choice, user-selectable
 models within admin policy, and — critically — ordinary relational queries must
@@ -482,7 +484,7 @@ excluded from the compliance map above:
 | 12 | VFP Asset Editing And Execution | Partial | xAsset execution is first-pass, bounded by language-surface coverage |
 | 13 | Index Format Notes | Partial | No index write fidelity; collation hints are heuristic, not named |
 | 18 | Native Security And RBAC | Partial (real baseline) | Not yet verified against docs/04's fuller vision |
-| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, first Native AOT C# target, advisory measured-route strategy, and versioned representative benchmark evidence) | No general CLR/Python/R runtime hook; AI/MCP policy has little to govern yet |
+| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, Native AOT C# leaf, admitted Python sidecar leaf, advisory measured-route strategy, and versioned representative benchmark evidence) | No general CLR/Python/R runtime surface; R and product MCP/AI hooks remain unimplemented |
 | 20 | Runtime Build And Debug Pipeline | Partial | Engine is PRG-first, not the full command surface |
 | 21 | Database Federation And Query Translation | Partial (real seed) | No live connector execution behind the translator/planner |
 | 22 | VFP Language Reference Coverage | Partial, measured | 1,411 documented items; official surface exceeds current runtime |

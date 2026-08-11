@@ -80,7 +80,12 @@ Current maturity:
   by the parity policy and receives no external-I/O scope. A separately
   reviewed host adapter admitted through the polyglot contract is the current
   fallback for an application that deliberately needs network access.
-- Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook today.
+- Python now has one strict, tested sidecar hook through the generic artifact
+  boundary. The interpreter is an admitted executable; every loose script is a
+  separately admitted supporting artifact, hash/identity pinned beneath an
+  explicit physical root, bound to an exact argument position, and revalidated
+  before launch. This is not a general embedded-Python surface. R and broader
+  language adapters remain planning work.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 
 ## Migration Contract v1
@@ -702,6 +707,20 @@ Recommended rule:
 - run Python out-of-process
 - make it policy-controlled and auditable
 - do not let it become the trusted runtime boundary
+
+Current concrete workflow:
+
+- `samples/polyglot-python-sidecar/candidate.py` implements one strict
+  `samples.python.add-v1` leaf using only the standard library
+- the host starts an explicitly configured interpreter with `-I -S`, a
+  complete child environment, bounded I/O/time/process-tree ownership, and no
+  shell
+- the script path cannot be substituted, moved, linked, replaced, or edited
+  after admission without rejection before interpreter launch
+- ordinary PRG remains the control plane through `CFPOLYGLOTDISPATCH()` and
+  can inspect the immutable result with `CFJSONGET()`
+
+See `docs/46-python-polyglot-sidecar.md` for the operational and trust contract.
 
 ## R Story
 

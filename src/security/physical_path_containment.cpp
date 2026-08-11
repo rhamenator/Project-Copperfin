@@ -9,6 +9,7 @@
 #include <array>
 #include <cerrno>
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <string>
 #include <system_error>
@@ -289,8 +290,20 @@ PhysicalPathContainmentResult inspect_physical_path_containment(
 PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
     const PhysicalPathContainmentResult& expected,
     const std::filesystem::path& root) {
+    return read_physically_contained_file_snapshot(
+        expected, root, (std::numeric_limits<std::uint64_t>::max)());
+}
+
+PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
+    const PhysicalPathContainmentResult& expected,
+    const std::filesystem::path& root,
+    const std::uint64_t maximum_bytes) {
     if (!expected.allowed || expected.canonical_path.empty()) {
         return failed_snapshot(PhysicalPathContainmentFailure::path_unavailable);
+    }
+    if (expected.identity.file_size > maximum_bytes) {
+        return failed_snapshot(
+            PhysicalPathContainmentFailure::size_limit_exceeded);
     }
 
     std::string bytes;
@@ -344,6 +357,12 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
         }
         if (bytes_read == 0U) {
             break;
+        }
+        if (bytes_read > maximum_bytes ||
+            bytes.size() > maximum_bytes - bytes_read) {
+            ::CloseHandle(handle);
+            return failed_snapshot(
+                PhysicalPathContainmentFailure::size_limit_exceeded);
         }
         bytes.append(buffer.data(), bytes_read);
     }
@@ -417,6 +436,13 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
         }
         if (bytes_read == 0) {
             break;
+        }
+        const auto byte_count = static_cast<std::uint64_t>(bytes_read);
+        if (byte_count > maximum_bytes ||
+            bytes.size() > maximum_bytes - byte_count) {
+            ::close(descriptor);
+            return failed_snapshot(
+                PhysicalPathContainmentFailure::size_limit_exceeded);
         }
         bytes.append(buffer.data(), static_cast<std::size_t>(bytes_read));
     }

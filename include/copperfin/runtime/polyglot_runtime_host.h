@@ -16,12 +16,17 @@ namespace copperfin::runtime {
 
 // One explicit trusted host binding. The invocation template owns bridge,
 // process, protocol, and bound settings; its capability must match both the
-// admission token and capability_id. Its correlation_id is a non-empty prefix
-// and arguments_json/cancellation_requested must be empty because the host
-// binds those values from each immutable PRG dispatch request.
+// executable admission, every supporting-file admission, and capability_id.
+// Its correlation_id is a non-empty prefix and
+// arguments_json/cancellation_requested must be empty because the host binds
+// those values from each immutable PRG dispatch request.
 struct PolyglotRuntimeCapabilityBinding {
     std::string capability_id;
     platform::PolyglotArtifactAdmissionResult artifact_admission;
+    std::vector<platform::PolyglotSupportingArtifactAdmissionResult>
+        supporting_artifact_admissions;
+    std::vector<platform::PolyglotSupportingArtifactArgumentBinding>
+        supporting_artifact_arguments;
     platform::PolyglotArtifactInvocationRequest candidate_request_template;
     platform::PolyglotNativeInvoker invoke_native;
     platform::PolyglotShadowParityNormalizer normalize_shadow_parity;

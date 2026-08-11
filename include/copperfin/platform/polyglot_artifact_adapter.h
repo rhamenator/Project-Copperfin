@@ -9,13 +9,20 @@
 #include "copperfin/platform/polyglot_bridge_invocation.h"
 #include "copperfin/platform/polyglot_interop_envelope.h"
 #include "copperfin/platform/polyglot_migration_telemetry.h"
+#include "copperfin/platform/polyglot_supporting_artifact_admission.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <string>
 #include <vector>
 
 namespace copperfin::platform {
+
+struct PolyglotSupportingArtifactArgumentBinding {
+    std::size_t argument_index = 0U;
+    std::size_t admission_index = 0U;
+};
 
 enum class PolyglotArtifactInvocationStatus : std::uint8_t {
     success,
@@ -60,13 +67,22 @@ struct PolyglotArtifactInvocationResult {
     }
 };
 
-// Connects one previously admitted artifact to the v1 stdin/stdout JSON
-// protocol. The token is revalidated immediately beside the owned launch
-// call. This adapter executes exactly one candidate attempt; it reports the
-// configured fallback decision but never invokes a fallback, native path,
-// route registry, or mutable PRG/runtime callback itself.
+// Connects one previously admitted executable plus any exact-position-bound
+// supporting files to the v1 stdin/stdout JSON protocol. The tokens are
+// revalidated immediately beside the owned launch call. This adapter executes
+// exactly one candidate attempt; it reports the configured fallback decision
+// but never invokes a fallback, native path, route registry, or mutable
+// PRG/runtime callback itself.
 [[nodiscard]] PolyglotArtifactInvocationResult invoke_polyglot_artifact(
     PolyglotArtifactAdmissionResult& admission,
+    const PolyglotArtifactInvocationRequest& request);
+
+[[nodiscard]] PolyglotArtifactInvocationResult invoke_polyglot_artifact(
+    PolyglotArtifactAdmissionResult& admission,
+    std::vector<PolyglotSupportingArtifactAdmissionResult>&
+        supporting_artifact_admissions,
+    const std::vector<PolyglotSupportingArtifactArgumentBinding>&
+        supporting_artifact_arguments,
     const PolyglotArtifactInvocationRequest& request);
 
 [[nodiscard]] const char* polyglot_artifact_invocation_status_name(

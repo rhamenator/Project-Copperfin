@@ -1153,6 +1153,16 @@ void test_physical_path_containment_rejects_indirection() {
         package_root);
     expect(ordinary_snapshot.ok && ordinary_snapshot.bytes == "RETURN\n",
            "physical file snapshots should read the same admitted package file object");
+    const auto bounded_snapshot =
+        copperfin::security::read_physically_contained_file_snapshot(
+            ordinary,
+            package_root,
+            ordinary.identity.file_size - 1U);
+    expect(
+        !bounded_snapshot.ok &&
+            bounded_snapshot.failure ==
+                PhysicalPathContainmentFailure::size_limit_exceeded,
+        "physical file snapshots should enforce a byte ceiling before reading");
 
 #if defined(_WIN32)
     std::wstring differently_cased_root = package_root.native();

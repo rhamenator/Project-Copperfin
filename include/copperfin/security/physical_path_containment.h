@@ -19,6 +19,7 @@ enum class PhysicalPathContainmentFailure {
     cross_device_component,
     identity_changed,
     not_regular_file,
+    size_limit_exceeded,
     read_failed
 };
 
@@ -53,5 +54,10 @@ struct PhysicalFileSnapshotResult {
 [[nodiscard]] PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
     const PhysicalPathContainmentResult& expected,
     const std::filesystem::path& root);
+
+[[nodiscard]] PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
+    const PhysicalPathContainmentResult& expected,
+    const std::filesystem::path& root,
+    std::uint64_t maximum_bytes);
 
 }  // namespace copperfin::security

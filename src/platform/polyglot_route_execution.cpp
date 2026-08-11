@@ -103,8 +103,17 @@ void invoke_candidate_once(
     const PolyglotRouteExecutionRequest& request,
     PolyglotRouteExecutionResult& result) {
     ++result.candidate_invocation_count;
-    result.candidate = invoke_polyglot_artifact(
-        *request.artifact_admission, request.candidate_request);
+    if (request.supporting_artifact_admissions == nullptr &&
+        request.supporting_artifact_arguments == nullptr) {
+        result.candidate = invoke_polyglot_artifact(
+            *request.artifact_admission, request.candidate_request);
+    } else {
+        result.candidate = invoke_polyglot_artifact(
+            *request.artifact_admission,
+            *request.supporting_artifact_admissions,
+            *request.supporting_artifact_arguments,
+            request.candidate_request);
+    }
     append_telemetry(result.telemetry, result.candidate.telemetry);
 }
 
@@ -141,6 +150,13 @@ bool request_is_valid(
     std::string& error_code) {
     if (route.invoke_candidate && request.artifact_admission == nullptr) {
         error_code = "polyglot.execution.artifact_admission_required";
+        return false;
+    }
+    if (route.invoke_candidate &&
+        ((request.supporting_artifact_arguments == nullptr) !=
+         (request.supporting_artifact_admissions == nullptr))) {
+        error_code =
+            "polyglot.execution.supporting_artifact_admissions_required";
         return false;
     }
     const bool fallback_may_need_native = route.candidate_primary &&

@@ -62,6 +62,37 @@ bool route_can_invoke_native(
         policy.fallback == platform::PolyglotFallbackPolicy::fallback_native;
 }
 
+bool valid_supporting_artifact_bindings(
+    const PolyglotRuntimeCapabilityBinding& binding) {
+    if (binding.supporting_artifact_admissions.size() !=
+        binding.supporting_artifact_arguments.size()) {
+        return false;
+    }
+    std::vector<bool> arguments(
+        binding.candidate_request_template.artifact_arguments.size(), false);
+    std::vector<bool> admissions(
+        binding.supporting_artifact_admissions.size(), false);
+    for (const auto& mapped : binding.supporting_artifact_arguments) {
+        if (mapped.argument_index >= arguments.size() ||
+            mapped.admission_index >= admissions.size() ||
+            arguments[mapped.argument_index] ||
+            admissions[mapped.admission_index]) {
+            return false;
+        }
+        const auto& admitted =
+            binding.supporting_artifact_admissions[mapped.admission_index];
+        if (!admitted.ok() || admitted.capability_id() != binding.capability_id ||
+            binding.candidate_request_template
+                    .artifact_arguments[mapped.argument_index] !=
+                admitted.resolved_path()) {
+            return false;
+        }
+        arguments[mapped.argument_index] = true;
+        admissions[mapped.admission_index] = true;
+    }
+    return true;
+}
+
 RuntimePolyglotDispatchStatus map_status(
     const PolyglotRouteExecutionStatus status) noexcept {
     switch (status) {
@@ -177,6 +208,10 @@ PolyglotRuntimeHostBuildResult PolyglotRuntimeHost::create(
         if (!binding.artifact_admission.ok()) {
             return {nullptr, "polyglot.host.artifact_admission_required"};
         }
+        if (!valid_supporting_artifact_bindings(binding)) {
+            return {nullptr,
+                    "polyglot.host.supporting_artifact_binding_required"};
+        }
         if (binding.artifact_admission.capability_id() != binding.capability_id ||
             binding.candidate_request_template.invocation.capability_id !=
                 binding.capability_id) {
@@ -247,6 +282,14 @@ PolyglotRuntimeHost::dispatch_callback() const {
         execution.capability_id = request.capability_id;
         execution.selection_sample = request.selection_sample;
         execution.artifact_admission = &capability->binding.artifact_admission;
+        execution.supporting_artifact_admissions =
+            capability->binding.supporting_artifact_admissions.empty()
+            ? nullptr
+            : &capability->binding.supporting_artifact_admissions;
+        execution.supporting_artifact_arguments =
+            capability->binding.supporting_artifact_arguments.empty()
+            ? nullptr
+            : &capability->binding.supporting_artifact_arguments;
         execution.candidate_request = std::move(candidate);
         execution.invoke_native = capability->binding.invoke_native;
         execution.normalize_shadow_parity =

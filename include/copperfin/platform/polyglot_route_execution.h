@@ -55,6 +55,10 @@ struct PolyglotRouteExecutionRequest {
     std::string capability_id;
     std::uint8_t selection_sample = 0U;
     PolyglotArtifactAdmissionResult* artifact_admission = nullptr;
+    std::vector<PolyglotSupportingArtifactAdmissionResult>*
+        supporting_artifact_admissions = nullptr;
+    const std::vector<PolyglotSupportingArtifactArgumentBinding>*
+        supporting_artifact_arguments = nullptr;
     PolyglotArtifactInvocationRequest candidate_request;
     PolyglotNativeInvoker invoke_native;
     PolyglotShadowParityNormalizer normalize_shadow_parity;
