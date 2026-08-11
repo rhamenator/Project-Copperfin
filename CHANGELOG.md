@@ -7,11 +7,15 @@
   fallback chain. Invalid or wholly ineligible evidence retains the native
   no-promotion default. The evaluator is advisory and never runs a workload,
   invokes an artifact, changes the route registry, or promotes traffic.
-  Focused local Release coverage and the adjacent route/telemetry set pass;
-  Clang 21 ASan/UBSan with leak detection also passes. The representative
-  benchmark runner, checked-in workload results, and hosted matrices remain
-  separate validation before this increment can merge or the broader
-  criterion can close.
+  Focused local Release/adjacent/isolation coverage passes `5/5`, focused
+  repeats pass `20/20`, and Clang 21 ASan/UBSan with leak detection plus focused
+  static analysis pass. Exact signed product/test head `2f21378eb` passes Linux
+  Native `31477286106` and macOS Native `31477287811` at `338/338`, Windows
+  Native `31477289323` at `337/337`, the focused route-impact and isolation
+  contracts on every host, the macOS locale matrix at `8/8`, and all eleven
+  PR-triggered checks. The representative benchmark runner and checked-in
+  workload results remain separate acceptance work before the broader criterion
+  can close.
 
 - 2026-08-11: Hardened the trusted polyglot runtime-host result boundary after
   review found a latent native-failure asymmetry. Native-authoritative success

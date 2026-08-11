@@ -78,8 +78,16 @@ telemetry, signing, or human review. Those remain separate reviewed boundaries.
 input-order independence, every eligibility gate, deterministic ties,
 fail-closed native/no-promotion behavior, and malformed request/policy/evidence
 rejection. Fresh local Release coverage passes with the adjacent route registry,
-route execution, and migration telemetry tests (`4/4`). Clang 21 ASan/UBSan
-with leak detection passes the focused target. The test is audited portable,
-parallel-safe, filesystem-free, environment-free, process-free, network-free,
-and sample-free. Hosted Linux, macOS, and Windows evidence remains required
-before merge.
+route execution, migration telemetry, and isolation contracts (`5/5`); the
+focused target repeats `20/20`. Clang 21 ASan/UBSan with leak detection passes
+the focused target, and focused static analysis is clean. The test is audited
+portable, parallel-safe, filesystem-free, environment-free, process-free,
+network-free, and sample-free.
+
+Exact signed product/test head `2f21378eb` passes Linux Native
+`31477286106` and macOS Native `31477287811` at `338/338`, Windows Native
+`31477289323` at `337/337`, and both `test_polyglot_route_impact` and
+`test_native_test_isolation_contract` on every host. The macOS run additionally
+passes both SET POINT display targets under `C`, `en_US.UTF-8`, `pt_BR.UTF-8`,
+and `de_DE.UTF-8` (`8/8`). All eleven PR-triggered checks pass at that exact
+head.

@@ -12,13 +12,16 @@ an ordered fallback chain. Invalid or wholly ineligible evidence fails closed
 to no recommendation and the native/no-promotion default. The evaluator cannot
 run workloads, invoke artifacts, mutate the route registry, or promote traffic.
 
-Fresh local Release coverage passes the focused target and adjacent route
-registry, route execution, and migration telemetry tests (`4/4`); the focused
-target repeats `20/20`; Clang 21 ASan/UBSan passes with leak detection; focused
-static analysis is clean; and the isolation-contract audit passes. Hosted
-Linux, macOS, and Windows evidence is still required before merge. This
-increment advances but does not close #277: the representative workload runner
-and checked-in benchmark results remain open acceptance work. See
+Fresh local Release coverage passes the focused target, adjacent route
+registry/execution/migration-telemetry targets, and isolation audit (`5/5`);
+the focused target repeats `20/20`; Clang 21 ASan/UBSan passes with leak
+detection; and focused static analysis is clean. Exact signed product/test head
+`2f21378eb` passes Linux Native `31477286106` and macOS Native `31477287811`
+at `338/338`, Windows Native `31477289323` at `337/337`, the focused route
+impact and isolation contracts on every host, and the macOS SET POINT locale
+matrix at `8/8`. All eleven PR-triggered checks pass. This increment advances
+but does not close #277: the representative workload runner and checked-in
+benchmark results remain open acceptance work. See
 `docs/44-polyglot-route-impact.md`.
 
 ## V1 native-failure payload fail-closed correction
