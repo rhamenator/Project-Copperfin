@@ -32,7 +32,7 @@ Interop maturity:
 - PRG can validate and extract immutable result text through bounded native `CFREGEXVALID()`, `CFREGEXTEST()`, `CFREGEXFIND()`, and `CFREGEXGET()` helpers. The documented byte-oriented subset uses a non-backtracking state machine with fixed input/pattern/state ceilings; unsupported advanced regex constructs fail closed and can later route through a separately approved external capability.
 - PRG can identify, authenticate, and transport immutable byte payloads through bounded native `CFSHA256()`, `CFHMACSHA256()`, `CFHMACVERIFY()`, `CFBASE64ENCODE()`, and strict `CFBASE64DECODE()` helpers. Typed failure fallbacks and fixed 1 MiB key/payload ceilings keep this a deterministic control-plane utility; HMAC depends on caller-managed secret keys, and Base64 is not encryption.
 - Collection parity stays FP/VFP-shaped: native `Collection` plus the seeded `Scripting.Dictionary` compatibility surface provide ordered/keyed storage without exposing managed collection types. A general HTTP facade is not shipped or allowlisted; network work requires a separately reviewed host adapter admitted through the existing polyglot contracts.
-- Python and R now each have one practical out-of-process sidecar workflow, not a general embedded runtime. Copperfin admits each interpreter and exact script separately, binds the script to its command-line position, launches with isolated startup and an explicit environment, and lets ordinary PRG control the leaf through the existing polyglot contract. General language environments and live MCP/AI product adapters remain separate work.
+- Python and R now each have one practical out-of-process sidecar workflow, not a general embedded runtime. Copperfin admits each interpreter and exact script separately, binds the script to its command-line position, launches with isolated startup and an explicit environment, and lets ordinary PRG control the leaf through the existing polyglot contract. A separate local stdio MCP host exposes one permission-checked, read-only DBF-header inspection tool without caller-selected file, network, model-provider, or mutable-runtime access. General language environments and broader MCP/AI adapters remain separate work.
 
 Requirements Recovery:
 
@@ -120,6 +120,7 @@ License documents:
 - [`docs/45-polyglot-benchmark-evidence.md`](docs/45-polyglot-benchmark-evidence.md)
 - [`docs/46-python-polyglot-sidecar.md`](docs/46-python-polyglot-sidecar.md)
 - [`docs/47-r-polyglot-sidecar.md`](docs/47-r-polyglot-sidecar.md)
+- [`docs/48-mcp-read-only-dbf-header-host.md`](docs/48-mcp-read-only-dbf-header-host.md)
 - [`assets/copperfin-logo.png`](assets/copperfin-logo.png)
 
 Current implementation focus:

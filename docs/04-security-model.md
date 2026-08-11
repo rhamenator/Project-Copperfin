@@ -56,6 +56,12 @@ Current direction:
 - signed packages and signed extensions
 - explicit allow-list policy for managed/native/plugin loading
 
+Current MCP baseline: the installed local stdio host fails closed unless the
+effective `COPPERFIN_SECURITY_ROLE` has `ai.mcp` (the default `developer` role
+does not; `runtime-operator` does). Its only tool accepts fixed-size
+caller-supplied hexadecimal bytes, has no caller-file or network adapter, and
+emits content-free tool identity/outcome audit events on stderr.
+
 ## Security Boundaries
 
 ### Runtime Boundary

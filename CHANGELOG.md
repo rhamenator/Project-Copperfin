@@ -7322,3 +7322,15 @@ passes `1/1`.
   `31518107351`, Windows Environment and Executable Path Validation
   `31518107306`, and GCC/Clang Executable Path Validation `31518107204` also
   pass; all eleven protected PR checks are green at that implementation head.
+- 2026-08-11: Added the first live product MCP surface as a portable local
+  stdio host. It supports current stateless MCP `2026-07-28` plus the
+  initialization-era `2025-11-25` and `2025-06-18` protocols, and exposes one
+  deterministic read-only DBF-header parser. The host accepts only an exact
+  32-byte hexadecimal payload, uses bounded duplicate-key-rejecting JSON,
+  writes protocol messages only to stdout, exits on EOF, enforces the existing
+  `ai.mcp` role permission, and has no caller-selected file, network,
+  model-provider, shell, extension-loading, or mutable product-state access.
+  Content-free audit events report tool identity and outcome without request
+  bytes. Native protocol and process-level stdio regressions pass locally on
+  Linux; hosted Windows and macOS evidence remains required before closing the
+  broader interoperability criterion.

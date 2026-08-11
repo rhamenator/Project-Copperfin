@@ -111,6 +111,28 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    copperfin_set_test_isolation(test_mcp_host
+        PARALLEL_SAFE
+        FILESYSTEM none
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+    copperfin_set_test_isolation(test_mcp_host_stdio
+        FILESYSTEM fixed-build-tree
+        ENVIRONMENT child-scoped
+        CHILD_PROCESSES bounded
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+        RESOURCES lock
+        LOCK mcp-host-stdio
+    )
+
     foreach(test_name IN ITEMS
             test_polyglot_bridge_invocation
             test_polyglot_benchmark

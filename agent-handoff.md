@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 read-only MCP DBF-header host
+
+The current H3 increment adds `copperfin_mcp_host`, an installed portable local
+stdio executable with one deterministic tool: `copperfin.parse_dbf_header`.
+The tool accepts exactly 32 caller-supplied DBF-header bytes as hexadecimal and
+returns invariant schema-v1 JSON. It cannot read paths, access a network,
+choose a model/provider, launch a shell, load extensions, or mutate product
+state. The host supports current stateless MCP `2026-07-28` and the
+initialization-era `2025-11-25` / `2025-06-18` clients, with bounded strict JSON
+and process-hardening at the executable boundary. Startup enforces the existing
+`ai.mcp` permission, and tool calls emit content-free identity/outcome audit
+events on stderr.
+
+Local GCC and Clang 21 Release builds pass the direct protocol and real stdio
+tests. Adjacent DBF/platform-model, workflow-contract, and package-document
+checks also pass. The Windows installer contract now requires the executable,
+and all installer jobs build it. Hosted Windows/macOS evidence and independent
+review remain outstanding; no broader model/provider or mutable MCP tool is
+claimed. See `docs/48-mcp-read-only-dbf-header-host.md`.
+
 ## V1 advisory polyglot route-impact candidate
 
 The current #277 increment adds a deterministic, advisory decision contract for

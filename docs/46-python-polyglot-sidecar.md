@@ -74,6 +74,7 @@ all eleven protected pull-request checks are green.
 ## Remaining H3 work
 
 This slice does not implement R, general Python environments or dependency
-locks, a CLR host, or live MCP/AI product adapters. Those remain separately
+locks, or a CLR host. A later slice adds one bounded read-only MCP DBF-header
+tool, but broader model/provider and mutable MCP adapters remain separately
 reviewable H3 work and must preserve the same FP/VFP control-plane and
 fail-closed external-capability boundary.

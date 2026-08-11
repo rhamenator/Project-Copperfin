@@ -112,7 +112,7 @@ jobs:
         run: cmake --build build --config Release --target copperfin_package_document_check
 
       - name: Build
-        run: cmake --build build --config Release --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect --parallel 2
+        run: cmake --build build --config Release --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect copperfin_mcp_host --parallel 2
 
       - name: Build standalone Studio shell
         run: msbuild vsix/Copperfin.Studio/Copperfin.Studio.csproj /restore /t:Rebuild /m:2 /p:Configuration=Release
@@ -177,7 +177,7 @@ jobs:
         run: cmake --build build --config Release --target copperfin_package_document_check
 
       - name: Build
-        run: cmake --build build --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect
+        run: cmake --build build --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect copperfin_mcp_host
 
       - name: Verify localized catalog install
         run: |
@@ -236,7 +236,7 @@ jobs:
         run: cmake --build build --config Release --target copperfin_package_document_check
 
       - name: Build
-        run: cmake --build build --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect
+        run: cmake --build build --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect copperfin_mcp_host
 
       - name: Verify localized catalog install
         run: |

@@ -84,8 +84,10 @@ Current maturity:
   artifact boundary. Each interpreter is an admitted executable; every loose script is a
   separately admitted supporting artifact, hash/identity pinned beneath an
   explicit physical root, bound to an exact argument position, and revalidated
-  before launch. These are not general embedded-language surfaces. Broader
-  language environments and product MCP/AI adapters remain planning work.
+  before launch. These are not general embedded-language surfaces. A separate
+  local MCP host now supplies one bounded read-only DBF-header tool; broader
+  language environments and model/provider or mutable MCP adapters remain
+  planning work.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 
 ## Migration Contract v1
@@ -769,7 +771,15 @@ The important thing is a stable, signed, well-audited extension model.
 
 ## MCP And AI Story
 
-Copperfin should eventually have a dedicated MCP host surface so developers can use their preferred AI models and assistants for:
+Copperfin now has a first dedicated, provider-independent MCP host surface:
+`copperfin_mcp_host` exposes one local, read-only DBF-header inspection tool.
+It accepts caller-supplied bytes only and has no caller-selected file, network,
+model, shell, extension-loading, or mutable product-state access. The process
+also enforces the existing `ai.mcp` role permission and emits content-free
+tool-call audit events. See
+[`48-mcp-read-only-dbf-header-host.md`](48-mcp-read-only-dbf-header-host.md).
+Broader MCP tooling can eventually let developers use their preferred AI
+models and assistants for:
 
 - code generation
 - migration help
@@ -790,6 +800,11 @@ Recommended rules:
 - allow user-selected models within administrator-approved provider/model policy
 - keep ordinary relational query execution deterministic so AI is optional for the straightforward path
 - reserve AI planning for ambiguous document/vector query synthesis, explanation, and debugging help
+
+The shipped DBF-header tool satisfies the opt-in, provider-independent,
+deterministic foundation of these rules. It does not yet supply model policy,
+enterprise-provider integration, or the broader mutable developer tools listed
+above.
 
 ## Why This Matters
 
