@@ -317,6 +317,7 @@ add_test(
 )
 
 find_program(COPPERFIN_PYTHON3_EXECUTABLE NAMES python3 python)
+find_program(COPPERFIN_RSCRIPT_EXECUTABLE NAMES Rscript Rscript.exe)
 if(COPPERFIN_PYTHON3_EXECUTABLE)
     add_test(
         NAME test_rc_candidate_assembly
@@ -4706,6 +4707,19 @@ if(COPPERFIN_PYTHON3_EXECUTABLE)
         COPPERFIN_POLYGLOT_PYTHON_SIDECAR_PATH="${CMAKE_SOURCE_DIR}/samples/polyglot-python-sidecar/candidate.py"
     )
     set_tests_properties(test_polyglot_python_sidecar PROPERTIES TIMEOUT 30)
+endif()
+
+if(COPPERFIN_RSCRIPT_EXECUTABLE)
+    copperfin_add_test(test_polyglot_r_sidecar
+        "cf_xbase_runtime;cf_security;cf_platform_profile;cf_platform_support"
+        test_polyglot_r_sidecar.cpp
+        prg_engine_test_support.cpp
+    )
+    target_compile_definitions(test_polyglot_r_sidecar PRIVATE
+        COPPERFIN_POLYGLOT_RSCRIPT_EXECUTABLE="${COPPERFIN_RSCRIPT_EXECUTABLE}"
+        COPPERFIN_POLYGLOT_R_SIDECAR_PATH="${CMAKE_SOURCE_DIR}/samples/polyglot-r-sidecar/candidate.R"
+    )
+    set_tests_properties(test_polyglot_r_sidecar PROPERTIES TIMEOUT 45)
 endif()
 
 copperfin_add_test(test_polyglot_route_execution
