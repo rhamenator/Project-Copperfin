@@ -78,17 +78,31 @@ bool path_component_equal_for_platform(
 #if defined(_WIN32)
     const std::wstring left_value = left.native();
     const std::wstring right_value = right.native();
+    const auto maximum_api_length =
+        static_cast<std::size_t>((std::numeric_limits<int>::max)());
+    if (left_value.size() > maximum_api_length || right_value.size() > maximum_api_length) {
+        return false;
+    }
     if (::CompareStringOrdinal(
             left_value.c_str(), static_cast<int>(left_value.size()),
             right_value.c_str(), static_cast<int>(right_value.size()), TRUE) == CSTR_EQUAL) {
         return true;
     }
+
+    // Retain the older invariant-locale entry point for Windows environments
+    // where the ordinal and extended comparison APIs do not share the same
+    // Unicode case table.
     if (::CompareStringW(
             LOCALE_INVARIANT, NORM_IGNORECASE,
             left_value.c_str(), static_cast<int>(left_value.size()),
             right_value.c_str(), static_cast<int>(right_value.size())) == CSTR_EQUAL) {
         return true;
     }
+
+    // Some Windows builds do not apply the complete Unicode simple-case
+    // table through CompareStringOrdinal. The invariant locale comparison
+    // supplies the Windows filesystem's case-insensitive behavior for those
+    // code points without consulting the user's active locale.
     if (::CompareStringEx(
             LOCALE_NAME_INVARIANT, NORM_IGNORECASE,
             left_value.c_str(), static_cast<int>(left_value.size()),
@@ -97,6 +111,9 @@ bool path_component_equal_for_platform(
         return true;
     }
 
+    // Some supported Windows environments do not provide complete Unicode
+    // simple-case behavior through CompareStringOrdinal alone. Prefer the
+    // invariant mapping API, with a native fallback when it is unavailable.
     const auto invariant_lowercase = [](const std::wstring& value) {
         if (value.empty()) {
             return std::wstring{};
@@ -116,7 +133,12 @@ bool path_component_equal_for_platform(
         }
 
         std::wstring fallback = value;
-        (void)::CharLowerBuffW(fallback.data(), static_cast<DWORD>(fallback.size()));
+        // CharLowerBuffW reports zero on failure. Returning the unchanged
+        // input makes a mapping failure conservative rather than treating
+        // unconverted text as a successful fold.
+        if (::CharLowerBuffW(fallback.data(), static_cast<DWORD>(fallback.size())) == 0) {
+            return value;
+        }
         return fallback;
     };
     return invariant_lowercase(left_value) == invariant_lowercase(right_value);

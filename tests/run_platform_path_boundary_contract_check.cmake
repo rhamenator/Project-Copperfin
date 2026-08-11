@@ -39,7 +39,12 @@ foreach(required IN ITEMS
         "#include <windows.h>"
         "path_to_utf8_string"
         "path_from_utf8_string"
-        "path_component_equal_for_platform")
+        "path_component_equal_for_platform"
+        "left_value.size() > maximum_api_length"
+        "right_value.size() > maximum_api_length"
+        "Unicode case table"
+        "Windows filesystem's case-insensitive behavior"
+        "CharLowerBuffW reports zero on failure")
     string(FIND "${source_text}" "${required}" offset)
     if(offset EQUAL -1)
         message(FATAL_ERROR

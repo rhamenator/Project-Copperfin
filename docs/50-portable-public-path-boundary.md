@@ -51,6 +51,29 @@ preserved `CharLowerBuffW` fallback's User32 dependency had remained implicit
 through CMake's default Windows libraries; the corrected head declares that
 dependency on `cf_platform_support`, and the source contract protects it.
 
+Final evidence head `e0fbdd11c` passes all eleven protected checks. Generated
+Launcher Validation run `31542720317` runs both path contracts on Windows,
+Ubuntu, and macOS, and Windows Environment and Executable Path Validation run
+`31542720276` repeats them inside its `9/9` focused set. Independent review
+found no functional defect, but did identify that the move had dropped the
+hard-won rationale for the layered Windows Unicode comparison fallbacks. The
+original rationale is restored, with one inherited statement corrected to
+match the `CharLowerBuffW` failure contract. Review also identified unchecked
+narrowing into Win32's signed length type; unrepresentable component lengths
+now fail closed instead of reaching the comparison APIs. The source contract
+protects the length guard and key explanations alongside the implementation
+and explicit User32 link dependency. Representable path behavior is unchanged.
+
+Corrected implementation head `e35830c30` passes all eleven protected checks.
+Generated Launcher Validation run `31545471149` builds and runs the path
+runtime and boundary contracts on Windows, Ubuntu, and macOS; Windows
+Environment and Executable Path Validation run `31545471092` repeats them in
+its focused set. Independent review at that exact head passes, independently
+mutation-proves the length guard, and confirms the documentation scope. Its
+disclosed limitation is that the corrected Win32 branch was read-verified
+against the API contract rather than executed on the reviewer's Linux host;
+the hosted Windows jobs provide the direct build-and-execution evidence.
+
 ## Remaining J1 work
 
 This boundary is a seed, not a blanket portability claim. Later independently

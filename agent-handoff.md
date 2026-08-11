@@ -24,6 +24,27 @@ is corrected and contract-protected. This seeds J1 only; broader
 native-boundary inventory and the J2/J3 ports remain open. See
 `docs/50-portable-public-path-boundary.md`.
 
+Independent review found no functional defect and mechanically confirmed the
+moved implementations, then identified one maintainability gap: the move had
+dropped the rationale for the layered Windows Unicode comparison fallbacks.
+That original rationale is restored, with its inherited `CharLowerBuffW`
+statement corrected to identify zero as failure. Review also found unchecked
+narrowing into Win32 signed length parameters; unrepresentable component
+lengths now fail closed, while representable behavior is unchanged. The source
+contract protects the length guard and key explanations. Final pre-follow-up evidence head
+`e0fbdd11c` passed all eleven protected checks; Generated Launcher Validation
+`31542720317` ran both path tests on Windows, Ubuntu, and macOS, while Windows
+Environment and Executable Path Validation `31542720276` repeated them in its
+focused set.
+
+Corrected implementation head `e35830c30` passes all eleven protected checks.
+Generated Launcher Validation `31545471149` runs the path runtime and boundary
+contracts on Windows, Ubuntu, and macOS; Windows Environment and Executable
+Path Validation `31545471092` repeats them. Independent review passes and
+independently mutation-proves the length guard. The reviewer read-verified the
+Win32 API correction from Linux; the hosted Windows jobs provide direct
+build-and-execution evidence.
+
 ## V1 read-only SQLite federation execution
 
 The current H1 increment connects the deterministic SQLite translator/planner
