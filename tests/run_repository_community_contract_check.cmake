@@ -31,7 +31,10 @@ foreach(required_path IN ITEMS
         GOVERNANCE.md
         SECURITY.md
         .github/CODEOWNERS
-        .github/pull_request_template.md
+        .github/PULL_REQUEST_TEMPLATE/general_contribution.md
+        .github/PULL_REQUEST_TEMPLATE/requirements_recovery.md
+        .github/DISCUSSION_TEMPLATE/ideas.yml
+        .github/DISCUSSION_TEMPLATE/q-a.yml
         .github/ISSUE_TEMPLATE/config.yml)
     require_community_file("${required_path}")
 endforeach()
@@ -54,9 +57,17 @@ require_community_text("GOVERNANCE.md" "does not transfer contributor copyright"
 require_community_file(".github/workflows/contributor-signoff.yml")
 require_community_file("scripts/check-contributor-signoffs.py")
 require_community_text(".github/CODEOWNERS" "* @rhamenator")
-require_community_text(".github/pull_request_template.md" "Contribution Licensing And Provenance")
-require_community_text(".github/pull_request_template.md" "Signed-off-by")
-require_community_text(".github/pull_request_template.md" "User-visible strings are localized")
+foreach(pull_request_template IN ITEMS
+        .github/PULL_REQUEST_TEMPLATE/general_contribution.md
+        .github/PULL_REQUEST_TEMPLATE/requirements_recovery.md)
+    require_community_text("${pull_request_template}" "Contribution Licensing And Provenance")
+    require_community_text("${pull_request_template}" "Signed-off-by")
+    require_community_text("${pull_request_template}" "User-visible strings are localized")
+endforeach()
+require_community_text(".github/DISCUSSION_TEMPLATE/ideas.yml" "title: \"[idea] <short summary>\"")
+require_community_text(".github/DISCUSSION_TEMPLATE/ideas.yml" "label: Proposed idea")
+require_community_text(".github/DISCUSSION_TEMPLATE/q-a.yml" "title: \"[question] <short summary>\"")
+require_community_text(".github/DISCUSSION_TEMPLATE/q-a.yml" "label: Your question")
 require_community_text(".github/ISSUE_TEMPLATE/config.yml" "blank_issues_enabled: false")
 require_community_text(".github/ISSUE_TEMPLATE/config.yml" "Contribution Guide")
 require_community_text(".github/ISSUE_TEMPLATE/config.yml" "Support Guide")
