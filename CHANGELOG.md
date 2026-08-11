@@ -1,3 +1,16 @@
+- 2026-08-11: Completed the first high-value .NET parity surface-pack
+  disposition. The policy matrix now records shipped adapted task, JSON,
+  bounded regex, native collection/dictionary, and bounded payload-crypto
+  facades. The previously aspirational `safe-http-helpers` entry is no longer
+  allowlisted or granted external I/O: it is explicitly unsupported and
+  rejected until a separately reviewed bounded implementation exists, with an
+  admitted host adapter documented as the application-level fallback. Focused
+  model, localization, and manifest regressions cover the machine policy while
+  active docs name the exact FP/VFP-friendly surfaces and limitations. Local
+  GCC Release validation passes the model, runtime-manifest, locale-install,
+  and localization tests at `4/4`; the focused model test also passes Clang 21
+  ASan/UBSan with leak detection.
+
 - 2026-08-11: Added the first #277 measured polyglot routing-strategy
   contract. `evaluate_polyglot_route_impact()` accepts one canonical
   capability policy plus direct-C++, C++/.NET-wrapper, and C#-service evidence;

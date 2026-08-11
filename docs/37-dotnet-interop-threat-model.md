@@ -47,9 +47,12 @@ the gateway.
 
 ## Fail-Closed Gateway
 
-The default profile permits only named parity capabilities. Reflection,
-assembly loading, and secret access have empty capability scopes. External I/O
-is initially scoped only to `safe-http-helpers`. A request is rejected before a
+The default profile permits only named, implemented parity capabilities.
+Reflection, assembly loading, external I/O, and secret access all have empty
+capability scopes. The planned `safe-http-helpers` capability is explicitly
+denylisted until a bounded implementation and contract receive separate review;
+applications that require network access must use a separately reviewed host
+adapter admitted through the polyglot contract. A request is rejected before a
 .NET path can be selected when any of these proofs is absent:
 
 - non-empty authenticated actor identity;
