@@ -11,6 +11,16 @@ function(copperfin_add_test TARGET_NAME LINK_LIBS)
     add_test(NAME ${TARGET_NAME} COMMAND $<TARGET_FILE:${TARGET_NAME}>)
 endfunction()
 
+copperfin_add_test(test_mcp_host "cf_mcp_host;cf_platform_support"
+    test_mcp_host.cpp)
+add_test(
+    NAME test_mcp_host_stdio
+    COMMAND ${CMAKE_COMMAND}
+        -DMCP_HOST=$<TARGET_FILE:copperfin_mcp_host>
+        -DTEST_WORK_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/test_mcp_host_stdio.cmake
+)
+
 function(copperfin_add_test_support_object TARGET_NAME SOURCE_FILE LINK_LIBS)
     add_library(${TARGET_NAME} OBJECT ${SOURCE_FILE})
     target_link_libraries(${TARGET_NAME} PRIVATE ${LINK_LIBS})

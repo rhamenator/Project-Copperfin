@@ -71,6 +71,12 @@ The security layer must govern:
 - MCP and AI-assisted tooling
 - package signing and extension loading
 
+The first shipped MCP surface applies this existing model directly:
+`copperfin_mcp_host` requires the `ai.mcp` permission before reading protocol
+input and emits a content-free `ai.mcp_invoked` identity/outcome event for each
+tool call. The default `developer` role is denied; `runtime-operator` is the
+current built-in role that grants the permission.
+
 ## Hardening Profiles
 
 Suggested deployment tiers:

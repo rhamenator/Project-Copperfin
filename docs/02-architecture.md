@@ -52,7 +52,8 @@ flowchart LR
 
     subgraph Platform[Interop And Federation]
         direction TB
-        DOTNET[".NET Interoperability<br/>launcher stub only"]
+        DOTNET[".NET / Polyglot Interoperability<br/>bounded execution seams shipped"]
+        MCP["Local MCP Host<br/>read-only DBF inspection"]
         FED["Database Federation<br/>planning slices shipped"]
     end
 
@@ -76,6 +77,7 @@ flowchart LR
 
     PRG --> BLD --> DBG --> PKG
     PRG --> DOTNET --> FED
+    DBF --> MCP
     PRG --> SEC
 
 
@@ -87,7 +89,7 @@ flowchart LR
 
     class LQ,SQ done;
 
-    class PRG,EXP,SEC,DES,FORMS,RPT,MENU,VS,IDE,LS,BLD,DBG,PKG,DOTNET,FED partial;
+    class PRG,EXP,SEC,DES,FORMS,RPT,MENU,VS,IDE,LS,BLD,DBG,PKG,DOTNET,MCP,FED partial;
 
     class DataPlane,RuntimePlane,UXHosts,Toolchain,Platform seam;
 ```
@@ -102,6 +104,9 @@ This diagram is intentionally coarse-grained. As of the current repo state:
 - The execution plane is still partial because the parser/runtime core is broader than the currently shipped command surface, macro semantics, host behavior, and compatibility edge cases.
 - Expression/runtime-surface coverage is now large enough to deserve its own node, but it remains partial because the VFP built-in surface is still expanding in reference-derived batches.
 - Database federation is no longer "missing": deterministic translation/planning slices exist, but live backend execution and broader connector behavior remain incomplete.
+- MCP is no longer only aspirational: a local stdio host exposes one bounded,
+  read-only DBF-header tool. Broader model/provider and mutable tooling remain
+  incomplete.
 
 ## Top-Level Product Map
 

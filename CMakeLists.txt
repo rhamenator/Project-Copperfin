@@ -300,6 +300,19 @@ else()
     target_compile_options(cf_vfp_assets PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+add_library(cf_mcp_host
+    src/platform/mcp_host.cpp
+)
+target_include_directories(cf_mcp_host PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(cf_mcp_host PRIVATE cf_platform_support cf_vfp_assets)
+target_compile_definitions(cf_mcp_host PRIVATE
+    COPPERFIN_MCP_HOST_VERSION="${PROJECT_VERSION}")
+if(MSVC)
+    target_compile_options(cf_mcp_host PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_mcp_host PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 add_library(cf_design_model
     src/studio/builder_dispatch.cpp
     src/studio/builder_invocation_admission.cpp
@@ -516,6 +529,17 @@ else()
     target_compile_options(copperfin_inspect PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+add_executable(copperfin_mcp_host
+    apps/copperfin_mcp_host/main.cpp
+)
+target_link_libraries(copperfin_mcp_host PRIVATE cf_mcp_host cf_security)
+copperfin_apply_windows_stack_reserve(copperfin_mcp_host)
+if(MSVC)
+    target_compile_options(copperfin_mcp_host PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(copperfin_mcp_host PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 add_executable(copperfin_studio_host
     apps/copperfin_studio_host/main.cpp
     apps/copperfin_studio_host/studio_host_main_shared_cli_infra.cpp
@@ -601,7 +625,7 @@ else()
     target_compile_options(copperfin_build_host PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-install(TARGETS copperfin_inspect copperfin_studio_host copperfin_runtime_host copperfin_build_host
+install(TARGETS copperfin_inspect copperfin_mcp_host copperfin_studio_host copperfin_runtime_host copperfin_build_host
     RUNTIME DESTINATION bin
 )
 

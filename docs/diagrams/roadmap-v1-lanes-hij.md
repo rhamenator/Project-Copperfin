@@ -25,7 +25,7 @@ flowchart TB
         direction LR
         H1["H1 Deterministic Relational<br/>Backend Translators<br/>root #30 - SEEDED:<br/>see docs/21, cf_platform_profile"]
         H2["H2 Document/Vector Backend<br/>+ AI-Assisted Planning<br/>root #31"]
-        H3["H3 .NET Outputs, MCP/AI<br/>Hooks, Python/R Sidecars<br/>root #32 - SEEDED:<br/>Native AOT + Python/R leaves<br/>+ benchmarked route impact"]
+        H3["H3 .NET Outputs, MCP/AI<br/>Hooks, Python/R Sidecars<br/>root #32 - SEEDED:<br/>Native AOT + Python/R leaves<br/>+ read-only MCP host"]
         H1 --> H2 --> H3
       end
 
@@ -69,12 +69,14 @@ flowchart TB
 ```
 
 **What's done:** `H1` has relational backend translators; `H3` has an admitted
-Native AOT leaf, admitted Python and R sidecar leaves, advisory measured-route strategy,
-and versioned representative benchmark evidence; and `I1` has a security baseline. These real seeds are
+Native AOT leaf, admitted Python and R sidecar leaves, one bounded read-only MCP
+DBF-header host, advisory measured-route strategy, and versioned representative
+benchmark evidence; and `I1` has a security baseline. These real seeds are
 `cf_platform_profile`'s deterministic Fox-SQL
 translator/execution-planning lane, the trusted polyglot host and route-impact
 boundary, and `cf_security`'s RBAC/audit/secrets/signing baseline, respectively.
-`H3` still lacks broader managed-language environments and product MCP/AI adapters. **What's left, and what it
+`H3` still lacks broader managed-language environments and model/provider or
+mutable MCP/AI adapters. **What's left, and what it
 takes:** this is
 covered in full, document-by-document, in
 [31-specification-compliance-gap-analysis.md](../31-specification-compliance-gap-analysis.md) —

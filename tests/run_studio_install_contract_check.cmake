@@ -50,6 +50,7 @@ set(required_files
     "bin/studio/Copperfin.Studio.exe"
     "bin/studio/Copperfin.Studio.exe.config"
     "bin/copperfin_studio_host.exe"
+    "bin/copperfin_mcp_host.exe"
     "share/copperfin/locales/en-US/strings.json"
     "share/copperfin/locales/es-419/strings.json"
     "share/copperfin/locales/pt-BR/strings.json"

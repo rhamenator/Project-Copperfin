@@ -459,8 +459,12 @@ require_text(".github/workflows/build-installers.yml"
     "timeout-minutes: 120"
     "bounded Windows installer job timeout")
 require_text(".github/workflows/build-installers.yml"
-    "copperfin_inspect --parallel 2"
+    "copperfin_mcp_host --parallel 2"
     "bounded Windows installer native build parallelism")
+require_text_count(".github/workflows/build-installers.yml"
+    "copperfin_mcp_host"
+    3
+    "MCP host installer matrix builds")
 require_text(".github/workflows/build-installers.yml"
     "Copperfin.Studio.csproj /restore /t:Rebuild /m:2"
     "bounded Windows installer managed build parallelism")

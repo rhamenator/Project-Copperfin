@@ -100,7 +100,7 @@ separate runtime evidence.
 
 ## Remaining H3 work
 
-This slice does not implement general R environments or package locks, a CLR
-host, or live MCP/AI product adapters. The practical Python and R leaf examples
-share one audited FP/VFP control-plane boundary; product MCP/AI hooks remain the
-next distinct H3 implementation gap.
+This slice does not implement general R environments or package locks, or a
+CLR host. The practical Python and R leaf examples share one audited FP/VFP
+control-plane boundary. A later slice adds one bounded read-only MCP DBF-header
+tool; broader model/provider and mutable MCP adapters remain distinct H3 work.

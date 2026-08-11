@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace copperfin::platform {
 
@@ -52,7 +53,21 @@ struct JsonSelectionResult final {
     }
 };
 
+struct JsonObjectMembersResult final {
+    JsonSelectionError error = JsonSelectionError::none;
+    std::vector<std::string> names;
+
+    [[nodiscard]] bool ok() const noexcept {
+        return error == JsonSelectionError::none;
+    }
+};
+
 [[nodiscard]] JsonSelectionResult select_json_value(
+    std::string_view document,
+    std::string_view json_pointer = {},
+    const JsonDocumentLimits& limits = {});
+
+[[nodiscard]] JsonObjectMembersResult select_json_object_member_names(
     std::string_view document,
     std::string_view json_pointer = {},
     const JsonDocumentLimits& limits = {});

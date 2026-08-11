@@ -7322,3 +7322,22 @@ passes `1/1`.
   `31518107351`, Windows Environment and Executable Path Validation
   `31518107306`, and GCC/Clang Executable Path Validation `31518107204` also
   pass; all eleven protected PR checks are green at that implementation head.
+- 2026-08-11: Added the first live product MCP surface as a portable local
+  stdio host. It supports current stateless MCP `2026-07-28` plus the
+  initialization-era `2025-11-25` and `2025-06-18` protocols, and exposes one
+  deterministic read-only DBF-header parser. The host accepts only an exact
+  32-byte hexadecimal payload, uses bounded duplicate-key-rejecting JSON,
+  writes protocol messages only to stdout, exits on EOF, enforces the existing
+  `ai.mcp` role permission, and has no caller-selected file, network,
+  model-provider, shell, extension-loading, or mutable product-state access.
+  Content-free audit events report tool identity and outcome without request
+  bytes. At exact signed/DCO implementation head `25c545907`, Generated
+  Launcher Validation `31525167620` passes the host and both MCP tests on
+  Windows, Ubuntu, and macOS. Executable Path Validation `31525167466`,
+  Windows DECLARE ABI Validation `31525167468`, and Windows Environment and
+  Executable Path Validation `31525167519` also pass; all eleven protected PR
+  checks are green. Independent Linux review rebuilt with ASan/UBSan, exercised
+  RBAC, output isolation, audit redaction, bounded parsing, protocol/version
+  boundaries, malformed inputs, and installer wiring, and found no defect.
+  That review did not repeat Windows/macOS execution, run TSan on the
+  deliberately single-threaded host, or re-review the unchanged DBF parser.

@@ -399,11 +399,13 @@ policy-controlled, auditable, local-or-enterprise model choice, user-selectable
 models within admin policy, and — critically — ordinary relational queries must
 stay deterministic and not require AI).
 
-**What it will take:** the AI/MCP rules are policy constraints on a capability
-that doesn't fully exist yet either — `cf_platform_profile`'s
-`extensibility_model` is the closest real seed. Nothing here is contradicted by
-current code; it simply hasn't been built out to the point where the policy rules
-have much surface area to govern yet.
+**Current implementation:** `copperfin_mcp_host` is now a real portable,
+local-stdio product surface with one deterministic read-only DBF-header tool.
+Its process boundary is opt-in and permission-checked; bounded input, strict
+JSON, no network or caller-selected file access, no provider dependency,
+content-free audit events, and immutable output keep this
+first surface inside the documented rules. Broader model/provider policy,
+auditing integration, and mutable development tools remain future work.
 
 ### docs/21 — Database Federation And Query Translation
 
@@ -484,7 +486,7 @@ excluded from the compliance map above:
 | 12 | VFP Asset Editing And Execution | Partial | xAsset execution is first-pass, bounded by language-surface coverage |
 | 13 | Index Format Notes | Partial | No index write fidelity; collation hints are heuristic, not named |
 | 18 | Native Security And RBAC | Partial (real baseline) | Not yet verified against docs/04's fuller vision |
-| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, Native AOT C# leaf, admitted Python/R sidecar leaves, advisory measured-route strategy, and versioned representative benchmark evidence) | No general CLR/Python/R runtime surface; product MCP/AI hooks remain unimplemented |
+| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, Native AOT C# leaf, admitted Python/R sidecar leaves, advisory measured-route strategy, versioned benchmark evidence, and a bounded read-only MCP DBF-header host) | No general CLR/Python/R runtime surface or broader model/provider and mutable MCP tooling |
 | 20 | Runtime Build And Debug Pipeline | Partial | Engine is PRG-first, not the full command surface |
 | 21 | Database Federation And Query Translation | Partial (real seed) | No live connector execution behind the translator/planner |
 | 22 | VFP Language Reference Coverage | Partial, measured | 1,411 documented items; official surface exceeds current runtime |

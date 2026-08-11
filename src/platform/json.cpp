@@ -599,6 +599,34 @@ JsonSelectionResult select_json_value(
     return result;
 }
 
+JsonObjectMembersResult select_json_object_member_names(
+    const std::string_view document,
+    const std::string_view json_pointer,
+    const JsonDocumentLimits& limits) {
+    const JsonSelectionResult selection =
+        select_json_value(document, json_pointer, limits);
+    if (!selection.ok()) {
+        return {.error = selection.error, .names = {}};
+    }
+    if (selection.kind != JsonValueKind::object) {
+        return {.error = JsonSelectionError::value_not_found, .names = {}};
+    }
+
+    JsonNode root;
+    JsonDocumentParser parser(
+        selection.raw_json,
+        limits.max_nesting_depth,
+        limits.max_value_count);
+    if (!parser.parse(root) || root.kind != JsonValueKind::object) {
+        return {
+            .error = parser.value_count_exceeded()
+                ? JsonSelectionError::value_count_exceeded
+                : JsonSelectionError::invalid_json,
+            .names = {}};
+    }
+    return {.error = JsonSelectionError::none, .names = std::move(root.object_keys)};
+}
+
 std::string_view json_value_kind_name(const JsonValueKind kind) noexcept {
     switch (kind) {
     case JsonValueKind::null_value: return "null";
