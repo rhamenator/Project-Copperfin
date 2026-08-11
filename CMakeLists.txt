@@ -389,6 +389,7 @@ add_library(cf_xbase_runtime
     src/runtime/prg_engine_date_time_functions.cpp
     src/runtime/prg_engine_file_io_functions.cpp
     src/runtime/prg_engine.cpp
+    src/runtime/polyglot_runtime_host.cpp
     src/runtime/index_seek_optimizer.cpp
     src/runtime/prg_engine_helpers.cpp
     src/runtime/prg_engine_locale_code_page.cpp

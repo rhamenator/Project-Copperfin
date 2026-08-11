@@ -4692,6 +4692,12 @@ copperfin_add_test(test_polyglot_route_execution
     test_polyglot_route_execution.cpp
 )
 
+copperfin_add_test(test_polyglot_runtime_host
+    "cf_xbase_runtime;cf_security;cf_platform_profile;cf_platform_support"
+    test_polyglot_runtime_host.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_polyglot_interop_envelope cf_platform_profile
     test_polyglot_interop_envelope.cpp
 )
