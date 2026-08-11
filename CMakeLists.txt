@@ -272,25 +272,25 @@ set(COPPERFIN_SQLITE_CONNECTOR_SOURCE
 set(COPPERFIN_SQLITE_CONNECTOR_LIBRARY "")
 
 if(WIN32)
-    include(CheckCXXSourceCompiles)
-    set(CMAKE_REQUIRED_LIBRARIES winsqlite3)
-    check_cxx_source_compiles(
-        "#include <winsqlite3.h>\nint main() { return sqlite3_libversion_number() > 0 ? 0 : 1; }"
-        COPPERFIN_HAVE_WINSQLITE3)
-    unset(CMAKE_REQUIRED_LIBRARIES)
-    if(COPPERFIN_HAVE_WINSQLITE3)
-        set(COPPERFIN_SQLITE_CONNECTOR_AVAILABLE ON)
-        set(COPPERFIN_SQLITE_CONNECTOR_SOURCE
-            src/platform/sqlite_federation_connector.cpp)
-        set(COPPERFIN_SQLITE_CONNECTOR_LIBRARY winsqlite3)
-    endif()
+    # Copperfin's Windows baseline is Windows 10 or newer, where the Windows
+    # SDK and operating system provide winsqlite3.h and winsqlite3.lib.
+    # Compile/link diagnostics are clearer than a configure-time try_compile,
+    # whose SDK library discovery varies by Visual Studio generator.
+    set(COPPERFIN_SQLITE_CONNECTOR_AVAILABLE ON)
+    set(COPPERFIN_SQLITE_CONNECTOR_SOURCE
+        src/platform/sqlite_federation_connector.cpp)
+    set(COPPERFIN_SQLITE_CONNECTOR_LIBRARY winsqlite3)
 else()
     find_package(SQLite3 QUIET)
     if(SQLite3_FOUND)
         set(COPPERFIN_SQLITE_CONNECTOR_AVAILABLE ON)
         set(COPPERFIN_SQLITE_CONNECTOR_SOURCE
             src/platform/sqlite_federation_connector.cpp)
-        set(COPPERFIN_SQLITE_CONNECTOR_LIBRARY SQLite::SQLite3)
+        if(TARGET SQLite3::SQLite3)
+            set(COPPERFIN_SQLITE_CONNECTOR_LIBRARY SQLite3::SQLite3)
+        else()
+            set(COPPERFIN_SQLITE_CONNECTOR_LIBRARY SQLite::SQLite3)
+        endif()
     endif()
 endif()
 

@@ -360,9 +360,11 @@ SqliteFederationResult execute_sqlite_federation_plan_read_only(
 
     sqlite3_extended_result_codes(database.get(), 1);
     sqlite3_busy_timeout(database.get(), 0);
+#if !defined(SQLITE_OMIT_LOAD_EXTENSION)
     if (sqlite3_enable_load_extension(database.get(), 0) != SQLITE_OK) {
         return failure("federation.sqlite.extension_disable_failed");
     }
+#endif
 #if defined(SQLITE_DBCONFIG_DEFENSIVE)
     sqlite3_db_config(database.get(), SQLITE_DBCONFIG_DEFENSIVE, 1, nullptr);
 #endif
