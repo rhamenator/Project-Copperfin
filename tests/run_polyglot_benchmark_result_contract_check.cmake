@@ -1,0 +1,87 @@
+# Copyright © 2026 Richard M. Hamilton.
+# SPDX-License-Identifier: GPL-3.0-only
+# Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
+
+if(NOT DEFINED SOURCE_DIR OR "${SOURCE_DIR}" STREQUAL "")
+    message(FATAL_ERROR "SOURCE_DIR is required")
+endif()
+
+set(schema_path "${SOURCE_DIR}/docs/contracts/polyglot-benchmark-result-v1.schema.json")
+set(result_path "${SOURCE_DIR}/docs/contracts/polyglot-benchmark-result-v1.json")
+foreach(path IN ITEMS "${schema_path}" "${result_path}")
+    if(NOT EXISTS "${path}")
+        message(FATAL_ERROR "Polyglot benchmark contract fixture is missing: ${path}")
+    endif()
+endforeach()
+
+file(READ "${schema_path}" schema_json)
+file(READ "${result_path}" result_json)
+string(JSON schema_type ERROR_VARIABLE schema_error TYPE "${schema_json}")
+string(JSON result_type ERROR_VARIABLE result_error TYPE "${result_json}")
+if(schema_error OR NOT schema_type STREQUAL "OBJECT" OR
+   result_error OR NOT result_type STREQUAL "OBJECT")
+    message(FATAL_ERROR "Polyglot benchmark contract fixtures must be JSON objects")
+endif()
+
+string(JSON schema_version GET "${result_json}" schema_version)
+string(JSON result_kind GET "${result_json}" kind)
+string(JSON source_commit GET "${result_json}" source_commit)
+string(LENGTH "${source_commit}" source_commit_length)
+string(JSON measurement_count LENGTH "${result_json}" measurements)
+string(JSON promotion GET "${result_json}" recommendation automatic_promotion)
+if(NOT schema_version EQUAL 1 OR
+   NOT result_kind STREQUAL "copperfin-polyglot-benchmark-result" OR
+   NOT source_commit_length EQUAL 40 OR
+   NOT source_commit MATCHES "^[0-9a-f]+$" OR
+   NOT measurement_count EQUAL 3 OR promotion)
+    message(FATAL_ERROR "Polyglot benchmark result identity or promotion contract is invalid")
+endif()
+
+string(JSON policy_additional GET "${schema_json}" properties policy additionalProperties)
+string(JSON policy_required_count LENGTH "${schema_json}" properties policy required)
+string(JSON weights_additional GET "${schema_json}" properties policy properties weights additionalProperties)
+string(JSON weights_required_count LENGTH "${schema_json}" properties policy properties weights required)
+if(policy_additional OR NOT policy_required_count EQUAL 7 OR
+   weights_additional OR NOT weights_required_count EQUAL 4)
+    message(FATAL_ERROR "Polyglot benchmark policy schema must be closed and complete")
+endif()
+
+set(expected_policy_fields
+    minimum_sample_count
+    maximum_p95_latency_us
+    minimum_throughput_per_second
+    maximum_peak_memory_kib
+    maximum_p95_startup_ms
+    maximum_security_profile
+    weights)
+foreach(field IN LISTS expected_policy_fields)
+    string(JSON field_index ERROR_VARIABLE field_error
+        GET "${schema_json}" properties policy properties "${field}")
+    string(JSON policy_value_error ERROR_VARIABLE value_error
+        GET "${result_json}" policy "${field}")
+    if(field_error OR value_error)
+        message(FATAL_ERROR "Polyglot benchmark policy field is missing: ${field}")
+    endif()
+endforeach()
+
+set(expected_implementations direct-cpp cpp-dotnet-wrapper csharp-service)
+set(expected_memory_sources
+    route-specific-additional
+    candidate-self-reported-working-set
+    candidate-self-reported-working-set)
+foreach(index RANGE 0 2)
+    list(GET expected_implementations ${index} expected)
+    list(GET expected_memory_sources ${index} expected_memory_source)
+    string(JSON implementation GET "${result_json}" measurements ${index} implementation)
+    string(JSON memory_source GET "${result_json}" measurements ${index} peak_memory_source)
+    string(JSON samples GET "${result_json}" measurements ${index} sample_count)
+    string(JSON failures GET "${result_json}" measurements ${index} failure_count)
+    string(JSON mismatches GET "${result_json}" measurements ${index} parity_mismatch_count)
+    if(NOT implementation STREQUAL expected OR
+       NOT memory_source STREQUAL expected_memory_source OR
+       NOT samples EQUAL 9 OR NOT failures EQUAL 0 OR NOT mismatches EQUAL 0)
+        message(FATAL_ERROR "Polyglot benchmark evidence is incomplete for ${expected}")
+    endif()
+endforeach()
+
+message(STATUS "Polyglot benchmark result v1 schema and evidence passed")

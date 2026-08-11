@@ -48,6 +48,7 @@ internal static class Program
             try
             {
                 WriteSuccess(identity, checked(left + right));
+                WriteBenchmarkMetricsIfRequested();
             }
             catch (OverflowException)
             {
@@ -65,6 +66,17 @@ internal static class Program
             Console.Error.Write("polyglot candidate failed");
             return 3;
         }
+    }
+
+    private static void WriteBenchmarkMetricsIfRequested()
+    {
+        if (Environment.GetEnvironmentVariable(
+                "COPPERFIN_BENCHMARK_SELF_METRICS") != "1")
+        {
+            return;
+        }
+        var workingSetKiB = checked((Environment.WorkingSet + 1023L) / 1024L);
+        Console.Error.Write($"COPPERFIN_WORKING_SET_KIB={workingSetKiB}\n");
     }
 
     private static byte[]? ReadBoundedStandardInput()

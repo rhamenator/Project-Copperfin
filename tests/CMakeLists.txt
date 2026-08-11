@@ -4677,6 +4677,10 @@ copperfin_add_test(test_polyglot_route_impact cf_platform_profile
     test_polyglot_route_impact.cpp
 )
 
+copperfin_add_test(test_polyglot_benchmark cf_platform_profile
+    test_polyglot_benchmark.cpp
+)
+
 copperfin_add_test(test_polyglot_bridge_invocation cf_platform_profile
     test_polyglot_bridge_invocation.cpp
 )
@@ -4797,6 +4801,13 @@ add_test(
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_polyglot_route_contract_check.cmake
+)
+
+add_test(
+    NAME test_polyglot_benchmark_result_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_polyglot_benchmark_result_contract_check.cmake
 )
 
 add_executable(test_platform_environment

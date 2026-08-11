@@ -113,6 +113,7 @@ function(copperfin_configure_native_test_isolation)
 
     foreach(test_name IN ITEMS
             test_polyglot_bridge_invocation
+            test_polyglot_benchmark
             test_polyglot_interop_envelope
             test_polyglot_migration_telemetry
             test_polyglot_parity_comparator
@@ -202,6 +203,16 @@ function(copperfin_configure_native_test_isolation)
         AUDIT complete
     )
     copperfin_set_test_isolation(test_polyglot_route_contract
+        PARALLEL_SAFE
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+    copperfin_set_test_isolation(test_polyglot_benchmark_result_contract
         PARALLEL_SAFE
         FILESYSTEM read-only
         ENVIRONMENT none

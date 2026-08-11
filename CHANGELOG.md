@@ -7244,3 +7244,22 @@ passes `1/1`.
   Syft release `v1.50.0`; the checked workflow no longer depends on the
   action's stale implicit `v1.42.3` selection. The single CycloneDX artifact
   owner, read-only permissions, and Trivy gate remain unchanged.
+- 2026-08-11: Added the representative polyglot benchmark runner and versioned
+  evidence schema. Bounded warmup/measurement loops now aggregate nearest-rank
+  p95 latency/startup, throughput, peak process memory, failures, and exact
+  payload parity across direct C++, the admitted C++/.NET wrapper, and the local
+  Native AOT endpoint boundary. Recommendations remain advisory and cannot
+  modify the route registry or promote traffic. Independent review reproduced
+  that POSIX `wait4()` can seed a post-fork child's high-water mark with the
+  launcher's own pre-`exec` resident set, so generic POSIX process results now
+  mark peak memory unavailable instead of publishing a misleading value. The
+  controlled benchmark candidate self-reports its current cross-platform
+  working set through a strict opt-in metric channel, and aggregation retains
+  the maximum observed value; Windows retains its reliable Job Object peak.
+  Review also found that valid observations were rejected after cumulative
+  latency crossed the per-observation ceiling; accumulation now guards the
+  actual `uint64_t` boundary, with a 100-observation regression. Final review
+  found that the direct-C++ fixture had been an empty timing callback and that
+  the evidence schema left policy unconstrained. The direct route now strictly
+  parses, executes, serializes, and parity-checks the same signed-add workload,
+  while the schema and contract check require a closed policy and weights shape.

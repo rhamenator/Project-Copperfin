@@ -64,12 +64,12 @@ ineligible, the result is `polyglot.impact.no_eligible_route`,
 field retains its direct-C++/native default. Operators must keep the live route
 unchanged; insufficient evidence is not permission to promote.
 
-## Nonclaims And Remaining Work
+## Related Evidence
 
-This slice defines the decision contract and regression fixtures. It does not
-yet provide the representative workload runner or checked-in benchmark result
-documents required to close the broader routing-strategy acceptance criterion.
-It also does not replace artifact admission, parity comparison, route execution,
+The representative workload runner, result schema, capture procedure, and
+measurement limitations are defined in
+[`45-polyglot-benchmark-evidence.md`](45-polyglot-benchmark-evidence.md). Neither
+component replaces artifact admission, parity comparison, route execution,
 telemetry, signing, or human review. Those remain separate reviewed boundaries.
 
 ## Verification
