@@ -40,8 +40,8 @@ endif()
 set(expected_implementations direct-cpp cpp-dotnet-wrapper csharp-service)
 set(expected_memory_sources
     route-specific-additional
-    candidate-self-reported-peak-working-set
-    candidate-self-reported-peak-working-set)
+    candidate-self-reported-working-set
+    candidate-self-reported-working-set)
 foreach(index RANGE 0 2)
     list(GET expected_implementations ${index} expected)
     list(GET expected_memory_sources ${index} expected_memory_source)

@@ -47,13 +47,16 @@ forked child's high-water mark can already contain the launcher's copy-on-write
 resident set.
 
 For this controlled cross-platform benchmark, the Native AOT candidate receives
-an explicit opt-in environment flag and reports its own `PeakWorkingSet64` in
-KiB on the otherwise-unused diagnostic channel. The harness accepts only the
+an explicit opt-in environment flag and reports its own cross-platform
+`Environment.WorkingSet` in KiB on the otherwise-unused diagnostic channel.
+The harness accepts only the
 exact metric prefix, a positive base-10 integer, and one terminating newline;
 a missing or malformed metric fails that observation. Normal candidate calls
 do not emit the metric. The current direct C++ sample performs no route-specific
-allocation and therefore records zero additional KiB. These are route-impact
-figures, not total host memory or a universal language comparison.
+allocation and therefore records zero additional KiB. Aggregation records the
+maximum observed working set in the existing peak-memory policy field; it does
+not claim an OS lifetime high-water mark. These are route-impact figures, not
+total host memory or a universal language comparison.
 
 ## Representative Workload
 
@@ -72,7 +75,7 @@ versioned schema in `docs/contracts/polyglot-benchmark-result-v1.schema.json`.
 Timing values are host-specific observations and must not be generalized.
 
 The checked-in corrected result was captured from exact signed source commit
-`deaa815ef1ccf74836676654d4108689d6422c8a` on Linux x86_64. All 27 measured
+`2ca80ab39135185b67f81b470ab500cf2c4d6a58` on Linux x86_64. All 27 measured
 executions completed with exact parity and no failures. The host-specific
 advisory order was direct C++, local C# endpoint boundary, then the full
 C++/.NET wrapper. Each measurement records its memory source so a consumer

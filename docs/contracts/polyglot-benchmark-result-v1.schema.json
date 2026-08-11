@@ -57,7 +57,7 @@
           "peak_memory_source": {
             "enum": [
               "route-specific-additional",
-              "candidate-self-reported-peak-working-set",
+              "candidate-self-reported-working-set",
               "windows-owned-job"
             ]
           },
