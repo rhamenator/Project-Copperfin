@@ -1,5 +1,27 @@
 # Agent Handoff
 
+## Contributor template and Discussion-form readiness
+
+PR #4944 replaces the single traceability-heavy pull-request template with two
+selectable paths: an ordinary contribution template and the preserved
+requirements-recovery/safety template. Both retain the licensing, DCO,
+provenance, localization, and limitation boundaries. Structured Q&A and Ideas
+forms now match the repository's live Discussion categories, while the
+repository-community contract requires both PR templates and both forms and
+checks their critical fields. No product, runtime, package, installer, VSIX,
+VFP9, localization-catalog, xAsset, report/label, IDE, stack, or platform
+behavior changed, and the immutable RC2 tag and artifacts remain untouched.
+
+The corrected exact head `3316bd0b7` passed the direct CMake community
+contract, YAML parsing, diff validation, DCO, and all 17 hosted checks. Linux
+Native run `31472118216` and macOS Native run `31472118302` each pass all
+`323/323` tests; Windows Native run `31472118222` passes all `322/322` tests.
+The same head also passes hosted installers on Linux, macOS, and Windows,
+Windows environment paths, Win32/x64 DECLARE, VSIX, managed UI, executable
+paths, and CVE/SBOM checks. Guarded rebase merge `104780d2b` on `main` has
+exact tree `19c17b17543f42056064110824948416d8c08824`, identical to the reviewed
+head tree.
+
 ## Current State
 
 #4907 now has a complete private-evaluation RC artifact lane without weakening
