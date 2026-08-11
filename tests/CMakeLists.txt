@@ -4698,6 +4698,73 @@ copperfin_add_test(test_polyglot_runtime_host
     prg_engine_test_support.cpp
 )
 
+set(COPPERFIN_POLYGLOT_DOTNET_RID "")
+if(DOTNET_EXECUTABLE)
+    string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" COPPERFIN_SYSTEM_PROCESSOR_LOWER)
+    if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+        if(COPPERFIN_SYSTEM_PROCESSOR_LOWER MATCHES "arm64|aarch64")
+            set(COPPERFIN_POLYGLOT_DOTNET_RID "win-arm64")
+        else()
+            set(COPPERFIN_POLYGLOT_DOTNET_RID "win-x64")
+        endif()
+    elseif(APPLE)
+        if(COPPERFIN_SYSTEM_PROCESSOR_LOWER MATCHES "arm64|aarch64")
+            set(COPPERFIN_POLYGLOT_DOTNET_RID "osx-arm64")
+        else()
+            set(COPPERFIN_POLYGLOT_DOTNET_RID "osx-x64")
+        endif()
+    elseif(UNIX)
+        if(COPPERFIN_SYSTEM_PROCESSOR_LOWER MATCHES "arm64|aarch64")
+            set(COPPERFIN_POLYGLOT_DOTNET_RID "linux-arm64")
+        elseif(COPPERFIN_SYSTEM_PROCESSOR_LOWER MATCHES "x86_64|amd64")
+            set(COPPERFIN_POLYGLOT_DOTNET_RID "linux-x64")
+        endif()
+    endif()
+endif()
+
+if(NOT COPPERFIN_POLYGLOT_DOTNET_RID STREQUAL "")
+    set(COPPERFIN_POLYGLOT_DOTNET_PUBLISH_DIR
+        "${CMAKE_CURRENT_BINARY_DIR}/polyglot-dotnet-candidate")
+    set(COPPERFIN_POLYGLOT_DOTNET_CANDIDATE_PATH
+        "${COPPERFIN_POLYGLOT_DOTNET_PUBLISH_DIR}/Copperfin.PolyglotCandidate${CMAKE_EXECUTABLE_SUFFIX}")
+    add_custom_command(
+        OUTPUT "${COPPERFIN_POLYGLOT_DOTNET_CANDIDATE_PATH}"
+        COMMAND "${CMAKE_COMMAND}" -E rm -rf
+            "${COPPERFIN_POLYGLOT_DOTNET_PUBLISH_DIR}"
+        COMMAND "${DOTNET_EXECUTABLE}" publish
+            "${CMAKE_SOURCE_DIR}/samples/polyglot-dotnet-candidate/Copperfin.PolyglotCandidate.csproj"
+            --configuration Release
+            --runtime "${COPPERFIN_POLYGLOT_DOTNET_RID}"
+            --self-contained true
+            --output "${COPPERFIN_POLYGLOT_DOTNET_PUBLISH_DIR}"
+            --nologo
+            -v minimal
+            -p:UseSharedCompilation=false
+        DEPENDS
+            "${CMAKE_SOURCE_DIR}/samples/polyglot-dotnet-candidate/Copperfin.PolyglotCandidate.csproj"
+            "${CMAKE_SOURCE_DIR}/samples/polyglot-dotnet-candidate/Program.cs"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMENT "Publishing the self-contained Native AOT .NET polyglot candidate"
+        VERBATIM
+    )
+    add_custom_target(copperfin_polyglot_dotnet_candidate
+        DEPENDS "${COPPERFIN_POLYGLOT_DOTNET_CANDIDATE_PATH}"
+    )
+    copperfin_add_test(test_polyglot_dotnet_candidate
+        "cf_xbase_runtime;cf_security;cf_platform_profile;cf_platform_support"
+        test_polyglot_dotnet_candidate.cpp
+        prg_engine_test_support.cpp
+    )
+    add_dependencies(
+        test_polyglot_dotnet_candidate
+        copperfin_polyglot_dotnet_candidate
+    )
+    target_compile_definitions(test_polyglot_dotnet_candidate PRIVATE
+        COPPERFIN_POLYGLOT_DOTNET_CANDIDATE_PATH="${COPPERFIN_POLYGLOT_DOTNET_CANDIDATE_PATH}"
+    )
+    set_tests_properties(test_polyglot_dotnet_candidate PROPERTIES TIMEOUT 30)
+endif()
+
 copperfin_add_test(test_polyglot_interop_envelope cf_platform_profile
     test_polyglot_interop_envelope.cpp
 )
