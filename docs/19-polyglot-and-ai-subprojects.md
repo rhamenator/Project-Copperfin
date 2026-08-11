@@ -304,6 +304,15 @@ candidate `b66e6085f` passes Linux Native `31453166584` and macOS Native
 focused regression on every host, the macOS locale matrix at `8/8`, and all
 eight candidate-head protected checks without a blocking result.
 
+Native payload bytes cross from this host into the PRG result only when the
+native callback reports success. A failed native-authoritative result retains
+its status, reason, authority, selection, invocation counts, and fallback
+evidence while publishing an empty payload, matching the existing candidate
+failure behavior. Focused coverage supplies nonempty synthetic native-failure
+bytes, and a mutation check confirms the former unconditional copy fails that
+regression. No current native invoker was known to populate failure payloads;
+the guard is fail-closed preparation for future adapters.
+
 The host does not discover artifacts or language runtimes, authorize inline
 foreign source, retry, promote routes, invoke a second artifact, introduce a
 task model, or permit a foreign worker to enter mutable PRG state. Artifact

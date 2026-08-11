@@ -127,7 +127,8 @@ RuntimePolyglotDispatchResult map_result(
         .candidate_invocation_count = source.candidate_invocation_count,
         .native_fallback_executed = source.native_fallback_executed,
         .payload_json = {}};
-    if (source.authority == PolyglotRouteResultAuthority::native) {
+    if (source.authority == PolyglotRouteResultAuthority::native &&
+        source.native.success) {
         result.payload_json = source.native.payload;
     } else if (source.authority == PolyglotRouteResultAuthority::candidate &&
                source.candidate.response.ok()) {

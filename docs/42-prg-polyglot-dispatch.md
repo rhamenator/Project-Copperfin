@@ -169,6 +169,15 @@ candidate `b66e6085f` passes Linux Native `31453166584` and macOS Native
 focused regression on every host, the macOS locale matrix at `8/8`, and all
 eight candidate-head protected checks without a blocking result.
 
+Follow-up review identified a latent native-failure mapping asymmetry. The host
+now copies native-authoritative payload bytes into the PRG evidence document
+only when `PolyglotNativeInvocationResult::success` is true. Failed native work
+retains its canonical status, reason, authority, route selection, invocation
+counts, and fallback flag but exposes an empty payload, matching the existing
+candidate-failure rule. The focused regression supplies nonempty synthetic
+failure bytes; restoring the former unconditional copy makes that exact check
+fail. No current native callback was known to populate failure payloads.
+
 This PRG integration itself adds no language-specific runtime,
 discovery/install, inline foreign source, retry, second artifact, new task
 lifecycle, mutable PRG callback, or atomic handle-bound launch. The separate
