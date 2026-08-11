@@ -33,8 +33,9 @@ enum class PolyglotRouteResultAuthority : std::uint8_t {
 struct PolyglotNativeInvocationResult {
     bool success = false;
     std::string error_code;
-    // Opaque caller-owned result bytes. The coordinator does not parse or
-    // reinterpret native runtime state.
+    // Opaque caller-owned success bytes. The coordinator does not parse or
+    // reinterpret native runtime state, and downstream boundaries must not
+    // publish these bytes when success is false.
     std::string payload;
 };
 

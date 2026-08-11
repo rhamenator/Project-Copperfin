@@ -502,6 +502,14 @@ candidate `b66e6085f` passes Linux Native `31453166584` and macOS Native
 `31453166506` at `336/336`, Windows Native `31453166516` at `335/335`, the
 focused regression on every host, the macOS locale matrix at `8/8`, and all
 eight candidate-head protected checks without a blocking result.
+Follow-up review found that the runtime-host mapper gated candidate payloads on
+success but copied native-authoritative payload bytes even when the native
+callback reported failure. The fail-closed correction now requires native
+success before publishing those bytes while retaining the existing failure
+status, error, authority, route, counts, and fallback evidence. A focused
+regression supplies nonempty synthetic failure bytes and a mutation check proves
+the guard is load-bearing; no current native callback was known to exercise the
+latent path.
 Language-specific hosting, discovery,
 retry, second-artifact fallback, and atomic handle-bound launch remain separate.
 

@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 native-failure payload fail-closed correction
+
+Review of the trusted polyglot runtime-host composition found a latent mapping
+asymmetry: candidate payloads crossed into `RuntimePolyglotDispatchResult` only
+after a successful response, while native-authoritative payload bytes were
+copied without checking `PolyglotNativeInvocationResult::success`. No current
+native invoker populated failure payloads, but a future adapter could otherwise
+have exposed caller-controlled failure bytes through the ordinary PRG evidence
+document.
+
+`map_result()` now publishes native payload bytes only when native authority and
+native success are both true. The native result contract identifies the field
+as success bytes and forbids downstream publication on failure. The focused
+runtime-host regression returns a failed native result with a nonempty
+synthetic payload and proves that status, error, authority, selection, counts,
+and fallback evidence are retained while `payload_json` is empty. A mutation
+check restoring the old unconditional copy fails that exact assertion. This
+changes no route, status, reason, telemetry, localization, process, package,
+debug, or successful-payload contract.
+
 ## V1 .NET polyglot leaf-candidate implementation
 
 The current #4700/#91 slice supplies the first real language target over the

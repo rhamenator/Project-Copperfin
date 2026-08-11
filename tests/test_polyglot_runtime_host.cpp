@@ -395,6 +395,27 @@ void test_fallback_error_and_correlation_identity(
         !failed.native_fallback_executed,
         "fail-fast should preserve the existing candidate error identity and counts");
 
+    auto failed_native_config = configuration(admission, root, "off");
+    failed_native_config.capabilities.front().invoke_native = []() {
+        return PolyglotNativeInvocationResult{
+            false,
+            "native.synthetic.failure",
+            R"json({"sensitive":"must-not-cross-runtime-boundary"})json"};
+    };
+    auto failed_native = PolyglotRuntimeHost::create(
+        std::move(failed_native_config));
+    const auto native_failure = dispatch_once(failed_native.host);
+    expect_local(
+        native_failure.status == RuntimePolyglotDispatchStatus::native_failed &&
+        native_failure.error_code == "native.synthetic.failure" &&
+        native_failure.selection == RuntimePolyglotDispatchSelection::native &&
+        native_failure.authority == RuntimePolyglotDispatchAuthority::native &&
+        native_failure.native_invocation_count == 1U &&
+        native_failure.candidate_invocation_count == 0U &&
+        !native_failure.native_fallback_executed &&
+        native_failure.payload_json.empty(),
+        "failed native work must preserve evidence without exposing payload bytes");
+
     auto fallback = PolyglotRuntimeHost::create(configuration(
         admission, root, "on", "--host-error", 0U,
         PolyglotFallbackPolicy::fallback_native));

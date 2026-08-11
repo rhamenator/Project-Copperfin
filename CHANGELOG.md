@@ -1,3 +1,14 @@
+- 2026-08-11: Hardened the trusted polyglot runtime-host result boundary after
+  review found a latent native-failure asymmetry. Native-authoritative success
+  still publishes its opaque payload, but a failed native callback can no
+  longer place caller-supplied bytes in the PRG-visible payload field. Status,
+  error identity, authority, route selection, invocation counts, and fallback
+  evidence remain unchanged. A focused regression supplies nonempty synthetic
+  failure bytes and requires an empty mapped payload; temporarily restoring the
+  old unconditional copy makes that exact assertion fail. No current native
+  callback was known to populate failure payloads, so this is a fail-closed
+  defense before future native adapters make the latent path reachable.
+
 - 2026-08-11: Added the first real cross-platform language target for the
   artifact-first polyglot bridge. The checked-in C# sample publishes with the
   .NET 10 SDK as one self-contained Native AOT executable for supported
