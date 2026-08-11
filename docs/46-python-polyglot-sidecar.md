@@ -64,6 +64,13 @@ argument or modifying the admitted script prevents Python from starting and
 revokes the changed supporting token. Adapter, route-execution, runtime-host,
 and isolation tests cover the adjacent contracts.
 
+At exact implementation head `648c02b1b`, hosted Generated Launcher Validation
+run `31509182243` passes the Python target on Windows, Ubuntu, and macOS.
+Windows DECLARE ABI run `31509182280`, Windows Environment and Executable Path
+Validation run `31509182221`, and GCC/Clang Executable Path Validation run
+`31509182231` also pass. Together with DCO and both package-security checks,
+all eleven protected pull-request checks are green.
+
 ## Remaining H3 work
 
 This slice does not implement R, general Python environments or dependency
