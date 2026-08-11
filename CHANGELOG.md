@@ -11,8 +11,10 @@
   fail-fast/native fallback, both cancellation policies, concurrent calls,
   lifetime, bounds/redaction, fail-closed configuration, direct session use,
   and marker-synchronized `CFTASKCANCEL()` propagation to a bounded candidate.
-  Local GCC Release focused and adjacent tests pass `6/6`; hosted platform and
-  protected evidence remain pending. No language runtime, discovery/install,
+  Local GCC Release focused and adjacent tests pass `6/6`, the focused target
+  repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection, and focused
+  static analysis is clean; hosted platform and protected evidence remain
+  pending. No language runtime, discovery/install,
   inline foreign source, retry, second artifact, new task lifecycle, mutable
   PRG callback, atomic handle-bound launch, stub, or no-op was added.
 

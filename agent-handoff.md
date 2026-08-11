@@ -32,9 +32,11 @@ the read-only probe. Local GCC Release builds the new and adjacent targets;
 `test_polyglot_runtime_host`, `test_polyglot_route_execution`, and
 `test_prg_engine_polyglot_dispatch`, `test_polyglot_contract`,
 `test_native_test_isolation_contract`, and
-`test_security_supply_chain_workflow_contract` pass `6/6`. Hosted
-Linux, macOS, Windows, sanitizer/static-analysis, and protected-check evidence
-remain required before merge.
+`test_security_supply_chain_workflow_contract` pass `6/6`; the focused target
+also repeats `20/20`. Clang 21 ASan/UBSan passes the focused test with leak
+detection enabled, and focused `clang-tidy` reports no diagnostics. Hosted
+Linux, macOS, Windows, and protected-check evidence remain required before
+merge.
 
 This seam does not discover, download, install, or select a language runtime;
 allow inline foreign source; retry; invoke a second artifact; create a task
