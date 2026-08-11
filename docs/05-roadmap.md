@@ -544,7 +544,11 @@ startup before ranking eligible routes with integer weighted scores. The
 result contains a stable preferred route and measured fallback chain but cannot
 change the live registry or promote traffic; invalid or insufficient evidence
 retains native/no-promotion behavior. This advances the measured-routing and
-fallback acceptance without claiming it complete: a representative workload
+fallback acceptance without claiming it complete. Exact signed product/test
+head `2f21378eb` passes Linux Native `31477286106` and macOS Native
+`31477287811` at `338/338`, Windows Native `31477289323` at `337/337`, the
+focused route-impact and isolation contracts on every host, the macOS locale
+matrix at `8/8`, and all eleven PR-triggered checks. A representative workload
 runner and checked-in benchmark evidence remain open.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate

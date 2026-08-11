@@ -373,8 +373,11 @@ loading, and broader language adapters remain absent.
 The route-impact boundary can deterministically reject or rank already-captured
 direct-C++, C++/.NET-wrapper, and C#-service evidence and emit a measured
 fallback order. It is deliberately unable to execute benchmarks or promote a
-route. A representative workload runner and checked-in benchmark results remain
-open before the routing-strategy criterion can close.
+route. Exact signed product/test head `2f21378eb` passes the complete native
+matrices on Linux (`338/338`), macOS (`338/338` plus `8/8` locale checks), and
+Windows (`337/337`), including the focused route-impact and isolation contracts
+on every host. A representative workload runner and checked-in benchmark
+results remain open before the routing-strategy criterion can close.
 
 **What it will take:** none of the four named native execution/marshaling
 modules exist yet. What exists today, per `docs/28-repository-ontology.md` §3, is
