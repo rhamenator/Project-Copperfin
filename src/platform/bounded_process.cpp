@@ -31,7 +31,6 @@
 #include <csignal>
 #include <fcntl.h>
 #include <pthread.h>
-#include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -52,6 +51,7 @@ void capture_windows_peak_memory(
     if (::QueryInformationJobObject(
             job, JobObjectExtendedLimitInformation, &information,
             sizeof(information), nullptr) != FALSE) {
+        result.peak_memory_available = true;
         result.peak_memory_kib = static_cast<std::uint64_t>(
             (information.PeakJobMemoryUsed + 1023U) / 1024U);
     }
@@ -821,19 +821,6 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
 
 #else
 
-void capture_posix_peak_memory(
-    const struct rusage& usage,
-    BoundedProcessResult& result) noexcept {
-#if defined(__APPLE__)
-    const std::uint64_t bytes = usage.ru_maxrss <= 0
-        ? 0U : static_cast<std::uint64_t>(usage.ru_maxrss);
-    result.peak_memory_kib = (bytes + 1023U) / 1024U;
-#else
-    result.peak_memory_kib = usage.ru_maxrss <= 0
-        ? 0U : static_cast<std::uint64_t>(usage.ru_maxrss);
-#endif
-}
-
 bool write_child_error(const int descriptor, const int child_error) {
     const auto* bytes = reinterpret_cast<const std::uint8_t*>(&child_error);
     std::size_t written = 0U;
@@ -1309,10 +1296,8 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
 
     int status = 0;
     for (;;) {
-        struct rusage usage{};
-        const pid_t waited = ::wait4(process_id, &status, WNOHANG, &usage);
+        const pid_t waited = ::waitpid(process_id, &status, WNOHANG);
         if (waited == process_id) {
-            capture_posix_peak_memory(usage, result);
             result.status = BoundedProcessStatus::exited;
             result.error_code = "polyglot.process.exited";
             if (WIFEXITED(status)) {

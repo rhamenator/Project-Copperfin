@@ -157,7 +157,9 @@ PolyglotBenchmarkResult run_polyglot_benchmark(
                     const auto observation = request.invoke({
                         route.implementation, &workload, iteration, false});
                     if (!valid_observation(observation) ||
-                        total_latency > kMaximumMetricValue - observation.latency_us) {
+                        total_latency >
+                            std::numeric_limits<std::uint64_t>::max() -
+                                observation.latency_us) {
                         return reject(
                             PolyglotBenchmarkError::invalid_observation,
                             "polyglot.benchmark.invalid_observation");

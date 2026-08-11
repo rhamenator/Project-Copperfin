@@ -280,8 +280,13 @@ int run_tests(const std::filesystem::path& executable) {
         .cancellation_requested = {}});
     expect(exited.completed() && exited.started && exited.exit_code == 37,
            "#4700: direct invocation should preserve the candidate exit code");
-    expect(exited.peak_memory_kib > 0U,
-           "#4700: a completed child should report peak resident memory");
+#if defined(_WIN32)
+    expect(exited.peak_memory_available && exited.peak_memory_kib > 0U,
+           "#4700: a Windows owned job should report peak resident memory");
+#else
+    expect(!exited.peak_memory_available && exited.peak_memory_kib == 0U,
+           "#4700: POSIX must not expose fork-seeded wait4 memory as child memory");
+#endif
     expect(exited.process_tree_closed && exited.error_code == "polyglot.process.exited",
            "#4700: normal completion should close the owned process tree");
     expect(exited.standard_output.empty() && exited.standard_error.empty(),

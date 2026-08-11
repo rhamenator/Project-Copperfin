@@ -7249,4 +7249,12 @@ passes `1/1`.
   p95 latency/startup, throughput, peak process memory, failures, and exact
   payload parity across direct C++, the admitted C++/.NET wrapper, and the local
   Native AOT endpoint boundary. Recommendations remain advisory and cannot
-  modify the route registry or promote traffic.
+  modify the route registry or promote traffic. Independent review reproduced
+  that POSIX `wait4()` can seed a post-fork child's high-water mark with the
+  launcher's own pre-`exec` resident set, so generic POSIX process results now
+  mark peak memory unavailable instead of publishing a misleading value. The
+  controlled benchmark candidate self-reports its own peak working set through
+  a strict opt-in metric channel; Windows retains its reliable Job Object peak.
+  Review also found that valid observations were rejected after cumulative
+  latency crossed the per-observation ceiling; accumulation now guards the
+  actual `uint64_t` boundary, with a 100-observation regression.

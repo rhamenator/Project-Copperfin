@@ -10,12 +10,15 @@
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
+#include <charconv>
 #include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #if defined(_WIN32)
@@ -149,6 +152,25 @@ std::uint64_t elapsed_microseconds(
     return static_cast<std::uint64_t>(std::max<std::int64_t>(1, value));
 }
 
+std::optional<std::uint64_t> parse_self_reported_peak_memory(
+    const std::string_view document) {
+    constexpr std::string_view prefix = "COPPERFIN_PEAK_MEMORY_KIB=";
+    if (!document.starts_with(prefix) || document.size() <= prefix.size() + 1U ||
+        document.back() != '\n') {
+        return std::nullopt;
+    }
+    const std::string_view digits = document.substr(
+        prefix.size(), document.size() - prefix.size() - 1U);
+    std::uint64_t value = 0U;
+    const auto parsed = std::from_chars(
+        digits.data(), digits.data() + digits.size(), value);
+    if (parsed.ec != std::errc{} || parsed.ptr != digits.data() + digits.size() ||
+        value == 0U) {
+        return std::nullopt;
+    }
+    return value;
+}
+
 void test_representative_benchmark(
     PolyglotArtifactAdmissionResult& admission,
     const PublishedCandidate& published) {
@@ -188,15 +210,19 @@ void test_representative_benchmark(
 
         auto candidate = candidate_request(invocation);
         candidate.working_directory = utf8_path(published.root);
+        candidate.environment = {{"COPPERFIN_BENCHMARK_SELF_METRICS", "1"}};
         if (invocation.implementation ==
             PolyglotRouteImplementation::cpp_dotnet_wrapper) {
             const auto result = invoke_polyglot_artifact(admission, candidate);
+            const auto peak_memory = parse_self_reported_peak_memory(
+                result.process.standard_error);
             return PolyglotBenchmarkObservation{
-                result.ok(),
-                result.ok() && result.response.envelope.payload_json ==
+                result.ok() && peak_memory.has_value(),
+                result.ok() && peak_memory.has_value() &&
+                    result.response.envelope.payload_json ==
                     invocation.workload->expected_payload_json,
                 elapsed_microseconds(started),
-                result.process.peak_memory_kib,
+                peak_memory.value_or(0U),
                 result.process.elapsed_ms};
         }
 
@@ -210,7 +236,7 @@ void test_representative_benchmark(
             .executable_path = utf8_path(published.executable),
             .arguments = {},
             .working_directory = utf8_path(published.root),
-            .environment = {},
+            .environment = candidate.environment,
             .standard_input = serialized.document,
             .timeout_ms = 5000U,
             .poll_interval_ms = 1U,
@@ -224,12 +250,15 @@ void test_representative_benchmark(
              protocol_version, 64U * 1024U, 32U});
         const bool succeeded = process.completed() && process.exit_code == 0 &&
             process.process_tree_closed && parsed.ok();
+        const auto peak_memory = parse_self_reported_peak_memory(
+            process.standard_error);
         return PolyglotBenchmarkObservation{
-            succeeded,
-            succeeded && parsed.envelope.payload_json ==
+            succeeded && peak_memory.has_value(),
+            succeeded && peak_memory.has_value() &&
+                parsed.envelope.payload_json ==
                 invocation.workload->expected_payload_json,
             elapsed_microseconds(started),
-            process.peak_memory_kib,
+            peak_memory.value_or(0U),
             process.elapsed_ms};
     };
 

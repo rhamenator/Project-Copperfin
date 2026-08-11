@@ -39,13 +39,21 @@ the existing migration workflow.
 
 ## Memory Semantics
 
-The bounded-process result reports peak resident memory for the owned root
-process on POSIX and the owned job, including descendants, on Windows. macOS
-byte units are normalized to KiB; Linux `ru_maxrss` is already KiB. The current
-direct C++ sample performs no route-specific allocation and therefore records
-zero additional KiB. External routes report their measured process footprint.
-This is a route-impact measure, not total host memory or a universal language
-comparison.
+Windows bounded-process results expose a peak only when the owned Job Object
+query succeeds; that value includes descendants. Generic POSIX bounded-process
+results deliberately mark peak memory unavailable and leave the value zero.
+`wait4()` cannot supply a trustworthy post-`exec` child peak because the
+forked child's high-water mark can already contain the launcher's copy-on-write
+resident set.
+
+For this controlled cross-platform benchmark, the Native AOT candidate receives
+an explicit opt-in environment flag and reports its own `PeakWorkingSet64` in
+KiB on the otherwise-unused diagnostic channel. The harness accepts only the
+exact metric prefix, a positive base-10 integer, and one terminating newline;
+a missing or malformed metric fails that observation. Normal candidate calls
+do not emit the metric. The current direct C++ sample performs no route-specific
+allocation and therefore records zero additional KiB. These are route-impact
+figures, not total host memory or a universal language comparison.
 
 ## Representative Workload
 

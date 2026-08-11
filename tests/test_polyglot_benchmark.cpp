@@ -100,6 +100,24 @@ void test_failures_and_parity_are_hard_gates() {
            "each measured failed or mismatched observation should be counted");
 }
 
+void test_cumulative_latency_uses_the_uint64_bound() {
+    auto input = request();
+    input.warmup_iterations = 0U;
+    input.measured_iterations = 100U;
+    input.workloads.resize(1U);
+    input.routes[1].runtime_available = false;
+    input.invoke = [](const PolyglotBenchmarkInvocation&) {
+        return PolyglotBenchmarkObservation{
+            true, true, 20'000'000'000ULL, 1000U, 1U};
+    };
+    const auto result = run_polyglot_benchmark(input);
+    expect(result.error == PolyglotBenchmarkError::none &&
+               result.measurements[0].sample_count == 100U &&
+               result.measurements[0].p95_latency_us == 20'000'000'000ULL &&
+               result.measurements[0].throughput_per_second == 1U,
+           "valid per-observation latencies may cumulatively exceed the metric ceiling");
+}
+
 void test_invalid_inputs_fail_before_callback() {
     auto input = request();
     std::size_t calls = 0U;
@@ -154,6 +172,7 @@ void test_invalid_inputs_fail_before_callback() {
 int main() {
     test_bounded_aggregation_and_unavailable_route();
     test_failures_and_parity_are_hard_gates();
+    test_cumulative_latency_uses_the_uint64_bound();
     test_invalid_inputs_fail_before_callback();
     std::cout << "polyglot benchmark tests passed\n";
     return 0;
