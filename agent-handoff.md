@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 read-only SQLite federation execution
+
+The current H1 increment connects the deterministic SQLite translator/planner
+to one real local database. Execution is opt-in through
+`--federation-execute-read-only true`, requires an explicit target and the
+existing `project.open` permission, returns typed schema-v1 JSON, and emits a
+content-free audit event. Planning remains the default. The connector opens
+read-only, denies mutation/PRAGMA/multiple statements/extensions/attachments,
+and enforces file, SQL, row, column, cell, result, and VM-step limits.
+
+Focused GCC Release connector, runtime-host process, localization, and workflow
+contract tests pass locally. The generated-launcher workflow requires and runs
+the real connector on Windows, Linux, and macOS. Hosted evidence and independent
+review remain outstanding. Other relational providers, provider sessions,
+remote cursors, mutation/transactions, and non-relational execution are not
+claimed. See `docs/49-read-only-sqlite-federation-execution.md`.
+
 ## V1 read-only MCP DBF-header host
 
 The current H3 increment adds `copperfin_mcp_host`, an installed portable local
@@ -4623,3 +4640,19 @@ The reviewer did not repeat hosted Windows/macOS execution, run TSan on the
 single-threaded host, or re-review the unchanged DBF parser. The broader MCP
 interoperability criterion remains open for future separately authorized tools
 and provider/mutable-runtime integration; this narrow product slice is ready.
+
+# 2026-08-11 Read-only SQLite federation execution evidence
+
+PR #4953 exact signed/DCO implementation head `8aa8d514f` has all eleven
+protected checks green. Generated Launcher Validation `31535000120` built,
+linked, and ran the real SQLite connector and runtime-host tests on Windows,
+Ubuntu, and macOS. The Windows job specifically proved the headerless SDK
+compatibility declarations against the OS `winsqlite3` library. Independent
+Linux review rebuilt the exact head with ASan/UBSan, exercised authorizer,
+statement-read-only, resource, RBAC, audit, output, symlink, and path-identity
+boundaries, cross-checked the Windows declarations, and found no defect. The
+reviewer did not compile that Windows-only path locally; hosted Windows supplied
+the direct evidence. A scratch race probe confirmed that permanent target
+replacement is rejected and that the already documented same-identity ABA
+limitation is real. Other relational providers, sessions/cursors, mutation,
+transactions, and non-relational execution remain separate H1 scope.

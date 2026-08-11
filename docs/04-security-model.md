@@ -62,6 +62,13 @@ does not; `runtime-operator` does). Its only tool accepts fixed-size
 caller-supplied hexadecimal bytes, has no caller-file or network adapter, and
 emits content-free tool identity/outcome audit events on stderr.
 
+Current federation baseline: live execution is explicit, limited to one local
+read-only SQLite file, and requires `project.open`. The connector denies
+mutation, PRAGMA, multiple statements, attachments, extension/file helpers,
+URI targets, and unbounded work/results; it checks physical identity before and
+after execution and emits content-free outcome audit events. Planning remains
+the default and other provider/session/credential surfaces are not implied.
+
 ## Security Boundaries
 
 ### Runtime Boundary

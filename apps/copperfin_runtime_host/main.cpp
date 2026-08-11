@@ -8,6 +8,7 @@
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/executable_path.h"
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/sqlite_federation_connector.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/platform/federation_execution.h"
@@ -2149,6 +2150,7 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
         {"federationBackendValue", "<sqlite|postgresql|sqlserver|oracle>"},
         {"federationQueryOption", "--federation-query"},
         {"federationQueryValue", "<fox-sql>"},
+        {"federationReadOnlyExecuteOption", "--federation-execute-read-only"},
         {"federationTargetOption", "--federation-target"},
         {"federationTargetValue", "<name>"},
         {"manifestOption", "--manifest"},
@@ -2160,6 +2162,7 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
     std::cout << catalog.translate("RuntimeHost.Usage.Manifest", invariant_tokens) << "\n";
     std::cout << catalog.translate("RuntimeHost.Usage.Federation", invariant_tokens) << "\n";
     std::cout << catalog.translate("RuntimeHost.Usage.FederationPlanning", invariant_tokens) << "\n";
+    std::cout << catalog.translate("RuntimeHost.Usage.FederationExecution", invariant_tokens) << "\n";
 }
 
 std::optional<copperfin::runtime::RuntimeBreakpoint> parse_breakpoint(const std::string& value, const std::string& startup_source) {
@@ -3094,6 +3097,8 @@ int run_runtime_host_main_impl(int argc, char** argv) {
     bool federation_planning_enable = false;
     bool federation_planning_require = false;
     bool federation_policy_audit = true;
+    bool federation_execute_read_only = false;
+    bool federation_execute_option_seen = false;
     bool debug_mode = false;
     bool debug_stop_on_entry = false;
     bool debug_server_mode = false;
@@ -3126,6 +3131,17 @@ int run_runtime_host_main_impl(int argc, char** argv) {
             federation_query = argv[++index];
         } else if (arg == "--federation-target" && (index + 1) < argc) {
             federation_target = argv[++index];
+        } else if (arg == "--federation-execute-read-only" && (index + 1) < argc) {
+            federation_execute_option_seen = true;
+            const std::string token = argv[++index];
+            if (!parse_cli_bool_token(token, federation_execute_read_only)) {
+                std::cout << "status: error\n";
+                print_error_line(
+                    catalog,
+                    runtime_host_parse_boolean_value_required(catalog, "--federation-execute-read-only"));
+                print_usage(catalog);
+                return 2;
+            }
         } else if (arg == "--federation-planning-enable" && (index + 1) < argc) {
             const std::string token = argv[++index];
             if (!parse_cli_bool_token(token, federation_planning_enable)) {
@@ -3212,7 +3228,8 @@ int run_runtime_host_main_impl(int argc, char** argv) {
     }
 
     const bool federation_mode_requested =
-        !trim_copy(federation_backend).empty() || !trim_copy(federation_query).empty();
+        !trim_copy(federation_backend).empty() || !trim_copy(federation_query).empty() ||
+        federation_execute_option_seen;
     if (federation_mode_requested && runtime_bridge_mode_requested(bridge_options)) {
         std::cout << "status: error\n";
         print_error_line(catalog, localized_message(catalog, "RuntimeHost.Error.BridgeFederationModeConflict"));
@@ -3278,6 +3295,72 @@ int run_runtime_host_main_impl(int argc, char** argv) {
             std::cout << "runtime.mode: federation-query-plan\n";
             print_error_line(catalog, plan.error);
             return 6;
+        }
+
+        if (federation_execute_read_only) {
+            if (*backend != copperfin::platform::FederationBackend::sqlite) {
+                std::cout << "status: error\n";
+                std::cout << "runtime.mode: federation-query-execute\n";
+                print_error_line(
+                    catalog,
+                    localized_message(catalog, "RuntimeHost.Error.FederationExecutionRequiresSqlite"));
+                return 2;
+            }
+            if (trim_copy(federation_target).empty()) {
+                std::cout << "status: error\n";
+                std::cout << "runtime.mode: federation-query-execute\n";
+                print_error_line(
+                    catalog,
+                    localized_message(catalog, "RuntimeHost.Error.FederationExecutionTargetRequired"));
+                return 2;
+            }
+
+            const auto security_profile = copperfin::security::default_native_security_profile(catalog);
+            const std::string security_role = resolve_federation_security_role();
+            if (!copperfin::security::role_has_permission(
+                    security_profile,
+                    security_role,
+                    "project.open")) {
+                std::cout << "status: error\n";
+                std::cout << "runtime.mode: federation-query-execute\n";
+                print_error_line(
+                    catalog,
+                    localized_message(
+                        catalog,
+                        "RuntimeHost.Error.SecurityPolicyDenied",
+                        {
+                            {"permission", "project.open"},
+                            {"role", security_role}
+                        }));
+                return 7;
+            }
+
+            const auto result =
+                copperfin::platform::execute_sqlite_federation_plan_read_only(plan);
+            std::cerr << "audit.event: federation.sqlite_read outcome="
+                      << (result.ok ? "success" : "rejected") << "\n";
+            if (!result.ok) {
+                std::cout << "status: error\n";
+                std::cout << "runtime.mode: federation-query-execute\n";
+                std::cout << "federation.error_code: " << result.error_code << "\n";
+                print_error_line(
+                    catalog,
+                    localized_message(
+                        catalog,
+                        "RuntimeHost.Error.FederationExecutionFailed",
+                        {{"errorCode", result.error_code}}));
+                return 8;
+            }
+
+            std::cout << "status: ok\n";
+            std::cout << "runtime.mode: federation-query-execute\n";
+            std::cout << "federation.backend: sqlite\n";
+            std::cout << "federation.connector: sqlite\n";
+            std::cout << "federation.target: " << plan.target << "\n";
+            std::cout << "federation.result_json: "
+                      << copperfin::platform::serialize_sqlite_federation_result_json(result)
+                      << "\n";
+            return 0;
         }
 
         std::cout << "status: ok\n";

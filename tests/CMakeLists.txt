@@ -4886,6 +4886,30 @@ copperfin_add_test(test_federation_execution cf_platform_profile
     test_federation_execution.cpp
 )
 
+copperfin_add_test(test_sqlite_federation_connector cf_sqlite_connector
+    test_sqlite_federation_connector.cpp
+)
+
+add_executable(test_runtime_host_sqlite_federation
+    test_runtime_host_sqlite_federation.cpp
+)
+target_link_libraries(test_runtime_host_sqlite_federation PRIVATE
+    cf_sqlite_connector
+    cf_platform_support
+    cf_test_process_capture_support)
+add_dependencies(test_runtime_host_sqlite_federation copperfin_runtime_host)
+if(MSVC)
+    target_compile_options(test_runtime_host_sqlite_federation PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_runtime_host_sqlite_federation PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_test(
+    NAME test_runtime_host_sqlite_federation
+    COMMAND
+        $<TARGET_FILE:test_runtime_host_sqlite_federation>
+        $<TARGET_FILE:copperfin_runtime_host>
+)
+
 copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline_test
     test_runtime_pipeline.cpp
     test_runtime_pipeline_shared_test_helpers.cpp

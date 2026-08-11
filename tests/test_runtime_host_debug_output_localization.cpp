@@ -30,6 +30,8 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#2349: runtime host en-US usage should remain stable");
         expect(process.stdout_text.find("--federation-backend <sqlite|postgresql|sqlserver|oracle>") != std::string::npos,
                "#2349: runtime host en-US usage should preserve federation CLI tokens");
+        expect(process.stdout_text.find("--federation-execute-read-only <true|false>") != std::string::npos,
+               "#30: runtime host en-US usage should preserve the read-only execution CLI contract");
 
         const auto invalid_federation_bool = run_process_capture(
             runtime_host_path,
@@ -63,7 +65,8 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#2585: es-419 runtime host usage should localize manifest usage prose");
         expect(process.stdout_text.find("   o: copperfin_runtime_host") != std::string::npos &&
                    process.stdout_text.find("--federation-backend") != std::string::npos &&
-                   process.stdout_text.find("--federation-query") != std::string::npos,
+                   process.stdout_text.find("--federation-query") != std::string::npos &&
+                   process.stdout_text.find("--federation-execute-read-only") != std::string::npos,
                "#2585: es-419 runtime host usage should localize alternate usage prose while preserving CLI tokens");
         expect(process.stdout_text.find("Usage: copperfin_runtime_host --manifest <path> [--debug]") == std::string::npos,
                "#2585: es-419 runtime host usage should not fall back to raw English prose");
@@ -106,6 +109,7 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#2349: pseudo-localized runtime host usage should decorate prose");
         expect(process.stdout_text.find("copperfin_runtime_host") != std::string::npos &&
                    process.stdout_text.find("--manifest") != std::string::npos &&
+                   process.stdout_text.find("--federation-execute-read-only") != std::string::npos &&
                    process.stdout_text.find("--debug-command") != std::string::npos &&
                    process.stdout_text.find("<continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:add-action:<action-id>|break:remove-action:<action-id>|break:clear|break:list>") != std::string::npos,
                "#2349: pseudo-localized runtime host usage should preserve CLI and debug-command tokens");
