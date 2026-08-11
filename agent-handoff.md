@@ -27,8 +27,11 @@ native-boundary inventory and the J2/J3 ports remain open. See
 Independent review found no functional defect and mechanically confirmed the
 moved implementations, then identified one maintainability gap: the move had
 dropped the rationale for the layered Windows Unicode comparison fallbacks.
-That original rationale is restored without a behavior change, and the source
-contract now protects its key explanations. Final pre-follow-up evidence head
+That original rationale is restored, with its inherited `CharLowerBuffW`
+statement corrected to identify zero as failure. Review also found unchecked
+narrowing into Win32 signed length parameters; unrepresentable component
+lengths now fail closed, while representable behavior is unchanged. The source
+contract protects the length guard and key explanations. Final pre-follow-up evidence head
 `e0fbdd11c` passed all eleven protected checks; Generated Launcher Validation
 `31542720317` ran both path tests on Windows, Ubuntu, and macOS, while Windows
 Environment and Executable Path Validation `31542720276` repeated them in its

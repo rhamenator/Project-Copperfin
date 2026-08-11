@@ -57,9 +57,12 @@ Ubuntu, and macOS, and Windows Environment and Executable Path Validation run
 `31542720276` repeats them inside its `9/9` focused set. Independent review
 found no functional defect, but did identify that the move had dropped the
 hard-won rationale for the layered Windows Unicode comparison fallbacks. The
-original rationale is restored without changing code behavior, and the source
-contract now protects the key explanations alongside the implementation and
-explicit User32 link dependency.
+original rationale is restored, with one inherited statement corrected to
+match the `CharLowerBuffW` failure contract. Review also identified unchecked
+narrowing into Win32's signed length type; unrepresentable component lengths
+now fail closed instead of reaching the comparison APIs. The source contract
+protects the length guard and key explanations alongside the implementation
+and explicit User32 link dependency. Representable path behavior is unchanged.
 
 ## Remaining J1 work
 

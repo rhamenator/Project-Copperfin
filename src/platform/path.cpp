@@ -78,6 +78,11 @@ bool path_component_equal_for_platform(
 #if defined(_WIN32)
     const std::wstring left_value = left.native();
     const std::wstring right_value = right.native();
+    const auto maximum_api_length =
+        static_cast<std::size_t>((std::numeric_limits<int>::max)());
+    if (left_value.size() > maximum_api_length || right_value.size() > maximum_api_length) {
+        return false;
+    }
     if (::CompareStringOrdinal(
             left_value.c_str(), static_cast<int>(left_value.size()),
             right_value.c_str(), static_cast<int>(right_value.size()), TRUE) == CSTR_EQUAL) {
@@ -128,10 +133,12 @@ bool path_component_equal_for_platform(
         }
 
         std::wstring fallback = value;
-        // CharLowerBuffW returns zero when the buffer needs no changes as
-        // well as when the call cannot process the buffer. The unchanged
-        // value is still a valid case-folding result.
-        (void)::CharLowerBuffW(fallback.data(), static_cast<DWORD>(fallback.size()));
+        // CharLowerBuffW reports zero on failure. Returning the unchanged
+        // input makes a mapping failure conservative rather than treating
+        // unconverted text as a successful fold.
+        if (::CharLowerBuffW(fallback.data(), static_cast<DWORD>(fallback.size())) == 0) {
+            return value;
+        }
         return fallback;
     };
     return invariant_lowercase(left_value) == invariant_lowercase(right_value);
