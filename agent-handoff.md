@@ -20,6 +20,14 @@ check restoring the old unconditional copy fails that exact assertion. This
 changes no route, status, reason, telemetry, localization, process, package,
 debug, or successful-payload contract.
 
+Local Release focused and adjacent tests pass `5/5`; the focused target repeats
+`20/20`; and Clang 21 ASan/UBSan passes with leak detection. Exact product/test
+head `edbcecfeb` passes Linux Native `31465221620` and macOS Native
+`31465221684` at `337/337`, Windows Native `31465221686` at `336/336`, the
+focused regression on every host, and the macOS four-locale matrix at `8/8`.
+All eleven protected checks pass at that implementation head. The follow-up
+documentation commit changes no product or test source.
+
 ## V1 .NET polyglot leaf-candidate implementation
 
 The current #4700/#91 slice supplies the first real language target over the

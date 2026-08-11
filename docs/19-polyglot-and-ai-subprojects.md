@@ -311,7 +311,12 @@ evidence while publishing an empty payload, matching the existing candidate
 failure behavior. Focused coverage supplies nonempty synthetic native-failure
 bytes, and a mutation check confirms the former unconditional copy fails that
 regression. No current native invoker was known to populate failure payloads;
-the guard is fail-closed preparation for future adapters.
+the guard is fail-closed preparation for future adapters. Local Release
+focused and adjacent tests pass `5/5`, the focused target repeats `20/20`, and
+Clang 21 ASan/UBSan passes with leak detection. Exact product/test head
+`edbcecfeb` passes Linux Native `31465221620` and macOS Native `31465221684` at
+`337/337`, Windows Native `31465221686` at `336/336`, the focused regression on
+every host, the macOS locale matrix at `8/8`, and all eleven protected checks.
 
 The host does not discover artifacts or language runtimes, authorize inline
 foreign source, retry, promote routes, invoke a second artifact, introduce a
