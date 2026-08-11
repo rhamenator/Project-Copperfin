@@ -4695,6 +4695,19 @@ copperfin_add_test(test_polyglot_artifact_adapter
     test_polyglot_artifact_adapter.cpp
 )
 
+if(COPPERFIN_PYTHON3_EXECUTABLE)
+    copperfin_add_test(test_polyglot_python_sidecar
+        "cf_xbase_runtime;cf_security;cf_platform_profile;cf_platform_support"
+        test_polyglot_python_sidecar.cpp
+        prg_engine_test_support.cpp
+    )
+    target_compile_definitions(test_polyglot_python_sidecar PRIVATE
+        COPPERFIN_POLYGLOT_PYTHON_EXECUTABLE="${COPPERFIN_PYTHON3_EXECUTABLE}"
+        COPPERFIN_POLYGLOT_PYTHON_SIDECAR_PATH="${CMAKE_SOURCE_DIR}/samples/polyglot-python-sidecar/candidate.py"
+    )
+    set_tests_properties(test_polyglot_python_sidecar PROPERTIES TIMEOUT 30)
+endif()
+
 copperfin_add_test(test_polyglot_route_execution
     "cf_security;cf_platform_profile;cf_platform_support"
     test_polyglot_route_execution.cpp

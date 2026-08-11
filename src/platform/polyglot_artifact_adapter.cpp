@@ -5,10 +5,12 @@
 #include "copperfin/platform/polyglot_artifact_adapter.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace copperfin::platform {
 
@@ -66,6 +68,20 @@ PolyglotArtifactInvocationResult reject_without_telemetry(
 PolyglotArtifactInvocationResult invoke_polyglot_artifact(
     PolyglotArtifactAdmissionResult& admission,
     const PolyglotArtifactInvocationRequest& request) {
+    std::vector<PolyglotSupportingArtifactAdmissionResult> no_supporting_artifacts;
+    const std::vector<PolyglotSupportingArtifactArgumentBinding>
+        no_supporting_bindings;
+    return invoke_polyglot_artifact(
+        admission, no_supporting_artifacts, no_supporting_bindings, request);
+}
+
+PolyglotArtifactInvocationResult invoke_polyglot_artifact(
+    PolyglotArtifactAdmissionResult& admission,
+    std::vector<PolyglotSupportingArtifactAdmissionResult>&
+        supporting_artifact_admissions,
+    const std::vector<PolyglotSupportingArtifactArgumentBinding>&
+        supporting_artifact_arguments,
+    const PolyglotArtifactInvocationRequest& request) {
     const std::string capability_id = request.invocation.capability_id;
     if (!admission.ok()) {
         return reject_without_telemetry(
@@ -78,6 +94,48 @@ PolyglotArtifactInvocationResult invoke_polyglot_artifact(
         return reject_without_telemetry(
             PolyglotArtifactInvocationStatus::artifact_rejected,
             "polyglot.adapter.capability_id_mismatch");
+    }
+    if (supporting_artifact_arguments.size() !=
+        supporting_artifact_admissions.size()) {
+        return reject_without_telemetry(
+            PolyglotArtifactInvocationStatus::artifact_rejected,
+            "polyglot.adapter.supporting_artifact_binding_required");
+    }
+    std::vector<bool> bound_arguments(request.artifact_arguments.size(), false);
+    std::vector<bool> bound_admissions(
+        supporting_artifact_admissions.size(), false);
+    for (const auto& binding : supporting_artifact_arguments) {
+        if (binding.argument_index >= request.artifact_arguments.size() ||
+            binding.admission_index >= supporting_artifact_admissions.size() ||
+            bound_arguments[binding.argument_index] ||
+            bound_admissions[binding.admission_index]) {
+            return reject_without_telemetry(
+                PolyglotArtifactInvocationStatus::artifact_rejected,
+                "polyglot.adapter.invalid_supporting_artifact_binding");
+        }
+        auto& supporting =
+            supporting_artifact_admissions[binding.admission_index];
+        if (!supporting.ok()) {
+            return reject_without_telemetry(
+                PolyglotArtifactInvocationStatus::artifact_rejected,
+                supporting.error_code().empty()
+                    ? std::string(
+                          "polyglot.adapter.supporting_artifact_rejected")
+                    : supporting.error_code());
+        }
+        if (supporting.capability_id() != capability_id) {
+            return reject_without_telemetry(
+                PolyglotArtifactInvocationStatus::artifact_rejected,
+                "polyglot.adapter.supporting_artifact_capability_mismatch");
+        }
+        if (request.artifact_arguments[binding.argument_index] !=
+            supporting.resolved_path()) {
+            return reject_without_telemetry(
+                PolyglotArtifactInvocationStatus::artifact_rejected,
+                "polyglot.adapter.supporting_artifact_argument_mismatch");
+        }
+        bound_arguments[binding.argument_index] = true;
+        bound_admissions[binding.admission_index] = true;
     }
 
     const auto serialized = serialize_polyglot_invocation_request(request.invocation);
@@ -120,8 +178,37 @@ PolyglotArtifactInvocationResult invoke_polyglot_artifact(
         .stderr_limit_bytes = request.stderr_limit_bytes,
         .cancellation_requested = request.cancellation_requested};
 
-    // No allocation, policy decision, callback, or other user-controlled work
-    // occurs between successful revalidation and the owned launch call.
+    for (const auto& binding : supporting_artifact_arguments) {
+        auto& supporting =
+            supporting_artifact_admissions[binding.admission_index];
+        if (!revalidate_polyglot_supporting_artifact_admission(supporting)) {
+            result.status = PolyglotArtifactInvocationStatus::artifact_rejected;
+            result.error_code = supporting.error_code();
+            decide_and_record(
+                result,
+                capability_id,
+                request.policy,
+                PolyglotBridgeFailure::unavailable);
+            return result;
+        }
+        if (process_request.arguments[binding.argument_index] !=
+            supporting.resolved_path()) {
+            result.status = PolyglotArtifactInvocationStatus::artifact_rejected;
+            result.error_code =
+                "polyglot.adapter.supporting_artifact_path_changed";
+            decide_and_record(
+                result,
+                capability_id,
+                request.policy,
+                PolyglotBridgeFailure::unavailable);
+            return result;
+        }
+    }
+
+    // Supporting files are checked first and the executable last. No
+    // allocation, policy decision, callback, or other user-controlled work
+    // occurs after successful executable revalidation and before the owned
+    // launch call.
     if (!revalidate_polyglot_artifact_admission(admission)) {
         result.status = PolyglotArtifactInvocationStatus::artifact_rejected;
         result.error_code = admission.error_code();

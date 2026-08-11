@@ -190,6 +190,8 @@ PolyglotRuntimeHostConfiguration configuration(
     PolyglotRuntimeCapabilityBinding binding{
         .capability_id = capability_id,
         .artifact_admission = admission,
+        .supporting_artifact_admissions = {},
+        .supporting_artifact_arguments = {},
         .candidate_request_template = std::move(candidate),
         .invoke_native = []() {
             return PolyglotNativeInvocationResult{

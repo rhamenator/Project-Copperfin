@@ -7276,3 +7276,16 @@ passes `1/1`.
   the evidence schema left policy unconstrained. The direct route now strictly
   parses, executes, serializes, and parity-checks the same signed-add workload,
   while the schema and contract check require a closed policy and weights shape.
+- 2026-08-11: Added the first practical Python sidecar workflow without
+  embedding Python in the trusted core or FP/VFP source. The portable host now
+  admits non-executable supporting artifacts beneath explicit physical roots,
+  pins their exact file identity and lowercase SHA-256, binds each to one exact
+  command-line position, and revalidates them before the already admitted
+  executable is launched. The checked-in standard-library sample runs under
+  `python -I -S` with a complete explicit environment and the existing bounded
+  process/envelope contract. End-to-end coverage proves the strict result,
+  ordinary PRG control, argument-substitution rejection, and pre-launch token
+  revocation after script mutation. Local Linux Release focused and adjacent
+  tests pass `7/7`, the Python integration repeats `10/10`, and Clang 21
+  ASan/UBSan with leak detection is clean. Hosted Windows, Linux, and macOS
+  evidence remains pending.

@@ -89,15 +89,19 @@ string(REPLACE "\r\n" "\n" generated_launcher_workflow
 foreach(required_text IN ITEMS
         "branches: [main, v1-development]"
         "samples/polyglot-dotnet-candidate/**"
+        "samples/polyglot-python-sidecar/**"
         "tests/test_polyglot_dotnet_candidate.cpp"
+        "tests/test_polyglot_python_sidecar.cpp"
         "test_generated_launcher_process test_polyglot_dotnet_candidate"
         "test_generated_launcher_posix_process test_polyglot_dotnet_candidate"
+        "test_polyglot_dotnet_candidate test_polyglot_python_sidecar"
         "test_generated_launcher_process|test_polyglot_dotnet_candidate"
-        "test_generated_launcher_posix_process|test_polyglot_dotnet_candidate")
+        "test_generated_launcher_posix_process|test_polyglot_dotnet_candidate"
+        "test_polyglot_dotnet_candidate|test_polyglot_python_sidecar")
     string(FIND "${generated_launcher_workflow}" "${required_text}" required_index)
     if(required_index EQUAL -1)
         message(FATAL_ERROR
-            "Generated-launcher workflow is missing .NET candidate evidence: ${required_text}")
+            "Generated-launcher workflow is missing polyglot candidate evidence: ${required_text}")
     endif()
 endforeach()
 

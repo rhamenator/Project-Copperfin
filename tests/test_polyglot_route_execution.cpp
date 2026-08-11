@@ -536,6 +536,19 @@ void test_fail_closed_configuration(
                no_admission.candidate_invocation_count == 0U,
            "#4937: a candidate route should require an admission token");
 
+    auto missing_supporting_admission = base_request(
+        on_routes, &admission, root);
+    const std::vector<PolyglotSupportingArtifactArgumentBinding>
+        missing_supporting_bindings{{0U, 0U}};
+    missing_supporting_admission.supporting_artifact_arguments =
+        &missing_supporting_bindings;
+    const auto no_supporting_admission = execute_polyglot_route(
+        missing_supporting_admission);
+    expect(no_supporting_admission.error_code ==
+               "polyglot.execution.supporting_artifact_admissions_required" &&
+               no_supporting_admission.candidate_invocation_count == 0U,
+           "#32: a supporting-file binding should require its admission collection");
+
     auto missing_native = base_request(off_routes, nullptr, root);
     missing_native.invoke_native = {};
     const auto no_native = execute_polyglot_route(missing_native);
