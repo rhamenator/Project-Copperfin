@@ -513,8 +513,15 @@ configures the trusted runtime host, exercises strict success/error behavior,
 and proves ordinary PRG dispatch plus bounded JSON inspection. This is an
 external capability template, not a general CLR host, inline foreign syntax,
 arbitrary assembly loading, or execution of emitted transpilation output.
-Final sanitizer, repeat, hosted cross-platform, and protected-merge evidence is
-still required for this candidate.
+Local Release focused and adjacent tests pass `7/7`, the focused target repeats
+`20/20`, Clang 21 ASan/UBSan passes with leak detection, and managed
+formatting/analyzers plus focused C++ static analysis are clean. Exact
+product/test candidate `4e66813d2` passes Linux Native `31459407580` and macOS
+Native `31459407582` at `337/337`, Windows Native `31459407816` at `336/336`,
+the focused regression on every host, and the macOS locale matrix at `8/8`.
+Generated Launcher Validation `31459366674` independently passes the candidate
+on Windows, Ubuntu, and macOS; all eleven protected PR checks pass at
+documentation head `d0c7ef408`.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate
 response envelopes before downstream use. Success and error shapes are

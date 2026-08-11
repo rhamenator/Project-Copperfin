@@ -332,6 +332,16 @@ This proves one real external .NET target, not general CLR hosting, inline C#,
 reflection, arbitrary assembly loading, dependency resolution, or execution of
 generated transpilation output. See `docs/43-dotnet-polyglot-candidate.md`.
 
+Local Release focused and adjacent tests pass `7/7`, the focused target repeats
+`20/20`, Clang 21 ASan/UBSan passes with leak detection, and managed
+formatting/analyzers plus focused C++ static analysis are clean. Exact
+product/test candidate `4e66813d2` passes Linux Native `31459407580` and macOS
+Native `31459407582` at `337/337`, Windows Native `31459407816` at `336/336`,
+the focused regression on every host, and the macOS four-locale matrix at
+`8/8`. Generated Launcher Validation `31459366674` separately passes the
+candidate on Windows, Ubuntu, and macOS, and all eleven protected PR checks
+pass at documentation head `d0c7ef408`.
+
 ## PRG Polyglot Dispatch Boundary v1
 
 `CFPOLYGLOTDISPATCH()` is the PRG-facing orchestration contract. It accepts one

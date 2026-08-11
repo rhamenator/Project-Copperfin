@@ -100,6 +100,12 @@ code signing.
 
 The focused native target is `test_polyglot_dotnet_candidate`. The related
 workflow builds it with the generated-launcher process tests on hosted Windows,
-Linux, and macOS. Final candidate-head local sanitizer/repeat evidence, hosted
-run identifiers, and protected-check results are recorded in the changelog,
-roadmap, and handoff only after those runs complete.
+Linux, and macOS. Local Release focused and adjacent tests pass `7/7`, the
+focused target repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection,
+and managed formatting/analyzers plus focused C++ static analysis are clean.
+Exact product/test candidate `4e66813d2` passes Linux Native `31459407580` and
+macOS Native `31459407582` at `337/337`, Windows Native `31459407816` at
+`336/336`, the focused regression on every host, and the macOS four-locale
+matrix at `8/8`. Generated Launcher Validation `31459366674` independently
+passes the candidate with its process regression on Windows, Ubuntu, and macOS.
+All eleven protected PR checks pass at documentation head `d0c7ef408`.
