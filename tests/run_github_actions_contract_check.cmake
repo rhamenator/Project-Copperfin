@@ -6,6 +6,46 @@ if(NOT DEFINED SOURCE_DIR OR "${SOURCE_DIR}" STREQUAL "")
     message(FATAL_ERROR "SOURCE_DIR is required")
 endif()
 
+function(copperfin_external_action_name_is_safe action_name output_variable)
+    set(is_safe TRUE)
+    if(NOT action_name MATCHES
+            "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$")
+        set(is_safe FALSE)
+    else()
+        string(REPLACE "/" ";" action_name_segments "${action_name}")
+        list(LENGTH action_name_segments action_name_segment_count)
+        if(action_name_segment_count LESS 2)
+            set(is_safe FALSE)
+        endif()
+        foreach(action_name_segment IN LISTS action_name_segments)
+            if(action_name_segment STREQUAL "" OR
+                    action_name_segment STREQUAL "." OR
+                    action_name_segment STREQUAL ".." OR
+                    NOT action_name_segment MATCHES "^[A-Za-z0-9_.-]+$")
+                set(is_safe FALSE)
+            endif()
+        endforeach()
+    endif()
+    set(${output_variable} "${is_safe}" PARENT_SCOPE)
+endfunction()
+
+foreach(safe_action_name IN ITEMS "actions/checkout" "r-lib/actions/setup-r")
+    copperfin_external_action_name_is_safe("${safe_action_name}" safe_action_name_result)
+    if(NOT safe_action_name_result)
+        message(FATAL_ERROR
+            "GitHub Action name validator rejected safe fixture: ${safe_action_name}")
+    endif()
+endforeach()
+foreach(unsafe_action_name IN ITEMS
+        "owner" "owner//action" "owner/repository/." "owner/repository/.."
+        "owner/repository/subpath/.." "/repository/action")
+    copperfin_external_action_name_is_safe("${unsafe_action_name}" unsafe_action_name_result)
+    if(unsafe_action_name_result)
+        message(FATAL_ERROR
+            "GitHub Action name validator admitted unsafe fixture: ${unsafe_action_name}")
+    endif()
+endforeach()
+
 file(GLOB_RECURSE action_files
     "${SOURCE_DIR}/.github/workflows/*.yml"
     "${SOURCE_DIR}/.github/workflows/*.yaml"
@@ -29,9 +69,10 @@ foreach(action_file IN LISTS action_files)
         endif()
         set(action_name "${CMAKE_MATCH_1}")
         set(action_ref "${CMAKE_MATCH_2}")
-        if(NOT action_name MATCHES "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+        copperfin_external_action_name_is_safe("${action_name}" action_name_safe)
+        if(NOT action_name_safe)
             message(FATAL_ERROR
-                "External GitHub Action must use owner/repository syntax in ${action_file}: ${action_line}")
+                "External GitHub Action must use safe owner/repository[/subpath] syntax in ${action_file}: ${action_line}")
         endif()
         string(LENGTH "${action_ref}" action_ref_length)
         if(NOT action_ref_length EQUAL 40 OR
@@ -90,14 +131,22 @@ foreach(required_text IN ITEMS
         "branches: [main, v1-development]"
         "samples/polyglot-dotnet-candidate/**"
         "samples/polyglot-python-sidecar/**"
+        "samples/polyglot-r-sidecar/**"
         "tests/test_polyglot_dotnet_candidate.cpp"
         "tests/test_polyglot_python_sidecar.cpp"
+        "tests/test_polyglot_r_sidecar.cpp"
+        "r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6"
+        "r-version: \"4.6.1\""
+        "rtools-version: \"none\""
+        "use-public-rspm: \"false\""
         "test_generated_launcher_process test_polyglot_dotnet_candidate"
         "test_generated_launcher_posix_process test_polyglot_dotnet_candidate"
         "test_polyglot_dotnet_candidate test_polyglot_python_sidecar"
+        "test_polyglot_python_sidecar test_polyglot_r_sidecar"
         "test_generated_launcher_process|test_polyglot_dotnet_candidate"
         "test_generated_launcher_posix_process|test_polyglot_dotnet_candidate"
-        "test_polyglot_dotnet_candidate|test_polyglot_python_sidecar")
+        "test_polyglot_dotnet_candidate|test_polyglot_python_sidecar"
+        "test_polyglot_python_sidecar|test_polyglot_r_sidecar")
     string(FIND "${generated_launcher_workflow}" "${required_text}" required_index)
     if(required_index EQUAL -1)
         message(FATAL_ERROR

@@ -80,12 +80,12 @@ Current maturity:
   by the parity policy and receives no external-I/O scope. A separately
   reviewed host adapter admitted through the polyglot contract is the current
   fallback for an application that deliberately needs network access.
-- Python now has one strict, tested sidecar hook through the generic artifact
-  boundary. The interpreter is an admitted executable; every loose script is a
+- Python and R now each have one strict, tested sidecar hook through the generic
+  artifact boundary. Each interpreter is an admitted executable; every loose script is a
   separately admitted supporting artifact, hash/identity pinned beneath an
   explicit physical root, bound to an exact argument position, and revalidated
-  before launch. This is not a general embedded-Python surface. R and broader
-  language adapters remain planning work.
+  before launch. These are not general embedded-language surfaces. Broader
+  language environments and product MCP/AI adapters remain planning work.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 
 ## Migration Contract v1
@@ -738,6 +738,22 @@ Recommended rule:
 - run R out-of-process
 - keep it policy-controlled and auditable
 - treat it as a sidecar/job boundary rather than the trusted runtime
+
+Current concrete workflow:
+
+- `samples/polyglot-r-sidecar/candidate.R` implements one strict
+  `samples.r.mean-v1` leaf using base R only
+- the host starts an explicitly configured `Rscript` with `--vanilla`, a
+  complete environment containing only `R_DEFAULT_PACKAGES=base`, bounded
+  I/O/time/process-tree ownership, and no shell
+- the exact script is admitted beneath a physical root, bound to argument
+  index 1, and rejected before launch if substituted or changed
+- a closed 1 MiB/32-depth/4,096-value reader rejects duplicate members,
+  malformed Unicode, non-finite numbers, and noncanonical envelope shapes
+- ordinary PRG remains the control plane through `CFPOLYGLOTDISPATCH()` and
+  can inspect the immutable mean result with `CFJSONGET()`
+
+See `docs/47-r-polyglot-sidecar.md` for the operational and trust contract.
 
 ## Other Language Story
 

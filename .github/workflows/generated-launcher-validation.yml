@@ -12,6 +12,7 @@ on:
       - "src/**"
       - "samples/polyglot-dotnet-candidate/**"
       - "samples/polyglot-python-sidecar/**"
+      - "samples/polyglot-r-sidecar/**"
       - "tests/CMakeLists.txt"
       - "tests/CopperfinTestIsolation.cmake"
       - "tests/test_environment_support.h"
@@ -19,6 +20,7 @@ on:
       - "tests/test_generated_launcher_posix_process.cpp"
       - "tests/test_polyglot_dotnet_candidate.cpp"
       - "tests/test_polyglot_python_sidecar.cpp"
+      - "tests/test_polyglot_r_sidecar.cpp"
       - "tests/test_runtime_pipeline*.cpp"
       - "tests/test_runtime_pipeline*.h"
   pull_request:
@@ -32,6 +34,7 @@ on:
       - "src/**"
       - "samples/polyglot-dotnet-candidate/**"
       - "samples/polyglot-python-sidecar/**"
+      - "samples/polyglot-r-sidecar/**"
       - "tests/CMakeLists.txt"
       - "tests/CopperfinTestIsolation.cmake"
       - "tests/test_environment_support.h"
@@ -39,6 +42,7 @@ on:
       - "tests/test_generated_launcher_posix_process.cpp"
       - "tests/test_polyglot_dotnet_candidate.cpp"
       - "tests/test_polyglot_python_sidecar.cpp"
+      - "tests/test_polyglot_r_sidecar.cpp"
       - "tests/test_runtime_pipeline*.cpp"
       - "tests/test_runtime_pipeline*.h"
   workflow_dispatch:
@@ -65,14 +69,21 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Setup R 4.6.1
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
+        with:
+          r-version: "4.6.1"
+          rtools-version: "none"
+          use-public-rspm: "false"
+
       - name: Configure native build
         run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build generated-launcher and polyglot candidate targets
-        run: cmake --build build --config Release --target test_generated_launcher_process test_polyglot_dotnet_candidate test_polyglot_python_sidecar copperfin_build_host --parallel 2
+        run: cmake --build build --config Release --target test_generated_launcher_process test_polyglot_dotnet_candidate test_polyglot_python_sidecar test_polyglot_r_sidecar copperfin_build_host --parallel 2
 
       - name: Run generated-launcher and polyglot candidate tests
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_process|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar)$"
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_process|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar)$"
 
   posix-generated-launcher:
     name: ${{ matrix.os }} generated launcher process
@@ -92,11 +103,18 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Setup R 4.6.1
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
+        with:
+          r-version: "4.6.1"
+          rtools-version: "none"
+          use-public-rspm: "false"
+
       - name: Configure native build
         run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build POSIX generated-launcher and polyglot candidate targets
-        run: cmake --build build --config Release --target test_generated_launcher_posix_process test_polyglot_dotnet_candidate test_polyglot_python_sidecar --parallel 2
+        run: cmake --build build --config Release --target test_generated_launcher_posix_process test_polyglot_dotnet_candidate test_polyglot_python_sidecar test_polyglot_r_sidecar --parallel 2
 
       - name: Run POSIX generated-launcher and polyglot candidate tests
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_posix_process|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar)$"
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_posix_process|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar)$"

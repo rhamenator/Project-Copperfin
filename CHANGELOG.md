@@ -7293,3 +7293,32 @@ passes `1/1`.
   `31509182280`, Windows Environment and Executable Path Validation
   `31509182221`, and GCC/Clang Executable Path Validation `31509182231` also
   pass. All eleven protected PR checks are green.
+- 2026-08-11: Added the first practical R sidecar workflow without embedding R
+  in the trusted core or FP/VFP source. The base-R-only
+  `samples.r.mean-v1` leaf runs under an admitted `Rscript --vanilla`, uses a
+  complete environment restricted to `R_DEFAULT_PACKAGES=base`, and keeps its
+  exact script separately admitted and argument-position-bound. Its closed
+  bounded JSON reader rejects duplicate members, unknown envelope fields,
+  malformed Unicode, excessive nesting, non-finite values, and excess input
+  before calculating one compensated arithmetic mean. End-to-end coverage
+  proves strict success and typed-error envelopes, ordinary PRG control,
+  substitution rejection, and mutation-triggered token revocation. The GitHub
+  Actions contract now safely admits pinned `owner/repository/subpath` actions
+  while rejecting empty, `.` and `..` path segments. Generated Launcher
+  Validation pins `r-lib/actions/setup-r` to commit `d3c5be51b` and exact R
+  4.6.1 on Windows, Ubuntu, and macOS. The first hosted run exposed that
+  top-level Windows `bin/Rscript.exe` is a shell-based architecture dispatcher:
+  it returned `-1` under the intentionally complete environment while both
+  POSIX jobs passed. Automatic discovery now selects and admits the direct
+  `bin/x64/Rscript.exe` front end instead, refuses the dispatcher when the
+  direct executable is absent, and retains the one-variable environment.
+  Local regenerated focused, adjacent, and isolation coverage passes `8/8`,
+  and the isolated real-R integration repeats `10/10`. At exact signed
+  implementation head `70c68bcfd`, Generated Launcher Validation
+  `31518107199` passes the real R 4.6.1 sidecar target on Windows, Ubuntu, and
+  macOS, including the architecture-specific Windows path. Independent review
+  exercised the discovery contract, proved its x64 assertion load-bearing by
+  mutation, and found no defect. Windows DECLARE ABI Validation
+  `31518107351`, Windows Environment and Executable Path Validation
+  `31518107306`, and GCC/Clang Executable Path Validation `31518107204` also
+  pass; all eleven protected PR checks are green at that implementation head.
