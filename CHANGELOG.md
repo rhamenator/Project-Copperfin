@@ -12,9 +12,13 @@
   lifetime, bounds/redaction, fail-closed configuration, direct session use,
   and marker-synchronized `CFTASKCANCEL()` propagation to a bounded candidate.
   Local GCC Release focused and adjacent tests pass `6/6`, the focused target
-  repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection, and focused
-  static analysis is clean; hosted platform and protected evidence remain
-  pending. No language runtime, discovery/install,
+  repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection,
+  ThreadSanitizer passes, and focused static analysis is clean. Exact
+  product/test candidate `b66e6085f` passes Linux Native `31453166584` and
+  macOS Native `31453166506` at `336/336`, Windows Native `31453166516` at
+  `335/335`, the focused regression on all three hosts, the macOS locale matrix
+  at `8/8`, and all eight candidate-head protected checks without a blocking
+  result. No language runtime, discovery/install,
   inline foreign source, retry, second artifact, new task lifecycle, mutable
   PRG callback, atomic handle-bound launch, stub, or no-op was added.
 

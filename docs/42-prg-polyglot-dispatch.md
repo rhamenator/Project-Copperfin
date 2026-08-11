@@ -163,7 +163,11 @@ cancellation policies, bounds/redaction, callback lifetime, concurrency, real
 session creation, and a marker-synchronized `CFTASKCANCEL()` reaching the
 bounded candidate. Local GCC Release focused and adjacent tests pass `6/6`, the
 focused target repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection,
-and focused static analysis is clean; hosted platform evidence remains pending.
+ThreadSanitizer passes, and focused static analysis is clean. Exact product/test
+candidate `b66e6085f` passes Linux Native `31453166584` and macOS Native
+`31453166506` at `336/336`, Windows Native `31453166516` at `335/335`, the
+focused regression on every host, the macOS locale matrix at `8/8`, and all
+eight candidate-head protected checks without a blocking result.
 
 This integration still adds no language-specific runtime, discovery/install,
 inline foreign source, retry, second artifact, new task lifecycle, mutable PRG
