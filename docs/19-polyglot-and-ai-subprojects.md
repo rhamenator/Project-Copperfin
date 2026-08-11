@@ -293,8 +293,11 @@ fail-closed configuration. A real spawned PRG session uses the production
 callback and `CFTASKCANCEL()` to stop a bounded synthetic candidate through the
 read-only probe. Local GCC Release focused and adjacent targets pass `6/6`, the
 focused target repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection,
-and focused static analysis is clean; hosted Linux/macOS/Windows and protected
-contribution evidence remain pending.
+ThreadSanitizer passes, and focused static analysis is clean. Exact product/test
+candidate `b66e6085f` passes Linux Native `31453166584` and macOS Native
+`31453166506` at `336/336`, Windows Native `31453166516` at `335/335`, the
+focused regression on every host, the macOS locale matrix at `8/8`, and all
+eight candidate-head protected checks without a blocking result.
 
 The host does not discover artifacts or language runtimes, authorize inline
 foreign source, retry, promote routes, invoke a second artifact, introduce a

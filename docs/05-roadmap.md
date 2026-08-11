@@ -496,9 +496,13 @@ fail-fast/fallback/parity/error mapping, both cancellation policies,
 concurrency, lifetime, bounds/redaction, construction failures, direct PRG
 integration, and real `CFTASKCANCEL()` propagation to a bounded candidate.
 Local GCC Release focused and adjacent targets pass `6/6`, the focused target
-repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection, and focused
-static analysis is clean; hosted platform and protected evidence remain
-pending. Language-specific hosting, discovery,
+repeats `20/20`, Clang 21 ASan/UBSan passes with leak detection,
+ThreadSanitizer passes, and focused static analysis is clean. Exact product/test
+candidate `b66e6085f` passes Linux Native `31453166584` and macOS Native
+`31453166506` at `336/336`, Windows Native `31453166516` at `335/335`, the
+focused regression on every host, the macOS locale matrix at `8/8`, and all
+eight candidate-head protected checks without a blocking result.
+Language-specific hosting, discovery,
 retry, second-artifact fallback, and atomic handle-bound launch remain separate.
 
 The next #91/#4700 bridge prerequisite now validates versioned candidate

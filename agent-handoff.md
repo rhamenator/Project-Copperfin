@@ -34,9 +34,12 @@ the read-only probe. Local GCC Release builds the new and adjacent targets;
 `test_native_test_isolation_contract`, and
 `test_security_supply_chain_workflow_contract` pass `6/6`; the focused target
 also repeats `20/20`. Clang 21 ASan/UBSan passes the focused test with leak
-detection enabled, and focused `clang-tidy` reports no diagnostics. Hosted
-Linux, macOS, Windows, and protected-check evidence remain required before
-merge.
+detection enabled, ThreadSanitizer passes, and focused `clang-tidy` reports no
+diagnostics. Exact product/test candidate `b66e6085f` passes Linux Native
+`31453166584` and macOS Native `31453166506` at `336/336`, Windows Native
+`31453166516` at `335/335`, and the focused regression on every host. The
+macOS four-locale matrix passes `8/8`; all eight candidate-head protected
+checks complete without a blocking result.
 
 This seam does not discover, download, install, or select a language runtime;
 allow inline foreign source; retry; invoke a second artifact; create a task
