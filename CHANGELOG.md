@@ -9,8 +9,13 @@
   macOS, and the focused Windows environment/path workflow repeats them. Local
   GCC Release focused, adjacent consumer, isolation, and workflow-contract
   coverage passes `10/10`; Clang 21 ASan/UBSan passes the two new tests with
-  leak detection. This is a bounded J1 seed, not completion of the
-  portable-core inventory or the J2/J3 host ports.
+  leak detection. Exact corrected head `dac37ee59` passes all eleven protected
+  checks; Generated Launcher Validation `31541415911` runs both contracts on
+  Windows, Ubuntu, and macOS, and Windows Environment and Executable Path
+  Validation `31541415790` repeats them beside the focused consumers. Automated
+  review's explicit-User32 dependency finding is corrected and
+  contract-protected. This is a bounded J1 seed, not completion of the portable-
+  core inventory or the J2/J3 host ports.
 
 - 2026-08-11: Completed the first high-value .NET parity surface-pack
   disposition. The policy matrix now records shipped adapted task, JSON,

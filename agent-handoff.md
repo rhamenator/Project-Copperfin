@@ -16,7 +16,11 @@ Validation on Windows, Ubuntu, and macOS and in the focused Windows
 environment/path workflow. Local GCC Release focused plus adjacent licensing,
 security, VFP asset, environment, isolation, and workflow-contract tests pass
 `10/10`; Clang 21 ASan/UBSan passes the two new tests with leak detection.
-Hosted exact-head evidence remains outstanding. This seeds J1 only; broader
+Exact corrected head `dac37ee59` passes all eleven protected checks. Generated
+Launcher Validation `31541415911` runs both contracts on Windows, Ubuntu, and
+macOS; Windows Environment and Executable Path Validation `31541415790` repeats
+them beside all focused consumers. Automated review's explicit-User32 finding
+is corrected and contract-protected. This seeds J1 only; broader
 native-boundary inventory and the J2/J3 ports remain open. See
 `docs/50-portable-public-path-boundary.md`.
 

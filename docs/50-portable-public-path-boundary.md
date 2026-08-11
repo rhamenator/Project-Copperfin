@@ -40,8 +40,16 @@ Ubuntu, and macOS; Windows Environment and Executable Path Validation repeats
 them beside the existing environment/path consumers. Local GCC Release focused,
 adjacent-consumer, isolation, and workflow-contract validation passes `10/10`,
 including licensing, security, VFP asset, and environment-path consumers. Clang
-21 ASan/UBSan passes the two new tests with leak detection. Hosted exact-head
-results are recorded only after the protected workflows finish.
+21 ASan/UBSan passes the two new tests with leak detection.
+
+Exact corrected head `dac37ee59` passes all eleven protected checks. Generated
+Launcher Validation run `31541415911` builds, links, and runs the two path
+contracts as part of a `10/10` focused set on Windows, Ubuntu, and macOS.
+Windows Environment and Executable Path Validation run `31541415790` repeats
+both inside its `9/9` consumer set. Automated review identified that the
+preserved `CharLowerBuffW` fallback's User32 dependency had remained implicit
+through CMake's default Windows libraries; the corrected head declares that
+dependency on `cf_platform_support`, and the source contract protects it.
 
 ## Remaining J1 work
 
