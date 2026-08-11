@@ -1,0 +1,44 @@
+title: "[question] <short summary>"
+labels:
+  - question
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about using or building Copperfin, or about expected
+        VFP9 compatibility behavior? Use this form. If you've found something
+        that looks like a bug rather than a question, please use a
+        [bug report issue](https://github.com/rhamenator/Project-Copperfin/issues/new/choose)
+        instead.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What are you trying to do, and what's unclear or not working as expected?
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS/platform, Copperfin version or commit, and build type (source build, installer, VSIX), if relevant.
+    validations:
+      required: false
+
+  - type: textarea
+    id: vfp9-behavior
+    attributes:
+      label: Expected VFP9 behavior (if applicable)
+      description: If this is about compatibility, what does real VFP9 do here? Cite shipped docs or your own testing if you can.
+    validations:
+      required: false
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you've already tried
+      description: Docs you checked, workarounds attempted, related issues/discussions found.
+    validations:
+      required: false

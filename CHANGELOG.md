@@ -1,3 +1,15 @@
+- 2026-08-11: Added contributor-facing templates ahead of external recruitment.
+  The single `pull_request_template.md` is now two selectable templates under
+  `.github/PULL_REQUEST_TEMPLATE/`: `requirements_recovery.md` (the prior
+  content, unchanged, for `RQ-*`/`VR-*`/`DQ-*`/`DV-*`/`HZ-*` traceability and
+  safety-relevant work) and `general_contribution.md` (new, shorter — summary,
+  testing, the same mandatory licensing/DCO/provenance checklist, and a light
+  checklist, for ordinary bug-fix/feature/docs contributions). Also added
+  `.github/DISCUSSION_TEMPLATE/q-a.yml` and `ideas.yml` structured forms for
+  the existing Q&A and Ideas Discussion categories; General, Show and tell,
+  Polls, and Announcements remain freeform. No product, runtime, or workflow
+  behavior changed.
+
 - 2026-08-08: Produced and independently inspected the corrected private
   evaluation candidate `v0.1.0-rc.2` under #4907. The protected annotated tag
   peels exactly to reviewed commit `fd6bd94f8`; all exact-main native, package,
