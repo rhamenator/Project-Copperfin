@@ -10,10 +10,17 @@
   leaf through `CFPOLYGLOTDISPATCH()` and `CFJSONGET()`. The candidate receives
   an empty environment and performs no discovery, networking, package loading,
   reflection, or callback into mutable runtime state. Local Release focused
-  and adjacent tests pass `7/7`; hosted and sanitizer evidence remains to be
-  recorded at the final candidate head. This is not inline C#, general CLR
-  hosting, arbitrary assembly loading, a loose managed sidecar, or execution
-  of generated transpilation output.
+  and adjacent tests pass `7/7`, the focused target repeats `20/20`, Clang 21
+  ASan/UBSan passes with leak detection, and managed formatting/analyzers plus
+  focused C++ static analysis are clean. Exact product/test candidate
+  `4e66813d2` passes Linux Native `31459407580` and macOS Native
+  `31459407582` at `337/337`, Windows Native `31459407816` at `336/336`, the
+  focused regression on every host, and the macOS locale matrix at `8/8`.
+  Generated Launcher Validation `31459366674` separately passes the candidate
+  with its process regression on Windows, Ubuntu, and macOS, and all eleven
+  protected PR checks pass at candidate documentation head `d0c7ef408`. This
+  is not inline C#, general CLR hosting, arbitrary assembly loading, a loose
+  managed sidecar, or execution of generated transpilation output.
 
 - 2026-08-10: Added the #4940/#4700 trusted polyglot runtime-host composition.
   `PolyglotRuntimeHost` owns a validated route registry and explicit admitted-

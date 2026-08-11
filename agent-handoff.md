@@ -23,14 +23,20 @@ correlation redaction. The generated-launcher workflow now exercises this path
 on hosted Windows, Linux, and macOS whenever the relevant source or contract
 changes.
 
-Local Release focused and adjacent coverage currently passes `7/7`; direct
-publish probes prove exact success, typed overflow, and quiet identity
-rejection. Sanitizer, repeat, final-head protected, and hosted cross-platform
-evidence remain to be recorded before merge. This slice adds no inline C#,
-ambient CLR discovery, in-process CLR host, arbitrary assembly load, loose
-managed runtime sidecar, network/package dependency, new task lifecycle, or
-foreign callback into mutable PRG state. See
-`docs/43-dotnet-polyglot-candidate.md`.
+Local Release focused and adjacent coverage passes `7/7`; the focused target
+repeats `20/20`; direct publish probes prove exact success, typed overflow, and
+quiet identity rejection; Clang 21 ASan/UBSan passes with leak detection; and
+managed formatting/analyzers plus focused C++ static analysis are clean. Exact
+product/test candidate `4e66813d2` passes Linux Native `31459407580` and macOS
+Native `31459407582` at `337/337`, Windows Native `31459407816` at `336/336`,
+the focused regression on every host, and the macOS four-locale matrix at
+`8/8`. Generated Launcher Validation `31459366674` separately builds and
+passes the candidate with its process regression on hosted Windows, Ubuntu,
+and macOS. All eleven protected PR checks pass at documentation head
+`d0c7ef408`. This slice adds no inline C#, ambient CLR discovery, in-process
+CLR host, arbitrary assembly load, loose managed runtime sidecar,
+network/package dependency, new task lifecycle, or foreign callback into
+mutable PRG state. See `docs/43-dotnet-polyglot-candidate.md`.
 
 ## V1 trusted polyglot runtime-host composition candidate
 
