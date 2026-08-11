@@ -54,3 +54,14 @@ stable JSON, forbidden SQL/functions, target validation, and resource limits.
 `test_runtime_host_sqlite_federation` covers the product process, opt-in, RBAC,
 planning compatibility, stable failures, and audit redaction. Runtime-host
 localization coverage preserves invariant option tokens.
+
+At exact signed/DCO implementation head `8aa8d514f`, Generated Launcher
+Validation `31535000120` built and ran the connector and product-process tests
+on Windows, Ubuntu, and macOS. All eleven protected checks passed. Independent
+Linux review rebuilt the exact head with ASan/UBSan, exercised the connector
+and runtime-host boundaries, cross-checked the Windows ABI declarations, and
+found no defect. The reviewer could not compile the Windows-only declaration
+path locally; the hosted Windows job supplied that direct build, link, and
+execution evidence. A scratch race probe also confirmed both that permanent
+target replacement is rejected and that the same-identity ABA limitation
+documented above is real.
