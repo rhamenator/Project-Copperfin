@@ -6,13 +6,8 @@
 
 #include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/sqlite_api.h"
 #include "copperfin/security/physical_path_containment.h"
-
-#if defined(_WIN32)
-#include <winsqlite3.h>
-#else
-#include <sqlite3.h>
-#endif
 
 #include <algorithm>
 #include <charconv>
@@ -360,11 +355,6 @@ SqliteFederationResult execute_sqlite_federation_plan_read_only(
 
     sqlite3_extended_result_codes(database.get(), 1);
     sqlite3_busy_timeout(database.get(), 0);
-#if !defined(SQLITE_OMIT_LOAD_EXTENSION)
-    if (sqlite3_enable_load_extension(database.get(), 0) != SQLITE_OK) {
-        return failure("federation.sqlite.extension_disable_failed");
-    }
-#endif
 #if defined(SQLITE_DBCONFIG_DEFENSIVE)
     sqlite3_db_config(database.get(), SQLITE_DBCONFIG_DEFENSIVE, 1, nullptr);
 #endif
@@ -396,11 +386,10 @@ SqliteFederationResult execute_sqlite_federation_plan_read_only(
 
     sqlite3_stmt* raw_statement = nullptr;
     const char* tail = nullptr;
-    const int prepare_result = sqlite3_prepare_v3(
+    const int prepare_result = sqlite3_prepare_v2(
         database.get(),
         plan.translated_sql.c_str(),
         static_cast<int>(plan.translated_sql.size()),
-        SQLITE_PREPARE_PERSISTENT,
         &raw_statement,
         &tail);
     StatementHandle statement(raw_statement);

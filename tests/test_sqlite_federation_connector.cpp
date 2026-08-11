@@ -6,11 +6,7 @@
 #include "copperfin/platform/sqlite_federation_connector.h"
 
 #if COPPERFIN_SQLITE_CONNECTOR_AVAILABLE
-#if defined(COPPERFIN_SQLITE_USE_WINSQLITE3)
-#include <winsqlite3.h>
-#else
-#include <sqlite3.h>
-#endif
+#include "copperfin/platform/sqlite_api.h"
 #endif
 
 #include <chrono>
