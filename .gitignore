@@ -25,3 +25,7 @@
 *_private.pem
 *.cflicense
 /release-source/
+
+# Local unattended agent-channel monitor state — never shared, never committed.
+/.agent-channel/.claude-monitor.local.log
+/.agent-channel/.stop-claude-monitor

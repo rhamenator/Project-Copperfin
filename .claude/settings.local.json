@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git reset --hard origin/main)",
+      "Bash(git rebase:*)",
+      "Bash(git worktree add:*)",
+      "Bash(git worktree remove:*)",
+      "Bash(git worktree list)",
+      "Bash(git add .agent-channel/log.jsonl .agent-channel/claude.cursor)",
+      "Bash(git commit -m:*)",
+      "Bash(git push origin main)",
+      "Bash(git push origin HEAD:main)",
+      "Bash(cmake:*)",
+      "Bash(ctest:*)",
+      "Bash(make:*)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push*--force*)",
+      "Bash(git reset --hard HEAD*)",
+      "Bash(git branch -D*)",
+      "Bash(git clean -f*)"
+    ]
+  }
+}
