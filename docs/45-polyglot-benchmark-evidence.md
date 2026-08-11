@@ -62,3 +62,10 @@ evidence capture. A checked-in evidence document adds the exact source commit,
 host/toolchain metadata, UTC capture time, policy, and limitations under the
 versioned schema in `docs/contracts/polyglot-benchmark-result-v1.schema.json`.
 Timing values are host-specific observations and must not be generalized.
+
+The first checked-in result was captured from exact signed source commit
+`cf4cd9573103096d915a211c9cd95aae413cb68c` on Linux x86_64. All 27 measured
+executions completed with exact parity and no failures. The host-specific
+advisory order was direct C++, local C# endpoint boundary, then the full
+C++/.NET wrapper. The result and its explicit limitations are stored in
+`docs/contracts/polyglot-benchmark-result-v1.json`; no route was changed.

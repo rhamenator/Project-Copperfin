@@ -4803,6 +4803,13 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_polyglot_route_contract_check.cmake
 )
 
+add_test(
+    NAME test_polyglot_benchmark_result_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_polyglot_benchmark_result_contract_check.cmake
+)
+
 add_executable(test_platform_environment
     test_platform_environment.cpp
 )

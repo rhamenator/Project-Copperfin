@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "kind": "copperfin-polyglot-benchmark-result",
+  "captured_at_utc": "2026-08-11T11:14:13Z",
+  "source_commit": "cf4cd9573103096d915a211c9cd95aae413cb68c",
+  "host": {
+    "os": "Linux 7.0.0-29-generic",
+    "architecture": "x86_64",
+    "compiler": "GCC 15.2.0",
+    "configuration": "Release",
+    "dotnet_sdk": "10.0.104"
+  },
+  "capability_id": "samples.dotnet.add-v1",
+  "runner": {
+    "warmup_iterations": 1,
+    "measured_iterations": 3,
+    "workloads": ["positive", "negative", "zero"]
+  },
+  "policy": {
+    "minimum_sample_count": 9,
+    "maximum_p95_latency_us": 5000000,
+    "minimum_throughput_per_second": 1,
+    "maximum_peak_memory_kib": 1048576,
+    "maximum_p95_startup_ms": 5000,
+    "maximum_security_profile": "admitted-process",
+    "weights": {"latency": 25, "throughput": 25, "memory": 25, "startup": 25}
+  },
+  "measurements": [
+    {
+      "implementation": "direct-cpp",
+      "security_profile": "trusted-native",
+      "sample_count": 9,
+      "failure_count": 0,
+      "parity_mismatch_count": 0,
+      "p95_latency_us": 1,
+      "throughput_per_second": 1000000,
+      "peak_memory_kib": 0,
+      "p95_startup_ms": 0
+    },
+    {
+      "implementation": "cpp-dotnet-wrapper",
+      "security_profile": "admitted-process",
+      "sample_count": 9,
+      "failure_count": 0,
+      "parity_mismatch_count": 0,
+      "p95_latency_us": 18167,
+      "throughput_per_second": 71,
+      "peak_memory_kib": 3828,
+      "p95_startup_ms": 6
+    },
+    {
+      "implementation": "csharp-service",
+      "security_profile": "admitted-process",
+      "sample_count": 9,
+      "failure_count": 0,
+      "parity_mismatch_count": 0,
+      "p95_latency_us": 9916,
+      "throughput_per_second": 161,
+      "peak_memory_kib": 3820,
+      "p95_startup_ms": 9
+    }
+  ],
+  "recommendation": {
+    "ready": true,
+    "preferred": "direct-cpp",
+    "fallback_chain": ["csharp-service", "cpp-dotnet-wrapper"],
+    "automatic_promotion": false
+  },
+  "limitations": [
+    "This is one Linux x86_64 host observation, not a cross-platform performance claim.",
+    "The csharp-service class is a local one-request Native AOT endpoint boundary, not a persistent or remote service.",
+    "Direct C++ reports zero route-specific additional KiB for this allocation-free operation, not total host-process RSS.",
+    "Timing and route ordering must be remeasured for each target host and representative production workload."
+  ]
+}
