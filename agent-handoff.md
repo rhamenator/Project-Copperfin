@@ -24,6 +24,16 @@ is corrected and contract-protected. This seeds J1 only; broader
 native-boundary inventory and the J2/J3 ports remain open. See
 `docs/50-portable-public-path-boundary.md`.
 
+Independent review found no functional defect and mechanically confirmed the
+moved implementations, then identified one maintainability gap: the move had
+dropped the rationale for the layered Windows Unicode comparison fallbacks.
+That original rationale is restored without a behavior change, and the source
+contract now protects its key explanations. Final pre-follow-up evidence head
+`e0fbdd11c` passed all eleven protected checks; Generated Launcher Validation
+`31542720317` ran both path tests on Windows, Ubuntu, and macOS, while Windows
+Environment and Executable Path Validation `31542720276` repeated them in its
+focused set.
+
 ## V1 read-only SQLite federation execution
 
 The current H1 increment connects the deterministic SQLite translator/planner

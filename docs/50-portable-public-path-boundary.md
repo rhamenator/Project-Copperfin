@@ -51,6 +51,16 @@ preserved `CharLowerBuffW` fallback's User32 dependency had remained implicit
 through CMake's default Windows libraries; the corrected head declares that
 dependency on `cf_platform_support`, and the source contract protects it.
 
+Final evidence head `e0fbdd11c` passes all eleven protected checks. Generated
+Launcher Validation run `31542720317` runs both path contracts on Windows,
+Ubuntu, and macOS, and Windows Environment and Executable Path Validation run
+`31542720276` repeats them inside its `9/9` focused set. Independent review
+found no functional defect, but did identify that the move had dropped the
+hard-won rationale for the layered Windows Unicode comparison fallbacks. The
+original rationale is restored without changing code behavior, and the source
+contract now protects the key explanations alongside the implementation and
+explicit User32 link dependency.
+
 ## Remaining J1 work
 
 This boundary is a seed, not a blanket portability claim. Later independently

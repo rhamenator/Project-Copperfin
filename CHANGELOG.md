@@ -1,3 +1,13 @@
+- 2026-08-11: Restored the review-identified rationale for the layered Windows
+  Unicode path-component comparison APIs after their move behind the portable
+  public boundary. The original comments explain the invariant-locale
+  fallbacks and `CharLowerBuffW`'s ambiguous zero result; a source contract now
+  prevents those load-bearing explanations from being silently discarded.
+  Executable behavior is unchanged. Final pre-follow-up evidence head
+  `e0fbdd11c` passed all eleven protected checks, including Generated Launcher
+  Validation `31542720317` on Windows, Ubuntu, and macOS and Windows
+  Environment and Executable Path Validation `31542720276`.
+
 - 2026-08-11: Seeded v1 portability lane J1 with an explicit public path
   boundary. The widely consumed `copperfin/platform/path.h` interface now
   contains only standard C++ declarations; Windows SDK inclusion and all
