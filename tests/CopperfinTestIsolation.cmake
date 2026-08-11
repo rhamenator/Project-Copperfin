@@ -168,6 +168,18 @@ function(copperfin_configure_native_test_isolation)
         PLATFORM portable
         AUDIT complete
     )
+    if(TEST test_polyglot_dotnet_candidate)
+        copperfin_set_test_isolation(test_polyglot_dotnet_candidate
+            PARALLEL_SAFE
+            FILESYSTEM process-owned
+            ENVIRONMENT child-scoped
+            CHILD_PROCESSES bounded
+            NETWORK none
+            SAMPLES read-only
+            PLATFORM portable
+            AUDIT complete
+        )
+    endif()
     copperfin_set_test_isolation(test_bounded_process
         PARALLEL_SAFE
         FILESYSTEM process-owned
