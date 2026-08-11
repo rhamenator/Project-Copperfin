@@ -4861,6 +4861,17 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_polyglot_benchmark_result_contract_check.cmake
 )
 
+copperfin_add_test(test_platform_path cf_platform_support
+    test_platform_path.cpp
+)
+
+add_test(
+    NAME test_platform_path_boundary_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_platform_path_boundary_contract_check.cmake
+)
+
 add_executable(test_platform_environment
     test_platform_environment.cpp
 )

@@ -119,6 +119,21 @@ only — the mechanism exists but is empty or entirely unclaimed.
 
 ## Foundational Contracts
 
+### v1 lane J1 — Portable core boundary
+
+**Status: real seed, broad inventory still open.** The common public path
+interface now contains only standard C++ declarations; Windows SDK selection,
+UTF conversion, and path-component comparison are private implementation in
+`cf_platform_support`. A direct portable regression and a source-level contract
+run in the Windows, Linux, and macOS validation workflow, so the boundary is
+load-bearing rather than documentary. See
+`docs/50-portable-public-path-boundary.md`.
+
+**What it will take:** inventory the rest of the public core and isolate the
+remaining shell, printing, OLE/COM, CLR-hosting, and other host-specific seams.
+This slice does not claim the standalone IDE or full core host has been ported;
+those remain J2/J3 work.
+
 ### docs/01 — Product Charter
 
 The charter's **Compatibility Fidelity Rule** is the load-bearing requirement for

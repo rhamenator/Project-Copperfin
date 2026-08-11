@@ -1,3 +1,22 @@
+- 2026-08-11: Seeded v1 portability lane J1 with an explicit public path
+  boundary. The widely consumed `copperfin/platform/path.h` interface now
+  contains only standard C++ declarations; Windows SDK inclusion and all
+  OS-specific UTF conversion and component-comparison calls live privately in
+  `cf_platform_support`. Existing Windows and POSIX behavior is preserved.
+  Direct UTF-8/equality regression coverage and a load-bearing source contract
+  prevent Windows implementation tokens from returning to the public header.
+  Generated Launcher Validation runs both contracts on Windows, Ubuntu, and
+  macOS, and the focused Windows environment/path workflow repeats them. Local
+  GCC Release focused, adjacent consumer, isolation, and workflow-contract
+  coverage passes `10/10`; Clang 21 ASan/UBSan passes the two new tests with
+  leak detection. Exact corrected head `dac37ee59` passes all eleven protected
+  checks; Generated Launcher Validation `31541415911` runs both contracts on
+  Windows, Ubuntu, and macOS, and Windows Environment and Executable Path
+  Validation `31541415790` repeats them beside the focused consumers. Automated
+  review's explicit-User32 dependency finding is corrected and
+  contract-protected. This is a bounded J1 seed, not completion of the portable-
+  core inventory or the J2/J3 host ports.
+
 - 2026-08-11: Completed the first high-value .NET parity surface-pack
   disposition. The policy matrix now records shipped adapted task, JSON,
   bounded regex, native collection/dictionary, and bounded payload-crypto

@@ -36,9 +36,9 @@ flowchart TB
         I1 --> I2
       end
 
-      subgraph LANEJ["Lane J - root #114 'Portability and portable core boundary' (still OPEN, zero shipped evidence)"]
+      subgraph LANEJ["Lane J - root #114 'Portability and portable core boundary' (still OPEN, seeded)"]
         direction LR
-        J1["J1 Preserve Portable Core<br/>Boundary<br/>root #35"]
+        J1["J1 Preserve Portable Core<br/>Boundary<br/>root #35 - SEEDED:<br/>public path isolation"]
         J2["J2 Port Standalone IDE<br/>+ Core to macOS<br/>root #36"]
         J3["J3 Port Standalone IDE<br/>+ Core to Linux<br/>root #37"]
         J1 --> J2
@@ -61,9 +61,9 @@ flowchart TB
     J1 --> TRACE
 
     class CONT1,CONT2 planned;
-    class H1,H3,I1 partial;
+    class H1,H3,I1,J1 partial;
     class H2,I2 planned;
-    class J1,J2,J3 planned;
+    class J2,J3 planned;
     class TRACE planned;
     class V1,LANEH,LANEI,LANEJ lane;
 ```
@@ -75,6 +75,10 @@ benchmark evidence; and `I1` has a security baseline. These real seeds are
 `cf_platform_profile`'s deterministic Fox-SQL
 translator/execution-planning lane, the trusted polyglot host and route-impact
 boundary, and `cf_security`'s RBAC/audit/secrets/signing baseline, respectively.
+`J1` now has an explicit portable public path boundary: platform-neutral
+declarations remain in the broadly consumed header while the Windows SDK and
+native implementation stay private to `cf_platform_support`, with direct and
+source-contract tests scheduled on all three hosts.
 `H3` still lacks broader managed-language environments and model/provider or
 mutable MCP/AI adapters. **What's left, and what it
 takes:** this is
@@ -82,5 +86,6 @@ covered in full, document-by-document, in
 [31-specification-compliance-gap-analysis.md](../31-specification-compliance-gap-analysis.md) —
 in particular its interop/federation/trust/security and language/data-fidelity
 gap diagrams give the `H`/`I` gaps in the same level of detail as this diagram
-gives their dependency shape. Lane `J` (portability) has no shipped evidence
-at all yet and is the most clearly not-started item in the entire v1 list.
+gives their dependency shape. Lane `J` still needs a broader portable-core
+inventory and isolation of shell, printing, OLE/COM, CLR-hosting, and other
+native seams before J1 can close; the J2/J3 host ports remain planned.

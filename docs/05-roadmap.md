@@ -833,8 +833,10 @@ cover:
 5. Port standalone/core host behavior to macOS and Linux while preserving the
    portable native contracts. *(This is lane **J** — `J1`/`#35` portable core
    boundary, `J2`/`#36` macOS port, `J3`/`#37` Linux port. The first bounded
-   Studio launch-error seam is shipped with three-platform evidence; the
-   broader ports remain open.)*
+   Studio launch-error seam is shipped with three-platform evidence, and the
+   broadly consumed public path interface now isolates its Windows SDK
+   implementation behind `cf_platform_support`; the wider native-boundary
+   inventory and broader ports remain open.)*
 6. Build the requirements-to-code-to-test traceability matrix from validated
    VFP9 behavior, shipped documentation, and documented Copperfin exceptions.
    *(No lane letter was ever assigned. The durable matrix has begun in
