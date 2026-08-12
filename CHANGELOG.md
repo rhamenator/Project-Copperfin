@@ -8,6 +8,9 @@
   one successful signed launch, seven fail-closed negative cases, and no
   secret-material markers. This refines fixture fidelity without changing the
   trust model, signed inventory contract, or ordinary development behavior.
+  Review hardening now binds each constant name to its exact role-specific
+  literal as well as its intended sidecar path, so initializer and usage swaps
+  both fail the focused source contract.
 
 - 2026-08-12: Made the protected Windows launcher-trust fixture's dependency
   and runtime-configuration JSON payloads distinct. The signed inventory
