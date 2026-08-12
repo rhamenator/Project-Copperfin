@@ -13,7 +13,10 @@
   macOS; Windows DECLARE ABI Validation `31566888629` on Win32/x64; Windows
   environment/path `31566888649`; GCC/Clang executable-path `31566888767`;
   DCO `31566887243`; and both socket checks. Native invocation marshaling,
-  OLE/COM, shell, printing, and J2/J3 ports remain separate.
+  OLE/COM, shell, printing, and J2/J3 ports remain separate. Independent
+  review found no defect after ownership/failure-path tracing, portable-header
+  compilation, two boundary mutations, and an ASan/UBSan runtime-host build;
+  direct Windows loader execution remains supplied by hosted Win32/x64 CI.
 
 - 2026-08-11: Continued v1 portability lane J1 with a portable public
   process-environment boundary. The broadly consumed
