@@ -47,24 +47,18 @@ artifact workflow. That path records the English source-of-truth and preserves
 the Spanish/Portuguese human-review warning, but it neither publishes a GitHub
 Release nor claims protected signing or independent safety approval. Permissive
 #4403 primary-hazard safety run `30555972170` passes; genuine arm's-length
-review, formal issue closure, and strict validation remain required. #4409
-cannot run its enforced trust gate because no protected repository
-signer/registry secrets are configured. Audit child #4894 corrects that gate's
-implementation: the protected signer now signs a finalized inventory and the
-actual enforced guard records valid launch and stable exit-code-4 failures
-without exposing private material. That implementation does not replace the
-missing approved signer/registry or its required protected Windows run. Do not
-present the MVP RC as an official release. Once the immutable RC1 artifact
-passes, v1 development may proceed on its dedicated branch from the exact RC1
-commit while those external authorities and the RC stabilization lane remain
-separate.
+review, formal issue closure, and strict validation remain required. The
+protected #4409 Windows launcher-trust gate now passes at commit
+`111fb67d09df1413221beeebce9b684f47097053` in run `31630819119` using the
+approved external signer/registry pair. This does not satisfy the separate
+independent safety or linguistic-review gates and does not make an existing RC
+an official release. v1 development remains isolated from RC stabilization.
 
 The corrected mechanics are platform-validated at exact head `f0c9e06e2`:
 Windows native run `30559930672` passes `315/315` after compiling the fixture
 with MSVC, Linux/macOS native runs pass `316/316`, and the exact VSIX,
 managed-UI, installer, security, path, and ABI gates are green. No localized
-catalog or invariant diagnostic contract changed in #4894. The approved
-protected signer execution remains an external release gate.
+catalog or invariant diagnostic contract changed in #4894.
 
 Audit child #4895 additionally binds the signer/guard job to the fixed GitHub
 Actions `release` environment. The release administrator must restrict the
@@ -82,18 +76,7 @@ Windows Native `315/315`; each explicitly passes the focused
 permission/provisioning contract. The VSIX, managed-UI, installer,
 security/SBOM, executable-path, Windows environment/path, and DECLARE ABI gates
 pass. Permissive safety run `30566915484` also passes. #4895 is closed, and
-strict post-closure safety run `30568877447` passes without advancing external
-#4409 authority.
-
-Hosted Linux managed-UI run `31624289221` subsequently reproduced an
-asynchronous standalone-terminal teardown crash: a pending stderr callback
-could pass its stopped/disposed checks immediately before form disposal and
-then call `BeginInvoke` through Mono's torn-down X11 handle. Callback admission
-and UI marshaling now share one gate with disposal, and a deterministic smoke
-holds a callback at that boundary while teardown begins. The correction adds
-no text or catalog keys and changes no invariant command, transcript, layout,
-or machine contract. Warning-free managed compilation passes locally; hosted
-Mono/Xvfb and Windows managed matrices remain the acceptance evidence.
+strict post-closure safety run `30568877447` passes.
 
 The first live protected run `31623671192` passed external signer/registry
 preflight, configured and built the enforced Windows guard, and passed the
@@ -102,8 +85,24 @@ seven expected fail-closed cases, but the workflow step failed because the
 PowerShell orchestrator left the final expected exit code `4` in global process
 state. GitHub propagated that stale value and skipped the non-secret evidence
 upload. The correction resets only that process state after assertions,
-evidence generation, and cleanup. A successful rerun remains required before
-the protected trust gate can close.
+evidence generation, and cleanup. Corrected run `31630819119` passes every
+step and uploads artifact `9155061757`, whose independently reproduced archive
+digest is
+`sha256:c66fd93daab64d3c2abee12291648987f0ebff701ca36f625bfa7d4f207582eb`.
+The report records a valid launch and seven exit-code-`4` pre-start failures;
+the downloaded evidence contains no private-key or secret markers.
+
+Hosted Linux managed-UI run `31624289221` subsequently reproduced an
+asynchronous standalone-terminal teardown crash: a pending stderr callback
+could pass its stopped/disposed checks immediately before form disposal and
+then call `BeginInvoke` through Mono's torn-down X11 handle. Callback admission
+and UI marshaling now share one gate with disposal, and a deterministic smoke
+holds a callback at that boundary while teardown begins. The correction adds
+no text or catalog keys and changes no invariant command, transcript, layout,
+or machine contract. Warning-free managed compilation passes locally. Exact
+v1 forward-port run `31633512939` passes the Linux Mono/Xvfb standalone-shell
+and adjacent property-grid smoke; the accepted Windows managed matrix remains
+unchanged.
 
 The latest broad implementation baseline is product head `93d44395f`; the
 latest product implementation/test head is `f0c9e06e2`, while subsequent

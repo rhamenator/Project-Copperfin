@@ -38,8 +38,9 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   `30550948703` passes Linux `316/316`, Windows `315/315`, and macOS `316/316`;
   Windows Deep `30550946359` passes native, VSIX/resources, managed/net472,
   standalone Studio, DesignerSmoke, and debugger stages. Exact VSIX, Linux UI,
-  installers, security/SBOM, and individual native runs also pass. The v1 queue
-  remains behind external release authorities #4403 and #4409.
+  installers, security/SBOM, and individual native runs also pass. The separate
+  #4403 independent safety authority remains open; #4409's protected Windows
+  launcher-trust authority is now satisfied by the evidence below.
 - Release-trust audit child `#4894` found that #4409's protected job stopped at
   provisioning and verifier-unit coverage. The corrected implementation binds
   an explicit approved signer ID to the external registry, signs a canonical
@@ -48,9 +49,7 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   evidence, and removes protected temporary inputs. Exact head `f0c9e06e2`
   passes Windows native `315/315`, Linux/macOS `316/316`, and the VSIX,
   managed-UI, installer, security, path, and ABI gates; generated-launcher run
-  `30559417230` passes at duplicate-signer head `3968fabff`. Externally approved
-  protected execution remains #4409's release authority and is not substituted
-  by this implementation slice.
+  `30559417230` passes at duplicate-signer head `3968fabff`.
 - Security audit child `#4895` binds the manual signer/guard job to the fixed
   GitHub Actions `release` environment and locks that invariant in the workflow
   contract. Independent reviewers and prevention of self-review remain
@@ -67,15 +66,20 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   installer, security/SBOM, executable-path, Windows environment/path, and
   DECLARE ABI gates pass; corrected-head permissive safety run `30566915484`
   also passes. #4895 is closed, and strict post-closure safety run `30568877447`
-  passes; #4409 remains open for external release authority.
+  passes.
 - The first live protected run `31623671192` proved the external signer/registry
   binding, enforced Windows build, and package-trust verifier, then executed
   the valid launch and all seven negative guard cases. The workflow still
   failed because its PowerShell orchestrator leaked the final expected guard
   exit code `4` into GitHub's step wrapper, which skipped evidence upload. The
   correction clears only that expected process state after assertions,
-  evidence writing, and cleanup; a successful protected rerun and new
-  immutable RC remain required.
+  evidence writing, and cleanup. Corrected protected run `31630819119` passes
+  at merge commit `111fb67d09df1413221beeebce9b684f47097053`; artifact
+  `9155061757` has independently reproduced archive digest
+  `sha256:c66fd93daab64d3c2abee12291648987f0ebff701ca36f625bfa7d4f207582eb`.
+  Its report records one valid launch (`0`, apphost started) and all seven
+  negative cases (`4`, apphost not started), with no secret markers. This
+  satisfies #4894/#4409/#4387/#4041; a new immutable RC remains required.
 - RC regression `#4893` removes the separate net472 fixture's nested shell and
   cold-child readiness races. Owning parents record helper PIDs immediately
   from `Process.Start`; native Windows stress passes `9/9`, exact VSIX
