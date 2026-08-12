@@ -45,8 +45,24 @@ hosted lane fails closed.
 
 Local GCC Release builds the affected runtime, parser regression, and broad
 runtime-surface regression. Boundary, workflow, isolation, parser, and runtime
-coverage passes `5/5`. This proves the portable interpreter side on Linux;
-Win32/x64 behavior remains gated by the hosted managed fixture before merge.
+coverage passes `5/5`. Corrected exact head `9485852c1` passes all eleven
+protected checks. Generated Launcher Validation `31563614971` passes the
+boundary contract and adjacent generated-launcher, portable-platform,
+polyglot, MCP, and SQLite federation coverage on Windows, Ubuntu, and macOS.
+Windows DECLARE ABI Validation `31563615036` passes the real managed fixture
+and adjacent DECLARE tests on Win32 and x64. Windows environment/path
+validation `31563615085`, GCC/Clang executable-path validation `31563615003`,
+DCO `31563612877`, and both socket checks also pass.
+
+Independent review found no defect. It read-verified every COM owner and all
+15 managed-failure returns for single cleanup, compared the moved error mapping
+to its prior implementation, compiled the header from Linux, mutation-proved
+both native-type exclusion and portable error consumption, and passed the
+runtime host and broad control-flow regression under ASan/UBSan. That review
+could not execute Windows CLR hosting; actual CLR invocation equivalence is
+therefore established by the hosted Win32/x64 fixture, not by the Linux review.
+The portable contract is the declaration and interpreter boundary; the
+Windows-only function intentionally has no non-Windows implementation.
 
 ## Scope
 
