@@ -102,11 +102,12 @@ internal static partial class Program
 
         using var marshalEntered = new ManualResetEventSlim(false);
         using var allowMarshal = new ManualResetEventSlim(false);
+        var marshalReleaseObserved = false;
         Exception? callbackFailure = null;
         terminal.BeforeCallbackMarshalForTest = () =>
         {
             marshalEntered.Set();
-            allowMarshal.Wait(TimeSpan.FromSeconds(5));
+            marshalReleaseObserved = allowMarshal.Wait(TimeSpan.FromSeconds(5));
         };
 
         var callbackThread = new Thread(() =>
@@ -140,6 +141,8 @@ internal static partial class Program
         Expect(callbackThread.Join(TimeSpan.FromSeconds(5)) && releaseThread.Join(TimeSpan.FromSeconds(5)),
             "standalone Terminal teardown should drain the in-flight callback without deadlock");
         Application.DoEvents();
+        Expect(marshalReleaseObserved,
+            "standalone Terminal teardown smoke should explicitly release the paused callback");
         Expect(callbackFailure is null,
             "standalone Terminal teardown should not marshal output through a disposed WinForms handle");
     }
