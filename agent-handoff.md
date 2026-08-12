@@ -1,6 +1,6 @@
 # Agent Handoff
 
-## Windows launcher-trust protected-run correction
+## Windows launcher-trust protected execution complete
 
 The first live protected `Windows Launcher Trust Validation` run
 `31623671192` at `main` head `b458c8794` proved that the external
@@ -18,8 +18,16 @@ The correction clears only that expected-negative process state, after all
 assertions, evidence writing, and cleanup have succeeded. The provisioning
 contract now requires exactly one end-of-script reset, so removing or moving
 it fails locally. No guard, signature, envelope, inventory, package, runtime,
-installer, or machine status/exit contract changes. The protected workflow
-must be rerun successfully before #4894/#4409 or their parents can close.
+installer, or machine status/exit contract changes.
+
+Corrected protected run `31630819119` passes at exact `main` merge commit
+`111fb67d09df1413221beeebce9b684f47097053`. Artifact `9155061757` has GitHub
+and independently reproduced archive digest
+`sha256:c66fd93daab64d3c2abee12291648987f0ebff701ca36f625bfa7d4f207582eb`.
+The report contains exactly one valid launch (`0`, apphost started) and seven
+negative cases (`4`, apphost not started), and its downloaded files contain no
+private-key or secret markers. #4894, #4409, #4387, and #4041 now have direct
+closure evidence. RC2 remains immutable; assemble a new sequential RC.
 
 The live `release` environment is restricted to `main` and owns the two
 launcher-trust secrets. Because the repository currently has one owner and no
@@ -27,8 +35,8 @@ second trusted maintainer, it does not claim an independent environment
 reviewer; the explicit owner dispatch is the documented temporary authority
 boundary. Independent review becomes mandatory when another trusted
 maintainer is admitted. RC2 and its artifact set remain immutable; this
-security-validation correction requires a new sequential RC after review and
-successful protected execution, then forward-porting into `v1-development`.
+security-validation correction requires a new sequential RC, then
+forward-porting into `v1-development`.
 
 ## Standalone terminal callback teardown correction
 
