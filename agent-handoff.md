@@ -12,7 +12,13 @@ behavior, source ownership, three-host scheduling, and complete isolation
 metadata are load-bearing. GCC Release passes the affected and adjacent set
 `7/7`; two deliberate ownership/delegation mutations fail at the intended
 assertions; and Clang ASan/UBSan passes `5/5` without findings. Hosted and
-independent-review evidence remain required. See
+independent evidence now pass at exact implementation head `b30f428ff`:
+generated-launcher run `31645961061` executes the behavior and boundary tests
+on Windows, Ubuntu, and macOS; Windows path run `31645961018`, Win32/x64 run
+`31645961045`, GCC/Clang run `31645961239`, DCO run `31645960989`, and both
+Socket checks pass. Independent review rebuilt and reran the affected surface,
+reproduced both mutation failures, passed the isolation meta-test, and found no
+ASan/UBSan issue in an additional path-input/repetition probe. See
 `docs/60-portable-disk-space-boundary.md`.
 
 ## V1 portable code-page boundary

@@ -40,8 +40,21 @@ disk API token to the interpreter and separately replacing the allocation-unit
 delegation with the available-byte query each fail at the intended boundary
 assertion; restoration returns the selection to green. Clang ASan/UBSan passes
 the direct behavior, disk-space boundary, workflow, and isolation selection
-`5/5` without a sanitizer finding. Hosted Windows, Ubuntu, and macOS execution
-and independent review remain required before merge.
+`5/5` without a sanitizer finding.
+
+At exact signed/DCO implementation head
+`b30f428ffd6b5e49f2b0bb8cae2a6eb6b0cd5dab`, generated-launcher validation
+run `31645961061` passes the disk-space behavior and ownership contracts on
+Windows, Ubuntu, and macOS. Windows environment/path run `31645961018`, Win32
+and x64 DECLARE run `31645961045`, GCC/Clang executable-path run
+`31645961239`, and DCO run `31645960989` also pass; both Socket checks report
+success. Independent review at that head rebuilt the direct and broad runtime
+targets, passed the behavior, boundary, workflow, and isolation contracts,
+independently reproduced both mutation failures, and exercised empty,
+relative, root, long-missing, non-ASCII, device, traversal, and repeated-query
+paths through an additional ASan/UBSan probe with no finding. The reviewer
+could only read-verify the Windows volume-query branch on Linux; the hosted
+Windows behavior run provides the direct Windows execution evidence.
 
 ## Scope
 
