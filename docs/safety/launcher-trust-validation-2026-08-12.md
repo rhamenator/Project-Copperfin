@@ -83,6 +83,42 @@ trust scopes in #4894, #4409, #4387, and #4041. It does not authorize a public
 release or satisfy the separate Authenticode, Apple signing/notarization,
 Linux package signing, independent safety-review, or localization-review gates.
 
+## Superseding Distinct-Payload Execution
+
+Independent review of the corrected artifact found that the dependency and
+runtime-configuration fixture sidecars used identical minimal JSON content.
+The signed inventory still bound each path, role, and digest independently, so
+this was not a verifier bypass. The fixture was nevertheless made more
+representative by assigning valid, role-specific JSON payloads and by adding a
+source contract that rejects missing or swapped bindings.
+
+Protected run `31635868978` passed every step at exact `main` merge commit
+`477035ca2df6d0eb688d58e83aee80805e932d38`, including protected-input
+materialization, signer/registry preflight, enforced build, package contract,
+guard walkthrough, evidence upload, and protected-input cleanup. Artifact
+`9156951212` has GitHub archive digest
+`sha256:9385656df3fbbcf0408d8e0c68bb42504dc7a9f1333272f4f05b8b4cbfa29dec`;
+an independent raw download reproduced that digest. The provisioning JSON
+retains digest
+`7adcc4ff91d5319b2969caa1e30523236d69918049481a80576472780ebc8cb7`, and
+the superseding validation JSON has digest
+`9a475a239c492f9bf0243261506c1e00a3a93f42a68b078157b7b1e6ce78bba3`.
+
+Machine assertions verified the exact signer, run, and commit identities;
+five unique artifact paths; five distinct lowercase SHA-256 values; eight
+unique cases; the valid launch's exit `0`, apphost start, and passing status;
+and all seven negative cases' exit `4`, absent apphost start, and passing
+status. The dependency and runtime-configuration fixture digests are now
+distinct:
+
+- dependency sidecar: `40831f6757929bc14af6185082bccaadbd188d2246eb324b486e6b59792190e0`;
+- runtime-configuration sidecar: `6616eda4480368fb2615c9496a572bd52ac3b1f102d252cbdb6edca338a775d1`.
+
+A refined scan found no PEM private-key block, passphrase, signing-key secret
+name, or registry-secret name in either downloaded JSON file. This execution
+supersedes the earlier fixture-content evidence while preserving its valid
+trust and fail-closed conclusions.
+
 ## Release Authority Limitation
 
 The repository currently has one owner and no second trusted maintainer.

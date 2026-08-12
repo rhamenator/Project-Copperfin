@@ -1,5 +1,26 @@
 # Agent Handoff
 
+## Launcher-trust distinct-payload evidence
+
+Protected run `31635868978` passes at exact `main` merge
+`477035ca2df6d0eb688d58e83aee80805e932d38` after the fixture dependency and
+runtime-configuration sidecars received distinct role-specific JSON payloads.
+Artifact `9156951212` has GitHub and independently reproduced archive digest
+`sha256:9385656df3fbbcf0408d8e0c68bb42504dc7a9f1333272f4f05b8b4cbfa29dec`.
+The provisioning and validation JSON digests are respectively
+`7adcc4ff91d5319b2969caa1e30523236d69918049481a80576472780ebc8cb7` and
+`9a475a239c492f9bf0243261506c1e00a3a93f42a68b078157b7b1e6ce78bba3`.
+
+Independent machine assertions confirm the exact signer, run, and commit;
+five unique artifact paths; five distinct valid SHA-256 values; one valid
+launch with exit `0` and apphost start; seven negative cases with exit `4`
+and no apphost start; and no private-key, passphrase, environment-secret, or
+registry-secret markers. The dependency and runtime-configuration digests are
+now respectively `40831f6757929bc14af6185082bccaadbd188d2246eb324b486e6b59792190e0`
+and `6616eda4480368fb2615c9496a572bd52ac3b1f102d252cbdb6edca338a775d1`.
+This supersedes the earlier same-content fixture evidence without changing
+the path/role/digest trust contract or reopening the closed launcher gates.
+
 ## Launcher-trust fixture review follow-up
 
 Independent inspection of protected run `31630819119` confirmed the archive
@@ -10,10 +31,9 @@ paths used the same empty JSON payload and therefore had the same digest.
 The signed trust contract was not bypassed: each inventory record binds its
 package-relative path, role, and SHA-256 digest, and identical file content is
 valid. The fixture now uses distinct valid JSON markers for those two roles,
-with a source-contract regression preventing accidental reintroduction. Rerun
-the protected Windows launcher-trust workflow after this correction is merged
-to supersede the earlier fixture evidence before assembling the next immutable
-release candidate.
+with a source-contract regression preventing accidental reintroduction. The
+protected rerun recorded above supersedes the earlier fixture-content evidence
+before assembly of the next immutable release candidate.
 
 ## Windows launcher-trust protected execution complete
 
