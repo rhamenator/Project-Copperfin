@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+#include "copperfin/platform/code_page.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_locale_code_page.h"
 #include "prg_engine_test_support.h"
@@ -54,7 +55,7 @@ namespace copperfin::runtime_surface_tests
             copperfin::test_support::getenv_optional("LC_CTYPE"),
             copperfin::test_support::getenv_optional("LANG"),
         };
-        return copperfin::runtime::detail::resolve_posix_host_code_page(system_codeset, locale_candidates);
+        return copperfin::platform::resolve_posix_host_code_page(system_codeset, locale_candidates);
 #endif
     }
 

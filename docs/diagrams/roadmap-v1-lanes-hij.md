@@ -38,7 +38,7 @@ flowchart TB
 
       subgraph LANEJ["Lane J - root #114 'Portability and portable core boundary' (still OPEN, seeded)"]
         direction LR
-        J1["J1 Preserve Portable Core<br/>Boundary<br/>root #35 - SEEDED:<br/>public path/environment/search isolation"]
+        J1["J1 Preserve Portable Core<br/>Boundary<br/>root #35 - PARTIAL:<br/>path/environment/search, code-page isolation"]
         J2["J2 Port Standalone IDE<br/>+ Core to macOS<br/>root #36"]
         J3["J3 Port Standalone IDE<br/>+ Core to Linux<br/>root #37"]
         J1 --> J2
@@ -76,7 +76,7 @@ benchmark evidence; and `I1` has a security baseline. These real seeds are
 translator/execution-planning lane, the trusted polyglot host and route-impact
 boundary, and `cf_security`'s RBAC/audit/secrets/signing baseline, respectively.
 `J1` now has explicit portable public path, process-environment,
-executable-search, and file-version metadata boundaries plus a private SQLite
+executable-search, file-version metadata, and code-page boundaries plus a private SQLite
 native-ABI boundary:
 platform-neutral declarations remain in the broadly consumed headers while
 Windows/POSIX selection and native implementation stay private to

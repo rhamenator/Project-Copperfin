@@ -4,6 +4,7 @@
 
 #include "prg_engine_runtime_surface_functions.h"
 
+#include "copperfin/platform/code_page.h"
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/json.h"
@@ -23,7 +24,6 @@
 #include <cstdint>
 #include <cwchar>
 #include <cstdlib>
-#include <cerrno>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -41,8 +41,6 @@
 #define NOMINMAX
 #include <windows.h>
 #else
-#include <iconv.h>
-#include <langinfo.h>
 #include <sys/statvfs.h>
 #endif
 
