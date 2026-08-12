@@ -21,6 +21,9 @@ Automation, CLR-hosting, and `mscorlib` types remain private to
 - Exact source/fault context, repeat-call cleanup, mixed-mode native-export
   precedence, path resolution, and the unsupported-by-reference/object/callback
   limitations are unchanged.
+- The superseded late-bound `IDispatch` route and its `EXCEPINFO` owner are no
+  longer compiled or retained. The supported CLR vtable implementation owns
+  each COM result directly and converts failures to the portable result record.
 - macOS and Linux still do not compile or link the Windows CLR host. Their
   interpreter translation unit nevertheless compiles against the same portable
   boundary declarations, preventing native SDK types from becoming a core
@@ -32,7 +35,9 @@ Automation, CLR-hosting, and `mscorlib` types remain private to
 and CLR SDK tokens in the portable boundary header; requires the portable
 argument/value/error-stage records; verifies private ownership of CLR and
 `VARIANT`/`SAFEARRAY` marshaling; and prevents CLR headers or linker directives
-from returning to the interpreter translation unit. Generated Launcher
+from returning to the interpreter translation unit. It also requires the old
+`dispatch_exception_info` sources, build wiring, test hook, and interpreter
+tokens to remain absent. Generated Launcher
 Validation runs this contract on Windows, Ubuntu, and macOS. Windows DECLARE
 ABI Validation repeats it on Win32 and x64 beside the existing real managed
 fixture.
@@ -69,5 +74,5 @@ Windows-only function intentionally has no non-Windows implementation.
 This is a J1 boundary correction, not a new interop feature. It does not enable
 CLR hosting on macOS/Linux, add inline foreign-language syntax, change the
 out-of-process polyglot route, add managed objects/events/callbacks, or isolate
-the remaining native DLL and OLE/COM paths. Those broader seams and J2/J3 host
+unrelated OLE/COM object-automation paths. Those broader seams and J2/J3 host
 ports remain open.

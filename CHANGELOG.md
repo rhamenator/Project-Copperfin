@@ -1,3 +1,15 @@
+- 2026-08-12: Retired the dormant Windows `IDispatch`/`EXCEPINFO` exception
+  owner left behind after managed `DECLARE` moved to supported CLR vtable
+  interfaces. The unused sources, test-only instrumentation, and build wiring
+  are removed; real managed success, repeated failure, localization, path, and
+  mixed-mode behavior coverage remains authoritative. The portable CLR-host
+  source contract now fails if the obsolete files, hook, build wiring, or
+  interpreter tokens return. This narrows the J1 native seam without changing
+  VFP-visible behavior or claiming closure of unrelated OLE automation. A
+  clean GCC Release build and the focused boundary/workflow/runtime set pass
+  `4/4`; deliberately restoring the retired header fails at the intended
+  contract guard, and removing the mutation returns the set to green.
+
 - 2026-08-12: Continued v1 portability lane J1 by moving native `DECLARE`
   argument backing storage, raw pointer formation, Windows Automation dispatch,
   x64 typed invocation, return extraction, and by-reference result copying

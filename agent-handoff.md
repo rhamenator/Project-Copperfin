@@ -1,5 +1,23 @@
 # Agent Handoff
 
+## V1 obsolete managed IDispatch retirement
+
+The supported Windows managed `DECLARE` path uses CLR vtable interfaces and
+portable scalar result records; no production source consumed the older
+`DispatchExceptionInfo` helper. This slice removes that dormant
+`IDispatch`/`EXCEPINFO` owner, its test-only counters, and its build wiring.
+The existing Windows managed fixture remains the behavior authority for
+success, repeated managed faults, localization, explicit-relative and
+loader-resolved paths, missing assemblies, and mixed-mode native precedence.
+`test_portable_clr_host_boundary_contract` now rejects restoration of the old
+files, hook, build wiring, or interpreter ownership. Unrelated OLE object
+automation remains open under J1. Clean GCC Release compilation and the
+portable CLR boundary, native workflow, GitHub Actions workflow, and broad
+runtime-surface tests pass `4/4`. A deliberate restoration of the retired
+header fails at the intended file-presence guard; deleting the mutation
+returns the contract to green. Win32/x64 hosted managed-fixture execution is
+still required before merge.
+
 ## V1 APRINTERS shell/printing boundary
 
 Independent post-merge review of #4963 found no product defect but identified
