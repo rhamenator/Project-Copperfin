@@ -125,7 +125,9 @@ only — the mechanism exists but is empty or entirely unclaimed.
 process-environment, and executable-search interfaces now contain only standard
 C++ declarations. The SQLite connector's OS-selected raw C ABI shim is private
 to its implementation and no public Copperfin header selects a host platform or
-includes a native SQLite header.
+includes a native SQLite header. The Windows-only managed `DECLARE` host now
+accepts and returns portable scalar records; `HRESULT`, `VARIANT`, `SAFEARRAY`,
+CLR interfaces, and `mscorlib` remain private to its Windows implementation.
 Windows SDK/CRT selection, UTF conversion, path-component comparison, POSIX
 environment calls, and process-wide synchronization are private implementation
 in `cf_platform_support`. Direct portable regressions and source-level
@@ -134,10 +136,12 @@ boundaries are load-bearing rather than documentary. See
 `docs/50-portable-public-path-boundary.md` and
 `docs/51-portable-public-environment-boundary.md`, and
 `docs/52-portable-executable-search-default.md`, plus
-`docs/53-private-sqlite-native-api-boundary.md`.
+`docs/53-private-sqlite-native-api-boundary.md` and
+`docs/54-portable-clr-host-boundary.md`.
 
 **What it will take:** inventory the rest of the public core and isolate the
-remaining shell, printing, OLE/COM, CLR-hosting, and other host-specific seams.
+remaining shell, printing, native DLL, OLE/COM, and other host-specific seams;
+the CLR host implementation itself remains Windows-only by design.
 This slice does not claim the standalone IDE or full core host has been ported;
 those remain J2/J3 work.
 

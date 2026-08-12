@@ -6,12 +6,17 @@
 
 #if defined(_WIN32)
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#include <oleauto.h>
 #include <metahost.h>
 
 #include <cstddef>
 #include <mutex>
 
 #if defined(_MSC_VER)
+#pragma comment(lib, "mscoree.lib")
 #import "mscorlib.tlb" raw_interfaces_only \
     high_property_prefixes("_get", "_put", "_putref") \
     rename("ReportEvent", "InteropServices_ReportEvent") \
@@ -186,6 +191,172 @@ namespace copperfin::runtime
                 result.data(),
                 count);
             return converted == count ? result : std::wstring{};
+        }
+
+        [[nodiscard]] std::wstring widen_utf8_terminated(const std::string &value)
+        {
+            const int count = MultiByteToWideChar(
+                CP_UTF8,
+                0,
+                value.c_str(),
+                -1,
+                nullptr,
+                0);
+            if (count <= 0)
+            {
+                return {};
+            }
+            std::wstring result(static_cast<std::size_t>(count), L'\0');
+            const int converted = MultiByteToWideChar(
+                CP_UTF8,
+                0,
+                value.c_str(),
+                -1,
+                result.data(),
+                count);
+            return converted == count ? result : std::wstring{};
+        }
+
+        [[nodiscard]] std::string narrow_bstr(BSTR value)
+        {
+            if (value == nullptr)
+            {
+                return {};
+            }
+            const int count = WideCharToMultiByte(
+                CP_UTF8,
+                0,
+                value,
+                -1,
+                nullptr,
+                0,
+                nullptr,
+                nullptr);
+            if (count <= 0)
+            {
+                return {};
+            }
+            std::string result(static_cast<std::size_t>(count), '\0');
+            const int converted = WideCharToMultiByte(
+                CP_UTF8,
+                0,
+                value,
+                -1,
+                result.data(),
+                count,
+                nullptr,
+                nullptr);
+            if (converted != count)
+            {
+                return {};
+            }
+            if (!result.empty() && result.back() == '\0')
+            {
+                result.pop_back();
+            }
+            return result;
+        }
+
+        [[nodiscard]] ManagedInvocationResult managed_failure(
+            HRESULT status,
+            ManagedInvocationStage stage)
+        {
+            const HRESULT compatible_status =
+                stage == ManagedInvocationStage::load_assembly ||
+                        stage == ManagedInvocationStage::invoke_method
+                    ? DISP_E_EXCEPTION
+                    : status;
+            return {
+                .succeeded = false,
+                .compatible_error_code = static_cast<std::int32_t>(compatible_status),
+                .stage = stage,
+            };
+        }
+
+        [[nodiscard]] HRESULT populate_argument_variant(
+            const ManagedDeclaredArgument &argument,
+            VARIANT *value)
+        {
+            VariantInit(value);
+            switch (argument.kind)
+            {
+            case ManagedDeclaredArgumentKind::string:
+            {
+                const std::wstring wide_value = widen_utf8_terminated(argument.string_value);
+                value->vt = VT_BSTR;
+                value->bstrVal = SysAllocString(wide_value.c_str());
+                return value->bstrVal != nullptr ? S_OK : E_OUTOFMEMORY;
+            }
+            case ManagedDeclaredArgumentKind::signed_integer32:
+                value->vt = VT_I4;
+                value->lVal = static_cast<LONG>(argument.signed_integer_value);
+                return S_OK;
+            case ManagedDeclaredArgumentKind::signed_integer64:
+                value->vt = VT_I8;
+                value->llVal = static_cast<LONGLONG>(argument.signed_integer_value);
+                return S_OK;
+            case ManagedDeclaredArgumentKind::floating_point32:
+                value->vt = VT_R4;
+                value->fltVal = static_cast<float>(argument.floating_point_value);
+                return S_OK;
+            case ManagedDeclaredArgumentKind::floating_point64:
+                value->vt = VT_R8;
+                value->dblVal = argument.floating_point_value;
+                return S_OK;
+            }
+            return E_INVALIDARG;
+        }
+
+        [[nodiscard]] ManagedDeclaredValue portable_return_value(const VARIANT &value)
+        {
+            ManagedDeclaredValue result;
+            switch (value.vt)
+            {
+            case VT_BSTR:
+                result.kind = ManagedDeclaredValueKind::string;
+                result.string_value = narrow_bstr(value.bstrVal);
+                break;
+            case VT_I8:
+                result.kind = ManagedDeclaredValueKind::signed_integer64;
+                result.signed_integer_value = static_cast<std::int64_t>(value.llVal);
+                break;
+            case VT_UI8:
+                result.kind = ManagedDeclaredValueKind::unsigned_integer64;
+                result.unsigned_integer_value = static_cast<std::uint64_t>(value.ullVal);
+                break;
+            case VT_R4:
+                result.kind = ManagedDeclaredValueKind::floating_point;
+                result.floating_point_value = static_cast<double>(value.fltVal);
+                break;
+            case VT_R8:
+                result.kind = ManagedDeclaredValueKind::floating_point;
+                result.floating_point_value = value.dblVal;
+                break;
+            case VT_BOOL:
+                result.kind = ManagedDeclaredValueKind::boolean;
+                result.boolean_value = value.boolVal != VARIANT_FALSE;
+                break;
+            case VT_I4:
+            case VT_UI4:
+                result.kind = ManagedDeclaredValueKind::floating_point;
+                result.floating_point_value = static_cast<double>(value.lVal);
+                break;
+            case VT_I2:
+            case VT_UI2:
+                result.kind = ManagedDeclaredValueKind::floating_point;
+                result.floating_point_value = static_cast<double>(value.iVal);
+                break;
+            case VT_I1:
+            case VT_UI1:
+                result.kind = ManagedDeclaredValueKind::floating_point;
+                result.floating_point_value = static_cast<double>(value.bVal);
+                break;
+            default:
+                result.kind = ManagedDeclaredValueKind::floating_point;
+                result.floating_point_value = static_cast<double>(value.intVal);
+                break;
+            }
+            return result;
         }
 
 #if defined(_MSC_VER)
@@ -486,74 +657,72 @@ namespace copperfin::runtime
         const std::string &assembly_path_utf8,
         const std::string &type_name_utf8,
         const std::string &method_name_utf8,
-        const std::vector<VARIANT> &arguments,
-        VARIANT *return_value)
+        const std::vector<ManagedDeclaredArgument> &arguments)
     {
-        if (return_value == nullptr)
-        {
-            return {E_POINTER, ManagedInvocationStage::invoke_method};
-        }
-        VariantInit(return_value);
-
 #if !defined(_MSC_VER)
         (void)assembly_path_utf8;
         (void)type_name_utf8;
         (void)method_name_utf8;
         (void)arguments;
-        return {E_NOTIMPL, ManagedInvocationStage::acquire_runtime_host};
+        return managed_failure(E_NOTIMPL, ManagedInvocationStage::acquire_runtime_host);
 #else
         if (assembly_path_utf8.empty())
         {
-            return {E_INVALIDARG, ManagedInvocationStage::load_assembly};
+            return managed_failure(E_INVALIDARG, ManagedInvocationStage::load_assembly);
         }
         if (type_name_utf8.empty())
         {
-            return {E_INVALIDARG, ManagedInvocationStage::find_type};
+            return managed_failure(E_INVALIDARG, ManagedInvocationStage::find_type);
         }
         if (method_name_utf8.empty())
         {
-            return {E_INVALIDARG, ManagedInvocationStage::find_method};
+            return managed_failure(E_INVALIDARG, ManagedInvocationStage::find_method);
         }
         const std::wstring assembly_path = widen_utf8(assembly_path_utf8);
         if (assembly_path.empty())
         {
-            return {HRESULT_FROM_WIN32(ERROR_NO_UNICODE_TRANSLATION),
-                    ManagedInvocationStage::load_assembly};
+            return managed_failure(
+                HRESULT_FROM_WIN32(ERROR_NO_UNICODE_TRANSLATION),
+                ManagedInvocationStage::load_assembly);
         }
         const std::wstring type_name = widen_utf8(type_name_utf8);
         if (type_name.empty())
         {
-            return {HRESULT_FROM_WIN32(ERROR_NO_UNICODE_TRANSLATION),
-                    ManagedInvocationStage::find_type};
+            return managed_failure(
+                HRESULT_FROM_WIN32(ERROR_NO_UNICODE_TRANSLATION),
+                ManagedInvocationStage::find_type);
         }
         const std::wstring method_name = widen_utf8(method_name_utf8);
         if (method_name.empty())
         {
-            return {HRESULT_FROM_WIN32(ERROR_NO_UNICODE_TRANSLATION),
-                    ManagedInvocationStage::find_method};
+            return managed_failure(
+                HRESULT_FROM_WIN32(ERROR_NO_UNICODE_TRANSLATION),
+                ManagedInvocationStage::find_method);
         }
 
         static ClrRuntime runtime;
         const HRESULT runtime_status = runtime.ensure_started();
         if (FAILED(runtime_status))
         {
-            return {runtime_status, runtime.stage()};
+            return managed_failure(runtime_status, runtime.stage());
         }
 
         ComOwner<mscorlib::_AppDomain> domain;
         HRESULT hr = runtime.default_domain(domain.put());
         if (FAILED(hr) || domain.get() == nullptr)
         {
-            return {FAILED(hr) ? hr : E_NOINTERFACE,
-                    ManagedInvocationStage::acquire_app_domain};
+            return managed_failure(
+                FAILED(hr) ? hr : E_NOINTERFACE,
+                ManagedInvocationStage::acquire_app_domain);
         }
 
         ComOwner<mscorlib::_Assembly> assembly;
         hr = load_from(domain.get(), assembly_path, assembly.put());
         if (FAILED(hr) || assembly.get() == nullptr)
         {
-            return {FAILED(hr) ? hr : E_NOINTERFACE,
-                    ManagedInvocationStage::load_assembly};
+            return managed_failure(
+                FAILED(hr) ? hr : E_NOINTERFACE,
+                ManagedInvocationStage::load_assembly);
         }
 
         BstrOwner type_name_bstr(type_name);
@@ -561,16 +730,18 @@ namespace copperfin::runtime
         hr = assembly.get()->GetType_2(type_name_bstr.get(), type.put());
         if (FAILED(hr) || type.get() == nullptr)
         {
-            return {FAILED(hr) ? hr : E_NOINTERFACE,
-                    ManagedInvocationStage::find_type};
+            return managed_failure(
+                FAILED(hr) ? hr : E_NOINTERFACE,
+                ManagedInvocationStage::find_type);
         }
 
         bool method_found = false;
         hr = has_public_static_method(type.get(), method_name, &method_found);
         if (FAILED(hr) || !method_found)
         {
-            return {FAILED(hr) ? hr : DISP_E_MEMBERNOTFOUND,
-                    ManagedInvocationStage::find_method};
+            return managed_failure(
+                FAILED(hr) ? hr : DISP_E_MEMBERNOTFOUND,
+                ManagedInvocationStage::find_method);
         }
 
         SafeArrayOwner invocation_arguments;
@@ -583,16 +754,15 @@ namespace copperfin::runtime
                 static_cast<ULONG>(arguments.size()));
             if (argument_array == nullptr)
             {
-                return {E_OUTOFMEMORY, ManagedInvocationStage::invoke_method};
+                return managed_failure(E_OUTOFMEMORY, ManagedInvocationStage::invoke_method);
             }
             invocation_arguments.reset(argument_array);
             for (LONG index = 0; index < static_cast<LONG>(arguments.size()); ++index)
             {
                 VARIANT copy{};
-                VariantInit(&copy);
-                hr = VariantCopy(
-                    &copy,
-                    const_cast<VARIANT *>(&arguments[static_cast<std::size_t>(index)]));
+                hr = populate_argument_variant(
+                    arguments[static_cast<std::size_t>(index)],
+                    &copy);
                 if (SUCCEEDED(hr))
                 {
                     hr = SafeArrayPutElement(argument_array, &index, &copy);
@@ -600,7 +770,7 @@ namespace copperfin::runtime
                 VariantClear(&copy);
                 if (FAILED(hr))
                 {
-                    return {hr, ManagedInvocationStage::invoke_method};
+                    return managed_failure(hr, ManagedInvocationStage::invoke_method);
                 }
             }
         }
@@ -610,27 +780,32 @@ namespace copperfin::runtime
         BstrOwner method_name_bstr(method_name);
         if (method_name_bstr.get() == nullptr)
         {
-            return {E_OUTOFMEMORY, ManagedInvocationStage::invoke_method};
+            return managed_failure(E_OUTOFMEMORY, ManagedInvocationStage::invoke_method);
         }
         constexpr auto flags = static_cast<mscorlib::BindingFlags>(
             mscorlib::BindingFlags_InvokeMethod |
             mscorlib::BindingFlags_Public |
             mscorlib::BindingFlags_Static |
             mscorlib::BindingFlags_FlattenHierarchy);
+        VariantOwner return_value;
         hr = type.get()->InvokeMember_3(
             method_name_bstr.get(),
             flags,
             nullptr,
             target,
             argument_array,
-            return_value);
+            return_value.put());
         if (FAILED(hr))
         {
-            VariantClear(return_value);
             discard_thread_error_info();
-            return {hr, ManagedInvocationStage::invoke_method};
+            return managed_failure(hr, ManagedInvocationStage::invoke_method);
         }
-        return {S_OK, ManagedInvocationStage::none};
+        return {
+            .succeeded = true,
+            .compatible_error_code = 0,
+            .stage = ManagedInvocationStage::none,
+            .value = portable_return_value(return_value.get()),
+        };
 #endif
     }
 }

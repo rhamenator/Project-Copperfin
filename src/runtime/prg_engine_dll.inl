@@ -181,93 +181,77 @@
                 }
                 return static_cast<std::int64_t>(value_as_number(value));
             };
-            // Helper: convert PrgValue → VARIANT
-            auto to_variant = [&](const PrgValue &v, const std::string &ptype) -> VARIANT
+            // Convert interpreter values to the portable CLR-host boundary.
+            auto to_managed_argument = [&](const PrgValue &v, const std::string &ptype) -> ManagedDeclaredArgument
             {
-                VARIANT var;
-                VariantInit(&var);
+                ManagedDeclaredArgument argument;
                 const std::string base = normalize_identifier(ptype);
                 if (base == "string" || base == "c")
                 {
-                    std::string s = value_as_string(v);
-                    var.vt = VT_BSTR;
-                    int wlen = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
-                    std::wstring ws(wlen, 0);
-                    MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, ws.data(), wlen);
-                    var.bstrVal = SysAllocString(ws.c_str());
+                    argument.kind = ManagedDeclaredArgumentKind::string;
+                    argument.string_value = value_as_string(v);
                 }
                 else if (base == "double" || base == "d" || base == "f")
                 {
-                    var.vt = VT_R8;
-                    var.dblVal = value_as_number(v);
+                    argument.kind = ManagedDeclaredArgumentKind::floating_point64;
+                    argument.floating_point_value = value_as_number(v);
                 }
                 else if (declared_dll_type_is_single(base))
                 {
-                    var.vt = VT_R4;
-                    var.fltVal = static_cast<float>(value_as_number(v));
+                    argument.kind = ManagedDeclaredArgumentKind::floating_point32;
+                    argument.floating_point_value = static_cast<float>(value_as_number(v));
                 }
                 else if (declared_dll_type_uses_64_bit_integer(base))
                 {
-                    var.vt = VT_I8;
-                    var.llVal = static_cast<LONGLONG>(exact_declared_integer_value(v));
+                    argument.kind = ManagedDeclaredArgumentKind::signed_integer64;
+                    argument.signed_integer_value = exact_declared_integer_value(v);
                 }
                 else
                 {
                     // VFP9 parameters permit INTEGER/LONG, not SHORT.
-                    var.vt = VT_I4;
-                    var.lVal = static_cast<LONG>(value_as_number(v));
+                    argument.kind = ManagedDeclaredArgumentKind::signed_integer32;
+                    argument.signed_integer_value = static_cast<std::int32_t>(value_as_number(v));
                 }
-                return var;
+                return argument;
             };
 
-            // Helper: VARIANT → PrgValue based on return_type
-            auto from_variant = [&](const VARIANT &var) -> PrgValue
+            // Convert the portable CLR-host result back to an interpreter value.
+            auto from_managed_value = [&](const ManagedDeclaredValue &value) -> PrgValue
             {
                 const std::string rt = normalize_identifier(declfn.return_type);
                 if (rt == "c" || rt == "string")
                 {
-                    if (var.vt == VT_BSTR && var.bstrVal)
-                    {
-                        int len = WideCharToMultiByte(CP_UTF8, 0, var.bstrVal, -1, nullptr, 0, nullptr, nullptr);
-                        std::string s(len, 0);
-                        WideCharToMultiByte(CP_UTF8, 0, var.bstrVal, -1, s.data(), len, nullptr, nullptr);
-                        if (!s.empty() && s.back() == '\0')
-                            s.pop_back();
-                        return make_string_value(s);
-                    }
-                    return make_string_value({});
+                    return make_string_value(
+                        value.kind == ManagedDeclaredValueKind::string
+                            ? value.string_value
+                            : std::string{});
                 }
-                if (var.vt == VT_I8)
-                    return make_int64_value(static_cast<std::int64_t>(var.llVal));
-                if (var.vt == VT_UI8)
-                    return make_uint64_value(static_cast<std::uint64_t>(var.ullVal));
-                if (var.vt == VT_R4)
-                    return make_number_value(static_cast<double>(var.fltVal));
-                if (var.vt == VT_R8)
-                    return make_number_value(var.dblVal);
-                if (var.vt == VT_BOOL)
-                    return make_boolean_value(var.boolVal != VARIANT_FALSE);
-                // Integer family
-                if (var.vt == VT_I4 || var.vt == VT_UI4)
-                    return make_number_value(static_cast<double>(var.lVal));
-                if (var.vt == VT_I2 || var.vt == VT_UI2)
-                    return make_number_value(static_cast<double>(var.iVal));
-                if (var.vt == VT_I1 || var.vt == VT_UI1)
-                    return make_number_value(static_cast<double>(var.bVal));
-                return make_number_value(static_cast<double>(var.intVal));
+                switch (value.kind)
+                {
+                case ManagedDeclaredValueKind::signed_integer64:
+                    return make_int64_value(value.signed_integer_value);
+                case ManagedDeclaredValueKind::unsigned_integer64:
+                    return make_uint64_value(value.unsigned_integer_value);
+                case ManagedDeclaredValueKind::floating_point:
+                    return make_number_value(value.floating_point_value);
+                case ManagedDeclaredValueKind::boolean:
+                    return make_boolean_value(value.boolean_value);
+                case ManagedDeclaredValueKind::empty:
+                case ManagedDeclaredValueKind::string:
+                    return make_number_value(0.0);
+                }
+                return make_number_value(0.0);
             };
 
             if (declfn.is_dotnet)
             {
-                std::vector<VARIANT> managed_arguments;
+                std::vector<ManagedDeclaredArgument> managed_arguments;
                 managed_arguments.reserve(args.size());
                 for (std::size_t index = 0U; index < args.size(); ++index)
                 {
-                    managed_arguments.push_back(to_variant(args[index], param_type_at(index)));
+                    managed_arguments.push_back(to_managed_argument(args[index], param_type_at(index)));
                 }
 
-                VARIANT return_value;
-                VariantInit(&return_value);
                 const std::string &managed_load_path = declfn.loaded_module_path.empty()
                                                            ? declfn.dll_path
                                                            : declfn.loaded_module_path;
@@ -275,16 +259,10 @@
                     managed_load_path,
                     declfn.dotnet_type_name,
                     declfn.dotnet_method_name,
-                    managed_arguments,
-                    &return_value);
-                for (VARIANT &argument : managed_arguments)
-                {
-                    VariantClear(&argument);
-                }
+                    managed_arguments);
 
-                if (FAILED(invocation.hresult))
+                if (!invocation.succeeded)
                 {
-                    VariantClear(&return_value);
                     if (!stack.empty() && stack.back().routine != nullptr && stack.back().pc > 0U)
                     {
                         const std::size_t statement_index = stack.back().pc - 1U;
@@ -296,11 +274,7 @@
                             last_fault_statement = statement.text;
                         }
                     }
-                    const long compatible_hresult =
-                        invocation.stage == ManagedInvocationStage::load_assembly ||
-                                invocation.stage == ManagedInvocationStage::invoke_method
-                            ? static_cast<long>(DISP_E_EXCEPTION)
-                            : static_cast<long>(invocation.hresult);
+                    const std::int32_t compatible_hresult = invocation.compatible_error_code;
                     switch (invocation.stage)
                     {
                     case ManagedInvocationStage::create_runtime:
@@ -354,9 +328,7 @@
                     return make_empty_value();
                 }
 
-                PrgValue result = from_variant(return_value);
-                VariantClear(&return_value);
-                return result;
+                return from_managed_value(invocation.value);
             }
             else
             {

@@ -7453,3 +7453,15 @@ passes `1/1`.
   root is not propagated, confirmed the moved ABI is otherwise unchanged,
   reproduced the public-leak and fourth-consumer mutations, and passed the real
   connector/runtime-host path under ASan/UBSan.
+- 2026-08-12: Continued v1 portability lane J1 by replacing the managed
+  `DECLARE` path's interpreter-facing `HRESULT`/`VARIANT` interface with
+  portable scalar argument, value, error-stage, and result records. The
+  Windows-only implementation now privately owns CLR creation, `mscorlib`,
+  COM/Automation types, UTF conversion, `SAFEARRAY` construction, return-value
+  marshaling, and its `mscoree` linker directive. Existing .NET Framework v4
+  assembly loading, CLR-binder dispatch, VFP-compatible error identities, and
+  scalar behavior are preserved, with new direct `SINGLE` and logical-return
+  regression cases. A source contract runs on all three hosted platforms and
+  beside Win32/x64 managed DECLARE validation. Local GCC Release focused
+  boundary, workflow, isolation, parser, and runtime coverage passes `5/5`.
+  Broader native DLL/OLE seams and J2/J3 host ports remain open.

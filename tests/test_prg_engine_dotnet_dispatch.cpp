@@ -341,6 +341,10 @@ namespace
                 fixture_path() + "' AS ManagedExactUInt64\n"
             "DECLARE DOUBLE Copperfin.ManagedDeclareFixture.Methods.WidenDouble IN '" +
                 fixture_path() + "' AS ManagedDouble INTEGER value\n"
+            "DECLARE SINGLE Copperfin.ManagedDeclareFixture.Methods.WidenSingle IN '" +
+                fixture_path() + "' AS ManagedSingle SINGLE value\n"
+            "DECLARE LOGICAL Copperfin.ManagedDeclareFixture.Methods.ReturnTrue IN '" +
+                fixture_path() + "' AS ManagedBoolean\n"
             "DECLARE STRING Copperfin.ManagedDeclareFixture.Methods.Echo IN '" +
                 fixture_path() + "' AS ManagedEcho STRING value\n"
             "nResult = ManagedSuccess()\n"
@@ -350,6 +354,8 @@ namespace
             "nEchoInt64 = ManagedPreserveInt64(nExactInt64)\n"
             "nExactUInt64 = ManagedExactUInt64()\n"
             "nDouble = ManagedDouble(42)\n"
+            "nSingle = ManagedSingle(42)\n"
+            "lBoolean = ManagedBoolean()\n"
             "cEcho = ManagedEcho('Copperfin')\n"
             "FOR nCall = 1 TO 128\n"
             "  nRepeated = ManagedSuccess()\n"
@@ -399,6 +405,15 @@ namespace
         expect(widened_double != state.globals.end() &&
                    copperfin::runtime::format_value(widened_double->second) == "42.5",
                "#3945: CLR binder should widen INTEGER arguments to System.Double");
+        const auto widened_single = state.globals.find("nsingle");
+        expect(widened_single != state.globals.end() &&
+                   copperfin::runtime::format_value(widened_single->second) == "42.25",
+               "#3945: managed dispatch should preserve SINGLE argument and return marshalling");
+        const auto boolean_result = state.globals.find("lboolean");
+        expect(boolean_result != state.globals.end() &&
+                   boolean_result->second.kind == copperfin::runtime::PrgValueKind::boolean &&
+                   copperfin::runtime::format_value(boolean_result->second) == ".T.",
+               "#3945: managed dispatch should preserve LOGICAL returns");
         const auto echoed = state.globals.find("cecho");
         expect(echoed != state.globals.end() &&
                    copperfin::runtime::format_value(echoed->second) == "Copperfin",

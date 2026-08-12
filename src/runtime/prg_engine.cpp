@@ -17,6 +17,7 @@
 #include "prg_engine_locale_code_page.h"
 #include "prg_engine_runtime_surface_functions.h"
 #include "prg_engine_table_structure_helpers.h"
+#include "managed_declared_call.h"
 #include "prg_engine_date_time_functions.h"
 #include "prg_engine_string_functions.h"
 #include "prg_compatibility_error.h"
@@ -68,12 +69,8 @@
 #define NOMINMAX
 #include <windows.h>
 #include <winver.h>
-#include <metahost.h>
-#pragma comment(lib, "mscoree.lib")
 #pragma comment(lib, "version.lib")
-#include <comdef.h>
 #include <oleauto.h>
-#include "managed_declared_call.h"
 #include "managed_pe_image.h"
 
 #else

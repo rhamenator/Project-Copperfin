@@ -1,5 +1,23 @@
 # Agent Handoff
 
+## V1 portable CLR-host boundary
+
+The next J1 slice replaces the interpreter-facing Windows `HRESULT`/`VARIANT`
+managed-call interface with portable scalar argument, value, error-stage, and
+result records. CLR creation, `mscorlib`, COM/Automation types, UTF conversion,
+`SAFEARRAY` assembly, result marshaling, and the `mscoree` linker directive now
+live only in `managed_declared_call.cpp`. Existing .NET Framework v4 managed
+`DECLARE` behavior remains Windows-only and unchanged. See
+`docs/54-portable-clr-host-boundary.md`.
+
+The source contract is scheduled on Windows, Ubuntu, and macOS plus the
+Win32/x64 DECLARE lane. The existing managed fixture now directly adds `SINGLE`
+and logical-return coverage beside its string, integer, exact 64-bit, double,
+path, error, localization, repetition, and mixed-mode cases. Local GCC Release
+builds the affected runtime and focused regressions; boundary, workflow,
+isolation, parser, and broad runtime-surface coverage passes `5/5`. Hosted and
+independent-review evidence remain pending before merge.
+
 ## V1 private SQLite native API boundary
 
 The J1 follow-up moves the raw Windows/POSIX SQLite header selection from
