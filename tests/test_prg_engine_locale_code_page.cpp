@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+#include "copperfin/platform/code_page.h"
 #include "prg_engine_locale_code_page.h"
 #include "prg_engine_test_support.h"
 
@@ -13,8 +14,9 @@
 
 namespace {
 
-using copperfin::runtime::detail::parse_posix_locale_code_page;
-using copperfin::runtime::detail::resolve_posix_host_code_page;
+using copperfin::platform::parse_posix_locale_code_page;
+using copperfin::platform::resolve_posix_host_code_page;
+using copperfin::platform::convert_code_page_bytes;
 using copperfin::runtime::detail::is_lead_byte_for_code_page;
 using copperfin::test_support::expect;
 
@@ -98,6 +100,21 @@ void test_dbcs_lead_byte_ranges() {
     }
 }
 
+void test_platform_code_page_conversion() {
+    const auto identity = convert_code_page_bytes(1252, 1252, "Copperfin");
+    expect(identity.has_value() && *identity == "Copperfin",
+           "platform code-page conversion should preserve representable identity text");
+
+    const auto converted = convert_code_page_bytes(
+        437, 1252, std::string(1, static_cast<char>(0x8E)));
+    expect(converted.has_value() &&
+               *converted == std::string(1, static_cast<char>(0xC4)),
+           "platform code-page conversion should preserve the existing CP437-to-1252 mapping");
+
+    expect(!convert_code_page_bytes(99999, 1252, "x").has_value(),
+           "platform code-page conversion should reject an unsupported source code page");
+}
+
 }  // namespace
 
 int main() {
@@ -105,6 +122,7 @@ int main() {
     test_malformed_values_do_not_scrape_unrelated_digits();
     test_posix_fallback_order();
     test_dbcs_lead_byte_ranges();
+    test_platform_code_page_conversion();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

@@ -1,3 +1,14 @@
+- 2026-08-12: Continued v1 portability lane J1 by moving host code-page
+  discovery and byte conversion out of the PRG runtime and behind a
+  standard-C++ `copperfin::platform` contract. Windows ANSI/OEM and Unicode
+  APIs plus POSIX locale/`iconv` details are now private to
+  `cf_platform_support`; VFP-facing supported-code-page policy, DBCS rules,
+  results, and diagnostics remain unchanged. GCC Release passes the affected
+  behavior/boundary/workflow/isolation selection `6/6`; two deliberate
+  ownership/delegation mutations fail as intended; and Clang ASan/UBSan passes
+  the focused selection `4/4` without findings. Three-host evidence is tracked
+  in `docs/59-portable-code-page-boundary.md`.
+
 - 2026-08-12: Superseded the protected Windows launcher-trust fixture evidence
   after differentiating the dependency and runtime-configuration sidecar
   payloads. Protected run `31635868978` passed at exact `main` merge

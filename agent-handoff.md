@@ -1,5 +1,17 @@
 # Agent Handoff
 
+## V1 portable code-page boundary
+
+The current J1 slice moves host ANSI/OEM discovery, POSIX locale resolution,
+and code-page byte conversion behind the standard-C++
+`copperfin::platform` boundary. The interpreter retains VFP code-page policy,
+DBCS lead-byte rules, and all VFP-visible behavior. GCC Release behavior,
+boundary, workflow, and isolation coverage passes `6/6`; both ownership and
+delegation mutations fail at their intended checks. Clang ASan/UBSan passes
+the focused selection `4/4` without findings. Hosted and independent-review
+evidence is still being completed. See
+`docs/59-portable-code-page-boundary.md` for the canonical details.
+
 ## Launcher-trust distinct-payload evidence
 
 Protected run `31635868978` passes at exact `main` merge `477035ca2` with five

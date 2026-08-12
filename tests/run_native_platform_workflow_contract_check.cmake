@@ -471,6 +471,18 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     2
     "cross-platform file-version boundary tests")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/run_platform_code_page_boundary_contract_check.cmake"
+    2
+    "cross-platform code-page boundary path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_code_page_boundary_contract"
+    2
+    "cross-platform code-page boundary tests")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_prg_engine_locale_code_page"
+    4
+    "cross-platform code-page behavior build and test entries")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_portable_clr_host_boundary_contract"
     2
     "cross-platform portable CLR-host boundary tests")

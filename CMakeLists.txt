@@ -103,6 +103,7 @@ function(copperfin_apply_windows_stack_reserve TARGET_NAME)
 endfunction()
 
 add_library(cf_platform_support
+    src/platform/code_page.cpp
     src/platform/environment.cpp
     src/platform/executable_path.cpp
     src/platform/file_version.cpp
@@ -126,6 +127,9 @@ endif()
 if(WIN32)
     target_link_libraries(cf_platform_support PRIVATE user32)
     target_link_libraries(cf_platform_support PRIVATE version)
+else()
+    find_package(Iconv REQUIRED)
+    target_link_libraries(cf_platform_support PRIVATE Iconv::Iconv)
 endif()
 
 add_library(cf_localization
@@ -370,7 +374,6 @@ target_include_directories(cf_vfp_assets
 target_link_libraries(cf_vfp_assets PUBLIC cf_localization)
 
 if(NOT WIN32)
-    find_package(Iconv REQUIRED)
     target_link_libraries(cf_vfp_assets PRIVATE Iconv::Iconv)
 endif()
 
