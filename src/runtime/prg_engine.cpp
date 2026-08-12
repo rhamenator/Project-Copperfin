@@ -18,11 +18,11 @@
 #include "prg_engine_runtime_surface_functions.h"
 #include "prg_engine_table_structure_helpers.h"
 #include "managed_declared_call.h"
+#include "native_declared_call.h"
 #include "native_declared_library.h"
 #include "prg_engine_date_time_functions.h"
 #include "prg_engine_string_functions.h"
 #include "prg_compatibility_error.h"
-#include "win64_native_call.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/report_layout.h"
@@ -71,7 +71,6 @@
 #include <windows.h>
 #include <winver.h>
 #pragma comment(lib, "version.lib")
-#include <oleauto.h>
 #else
 #include <errno.h>
 #include <fcntl.h>

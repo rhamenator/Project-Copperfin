@@ -1,3 +1,33 @@
+- 2026-08-12: Continued v1 portability lane J1 by moving native `DECLARE`
+  argument backing storage, raw pointer formation, Windows Automation dispatch,
+  x64 typed invocation, return extraction, and by-reference result copying
+  behind a portable typed request/result contract. The interpreter no longer
+  constructs `VARIANTARG`/`VARTYPE` records or selects Windows calling
+  conventions, while established Win32/x64 type widths, strings, floating
+  slots, cdecl/stdcall behavior, exact 64-bit values, argument limits,
+  diagnostics, and successful-call writeback are intended unchanged. A source
+  contract runs on all three hosted platforms and beside the real Win32/x64
+  DECLARE fixtures. Local GCC Release focused and adjacent coverage passes
+  `5/5`, and a standalone Linux compile accepts the portable header. Hosted
+  Windows execution passes at exact signed/DCO implementation head
+  `32d11e34f`: Generated Launcher Validation `31571330747` on Windows, Ubuntu,
+  and macOS; Windows DECLARE ABI Validation `31571330827` on Win32/x64;
+  Windows environment/path `31571330790`; GCC/Clang executable-path
+  `31571330801`; DCO `31571330808`; and both socket checks. Independent review
+  reproduced two stale workflow self-check failures inherited from the prior
+  boundary additions: the workflows were correct, but exact-text contracts
+  still expected their older test inventories. Both contracts now require the
+  complete current lists, pass `2/2`, and reject deliberate removal of the new
+  boundary from either owning workflow. Generated Launcher now executes both
+  self-checks on all three hosts, and Win32/x64 DECLARE repeats the native
+  workflow contract. Independent review passes after ABI storage/lifetime,
+  type-width, writeback-order, portable-boundary, contract, and hosted-schedule
+  verification. Corrected signed/DCO head `c3b3e6666` passes all eleven checks:
+  Generated Launcher `31573089456`, Win32/x64 DECLARE `31573089502`, Windows
+  environment/path `31573089540`, GCC/Clang executable-path `31573089452`, DCO
+  `31573087926`, and both socket checks. OLE/COM, shell, printing, and J2/J3
+  ports remain separate.
+
 - 2026-08-12: Continued v1 portability lane J1 by moving Windows native
   `DECLARE` module search, export resolution, managed-PE classification,
   diagnostics, and module lifetime behind a standard-C++ internal boundary.

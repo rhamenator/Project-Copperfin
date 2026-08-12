@@ -1,5 +1,44 @@
 # Agent Handoff
 
+## V1 native DECLARE invocation boundary
+
+The current J1 slice moves native `DECLARE` ABI storage, pointer formation,
+Win32/x64 call dispatch, and by-reference value extraction behind
+`native_declared_call.h`. The interpreter now exchanges portable typed
+arguments/results and applies copied writeback values; Windows `VARIANTARG`,
+`VARTYPE`, `CALLCONV`, `HRESULT`, `DispCallFunc`, and the x64 typed dispatcher
+remain private to the Windows implementation. Existing argument limits,
+calling conventions, type widths, exact 64-bit values, strings, floating-point
+slots, failure diagnostics, and writeback behavior are intended unchanged. See
+`docs/56-native-declare-invocation-boundary.md`.
+
+Local GCC Release builds the affected runtime and focused targets. The new
+boundary contract, adjacent loader contract, native-DECLARE-adjacent test,
+parser test, and broad runtime-surface test pass `5/5`; a standalone Linux
+translation unit compiles the portable header. The contract is scheduled on
+Windows, Ubuntu, and macOS and beside real Win32/x64 native/managed DECLARE
+fixtures. Exact signed/DCO implementation head `32d11e34f` passes all eleven
+protected checks: Generated Launcher Validation `31571330747` passes on
+Windows, Ubuntu, and macOS; Windows DECLARE ABI Validation `31571330827` passes
+the real native/managed fixtures and adjacent coverage on Win32/x64; Windows
+environment/path `31571330790`, GCC/Clang executable-path `31571330801`, DCO
+`31571330808`, and both socket checks pass. Independent review then reproduced
+two stale workflow self-check failures inherited from the preceding boundary
+additions: the actual workflows carried the complete inventory, while their
+exact-text contracts expected older lists. Both contracts now require the
+complete current inventories and pass `2/2` after a clean configure. Removing
+the new boundary from either owning workflow makes its contract fail. Generated
+Launcher Validation now runs both self-checks on Windows, Ubuntu, and macOS;
+Windows DECLARE ABI Validation repeats the native-platform workflow contract on
+Win32 and x64. Independent review passes at corrected signed/DCO head
+`c3b3e6666` after storage/string pointer lifetime, type-width, success-only
+writeback, argument-limit, portable compile/link, and mutation checks. The
+reviewer reran the formerly failing selection at `5/5` and independently proved
+hosted scheduling is load-bearing. This exact corrected head passes all eleven
+checks: Generated Launcher `31573089456`, Win32/x64 DECLARE `31573089502`,
+Windows environment/path `31573089540`, GCC/Clang executable-path
+`31573089452`, DCO `31573087926`, and both socket checks.
+
 ## V1 native DECLARE loader boundary
 
 The current J1 slice moves Windows native `DECLARE` module search, export
