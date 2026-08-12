@@ -27,6 +27,7 @@ on:
       - "tests/run_platform_executable_path_boundary_contract_check.cmake"
       - "tests/run_platform_file_version_boundary_contract_check.cmake"
       - "tests/run_platform_code_page_boundary_contract_check.cmake"
+      - "tests/run_platform_disk_space_boundary_contract_check.cmake"
       - "tests/run_platform_sqlite_api_boundary_contract_check.cmake"
       - "tests/run_portable_clr_host_boundary_contract_check.cmake"
       - "tests/run_native_declared_library_boundary_contract_check.cmake"
@@ -36,6 +37,7 @@ on:
       - "tests/run_github_actions_contract_check.cmake"
       - "tests/test_platform_environment.cpp"
       - "tests/test_platform_path.cpp"
+      - "tests/test_platform_disk_space.cpp"
       - "tests/test_runtime_host_sqlite_federation.cpp"
       - "tests/test_sqlite_federation_connector.cpp"
       - "tests/test_polyglot_dotnet_candidate.cpp"
@@ -69,6 +71,7 @@ on:
       - "tests/run_platform_executable_path_boundary_contract_check.cmake"
       - "tests/run_platform_file_version_boundary_contract_check.cmake"
       - "tests/run_platform_code_page_boundary_contract_check.cmake"
+      - "tests/run_platform_disk_space_boundary_contract_check.cmake"
       - "tests/run_platform_sqlite_api_boundary_contract_check.cmake"
       - "tests/run_portable_clr_host_boundary_contract_check.cmake"
       - "tests/run_native_declared_library_boundary_contract_check.cmake"
@@ -78,6 +81,7 @@ on:
       - "tests/run_github_actions_contract_check.cmake"
       - "tests/test_platform_environment.cpp"
       - "tests/test_platform_path.cpp"
+      - "tests/test_platform_disk_space.cpp"
       - "tests/test_runtime_host_sqlite_federation.cpp"
       - "tests/test_sqlite_federation_connector.cpp"
       - "tests/test_polyglot_dotnet_candidate.cpp"
@@ -120,10 +124,10 @@ jobs:
         run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON -DCOPPERFIN_REQUIRE_SQLITE_CONNECTOR=ON
 
       - name: Build generated-launcher, portable-platform, polyglot, MCP, and SQLite federation targets
-        run: cmake --build build --config Release --target test_generated_launcher_process test_platform_path test_platform_environment test_prg_engine_arrays test_prg_engine_locale_code_page test_polyglot_dotnet_candidate test_polyglot_python_sidecar test_polyglot_r_sidecar test_mcp_host copperfin_mcp_host copperfin_build_host test_sqlite_federation_connector test_runtime_host_sqlite_federation --parallel 2
+        run: cmake --build build --config Release --target test_generated_launcher_process test_platform_path test_platform_disk_space test_platform_environment test_prg_engine_arrays test_prg_engine_locale_code_page test_polyglot_dotnet_candidate test_polyglot_python_sidecar test_polyglot_r_sidecar test_mcp_host copperfin_mcp_host copperfin_build_host test_sqlite_federation_connector test_runtime_host_sqlite_federation --parallel 2
 
       - name: Run generated-launcher, portable-platform, polyglot, MCP, and SQLite federation tests
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_process|test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_file_version_boundary_contract|test_platform_code_page_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_printer_shell_boundary_contract|test_prg_engine_arrays|test_prg_engine_locale_code_page|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar|test_mcp_host|test_mcp_host_stdio|test_sqlite_federation_connector|test_runtime_host_sqlite_federation)$"
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_process|test_platform_path|test_platform_path_boundary_contract|test_platform_disk_space|test_platform_disk_space_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_file_version_boundary_contract|test_platform_code_page_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_printer_shell_boundary_contract|test_prg_engine_arrays|test_prg_engine_locale_code_page|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar|test_mcp_host|test_mcp_host_stdio|test_sqlite_federation_connector|test_runtime_host_sqlite_federation)$"
 
   posix-generated-launcher:
     name: ${{ matrix.os }} generated launcher process
@@ -154,7 +158,7 @@ jobs:
         run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON -DCOPPERFIN_REQUIRE_SQLITE_CONNECTOR=ON
 
       - name: Build POSIX generated-launcher, portable-platform, polyglot, MCP, and SQLite federation targets
-        run: cmake --build build --config Release --target test_generated_launcher_posix_process test_platform_path test_platform_environment test_prg_engine_arrays test_prg_engine_locale_code_page test_polyglot_dotnet_candidate test_polyglot_python_sidecar test_polyglot_r_sidecar test_mcp_host copperfin_mcp_host test_sqlite_federation_connector test_runtime_host_sqlite_federation --parallel 2
+        run: cmake --build build --config Release --target test_generated_launcher_posix_process test_platform_path test_platform_disk_space test_platform_environment test_prg_engine_arrays test_prg_engine_locale_code_page test_polyglot_dotnet_candidate test_polyglot_python_sidecar test_polyglot_r_sidecar test_mcp_host copperfin_mcp_host test_sqlite_federation_connector test_runtime_host_sqlite_federation --parallel 2
 
       - name: Run POSIX generated-launcher, portable-platform, polyglot, MCP, and SQLite federation tests
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_posix_process|test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_file_version_boundary_contract|test_platform_code_page_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_printer_shell_boundary_contract|test_prg_engine_arrays|test_prg_engine_locale_code_page|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar|test_mcp_host|test_mcp_host_stdio|test_sqlite_federation_connector|test_runtime_host_sqlite_federation)$"
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_posix_process|test_platform_path|test_platform_path_boundary_contract|test_platform_disk_space|test_platform_disk_space_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_file_version_boundary_contract|test_platform_code_page_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_printer_shell_boundary_contract|test_prg_engine_arrays|test_prg_engine_locale_code_page|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar|test_mcp_host|test_mcp_host_stdio|test_sqlite_federation_connector|test_runtime_host_sqlite_federation)$"

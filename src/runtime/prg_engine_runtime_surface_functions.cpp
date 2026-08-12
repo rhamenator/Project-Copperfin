@@ -5,6 +5,7 @@
 #include "prg_engine_runtime_surface_functions.h"
 
 #include "copperfin/platform/code_page.h"
+#include "copperfin/platform/disk_space.h"
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/json.h"
@@ -35,14 +36,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <system_error>
-
-#if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#else
-#include <sys/statvfs.h>
-#endif
 
 namespace copperfin::runtime {
 
