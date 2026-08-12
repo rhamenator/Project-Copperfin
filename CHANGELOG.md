@@ -7478,3 +7478,16 @@ passes `1/1`.
   adjacent Linux code under ASan/UBSan. Actual CLR invocation equivalence is
   established by hosted Windows execution because the reviewer had no Windows
   CLR host.
+- 2026-08-12: Continued J1 by moving native `DECLARE` module discovery,
+  decorated export resolution, managed-PE classification, system-error
+  formatting, and module lifetime out of the PRG interpreter and behind a
+  portable opaque-identity/result boundary. The private Windows implementation
+  owns all loader handles and operations. Exact/ANSI/underscore/Win32 stdcall
+  fallback, WIN32API module order, mixed-mode native precedence, path and
+  diagnostic contracts, failed-redeclaration rollback, and shutdown release
+  behavior are preserved. A source contract runs on all three hosted systems
+  and beside the existing real Win32/x64 DECLARE fixtures. Local GCC Release
+  focused and adjacent coverage passes `6/6`; a standalone portable-header
+  compile passes, and two native-token mutations prove the source boundary is
+  load-bearing. Native-call marshaling, OLE/COM, shell, printing, and J2/J3
+  ports remain separate.

@@ -52,7 +52,7 @@ jobs:
         run: cmake --build build-${{ matrix.platform }} --config Release --parallel 2 --target test_prg_engine_seek_index test_prg_engine_dotnet_dispatch test_prg_engine_parser_classes test_localization
 
       - name: Run managed DECLARE regression target
-        run: ctest --test-dir build-${{ matrix.platform }} -C Release --verbose --timeout 180 -R "^(test_prg_engine_dotnet_dispatch|test_portable_clr_host_boundary_contract)$"
+        run: ctest --test-dir build-${{ matrix.platform }} -C Release --verbose --timeout 180 -R "^(test_prg_engine_dotnet_dispatch|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract)$"
 
       - name: Run adjacent DECLARE regression targets
         run: ctest --test-dir build-${{ matrix.platform }} -C Release --output-on-failure -R "^(test_prg_engine_seek_index|test_prg_engine_parser_classes|test_localization)$"

@@ -539,6 +539,7 @@ if(WIN32)
         src/runtime/dispatch_exception_info.cpp
         src/runtime/managed_declared_call.cpp
         src/runtime/managed_pe_image.cpp
+        src/runtime/native_declared_library.cpp
     )
     target_link_libraries(cf_xbase_runtime PRIVATE oleaut32)
     if(COPPERFIN_BUILD_TESTS)

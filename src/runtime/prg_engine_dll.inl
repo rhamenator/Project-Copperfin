@@ -335,7 +335,7 @@
                 // ---------------------------------------------------------------
                 // Native DLL invocation via proc_address
                 // ---------------------------------------------------------------
-                if (declfn.proc_address == nullptr)
+                if (declfn.native_function_address == 0U)
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Dll.Error.NativeProcAddressMissing",
@@ -650,7 +650,7 @@
 #endif
                     const HRESULT invoke_result = DispCallFunc(
                         nullptr,
-                        reinterpret_cast<ULONG_PTR>(declfn.proc_address),
+                        static_cast<ULONG_PTR>(declfn.native_function_address),
                         native_calling_convention,
                         native_return_type,
                         static_cast<UINT>(nargs),
@@ -715,7 +715,7 @@
                 }
 
                 const detail::Win64NativeCallResult native_result = detail::invoke_win64_native_function(
-                    reinterpret_cast<ULONG_PTR>(declfn.proc_address),
+                    declfn.native_function_address,
                     native_arguments,
                     ret_double
                         ? detail::Win64NativeReturnKind::floating64

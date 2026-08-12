@@ -26,12 +26,9 @@
 #if defined(_WIN32)
             for (auto &[_, declfn] : declared_dll_functions)
             {
-                if (declfn.hmodule != nullptr)
-                {
-                    FreeLibrary(declfn.hmodule);
-                }
-                declfn.hmodule = nullptr;
-                declfn.proc_address = nullptr;
+                release_native_declared_library(declfn.native_module_handle);
+                declfn.native_module_handle = 0U;
+                declfn.native_function_address = 0U;
             }
 #endif
             declared_dll_functions.clear();

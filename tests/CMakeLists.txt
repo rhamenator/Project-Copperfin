@@ -4900,6 +4900,13 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_portable_clr_host_boundary_contract_check.cmake
 )
 
+add_test(
+    NAME test_native_declared_library_boundary_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_native_declared_library_boundary_contract_check.cmake
+)
+
 add_executable(test_platform_environment
     test_platform_environment.cpp
 )

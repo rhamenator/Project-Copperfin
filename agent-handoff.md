@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## V1 native DECLARE loader boundary
+
+The current J1 slice moves Windows native `DECLARE` module search, export
+resolution, managed-PE classification, system-error formatting, and module
+lifetime behind `native_declared_library.h`. Interpreter state now stores only
+portable integer-sized opaque module/function identities. Exact/ANSI,
+underscore, Win32 decorated-stdcall, WIN32API system-module, mixed-mode native
+precedence, path, diagnostics, redeclaration rollback, and shutdown behavior are
+intended unchanged. See `docs/55-native-declare-loader-boundary.md`.
+
+The new source contract runs on Windows, Ubuntu, and macOS and beside the real
+Win32/x64 native/managed DECLARE fixtures. Local GCC Release builds the affected
+runtime; boundary, workflow, isolation, native-DECLARE-adjacent, parser, and
+broad runtime-surface coverage passes `6/6`. A standalone Linux header compile
+passes, while `HMODULE`-header and `LoadLibraryW`-dispatch mutations fail at the
+intended exact requirements. Hosted and independent review evidence remain
+pending. Native invocation marshaling, OLE/COM, shell, printing, and J2/J3
+ports remain separate.
+
 ## V1 portable CLR-host boundary
 
 The next J1 slice replaces the interpreter-facing Windows `HRESULT`/`VARIANT`

@@ -18,6 +18,7 @@
 #include "prg_engine_runtime_surface_functions.h"
 #include "prg_engine_table_structure_helpers.h"
 #include "managed_declared_call.h"
+#include "native_declared_library.h"
 #include "prg_engine_date_time_functions.h"
 #include "prg_engine_string_functions.h"
 #include "prg_compatibility_error.h"
@@ -71,8 +72,6 @@
 #include <winver.h>
 #pragma comment(lib, "version.lib")
 #include <oleauto.h>
-#include "managed_pe_image.h"
-
 #else
 #include <errno.h>
 #include <fcntl.h>
@@ -753,11 +752,9 @@ namespace copperfin::runtime
             std::string return_type;            // e.g. "INTEGER", "STRING", "DOUBLE", etc.
             std::string param_types;            // Comma-separated param types
             bool is_dotnet = false;
-#if defined(_WIN32)
-            HMODULE hmodule = nullptr;
-            FARPROC proc_address = nullptr;
+            std::uintptr_t native_module_handle = 0U;
+            std::uintptr_t native_function_address = 0U;
             bool native_cdecl = false;
-#endif
             // .NET-specific (assembly!Namespace.Type.Method)
             std::string dotnet_type_name;
             std::string dotnet_method_name;
