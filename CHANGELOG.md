@@ -1,10 +1,12 @@
 - 2026-08-12: Continued v1 portability lane J1 by moving the PRG runtime's
   normalized, case-insensitive path identity comparison behind the existing
-  `copperfin::platform` path boundary. Database/session, parser, and
-  verified-file admission callers keep their VFP-style semantics on every
-  host while the remaining Windows `CompareStringOrdinal` dependency leaves
-  `prg_engine_helpers.cpp`. Direct behavior and native-ownership contracts
-  cover the delegation.
+  `copperfin::platform` path boundary. Parser, frame, index, and verified-file
+  callers of the shared helper keep their existing all-host matching while
+  database/session paths retain their established Windows-insensitive and
+  POSIX-sensitive rules. The remaining Windows comparison dependency leaves
+  `prg_engine_helpers.cpp`, and whole-path comparison reuses the established
+  invariant Unicode fallback layers. Direct behavior and native-ownership
+  contracts cover both delegations.
 
 - 2026-08-12: Continued v1 portability lane J1 by moving available-disk-byte
   and allocation-unit queries out of the PRG runtime and behind the

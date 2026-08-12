@@ -4,18 +4,22 @@
 
 The current J1 slice moves normalized, case-insensitive VFP path identity from
 `prg_engine_helpers.cpp` into the existing `copperfin::platform` path
-boundary. Database/session selection, parser lookup, frame loading, index
-identity, and verified-file admission retain case-insensitive matching on every
-host; this is deliberately distinct from host-filesystem component comparison,
-which remains case-sensitive on POSIX. The runtime helper now delegates through
-standard C++ paths and no longer includes `windows.h` or calls
-`CompareStringOrdinal` directly. Direct path behavior, native ownership, broad
+boundary. Parser lookup, frame loading, index identity, and verified-file
+callers of that helper retain case-insensitive matching on every host.
+Database/session path selection deliberately retains its existing
+Windows-insensitive and POSIX-sensitive rules. The runtime helper now delegates
+through standard C++ paths and no longer includes `windows.h` or calls native
+comparison APIs directly. On Windows, whole-path identity reuses the complete
+ordinal/invariant Unicode fallback chain and fail-closed length guard already
+owned by component comparison. Direct path behavior, native ownership, broad
 runtime callers, and hosted three-OS execution are load-bearing. GCC Release
 builds the direct path and broad runtime/database targets; the focused selection
 passes `7/7`. Deliberately restoring the native comparison token and separately
 substituting the host-component comparison each fail the intended ownership or
 exact-delegation assertion. Removing lexical normalization from one operand
 also makes the direct behavior test fail at its normalized-path assertion.
+Replacing the Windows whole-path delegation with a direct equality check fails
+at the intended complete-Unicode-comparison assertion.
 Clang ASan/UBSan passes `5/5` without findings.
 Hosted and independent-review evidence remain required.
 

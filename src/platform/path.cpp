@@ -155,16 +155,9 @@ bool path_equal_case_insensitive(
     const std::filesystem::path normalized_left = left.lexically_normal();
     const std::filesystem::path normalized_right = right.lexically_normal();
 #if defined(_WIN32)
-    const std::wstring left_value = normalized_left.native();
-    const std::wstring right_value = normalized_right.native();
-    const auto maximum_api_length =
-        static_cast<std::size_t>((std::numeric_limits<int>::max)());
-    if (left_value.size() > maximum_api_length || right_value.size() > maximum_api_length) {
-        return false;
-    }
-    return ::CompareStringOrdinal(
-               left_value.data(), static_cast<int>(left_value.size()),
-               right_value.data(), static_cast<int>(right_value.size()), TRUE) == CSTR_EQUAL;
+    // Whole-path identity needs the same invariant Unicode fallback layers
+    // and fail-closed length guard as Windows component comparison.
+    return path_component_equal_for_platform(normalized_left, normalized_right);
 #else
     const auto lowercase_path = [](const std::filesystem::path& value) {
         std::string lowered = path_to_utf8_string(value);

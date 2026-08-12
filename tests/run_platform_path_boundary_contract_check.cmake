@@ -78,6 +78,13 @@ foreach(required IN ITEMS
             "Private path implementation is missing required token: ${required}")
     endif()
 endforeach()
+string(FIND "${source_text}"
+    "return path_component_equal_for_platform(normalized_left, normalized_right);"
+    whole_path_windows_delegation_offset)
+if(whole_path_windows_delegation_offset EQUAL -1)
+    message(FATAL_ERROR
+        "Windows whole-path identity does not reuse the complete Unicode comparison boundary")
+endif()
 
 file(READ "${SOURCE_DIR}/CMakeLists.txt" cmake_text)
 string(FIND "${cmake_text}" "src/platform/path.cpp" path_source_offset)

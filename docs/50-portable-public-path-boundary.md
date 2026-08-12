@@ -76,18 +76,23 @@ the hosted Windows jobs provide the direct build-and-execution evidence.
 
 ## VFP path-identity follow-up
 
-The follow-up VFP path-identity slice also moves the PRG runtime's normalized,
-case-insensitive path comparison into this boundary. That contract remains
-case-insensitive on every host for database/session, parser, frame, index, and
-verified-file identity, unlike host-filesystem component comparison, which
-retains POSIX case sensitivity. The interpreter no longer owns a Windows SDK
-comparison call. GCC Release builds the direct path test and broad runtime and
-database-lifecycle targets; direct behavior, ownership, both workflow
-contracts, test isolation, database lifecycle, and the complete runtime surface
-pass `7/7`. Restoring a native comparison token in the interpreter and
+The follow-up VFP path-identity slice also moves the PRG runtime's shared
+normalized, case-insensitive path helper into this boundary. Parser, frame,
+index, and verified-file callers of that helper retain case-insensitive
+matching on every host. Database/session path selection separately retains its
+existing Windows-insensitive and POSIX-sensitive behavior. The interpreter no
+longer owns a Windows SDK comparison call; on Windows, whole-path comparison
+reuses the complete ordinal/invariant Unicode fallback chain and fail-closed
+length guard already used for component comparison. GCC Release builds the
+direct path test and broad runtime and database-lifecycle targets; direct
+behavior, ownership, both workflow contracts, test isolation, database
+lifecycle, and the complete runtime surface pass `7/7`. Restoring a native
+comparison token in the interpreter and
 separately substituting host-component comparison for VFP identity each fail at
 the intended boundary assertion. Removing lexical normalization from one
 operand separately makes the direct test fail at its normalized-path assertion.
+Replacing the Windows whole-path delegation with direct equality separately
+fails at the intended complete-Unicode-comparison assertion.
 Clang ASan/UBSan passes the direct behavior, ownership, workflow, and isolation
 selection `5/5` without a finding. Hosted Windows, Ubuntu, and macOS execution
 and independent review remain required before merge.
