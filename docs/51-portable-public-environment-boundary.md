@@ -60,6 +60,18 @@ satisfied by the substring in `unsetenv`; the corrected contract requires both
 exact return statements independently. Removing only the `setenv` statement
 now fails at that precise requirement.
 
+Final evidence head `5ebe5fbeb` also passes all eleven protected checks. Its
+Generated Launcher Validation run `31551072481` passes on Ubuntu and macOS;
+the first Windows attempt passed both environment contracts but had an
+unrelated Python-sidecar failure, and the failed-job rerun passed the complete
+Windows set. Independent review at `e8f87cf42` passed the implementation,
+consumer links, ASan/UBSan, and a ThreadSanitizer concurrency run. It found the
+same substring-collision class in the header declaration probes: the shorter
+`read_environment_variable` name could match inside
+`read_environment_variable_or_empty`. The contract now requires exact
+declaration prefixes for every public function, and deleting only the shorter
+declaration fails at its precise requirement.
+
 ## Remaining J1 work
 
 The environment and path interfaces are two explicit boundaries, not a blanket

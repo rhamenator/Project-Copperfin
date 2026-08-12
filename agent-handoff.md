@@ -26,6 +26,15 @@ and macOS; Windows Environment and Executable Path Validation `31549944197`
 passes `10/10`. Automated review's `setenv`/`unsetenv` substring-collision
 finding is corrected with independent exact-statement probes, and removing
 only `setenv` now fails the source contract at the intended requirement.
+Independent review passed implementation equivalence, all Linux-buildable
+consumer links, ASan/UBSan, and ThreadSanitizer concurrency coverage. Its
+header-probe mutation exposed a second substring-collision blind spot, so every
+public function now requires an exact declaration prefix; deleting only
+`read_environment_variable` fails at the intended requirement. Final evidence
+head `5ebe5fbeb` passed all eleven protected checks. Generated Launcher
+Validation `31551072481` passed on Ubuntu and macOS, while a failed-job rerun
+passed the complete Windows set after an unrelated Python-sidecar-only failure
+on the first attempt.
 
 ## V1 portable public path boundary
 

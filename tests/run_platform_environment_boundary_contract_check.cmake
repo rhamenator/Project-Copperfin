@@ -36,13 +36,13 @@ foreach(forbidden IN ITEMS
 endforeach()
 
 foreach(required IN ITEMS
-        "read_environment_variable"
-        "read_environment_variable_or_empty"
-        "read_environment_path"
-        "write_environment_variable"
-        "write_environment_path"
-        "clear_environment_variable"
-        "clear_environment_path")
+        "std::optional<std::string> read_environment_variable("
+        "std::string read_environment_variable_or_empty("
+        "std::optional<std::filesystem::path> read_environment_path("
+        "bool write_environment_variable("
+        "bool write_environment_path("
+        "bool clear_environment_variable("
+        "bool clear_environment_path(")
     string(FIND "${header_text}" "${required}" offset)
     if(offset EQUAL -1)
         message(FATAL_ERROR "Public environment header is missing declaration: ${required}")
