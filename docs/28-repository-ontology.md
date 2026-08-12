@@ -75,7 +75,8 @@ Also note the root of the graph changed since this document's first pass:
 
 ### `cf_platform_support` (new base layer)
 
-- `executable_path.cpp` — resolves the running executable's own path in a
+- `executable_path.cpp` — exposes a portable optional executable-search default
+  and resolves the running executable's own path in a
   platform-portable way.
 - `environment.cpp` and `path.cpp` — keep operating-system selection, native
   environment calls, synchronization, and path conversion/comparison behind

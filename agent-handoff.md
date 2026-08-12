@@ -1,5 +1,34 @@
 # Agent Handoff
 
+## V1 portable executable-search default
+
+The J1 executable-path follow-up removes the last OS-selected declaration from
+`copperfin/platform/executable_path.h`. The portable optional
+`default_executable_search_path()` query preserves the POSIX `_CS_PATH` and
+fallback behavior while returning no invented default on Windows. Existing
+build-host, external-process-policy, and invocation-resolution behavior is
+unchanged. See `docs/52-portable-executable-search-default.md`.
+
+A new source-boundary contract rejects platform selection and native discovery
+tokens in the public header and is scheduled with the runtime regression in
+Generated Launcher Validation and the focused Windows environment/path
+workflow. Local GCC Release builds the platform and security regressions plus
+the runtime and build hosts. Focused behavior, boundary, workflow, and isolation
+coverage passes `8/8`; a temporary `_WIN32` header mutation fails at the exact
+forbidden token.
+
+Exact signed/DCO implementation head `fee6c1be7` passes all eleven protected
+checks. Generated Launcher Validation `31554724495` passes on Windows, Ubuntu,
+and macOS; Windows Environment and Executable Path Validation `31554724462`,
+Windows DECLARE ABI Validation `31554724438`, GCC/Clang Executable Path
+Validation `31554724484`, DCO `31554724442`, and both socket checks also pass.
+There are no GitHub review comments or unresolved review threads at that head.
+Independent review at evidence head `12f47816c` found no defect: it
+mutation-proved declaration-token collision resistance, traced all three
+callers through their existing platform guards, matched the Linux result to
+`getconf PATH`, and freshly built and ran the affected regression and hosts
+under ASan/UBSan. Both touched workflow-text contracts also pass independently.
+
 ## V1 portable public environment boundary
 
 The J1 follow-up to the path boundary moves all OS-specific process-environment

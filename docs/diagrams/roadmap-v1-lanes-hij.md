@@ -38,7 +38,7 @@ flowchart TB
 
       subgraph LANEJ["Lane J - root #114 'Portability and portable core boundary' (still OPEN, seeded)"]
         direction LR
-        J1["J1 Preserve Portable Core<br/>Boundary<br/>root #35 - SEEDED:<br/>public path isolation"]
+        J1["J1 Preserve Portable Core<br/>Boundary<br/>root #35 - SEEDED:<br/>public path/environment/search isolation"]
         J2["J2 Port Standalone IDE<br/>+ Core to macOS<br/>root #36"]
         J3["J3 Port Standalone IDE<br/>+ Core to Linux<br/>root #37"]
         J1 --> J2
@@ -75,7 +75,8 @@ benchmark evidence; and `I1` has a security baseline. These real seeds are
 `cf_platform_profile`'s deterministic Fox-SQL
 translator/execution-planning lane, the trusted polyglot host and route-impact
 boundary, and `cf_security`'s RBAC/audit/secrets/signing baseline, respectively.
-`J1` now has explicit portable public path and process-environment boundaries:
+`J1` now has explicit portable public path, process-environment, and
+executable-search boundaries:
 platform-neutral declarations remain in the broadly consumed headers while
 Windows/POSIX selection and native implementation stay private to
 `cf_platform_support`, with direct and source-contract tests scheduled on all
