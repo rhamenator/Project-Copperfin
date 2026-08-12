@@ -5668,8 +5668,6 @@
                     }
                     dll_fspath.make_preferred();
                 }
-                const std::wstring dll_wpath = dll_fspath.wstring();
-
                 DeclaredDllFunction declfn;
                 declfn.alias = alias;
                 declfn.function_name = fn_name;
@@ -5680,237 +5678,65 @@
                 declfn.param_types = param_types_str;
                 declfn.resolved_function_name = fn_name;
 
-                const auto resolve_native_export = [&](HMODULE module, bool allow_ansi_fallback) -> FARPROC
+                const NativeDeclaredLibraryLoadResult load_result = load_native_declared_library(
+                    dll_fspath,
+                    is_win32api_designator,
+                    fn_name,
+                    param_types_str);
+                if (load_result.kind == NativeDeclaredLibraryKind::cannot_load)
                 {
-                    const std::array<std::string, 2U> export_names{fn_name, fn_name + "A"};
-                    const std::size_t export_name_count = allow_ansi_fallback ? export_names.size() : 1U;
-                    for (std::size_t export_index = 0U; export_index < export_name_count; ++export_index)
-                    {
-                        const std::string &export_name = export_names[export_index];
-                        FARPROC procedure = GetProcAddress(module, export_name.c_str());
-                        if (procedure != nullptr)
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.DeclareCannotLoadDll",
                         {
-                            declfn.native_cdecl = false;
-                            declfn.resolved_function_name = export_name;
-                            return procedure;
-                        }
-
-                        procedure = GetProcAddress(module, ("_" + export_name).c_str());
-                        if (procedure != nullptr)
-                        {
-#if !defined(_WIN64)
-                            declfn.native_cdecl = true;
-#endif
-                            declfn.resolved_function_name = export_name;
-                            return procedure;
-                        }
-#if !defined(_WIN64)
-                        const std::string stack_suffix = "@" + std::to_string(
-                            declared_dll_x86_stdcall_stack_bytes(param_types_str));
-                        procedure = GetProcAddress(
-                            module,
-                            ("_" + export_name + stack_suffix).c_str());
-                        if (procedure == nullptr)
-                        {
-                            procedure = GetProcAddress(
-                                module,
-                                (export_name + stack_suffix).c_str());
-                        }
-                        if (procedure != nullptr)
-                        {
-                            declfn.native_cdecl = false;
-                            declfn.resolved_function_name = export_name;
-                            return procedure;
-                        }
-#endif
-                    }
-                    return nullptr;
-                };
-
-                const auto loaded_module_path = [](HMODULE module, const std::wstring &fallback_name)
-                {
-                    std::wstring module_path(32768U, L'\0');
-                    const DWORD length = GetModuleFileNameW(
-                        module,
-                        module_path.data(),
-                        static_cast<DWORD>(module_path.size()));
-                    if (length > 0U && length < module_path.size())
-                    {
-                        module_path.resize(length);
-                        return module_path;
-                    }
-                    return fallback_name;
-                };
-
-                const auto retain_resolved_module_identity = [&](const std::filesystem::path &module_path)
-                {
-                    const std::u8string utf8_path = module_path.u8string();
-                    declfn.loaded_module_path.assign(
-                        reinterpret_cast<const char *>(utf8_path.data()),
-                        utf8_path.size());
-                };
-
-                const auto retain_loaded_module_identity = [&](HMODULE module, const std::wstring &fallback_name)
-                {
-                    retain_resolved_module_identity(loaded_module_path(module, fallback_name));
-                };
-
-                HMODULE hmod = nullptr;
-                if (is_win32api_designator)
-                {
-                    constexpr std::array<const wchar_t *, 5U> win32api_modules{
-                        L"Kernel32.dll",
-                        L"Gdi32.dll",
-                        L"User32.dll",
-                        L"Mpr.dll",
-                        L"Advapi32.dll",
-                    };
-                    std::wstring system_directory_buffer(32768U, L'\0');
-                    const UINT system_directory_length = GetSystemDirectoryW(
-                        system_directory_buffer.data(),
-                        static_cast<UINT>(system_directory_buffer.size()));
-                    if (system_directory_length > 0U &&
-                        system_directory_length < system_directory_buffer.size())
-                    {
-                        system_directory_buffer.resize(system_directory_length);
-                        const std::filesystem::path system_directory(system_directory_buffer);
-                        for (const wchar_t *module_name : win32api_modules)
-                        {
-                            const std::filesystem::path module_path = system_directory / module_name;
-                            HMODULE candidate = LoadLibraryW(module_path.c_str());
-                            if (candidate == nullptr)
-                            {
-                                continue;
-                            }
-                            FARPROC procedure = resolve_native_export(candidate, true);
-                            if (procedure != nullptr)
-                            {
-                                hmod = candidate;
-                                declfn.hmodule = candidate;
-                                declfn.proc_address = procedure;
-                                retain_loaded_module_identity(candidate, module_path.wstring());
-                                break;
-                            }
-                            FreeLibrary(candidate);
-                        }
-                    }
-
-                    if (hmod == nullptr)
-                    {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll",
-                            {
-                                {"functionName", fn_name},
-                                {"path", declfn.dll_path},
-                            });
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        if (dispatch_error_handler())
-                            return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
-                        return {.ok = false, .message = last_error_message};
-                    }
-
+                            {"path", declfn.dll_path},
+                            {"errorMessage", load_result.system_error_message},
+                        });
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    if (dispatch_error_handler())
+                        return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
+                    return {.ok = false, .message = last_error_message};
                 }
-                else
+                if (load_result.kind == NativeDeclaredLibraryKind::function_not_found)
                 {
-                    hmod = LoadLibraryW(dll_wpath.c_str());
-                    const DWORD load_error = hmod == nullptr ? GetLastError() : ERROR_SUCCESS;
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll",
+                        {
+                            {"functionName", fn_name},
+                            {"path", declfn.dll_path},
+                        });
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    if (dispatch_error_handler())
+                        return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
+                    return {.ok = false, .message = last_error_message};
+                }
 
-                    std::filesystem::path inspection_path;
-                    if (hmod != nullptr)
+                declfn.loaded_module_path = load_result.loaded_module_path;
+                declfn.resolved_function_name = load_result.resolved_function_name;
+                declfn.native_module_handle = load_result.module_handle;
+                declfn.native_function_address = load_result.function_address;
+                declfn.native_cdecl = load_result.native_cdecl;
+                if (load_result.kind == NativeDeclaredLibraryKind::managed)
+                {
+                    declfn.is_dotnet = true;
+                    const auto last_dot = fn_name.rfind('.');
+                    if (last_dot != std::string::npos && last_dot > 0U)
                     {
-                        inspection_path = loaded_module_path(hmod, dll_wpath);
-                    }
-                    else if (dll_fspath.is_absolute() || dll_fspath.has_parent_path())
-                    {
-                        inspection_path = dll_fspath;
+                        declfn.dotnet_type_name = fn_name.substr(0U, last_dot);
+                        declfn.dotnet_method_name = fn_name.substr(last_dot + 1U);
                     }
                     else
                     {
-                        std::wstring search_result(32768U, L'\0');
-                        const DWORD search_length = SearchPathW(
-                            nullptr,
-                            dll_wpath.c_str(),
-                            nullptr,
-                            static_cast<DWORD>(search_result.size()),
-                            search_result.data(),
-                            nullptr);
-                        if (search_length > 0U && search_length < search_result.size())
-                        {
-                            search_result.resize(search_length);
-                            inspection_path = search_result;
-                        }
-                    }
-                    const bool is_dotnet_assembly =
-                        !inspection_path.empty() &&
-                        inspect_portable_executable(inspection_path) == PortableExecutableKind::managed;
-                    FARPROC native_procedure = hmod == nullptr ? nullptr : resolve_native_export(hmod, true);
-
-                    if (native_procedure != nullptr)
-                    {
-                        declfn.hmodule = hmod;
-                        declfn.proc_address = native_procedure;
-                        retain_loaded_module_identity(hmod, dll_wpath);
-                    }
-                    else if (is_dotnet_assembly)
-                    {
-                        if (hmod != nullptr)
-                        {
-                            FreeLibrary(hmod);
-                            hmod = nullptr;
-                        }
-                        declfn.is_dotnet = true;
-                        retain_resolved_module_identity(inspection_path);
-                        const auto last_dot = fn_name.rfind('.');
-                        if (last_dot != std::string::npos && last_dot > 0U)
-                        {
-                            declfn.dotnet_type_name = fn_name.substr(0U, last_dot);
-                            declfn.dotnet_method_name = fn_name.substr(last_dot + 1U);
-                        }
-                        else
-                        {
-                            declfn.dotnet_type_name = std::string{};
-                            declfn.dotnet_method_name = fn_name;
-                        }
-                    }
-                    else if (hmod == nullptr)
-                    {
-                        char msg_buf[256]{};
-                        FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
-                                       load_error, 0, msg_buf, sizeof(msg_buf) - 1U, nullptr);
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.DeclareCannotLoadDll",
-                            {
-                                {"path", declfn.dll_path},
-                                {"errorMessage", std::string(msg_buf)},
-                            });
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        if (dispatch_error_handler())
-                            return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
-                        return {.ok = false, .message = last_error_message};
-                    }
-                    else
-                    {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll",
-                            {
-                                {"functionName", fn_name},
-                                {"path", declfn.dll_path},
-                            });
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        FreeLibrary(hmod);
-                        if (dispatch_error_handler())
-                            return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
-                        return {.ok = false, .message = last_error_message};
+                        declfn.dotnet_type_name = std::string{};
+                        declfn.dotnet_method_name = fn_name;
                     }
                 }
 
                 if (const auto existing = declared_dll_functions.find(alias_key);
-                    existing != declared_dll_functions.end() && existing->second.hmodule != nullptr)
+                    existing != declared_dll_functions.end())
                 {
-                    FreeLibrary(existing->second.hmodule);
+                    release_native_declared_library(existing->second.native_module_handle);
                 }
                 declared_dll_functions.insert_or_assign(alias_key, std::move(declfn));
                 events.push_back({.category = "runtime.declare_dll",

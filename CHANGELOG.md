@@ -1,3 +1,23 @@
+- 2026-08-12: Continued v1 portability lane J1 by moving Windows native
+  `DECLARE` module search, export resolution, managed-PE classification,
+  diagnostics, and module lifetime behind a standard-C++ internal boundary.
+  Interpreter state now retains only integer-sized opaque module/function
+  identities; exact/ANSI/underscore/decorated export lookup, ordered
+  `WIN32API` modules, mixed-mode native precedence, redeclaration rollback,
+  and invocation behavior remain unchanged. A source contract protects the
+  portable header and private loader ownership. Local focused and adjacent
+  coverage passes `6/6`, a standalone Linux header compile passes, and two
+  deliberate native-token mutations fail at the intended boundary. Exact
+  signed/DCO implementation head `eb81efa50` passes all eleven protected
+  checks: Generated Launcher Validation `31566888844` on Windows, Ubuntu, and
+  macOS; Windows DECLARE ABI Validation `31566888629` on Win32/x64; Windows
+  environment/path `31566888649`; GCC/Clang executable-path `31566888767`;
+  DCO `31566887243`; and both socket checks. Native invocation marshaling,
+  OLE/COM, shell, printing, and J2/J3 ports remain separate. Independent
+  review found no defect after ownership/failure-path tracing, portable-header
+  compilation, two boundary mutations, and an ASan/UBSan runtime-host build;
+  direct Windows loader execution remains supplied by hosted Win32/x64 CI.
+
 - 2026-08-11: Continued v1 portability lane J1 with a portable public
   process-environment boundary. The broadly consumed
   `copperfin/platform/environment.h` interface now contains only standard C++
@@ -7478,3 +7498,16 @@ passes `1/1`.
   adjacent Linux code under ASan/UBSan. Actual CLR invocation equivalence is
   established by hosted Windows execution because the reviewer had no Windows
   CLR host.
+- 2026-08-12: Continued J1 by moving native `DECLARE` module discovery,
+  decorated export resolution, managed-PE classification, system-error
+  formatting, and module lifetime out of the PRG interpreter and behind a
+  portable opaque-identity/result boundary. The private Windows implementation
+  owns all loader handles and operations. Exact/ANSI/underscore/Win32 stdcall
+  fallback, WIN32API module order, mixed-mode native precedence, path and
+  diagnostic contracts, failed-redeclaration rollback, and shutdown release
+  behavior are preserved. A source contract runs on all three hosted systems
+  and beside the existing real Win32/x64 DECLARE fixtures. Local GCC Release
+  focused and adjacent coverage passes `6/6`; a standalone portable-header
+  compile passes, and two native-token mutations prove the source boundary is
+  load-bearing. Native-call marshaling, OLE/COM, shell, printing, and J2/J3
+  ports remain separate.

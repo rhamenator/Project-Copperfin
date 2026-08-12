@@ -259,6 +259,11 @@ Ground-truth diagram:
 - Its in-process CLR capability remains Windows-only, but the interpreter now
   crosses a portable scalar value/result boundary; CLR, COM, Automation, and
   `mscorlib` types are confined to the private Windows implementation.
+- Native `DECLARE` remains Windows-only, but module search, decorated export
+  resolution, managed-PE classification, and module lifetime now cross a
+  portable opaque-identity/result boundary. Windows loader handles and APIs
+  remain private to `native_declared_library.cpp`; native-call marshaling is a
+  separate remaining seam.
 - `cf_security` and `cf_platform_profile` are siblings consumed identically by `copperfin_studio_host` and `copperfin_runtime_host`.
 - Every native library depends on `cf_localization` (and therefore `cf_platform_support`) except the two deliberately independent bases: `cf_licensing` and `cf_platform_support` itself. This reflects the hard localization-catalog requirement — though actual call-site adoption outside these wired libraries is still thin.
 

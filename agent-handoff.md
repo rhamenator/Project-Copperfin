@@ -1,5 +1,35 @@
 # Agent Handoff
 
+## V1 native DECLARE loader boundary
+
+The current J1 slice moves Windows native `DECLARE` module search, export
+resolution, managed-PE classification, system-error formatting, and module
+lifetime behind `native_declared_library.h`. Interpreter state now stores only
+portable integer-sized opaque module/function identities. Exact/ANSI,
+underscore, Win32 decorated-stdcall, WIN32API system-module, mixed-mode native
+precedence, path, diagnostics, redeclaration rollback, and shutdown behavior are
+intended unchanged. See `docs/55-native-declare-loader-boundary.md`.
+
+The new source contract runs on Windows, Ubuntu, and macOS and beside the real
+Win32/x64 native/managed DECLARE fixtures. Local GCC Release builds the affected
+runtime; boundary, workflow, isolation, native-DECLARE-adjacent, parser, and
+broad runtime-surface coverage passes `6/6`. A standalone Linux header compile
+passes, while `HMODULE`-header and `LoadLibraryW`-dispatch mutations fail at the
+intended exact requirements. Exact signed/DCO implementation head
+`eb81efa50` passes all eleven protected checks: Generated Launcher Validation
+`31566888844` passes on Windows, Ubuntu, and macOS; Windows DECLARE ABI
+Validation `31566888629` passes the real native/managed fixtures and adjacent
+coverage on Win32/x64; Windows environment/path `31566888649`, GCC/Clang
+executable-path `31566888767`, DCO `31566887243`, and both socket checks pass.
+GitHub has no comments or unresolved threads. Independent review found no
+defect after tracing candidate and failure-branch ownership, redeclaration and
+shutdown release ordering, compiling the portable declarations from Linux,
+mutation-proving both native-type exclusion and prior-binding release, and
+building/smoke-testing the runtime host under ASan/UBSan. It could not execute
+Windows loader operations; real export/module/calling-convention behavior is
+supplied by the hosted Win32/x64 jobs. Native invocation marshaling, OLE/COM,
+shell, printing, and J2/J3 ports remain separate.
+
 ## V1 portable CLR-host boundary
 
 The next J1 slice replaces the interpreter-facing Windows `HRESULT`/`VARIANT`

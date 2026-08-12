@@ -128,6 +128,10 @@ to its implementation and no public Copperfin header selects a host platform or
 includes a native SQLite header. The Windows-only managed `DECLARE` host now
 accepts and returns portable scalar records; `HRESULT`, `VARIANT`, `SAFEARRAY`,
 CLR interfaces, and `mscorlib` remain private to its Windows implementation.
+Native `DECLARE` module search, export decoration/fallback, PE classification,
+system-error formatting, and module release now return portable opaque integer
+identities and result state; Windows loader handles and APIs remain private to
+one Windows implementation.
 Windows SDK/CRT selection, UTF conversion, path-component comparison, POSIX
 environment calls, and process-wide synchronization are private implementation
 in `cf_platform_support`. Direct portable regressions and source-level
@@ -137,10 +141,12 @@ boundaries are load-bearing rather than documentary. See
 `docs/51-portable-public-environment-boundary.md`, and
 `docs/52-portable-executable-search-default.md`, plus
 `docs/53-private-sqlite-native-api-boundary.md` and
-`docs/54-portable-clr-host-boundary.md`.
+`docs/54-portable-clr-host-boundary.md`, plus
+`docs/55-native-declare-loader-boundary.md`.
 
 **What it will take:** inventory the rest of the public core and isolate the
-remaining shell, printing, native DLL, OLE/COM, and other host-specific seams;
+remaining shell, printing, native-call marshaling, OLE/COM, and other
+host-specific seams;
 the CLR host implementation itself remains Windows-only by design.
 This slice does not claim the standalone IDE or full core host has been ported;
 those remain J2/J3 work.
