@@ -57,8 +57,8 @@ foreach(required IN ITEMS
         "_wdupenv_s"
         "_wputenv_s"
         "std::getenv"
-        "setenv"
-        "unsetenv"
+        "return setenv(key.c_str(), assigned_value.c_str(), 1) == 0;"
+        "return unsetenv(key.c_str()) == 0;"
         "environment_mutex")
     string(FIND "${source_text}" "${required}" offset)
     if(offset EQUAL -1)
