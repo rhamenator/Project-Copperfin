@@ -63,8 +63,10 @@ current boundary inventory, but their exact-text contracts still expected the
 older inventories. Both contracts now require the complete current lists and
 pass `2/2` from a clean configure. Deliberately removing the native-call
 boundary from either the Win32/x64 DECLARE lane or the generated-launcher lane
-makes its owning contract fail. Native ABI review continues at the corrected
-head.
+makes its owning contract fail. Generated Launcher Validation now executes both
+self-checks on Windows, Ubuntu, and macOS, while Windows DECLARE ABI Validation
+repeats the native-platform workflow contract on Win32 and x64. Native ABI
+review continues at the corrected head.
 
 ## Scope
 

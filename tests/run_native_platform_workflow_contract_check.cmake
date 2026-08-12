@@ -676,7 +676,7 @@ require_text(".github/workflows/windows-x86-declare-validation.yml"
     "--target test_prg_engine_seek_index test_prg_engine_dotnet_dispatch test_prg_engine_parser_classes test_localization"
     "focused DECLARE target inventory")
 require_text(".github/workflows/windows-x86-declare-validation.yml"
-    "^(test_prg_engine_dotnet_dispatch|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract)$"
+    "^(test_prg_engine_dotnet_dispatch|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_native_platform_workflow_contract)$"
     "focused managed and native DECLARE behavior and boundary inventory")
 
 require_text("README.md"

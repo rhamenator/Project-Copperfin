@@ -27,8 +27,10 @@ two stale workflow self-check failures inherited from the preceding boundary
 additions: the actual workflows carried the complete inventory, while their
 exact-text contracts expected older lists. Both contracts now require the
 complete current inventories and pass `2/2` after a clean configure. Removing
-the new boundary from either owning workflow makes its contract fail. Native
-ABI review continues at the corrected head.
+the new boundary from either owning workflow makes its contract fail. Generated
+Launcher Validation now runs both self-checks on Windows, Ubuntu, and macOS;
+Windows DECLARE ABI Validation repeats the native-platform workflow contract on
+Win32 and x64. Native ABI review continues at the corrected head.
 
 ## V1 native DECLARE loader boundary
 

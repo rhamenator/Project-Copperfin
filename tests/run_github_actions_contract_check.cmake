@@ -139,6 +139,8 @@ foreach(required_text IN ITEMS
         "tests/run_platform_environment_boundary_contract_check.cmake"
         "tests/run_platform_executable_path_boundary_contract_check.cmake"
         "tests/run_platform_sqlite_api_boundary_contract_check.cmake"
+        "tests/run_native_platform_workflow_contract_check.cmake"
+        "tests/run_github_actions_contract_check.cmake"
         "tests/test_platform_environment.cpp"
         "tests/test_platform_path.cpp"
         "r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6"
@@ -149,8 +151,8 @@ foreach(required_text IN ITEMS
         "test_generated_launcher_posix_process test_platform_path test_platform_environment test_polyglot_dotnet_candidate"
         "test_polyglot_dotnet_candidate test_polyglot_python_sidecar"
         "test_polyglot_python_sidecar test_polyglot_r_sidecar"
-        "test_generated_launcher_process|test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_polyglot_dotnet_candidate"
-        "test_generated_launcher_posix_process|test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_polyglot_dotnet_candidate"
+        "test_generated_launcher_process|test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate"
+        "test_generated_launcher_posix_process|test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate"
         "test_polyglot_dotnet_candidate|test_polyglot_python_sidecar"
         "test_polyglot_python_sidecar|test_polyglot_r_sidecar")
     string(FIND "${generated_launcher_workflow}" "${required_text}" required_index)
