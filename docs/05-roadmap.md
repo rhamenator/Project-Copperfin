@@ -743,12 +743,13 @@ inventory and exercises the actual enforced guard across valid and fail-closed
 cases. The accepted #4621 hosted baseline remains separate from an exact-head
 live Visual Studio UI rerun.
 
-The #4898 Linux launcher-key generator has completed its bounded tool,
-walkthrough, independent-review, and DQ/DV/HZ evidence. The non-secret record
-is archived in
-`docs/safety/traceability-report-2026-08-08-launcher-keygen.md`. GitHub still
-has no `release` environment, so this child does not satisfy #4409 or authorize
-a protected Windows launcher-trust claim.
+The #4898 Linux launcher-key generator completed its bounded tool,
+walkthrough, independent-review, and DQ/DV/HZ evidence before the protected
+execution recorded below. The non-secret record is archived in
+`docs/safety/traceability-report-2026-08-08-launcher-keygen.md`. That child did
+not by itself satisfy #4409 or authorize a protected Windows launcher-trust
+claim; the subsequently configured `release` environment and successful
+protected run `31630819119` supply that distinct evidence.
 
 The implementation-side #4894 matrix is current at exact head `f0c9e06e2`:
 Windows native `30559930672` passes `315/315` after building the new fixture
