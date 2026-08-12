@@ -9,9 +9,45 @@ endif()
 set(SCRIPT "${SOURCE_DIR}/scripts/prepare-windows-launcher-trust.ps1")
 set(VALIDATION_SCRIPT "${SOURCE_DIR}/scripts/run-windows-launcher-trust-validation.ps1")
 set(WORKFLOW "${SOURCE_DIR}/.github/workflows/windows-launcher-trust-validation.yml")
+set(FIXTURE "${SOURCE_DIR}/tests/test_windows_launcher_trust_fixture.cpp")
 foreach(REQUIRED_FILE IN ITEMS "${SCRIPT}" "${VALIDATION_SCRIPT}" "${WORKFLOW}")
     if(NOT EXISTS "${REQUIRED_FILE}")
         message(FATAL_ERROR "launcher trust provisioning file is missing: ${REQUIRED_FILE}")
+    endif()
+endforeach()
+
+if(NOT EXISTS "${FIXTURE}")
+    message(FATAL_ERROR "launcher trust fixture source is missing: ${FIXTURE}")
+endif()
+
+file(READ "${FIXTURE}" FIXTURE_CONTENT)
+foreach(REQUIRED_TEXT IN ITEMS
+    "constexpr char kDependenciesFixturePayload[] ="
+    "{\\\"fixture\\\":\\\"dependencies\\\"}\\n"
+    "constexpr char kRuntimeConfigurationFixturePayload[] ="
+    "{\\\"fixture\\\":\\\"runtime-configuration\\\"}\\n"
+    "kDependenciesFixturePayload);"
+    "kRuntimeConfigurationFixturePayload);"
+)
+    string(FIND "${FIXTURE_CONTENT}" "${REQUIRED_TEXT}" POSITION)
+    if(POSITION EQUAL -1)
+        message(FATAL_ERROR
+            "launcher trust fixture must retain distinct dependency and runtime-configuration payloads: ${REQUIRED_TEXT}")
+    endif()
+endforeach()
+
+set(DEPENDENCIES_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.deps.json",
+               kDependenciesFixturePayload);]=])
+set(RUNTIME_CONFIGURATION_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json",
+               kRuntimeConfigurationFixturePayload);]=])
+foreach(REQUIRED_BINDING IN ITEMS
+    "${DEPENDENCIES_FIXTURE_BINDING}"
+    "${RUNTIME_CONFIGURATION_FIXTURE_BINDING}"
+)
+    string(FIND "${FIXTURE_CONTENT}" "${REQUIRED_BINDING}" POSITION)
+    if(POSITION EQUAL -1)
+        message(FATAL_ERROR
+            "launcher trust fixture payload is not bound to its intended sidecar")
     endif()
 endforeach()
 

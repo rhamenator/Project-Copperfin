@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## Launcher-trust fixture review follow-up
+
+Independent inspection of protected run `31630819119` confirmed the archive
+and report hashes, all eight guard outcomes, and the absence of secret
+material. It also observed that the fixture's dependency and runtime-config
+paths used the same empty JSON payload and therefore had the same digest.
+
+The signed trust contract was not bypassed: each inventory record binds its
+package-relative path, role, and SHA-256 digest, and identical file content is
+valid. The fixture now uses distinct valid JSON markers for those two roles,
+with a source-contract regression preventing accidental reintroduction. Rerun
+the protected Windows launcher-trust workflow after this correction is merged
+to supersede the earlier fixture evidence before assembling the next immutable
+release candidate.
+
 ## Windows launcher-trust protected execution complete
 
 The first live protected `Windows Launcher Trust Validation` run
