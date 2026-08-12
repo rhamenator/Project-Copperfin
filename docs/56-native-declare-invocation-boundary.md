@@ -65,8 +65,15 @@ pass `2/2` from a clean configure. Deliberately removing the native-call
 boundary from either the Win32/x64 DECLARE lane or the generated-launcher lane
 makes its owning contract fail. Generated Launcher Validation now executes both
 self-checks on Windows, Ubuntu, and macOS, while Windows DECLARE ABI Validation
-repeats the native-platform workflow contract on Win32 and x64. Native ABI
-review continues at the corrected head.
+repeats the native-platform workflow contract on Win32 and x64. Independent
+review passes at corrected signed/DCO head `c3b3e6666` after backing-storage and
+string-pointer lifetime, type-width, success-only writeback, argument-limit,
+portable compile/link, and mutation checks. The reviewer reran the formerly
+failing selection at `5/5` and independently proved hosted scheduling is
+load-bearing. This exact corrected head passes all eleven checks: Generated
+Launcher `31573089456`, Win32/x64 DECLARE `31573089502`, Windows
+environment/path `31573089540`, GCC/Clang executable-path `31573089452`, DCO
+`31573087926`, and both socket checks.
 
 ## Scope
 

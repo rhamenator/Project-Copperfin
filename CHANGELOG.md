@@ -20,8 +20,13 @@
   complete current lists, pass `2/2`, and reject deliberate removal of the new
   boundary from either owning workflow. Generated Launcher now executes both
   self-checks on all three hosts, and Win32/x64 DECLARE repeats the native
-  workflow contract. Native ABI review continues at the corrected head;
-  OLE/COM, shell, printing, and J2/J3 ports remain separate.
+  workflow contract. Independent review passes after ABI storage/lifetime,
+  type-width, writeback-order, portable-boundary, contract, and hosted-schedule
+  verification. Corrected signed/DCO head `c3b3e6666` passes all eleven checks:
+  Generated Launcher `31573089456`, Win32/x64 DECLARE `31573089502`, Windows
+  environment/path `31573089540`, GCC/Clang executable-path `31573089452`, DCO
+  `31573087926`, and both socket checks. OLE/COM, shell, printing, and J2/J3
+  ports remain separate.
 
 - 2026-08-12: Continued v1 portability lane J1 by moving Windows native
   `DECLARE` module search, export resolution, managed-PE classification,
