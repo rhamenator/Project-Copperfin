@@ -42,8 +42,30 @@ and isolation selection passes `6/6`. Deliberately restoring a `GetACP`
 ownership token to the interpreter and separately breaking CPCONVERT's exact
 platform delegation each fail at the intended assertion; restoration returns
 the selection to green. Clang ASan/UBSan passes the behavior, boundary, and
-workflow selection `4/4` with no sanitizer findings. Hosted matrices and
-independent review remain required before merge.
+workflow selection `4/4` with no sanitizer findings.
+
+Exact implementation head `09531a717` passes hosted generated-launcher run
+`31641915332` on Windows, Ubuntu, and macOS; Windows environment/path run
+`31641915461`; Win32/x64 DECLARE run `31641915348`; GCC/Clang executable-path
+run `31641915340`; DCO run `31641915507`; and both Socket checks. These jobs
+compile and execute the behavior and boundary contracts on each applicable
+host rather than relying on source inspection alone.
+
+Independent review at coordination sequence 1675 found no defect. It compared
+the moved implementation with its former interpreter owner, confirmed the
+new greater-than-`INT_MAX` Windows input guard is a safety hardening with no
+ordinary behavior change, passed the behavior/boundary/workflow/isolation set
+`5/5`, and independently proved the CPCONVERT delegation assertion is
+load-bearing. A separate ASan/UBSan stress probe covered empty and malformed
+input, a 200 KiB conversion that repeatedly grows the iconv output buffer,
+unsupported encodings, all mapped code-page names, and 5,000 repeated
+open/convert/close cycles without a sanitizer finding or leak.
+
+Some byte sequences are not representable in a requested target code page,
+and some POSIX hosts do not install aliases for every mapped legacy encoding
+(the review host lacked CP620, CP895, MACGREEK, and MACCENTRALEUROPE). These
+pre-existing environment-dependent cases return no conversion; the boundary
+does not guess, crash, or emit corrupted output.
 
 ## Scope
 
