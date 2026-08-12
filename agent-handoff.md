@@ -30,6 +30,32 @@ maintainer is admitted. RC2 and its artifact set remain immutable; this
 security-validation correction requires a new sequential RC after review and
 successful protected execution, then forward-porting into `v1-development`.
 
+## Standalone terminal callback teardown correction
+
+PR #4967's unrelated broad RC matrix reproduced a real managed-UI teardown
+fault in Linux run `31624289221`. After the terminal smoke had disposed its
+form and shell, a pending asynchronous stderr callback entered
+`StudioTerminalWindowControl.AppendTranscript()` and called `BeginInvoke`
+while Mono's X11 handle infrastructure was tearing down. The process ended in
+an unhandled `NullReferenceException` during the following shell-layout smoke.
+
+The terminal now serializes callback admission/marshaling and disposal through
+one private gate. Disposal marks callbacks stopped while holding that gate; an
+in-flight callback may enqueue only before disposal acquires it, and the queued
+delegate rechecks the stopped state before touching controls. The same boundary
+protects transcript and process-exit state updates. A focused managed smoke
+deterministically pauses a background callback at the marshal boundary, starts
+disposal on the UI thread, releases the callback, and requires both threads to
+drain without exception or deadlock. The managed project builds with zero
+warnings/errors on Linux; Mono/Xvfb is unavailable locally, so the exact hosted
+Linux smoke remains required. No terminal command, shell, transcript,
+localization, layout, runtime, package, or machine contract changes.
+
+This confirmed RC defect is separate from the launcher-trust exit-state
+correction. Land it on `main` first, refresh the launcher correction onto that
+base, forward-port both fixes to `v1-development`, and create a new immutable
+RC only after their protected matrices pass. RC2 remains unchanged.
+
 ## Contributor template and Discussion-form readiness
 
 PR #4944 replaces the single traceability-heavy pull-request template with two

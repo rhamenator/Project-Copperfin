@@ -95,6 +95,16 @@ upload. The correction resets only that process state after assertions,
 evidence generation, and cleanup. A successful rerun remains required before
 the protected trust gate can close.
 
+Hosted Linux managed-UI run `31624289221` subsequently reproduced an
+asynchronous standalone-terminal teardown crash: a pending stderr callback
+could pass its stopped/disposed checks immediately before form disposal and
+then call `BeginInvoke` through Mono's torn-down X11 handle. Callback admission
+and UI marshaling now share one gate with disposal, and a deterministic smoke
+holds a callback at that boundary while teardown begins. The correction adds
+no text or catalog keys and changes no invariant command, transcript, layout,
+or machine contract. Warning-free managed compilation passes locally; hosted
+Mono/Xvfb and Windows managed matrices remain the acceptance evidence.
+
 The latest broad implementation baseline is product head `93d44395f`; the
 latest product implementation/test head is `f0c9e06e2`, while subsequent
 documentation-only coordination commits may advance the branch. Hosted Linux
