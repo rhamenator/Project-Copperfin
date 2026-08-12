@@ -463,6 +463,14 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     2
     "cross-platform private SQLite API boundary tests")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/run_platform_file_version_boundary_contract_check.cmake"
+    2
+    "cross-platform file-version boundary path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_file_version_boundary_contract"
+    2
+    "cross-platform file-version boundary tests")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_portable_clr_host_boundary_contract"
     2
     "cross-platform portable CLR-host boundary tests")

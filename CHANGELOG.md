@@ -1,3 +1,18 @@
+- 2026-08-12: Continued v1 portability lane J1 by moving
+  `AGETFILEVERSION()` metadata extraction out of the PRG interpreter and behind
+  a standard-C++ platform record. Windows version-resource APIs, native
+  records, UTF conversion, and `version` linkage are now private to
+  `cf_platform_support`; macOS/Linux retain the existing PE UTF-16LE fallback.
+  The seven-row VFP array, plain-file defaults, mounted/real Windows resource
+  behavior, missing-file result, and admitted immutable-snapshot security path
+  remain covered by the existing runtime regression. A new source contract is
+  scheduled on Windows, Ubuntu, and macOS and prevents native resource code
+  from returning to the interpreter. Local GCC Release focused behavior,
+  boundary, and workflow coverage passes `5/5`; two ownership/delegation
+  mutations fail at their intended assertions and restoration returns green.
+  Clang ASan/UBSan passes the affected selection `4/4` with no findings. Hosted
+  exact-head validation remains required before merge.
+
 - 2026-08-12: Retired the dormant Windows `IDispatch`/`EXCEPINFO` exception
   owner left behind after managed `DECLARE` moved to supported CLR vtable
   interfaces. The unused sources, test-only instrumentation, and build wiring

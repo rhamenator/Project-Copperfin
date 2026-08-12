@@ -4887,6 +4887,13 @@ add_test(
 )
 
 add_test(
+    NAME test_platform_file_version_boundary_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_platform_file_version_boundary_contract_check.cmake
+)
+
+add_test(
     NAME test_platform_sqlite_api_boundary_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
