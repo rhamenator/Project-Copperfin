@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include <windows.h>
 #include <oleauto.h>
 
 namespace

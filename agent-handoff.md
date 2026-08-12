@@ -16,7 +16,13 @@ portable CLR boundary, native workflow, GitHub Actions workflow, and broad
 runtime-surface tests pass `4/4`. A deliberate restoration of the retired
 header fails at the intended file-presence guard; deleting the mutation
 returns the contract to green. Win32/x64 hosted managed-fixture execution is
-still required before merge.
+still required before merge. The first hosted attempt failed in both
+architectures because deleting the helper also removed its accidental
+transitive Windows SDK prerequisite from the test translation unit. The test
+now explicitly includes `windows.h` before `oleauto.h`; the source contract
+requires that order. The corrected boundary and both workflow contracts pass
+`3/3`; reversing only the two includes fails at the intended assertion, and
+restoration returns green. Product sources remain unchanged by this correction.
 
 ## V1 APRINTERS shell/printing boundary
 

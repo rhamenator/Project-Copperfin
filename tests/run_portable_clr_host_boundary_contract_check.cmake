@@ -29,6 +29,7 @@ read_source("src/runtime/managed_declared_call.h" boundary_header)
 read_source("src/runtime/managed_declared_call.cpp" windows_implementation)
 read_source("src/runtime/prg_engine.cpp" interpreter_source)
 read_source("src/runtime/prg_engine_dll.inl" declared_call_source)
+read_source("tests/test_prg_engine_dotnet_dispatch.cpp" managed_dispatch_test)
 read_source("CMakeLists.txt" root_build)
 read_source("tests/CMakeLists.txt" test_build)
 
@@ -39,6 +40,10 @@ foreach(obsolete_path IN ITEMS
         message(FATAL_ERROR "Obsolete IDispatch exception owner returned: ${obsolete_path}")
     endif()
 endforeach()
+
+require_text("${managed_dispatch_test}"
+    "#include <windows.h>\n#include <oleauto.h>"
+    "explicit Windows SDK prerequisite before Automation in the managed dispatch test")
 
 foreach(build_source IN ITEMS "${root_build}" "${test_build}")
     foreach(obsolete_token IN ITEMS
