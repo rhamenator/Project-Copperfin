@@ -11,7 +11,13 @@ printer names. `docs/57-portable-printer-shell-boundary.md` records the scope.
 
 Local GCC Release builds the affected runtime and passes APRINTERS, bounded
 process, boundary, GitHub Actions, and native-platform workflow coverage `5/5`.
-Hosted Windows/Ubuntu/macOS evidence and independent review remain pending.
+Clang ASan/UBSan passes `3/3`. Exact signed/DCO implementation head
+`36be64015` passes all eleven protected checks: Generated Launcher Validation
+`31577463882` on Windows, Ubuntu, and macOS (including the new APRINTERS target
+and boundary contract); Windows DECLARE ABI Validation `31577463847` on
+Win32/x64; Windows environment/path `31577463814`; GCC/Clang executable-path
+`31577463753`; DCO `31577463901`; and both socket checks. Independent review
+remains pending.
 
 ## V1 native DECLARE invocation boundary
 

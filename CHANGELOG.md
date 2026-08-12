@@ -7548,4 +7548,9 @@ passes `1/1`.
   no ambient environment. Deterministic injected enumeration and no-printer
   fallback remain covered, and a hosted source contract prevents shell/native
   mechanics from returning to the interpreter boundary. Local GCC Release
-  focused and adjacent coverage passes `5/5`.
+  focused and adjacent coverage passes `5/5`; Clang ASan/UBSan passes `3/3`.
+  Exact signed/DCO implementation head `36be64015` passes all eleven protected
+  checks: Generated Launcher Validation `31577463882` on Windows, Ubuntu, and
+  macOS; Windows DECLARE ABI Validation `31577463847` on Win32/x64; Windows
+  environment/path `31577463814`; GCC/Clang executable-path `31577463753`; DCO
+  `31577463901`; and both socket checks.
