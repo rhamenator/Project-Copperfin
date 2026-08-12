@@ -7633,3 +7633,15 @@ passes `1/1`.
   sides to drain without exception or deadlock. No shell, command, transcript,
   localization, or layout contract changes. RC2 remains immutable; protected
   hosted evidence and a new sequential RC remain required.
+- 2026-08-12: Corrected the protected Windows launcher-trust orchestrator after
+  live run `31623671192` completed every valid and expected fail-closed guard
+  case but GitHub propagated the last expected exit code `4` as the workflow
+  result. The script now clears that process state only after assertions,
+  non-secret evidence writing, and protected-input cleanup succeed; its source
+  contract rejects removal, duplication, or relocation of the reset. The
+  launcher guard, signed envelope, package inventory, and invariant negative
+  exit code remain unchanged. The single-owner release-environment procedure
+  now records owner dispatch honestly instead of claiming an unavailable
+  independent reviewer; independent review becomes mandatory when a second
+  trusted maintainer exists. RC2 remains immutable and the corrected protected
+  run plus a new sequential RC remain required.

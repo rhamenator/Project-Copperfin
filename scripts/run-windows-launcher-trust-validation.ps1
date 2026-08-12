@@ -158,3 +158,10 @@ try {
     Remove-Item Env:COPPERFIN_TEST_LAUNCHER_TRUST_MARKER -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $packageRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
+
+# The final matrix case intentionally returns guard exit code 4. GitHub's pwsh
+# wrapper propagates a surviving LASTEXITCODE after this script returns, so
+# clear that expected-negative process state only after every assertion,
+# evidence write, and cleanup step has completed successfully.
+$global:LASTEXITCODE = 0
+Write-Host "Launcher trust validation passed $($results.Count) case(s)."
