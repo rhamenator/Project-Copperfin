@@ -31,13 +31,16 @@ and 1 MiB SQL text. Limits fail closed; results are never silently truncated.
 
 ## Build And Platform Contract
 
-Windows 10 and newer use the system `winsqlite3` library. Copperfin supplies a
-narrow compatibility declaration header when an SDK installation omits the
-optional header; it does not package or replace the OS library. Linux and macOS
-use a discoverable system SQLite3 development package. Ordinary builds provide
-a stable unavailable adapter when SQLite is absent. Validation and release
-builds set `COPPERFIN_REQUIRE_SQLITE_CONNECTOR=ON`, making absence a configure failure.
-Hosted Windows, Linux, and macOS validation builds and runs both new tests.
+Windows 10 and newer use the system `winsqlite3` library. Copperfin keeps a
+narrow private compatibility declaration header beside the connector when an
+SDK installation omits the optional header; it does not expose that native ABI
+through the Copperfin public include tree and does not package or replace the OS
+library. Linux and macOS use a discoverable system SQLite3 development package.
+Ordinary builds provide a stable unavailable adapter when SQLite is absent.
+Validation and release builds set `COPPERFIN_REQUIRE_SQLITE_CONNECTOR=ON`,
+making absence a configure failure. Hosted Windows, Linux, and macOS validation
+builds and runs both connector tests plus the private-boundary contract. See
+[53-private-sqlite-native-api-boundary.md](53-private-sqlite-native-api-boundary.md).
 
 ## Deliberate Limits
 

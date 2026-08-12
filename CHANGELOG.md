@@ -7433,3 +7433,23 @@ passes `1/1`.
   collision resistance, traced all current callers through their preserved
   platform guards, matched the Linux result to `getconf PATH`, and passed a
   fresh ASan/UBSan build and run of the affected regression and hosts.
+- 2026-08-11: Continued J1 by moving the raw OS-selected SQLite C ABI shim out
+  of Copperfin's public include tree and beside the private read-only connector.
+  Windows still uses system WinSQLite with the same SDK-header/fallback
+  declarations; Linux and macOS still use system SQLite3. The connector and its
+  two synthetic-fixture tests receive a non-propagated private include root.
+  A new source contract rejects OS/native SQLite tokens across the complete
+  public Copperfin include tree and protects exact private ABI, three-consumer,
+  and build wiring.
+  Local GCC Release focused behavior/workflow/isolation coverage passes `6/6`;
+  public-shim and private-Windows-selector mutations fail at exact requirements,
+  and Clang 21 ASan/UBSan passes the connector and boundary tests `2/2`.
+  Alternate-suffix public leakage and a fourth private-shim consumer are also
+  rejected by the tree-wide scan and closed consumer count.
+  Exact signed/DCO corrected head `52b9b5c65` passes all eleven protected
+  checks, including the real connector, runtime-host integration, and boundary
+  contract on Windows, Ubuntu, and macOS; GitHub has no unresolved PR threads.
+  Independent review found no defect and directly proved the private include
+  root is not propagated, confirmed the moved ABI is otherwise unchanged,
+  reproduced the public-leak and fourth-consumer mutations, and passed the real
+  connector/runtime-host path under ASan/UBSan.

@@ -66,6 +66,11 @@ classDiagram
         +extensibility_model
     }
 
+    class cf_sqlite_connector {
+        +read_only_plan_execution
+        -private_native_sqlite_api
+    }
+
     class cf_mcp_host {
         +dual_era_stdio_protocol
         +read_only_dbf_header_tool
@@ -157,6 +162,8 @@ classDiagram
 
     cf_security --> cf_localization
     cf_platform_profile --> cf_localization
+    cf_sqlite_connector --> cf_platform_profile
+    cf_sqlite_connector --> cf_security : private
     cf_vfp_assets --> cf_localization
     cf_mcp_host --> cf_platform_support
     cf_mcp_host --> cf_vfp_assets
@@ -194,6 +201,7 @@ classDiagram
     copperfin_runtime_host --> cf_xbase_runtime
     copperfin_runtime_host --> cf_security
     copperfin_runtime_host --> cf_platform_profile
+    copperfin_runtime_host --> cf_sqlite_connector
     copperfin_runtime_host --> cf_licensing
     copperfin_runtime_host --> cf_localization
 

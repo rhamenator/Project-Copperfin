@@ -459,6 +459,10 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     2
     "cross-platform SQLite connector test pairs")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_sqlite_api_boundary_contract"
+    2
+    "cross-platform private SQLite API boundary tests")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
     "apps/copperfin_runtime_host/**"
     2
     "runtime-host path triggers")

@@ -4886,6 +4886,13 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_platform_executable_path_boundary_contract_check.cmake
 )
 
+add_test(
+    NAME test_platform_sqlite_api_boundary_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_platform_sqlite_api_boundary_contract_check.cmake
+)
+
 add_executable(test_platform_environment
     test_platform_environment.cpp
 )
@@ -4914,6 +4921,8 @@ copperfin_add_test(test_federation_execution cf_platform_profile
 copperfin_add_test(test_sqlite_federation_connector cf_sqlite_connector
     test_sqlite_federation_connector.cpp
 )
+target_include_directories(test_sqlite_federation_connector PRIVATE
+    ${CMAKE_SOURCE_DIR}/src)
 
 add_executable(test_runtime_host_sqlite_federation
     test_runtime_host_sqlite_federation.cpp
@@ -4922,6 +4931,8 @@ target_link_libraries(test_runtime_host_sqlite_federation PRIVATE
     cf_sqlite_connector
     cf_platform_support
     cf_test_process_capture_support)
+target_include_directories(test_runtime_host_sqlite_federation PRIVATE
+    ${CMAKE_SOURCE_DIR}/src)
 add_dependencies(test_runtime_host_sqlite_federation copperfin_runtime_host)
 if(MSVC)
     target_compile_options(test_runtime_host_sqlite_federation PRIVATE /W4 /permissive-)

@@ -9,8 +9,8 @@
 #elif defined(_WIN32)
 
 // Windows provides winsqlite3.dll and winsqlite3.lib even on SDK layouts that
-// omit the optional winsqlite3.h header. These are the public SQLite C ABI
-// declarations and constants used by Copperfin; SQLite's API is public domain.
+// omit the optional winsqlite3.h header. These private connector declarations
+// cover only the public-domain SQLite C ABI used by Copperfin.
 extern "C" {
 
 struct sqlite3;

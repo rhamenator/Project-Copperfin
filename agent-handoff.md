@@ -1,5 +1,36 @@
 # Agent Handoff
 
+## V1 private SQLite native API boundary
+
+The J1 follow-up moves the raw Windows/POSIX SQLite header selection from
+`include/copperfin/platform/` to the connector-private `src/platform/` surface.
+Windows WinSQLite header/fallback behavior, POSIX system SQLite, the real
+connector, runtime-host integration, security limits, and machine contracts are
+unchanged. The connector and two fixture-building tests receive a non-propagated
+private source include root. See `docs/53-private-sqlite-native-api-boundary.md`.
+
+The new source contract rejects OS/native SQLite tokens across the entire public
+Copperfin include tree, protects each private ABI branch, and verifies exactly
+three consumers plus exact build wiring. Local GCC Release builds the connector tests and runtime host;
+focused behavior, workflow, boundary, and isolation coverage passes `6/6`.
+Restoring the public shim and changing only the private Windows fallback branch
+both fail at the intended exact requirement. Clang 21 ASan/UBSan with leak
+detection passes the connector and boundary tests `2/2`. Hosted
+Windows/macOS/Linux evidence passes at exact signed/DCO corrected head
+`52b9b5c65`: Generated Launcher Validation `31559462483`, Windows DECLARE ABI
+Validation `31559462461`, Windows Environment and Executable Path Validation
+`31559462418`, GCC/Clang Executable Path Validation `31559462383`, DCO
+`31559461132`, and both socket checks are green. GitHub has no review comments
+or unresolved threads at that head.
+An alternate-suffix public header mutation and a fourth-consumer mutation also
+fail at the intended tree-wide and closed-consumer requirements.
+Independent review at corrected head `52b9b5c65` found no defect. A deliberate
+old-public-path include in the runtime host failed compilation, directly
+proving the private include root is not propagated. The review also confirmed
+the ABI content is unchanged, reproduced the public-leak and fourth-consumer
+mutations, passed real connector/runtime-host ASan/UBSan tests, and reran both
+workflow-text contracts.
+
 ## V1 portable executable-search default
 
 The J1 executable-path follow-up removes the last OS-selected declaration from

@@ -76,11 +76,13 @@ benchmark evidence; and `I1` has a security baseline. These real seeds are
 translator/execution-planning lane, the trusted polyglot host and route-impact
 boundary, and `cf_security`'s RBAC/audit/secrets/signing baseline, respectively.
 `J1` now has explicit portable public path, process-environment, and
-executable-search boundaries:
+executable-search boundaries plus a private SQLite native-ABI boundary:
 platform-neutral declarations remain in the broadly consumed headers while
 Windows/POSIX selection and native implementation stay private to
 `cf_platform_support`, with direct and source-contract tests scheduled on all
 three hosts.
+The read-only connector retains Windows/POSIX SQLite selection privately;
+public Copperfin headers reject host-selection and native SQLite API tokens.
 `H3` still lacks broader managed-language environments and model/provider or
 mutable MCP/AI adapters. **What's left, and what it
 takes:** this is
