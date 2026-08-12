@@ -121,13 +121,15 @@ only — the mechanism exists but is empty or entirely unclaimed.
 
 ### v1 lane J1 — Portable core boundary
 
-**Status: real seed, broad inventory still open.** The common public path
-interface now contains only standard C++ declarations; Windows SDK selection,
-UTF conversion, and path-component comparison are private implementation in
-`cf_platform_support`. A direct portable regression and a source-level contract
-run in the Windows, Linux, and macOS validation workflow, so the boundary is
-load-bearing rather than documentary. See
-`docs/50-portable-public-path-boundary.md`.
+**Status: real seed, broad inventory still open.** The common public path and
+process-environment interfaces now contain only standard C++ declarations.
+Windows SDK/CRT selection, UTF conversion, path-component comparison, POSIX
+environment calls, and process-wide synchronization are private implementation
+in `cf_platform_support`. Direct portable regressions and source-level
+contracts run in the Windows, Linux, and macOS validation workflow, so the
+boundaries are load-bearing rather than documentary. See
+`docs/50-portable-public-path-boundary.md` and
+`docs/51-portable-public-environment-boundary.md`.
 
 **What it will take:** inventory the rest of the public core and isolate the
 remaining shell, printing, OLE/COM, CLR-hosting, and other host-specific seams.

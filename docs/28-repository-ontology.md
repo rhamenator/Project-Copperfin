@@ -19,7 +19,7 @@ portable `cf_mcp_host` library and installed `copperfin_mcp_host` executable.
 ## 2. Native library dependency graph (ground truth, from `CMakeLists.txt`)
 
 ```
-cf_platform_support                    (base: executable_path.cpp, no deps)
+cf_platform_support                    (base: environment/path/executable-path helpers, no internal deps)
  └─ cf_localization                    (localization.cpp; PUBLIC-links cf_platform_support)
       ├─ cf_security                   (audit, auth, sha256, process hardening, secrets)
       ├─ cf_platform_profile           (database_model, extensibility_model, federation_execution, query_translator)
@@ -29,8 +29,8 @@ cf_platform_support                    (base: executable_path.cpp, no deps)
 
 cf_licensing                            (base64, canonical payload serializer, ed25519 verify,
                                           license classifier/parser/status, vendored ed25519_ref)
-                                         Deliberately dependency-free — no cf_localization link,
-                                         so it stays trivially unit-testable offline.
+                                         PRIVATE-links cf_platform_support for license-status
+                                         environment access; no cf_localization link.
  └─ cf_package_trust                    (launcher_inventory_trust.cpp — PRIVATE-links cf_licensing;
                                           reuses the verify-only crypto primitive but owns its own
                                           envelope/key-registry/verification API; must not consume
@@ -76,8 +76,11 @@ Also note the root of the graph changed since this document's first pass:
 ### `cf_platform_support` (new base layer)
 
 - `executable_path.cpp` — resolves the running executable's own path in a
-  platform-portable way. The single lowest-level dependency in the whole
-  native graph; `cf_localization` sits directly on top of it.
+  platform-portable way.
+- `environment.cpp` and `path.cpp` — keep operating-system selection, native
+  environment calls, synchronization, and path conversion/comparison behind
+  platform-neutral public declarations. This is the lowest-level dependency
+  in the native graph; `cf_localization` sits directly on top of it.
 
 ### `cf_localization` / `cf_security` / `cf_platform_profile` (cross-cutting infrastructure)
 
@@ -179,7 +182,11 @@ managed projects today, not a target.
 
 ## 8. Cross-cutting relationships worth noting
 
-- Every native library now depends on `cf_localization` (and therefore transitively on `cf_platform_support`) except the two deliberately independent bases: `cf_licensing` (dependency-free by design, for offline unit-testability) and `cf_platform_support` itself.
+- Every native library now depends on `cf_localization` (and therefore
+  transitively on `cf_platform_support`) except `cf_licensing`,
+  `cf_package_trust`, and `cf_platform_support` itself. `cf_licensing`
+  privately links `cf_platform_support` for environment access but remains
+  outside the localization catalog.
 - `cf_security` and `cf_platform_profile` are siblings consumed identically by both `copperfin_studio_host` and `copperfin_runtime_host`, but `copperfin_studio_host` does *not* link `cf_xbase_runtime` directly — design-time JSON snapshot generation doesn't need the execution engine, only `cf_design_model`.
 - `cf_package_trust` and `cf_licensing` are siblings with a deliberately narrow relationship: package trust reuses only the licensing library's verify-only crypto primitive, never its parsing or status-decision logic, and neither one links `cf_localization` — they sit outside the localization-catalog requirement that governs the rest of the graph.
 - The VFP asset type taxonomy (§1) is the spine the whole ontology hangs off: each format has a reader in `cf_vfp_assets`, an editable object model in `cf_design_model`, and (for `SCX/VCX/MNX/FRX/LBX/PRG`) an executable surface in `cf_xbase_runtime`.

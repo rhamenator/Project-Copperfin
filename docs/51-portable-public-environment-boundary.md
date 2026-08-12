@@ -1,0 +1,60 @@
+# Portable Public Environment Boundary
+
+Project Copperfin's public process-environment interface is platform-neutral.
+The header `include/copperfin/platform/environment.h` exposes only standard C++
+types and declarations; it does not include the path implementation, select an
+operating system, or embed native environment calls. The implementation belongs
+to `src/platform/environment.cpp` inside `cf_platform_support`.
+
+This is a bounded J1 follow-up to the portable public path boundary. It prevents
+runtime, security, licensing, asset, Studio, and application consumers from
+compiling Windows/POSIX environment mechanics and synchronization into every
+translation unit that includes the interface. It does not claim that the whole
+core is portable or complete the macOS or Linux ports.
+
+## Preserved behavior
+
+- Names remain nonempty ASCII on Windows and reject `=` or embedded NUL bytes
+  everywhere.
+- Windows continues to use the wide-character CRT environment APIs and the
+  shared strict UTF-8/native-path conversion boundary.
+- POSIX reads, writes, and clears continue to serialize through one process-wide
+  mutex for callers using these helpers.
+- Empty Windows assignments retain CRT removal semantics; POSIX empty
+  assignments remain distinct from missing variables.
+- Path values, Unicode values, scoped restoration, and concurrent access retain
+  their existing contracts.
+
+No VFP9 language behavior, xAsset format, machine-readable output, package or
+debug contract, localization key, or runtime policy changed in this slice.
+
+## Load-bearing verification
+
+`test_platform_environment` continues to exercise value and path round trips,
+Unicode, invalid names and embedded NULs, empty-value semantics, scoped
+restoration, executable discovery, and concurrent process-environment access.
+The new `test_platform_environment_boundary_contract` rejects platform
+selection, CRT environment calls, synchronization, or the private path helper
+from the public header. It also requires the private implementation and its
+Windows/POSIX behavior tokens to remain registered with `cf_platform_support`.
+
+Generated Launcher Validation builds and runs both tests on Windows, Ubuntu,
+and macOS. Windows Environment and Executable Path Validation repeats them with
+the adjacent environment and path consumers. Both contracts are portable,
+network-free, sample-free, and use no child processes.
+
+Local GCC Release validation builds the runtime, build, MCP, and inspection
+hosts plus direct licensing, localization, security, asset, bounded-process,
+and platform-model consumers. Focused, adjacent, workflow, and isolation
+coverage passes `14/14`. A mutation that returned `_WIN32` selection to the
+public header fails the boundary contract at the exact forbidden token, while
+the unmodified source passes.
+
+## Remaining J1 work
+
+The environment and path interfaces are two explicit boundaries, not a blanket
+portability claim. Later independently reviewed slices must inventory and
+isolate the remaining Windows-only shell, printing, OLE/COM, CLR-hosting, and
+other native seams while keeping portable runtime/data/parser/connector
+contracts free of host-specific dependencies. J2 and J3 remain responsible for
+the broader standalone IDE and core-host work on macOS and Linux.

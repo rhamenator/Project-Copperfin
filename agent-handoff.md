@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 portable public environment boundary
+
+The J1 follow-up to the path boundary moves all OS-specific process-environment
+code out of the widely consumed `copperfin/platform/environment.h` header and
+into `cf_platform_support`. The public interface now exposes only standard C++
+declarations. Windows wide-CRT/UTF-8 behavior, POSIX process-wide
+serialization, empty-value semantics, path values, validation, and concurrent
+access remain unchanged.
+
+The existing behavior regression and a new source-boundary contract are
+registered in Generated Launcher Validation on Windows, Ubuntu, and macOS and
+in the focused Windows environment/path workflow. This advances J1 only; the
+wider native-boundary inventory and J2/J3 ports remain open. See
+`docs/51-portable-public-environment-boundary.md`.
+
+Local GCC Release builds the four directly affected hosts and adjacent
+licensing, localization, security, asset, bounded-process, and platform-model
+consumers; focused, adjacent, workflow, and isolation tests pass `14/14`. A
+temporary `_WIN32` header mutation is rejected by the new boundary contract.
+
 ## V1 portable public path boundary
 
 The first explicit J1 library-boundary increment moves all OS-specific path

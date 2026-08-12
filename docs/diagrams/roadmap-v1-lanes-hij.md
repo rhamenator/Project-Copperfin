@@ -75,10 +75,11 @@ benchmark evidence; and `I1` has a security baseline. These real seeds are
 `cf_platform_profile`'s deterministic Fox-SQL
 translator/execution-planning lane, the trusted polyglot host and route-impact
 boundary, and `cf_security`'s RBAC/audit/secrets/signing baseline, respectively.
-`J1` now has an explicit portable public path boundary: platform-neutral
-declarations remain in the broadly consumed header while the Windows SDK and
-native implementation stay private to `cf_platform_support`, with direct and
-source-contract tests scheduled on all three hosts.
+`J1` now has explicit portable public path and process-environment boundaries:
+platform-neutral declarations remain in the broadly consumed headers while
+Windows/POSIX selection and native implementation stay private to
+`cf_platform_support`, with direct and source-contract tests scheduled on all
+three hosts.
 `H3` still lacks broader managed-language environments and model/provider or
 mutable MCP/AI adapters. **What's left, and what it
 takes:** this is

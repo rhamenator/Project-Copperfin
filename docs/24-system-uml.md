@@ -24,6 +24,8 @@ classDiagram
     direction TB
 
     class cf_platform_support {
+        +environment()
+        +path_conversion()
         +executable_path()
     }
 

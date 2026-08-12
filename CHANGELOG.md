@@ -1,3 +1,19 @@
+- 2026-08-11: Continued v1 portability lane J1 with a portable public
+  process-environment boundary. The broadly consumed
+  `copperfin/platform/environment.h` interface now contains only standard C++
+  declarations; Windows/POSIX selection, CRT environment calls, strict UTF-8
+  path conversion, and process-wide synchronization live privately in
+  `cf_platform_support`. Existing Unicode, empty-value, validation, path,
+  restoration, and concurrent-access behavior remains covered. A new source
+  contract prevents native implementation mechanics from returning to the
+  public header. Generated Launcher Validation builds and runs both contracts
+  on Windows, Ubuntu, and macOS, and the focused Windows environment/path
+  workflow repeats them. Local GCC Release host/consumer builds pass, focused
+  plus adjacent workflow/isolation coverage passes `14/14`, and a deliberate
+  `_WIN32` header mutation proves the new source contract is load-bearing. This
+  is a bounded J1 increment, not completion of the portable-core inventory or
+  J2/J3 ports.
+
 - 2026-08-11: Restored the review-identified rationale for the layered Windows
   Unicode path-component comparison APIs after their move behind the portable
   public boundary. The original comments explain the invariant-locale
