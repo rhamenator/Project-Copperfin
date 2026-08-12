@@ -1,5 +1,23 @@
 # Agent Handoff
 
+## V1 private SQLite native API boundary
+
+The J1 follow-up moves the raw Windows/POSIX SQLite header selection from
+`include/copperfin/platform/` to the connector-private `src/platform/` surface.
+Windows WinSQLite header/fallback behavior, POSIX system SQLite, the real
+connector, runtime-host integration, security limits, and machine contracts are
+unchanged. The connector and two fixture-building tests receive a non-propagated
+private source include root. See `docs/53-private-sqlite-native-api-boundary.md`.
+
+The new source contract rejects OS/native SQLite tokens across every public
+Copperfin header, protects each private ABI branch, and verifies exact consumer
+and build wiring. Local GCC Release builds the connector tests and runtime host;
+focused behavior, workflow, boundary, and isolation coverage passes `6/6`.
+Restoring the public shim and changing only the private Windows fallback branch
+both fail at the intended exact requirement. Clang 21 ASan/UBSan with leak
+detection passes the connector and boundary tests `2/2`. Hosted
+Windows/macOS/Linux evidence and independent review remain required before merge.
+
 ## V1 portable executable-search default
 
 The J1 executable-path follow-up removes the last OS-selected declaration from

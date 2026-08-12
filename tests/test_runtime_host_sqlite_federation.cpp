@@ -7,7 +7,7 @@
 #include "test_process_capture_support.h"
 
 #if COPPERFIN_SQLITE_CONNECTOR_AVAILABLE
-#include "copperfin/platform/sqlite_api.h"
+#include "platform/sqlite_api.h"
 #endif
 
 #include <atomic>

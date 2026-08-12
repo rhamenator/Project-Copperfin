@@ -9,7 +9,7 @@ portable `cf_mcp_host` library and installed `copperfin_mcp_host` executable.
 
 | Class | Instances | Where |
 |---|---|---|
-| Native static libraries | `cf_platform_support`, `cf_localization`, `cf_security`, `cf_licensing`, `cf_package_trust`, `cf_platform_profile`, `cf_vfp_assets`, `cf_mcp_host`, `cf_design_model`, `cf_prg_analysis`, `cf_runtime_text`, `cf_xbase_runtime`, `cf_runtime_pipeline` | `CMakeLists.txt`, `src/*`, `include/copperfin/*` |
+| Native static libraries | `cf_platform_support`, `cf_localization`, `cf_security`, `cf_licensing`, `cf_package_trust`, `cf_platform_profile`, `cf_sqlite_connector`, `cf_vfp_assets`, `cf_mcp_host`, `cf_design_model`, `cf_prg_analysis`, `cf_runtime_text`, `cf_xbase_runtime`, `cf_runtime_pipeline` | `CMakeLists.txt`, `src/*`, `include/copperfin/*` |
 | Native executables ("hosts") | `copperfin_inspect`, `copperfin_mcp_host`, `copperfin_studio_host`, `copperfin_runtime_host`, `copperfin_build_host`, `copperfin_launcher_guard` (Windows-only) | `apps/*/main.cpp` |
 | Managed (.NET) projects | `Copperfin.VisualStudio` (VSIX), `Copperfin.Studio` (standalone shell), `Copperfin.DesignerSmokeTests`, `Copperfin.LanguageServiceTests`, `Copperfin.PolyglotCandidate` (Native AOT external leaf sample) | `vsix/*`, `samples/polyglot-dotnet-candidate/*` |
 | VFP-era asset formats (domain data) | `DBF/FPT`, `CDX/DCX/IDX/MDX`, `DBC`, `PJX/PJT`, `SCX/SCT`, `VCX/VCT`, `FRX/FRT`, `LBX/LBT`, `MNX/MNT`, `PRG/H/QPR/MPR/SPR` | parsed/edited across `cf_vfp_assets`, `cf_design_model`, `cf_xbase_runtime` |
@@ -36,6 +36,10 @@ cf_licensing                            (base64, canonical payload serializer, e
                                           envelope/key-registry/verification API; must not consume
                                           license parsing or license-status decisions)
 
+cf_sqlite_connector = cf_platform_profile(public) + cf_security(private)
+                      (read-only SQLite execution; raw Windows/POSIX SQLite ABI
+                       selection remains private under src/platform)
+
 cf_design_model  = cf_vfp_assets + cf_prg_analysis + cf_localization
                    (src/studio/*: designer_*, builder_*, toolbox_*, vs_launch_contract_*, report_layout, project_workspace, document_model)
 
@@ -55,7 +59,7 @@ Executables consume this graph at the top:
 copperfin_inspect        -> cf_vfp_assets, cf_security, cf_licensing, cf_localization
 copperfin_mcp_host       -> cf_mcp_host, cf_security
 copperfin_studio_host    -> cf_design_model, cf_security, cf_platform_profile, cf_licensing
-copperfin_runtime_host   -> cf_xbase_runtime, cf_security, cf_platform_profile, cf_licensing, cf_localization
+copperfin_runtime_host   -> cf_xbase_runtime, cf_security, cf_platform_profile, cf_sqlite_connector, cf_licensing, cf_localization
 copperfin_build_host     -> cf_runtime_pipeline, cf_localization
 copperfin_launcher_guard -> cf_security, cf_localization, cf_platform_support, cf_package_trust   (Windows-only)
 ```
@@ -88,6 +92,7 @@ Also note the root of the graph changed since this document's first pass:
 - **Localization**: catalog-driven string lookup (`resources/locales/{en-US,es-419,pt-BR,qps-ploc}/strings.json`); each higher subsystem has its own `localized_text.{h,cpp}` shim over this base.
 - **Security**: `authorization`, `audit_stream`, `external_process_policy`, `physical_path_containment`, `process_hardening`, `secret_provider`, `security_model`, `sha256` — an RBAC/audit/sandboxing layer (`docs/18-native-security-and-rbac.md`), independent of any one host. On Windows it links `bcrypt`, `crypt32`, `wintrust`, and `version`.
 - **Platform profile**: `database_model`, `query_translator`, `federation_execution`, `extensibility_model` — the "database federation" concept (`docs/21-database-federation-and-query-translation.md`): deterministic relational query translation plus AI-assisted document/vector planning metadata, surfaced into both Studio and the runtime host.
+- **SQLite connector**: bounded read-only execution of deterministic SQLite plans. Its public Copperfin header exposes only platform-neutral result/request types; the system SQLite/WinSQLite C ABI selection is a private implementation header.
 
 ### `cf_licensing` / `cf_package_trust` (new — crypto and package-trust layer)
 

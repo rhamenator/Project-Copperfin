@@ -6,7 +6,7 @@
 
 #include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
-#include "copperfin/platform/sqlite_api.h"
+#include "platform/sqlite_api.h"
 #include "copperfin/security/physical_path_containment.h"
 
 #include <algorithm>

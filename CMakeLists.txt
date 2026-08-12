@@ -314,6 +314,8 @@ add_library(cf_sqlite_connector
 target_include_directories(cf_sqlite_connector
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 if(MSVC)
