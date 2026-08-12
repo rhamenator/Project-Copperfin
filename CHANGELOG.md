@@ -13,6 +13,12 @@
   `_WIN32` header mutation proves the new source contract is load-bearing. This
   is a bounded J1 increment, not completion of the portable-core inventory or
   J2/J3 ports.
+  Corrected product/test head `e8f87cf42` passes all eleven protected checks;
+  Generated Launcher Validation `31549944398` passes `12/12` on Windows,
+  Ubuntu, and macOS, and Windows Environment and Executable Path Validation
+  `31549944197` passes `10/10`. Automated review found that a bare `setenv`
+  probe could match inside `unsetenv`; both calls now require independent exact
+  statements, and a setenv-only mutation proves the correction.
 
 - 2026-08-11: Restored the review-identified rationale for the layered Windows
   Unicode path-component comparison APIs after their move behind the portable

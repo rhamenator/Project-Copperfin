@@ -20,6 +20,13 @@ licensing, localization, security, asset, bounded-process, and platform-model
 consumers; focused, adjacent, workflow, and isolation tests pass `14/14`. A
 temporary `_WIN32` header mutation is rejected by the new boundary contract.
 
+Corrected product/test head `e8f87cf42` passes all eleven protected checks.
+Generated Launcher Validation `31549944398` passes `12/12` on Windows, Ubuntu,
+and macOS; Windows Environment and Executable Path Validation `31549944197`
+passes `10/10`. Automated review's `setenv`/`unsetenv` substring-collision
+finding is corrected with independent exact-statement probes, and removing
+only `setenv` now fails the source contract at the intended requirement.
+
 ## V1 portable public path boundary
 
 The first explicit J1 library-boundary increment moves all OS-specific path

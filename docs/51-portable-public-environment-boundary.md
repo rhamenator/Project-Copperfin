@@ -50,6 +50,16 @@ coverage passes `14/14`. A mutation that returned `_WIN32` selection to the
 public header fails the boundary contract at the exact forbidden token, while
 the unmodified source passes.
 
+Corrected product/test head `e8f87cf42` passes all eleven protected checks.
+Generated Launcher Validation run `31549944398` passes its `12/12` focused set
+on Windows, Ubuntu, and macOS, including the environment behavior and boundary
+contracts. Windows Environment and Executable Path Validation run
+`31549944197` repeats the two contracts inside its `10/10` consumer set.
+Automated review found that the original bare `setenv` contract token could be
+satisfied by the substring in `unsetenv`; the corrected contract requires both
+exact return statements independently. Removing only the `setenv` statement
+now fails at that precise requirement.
+
 ## Remaining J1 work
 
 The environment and path interfaces are two explicit boundaries, not a blanket
