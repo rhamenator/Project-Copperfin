@@ -1,3 +1,20 @@
+- 2026-08-12: Continued v1 portability lane J1 by moving Windows native
+  `DECLARE` module search, export resolution, managed-PE classification,
+  diagnostics, and module lifetime behind a standard-C++ internal boundary.
+  Interpreter state now retains only integer-sized opaque module/function
+  identities; exact/ANSI/underscore/decorated export lookup, ordered
+  `WIN32API` modules, mixed-mode native precedence, redeclaration rollback,
+  and invocation behavior remain unchanged. A source contract protects the
+  portable header and private loader ownership. Local focused and adjacent
+  coverage passes `6/6`, a standalone Linux header compile passes, and two
+  deliberate native-token mutations fail at the intended boundary. Exact
+  signed/DCO implementation head `eb81efa50` passes all eleven protected
+  checks: Generated Launcher Validation `31566888844` on Windows, Ubuntu, and
+  macOS; Windows DECLARE ABI Validation `31566888629` on Win32/x64; Windows
+  environment/path `31566888649`; GCC/Clang executable-path `31566888767`;
+  DCO `31566887243`; and both socket checks. Native invocation marshaling,
+  OLE/COM, shell, printing, and J2/J3 ports remain separate.
+
 - 2026-08-11: Continued v1 portability lane J1 with a portable public
   process-environment boundary. The broadly consumed
   `copperfin/platform/environment.h` interface now contains only standard C++

@@ -15,9 +15,16 @@ Win32/x64 native/managed DECLARE fixtures. Local GCC Release builds the affected
 runtime; boundary, workflow, isolation, native-DECLARE-adjacent, parser, and
 broad runtime-surface coverage passes `6/6`. A standalone Linux header compile
 passes, while `HMODULE`-header and `LoadLibraryW`-dispatch mutations fail at the
-intended exact requirements. Hosted and independent review evidence remain
-pending. Native invocation marshaling, OLE/COM, shell, printing, and J2/J3
-ports remain separate.
+intended exact requirements. Exact signed/DCO implementation head
+`eb81efa50` passes all eleven protected checks: Generated Launcher Validation
+`31566888844` passes on Windows, Ubuntu, and macOS; Windows DECLARE ABI
+Validation `31566888629` passes the real native/managed fixtures and adjacent
+coverage on Win32/x64; Windows environment/path `31566888649`, GCC/Clang
+executable-path `31566888767`, DCO `31566887243`, and both socket checks pass.
+GitHub has no comments or unresolved threads. Independent review was requested
+through the coordination channel and remains non-blocking; no independent
+result is claimed yet. Native invocation marshaling, OLE/COM, shell, printing,
+and J2/J3 ports remain separate.
 
 ## V1 portable CLR-host boundary
 

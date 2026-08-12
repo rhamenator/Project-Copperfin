@@ -51,7 +51,19 @@ Boundary, workflow, isolation, native-DECLARE-adjacent, parser, and broad
 runtime-surface coverage passes `6/6`, and a standalone Linux translation unit
 compiles the portable header. Deliberately leaking `HMODULE` into the header or
 `LoadLibraryW` into interpreter dispatch fails the source contract at the exact
-boundary. Exact hosted Windows behavior remains required before merge.
+boundary.
+
+Exact signed/DCO implementation head `eb81efa50` passes all eleven protected
+checks. Generated Launcher Validation `31566888844` passes the boundary
+contract and adjacent generated-launcher, portable-platform, polyglot, MCP,
+and SQLite federation coverage on Windows, Ubuntu, and macOS. Windows DECLARE
+ABI Validation `31566888629` builds and runs the real native and managed
+fixtures plus adjacent DECLARE regressions on Win32 and x64. Windows
+environment/path validation `31566888649`, GCC/Clang executable-path
+validation `31566888767`, DCO `31566887243`, and both socket checks also pass.
+GitHub has no comments or unresolved review threads at that head. An
+independent review was requested through the coordination channel; it is not
+an acknowledgment dependency, and no response is claimed by this evidence.
 
 ## Scope
 
