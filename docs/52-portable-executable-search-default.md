@@ -50,6 +50,14 @@ regression; Windows DECLARE ABI Validation `31554724438`, GCC/Clang Executable
 Path Validation `31554724484`, DCO `31554724442`, and both socket checks pass.
 GitHub reports no review comments or unresolved review threads at that head.
 
+Independent review at evidence head `12f47816c` found no defect. It confirmed
+the implementation is byte-identical to `fee6c1be7`, mutation-proved that one
+public declaration cannot satisfy another declaration's contract token, traced
+all three current callers through their existing platform guards, and matched
+the Linux query result to `getconf PATH`. A fresh ASan/UBSan build and run of
+the platform regression plus build and runtime hosts was clean. The reviewer
+also reran both touched workflow-text contracts successfully.
+
 ## Remaining J1 work
 
 The path, process-environment, and executable-search public interfaces now have

@@ -23,6 +23,11 @@ and macOS; Windows Environment and Executable Path Validation `31554724462`,
 Windows DECLARE ABI Validation `31554724438`, GCC/Clang Executable Path
 Validation `31554724484`, DCO `31554724442`, and both socket checks also pass.
 There are no GitHub review comments or unresolved review threads at that head.
+Independent review at evidence head `12f47816c` found no defect: it
+mutation-proved declaration-token collision resistance, traced all three
+callers through their existing platform guards, matched the Linux result to
+`getconf PATH`, and freshly built and ran the affected regression and hosts
+under ASan/UBSan. Both touched workflow-text contracts also pass independently.
 
 ## V1 portable public environment boundary
 
