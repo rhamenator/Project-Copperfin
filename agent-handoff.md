@@ -23,6 +23,12 @@ now explicitly includes `windows.h` before `oleauto.h`; the source contract
 requires that order. The corrected boundary and both workflow contracts pass
 `3/3`; reversing only the two includes fails at the intended assertion, and
 restoration returns green. Product sources remain unchanged by this correction.
+Corrected signed/DCO implementation head `cacc5f711` passes all eleven
+protected checks: Generated Launcher `31616588988` on Windows/Ubuntu/macOS;
+Windows DECLARE `31616589040` on Win32/x64; Windows environment/path
+`31616588982`; GCC/Clang executable-path `31616588890`; DCO `31616586145`;
+and both package-safety checks. The evidence-only final head requires its own
+protected rerun before merge.
 
 ## V1 APRINTERS shell/printing boundary
 

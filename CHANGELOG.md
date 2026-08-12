@@ -16,6 +16,11 @@
   ordering without restoring the obsolete owner. The corrected boundary and
   both workflow contracts pass `3/3`; reversing only the includes fails at the
   intended ordering assertion, and restoration returns the set to green.
+  Corrected signed/DCO implementation head `cacc5f711` passes all eleven
+  protected checks: Generated Launcher `31616588988` on Windows, Ubuntu, and
+  macOS; Windows DECLARE `31616589040` on Win32/x64; Windows environment/path
+  `31616588982`; GCC/Clang executable-path `31616588890`; DCO `31616586145`;
+  and both package-safety checks.
 
 - 2026-08-12: Continued v1 portability lane J1 by moving native `DECLARE`
   argument backing storage, raw pointer formation, Windows Automation dispatch,
