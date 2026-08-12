@@ -21,33 +21,29 @@ if(NOT EXISTS "${FIXTURE}")
 endif()
 
 file(READ "${FIXTURE}" FIXTURE_CONTENT)
-foreach(REQUIRED_TEXT IN ITEMS
-    "constexpr char kDependenciesFixturePayload[] ="
-    "{\\\"fixture\\\":\\\"dependencies\\\"}\\n"
-    "constexpr char kRuntimeConfigurationFixturePayload[] ="
-    "{\\\"fixture\\\":\\\"runtime-configuration\\\"}\\n"
-    "kDependenciesFixturePayload);"
-    "kRuntimeConfigurationFixturePayload);"
-)
-    string(FIND "${FIXTURE_CONTENT}" "${REQUIRED_TEXT}" POSITION)
-    if(POSITION EQUAL -1)
-        message(FATAL_ERROR
-            "launcher trust fixture must retain distinct dependency and runtime-configuration payloads: ${REQUIRED_TEXT}")
-    endif()
-endforeach()
-
-set(DEPENDENCIES_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.deps.json",
-               kDependenciesFixturePayload);]=])
-set(RUNTIME_CONFIGURATION_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json",
-               kRuntimeConfigurationFixturePayload);]=])
-foreach(REQUIRED_BINDING IN ITEMS
+string(REGEX REPLACE "[ \t\r\n]+" " " FIXTURE_NORMALIZED "${FIXTURE_CONTENT}")
+set(DEPENDENCIES_FIXTURE_DECLARATION [=[constexpr char kDependenciesFixturePayload[] = "{\"fixture\":\"dependencies\"}\n";]=])
+set(RUNTIME_CONFIGURATION_FIXTURE_DECLARATION [=[constexpr char kRuntimeConfigurationFixturePayload[] = "{\"fixture\":\"runtime-configuration\"}\n";]=])
+set(DEPENDENCIES_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.deps.json", kDependenciesFixturePayload);]=])
+set(RUNTIME_CONFIGURATION_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json", kRuntimeConfigurationFixturePayload);]=])
+foreach(REQUIRED_FIXTURE_CONTRACT IN ITEMS
+    "${DEPENDENCIES_FIXTURE_DECLARATION}"
+    "${RUNTIME_CONFIGURATION_FIXTURE_DECLARATION}"
     "${DEPENDENCIES_FIXTURE_BINDING}"
     "${RUNTIME_CONFIGURATION_FIXTURE_BINDING}"
 )
-    string(FIND "${FIXTURE_CONTENT}" "${REQUIRED_BINDING}" POSITION)
+    # The source normalization above collapses every whitespace run to one
+    # space. Remove those spaces from both sides so purely stylistic spacing
+    # cannot weaken or trip the semantic name/value and path/name checks.
+    string(REPLACE " " "" FIXTURE_CONTRACT_TOKENS "${FIXTURE_NORMALIZED}")
+    string(REPLACE " " "" REQUIRED_FIXTURE_CONTRACT_TOKENS
+        "${REQUIRED_FIXTURE_CONTRACT}")
+    string(FIND "${FIXTURE_CONTRACT_TOKENS}"
+        "${REQUIRED_FIXTURE_CONTRACT_TOKENS}" POSITION)
     if(POSITION EQUAL -1)
         message(FATAL_ERROR
-            "launcher trust fixture payload is not bound to its intended sidecar")
+            "launcher trust fixture payload declaration or sidecar binding is incorrect: "
+            "${REQUIRED_FIXTURE_CONTRACT}")
     endif()
 endforeach()
 
