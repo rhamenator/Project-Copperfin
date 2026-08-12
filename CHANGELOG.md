@@ -7541,3 +7541,20 @@ passes `1/1`.
   compile passes, and two native-token mutations prove the source boundary is
   load-bearing. Native-call marshaling, OLE/COM, shell, printing, and J2/J3
   ports remain separate.
+- 2026-08-12: Continued v1 portability lane J1 by replacing APRINTERS' `_popen`/
+  `popen` command-shell discovery with a portable printer API. Windows now uses
+  private Unicode spooler enumeration; POSIX resolves `lpstat` and invokes it
+  directly through the bounded-process facility with fixed resource limits and
+  no ambient environment. Deterministic injected enumeration and no-printer
+  fallback remain covered, and a hosted source contract prevents shell/native
+  mechanics from returning to the interpreter boundary. Local GCC Release
+  focused and adjacent coverage passes `5/5`; Clang ASan/UBSan passes `3/3`.
+  Exact signed/DCO implementation head `36be64015` passes all eleven protected
+  checks: Generated Launcher Validation `31577463882` on Windows, Ubuntu, and
+  macOS; Windows DECLARE ABI Validation `31577463847` on Win32/x64; Windows
+  environment/path `31577463814`; GCC/Clang executable-path `31577463753`; DCO
+  `31577463901`; and both socket checks. Independent review passes after a
+  clean GCC build, focused `4/4`, real POSIX ASan/UBSan execution, both workflow
+  self-checks, direct parsing-equivalence review, and a deliberate `popen`
+  mutation that failed at the intended contract. The replacement also removes
+  the old fixed-512-byte line-read fragmentation risk.

@@ -146,10 +146,14 @@ boundaries are load-bearing rather than documentary. See
 `docs/53-private-sqlite-native-api-boundary.md` and
 `docs/54-portable-clr-host-boundary.md`, plus
 `docs/55-native-declare-loader-boundary.md` and
-`docs/56-native-declare-invocation-boundary.md`.
+`docs/56-native-declare-invocation-boundary.md`. APRINTERS host discovery now
+crosses the portable contract documented in
+`docs/57-portable-printer-shell-boundary.md`: Windows owns Unicode spooler
+enumeration privately, while POSIX invokes `lpstat` directly under bounded
+process limits without a command shell.
 
 **What it will take:** inventory the rest of the public core and isolate the
-remaining shell, printing, OLE/COM, and other host-specific seams;
+remaining report printing, print-dialog, OLE/COM, and other host-specific seams;
 the CLR host implementation itself remains Windows-only by design.
 This slice does not claim the standalone IDE or full core host has been ported;
 those remain J2/J3 work.

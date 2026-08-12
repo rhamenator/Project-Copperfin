@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/platform/printer.h"
 #include "prg_engine_test_support.h"
 #include "test_environment_support.h"
 
@@ -1346,50 +1347,6 @@ void test_aprinters_supports_injected_enumeration_and_deterministic_no_printer_f
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
-    const fs::path fake_path = temp_root / "fake-bin";
-    const fs::path empty_path = temp_root / "empty-bin";
-    fs::create_directories(fake_path);
-    fs::create_directories(empty_path);
-
-#if defined(_WIN32)
-    const fs::path fake_lpstat = fake_path / "lpstat.cmd";
-    write_text(
-        fake_lpstat,
-        "@echo off\r\n"
-        "if \"%1\"==\"-a\" (\r\n"
-        "  echo Office_Printer accepting requests since Sat Jul 4 01:00:11 2026\r\n"
-        "  echo Label_Printer accepting requests since Sat Jul 4 01:00:18 2026\r\n"
-        "  exit /b 0\r\n"
-        ")\r\n"
-        "if \"%1\"==\"-p\" (\r\n"
-        "  echo printer Office_Printer is idle. enabled since Sat Jul 4 01:00:11 2026\r\n"
-        "  echo printer Label_Printer is idle. enabled since Sat Jul 4 01:00:18 2026\r\n"
-        "  exit /b 0\r\n"
-        ")\r\n"
-        "exit /b 0\r\n");
-#else
-    const fs::path fake_lpstat = fake_path / "lpstat";
-    write_text(
-        fake_lpstat,
-        "#!/bin/sh\n"
-        "if [ \"$1\" = \"-a\" ]; then\n"
-        "  echo \"Office_Printer accepting requests since Sat Jul 4 01:00:11 2026\"\n"
-        "  echo \"Label_Printer accepting requests since Sat Jul 4 01:00:18 2026\"\n"
-        "  exit 0\n"
-        "fi\n"
-        "if [ \"$1\" = \"-p\" ]; then\n"
-        "  echo \"printer Office_Printer is idle. enabled since Sat Jul 4 01:00:11 2026\"\n"
-        "  echo \"printer Label_Printer is idle. enabled since Sat Jul 4 01:00:18 2026\"\n"
-        "  exit 0\n"
-        "fi\n"
-        "exit 0\n");
-    fs::permissions(
-        fake_lpstat,
-        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
-        fs::perm_options::add,
-        ignored);
-#endif
-
     const fs::path main_path = temp_root / "aprinters_enumerated.prg";
     write_text(
         main_path,
@@ -1399,11 +1356,12 @@ void test_aprinters_supports_injected_enumeration_and_deterministic_no_printer_f
         "RETURN\n");
 
     {
-        copperfin::test_support::ScopedEnvironmentValue scoped_path("PATH");
-        scoped_path.set(fake_path.string());
-
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto options = make_runtime_session_options(main_path.string(), temp_root.string());
+        options.printer_enumeration_callback = [] {
+            return std::vector<std::string>{"Office_Printer", "Label_Printer"};
+        };
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(options);
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "APRINTERS injected-enumeration script should complete");
@@ -1436,11 +1394,10 @@ void test_aprinters_supports_injected_enumeration_and_deterministic_no_printer_f
         "RETURN\n");
 
     {
-        copperfin::test_support::ScopedEnvironmentValue scoped_path("PATH");
-        scoped_path.set(empty_path.string());
-
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            make_runtime_session_options(fallback_path.string(), temp_root.string()));
+        auto options = make_runtime_session_options(fallback_path.string(), temp_root.string());
+        options.printer_enumeration_callback = [] { return std::vector<std::string>{}; };
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(options);
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "APRINTERS fallback script should complete");
@@ -1460,6 +1417,33 @@ void test_aprinters_supports_injected_enumeration_and_deterministic_no_printer_f
     }
 
     fs::remove_all(temp_root, ignored);
+}
+
+void test_platform_printer_enumeration_uses_direct_host_boundary() {
+    namespace fs = std::filesystem;
+#if !defined(_WIN32)
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_direct_printer_enumeration";
+    const fs::path fake_bin = temp_root / "bin";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(fake_bin);
+    const fs::path fake_lpstat = fake_bin / "lpstat";
+    write_text(fake_lpstat,
+        "#!/bin/sh\n"
+        "printf '%s\\n' 'Office_Printer accepting requests' 'printer Label_Printer is idle.'\n");
+    fs::permissions(fake_lpstat, fs::perms::owner_exec, fs::perm_options::add, ignored);
+    copperfin::test_support::ScopedEnvironmentValue scoped_path("PATH");
+    scoped_path.set(fake_bin.string());
+#endif
+    const std::vector<std::string> names = copperfin::platform::enumerate_printer_names();
+#if !defined(_WIN32)
+    expect(names == std::vector<std::string>({"Office_Printer", "Label_Printer"}),
+        "POSIX printer discovery should directly execute and parse the resolved lpstat fixture");
+    fs::remove_all(temp_root, ignored);
+#else
+    expect(std::all_of(names.begin(), names.end(), [](const std::string& name) { return !name.empty(); }),
+        "Windows native printer discovery should never return empty queue names");
+#endif
 }
 
 void test_agetfileversion_existing_and_missing_files() {
@@ -1833,6 +1817,7 @@ int main() {
     test_asessions_returns_at_least_default_session();
     test_afont_returns_host_aware_font_array_with_deterministic_size_contract();
     test_aprinters_supports_injected_enumeration_and_deterministic_no_printer_fallback();
+    test_platform_printer_enumeration_uses_direct_host_boundary();
     test_agetfileversion_existing_and_missing_files();
     test_agetfileversion_strict_verified_bytes();
 

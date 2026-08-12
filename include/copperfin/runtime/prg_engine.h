@@ -287,6 +287,9 @@ struct RuntimeSessionOptions {
     // Null fails closed; the callback receives no runtime/session reference.
     std::function<RuntimePolyglotDispatchResult(
         const RuntimePolyglotDispatchRequest&)> polyglot_dispatch_callback;
+    // Optional host-owned printer enumeration seam. Null uses the platform
+    // implementation; tests and embedded hosts may supply deterministic names.
+    std::function<std::vector<std::string>()> printer_enumeration_callback;
     // Called when QUIT executes. Return true to allow quit; false to cancel it
     // (e.g. show a dialog asking the user to confirm). Null means always quit.
     std::function<bool()> quit_confirm_callback;

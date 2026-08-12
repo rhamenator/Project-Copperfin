@@ -1,5 +1,31 @@
 # Agent Handoff
 
+## V1 APRINTERS shell/printing boundary
+
+The current J1 slice replaces APRINTERS' `_popen`/`popen` command strings with
+`copperfin::platform::enumerate_printer_names()`. Windows privately uses
+`EnumPrintersW`; POSIX directly launches an absolute `lpstat` path through the
+bounded-process facility. The public boundary is standard C++, no command shell
+or redirection syntax remains, and an embedding host can inject deterministic
+printer names. `docs/57-portable-printer-shell-boundary.md` records the scope.
+
+Local GCC Release builds the affected runtime and passes APRINTERS, bounded
+process, boundary, GitHub Actions, and native-platform workflow coverage `5/5`.
+Clang ASan/UBSan passes `3/3`. Exact signed/DCO implementation head
+`36be64015` passes all eleven protected checks: Generated Launcher Validation
+`31577463882` on Windows, Ubuntu, and macOS (including the new APRINTERS target
+and boundary contract); Windows DECLARE ABI Validation `31577463847` on
+Win32/x64; Windows environment/path `31577463814`; GCC/Clang executable-path
+`31577463753`; DCO `31577463901`; and both socket checks. Independent review
+passes at the byte-identical implementation: clean GCC build, focused `4/4`,
+real POSIX ASan/UBSan execution, both workflow self-checks, parsing-equivalence
+review, and a deliberate `popen` mutation rejected by the source contract. The
+review also confirms the full-output parser removes the prior fixed-512-byte
+line fragmentation risk. Its disclosed Windows limitation is covered by the
+hosted Windows execution above; the PATH resolution-to-launch interval is an
+accepted local-host boundary because argv is fixed and PATH-directory write
+access already permits executable substitution.
+
 ## V1 native DECLARE invocation boundary
 
 The current J1 slice moves native `DECLARE` ABI storage, pointer formation,
