@@ -241,9 +241,9 @@ std::filesystem::path resolve_runtime_file_probe_path(
 }
 
 double available_disk_space(const std::string& raw_path, const std::string& default_directory) {
-    std::error_code ignored;
-    const auto info = std::filesystem::space(filesystem_probe_path(raw_path, default_directory), ignored);
-    return ignored ? 0.0 : static_cast<double>(info.available);
+    const auto available = copperfin::platform::available_disk_bytes(
+        filesystem_probe_path(raw_path, default_directory));
+    return available.has_value() ? static_cast<double>(*available) : 0.0;
 }
 
 std::string disk_cluster_size(const std::string& raw_path, const std::string& default_directory) {
@@ -257,43 +257,10 @@ std::string disk_cluster_size(const std::string& raw_path, const std::string& de
         path = copperfin::platform::path_from_utf8_string(trimmed_path + "\\");
     }
 
-    if (::GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES) {
-        return "0";
-    }
-
-    // GetDiskFreeSpaceW requires a volume root, not an arbitrary file or
-    // directory path. Resolve the supplied path first so nested files and
-    // UNC/mounted-volume paths use the same volume as the default query.
-    std::wstring volume_root(32768U, L'\0');
-    if (!::GetVolumePathNameW(
-            path.c_str(),
-            volume_root.data(),
-            static_cast<DWORD>(volume_root.size()))) {
-        return "0";
-    }
-    volume_root.resize(std::wcslen(volume_root.c_str()));
-
-    DWORD sectors_per_cluster = 0U;
-    DWORD bytes_per_sector = 0U;
-    if (!::GetDiskFreeSpaceW(
-            volume_root.c_str(),
-            &sectors_per_cluster,
-            &bytes_per_sector,
-            nullptr,
-            nullptr) ||
-        sectors_per_cluster == 0U || bytes_per_sector == 0U) {
-        return "0";
-    }
-    return std::to_string(
-        static_cast<unsigned long long>(sectors_per_cluster) *
-        static_cast<unsigned long long>(bytes_per_sector));
-#else
-    struct statvfs info {};
-    if (::statvfs(path.c_str(), &info) != 0 || info.f_frsize == 0U) {
-        return "0";
-    }
-    return std::to_string(static_cast<unsigned long long>(info.f_frsize));
 #endif
+    const auto allocation_unit =
+        copperfin::platform::disk_allocation_unit_bytes(path);
+    return allocation_unit.has_value() ? std::to_string(*allocation_unit) : "0";
 }
 
 int drive_type_value(const std::string& raw_path, const std::string& default_directory) {

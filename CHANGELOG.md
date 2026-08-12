@@ -1,3 +1,12 @@
+- 2026-08-12: Continued v1 portability lane J1 by moving available-disk-byte
+  and allocation-unit queries out of the PRG runtime and behind the
+  standard-C++ `copperfin::platform` boundary. Windows volume APIs and POSIX
+  `statvfs` are now private to `cf_platform_support`; VFP path resolution,
+  numeric/string presentation, and zero fallback remain unchanged. Direct
+  platform behavior, the existing runtime surface, native ownership, workflow
+  scheduling, and complete isolation metadata are covered by focused tests.
+  See `docs/60-portable-disk-space-boundary.md`.
+
 - 2026-08-12: Continued v1 portability lane J1 by moving host code-page
   discovery and byte conversion out of the PRG runtime and behind a
   standard-C++ `copperfin::platform` contract. Windows ANSI/OEM and Unicode

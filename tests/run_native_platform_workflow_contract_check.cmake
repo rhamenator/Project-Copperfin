@@ -483,6 +483,22 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     4
     "cross-platform code-page behavior build and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/run_platform_disk_space_boundary_contract_check.cmake"
+    2
+    "cross-platform disk-space boundary path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/test_platform_disk_space.cpp"
+    2
+    "cross-platform disk-space behavior path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_disk_space_boundary_contract"
+    2
+    "cross-platform disk-space boundary tests")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_disk_space"
+    8
+    "cross-platform disk-space behavior path, build, and test entries")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_portable_clr_host_boundary_contract"
     2
     "cross-platform portable CLR-host boundary tests")

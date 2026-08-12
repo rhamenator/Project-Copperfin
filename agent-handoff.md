@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## V1 portable disk-space boundary
+
+The current J1 slice moves available-byte and allocation-unit host queries
+behind `copperfin::platform::available_disk_bytes()` and
+`disk_allocation_unit_bytes()`. The PRG runtime retains VFP path resolution,
+drive-token normalization, return types, and zero fallback while Windows
+volume APIs, POSIX `statvfs`, and direct `std::filesystem::space` ownership
+move into `cf_platform_support`. Direct platform behavior, broad runtime
+behavior, source ownership, three-host scheduling, and complete isolation
+metadata are load-bearing. GCC Release passes the affected and adjacent set
+`7/7`; two deliberate ownership/delegation mutations fail at the intended
+assertions; and Clang ASan/UBSan passes `5/5` without findings. Hosted and
+independent-review evidence remain required. See
+`docs/60-portable-disk-space-boundary.md`.
+
 ## V1 portable code-page boundary
 
 The current J1 slice moves host ANSI/OEM discovery, POSIX locale resolution,
