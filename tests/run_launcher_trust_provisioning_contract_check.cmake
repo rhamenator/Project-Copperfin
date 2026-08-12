@@ -21,21 +21,18 @@ if(NOT EXISTS "${FIXTURE}")
 endif()
 
 file(READ "${FIXTURE}" FIXTURE_CONTENT)
-set(DEPENDENCIES_FIXTURE_DECLARATION [=[constexpr char kDependenciesFixturePayload[] =
-    "{\"fixture\":\"dependencies\"}\n";]=])
-set(RUNTIME_CONFIGURATION_FIXTURE_DECLARATION [=[constexpr char kRuntimeConfigurationFixturePayload[] =
-    "{\"fixture\":\"runtime-configuration\"}\n";]=])
-set(DEPENDENCIES_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.deps.json",
-               kDependenciesFixturePayload);]=])
-set(RUNTIME_CONFIGURATION_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json",
-               kRuntimeConfigurationFixturePayload);]=])
+string(REGEX REPLACE "[ \t\r\n]+" " " FIXTURE_NORMALIZED "${FIXTURE_CONTENT}")
+set(DEPENDENCIES_FIXTURE_DECLARATION [=[constexpr char kDependenciesFixturePayload[] = "{\"fixture\":\"dependencies\"}\n";]=])
+set(RUNTIME_CONFIGURATION_FIXTURE_DECLARATION [=[constexpr char kRuntimeConfigurationFixturePayload[] = "{\"fixture\":\"runtime-configuration\"}\n";]=])
+set(DEPENDENCIES_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.deps.json", kDependenciesFixturePayload);]=])
+set(RUNTIME_CONFIGURATION_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json", kRuntimeConfigurationFixturePayload);]=])
 foreach(REQUIRED_FIXTURE_CONTRACT IN ITEMS
     "${DEPENDENCIES_FIXTURE_DECLARATION}"
     "${RUNTIME_CONFIGURATION_FIXTURE_DECLARATION}"
     "${DEPENDENCIES_FIXTURE_BINDING}"
     "${RUNTIME_CONFIGURATION_FIXTURE_BINDING}"
 )
-    string(FIND "${FIXTURE_CONTENT}" "${REQUIRED_FIXTURE_CONTRACT}" POSITION)
+    string(FIND "${FIXTURE_NORMALIZED}" "${REQUIRED_FIXTURE_CONTRACT}" POSITION)
     if(POSITION EQUAL -1)
         message(FATAL_ERROR
             "launcher trust fixture payload declaration or sidecar binding is incorrect")

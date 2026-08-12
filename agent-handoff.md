@@ -2,26 +2,12 @@
 
 ## Launcher-trust distinct-payload evidence
 
-Protected run `31635868978` passes at exact `main` merge
-`477035ca2df6d0eb688d58e83aee80805e932d38` after the fixture dependency and
-runtime-configuration sidecars received distinct role-specific JSON payloads.
-Artifact `9156951212` has GitHub and independently reproduced archive digest
-`sha256:9385656df3fbbcf0408d8e0c68bb42504dc7a9f1333272f4f05b8b4cbfa29dec`.
-The provisioning and validation JSON digests are respectively
-`7adcc4ff91d5319b2969caa1e30523236d69918049481a80576472780ebc8cb7` and
-`9a475a239c492f9bf0243261506c1e00a3a93f42a68b078157b7b1e6ce78bba3`.
-
-Independent machine assertions confirm the exact signer, run, and commit;
-five unique artifact paths; five distinct valid SHA-256 values; one valid
-launch with exit `0` and apphost start; seven negative cases with exit `4`
-and no apphost start; and no private-key, passphrase, environment-secret, or
-registry-secret markers. The dependency and runtime-configuration digests are
-now respectively `40831f6757929bc14af6185082bccaadbd188d2246eb324b486e6b59792190e0`
-and `6616eda4480368fb2615c9496a572bd52ac3b1f102d252cbdb6edca338a775d1`.
-This supersedes the earlier same-content fixture evidence without changing
-the path/role/digest trust contract or reopening the closed launcher gates.
-Review hardening binds both the exact constant-to-literal declarations and the
-constant-to-sidecar writes; swapping either layer fails the focused contract.
+Protected run `31635868978` passes at exact `main` merge `477035ca2` with five
+distinct artifact digests and all eight guard cases passing. Canonical hashes,
+case assertions, and secret-boundary evidence are in
+`docs/safety/launcher-trust-validation-2026-08-12.md`. Review hardening binds
+both exact constant-to-literal declarations and constant-to-sidecar writes;
+initializer and usage swaps fail while whitespace-only formatting remains free.
 
 ## Launcher-trust fixture review follow-up
 

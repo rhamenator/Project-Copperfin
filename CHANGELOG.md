@@ -12,12 +12,6 @@
   literal as well as its intended sidecar path, so initializer and usage swaps
   both fail the focused source contract.
 
-- 2026-08-12: Made the protected Windows launcher-trust fixture's dependency
-  and runtime-configuration JSON payloads distinct. The signed inventory
-  already binds path, role, and digest, so product trust behavior is unchanged;
-  the fixture evidence is now more representative and its provisioning
-  contract prevents the duplicate marker payload from returning.
-
 - 2026-08-12: Corrected the v1 native isolation inventory after independent
   review found that `test_platform_file_version_boundary_contract` fell
   through to the fail-closed `audit=pending` default. A fresh configure
