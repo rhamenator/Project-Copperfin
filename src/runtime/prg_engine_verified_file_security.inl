@@ -5,77 +5,7 @@
             const std::filesystem::path &path,
             const std::string &bytes)
         {
-#if defined(_WIN32)
-            const HANDLE handle = ::CreateFileW(
-                path.c_str(),
-                GENERIC_WRITE,
-                0U,
-                nullptr,
-                CREATE_NEW,
-                FILE_ATTRIBUTE_TEMPORARY,
-                nullptr);
-            if (handle == INVALID_HANDLE_VALUE)
-            {
-                return false;
-            }
-
-            bool written = true;
-            std::size_t offset = 0U;
-            while (offset < bytes.size())
-            {
-                const DWORD requested = static_cast<DWORD>(std::min<std::size_t>(
-                    bytes.size() - offset,
-                    static_cast<std::size_t>(std::numeric_limits<DWORD>::max())));
-                DWORD transferred = 0U;
-                if (::WriteFile(
-                        handle,
-                        bytes.data() + offset,
-                        requested,
-                        &transferred,
-                        nullptr) == 0 ||
-                    transferred == 0U)
-                {
-                    written = false;
-                    break;
-                }
-                offset += transferred;
-            }
-            written = written && ::FlushFileBuffers(handle) != 0;
-            return ::CloseHandle(handle) != 0 && written;
-#else
-            const std::string native_path =
-                copperfin::platform::path_to_utf8_string(path);
-            const int descriptor = ::open(
-                native_path.c_str(),
-                O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
-                0600);
-            if (descriptor < 0)
-            {
-                return false;
-            }
-
-            bool written = true;
-            std::size_t offset = 0U;
-            while (offset < bytes.size())
-            {
-                const ssize_t transferred = ::write(
-                    descriptor,
-                    bytes.data() + offset,
-                    bytes.size() - offset);
-                if (transferred < 0 && errno == EINTR)
-                {
-                    continue;
-                }
-                if (transferred <= 0)
-                {
-                    written = false;
-                    break;
-                }
-                offset += static_cast<std::size_t>(transferred);
-            }
-            written = written && ::fsync(descriptor) == 0;
-            return ::close(descriptor) == 0 && written;
-#endif
+            return copperfin::platform::write_new_durable_file(path, bytes);
         }
 
         std::optional<std::filesystem::path> resolve_verified_file_byte_override_path(

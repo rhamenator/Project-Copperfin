@@ -106,6 +106,7 @@ add_library(cf_platform_support
     src/platform/code_page.cpp
     src/platform/disk_space.cpp
     src/platform/environment.cpp
+    src/platform/exclusive_file.cpp
     src/platform/executable_path.cpp
     src/platform/file_version.cpp
     src/platform/invariant_numeric.cpp

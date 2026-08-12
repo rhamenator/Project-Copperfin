@@ -868,7 +868,10 @@ cover:
    host-specific case rules. Available-disk-byte and
    allocation-unit queries similarly hide Windows
    volume APIs and POSIX `statvfs` behind `cf_platform_support` while the
-   interpreter retains VFP path and presentation policy. The wider
+   interpreter retains VFP path and presentation policy. Strict verified-byte
+   snapshot creation similarly hides exclusive native file creation, complete
+   writes, flushes, and close handling while the interpreter retains admission,
+   naming, cleanup, sidecar, and diagnostic policy. The wider
    native-boundary inventory plus broader ports remain open.)*
 6. Build the requirements-to-code-to-test traceability matrix from validated
    VFP9 behavior, shipped documentation, and documented Copperfin exceptions.

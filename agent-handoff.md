@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 portable exclusive verified-snapshot file writes
+
+The current J1 slice moves the strict verified-byte snapshot writer from
+`prg_engine_verified_file_security.inl` into
+`copperfin::platform::write_new_durable_file()`. The runtime retains admission,
+unambiguous path selection, snapshot naming, sidecar policy, cleanup, and
+localized diagnostics. The platform boundary preserves Windows `CREATE_NEW`,
+exclusive sharing, full-write/flush/close checks and POSIX
+`O_EXCL|O_NOFOLLOW|O_CLOEXEC`, mode `0600`, interrupted-write retry,
+`fsync`, and close checks. Direct binary/empty/existing/missing-parent/directory
+coverage plus POSIX mode and symlink checks, the full verified-DBF consumer,
+native-ownership contract, three-host workflow contract, and complete isolation
+metadata are load-bearing. GCC Release passes the complete focused selection
+`6/6`; Clang 21 ASan/UBSan passes `5/5` without findings. Native-ownership and
+POSIX-permission mutations fail at their intended assertions and are restored.
+See `docs/61-portable-exclusive-file-boundary.md`.
+
 ## V1 portable VFP path-identity comparison
 
 The current J1 slice moves normalized, case-insensitive VFP path identity from
