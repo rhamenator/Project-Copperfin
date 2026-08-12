@@ -7623,3 +7623,13 @@ passes `1/1`.
   self-checks, direct parsing-equivalence review, and a deliberate `popen`
   mutation that failed at the intended contract. The replacement also removes
   the old fixed-512-byte line-read fragmentation risk.
+- 2026-08-12: Corrected a standalone terminal teardown race reproduced by
+  hosted Linux managed-UI run `31624289221`. Transcript and process-exit
+  callbacks now share a private admission/marshal gate with disposal, so an
+  in-flight callback either queues before teardown and is discarded when its
+  delegate rechecks state, or observes stopped callbacks without touching a
+  disposed WinForms handle. A deterministic smoke pauses a background callback
+  at that boundary while the UI thread disposes the control, then requires both
+  sides to drain without exception or deadlock. No shell, command, transcript,
+  localization, or layout contract changes. RC2 remains immutable; protected
+  hosted evidence and a new sequential RC remain required.
