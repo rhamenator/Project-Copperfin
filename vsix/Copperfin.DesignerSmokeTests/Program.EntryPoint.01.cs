@@ -57,6 +57,7 @@ internal static partial class Program
         runner.Run(nameof(SmokeStandaloneStudioFileLayoutStoreRoundTrip), SmokeStandaloneStudioFileLayoutStoreRoundTrip);
         runner.Run(nameof(SmokeStandaloneStudioTerminalShellContract), SmokeStandaloneStudioTerminalShellContract);
         runner.Run(nameof(SmokeStandaloneStudioTerminalWindow), SmokeStandaloneStudioTerminalWindow);
+        runner.Run(nameof(SmokeStandaloneStudioTerminalCallbackTeardown), SmokeStandaloneStudioTerminalCallbackTeardown);
         runner.Run(nameof(SmokeProjectWorkspaceEntryActivation), SmokeProjectWorkspaceEntryActivation);
         runner.Run(nameof(SmokeCrossPlatformFileRevealContracts), SmokeCrossPlatformFileRevealContracts);
         runner.Run(nameof(SmokeLocalizedProjectWorkspaceChrome), SmokeLocalizedProjectWorkspaceChrome);

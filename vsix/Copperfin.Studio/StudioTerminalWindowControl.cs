@@ -13,6 +13,7 @@ namespace Copperfin.VisualStudio;
 
 internal sealed class StudioTerminalWindowControl : UserControl
 {
+    private readonly object callbackDispatchGate = new();
     private readonly CopperfinLocalization localization;
     private readonly RichTextBox transcript;
     private readonly TextBox commandInput;
@@ -25,6 +26,8 @@ internal sealed class StudioTerminalWindowControl : UserControl
     private bool disposeStarted;
     private bool disposeCompleted;
     private bool callbacksStopped;
+
+    internal Action? BeforeCallbackMarshalForTest { get; set; }
 
     public StudioTerminalWindowControl(CopperfinLocalization localization)
     {
@@ -175,7 +178,10 @@ internal sealed class StudioTerminalWindowControl : UserControl
                 StartInfo = CreateShellStartInfo(),
                 EnableRaisingEvents = true
             };
-            callbacksStopped = false;
+            lock (callbackDispatchGate)
+            {
+                callbacksStopped = false;
+            }
             process.OutputDataReceived += OnOutputDataReceived;
             process.ErrorDataReceived += OnOutputDataReceived;
             process.Exited += OnProcessExited;
@@ -216,7 +222,10 @@ internal sealed class StudioTerminalWindowControl : UserControl
 
     internal void StopShell()
     {
-        callbacksStopped = true;
+        lock (callbackDispatchGate)
+        {
+            callbacksStopped = true;
+        }
         var process = terminalProcess;
         terminalProcess = null;
         var inputWriter = terminalInputWriter;
@@ -283,7 +292,10 @@ internal sealed class StudioTerminalWindowControl : UserControl
             }
 
             disposeStarted = true;
-            callbacksStopped = true;
+            lock (callbackDispatchGate)
+            {
+                callbacksStopped = true;
+            }
             if (handleCreationInProgress)
             {
                 disposePending = true;
@@ -344,47 +356,60 @@ internal sealed class StudioTerminalWindowControl : UserControl
 
     private void UpdateState(string text)
     {
-        if (callbacksStopped || IsDisposed || Disposing || !IsHandleCreated)
+        lock (callbackDispatchGate)
         {
-            return;
-        }
-
-        try
-        {
-            if (InvokeRequired)
+            if (callbacksStopped || IsDisposed || Disposing || !IsHandleCreated)
             {
-                BeginInvoke(new Action<string>(UpdateState), text);
                 return;
             }
 
-            stateLabel.Text = text;
-        }
-        catch (InvalidOperationException)
-        {
+            try
+            {
+                if (InvokeRequired)
+                {
+                    BeforeCallbackMarshalForTest?.Invoke();
+                    BeginInvoke(new Action<string>(UpdateState), text);
+                    return;
+                }
+
+                stateLabel.Text = text;
+            }
+            catch (InvalidOperationException)
+            {
+            }
         }
     }
 
     private void AppendTranscript(string text)
     {
-        if (callbacksStopped || IsDisposed || Disposing || !IsHandleCreated)
+        lock (callbackDispatchGate)
         {
-            return;
-        }
-
-        try
-        {
-            if (InvokeRequired)
+            if (callbacksStopped || IsDisposed || Disposing || !IsHandleCreated)
             {
-                BeginInvoke(new Action<string>(AppendTranscript), text);
                 return;
             }
 
-            transcript.AppendText(text + Environment.NewLine);
-            transcript.SelectionStart = transcript.TextLength;
-            transcript.ScrollToCaret();
+            try
+            {
+                if (InvokeRequired)
+                {
+                    BeforeCallbackMarshalForTest?.Invoke();
+                    BeginInvoke(new Action<string>(AppendTranscript), text);
+                    return;
+                }
+
+                transcript.AppendText(text + Environment.NewLine);
+                transcript.SelectionStart = transcript.TextLength;
+                transcript.ScrollToCaret();
+            }
+            catch (InvalidOperationException)
+            {
+            }
         }
-        catch (InvalidOperationException)
-        {
-        }
+    }
+
+    internal void AppendTranscriptForTest(string text)
+    {
+        AppendTranscript(text);
     }
 }
