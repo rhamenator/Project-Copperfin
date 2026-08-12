@@ -37,6 +37,7 @@ foreach(token IN ITEMS "popen(" "_popen(" "pclose(" "_pclose(" "std::system(" " 
 endforeach()
 forbid_text("${platform_source}" "std::tolower(" "locale-sensitive printer-name folding")
 require_text("${platform_source}" "character >= 'A' && character <= 'Z'" "locale-independent ASCII printer-name fold")
+require_text("${platform_source}" "catch (const fs::filesystem_error&)" "fail-closed executable resolution")
 require_text("${platform_source}" "fs::current_path(working_directory_error)" "non-throwing printer working-directory query")
 require_text("${runtime_source}" "copperfin::platform::enumerate_printer_names();" "runtime portable printer use")
 require_text("${root_build}" "src/platform/printer.cpp" "printer build source")

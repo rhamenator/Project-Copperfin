@@ -2,6 +2,16 @@
 
 ## V1 APRINTERS shell/printing boundary
 
+Independent post-merge review of #4963 found no product defect but identified
+that its invalid-CWD regression covered only the later non-throwing
+working-directory query. The follow-up regression now also uses a leading empty
+POSIX `PATH` segment with a deleted CWD, directly exercising the earlier
+executable-resolver exception guard; the source contract requires both guards.
+GCC Release and Clang ASan/UBSan each pass the focused runtime, printer-boundary,
+and two workflow-contract tests `4/4`. A direct mutation removing only the
+resolver guard makes the runtime test abort at the expected uncaught
+`filesystem_error`; restoration returns the worktree and suite to clean/green.
+
 Review follow-up keeps UTF-8 printer-name bytes stable by limiting
 case-insensitive deduplication to ASCII, fails closed when POSIX discovery
 cannot obtain a valid process working directory, and removes duplicate
