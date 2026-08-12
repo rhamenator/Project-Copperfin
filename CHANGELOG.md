@@ -7460,8 +7460,12 @@ passes `1/1`.
   COM/Automation types, UTF conversion, `SAFEARRAY` construction, return-value
   marshaling, and its `mscoree` linker directive. Existing .NET Framework v4
   assembly loading, CLR-binder dispatch, VFP-compatible error identities, and
-  scalar behavior are preserved, with new direct `SINGLE` and logical-return
-  regression cases. A source contract runs on all three hosted platforms and
+  scalar behavior are preserved, with new direct `SINGLE` regression coverage.
+  A source contract runs on all three hosted platforms and
   beside Win32/x64 managed DECLARE validation. Local GCC Release focused
   boundary, workflow, isolation, parser, and runtime coverage passes `5/5`.
   Broader native DLL/OLE seams and J2/J3 host ports remain open.
+  The first hosted Win32/x64 run passed the boundary contract but rejected a
+  newly invented `DECLARE LOGICAL` fixture assertion. That unsupported test
+  extension was removed without changing product behavior; the superseding
+  Windows run remains required.

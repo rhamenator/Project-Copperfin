@@ -14,7 +14,7 @@ Automation, CLR-hosting, and `mscorlib` types remain private to
   the CLR binder, and invoke it in process.
 - VFP `DECLARE` values retain their existing scalar mappings: strings,
   32-bit and exact 64-bit signed integers, exact unsigned 64-bit results,
-  `SINGLE`, `DOUBLE`, and logical returns.
+  `SINGLE`, `DOUBLE`, and the existing Automation logical result conversion.
 - Assembly-load and method-invocation failures retain the VFP-compatible
   `DISP_E_EXCEPTION` numeric identity. Other CLR-host failures retain their
   native status number and existing localized stage-specific message.
@@ -38,7 +38,7 @@ ABI Validation repeats it on Win32 and x64 beside the existing real managed
 fixture.
 
 The managed fixture directly exercises integer, exact signed/unsigned 64-bit,
-`SINGLE`, `DOUBLE`, string, and logical result paths, repeated success and
+`SINGLE`, `DOUBLE`, and string result paths, repeated success and
 failure, localization, path loading, and mixed-mode precedence. The portable
 contract is also run by the native workflow self-check so removal from either
 hosted lane fails closed.

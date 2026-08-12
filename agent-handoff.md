@@ -12,11 +12,17 @@ live only in `managed_declared_call.cpp`. Existing .NET Framework v4 managed
 
 The source contract is scheduled on Windows, Ubuntu, and macOS plus the
 Win32/x64 DECLARE lane. The existing managed fixture now directly adds `SINGLE`
-and logical-return coverage beside its string, integer, exact 64-bit, double,
+coverage beside its string, integer, exact 64-bit, double,
 path, error, localization, repetition, and mixed-mode cases. Local GCC Release
 builds the affected runtime and focused regressions; boundary, workflow,
 isolation, parser, and broad runtime-surface coverage passes `5/5`. Hosted and
 independent-review evidence remain pending before merge.
+
+The first hosted Win32/x64 run built successfully and passed the boundary
+contract, then rejected a newly added `DECLARE LOGICAL` fixture assertion. That
+declaration was not an established supported surface and has been removed; it
+was a test-scope error, not a product regression. The existing Automation
+logical conversion remains unchanged. A superseding Windows rerun is required.
 
 ## V1 private SQLite native API boundary
 
