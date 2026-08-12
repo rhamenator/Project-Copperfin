@@ -32,10 +32,18 @@ foreach(REQUIRED_FIXTURE_CONTRACT IN ITEMS
     "${DEPENDENCIES_FIXTURE_BINDING}"
     "${RUNTIME_CONFIGURATION_FIXTURE_BINDING}"
 )
-    string(FIND "${FIXTURE_NORMALIZED}" "${REQUIRED_FIXTURE_CONTRACT}" POSITION)
+    # The source normalization above collapses every whitespace run to one
+    # space. Remove those spaces from both sides so purely stylistic spacing
+    # cannot weaken or trip the semantic name/value and path/name checks.
+    string(REPLACE " " "" FIXTURE_CONTRACT_TOKENS "${FIXTURE_NORMALIZED}")
+    string(REPLACE " " "" REQUIRED_FIXTURE_CONTRACT_TOKENS
+        "${REQUIRED_FIXTURE_CONTRACT}")
+    string(FIND "${FIXTURE_CONTRACT_TOKENS}"
+        "${REQUIRED_FIXTURE_CONTRACT_TOKENS}" POSITION)
     if(POSITION EQUAL -1)
         message(FATAL_ERROR
-            "launcher trust fixture payload declaration or sidecar binding is incorrect")
+            "launcher trust fixture payload declaration or sidecar binding is incorrect: "
+            "${REQUIRED_FIXTURE_CONTRACT}")
     endif()
 endforeach()
 
