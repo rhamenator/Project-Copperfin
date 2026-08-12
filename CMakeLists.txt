@@ -105,6 +105,7 @@ endfunction()
 add_library(cf_platform_support
     src/platform/environment.cpp
     src/platform/executable_path.cpp
+    src/platform/file_version.cpp
     src/platform/invariant_numeric.cpp
     src/platform/json.cpp
     src/platform/path.cpp
@@ -124,6 +125,7 @@ endif()
 
 if(WIN32)
     target_link_libraries(cf_platform_support PRIVATE user32)
+    target_link_libraries(cf_platform_support PRIVATE version)
 endif()
 
 add_library(cf_localization

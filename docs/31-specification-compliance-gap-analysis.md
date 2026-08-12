@@ -150,7 +150,10 @@ boundaries are load-bearing rather than documentary. See
 crosses the portable contract documented in
 `docs/57-portable-printer-shell-boundary.md`: Windows owns Unicode spooler
 enumeration privately, while POSIX invokes `lpstat` directly under bounded
-process limits without a command shell.
+process limits without a command shell. `AGETFILEVERSION()` now crosses the
+portable metadata record documented in
+`docs/58-portable-file-version-boundary.md`; native Windows resource APIs and
+the POSIX PE-resource fallback no longer live in the interpreter.
 
 **What it will take:** inventory the rest of the public core and isolate the
 remaining report printing, print-dialog, OLE/COM, and other host-specific seams;

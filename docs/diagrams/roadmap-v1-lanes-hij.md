@@ -75,12 +75,16 @@ benchmark evidence; and `I1` has a security baseline. These real seeds are
 `cf_platform_profile`'s deterministic Fox-SQL
 translator/execution-planning lane, the trusted polyglot host and route-impact
 boundary, and `cf_security`'s RBAC/audit/secrets/signing baseline, respectively.
-`J1` now has explicit portable public path, process-environment, and
-executable-search boundaries plus a private SQLite native-ABI boundary:
+`J1` now has explicit portable public path, process-environment,
+executable-search, and file-version metadata boundaries plus a private SQLite
+native-ABI boundary:
 platform-neutral declarations remain in the broadly consumed headers while
 Windows/POSIX selection and native implementation stay private to
 `cf_platform_support`, with direct and source-contract tests scheduled on all
 three hosts.
+`AGETFILEVERSION()` keeps its seven-row VFP and verified-snapshot contracts
+while Windows version-resource APIs and the POSIX PE-resource fallback remain
+private to that base layer.
 The read-only connector retains Windows/POSIX SQLite selection privately;
 public Copperfin headers reject host-selection and native SQLite API tokens.
 `H3` still lacks broader managed-language environments and model/provider or

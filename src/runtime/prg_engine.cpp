@@ -5,6 +5,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/index_seek_optimizer.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/file_version.h"
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
@@ -70,8 +71,6 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
-#include <winver.h>
-#pragma comment(lib, "version.lib")
 #else
 #include <errno.h>
 #include <fcntl.h>

@@ -1,5 +1,28 @@
 # Agent Handoff
 
+## V1 portable AGETFILEVERSION boundary
+
+The current J1 slice moves `AGETFILEVERSION()` host metadata extraction behind
+`copperfin::platform::read_file_version_metadata()`. The interpreter still
+owns the seven-row VFP array, verified-snapshot admission, missing-file result,
+and localized runtime failures; Windows `GetFileVersionInfo*`/`VerQueryValueW`,
+native resource records, UTF conversion, and private `version` linkage now live
+in `cf_platform_support`. The macOS/Linux implementation retains the prior PE
+UTF-16LE resource-string fallback. See
+`docs/58-portable-file-version-boundary.md`.
+
+Local GCC Release builds the affected runtime warning-free apart from existing
+unrelated CDX/index diagnostics. The file-version boundary, existing path
+boundary, AGETFILEVERSION behavior/security regression, GitHub Actions
+contract, and native workflow contract pass `5/5`. Adding a
+`GetFileVersionInfo` token to the interpreter and separately breaking its exact
+platform delegation each fail at the intended source assertion; restoration
+returns the selection to green. Clang ASan/UBSan passes the affected behavior,
+boundary, and workflow selection `4/4` with no findings. Exact-head
+Windows/macOS/Ubuntu execution and independent review remain required before
+merge. OLE/COM, report printing, the security subsystem's separate
+executable-signature version check, and J2/J3 ports remain separate.
+
 ## V1 obsolete managed IDispatch retirement
 
 The supported Windows managed `DECLARE` path uses CLR vtable interfaces and
