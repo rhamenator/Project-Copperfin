@@ -16,7 +16,12 @@ focused behavior, workflow, boundary, and isolation coverage passes `6/6`.
 Restoring the public shim and changing only the private Windows fallback branch
 both fail at the intended exact requirement. Clang 21 ASan/UBSan with leak
 detection passes the connector and boundary tests `2/2`. Hosted
-Windows/macOS/Linux evidence and independent review remain required before merge.
+Windows/macOS/Linux evidence passes at exact signed/DCO corrected head
+`52b9b5c65`: Generated Launcher Validation `31559462483`, Windows DECLARE ABI
+Validation `31559462461`, Windows Environment and Executable Path Validation
+`31559462418`, GCC/Clang Executable Path Validation `31559462383`, DCO
+`31559461132`, and both socket checks are green. GitHub has no review comments
+or unresolved threads at that head.
 An alternate-suffix public header mutation and a fourth-consumer mutation also
 fail at the intended tree-wide and closed-consumer requirements.
 

@@ -7446,3 +7446,6 @@ passes `1/1`.
   and Clang 21 ASan/UBSan passes the connector and boundary tests `2/2`.
   Alternate-suffix public leakage and a fourth private-shim consumer are also
   rejected by the tree-wide scan and closed consumer count.
+  Exact signed/DCO corrected head `52b9b5c65` passes all eleven protected
+  checks, including the real connector, runtime-host integration, and boundary
+  contract on Windows, Ubuntu, and macOS; GitHub has no unresolved PR threads.

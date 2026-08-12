@@ -42,6 +42,14 @@ An alternate-suffix `.hpp` public leak and a fourth private-shim consumer are
 also rejected, proving the tree-wide scan and closed consumer count are
 load-bearing rather than dependent on today's filenames.
 
+At exact signed/DCO corrected head `52b9b5c65`, all eleven protected PR
+checks pass. Generated Launcher Validation `31559462483` builds and runs the
+real connector, runtime-host integration, and boundary contract on Windows,
+Ubuntu, and macOS. Windows DECLARE ABI Validation `31559462461`, Windows
+Environment and Executable Path Validation `31559462418`, GCC/Clang Executable
+Path Validation `31559462383`, DCO `31559461132`, and both socket checks pass.
+GitHub reports no review comments or unresolved review threads at that head.
+
 ## Scope
 
 This is a pure J1 ownership/boundary correction. It does not change the SQLite
