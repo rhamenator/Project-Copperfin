@@ -31,7 +31,9 @@ behavior. `test_platform_file_version_boundary_contract` rejects native
 version-resource ownership in the public header or interpreter, requires the
 private Windows and POSIX implementations, preserves private `version` library
 linkage, and requires all three generated-launcher hosts to schedule the
-contract.
+contract. Its source-only CMake read is explicitly classified as portable,
+read-only, child-process-free, resource-free, and parallel-safe in the native
+test-isolation inventory.
 
 The focused GCC Release selection passes `5/5`: the new boundary, existing path
 boundary, AGETFILEVERSION behavior, GitHub Actions workflow contract, and native
@@ -39,8 +41,14 @@ platform workflow contract. Deliberately restoring a `GetFileVersionInfo`
 token to the interpreter and separately breaking the exact portable delegation
 both fail at their intended assertions; restoration returns the selection to
 green. Clang ASan/UBSan passes the affected behavior, boundary, and workflow
-selection `4/4` with no sanitizer findings. Exact-head Windows, macOS, and
-Ubuntu hosted validation remains required before merge.
+selection `4/4` with no sanitizer findings. Exact-head PR #4966 validation
+passed the generated-launcher contract on Windows, Ubuntu, and macOS, the
+Win32/x64 DECLARE lanes, Windows environment/path, GCC/Clang executable-path,
+DCO, and both package-safety checks before merge. Independent post-merge
+review then found the missing explicit isolation classification: a fresh
+configure reproduced the native isolation contract failure, and the
+classification correction removes that sole `audit=pending` row without
+changing runtime or platform-boundary behavior.
 
 ## Scope
 

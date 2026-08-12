@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## V1 file-version isolation audit correction
+
+Independent review of the merged portable `AGETFILEVERSION()` boundary found
+that its new source-contract test was not explicitly classified in
+`tests/CopperfinTestIsolation.cmake`. A fresh configure at the merged v1 head
+reproduced the consequence: `test_native_test_isolation_contract` failed only
+because `test_platform_file_version_boundary_contract` retained the
+fail-closed `audit=pending` and unverified default axes.
+
+The correction classifies that source-only CMake test as portable, read-only,
+free of environment changes, child processes, network, samples, and shared
+resources, and parallel-safe with `audit=complete`, matching the neighboring
+platform-boundary contracts. No product or test behavior changes. Reconfigure
+before validation because the generated isolation inventory records both the
+classification-source digest and resolved labels.
+
 ## V1 portable AGETFILEVERSION boundary
 
 The current J1 slice moves `AGETFILEVERSION()` host metadata extraction behind
