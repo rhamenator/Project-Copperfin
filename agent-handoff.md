@@ -1,5 +1,31 @@
 # Agent Handoff
 
+## Standalone terminal callback teardown correction
+
+PR #4967's unrelated broad RC matrix reproduced a real managed-UI teardown
+fault in Linux run `31624289221`. After the terminal smoke had disposed its
+form and shell, a pending asynchronous stderr callback entered
+`StudioTerminalWindowControl.AppendTranscript()` and called `BeginInvoke`
+while Mono's X11 handle infrastructure was tearing down. The process ended in
+an unhandled `NullReferenceException` during the following shell-layout smoke.
+
+The terminal now serializes callback admission/marshaling and disposal through
+one private gate. Disposal marks callbacks stopped while holding that gate; an
+in-flight callback may enqueue only before disposal acquires it, and the queued
+delegate rechecks the stopped state before touching controls. The same boundary
+protects transcript and process-exit state updates. A focused managed smoke
+deterministically pauses a background callback at the marshal boundary, starts
+disposal on the UI thread, releases the callback, and requires both threads to
+drain without exception or deadlock. The managed project builds with zero
+warnings/errors on Linux; Mono/Xvfb is unavailable locally, so the exact hosted
+Linux smoke remains required. No terminal command, shell, transcript,
+localization, layout, runtime, package, or machine contract changes.
+
+This confirmed RC defect is separate from the launcher-trust exit-state
+correction. It landed on `main` first and is now forward-ported to
+`v1-development`; create a new immutable RC only after the launcher correction
+and both protected matrices pass. RC2 remains unchanged.
+
 ## V1 file-version isolation audit correction
 
 Independent review of the merged portable `AGETFILEVERSION()` boundary found
