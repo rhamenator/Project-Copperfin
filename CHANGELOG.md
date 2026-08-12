@@ -1,3 +1,17 @@
+- 2026-08-12: Completed the protected Windows launcher-inventory trust gate.
+  Corrected workflow run `31630819119` passed at exact merge commit
+  `111fb67d09df1413221beeebce9b684f47097053` with the dedicated external signer
+  `copperfin-launcher-2026-01`. The non-secret artifact `9155061757` has GitHub
+  and independently reproduced archive digest
+  `sha256:c66fd93daab64d3c2abee12291648987f0ebff701ca36f625bfa7d4f207582eb`;
+  its report records the exact five-file finalized inventory, one valid launch,
+  and seven stable exit-code-`4` failures before apphost start. No private-key
+  or secret markers appear in the downloaded evidence. This completes
+  #4894/#4409/#4387/#4041 without adding Authenticode, Apple
+  signing/notarization, Linux package signing, or changing ordinary unsigned
+  development behavior. RC2 remains immutable and a new sequential RC is
+  required.
+
 - 2026-08-11: Added contributor-facing templates ahead of external recruitment.
   The single `pull_request_template.md` is now two selectable templates under
   `.github/PULL_REQUEST_TEMPLATE/`: `requirements_recovery.md` (the prior
