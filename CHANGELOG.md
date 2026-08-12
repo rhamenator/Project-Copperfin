@@ -9,8 +9,12 @@
   contract runs on all three hosted platforms and beside the real Win32/x64
   DECLARE fixtures. Local GCC Release focused and adjacent coverage passes
   `5/5`, and a standalone Linux compile accepts the portable header. Hosted
-  Windows execution and independent review remain pending; OLE/COM, shell,
-  printing, and J2/J3 ports remain separate.
+  Windows execution passes at exact signed/DCO implementation head
+  `32d11e34f`: Generated Launcher Validation `31571330747` on Windows, Ubuntu,
+  and macOS; Windows DECLARE ABI Validation `31571330827` on Win32/x64;
+  Windows environment/path `31571330790`; GCC/Clang executable-path
+  `31571330801`; DCO `31571330808`; and both socket checks. Independent review
+  remains pending; OLE/COM, shell, printing, and J2/J3 ports remain separate.
 
 - 2026-08-12: Continued v1 portability lane J1 by moving Windows native
   `DECLARE` module search, export resolution, managed-PE classification,

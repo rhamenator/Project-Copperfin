@@ -50,7 +50,12 @@ Local GCC Release builds the affected runtime and focused regression targets.
 The new boundary contract, loader contract, native-DECLARE-adjacent test,
 parser coverage, and broad runtime-surface coverage pass `5/5`. A standalone
 Linux translation unit including the portable header also compiles cleanly.
-Direct Win32/x64 execution evidence is required before this slice can merge.
+Exact signed/DCO implementation head `32d11e34f` passes all eleven protected
+checks. Generated Launcher Validation `31571330747` passes on Windows, Ubuntu,
+and macOS; Windows DECLARE ABI Validation `31571330827` passes the real native
+and managed fixtures plus adjacent coverage on Win32 and x64; Windows
+environment/path `31571330790`, GCC/Clang executable-path `31571330801`, DCO
+`31571330808`, and both socket checks pass. Independent review remains pending.
 
 ## Scope
 

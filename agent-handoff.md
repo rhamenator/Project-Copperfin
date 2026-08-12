@@ -17,7 +17,12 @@ boundary contract, adjacent loader contract, native-DECLARE-adjacent test,
 parser test, and broad runtime-surface test pass `5/5`; a standalone Linux
 translation unit compiles the portable header. The contract is scheduled on
 Windows, Ubuntu, and macOS and beside real Win32/x64 native/managed DECLARE
-fixtures. Direct Windows evidence and independent review remain pending.
+fixtures. Exact signed/DCO implementation head `32d11e34f` passes all eleven
+protected checks: Generated Launcher Validation `31571330747` passes on
+Windows, Ubuntu, and macOS; Windows DECLARE ABI Validation `31571330827` passes
+the real native/managed fixtures and adjacent coverage on Win32/x64; Windows
+environment/path `31571330790`, GCC/Clang executable-path `31571330801`, DCO
+`31571330808`, and both socket checks pass. Independent review remains pending.
 
 ## V1 native DECLARE loader boundary
 
