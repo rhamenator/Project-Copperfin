@@ -226,7 +226,7 @@ std::vector<std::string> dotnet_allowed_path_roots() {
     const auto configured_path = copperfin::platform::read_environment_variable("PATH");
     const std::string path_value = configured_path.has_value()
         ? *configured_path
-        : copperfin::platform::default_posix_search_path().value_or(std::string{});
+        : copperfin::platform::default_executable_search_path().value_or(std::string{});
     std::size_t start = 0U;
     for (;;) {
         const std::size_t separator = path_value.find(':', start);

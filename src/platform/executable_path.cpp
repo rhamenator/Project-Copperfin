@@ -56,29 +56,6 @@ void append_unique(
 }
 #endif
 
-#if !defined(_WIN32)
-std::optional<std::string> default_posix_search_path_value() {
-#if defined(_CS_PATH)
-    const std::size_t required_size = confstr(_CS_PATH, nullptr, 0U);
-    if (required_size <= 1U) {
-        return std::nullopt;
-    }
-    std::string value(required_size, '\0');
-    if (confstr(_CS_PATH, value.data(), value.size()) == 0U) {
-        return std::nullopt;
-    }
-    const std::size_t terminator = value.find('\0');
-    if (terminator == std::string::npos) {
-        return std::nullopt;
-    }
-    value.resize(terminator);
-    return value;
-#else
-    return std::string("/bin:/usr/bin");
-#endif
-}
-#endif
-
 std::vector<std::filesystem::path> executable_search_suffixes(
     const std::filesystem::path& invocation_path) {
     if (invocation_path.has_extension()) {
@@ -183,11 +160,28 @@ std::filesystem::path query_running_executable_path() {
 
 }  // namespace
 
-#if !defined(_WIN32)
-std::optional<std::string> default_posix_search_path() {
-    return default_posix_search_path_value();
-}
+std::optional<std::string> default_executable_search_path() {
+#if defined(_WIN32)
+    return std::nullopt;
+#elif defined(_CS_PATH)
+    const std::size_t required_size = confstr(_CS_PATH, nullptr, 0U);
+    if (required_size <= 1U) {
+        return std::nullopt;
+    }
+    std::string value(required_size, '\0');
+    if (confstr(_CS_PATH, value.data(), value.size()) == 0U) {
+        return std::nullopt;
+    }
+    const std::size_t terminator = value.find('\0');
+    if (terminator == std::string::npos) {
+        return std::nullopt;
+    }
+    value.resize(terminator);
+    return value;
+#else
+    return std::string("/bin:/usr/bin");
 #endif
+}
 
 std::filesystem::path resolve_executable_invocation_path(
     const std::filesystem::path& invocation_path) {
@@ -210,7 +204,8 @@ std::filesystem::path resolve_executable_invocation_path(
     std::vector<std::string> search_roots;
     if (path_value.has_value()) {
         search_roots = split_search_path_list<char>(*path_value, ':');
-    } else if (const auto default_path = default_posix_search_path_value(); default_path.has_value()) {
+    } else if (const auto default_path = default_executable_search_path();
+               default_path.has_value()) {
         search_roots = split_search_path_list<char>(*default_path, ':');
     }
 #endif

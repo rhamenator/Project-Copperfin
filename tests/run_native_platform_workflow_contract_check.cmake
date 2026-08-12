@@ -332,7 +332,7 @@ require_text(".github/workflows/windows-environment-validation.yml"
     [=[cmake -S . -B "$env:RUNNER_TEMP/copperfin-environment-build" -DCOPPERFIN_BUILD_TESTS=ON]=]
     "out-of-tree configure command")
 require_text(".github/workflows/windows-environment-validation.yml"
-    [=[ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure -R "^(test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch|test_studio_host_report_section_selection_diagnostics)$"]=]
+    [=[ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure -R "^(test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch|test_studio_host_report_section_selection_diagnostics)$"]=]
     "out-of-tree localization, runtime-host, and Studio-host CTest contract")
 require_text(".github/workflows/build-vsix.yml"
     "name: Build Visual Studio VSIX"

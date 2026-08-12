@@ -7413,3 +7413,15 @@ passes `1/1`.
 - 2026-08-11: Corrected the first hosted SQLite connector portability findings before merge. Windows now treats `winsqlite3` as the Windows 10+ SDK/system contract instead of relying on a Visual Studio generator-sensitive configure probe, and platforms whose SQLite headers define `SQLITE_OMIT_LOAD_EXTENSION` skip the unavailable API while retaining database-configuration and authorizer denial. Linux passed the original hosted target; a superseding three-platform run remains required.
 - 2026-08-11: The superseding hosted run showed that Apple omits the extension-loading declaration without publishing the expected feature macro and that the current Windows SDK layout supplies the WinSQLite library without its optional header. Copperfin now never calls the redundant extension-enable API, continues to deny it through SQLite configuration and the authorizer, and supplies a narrow public-domain SQLite ABI declaration shim for only the Windows system-library calls it uses. Query preparation uses the older, widely available `sqlite3_prepare_v2` ABI; no SQLite DLL is bundled.
 - 2026-08-11: Final exact-head SQLite execution evidence is green. Generated Launcher Validation `31535000120` built and ran the connector and product-process tests on Windows, Ubuntu, and macOS; all eleven protected checks passed at signed/DCO head `8aa8d514f`. Independent ASan/UBSan review found no defect and empirically confirmed both permanent-replacement rejection and the documented narrow same-identity ABA limitation.
+- 2026-08-11: Continued v1 portability lane J1 by removing the remaining
+  POSIX-only declaration from the public executable-path header. The portable
+  `default_executable_search_path()` query preserves `_CS_PATH` and
+  `/bin:/usr/bin` fallback behavior on POSIX and explicitly returns no default
+  on Windows. The build-host and external-process-policy callers retain their
+  existing POSIX behavior. A new source contract rejects OS selection and
+  native discovery APIs in the public header and runs beside the behavior test
+  on Windows, Ubuntu, and macOS. Local GCC Release builds the platform test,
+  security test, runtime host, and build host; focused workflow/isolation
+  coverage passes `8/8`, and a deliberate `_WIN32` header mutation fails at the
+  exact forbidden token. This is a bounded J1 increment, not completion of the
+  portable-core inventory or J2/J3 ports.

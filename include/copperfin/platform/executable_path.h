@@ -10,9 +10,7 @@
 
 namespace copperfin::platform {
 
-#if !defined(_WIN32)
-[[nodiscard]] std::optional<std::string> default_posix_search_path();
-#endif
+[[nodiscard]] std::optional<std::string> default_executable_search_path();
 
 [[nodiscard]] std::filesystem::path resolve_executable_invocation_path(
     const std::filesystem::path& invocation_path);
