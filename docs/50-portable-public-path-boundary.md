@@ -74,6 +74,36 @@ disclosed limitation is that the corrected Win32 branch was read-verified
 against the API contract rather than executed on the reviewer's Linux host;
 the hosted Windows jobs provide the direct build-and-execution evidence.
 
+## VFP path-identity follow-up
+
+The follow-up VFP path-identity slice also moves the PRG runtime's shared
+normalized, case-insensitive path helper into this boundary. Parser, frame,
+index, and verified-file callers of that helper retain case-insensitive
+matching on every host. Database/session path selection separately retains its
+existing Windows-insensitive and POSIX-sensitive behavior. The interpreter no
+longer owns a Windows SDK comparison call; on Windows, whole-path comparison
+reuses the complete ordinal/invariant Unicode fallback chain and fail-closed
+length guard already used for component comparison. GCC Release builds the
+direct path test and broad runtime and database-lifecycle targets; direct
+behavior, ownership, both workflow contracts, test isolation, database
+lifecycle, and the complete runtime surface pass `7/7`. Restoring a native
+comparison token in the interpreter and
+separately substituting host-component comparison for VFP identity each fail at
+the intended boundary assertion. Removing lexical normalization from one
+operand separately makes the direct test fail at its normalized-path assertion.
+Replacing the Windows whole-path delegation with direct equality separately
+fails at the intended complete-Unicode-comparison assertion.
+Clang ASan/UBSan passes the direct behavior, ownership, workflow, and isolation
+selection `5/5` without a finding. Corrected exact head `bdd586477` passes all
+eleven protected checks. Generated Launcher Validation `31650731603` executes
+the behavior and ownership contracts on Windows, Ubuntu, and macOS; Windows
+environment/path run `31650731605`, Win32/x64 DECLARE run `31650731645`,
+GCC/Clang executable-path run `31650731607`, DCO run `31650730422`, and both
+Socket checks pass. Two automated review findings identified the
+database/session documentation overclaim and incomplete Windows Unicode
+fallback; both are corrected and both threads are resolved. Independent review
+remains required before merge.
+
 ## Remaining J1 work
 
 This boundary is a seed, not a blanket portability claim. Later independently

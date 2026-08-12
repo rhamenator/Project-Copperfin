@@ -60,6 +60,17 @@ void test_platform_component_comparison() {
 #endif
 }
 
+void test_case_insensitive_normalized_path_comparison() {
+    const std::filesystem::path normalized("workspace/Copperfin.DBF");
+    const std::filesystem::path equivalent("workspace/ignored/../copperfin.dbf");
+    expect(copperfin::platform::path_equal_case_insensitive(normalized, equivalent),
+           "#35: VFP path identity should normalize and compare without case on every host");
+
+    const std::filesystem::path different("workspace/Copperfin.FPT");
+    expect(!copperfin::platform::path_equal_case_insensitive(normalized, different),
+           "#35: VFP path identity should reject a different normalized path");
+}
+
 }  // namespace
 
 int main() {
@@ -67,6 +78,7 @@ int main() {
     test_empty_path_contract();
     test_invalid_utf8_contract();
     test_platform_component_comparison();
+    test_case_insensitive_normalized_path_comparison();
 
     if (failures == 0) {
         std::cout << "Platform path tests passed\n";

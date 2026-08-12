@@ -1,5 +1,35 @@
 # Agent Handoff
 
+## V1 portable VFP path-identity comparison
+
+The current J1 slice moves normalized, case-insensitive VFP path identity from
+`prg_engine_helpers.cpp` into the existing `copperfin::platform` path
+boundary. Parser lookup, frame loading, index identity, and verified-file
+callers of that helper retain case-insensitive matching on every host.
+Database/session path selection deliberately retains its existing
+Windows-insensitive and POSIX-sensitive rules. The runtime helper now delegates
+through standard C++ paths and no longer includes `windows.h` or calls native
+comparison APIs directly. On Windows, whole-path identity reuses the complete
+ordinal/invariant Unicode fallback chain and fail-closed length guard already
+owned by component comparison. Direct path behavior, native ownership, broad
+runtime callers, and hosted three-OS execution are load-bearing. GCC Release
+builds the direct path and broad runtime/database targets; the focused selection
+passes `7/7`. Deliberately restoring the native comparison token and separately
+substituting the host-component comparison each fail the intended ownership or
+exact-delegation assertion. Removing lexical normalization from one operand
+also makes the direct behavior test fail at its normalized-path assertion.
+Replacing the Windows whole-path delegation with a direct equality check fails
+at the intended complete-Unicode-comparison assertion.
+Clang ASan/UBSan passes `5/5` without findings.
+Corrected exact head `bdd586477` passes all eleven protected checks:
+Generated Launcher Validation `31650731603` executes the behavior and boundary
+tests on Windows, Ubuntu, and macOS; Windows environment/path run
+`31650731605`, Win32/x64 DECLARE run `31650731645`, GCC/Clang executable-path
+run `31650731607`, DCO run `31650730422`, and both Socket checks pass. Two
+automated review findings identified the database/session documentation
+overclaim and incomplete Windows Unicode fallback; both are corrected and both
+threads are resolved. Independent review remains required.
+
 ## V1 portable disk-space boundary
 
 The current J1 slice moves available-byte and allocation-unit host queries

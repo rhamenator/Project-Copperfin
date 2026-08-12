@@ -18,4 +18,8 @@ bool path_component_equal_for_platform(
     const std::filesystem::path& left,
     const std::filesystem::path& right);
 
+bool path_equal_case_insensitive(
+    const std::filesystem::path& left,
+    const std::filesystem::path& right);
+
 }  // namespace copperfin::platform

@@ -4,6 +4,8 @@
 
 #include "copperfin/platform/path.h"
 
+#include <algorithm>
+#include <cctype>
 #include <limits>
 
 #if defined(_WIN32)
@@ -144,6 +146,27 @@ bool path_component_equal_for_platform(
     return invariant_lowercase(left_value) == invariant_lowercase(right_value);
 #else
     return left == right;
+#endif
+}
+
+bool path_equal_case_insensitive(
+    const std::filesystem::path& left,
+    const std::filesystem::path& right) {
+    const std::filesystem::path normalized_left = left.lexically_normal();
+    const std::filesystem::path normalized_right = right.lexically_normal();
+#if defined(_WIN32)
+    // Whole-path identity needs the same invariant Unicode fallback layers
+    // and fail-closed length guard as Windows component comparison.
+    return path_component_equal_for_platform(normalized_left, normalized_right);
+#else
+    const auto lowercase_path = [](const std::filesystem::path& value) {
+        std::string lowered = path_to_utf8_string(value);
+        std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        return lowered;
+    };
+    return lowercase_path(normalized_left) == lowercase_path(normalized_right);
 #endif
 }
 

@@ -22,16 +22,6 @@
 #include <stdexcept>
 #include <vector>
 
-#if defined(_WIN32)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#endif
-
 namespace copperfin::runtime {
 
 std::string trim_copy(std::string value) {
@@ -84,21 +74,9 @@ bool starts_with_insensitive(const std::string& value, const std::string& prefix
 }
 
 bool paths_equal_insensitive(const std::string& left, const std::string& right) {
-#if defined(_WIN32)
-    const auto left_path = copperfin::platform::path_from_utf8_string(left).lexically_normal().native();
-    const auto right_path = copperfin::platform::path_from_utf8_string(right).lexically_normal().native();
-    return ::CompareStringOrdinal(
-               left_path.data(),
-               static_cast<int>(left_path.size()),
-               right_path.data(),
-               static_cast<int>(right_path.size()),
-               TRUE) == CSTR_EQUAL;
-#else
-    return lowercase_copy(copperfin::platform::path_to_utf8_string(
-               copperfin::platform::path_from_utf8_string(left).lexically_normal())) ==
-           lowercase_copy(copperfin::platform::path_to_utf8_string(
-               copperfin::platform::path_from_utf8_string(right).lexically_normal()));
-#endif
+    return copperfin::platform::path_equal_case_insensitive(
+        copperfin::platform::path_from_utf8_string(left),
+        copperfin::platform::path_from_utf8_string(right));
 }
 
 std::string normalize_identifier(std::string value) {

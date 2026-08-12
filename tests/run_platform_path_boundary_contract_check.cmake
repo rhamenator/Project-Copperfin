@@ -8,13 +8,39 @@ endif()
 
 set(header_path "${SOURCE_DIR}/include/copperfin/platform/path.h")
 set(source_path "${SOURCE_DIR}/src/platform/path.cpp")
-foreach(path IN ITEMS "${header_path}" "${source_path}")
+set(runtime_helper_path "${SOURCE_DIR}/src/runtime/prg_engine_helpers.cpp")
+foreach(path IN ITEMS "${header_path}" "${source_path}" "${runtime_helper_path}")
     if(NOT EXISTS "${path}")
         message(FATAL_ERROR "Portable path boundary file is missing: ${path}")
     endif()
 endforeach()
 
+file(READ "${runtime_helper_path}" runtime_helper_text)
+foreach(forbidden IN ITEMS
+        "#include <windows.h>"
+        "CompareStringOrdinal"
+        "CSTR_EQUAL")
+    string(FIND "${runtime_helper_text}" "${forbidden}" offset)
+    if(NOT offset EQUAL -1)
+        message(FATAL_ERROR
+            "PRG helper retains native path-comparison implementation: ${forbidden}")
+    endif()
+endforeach()
+string(FIND "${runtime_helper_text}"
+    "copperfin::platform::path_equal_case_insensitive("
+    runtime_delegation_offset)
+if(runtime_delegation_offset EQUAL -1)
+    message(FATAL_ERROR "PRG helper does not delegate VFP path identity to cf_platform_support")
+endif()
+
 file(READ "${header_path}" header_text)
+string(FIND "${header_text}"
+    "bool path_equal_case_insensitive("
+    path_identity_declaration_offset)
+if(path_identity_declaration_offset EQUAL -1)
+    message(FATAL_ERROR
+        "Public path header does not declare the VFP path-identity boundary")
+endif()
 string(TOLOWER "${header_text}" header_text_lower)
 foreach(forbidden IN ITEMS
         "windows.h"
@@ -40,6 +66,7 @@ foreach(required IN ITEMS
         "path_to_utf8_string"
         "path_from_utf8_string"
         "path_component_equal_for_platform"
+        "path_equal_case_insensitive"
         "left_value.size() > maximum_api_length"
         "right_value.size() > maximum_api_length"
         "Unicode case table"
@@ -51,6 +78,13 @@ foreach(required IN ITEMS
             "Private path implementation is missing required token: ${required}")
     endif()
 endforeach()
+string(FIND "${source_text}"
+    "return path_component_equal_for_platform(normalized_left, normalized_right);"
+    whole_path_windows_delegation_offset)
+if(whole_path_windows_delegation_offset EQUAL -1)
+    message(FATAL_ERROR
+        "Windows whole-path identity does not reuse the complete Unicode comparison boundary")
+endif()
 
 file(READ "${SOURCE_DIR}/CMakeLists.txt" cmake_text)
 string(FIND "${cmake_text}" "src/platform/path.cpp" path_source_offset)
