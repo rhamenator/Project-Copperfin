@@ -1,3 +1,12 @@
+- 2026-08-12: Corrected the v1 native isolation inventory after independent
+  review found that `test_platform_file_version_boundary_contract` fell
+  through to the fail-closed `audit=pending` default. A fresh configure
+  reproduced the resulting `test_native_test_isolation_contract` failure.
+  The file-version source contract is now explicitly classified as portable,
+  read-only, child-process-free, resource-free, and parallel-safe, matching
+  the adjacent platform-boundary checks. No product, VFP9, package, debug,
+  localization, or machine contract changes.
+
 - 2026-08-12: Continued v1 portability lane J1 by moving
   `AGETFILEVERSION()` metadata extraction out of the PRG interpreter and behind
   a standard-C++ platform record. Windows version-resource APIs, native
