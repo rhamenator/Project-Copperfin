@@ -2,6 +2,14 @@
 
 ## V1 APRINTERS shell/printing boundary
 
+Review follow-up keeps UTF-8 printer-name bytes stable by limiting
+case-insensitive deduplication to ASCII, fails closed when POSIX discovery
+cannot obtain a valid process working directory, and removes duplicate
+ordering-dependent isolation declarations for `test_prg_engine_arrays`.
+GCC Release focused regressions pass `4/4`; Clang ASan/UBSan coverage of the
+affected runtime and boundary/isolation contracts passes `3/3` with no
+findings. Hosted final-head validation is tracked by follow-up PR #4963.
+
 The current J1 slice replaces APRINTERS' `_popen`/`popen` command strings with
 `copperfin::platform::enumerate_printer_names()`. Windows privately uses
 `EnumPrintersW`; POSIX directly launches an absolute `lpstat` path through the

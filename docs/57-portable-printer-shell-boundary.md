@@ -13,6 +13,11 @@ process-tree limits. No shell, redirection syntax, or ambient child environment
 is used. An unavailable printer service produces the established deterministic
 `(none)` APRINTERS entry.
 
+Queue deduplication folds ASCII letters only, preserving every non-ASCII UTF-8
+byte and avoiding locale-sensitive keys. POSIX discovery also uses a
+non-throwing working-directory query and returns no queues when the process has
+an invalid working directory, preserving APRINTERS' fail-closed behavior.
+
 `RuntimeSessionOptions::printer_enumeration_callback` lets an embedding host
 provide printer names without exposing platform mechanics and makes the PRG
 contract deterministic in regression tests. The source contract rejects native

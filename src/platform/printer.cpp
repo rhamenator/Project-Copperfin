@@ -37,8 +37,10 @@ std::string trim_copy(std::string value) {
 }
 
 std::string ascii_lower_copy(std::string value) {
-    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char character) {
-        return static_cast<char>(std::tolower(character));
+    std::transform(value.begin(), value.end(), value.begin(), [](char character) {
+        return character >= 'A' && character <= 'Z'
+            ? static_cast<char>(character + ('a' - 'A'))
+            : character;
     });
     return value;
 }
@@ -125,15 +127,25 @@ std::vector<std::string> parse_lpstat_output(const std::string& output) {
 
 std::vector<std::string> run_lpstat(const std::string& argument) {
     namespace fs = std::filesystem;
-    const fs::path executable = resolve_executable_invocation_path("lpstat");
+    fs::path executable;
+    try {
+        executable = resolve_executable_invocation_path("lpstat");
+    } catch (const fs::filesystem_error&) {
+        return {};
+    }
     std::error_code status_error;
     if (!executable.is_absolute() || !fs::is_regular_file(executable, status_error) || status_error) {
+        return {};
+    }
+    std::error_code working_directory_error;
+    const fs::path working_directory = fs::current_path(working_directory_error);
+    if (working_directory_error) {
         return {};
     }
     BoundedProcessRequest request;
     request.executable_path = path_to_utf8_string(executable);
     request.arguments = {argument};
-    request.working_directory = path_to_utf8_string(fs::current_path());
+    request.working_directory = path_to_utf8_string(working_directory);
     request.timeout_ms = 2000U;
     request.stdout_limit_bytes = 256U * 1024U;
     request.stderr_limit_bytes = 64U * 1024U;
