@@ -67,11 +67,14 @@ catalog or invariant diagnostic contract changed in #4894. The approved
 protected signer execution remains an external release gate.
 
 Audit child #4895 additionally binds the signer/guard job to the fixed GitHub
-Actions `release` environment. The release administrator must configure a
-required reviewer, prevent self-review, restrict the environment to `main`,
-and provision both approved secrets at environment scope. The repository does
-not perform or claim those authority-bearing steps, and no localized or
-machine-readable contract changes in this workflow-only slice. Independent
+Actions `release` environment. The release administrator must restrict the
+environment to `main` and provision both approved secrets at environment
+scope. When a second trusted maintainer is available, a required reviewer and
+prevention of self-review are mandatory. In the current single-owner topology,
+an explicit recorded owner dispatch replaces the unavailable independent
+approval and the limitation must be disclosed. Secret contents remain outside
+source control, and no localized or machine-readable contract changes in this
+workflow-only slice. Independent
 review found and correction head `0a8a43080` closes the missing exact
 `contents: read` regression guard; the same reviewer passes the corrected
 slice. That exact corrected head passes hosted Linux/macOS Native `316/316` and
@@ -81,6 +84,16 @@ security/SBOM, executable-path, Windows environment/path, and DECLARE ABI gates
 pass. Permissive safety run `30566915484` also passes. #4895 is closed, and
 strict post-closure safety run `30568877447` passes without advancing external
 #4409 authority.
+
+The first live protected run `31623671192` passed external signer/registry
+preflight, configured and built the enforced Windows guard, and passed the
+package-trust verifier. Its actual walkthrough reached the valid launch and all
+seven expected fail-closed cases, but the workflow step failed because the
+PowerShell orchestrator left the final expected exit code `4` in global process
+state. GitHub propagated that stale value and skipped the non-secret evidence
+upload. The correction resets only that process state after assertions,
+evidence generation, and cleanup. A successful rerun remains required before
+the protected trust gate can close.
 
 The latest broad implementation baseline is product head `93d44395f`; the
 latest product implementation/test head is `f0c9e06e2`, while subsequent

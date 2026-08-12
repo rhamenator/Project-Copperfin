@@ -1,5 +1,35 @@
 # Agent Handoff
 
+## Windows launcher-trust protected-run correction
+
+The first live protected `Windows Launcher Trust Validation` run
+`31623671192` at `main` head `b458c8794` proved that the external
+`copperfin-launcher-2026-01` signer and matching one-entry registry can be
+materialized outside the checkout, bound by preflight, compiled into the
+enforced Windows guard, and used by the package-trust verifier. Provisioning,
+configuration, target builds, and the verifier contract passed. The actual
+guard walkthrough executed the valid signed launch and every expected
+fail-closed case, but the workflow step then failed because the orchestrator
+left the final expected guard exit code `4` in PowerShell's global
+`LASTEXITCODE`; GitHub's wrapper propagated that stale process state and
+skipped the non-secret evidence upload.
+
+The correction clears only that expected-negative process state, after all
+assertions, evidence writing, and cleanup have succeeded. The provisioning
+contract now requires exactly one end-of-script reset, so removing or moving
+it fails locally. No guard, signature, envelope, inventory, package, runtime,
+installer, or machine status/exit contract changes. The protected workflow
+must be rerun successfully before #4894/#4409 or their parents can close.
+
+The live `release` environment is restricted to `main` and owns the two
+launcher-trust secrets. Because the repository currently has one owner and no
+second trusted maintainer, it does not claim an independent environment
+reviewer; the explicit owner dispatch is the documented temporary authority
+boundary. Independent review becomes mandatory when another trusted
+maintainer is admitted. RC2 and its artifact set remain immutable; this
+security-validation correction requires a new sequential RC after review and
+successful protected execution, then forward-porting into `v1-development`.
+
 ## Contributor template and Discussion-form readiness
 
 PR #4944 replaces the single traceability-heavy pull-request template with two
