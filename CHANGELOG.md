@@ -1,3 +1,14 @@
+- 2026-08-12: Superseded the protected Windows launcher-trust fixture evidence
+  after differentiating the dependency and runtime-configuration sidecar
+  payloads. Protected run `31635868978` passed at exact `main` merge
+  `477035ca2df6d0eb688d58e83aee80805e932d38`; artifact `9156951212` has
+  GitHub and independently reproduced archive digest
+  `sha256:9385656df3fbbcf0408d8e0c68bb42504dc7a9f1333272f4f05b8b4cbfa29dec`.
+  Machine verification confirms five unique paths with five distinct digests,
+  one successful signed launch, seven fail-closed negative cases, and no
+  secret-material markers. This refines fixture fidelity without changing the
+  trust model, signed inventory contract, or ordinary development behavior.
+
 - 2026-08-12: Made the protected Windows launcher-trust fixture's dependency
   and runtime-configuration JSON payloads distinct. The signed inventory
   already binds path, role, and digest, so product trust behavior is unchanged;
