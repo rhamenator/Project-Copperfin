@@ -9,9 +9,41 @@ endif()
 set(SCRIPT "${SOURCE_DIR}/scripts/prepare-windows-launcher-trust.ps1")
 set(VALIDATION_SCRIPT "${SOURCE_DIR}/scripts/run-windows-launcher-trust-validation.ps1")
 set(WORKFLOW "${SOURCE_DIR}/.github/workflows/windows-launcher-trust-validation.yml")
+set(FIXTURE "${SOURCE_DIR}/tests/test_windows_launcher_trust_fixture.cpp")
 foreach(REQUIRED_FILE IN ITEMS "${SCRIPT}" "${VALIDATION_SCRIPT}" "${WORKFLOW}")
     if(NOT EXISTS "${REQUIRED_FILE}")
         message(FATAL_ERROR "launcher trust provisioning file is missing: ${REQUIRED_FILE}")
+    endif()
+endforeach()
+
+if(NOT EXISTS "${FIXTURE}")
+    message(FATAL_ERROR "launcher trust fixture source is missing: ${FIXTURE}")
+endif()
+
+file(READ "${FIXTURE}" FIXTURE_CONTENT)
+string(REGEX REPLACE "[ \t\r\n]+" " " FIXTURE_NORMALIZED "${FIXTURE_CONTENT}")
+set(DEPENDENCIES_FIXTURE_DECLARATION [=[constexpr char kDependenciesFixturePayload[] = "{\"fixture\":\"dependencies\"}\n";]=])
+set(RUNTIME_CONFIGURATION_FIXTURE_DECLARATION [=[constexpr char kRuntimeConfigurationFixturePayload[] = "{\"fixture\":\"runtime-configuration\"}\n";]=])
+set(DEPENDENCIES_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.deps.json", kDependenciesFixturePayload);]=])
+set(RUNTIME_CONFIGURATION_FIXTURE_BINDING [=[write_text(package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json", kRuntimeConfigurationFixturePayload);]=])
+foreach(REQUIRED_FIXTURE_CONTRACT IN ITEMS
+    "${DEPENDENCIES_FIXTURE_DECLARATION}"
+    "${RUNTIME_CONFIGURATION_FIXTURE_DECLARATION}"
+    "${DEPENDENCIES_FIXTURE_BINDING}"
+    "${RUNTIME_CONFIGURATION_FIXTURE_BINDING}"
+)
+    # The source normalization above collapses every whitespace run to one
+    # space. Remove those spaces from both sides so purely stylistic spacing
+    # cannot weaken or trip the semantic name/value and path/name checks.
+    string(REPLACE " " "" FIXTURE_CONTRACT_TOKENS "${FIXTURE_NORMALIZED}")
+    string(REPLACE " " "" REQUIRED_FIXTURE_CONTRACT_TOKENS
+        "${REQUIRED_FIXTURE_CONTRACT}")
+    string(FIND "${FIXTURE_CONTRACT_TOKENS}"
+        "${REQUIRED_FIXTURE_CONTRACT_TOKENS}" POSITION)
+    if(POSITION EQUAL -1)
+        message(FATAL_ERROR
+            "launcher trust fixture payload declaration or sidecar binding is incorrect: "
+            "${REQUIRED_FIXTURE_CONTRACT}")
     endif()
 endforeach()
 

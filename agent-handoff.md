@@ -1,5 +1,28 @@
 # Agent Handoff
 
+## Launcher-trust distinct-payload evidence
+
+Protected run `31635868978` passes at exact `main` merge `477035ca2` with five
+distinct artifact digests and all eight guard cases passing. Canonical hashes,
+case assertions, and secret-boundary evidence are in
+`docs/safety/launcher-trust-validation-2026-08-12.md`. Review hardening binds
+both exact constant-to-literal declarations and constant-to-sidecar writes;
+initializer and usage swaps fail while whitespace-only formatting remains free.
+
+## Launcher-trust fixture review follow-up
+
+Independent inspection of protected run `31630819119` confirmed the archive
+and report hashes, all eight guard outcomes, and the absence of secret
+material. It also observed that the fixture's dependency and runtime-config
+paths used the same empty JSON payload and therefore had the same digest.
+
+The signed trust contract was not bypassed: each inventory record binds its
+package-relative path, role, and SHA-256 digest, and identical file content is
+valid. The fixture now uses distinct valid JSON markers for those two roles,
+with a source-contract regression preventing accidental reintroduction. The
+protected rerun recorded above supersedes the earlier fixture-content evidence
+before assembly of the next immutable release candidate.
+
 ## Windows launcher-trust protected execution complete
 
 The first live protected `Windows Launcher Trust Validation` run

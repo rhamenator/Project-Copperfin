@@ -1,3 +1,17 @@
+- 2026-08-12: Superseded the protected Windows launcher-trust fixture evidence
+  after differentiating the dependency and runtime-configuration sidecar
+  payloads. Protected run `31635868978` passed at exact `main` merge
+  `477035ca2df6d0eb688d58e83aee80805e932d38`; artifact `9156951212` has
+  GitHub and independently reproduced archive digest
+  `sha256:9385656df3fbbcf0408d8e0c68bb42504dc7a9f1333272f4f05b8b4cbfa29dec`.
+  Machine verification confirms five unique paths with five distinct digests,
+  one successful signed launch, seven fail-closed negative cases, and no
+  secret-material markers. This refines fixture fidelity without changing the
+  trust model, signed inventory contract, or ordinary development behavior.
+  Review hardening now binds each constant name to its exact role-specific
+  literal as well as its intended sidecar path, so initializer and usage swaps
+  both fail the focused source contract.
+
 - 2026-08-12: Corrected the v1 native isolation inventory after independent
   review found that `test_platform_file_version_boundary_contract` fell
   through to the fail-closed `audit=pending` default. A fresh configure
