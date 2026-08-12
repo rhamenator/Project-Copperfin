@@ -7449,3 +7449,7 @@ passes `1/1`.
   Exact signed/DCO corrected head `52b9b5c65` passes all eleven protected
   checks, including the real connector, runtime-host integration, and boundary
   contract on Windows, Ubuntu, and macOS; GitHub has no unresolved PR threads.
+  Independent review found no defect and directly proved the private include
+  root is not propagated, confirmed the moved ABI is otherwise unchanged,
+  reproduced the public-leak and fourth-consumer mutations, and passed the real
+  connector/runtime-host path under ASan/UBSan.

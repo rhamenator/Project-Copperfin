@@ -24,6 +24,12 @@ Validation `31559462461`, Windows Environment and Executable Path Validation
 or unresolved threads at that head.
 An alternate-suffix public header mutation and a fourth-consumer mutation also
 fail at the intended tree-wide and closed-consumer requirements.
+Independent review at corrected head `52b9b5c65` found no defect. A deliberate
+old-public-path include in the runtime host failed compilation, directly
+proving the private include root is not propagated. The review also confirmed
+the ABI content is unchanged, reproduced the public-leak and fourth-consumer
+mutations, passed real connector/runtime-host ASan/UBSan tests, and reran both
+workflow-text contracts.
 
 ## V1 portable executable-search default
 

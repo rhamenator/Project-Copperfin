@@ -50,6 +50,15 @@ Environment and Executable Path Validation `31559462418`, GCC/Clang Executable
 Path Validation `31559462383`, DCO `31559461132`, and both socket checks pass.
 GitHub reports no review comments or unresolved review threads at that head.
 
+Independent review at corrected head `52b9b5c65` found no defect. It proved
+the private include root is not propagated by deliberately including the old
+public path from the runtime host and observing the expected compiler failure;
+the host rebuilt cleanly after restoration. It confirmed the moved ABI content
+is unchanged except for its ownership comment, reproduced public-shim,
+unrelated-public-header, and fourth-consumer mutations, and passed the real
+connector and runtime-host tests under ASan/UBSan with the connector required.
+Both touched workflow-text contracts also pass independently.
+
 ## Scope
 
 This is a pure J1 ownership/boundary correction. It does not change the SQLite
