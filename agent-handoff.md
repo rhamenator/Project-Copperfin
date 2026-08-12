@@ -20,6 +20,8 @@ now respectively `40831f6757929bc14af6185082bccaadbd188d2246eb324b486e6b59792190
 and `6616eda4480368fb2615c9496a572bd52ac3b1f102d252cbdb6edca338a775d1`.
 This supersedes the earlier same-content fixture evidence without changing
 the path/role/digest trust contract or reopening the closed launcher gates.
+Review hardening binds both the exact constant-to-literal declarations and the
+constant-to-sidecar writes; swapping either layer fails the focused contract.
 
 ## Launcher-trust fixture review follow-up
 
