@@ -863,7 +863,9 @@ cover:
    fallback live behind a portable metadata record. Host ANSI/OEM discovery,
    POSIX locale resolution, and code-page byte conversion now also cross a
    portable standard-C++ boundary while VFP policy remains in the interpreter.
-   Available-disk-byte and allocation-unit queries now similarly hide Windows
+   VFP path identity now also crosses that boundary for normalized,
+   case-insensitive matching on every host. Available-disk-byte and
+   allocation-unit queries similarly hide Windows
    volume APIs and POSIX `statvfs` behind `cf_platform_support` while the
    interpreter retains VFP path and presentation policy. The wider
    native-boundary inventory plus broader ports remain open.)*

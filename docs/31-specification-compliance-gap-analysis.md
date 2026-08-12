@@ -135,9 +135,10 @@ one Windows implementation. Native invocation now also exchanges portable
 typed arguments, result values, and copied by-reference updates; Windows ABI
 storage, pointers, calling conventions, Automation dispatch, and x64 typed
 calls remain private to Windows implementation files.
-Windows SDK/CRT selection, UTF conversion, path-component comparison, POSIX
-environment calls, and process-wide synchronization are private implementation
-in `cf_platform_support`. Direct portable regressions and source-level
+Windows SDK/CRT selection, UTF conversion, host path-component comparison,
+VFP-style normalized case-insensitive path identity, POSIX environment calls,
+and process-wide synchronization are private implementation in
+`cf_platform_support`. Direct portable regressions and source-level
 contracts run in the Windows, Linux, and macOS validation workflow, so the
 boundaries are load-bearing rather than documentary. See
 `docs/50-portable-public-path-boundary.md` and
