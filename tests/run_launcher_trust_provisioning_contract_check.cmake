@@ -50,12 +50,30 @@ foreach(REQUIRED_TEXT IN ITEMS
     "exit_code"
     "package_relative_name"
     "sha256"
+    "clear that expected-negative process state"
+    "\$global:LASTEXITCODE = 0"
 )
     string(FIND "${VALIDATION_SCRIPT_CONTENT}" "${REQUIRED_TEXT}" POSITION)
     if(POSITION EQUAL -1)
         message(FATAL_ERROR "launcher trust validation is missing required contract text: ${REQUIRED_TEXT}")
     endif()
 endforeach()
+
+string(REGEX MATCHALL "\\$global:LASTEXITCODE[ ]*=[ ]*0"
+    EXPLICIT_SUCCESS_STATE_RESETS "${VALIDATION_SCRIPT_CONTENT}")
+list(LENGTH EXPLICIT_SUCCESS_STATE_RESETS EXPLICIT_SUCCESS_STATE_RESET_COUNT)
+if(NOT EXPLICIT_SUCCESS_STATE_RESET_COUNT EQUAL 1)
+    message(FATAL_ERROR
+        "launcher trust validation must clear expected-negative process state exactly once")
+endif()
+
+string(REGEX MATCH
+    "\\$global:LASTEXITCODE[ ]*=[ ]*0[^\n]*\nWrite-Host[^\n]*\n*$"
+    EXPLICIT_SUCCESS_STATE_AT_END "${VALIDATION_SCRIPT_CONTENT}")
+if(NOT EXPLICIT_SUCCESS_STATE_AT_END)
+    message(FATAL_ERROR
+        "launcher trust validation must clear expected-negative process state only after cleanup")
+endif()
 
 file(READ "${WORKFLOW}" WORKFLOW_CONTENT)
 foreach(REQUIRED_TEXT IN ITEMS

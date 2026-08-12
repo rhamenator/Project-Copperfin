@@ -111,10 +111,10 @@ The signing/guard job is bound to the fixed GitHub Actions environment
 `release`; the environment name is not a dispatch input or expression. Before
 any protected run, a repository administrator must:
 
-1. create the `release` environment and configure one or more required
-   reviewers;
-2. enable prevention of self-review so the dispatcher cannot approve the same
-   run;
+1. create the `release` environment and, when a second trusted maintainer is
+   available, configure one or more required reviewers;
+2. enable prevention of self-review whenever an independent reviewer is
+   configured;
 3. restrict deployment branches to `main`;
 4. create environment-scoped
    `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` and
@@ -122,13 +122,19 @@ any protected run, a repository administrator must:
 5. confirm the same secret names are not being supplied as repository-level
    substitutes for the release ceremony.
 
-An environment that is absent, has no required reviewer, permits self-review,
-or admits branches other than `main` is not protected release evidence. The
-job must remain pending until the configured reviewer approves it, and secret
-material must not become available to the runner before that approval. The
-repository intentionally does not create the environment, select its reviewer,
-or provision its secrets in source control; those are external #4409 release
-authority.
+For a single-owner repository with no second trusted maintainer, the recorded
+owner-only manual dispatch, fixed workflow/environment binding, `main`-only
+deployment policy, environment-scoped secrets, and absence of other write
+access form the available release-authority boundary; claiming independent
+approval in that topology would be false. When another trusted maintainer is
+admitted, required independent review and prevention of self-review become
+mandatory before a later official release. An environment that is absent or
+admits branches other than `main` is not protected release evidence. When a
+reviewer is configured, the job must remain pending until that reviewer
+approves it, and secret material must not become available before approval.
+The repository intentionally does not provision secret contents in source
+control; they remain outside source control as environment-scoped release
+authority inputs.
 
 The protected job derives a canonical `app.cftrust` from an exact finalized
 fixture inventory, signs it with the external key reference through the native
@@ -138,14 +144,22 @@ removed/duplicate/case-ambiguous inventory records, and modified or removed
 signature sidecars must all return exit code `4` without starting that apphost.
 Only the signer ID, commit/run identity, finalized direct artifact names/roles
 and SHA-256 digests, invariant case results, and non-secret provisioning facts
-are uploaded. This workflow path is implemented under
-#4894 and its fixed release-environment binding is enforced under #4895, but it
-is release evidence only after an externally approved registry and key execute
-it successfully through the configured environment approval.
+are uploaded. This workflow path is implemented under #4894 and its fixed
+release-environment binding is enforced under #4895, but it is release evidence
+only after the workflow executes successfully with an externally approved
+registry/key pair through the configured environment approval. In the documented
+single-owner exception, an explicit owner dispatch replaces the unavailable
+independent environment approval and must be disclosed in the validation evidence
+and release limitations.
 
 ## Platform Policy
 
-For an enforced release build, Windows generated-launcher packages require both trust sidecars and reject unsigned or unknown-signer inventories before managed apphost startup. The guard retains the existing containment, regular-file, physical-identity, and SHA-256 checks after signature verification. Until an approved release signer and registry are provisioned, ordinary development packages intentionally use the unsigned fallback and must not be presented as meeting the Windows release trust boundary.
+For an enforced release build, Windows generated-launcher packages require both
+trust sidecars and reject unsigned or unknown-signer inventories before managed
+apphost startup. The guard retains the existing containment, regular-file,
+physical-identity, and SHA-256 checks after signature verification. Ordinary
+development packages intentionally use the unsigned fallback and must not be
+presented as meeting the Windows release trust boundary.
 
 POSIX and macOS do not claim this Windows trust boundary yet. Until platform-specific release signing and verification are approved, they retain the current unsigned inventory behavior and report the trust capability as unsupported rather than treating a recomputed unsigned inventory as authenticated.
 
@@ -158,8 +172,7 @@ verification vector. The Windows `test_generated_launcher_process` regression
 also proves malformed trust sidecars fail before managed startup. The #4894
 fixture and protected orchestrator cover the external signer-to-guard path and
 record whether the internal apphost started for every case. No private or
-machine-specific key is embedded. The protected workflow must still run with
-the approved registry/key pair before the release trust boundary is claimed.
+machine-specific key is embedded.
 
 Implementation evidence is current at head `f0c9e06e2`. Windows native run
 `30559930672` built `test_windows_launcher_trust_fixture` with MSVC and passed
@@ -167,5 +180,12 @@ Implementation evidence is current at head `f0c9e06e2`. Windows native run
 Generated-launcher run `30559417230` passed at the exact duplicate-signer head
 `3968fabff`, and independent review confirmed the signer, registry, evidence,
 and cleanup boundaries. Permissive safety run `30559107092` produced artifact
-`8766084663`. These results validate the implementation contract only; the
-approved protected execution required by #4409 remains outstanding.
+`8766084663`. Corrected protected execution `31630819119` then passed at
+`111fb67d09df1413221beeebce9b684f47097053` with signer
+`copperfin-launcher-2026-01`. Artifact `9155061757` has independently matched
+archive digest
+`sha256:c66fd93daab64d3c2abee12291648987f0ebff701ca36f625bfa7d4f207582eb`;
+its report contains the exact five-artifact inventory, one valid launch, and
+seven exit-code-`4` failures before apphost start. This satisfies #4409's
+Windows launcher-trust execution boundary while leaving platform signing and
+ordinary unsigned development behavior unchanged.

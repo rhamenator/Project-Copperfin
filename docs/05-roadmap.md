@@ -351,19 +351,21 @@ tag remains immutable, the scanner regression is corrected for sequential
 `copperfin-v0.1.0-rc.2-evaluation-bundle` artifact with GitHub-reported
 SHA-256 `501ba26642af4fb58c69e3c69ca0f29b7eb5e242a4980ea31770e83bd84605df`;
 no GitHub Release exists. This is private-evaluation availability, not human
-acceptance or authority for an official release. The complete
-official-release evidence gate remains open until #4403 receives genuine
-arm's-length safety sign-off, closes, and passes strict validation, and until
-#4409 receives the approved protected launcher-trust signer/registry secrets
-and passes enforced Windows validation. Permissive primary-hazard safety run
-`30555972170` is green but cannot substitute for that strict closure. The
-hosted Deep runner also lacked VFP9;
+acceptance or authority for an official release. The complete official-release
+evidence gate remains open until #4403 receives genuine arm's-length safety
+sign-off, closes, and passes strict validation. #4409's protected Windows
+launcher-trust gate has passed with the approved signer/registry pair in run
+`31630819119` at exact commit
+`111fb67d09df1413221beeebce9b684f47097053`. Permissive primary-hazard safety
+run `30555972170` is green but cannot substitute for #4403's strict closure.
+The hosted Deep runner also lacked VFP9;
 accepted installed-VFP9, mounted-sample, RuntimePackage/xAsset/Report/Menu, and
 live Visual Studio evidence remains the closed #4621 baseline because the final
-changes were catalog/managed/test-only. After an immutable RC artifact passes,
-the long-lived v1 development branch may begin at that exact tag while RC
-stabilization remains isolated. Neither lane may reinterpret this parallel work
-as closure of #4403 or #4409 or as authority for an official 1.0 release.
+changes were catalog/managed/test-only. Protected `v1-development` begins at
+the peeled RC2 commit under no-bypass ruleset `20582609`, while immutable RC
+stabilization remains separate. Human RC2 evaluation remains pending. Neither
+lane may reinterpret this parallel work as closure of #4403 or as authority
+for an official 1.0 release.
 
 The v1 lane also carries optional bounded DBF-header robustness coverage:
 6,757 deterministic synthetic cases plus an ASan/UBSan variant when supported.
@@ -712,8 +714,8 @@ and Windows/MSVC, and #4847's hosted SBOM gate is closed. #4621's hosted
 Windows/VFP9/Visual Studio reconciliation remains accepted as historical
 evidence for its validated binaries, while the current-head matrix continues
 to run. This does not claim complete RC readiness. Independent safety sign-off
-under #4403 and protected launcher-trust provisioning under #4409 remain
-separate release gates.
+under #4403 remains a separate release gate; the later protected run below
+supersedes this section's historical #4409 pending state.
 
 Independent local POSIX validation at synchronized head `792f1840c` passed
 `ctest --test-dir build --output-on-failure --timeout 180 --parallel 2` with
@@ -734,21 +736,20 @@ runtime equivalents twice at the same product head: RuntimePackage, XAsset,
 Report, and Menu, with the installed VFP9 prerequisite present. The artifacts
 are recorded under the Windows host's
 `E:\Project-Copperfin\artifacts\windows-mounted-vfp9-validation\` path.
-The complete RC evidence gate remains unclaimed while #4403 independent
-review/closure and #4409 protected launcher-trust provisioning remain open.
-The #4894 audit slice corrects the protected job so provisioning now drives an
-external signer over a finalized inventory and exercises the actual enforced
-guard across valid and fail-closed cases; exact protected execution still
-requires the externally approved registry/key pair and does not weaken #4409;
-the accepted #4621 hosted baseline remains separate from an exact-head live
-Visual Studio UI rerun.
+The complete official-release evidence gate remains unclaimed while #4403
+independent review/closure remains open. The #4894 audit slice corrected the
+protected job so provisioning drives an external signer over a finalized
+inventory and exercises the actual enforced guard across valid and fail-closed
+cases. The accepted #4621 hosted baseline remains separate from an exact-head
+live Visual Studio UI rerun.
 
-The #4898 Linux launcher-key generator has completed its bounded tool,
-walkthrough, independent-review, and DQ/DV/HZ evidence. The non-secret record
-is archived in
-`docs/safety/traceability-report-2026-08-08-launcher-keygen.md`. GitHub still
-has no `release` environment, so this child does not satisfy #4409 or authorize
-a protected Windows launcher-trust claim.
+The #4898 Linux launcher-key generator completed its bounded tool,
+walkthrough, independent-review, and DQ/DV/HZ evidence before the protected
+execution recorded below. The non-secret record is archived in
+`docs/safety/traceability-report-2026-08-08-launcher-keygen.md`. That child did
+not by itself satisfy #4409 or authorize a protected Windows launcher-trust
+claim; the subsequently configured `release` environment and successful
+protected run `31630819119` supply that distinct evidence.
 
 The implementation-side #4894 matrix is current at exact head `f0c9e06e2`:
 Windows native `30559930672` passes `315/315` after building the new fixture
@@ -756,16 +757,15 @@ with MSVC, Linux `30559930560` and macOS `30559930719` pass `316/316`, and the
 exact VSIX, managed-UI, installer, security/SBOM, executable-path, Windows
 environment/path, and DECLARE ABI workflows pass. Generated-launcher run
 `30559417230` passes at the exact duplicate-signer implementation head
-`3968fabff`. This evidence completes the missing workflow mechanics; it does
-not provide an approved key, protected run, #4409 closure, or release authority.
+`3968fabff`. This evidence completed the missing workflow mechanics before the
+approved protected execution recorded below.
 
 Security audit child #4895 binds that manual job to the fixed GitHub Actions
 `release` environment so configured required-reviewer, no-self-review, branch,
 and environment-secret protections apply before the runner receives signing
 authority. Source control does not create or configure that environment. An
-administrator must still establish its protection rules and approved secrets,
-then complete the #4409 run; an absent or unprotected environment is not RC
-evidence. Independent review found and correction head `0a8a43080` closes one
+absent or unprotected environment is not RC evidence. Independent review found
+and correction head `0a8a43080` closes one
 test gap by requiring the exact sole `contents: read` permission block; the
 same reviewer passes the corrected slice. Exact corrected test head
 `0a8a43080` passes hosted Linux/macOS Native `316/316` and Windows Native
@@ -774,8 +774,19 @@ contract. The VSIX, managed-UI, installer, security/SBOM, executable-path,
 Windows environment/path, and DECLARE ABI gates pass. Corrected-head permissive
 safety run `30566915484` also passes for #4895; neither result supplies external
 release authority. #4895 is closed after independent review and synchronized
-evidence; strict post-closure safety run `30568877447` passes. #4409 remains
-open.
+evidence; strict post-closure safety run `30568877447` passes.
+
+Corrected protected run `31630819119` passes at exact `main` merge commit
+`111fb67d09df1413221beeebce9b684f47097053` using signer
+`copperfin-launcher-2026-01`. Artifact `9155061757` has GitHub and independently
+reproduced archive digest
+`sha256:c66fd93daab64d3c2abee12291648987f0ebff701ca36f625bfa7d4f207582eb`.
+Its non-secret report contains the exact five-artifact finalized inventory,
+one valid launch (`0`, apphost started), and seven negative cases (`4`, apphost
+not started); a marker scan found no private-key or secret content. This
+satisfies #4894/#4409/#4387/#4041. It does not satisfy #4403, authorize a public
+release, or add Authenticode, Apple signing/notarization, or Linux package
+signing. RC2 remains immutable; assemble a new sequential RC.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.

@@ -1,5 +1,43 @@
 # Agent Handoff
 
+## Windows launcher-trust protected execution complete
+
+The first live protected `Windows Launcher Trust Validation` run
+`31623671192` at `main` head `b458c8794` proved that the external
+`copperfin-launcher-2026-01` signer and matching one-entry registry can be
+materialized outside the checkout, bound by preflight, compiled into the
+enforced Windows guard, and used by the package-trust verifier. Provisioning,
+configuration, target builds, and the verifier contract passed. The actual
+guard walkthrough executed the valid signed launch and every expected
+fail-closed case, but the workflow step then failed because the orchestrator
+left the final expected guard exit code `4` in PowerShell's global
+`LASTEXITCODE`; GitHub's wrapper propagated that stale process state and
+skipped the non-secret evidence upload.
+
+The correction clears only that expected-negative process state, after all
+assertions, evidence writing, and cleanup have succeeded. The provisioning
+contract now requires exactly one end-of-script reset, so removing or moving
+it fails locally. No guard, signature, envelope, inventory, package, runtime,
+installer, or machine status/exit contract changes.
+
+Corrected protected run `31630819119` passes at exact `main` merge commit
+`111fb67d09df1413221beeebce9b684f47097053`. Artifact `9155061757` has GitHub
+and independently reproduced archive digest
+`sha256:c66fd93daab64d3c2abee12291648987f0ebff701ca36f625bfa7d4f207582eb`.
+The report contains exactly one valid launch (`0`, apphost started) and seven
+negative cases (`4`, apphost not started), and its downloaded files contain no
+private-key or secret markers. #4894, #4409, #4387, and #4041 now have direct
+closure evidence. RC2 remains immutable; assemble a new sequential RC.
+
+The live `release` environment is restricted to `main` and owns the two
+launcher-trust secrets. Because the repository currently has one owner and no
+second trusted maintainer, it does not claim an independent environment
+reviewer; the explicit owner dispatch is the documented temporary authority
+boundary. Independent review becomes mandatory when another trusted
+maintainer is admitted. RC2 and its artifact set remain immutable; this
+security-validation correction is now forward-ported into `v1-development`;
+it still requires a new sequential RC.
+
 ## Standalone terminal callback teardown correction
 
 PR #4967's unrelated broad RC matrix reproduced a real managed-UI teardown
@@ -17,14 +55,15 @@ protects transcript and process-exit state updates. A focused managed smoke
 deterministically pauses a background callback at the marshal boundary, starts
 disposal on the UI thread, releases the callback, and requires both threads to
 drain without exception or deadlock. The managed project builds with zero
-warnings/errors on Linux; Mono/Xvfb is unavailable locally, so the exact hosted
-Linux smoke remains required. No terminal command, shell, transcript,
-localization, layout, runtime, package, or machine contract changes.
+warnings/errors locally. Exact v1 forward-port run `31633512939` passes the
+full Linux Mono/Xvfb standalone-shell and adjacent property-grid smoke. No
+terminal command, shell, transcript, localization, layout, runtime, package,
+or machine contract changes.
 
 This confirmed RC defect is separate from the launcher-trust exit-state
-correction. It landed on `main` first and is now forward-ported to
-`v1-development`; create a new immutable RC only after the launcher correction
-and both protected matrices pass. RC2 remains unchanged.
+correction. Both corrections landed on `main`, their required protected paths
+pass, and both are now forward-ported to `v1-development`. Create a new
+immutable RC before private evaluation continues. RC2 remains unchanged.
 
 ## V1 file-version isolation audit correction
 
@@ -3260,7 +3299,7 @@ not to the current state above.
 
 - #4730 under #3217 is closed after Claude review and exact-head Windows validation. Mounted VFP9 help documents only `MultiSelect` values `0` and `1`; native PRG direct/reflective access, mode transitions, invalid-value normalization, same-PRG setup, and derived `Init` are covered by `test_prg_engine_runtime_surface_functions` on Linux and Windows. Mode `2`, mouse/keyboard selection interaction, and viewport painting remain outside this property slice. Windows evidence is under `artifacts/windows-review-4730-corrected-4f3f590c/` and the closure is recorded on GitHub issue #4730.
 
-- Current-state precedence: older #4621 entries later in this handoff describe intermediate hosted runs and their pending gates at historical heads. They are superseded by the current closure record above: hosted Windows/VFP9/Visual Studio evidence and exact-head Linux/macOS/Windows native evidence are complete, and #4621 is closed. Do not treat historical "pending" wording below as a current release status; #4403 safety traceability and #4409 protected package signing remain open separately.
+- Current-state precedence: older #4621 entries later in this handoff describe intermediate hosted runs and their pending gates at historical heads. They are superseded by the current closure record above: hosted Windows/VFP9/Visual Studio evidence and exact-head Linux/macOS/Windows native evidence are complete, and #4621 is closed. Do not treat historical "pending" wording below as a current release status. #4409 protected package signing is now complete; #4403 arm's-length safety review remains open separately.
 
 - Current #4403 validator rerun after #4621 closure: permissive validation with primary-hazard coverage passed; strict validation passed all structural, DQ/DV/HZ, and primary-hazard checks and reported exactly one intentional failure, `Issue is not closed (state=OPEN)`. No arm's-length reviewer sign-off or safety closure is claimed. The issue remains open until a genuinely independent reviewer signs off and the strict closed-issue gate can pass.
 
