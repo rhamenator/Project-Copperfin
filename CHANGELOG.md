@@ -7548,6 +7548,16 @@ passes `1/1`.
   declaration. GCC Release focused regressions pass `4/4`; Clang ASan/UBSan
   coverage of the affected runtime and boundary/isolation contracts passes
   `3/3` with no findings.
+- 2026-08-12: Added the missing second invalid-working-directory APRINTERS
+  regression identified by independent review. The POSIX test now uses a
+  leading empty `PATH` segment while its current directory is deleted, directly
+  proving that executable resolution's throwing current-directory lookup is
+  caught and returns no queues. The source contract separately requires that
+  resolver guard and the non-throwing later working-directory query. GCC
+  Release and Clang ASan/UBSan each pass the focused runtime/boundary/workflow
+  set `4/4`; removing only the resolver guard makes the runtime regression
+  abort at the expected uncaught `filesystem_error`, then restoration returns
+  the suite to green.
 - 2026-08-12: Continued v1 portability lane J1 by replacing APRINTERS' `_popen`/
   `popen` command-shell discovery with a portable printer API. Windows now uses
   private Unicode spooler enumeration; POSIX resolves `lpstat` and invokes it

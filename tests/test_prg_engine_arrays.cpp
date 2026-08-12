@@ -1453,6 +1453,16 @@ void test_platform_printer_enumeration_uses_direct_host_boundary() {
     fs::current_path(original_directory);
     expect(missing_working_directory_names.empty(),
         "POSIX printer discovery should fail closed when the process working directory is invalid");
+
+    scoped_path.set(std::string(":") + fake_bin.string());
+    fs::create_directories(removed_directory);
+    fs::current_path(removed_directory);
+    fs::remove(removed_directory, ignored);
+    const std::vector<std::string> missing_resolver_working_directory_names =
+        copperfin::platform::enumerate_printer_names();
+    fs::current_path(original_directory);
+    expect(missing_resolver_working_directory_names.empty(),
+        "POSIX printer discovery should fail closed when an empty PATH segment requires an invalid working directory");
     fs::remove_all(temp_root, ignored);
 #else
     expect(std::all_of(names.begin(), names.end(), [](const std::string& name) { return !name.empty(); }),

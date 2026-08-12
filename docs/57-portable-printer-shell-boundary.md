@@ -15,8 +15,10 @@ is used. An unavailable printer service produces the established deterministic
 
 Queue deduplication folds ASCII letters only, preserving every non-ASCII UTF-8
 byte and avoiding locale-sensitive keys. POSIX discovery also uses a
-non-throwing working-directory query and returns no queues when the process has
-an invalid working directory, preserving APRINTERS' fail-closed behavior.
+non-throwing working-directory query and catches filesystem failures from
+executable resolution. It returns no queues when the process has an invalid
+working directory, including when an empty `PATH` segment requires resolving
+the current directory, preserving APRINTERS' fail-closed behavior.
 
 `RuntimeSessionOptions::printer_enumeration_callback` lets an embedding host
 provide printer names without exposing platform mechanics and makes the PRG
