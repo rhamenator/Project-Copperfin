@@ -1,3 +1,34 @@
+- 2026-08-11: Continued v1 portability lane J1 with a portable public
+  process-environment boundary. The broadly consumed
+  `copperfin/platform/environment.h` interface now contains only standard C++
+  declarations; Windows/POSIX selection, CRT environment calls, strict UTF-8
+  path conversion, and process-wide synchronization live privately in
+  `cf_platform_support`. Existing Unicode, empty-value, validation, path,
+  restoration, and concurrent-access behavior remains covered. A new source
+  contract prevents native implementation mechanics from returning to the
+  public header. Generated Launcher Validation builds and runs both contracts
+  on Windows, Ubuntu, and macOS, and the focused Windows environment/path
+  workflow repeats them. Local GCC Release host/consumer builds pass, focused
+  plus adjacent workflow/isolation coverage passes `14/14`, and a deliberate
+  `_WIN32` header mutation proves the new source contract is load-bearing. This
+  is a bounded J1 increment, not completion of the portable-core inventory or
+  J2/J3 ports.
+  Corrected product/test head `e8f87cf42` passes all eleven protected checks;
+  Generated Launcher Validation `31549944398` passes `12/12` on Windows,
+  Ubuntu, and macOS, and Windows Environment and Executable Path Validation
+  `31549944197` passes `10/10`. Automated review found that a bare `setenv`
+  probe could match inside `unsetenv`; both calls now require independent exact
+  statements, and a setenv-only mutation proves the correction.
+  Independent review passed implementation equivalence, consumer links,
+  ASan/UBSan, and ThreadSanitizer concurrency coverage, then found the same
+  substring-collision class in the public declaration probes. Those probes now
+  require exact declaration prefixes, and deleting only
+  `read_environment_variable` makes the contract fail as intended. Final
+  evidence head `5ebe5fbeb` passed all eleven protected checks; Generated
+  Launcher Validation `31551072481` passed on Ubuntu and macOS, and its Windows
+  failed-job rerun passed the full set after an unrelated Python-sidecar-only
+  first-attempt failure.
+
 - 2026-08-11: Restored the review-identified rationale for the layered Windows
   Unicode path-component comparison APIs after their move behind the portable
   public boundary. The original comments explain the invariant-locale

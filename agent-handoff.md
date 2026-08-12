@@ -1,5 +1,41 @@
 # Agent Handoff
 
+## V1 portable public environment boundary
+
+The J1 follow-up to the path boundary moves all OS-specific process-environment
+code out of the widely consumed `copperfin/platform/environment.h` header and
+into `cf_platform_support`. The public interface now exposes only standard C++
+declarations. Windows wide-CRT/UTF-8 behavior, POSIX process-wide
+serialization, empty-value semantics, path values, validation, and concurrent
+access remain unchanged.
+
+The existing behavior regression and a new source-boundary contract are
+registered in Generated Launcher Validation on Windows, Ubuntu, and macOS and
+in the focused Windows environment/path workflow. This advances J1 only; the
+wider native-boundary inventory and J2/J3 ports remain open. See
+`docs/51-portable-public-environment-boundary.md`.
+
+Local GCC Release builds the four directly affected hosts and adjacent
+licensing, localization, security, asset, bounded-process, and platform-model
+consumers; focused, adjacent, workflow, and isolation tests pass `14/14`. A
+temporary `_WIN32` header mutation is rejected by the new boundary contract.
+
+Corrected product/test head `e8f87cf42` passes all eleven protected checks.
+Generated Launcher Validation `31549944398` passes `12/12` on Windows, Ubuntu,
+and macOS; Windows Environment and Executable Path Validation `31549944197`
+passes `10/10`. Automated review's `setenv`/`unsetenv` substring-collision
+finding is corrected with independent exact-statement probes, and removing
+only `setenv` now fails the source contract at the intended requirement.
+Independent review passed implementation equivalence, all Linux-buildable
+consumer links, ASan/UBSan, and ThreadSanitizer concurrency coverage. Its
+header-probe mutation exposed a second substring-collision blind spot, so every
+public function now requires an exact declaration prefix; deleting only
+`read_environment_variable` fails at the intended requirement. Final evidence
+head `5ebe5fbeb` passed all eleven protected checks. Generated Launcher
+Validation `31551072481` passed on Ubuntu and macOS, while a failed-job rerun
+passed the complete Windows set after an unrelated Python-sidecar-only failure
+on the first attempt.
+
 ## V1 portable public path boundary
 
 The first explicit J1 library-boundary increment moves all OS-specific path

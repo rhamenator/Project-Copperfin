@@ -103,6 +103,7 @@ function(copperfin_apply_windows_stack_reserve TARGET_NAME)
 endfunction()
 
 add_library(cf_platform_support
+    src/platform/environment.cpp
     src/platform/executable_path.cpp
     src/platform/invariant_numeric.cpp
     src/platform/json.cpp
