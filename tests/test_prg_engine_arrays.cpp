@@ -1430,15 +1430,29 @@ void test_platform_printer_enumeration_uses_direct_host_boundary() {
     const fs::path fake_lpstat = fake_bin / "lpstat";
     write_text(fake_lpstat,
         "#!/bin/sh\n"
-        "printf '%s\\n' 'Office_Printer accepting requests' 'printer Label_Printer is idle.'\n");
+        "printf '%s\\n' 'Office_Printer accepting requests' 'office_printer accepting requests' "
+        "'printer Label_Printer is idle.'\n"
+        "printf 'printer \\303\\204_Printer is idle.\\nprinter \\303\\244_Printer is idle.\\n'\n");
     fs::permissions(fake_lpstat, fs::perms::owner_exec, fs::perm_options::add, ignored);
     copperfin::test_support::ScopedEnvironmentValue scoped_path("PATH");
     scoped_path.set(fake_bin.string());
 #endif
     const std::vector<std::string> names = copperfin::platform::enumerate_printer_names();
 #if !defined(_WIN32)
-    expect(names == std::vector<std::string>({"Office_Printer", "Label_Printer"}),
-        "POSIX printer discovery should directly execute and parse the resolved lpstat fixture");
+    expect(names == std::vector<std::string>({
+            "Office_Printer", "Label_Printer", "\xC3\x84_Printer", "\xC3\xA4_Printer"}),
+        "POSIX printer discovery should directly execute, ASCII-deduplicate, and preserve UTF-8 names");
+
+    const fs::path original_directory = fs::current_path();
+    const fs::path removed_directory = temp_root / "removed-working-directory";
+    fs::create_directories(removed_directory);
+    fs::current_path(removed_directory);
+    fs::remove(removed_directory, ignored);
+    const std::vector<std::string> missing_working_directory_names =
+        copperfin::platform::enumerate_printer_names();
+    fs::current_path(original_directory);
+    expect(missing_working_directory_names.empty(),
+        "POSIX printer discovery should fail closed when the process working directory is invalid");
     fs::remove_all(temp_root, ignored);
 #else
     expect(std::all_of(names.begin(), names.end(), [](const std::string& name) { return !name.empty(); }),

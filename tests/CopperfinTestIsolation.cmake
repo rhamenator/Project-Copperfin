@@ -1220,7 +1220,6 @@ function(copperfin_configure_native_test_isolation)
 
     foreach(test_name IN ITEMS
             test_prg_engine_aggregate_array_functions
-            test_prg_engine_arrays
             test_prg_engine_control_flow
             test_prg_engine_data_io
             test_prg_engine_database_lifecycle
@@ -1265,7 +1264,6 @@ function(copperfin_configure_native_test_isolation)
     endforeach()
 
     foreach(test_name IN ITEMS
-            test_prg_engine_arrays
             test_prg_engine_control_flow
             test_prg_engine_data_io
             test_prg_engine_database_lifecycle

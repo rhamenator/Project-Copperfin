@@ -7541,6 +7541,11 @@ passes `1/1`.
   compile passes, and two native-token mutations prove the source boundary is
   load-bearing. Native-call marshaling, OLE/COM, shell, printing, and J2/J3
   ports remain separate.
+- 2026-08-12: Hardened the APRINTERS boundary after review: printer-name
+  deduplication now folds ASCII only so UTF-8 bytes remain stable, POSIX
+  discovery fails closed rather than throwing when the process working
+  directory is invalid, and the arrays test has one authoritative isolation
+  declaration. Focused regressions cover all three corrections.
 - 2026-08-12: Continued v1 portability lane J1 by replacing APRINTERS' `_popen`/
   `popen` command-shell discovery with a portable printer API. Windows now uses
   private Unicode spooler enumeration; POSIX resolves `lpstat` and invokes it
