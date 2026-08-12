@@ -7425,3 +7425,7 @@ passes `1/1`.
   coverage passes `8/8`, and a deliberate `_WIN32` header mutation fails at the
   exact forbidden token. This is a bounded J1 increment, not completion of the
   portable-core inventory or J2/J3 ports.
+  Exact signed/DCO implementation head `fee6c1be7` passes all eleven protected
+  checks. Generated Launcher Validation `31554724495` passes the new coverage
+  on Windows, Ubuntu, and macOS; focused Windows environment/path, Win32/x64
+  DECLARE, GCC/Clang executable-path, DCO, and both socket checks also pass.

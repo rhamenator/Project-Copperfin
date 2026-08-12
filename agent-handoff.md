@@ -17,6 +17,13 @@ the runtime and build hosts. Focused behavior, boundary, workflow, and isolation
 coverage passes `8/8`; a temporary `_WIN32` header mutation fails at the exact
 forbidden token.
 
+Exact signed/DCO implementation head `fee6c1be7` passes all eleven protected
+checks. Generated Launcher Validation `31554724495` passes on Windows, Ubuntu,
+and macOS; Windows Environment and Executable Path Validation `31554724462`,
+Windows DECLARE ABI Validation `31554724438`, GCC/Clang Executable Path
+Validation `31554724484`, DCO `31554724442`, and both socket checks also pass.
+There are no GitHub review comments or unresolved review threads at that head.
+
 ## V1 portable public environment boundary
 
 The J1 follow-up to the path boundary moves all OS-specific process-environment
