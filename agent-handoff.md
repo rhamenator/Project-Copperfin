@@ -21,7 +21,14 @@ also makes the direct behavior test fail at its normalized-path assertion.
 Replacing the Windows whole-path delegation with a direct equality check fails
 at the intended complete-Unicode-comparison assertion.
 Clang ASan/UBSan passes `5/5` without findings.
-Hosted and independent-review evidence remain required.
+Corrected exact head `bdd586477` passes all eleven protected checks:
+Generated Launcher Validation `31650731603` executes the behavior and boundary
+tests on Windows, Ubuntu, and macOS; Windows environment/path run
+`31650731605`, Win32/x64 DECLARE run `31650731645`, GCC/Clang executable-path
+run `31650731607`, DCO run `31650730422`, and both Socket checks pass. Two
+automated review findings identified the database/session documentation
+overclaim and incomplete Windows Unicode fallback; both are corrected and both
+threads are resolved. Independent review remains required.
 
 ## V1 portable disk-space boundary
 

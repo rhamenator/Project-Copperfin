@@ -94,8 +94,15 @@ operand separately makes the direct test fail at its normalized-path assertion.
 Replacing the Windows whole-path delegation with direct equality separately
 fails at the intended complete-Unicode-comparison assertion.
 Clang ASan/UBSan passes the direct behavior, ownership, workflow, and isolation
-selection `5/5` without a finding. Hosted Windows, Ubuntu, and macOS execution
-and independent review remain required before merge.
+selection `5/5` without a finding. Corrected exact head `bdd586477` passes all
+eleven protected checks. Generated Launcher Validation `31650731603` executes
+the behavior and ownership contracts on Windows, Ubuntu, and macOS; Windows
+environment/path run `31650731605`, Win32/x64 DECLARE run `31650731645`,
+GCC/Clang executable-path run `31650731607`, DCO run `31650730422`, and both
+Socket checks pass. Two automated review findings identified the
+database/session documentation overclaim and incomplete Windows Unicode
+fallback; both are corrected and both threads are resolved. Independent review
+remains required before merge.
 
 ## Remaining J1 work
 
