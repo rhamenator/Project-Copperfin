@@ -7545,7 +7545,9 @@ passes `1/1`.
   deduplication now folds ASCII only so UTF-8 bytes remain stable, POSIX
   discovery fails closed rather than throwing when the process working
   directory is invalid, and the arrays test has one authoritative isolation
-  declaration. Focused regressions cover all three corrections.
+  declaration. GCC Release focused regressions pass `4/4`; Clang ASan/UBSan
+  coverage of the affected runtime and boundary/isolation contracts passes
+  `3/3` with no findings.
 - 2026-08-12: Continued v1 portability lane J1 by replacing APRINTERS' `_popen`/
   `popen` command-shell discovery with a portable printer API. Windows now uses
   private Unicode spooler enumeration; POSIX resolves `lpstat` and invokes it
