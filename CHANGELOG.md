@@ -1,3 +1,9 @@
+- 2026-08-12: Made the protected Windows launcher-trust fixture's dependency
+  and runtime-configuration JSON payloads distinct. The signed inventory
+  already binds path, role, and digest, so product trust behavior is unchanged;
+  the fixture evidence is now more representative and its provisioning
+  contract prevents the duplicate marker payload from returning.
+
 - 2026-08-12: Completed the protected Windows launcher-inventory trust gate.
   Corrected workflow run `31630819119` passed at exact merge commit
   `111fb67d09df1413221beeebce9b684f47097053` with the dedicated external signer

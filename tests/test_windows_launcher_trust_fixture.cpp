@@ -21,6 +21,11 @@
 
 namespace {
 
+constexpr char kDependenciesFixturePayload[] =
+    "{\"fixture\":\"dependencies\"}\n";
+constexpr char kRuntimeConfigurationFixturePayload[] =
+    "{\"fixture\":\"runtime-configuration\"}\n";
+
 #if !defined(_WIN32)
 constexpr const char* kMarkerEnvironment = "COPPERFIN_TEST_LAUNCHER_TRUST_MARKER";
 #endif
@@ -108,8 +113,10 @@ int prepare_fixture(
         return 2;
     }
     write_text(package_root / "Copperfin.GeneratedLauncher.dll", "launcher dll fixture\n");
-    write_text(package_root / "Copperfin.GeneratedLauncher.deps.json", "{}\n");
-    write_text(package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json", "{}\n");
+    write_text(package_root / "Copperfin.GeneratedLauncher.deps.json",
+               kDependenciesFixturePayload);
+    write_text(package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json",
+               kRuntimeConfigurationFixturePayload);
 
     std::vector<copperfin::package_trust::LauncherInventoryArtifact> artifacts{
         {"public_apphost", public_name, file_digest(package_root / public_name)},
