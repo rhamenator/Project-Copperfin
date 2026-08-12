@@ -1,3 +1,27 @@
+- 2026-08-12: Retired the dormant Windows `IDispatch`/`EXCEPINFO` exception
+  owner left behind after managed `DECLARE` moved to supported CLR vtable
+  interfaces. The unused sources, test-only instrumentation, and build wiring
+  are removed; real managed success, repeated failure, localization, path, and
+  mixed-mode behavior coverage remains authoritative. The portable CLR-host
+  source contract now fails if the obsolete files, hook, build wiring, or
+  interpreter tokens return. This narrows the J1 native seam without changing
+  VFP-visible behavior or claiming closure of unrelated OLE automation. A
+  clean GCC Release build and the focused boundary/workflow/runtime set pass
+  `4/4`; deliberately restoring the retired header fails at the intended
+  contract guard, and removing the mutation returns the set to green.
+  Initial hosted Win32/x64 compilation exposed that the deleted helper header
+  had also supplied an accidental transitive Windows SDK prerequisite to the
+  managed-dispatch test. The test now explicitly includes `windows.h` before
+  `oleauto.h`, and the portable CLR-host contract preserves that required
+  ordering without restoring the obsolete owner. The corrected boundary and
+  both workflow contracts pass `3/3`; reversing only the includes fails at the
+  intended ordering assertion, and restoration returns the set to green.
+  Corrected signed/DCO implementation head `cacc5f711` passes all eleven
+  protected checks: Generated Launcher `31616588988` on Windows, Ubuntu, and
+  macOS; Windows DECLARE `31616589040` on Win32/x64; Windows environment/path
+  `31616588982`; GCC/Clang executable-path `31616588890`; DCO `31616586145`;
+  and both package-safety checks.
+
 - 2026-08-12: Continued v1 portability lane J1 by moving native `DECLARE`
   argument backing storage, raw pointer formation, Windows Automation dispatch,
   x64 typed invocation, return extraction, and by-reference result copying

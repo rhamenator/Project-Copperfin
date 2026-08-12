@@ -4,7 +4,6 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
-#include "dispatch_exception_info.h"
 #include "managed_pe_image.h"
 #include "test_environment_support.h"
 #include "prg_engine_test_support.h"
@@ -23,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include <windows.h>
 #include <oleauto.h>
 
 namespace
@@ -55,14 +55,6 @@ namespace
     private:
         std::filesystem::path original_;
     };
-
-    HRESULT __stdcall fill_deferred_exception(EXCEPINFO *exception_info)
-    {
-        exception_info->bstrSource = SysAllocString(L"Copperfin deferred source");
-        exception_info->bstrDescription = SysAllocString(L"Copperfin deferred description");
-        exception_info->bstrHelpFile = SysAllocString(L"Copperfin deferred help");
-        return S_OK;
-    }
 
     std::string fixture_path()
     {
@@ -262,58 +254,17 @@ namespace
             "nResult = CopperfinMixedModeNativeValue()\n"
             "RETURN\n");
 
-        copperfin::runtime::reset_dispatch_exception_cleanup_stats();
         auto session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(program_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-        const auto stats = copperfin::runtime::dispatch_exception_cleanup_stats();
 
         expect(state.completed, "#3947: mixed-mode native export should remain callable: " + state.message);
         const auto result = state.globals.find("nresult");
         expect(result != state.globals.end() &&
                    copperfin::runtime::format_value(result->second) == "3947",
                "#3947: mixed-mode native export should win before managed reflection fallback");
-        expect(stats.invoke_results == 0U,
-               "#3947: mixed-mode native export should not enter IDispatch reflection");
-
         fs::remove_all(temp_root, ignored);
 #endif
-    }
-
-    void test_deferred_exception_cleanup_contract()
-    {
-        copperfin::runtime::reset_dispatch_exception_cleanup_stats();
-        {
-            copperfin::runtime::DispatchExceptionInfo exception_info;
-            exception_info.output()->pfnDeferredFillIn = &fill_deferred_exception;
-            exception_info.record_result(DISP_E_EXCEPTION);
-        }
-
-        const auto stats = copperfin::runtime::dispatch_exception_cleanup_stats();
-        expect(stats.invoke_results == 1U,
-               "#3943: controlled EXCEPINFO cleanup should retain the Invoke result count");
-        expect(stats.exception_results == 1U,
-               "#3943: controlled EXCEPINFO cleanup should retain DISP_E_EXCEPTION identity");
-        expect(stats.deferred_fill_calls == 1U,
-               "#3943: cleanup should invoke deferred fill-in exactly once");
-        expect(stats.bstrs_released == 3U,
-               "#3943: cleanup should release source, description, and help BSTRs");
-        expect(stats.source_bstrs_released == 1U &&
-                   stats.description_bstrs_released == 1U &&
-                   stats.help_file_bstrs_released == 1U,
-               "#3943: cleanup should release each populated EXCEPINFO BSTR field exactly once");
-
-        copperfin::runtime::reset_dispatch_exception_cleanup_stats();
-        {
-            copperfin::runtime::DispatchExceptionInfo exception_info;
-            exception_info.output()->pfnDeferredFillIn = &fill_deferred_exception;
-            exception_info.record_result(S_OK);
-        }
-        const auto success_stats = copperfin::runtime::dispatch_exception_cleanup_stats();
-        expect(success_stats.invoke_results == 1U && success_stats.exception_results == 0U,
-               "#3943: controlled success should retain a non-exception Invoke result");
-        expect(success_stats.deferred_fill_calls == 0U && success_stats.bstrs_released == 0U,
-               "#3943: non-exception results must not execute a deferred exception callback");
     }
 
     void test_managed_declare_success_contract()
@@ -359,7 +310,6 @@ namespace
             "ENDFOR\n"
             "RETURN\n");
 
-        copperfin::runtime::reset_dispatch_exception_cleanup_stats();
         auto session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(program_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
@@ -421,10 +371,6 @@ namespace
                        event.detail.find("ManagedSuccess") != std::string::npos;
             }),
             "#3943: managed declarations should preserve the invariant runtime.declare_dll event");
-
-        const auto stats = copperfin::runtime::dispatch_exception_cleanup_stats();
-        expect(stats.invoke_results == 0U && stats.exception_results == 0U,
-               "#3943: supported CLR vtable dispatch should not expose an EXCEPINFO ownership path");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -503,19 +449,15 @@ namespace
             "nResult = ManagedRelative()\n"
             "RETURN\n");
 
-        copperfin::runtime::reset_dispatch_exception_cleanup_stats();
         auto session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(program_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-        const auto stats = copperfin::runtime::dispatch_exception_cleanup_stats();
 
         expect(state.completed, "#3945: explicit-relative managed DECLARE should complete");
         const auto result = state.globals.find("nresult");
         expect(result != state.globals.end() &&
                    copperfin::runtime::format_value(result->second) == "3945",
                "#3945: explicit-relative Assembly.LoadFrom should resolve sibling dependencies");
-        expect(stats.invoke_results == 0U && stats.exception_results == 0U,
-               "#3943: explicit-relative CLR vtable dispatch should avoid IDispatch EXCEPINFO state");
         expect(
             std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
             {
@@ -547,18 +489,12 @@ namespace
             "RETURN\n");
 
         const ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
-        copperfin::runtime::reset_dispatch_exception_cleanup_stats();
         auto session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(program_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-        const auto stats = copperfin::runtime::dispatch_exception_cleanup_stats();
 
         expect(state.completed,
                "#3943: repeatedly-throwing managed DECLARE fixture should retain the existing recoverable contract");
-        expect(stats.invoke_results == 0U && stats.exception_results == 0U &&
-                   stats.bstrs_released == 0U,
-               "#3943: repeated managed failures should avoid the obsolete IDispatch EXCEPINFO path");
-
         const auto failure_message = state.globals.find("cfailuremessage");
         expect(failure_message != state.globals.end(),
                "#3943: managed failure should retain the localized MESSAGE() contract");
@@ -602,7 +538,6 @@ namespace
             "nResult = ManagedParentless()\n"
             "RETURN\n");
 
-        copperfin::runtime::reset_dispatch_exception_cleanup_stats();
         {
             const ScopedCurrentPath current_path(temp_root);
             auto session = copperfin::runtime::PrgRuntimeSession::create(
@@ -614,7 +549,6 @@ namespace
 
             fs::current_path(temp_root / "moved-cwd");
             const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-            const auto stats = copperfin::runtime::dispatch_exception_cleanup_stats();
 
             expect(state.completed,
                    "#3947: parentless managed DECLARE should retain its loader-resolved path after CWD changes: " +
@@ -623,8 +557,6 @@ namespace
             expect(result != state.globals.end() &&
                        copperfin::runtime::format_value(result->second) == "42",
                    "#3947: parentless managed DECLARE should retain invocation behavior");
-            expect(stats.invoke_results == 0U && stats.exception_results == 0U,
-                   "#3943/#3947: parentless CLR vtable dispatch should avoid IDispatch state");
             expect(
                 std::any_of(state.events.begin(), state.events.end(), [&](const auto &event)
                 {
@@ -667,7 +599,6 @@ namespace
             "RETURN\n");
 
         const ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
-        copperfin::runtime::reset_dispatch_exception_cleanup_stats();
         auto session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(program_path.string(), temp_root.string()));
         session.add_breakpoint({.file_path = program_path.string(), .line = 2U});
@@ -680,12 +611,9 @@ namespace
         expect(!ignored && !fs::exists(missing_fixture),
                "#3945: managed image should be removable before Assembly.LoadFrom");
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-        const auto stats = copperfin::runtime::dispatch_exception_cleanup_stats();
 
         expect(state.completed,
                "#3945: missing managed load should retain the recoverable expression contract");
-        expect(stats.invoke_results == 0U && stats.exception_results == 0U,
-               "#3943: managed load failure should avoid IDispatch EXCEPINFO state");
         const auto ignored_result = state.globals.find("nignored");
         expect(ignored_result != state.globals.end() &&
                    copperfin::runtime::format_value(ignored_result->second).empty(),
@@ -732,7 +660,6 @@ int main()
 {
     test_managed_pe_classification_contract();
     test_mixed_mode_native_export_precedence();
-    test_deferred_exception_cleanup_contract();
     test_managed_declare_requires_qualified_type();
     test_managed_declare_explicit_relative_path();
     test_managed_declare_success_contract();

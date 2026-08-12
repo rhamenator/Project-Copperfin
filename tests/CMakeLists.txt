@@ -5259,7 +5259,6 @@ if(WIN32)
             "${CMAKE_SOURCE_DIR}/src/runtime"
         )
         target_compile_definitions(test_prg_engine_dotnet_dispatch PRIVATE
-            COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS=1
             COPPERFIN_DECLARED_DLL_FIXTURE_PATH="$<TARGET_FILE:copperfin_declared_dll_fixture>"
             COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH="${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
             COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH="${COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH}"

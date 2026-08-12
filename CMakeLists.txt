@@ -538,7 +538,6 @@ target_link_libraries(cf_xbase_runtime
 if(WIN32)
     target_link_libraries(cf_platform_profile PRIVATE winspool)
     target_sources(cf_xbase_runtime PRIVATE
-        src/runtime/dispatch_exception_info.cpp
         src/runtime/managed_declared_call.cpp
         src/runtime/managed_pe_image.cpp
         src/runtime/native_declared_call.cpp
@@ -546,11 +545,6 @@ if(WIN32)
         src/runtime/win64_native_call.cpp
     )
     target_link_libraries(cf_xbase_runtime PRIVATE oleaut32)
-    if(COPPERFIN_BUILD_TESTS)
-        target_compile_definitions(cf_xbase_runtime PRIVATE
-            COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS=1
-        )
-    endif()
 endif()
 
 if(MSVC)
