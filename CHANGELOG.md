@@ -14,7 +14,12 @@
   and macOS; Windows DECLARE ABI Validation `31571330827` on Win32/x64;
   Windows environment/path `31571330790`; GCC/Clang executable-path
   `31571330801`; DCO `31571330808`; and both socket checks. Independent review
-  remains pending; OLE/COM, shell, printing, and J2/J3 ports remain separate.
+  reproduced two stale workflow self-check failures inherited from the prior
+  boundary additions: the workflows were correct, but exact-text contracts
+  still expected their older test inventories. Both contracts now require the
+  complete current lists, pass `2/2`, and reject deliberate removal of the new
+  boundary from either owning workflow. Native ABI review continues at the
+  corrected head; OLE/COM, shell, printing, and J2/J3 ports remain separate.
 
 - 2026-08-12: Continued v1 portability lane J1 by moving Windows native
   `DECLARE` module search, export resolution, managed-PE classification,

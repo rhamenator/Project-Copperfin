@@ -55,7 +55,16 @@ checks. Generated Launcher Validation `31571330747` passes on Windows, Ubuntu,
 and macOS; Windows DECLARE ABI Validation `31571330827` passes the real native
 and managed fixtures plus adjacent coverage on Win32 and x64; Windows
 environment/path `31571330790`, GCC/Clang executable-path `31571330801`, DCO
-`31571330808`, and both socket checks pass. Independent review remains pending.
+`31571330808`, and both socket checks pass.
+
+Independent review reproduced two stale workflow self-check failures inherited
+from the preceding boundary additions: the workflows scheduled the complete
+current boundary inventory, but their exact-text contracts still expected the
+older inventories. Both contracts now require the complete current lists and
+pass `2/2` from a clean configure. Deliberately removing the native-call
+boundary from either the Win32/x64 DECLARE lane or the generated-launcher lane
+makes its owning contract fail. Native ABI review continues at the corrected
+head.
 
 ## Scope
 
