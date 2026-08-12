@@ -7553,4 +7553,8 @@ passes `1/1`.
   checks: Generated Launcher Validation `31577463882` on Windows, Ubuntu, and
   macOS; Windows DECLARE ABI Validation `31577463847` on Win32/x64; Windows
   environment/path `31577463814`; GCC/Clang executable-path `31577463753`; DCO
-  `31577463901`; and both socket checks.
+  `31577463901`; and both socket checks. Independent review passes after a
+  clean GCC build, focused `4/4`, real POSIX ASan/UBSan execution, both workflow
+  self-checks, direct parsing-equivalence review, and a deliberate `popen`
+  mutation that failed at the intended contract. The replacement also removes
+  the old fixed-512-byte line-read fragmentation risk.

@@ -17,7 +17,14 @@ Clang ASan/UBSan passes `3/3`. Exact signed/DCO implementation head
 and boundary contract); Windows DECLARE ABI Validation `31577463847` on
 Win32/x64; Windows environment/path `31577463814`; GCC/Clang executable-path
 `31577463753`; DCO `31577463901`; and both socket checks. Independent review
-remains pending.
+passes at the byte-identical implementation: clean GCC build, focused `4/4`,
+real POSIX ASan/UBSan execution, both workflow self-checks, parsing-equivalence
+review, and a deliberate `popen` mutation rejected by the source contract. The
+review also confirms the full-output parser removes the prior fixed-512-byte
+line fragmentation risk. Its disclosed Windows limitation is covered by the
+hosted Windows execution above; the PATH resolution-to-launch interval is an
+accepted local-host boundary because argv is fixed and PATH-directory write
+access already permits executable substitution.
 
 ## V1 native DECLARE invocation boundary
 
