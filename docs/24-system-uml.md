@@ -103,6 +103,7 @@ classDiagram
 
     class cf_xbase_runtime {
         +prg_engine_dispatch_flow_expression_records_cursor_arrays_variables_session_sql_aggregate_dll
+        +portable_scalar_contract_to_private_windows_clr_host
         +index_seek_optimizer
         +xasset_methods
         +vfp_builtin_function_families
@@ -255,6 +256,9 @@ Moved to its own file for the same reason — see
 Ground-truth diagram:
 
 - `cf_xbase_runtime` is the current execution hub; `cf_design_model` is upstream of it (see inversion note above), not the other way around.
+- Its in-process CLR capability remains Windows-only, but the interpreter now
+  crosses a portable scalar value/result boundary; CLR, COM, Automation, and
+  `mscorlib` types are confined to the private Windows implementation.
 - `cf_security` and `cf_platform_profile` are siblings consumed identically by `copperfin_studio_host` and `copperfin_runtime_host`.
 - Every native library depends on `cf_localization` (and therefore `cf_platform_support`) except the two deliberately independent bases: `cf_licensing` and `cf_platform_support` itself. This reflects the hard localization-catalog requirement — though actual call-site adoption outside these wired libraries is still thin.
 

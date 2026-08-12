@@ -1,5 +1,41 @@
 # Agent Handoff
 
+## V1 portable CLR-host boundary
+
+The next J1 slice replaces the interpreter-facing Windows `HRESULT`/`VARIANT`
+managed-call interface with portable scalar argument, value, error-stage, and
+result records. CLR creation, `mscorlib`, COM/Automation types, UTF conversion,
+`SAFEARRAY` assembly, result marshaling, and the `mscoree` linker directive now
+live only in `managed_declared_call.cpp`. Existing .NET Framework v4 managed
+`DECLARE` behavior remains Windows-only and unchanged. See
+`docs/54-portable-clr-host-boundary.md`.
+
+The source contract is scheduled on Windows, Ubuntu, and macOS plus the
+Win32/x64 DECLARE lane. The existing managed fixture now directly adds `SINGLE`
+coverage beside its string, integer, exact 64-bit, double,
+path, error, localization, repetition, and mixed-mode cases. Local GCC Release
+builds the affected runtime and focused regressions; boundary, workflow,
+isolation, parser, and broad runtime-surface coverage passes `5/5`.
+
+Corrected exact head `9485852c1` passes all eleven protected checks. Generated
+Launcher Validation `31563614971` passes on Windows, Ubuntu, and macOS; Windows
+DECLARE ABI Validation `31563615036` passes the real managed fixture and
+adjacent DECLARE tests on Win32/x64; Windows environment/path
+`31563615085`, GCC/Clang executable-path `31563615003`, DCO `31563612877`, and
+both socket checks pass. GitHub has no comments or unresolved review threads.
+Independent review found no defect: it read-traced all COM owners and 15
+failure returns, compared error mapping, compiled the portable header, passed
+two boundary mutations, and ran the runtime host/control-flow suite under
+ASan/UBSan. The reviewer could not execute Windows CLR hosting; real invocation
+equivalence is supplied by the hosted Win32/x64 fixture.
+
+The first hosted Win32/x64 run built successfully and passed the boundary
+contract, then rejected a newly added `DECLARE LOGICAL` fixture assertion. That
+declaration was not an established supported surface and has been removed; it
+was a test-scope error, not a product regression. The existing Automation
+logical conversion remains unchanged. The superseding Windows rerun passes on
+both architectures.
+
 ## V1 private SQLite native API boundary
 
 The J1 follow-up moves the raw Windows/POSIX SQLite header selection from

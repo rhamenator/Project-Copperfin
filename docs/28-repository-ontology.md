@@ -127,7 +127,7 @@ Also note the root of the graph changed since this document's first pass:
 - `index_seek_optimizer.cpp` — Rushmore-style seek/optimization logic (see `tests/test_prg_engine_rushmore_optimization.cpp`).
 - `xasset_methods.cpp` — extracts dispatchable runtime actions (method invocations, menu selections) from `SCX/VCX/FRX/LBX/MNX` objects, the bridge that lets `cf_design_model` assets actually run.
 - `win64_native_call.cpp` — the native side of Windows `DECLARE`-style calls into external DLLs.
-- On Windows, additionally: `dispatch_exception_info.cpp`, `managed_declared_call.cpp`, `managed_pe_image.cpp` (links `oleaut32`) — the bounded .NET Framework static-method `DECLARE` invocation path noted in `docs/24-system-uml.md`'s reading notes.
+- On Windows, additionally: `dispatch_exception_info.cpp`, `managed_declared_call.cpp`, `managed_pe_image.cpp` (links `oleaut32`) — the bounded .NET Framework static-method `DECLARE` invocation path noted in `docs/24-system-uml.md`'s reading notes. `managed_declared_call.h` is a portable internal scalar contract; CLR/COM types, marshaling, and the `mscoree` linker directive remain in `managed_declared_call.cpp`.
 - `prg_engine_static_analysis.cpp` (in the separate `cf_prg_analysis` target) — analysis that doesn't need the full runtime, kept as a lighter dependency for `cf_design_model`.
 
 ### `cf_runtime_pipeline` (build/package/debug orchestration)

@@ -11,7 +11,7 @@ Copperfin must fit into the .NET ecosystem well enough that teams can:
 
 Current maturity:
 
-- Windows builds provide a bounded in-process .NET Framework v4 `DECLARE ... IN <assembly>` path for public static methods named as `Namespace.Type.Method`. The native host loads the exact resolved assembly through `Assembly.LoadFrom`, resolves overloads through the CLR binder, and currently marshals the supported scalar `DECLARE` values through `VARIANT`/`SAFEARRAY` boundaries.
+- Windows builds provide a bounded in-process .NET Framework v4 `DECLARE ... IN <assembly>` path for public static methods named as `Namespace.Type.Method`. The native host loads the exact resolved assembly through `Assembly.LoadFrom`, resolves overloads through the CLR binder, and marshals supported scalar `DECLARE` values through private `VARIANT`/`SAFEARRAY` implementation. Its interpreter-facing contract contains only portable C++ value and result records; see `docs/54-portable-clr-host-boundary.md`.
 - The managed `DECLARE` path is tested on Win32 and x64 for absolute, explicit-relative, and parentless loader-resolved paths, sibling dependency resolution, integer/floating/string values, repeat success/failure, localized failures, and mixed-mode assemblies whose native export must take precedence. It is not a general managed object, event, callback, or by-reference interop surface.
 - The build pipeline can also generate a C# launcher/stub that is invoked as a child process by the native runtime pipeline in `src/runtime/runtime_pipeline.cpp`.
 - The portable artifact-bridge foundation now composes a deterministic,

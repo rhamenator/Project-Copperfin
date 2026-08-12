@@ -7453,3 +7453,28 @@ passes `1/1`.
   root is not propagated, confirmed the moved ABI is otherwise unchanged,
   reproduced the public-leak and fourth-consumer mutations, and passed the real
   connector/runtime-host path under ASan/UBSan.
+- 2026-08-12: Continued v1 portability lane J1 by replacing the managed
+  `DECLARE` path's interpreter-facing `HRESULT`/`VARIANT` interface with
+  portable scalar argument, value, error-stage, and result records. The
+  Windows-only implementation now privately owns CLR creation, `mscorlib`,
+  COM/Automation types, UTF conversion, `SAFEARRAY` construction, return-value
+  marshaling, and its `mscoree` linker directive. Existing .NET Framework v4
+  assembly loading, CLR-binder dispatch, VFP-compatible error identities, and
+  scalar behavior are preserved, with new direct `SINGLE` regression coverage.
+  A source contract runs on all three hosted platforms and
+  beside Win32/x64 managed DECLARE validation. Local GCC Release focused
+  boundary, workflow, isolation, parser, and runtime coverage passes `5/5`.
+  Broader native DLL/OLE seams and J2/J3 host ports remain open.
+  The first hosted Win32/x64 run passed the boundary contract but rejected a
+  newly invented `DECLARE LOGICAL` fixture assertion. That unsupported test
+  extension was removed without changing product behavior. Corrected exact
+  head `9485852c1` passes all eleven protected checks. Generated Launcher
+  Validation `31563614971` passes on Windows, Ubuntu, and macOS; Windows
+  DECLARE ABI Validation `31563615036` passes the real managed fixture and
+  adjacent DECLARE tests on Win32/x64; focused Windows environment/path,
+  GCC/Clang executable-path, DCO, and both socket checks pass. Independent
+  review found no defect, read-traced COM cleanup and every failure return,
+  compared error mapping, passed portable compile and mutation probes, and ran
+  adjacent Linux code under ASan/UBSan. Actual CLR invocation equivalence is
+  established by hosted Windows execution because the reviewer had no Windows
+  CLR host.

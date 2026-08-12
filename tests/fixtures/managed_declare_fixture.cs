@@ -43,6 +43,11 @@ namespace Copperfin.ManagedDeclareFixture
             return value + 0.5;
         }
 
+        public static float WidenSingle(float value)
+        {
+            return value + 0.25F;
+        }
+
         public static string Echo(string value)
         {
             return value;

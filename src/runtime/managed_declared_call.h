@@ -4,16 +4,49 @@
 
 #pragma once
 
-#if defined(_WIN32)
-
+#include <cstdint>
 #include <string>
 #include <vector>
 
-#include <windows.h>
-#include <oleauto.h>
-
 namespace copperfin::runtime
 {
+    enum class ManagedDeclaredValueKind
+    {
+        empty,
+        string,
+        signed_integer64,
+        unsigned_integer64,
+        floating_point,
+        boolean,
+    };
+
+    struct ManagedDeclaredValue
+    {
+        ManagedDeclaredValueKind kind = ManagedDeclaredValueKind::empty;
+        std::string string_value;
+        std::int64_t signed_integer_value = 0;
+        std::uint64_t unsigned_integer_value = 0U;
+        double floating_point_value = 0.0;
+        bool boolean_value = false;
+    };
+
+    enum class ManagedDeclaredArgumentKind
+    {
+        string,
+        signed_integer32,
+        signed_integer64,
+        floating_point32,
+        floating_point64,
+    };
+
+    struct ManagedDeclaredArgument
+    {
+        ManagedDeclaredArgumentKind kind = ManagedDeclaredArgumentKind::signed_integer32;
+        std::string string_value;
+        std::int64_t signed_integer_value = 0;
+        double floating_point_value = 0.0;
+    };
+
     enum class ManagedInvocationStage
     {
         none,
@@ -30,16 +63,15 @@ namespace copperfin::runtime
 
     struct ManagedInvocationResult
     {
-        HRESULT hresult = S_OK;
+        bool succeeded = false;
+        std::int32_t compatible_error_code = 0;
         ManagedInvocationStage stage = ManagedInvocationStage::none;
+        ManagedDeclaredValue value;
     };
 
     [[nodiscard]] ManagedInvocationResult invoke_managed_declared_method(
         const std::string &assembly_path_utf8,
         const std::string &type_name_utf8,
         const std::string &method_name_utf8,
-        const std::vector<VARIANT> &arguments,
-        VARIANT *return_value);
+        const std::vector<ManagedDeclaredArgument> &arguments);
 }
-
-#endif

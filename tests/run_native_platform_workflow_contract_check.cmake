@@ -463,6 +463,10 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     2
     "cross-platform private SQLite API boundary tests")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_portable_clr_host_boundary_contract"
+    2
+    "cross-platform portable CLR-host boundary tests")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
     "apps/copperfin_runtime_host/**"
     2
     "runtime-host path triggers")
@@ -667,6 +671,9 @@ require_text(".github/workflows/windows-x86-declare-validation.yml"
 require_text(".github/workflows/windows-x86-declare-validation.yml"
     "--target test_prg_engine_seek_index test_prg_engine_dotnet_dispatch test_prg_engine_parser_classes test_localization"
     "focused DECLARE target inventory")
+require_text(".github/workflows/windows-x86-declare-validation.yml"
+    "^(test_prg_engine_dotnet_dispatch|test_portable_clr_host_boundary_contract)$"
+    "focused managed DECLARE behavior and boundary inventory")
 
 require_text("README.md"
     "Release readiness requires successful `Linux GCC`, `macOS Clang`, and `Windows MSVC` checks."
