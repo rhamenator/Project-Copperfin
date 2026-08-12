@@ -9,14 +9,16 @@ connector, runtime-host integration, security limits, and machine contracts are
 unchanged. The connector and two fixture-building tests receive a non-propagated
 private source include root. See `docs/53-private-sqlite-native-api-boundary.md`.
 
-The new source contract rejects OS/native SQLite tokens across every public
-Copperfin header, protects each private ABI branch, and verifies exact consumer
-and build wiring. Local GCC Release builds the connector tests and runtime host;
+The new source contract rejects OS/native SQLite tokens across the entire public
+Copperfin include tree, protects each private ABI branch, and verifies exactly
+three consumers plus exact build wiring. Local GCC Release builds the connector tests and runtime host;
 focused behavior, workflow, boundary, and isolation coverage passes `6/6`.
 Restoring the public shim and changing only the private Windows fallback branch
 both fail at the intended exact requirement. Clang 21 ASan/UBSan with leak
 detection passes the connector and boundary tests `2/2`. Hosted
 Windows/macOS/Linux evidence and independent review remain required before merge.
+An alternate-suffix public header mutation and a fourth-consumer mutation also
+fail at the intended tree-wide and closed-consumer requirements.
 
 ## V1 portable executable-search default
 

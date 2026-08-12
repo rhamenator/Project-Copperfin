@@ -13,7 +13,8 @@ if(EXISTS "${public_api_path}")
 endif()
 
 file(GLOB_RECURSE public_headers
-    "${SOURCE_DIR}/include/copperfin/*.h")
+    LIST_DIRECTORIES false
+    "${SOURCE_DIR}/include/copperfin/*")
 foreach(header_path IN LISTS public_headers)
     file(READ "${header_path}" header_text)
     foreach(forbidden IN ITEMS
@@ -68,12 +69,32 @@ foreach(consumer IN ITEMS
     endif()
 endforeach()
 
+file(GLOB_RECURSE native_source_files
+    LIST_DIRECTORIES false
+    "${SOURCE_DIR}/src/*.cpp"
+    "${SOURCE_DIR}/tests/*.cpp")
+set(private_include_consumers 0)
+foreach(source_path IN LISTS native_source_files)
+    file(READ "${source_path}" source_text)
+    string(FIND "${source_text}" "#include \"platform/sqlite_api.h\"" include_offset)
+    if(NOT include_offset EQUAL -1)
+        math(EXPR private_include_consumers "${private_include_consumers} + 1")
+    endif()
+endforeach()
+if(NOT private_include_consumers EQUAL 3)
+    message(FATAL_ERROR
+        "Exactly three native source/test consumers may use the private SQLite API shim")
+endif()
+
 file(READ "${SOURCE_DIR}/CMakeLists.txt" root_cmake_text)
-string(FIND "${root_cmake_text}"
-    [=[${CMAKE_CURRENT_SOURCE_DIR}/src]=]
-    private_source_offset)
+string(FIND "${root_cmake_text}" [=[target_include_directories(cf_sqlite_connector
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)]=] private_source_offset)
 if(private_source_offset EQUAL -1)
-    message(FATAL_ERROR "SQLite connector target lacks its private source include root")
+    message(FATAL_ERROR "SQLite connector target lacks its exact private include block")
 endif()
 
 file(READ "${SOURCE_DIR}/tests/CMakeLists.txt" tests_cmake_text)

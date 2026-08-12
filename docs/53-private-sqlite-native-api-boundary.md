@@ -23,12 +23,12 @@ syntax, or selects an operating system.
 
 ## Regression contract
 
-`test_platform_sqlite_api_boundary_contract` scans every Copperfin public
-header and rejects OS-selection macros, native SQLite headers, and Windows
-import syntax. It requires the exact private Windows-header, Windows-fallback,
-and POSIX-header branches, verifies the three intended consumers use the
-private path, and requires exact private include-root wiring for the connector
-and two tests.
+`test_platform_sqlite_api_boundary_contract` scans every file in Copperfin's
+public include tree and rejects OS-selection macros, native SQLite headers, and
+Windows import syntax. It requires the exact private Windows-header,
+Windows-fallback, and POSIX-header branches, requires exactly the three intended
+source/test consumers, and checks exact private include-root wiring for the
+connector and two tests.
 
 Generated Launcher Validation runs this source contract beside the real
 connector and runtime-host integration tests on Windows, Ubuntu, and macOS.
@@ -38,6 +38,9 @@ the public shim fails at the public-tree boundary; changing only the private
 Windows fallback selector fails at its exact required token.
 Clang 21 ASan/UBSan with leak detection also builds and passes the real
 connector regression plus the boundary contract `2/2`.
+An alternate-suffix `.hpp` public leak and a fourth private-shim consumer are
+also rejected, proving the tree-wide scan and closed consumer count are
+load-bearing rather than dependent on today's filenames.
 
 ## Scope
 

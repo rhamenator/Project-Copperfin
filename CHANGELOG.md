@@ -7438,8 +7438,11 @@ passes `1/1`.
   Windows still uses system WinSQLite with the same SDK-header/fallback
   declarations; Linux and macOS still use system SQLite3. The connector and its
   two synthetic-fixture tests receive a non-propagated private include root.
-  A new source contract rejects OS/native SQLite tokens across every public
-  Copperfin header and protects exact private ABI, consumer, and build wiring.
+  A new source contract rejects OS/native SQLite tokens across the complete
+  public Copperfin include tree and protects exact private ABI, three-consumer,
+  and build wiring.
   Local GCC Release focused behavior/workflow/isolation coverage passes `6/6`;
   public-shim and private-Windows-selector mutations fail at exact requirements,
   and Clang 21 ASan/UBSan passes the connector and boundary tests `2/2`.
+  Alternate-suffix public leakage and a fourth private-shim consumer are also
+  rejected by the tree-wide scan and closed consumer count.
