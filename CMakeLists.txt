@@ -243,6 +243,7 @@ target_link_libraries(cf_package_trust PRIVATE cf_licensing)
 
 add_library(cf_platform_profile
     src/platform/bounded_process.cpp
+    src/platform/printer.cpp
     src/platform/polyglot_benchmark.cpp
     src/platform/database_model.cpp
     src/platform/extensibility_model.cpp
@@ -530,10 +531,12 @@ target_link_libraries(cf_xbase_runtime
         cf_design_model
     PRIVATE
         cf_localization
+        cf_platform_profile
         cf_security
 )
 
 if(WIN32)
+    target_link_libraries(cf_platform_profile PRIVATE winspool)
     target_sources(cf_xbase_runtime PRIVATE
         src/runtime/dispatch_exception_info.cpp
         src/runtime/managed_declared_call.cpp

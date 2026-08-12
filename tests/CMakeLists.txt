@@ -4914,6 +4914,13 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_native_declared_call_boundary_contract_check.cmake
 )
 
+add_test(
+    NAME test_printer_shell_boundary_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_printer_shell_boundary_contract_check.cmake
+)
+
 add_executable(test_platform_environment
     test_platform_environment.cpp
 )

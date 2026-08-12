@@ -1,5 +1,18 @@
 # Agent Handoff
 
+## V1 APRINTERS shell/printing boundary
+
+The current J1 slice replaces APRINTERS' `_popen`/`popen` command strings with
+`copperfin::platform::enumerate_printer_names()`. Windows privately uses
+`EnumPrintersW`; POSIX directly launches an absolute `lpstat` path through the
+bounded-process facility. The public boundary is standard C++, no command shell
+or redirection syntax remains, and an embedding host can inject deterministic
+printer names. `docs/57-portable-printer-shell-boundary.md` records the scope.
+
+Local GCC Release builds the affected runtime and passes APRINTERS, bounded
+process, boundary, GitHub Actions, and native-platform workflow coverage `5/5`.
+Hosted Windows/Ubuntu/macOS evidence and independent review remain pending.
+
 ## V1 native DECLARE invocation boundary
 
 The current J1 slice moves native `DECLARE` ABI storage, pointer formation,

@@ -7541,3 +7541,11 @@ passes `1/1`.
   compile passes, and two native-token mutations prove the source boundary is
   load-bearing. Native-call marshaling, OLE/COM, shell, printing, and J2/J3
   ports remain separate.
+- 2026-08-12: Continued v1 portability lane J1 by replacing APRINTERS' `_popen`/
+  `popen` command-shell discovery with a portable printer API. Windows now uses
+  private Unicode spooler enumeration; POSIX resolves `lpstat` and invokes it
+  directly through the bounded-process facility with fixed resource limits and
+  no ambient environment. Deterministic injected enumeration and no-printer
+  fallback remain covered, and a hosted source contract prevents shell/native
+  mechanics from returning to the interpreter boundary. Local GCC Release
+  focused and adjacent coverage passes `5/5`.

@@ -8,6 +8,7 @@
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/printer.h"
 #include "localized_text.h"
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
