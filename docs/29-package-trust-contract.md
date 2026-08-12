@@ -106,10 +106,10 @@ The signing/guard job is bound to the fixed GitHub Actions environment
 `release`; the environment name is not a dispatch input or expression. Before
 any protected run, a repository administrator must:
 
-1. create the `release` environment and configure one or more required
-   reviewers;
-2. enable prevention of self-review so the dispatcher cannot approve the same
-   run;
+1. create the `release` environment and, when a second trusted maintainer is
+   available, configure one or more required reviewers;
+2. enable prevention of self-review whenever an independent reviewer is
+   configured;
 3. restrict deployment branches to `main`;
 4. create environment-scoped
    `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` and
@@ -117,13 +117,18 @@ any protected run, a repository administrator must:
 5. confirm the same secret names are not being supplied as repository-level
    substitutes for the release ceremony.
 
-An environment that is absent, has no required reviewer, permits self-review,
-or admits branches other than `main` is not protected release evidence. The
-job must remain pending until the configured reviewer approves it, and secret
-material must not become available to the runner before that approval. The
-repository intentionally does not create the environment, select its reviewer,
-or provision its secrets in source control; those are external #4409 release
-authority.
+For a single-owner repository with no second trusted maintainer, the recorded
+owner-only manual dispatch, fixed workflow/environment binding, `main`-only
+deployment policy, environment-scoped secrets, and absence of other write
+access form the available release-authority boundary; claiming independent
+approval in that topology would be false. When another trusted maintainer is
+admitted, required independent review and prevention of self-review become
+mandatory before a later official release. An environment that is absent or
+admits branches other than `main` is not protected release evidence. When a
+reviewer is configured, the job must remain pending until that reviewer
+approves it, and secret material must not become available before approval.
+The repository intentionally does not provision secret contents in source
+control; those remain external #4409 release authority.
 
 The protected job derives a canonical `app.cftrust` from an exact finalized
 fixture inventory, signs it with the external key reference through the native
@@ -137,6 +142,9 @@ are uploaded. This workflow path is implemented under
 #4894 and its fixed release-environment binding is enforced under #4895, but it
 is release evidence only after an externally approved registry and key execute
 it successfully through the configured environment approval.
+In the documented single-owner exception, an explicit owner dispatch replaces
+the unavailable independent environment approval and must be disclosed in the
+validation evidence and release limitations.
 
 ## Platform Policy
 

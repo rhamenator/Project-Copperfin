@@ -53,10 +53,13 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   by this implementation slice.
 - Security audit child `#4895` binds the manual signer/guard job to the fixed
   GitHub Actions `release` environment and locks that invariant in the workflow
-  contract. Required reviewers, prevention of self-review, `main` branch
-  restriction, environment-scoped approved secrets, and the actual approved
-  run remain external #4409 configuration/evidence rather than repository
-  implementation. Independent review found and correction head `0a8a43080`
+  contract. Independent reviewers and prevention of self-review remain
+  mandatory when a second trusted maintainer is available; the current
+  single-owner topology instead requires an explicit recorded owner dispatch,
+  `main` branch restriction, environment-scoped approved secrets, and honest
+  disclosure that no independent approval occurred. Those authority steps and
+  the actual approved run remain external #4409 configuration/evidence rather
+  than repository implementation. Independent review found and correction head `0a8a43080`
   closes the missing exact `contents: read` regression guard; the same reviewer
   passes the corrected slice. That exact corrected head passes hosted
   Linux/macOS Native `316/316` and Windows Native `315/315`; each explicitly
@@ -65,6 +68,14 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   DECLARE ABI gates pass; corrected-head permissive safety run `30566915484`
   also passes. #4895 is closed, and strict post-closure safety run `30568877447`
   passes; #4409 remains open for external release authority.
+- The first live protected run `31623671192` proved the external signer/registry
+  binding, enforced Windows build, and package-trust verifier, then executed
+  the valid launch and all seven negative guard cases. The workflow still
+  failed because its PowerShell orchestrator leaked the final expected guard
+  exit code `4` into GitHub's step wrapper, which skipped evidence upload. The
+  correction clears only that expected process state after assertions,
+  evidence writing, and cleanup; a successful protected rerun and new
+  immutable RC remain required.
 - RC regression `#4893` removes the separate net472 fixture's nested shell and
   cold-child readiness races. Owning parents record helper PIDs immediately
   from `Process.Start`; native Windows stress passes `9/9`, exact VSIX
