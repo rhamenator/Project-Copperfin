@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## V1 native DECLARE invocation boundary
+
+The current J1 slice moves native `DECLARE` ABI storage, pointer formation,
+Win32/x64 call dispatch, and by-reference value extraction behind
+`native_declared_call.h`. The interpreter now exchanges portable typed
+arguments/results and applies copied writeback values; Windows `VARIANTARG`,
+`VARTYPE`, `CALLCONV`, `HRESULT`, `DispCallFunc`, and the x64 typed dispatcher
+remain private to the Windows implementation. Existing argument limits,
+calling conventions, type widths, exact 64-bit values, strings, floating-point
+slots, failure diagnostics, and writeback behavior are intended unchanged. See
+`docs/56-native-declare-invocation-boundary.md`.
+
+Local GCC Release builds the affected runtime and focused targets. The new
+boundary contract, adjacent loader contract, native-DECLARE-adjacent test,
+parser test, and broad runtime-surface test pass `5/5`; a standalone Linux
+translation unit compiles the portable header. The contract is scheduled on
+Windows, Ubuntu, and macOS and beside real Win32/x64 native/managed DECLARE
+fixtures. Direct Windows evidence and independent review remain pending.
+
 ## V1 native DECLARE loader boundary
 
 The current J1 slice moves Windows native `DECLARE` module search, export

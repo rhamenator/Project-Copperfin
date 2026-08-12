@@ -494,7 +494,6 @@ add_library(cf_xbase_runtime
     src/runtime/prg_engine_string_functions.cpp
     src/runtime/prg_engine_table_structure_helpers.cpp
     src/runtime/prg_engine_type_functions.cpp
-    src/runtime/win64_native_call.cpp
     src/runtime/xasset_methods.cpp
 )
 
@@ -539,7 +538,9 @@ if(WIN32)
         src/runtime/dispatch_exception_info.cpp
         src/runtime/managed_declared_call.cpp
         src/runtime/managed_pe_image.cpp
+        src/runtime/native_declared_call.cpp
         src/runtime/native_declared_library.cpp
+        src/runtime/win64_native_call.cpp
     )
     target_link_libraries(cf_xbase_runtime PRIVATE oleaut32)
     if(COPPERFIN_BUILD_TESTS)

@@ -1,3 +1,17 @@
+- 2026-08-12: Continued v1 portability lane J1 by moving native `DECLARE`
+  argument backing storage, raw pointer formation, Windows Automation dispatch,
+  x64 typed invocation, return extraction, and by-reference result copying
+  behind a portable typed request/result contract. The interpreter no longer
+  constructs `VARIANTARG`/`VARTYPE` records or selects Windows calling
+  conventions, while established Win32/x64 type widths, strings, floating
+  slots, cdecl/stdcall behavior, exact 64-bit values, argument limits,
+  diagnostics, and successful-call writeback are intended unchanged. A source
+  contract runs on all three hosted platforms and beside the real Win32/x64
+  DECLARE fixtures. Local GCC Release focused and adjacent coverage passes
+  `5/5`, and a standalone Linux compile accepts the portable header. Hosted
+  Windows execution and independent review remain pending; OLE/COM, shell,
+  printing, and J2/J3 ports remain separate.
+
 - 2026-08-12: Continued v1 portability lane J1 by moving Windows native
   `DECLARE` module search, export resolution, managed-PE classification,
   diagnostics, and module lifetime behind a standard-C++ internal boundary.

@@ -104,6 +104,7 @@ classDiagram
     class cf_xbase_runtime {
         +prg_engine_dispatch_flow_expression_records_cursor_arrays_variables_session_sql_aggregate_dll
         +portable_scalar_contract_to_private_windows_clr_host
+        +portable_typed_contract_to_private_windows_native_call
         +index_seek_optimizer
         +xasset_methods
         +vfp_builtin_function_families
@@ -261,9 +262,11 @@ Ground-truth diagram:
   `mscorlib` types are confined to the private Windows implementation.
 - Native `DECLARE` remains Windows-only, but module search, decorated export
   resolution, managed-PE classification, and module lifetime now cross a
-  portable opaque-identity/result boundary. Windows loader handles and APIs
-  remain private to `native_declared_library.cpp`; native-call marshaling is a
-  separate remaining seam.
+  portable opaque-identity/result boundary, while typed arguments, return
+  values, and copied by-reference updates cross a second portable contract.
+  Windows loader APIs remain private to `native_declared_library.cpp`; ABI
+  storage, pointer formation, Automation dispatch, and x64 typed calls remain
+  private to `native_declared_call.cpp` and `win64_native_call.cpp`.
 - `cf_security` and `cf_platform_profile` are siblings consumed identically by `copperfin_studio_host` and `copperfin_runtime_host`.
 - Every native library depends on `cf_localization` (and therefore `cf_platform_support`) except the two deliberately independent bases: `cf_licensing` and `cf_platform_support` itself. This reflects the hard localization-catalog requirement — though actual call-site adoption outside these wired libraries is still thin.
 
