@@ -38,6 +38,10 @@ matrix row.
 - Silent uninstall must remove the installation root and the registration whose
   install location exactly matches that root. The verifier does not alter other
   installations or registrations.
+- Registry inventory is heterogeneous: unrelated uninstall entries may omit
+  `InstallLocation`. Optional values are read through the PowerShell property
+  collection so strict mode treats absence as a non-match rather than aborting
+  before the Copperfin installer runs.
 
 Potential severity is **high** because false lifecycle evidence could admit an
 installer that cannot be safely deployed or removed. No user project, legacy

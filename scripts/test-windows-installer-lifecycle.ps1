@@ -97,6 +97,21 @@ function Get-InstalledSnapshot {
     return $snapshot
 }
 
+function Get-OptionalPropertyValue {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$InputObject,
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+    $property = $InputObject.PSObject.Properties[$Name]
+    if ($null -eq $property) {
+        return $null
+    }
+    return $property.Value
+}
+
 function Get-CopperfinUninstallEntries {
     param([Parameter(Mandatory = $true)][string]$ExpectedInstallRoot)
 
@@ -109,7 +124,8 @@ function Get-CopperfinUninstallEntries {
     return @(
         foreach ($registryRoot in $registryRoots) {
             Get-ItemProperty -Path $registryRoot -ErrorAction SilentlyContinue | Where-Object {
-                $location = if ($null -eq $_.InstallLocation) { '' } else { [string]$_.InstallLocation }
+                $installLocation = Get-OptionalPropertyValue -InputObject $_ -Name 'InstallLocation'
+                $location = if ($null -eq $installLocation) { '' } else { [string]$installLocation }
                 $normalizedLocation = $location.Trim('"').TrimEnd('\')
                 if ([string]::IsNullOrWhiteSpace($normalizedLocation)) {
                     return $false

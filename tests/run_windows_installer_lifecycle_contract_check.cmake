@@ -48,6 +48,10 @@ require_text("${script}" "@('--locale', 'en-US', '--help')" "installed executabl
 require_text("${script}" "same-version maintenance reinstall" "maintenance reinstall execution")
 require_text("${script}" "upgrade_from_previous_version = 'NOT_RUN'" "honest upgrade limitation")
 require_text("${script}" "Get-CopperfinUninstallEntries" "uninstall-registration inspection")
+require_text("${script}" "PSObject.Properties[$Name]" "strict-mode-safe optional registry property lookup")
+require_text("${script}" "Get-OptionalPropertyValue -InputObject $_ -Name 'InstallLocation'"
+    "optional InstallLocation lookup")
+forbid_text("${script}" "$_.InstallLocation" "strict-mode-unsafe optional registry property access")
 require_text("${script}" "Silent uninstall left installation-root residue" "filesystem residue failure")
 require_text("${script}" "Silent uninstall left an uninstall registration" "registry residue failure")
 require_text("${script}" "windows-installer-lifecycle.json" "machine-readable retained evidence")
