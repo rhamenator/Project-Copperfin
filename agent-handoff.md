@@ -8,8 +8,11 @@ reported `LNK2019`/`LNK1120`: the standalone
 Unicode-path assertion but did not link `cf_platform_support`. The target now
 declares that dependency, passes its focused GCC Release build/execution `1/1`,
 and is included in the focused Windows environment/path workflow. Product
-shell-command and path behavior are unchanged; exact-head Windows evidence is
-required before merge. See `docs/50-portable-public-path-boundary.md`.
+shell-command and path behavior are unchanged. Exact signed/DCO implementation
+head `0221329d2` passes all eleven protected checks; focused Windows run
+`31665231456` directly builds the corrected target and passes it inside the
+`12/12` selection. The remaining protected run IDs and review disposition are
+recorded in `docs/50-portable-public-path-boundary.md`.
 
 ## V1 workspace-agent authority policy
 

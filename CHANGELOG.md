@@ -4,7 +4,9 @@
   `cf_platform_support`, and the focused Windows environment/path workflow
   builds and runs it directly. This is test/workflow wiring only; product and
   VFP9 behavior are unchanged. See
-  `docs/50-portable-public-path-boundary.md`.
+  `docs/50-portable-public-path-boundary.md`. Exact implementation head
+  `0221329d2` passes the complete protected matrix, including the corrected
+  target inside Windows focused run `31665231456` (`12/12`).
 
 - 2026-08-12: Made Copperfin's DO-178C-inspired development-assurance
   discipline an explicit project-wide quality baseline without claiming
