@@ -1,20 +1,46 @@
-# Recovered Requirements Traceability
+# Requirements And Verification Traceability
 
 ## Purpose
 
-This document is the durable low-level requirement (LLR) to code to test matrix
-for requirements recovered after implementation. It implements the Requirements
-Recovery Principle in `docs/01-product-charter.md` without treating Copperfin's
-existing behavior as its own requirement source.
+This document is the durable bidirectional requirements-to-architecture-to-code-
+to-verification matrix. It implements the Requirements Recovery Principle in
+`docs/01-product-charter.md` without treating Copperfin's existing behavior as
+its own requirement source. The historical filename remains stable because
+recovered compatibility requirements are one important subset of this matrix.
 
 Allowed requirement evidence is limited to observed behavior from a real,
-installed VFP9 environment, shipped Microsoft/VFP documentation, and registered
-known-bug or crash exceptions in `docs/27-known-vfp9-bug-exceptions.md`.
+installed VFP9 environment, shipped Microsoft/VFP documentation, explicit
+repository-owner product policy, and registered known-bug or crash exceptions
+in `docs/27-known-vfp9-bug-exceptions.md`.
 Decompiled or disassembled VFP binaries are prohibited inputs under
 `docs/07-clean-room-rules.md`.
 
+Existing Copperfin implementation and tests may confirm or contradict a
+requirement, but may not originate one. A derived requirement must identify its
+parent product requirement or hazard. When allowed evidence and implementation
+disagree, use `gap` or `exception`; never rewrite the requirement to describe
+whatever the code happens to do.
+
+## Assurance Boundary
+
+Copperfin's DO-178C-inspired discipline is adapted to a general-purpose
+C++/.NET platform. This matrix is not evidence of formal DO-178C compliance,
+an assigned software level, certification, or suitability for a particular
+safety-critical use. Integrators retain the responsibilities stated in the
+product charter.
+
+Every behavior-changing slice must add or cite a governing row and preserve
+both directions of traceability. Higher-hazard or broader-reach work must also
+record misuse and boundary analysis, rollback, applicable `HZ-*` controls,
+focused and broader verification, retained results, and release-evidence
+disposition. Unknown relationships remain explicit gaps rather than inferred
+coverage.
+
 ## Status Values
 
+- `defined`: an explicit owner product requirement or a derived requirement has
+  its allowed source/parent plus mapped architecture, code, tests, and retained
+  verification evidence.
 - `recovered`: the requirement has allowed source evidence and mapped code and
   test evidence.
 - `gap`: allowed source evidence exists, but code or test evidence is missing or
@@ -23,7 +49,13 @@ Decompiled or disassembled VFP binaries are prohibited inputs under
 - `exception`: the behavior is intentionally different and has an applied
   `KBX-*` entry in `docs/27-known-vfp9-bug-exceptions.md`.
 
-## Traceability Matrix
+## Product And Derived Requirements Matrix
+
+| Requirement ID | Parent / allowed source | Testable requirement | Architecture / code | Focused and broader verification | Retained result | Exceptions / hazards | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `RQ-CF-AGENT-001` | Explicit repository-owner product policy; `docs/01-product-charter.md` security-first decision driver | Provider authentication shall not grant local workspace authority. Agent modes shall expose only their exact declared capabilities; unknown modes shall fail closed. Unrestricted local authority shall require explicit feature opt-in, nondefault native permission, trusted product UI, available content-free audit, the exact current warning, and affirmative consent, and shall never elevate privileges. | `docs/64-workspace-agent-access-policy.md`; `include/copperfin/security/workspace_agent_policy.h`; `src/security/workspace_agent_policy.cpp`; `src/security/security_model.cpp`; localization catalogs | `tests/test_workspace_agent_policy.cpp`; broader native policy/platform/localization/isolation selection; Windows, Ubuntu, and macOS protected native execution | `docs/safety/traceability-report-2026-08-12-workspace-agent-access-policy.md` records focused, mutation, sanitizer, review, and protected exact-head evidence | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01`; mutable executor, real sandbox, provider adapter, session revocation, and activation UI remain explicit implementation gaps | `defined` |
+
+## Recovered Compatibility Requirements Matrix
 
 | LLR ID | Recovered low-level requirement | Allowed source evidence | Code | Tests | Verification | Status | Issue |
 | --- | --- | --- | --- | --- | --- | --- | --- |

@@ -2,6 +2,13 @@
 
 ## V1 workspace-agent authority policy
 
+The project-wide DO-178C-inspired assurance baseline is now continuous and
+explicitly non-certifying. `RQ-CF-AGENT-001` maps the owner-authorized agent
+security policy through architecture/code, focused and broader verification,
+retained exact-head results, hazards, limitations, and reverse links. Existing
+Copperfin behavior is no longer an allowed requirement source in the issue/PR
+workflow.
+
 The current H3/I2 slice defines provider-independent `advisory`,
 `workspace_sandbox`, and `unrestricted_local` modes in `cf_security`. Mode
 names round-trip through one strict parser that rejects aliases and unknown

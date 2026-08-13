@@ -1,5 +1,9 @@
 # Workspace-Agent Access Policy
 
+Governing product/derived requirement: `RQ-CF-AGENT-001` in
+`docs/32-recovered-requirements-traceability.md`. The public header and focused
+policy test carry the reverse link back to that requirement.
+
 Copperfin's built-in coding assistant is intended to progress from advisory
 help to useful workspace editing and process execution. Provider authentication
 and local machine authority are separate decisions: signing in to a model

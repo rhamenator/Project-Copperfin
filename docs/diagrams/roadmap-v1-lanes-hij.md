@@ -45,7 +45,7 @@ flowchart TB
         J1 --> J3
       end
 
-      TRACE["Requirements-to-code-to-test<br/>traceability matrix<br/>(v1 item 6) - no lettered root;<br/>standing deferred goal"]
+      TRACE["Bidirectional requirements/<br/>architecture/code/test/results<br/>traceability baseline<br/>(v1 item 6) - continuous"]
     end
 
     MVP --> CONT1
@@ -64,7 +64,7 @@ flowchart TB
     class H1,H3,I1,I2,J1 partial;
     class H2 planned;
     class J2,J3 planned;
-    class TRACE planned;
+    class TRACE partial;
     class V1,LANEH,LANEI,LANEJ lane;
 ```
 

@@ -108,15 +108,53 @@ This is a product requirement, not an optimization detail.
 
 ## Requirements Recovery Principle
 
-Copperfin did not begin with a complete up-front requirements set, so a later requirements-recovery pass is a product-quality goal rather than an optional documentation exercise.
+Copperfin did not begin with a complete up-front requirements set. The project
+therefore uses DO-178C-inspired development-assurance discipline, adapted to a
+general-purpose C++/.NET platform, as its quality baseline. This is not a claim
+of formal avionics certification, DO-178C compliance, an assigned software
+level, or suitability for any particular safety-critical deployment.
 
-The intended output is a DO-178-style traceability matrix that links recovered low-level requirements to code and tests. Recovered requirements must be derived from:
+Requirements recovery and bidirectional traceability are continuous,
+load-bearing work rather than a later documentation pass. The durable matrix
+must connect product and compatibility requirements, recovered high- and
+low-level requirements, derived requirements and safety constraints,
+architecture and implementing code, focused and broader tests, retained
+verification results, known-bug/crash exceptions, hazards and mitigations, and
+release evidence. Every behavior-changing slice must identify its governing
+requirement or record a properly evidenced recovery gap; code and tests alone
+do not establish that the intended behavior is known.
+
+Recovered requirements must be derived only from:
 
 - observed behavior from a real installed VFP9 environment
 - shipped Microsoft/VFP documentation
-- Copperfin's documented compatibility exceptions for known VFP9 bugs and crash cases
+- explicit repository-owner product policy
+- Copperfin's registered compatibility exceptions for known VFP9 bugs and crash cases
 
-Recovered requirements must not be derived from decompiled VFP binaries or other restricted clean-room inputs. The compatibility fidelity rule above remains the source of truth for deciding when an observed edge case is a requirement, a known-bug exception, or a non-crash safety fallback.
+Existing Copperfin implementation or behavior is verification evidence only;
+it must never be used as its own requirement source. Derived requirements must
+identify their parent product requirement or hazard. Recovered requirements
+must not be derived from decompiled VFP binaries or other restricted clean-room
+inputs. When code and allowed evidence disagree, record a gap or exception
+instead of changing the requirement to rationalize the code. The compatibility
+fidelity rule above remains the source of truth for deciding when an observed
+edge case is a requirement, a known-bug exception, or a non-crash safety
+fallback.
+
+Assurance rigor is proportional to hazard and reach. Data corruption, runtime
+containment, security boundaries, package trust, debugger or recovery behavior,
+concurrency, external processes, generated code, and plausible use in
+safety-significant or large-population systems require explicit hazard, misuse,
+boundary, rollback, and verification analysis. Release evidence must identify
+the applicable requirements and retained verification results and must disclose
+unresolved traceability gaps or exceptions.
+
+A future integrator remains responsible for its system safety assessment,
+assurance level, target-specific requirements, independent verification, tool
+qualification where applicable, configuration control, operational environment,
+and domain certification. Copperfin documentation must not claim that the
+project is certified, automatically certifiable, or safe for a specific
+safety-critical deployment.
 
 ## Success Criteria
 

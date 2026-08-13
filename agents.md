@@ -16,9 +16,46 @@ Use these sources in order:
 
 `remaining-work.md` is intentionally deprecated as an active planning source. `issues.txt` is a local snapshot only; never use it instead of live GitHub state.
 
-## Standing Goal: Requirements Recovery
+## Quality Baseline And Requirements Recovery
 
-Eventual goal, restated here because it keeps getting dropped from condensed guidance: build a DO-178-style LLR <-> code <-> test traceability matrix via requirements recovery, since Copperfin's requirements were never written before its code. See `docs/01-product-charter.md` (Compatibility Fidelity Rule) and `docs/27-known-vfp9-bug-exceptions.md` (bug/crash exception registry). A recovered requirement must validate against real installed VFP9 or shipped docs only, never decompiled binaries (`docs/07-clean-room-rules.md`). Select this subgoal when its evidence, dependencies, or release impact make it the highest-value unfinished work; do not let it block a more important MVP acceptance gap.
+Copperfin uses DO-178C-inspired development-assurance discipline adapted to a
+general-purpose C++/.NET platform. This is a project quality baseline, not a
+claim of avionics certification, DO-178C compliance, an assigned software
+level, or suitability for a safety-critical deployment. A future integrator
+remains responsible for its system safety assessment, target requirements,
+independent verification, tool qualification where applicable, configuration
+control, operating environment, and domain certification.
+
+Requirements recovery and bidirectional traceability are load-bearing work in
+every behavior-changing slice, not a later documentation pass. Before calling
+behavior complete:
+
+1. identify the governing product, compatibility, recovered, or derived
+   requirement, or record an evidenced recovery gap;
+2. map the requirement to architecture and implementing code;
+3. map focused and broader verification plus retained results back to the
+   requirement;
+4. preserve reverse links from changed code and tests to the governing
+   requirement; and
+5. link applicable `KBX-*` exceptions and `HZ-*` hazards, mitigations, residual
+   limitations, and release evidence.
+
+Existing Copperfin code or behavior is verification evidence only; it is never
+its own requirement source. Recover requirements only from observed behavior
+in a real installed VFP9 environment, shipped Microsoft/VFP documentation,
+explicit repository-owner product policy, or a registered known-bug/crash
+exception. Derived requirements must name their parent requirement or hazard.
+Never use decompiled binaries (`docs/07-clean-room-rules.md`). When code and
+allowed evidence disagree, record a gap or exception instead of rewriting the
+requirement to rationalize the code. See `docs/01-product-charter.md`,
+`docs/32-recovered-requirements-traceability.md`, and
+`docs/27-known-vfp9-bug-exceptions.md`.
+
+Apply rigor proportionally to reach and hazard. Data corruption, runtime
+containment, security and package-trust boundaries, debugger/recovery behavior,
+concurrency, external processes, generated code, and plausible
+safety-significant or large-population use require explicit hazard, misuse,
+boundary, rollback, and verification analysis.
 
 ## Product And Roadmap Intent
 
@@ -36,6 +73,10 @@ state plus current repo guidance, not from old numbered ledgers.
 - Derive one prompt-sized slice that unblocks the most downstream work within the selected owner-authorized workstream. A separate child issue is optional, not an authorization gate.
 - If a tracking child is useful, keep it within the admitted workstream scope. Do not stop solely to request another `agent-approved` label.
 - Keep implementation narrow, add focused regression coverage, validate, and update durable docs only when behavior or active guidance changes. Use the roadmap for durable workstream structure and progress/handoff files for issue-linked evidence.
+- For every behavior-changing slice, update or cite the durable requirements
+  matrix. Code and tests without a known governing requirement and verification
+  relationship are incomplete; record a `gap` when allowed evidence is not yet
+  sufficient rather than inventing a requirement from the implementation.
 
 ## Issue Hierarchy
 
