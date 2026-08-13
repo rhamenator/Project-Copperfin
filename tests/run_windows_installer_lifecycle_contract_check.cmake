@@ -56,6 +56,7 @@ forbid_text("${script}" "Remove-ItemProperty" "registry deletion")
 forbid_text("${script}" "Remove-Item -Recurse" "recursive cleanup masking installer residue")
 
 require_text("${workflow}" "name: Exercise Windows installer lifecycle" "hosted lifecycle step")
+require_text("${workflow}" "workflow_dispatch:" "manual exact-head validation trigger")
 require_text("${workflow}" "copperfin-*-Windows.exe" "exact NSIS artifact selection")
 require_text("${workflow}" "-InstallerPath $installer[0].FullName" "selected-installer binding")
 require_text("${workflow}" "copperfin-installer-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
