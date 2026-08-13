@@ -88,6 +88,9 @@ bound when the verifier waits synchronously. The corrected sequence starts each
 routing request separately, proves its PID differs from the controlled IDE,
 observes the required pane/document in the controlled IDE PID, and terminates
 any still-attached router only after that independent proof.
+Run `31737231439` did not reach that correction because hosted VSIX installation
+exceeded 300 seconds. The corrected default is 360 seconds, still within the
+validated 30–600 range and still enforcing timed-out process-tree termination.
 
 ## V1 Windows installer lifecycle
 

@@ -193,6 +193,12 @@ to differ from the controlled IDE, observes the pane or exact document in the
 controlled IDE PID, and then terminates any still-attached routing process tree.
 Routing-process lifetime or exit cannot itself admit evidence.
 
+Run `31737231439` did not exercise the concurrency correction because hosted
+VSIX installation exceeded the 300-second bound. The default is widened to 360
+seconds within the existing validated 30–600 range; timed-out process-tree
+termination remains mandatory. This run is installer scheduling diagnostics,
+not command or lifecycle evidence.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

@@ -39,7 +39,7 @@ foreach(path IN ITEMS
 endforeach()
 
 require_text("${script}" "[ValidateRange(30, 600)]" "bounded process timeout")
-require_text("${script}" "ProcessTimeoutSeconds = 300" "hosted installer scheduling allowance")
+require_text("${script}" "ProcessTimeoutSeconds = 360" "hosted installer scheduling allowance")
 require_text("${script}" "ProcessTimeoutSeconds * 1000" "bounded VSIXInstaller wait")
 require_text("${script}" "Kill($true)" "timed-out process-tree termination")
 require_text("${script}" "-requires Microsoft.VisualStudio.Component.CoreEditor" "Visual Studio component selection")

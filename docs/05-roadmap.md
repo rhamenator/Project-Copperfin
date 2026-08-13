@@ -417,6 +417,9 @@ the full process bound. The corrected verifier starts `/Command` and `/Edit` as
 separate routing processes, proves each differs from the controlled IDE,
 observes the pane/document in the controlled IDE PID, and bounds any remaining
 router process tree after independent proof.
+Run `31737231439` did not reach that proof because hosted VSIX installation
+exceeded 300 seconds. The corrected 360-second default remains within the
+validated 30–600 range and retains process-tree termination.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse
