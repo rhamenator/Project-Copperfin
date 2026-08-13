@@ -9,6 +9,8 @@
   enforcement, and user-facing assistant UI remain explicit follow-on work.
   Every allow or denial requires an audit outcome, including feature-disabled
   attempts, so disabling authority cannot also disable observability.
+  Corrected exact head `4c4014f94` passes all eleven protected checks after the
+  audit finding was fixed and independently rereviewed.
   See `docs/64-workspace-agent-access-policy.md`.
 
 - 2026-08-12: Continued v1 portability lane J1 by moving `AFONT()`'s ordered

@@ -19,6 +19,12 @@ sandbox/audit commits, provider/OAuth adapters, and the assistant UI remain
 open. A deliberate stale-warning admission mutation fails at the intended
 assertion and is restored. See `docs/64-workspace-agent-access-policy.md` and its safety
 traceability report.
+Corrected implementation head `4c4014f94` passes all eleven protected checks:
+Generated Launcher `31660946596` on Windows/Ubuntu/macOS, Win32/x64 DECLARE
+`31660946655`, Windows environment/path `31660946599`, GCC/Clang executable
+path `31660946592`, DCO `31660945231`, and both Socket checks. Automated review's
+feature-disabled audit finding is corrected/resolved; a current-head rereview
+found no further major issue.
 
 ## V1 portable AFONT host roots
 

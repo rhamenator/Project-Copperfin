@@ -68,11 +68,31 @@ The deterministic test walkthrough covers these credible mistakes:
 
 ### DV-V1-workspace-agent-independent-review
 
-Independent read-only review is required before merge because the warning is a
-high-impact security control. The review must assess mode capabilities, RBAC
-defaults, warning completeness, fail-closed ordering, localization, and the
-accuracy of the explicit remaining-work statement. Exact review and hosted
-evidence will be recorded here before closure.
+The GitHub independent automated reviewer first found a real observability gap:
+feature-disabled denials did not require an audit outcome. Corrected exact head
+`4c4014f94` makes every decision require auditing, adds a direct regression,
+and resolves that thread. A fresh review explicitly targeting that corrected
+head found no further major issue. A separate coordination-channel review was
+also requested, but no response was made an acknowledgment or merge deadlock.
+The direct capability, RBAC, warning, fail-closed, localization, mutation, and
+remaining-work evidence above therefore remains load-bearing rather than being
+replaced by the automated verdict.
+
+### Protected exact-head matrix
+
+Corrected signed/DCO head `4c4014f94` passes all eleven protected checks:
+
+- Generated Launcher Validation `31660946596` passes on Windows, Ubuntu, and
+  macOS;
+- Windows DECLARE ABI Validation `31660946655` passes Win32 and x64;
+- Windows environment/path validation `31660946599` passes;
+- GCC/Clang executable-path validation `31660946592` passes;
+- DCO run `31660945231` and both Socket checks pass.
+
+The generated-launcher jobs include the portable policy regression through the
+native suite on all three hosts. This slice does not claim that those unrelated
+workflow names constitute execution of the still-unimplemented agent UI or
+executor.
 
 ## Severity, Rollback, And Notification
 

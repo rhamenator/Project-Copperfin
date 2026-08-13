@@ -73,6 +73,10 @@ causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.
 The policy test also passes under Clang ASan/UBSan with leak detection and no
 findings.
+Corrected signed/DCO head `4c4014f94` passes all eleven protected checks,
+including native execution on Windows, Ubuntu, and macOS. Exact run identifiers
+and the corrected independent-review record are in the safety traceability
+report.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
 session indicator, or the WinForms dialog that must render the warning.
