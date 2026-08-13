@@ -7823,3 +7823,16 @@ passes `1/1`.
   Validation pass; the latter builds the VSIX and executes all strict managed
   smoke cases. This remains read-only and adds no activation or execution
   authority.
+- 2026-08-13: Corrected the private RC validation manifest so package creation
+  cannot be mistaken for installer or Visual Studio extension lifecycle
+  evidence. Schema v2 is bundled beside each manifest, uses the closed
+  uppercase release-evidence vocabulary, and records artifact build/static
+  checks separately from install/launch/upgrade/uninstall execution. Signing,
+  qualified linguistic review, and real installed-VFP9 evidence are also
+  separate machine fields. Unperformed lifecycle and external evidence remain
+  `NOT_RUN` or `UNSUPPORTED_AND_DISCLOSED`; existing immutable RC1/RC2 bundles
+  are not rewritten. The producer now validates each output against the exact
+  bundled Draft 2020-12 schema, rejects malformed workflow URLs without
+  optional format assertions, and preserves reverse RQ/DQ/DV/hazard links in
+  every mapped artifact. See `docs/35-rc1-evaluation-guide.md` and
+  `docs/safety/traceability-report-2026-08-13-rc-evidence-truth.md`.

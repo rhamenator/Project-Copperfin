@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 RC evidence truthfulness
+
+The current bounded release-evidence slice replaces the private-candidate
+manifest's ambiguous installer/VSIX `passed` values with a bundled
+schema-versioned contract and the closed uppercase evidence vocabulary. Build
+and static checks remain `PASS`; actual installer and VSIX lifecycle execution,
+protected launcher trust in this workflow, qualified Spanish/Portuguese review,
+and real installed-VFP9 evidence remain `NOT_RUN`. Platform-signing gaps are
+`UNSUPPORTED_AND_DISCLOSED`. The assembler validates every produced manifest
+against the exact bundled Draft 2020-12 schema with a dependency-free,
+fail-closed vocabulary implementation. Its self-test proves the exact mapping,
+rejects retention of the old ambiguous keys, missing governing fields, and
+malformed workflow URLs, and verifies that the bundled schema bytes match the
+tagged repository. Reverse `RQ-CF-REL-001`/DQ/DV/hazard identifiers are anchored
+in the producer, schema, workflow, guide, and focused contract.
+`RQ-CF-REL-001` remains a `gap` until
+exact-head hosted execution and review are retained. Existing immutable RC1
+and RC2 artifacts are unchanged; a new sequential candidate is required for
+this visible/machine-contract correction.
+
 ## V1 Studio install-contract MCP fixture
 
 Windows Deep Validation at managed-policy head `387dae521` built the complete

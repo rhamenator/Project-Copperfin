@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:copperfin:schema:rc-validation-manifest:2",
+  "$comment": "Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation; DV-rc-evidence-v2-schema-validation; HZ-system-failure-01; HZ-doc-command-01.",
+  "title": "Copperfin private evaluation release-candidate validation manifest v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "schema",
+    "kind",
+    "candidate_tag",
+    "revision",
+    "repository",
+    "official_release",
+    "workflow_run",
+    "validation",
+    "signing",
+    "localization",
+    "compatibility",
+    "limitations",
+    "files"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "schema": { "const": "rc-validation-manifest.schema.json" },
+    "kind": { "const": "copperfin-private-evaluation-release-candidate" },
+    "candidate_tag": {
+      "type": "string",
+      "pattern": "^v0\\.1\\.0-rc\\.[1-9][0-9]*$"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "repository": {
+      "type": "string",
+      "minLength": 1
+    },
+    "official_release": { "const": false },
+    "workflow_run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "attempt", "url"],
+      "properties": {
+        "id": { "type": "integer", "minimum": 1 },
+        "attempt": { "type": "integer", "minimum": 1 },
+        "url": {
+          "type": "string",
+          "pattern": "^(?![\\s\\S]*[\\r\\n\\u2028\\u2029])https://[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*(?::[1-9][0-9]{0,4})?/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[1-9][0-9]*$"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exact_tag_and_revision",
+        "native_release_readiness",
+        "managed_ui_build_and_smoke",
+        "installer_artifact_build_and_static_checks",
+        "installer_lifecycle",
+        "visual_studio_vsix_build_and_static_checks",
+        "visual_studio_vsix_lifecycle",
+        "security_and_sbom"
+      ],
+      "properties": {
+        "exact_tag_and_revision": { "const": "PASS" },
+        "native_release_readiness": { "const": "PASS" },
+        "managed_ui_build_and_smoke": { "const": "PASS" },
+        "installer_artifact_build_and_static_checks": { "const": "PASS" },
+        "installer_lifecycle": { "const": "NOT_RUN" },
+        "visual_studio_vsix_build_and_static_checks": { "const": "PASS" },
+        "visual_studio_vsix_lifecycle": { "const": "NOT_RUN" },
+        "security_and_sbom": { "const": "PASS" }
+      }
+    },
+    "signing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "windows_launcher_release_trust",
+        "windows_authenticode",
+        "visual_studio_vsix",
+        "macos_developer_id_and_notarization",
+        "linux_package_repository"
+      ],
+      "properties": {
+        "windows_launcher_release_trust": { "const": "NOT_RUN" },
+        "windows_authenticode": { "const": "UNSUPPORTED_AND_DISCLOSED" },
+        "visual_studio_vsix": { "const": "UNSUPPORTED_AND_DISCLOSED" },
+        "macos_developer_id_and_notarization": { "const": "UNSUPPORTED_AND_DISCLOSED" },
+        "linux_package_repository": { "const": "UNSUPPORTED_AND_DISCLOSED" }
+      }
+    },
+    "localization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "catalog_structure_and_routing_checks",
+        "spanish_portuguese_linguistic_review"
+      ],
+      "properties": {
+        "catalog_structure_and_routing_checks": { "const": "PASS" },
+        "spanish_portuguese_linguistic_review": { "const": "NOT_RUN" }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "real_installed_vfp9_samples"
+      ],
+      "properties": {
+        "real_installed_vfp9_samples": { "const": "NOT_RUN" }
+      }
+    },
+    "limitations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["translations", "workflow_artifact_retention_days"],
+      "properties": {
+        "translations": { "type": "string" },
+        "workflow_artifact_retention_days": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "size_bytes"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "size_bytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "NOT_RUN",
+        "BLOCKED_EXTERNAL",
+        "UNSUPPORTED_AND_DISCLOSED",
+        "NOT_APPLICABLE"
+      ]
+    }
+  }
+}

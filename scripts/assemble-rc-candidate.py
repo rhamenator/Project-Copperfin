@@ -3,7 +3,12 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
-"""Assemble and verify an immutable Copperfin RC evaluation bundle."""
+"""Assemble and verify an immutable Copperfin RC evaluation bundle.
+
+Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation;
+DV-rc-evidence-v2-assembly-self-test; DV-rc-evidence-v2-schema-validation;
+HZ-system-failure-01; HZ-doc-command-01.
+"""
 
 from __future__ import annotations
 
@@ -23,6 +28,7 @@ from typing import BinaryIO
 CANDIDATE_TAG_PATTERN = re.compile(r"v0\.1\.0-rc\.[1-9][0-9]*\Z")
 RETENTION_DAYS = 90
 SOURCE_PREFIX = "Project-Copperfin-source-"
+VALIDATION_MANIFEST_SCHEMA = "rc-validation-manifest.schema.json"
 SCAN_BLOCK_SIZE = 1024 * 1024
 # Construct the boundaries so this scanner's own source does not contain a
 # complete private-key sentinel and falsely reject the Corresponding Source
@@ -158,6 +164,140 @@ def relative_file_records(bundle_root: Path) -> list[dict[str, object]]:
     return records
 
 
+def _json_values_equal(left: object, right: object) -> bool:
+    """Compare JSON values without treating booleans as integers."""
+    return type(left) is type(right) and left == right
+
+
+SCHEMA_KEYWORDS = {
+    "$schema",
+    "$id",
+    "$comment",
+    "$defs",
+    "title",
+    "type",
+    "const",
+    "enum",
+    "required",
+    "additionalProperties",
+    "properties",
+    "pattern",
+    "minLength",
+    "minimum",
+    "items",
+}
+
+
+def check_schema_vocabulary(schema: object, location: str = "$") -> None:
+    if not isinstance(schema, dict):
+        raise AssemblyError(f"manifest schema at {location} must be an object")
+    if location == "$" and schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+        raise AssemblyError("manifest schema must declare JSON Schema Draft 2020-12")
+    unsupported = sorted(set(schema) - SCHEMA_KEYWORDS)
+    if unsupported:
+        raise AssemblyError(
+            f"manifest schema at {location} uses unsupported keywords: {', '.join(unsupported)}"
+        )
+    for container_name in ("properties", "$defs"):
+        children = schema.get(container_name, {})
+        if not isinstance(children, dict):
+            raise AssemblyError(
+                f"manifest schema {container_name} at {location} must be an object"
+            )
+        for name, child in children.items():
+            check_schema_vocabulary(child, f"{location}.{container_name}.{name}")
+    if "items" in schema:
+        check_schema_vocabulary(schema["items"], f"{location}.items")
+
+
+def validate_schema_instance(instance: object, schema: object, location: str = "$") -> None:
+    """Validate against the closed JSON Schema subset used by the RC manifest.
+
+    This dependency-free validator deliberately rejects unsupported schema
+    keywords. That keeps the release workflow fail-closed if the bundled
+    Draft 2020-12 schema evolves beyond the vocabulary implemented here.
+    """
+    check_schema_vocabulary(schema, location)
+
+    expected_type = schema.get("type")
+    type_matches = {
+        "object": lambda value: isinstance(value, dict),
+        "array": lambda value: isinstance(value, list),
+        "string": lambda value: isinstance(value, str),
+        "integer": lambda value: isinstance(value, int) and not isinstance(value, bool),
+        "boolean": lambda value: isinstance(value, bool),
+    }
+    if expected_type is not None:
+        if expected_type not in type_matches:
+            raise AssemblyError(
+                f"manifest schema at {location} has unsupported type {expected_type!r}"
+            )
+        if not type_matches[expected_type](instance):
+            raise AssemblyError(f"manifest value at {location} must be {expected_type}")
+
+    if "const" in schema and not _json_values_equal(instance, schema["const"]):
+        raise AssemblyError(f"manifest value at {location} does not match its required constant")
+    if "enum" in schema:
+        enum_values = schema["enum"]
+        if not isinstance(enum_values, list):
+            raise AssemblyError(f"manifest schema enum at {location} must be an array")
+        if not any(_json_values_equal(instance, value) for value in enum_values):
+            raise AssemblyError(f"manifest value at {location} is outside its allowed values")
+
+    if isinstance(instance, dict):
+        required = schema.get("required", [])
+        properties = schema.get("properties", {})
+        if not isinstance(required, list) or not all(isinstance(name, str) for name in required):
+            raise AssemblyError(f"manifest schema required list at {location} is invalid")
+        if not isinstance(properties, dict):
+            raise AssemblyError(f"manifest schema properties at {location} must be an object")
+        missing = [name for name in required if name not in instance]
+        if missing:
+            raise AssemblyError(
+                f"manifest value at {location} is missing required properties: {', '.join(missing)}"
+            )
+        if schema.get("additionalProperties") is False:
+            extras = sorted(set(instance) - set(properties))
+            if extras:
+                raise AssemblyError(
+                    f"manifest value at {location} has unexpected properties: {', '.join(extras)}"
+                )
+        for name, value in instance.items():
+            if name in properties:
+                validate_schema_instance(value, properties[name], f"{location}.{name}")
+
+    if isinstance(instance, list) and "items" in schema:
+        for index, value in enumerate(instance):
+            validate_schema_instance(value, schema["items"], f"{location}[{index}]")
+
+    if isinstance(instance, str):
+        minimum_length = schema.get("minLength")
+        if minimum_length is not None:
+            if not isinstance(minimum_length, int) or minimum_length < 0:
+                raise AssemblyError(f"manifest schema minLength at {location} is invalid")
+            if len(instance) < minimum_length:
+                raise AssemblyError(f"manifest string at {location} is shorter than allowed")
+        pattern = schema.get("pattern")
+        if pattern is not None:
+            if not isinstance(pattern, str):
+                raise AssemblyError(f"manifest schema pattern at {location} must be a string")
+            try:
+                matches = re.search(pattern, instance) is not None
+            except re.error as error:
+                raise AssemblyError(
+                    f"manifest schema pattern at {location} is invalid: {error}"
+                ) from error
+            if not matches:
+                raise AssemblyError(f"manifest string at {location} does not match its pattern")
+
+    if isinstance(instance, int) and not isinstance(instance, bool) and "minimum" in schema:
+        minimum = schema["minimum"]
+        if not isinstance(minimum, (int, float)) or isinstance(minimum, bool):
+            raise AssemblyError(f"manifest schema minimum at {location} is invalid")
+        if instance < minimum:
+            raise AssemblyError(f"manifest integer at {location} is below its minimum")
+
+
 def assemble(args: argparse.Namespace) -> Path:
     if CANDIDATE_TAG_PATTERN.fullmatch(args.candidate_tag) is None:
         raise AssemblyError("candidate tag must match v0.1.0-rc.N with a positive RC number")
@@ -241,8 +381,24 @@ def assemble(args: argparse.Namespace) -> Path:
     )
     copy_verified(tester_guide, output_root / "RC-TESTER-README.md", "RC tester guide")
 
+    manifest_schema = require_regular(
+        repository_root / "docs/contracts/rc-validation-manifest-v2.schema.json",
+        "RC validation manifest schema",
+    )
+    try:
+        manifest_schema_document = json.loads(manifest_schema.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise AssemblyError(f"RC validation manifest schema is not valid JSON: {error}") from error
+    check_schema_vocabulary(manifest_schema_document)
+    copy_verified(
+        manifest_schema,
+        output_root / VALIDATION_MANIFEST_SCHEMA,
+        "RC validation manifest schema",
+    )
+
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "schema": VALIDATION_MANIFEST_SCHEMA,
         "kind": "copperfin-private-evaluation-release-candidate",
         "candidate_tag": args.candidate_tag,
         "revision": args.revision,
@@ -254,17 +410,28 @@ def assemble(args: argparse.Namespace) -> Path:
             "url": f"{args.server_url.rstrip('/')}/{args.repository}/actions/runs/{args.run_id}",
         },
         "validation": {
-            "exact_tag_and_revision": "passed",
-            "native_release_readiness": "passed",
-            "managed_ui": "passed",
-            "installers": "passed",
-            "visual_studio_vsix": "passed",
-            "security_and_sbom": "passed",
+            "exact_tag_and_revision": "PASS",
+            "native_release_readiness": "PASS",
+            "managed_ui_build_and_smoke": "PASS",
+            "installer_artifact_build_and_static_checks": "PASS",
+            "installer_lifecycle": "NOT_RUN",
+            "visual_studio_vsix_build_and_static_checks": "PASS",
+            "visual_studio_vsix_lifecycle": "NOT_RUN",
+            "security_and_sbom": "PASS",
         },
         "signing": {
-            "windows_launcher_release_trust": "not claimed by this evaluation workflow",
-            "macos_platform_signing": "unsupported",
-            "linux_platform_signing": "unsupported",
+            "windows_launcher_release_trust": "NOT_RUN",
+            "windows_authenticode": "UNSUPPORTED_AND_DISCLOSED",
+            "visual_studio_vsix": "UNSUPPORTED_AND_DISCLOSED",
+            "macos_developer_id_and_notarization": "UNSUPPORTED_AND_DISCLOSED",
+            "linux_package_repository": "UNSUPPORTED_AND_DISCLOSED",
+        },
+        "localization": {
+            "catalog_structure_and_routing_checks": "PASS",
+            "spanish_portuguese_linguistic_review": "NOT_RUN",
+        },
+        "compatibility": {
+            "real_installed_vfp9_samples": "NOT_RUN",
         },
         "limitations": {
             "translations": "machine-generated catalogs retain documented human-review limits",
@@ -272,6 +439,7 @@ def assemble(args: argparse.Namespace) -> Path:
         },
         "files": relative_file_records(output_root),
     }
+    validate_schema_instance(manifest, manifest_schema_document)
     manifest_path = output_root / "rc-validation-manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
@@ -334,6 +502,11 @@ def self_test() -> None:
             "THIRD_PARTY_NOTICES.md": b"Notices\n",
             "LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt": b"Exception\n",
             "docs/contracts/release-license-metadata.json": b"{}\n",
+            "docs/contracts/rc-validation-manifest-v2.schema.json": Path(
+                __file__
+            ).parent.parent.joinpath(
+                "docs/contracts/rc-validation-manifest-v2.schema.json"
+            ).read_bytes(),
             "docs/35-rc1-evaluation-guide.md": b"# RC candidate\n",
         }
         for relative, data in licenses.items():
@@ -378,6 +551,7 @@ def self_test() -> None:
             "licensing/LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt",
             "licensing/THIRD_PARTY_NOTICES.md",
             "licensing/docs/contracts/release-license-metadata.json",
+            VALIDATION_MANIFEST_SCHEMA,
             "rc-validation-manifest.json",
             "sbom/sbom.cdx.json",
             f"source/{source_name}",
@@ -388,8 +562,83 @@ def self_test() -> None:
         if actual_bundle_files != expected_bundle_files:
             raise AssemblyError("self-test produced an unexpected evaluation bundle layout")
         manifest = json.loads((bundle / "rc-validation-manifest.json").read_text(encoding="utf-8"))
-        if manifest["revision"] != revision or manifest["official_release"] is not False:
+        bundled_schema_document = json.loads(
+            (bundle / VALIDATION_MANIFEST_SCHEMA).read_text(encoding="utf-8")
+        )
+        validate_schema_instance(manifest, bundled_schema_document)
+
+        def require_schema_rejection(mutated_manifest: object, description: str) -> None:
+            try:
+                validate_schema_instance(mutated_manifest, bundled_schema_document)
+            except AssemblyError:
+                return
+            raise AssemblyError(f"self-test schema accepted {description}")
+
+        for required_field in (
+            "kind",
+            "candidate_tag",
+            "repository",
+            "workflow_run",
+            "limitations",
+            "files",
+        ):
+            missing_field_manifest = json.loads(json.dumps(manifest))
+            del missing_field_manifest[required_field]
+            require_schema_rejection(
+                missing_field_manifest,
+                f"manifest without required field {required_field}",
+            )
+        for malformed_url in (
+            "not a URI",
+            "https://github.example/example/Project-Copperfin/actions/runs/123\n",
+            "https://github..example/example/Project-Copperfin/actions/runs/123",
+        ):
+            malformed_url_manifest = json.loads(json.dumps(manifest))
+            malformed_url_manifest["workflow_run"]["url"] = malformed_url
+            require_schema_rejection(malformed_url_manifest, "malformed workflow URL")
+
+        expected_validation = {
+            "exact_tag_and_revision": "PASS",
+            "native_release_readiness": "PASS",
+            "managed_ui_build_and_smoke": "PASS",
+            "installer_artifact_build_and_static_checks": "PASS",
+            "installer_lifecycle": "NOT_RUN",
+            "visual_studio_vsix_build_and_static_checks": "PASS",
+            "visual_studio_vsix_lifecycle": "NOT_RUN",
+            "security_and_sbom": "PASS",
+        }
+        expected_signing = {
+            "windows_launcher_release_trust": "NOT_RUN",
+            "windows_authenticode": "UNSUPPORTED_AND_DISCLOSED",
+            "visual_studio_vsix": "UNSUPPORTED_AND_DISCLOSED",
+            "macos_developer_id_and_notarization": "UNSUPPORTED_AND_DISCLOSED",
+            "linux_package_repository": "UNSUPPORTED_AND_DISCLOSED",
+        }
+        expected_localization = {
+            "catalog_structure_and_routing_checks": "PASS",
+            "spanish_portuguese_linguistic_review": "NOT_RUN",
+        }
+        expected_compatibility = {
+            "real_installed_vfp9_samples": "NOT_RUN",
+        }
+        if (
+            manifest["schema_version"] != 2
+            or manifest["schema"] != VALIDATION_MANIFEST_SCHEMA
+            or manifest["revision"] != revision
+            or manifest["official_release"] is not False
+            or manifest["validation"] != expected_validation
+            or manifest["signing"] != expected_signing
+            or manifest["localization"] != expected_localization
+            or manifest["compatibility"] != expected_compatibility
+        ):
             raise AssemblyError("self-test validation manifest is invalid")
+        if "installers" in manifest["validation"] or "visual_studio_vsix" in manifest["validation"]:
+            raise AssemblyError("self-test validation manifest retains an ambiguous lifecycle claim")
+        bundled_schema = bundle / VALIDATION_MANIFEST_SCHEMA
+        if sha256(bundled_schema) != sha256(
+            repository / "docs/contracts/rc-validation-manifest-v2.schema.json"
+        ):
+            raise AssemblyError("self-test validation manifest schema is not the exact repository schema")
 
         for invalid_tag in (
             "v0.1.0-rc.0",
