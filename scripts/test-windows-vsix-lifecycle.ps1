@@ -270,10 +270,17 @@ try {
         'Visual Studio registration-prime process did not reach input-idle state within the bounded interval.'
     Assert-Condition $registrationProcess.CloseMainWindow() `
         'Visual Studio registration-prime main window rejected the close request.'
-    Assert-Condition $registrationProcess.WaitForExit(120000) `
-        'Visual Studio registration-prime process did not exit after the bounded close request.'
-    Assert-Condition ($registrationProcess.ExitCode -eq 0) `
-        "Visual Studio registration-prime process exited with code $($registrationProcess.ExitCode)."
+    if ($registrationProcess.WaitForExit(15000)) {
+        Assert-Condition ($registrationProcess.ExitCode -eq 0) `
+            "Visual Studio registration-prime process exited with code $($registrationProcess.ExitCode)."
+    }
+    else {
+        Write-Warning 'Visual Studio registration-prime process did not exit after the bounded close request; terminating its process tree.'
+        try { $registrationProcess.Kill($true) }
+        catch { throw "Visual Studio registration-prime process could not be terminated: $($_.Exception.Message)" }
+        Assert-Condition $registrationProcess.WaitForExit(15000) `
+            'Visual Studio registration-prime process tree did not terminate within the bounded cleanup interval.'
+    }
     Assert-Condition (Test-Path -LiteralPath $registrationActivityLog -PathType Leaf) `
         'Visual Studio registration-prime ActivityLog was not retained.'
     [xml]$registrationActivity = Get-Content -LiteralPath $registrationActivityLog -Raw -ErrorAction Stop

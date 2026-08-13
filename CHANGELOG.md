@@ -79,13 +79,16 @@
   still independently prove the document, command pane, and package load.
   Run `31740807424` showed that launch was concurrently regenerating its stale
   per-user PkgDef cache and importing Copperfin, before the startup command was
-  usable. A separate bounded registration-prime launch now closes normally and
-  must prove the exact installed PkgDef import before the later evidence IDE
+  usable. A separate bounded registration-prime launch now requests normal
+  close with bounded process-tree termination as fallback and must prove the
+  exact installed PkgDef import before the later evidence IDE
   starts; registration import alone is never reported as package-load success.
   Run `31742224692` reached input-idle registration priming but exceeded its
-  initial 30-second normal-close allowance before any product evidence. The
-  allowance is now a bounded 120 seconds, and failure artifacts retain the
-  registration ActivityLog alongside the evidence ActivityLog.
+  initial 30-second normal-close allowance before any product evidence. Run
+  `31742937078` retained the exact installed-PkgDef import but the prime IDE
+  remained alive after a 120-second close allowance. The harness now requests a
+  normal close, then performs bounded process-tree cleanup before evidence
+  launch; failure artifacts retain both ActivityLogs.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

@@ -439,9 +439,12 @@ exact installed Copperfin PkgDef path, and uses a later process for all command,
 document, and package-load evidence. The requirement remains a gap pending that
 fresh exact-head result and review.
 Run `31742224692` reached an input-idle prime IDE but its normal close exceeded
-the initial 30-second allowance. The bounded allowance is now 120 seconds and
-failure staging retains the registration ActivityLog as well as the evidence
-ActivityLog. The run did not reach product evidence and does not change the gap.
+the initial 30-second allowance. Run `31742937078` retained direct exact-path
+PkgDef-import proof but the prime IDE remained alive after a 120-second close
+allowance. The corrected harness requests a normal close, then bounds cleanup
+with process-tree termination before launching the evidence IDE. Failure staging
+retains the registration ActivityLog as well as the evidence ActivityLog. The
+runs did not reach product evidence and do not change the gap.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

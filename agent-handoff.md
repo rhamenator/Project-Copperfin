@@ -106,14 +106,18 @@ package-load evidence from that process. Inputs alone are not evidence.
 Run `31740807424` showed that process was simultaneously regenerating its stale
 per-user PkgDef cache and importing Copperfin, so the startup command was not
 usable and the package never began loading. The verifier now performs a
-bounded, normally closed registration-prime launch and requires an exact path
-match for the installed Copperfin PkgDef import before starting the separate
+bounded registration-prime launch, requests a normal close with bounded
+process-tree termination as fallback, and requires an exact path match for the
+installed Copperfin PkgDef import before starting the separate
 evidence IDE. Registration priming is not promoted to command/load evidence;
 `RQ-CF-REL-003` remains `gap` pending exact-head execution and rereview.
 Run `31742224692` reached input-idle registration priming but did not exit
 within the initial 30-second normal-close allowance, so it never reached PkgDef
-proof or the evidence IDE. The corrected allowance is a bounded 120 seconds;
-always-run staging now retains `ActivityLog-registration.xml` on failure.
+proof or the evidence IDE. Run `31742937078` retained direct proof that the
+exact installed PkgDef was imported, but the prime IDE remained alive after a
+120-second close allowance. The corrected cleanup requests normal close, then
+uses bounded process-tree termination before the evidence IDE; always-run
+staging retains `ActivityLog-registration.xml` on failure.
 
 ## V1 Windows installer lifecycle
 
