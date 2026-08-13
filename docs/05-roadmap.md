@@ -354,9 +354,11 @@ previous-version VSIX upgrade, and disablement remain `NOT_RUN` pending direct
 evidence. Exact-head VS2022 run `31711406714` completed the lifecycle at
 `f26086a09`, but independent review found its PRG and package-load admission
 signals were insufficient: a visible IDE did not prove the document opened and
-an activity-log substring could represent registration or failure. Corrected
-same-instance DTE document/command proof plus explicit successful-load XML and
-matching-error rejection require fresh exact-head execution.
+an activity-log substring could represent registration or failure. A corrected
+retry reached the stronger observation boundary but generic DTE discovery did
+not identify the launched instance. Process-ID-bound Running Object Table DTE
+document/command proof plus explicit successful-load XML and matching-error
+rejection require fresh exact-head execution.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

@@ -7,8 +7,10 @@
   previous-version upgrade, and disablement remain explicitly `NOT_RUN`.
   Initial hosted VS2022 run `31711406714` completed the lifecycle and managed
   suite, but review invalidated its PRG-open and package-load admission signals.
-  Corrected same-instance document/command proof and explicit successful-load
-  XML/error rejection require fresh exact-head evidence.
+  A corrected retry reached the stronger observation boundary but generic DTE
+  discovery could not identify the launched IDE. Process-ID-bound Running
+  Object Table document/command proof and explicit successful-load XML/error
+  rejection require fresh exact-head evidence.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

@@ -53,8 +53,10 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
 - VSIXInstaller has a bounded wait and timed-out process-tree termination.
   Visual Studio has a bounded observation window, then receives a normal close
   request before bounded tree termination fallback.
-- A same-instance DTE observation must find the exact runner-owned PRG in the
-  running IDE's Documents collection before invoking the registered
+- A process-specific DTE observation enumerates the Windows Running Object
+  Table and accepts only the exact Visual Studio version/PID moniker for the
+  IDE process launched by the helper. It must then find the exact runner-owned
+  PRG in that IDE's Documents collection before invoking the registered
   `Copperfin.ShowCommandWindow` command. A visible window or launched process
   alone is not PRG-open or command evidence. After bounded IDE shutdown flushes
   the activity log, XML entry parsing requires the exact informational
@@ -91,8 +93,13 @@ both report expiry on 2026-11-11. Independent review found that the old helper
 could emit that nominal result without proving two required relationships: a
 main window did not prove the supplied PRG was an open document, and a package
 GUID/assembly substring could be a registration or failed-load mention rather
-than successful initialization. The corrected helper uses same-instance DTE to
-observe the exact document and invoke the command, then requires the exact
+than successful initialization. The first corrected hosted attempt
+(`31713227592`) timed out during installation and its exact-head retry
+(`31713867127`) reached the observation step but proved that generic DTE ProgID
+lookup could not reliably discover the launched IDE. Neither failure is
+admissible lifecycle evidence. The further-corrected helper binds Running
+Object Table discovery to the launched Visual Studio process ID, observes the
+exact document, and invokes the command only through that DTE. It then requires the exact
 informational `End package load [CopperfinPackage]` XML entry/package GUID and
 rejects matching error entries. The self-test includes nominal-success and
 success-plus-error records. Corrected exact-head hosted execution is pending;

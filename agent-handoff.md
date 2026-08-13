@@ -21,11 +21,15 @@ diagnostic artifact `9185671767` has digest
 `sha256:cc7308165fe5800a29be43e3c03063a46d0a91c7a8d5bb6cfe4fab268b844de6`;
 both expire 2026-11-11. Independent review invalidated admission of that result:
 the old activity-log substring could match registration or failed-load records,
-and a main window did not prove the PRG opened. The corrected helper requires
-the exact open document through same-instance DTE, invokes the command through
-that DTE, requires an explicit successful package-load XML entry, and rejects
-matching errors. `RQ-CF-REL-003` is reset to `gap` pending corrected exact-head
-execution and rereview.
+and a main window did not prove the PRG opened. Corrected run `31713227592`
+timed out during installation; exact-head retry `31713867127` reached the DTE
+boundary but generic ProgID lookup did not identify the launched IDE. The
+further-corrected helper enumerates the Running Object Table and accepts only
+the exact Visual Studio version/PID moniker, then requires the exact open
+document, invokes the command through that process-specific DTE, requires an
+explicit successful package-load XML entry, and rejects matching errors.
+`RQ-CF-REL-003` remains `gap` pending corrected exact-head execution and
+rereview.
 
 ## V1 Windows installer lifecycle
 

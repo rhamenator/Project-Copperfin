@@ -269,19 +269,85 @@ try {
     $automationScript = Join-Path $resolvedEvidenceDirectory 'observe-running-visual-studio.ps1'
     [System.IO.File]::WriteAllText($automationScript, @'
 param(
-    [Parameter(Mandatory = $true)][string]$DteProgId,
+    [Parameter(Mandatory = $true)][string]$RegistryVersion,
+    [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
     [Parameter(Mandatory = $true)][string]$ExpectedDocument,
     [Parameter(Mandatory = $true)][string]$CommandName,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
 )
 $ErrorActionPreference = 'Stop'
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+
+namespace Copperfin
+{
+    public static class VisualStudioRunningObjectTable
+    {
+        [DllImport("ole32.dll")]
+        private static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable table);
+
+        [DllImport("ole32.dll")]
+        private static extern int CreateBindCtx(int reserved, out IBindCtx context);
+
+        public static object Find(string expectedMoniker)
+        {
+            IRunningObjectTable table = null;
+            IBindCtx context = null;
+            IEnumMoniker enumerator = null;
+            try
+            {
+                Marshal.ThrowExceptionForHR(GetRunningObjectTable(0, out table));
+                Marshal.ThrowExceptionForHR(CreateBindCtx(0, out context));
+                table.EnumRunning(out enumerator);
+                IMoniker[] monikers = new IMoniker[1];
+                while (enumerator.Next(1, monikers, IntPtr.Zero) == 0)
+                {
+                    IMoniker moniker = monikers[0];
+                    try
+                    {
+                        string displayName;
+                        moniker.GetDisplayName(context, null, out displayName);
+                        if (String.Equals(displayName, expectedMoniker, StringComparison.OrdinalIgnoreCase))
+                        {
+                            object result;
+                            table.GetObject(moniker, out result);
+                            return result;
+                        }
+                    }
+                    catch (COMException)
+                    {
+                        // A transient or inaccessible unrelated ROT entry must
+                        // not prevent discovery of the exact expected entry.
+                    }
+                    finally
+                    {
+                        if (moniker != null && Marshal.IsComObject(moniker))
+                            Marshal.ReleaseComObject(moniker);
+                        monikers[0] = null;
+                    }
+                }
+                return null;
+            }
+            finally
+            {
+                if (enumerator != null && Marshal.IsComObject(enumerator)) Marshal.ReleaseComObject(enumerator);
+                if (context != null && Marshal.IsComObject(context)) Marshal.ReleaseComObject(context);
+                if (table != null && Marshal.IsComObject(table)) Marshal.ReleaseComObject(table);
+            }
+        }
+    }
+}
+"@
 $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+$expectedMoniker = "!VisualStudio.DTE.$RegistryVersion`:$ExpectedProcessId"
 $dte = $null
 while ([DateTime]::UtcNow -lt $deadline -and $null -eq $dte) {
-    try { $dte = [System.Runtime.InteropServices.Marshal]::GetActiveObject($DteProgId) }
+    try { $dte = [Copperfin.VisualStudioRunningObjectTable]::Find($expectedMoniker) }
     catch { Start-Sleep -Milliseconds 500 }
 }
-if ($null -eq $dte) { throw "Running Visual Studio DTE '$DteProgId' was not observable." }
+if ($null -eq $dte) { throw "Launched Visual Studio process did not publish expected ROT moniker '$expectedMoniker'." }
 $expected = [System.IO.Path]::GetFullPath($ExpectedDocument)
 $documentObserved = $false
 $lastDocumentError = ''
@@ -318,11 +384,13 @@ if (-not $commandInvoked) { throw "Registered command '$CommandName' could not b
     $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for DTE observation: $windowsPowerShell"
+    $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
-            '-DteProgId', "VisualStudio.DTE.$registryVersion", '-ExpectedDocument', $fixturePrg,
-            '-CommandName', 'Copperfin.ShowCommandWindow', '-TimeoutSeconds', "$ProcessTimeoutSeconds") `
+            '-RegistryVersion', $registryVersion, '-ExpectedProcessId', "$($ideProcess.Id)",
+            '-ExpectedDocument', $fixturePrg, '-CommandName', 'Copperfin.ShowCommandWindow',
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin PRG and registered-command DTE observation' | Out-Null
 
     Start-Sleep -Seconds 2
