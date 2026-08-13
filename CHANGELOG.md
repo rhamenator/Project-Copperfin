@@ -16,11 +16,14 @@
   `31718662961` proved that this did not activate the command in the original
   controlled process or load `CopperfinPackage`. Run `31719897147` proved the
   same result even when the controlled IDE itself was launched with `/Command`.
-  The corrected sequence now invokes the exact registered Copperfin Command
-  item through the controlled IDE's user-visible Tools menu, proves that
-  process's command surface, explicitly forwards `/Edit` plus the fixture to
-  it, and requires exact document proof plus explicit successful-load XML/error
-  rejection in fresh exact-head evidence.
+  Run `31721057446` then found no invocable item through direct menu-tree
+  expansion, but its diagnostic did not distinguish an inaccessible Tools menu
+  from an absent extension item. The corrected sequence focuses the exact IDE,
+  opens its Tools menu through the normal access key, records same-process menu
+  items on failure, invokes only the exact registered Copperfin Command item,
+  proves that process's command surface, explicitly forwards `/Edit` plus the
+  fixture to it, and requires exact document proof plus explicit successful-load
+  XML/error rejection in fresh exact-head evidence.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

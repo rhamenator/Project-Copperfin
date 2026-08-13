@@ -37,12 +37,15 @@ initial startup did not open it, and the command was still not invoked. Run
 Command surface, and its ActivityLog contained imported Copperfin registration
 but no `CopperfinPackage` load. Run `31719897147` then launched the controlled
 IDE itself with `/Command` and proved the same negative boundary. The next
-correction invokes the exact registered Copperfin Command item through that
-process's user-visible Tools menu, proves the resulting pane in the same
-process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
-then requires the exact document descendant or fixture window-title prefix. It
-also requires an explicit successful package-load XML entry and rejects
-matching errors.
+run `31721057446` found no invocable exact item through direct UI Automation
+menu-tree expansion, but that helper did not distinguish an inaccessible Tools
+menu from an absent extension item. The next correction focuses the exact IDE,
+opens Tools through its normal English access key, records observed same-process
+menu items on failure, invokes only the exact Copperfin Command item, proves the
+resulting pane in the same process, explicitly forwards `/Edit` plus the fixture
+to the running IDE, and then requires the exact document descendant or fixture
+window-title prefix. It also requires an explicit successful package-load XML
+entry and rejects matching errors.
 `RQ-CF-REL-003` remains `gap` pending corrected exact-head execution and
 rereview.
 

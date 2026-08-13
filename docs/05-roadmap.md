@@ -367,10 +367,14 @@ the original controlled IDE exposed no Copperfin Command surface and logged no
 `CopperfinPackage` load. Run `31719897147` proved the same negative result when
 the controlled IDE itself started with `/Command`. The next verifier invokes
 the exact registered Copperfin Command item through the controlled process's
-user-visible Tools menu, proves that exact process's pane, explicitly forwards
-`/Edit` plus the fixture to it, then requires exact fixture-title proof,
-explicit successful-load XML, and matching-error rejection in fresh exact-head
-execution.
+user-visible Tools menu. Run `31721057446` found no invocable item through
+direct menu-tree expansion, but did not distinguish an inaccessible Tools menu
+from an absent extension item. The corrected verifier focuses the exact IDE,
+opens Tools through its normal access key, records same-process menu items on
+failure, invokes only the exact Copperfin item, proves that process's pane,
+explicitly forwards `/Edit` plus the fixture to it, then requires exact
+fixture-title proof, explicit successful-load XML, and matching-error rejection
+in fresh exact-head execution.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

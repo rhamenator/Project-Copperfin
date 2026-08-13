@@ -336,13 +336,24 @@ param(
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public static class CopperfinForegroundWindow
+{
+    [DllImport("user32.dll")]
+    public static extern bool SetForegroundWindow(IntPtr windowHandle);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+}
+"@
 $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
 $processCondition = [System.Windows.Automation.PropertyCondition]::new(
     [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ExpectedProcessId)
-$menuCondition = [System.Windows.Automation.AndCondition]::new(@(
+$menuItemCondition = [System.Windows.Automation.AndCondition]::new(@(
     $processCondition,
-    [System.Windows.Automation.PropertyCondition]::new(
-        [System.Windows.Automation.AutomationElement]::NameProperty, $MenuName),
     [System.Windows.Automation.PropertyCondition]::new(
         [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
         [System.Windows.Automation.ControlType]::MenuItem)))
@@ -354,44 +365,46 @@ $commandCondition = [System.Windows.Automation.AndCondition]::new(@(
         [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
         [System.Windows.Automation.ControlType]::MenuItem)))
 $lastError = ''
+$lastMenuNames = ''
+$ideProcess = Get-Process -Id $ExpectedProcessId -ErrorAction Stop
+if ($ideProcess.MainWindowHandle -eq [IntPtr]::Zero) {
+    throw "Visual Studio process $ExpectedProcessId has no focusable main window."
+}
+[void][CopperfinForegroundWindow]::SetForegroundWindow($ideProcess.MainWindowHandle)
+Start-Sleep -Milliseconds 500
+if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
+    throw "Visual Studio process $ExpectedProcessId could not be focused for Tools-menu activation."
+}
+[System.Windows.Forms.SendKeys]::SendWait('%t')
+Start-Sleep -Milliseconds 500
 while ([DateTime]::UtcNow -lt $deadline) {
     try {
-        $toolsMenu = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
-            [System.Windows.Automation.TreeScope]::Descendants, $menuCondition)
-        if ($null -ne $toolsMenu) {
-            $expandPattern = $null
-            if ($toolsMenu.TryGetCurrentPattern(
-                    [System.Windows.Automation.ExpandCollapsePattern]::Pattern,
-                    [ref]$expandPattern)) {
-                $expandPattern.Expand()
+        $menuItems = [System.Windows.Automation.AutomationElement]::RootElement.FindAll(
+            [System.Windows.Automation.TreeScope]::Descendants, $menuItemCondition)
+        $names = @()
+        foreach ($menuItem in $menuItems) {
+            $name = [string]$menuItem.Current.Name
+            if (-not [string]::IsNullOrWhiteSpace($name)) { $names += $name }
+            if ($names.Count -ge 40) { break }
+        }
+        $lastMenuNames = ($names | Select-Object -Unique) -join ', '
+        $command = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+            [System.Windows.Automation.TreeScope]::Descendants, $commandCondition)
+        if ($null -ne $command) {
+            $commandInvokePattern = $null
+            if (-not $command.TryGetCurrentPattern(
+                    [System.Windows.Automation.InvokePattern]::Pattern,
+                    [ref]$commandInvokePattern)) {
+                throw "Menu item '$CommandName' does not expose InvokePattern."
             }
-            else {
-                $menuInvokePattern = $null
-                if ($toolsMenu.TryGetCurrentPattern(
-                        [System.Windows.Automation.InvokePattern]::Pattern,
-                        [ref]$menuInvokePattern)) {
-                    $menuInvokePattern.Invoke()
-                }
-            }
-            Start-Sleep -Milliseconds 250
-            $command = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
-                [System.Windows.Automation.TreeScope]::Descendants, $commandCondition)
-            if ($null -ne $command) {
-                $commandInvokePattern = $null
-                if (-not $command.TryGetCurrentPattern(
-                        [System.Windows.Automation.InvokePattern]::Pattern,
-                        [ref]$commandInvokePattern)) {
-                    throw "Menu item '$CommandName' does not expose InvokePattern."
-                }
-                $commandInvokePattern.Invoke()
-                exit 0
-            }
+            $commandInvokePattern.Invoke()
+            exit 0
         }
     }
     catch { $lastError = $_.Exception.Message }
     Start-Sleep -Milliseconds 500
 }
-throw "Exact menu command '$MenuName > $CommandName' was not invocable in Visual Studio process $ExpectedProcessId. Last UI Automation error: $lastError"
+throw "Exact menu command '$MenuName > $CommandName' was not invocable in Visual Studio process $ExpectedProcessId. Observed same-process menu items: $lastMenuNames. Last UI Automation error: $lastError"
 '@, [System.Text.UTF8Encoding]::new($false))
     Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through Tools menu'
     Invoke-BoundedProcess `
