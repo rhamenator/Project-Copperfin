@@ -809,8 +809,11 @@ permission, trusted product UI, audit availability, the exact current warning,
 and affirmative consent; provider authentication is deliberately not an
 authorization input. See
 [`64-workspace-agent-access-policy.md`](64-workspace-agent-access-policy.md).
-Model/provider adapters, OAuth clients, the mutable executor and sandbox, and
-the user-facing assistant/dialog surfaces remain unimplemented.
+A versioned native descriptor and strict shared managed client expose this
+policy read-only while rejecting schema drift and authority expansion; neither
+can activate an agent. Model/provider adapters, OAuth clients, the mutable
+executor and sandbox, and the user-facing assistant/dialog surfaces remain
+unimplemented.
 
 ## Why This Matters
 
