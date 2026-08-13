@@ -7782,3 +7782,8 @@ passes `1/1`.
   independent reviewer; independent review becomes mandatory when a second
   trusted maintainer exists. RC2 remains immutable and the corrected protected
   run plus a new sequential RC remain required.
+- 2026-08-13: Corrected the standalone Studio install-contract fixture to
+  stage the required Windows `copperfin_mcp_host.exe` added with the read-only
+  MCP host. The contract regression now also removes that executable and
+  proves the incomplete installed inventory fails closed. Product packaging
+  and runtime behavior are unchanged.
