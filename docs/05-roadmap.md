@@ -458,6 +458,11 @@ discovery from invocation. The current correction retains machine-readable,
 process-bound UI Automation state for the Tools menu, exact command item,
 invocation pattern, invocation completion, pane, and PRG observations before
 any further behavior correction.
+Run `31747101809` proved the missing boundary: the hosted Visual Studio main
+window does not expose its top-level Tools menu as a UI Automation `MenuItem`.
+The corrected harness foregrounds and verifies the exact evidence IDE PID,
+sends the standard English Tools accelerator once, and then uses process-scoped
+UI Automation to locate and invoke only the exact installed command item.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

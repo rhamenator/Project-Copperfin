@@ -132,6 +132,12 @@ boundary was absent. The current exact-head correction retains separate JSON
 state for Tools-menu discovery, exact command discovery, invocation-pattern
 availability, invocation, pane observation, and PRG observation. This is a
 diagnostic-only correction; product behavior remains unchanged.
+Run `31747101809` then proved `tools_menu_observed=false`, with no command item
+or invocation and no automation exception. The current correction foregrounds
+the exact evidence IDE, verifies the foreground PID before sending the English
+Tools accelerator once, and still requires process-scoped discovery and
+invocation of only the exact `Copperfin Command` item. Foreground identity and
+accelerator state remain in the retained JSON.
 
 ## V1 Windows installer lifecycle
 

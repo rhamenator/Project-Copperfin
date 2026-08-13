@@ -269,6 +269,16 @@ PRG observation, including each menu-discovery and invocation boundary. No
 product behavior is changed until that direct diagnostic identifies the next
 gap.
 
+Run `31747101809` supplied that direct diagnostic: Visual Studio exposed its
+main window in the exact evidence PID, but its top-level Tools menu was not a
+discoverable UI Automation `MenuItem`; consequently the command item was never
+searched in an open menu and was not invoked. The correction foregrounds that
+exact IDE window, independently verifies the foreground window belongs to the
+expected PID, and sends the English Visual Studio Tools accelerator once. It
+then searches for and invokes only the exact `Copperfin Command` menu item by
+process-scoped UI Automation. The accelerator never selects a product command,
+and no keystroke is sent unless foreground ownership is proven.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

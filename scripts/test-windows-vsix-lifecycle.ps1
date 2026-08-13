@@ -331,6 +331,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
+Add-Type -Namespace CopperfinLifecycle -Name NativeMethods -MemberDefinition '[DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd); [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow(); [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);'
 $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
 $expectedNames = @($ExpectedName)
 if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
@@ -343,6 +344,9 @@ $menuItemInvoked = [string]::IsNullOrWhiteSpace($InvokeToolsMenuItem)
 $toolsMenuObserved = $false
 $toolsExpandPatternObserved = $false
 $toolsInvokePatternObserved = $false
+$toolsActivationAttempted = $false
+$foregroundProcessVerified = $false
+$toolsKeyboardAcceleratorSent = $false
 $commandMenuItemObserved = $false
 $commandInvokePatternObserved = $false
 while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
@@ -357,48 +361,72 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
                 $menuItemCondition = [System.Windows.Automation.PropertyCondition]::new(
                     [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
                     [System.Windows.Automation.ControlType]::MenuItem)
-                $toolsNameCondition = [System.Windows.Automation.PropertyCondition]::new(
-                    [System.Windows.Automation.AutomationElement]::NameProperty, 'Tools')
-                $toolsCondition = [System.Windows.Automation.AndCondition]::new(
-                    $menuItemCondition, $toolsNameCondition)
-                $toolsMenu = $ide.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $toolsCondition)
-                if ($null -ne $toolsMenu) {
-                    $toolsMenuObserved = $true
-                    $expandPattern = $null
-                    if ($toolsMenu.TryGetCurrentPattern(
-                            [System.Windows.Automation.ExpandCollapsePattern]::Pattern,
-                            [ref]$expandPattern)) {
-                        $toolsExpandPatternObserved = $true
-                        $expandPattern.Expand()
-                    }
-                    else {
-                        $invokeToolsPattern = $null
+                if (-not $toolsActivationAttempted) {
+                    $toolsNameCondition = [System.Windows.Automation.PropertyCondition]::new(
+                        [System.Windows.Automation.AutomationElement]::NameProperty, 'Tools')
+                    $toolsCondition = [System.Windows.Automation.AndCondition]::new(
+                        $menuItemCondition, $toolsNameCondition)
+                    $toolsMenu = $ide.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $toolsCondition)
+                    if ($null -ne $toolsMenu) {
+                        $toolsMenuObserved = $true
+                        $expandPattern = $null
                         if ($toolsMenu.TryGetCurrentPattern(
-                                [System.Windows.Automation.InvokePattern]::Pattern,
-                                [ref]$invokeToolsPattern)) {
-                            $toolsInvokePatternObserved = $true
-                            $invokeToolsPattern.Invoke()
+                                [System.Windows.Automation.ExpandCollapsePattern]::Pattern,
+                                [ref]$expandPattern)) {
+                            $toolsExpandPatternObserved = $true
+                            $expandPattern.Expand()
+                            $toolsActivationAttempted = $true
+                        }
+                        else {
+                            $invokeToolsPattern = $null
+                            if ($toolsMenu.TryGetCurrentPattern(
+                                    [System.Windows.Automation.InvokePattern]::Pattern,
+                                    [ref]$invokeToolsPattern)) {
+                                $toolsInvokePatternObserved = $true
+                                $invokeToolsPattern.Invoke()
+                                $toolsActivationAttempted = $true
+                            }
                         }
                     }
-                    Start-Sleep -Milliseconds 500
-                    $commandNameCondition = [System.Windows.Automation.PropertyCondition]::new(
-                        [System.Windows.Automation.AutomationElement]::NameProperty, $InvokeToolsMenuItem)
-                    $commandCondition = [System.Windows.Automation.AndCondition]::new(
-                        $menuItemCondition, $commandNameCondition)
-                    $processCommandCondition = [System.Windows.Automation.AndCondition]::new(
-                        $processCondition, $commandCondition)
-                    $commandItem = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
-                        [System.Windows.Automation.TreeScope]::Descendants, $processCommandCondition)
-                    if ($null -ne $commandItem) {
-                        $commandMenuItemObserved = $true
-                        $invokeCommandPattern = $null
-                        if ($commandItem.TryGetCurrentPattern(
-                                [System.Windows.Automation.InvokePattern]::Pattern,
-                                [ref]$invokeCommandPattern)) {
-                            $commandInvokePatternObserved = $true
-                            $invokeCommandPattern.Invoke()
-                            $menuItemInvoked = $true
+                    if (-not $toolsActivationAttempted) {
+                        $ideWindowHandle = [IntPtr]::new($ide.Current.NativeWindowHandle)
+                        if ([CopperfinLifecycle.NativeMethods]::SetForegroundWindow($ideWindowHandle)) {
+                            $foregroundDeadline = [DateTime]::UtcNow.AddSeconds(5)
+                            while ([DateTime]::UtcNow -lt $foregroundDeadline -and -not $foregroundProcessVerified) {
+                                [uint32]$foregroundProcessId = 0
+                                $foregroundWindow = [CopperfinLifecycle.NativeMethods]::GetForegroundWindow()
+                                [void][CopperfinLifecycle.NativeMethods]::GetWindowThreadProcessId(
+                                    $foregroundWindow, [ref]$foregroundProcessId)
+                                $foregroundProcessVerified = $foregroundProcessId -eq $ExpectedProcessId
+                                if (-not $foregroundProcessVerified) { Start-Sleep -Milliseconds 100 }
+                            }
                         }
+                        if ($foregroundProcessVerified) {
+                            Add-Type -AssemblyName System.Windows.Forms
+                            [System.Windows.Forms.SendKeys]::SendWait('%t')
+                            $toolsKeyboardAcceleratorSent = $true
+                            $toolsActivationAttempted = $true
+                        }
+                    }
+                }
+                Start-Sleep -Milliseconds 500
+                $commandNameCondition = [System.Windows.Automation.PropertyCondition]::new(
+                    [System.Windows.Automation.AutomationElement]::NameProperty, $InvokeToolsMenuItem)
+                $commandCondition = [System.Windows.Automation.AndCondition]::new(
+                    $menuItemCondition, $commandNameCondition)
+                $processCommandCondition = [System.Windows.Automation.AndCondition]::new(
+                    $processCondition, $commandCondition)
+                $commandItem = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+                    [System.Windows.Automation.TreeScope]::Descendants, $processCommandCondition)
+                if ($null -ne $commandItem) {
+                    $commandMenuItemObserved = $true
+                    $invokeCommandPattern = $null
+                    if ($commandItem.TryGetCurrentPattern(
+                            [System.Windows.Automation.InvokePattern]::Pattern,
+                            [ref]$invokeCommandPattern)) {
+                        $commandInvokePatternObserved = $true
+                        $invokeCommandPattern.Invoke()
+                        $menuItemInvoked = $true
                     }
                 }
             }
@@ -436,6 +464,8 @@ $diagnostic = [ordered]@{
     tools_menu_observed = $toolsMenuObserved
     tools_expand_pattern_observed = $toolsExpandPatternObserved
     tools_invoke_pattern_observed = $toolsInvokePatternObserved
+    foreground_process_verified = $foregroundProcessVerified
+    tools_keyboard_accelerator_sent = $toolsKeyboardAcceleratorSent
     command_menu_item_observed = $commandMenuItemObserved
     command_invoke_pattern_observed = $commandInvokePatternObserved
     command_invoked = $menuItemInvoked
@@ -445,7 +475,7 @@ $diagnostic = [ordered]@{
 }
 $diagnostic | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $DiagnosticPath -Encoding utf8
 if (-not $observed) {
-    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Tools menu observed: $toolsMenuObserved. Command item observed: $commandMenuItemObserved. Command invoked: $menuItemInvoked. Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
+    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Tools menu observed: $toolsMenuObserved. Foreground process verified: $foregroundProcessVerified. Tools accelerator sent: $toolsKeyboardAcceleratorSent. Command item observed: $commandMenuItemObserved. Command invoked: $menuItemInvoked. Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
 }
 '@, [System.Text.UTF8Encoding]::new($false))
     $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'

@@ -99,6 +99,10 @@
   Copperfin load or error record. Separate versioned UI Automation diagnostic
   JSON now retains Tools-menu discovery, exact command discovery, invocation,
   pane, and PRG observation state instead of leaving that boundary ambiguous.
+  Run `31747101809` proved the hosted IDE's top-level Tools menu is not exposed
+  as a UI Automation `MenuItem`. The verifier now foregrounds and verifies the
+  exact IDE PID before sending the English Tools accelerator once, then locates
+  and invokes only the exact command item through process-scoped UI Automation.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
