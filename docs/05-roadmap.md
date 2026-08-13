@@ -335,7 +335,11 @@ VSIX artifact construction/static checks separately from lifecycle execution,
 and separately reports platform signing, linguistic review, and real installed
 VFP9 evidence. The Windows producer executes NSIS fresh install, installed-tree
 and localized-command smoke, same-version maintenance reinstall, silent
-uninstall, and filesystem/registration residue checks. Prior-version Windows
+uninstall, and filesystem/registration residue checks. Exact-head hosted run
+`31698722081` passed that Windows lifecycle at `c33458808`; independently
+downloaded evidence matches installer SHA-256
+`832cc4cb5b3c5f2df8d260103545e58c6847d3f729718c687a446ac76b48afbe`.
+Prior-version Windows
 upgrade, macOS productbuild, Linux DEB/RPM, and VSIX lifecycles remain
 `NOT_RUN`. The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the

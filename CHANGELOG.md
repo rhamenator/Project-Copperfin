@@ -7843,4 +7843,7 @@ passes `1/1`.
   the file inventory and single uninstall registration, and silent uninstall
   must leave neither its root nor registration. Schema v3 binds the retained
   result to the exact installer hash and keeps prior-version upgrade, macOS,
-  Linux, and VSIX lifecycle evidence explicitly `NOT_RUN`.
+  Linux, and VSIX lifecycle evidence explicitly `NOT_RUN`. Exact-head hosted
+  run `31698722081` passed the complete Windows lifecycle at `c33458808`; the
+  downloaded result matches the retained NSIS executable's independently
+  recomputed SHA-256. `RQ-CF-REL-002` is now defined.

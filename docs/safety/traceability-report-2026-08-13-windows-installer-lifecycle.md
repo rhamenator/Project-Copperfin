@@ -12,7 +12,7 @@ suitability for a safety-critical deployment.
 
 | Requirement | Verification | Controlled hazards |
 | --- | --- | --- |
-| `RQ-CF-REL-002`; `DQ-windows-installer-lifecycle-scope` — lifecycle evidence must be direct, bounded, exact-artifact-bound, and must not overstate same-version maintenance as upgrade | `DV-windows-installer-lifecycle-contract`; assembler self-test; exact-head hosted Windows execution pending | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
+| `RQ-CF-REL-002`; `DQ-windows-installer-lifecycle-scope` — lifecycle evidence must be direct, bounded, exact-artifact-bound, and must not overstate same-version maintenance as upgrade | `DV-windows-installer-lifecycle-contract`; assembler self-test; exact-head hosted Windows run `31698722081` at `c33458808bcee002e8eda61ce29b7367d1b34e2e` | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 
 Reverse traceability is carried by `.github/workflows/build-installers.yml`,
 `scripts/test-windows-installer-lifecycle.ps1`,
@@ -59,8 +59,16 @@ asset, profile, or customer data is placed in the test root.
 
 Local portable verification covers workflow/script structure, timeout and
 root boundaries, honest upgrade classification, retained result shape, and RC
-assembler ingestion. Direct Windows execution and independent review remain
-pending, so `RQ-CF-REL-002` remains `gap`.
+assembler ingestion. Exact-head hosted run `31698722081` passed the Windows
+fresh-install, installed-tree/catalog, installed-CLI, same-version reinstall,
+silent-uninstall, and filesystem/registry-residue stages. The retained result
+records one uninstall registration after install and 21 installed files. Its
+installer SHA-256, `832cc4cb5b3c5f2df8d260103545e58c6847d3f729718c687a446ac76b48afbe`,
+was independently recomputed from the downloaded NSIS executable and matches
+the JSON evidence. Artifact `9180809446` has GitHub digest
+`sha256:1c0344a9555b73d5bc8d5a89eabd36860658fbb2a63a7e107af152c2792cc153`
+and expires 2026-11-11. `RQ-CF-REL-002` is `defined`; independent review of the
+slice remains a merge gate rather than missing requirement verification.
 
 macOS productbuild, Linux DEB/RPM, previous-version Windows upgrade, VSIX
 lifecycle, human UI smoke, and platform signing are outside this slice and

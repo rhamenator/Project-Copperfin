@@ -10,8 +10,10 @@ the installed inspection CLI, performs a same-version maintenance reinstall,
 silently uninstalls, and verifies filesystem plus uninstall-registration
 residue. It neither removes residue itself nor claims prior-version upgrade;
 that field, macOS productbuild, Linux DEB/RPM, and VSIX lifecycle remain
-`NOT_RUN`. `RQ-CF-REL-002` remains a gap until exact-head hosted Windows
-execution and independent review are retained.
+`NOT_RUN`. Exact-head run `31698722081` passed the full Windows sequence at
+`c33458808`; the downloaded result's installer digest matches the retained
+NSIS executable, so `RQ-CF-REL-002` is defined. Independent review remains a
+merge gate.
 
 ## V1 RC evidence truthfulness
 
