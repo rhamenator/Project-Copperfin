@@ -37,8 +37,10 @@ Access preview under standalone Studio's View menu. It defaults to advisory,
 displays the three validated modes/capabilities and host-provided unrestricted
 warning, and contains only a Close button. It cannot activate, capture consent,
 authenticate, start a session, or execute. The Designer smoke and standalone
-projects compile warning-free against net472 locally; direct Mono/Windows UI
-evidence remains scheduled.
+projects compile warning-free against net472 locally. All load failures map to
+fixed localized product prose rather than exposing raw parser/process/host
+output, and key surfaces have localized accessibility names. `RQ-CF-AGENT-004`
+remains `gap` until direct Mono/Windows UI evidence passes.
 
 The strict read-only managed consumer is shared by
 the standalone Studio shell, VSIX, and Designer smoke assembly. It calls only

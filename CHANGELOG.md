@@ -2,7 +2,10 @@
   to standalone Studio. It displays the validated native policy descriptor,
   exact modes and capabilities, and current unrestricted warning, while
   explicitly keeping activation unavailable and offering no consent, session,
-  provider, or execution control. See
+  provider, or execution control. Generic localized errors prevent parser,
+  process, or untrusted host-output details from becoming UI prose, and the
+  mode, capability, status, and Close surfaces have localized accessibility
+  names. See
   `docs/64-workspace-agent-access-policy.md`.
 
 - 2026-08-12: Added a strict read-only managed client for the Studio-host v1

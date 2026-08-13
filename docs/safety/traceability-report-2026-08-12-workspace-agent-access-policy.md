@@ -108,10 +108,14 @@ and expires `2026-11-11T07:18:19Z`.
 `SmokeStandaloneStudioWorkspaceAgentPolicySurface` requires localized standalone
 Studio menu/dialog chrome, advisory default selection, exactly three modes,
 host-provided unrestricted warning prose, explicit false elevation, and only a
-localized Close button. It also exercises pseudo-localized chrome. The preview
+localized Close button. It requires localized accessibility names for the mode
+selector, capability text, and Close action and exercises pseudo-localized
+chrome. The preview
 has no activation, consent, provider, session, or executor control; selecting a
 mode changes displayed information only. Malformed descriptor details map to a
-localized generic UI error while retaining the stable diagnostic code. Both the full Designer smoke assembly
+localized generic UI error while retaining the stable diagnostic code. A
+synthetic nonzero-host result likewise proves that raw host output is retained
+outside the user-facing message rather than treated as trusted prose. Both the full Designer smoke assembly
 and standalone Studio shell compile warning-free against net472 locally;
 direct Mono and Windows hosted execution remain scheduled before merge.
 
@@ -216,6 +220,11 @@ sessions, audit commits, executor, sandbox, or trusted activation UI.
 The credible failure is unintended file deletion, secret disclosure, process
 execution, or network activity under the user's identity. Misuse severity is
 high; uncontrolled data corruption can intersect `HZ-data-corruption-01`.
+For the read-only preview, an additional boundary failure would be presenting
+untrusted host stderr as product guidance or exposing a control whose purpose
+cannot be determined by assistive technology. The UI therefore maps every
+load failure to fixed localized product prose and labels its interactive and
+read-only surfaces without granting them mutable authority.
 Current policy controls are disabled-by-default feature state, nondefault
 high-risk RBAC, trusted-UI origin, versioned warning consent, mandatory audit
 availability, and no elevation. Required integration controls still to ship
