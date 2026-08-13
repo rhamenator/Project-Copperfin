@@ -146,13 +146,18 @@ exited; the Common IDE package then loaded successfully, but that first input
 was already lost. Run `31730718257` reached the second attempt but exposed a
 verification gap: exact-main-HWND equality could not distinguish an unrelated
 foreground window from a same-process Visual Studio owned tool window. The
-further-corrected verifier resolves the foreground HWND's Win32 process owner,
-requires the exact controlled IDE PID, and repeats only the same idempotent
-`Copperfin.ShowCommandWindow` pane-show command, and
-proves the resulting pane in that process. It explicitly
-forwards `/Edit` plus the fixture to the running IDE and uses process-scoped UI
-Automation to prove either an exact document descendant or the exact fixture
-leaf followed by Visual Studio's title separator. It then requires the exact
+further-corrected verifier resolved the foreground HWND's Win32 process owner
+and required the exact controlled IDE PID. Run `31732427063` passed the widened
+installer boundary, completing installation in about 234 seconds, but the
+second input was owned by another process. That confirms synthetic foreground
+input is not a stable evidence boundary on the hosted desktop. The next
+correction obtains the version-matched Visual Studio DTE automation object,
+binds its main-window HWND owner to the exact controlled IDE PID, looks up and
+executes only `Copperfin.ShowCommandWindow`, and proves the resulting pane in
+that process. The same process-bound automation object opens the exact
+runner-owned PRG, after which process-scoped UI Automation proves either an
+exact document descendant or the exact fixture leaf followed by Visual
+Studio's title separator. It then requires the exact
 informational `End package load [CopperfinPackage]` XML entry/package GUID and
 rejects matching error entries. The self-test includes nominal-success and
 success-plus-error records. Corrected exact-head hosted execution is pending;
@@ -164,6 +169,11 @@ had approached 238 seconds. The default remains bounded with process-tree
 termination but is widened to 300 seconds for demonstrated hosted scheduling
 variation; the run is retained as installer-timeout diagnostics, not command
 or lifecycle evidence.
+
+Run `31732427063` is retained as negative command-automation evidence, not
+lifecycle evidence. Its ActivityLog remains retained, but no result JSON was
+admitted because the exact-process foreground check failed before pane and
+document proof.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its

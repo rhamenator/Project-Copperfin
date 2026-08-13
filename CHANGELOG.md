@@ -39,11 +39,13 @@
   sender exited; the Common IDE package then loaded, but the input was lost.
   Run `31730718257` reached the second attempt but exact-main-HWND equality
   could not distinguish an unrelated foreground window from a same-process
-  Visual Studio tool window. The corrected sequence requires the foreground
-  HWND's Win32 process owner to be the exact controlled IDE PID and repeats only
-  `Copperfin.ShowCommandWindow`,
-  proves that process's command surface, explicitly forwards `/Edit` plus the
-  fixture to it, and requires exact document proof plus explicit successful-load
+  Visual Studio tool window. Run `31732427063` then passed installation in about
+  234 seconds but correctly rejected its second synthetic input because another
+  process owned the foreground window. The corrected sequence instead binds a
+  version-matched Visual Studio DTE object's main-window owner to the controlled
+  IDE PID, executes only `Copperfin.ShowCommandWindow`, proves that process's
+  command surface, opens the exact runner-owned PRG through the same bound
+  object, and requires exact document proof plus explicit successful-load
   XML/error rejection in fresh exact-head evidence.
   Run `31731652063` did not reach the focus correction because hosted VSIX
   installation exceeded the 240-second process bound after prior installs

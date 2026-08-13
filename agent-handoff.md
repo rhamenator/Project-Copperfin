@@ -61,19 +61,22 @@ was deferred until the first invariant input sender exited; the Common IDE
 package then loaded successfully, but the input was lost. The next correction
 reached its second attempt in run `31730718257`, but exact-main-HWND equality
 could not distinguish an unrelated foreground window from a same-process
-Visual Studio tool window. It now resolves the foreground HWND's Win32 process
-owner, requires the exact controlled IDE PID, and repeats only the same idempotent
-`Copperfin.ShowCommandWindow` command, proves the resulting pane in the same
-process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
-then requires the exact document descendant or fixture
+Visual Studio tool window. Run `31732427063` proved the resulting exact-process
+foreground check fail-closed when another process owned the second input, even
+though installation completed in about 234 seconds. The current correction
+uses the version-matched Visual Studio DTE object, binds its main-window owner
+to the exact controlled IDE PID, looks up and executes only
+`Copperfin.ShowCommandWindow`, proves the resulting pane in that process, opens
+the exact runner-owned PRG through the same bound automation object, and then
+requires the exact document descendant or fixture
 window-title prefix. It also requires an explicit successful package-load XML
 entry and rejects matching errors.
 `RQ-CF-REL-003` remains `gap` pending corrected exact-head execution. Run
 `31731652063` did not reach the focus correction because hosted VSIX
 installation exceeded a brittle 240-second bound after prior installs
 approached 238 seconds. The corrected default is 300 seconds, still bounded
-with process-tree termination.
-rereview.
+with process-tree termination. Fresh exact-head execution and rereview remain
+required.
 
 ## V1 Windows installer lifecycle
 

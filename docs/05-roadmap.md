@@ -391,12 +391,15 @@ exited; the Common IDE package then loaded, but the input was lost. The next
 run `31730718257` reached the second attempt but the verifier rejected a
 foreground HWND different from the original main HWND without determining
 whether it was a same-process Visual Studio tool window. The corrected verifier
-resolves that window's Win32 process owner, requires the exact controlled IDE
-PID, and repeats only the same idempotent pane-show command,
-`Copperfin.ShowCommandWindow`, proves that
-process's pane,
-explicitly forwards `/Edit` plus the fixture to it, then requires exact
-fixture-title proof, explicit successful-load XML, and matching-error rejection
+resolves that window's Win32 process owner and requires the exact controlled IDE
+PID. Run `31732427063` passed the widened installer boundary in about 234
+seconds, but correctly rejected the second synthetic input because another
+process owned the foreground window. The current verifier instead binds the
+version-matched Visual Studio DTE object's main-window owner to the controlled
+IDE PID, looks up and executes `Copperfin.ShowCommandWindow`, proves that
+process's pane, opens the exact runner-owned PRG through that same bound object,
+then requires exact fixture-title proof, explicit successful-load XML, and
+matching-error rejection
 in fresh exact-head execution.
 Run `31731652063` did not reach that correction because VSIX installation
 exceeded the 240-second bound after prior hosted installs approached 238

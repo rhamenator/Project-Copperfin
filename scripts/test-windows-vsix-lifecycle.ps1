@@ -221,7 +221,6 @@ $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
 
 $installedDirectory = $null
 $ideProcess = $null
-$documentProcess = $null
 try {
     Write-Host 'VSIX lifecycle phase: install'
     Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
@@ -325,68 +324,88 @@ if (-not $observed) {
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
-    $invokeCommandWindowScript = Join-Path $resolvedEvidenceDirectory 'invoke-visual-studio-command-window.ps1'
-    [System.IO.File]::WriteAllText($invokeCommandWindowScript, @'
+    $invokeAutomationScript = Join-Path $resolvedEvidenceDirectory 'invoke-visual-studio-automation.ps1'
+    [System.IO.File]::WriteAllText($invokeAutomationScript, @'
 param(
     [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
-    [Parameter(Mandatory = $true)][string]$CommandName
+    [Parameter(Mandatory = $true)][string]$VisualStudioRegistryVersion,
+    [string]$CommandName = '',
+    [string]$DocumentPath = '',
+    [Parameter(Mandatory = $true)][int]$TimeoutSeconds
 )
 $ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName System.Windows.Forms
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
-public static class CopperfinForegroundWindow
+public static class CopperfinWindowOwner
 {
-    [DllImport("user32.dll")]
-    public static extern bool SetForegroundWindow(IntPtr windowHandle);
-
-    [DllImport("user32.dll")]
-    public static extern IntPtr GetForegroundWindow();
-
     [DllImport("user32.dll")]
     public static extern uint GetWindowThreadProcessId(IntPtr windowHandle, out uint processId);
 }
 "@
-if ($CommandName -ne 'Copperfin.ShowCommandWindow') {
+if ([string]::IsNullOrWhiteSpace($CommandName) -eq [string]::IsNullOrWhiteSpace($DocumentPath)) {
+    throw 'Exactly one Visual Studio automation operation is required.'
+}
+if (-not [string]::IsNullOrWhiteSpace($CommandName) -and $CommandName -ne 'Copperfin.ShowCommandWindow') {
     throw "Unexpected Visual Studio command name '$CommandName'."
 }
-$ideProcess = Get-Process -Id $ExpectedProcessId -ErrorAction Stop
-if ($ideProcess.MainWindowHandle -eq [IntPtr]::Zero) {
-    throw "Visual Studio process $ExpectedProcessId has no focusable main window."
+if (-not [string]::IsNullOrWhiteSpace($DocumentPath) -and
+        -not (Test-Path -LiteralPath $DocumentPath -PathType Leaf)) {
+    throw "Visual Studio automation document does not exist: $DocumentPath"
 }
-[void][CopperfinForegroundWindow]::SetForegroundWindow($ideProcess.MainWindowHandle)
-Start-Sleep -Milliseconds 500
-$foregroundWindow = [CopperfinForegroundWindow]::GetForegroundWindow()
-[uint32]$foregroundProcessId = 0
-[void][CopperfinForegroundWindow]::GetWindowThreadProcessId($foregroundWindow, [ref]$foregroundProcessId)
-if ($foregroundProcessId -ne [uint32]$ExpectedProcessId) {
-    throw "Visual Studio process $ExpectedProcessId did not own the foreground window for Command-window input (owner $foregroundProcessId)."
+$programmaticId = "VisualStudio.DTE.$VisualStudioRegistryVersion"
+$deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+$dte = $null
+$lastError = ''
+while ([DateTime]::UtcNow -lt $deadline -and $null -eq $dte) {
+    $candidate = $null
+    try {
+        $candidate = [Runtime.InteropServices.Marshal]::GetActiveObject($programmaticId)
+        $mainWindowHandle = [IntPtr][int64]$candidate.MainWindow.HWnd
+        [uint32]$ownerProcessId = 0
+        [void][CopperfinWindowOwner]::GetWindowThreadProcessId($mainWindowHandle, [ref]$ownerProcessId)
+        if ($ownerProcessId -eq [uint32]$ExpectedProcessId) {
+            $dte = $candidate
+            $candidate = $null
+            break
+        }
+        $lastError = "DTE main window owner $ownerProcessId did not match expected process $ExpectedProcessId."
+    }
+    catch { $lastError = $_.Exception.Message }
+    finally {
+        if ($null -ne $candidate -and [Runtime.InteropServices.Marshal]::IsComObject($candidate)) {
+            [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($candidate)
+        }
+    }
+    Start-Sleep -Milliseconds 500
 }
-[System.Windows.Forms.SendKeys]::SendWait($CommandName)
-[System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+if ($null -eq $dte) {
+    throw "Exact-process Visual Studio automation was unavailable through '$programmaticId'. Last error: $lastError"
+}
+try {
+    if (-not [string]::IsNullOrWhiteSpace($CommandName)) {
+        [void]$dte.Commands.Item($CommandName, 0)
+        $dte.ExecuteCommand($CommandName)
+    }
+    else {
+        [void]$dte.ItemOperations.OpenFile([System.IO.Path]::GetFullPath($DocumentPath))
+    }
+}
+finally {
+    if ([Runtime.InteropServices.Marshal]::IsComObject($dte)) {
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($dte)
+    }
+}
 '@, [System.Text.UTF8Encoding]::new($false))
-    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through Command window'
-    # The controlled IDE opens its built-in Command Window during startup. A
-    # parent-side bounded interval precedes one exact-command readiness trigger.
-    # Hosted Visual Studio may service the queued startup command only after
-    # that sender exits; wait again, then submit the same idempotent pane-show
-    # command for the evidence-bearing attempt. Only the pane and package-load
-    # checks below can admit success.
-    Start-Sleep -Milliseconds 10000
+    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through exact-process automation'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeAutomationScript,
             '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-CommandName', 'Copperfin.ShowCommandWindow') `
-        -Name 'Copperfin Command-window readiness-trigger input' | Out-Null
-    Start-Sleep -Milliseconds 10000
-    Invoke-BoundedProcess `
-        -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-CommandName', 'Copperfin.ShowCommandWindow') `
-        -Name 'Copperfin Command-window evidence input' | Out-Null
+            '-VisualStudioRegistryVersion', $registryVersion,
+            '-CommandName', 'Copperfin.ShowCommandWindow',
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
+        -Name 'Copperfin exact-process registered-command automation' | Out-Null
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
@@ -397,15 +416,14 @@ if ($foregroundProcessId -ne [uint32]$ExpectedProcessId) {
         -Name 'Copperfin registered-command UI Automation observation' | Out-Null
 
     Write-Host 'VSIX lifecycle phase: open runner-owned PRG through running IDE'
-    $documentStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
-    $documentStartInfo.FileName = $devenv
-    $documentStartInfo.UseShellExecute = $false
-    $documentStartInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @('/Edit', $fixturePrg)) {
-        [void]$documentStartInfo.ArgumentList.Add($argument)
-    }
-    $documentProcess = [System.Diagnostics.Process]::Start($documentStartInfo)
-    Assert-Condition ($null -ne $documentProcess) 'Runner-owned PRG open request did not start.'
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeAutomationScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)",
+            '-VisualStudioRegistryVersion', $registryVersion,
+            '-DocumentPath', $fixturePrg,
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
+        -Name 'Copperfin exact-process PRG-open automation' | Out-Null
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
@@ -416,11 +434,6 @@ if ($foregroundProcessId -ne [uint32]$ExpectedProcessId) {
             '-EvidenceDescription', 'Exact runner-owned PRG document tab',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin PRG document UI Automation observation' | Out-Null
-    if ($documentProcess.HasExited) {
-        Assert-Condition ($documentProcess.ExitCode -eq 0) `
-            "Runner-owned PRG open request exited with code $($documentProcess.ExitCode)."
-    }
-
     Start-Sleep -Seconds 2
     try { [void]$ideProcess.CloseMainWindow() } catch {}
     if (-not $ideProcess.WaitForExit(15000)) {
@@ -447,16 +460,6 @@ if ($foregroundProcessId -ne [uint32]$ExpectedProcessId) {
         'ActivityLog did not contain an explicit successful End package load [CopperfinPackage] record.'
 }
 finally {
-    if ($null -ne $documentProcess) {
-        if (-not $documentProcess.HasExited) {
-            try { [void]$documentProcess.CloseMainWindow() } catch {}
-            if (-not $documentProcess.WaitForExit(15000)) {
-                try { $documentProcess.Kill($true) } catch { Write-Warning "Document-bearing Visual Studio process could not be terminated: $($_.Exception.Message)" }
-                [void]$documentProcess.WaitForExit(15000)
-            }
-        }
-        $documentProcess.Dispose()
-    }
     if ($null -ne $ideProcess) {
         if (-not $ideProcess.HasExited) {
             try { [void]$ideProcess.CloseMainWindow() } catch {}
