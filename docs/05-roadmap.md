@@ -327,13 +327,16 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The RC assembly manifest now has a versioned schema-v2 contract that uses
-`PASS`, `FAIL`, `NOT_RUN`, `BLOCKED_EXTERNAL`,
+The RC assembly manifest first gained a schema-v2 evidence-level contract and
+now advances to schema v3 for platform-specific installer lifecycle results.
+It uses `PASS`, `FAIL`, `NOT_RUN`, `BLOCKED_EXTERNAL`,
 `UNSUPPORTED_AND_DISCLOSED`, and `NOT_APPLICABLE`. It records installer and
 VSIX artifact construction/static checks separately from lifecycle execution,
 and separately reports platform signing, linguistic review, and real installed
-VFP9 evidence. The current assembly workflow does not execute installer or
-VSIX install/launch/upgrade/uninstall lifecycles, so those fields remain
+VFP9 evidence. The Windows producer executes NSIS fresh install, installed-tree
+and localized-command smoke, same-version maintenance reinstall, silent
+uninstall, and filesystem/registration residue checks. Prior-version Windows
+upgrade, macOS productbuild, Linux DEB/RPM, and VSIX lifecycles remain
 `NOT_RUN`. The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse
@@ -341,7 +344,7 @@ requirement, verification, and hazard identifiers. Existing immutable RC1/RC2
 manifests predate this correction; their
 ambiguous `installers: passed` and `visual_studio_vsix: passed` values prove
 only their producer jobs completed, not lifecycle validation. A later
-sequential RC must carry schema v2 and current lifecycle evidence before those
+sequential RC must carry schema v3 and current lifecycle evidence before those
 claims can advance.
 
 The MVP implementation subgoals are complete at final product/test heads

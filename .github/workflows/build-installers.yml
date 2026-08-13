@@ -147,6 +147,21 @@ jobs:
           -DCOPPERFIN_EXPECTED_ARTIFACT_SUFFIXES="Windows.exe;Windows.zip"
           -P tests/run_cpack_artifact_contract_check.cmake
 
+      - name: Exercise Windows installer lifecycle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = @(Get-ChildItem -LiteralPath build/package -Filter 'copperfin-*-Windows.exe' -File)
+          if ($installer.Count -ne 1) {
+            throw "Windows installer lifecycle requires exactly one NSIS installer; found $($installer.Count)."
+          }
+          $installRoot = Join-Path $env:RUNNER_TEMP "copperfin-installer-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          ./scripts/test-windows-installer-lifecycle.ps1 `
+            -InstallerPath $installer[0].FullName `
+            -BinaryDirectory (Join-Path $env:GITHUB_WORKSPACE 'build') `
+            -InstallRoot $installRoot `
+            -EvidenceDirectory (Join-Path $env:GITHUB_WORKSPACE 'artifacts/windows-installer-lifecycle')
+
       - name: Create exact Corresponding Source archive
         uses: ./.github/actions/create-release-source
         with:
@@ -159,6 +174,7 @@ jobs:
           path: |
             build/package/copperfin-*-Windows.exe
             build/package/copperfin-*-Windows.zip
+            artifacts/windows-installer-lifecycle/windows-installer-lifecycle.json
             release-source/Project-Copperfin-source-${{ github.sha }}.zip
           if-no-files-found: error
 

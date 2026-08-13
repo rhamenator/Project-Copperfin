@@ -22,10 +22,13 @@ next sequential RC number.
 3. Compare the tag and 40-character revision in
    `rc-validation-manifest.json` with the workflow page.
    Validate that manifest against the bundled
-   `rc-validation-manifest.schema.json`. Schema version 2 separates package
-   construction/static checks from actual installer and VSIX lifecycle
-   execution. `NOT_RUN` means the bundle workflow did not perform that
-   lifecycle; it must not be read as a failure or a pass.
+   `rc-validation-manifest.schema.json`. Schema version 3 separates package
+   construction/static checks from each platform's actual installer and VSIX
+   lifecycle execution. The Windows NSIS fields distinguish fresh install,
+   installed-command smoke, same-version maintenance reinstall, prior-version
+   upgrade, silent uninstall, and residue checks. `NOT_RUN` means the bundle
+   workflow did not perform that exact operation; it must not be read as a
+   failure or a pass.
    The signing, linguistic-review, and real-installed-VFP9 fields use the same
    vocabulary and describe only this exact candidate workflow. Evidence from a
    separate protected or human run must not be inferred into this manifest.
@@ -42,6 +45,9 @@ next sequential RC number.
 - `installers/macos/` contains the productbuild package and portable TGZ.
 - `installers/linux/` contains DEB, RPM, and portable TGZ packages.
 - `ide/visual-studio/` contains the Visual Studio VSIX.
+- `evidence/windows-installer-lifecycle.json` records the Windows NSIS
+  lifecycle result and binds it to the installer's SHA-256 digest. A successful
+  maintenance reinstall is not evidence of upgrade from an older version.
 - `rc-validation-manifest.schema.json` defines the invariant status vocabulary
   and exact machine-readable validation fields used by the candidate manifest.
 - `source/` contains the exact Corresponding Source archive for the tagged

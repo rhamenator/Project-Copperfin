@@ -7836,3 +7836,11 @@ passes `1/1`.
   optional format assertions, and preserves reverse RQ/DQ/DV/hazard links in
   every mapped artifact. See `docs/35-rc1-evaluation-guide.md` and
   `docs/safety/traceability-report-2026-08-13-rc-evidence-truth.md`.
+- 2026-08-13: Added a fail-closed Windows NSIS lifecycle gate. The installer is
+  silently exercised in a unique runner-owned fresh root, its installed Studio
+  tree and locale catalogs are verified, the installed inspection CLI is run
+  with a bounded timeout, a same-version maintenance reinstall must preserve
+  the file inventory and single uninstall registration, and silent uninstall
+  must leave neither its root nor registration. Schema v3 binds the retained
+  result to the exact installer hash and keeps prior-version upgrade, macOS,
+  Linux, and VSIX lifecycle evidence explicitly `NOT_RUN`.

@@ -1,11 +1,24 @@
 # Agent Handoff
 
+## V1 Windows installer lifecycle
+
+The current stacked slice advances the validation manifest to schema v3 and
+binds a retained Windows lifecycle result to the exact NSIS installer digest.
+The Windows installer workflow performs a silent fresh install into a unique
+runner-owned root, checks the full Studio/localization install contracts, runs
+the installed inspection CLI, performs a same-version maintenance reinstall,
+silently uninstalls, and verifies filesystem plus uninstall-registration
+residue. It neither removes residue itself nor claims prior-version upgrade;
+that field, macOS productbuild, Linux DEB/RPM, and VSIX lifecycle remain
+`NOT_RUN`. `RQ-CF-REL-002` remains a gap until exact-head hosted Windows
+execution and independent review are retained.
+
 ## V1 RC evidence truthfulness
 
 The current bounded release-evidence slice replaces the private-candidate
 manifest's ambiguous installer/VSIX `passed` values with a bundled
 schema-versioned contract and the closed uppercase evidence vocabulary. Build
-and static checks remain `PASS`; actual installer and VSIX lifecycle execution,
+and static checks remain `PASS`; schema v2 left installer and VSIX lifecycle execution,
 protected launcher trust in this workflow, qualified Spanish/Portuguese review,
 and real installed-VFP9 evidence remain `NOT_RUN`. Platform-signing gaps are
 `UNSUPPORTED_AND_DISCLOSED`. The assembler validates every produced manifest
