@@ -45,8 +45,11 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   Visual Studio has a bounded observation window, then receives a normal close
   request before bounded tree termination fallback.
 - The activity log must identify the Copperfin assembly or package GUID after
-  invoking the registered `Copperfin.ShowCommandWindow` command. A process that
-  merely starts does not count as package-load evidence.
+  invoking the registered `Copperfin.ShowCommandWindow` command. Visual Studio
+  first opens the runner-owned PRG and exposes a real main window; a second
+  bounded `devenv` invocation then forwards the command to that running
+  instance. A process that merely starts does not count as package-load
+  evidence.
 - Same-version reinstall, previous-version upgrade/coexistence, and disablement
   remain explicit `NOT_RUN` states. They cannot be promoted by this slice.
 

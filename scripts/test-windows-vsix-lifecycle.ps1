@@ -193,12 +193,28 @@ try {
     $startInfo.FileName = $devenv
     $startInfo.UseShellExecute = $false
     $startInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @($fixturePrg, '/NoSplash', '/Log', $activityLog, '/Command', 'Copperfin.ShowCommandWindow')) {
+    foreach ($argument in @($fixturePrg, '/NoSplash', '/Log', $activityLog)) {
         [void]$startInfo.ArgumentList.Add($argument)
     }
     $ideProcess = [System.Diagnostics.Process]::Start($startInfo)
     Assert-Condition ($null -ne $ideProcess) 'Visual Studio lifecycle smoke did not start.'
-    $deadline = [DateTime]::UtcNow.AddSeconds($ProcessTimeoutSeconds)
+    $startupDeadline = [DateTime]::UtcNow.AddSeconds($ProcessTimeoutSeconds)
+    while ([DateTime]::UtcNow -lt $startupDeadline -and -not $ideProcess.HasExited) {
+        $ideProcess.Refresh()
+        if ($ideProcess.MainWindowHandle -ne [IntPtr]::Zero) { break }
+        Start-Sleep -Milliseconds 500
+    }
+    Assert-Condition (-not $ideProcess.HasExited) `
+        "Visual Studio exited while opening the runner-owned PRG (exit $($ideProcess.ExitCode))."
+    Assert-Condition ($ideProcess.MainWindowHandle -ne [IntPtr]::Zero) `
+        'Visual Studio did not expose a main window within the bounded startup interval.'
+
+    Invoke-BoundedProcess `
+        -FilePath $devenv `
+        -Arguments @('/Command', 'Copperfin.ShowCommandWindow') `
+        -Name 'Copperfin registered command invocation' | Out-Null
+
+    $deadline = [DateTime]::UtcNow.AddSeconds(60)
     $packageObserved = $false
     while ([DateTime]::UtcNow -lt $deadline -and -not $ideProcess.HasExited) {
         if (Test-Path -LiteralPath $activityLog -PathType Leaf) {
@@ -215,7 +231,7 @@ try {
         Start-Sleep -Milliseconds 500
     }
     Assert-Condition (-not $ideProcess.HasExited) `
-        "Visual Studio exited before the Copperfin command could be observed (exit $($ideProcess.ExitCode))."
+        "Visual Studio exited before the Copperfin package load could be observed (exit $($ideProcess.ExitCode))."
     Assert-Condition $packageObserved 'ActivityLog did not prove Copperfin package loading after command invocation.'
 }
 finally {

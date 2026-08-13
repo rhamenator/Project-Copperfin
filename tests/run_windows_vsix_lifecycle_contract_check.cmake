@@ -47,6 +47,8 @@ require_text("${script}" "'/quiet', \"/instanceIds:$instanceId\"" "noninteractiv
 require_text("${script}" "installationVersion -match" "version-independent Visual Studio profile selection")
 require_text("${script}" "Copperfin VSIX is already installed" "clean-runner precondition")
 require_text("${script}" "Copperfin.ShowCommandWindow" "representative installed command")
+require_text("${script}" "MainWindowHandle" "bounded IDE readiness observation")
+require_text("${script}" "Copperfin registered command invocation" "post-startup command forwarding")
 require_text("${script}" "lifecycle-smoke.prg" "runner-owned PRG open fixture")
 require_text("${script}" "ActivityLog did not prove Copperfin package loading" "package-load proof")
 require_text("${script}" "'/uninstall:Copperfin.VisualStudio'" "exact extension uninstall identity")
