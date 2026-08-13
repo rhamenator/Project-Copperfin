@@ -45,10 +45,12 @@ exposed zero same-process UI Automation `MenuItem` elements. The next correction
 focuses the exact IDE. Run `31723497158` proved `Ctrl+Alt+A` started loading the
 Common IDE package, but the helper entered the command before the package and
 Command window finished loading. Run `31724537954` proved the hosted Command
-Window is not a UI Automation descendant. The next correction opens Visual
-Studio's Command window through the hosted General profile's shortcut, waits
-for exact Common IDE package-load completion in the runner-owned ActivityLog,
-refocuses the same IDE, enters only the invariant
+Window is not a UI Automation descendant. Run `31725371043` proved its
+ActivityLog load record is buffered until IDE shutdown and cannot serve as a
+live readiness signal. The next correction opens Visual Studio's Command window
+through the hosted General profile's shortcut, gives the lazy WPF surface a
+conservative bounded startup interval, refocuses the same IDE, and enters only
+the invariant
 `Copperfin.ShowCommandWindow` command, proves the resulting pane in the same
 process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
 then requires the exact document descendant or fixture

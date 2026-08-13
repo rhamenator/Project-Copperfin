@@ -329,9 +329,7 @@ if (-not $observed) {
     [System.IO.File]::WriteAllText($invokeCommandWindowScript, @'
 param(
     [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
-    [Parameter(Mandatory = $true)][string]$CommandName,
-    [Parameter(Mandatory = $true)][string]$ActivityLogPath,
-    [Parameter(Mandatory = $true)][int]$TimeoutSeconds
+    [Parameter(Mandatory = $true)][string]$CommandName
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
@@ -350,9 +348,6 @@ public static class CopperfinForegroundWindow
 if ($CommandName -ne 'Copperfin.ShowCommandWindow') {
     throw "Unexpected Visual Studio command name '$CommandName'."
 }
-$commonIdeLoadMarker = '<description>End package load [Visual Studio Common IDE Package]</description>'
-$commonIdeAlreadyLoaded = (Test-Path -LiteralPath $ActivityLogPath -PathType Leaf) -and
-    ((Get-Content -LiteralPath $ActivityLogPath -Raw -ErrorAction Stop).Contains($commonIdeLoadMarker))
 $ideProcess = Get-Process -Id $ExpectedProcessId -ErrorAction Stop
 if ($ideProcess.MainWindowHandle -eq [IntPtr]::Zero) {
     throw "Visual Studio process $ExpectedProcessId has no focusable main window."
@@ -363,19 +358,11 @@ if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindo
     throw "Visual Studio process $ExpectedProcessId could not be focused for Command-window activation."
 }
 [System.Windows.Forms.SendKeys]::SendWait('^%a')
-$deadline = [DateTime]::UtcNow.AddSeconds([Math]::Min($TimeoutSeconds, 30))
-$commonIdeLoaded = $commonIdeAlreadyLoaded
-while ([DateTime]::UtcNow -lt $deadline -and -not $commonIdeLoaded) {
-    if (Test-Path -LiteralPath $ActivityLogPath -PathType Leaf) {
-        $logText = Get-Content -LiteralPath $ActivityLogPath -Raw -ErrorAction Stop
-        $commonIdeLoaded = $logText.Contains($commonIdeLoadMarker)
-    }
-    if (-not $commonIdeLoaded) { Start-Sleep -Milliseconds 250 }
-}
-if (-not $commonIdeLoaded) {
-    throw "Visual Studio process $ExpectedProcessId did not finish loading its Command Window before input."
-}
-Start-Sleep -Milliseconds 500
+# The hosted WPF Command Window is not a UI Automation descendant and its
+# ActivityLog records are buffered until IDE shutdown. Give the documented
+# shortcut a bounded startup interval; the pane and package-load checks below,
+# not this delay, are the positive command evidence.
+Start-Sleep -Milliseconds 3000
 [void][CopperfinForegroundWindow]::SetForegroundWindow($ideProcess.MainWindowHandle)
 Start-Sleep -Milliseconds 250
 if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
@@ -389,8 +376,7 @@ if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindo
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
             '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-CommandName', 'Copperfin.ShowCommandWindow', '-ActivityLogPath', $activityLog,
-            '-TimeoutSeconds', "$automationTimeoutSeconds") `
+            '-CommandName', 'Copperfin.ShowCommandWindow') `
         -Name 'Copperfin Command-window invocation' | Out-Null
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `

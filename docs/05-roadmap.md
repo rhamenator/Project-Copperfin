@@ -375,9 +375,10 @@ same-process UI Automation `MenuItem` elements. The corrected verifier focuses
 the exact IDE. Run `31723497158` proved `Ctrl+Alt+A` started the Common IDE
 package, but input raced ahead of Command-window readiness and was lost. The
 next run proved the hosted Command Window is not a UI Automation descendant.
-The corrected verifier opens it through the hosted General profile's shortcut,
-waits for exact Common IDE package-load completion in the runner-owned
-ActivityLog, refocuses the same IDE, enters only
+Run `31725371043` then proved its ActivityLog load record is buffered until IDE
+shutdown and cannot be a live readiness signal. The corrected verifier opens it
+through the hosted General profile's shortcut, gives the lazy WPF surface a
+conservative bounded startup interval, refocuses the same IDE, and enters only
 `Copperfin.ShowCommandWindow`, proves that
 process's pane,
 explicitly forwards `/Edit` plus the fixture to it, then requires exact
