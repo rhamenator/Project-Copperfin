@@ -327,13 +327,26 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The RC assembly manifest now has a versioned schema-v2 contract that uses
-`PASS`, `FAIL`, `NOT_RUN`, `BLOCKED_EXTERNAL`,
+The RC assembly manifest first gained a schema-v2 evidence-level contract and
+now advances to schema v3 for platform-specific installer lifecycle results.
+It uses `PASS`, `FAIL`, `NOT_RUN`, `BLOCKED_EXTERNAL`,
 `UNSUPPORTED_AND_DISCLOSED`, and `NOT_APPLICABLE`. It records installer and
 VSIX artifact construction/static checks separately from lifecycle execution,
 and separately reports platform signing, linguistic review, and real installed
-VFP9 evidence. The current assembly workflow does not execute installer or
-VSIX install/launch/upgrade/uninstall lifecycles, so those fields remain
+VFP9 evidence. The Windows producer executes NSIS fresh install, installed-tree
+and localized-command smoke, same-version maintenance reinstall, silent
+uninstall, and filesystem/registration residue checks. Exact-head hosted run
+`31698722081` passed that Windows lifecycle at `c33458808`; independently
+downloaded evidence matches installer SHA-256
+`832cc4cb5b3c5f2df8d260103545e58c6847d3f729718c687a446ac76b48afbe`.
+Independent review subsequently found that the old verifier suppressed
+registry-read errors and could miss the exact CPack key after its values were
+cleared. The corrected verifier terminates on read failure and admits the
+generated exact key independently of values; corrected exact-head Windows
+run `31702317708` passed, and independently downloaded evidence matches the
+retained NSIS SHA-256 `f77217c135ee223746f876b672b1a98366b1ba44ff38a94184e58f9fa408dcc6`.
+Prior-version Windows
+upgrade, macOS productbuild, Linux DEB/RPM, and VSIX lifecycles remain
 `NOT_RUN`. The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse
@@ -341,7 +354,7 @@ requirement, verification, and hazard identifiers. Existing immutable RC1/RC2
 manifests predate this correction; their
 ambiguous `installers: passed` and `visual_studio_vsix: passed` values prove
 only their producer jobs completed, not lifecycle validation. A later
-sequential RC must carry schema v2 and current lifecycle evidence before those
+sequential RC must carry schema v3 and current lifecycle evidence before those
 claims can advance.
 
 The MVP implementation subgoals are complete at final product/test heads

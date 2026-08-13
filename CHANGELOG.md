@@ -7836,3 +7836,23 @@ passes `1/1`.
   optional format assertions, and preserves reverse RQ/DQ/DV/hazard links in
   every mapped artifact. See `docs/35-rc1-evaluation-guide.md` and
   `docs/safety/traceability-report-2026-08-13-rc-evidence-truth.md`.
+- 2026-08-13: Added a fail-closed Windows NSIS lifecycle gate. The installer is
+  silently exercised in a unique runner-owned fresh root, its installed Studio
+  tree and locale catalogs are verified, the installed inspection CLI is run
+  with a bounded timeout, a same-version maintenance reinstall must preserve
+  the file inventory and single uninstall registration, and silent uninstall
+  must leave neither its root nor registration. Schema v3 binds the retained
+  result to the exact installer hash and keeps prior-version upgrade, macOS,
+  Linux, and VSIX lifecycle evidence explicitly `NOT_RUN`. Exact-head hosted
+  run `31698722081` passed the complete Windows lifecycle at `c33458808`; the
+  downloaded result matches the retained NSIS executable's independently
+  recomputed SHA-256. Independent review then found two false-clean registry
+  paths: suppressed read failures and an exact CPack uninstall key with cleared
+  values. The corrected verifier fails closed on existing-base/key reads and
+  matches the generated exact key independently of its values. Corrected
+  run `31700912913` then exposed PowerShell's successful zero-output
+  representation for a no-value registry key before installer launch. Such
+  keys are now normalized to explicit empty property objects without
+  suppressing real read errors. Exact-head run `31702317708` passed the
+  corrected full lifecycle at `2c38492c1`; the downloaded JSON digest matches
+  the retained NSIS executable. `RQ-CF-REL-002` is defined.

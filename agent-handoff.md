@@ -1,11 +1,35 @@
 # Agent Handoff
 
+## V1 Windows installer lifecycle
+
+The current stacked slice advances the validation manifest to schema v3 and
+binds a retained Windows lifecycle result to the exact NSIS installer digest.
+The Windows installer workflow performs a silent fresh install into a unique
+runner-owned root, checks the full Studio/localization install contracts, runs
+the installed inspection CLI, performs a same-version maintenance reinstall,
+silently uninstalls, and verifies filesystem plus uninstall-registration
+residue. It neither removes residue itself nor claims prior-version upgrade;
+that field, macOS productbuild, Linux DEB/RPM, and VSIX lifecycle remain
+`NOT_RUN`. Exact-head run `31698722081` passed the full Windows sequence at
+`c33458808`; the downloaded result's installer digest matches the retained
+NSIS executable. Independent review then found two false-clean paths in the
+registry verifier: suppressed read errors and an exact leftover CPack key with
+cleared values. The corrected implementation fails closed and recognizes the
+generated exact key independently of its values. `RQ-CF-REL-002` was reset to
+`gap` pending corrected exact-head Windows execution.
+The first corrected run, `31700912913`, exposed a successful empty registry-key
+read represented as no pipeline object before installer launch. Empty keys are
+now normalized explicitly without suppressing real read errors. Exact-head run
+`31702317708` passed the corrected full lifecycle at `2c38492c1`; downloaded
+artifact evidence matches NSIS SHA-256 `f77217c135ee223746f876b672b1a98366b1ba44ff38a94184e58f9fa408dcc6`.
+`RQ-CF-REL-002` is defined; exact-head rereview and checks remain merge gates.
+
 ## V1 RC evidence truthfulness
 
 The current bounded release-evidence slice replaces the private-candidate
 manifest's ambiguous installer/VSIX `passed` values with a bundled
 schema-versioned contract and the closed uppercase evidence vocabulary. Build
-and static checks remain `PASS`; actual installer and VSIX lifecycle execution,
+and static checks remain `PASS`; schema v2 left installer and VSIX lifecycle execution,
 protected launcher trust in this workflow, qualified Spanish/Portuguese review,
 and real installed-VFP9 evidence remain `NOT_RUN`. Platform-signing gaps are
 `UNSUPPORTED_AND_DISCLOSED`. The assembler validates every produced manifest

@@ -7,7 +7,9 @@
 
 Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation;
 DV-rc-evidence-v2-assembly-self-test; DV-rc-evidence-v2-schema-validation;
-HZ-system-failure-01; HZ-doc-command-01.
+RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
+DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
+HZ-data-corruption-01; HZ-doc-command-01.
 """
 
 from __future__ import annotations
@@ -298,6 +300,59 @@ def validate_schema_instance(instance: object, schema: object, location: str = "
             raise AssemblyError(f"manifest integer at {location} is below its minimum")
 
 
+def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) -> None:
+    try:
+        evidence = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise AssemblyError(f"Windows installer lifecycle evidence is not valid JSON: {path}") from error
+    expected_keys = {
+        "schema_version",
+        "kind",
+        "installer_sha256",
+        "install_root",
+        "fresh_install",
+        "installed_tree_contract",
+        "locale_catalog_contract",
+        "installed_cli_smoke",
+        "same_version_maintenance_reinstall",
+        "upgrade_from_previous_version",
+        "silent_uninstall",
+        "install_root_residue",
+        "uninstall_registration_residue",
+        "uninstall_registration_count_after_install",
+        "installed_file_count",
+        "installed_cli_stdout",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_keys:
+        raise AssemblyError("Windows installer lifecycle evidence has an unexpected object shape")
+    expected_pass_fields = (
+        "fresh_install",
+        "installed_tree_contract",
+        "locale_catalog_contract",
+        "installed_cli_smoke",
+        "same_version_maintenance_reinstall",
+        "silent_uninstall",
+        "install_root_residue",
+        "uninstall_registration_residue",
+    )
+    if (
+        evidence["schema_version"] != 1
+        or evidence["kind"] != "copperfin-windows-installer-lifecycle-result"
+        or any(evidence[field] != "PASS" for field in expected_pass_fields)
+        or evidence["upgrade_from_previous_version"] != "NOT_RUN"
+        or evidence["installer_sha256"] != sha256(installer)
+        or evidence["uninstall_registration_count_after_install"] != 1
+        or not isinstance(evidence["installed_file_count"], int)
+        or isinstance(evidence["installed_file_count"], bool)
+        or evidence["installed_file_count"] < 1
+        or not isinstance(evidence["install_root"], str)
+        or not evidence["install_root"]
+        or not isinstance(evidence["installed_cli_stdout"], str)
+        or "copperfin_inspect" not in evidence["installed_cli_stdout"]
+    ):
+        raise AssemblyError("Windows installer lifecycle evidence does not prove the required bounded lifecycle")
+
+
 def assemble(args: argparse.Namespace) -> Path:
     if CANDIDATE_TAG_PATTERN.fullmatch(args.candidate_tag) is None:
         raise AssemblyError("candidate tag must match v0.1.0-rc.N with a positive RC number")
@@ -345,6 +400,19 @@ def assemble(args: argparse.Namespace) -> Path:
         source = require_one(producer_roots[producer], pattern, f"{producer} RC payload")
         copy_verified(source, output_root / relative_directory / source.name, f"{producer} RC payload")
 
+    windows_installer = require_one(output_root / "installers/windows", "*.exe", "bundled Windows installer")
+    windows_lifecycle = require_one(
+        producer_roots["windows"],
+        "windows-installer-lifecycle.json",
+        "Windows installer lifecycle evidence",
+    )
+    require_windows_installer_lifecycle_evidence(windows_lifecycle, windows_installer)
+    copy_verified(
+        windows_lifecycle,
+        output_root / "evidence/windows-installer-lifecycle.json",
+        "Windows installer lifecycle evidence",
+    )
+
     source_name = f"{SOURCE_PREFIX}{args.revision}.zip"
     source_archive = require_one(
         producer_roots["source"], source_name, "authoritative Corresponding Source"
@@ -382,7 +450,7 @@ def assemble(args: argparse.Namespace) -> Path:
     copy_verified(tester_guide, output_root / "RC-TESTER-README.md", "RC tester guide")
 
     manifest_schema = require_regular(
-        repository_root / "docs/contracts/rc-validation-manifest-v2.schema.json",
+        repository_root / "docs/contracts/rc-validation-manifest-v3.schema.json",
         "RC validation manifest schema",
     )
     try:
@@ -397,7 +465,7 @@ def assemble(args: argparse.Namespace) -> Path:
     )
 
     manifest = {
-        "schema_version": 2,
+        "schema_version": 3,
         "schema": VALIDATION_MANIFEST_SCHEMA,
         "kind": "copperfin-private-evaluation-release-candidate",
         "candidate_tag": args.candidate_tag,
@@ -414,7 +482,17 @@ def assemble(args: argparse.Namespace) -> Path:
             "native_release_readiness": "PASS",
             "managed_ui_build_and_smoke": "PASS",
             "installer_artifact_build_and_static_checks": "PASS",
-            "installer_lifecycle": "NOT_RUN",
+            "installer_lifecycle": {
+                "windows_fresh_install": "PASS",
+                "windows_installed_cli_smoke": "PASS",
+                "windows_same_version_maintenance_reinstall": "PASS",
+                "windows_upgrade_from_previous_version": "NOT_RUN",
+                "windows_silent_uninstall": "PASS",
+                "windows_residue_checks": "PASS",
+                "macos_productbuild": "NOT_RUN",
+                "linux_deb": "NOT_RUN",
+                "linux_rpm": "NOT_RUN",
+            },
             "visual_studio_vsix_build_and_static_checks": "PASS",
             "visual_studio_vsix_lifecycle": "NOT_RUN",
             "security_and_sbom": "PASS",
@@ -484,6 +562,28 @@ def self_test() -> None:
                     archive.writestr("payload.bin", data)
             else:
                 path.write_bytes(data)
+        windows_installer_fixture = inputs / "copperfin-windows-installers/copperfin-0.1.0-Windows.exe"
+        windows_lifecycle_fixture = {
+            "schema_version": 1,
+            "kind": "copperfin-windows-installer-lifecycle-result",
+            "installer_sha256": sha256(windows_installer_fixture),
+            "install_root": "C:\\hosted-runner\\copperfin-lifecycle",
+            "fresh_install": "PASS",
+            "installed_tree_contract": "PASS",
+            "locale_catalog_contract": "PASS",
+            "installed_cli_smoke": "PASS",
+            "same_version_maintenance_reinstall": "PASS",
+            "upgrade_from_previous_version": "NOT_RUN",
+            "silent_uninstall": "PASS",
+            "install_root_residue": "PASS",
+            "uninstall_registration_residue": "PASS",
+            "uninstall_registration_count_after_install": 1,
+            "installed_file_count": 12,
+            "installed_cli_stdout": "Usage: copperfin_inspect <path-to-vfp-asset>",
+        }
+        (inputs / "copperfin-windows-installers/windows-installer-lifecycle.json").write_text(
+            json.dumps(windows_lifecycle_fixture, sort_keys=True) + "\n", encoding="utf-8"
+        )
         source_name = f"{SOURCE_PREFIX}{revision}.zip"
         for producer in (
             "copperfin-release-source",
@@ -502,10 +602,10 @@ def self_test() -> None:
             "THIRD_PARTY_NOTICES.md": b"Notices\n",
             "LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt": b"Exception\n",
             "docs/contracts/release-license-metadata.json": b"{}\n",
-            "docs/contracts/rc-validation-manifest-v2.schema.json": Path(
+            "docs/contracts/rc-validation-manifest-v3.schema.json": Path(
                 __file__
             ).parent.parent.joinpath(
-                "docs/contracts/rc-validation-manifest-v2.schema.json"
+                "docs/contracts/rc-validation-manifest-v3.schema.json"
             ).read_bytes(),
             "docs/35-rc1-evaluation-guide.md": b"# RC candidate\n",
         }
@@ -537,6 +637,7 @@ def self_test() -> None:
         expected_bundle_files = {
             "RC-TESTER-README.md",
             "SHA256SUMS.txt",
+            "evidence/windows-installer-lifecycle.json",
             "ide/visual-studio/Copperfin.VisualStudio.vsix",
             "installers/linux/copperfin-0.1.0-Linux.deb",
             "installers/linux/copperfin-0.1.0-Linux.rpm",
@@ -602,7 +703,17 @@ def self_test() -> None:
             "native_release_readiness": "PASS",
             "managed_ui_build_and_smoke": "PASS",
             "installer_artifact_build_and_static_checks": "PASS",
-            "installer_lifecycle": "NOT_RUN",
+            "installer_lifecycle": {
+                "windows_fresh_install": "PASS",
+                "windows_installed_cli_smoke": "PASS",
+                "windows_same_version_maintenance_reinstall": "PASS",
+                "windows_upgrade_from_previous_version": "NOT_RUN",
+                "windows_silent_uninstall": "PASS",
+                "windows_residue_checks": "PASS",
+                "macos_productbuild": "NOT_RUN",
+                "linux_deb": "NOT_RUN",
+                "linux_rpm": "NOT_RUN",
+            },
             "visual_studio_vsix_build_and_static_checks": "PASS",
             "visual_studio_vsix_lifecycle": "NOT_RUN",
             "security_and_sbom": "PASS",
@@ -622,7 +733,7 @@ def self_test() -> None:
             "real_installed_vfp9_samples": "NOT_RUN",
         }
         if (
-            manifest["schema_version"] != 2
+            manifest["schema_version"] != 3
             or manifest["schema"] != VALIDATION_MANIFEST_SCHEMA
             or manifest["revision"] != revision
             or manifest["official_release"] is not False
@@ -636,9 +747,32 @@ def self_test() -> None:
             raise AssemblyError("self-test validation manifest retains an ambiguous lifecycle claim")
         bundled_schema = bundle / VALIDATION_MANIFEST_SCHEMA
         if sha256(bundled_schema) != sha256(
-            repository / "docs/contracts/rc-validation-manifest-v2.schema.json"
+            repository / "docs/contracts/rc-validation-manifest-v3.schema.json"
         ):
             raise AssemblyError("self-test validation manifest schema is not the exact repository schema")
+
+        lifecycle_path = bundle / "evidence/windows-installer-lifecycle.json"
+        lifecycle = json.loads(lifecycle_path.read_text(encoding="utf-8"))
+        lifecycle_mutations = (
+            ("false fresh-install status", "fresh_install", "NOT_RUN"),
+            ("false previous-version upgrade", "upgrade_from_previous_version", "PASS"),
+            ("wrong installer digest", "installer_sha256", "0" * 64),
+            ("missing installed file inventory", "installed_file_count", 0),
+        )
+        for description, field, replacement in lifecycle_mutations:
+            mutated = dict(lifecycle)
+            mutated[field] = replacement
+            mutation_path = root / f"bad-lifecycle-{field}.json"
+            mutation_path.write_text(json.dumps(mutated) + "\n", encoding="utf-8")
+            try:
+                require_windows_installer_lifecycle_evidence(
+                    mutation_path,
+                    bundle / "installers/windows/copperfin-0.1.0-Windows.exe",
+                )
+            except AssemblyError:
+                pass
+            else:
+                raise AssemblyError(f"self-test accepted {description}")
 
         for invalid_tag in (
             "v0.1.0-rc.0",

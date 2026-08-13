@@ -796,15 +796,23 @@ install(DIRECTORY resources/locales/
     DESTINATION share/copperfin/locales
 )
 
+# Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
+# DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
+# HZ-data-corruption-01; HZ-doc-command-01.
 set(CPACK_PACKAGE_NAME "copperfin")
 set(CPACK_PACKAGE_VENDOR "Copperfin")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Copperfin standalone runtime and studio host tooling")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_CONTACT "maintainers@copperfin.local")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
+set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
 file(GENERATE
     OUTPUT "${CMAKE_BINARY_DIR}/CopperfinPackageVersion.txt"
     CONTENT "${PROJECT_VERSION}\n"
+)
+file(GENERATE
+    OUTPUT "${CMAKE_BINARY_DIR}/CopperfinPackageInstallRegistryKey.txt"
+    CONTENT "${CPACK_PACKAGE_INSTALL_REGISTRY_KEY}\n"
 )
 
 if(WIN32)
