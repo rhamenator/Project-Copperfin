@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/rhamenator/Project-Copperfin/blob/v1-development/docs/contracts/rc-validation-manifest-v2.schema.json",
+  "$id": "urn:copperfin:schema:rc-validation-manifest:2",
   "title": "Copperfin private evaluation release-candidate validation manifest v2",
   "type": "object",
   "additionalProperties": false,
@@ -61,14 +61,14 @@
         "security_and_sbom"
       ],
       "properties": {
-        "exact_tag_and_revision": { "$ref": "#/$defs/status" },
-        "native_release_readiness": { "$ref": "#/$defs/status" },
-        "managed_ui_build_and_smoke": { "$ref": "#/$defs/status" },
-        "installer_artifact_build_and_static_checks": { "$ref": "#/$defs/status" },
+        "exact_tag_and_revision": { "const": "PASS" },
+        "native_release_readiness": { "const": "PASS" },
+        "managed_ui_build_and_smoke": { "const": "PASS" },
+        "installer_artifact_build_and_static_checks": { "const": "PASS" },
         "installer_lifecycle": { "const": "NOT_RUN" },
-        "visual_studio_vsix_build_and_static_checks": { "$ref": "#/$defs/status" },
+        "visual_studio_vsix_build_and_static_checks": { "const": "PASS" },
         "visual_studio_vsix_lifecycle": { "const": "NOT_RUN" },
-        "security_and_sbom": { "$ref": "#/$defs/status" }
+        "security_and_sbom": { "const": "PASS" }
       }
     },
     "signing": {
@@ -97,7 +97,7 @@
         "spanish_portuguese_linguistic_review"
       ],
       "properties": {
-        "catalog_structure_and_routing_checks": { "$ref": "#/$defs/status" },
+        "catalog_structure_and_routing_checks": { "const": "PASS" },
         "spanish_portuguese_linguistic_review": { "const": "NOT_RUN" }
       }
     },
@@ -105,11 +105,9 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "automated_compatibility_tests",
         "real_installed_vfp9_samples"
       ],
       "properties": {
-        "automated_compatibility_tests": { "$ref": "#/$defs/status" },
         "real_installed_vfp9_samples": { "const": "NOT_RUN" }
       }
     },

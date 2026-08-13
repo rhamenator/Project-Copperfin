@@ -287,7 +287,6 @@ def assemble(args: argparse.Namespace) -> Path:
             "spanish_portuguese_linguistic_review": "NOT_RUN",
         },
         "compatibility": {
-            "automated_compatibility_tests": "PASS",
             "real_installed_vfp9_samples": "NOT_RUN",
         },
         "limitations": {
@@ -440,7 +439,6 @@ def self_test() -> None:
             "spanish_portuguese_linguistic_review": "NOT_RUN",
         }
         expected_compatibility = {
-            "automated_compatibility_tests": "PASS",
             "real_installed_vfp9_samples": "NOT_RUN",
         }
         if (
