@@ -30,6 +30,11 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   behavior being inferred.
   Profile inventory derives the registry/profile major from the selected
   installation version rather than assuming one Visual Studio release.
+- The authoritative hosted lifecycle lane pins GitHub's `windows-2022` image,
+  matching the shipping VSSDK 17.x package toolchain and preventing the moving
+  `windows-latest` alias from silently changing the release gate. Visual Studio
+  18/2026 remains a separately exercised compatibility seam; it is neither
+  inferred from this lane nor declared unsupported by it.
 - The precondition rejects an already installed Copperfin extension. The
   verifier inventories only that selected instance and never deletes extension
   directories to manufacture a clean result.

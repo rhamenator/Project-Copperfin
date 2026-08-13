@@ -61,6 +61,7 @@ require_text("${script}" "WorkingDirectory = $resolvedEvidenceDirectory" "checko
 require_text("${script}" "development_checkout_dependency = 'PASS'" "checkout-independence evidence")
 require_text("${script}" "windows-vsix-lifecycle.json" "machine-readable retained evidence")
 require_text("${workflow}" "workflow_dispatch:" "manual exact-head validation trigger")
+require_text("${workflow}" "runs-on: windows-2022" "stable VSSDK-17 lifecycle host")
 require_text("${workflow}" "Exercise Windows VSIX lifecycle" "hosted lifecycle step")
 require_text("${workflow}" "/nodeReuse:false" "MSBuild descendant shutdown before installation")
 require_text("${workflow}" "windows-vsix-lifecycle.json" "retained lifecycle evidence upload")
