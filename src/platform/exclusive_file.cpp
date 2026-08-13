@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <limits>
+#include <string>
 
 #if defined(_WIN32)
 #ifndef WIN32_LEAN_AND_MEAN
