@@ -215,11 +215,13 @@ $existing = @(Get-CopperfinExtensionDirectories `
         -VisualStudioRegistryVersion $registryVersion)
 Assert-Condition ($existing.Count -eq 0) 'Copperfin VSIX is already installed in the selected runner instance.'
 $vsixSha256 = (Get-FileHash -LiteralPath $resolvedVsix -Algorithm SHA256).Hash.ToLowerInvariant()
+$registrationActivityLog = Join-Path $resolvedEvidenceDirectory 'ActivityLog-registration.xml'
 $activityLog = Join-Path $resolvedEvidenceDirectory 'ActivityLog.xml'
 $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
 [System.IO.File]::WriteAllText($fixturePrg, "? 'Copperfin VSIX lifecycle smoke'`r`n", [System.Text.UTF8Encoding]::new($false))
 
 $installedDirectory = $null
+$registrationProcess = $null
 $ideProcess = $null
 try {
     Write-Host 'VSIX lifecycle phase: install'
@@ -244,7 +246,49 @@ try {
         -Arguments @('/updateconfiguration') `
         -Name 'Visual Studio package-registration refresh' | Out-Null
 
-    Write-Host 'VSIX lifecycle phase: launch Visual Studio'
+    Write-Host 'VSIX lifecycle phase: prime per-user package registration'
+    $registrationStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $registrationStartInfo.FileName = $devenv
+    $registrationStartInfo.UseShellExecute = $false
+    $registrationStartInfo.WorkingDirectory = $resolvedEvidenceDirectory
+    foreach ($argument in @('/NoSplash', '/Log', $registrationActivityLog)) {
+        [void]$registrationStartInfo.ArgumentList.Add($argument)
+    }
+    $registrationProcess = [System.Diagnostics.Process]::Start($registrationStartInfo)
+    Assert-Condition ($null -ne $registrationProcess) 'Visual Studio registration-prime launch did not start.'
+    $registrationDeadline = [DateTime]::UtcNow.AddSeconds($ProcessTimeoutSeconds)
+    while ([DateTime]::UtcNow -lt $registrationDeadline -and -not $registrationProcess.HasExited) {
+        $registrationProcess.Refresh()
+        if ($registrationProcess.MainWindowHandle -ne [IntPtr]::Zero) { break }
+        Start-Sleep -Milliseconds 500
+    }
+    Assert-Condition (-not $registrationProcess.HasExited) `
+        "Visual Studio exited during registration priming (exit $($registrationProcess.ExitCode))."
+    Assert-Condition ($registrationProcess.MainWindowHandle -ne [IntPtr]::Zero) `
+        'Visual Studio did not expose a registration-prime main window within the bounded interval.'
+    Assert-Condition $registrationProcess.WaitForInputIdle(30000) `
+        'Visual Studio registration-prime process did not reach input-idle state within the bounded interval.'
+    Assert-Condition $registrationProcess.CloseMainWindow() `
+        'Visual Studio registration-prime main window rejected the close request.'
+    Assert-Condition $registrationProcess.WaitForExit(30000) `
+        'Visual Studio registration-prime process did not exit after the bounded close request.'
+    Assert-Condition ($registrationProcess.ExitCode -eq 0) `
+        "Visual Studio registration-prime process exited with code $($registrationProcess.ExitCode)."
+    Assert-Condition (Test-Path -LiteralPath $registrationActivityLog -PathType Leaf) `
+        'Visual Studio registration-prime ActivityLog was not retained.'
+    [xml]$registrationActivity = Get-Content -LiteralPath $registrationActivityLog -Raw -ErrorAction Stop
+    $installedPkgDef = [System.IO.Path]::GetFullPath((Join-Path $installedDirectory 'Copperfin.VisualStudio.pkgdef'))
+    $matchingPkgDefImports = @($registrationActivity.activity.entry | Where-Object {
+        [string]$_.description -eq 'Importing pkgdef file' -and
+        [string]::Equals([System.IO.Path]::GetFullPath([string]$_.path), $installedPkgDef,
+            [System.StringComparison]::OrdinalIgnoreCase)
+    })
+    Assert-Condition ($matchingPkgDefImports.Count -ge 1) `
+        "Registration-prime ActivityLog did not prove import of the installed Copperfin pkgdef: $installedPkgDef"
+    $registrationProcess.Dispose()
+    $registrationProcess = $null
+
+    Write-Host 'VSIX lifecycle phase: launch evidence Visual Studio'
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $devenv
     $startInfo.UseShellExecute = $false
@@ -370,6 +414,16 @@ if (-not $observed) {
         'ActivityLog did not contain an explicit successful End package load [CopperfinPackage] record.'
 }
 finally {
+    if ($null -ne $registrationProcess) {
+        if (-not $registrationProcess.HasExited) {
+            try { [void]$registrationProcess.CloseMainWindow() } catch {}
+            if (-not $registrationProcess.WaitForExit(15000)) {
+                try { $registrationProcess.Kill($true) } catch { Write-Warning "Visual Studio registration-prime process could not be terminated: $($_.Exception.Message)" }
+                [void]$registrationProcess.WaitForExit(15000)
+            }
+        }
+        $registrationProcess.Dispose()
+    }
     if ($null -ne $ideProcess) {
         if (-not $ideProcess.HasExited) {
             try { [void]$ideProcess.CloseMainWindow() } catch {}

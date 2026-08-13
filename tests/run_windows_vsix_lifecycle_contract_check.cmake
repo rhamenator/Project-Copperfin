@@ -48,6 +48,11 @@ require_text("${script}" "'/quiet', \"/instanceIds:$instanceId\"" "noninteractiv
 require_text("${script}" "installationVersion -match" "version-independent Visual Studio profile selection")
 require_text("${script}" "Copperfin VSIX is already installed" "clean-runner precondition")
 require_text("${script}" "'/updateconfiguration'" "post-install package-registration refresh")
+require_text("${script}" "ActivityLog-registration.xml" "retained package-registration prime log")
+require_text("${script}" "Importing pkgdef file" "installed pkgdef import proof")
+require_text("${script}" "OrdinalIgnoreCase" "Windows path identity comparison")
+require_text("${script}" "registrationProcess.WaitForInputIdle(30000)" "bounded registration-prime input readiness")
+require_text("${script}" "registrationProcess.WaitForExit(30000)" "bounded graceful registration-prime shutdown")
 require_text("${script}" "Copperfin Command" "representative installed command")
 require_text("${script}" "MainWindowHandle" "bounded IDE readiness observation")
 require_text("${script}" "UIAutomationClient" "Windows UI Automation evidence boundary")
@@ -75,14 +80,19 @@ require_text("${workflow}" "windows-vsix-lifecycle.json" "retained lifecycle evi
 require_text("${workflow}" "Upload Windows VSIX lifecycle diagnostics" "retained failure diagnostics")
 require_text("${workflow}" "always()" "failure-path evidence staging")
 file(READ "${SOURCE_DIR}/${script}" script_contents)
-string(FIND "${script_contents}" "VSIX lifecycle phase: launch Visual Studio" launch_phase_offset)
+string(FIND "${script_contents}" "VSIX lifecycle phase: prime per-user package registration" registration_phase_offset)
+string(FIND "${script_contents}" "matchingPkgDefImports.Count -ge 1" registration_proof_offset)
+string(FIND "${script_contents}" "VSIX lifecycle phase: launch evidence Visual Studio" launch_phase_offset)
 string(FIND "${script_contents}" "Copperfin startup-command UI Automation observation" command_observation_offset)
 string(FIND "${script_contents}" "Copperfin startup PRG document UI Automation observation" document_observation_offset)
-if(launch_phase_offset EQUAL -1 OR command_observation_offset EQUAL -1 OR
+if(registration_phase_offset EQUAL -1 OR registration_proof_offset EQUAL -1 OR
+        launch_phase_offset EQUAL -1 OR command_observation_offset EQUAL -1 OR
         document_observation_offset EQUAL -1 OR
+        NOT registration_phase_offset LESS registration_proof_offset OR
+        NOT registration_proof_offset LESS launch_phase_offset OR
         NOT launch_phase_offset LESS command_observation_offset OR
         NOT command_observation_offset LESS document_observation_offset)
-    message(FATAL_ERROR "single-process startup and same-process observations must remain ordered")
+    message(FATAL_ERROR "registration priming, evidence startup, and same-process observations must remain ordered")
 endif()
 file(READ "${SOURCE_DIR}/${workflow}" workflow_contents)
 string(FIND "${workflow_contents}" "Exercise Windows VSIX lifecycle" lifecycle_offset)

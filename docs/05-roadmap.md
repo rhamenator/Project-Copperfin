@@ -431,6 +431,13 @@ built-in command into the controlled IDE. The verifier now removes the
 cross-process dependency: the single controlled IDE receives the exact fixture
 and Copperfin command as startup inputs, then independently requires both UI
 surfaces and package-load evidence from that same process.
+Run `31740807424` exposed that this evidence launch was also the first launch
+regenerating the per-user PkgDef cache, so the command was evaluated while its
+registration was being imported. The verifier now performs and normally closes
+a bounded registration-prime launch, requires its ActivityLog to identify the
+exact installed Copperfin PkgDef path, and uses a later process for all command,
+document, and package-load evidence. The requirement remains a gap pending that
+fresh exact-head result and review.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

@@ -103,6 +103,13 @@ built-in command into the controlled IDE. The current verifier therefore uses
 one controlled IDE process, supplies the exact PRG and Copperfin command as
 startup inputs, and independently requires both UI surfaces plus successful
 package-load evidence from that process. Inputs alone are not evidence.
+Run `31740807424` showed that process was simultaneously regenerating its stale
+per-user PkgDef cache and importing Copperfin, so the startup command was not
+usable and the package never began loading. The verifier now performs a
+bounded, normally closed registration-prime launch and requires an exact path
+match for the installed Copperfin PkgDef import before starting the separate
+evidence IDE. Registration priming is not promoted to command/load evidence;
+`RQ-CF-REL-003` remains `gap` pending exact-head execution and rereview.
 
 ## V1 Windows installer lifecycle
 

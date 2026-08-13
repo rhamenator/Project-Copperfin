@@ -218,6 +218,18 @@ runner-owned PRG path and `Copperfin.ShowCommandWindow` on its startup command
 line, after which UI Automation must independently prove both surfaces in that
 same process. Startup inputs do not themselves count as proof.
 
+Run `31740807424` proved that single-process startup still evaluated the
+Copperfin command during the same launch that regenerated the per-user PkgDef
+cache. The retained ActivityLog explicitly reports that the cache was stale,
+imports the installed Copperfin PkgDef during startup, and never begins loading
+`CopperfinPackage`; no pane was admitted. The corrected lifecycle performs a
+separate bounded registration-prime launch after `/updateconfiguration`, closes
+it normally, and parses its retained ActivityLog to require an exact
+case-insensitive path match for the installed Copperfin PkgDef import. Only a
+subsequent clean IDE process receives the PRG and command inputs and supplies
+the direct UI and package-load evidence. A prime launch or PkgDef import is
+registration evidence only, never command or package-load evidence.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

@@ -77,6 +77,11 @@
   removed: one controlled IDE receives the exact runner-owned PRG and Copperfin
   command as startup inputs, while UI Automation and ActivityLog evidence must
   still independently prove the document, command pane, and package load.
+  Run `31740807424` showed that launch was concurrently regenerating its stale
+  per-user PkgDef cache and importing Copperfin, before the startup command was
+  usable. A separate bounded registration-prime launch now closes normally and
+  must prove the exact installed PkgDef import before the later evidence IDE
+  starts; registration import alone is never reported as package-load success.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
