@@ -29,10 +29,13 @@ DTE moniker. The further-corrected helper uses Windows UI Automation scoped to
 the exact launched IDE process. Run `31716407669` did not find an exact-named
 document descendant, but its query excluded the process root's window title;
 the command was not invoked and the result is inconclusive. The
-next correction admits only either an exact document descendant or the exact
-fixture leaf followed by Visual Studio's window-title separator, then invokes
-the registered command, then requires the exact Copperfin Command surface in
-that same process. It also requires an explicit successful package-load XML
+next run `31717503945` checked both, proving the process root remained
+`Microsoft Visual Studio` and no fixture descendant existed; passing the PRG at
+initial startup did not open it, and the command was still not invoked. The
+next correction launches the IDE first, invokes and proves the exact Copperfin
+Command surface in that process, explicitly forwards `/Edit` plus the fixture
+to the running IDE, and then requires the exact document descendant or fixture
+window-title prefix. It also requires an explicit successful package-load XML
 entry and rejects matching errors.
 `RQ-CF-REL-003` remains `gap` pending corrected exact-head execution and
 rereview.

@@ -222,6 +222,7 @@ $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
 $installedDirectory = $null
 $ideProcess = $null
 $commandProcess = $null
+$documentProcess = $null
 try {
     Write-Host 'VSIX lifecycle phase: install'
     Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
@@ -245,12 +246,12 @@ try {
         -Arguments @('/updateconfiguration') `
         -Name 'Visual Studio package-registration refresh' | Out-Null
 
-    Write-Host 'VSIX lifecycle phase: open runner-owned PRG'
+    Write-Host 'VSIX lifecycle phase: launch Visual Studio'
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $devenv
     $startInfo.UseShellExecute = $false
     $startInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @($fixturePrg, '/NoSplash', '/Log', $activityLog)) {
+    foreach ($argument in @('/NoSplash', '/Log', $activityLog)) {
         [void]$startInfo.ArgumentList.Add($argument)
     }
     $ideProcess = [System.Diagnostics.Process]::Start($startInfo)
@@ -262,11 +263,10 @@ try {
         Start-Sleep -Milliseconds 500
     }
     Assert-Condition (-not $ideProcess.HasExited) `
-        "Visual Studio exited while opening the runner-owned PRG (exit $($ideProcess.ExitCode))."
+        "Visual Studio exited during lifecycle startup (exit $($ideProcess.ExitCode))."
     Assert-Condition ($ideProcess.MainWindowHandle -ne [IntPtr]::Zero) `
         'Visual Studio did not expose a main window within the bounded startup interval.'
 
-    Write-Host 'VSIX lifecycle phase: prove runner-owned PRG document'
     $automationScript = Join-Path $resolvedEvidenceDirectory 'observe-visual-studio-surface.ps1'
     [System.IO.File]::WriteAllText($automationScript, @'
 param(
@@ -326,17 +326,6 @@ if (-not $observed) {
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
-    Invoke-BoundedProcess `
-        -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-ExpectedName', [System.IO.Path]::GetFileName($fixturePrg),
-            '-AlternateExpectedName', [System.IO.Path]::GetFullPath($fixturePrg),
-            '-AllowProcessWindowTitlePrefix',
-            '-EvidenceDescription', 'Exact runner-owned PRG document tab',
-            '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Copperfin PRG document UI Automation observation' | Out-Null
-
     Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command'
     $commandStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $commandStartInfo.FileName = $devenv
@@ -357,6 +346,31 @@ if (-not $observed) {
     if ($commandProcess.HasExited) {
         Assert-Condition ($commandProcess.ExitCode -eq 0) `
             "Copperfin registered command invocation exited with code $($commandProcess.ExitCode)."
+    }
+
+    Write-Host 'VSIX lifecycle phase: open runner-owned PRG through running IDE'
+    $documentStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $documentStartInfo.FileName = $devenv
+    $documentStartInfo.UseShellExecute = $false
+    $documentStartInfo.WorkingDirectory = $resolvedEvidenceDirectory
+    foreach ($argument in @('/Edit', $fixturePrg)) {
+        [void]$documentStartInfo.ArgumentList.Add($argument)
+    }
+    $documentProcess = [System.Diagnostics.Process]::Start($documentStartInfo)
+    Assert-Condition ($null -ne $documentProcess) 'Runner-owned PRG open request did not start.'
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)",
+            '-ExpectedName', [System.IO.Path]::GetFileName($fixturePrg),
+            '-AlternateExpectedName', [System.IO.Path]::GetFullPath($fixturePrg),
+            '-AllowProcessWindowTitlePrefix',
+            '-EvidenceDescription', 'Exact runner-owned PRG document tab',
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
+        -Name 'Copperfin PRG document UI Automation observation' | Out-Null
+    if ($documentProcess.HasExited) {
+        Assert-Condition ($documentProcess.ExitCode -eq 0) `
+            "Runner-owned PRG open request exited with code $($documentProcess.ExitCode)."
     }
 
     Start-Sleep -Seconds 2
@@ -385,6 +399,16 @@ if (-not $observed) {
         'ActivityLog did not contain an explicit successful End package load [CopperfinPackage] record.'
 }
 finally {
+    if ($null -ne $documentProcess) {
+        if (-not $documentProcess.HasExited) {
+            try { [void]$documentProcess.CloseMainWindow() } catch {}
+            if (-not $documentProcess.WaitForExit(15000)) {
+                try { $documentProcess.Kill($true) } catch { Write-Warning "Document-bearing Visual Studio process could not be terminated: $($_.Exception.Message)" }
+                [void]$documentProcess.WaitForExit(15000)
+            }
+        }
+        $documentProcess.Dispose()
+    }
     if ($null -ne $commandProcess) {
         if (-not $commandProcess.HasExited) {
             try { [void]$commandProcess.CloseMainWindow() } catch {}

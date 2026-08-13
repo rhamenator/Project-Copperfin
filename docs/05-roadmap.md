@@ -359,9 +359,13 @@ retry reached the stronger observation boundary but generic DTE discovery did
 not identify the launched instance; a subsequent process-specific retry proved
 that this hosted IDE published no matching DTE moniker. Exact-process Windows
 UI Automation then failed to find an exact-named document descendant, but that
-verifier did not inspect the process root's active-document window title.
-Exact fixture-title/command-surface proof plus explicit successful-load XML and
-matching-error rejection require fresh exact-head execution.
+verifier did not inspect the process root's possible active-document title. A
+corrected run did inspect it and proved the title remained `Microsoft Visual
+Studio`: initial PRG input did not open the fixture and the command was never
+invoked. The next verifier initializes and proves the registered package
+command first, explicitly forwards `/Edit` plus the fixture to the running IDE,
+then requires exact fixture-title proof, explicit successful-load XML, and
+matching-error rejection in fresh exact-head execution.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

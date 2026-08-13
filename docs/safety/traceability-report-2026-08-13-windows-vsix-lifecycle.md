@@ -55,9 +55,10 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   request before bounded tree termination fallback.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
   IDE process launched by the helper. It must find the exact runner-owned PRG
-  document-tab name before the helper invokes the registered
-  `Copperfin.ShowCommandWindow` command, then find the exact Copperfin Command
-  surface in that same IDE process. A visible window, launched process, or
+  document-tab name after the helper invokes the registered
+  `Copperfin.ShowCommandWindow` command, finds the exact Copperfin Command
+  surface in that same IDE process, and explicitly forwards `/Edit` plus the
+  runner-owned fixture to the now-running IDE. A visible window, launched process, or
   command-line attempt alone is not PRG-open or command evidence. After bounded IDE shutdown flushes
   the activity log, XML entry parsing requires the exact informational
   `End package load [CopperfinPackage]` record and package GUID and rejects any
@@ -101,12 +102,16 @@ Object Table run `31715126080` then proved that the hosted IDE published no
 matching DTE moniker at all. None of these failures is admissible lifecycle
 evidence. UI Automation run `31716407669` did not find an exact-named document
 descendant, but that verifier excluded the process root where Visual Studio
-normally exposes its active-document title; its result is inconclusive and its
-command boundary was never reached. The
-further-corrected helper uses process-scoped Windows UI Automation to prove
-either an exact document descendant or the exact fixture leaf followed by the
-Visual Studio window-title separator, invokes the registered command,
-and requires the exact command surface in that same process. It then requires the exact
+can expose an active-document title; its result is inconclusive and its command
+boundary was never reached. Run `31717503945` added the root-title check and
+proved something stronger: the process title remained exactly `Microsoft
+Visual Studio`, no fixture-named descendant existed, and the command boundary
+was never reached. Passing the PRG as initial startup input therefore did not
+open it on this hosted profile. The further-corrected helper launches the IDE,
+invokes and proves the registered command surface to initialize the package,
+then explicitly forwards `/Edit` plus the fixture to that running IDE and uses
+process-scoped UI Automation to prove either an exact document descendant or
+the exact fixture leaf followed by Visual Studio's title separator. It then requires the exact
 informational `End package load [CopperfinPackage]` XML entry/package GUID and
 rejects matching error entries. The self-test includes nominal-success and
 success-plus-error records. Corrected exact-head hosted execution is pending;
