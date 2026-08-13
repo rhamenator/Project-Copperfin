@@ -37,6 +37,7 @@ NativeSecurityProfile default_native_security_profile(const localization::Locali
         {"interop.dotnet", profile_text(catalog, "Security.Profile.Permission.InteropDotNet.Title"), profile_text(catalog, "Security.Profile.Permission.InteropDotNet.Description")},
         {"interop.python", profile_text(catalog, "Security.Profile.Permission.InteropPython.Title"), profile_text(catalog, "Security.Profile.Permission.InteropPython.Description"), true},
         {"ai.mcp", profile_text(catalog, "Security.Profile.Permission.AiMcp.Title"), profile_text(catalog, "Security.Profile.Permission.AiMcp.Description"), true},
+        {"ai.workspace_agent", profile_text(catalog, "Security.Profile.Permission.AiWorkspaceAgent.Title"), profile_text(catalog, "Security.Profile.Permission.AiWorkspaceAgent.Description"), true},
         {"external.process", profile_text(catalog, "Security.Profile.Permission.ExternalProcess.Title"), profile_text(catalog, "Security.Profile.Permission.ExternalProcess.Description"), true}
     };
 
@@ -45,7 +46,7 @@ NativeSecurityProfile default_native_security_profile(const localization::Locali
         {"build-engineer", profile_text(catalog, "Security.Profile.Role.BuildEngineer.Title"), profile_text(catalog, "Security.Profile.Role.BuildEngineer.Description"), {"project.open", "build.execute", "build.release", "interop.dotnet"}, false},
         {"security-admin", profile_text(catalog, "Security.Profile.Role.SecurityAdmin.Title"), profile_text(catalog, "Security.Profile.Role.SecurityAdmin.Description"), {"project.open", "security.manage", "runtime.admin"}, false},
         {"auditor", profile_text(catalog, "Security.Profile.Role.Auditor.Title"), profile_text(catalog, "Security.Profile.Role.Auditor.Description"), {"project.open", "data.export"}, false},
-        {"runtime-operator", profile_text(catalog, "Security.Profile.Role.RuntimeOperator.Title"), profile_text(catalog, "Security.Profile.Role.RuntimeOperator.Description"), {"project.open", "runtime.admin", "interop.dotnet", "interop.python", "ai.mcp"}, false}
+        {"runtime-operator", profile_text(catalog, "Security.Profile.Role.RuntimeOperator.Title"), profile_text(catalog, "Security.Profile.Role.RuntimeOperator.Description"), {"project.open", "runtime.admin", "interop.dotnet", "interop.python", "ai.mcp", "ai.workspace_agent"}, false}
     };
 
     profile.identity_providers = {
@@ -74,6 +75,8 @@ NativeSecurityProfile default_native_security_profile(const localization::Locali
         "interop.dotnet_invoked",
         "interop.python_invoked",
         "ai.mcp_invoked",
+        "ai.workspace_agent_activation_allowed",
+        "ai.workspace_agent_activation_denied",
         "external.process_launched",
         "policy.denied"
     };

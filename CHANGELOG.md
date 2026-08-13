@@ -1,3 +1,18 @@
+- 2026-08-12: Seeded the v1 H3/I2 built-in coding-assistant boundary with a
+  provider-independent `cf_security` access policy. Advisory, workspace
+  sandbox, and warned unrestricted-local modes expose exact machine-readable
+  capabilities. Unrestricted activation requires feature opt-in, a dedicated
+  nondefault high-risk RBAC permission, trusted Copperfin UI, available audit,
+  the current versioned localized warning, and affirmative consent; it never
+  implies administrator/root elevation. Provider authentication cannot grant
+  local authority. Model/OAuth adapters, mutable execution, sandbox and audit
+  enforcement, and user-facing assistant UI remain explicit follow-on work.
+  Every allow or denial requires an audit outcome, including feature-disabled
+  attempts, so disabling authority cannot also disable observability.
+  Corrected exact head `4c4014f94` passes all eleven protected checks after the
+  audit finding was fixed and independently rereviewed.
+  See `docs/64-workspace-agent-access-policy.md`.
+
 - 2026-08-12: Continued v1 portability lane J1 by moving `AFONT()`'s ordered
   host font-directory selection behind `cf_platform_support`. Windows,
   macOS, and POSIX root policy no longer lives in the interpreter; recursive

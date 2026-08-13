@@ -62,6 +62,17 @@ does not; `runtime-operator` does). Its only tool accepts fixed-size
 caller-supplied hexadecimal bytes, has no caller-file or network adapter, and
 emits content-free tool identity/outcome audit events on stderr.
 
+Current workspace-agent policy baseline: `cf_security` distinguishes advisory,
+sandboxed-workspace, and unrestricted-local access. The default developer role
+does not receive the high-risk `ai.workspace_agent` permission. Unrestricted
+activation additionally requires trusted Copperfin UI, an available audit
+sink, the exact current localized warning contract, and affirmative consent.
+It allows the current user's file, process, and network authority but never
+administrator/root elevation. Provider sign-in is authentication only and
+cannot satisfy any local-authority gate. The host dialog, mutable executor,
+sandbox, audit commits, and provider adapters are not implemented yet; see
+[`64-workspace-agent-access-policy.md`](64-workspace-agent-access-policy.md).
+
 Current federation baseline: live execution is explicit, limited to one local
 read-only SQLite file, and requires `project.open`. The connector denies
 mutation, PRAGMA, multiple statements, attachments, extension/file helpers,

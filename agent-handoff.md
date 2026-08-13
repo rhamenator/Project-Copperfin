@@ -1,8 +1,34 @@
 # Agent Handoff
 
+## V1 workspace-agent authority policy
+
+The current H3/I2 slice defines provider-independent `advisory`,
+`workspace_sandbox`, and `unrestricted_local` modes in `cf_security`. Mode
+names round-trip through one strict parser that rejects aliases and unknown
+values. Exact capability records distinguish workspace mutation/process use from outside-
+workspace and network access, and every mode denies privilege elevation.
+Unrestricted access fails closed without explicit feature enablement, the
+nondefault high-risk `ai.workspace_agent` permission, trusted Copperfin UI,
+available audit, the exact `workspace-agent.unrestricted-local.v1` localized
+warning, and affirmative consent. Provider authentication is intentionally not
+an admission input, out-of-range mode values fail closed, and every decision
+requires a content-free audit outcome even when disabled. Focused policy, platform-model, full native-isolation, and
+broad localization coverage passes locally `4/4`; Clang ASan/UBSan passes the
+policy test `1/1` with leak detection and no findings; all locale JSON parses. Host dialog/executor/
+sandbox/audit commits, provider/OAuth adapters, and the assistant UI remain
+open. A deliberate stale-warning admission mutation fails at the intended
+assertion and is restored. See `docs/64-workspace-agent-access-policy.md` and its safety
+traceability report.
+Corrected implementation head `4c4014f94` passes all eleven protected checks:
+Generated Launcher `31660946596` on Windows/Ubuntu/macOS, Win32/x64 DECLARE
+`31660946655`, Windows environment/path `31660946599`, GCC/Clang executable
+path `31660946592`, DCO `31660945231`, and both Socket checks. Automated review's
+feature-disabled audit finding is corrected/resolved; a current-head rereview
+found no further major issue.
+
 ## V1 portable AFONT host roots
 
-The current bounded J1 slice moves only `AFONT()`'s ordered operating-system
+The previous bounded J1 slice moves only `AFONT()`'s ordered operating-system
 font search roots from `prg_engine_variables.inl` behind
 `copperfin::platform::font_search_directories()`. Windows `%WINDIR%/Fonts`,
 macOS system/local/user roots, and POSIX system/local/user roots are private to
@@ -12,7 +38,9 @@ sorting, VFP array semantics, and the fixed no-font fallback. Direct host-root
 behavior plus source ownership, workflow, GitHub Actions, and isolation
 contracts and the existing real `test_prg_engine_arrays` consumer pass locally
 `6/6`; Clang ASan/UBSan passes `6/6` without findings. Mutating the first POSIX
-root fails the direct ordered-root assertion and is restored. See
+root fails the direct ordered-root assertion and is restored. All eleven
+protected checks passed at exact signed/DCO head `5a093305a`, which merged as
+`f3b0f84b3`; the merge tree exactly matches the reviewed head. See
 `docs/63-portable-font-directory-boundary.md`.
 
 ## V1 portable PRG file streams

@@ -164,6 +164,7 @@ add_library(cf_security
     src/security/secret_provider.cpp
     src/security/sha256.cpp
     src/security/security_model.cpp
+    src/security/workspace_agent_policy.cpp
 )
 
 target_include_directories(cf_security
