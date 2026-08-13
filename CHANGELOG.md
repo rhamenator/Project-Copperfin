@@ -34,8 +34,10 @@
   next run `31728514403` proved that separate senders inside the lifecycle
   process still queued the shortcut until final command input and exposed no
   Copperfin pane. The corrected sequence opens the built-in Command Window via
-  the controlled IDE's `/Command View.CommandWindow` startup request, waits
-  within a parent-owned bound, and enters only
+  the controlled IDE's `/Command View.CommandWindow` startup request. Run
+  `31729613650` proved that request was deferred until the first invariant input
+  sender exited; the Common IDE package then loaded, but the input was lost.
+  The corrected sequence waits within another parent-owned bound and repeats only
   `Copperfin.ShowCommandWindow`,
   proves that process's command surface, explicitly forwards `/Edit` plus the
   fixture to it, and requires exact document proof plus explicit successful-load

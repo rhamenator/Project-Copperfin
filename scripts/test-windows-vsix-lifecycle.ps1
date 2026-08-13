@@ -362,15 +362,25 @@ if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindo
 '@, [System.Text.UTF8Encoding]::new($false))
     Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through Command window'
     # The controlled IDE opens its built-in Command Window during startup. A
-    # parent-side bounded interval lets that IDE-owned command finish before
-    # this helper sends only the invariant Copperfin command.
+    # parent-side bounded interval precedes one exact-command readiness trigger.
+    # Hosted Visual Studio may service the queued startup command only after
+    # that sender exits; wait again, then submit the same idempotent pane-show
+    # command for the evidence-bearing attempt. Only the pane and package-load
+    # checks below can admit success.
     Start-Sleep -Milliseconds 10000
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
             '-ExpectedProcessId', "$($ideProcess.Id)",
             '-CommandName', 'Copperfin.ShowCommandWindow') `
-        -Name 'Copperfin Command-window input' | Out-Null
+        -Name 'Copperfin Command-window readiness-trigger input' | Out-Null
+    Start-Sleep -Milliseconds 10000
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)",
+            '-CommandName', 'Copperfin.ShowCommandWindow') `
+        -Name 'Copperfin Command-window evidence input' | Out-Null
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `

@@ -59,7 +59,8 @@ require_text("${script}" "SetForegroundWindow" "exact IDE foreground activation"
 require_text("${script}" "GetForegroundWindow() -ne $ideProcess.MainWindowHandle" "foreground identity verification")
 require_text("${script}" "'/Command', 'View.CommandWindow'" "IDE-owned built-in Command-window startup")
 require_text("${script}" "Start-Sleep -Milliseconds 10000" "bounded built-in Command-window startup interval")
-require_text("${script}" "Copperfin Command-window input" "command-input phase")
+require_text("${script}" "Copperfin Command-window readiness-trigger input" "bounded startup-command dispatch trigger")
+require_text("${script}" "Copperfin Command-window evidence input" "evidence-bearing command-input phase")
 require_text("${script}" "SendWait($CommandName)" "invariant command input")
 require_text("${script}" "SendWait('{ENTER}')" "Command-window execution")
 require_text("${script}" "Registered Copperfin Command surface" "same-process command-surface proof")
@@ -83,10 +84,13 @@ require_text("${workflow}" "Upload Windows VSIX lifecycle diagnostics" "retained
 require_text("${workflow}" "always()" "failure-path evidence staging")
 file(READ "${SOURCE_DIR}/${script}" script_contents)
 string(FIND "${script_contents}" "'/Command', 'View.CommandWindow'" built_in_command_offset)
-string(FIND "${script_contents}" "Copperfin Command-window input" command_input_offset)
-if(built_in_command_offset EQUAL -1 OR command_input_offset EQUAL -1 OR
-        NOT built_in_command_offset LESS command_input_offset)
-    message(FATAL_ERROR "IDE-owned Command-window startup must precede invariant command input")
+string(FIND "${script_contents}" "Copperfin Command-window readiness-trigger input" readiness_trigger_offset)
+string(FIND "${script_contents}" "Copperfin Command-window evidence input" evidence_input_offset)
+if(built_in_command_offset EQUAL -1 OR readiness_trigger_offset EQUAL -1 OR
+        evidence_input_offset EQUAL -1 OR
+        NOT built_in_command_offset LESS readiness_trigger_offset OR
+        NOT readiness_trigger_offset LESS evidence_input_offset)
+    message(FATAL_ERROR "IDE-owned Command-window startup and bounded invariant inputs must remain ordered")
 endif()
 string(FIND "${script_contents}" "VSIX lifecycle phase: invoke registered Copperfin command through Command window" command_phase_offset)
 string(FIND "${script_contents}" "VSIX lifecycle phase: open runner-owned PRG through running IDE" document_phase_offset)

@@ -55,10 +55,13 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   request before bounded tree termination fallback.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
   IDE process launched by the helper. The controlled IDE opens Visual Studio's
-  built-in Command Window through startup `/Command View.CommandWindow`; after
+  built-in Command Window through startup `/Command View.CommandWindow`. After
   a parent-side bounded interval, the input helper focuses only that exact IDE
-  and enters only the invariant
-  `Copperfin.ShowCommandWindow` command, finds the exact Copperfin Command
+  and enters only the invariant `Copperfin.ShowCommandWindow` pane-show
+  command. Hosted Visual Studio may defer the startup command until that sender
+  exits, so the parent waits within another bound and repeats only that same
+  idempotent command. Neither attempt admits evidence by itself; the helper
+  finds the exact Copperfin Command
   surface in that same IDE process, and explicitly forwards `/Edit` plus the
   runner-owned fixture to the now-running IDE. A visible window, launched
   process, command-line attempt, keystroke attempt, or surface discovery alone
@@ -136,10 +139,12 @@ that even two shortcuts and a ten-second in-helper delay were serviced only
 after the external helper exited. Run `31728514403` proved that separating the
 senders inside the same lifecycle process did not change that dispatch boundary:
 the Common IDE package again began loading only after final command input, so
-the Copperfin pane remained absent. The further-corrected sequence makes the
-controlled IDE open its own built-in Command Window at startup, waits within a
-parent-owned bound, focuses only the exact IDE, and enters only the invariant
-`Copperfin.ShowCommandWindow` command, and
+the Copperfin pane remained absent. Run `31729613650` proved the IDE-owned
+startup command was likewise deferred until the first invariant input sender
+exited; the Common IDE package then loaded successfully, but that first input
+was already lost. The further-corrected sequence waits within another
+parent-owned bound and repeats only the same idempotent
+`Copperfin.ShowCommandWindow` pane-show command, and
 proves the resulting pane in that process. It explicitly
 forwards `/Edit` plus the fixture to the running IDE and uses process-scoped UI
 Automation to prove either an exact document descendant or the exact fixture

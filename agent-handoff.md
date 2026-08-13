@@ -56,8 +56,10 @@ ten-second delay in one helper were also serviced only after the external
 sender exited. Run `31728514403` proved that separate senders within the same
 lifecycle process still queued the shortcut until final command input, so no
 Copperfin pane appeared. The next correction launches the controlled IDE with
-`/Command View.CommandWindow`, waits within a parent-owned bound for that
-IDE-owned built-in command, and enters only the invariant
+`/Command View.CommandWindow`. Run `31729613650` proved that startup command
+was deferred until the first invariant input sender exited; the Common IDE
+package then loaded successfully, but the input was lost. The next correction
+waits within another parent-owned bound and repeats only the same idempotent
 `Copperfin.ShowCommandWindow` command, proves the resulting pane in the same
 process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
 then requires the exact document descendant or fixture
