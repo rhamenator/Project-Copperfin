@@ -155,6 +155,12 @@ expired. This matches earlier evidence that hosted Visual Studio services the
 queued input only after its external sender exits. The current head separates
 bounded submission from bounded same-IDE observation and retains both JSON
 records; pane/package-load admission remains independent.
+Run `31753021409` proved the combined shortcut/command sender still queued the
+canonical command before the lazy Common IDE package loaded after sender exit.
+The current head separates the Command Window request, a bounded ten-second
+settlement interval, canonical submission, and same-process pane observation;
+each input stage has its own retained diagnostic and remains non-admissible by
+itself.
 
 ## V1 Windows installer lifecycle
 

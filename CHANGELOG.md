@@ -116,6 +116,10 @@
   input while its external sender remained alive. Submission and same-process
   pane observation now run in separate bounded processes with separate retained
   JSON; command input alone still cannot admit lifecycle success.
+  Run `31753021409` proved the combined shortcut/command sender still exited
+  before the lazy Common IDE package loaded. Command Window request, bounded
+  initialization settlement, canonical command submission, and pane
+  observation are now separate stages with distinct retained input evidence.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

@@ -480,6 +480,12 @@ process remained alive. The correction now exits that bounded sender after
 retaining its submission diagnostic, then observes the pane from a separate
 bounded process in the same IDE PID. Input remains non-admissible without the
 independent pane and package-load proof.
+Run `31753021409` showed that separating only final pane observation was not
+enough: the Common IDE package still loaded after the combined shortcut/command
+sender exited, so the command had already arrived before its surface existed.
+The harness now separates Command Window request, bounded lazy initialization,
+canonical command submission, and pane observation, retaining each input
+boundary independently.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

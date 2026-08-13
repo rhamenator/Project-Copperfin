@@ -373,7 +373,9 @@ param(
     [string]$AlternateExpectedName = '',
     [switch]$AllowProcessWindowTitlePrefix,
     [string]$InvokeCanonicalCommand = '',
+    [switch]$RequestCommandWindowOnly,
     [switch]$SubmitCanonicalCommandOnly,
+    [switch]$CommandWindowAlreadyRequested,
     [Parameter(Mandatory = $true)][string]$DiagnosticPath,
     [Parameter(Mandatory = $true)][string]$EvidenceDescription,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
@@ -390,7 +392,8 @@ if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
 $observed = $false
 $lastAutomationError = ''
 $lastProcessWindowName = ''
-$commandSubmitted = [string]::IsNullOrWhiteSpace($InvokeCanonicalCommand)
+$requiresInput = $RequestCommandWindowOnly -or -not [string]::IsNullOrWhiteSpace($InvokeCanonicalCommand)
+$commandSubmitted = -not $requiresInput
 $foregroundProcessVerified = $false
 $commandWindowShortcutSent = $false
 $commandInputForegroundVerified = $false
@@ -416,12 +419,16 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
                         if (-not $foregroundProcessVerified) { Start-Sleep -Milliseconds 100 }
                     }
                 }
-                if ($foregroundProcessVerified) {
+                if ($foregroundProcessVerified -and -not $CommandWindowAlreadyRequested) {
                     Add-Type -AssemblyName System.Windows.Forms
                     Start-Sleep -Seconds 2
                     [System.Windows.Forms.SendKeys]::SendWait('^%a')
                     $commandWindowShortcutSent = $true
                     Start-Sleep -Seconds 1
+                    if ($RequestCommandWindowOnly) { break }
+                }
+                if ($foregroundProcessVerified -and -not $RequestCommandWindowOnly) {
+                    Add-Type -AssemblyName System.Windows.Forms
                     [uint32]$commandInputProcessId = 0
                     $commandInputWindow = [CopperfinLifecycle.NativeMethods]::GetForegroundWindow()
                     [void][CopperfinLifecycle.NativeMethods]::GetWindowThreadProcessId(
@@ -466,7 +473,9 @@ $diagnostic = [ordered]@{
     expected_process_id = $ExpectedProcessId
     expected_surface = $ExpectedName
     invoke_canonical_command = $InvokeCanonicalCommand
+    request_command_window_only = [bool]$RequestCommandWindowOnly
     submission_only = [bool]$SubmitCanonicalCommandOnly
+    command_window_already_requested = [bool]$CommandWindowAlreadyRequested
     foreground_process_verified = $foregroundProcessVerified
     command_window_shortcut_sent = $commandWindowShortcutSent
     command_input_foreground_verified = $commandInputForegroundVerified
@@ -476,6 +485,12 @@ $diagnostic = [ordered]@{
     last_automation_error = $lastAutomationError
 }
 $diagnostic | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $DiagnosticPath -Encoding utf8
+if ($RequestCommandWindowOnly) {
+    if (-not $commandWindowShortcutSent) {
+        throw "$EvidenceDescription was not requested in Visual Studio process $ExpectedProcessId within the bounded interval. Foreground process verified: $foregroundProcessVerified."
+    }
+    return
+}
 if ($SubmitCanonicalCommandOnly) {
     if (-not $canonicalCommandSubmitted) {
         throw "$EvidenceDescription was not submitted to Visual Studio process $ExpectedProcessId within the bounded interval. Foreground process verified: $foregroundProcessVerified. Command Window shortcut sent: $commandWindowShortcutSent. Command-input foreground verified: $commandInputForegroundVerified."
@@ -490,6 +505,18 @@ if (-not $observed) {
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
+    Write-Host 'VSIX lifecycle phase: request Visual Studio Command Window'
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
+            '-RequestCommandWindowOnly',
+            '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command-window-input.json'),
+            '-EvidenceDescription', 'Visual Studio Command Window',
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
+        -Name 'Visual Studio Command Window request' | Out-Null
+    Start-Sleep -Seconds 10
+
     Write-Host 'VSIX lifecycle phase: submit exact installed Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
@@ -497,6 +524,7 @@ if (-not $observed) {
             '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
             '-InvokeCanonicalCommand', 'Copperfin.ShowCommandWindow',
             '-SubmitCanonicalCommandOnly',
+            '-CommandWindowAlreadyRequested',
             '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command-input.json'),
             '-EvidenceDescription', 'Canonical Copperfin command',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `

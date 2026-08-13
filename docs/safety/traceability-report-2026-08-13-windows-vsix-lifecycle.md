@@ -318,6 +318,19 @@ same IDE PID. Submission is not surface or package-load evidence; all later
 admission conditions remain unchanged. The run is negative command-dispatch
 evidence and `RQ-CF-REL-003` remains `gap`.
 
+Run `31753021409` separated command submission from pane observation and
+retained successful install/uninstall plus both input diagnostics. It still
+observed no pane or Copperfin package load. The ActivityLog instead shows the
+lazy Visual Studio Common IDE package loaded only after the combined Command
+Window-request/command sender exited. Sender exit alone was therefore
+insufficient: the canonical command had already been queued before its input
+surface existed. The correction uses three separately bounded stages: request
+the Command Window and exit; allow the directly demonstrated lazy initialization
+a bounded ten-second settlement interval; foreground and reverify the same IDE
+before submitting only the canonical command and exiting; then independently
+observe the pane. Each input stage has distinct retained JSON. Neither the
+settlement interval nor either input can admit lifecycle evidence.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede
