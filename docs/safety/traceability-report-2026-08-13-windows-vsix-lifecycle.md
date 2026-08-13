@@ -55,13 +55,13 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   request before bounded tree termination fallback.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
   IDE process launched by the helper. The helper focuses the exact IDE window,
-  opens Tools through Visual Studio's normal English access key, finds the exact
-  registered Copperfin Command item under the same process, invokes its UI
-  Automation invoke pattern, finds the exact Copperfin Command surface in that
-  same IDE process, and explicitly forwards `/Edit` plus the
+  opens Visual Studio's documented Command window through the hosted General
+  profile's `Ctrl+Alt+A` shortcut, enters only the invariant
+  `Copperfin.ShowCommandWindow` command, finds the exact Copperfin Command
+  surface in that same IDE process, and explicitly forwards `/Edit` plus the
   runner-owned fixture to the now-running IDE. A visible window, launched
-  process, command-line attempt, or menu-item discovery alone is not PRG-open or
-  command evidence. After bounded IDE shutdown flushes
+  process, command-line attempt, keystroke attempt, or surface discovery alone
+  is not PRG-open or command evidence. After bounded IDE shutdown flushes
   the activity log, XML entry parsing requires the exact informational
   `End package load [CopperfinPackage]` record and package GUID and rejects any
   Copperfin-related error entry. Package-name, assembly-path, or GUID substring
@@ -118,11 +118,14 @@ started the controlled IDE itself with `/Command` and proved the same negative
 boundary: no Copperfin Command surface and no `CopperfinPackage` load. Run
 `31721057446` found no invocable exact item through direct UI Automation
 menu-tree expansion, but its failure diagnostic did not distinguish an
-inaccessible Tools menu from an absent extension item. The further-corrected
-helper focuses the exact IDE, opens Tools through its normal English access key,
-records observed same-process menu items on failure, invokes only the exact
-registered Copperfin Command item's UI Automation invoke pattern, and proves
-the resulting pane in that process. It explicitly
+inaccessible Tools menu from an absent extension item. Run `31722176750`
+focused the exact IDE and opened Tools through its normal English access key,
+but found zero same-process UI Automation `MenuItem` elements. That is retained
+as a hosted UI Automation limitation, not evidence that the Copperfin command
+is absent. The further-corrected helper focuses the exact IDE, opens Visual
+Studio's Command window through the hosted General profile's `Ctrl+Alt+A`
+shortcut, enters only the invariant `Copperfin.ShowCommandWindow` command, and
+proves the resulting pane in that process. It explicitly
 forwards `/Edit` plus the fixture to the running IDE and uses process-scoped UI
 Automation to prove either an exact document descendant or the exact fixture
 leaf followed by Visual Studio's title separator. It then requires the exact

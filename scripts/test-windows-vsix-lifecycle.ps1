@@ -325,17 +325,13 @@ if (-not $observed) {
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
-    $invokeMenuScript = Join-Path $resolvedEvidenceDirectory 'invoke-visual-studio-menu-command.ps1'
-    [System.IO.File]::WriteAllText($invokeMenuScript, @'
+    $invokeCommandWindowScript = Join-Path $resolvedEvidenceDirectory 'invoke-visual-studio-command-window.ps1'
+    [System.IO.File]::WriteAllText($invokeCommandWindowScript, @'
 param(
     [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
-    [Parameter(Mandatory = $true)][string]$MenuName,
-    [Parameter(Mandatory = $true)][string]$CommandName,
-    [Parameter(Mandatory = $true)][int]$TimeoutSeconds
+    [Parameter(Mandatory = $true)][string]$CommandName
 )
 $ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName UIAutomationClient
-Add-Type -AssemblyName UIAutomationTypes
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type @"
 using System;
@@ -349,23 +345,9 @@ public static class CopperfinForegroundWindow
     public static extern IntPtr GetForegroundWindow();
 }
 "@
-$deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
-$processCondition = [System.Windows.Automation.PropertyCondition]::new(
-    [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ExpectedProcessId)
-$menuItemCondition = [System.Windows.Automation.AndCondition]::new(@(
-    $processCondition,
-    [System.Windows.Automation.PropertyCondition]::new(
-        [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
-        [System.Windows.Automation.ControlType]::MenuItem)))
-$commandCondition = [System.Windows.Automation.AndCondition]::new(@(
-    $processCondition,
-    [System.Windows.Automation.PropertyCondition]::new(
-        [System.Windows.Automation.AutomationElement]::NameProperty, $CommandName),
-    [System.Windows.Automation.PropertyCondition]::new(
-        [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
-        [System.Windows.Automation.ControlType]::MenuItem)))
-$lastError = ''
-$lastMenuNames = ''
+if ($CommandName -ne 'Copperfin.ShowCommandWindow') {
+    throw "Unexpected Visual Studio command name '$CommandName'."
+}
 $ideProcess = Get-Process -Id $ExpectedProcessId -ErrorAction Stop
 if ($ideProcess.MainWindowHandle -eq [IntPtr]::Zero) {
     throw "Visual Studio process $ExpectedProcessId has no focusable main window."
@@ -373,46 +355,23 @@ if ($ideProcess.MainWindowHandle -eq [IntPtr]::Zero) {
 [void][CopperfinForegroundWindow]::SetForegroundWindow($ideProcess.MainWindowHandle)
 Start-Sleep -Milliseconds 500
 if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
-    throw "Visual Studio process $ExpectedProcessId could not be focused for Tools-menu activation."
+    throw "Visual Studio process $ExpectedProcessId could not be focused for Command-window activation."
 }
-[System.Windows.Forms.SendKeys]::SendWait('%t')
-Start-Sleep -Milliseconds 500
-while ([DateTime]::UtcNow -lt $deadline) {
-    try {
-        $menuItems = [System.Windows.Automation.AutomationElement]::RootElement.FindAll(
-            [System.Windows.Automation.TreeScope]::Descendants, $menuItemCondition)
-        $names = @()
-        foreach ($menuItem in $menuItems) {
-            $name = [string]$menuItem.Current.Name
-            if (-not [string]::IsNullOrWhiteSpace($name)) { $names += $name }
-            if ($names.Count -ge 40) { break }
-        }
-        $lastMenuNames = ($names | Select-Object -Unique) -join ', '
-        $command = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
-            [System.Windows.Automation.TreeScope]::Descendants, $commandCondition)
-        if ($null -ne $command) {
-            $commandInvokePattern = $null
-            if (-not $command.TryGetCurrentPattern(
-                    [System.Windows.Automation.InvokePattern]::Pattern,
-                    [ref]$commandInvokePattern)) {
-                throw "Menu item '$CommandName' does not expose InvokePattern."
-            }
-            $commandInvokePattern.Invoke()
-            exit 0
-        }
-    }
-    catch { $lastError = $_.Exception.Message }
-    Start-Sleep -Milliseconds 500
+[System.Windows.Forms.SendKeys]::SendWait('^%a')
+Start-Sleep -Milliseconds 750
+if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
+    throw "Visual Studio process $ExpectedProcessId lost focus before Command-window input."
 }
-throw "Exact menu command '$MenuName > $CommandName' was not invocable in Visual Studio process $ExpectedProcessId. Observed same-process menu items: $lastMenuNames. Last UI Automation error: $lastError"
+[System.Windows.Forms.SendKeys]::SendWait($CommandName)
+[System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
 '@, [System.Text.UTF8Encoding]::new($false))
-    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through Tools menu'
+    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through Command window'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeMenuScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)", '-MenuName', 'Tools',
-            '-CommandName', 'Copperfin Command', '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Copperfin Tools-menu command invocation' | Out-Null
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)",
+            '-CommandName', 'Copperfin.ShowCommandWindow') `
+        -Name 'Copperfin Command-window invocation' | Out-Null
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `

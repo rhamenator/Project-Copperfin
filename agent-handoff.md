@@ -39,11 +39,14 @@ but no `CopperfinPackage` load. Run `31719897147` then launched the controlled
 IDE itself with `/Command` and proved the same negative boundary. The next
 run `31721057446` found no invocable exact item through direct UI Automation
 menu-tree expansion, but that helper did not distinguish an inaccessible Tools
-menu from an absent extension item. The next correction focuses the exact IDE,
-opens Tools through its normal English access key, records observed same-process
-menu items on failure, invokes only the exact Copperfin Command item, proves the
-resulting pane in the same process, explicitly forwards `/Edit` plus the fixture
-to the running IDE, and then requires the exact document descendant or fixture
+menu from an absent extension item. Run `31722176750` focused the exact IDE and
+opened Tools through its normal English access key, but the hosted window
+exposed zero same-process UI Automation `MenuItem` elements. The next correction
+focuses the exact IDE, opens Visual Studio's Command window through the hosted
+General profile's `Ctrl+Alt+A` shortcut, enters only the invariant
+`Copperfin.ShowCommandWindow` command, proves the resulting pane in the same
+process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
+then requires the exact document descendant or fixture
 window-title prefix. It also requires an explicit successful package-load XML
 entry and rejects matching errors.
 `RQ-CF-REL-003` remains `gap` pending corrected exact-head execution and
