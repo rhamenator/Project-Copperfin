@@ -7846,4 +7846,8 @@ passes `1/1`.
   Linux, and VSIX lifecycle evidence explicitly `NOT_RUN`. Exact-head hosted
   run `31698722081` passed the complete Windows lifecycle at `c33458808`; the
   downloaded result matches the retained NSIS executable's independently
-  recomputed SHA-256. `RQ-CF-REL-002` is now defined.
+  recomputed SHA-256. Independent review then found two false-clean registry
+  paths: suppressed read failures and an exact CPack uninstall key with cleared
+  values. The corrected verifier fails closed on existing-base/key reads and
+  matches the generated exact key independently of its values. Corrected
+  exact-head hosted execution remains required before `RQ-CF-REL-002` advances.

@@ -20,6 +20,10 @@ param(
     [string]$InstallRoot,
 
     [Parameter(Mandatory = $true, ParameterSetName = 'Lifecycle')]
+    [ValidatePattern('^copperfin [0-9]+\.[0-9]+\.[0-9]+$')]
+    [string]$UninstallRegistryKeyName,
+
+    [Parameter(Mandatory = $true, ParameterSetName = 'Lifecycle')]
     [ValidateNotNullOrEmpty()]
     [string]$EvidenceDirectory,
 
@@ -150,32 +154,65 @@ function Test-NormalizedPathEquals {
     }
 }
 
-function Get-CopperfinUninstallEntries {
-    param([Parameter(Mandatory = $true)][string]$ExpectedInstallRoot)
+function Test-IsCopperfinUninstallEntry {
+    param(
+        [Parameter(Mandatory = $true)][object]$Entry,
+        [Parameter(Mandatory = $true)][string]$ActualRegistryKeyName,
+        [Parameter(Mandatory = $true)][string]$ExpectedRegistryKeyName,
+        [Parameter(Mandatory = $true)][string]$ExpectedInstallRoot
+    )
 
     $normalizedRoot = [System.IO.Path]::GetFullPath($ExpectedInstallRoot).TrimEnd('\')
     $expectedUninstaller = Join-Path $normalizedRoot 'Uninstall.exe'
-    $registryRoots = @(
-        'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
-        'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
-        'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+    $installLocation = Get-OptionalPropertyValue -InputObject $Entry -Name 'InstallLocation'
+    $uninstallString = Get-OptionalPropertyValue -InputObject $Entry -Name 'UninstallString'
+    return [string]::Equals(
+            $ActualRegistryKeyName,
+            $ExpectedRegistryKeyName,
+            [System.StringComparison]::OrdinalIgnoreCase) -or
+        (Test-NormalizedPathEquals -Candidate $installLocation -ExpectedPath $normalizedRoot) -or
+        (Test-NormalizedPathEquals -Candidate $uninstallString -ExpectedPath $expectedUninstaller)
+}
+
+function Get-CopperfinUninstallEntries {
+    param(
+        [Parameter(Mandatory = $true)][string]$ExpectedInstallRoot,
+        [Parameter(Mandatory = $true)][string]$ExpectedRegistryKeyName
+    )
+
+    $registryBases = @(
+        'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall',
+        'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall',
+        'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
     )
     return @(
-        foreach ($registryRoot in $registryRoots) {
-            Get-ItemProperty -Path $registryRoot -ErrorAction SilentlyContinue | Where-Object {
-                $installLocation = Get-OptionalPropertyValue -InputObject $_ -Name 'InstallLocation'
-                $uninstallString = Get-OptionalPropertyValue -InputObject $_ -Name 'UninstallString'
-                return (Test-NormalizedPathEquals -Candidate $installLocation -ExpectedPath $normalizedRoot) -or
-                    (Test-NormalizedPathEquals -Candidate $uninstallString -ExpectedPath $expectedUninstaller)
+        foreach ($registryBase in $registryBases) {
+            if (-not (Test-Path -LiteralPath $registryBase -ErrorAction Stop)) {
+                continue
+            }
+            foreach ($registryKey in @(Get-ChildItem -LiteralPath $registryBase -ErrorAction Stop)) {
+                $entry = Get-ItemProperty -LiteralPath $registryKey.PSPath -ErrorAction Stop
+                if (Test-IsCopperfinUninstallEntry `
+                        -Entry $entry `
+                        -ActualRegistryKeyName $registryKey.PSChildName `
+                        -ExpectedRegistryKeyName $ExpectedRegistryKeyName `
+                        -ExpectedInstallRoot $ExpectedInstallRoot) {
+                    $entry
+                }
             }
         }
     )
 }
 
 function Get-CopperfinUninstallEntryCount {
-    param([Parameter(Mandatory = $true)][string]$ExpectedInstallRoot)
+    param(
+        [Parameter(Mandatory = $true)][string]$ExpectedInstallRoot,
+        [Parameter(Mandatory = $true)][string]$ExpectedRegistryKeyName
+    )
 
-    return @(Get-CopperfinUninstallEntries -ExpectedInstallRoot $ExpectedInstallRoot).Count
+    return @(Get-CopperfinUninstallEntries `
+            -ExpectedInstallRoot $ExpectedInstallRoot `
+            -ExpectedRegistryKeyName $ExpectedRegistryKeyName).Count
 }
 
 if ($SelfTest) {
@@ -185,6 +222,20 @@ if ($SelfTest) {
         'Sparse registry entry unexpectedly exposed InstallLocation.'
     $fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) 'copperfin-installer-lifecycle-self-test'
     $fixtureUninstaller = Join-Path $fixtureRoot 'Uninstall.exe'
+    Assert-Condition `
+        (Test-IsCopperfinUninstallEntry `
+            -Entry $sparseEntry `
+            -ActualRegistryKeyName 'copperfin 0.1.0' `
+            -ExpectedRegistryKeyName 'copperfin 0.1.0' `
+            -ExpectedInstallRoot $fixtureRoot) `
+        'Exact CPack uninstall key with cleared values escaped residue detection.'
+    Assert-Condition `
+        (-not (Test-IsCopperfinUninstallEntry `
+            -Entry $sparseEntry `
+            -ActualRegistryKeyName 'Unrelated product' `
+            -ExpectedRegistryKeyName 'copperfin 0.1.0' `
+            -ExpectedInstallRoot $fixtureRoot)) `
+        'Unrelated sparse registry entry was admitted.'
     Assert-Condition `
         (Test-NormalizedPathEquals -Candidate "`"$fixtureUninstaller`"" -ExpectedPath $fixtureUninstaller) `
         'Quoted exact CPack uninstall path did not match.'
@@ -217,7 +268,9 @@ Assert-Condition ([System.IO.Path]::GetFileName($resolvedInstallRoot) -match '^c
     "Installation root leaf does not match the lifecycle allowlist: $resolvedInstallRoot"
 Assert-Condition (-not (Test-Path -LiteralPath $resolvedInstallRoot)) `
     "Fresh-install root already exists: $resolvedInstallRoot"
-Assert-Condition ((Get-CopperfinUninstallEntryCount -ExpectedInstallRoot $resolvedInstallRoot) -eq 0) `
+Assert-Condition ((Get-CopperfinUninstallEntryCount `
+        -ExpectedInstallRoot $resolvedInstallRoot `
+        -ExpectedRegistryKeyName $UninstallRegistryKeyName) -eq 0) `
     "Fresh-install root already has an uninstall registration: $resolvedInstallRoot"
 
 New-Item -ItemType Directory -Path $resolvedEvidenceDirectory -Force | Out-Null
@@ -265,7 +318,9 @@ try {
         "Installed copperfin_inspect help wrote unexpected stderr: $($inspectResult.Stderr)"
     $inspectOutput = $inspectResult.Stdout
 
-    $uninstallRegistrationCount = Get-CopperfinUninstallEntryCount -ExpectedInstallRoot $resolvedInstallRoot
+    $uninstallRegistrationCount = Get-CopperfinUninstallEntryCount `
+        -ExpectedInstallRoot $resolvedInstallRoot `
+        -ExpectedRegistryKeyName $UninstallRegistryKeyName
     Assert-Condition ($uninstallRegistrationCount -eq 1) `
         "Fresh installation must create exactly one uninstall registration for its root; found $uninstallRegistrationCount."
 
@@ -279,7 +334,9 @@ try {
     $maintenanceSnapshot = Get-InstalledSnapshot -Root $resolvedInstallRoot
     Assert-Condition (($installedSnapshot | ConvertTo-Json -Compress) -ceq ($maintenanceSnapshot | ConvertTo-Json -Compress)) `
         'Same-version maintenance reinstall changed the installed file inventory or hashes.'
-    Assert-Condition ((Get-CopperfinUninstallEntryCount -ExpectedInstallRoot $resolvedInstallRoot) -eq 1) `
+    Assert-Condition ((Get-CopperfinUninstallEntryCount `
+            -ExpectedInstallRoot $resolvedInstallRoot `
+            -ExpectedRegistryKeyName $UninstallRegistryKeyName) -eq 1) `
         'Same-version maintenance reinstall did not preserve exactly one uninstall registration.'
 
     $uninstaller = Join-Path $resolvedInstallRoot 'Uninstall.exe'
@@ -296,7 +353,9 @@ try {
     }
     Assert-Condition (-not (Test-Path -LiteralPath $resolvedInstallRoot)) `
         "Silent uninstall left installation-root residue: $resolvedInstallRoot"
-    Assert-Condition ((Get-CopperfinUninstallEntryCount -ExpectedInstallRoot $resolvedInstallRoot) -eq 0) `
+    Assert-Condition ((Get-CopperfinUninstallEntryCount `
+            -ExpectedInstallRoot $resolvedInstallRoot `
+            -ExpectedRegistryKeyName $UninstallRegistryKeyName) -eq 0) `
         "Silent uninstall left an uninstall registration for: $resolvedInstallRoot"
 
     $evidence = [ordered]@{

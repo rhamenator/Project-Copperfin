@@ -39,6 +39,7 @@ set(script "scripts/test-windows-installer-lifecycle.ps1")
 set(workflow ".github/workflows/build-installers.yml")
 
 foreach(traceability_file IN ITEMS
+        CMakeLists.txt
         scripts/assemble-rc-candidate.py
         scripts/test-windows-installer-lifecycle.ps1
         docs/contracts/rc-validation-manifest-v3.schema.json
@@ -70,21 +71,38 @@ require_text("${script}" "@('--locale', 'en-US', '--help')" "installed executabl
 require_text("${script}" "same-version maintenance reinstall" "maintenance reinstall execution")
 require_text("${script}" "upgrade_from_previous_version = 'NOT_RUN'" "honest upgrade limitation")
 require_text("${script}" "Get-CopperfinUninstallEntries" "uninstall-registration inspection")
-require_text("${script}" "return @(Get-CopperfinUninstallEntries -ExpectedInstallRoot $ExpectedInstallRoot).Count"
+require_text("${script}" "return @(Get-CopperfinUninstallEntries"
     "strict-mode-safe empty uninstall-entry counting")
-require_text("${script}" "Get-CopperfinUninstallEntryCount -ExpectedInstallRoot $resolvedInstallRoot"
+require_text("${script}" "Get-CopperfinUninstallEntryCount"
     "centralized uninstall-entry count use")
-forbid_text("${script}" "(Get-CopperfinUninstallEntries -ExpectedInstallRoot $resolvedInstallRoot).Count"
+forbid_text("${script}" "(Get-CopperfinUninstallEntries -ExpectedInstallRoot"
     "strict-mode-unsafe direct uninstall-entry count")
 require_text("${script}" "PSObject.Properties[$Name]" "strict-mode-safe optional registry property lookup")
-require_text("${script}" "Get-OptionalPropertyValue -InputObject $_ -Name 'InstallLocation'"
+require_text("${script}" "Get-OptionalPropertyValue -InputObject $Entry -Name 'InstallLocation'"
     "optional InstallLocation lookup")
-require_text("${script}" "Get-OptionalPropertyValue -InputObject $_ -Name 'UninstallString'"
+require_text("${script}" "Get-OptionalPropertyValue -InputObject $Entry -Name 'UninstallString'"
     "CPack uninstall-string lookup")
 require_text("${script}" "Join-Path $normalizedRoot 'Uninstall.exe'"
     "exact expected CPack uninstaller identity")
 require_text("${script}" "Test-NormalizedPathEquals -Candidate $uninstallString -ExpectedPath $expectedUninstaller"
     "exact uninstall-string path comparison")
+require_text("${script}" "[System.StringComparison]::OrdinalIgnoreCase"
+    "exact case-insensitive CPack uninstall-key identity")
+require_text("${script}" "Get-ChildItem -LiteralPath $registryBase -ErrorAction Stop"
+    "fail-closed uninstall-key enumeration")
+require_text("${script}" "Get-ItemProperty -LiteralPath $registryKey.PSPath -ErrorAction Stop"
+    "fail-closed uninstall-entry read")
+forbid_text("${script}" "ErrorAction SilentlyContinue" "suppressed registry-read failure")
+require_text("${script}" "Exact CPack uninstall key with cleared values escaped residue detection"
+    "sparse exact-key executable regression")
+require_text("${workflow}" "CopperfinPackageInstallRegistryKey.txt"
+    "generated exact CPack uninstall-key input")
+require_text("${workflow}" "-UninstallRegistryKeyName $uninstallRegistryKeyName"
+    "exact CPack uninstall-key workflow handoff")
+require_text("CMakeLists.txt" "set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY \"\${CPACK_PACKAGE_NAME} \${CPACK_PACKAGE_VERSION}\")"
+    "explicit version-bound CPack uninstall-key identity")
+require_text("CMakeLists.txt" "CopperfinPackageInstallRegistryKey.txt"
+    "generated CPack uninstall-key contract")
 forbid_text("${script}" "$_.InstallLocation" "strict-mode-unsafe optional registry property access")
 forbid_text("${script}" "$_.UninstallString" "strict-mode-unsafe optional uninstall-string access")
 require_text("${script}" "Silent uninstall left installation-root residue" "filesystem residue failure")

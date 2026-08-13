@@ -161,10 +161,12 @@ jobs:
             throw "Windows installer lifecycle requires exactly one NSIS installer; found $($installer.Count)."
           }
           $installRoot = Join-Path $env:RUNNER_TEMP "copperfin-installer-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          $uninstallRegistryKeyName = (Get-Content -LiteralPath build/CopperfinPackageInstallRegistryKey.txt -Raw).Trim()
           ./scripts/test-windows-installer-lifecycle.ps1 `
             -InstallerPath $installer[0].FullName `
             -BinaryDirectory (Join-Path $env:GITHUB_WORKSPACE 'build') `
             -InstallRoot $installRoot `
+            -UninstallRegistryKeyName $uninstallRegistryKeyName `
             -EvidenceDirectory (Join-Path $env:GITHUB_WORKSPACE 'artifacts/windows-installer-lifecycle')
 
       - name: Create exact Corresponding Source archive

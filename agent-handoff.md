@@ -12,8 +12,11 @@ residue. It neither removes residue itself nor claims prior-version upgrade;
 that field, macOS productbuild, Linux DEB/RPM, and VSIX lifecycle remain
 `NOT_RUN`. Exact-head run `31698722081` passed the full Windows sequence at
 `c33458808`; the downloaded result's installer digest matches the retained
-NSIS executable, so `RQ-CF-REL-002` is defined. Independent review remains a
-merge gate.
+NSIS executable. Independent review then found two false-clean paths in the
+registry verifier: suppressed read errors and an exact leftover CPack key with
+cleared values. The corrected implementation fails closed and recognizes the
+generated exact key independently of its values. `RQ-CF-REL-002` is again a
+gap until corrected exact-head Windows execution passes.
 
 ## V1 RC evidence truthfulness
 

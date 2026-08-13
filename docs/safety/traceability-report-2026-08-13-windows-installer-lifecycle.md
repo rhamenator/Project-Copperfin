@@ -12,7 +12,7 @@ suitability for a safety-critical deployment.
 
 | Requirement | Verification | Controlled hazards |
 | --- | --- | --- |
-| `RQ-CF-REL-002`; `DQ-windows-installer-lifecycle-scope` — lifecycle evidence must be direct, bounded, exact-artifact-bound, and must not overstate same-version maintenance as upgrade | `DV-windows-installer-lifecycle-contract`; assembler self-test; exact-head hosted Windows run `31698722081` at `c33458808bcee002e8eda61ce29b7367d1b34e2e` | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
+| `RQ-CF-REL-002`; `DQ-windows-installer-lifecycle-scope` — lifecycle evidence must be direct, bounded, exact-artifact-bound, and must not overstate same-version maintenance as upgrade | `DV-windows-installer-lifecycle-contract`; assembler self-test; corrected exact-head hosted Windows execution pending | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 
 Reverse traceability is carried by `.github/workflows/build-installers.yml`,
 `scripts/test-windows-installer-lifecycle.ps1`,
@@ -50,6 +50,12 @@ identifiers; the focused check enforces those reverse links.
   `InstallLocation` value in its uninstall entry. Registration matching accepts
   either an exact normalized install location or the exact normalized
   `<root>\Uninstall.exe` path, and rejects command arguments or sibling paths.
+- Registry enumeration skips only an absent uninstall base. Existing bases and
+  child keys are read with terminating errors, so an unavailable hive or entry
+  cannot be misreported as zero residue. The configured CPack uninstall-key
+  identity is generated into the build contract and passed explicitly to the
+  verifier; an exact key remains residue even when all of its values were
+  cleared.
 
 Potential severity is **high** because false lifecycle evidence could admit an
 installer that cannot be safely deployed or removed. No user project, legacy
@@ -67,8 +73,11 @@ installer SHA-256, `832cc4cb5b3c5f2df8d260103545e58c6847d3f729718c687a446ac76b48
 was independently recomputed from the downloaded NSIS executable and matches
 the JSON evidence. Artifact `9180809446` has GitHub digest
 `sha256:1c0344a9555b73d5bc8d5a89eabd36860658fbb2a63a7e107af152c2792cc153`
-and expires 2026-11-11. `RQ-CF-REL-002` is `defined`; independent review of the
-slice remains a merge gate rather than missing requirement verification.
+and expires 2026-11-11. Independent review then found that registry read errors
+could be suppressed and a leftover exact CPack key with cleared values could
+escape the old filter. That run is retained as discovery evidence but does not
+verify the corrected implementation. `RQ-CF-REL-002` therefore remains `gap`
+until the corrected exact-head hosted lifecycle passes and is retained.
 
 macOS productbuild, Linux DEB/RPM, previous-version Windows upgrade, VSIX
 lifecycle, human UI smoke, and platform signing are outside this slice and
