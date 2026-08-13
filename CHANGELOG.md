@@ -1,3 +1,11 @@
+- 2026-08-12: Continued v1 portability and security lane J1 by moving strict
+  verified-snapshot exclusive file creation and durable byte writes behind
+  `cf_platform_support`. Admission, naming, sidecar policy, cleanup, and
+  diagnostics remain in the PRG runtime, while Windows handle APIs and POSIX
+  descriptor flags no longer live in the interpreter. Direct behavior,
+  ownership, full verified-DBF consumer, workflow, and isolation coverage are
+  load-bearing on Windows, Ubuntu, and macOS.
+
 - 2026-08-12: Continued v1 portability lane J1 by moving the PRG runtime's
   normalized, case-insensitive path identity comparison behind the existing
   `copperfin::platform` path boundary. Parser, frame, index, and verified-file

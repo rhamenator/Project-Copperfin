@@ -138,11 +138,15 @@ calls remain private to Windows implementation files.
 Windows SDK/CRT selection, UTF conversion, host path-component comparison,
 the shared normalized case-insensitive runtime path-identity helper, POSIX
 environment calls, and process-wide synchronization are private implementation
-in `cf_platform_support`. Direct portable regressions and source-level
-contracts run in the Windows, Linux, and macOS validation workflow, so the
-boundaries are load-bearing rather than documentary. See
+in `cf_platform_support`. Strict verified-byte snapshot exclusive creation and
+durable content writes also cross that boundary while admission, naming,
+sidecar, cleanup, and diagnostics remain runtime policy. Direct portable
+regressions and source-level contracts run in the Windows, Linux, and macOS
+validation workflow, so the boundaries are load-bearing rather than
+documentary. See
 `docs/50-portable-public-path-boundary.md` and
-`docs/51-portable-public-environment-boundary.md`, and
+`docs/51-portable-public-environment-boundary.md`,
+`docs/61-portable-exclusive-file-boundary.md`, and
 `docs/52-portable-executable-search-default.md`, plus
 `docs/53-private-sqlite-native-api-boundary.md` and
 `docs/54-portable-clr-host-boundary.md`, plus

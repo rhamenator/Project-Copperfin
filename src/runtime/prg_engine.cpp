@@ -5,6 +5,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/index_seek_optimizer.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/exclusive_file.h"
 #include "copperfin/platform/file_version.h"
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/json.h"
@@ -72,8 +73,6 @@
 #define NOMINMAX
 #include <windows.h>
 #else
-#include <errno.h>
-#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif

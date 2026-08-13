@@ -499,6 +499,26 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     8
     "cross-platform disk-space behavior path, build, and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/run_platform_exclusive_file_boundary_contract_check.cmake"
+    2
+    "cross-platform exclusive-file boundary path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/test_platform_exclusive_file.cpp"
+    2
+    "cross-platform exclusive-file behavior path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_exclusive_file_boundary_contract"
+    2
+    "cross-platform exclusive-file boundary tests")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_exclusive_file"
+    8
+    "cross-platform exclusive-file behavior path, build, and test entries")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_prg_engine_verified_dbf_security"
+    6
+    "cross-platform verified-snapshot consumer path, build, and test entries")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_portable_clr_host_boundary_contract"
     2
     "cross-platform portable CLR-host boundary tests")
