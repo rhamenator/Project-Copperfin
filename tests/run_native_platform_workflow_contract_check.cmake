@@ -535,6 +535,22 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     8
     "cross-platform file-stream behavior path, build, and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/run_platform_font_directories_boundary_contract_check.cmake"
+    2
+    "cross-platform font-directory boundary path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/test_platform_font_directories.cpp"
+    2
+    "cross-platform font-directory behavior path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_font_directories_boundary_contract"
+    2
+    "cross-platform font-directory boundary tests")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_font_directories"
+    8
+    "cross-platform font-directory behavior path, build, and test entries")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_prg_engine_file_io_functions"
     6
     "cross-platform PRG file-I/O consumer path, build, and test entries")

@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## V1 portable AFONT host roots
+
+The current bounded J1 slice moves only `AFONT()`'s ordered operating-system
+font search roots from `prg_engine_variables.inl` behind
+`copperfin::platform::font_search_directories()`. Windows `%WINDIR%/Fonts`,
+macOS system/local/user roots, and POSIX system/local/user roots are private to
+`cf_platform_support`. The runtime still owns directory existence checks,
+recursive enumeration, extension filtering, display names, deduplication,
+sorting, VFP array semantics, and the fixed no-font fallback. Direct host-root
+behavior plus source ownership, workflow, GitHub Actions, and isolation
+contracts and the existing real `test_prg_engine_arrays` consumer pass locally
+`6/6`; Clang ASan/UBSan passes `6/6` without findings. Mutating the first POSIX
+root fails the direct ordered-root assertion and is restored. See
+`docs/63-portable-font-directory-boundary.md`.
+
 ## V1 portable PRG file streams
 
 The current J1 slice moves native standard-stream opening and underlying-file

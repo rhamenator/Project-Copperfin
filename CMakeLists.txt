@@ -110,6 +110,7 @@ add_library(cf_platform_support
     src/platform/executable_path.cpp
     src/platform/file_stream.cpp
     src/platform/file_version.cpp
+    src/platform/font_directories.cpp
     src/platform/invariant_numeric.cpp
     src/platform/json.cpp
     src/platform/path.cpp

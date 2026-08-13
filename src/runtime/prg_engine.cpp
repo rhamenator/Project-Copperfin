@@ -7,6 +7,7 @@
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/exclusive_file.h"
 #include "copperfin/platform/file_version.h"
+#include "copperfin/platform/font_directories.h"
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"

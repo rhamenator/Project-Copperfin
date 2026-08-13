@@ -1,3 +1,11 @@
+- 2026-08-12: Continued v1 portability lane J1 by moving `AFONT()`'s ordered
+  host font-directory selection behind `cf_platform_support`. Windows,
+  macOS, and POSIX root policy no longer lives in the interpreter; recursive
+  enumeration, extension filtering, name normalization, deduplication,
+  sorting, VFP array behavior, and the fixed no-font fallback remain unchanged.
+  Direct host-order, ownership, workflow, and isolation coverage is scheduled
+  on all three hosts. See `docs/63-portable-font-directory-boundary.md`.
+
 - 2026-08-12: Continued v1 portability lane J1 by moving PRG standard-stream
   opening and file resizing behind `cf_platform_support`. Windows Unicode
   `_wfopen`/`_chsize_s` and POSIX `fopen`/`ftruncate` details no longer live in
