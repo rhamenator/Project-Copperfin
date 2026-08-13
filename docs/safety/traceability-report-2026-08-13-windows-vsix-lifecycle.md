@@ -54,19 +54,15 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   Visual Studio has a bounded observation window, then receives a normal close
   request before bounded tree termination fallback.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
-  IDE process launched by the helper. The controlled IDE opens Visual Studio's
-  built-in Command Window through startup `/Command View.CommandWindow`. After
-  a parent-side bounded interval, the input helper requires the foreground
-  window to be owned by that exact IDE process and enters only the invariant
-  `Copperfin.ShowCommandWindow` pane-show
-  command. Hosted Visual Studio may defer the startup command until that sender
-  exits, so the parent waits within another bound and repeats only that same
-  idempotent command. Neither attempt admits evidence by itself; the helper
-  finds the exact Copperfin Command
-  surface in that same IDE process, and explicitly forwards `/Edit` plus the
-  runner-owned fixture to the now-running IDE. A visible window, launched
-  process, command-line attempt, keystroke attempt, or surface discovery alone
-  is not PRG-open or command evidence. After bounded IDE shutdown flushes
+  IDE process launched by the helper. The helper foregrounds that exact IDE,
+  verifies foreground PID ownership, sends Visual Studio's English Command
+  Window shortcut, verifies foreground PID ownership again, and submits only
+  the invariant `Copperfin.ShowCommandWindow` command. None of those input
+  steps admits evidence by itself: the exact Copperfin Command surface and
+  runner-owned PRG must be observed in that same IDE process. A visible window,
+  launched process, command-line attempt, keystroke attempt, or surface
+  discovery alone is not PRG-open or command evidence. After bounded IDE
+  shutdown flushes
   the activity log, XML entry parsing requires the exact informational
   `End package load [CopperfinPackage]` record and package GUID and rejects any
   Copperfin-related error entry. Package-name, assembly-path, or GUID substring
@@ -278,6 +274,17 @@ expected PID, and sends the English Visual Studio Tools accelerator once. It
 then searches for and invokes only the exact `Copperfin Command` menu item by
 process-scoped UI Automation. The accelerator never selects a product command,
 and no keystroke is sent unless foreground ownership is proven.
+
+Run `31748419105` proved the exact IDE foreground boundary and Tools
+accelerator both executed, but the open menu still exposed no exact command
+item through UI Automation. The correction no longer depends on menu-tree
+exposure. After exact-PID foreground proof it sends Visual Studio's English
+Command Window shortcut, independently verifies the command-input foreground
+still belongs to the exact IDE PID, and submits only the invariant canonical
+`Copperfin.ShowCommandWindow` command. The same-process pane, runner-owned PRG,
+successful package-load record, and absence of Copperfin load errors remain
+independent admission conditions. The run is retained negative activation
+evidence and does not advance `RQ-CF-REL-003`.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its

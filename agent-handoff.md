@@ -134,10 +134,13 @@ availability, invocation, pane observation, and PRG observation. This is a
 diagnostic-only correction; product behavior remains unchanged.
 Run `31747101809` then proved `tools_menu_observed=false`, with no command item
 or invocation and no automation exception. The current correction foregrounds
-the exact evidence IDE, verifies the foreground PID before sending the English
-Tools accelerator once, and still requires process-scoped discovery and
-invocation of only the exact `Copperfin Command` item. Foreground identity and
-accelerator state remain in the retained JSON.
+the exact evidence IDE. Run `31748419105` verified that foreground PID, sent the
+English Tools accelerator, and still exposed no exact command item. The current
+correction instead sends Visual Studio's English Command Window shortcut,
+rechecks foreground ownership, and submits only the invariant canonical
+`Copperfin.ShowCommandWindow` command. Those input boundaries, the same-process
+pane, and explicit successful package load remain separately required and
+retained. `RQ-CF-REL-003` remains `gap` pending exact-head execution.
 
 ## V1 Windows installer lifecycle
 

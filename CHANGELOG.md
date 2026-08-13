@@ -101,8 +101,11 @@
   pane, and PRG observation state instead of leaving that boundary ambiguous.
   Run `31747101809` proved the hosted IDE's top-level Tools menu is not exposed
   as a UI Automation `MenuItem`. The verifier now foregrounds and verifies the
-  exact IDE PID before sending the English Tools accelerator once, then locates
-  and invokes only the exact command item through process-scoped UI Automation.
+  exact IDE PID before using Visual Studio's English Command Window shortcut.
+  Run `31748419105` proved the Tools accelerator still exposed no command item;
+  the verifier now rechecks foreground ownership and submits only the exact
+  canonical `Copperfin.ShowCommandWindow` command, while same-process pane and
+  explicit package-load evidence remain mandatory.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

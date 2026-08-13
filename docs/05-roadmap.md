@@ -460,9 +460,13 @@ invocation pattern, invocation completion, pane, and PRG observations before
 any further behavior correction.
 Run `31747101809` proved the missing boundary: the hosted Visual Studio main
 window does not expose its top-level Tools menu as a UI Automation `MenuItem`.
-The corrected harness foregrounds and verifies the exact evidence IDE PID,
-sends the standard English Tools accelerator once, and then uses process-scoped
-UI Automation to locate and invoke only the exact installed command item.
+Run `31748419105` then proved the exact IDE could be foregrounded and receive
+the standard English Tools accelerator while still exposing no exact command
+item. The corrected harness now sends Visual Studio's English Command Window
+shortcut only after exact-PID foreground proof, verifies the foreground PID
+again before input, and submits only the invariant canonical
+`Copperfin.ShowCommandWindow` command. The same-process pane and explicit
+successful package-load record remain independent admission conditions.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

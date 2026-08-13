@@ -323,7 +323,7 @@ param(
     [Parameter(Mandatory = $true)][string]$ExpectedName,
     [string]$AlternateExpectedName = '',
     [switch]$AllowProcessWindowTitlePrefix,
-    [string]$InvokeToolsMenuItem = '',
+    [string]$InvokeCanonicalCommand = '',
     [Parameter(Mandatory = $true)][string]$DiagnosticPath,
     [Parameter(Mandatory = $true)][string]$EvidenceDescription,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
@@ -340,15 +340,11 @@ if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
 $observed = $false
 $lastAutomationError = ''
 $lastProcessWindowName = ''
-$menuItemInvoked = [string]::IsNullOrWhiteSpace($InvokeToolsMenuItem)
-$toolsMenuObserved = $false
-$toolsExpandPatternObserved = $false
-$toolsInvokePatternObserved = $false
-$toolsActivationAttempted = $false
+$commandSubmitted = [string]::IsNullOrWhiteSpace($InvokeCanonicalCommand)
 $foregroundProcessVerified = $false
-$toolsKeyboardAcceleratorSent = $false
-$commandMenuItemObserved = $false
-$commandInvokePatternObserved = $false
+$commandWindowShortcutSent = $false
+$commandInputForegroundVerified = $false
+$canonicalCommandSubmitted = $false
 while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
     try {
         $processCondition = [System.Windows.Automation.PropertyCondition]::new(
@@ -357,80 +353,38 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
             [System.Windows.Automation.TreeScope]::Children, $processCondition)
         if ($null -ne $ide) {
             $lastProcessWindowName = [string]$ide.Current.Name
-            if (-not $menuItemInvoked) {
-                $menuItemCondition = [System.Windows.Automation.PropertyCondition]::new(
-                    [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
-                    [System.Windows.Automation.ControlType]::MenuItem)
-                if (-not $toolsActivationAttempted) {
-                    $toolsNameCondition = [System.Windows.Automation.PropertyCondition]::new(
-                        [System.Windows.Automation.AutomationElement]::NameProperty, 'Tools')
-                    $toolsCondition = [System.Windows.Automation.AndCondition]::new(
-                        $menuItemCondition, $toolsNameCondition)
-                    $toolsMenu = $ide.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $toolsCondition)
-                    if ($null -ne $toolsMenu) {
-                        $toolsMenuObserved = $true
-                        $expandPattern = $null
-                        if ($toolsMenu.TryGetCurrentPattern(
-                                [System.Windows.Automation.ExpandCollapsePattern]::Pattern,
-                                [ref]$expandPattern)) {
-                            $toolsExpandPatternObserved = $true
-                            $expandPattern.Expand()
-                            $toolsActivationAttempted = $true
-                        }
-                        else {
-                            $invokeToolsPattern = $null
-                            if ($toolsMenu.TryGetCurrentPattern(
-                                    [System.Windows.Automation.InvokePattern]::Pattern,
-                                    [ref]$invokeToolsPattern)) {
-                                $toolsInvokePatternObserved = $true
-                                $invokeToolsPattern.Invoke()
-                                $toolsActivationAttempted = $true
-                            }
-                        }
-                    }
-                    if (-not $toolsActivationAttempted) {
-                        $ideWindowHandle = [IntPtr]::new($ide.Current.NativeWindowHandle)
-                        if ([CopperfinLifecycle.NativeMethods]::SetForegroundWindow($ideWindowHandle)) {
-                            $foregroundDeadline = [DateTime]::UtcNow.AddSeconds(5)
-                            while ([DateTime]::UtcNow -lt $foregroundDeadline -and -not $foregroundProcessVerified) {
-                                [uint32]$foregroundProcessId = 0
-                                $foregroundWindow = [CopperfinLifecycle.NativeMethods]::GetForegroundWindow()
-                                [void][CopperfinLifecycle.NativeMethods]::GetWindowThreadProcessId(
-                                    $foregroundWindow, [ref]$foregroundProcessId)
-                                $foregroundProcessVerified = $foregroundProcessId -eq $ExpectedProcessId
-                                if (-not $foregroundProcessVerified) { Start-Sleep -Milliseconds 100 }
-                            }
-                        }
-                        if ($foregroundProcessVerified) {
-                            Add-Type -AssemblyName System.Windows.Forms
-                            [System.Windows.Forms.SendKeys]::SendWait('%t')
-                            $toolsKeyboardAcceleratorSent = $true
-                            $toolsActivationAttempted = $true
-                        }
+            if (-not $commandSubmitted) {
+                $ideWindowHandle = [IntPtr]::new($ide.Current.NativeWindowHandle)
+                if ([CopperfinLifecycle.NativeMethods]::SetForegroundWindow($ideWindowHandle)) {
+                    $foregroundDeadline = [DateTime]::UtcNow.AddSeconds(5)
+                    while ([DateTime]::UtcNow -lt $foregroundDeadline -and -not $foregroundProcessVerified) {
+                        [uint32]$foregroundProcessId = 0
+                        $foregroundWindow = [CopperfinLifecycle.NativeMethods]::GetForegroundWindow()
+                        [void][CopperfinLifecycle.NativeMethods]::GetWindowThreadProcessId(
+                            $foregroundWindow, [ref]$foregroundProcessId)
+                        $foregroundProcessVerified = $foregroundProcessId -eq $ExpectedProcessId
+                        if (-not $foregroundProcessVerified) { Start-Sleep -Milliseconds 100 }
                     }
                 }
-                Start-Sleep -Milliseconds 500
-                $commandNameCondition = [System.Windows.Automation.PropertyCondition]::new(
-                    [System.Windows.Automation.AutomationElement]::NameProperty, $InvokeToolsMenuItem)
-                $commandCondition = [System.Windows.Automation.AndCondition]::new(
-                    $menuItemCondition, $commandNameCondition)
-                $processCommandCondition = [System.Windows.Automation.AndCondition]::new(
-                    $processCondition, $commandCondition)
-                $commandItem = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
-                    [System.Windows.Automation.TreeScope]::Descendants, $processCommandCondition)
-                if ($null -ne $commandItem) {
-                    $commandMenuItemObserved = $true
-                    $invokeCommandPattern = $null
-                    if ($commandItem.TryGetCurrentPattern(
-                            [System.Windows.Automation.InvokePattern]::Pattern,
-                            [ref]$invokeCommandPattern)) {
-                        $commandInvokePatternObserved = $true
-                        $invokeCommandPattern.Invoke()
-                        $menuItemInvoked = $true
+                if ($foregroundProcessVerified) {
+                    Add-Type -AssemblyName System.Windows.Forms
+                    Start-Sleep -Seconds 2
+                    [System.Windows.Forms.SendKeys]::SendWait('^%a')
+                    $commandWindowShortcutSent = $true
+                    Start-Sleep -Seconds 1
+                    [uint32]$commandInputProcessId = 0
+                    $commandInputWindow = [CopperfinLifecycle.NativeMethods]::GetForegroundWindow()
+                    [void][CopperfinLifecycle.NativeMethods]::GetWindowThreadProcessId(
+                        $commandInputWindow, [ref]$commandInputProcessId)
+                    $commandInputForegroundVerified = $commandInputProcessId -eq $ExpectedProcessId
+                    if ($commandInputForegroundVerified) {
+                        [System.Windows.Forms.SendKeys]::SendWait(">$InvokeCanonicalCommand{ENTER}")
+                        $canonicalCommandSubmitted = $true
+                        $commandSubmitted = $true
                     }
                 }
             }
-            if (-not $menuItemInvoked) {
+            if (-not $commandSubmitted) {
                 Start-Sleep -Milliseconds 500
                 continue
             }
@@ -460,38 +414,34 @@ $diagnostic = [ordered]@{
     schema_version = 1
     expected_process_id = $ExpectedProcessId
     expected_surface = $ExpectedName
-    invoke_tools_menu_item = $InvokeToolsMenuItem
-    tools_menu_observed = $toolsMenuObserved
-    tools_expand_pattern_observed = $toolsExpandPatternObserved
-    tools_invoke_pattern_observed = $toolsInvokePatternObserved
+    invoke_canonical_command = $InvokeCanonicalCommand
     foreground_process_verified = $foregroundProcessVerified
-    tools_keyboard_accelerator_sent = $toolsKeyboardAcceleratorSent
-    command_menu_item_observed = $commandMenuItemObserved
-    command_invoke_pattern_observed = $commandInvokePatternObserved
-    command_invoked = $menuItemInvoked
+    command_window_shortcut_sent = $commandWindowShortcutSent
+    command_input_foreground_verified = $commandInputForegroundVerified
+    canonical_command_submitted = $canonicalCommandSubmitted
     surface_observed = $observed
     last_process_window_name = $lastProcessWindowName
     last_automation_error = $lastAutomationError
 }
 $diagnostic | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $DiagnosticPath -Encoding utf8
 if (-not $observed) {
-    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Tools menu observed: $toolsMenuObserved. Foreground process verified: $foregroundProcessVerified. Tools accelerator sent: $toolsKeyboardAcceleratorSent. Command item observed: $commandMenuItemObserved. Command invoked: $menuItemInvoked. Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
+    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Foreground process verified: $foregroundProcessVerified. Command Window shortcut sent: $commandWindowShortcutSent. Command-input foreground verified: $commandInputForegroundVerified. Canonical command submitted: $canonicalCommandSubmitted. Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
 }
 '@, [System.Text.UTF8Encoding]::new($false))
     $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
-    Write-Host 'VSIX lifecycle phase: invoke installed Copperfin command from Tools menu'
+    Write-Host 'VSIX lifecycle phase: invoke exact installed Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
             '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
-            '-InvokeToolsMenuItem', 'Copperfin Command',
+            '-InvokeCanonicalCommand', 'Copperfin.ShowCommandWindow',
             '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command.json'),
             '-EvidenceDescription', 'Registered Copperfin Command surface',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Copperfin Tools-menu command UI Automation observation' | Out-Null
+        -Name 'Copperfin canonical command UI Automation observation' | Out-Null
 
     Write-Host 'VSIX lifecycle phase: observe startup-opened runner-owned PRG'
     Invoke-BoundedProcess `
