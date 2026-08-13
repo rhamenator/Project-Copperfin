@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 shell-command portable-path test linkage
+
+Windows Deep Validation `31662374490` compiled for 44 minutes before MSVC
+reported `LNK2019`/`LNK1120`: the standalone
+`test_studio_host_shell_command` target uses `path_to_utf8_string()` in its
+Unicode-path assertion but did not link `cf_platform_support`. The target now
+declares that dependency, passes its focused GCC Release build/execution `1/1`,
+and is included in the focused Windows environment/path workflow. Product
+shell-command and path behavior are unchanged; exact-head Windows evidence is
+required before merge. See `docs/50-portable-public-path-boundary.md`.
+
 ## V1 workspace-agent authority policy
 
 The project-wide DO-178C-inspired assurance baseline is now continuous and

@@ -631,6 +631,9 @@ add_executable(test_studio_host_shell_command
     test_studio_host_shell_command.cpp
     ../apps/copperfin_studio_host/studio_host_main_shell_command.cpp
 )
+target_link_libraries(test_studio_host_shell_command PRIVATE
+    cf_platform_support
+)
 target_include_directories(test_studio_host_shell_command PRIVATE
     ${CMAKE_SOURCE_DIR}/apps/copperfin_studio_host
     ${CMAKE_SOURCE_DIR}/include

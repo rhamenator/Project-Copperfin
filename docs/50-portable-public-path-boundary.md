@@ -104,6 +104,21 @@ database/session documentation overclaim and incomplete Windows Unicode
 fallback; both are corrected and both threads are resolved. Independent review
 remains required before merge.
 
+## Shell-command regression linkage correction
+
+Windows Deep Validation run `31662374490` exposed a test-build gap after the
+portable path boundary was adopted: `test_studio_host_shell_command` calls
+`path_to_utf8_string()` for its Unicode launch-path assertion, but its
+self-contained target did not link `cf_platform_support`. MSVC therefore
+reported `LNK2019`/`LNK1120` after 44 minutes of otherwise successful native
+compilation. The test target now declares the same platform-library dependency
+that its source consumes. The focused Windows environment/path workflow also
+builds and runs this real shell-command regression so the linkage and Unicode
+argument behavior remain direct Windows evidence rather than an incidental
+full-build side effect. This correction changes test and workflow wiring only;
+it does not alter shell-command, path-conversion, VFP9, package, or runtime
+behavior.
+
 ## Remaining J1 work
 
 This boundary is a seed, not a blanket portability claim. Later independently
