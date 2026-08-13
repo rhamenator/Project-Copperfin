@@ -337,10 +337,59 @@ $ErrorActionPreference = 'Stop'
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 public static class CopperfinWindowOwner
 {
     [DllImport("user32.dll")]
     public static extern uint GetWindowThreadProcessId(IntPtr windowHandle, out uint processId);
+}
+
+public static class CopperfinRunningObjectTable
+{
+    [DllImport("ole32.dll")]
+    private static extern int CreateBindCtx(uint reserved, out IBindCtx bindContext);
+
+    public static object GetObject(string expectedDisplayName)
+    {
+        IBindCtx bindContext = null;
+        IRunningObjectTable runningObjectTable = null;
+        IEnumMoniker monikerEnumerator = null;
+        try
+        {
+            Marshal.ThrowExceptionForHR(CreateBindCtx(0, out bindContext));
+            bindContext.GetRunningObjectTable(out runningObjectTable);
+            runningObjectTable.EnumRunning(out monikerEnumerator);
+            IMoniker[] monikers = new IMoniker[1];
+            while (monikerEnumerator.Next(1, monikers, IntPtr.Zero) == 0)
+            {
+                IMoniker moniker = monikers[0];
+                try
+                {
+                    string displayName;
+                    moniker.GetDisplayName(bindContext, null, out displayName);
+                    if (!String.IsNullOrWhiteSpace(displayName) &&
+                            displayName.EndsWith(expectedDisplayName, StringComparison.Ordinal))
+                    {
+                        object runningObject;
+                        runningObjectTable.GetObject(moniker, out runningObject);
+                        return runningObject;
+                    }
+                }
+                catch (UnauthorizedAccessException) { }
+                finally
+                {
+                    if (moniker != null) { Marshal.ReleaseComObject(moniker); }
+                }
+            }
+            return null;
+        }
+        finally
+        {
+            if (monikerEnumerator != null) { Marshal.ReleaseComObject(monikerEnumerator); }
+            if (runningObjectTable != null) { Marshal.ReleaseComObject(runningObjectTable); }
+            if (bindContext != null) { Marshal.ReleaseComObject(bindContext); }
+        }
+    }
 }
 "@
 if ([string]::IsNullOrWhiteSpace($CommandName) -eq [string]::IsNullOrWhiteSpace($DocumentPath)) {
@@ -353,14 +402,19 @@ if (-not [string]::IsNullOrWhiteSpace($DocumentPath) -and
         -not (Test-Path -LiteralPath $DocumentPath -PathType Leaf)) {
     throw "Visual Studio automation document does not exist: $DocumentPath"
 }
-$programmaticId = "VisualStudio.DTE.$VisualStudioRegistryVersion"
+$runningObjectDisplayName = "VisualStudio.DTE.$VisualStudioRegistryVersion`:$ExpectedProcessId"
 $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
 $dte = $null
 $lastError = ''
 while ([DateTime]::UtcNow -lt $deadline -and $null -eq $dte) {
     $candidate = $null
     try {
-        $candidate = [Runtime.InteropServices.Marshal]::GetActiveObject($programmaticId)
+        $candidate = [CopperfinRunningObjectTable]::GetObject($runningObjectDisplayName)
+        if ($null -eq $candidate) {
+            $lastError = "Running object '$runningObjectDisplayName' is not registered."
+            Start-Sleep -Milliseconds 500
+            continue
+        }
         $mainWindowHandle = [IntPtr][int64]$candidate.MainWindow.HWnd
         [uint32]$ownerProcessId = 0
         [void][CopperfinWindowOwner]::GetWindowThreadProcessId($mainWindowHandle, [ref]$ownerProcessId)
@@ -380,7 +434,7 @@ while ([DateTime]::UtcNow -lt $deadline -and $null -eq $dte) {
     Start-Sleep -Milliseconds 500
 }
 if ($null -eq $dte) {
-    throw "Exact-process Visual Studio automation was unavailable through '$programmaticId'. Last error: $lastError"
+    throw "Exact-process Visual Studio automation was unavailable through '$runningObjectDisplayName'. Last error: $lastError"
 }
 try {
     if (-not [string]::IsNullOrWhiteSpace($CommandName)) {

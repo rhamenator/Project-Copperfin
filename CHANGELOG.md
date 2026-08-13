@@ -51,6 +51,11 @@
   installation exceeded the 240-second process bound after prior installs
   approached 238 seconds. The corrected 300-second default remains bounded and
   retains timed-out process-tree termination.
+  Run `31733561020` proved the generic DTE active object was unavailable. The
+  corrected lookup follows Microsoft's documented Running Object Table pattern,
+  selects only the version- and process-specific
+  `VisualStudio.DTE.<version>:<PID>` suffix, and independently verifies the DTE
+  main-window owner before use.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

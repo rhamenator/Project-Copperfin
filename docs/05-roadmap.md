@@ -405,6 +405,11 @@ Run `31731652063` did not reach that correction because VSIX installation
 exceeded the 240-second bound after prior hosted installs approached 238
 seconds. The default is widened, still bounded, to 300 seconds and retains
 timed-out process-tree termination.
+Run `31733561020` proved the generic DTE active object was unavailable. The
+current verifier follows Microsoft's documented Running Object Table lookup,
+selects only the version- and process-specific
+`VisualStudio.DTE.<version>:<PID>` suffix, and still verifies the DTE
+main-window owner independently before use.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

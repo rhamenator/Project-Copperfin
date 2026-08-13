@@ -173,7 +173,13 @@ or lifecycle evidence.
 Run `31732427063` is retained as negative command-automation evidence, not
 lifecycle evidence. Its ActivityLog remains retained, but no result JSON was
 admitted because the exact-process foreground check failed before pane and
-document proof.
+document proof. Run `31733561020` then showed that the generic
+`VisualStudio.DTE.17.0` active object was unavailable throughout the bounded
+interval. Following Microsoft's documented launch-and-DTE pattern, the next
+correction enumerates the COM Running Object Table for only the version- and
+process-specific `VisualStudio.DTE.<version>:<PID>` suffix, then independently
+verifies that object's main-window owner before use. This remains a gap pending
+fresh exact-head evidence.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its

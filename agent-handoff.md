@@ -76,7 +76,11 @@ entry and rejects matching errors.
 installation exceeded a brittle 240-second bound after prior installs
 approached 238 seconds. The corrected default is 300 seconds, still bounded
 with process-tree termination. Fresh exact-head execution and rereview remain
-required.
+required. Run `31733561020` subsequently proved the generic DTE active object
+was unavailable. The current correction follows Microsoft's documented
+Running Object Table pattern and selects only the version- and process-specific
+`VisualStudio.DTE.<version>:<PID>` suffix before the independent main-window
+owner check.
 
 ## V1 Windows installer lifecycle
 
