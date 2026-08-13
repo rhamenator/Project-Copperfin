@@ -7,9 +7,9 @@
   previous-version upgrade, and disablement remain explicitly `NOT_RUN`.
   Initial hosted VS2022 run `31711406714` completed the lifecycle and managed
   suite, but review invalidated its PRG-open and package-load admission signals.
-  A corrected retry reached the stronger observation boundary but generic DTE
-  discovery could not identify the launched IDE. Process-ID-bound Running
-  Object Table document/command proof and explicit successful-load XML/error
+  Corrected retries proved that neither generic nor process-specific DTE
+  discovery can identify the hosted IDE. Exact-process Windows UI Automation
+  document-tab/command-surface proof and explicit successful-load XML/error
   rejection require fresh exact-head evidence.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview

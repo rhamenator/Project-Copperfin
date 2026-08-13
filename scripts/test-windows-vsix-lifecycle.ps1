@@ -221,6 +221,7 @@ $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
 
 $installedDirectory = $null
 $ideProcess = $null
+$commandProcess = $null
 try {
     Write-Host 'VSIX lifecycle phase: install'
     Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
@@ -265,133 +266,89 @@ try {
     Assert-Condition ($ideProcess.MainWindowHandle -ne [IntPtr]::Zero) `
         'Visual Studio did not expose a main window within the bounded startup interval.'
 
-    Write-Host 'VSIX lifecycle phase: prove PRG document and invoke registered Copperfin command'
-    $automationScript = Join-Path $resolvedEvidenceDirectory 'observe-running-visual-studio.ps1'
+    Write-Host 'VSIX lifecycle phase: prove runner-owned PRG document'
+    $automationScript = Join-Path $resolvedEvidenceDirectory 'observe-visual-studio-surface.ps1'
     [System.IO.File]::WriteAllText($automationScript, @'
 param(
-    [Parameter(Mandatory = $true)][string]$RegistryVersion,
     [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
-    [Parameter(Mandatory = $true)][string]$ExpectedDocument,
-    [Parameter(Mandatory = $true)][string]$CommandName,
+    [Parameter(Mandatory = $true)][string]$ExpectedName,
+    [string]$AlternateExpectedName = '',
+    [Parameter(Mandatory = $true)][string]$EvidenceDescription,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
 )
 $ErrorActionPreference = 'Stop'
-Add-Type -TypeDefinition @"
-using System;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-
-namespace Copperfin
-{
-    public static class VisualStudioRunningObjectTable
-    {
-        [DllImport("ole32.dll")]
-        private static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable table);
-
-        [DllImport("ole32.dll")]
-        private static extern int CreateBindCtx(int reserved, out IBindCtx context);
-
-        public static object Find(string expectedMoniker)
-        {
-            IRunningObjectTable table = null;
-            IBindCtx context = null;
-            IEnumMoniker enumerator = null;
-            try
-            {
-                Marshal.ThrowExceptionForHR(GetRunningObjectTable(0, out table));
-                Marshal.ThrowExceptionForHR(CreateBindCtx(0, out context));
-                table.EnumRunning(out enumerator);
-                IMoniker[] monikers = new IMoniker[1];
-                while (enumerator.Next(1, monikers, IntPtr.Zero) == 0)
-                {
-                    IMoniker moniker = monikers[0];
-                    try
-                    {
-                        string displayName;
-                        moniker.GetDisplayName(context, null, out displayName);
-                        if (String.Equals(displayName, expectedMoniker, StringComparison.OrdinalIgnoreCase))
-                        {
-                            object result;
-                            table.GetObject(moniker, out result);
-                            return result;
-                        }
-                    }
-                    catch (COMException)
-                    {
-                        // A transient or inaccessible unrelated ROT entry must
-                        // not prevent discovery of the exact expected entry.
-                    }
-                    finally
-                    {
-                        if (moniker != null && Marshal.IsComObject(moniker))
-                            Marshal.ReleaseComObject(moniker);
-                        monikers[0] = null;
-                    }
-                }
-                return null;
-            }
-            finally
-            {
-                if (enumerator != null && Marshal.IsComObject(enumerator)) Marshal.ReleaseComObject(enumerator);
-                if (context != null && Marshal.IsComObject(context)) Marshal.ReleaseComObject(context);
-                if (table != null && Marshal.IsComObject(table)) Marshal.ReleaseComObject(table);
-            }
-        }
-    }
-}
-"@
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
 $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
-$expectedMoniker = "!VisualStudio.DTE.$RegistryVersion`:$ExpectedProcessId"
-$dte = $null
-while ([DateTime]::UtcNow -lt $deadline -and $null -eq $dte) {
-    try { $dte = [Copperfin.VisualStudioRunningObjectTable]::Find($expectedMoniker) }
-    catch { Start-Sleep -Milliseconds 500 }
+$expectedNames = @($ExpectedName)
+if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
+    $expectedNames += $AlternateExpectedName
 }
-if ($null -eq $dte) { throw "Launched Visual Studio process did not publish expected ROT moniker '$expectedMoniker'." }
-$expected = [System.IO.Path]::GetFullPath($ExpectedDocument)
-$documentObserved = $false
-$lastDocumentError = ''
-while ([DateTime]::UtcNow -lt $deadline -and -not $documentObserved) {
+$observed = $false
+$lastAutomationError = ''
+while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
     try {
-        for ($index = 1; $index -le $dte.Documents.Count; $index++) {
-            $document = $dte.Documents.Item($index)
-            if ($null -ne $document -and -not [string]::IsNullOrWhiteSpace([string]$document.FullName) -and
-                    [string]::Equals([System.IO.Path]::GetFullPath([string]$document.FullName), $expected,
-                        [System.StringComparison]::OrdinalIgnoreCase)) {
-                $documentObserved = $true
+        $processCondition = [System.Windows.Automation.PropertyCondition]::new(
+            [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ExpectedProcessId)
+        $ide = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+            [System.Windows.Automation.TreeScope]::Children, $processCondition)
+        if ($null -ne $ide) {
+            foreach ($expectedName in $expectedNames) {
+                $nameCondition = [System.Windows.Automation.PropertyCondition]::new(
+                    [System.Windows.Automation.AutomationElement]::NameProperty, $expectedName)
+                $match = $ide.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $nameCondition)
+                if ($null -ne $match) {
+                    $observed = $true
+                    break
+                }
+            }
+            if ($observed) {
                 break
             }
         }
     }
-    catch { $lastDocumentError = $_.Exception.Message }
-    if (-not $documentObserved) { Start-Sleep -Milliseconds 500 }
+    catch { $lastAutomationError = $_.Exception.Message }
+    Start-Sleep -Milliseconds 500
 }
-if (-not $documentObserved) { throw "Expected PRG document was not open in Visual Studio: $expected. Last DTE error: $lastDocumentError" }
-$commandInvoked = $false
-$lastCommandError = ''
-while ([DateTime]::UtcNow -lt $deadline -and -not $commandInvoked) {
-    try {
-        $dte.ExecuteCommand($CommandName)
-        $commandInvoked = $true
-    }
-    catch {
-        $lastCommandError = $_.Exception.Message
-        Start-Sleep -Milliseconds 500
-    }
+if (-not $observed) {
+    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Last UI Automation error: $lastAutomationError"
 }
-if (-not $commandInvoked) { throw "Registered command '$CommandName' could not be invoked. Last DTE error: $lastCommandError" }
 '@, [System.Text.UTF8Encoding]::new($false))
     $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
-        "Windows PowerShell is unavailable for DTE observation: $windowsPowerShell"
+        "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
-            '-RegistryVersion', $registryVersion, '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-ExpectedDocument', $fixturePrg, '-CommandName', 'Copperfin.ShowCommandWindow',
+            '-ExpectedProcessId', "$($ideProcess.Id)",
+            '-ExpectedName', [System.IO.Path]::GetFileName($fixturePrg),
+            '-AlternateExpectedName', [System.IO.Path]::GetFullPath($fixturePrg),
+            '-EvidenceDescription', 'Exact runner-owned PRG document tab',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Copperfin PRG and registered-command DTE observation' | Out-Null
+        -Name 'Copperfin PRG document UI Automation observation' | Out-Null
+
+    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command'
+    $commandStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $commandStartInfo.FileName = $devenv
+    $commandStartInfo.UseShellExecute = $false
+    $commandStartInfo.WorkingDirectory = $resolvedEvidenceDirectory
+    foreach ($argument in @('/Command', 'Copperfin.ShowCommandWindow')) {
+        [void]$commandStartInfo.ArgumentList.Add($argument)
+    }
+    $commandProcess = [System.Diagnostics.Process]::Start($commandStartInfo)
+    Assert-Condition ($null -ne $commandProcess) 'Copperfin registered command invocation did not start.'
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
+            '-EvidenceDescription', 'Registered Copperfin Command surface',
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
+        -Name 'Copperfin registered-command UI Automation observation' | Out-Null
+    if ($commandProcess.HasExited) {
+        Assert-Condition ($commandProcess.ExitCode -eq 0) `
+            "Copperfin registered command invocation exited with code $($commandProcess.ExitCode)."
+    }
 
     Start-Sleep -Seconds 2
     try { [void]$ideProcess.CloseMainWindow() } catch {}
@@ -419,6 +376,16 @@ if (-not $commandInvoked) { throw "Registered command '$CommandName' could not b
         'ActivityLog did not contain an explicit successful End package load [CopperfinPackage] record.'
 }
 finally {
+    if ($null -ne $commandProcess) {
+        if (-not $commandProcess.HasExited) {
+            try { [void]$commandProcess.CloseMainWindow() } catch {}
+            if (-not $commandProcess.WaitForExit(15000)) {
+                try { $commandProcess.Kill($true) } catch { Write-Warning "Command-bearing Visual Studio process could not be terminated: $($_.Exception.Message)" }
+                [void]$commandProcess.WaitForExit(15000)
+            }
+        }
+        $commandProcess.Dispose()
+    }
     if ($null -ne $ideProcess) {
         if (-not $ideProcess.HasExited) {
             try { [void]$ideProcess.CloseMainWindow() } catch {}

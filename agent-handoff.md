@@ -24,10 +24,12 @@ the old activity-log substring could match registration or failed-load records,
 and a main window did not prove the PRG opened. Corrected run `31713227592`
 timed out during installation; exact-head retry `31713867127` reached the DTE
 boundary but generic ProgID lookup did not identify the launched IDE. The
-further-corrected helper enumerates the Running Object Table and accepts only
-the exact Visual Studio version/PID moniker, then requires the exact open
-document, invokes the command through that process-specific DTE, requires an
-explicit successful package-load XML entry, and rejects matching errors.
+process-specific retry `31715126080` proved the hosted IDE published no matching
+DTE moniker. The further-corrected helper uses Windows UI Automation scoped to
+the exact launched IDE process to require the exact PRG document tab, invokes
+the registered command, then requires the exact Copperfin Command surface in
+that same process. It also requires an explicit successful package-load XML
+entry and rejects matching errors.
 `RQ-CF-REL-003` remains `gap` pending corrected exact-head execution and
 rereview.
 
