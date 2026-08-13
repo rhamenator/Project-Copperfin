@@ -6,13 +6,22 @@ Purpose:
 
 - provide stable `HZ-*` identifiers
 - support investigation-grade traceability
-- connect documentation procedures to hazard analysis
+- connect product behavior and documentation procedures to hazard analysis
+
+This register supports Copperfin's DO-178C-inspired development-assurance
+baseline for a general-purpose platform. It is not a claim of DO-178C
+compliance, certification, an assigned software level, or suitability for a
+specific safety-critical deployment. Hazards and controls are applied
+proportionally to reach and severity; integrators remain responsible for their
+own system and domain assurance.
 
 ## Usage Rules
 
 1. Use a unique immutable `HZ-*` id for each hazard.
 2. Never recycle retired ids; mark them `retired` instead.
-3. Link each safety-relevant documentation issue to one or more `HZ-*` ids.
+3. Link each safety-relevant behavior or documentation change to one or more
+   `HZ-*` ids and to its governing requirement in
+   `docs/32-recovered-requirements-traceability.md`.
 4. If no hazard applies, record `HZ-none` with explicit rationale in the issue.
 5. Update this register in the same change set where new hazard ids are introduced.
 
@@ -36,7 +45,7 @@ Purpose:
 
 ## Investigation Checklist
 
-When investigating an incident potentially related to documentation:
+When investigating an incident potentially related to product behavior or documentation:
 
 1. Identify all linked `HZ-*`, `DQ-*`, and `DV-*` ids.
 2. Retrieve issue evidence ledger (commits, reviewers, artifacts, walkthrough results).
@@ -46,7 +55,7 @@ When investigating an incident potentially related to documentation:
 
 ## Release Gate Use
 
-Run `scripts/validate-safety-traceability.ps1` before release tagging (or run the `Safety Traceability Gate` workflow) against the intended documentation-traceability issue set to verify:
+Run `scripts/validate-safety-traceability.ps1` before release tagging (or run the `Safety Traceability Gate` workflow) against the intended documentation-traceability issue set to verify its current DQ/DV contract. Separately verify that every release-affecting behavior change has requirement/code/test/result traceability in the durable matrix and that unresolved gaps are disclosed. The current script verifies:
 
 1. `DQ-*`, `DV-*`, and `HZ-*` presence for safety-relevant documentation issues
 2. hazard ids resolve in this register

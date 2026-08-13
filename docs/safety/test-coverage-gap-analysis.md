@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-The current test suite has broad functional coverage of the happy path and several important robustness cases (runtime guardrails, DBF malformed-input rejection, staged-write rollback, ON ERROR/TRY/CATCH semantics, call-depth limits). Several categories of edge case relevant to DO-178C structural coverage and hazard containment remain absent or thin. This document enumerates those gaps, maps them to the hazard register, and proposes the minimal additional tests that would most meaningfully reduce certification risk.
+The current test suite has broad functional coverage of the happy path and several important robustness cases (runtime guardrails, DBF malformed-input rejection, staged-write rollback, ON ERROR/TRY/CATCH semantics, call-depth limits). Several categories of edge case relevant to DO-178C-inspired structural-coverage reasoning and hazard containment remain absent or thin. This document enumerates those gaps, maps them to the hazard register, and proposes the minimal additional tests that would most meaningfully reduce assurance risk. It does not claim formal DO-178C compliance, certification, or an assigned software level.
 
 **Overall assessment:** Functional coverage is strong. DBF parser/write error management now has focused coverage for the highest-risk malformed-header and rollback cases. Remaining boundary-value, fault-injection, concurrency, and security-subsystem coverage is still uneven.
 

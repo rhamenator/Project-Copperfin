@@ -1,3 +1,17 @@
+- 2026-08-12: Made Copperfin's DO-178C-inspired development-assurance
+  discipline an explicit project-wide quality baseline without claiming
+  compliance, certification, an assigned software level, or suitability for a
+  particular safety-critical deployment. Requirements recovery is now
+  continuous rather than deferred; current implementation cannot serve as its
+  own requirement source. The existing durable matrix now covers product and
+  derived requirements as well as recovered VFP compatibility requirements,
+  and requires bidirectional links among allowed source evidence,
+  architecture/code, focused and broader tests, retained results,
+  exceptions/hazards, and release evidence. Issue and PR templates reject
+  current-code rationalization and request proportional hazard, misuse,
+  boundary, rollback, and evidence analysis. `RQ-CF-AGENT-001` supplies that
+  complete mapping for the workspace-agent security policy.
+
 - 2026-08-12: Seeded the v1 H3/I2 built-in coding-assistant boundary with a
   provider-independent `cf_security` access policy. Advisory, workspace
   sandbox, and warned unrestricted-local modes expose exact machine-readable

@@ -9,17 +9,21 @@
 
 - Parent lane/family issue(s):
 - Child slice issue(s):
-- Requirement IDs (`RQ-*`):
+- Governing product/recovered/derived requirement IDs (`RQ-*`, `LLR-*`, or evidenced `GAP-*`):
+- Parent requirement or hazard for each derived requirement:
 - Verification IDs (`VR-*`):
 - Documentation requirement IDs (`DQ-*`), if docs changed:
 - Documentation verification IDs (`DV-*`), if docs changed:
-- Hazard linkage IDs (`HZ-*`), if docs changed:
-- Source of truth (behavior/docs/clean-room/current Copperfin behavior):
+- Hazard linkage IDs (`HZ-*`, for behavior or documentation; use `HZ-none` with rationale):
+- Allowed requirement source (real VFP9 observation / shipped Microsoft-VFP documentation / explicit owner product policy / registered exception / identified parent requirement or hazard):
+- Source evidence or recovery-gap rationale (current Copperfin code is not a requirement source):
+- Architecture/code/test reverse-traceability location:
 
 ## Verification
 
 - Focused tests run:
 - Broader validation run:
+- Boundary/misuse/rollback verification, when proportionally required:
 - Result summary:
 
 ## Evidence
@@ -27,6 +31,7 @@
 - Commit(s):
 - Workflow run(s):
 - Artifacts/logs:
+- Retention/location and release-evidence disposition:
 
 ## Contribution Licensing And Provenance
 
@@ -36,20 +41,24 @@
 - [ ] Third-party material is identified with its source, copyright, and compatible license, or this change contains none.
 - [ ] This change contains no secrets, signing material, personal/customer data, restricted source, or decompiled proprietary code.
 
-## Documentation Safety Case (Required If Docs Changed)
+## Proportional Assurance Case
 
-- [ ] No documentation changes in this PR
-- [ ] Documentation changes present and safety case completed
+- [ ] No behavior or safety-relevant documentation change in this PR
+- [ ] Behavior or safety-relevant documentation changed and the proportional assurance case is complete
 
-If documentation changed, provide:
+For data integrity, runtime containment, security/package trust, debugger or
+recovery behavior, concurrency, external processes, generated code, plausible
+safety-significant/large-population reach, or safety-relevant docs, provide:
 
 - Affected procedures/pages:
 - Procedural delta map (before/after operator actions):
 - Misuse analysis (how users could misread/misapply):
-- Severity assessment (none | low | medium | high):
+- Boundary and failure analysis:
+- Severity assessment (none | low | medium | high | catastrophic):
 - Independent reviewer and sign-off evidence:
 - Simulation/walkthrough evidence:
 - Rollback and field notification plan:
+- Residual limitations:
 
 ## Compatibility Delta
 
@@ -65,13 +74,14 @@ Compatibility delta notes (if any):
 
 ## Checklist
 
-- [ ] All `RQ-*` items map to at least one `VR-*`
+- [ ] All `RQ-*`/`LLR-*` items map to architecture/code, focused and broader verification, retained results, and reverse links; any `GAP-*` remains explicit
 - [ ] Focused regression coverage added/updated where behavior changed
-- [ ] For documentation changes, all `DQ-*` items map to `DV-*` and `HZ-*` (or explicit `HZ-none` rationale)
-- [ ] For documentation changes, independent review and misuse analysis evidence is attached
+- [ ] Applicable `DQ-*` items map to `DV-*`, and behavior/docs map to `HZ-*` (or explicit `HZ-none` rationale)
+- [ ] Proportionally required independent review, misuse/boundary analysis, rollback, and walkthrough evidence is attached
 - [ ] Changelog updated for shipped, lasting repo changes
 - [ ] Unsupported or partial behavior is explicitly documented
 - [ ] Machine-readable contracts remain compatible, or their intentional versioned change is documented and tested
 - [ ] User-visible strings are localized and catalog parity is tested, or no user-visible strings changed
 - [ ] Windows behavior and Linux/macOS seams were considered and applicable platform evidence is recorded
 - [ ] Clean-room and security requirements were reviewed for the changed inputs and outputs
+- [ ] This PR makes no claim of DO-178C compliance, certification, an assigned software level, or suitability for a specific safety-critical deployment

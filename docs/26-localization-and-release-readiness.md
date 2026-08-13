@@ -22,6 +22,17 @@ Localized text must be separated from stable protocol values:
 
 ## Current Validation Evidence
 
+Release readiness includes the project-wide assurance baseline in
+`docs/01-product-charter.md`: each behavior-affecting candidate must identify
+its governing requirement, architecture/code, focused and broader tests,
+retained verification result, applicable exception/hazard controls, and reverse
+links in `docs/32-recovered-requirements-traceability.md`. Candidate evidence
+must disclose unresolved recovery or verification gaps. The existing safety
+workflow validates its current DQ/DV/HZ documentation contract; it does not by
+itself prove complete product-requirement traceability. None of this is a claim
+of DO-178C compliance, certification, an assigned software level, or
+suitability for a particular safety-critical deployment.
+
 The current MVP implementation/test boundary is `8d6c307d4` for shared catalog
 parity, `64e162fd4` for UI-thread project-workflow publication, and `82b907cd5`
 for the final net472 gate correction. Exact synchronized hosted head

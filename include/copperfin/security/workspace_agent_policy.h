@@ -14,6 +14,8 @@ struct LocalizedCatalog;
 
 namespace copperfin::security {
 
+// Governing requirement: RQ-CF-AGENT-001 in the durable traceability matrix.
+
 inline constexpr const char* workspace_agent_unrestricted_warning_id =
     "workspace-agent.unrestricted-local.v1";
 

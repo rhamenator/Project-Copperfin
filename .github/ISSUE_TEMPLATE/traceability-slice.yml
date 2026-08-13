@@ -23,9 +23,18 @@ body:
   - type: input
     id: requirement_ids
     attributes:
-      label: Requirement IDs (RQ-*)
-      description: "Format: RQ-<lane>-<issue>-<short-name>; separate multiple IDs with commas."
-      placeholder: "RQ-A3-150-retry-restores-session-state"
+      label: Governing Requirement IDs
+      description: "List existing product/recovered/derived RQ-* or LLR-* IDs. If none is evidenced yet, enter GAP-<scope>-<short-name> and explain below; do not derive a requirement from current code."
+      placeholder: "RQ-A3-150-retry-restores-session-state, LLR-VFP-NUM-001"
+    validations:
+      required: true
+
+  - type: input
+    id: parent_requirement_ids
+    attributes:
+      label: Parent Requirement / Hazard IDs
+      description: "For derived requirements, name the parent RQ-*/LLR-* or HZ-* constraint. Enter N/A only when the requirement is not derived."
+      placeholder: "RQ-CF-RUNTIME-001, HZ-runtime-crash-01"
     validations:
       required: true
 
@@ -50,13 +59,14 @@ body:
   - type: dropdown
     id: source_of_truth
     attributes:
-      label: Source Of Truth
+      label: Allowed Requirement Source
       multiple: true
       options:
-        - Behavior observation
-        - Public documentation
-        - Clean-room derivation
-        - Existing Copperfin behavior
+        - Real installed VFP9 observation
+        - Shipped Microsoft/VFP documentation
+        - Explicit repository-owner product policy
+        - Registered known-bug or crash exception
+        - Derived from identified parent requirement or hazard
     validations:
       required: true
 
@@ -66,6 +76,15 @@ body:
       label: Requirement Statement
       description: "State the required behavior in testable terms."
       placeholder: "When RETRY is executed after a runtime fault, the current data session state is restored before control resumes."
+    validations:
+      required: true
+
+  - type: textarea
+    id: source_evidence
+    attributes:
+      label: Source Evidence Or Recovery Gap
+      description: "Cite the allowed evidence precisely. If a GAP-* ID was used, state what allowed evidence is missing or contradictory. Existing Copperfin code/tests may be comparison evidence but never the requirement source."
+      placeholder: "VFP9 SP2 Help topic <title/path/hash>, observed VFP9 procedure/result, owner policy section, KBX-* entry, or recovery gap."
     validations:
       required: true
 
@@ -82,10 +101,22 @@ body:
       required: true
 
   - type: textarea
+    id: architecture_and_reverse_links
+    attributes:
+      label: Architecture And Reverse Traceability
+      description: "Identify architecture boundaries and how changed code/tests link back to the governing requirement."
+      placeholder: |
+        architecture: docs/02-architecture.md section ...
+        code: src/... (RQ-... comment or stable matrix mapping)
+        tests: tests/... (VR-... / requirement mapping)
+    validations:
+      required: true
+
+  - type: textarea
     id: verification_plan
     attributes:
       label: Verification Plan
-      description: "List focused tests and command lines."
+      description: "List focused tests, broader regression/platform validation, boundary or misuse cases, and retained evidence locations."
       placeholder: |
         - ctest --test-dir build -C Release --output-on-failure
         - build/Release/test_prg_engine_control_flow.exe
@@ -101,6 +132,16 @@ body:
         - low
         - medium
         - high
+        - catastrophic
+    validations:
+      required: true
+
+  - type: textarea
+    id: hazard_boundary_rollback
+    attributes:
+      label: Hazard, Misuse, Boundary, And Rollback Analysis
+      description: "Required for data integrity, containment, security/package trust, debugger/recovery, concurrency, external process, generated-code, safety-significant, or large-population reach. Otherwise enter N/A with rationale."
+      placeholder: "HZ-* links; misuse and boundary cases; rollback/revocation plan; residual limitation."
     validations:
       required: true
 
@@ -120,7 +161,7 @@ body:
     id: closure_statement
     attributes:
       label: Closure Statement
-      description: "Confirm RQ/VR completion and any intentional compatibility deltas."
-      placeholder: "All RQ IDs are covered by VR IDs and focused regression tests. No intentional compatibility delta."
+      description: "Confirm bidirectional requirement/code/test/evidence links, broader verification, hazards/exceptions, and any unresolved recovery gaps or compatibility deltas."
+      placeholder: "All requirement IDs map to code, focused/broader verification, and retained results; reverse links are recorded. No unresolved gap or intentional compatibility delta."
     validations:
       required: true
