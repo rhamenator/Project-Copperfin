@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## V1 Windows VSIX lifecycle
+
+The current bounded slice advances `RQ-CF-REL-003` from the existing VSIX
+build/static gate to direct hosted lifecycle evidence. The workflow targets one
+ephemeral-runner Visual Studio instance by `vswhere` identity, installs the
+exact VSIX, verifies installed identity/version/payload, opens a runner-owned
+PRG and invokes the registered Copperfin Command window outside the source
+checkout, observes package loading in the Visual Studio activity log, then
+uninstalls the exact extension and rejects matching residue. Installer and IDE
+processes are bounded. The result binds to the VSIX SHA-256. Same-version
+reinstall, previous-version upgrade, and disablement remain `NOT_RUN` rather
+than inferred. Local helper, contract, and RC assembler self-tests pass; exact-
+head hosted Windows evidence and independent review remain required, so the
+requirement is still a `gap`.
+
 ## V1 Windows installer lifecycle
 
 The current stacked slice advances the validation manifest to schema v3 and

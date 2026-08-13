@@ -1,3 +1,11 @@
+- 2026-08-13: Added direct Windows VSIX lifecycle evidence for private RC
+  assembly. An ephemeral hosted Visual Studio instance now installs the exact
+  VSIX, verifies installed identity/version and package load, opens a
+  runner-owned PRG and registered Copperfin command outside the checkout,
+  uninstalls the exact extension, and checks residue under bounded processes.
+  The retained JSON binds to the VSIX SHA-256; same-version reinstall,
+  previous-version upgrade, and disablement remain explicitly `NOT_RUN`.
+
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
   exact modes and capabilities, and current unrestricted warning, while

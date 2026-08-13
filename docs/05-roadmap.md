@@ -345,9 +345,13 @@ cleared. The corrected verifier terminates on read failure and admits the
 generated exact key independently of values; corrected exact-head Windows
 run `31702317708` passed, and independently downloaded evidence matches the
 retained NSIS SHA-256 `f77217c135ee223746f876b672b1a98366b1ba44ff38a94184e58f9fa408dcc6`.
-Prior-version Windows
-upgrade, macOS productbuild, Linux DEB/RPM, and VSIX lifecycles remain
-`NOT_RUN`. The producer validates its output against the exact bundled Draft
+Prior-version Windows upgrade, macOS productbuild, and Linux DEB/RPM remain
+`NOT_RUN`. The Windows VSIX producer now directly installs the exact package
+into an ephemeral-runner Visual Studio instance, verifies identity/version,
+package load, a runner-owned PRG and registered command outside the checkout,
+then uninstalls and checks extension residue. Same-version VSIX reinstall,
+previous-version VSIX upgrade, and disablement remain `NOT_RUN` pending direct
+evidence. The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse
 requirement, verification, and hazard identifiers. Existing immutable RC1/RC2

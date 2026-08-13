@@ -6,7 +6,10 @@ Traceability: `RQ-CF-REL-001`, `DQ-rc-evidence-v2-scope-separation`,
 `HZ-doc-command-01` govern the release-evidence distinctions and checks in
 this guide. `RQ-CF-REL-002`, `DQ-windows-installer-lifecycle-scope`,
 `DV-windows-installer-lifecycle-contract`, and `HZ-data-corruption-01` govern
-the direct Windows lifecycle evidence and its fail-closed boundaries.
+the direct Windows installer lifecycle evidence and its fail-closed boundaries.
+`RQ-CF-REL-003`, `DQ-windows-vsix-lifecycle-scope`, and
+`DV-windows-vsix-lifecycle-contract` govern the corresponding Windows VSIX
+lifecycle boundary.
 
 Each Project Copperfin `v0.1.0-rc.N` candidate is a private-evaluation release
 candidate. It is not an official Project Copperfin release and is not
@@ -50,6 +53,11 @@ next sequential RC number.
 - `evidence/windows-installer-lifecycle.json` records the Windows NSIS
   lifecycle result and binds it to the installer's SHA-256 digest. A successful
   maintenance reinstall is not evidence of upgrade from an older version.
+- `evidence/windows-vsix-lifecycle.json` records exact-instance VSIX install,
+  identity/version, package load, runner-owned PRG/command smoke, uninstall,
+  and residue results bound to the VSIX SHA-256. It separately reports
+  same-version reinstall, previous-version upgrade, and disablement as
+  `NOT_RUN` until those operations are directly exercised.
 - `rc-validation-manifest.schema.json` defines the invariant status vocabulary
   and exact machine-readable validation fields used by the candidate manifest.
 - `source/` contains the exact Corresponding Source archive for the tagged

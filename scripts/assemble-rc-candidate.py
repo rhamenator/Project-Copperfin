@@ -9,7 +9,8 @@ Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation;
 DV-rc-evidence-v2-assembly-self-test; DV-rc-evidence-v2-schema-validation;
 RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
 DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
-HZ-data-corruption-01; HZ-doc-command-01.
+HZ-data-corruption-01; HZ-doc-command-01; RQ-CF-REL-003;
+DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract.
 """
 
 from __future__ import annotations
@@ -353,6 +354,62 @@ def require_windows_installer_lifecycle_evidence(path: Path, installer: Path) ->
         raise AssemblyError("Windows installer lifecycle evidence does not prove the required bounded lifecycle")
 
 
+def require_windows_vsix_lifecycle_evidence(path: Path, vsix: Path) -> None:
+    try:
+        evidence = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise AssemblyError(f"Windows VSIX lifecycle evidence is not valid JSON: {path}") from error
+    expected_keys = {
+        "schema_version",
+        "kind",
+        "vsix_sha256",
+        "extension_id",
+        "extension_version",
+        "visual_studio_instance_id",
+        "installation",
+        "package_registration_and_load",
+        "extension_version_check",
+        "supported_prg_open_and_command",
+        "same_version_reinstall",
+        "upgrade_from_previous_version",
+        "disablement",
+        "uninstall",
+        "extension_residue_check",
+        "development_checkout_dependency",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_keys:
+        raise AssemblyError("Windows VSIX lifecycle evidence has an unexpected object shape")
+    expected_pass_fields = (
+        "installation",
+        "package_registration_and_load",
+        "extension_version_check",
+        "supported_prg_open_and_command",
+        "uninstall",
+        "extension_residue_check",
+    )
+    if (
+        evidence["schema_version"] != 1
+        or evidence["kind"] != "copperfin-windows-vsix-lifecycle-result"
+        or any(evidence[field] != "PASS" for field in expected_pass_fields)
+        or any(
+            evidence[field] != "NOT_RUN"
+            for field in (
+                "same_version_reinstall",
+                "upgrade_from_previous_version",
+                "disablement",
+            )
+        )
+        or evidence["development_checkout_dependency"] != "PASS"
+        or evidence["vsix_sha256"] != sha256(vsix)
+        or evidence["extension_id"] != "Copperfin.VisualStudio"
+        or not isinstance(evidence["extension_version"], str)
+        or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", evidence["extension_version"]) is None
+        or not isinstance(evidence["visual_studio_instance_id"], str)
+        or not evidence["visual_studio_instance_id"]
+    ):
+        raise AssemblyError("Windows VSIX lifecycle evidence does not prove the required bounded lifecycle")
+
+
 def assemble(args: argparse.Namespace) -> Path:
     if CANDIDATE_TAG_PATTERN.fullmatch(args.candidate_tag) is None:
         raise AssemblyError("candidate tag must match v0.1.0-rc.N with a positive RC number")
@@ -411,6 +468,19 @@ def assemble(args: argparse.Namespace) -> Path:
         windows_lifecycle,
         output_root / "evidence/windows-installer-lifecycle.json",
         "Windows installer lifecycle evidence",
+    )
+
+    bundled_vsix = require_one(output_root / "ide/visual-studio", "*.vsix", "bundled Visual Studio VSIX")
+    windows_vsix_lifecycle = require_one(
+        producer_roots["vsix"],
+        "windows-vsix-lifecycle.json",
+        "Windows VSIX lifecycle evidence",
+    )
+    require_windows_vsix_lifecycle_evidence(windows_vsix_lifecycle, bundled_vsix)
+    copy_verified(
+        windows_vsix_lifecycle,
+        output_root / "evidence/windows-vsix-lifecycle.json",
+        "Windows VSIX lifecycle evidence",
     )
 
     source_name = f"{SOURCE_PREFIX}{args.revision}.zip"
@@ -494,7 +564,18 @@ def assemble(args: argparse.Namespace) -> Path:
                 "linux_rpm": "NOT_RUN",
             },
             "visual_studio_vsix_build_and_static_checks": "PASS",
-            "visual_studio_vsix_lifecycle": "NOT_RUN",
+            "visual_studio_vsix_lifecycle": {
+                "windows_installation": "PASS",
+                "windows_package_registration_and_load": "PASS",
+                "windows_extension_version": "PASS",
+                "windows_supported_prg_open_and_command": "PASS",
+                "windows_same_version_reinstall": "NOT_RUN",
+                "windows_upgrade_from_previous_version": "NOT_RUN",
+                "windows_disablement": "NOT_RUN",
+                "windows_uninstall": "PASS",
+                "windows_extension_residue_check": "PASS",
+                "development_checkout_independence": "PASS",
+            },
             "security_and_sbom": "PASS",
         },
         "signing": {
@@ -584,6 +665,28 @@ def self_test() -> None:
         (inputs / "copperfin-windows-installers/windows-installer-lifecycle.json").write_text(
             json.dumps(windows_lifecycle_fixture, sort_keys=True) + "\n", encoding="utf-8"
         )
+        vsix_fixture_path = inputs / "copperfin-visualstudio-vsix/Copperfin.VisualStudio.vsix"
+        windows_vsix_lifecycle_fixture = {
+            "schema_version": 1,
+            "kind": "copperfin-windows-vsix-lifecycle-result",
+            "vsix_sha256": sha256(vsix_fixture_path),
+            "extension_id": "Copperfin.VisualStudio",
+            "extension_version": "0.1.0",
+            "visual_studio_instance_id": "fixture-instance",
+            "installation": "PASS",
+            "package_registration_and_load": "PASS",
+            "extension_version_check": "PASS",
+            "supported_prg_open_and_command": "PASS",
+            "same_version_reinstall": "NOT_RUN",
+            "upgrade_from_previous_version": "NOT_RUN",
+            "disablement": "NOT_RUN",
+            "uninstall": "PASS",
+            "extension_residue_check": "PASS",
+            "development_checkout_dependency": "PASS",
+        }
+        (inputs / "copperfin-visualstudio-vsix/windows-vsix-lifecycle.json").write_text(
+            json.dumps(windows_vsix_lifecycle_fixture, sort_keys=True) + "\n", encoding="utf-8"
+        )
         source_name = f"{SOURCE_PREFIX}{revision}.zip"
         for producer in (
             "copperfin-release-source",
@@ -638,6 +741,7 @@ def self_test() -> None:
             "RC-TESTER-README.md",
             "SHA256SUMS.txt",
             "evidence/windows-installer-lifecycle.json",
+            "evidence/windows-vsix-lifecycle.json",
             "ide/visual-studio/Copperfin.VisualStudio.vsix",
             "installers/linux/copperfin-0.1.0-Linux.deb",
             "installers/linux/copperfin-0.1.0-Linux.rpm",
@@ -715,7 +819,18 @@ def self_test() -> None:
                 "linux_rpm": "NOT_RUN",
             },
             "visual_studio_vsix_build_and_static_checks": "PASS",
-            "visual_studio_vsix_lifecycle": "NOT_RUN",
+            "visual_studio_vsix_lifecycle": {
+                "windows_installation": "PASS",
+                "windows_package_registration_and_load": "PASS",
+                "windows_extension_version": "PASS",
+                "windows_supported_prg_open_and_command": "PASS",
+                "windows_same_version_reinstall": "NOT_RUN",
+                "windows_upgrade_from_previous_version": "NOT_RUN",
+                "windows_disablement": "NOT_RUN",
+                "windows_uninstall": "PASS",
+                "windows_extension_residue_check": "PASS",
+                "development_checkout_independence": "PASS",
+            },
             "security_and_sbom": "PASS",
         }
         expected_signing = {
@@ -768,6 +883,30 @@ def self_test() -> None:
                 require_windows_installer_lifecycle_evidence(
                     mutation_path,
                     bundle / "installers/windows/copperfin-0.1.0-Windows.exe",
+                )
+            except AssemblyError:
+                pass
+            else:
+                raise AssemblyError(f"self-test accepted {description}")
+
+        vsix_lifecycle_path = bundle / "evidence/windows-vsix-lifecycle.json"
+        vsix_lifecycle = json.loads(vsix_lifecycle_path.read_text(encoding="utf-8"))
+        vsix_lifecycle_mutations = (
+            ("false VSIX installation status", "installation", "NOT_RUN"),
+            ("false VSIX disablement status", "disablement", "PASS"),
+            ("wrong VSIX digest", "vsix_sha256", "0" * 64),
+            ("wrong VSIX identity", "extension_id", "Other.Extension"),
+            ("unproved checkout independence", "development_checkout_dependency", "NOT_RUN"),
+        )
+        for description, field, replacement in vsix_lifecycle_mutations:
+            mutated = dict(vsix_lifecycle)
+            mutated[field] = replacement
+            mutation_path = root / f"bad-vsix-lifecycle-{field}.json"
+            mutation_path.write_text(json.dumps(mutated) + "\n", encoding="utf-8")
+            try:
+                require_windows_vsix_lifecycle_evidence(
+                    mutation_path,
+                    bundle / "ide/visual-studio/Copperfin.VisualStudio.vsix",
                 )
             except AssemblyError:
                 pass

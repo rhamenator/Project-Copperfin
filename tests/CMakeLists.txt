@@ -411,6 +411,13 @@ add_test(
 )
 
 add_test(
+    NAME test_windows_vsix_lifecycle_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_windows_vsix_lifecycle_contract_check.cmake
+)
+
+add_test(
     NAME test_native_test_isolation_contract
     COMMAND ${CMAKE_COMMAND}
         -DINVENTORY_PATH=${CMAKE_BINARY_DIR}/native-test-isolation.tsv

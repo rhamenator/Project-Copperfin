@@ -1,4 +1,7 @@
 name: Build Visual Studio VSIX
+# Traceability: RQ-CF-REL-003; DQ-windows-vsix-lifecycle-scope;
+# DV-windows-vsix-lifecycle-contract; HZ-system-failure-01;
+# HZ-data-corruption-01; HZ-doc-command-01.
 
 on:
   push:
@@ -16,6 +19,7 @@ on:
       - "**/*.md"
       - "**/*.txt"
   workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -50,6 +54,24 @@ jobs:
       - name: Run .NET Framework process-runner tests
         run: dotnet run --project vsix/Copperfin.ProcessRunnerNetFrameworkTests/Copperfin.ProcessRunnerNetFrameworkTests.csproj --configuration Release
 
+      - name: Exercise Windows VSIX lifecycle
+        shell: pwsh
+        run: |
+          $vsix = @(Get-ChildItem -LiteralPath 'vsix/Copperfin.VisualStudio/bin/Release/net472' -Filter '*.vsix' -File)
+          if ($vsix.Count -ne 1) {
+            throw "Expected exactly one VSIX artifact, found $($vsix.Count)."
+          }
+          ./scripts/test-windows-vsix-lifecycle.ps1 `
+            -VsixPath $vsix[0].FullName `
+            -EvidenceDirectory (Join-Path $env:RUNNER_TEMP "copperfin-vsix-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT")
+
+      - name: Stage Windows VSIX lifecycle evidence
+        shell: pwsh
+        run: |
+          $source = Join-Path $env:RUNNER_TEMP "copperfin-vsix-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT/windows-vsix-lifecycle.json"
+          New-Item -ItemType Directory -Path 'artifacts/windows-vsix-lifecycle' -Force | Out-Null
+          Copy-Item -LiteralPath $source -Destination 'artifacts/windows-vsix-lifecycle/windows-vsix-lifecycle.json'
+
       - name: Create exact Corresponding Source archive
         uses: ./.github/actions/create-release-source
         with:
@@ -61,5 +83,6 @@ jobs:
           name: copperfin-visualstudio-vsix
           path: |
             vsix/Copperfin.VisualStudio/bin/Release/net472/*.vsix
+            artifacts/windows-vsix-lifecycle/windows-vsix-lifecycle.json
             release-source/Project-Copperfin-source-${{ github.sha }}.zip
           if-no-files-found: error
