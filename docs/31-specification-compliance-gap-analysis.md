@@ -143,7 +143,9 @@ durable content writes also cross that boundary while admission, naming,
 sidecar, cleanup, and diagnostics remain runtime policy. PRG standard-stream
 open and underlying-file resize operations also cross the boundary while VFP
 path/mode, handle, error, flush, verified-byte, and close policy remain in the
-runtime. Direct portable
+runtime. `AFONT()` host-root selection also crosses the boundary while
+enumeration, font interpretation, array semantics, and headless fallback remain
+runtime policy. Direct portable
 regressions and source-level contracts run in the Windows, Linux, and macOS
 validation workflow, so the boundaries are load-bearing rather than
 documentary. See
@@ -152,6 +154,7 @@ documentary. See
 `docs/52-portable-executable-search-default.md`,
 `docs/61-portable-exclusive-file-boundary.md`, and
 `docs/62-portable-file-stream-boundary.md`, plus
+`docs/63-portable-font-directory-boundary.md`, plus
 `docs/53-private-sqlite-native-api-boundary.md` and
 `docs/54-portable-clr-host-boundary.md`, plus
 `docs/55-native-declare-loader-boundary.md` and
@@ -484,8 +487,8 @@ entries exist today: `AMEMBERS()`/`ACLASS()` and `PEMSTATUS()`/`GETPEM()`/
 `SETPEM()`/`ADDPROPERTY()`/`REMOVEPROPERTY()` (both in
 `prg_engine_runtime_surface_dispatch_object.inl`, host-capability fallbacks),
 `CURSORTOXML()`/`XMLTOCURSOR()` (same file), `AFONT()` (`prg_engine_variables.inl`,
-host-aware platform font-directory discovery with a fixed headless fallback when
-no host fonts are found), generated
+platform-owned host root selection followed by runtime-owned enumeration and a
+fixed headless fallback when no host fonts are found), generated
 runtime bridge exports (`runtime_pipeline_library_export_manifest.cpp`, a
 deliberate interop boundary), and unsupported optimizer/query shapes
 (`index_seek_optimizer.h`/`rushmore_planning.h`, a deliberate semantic boundary).

@@ -321,6 +321,17 @@ function(copperfin_configure_native_test_isolation)
         PLATFORM portable
         AUDIT complete
     )
+    copperfin_set_test_isolation(test_platform_font_directories
+        PARALLEL_SAFE
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        RESOURCES none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
     copperfin_set_test_isolation(test_platform_path_boundary_contract
         PARALLEL_SAFE
         FILESYSTEM read-only
@@ -398,6 +409,17 @@ function(copperfin_configure_native_test_isolation)
         AUDIT complete
     )
     copperfin_set_test_isolation(test_platform_file_stream_boundary_contract
+        PARALLEL_SAFE
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        RESOURCES none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+    copperfin_set_test_isolation(test_platform_font_directories_boundary_contract
         PARALLEL_SAFE
         FILESYSTEM read-only
         ENVIRONMENT none
