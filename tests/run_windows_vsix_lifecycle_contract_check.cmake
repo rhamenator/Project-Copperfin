@@ -43,6 +43,8 @@ require_text("${script}" "ProcessTimeoutSeconds * 1000" "bounded VSIXInstaller w
 require_text("${script}" "Kill($true)" "timed-out process-tree termination")
 require_text("${script}" "-requires Microsoft.VisualStudio.Component.CoreEditor" "Visual Studio component selection")
 require_text("${script}" "\"/instanceIds:$instanceId\"" "exact Visual Studio instance targeting")
+require_text("${script}" "'/q', '/norestart'" "noninteractive no-restart VSIX operation")
+require_text("${script}" "installationVersion -match" "version-independent Visual Studio profile selection")
 require_text("${script}" "Copperfin VSIX is already installed" "clean-runner precondition")
 require_text("${script}" "Copperfin.ShowCommandWindow" "representative installed command")
 require_text("${script}" "lifecycle-smoke.prg" "runner-owned PRG open fixture")

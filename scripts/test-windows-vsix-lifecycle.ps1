@@ -79,12 +79,15 @@ function Read-VsixIdentity {
 }
 
 function Get-CopperfinExtensionDirectories {
-    param([Parameter(Mandatory = $true)][string]$VisualStudioInstanceId)
+    param(
+        [Parameter(Mandatory = $true)][string]$VisualStudioInstanceId,
+        [Parameter(Mandatory = $true)][string]$VisualStudioRegistryVersion
+    )
     $visualStudioRoot = Join-Path $env:LOCALAPPDATA 'Microsoft\VisualStudio'
     if (-not (Test-Path -LiteralPath $visualStudioRoot -PathType Container)) { return @() }
     return @(
         Get-ChildItem -LiteralPath $visualStudioRoot -Directory -ErrorAction Stop |
-            Where-Object { $_.Name -like "17.0_$VisualStudioInstanceId*" } |
+            Where-Object { $_.Name -like "$VisualStudioRegistryVersion`_$VisualStudioInstanceId*" } |
             ForEach-Object {
                 $extensionRoot = Join-Path $_.FullName 'Extensions'
                 if (Test-Path -LiteralPath $extensionRoot -PathType Container) {
@@ -150,12 +153,18 @@ Assert-Condition ($instances.Count -eq 1) "Expected exactly one selected Visual 
 $instance = $instances[0]
 $instanceId = [string]$instance.instanceId
 $installationPath = [string]$instance.installationPath
+$installationVersion = [string]$instance.installationVersion
+Assert-Condition ($installationVersion -match '^(?<major>[0-9]+)\.') `
+    "Visual Studio installation version is invalid: $installationVersion"
+$registryVersion = "$($Matches.major).0"
 $devenv = Join-Path $installationPath 'Common7\IDE\devenv.exe'
 $vsixInstaller = Join-Path $installationPath 'Common7\IDE\VSIXInstaller.exe'
 Assert-Condition (Test-Path -LiteralPath $devenv -PathType Leaf) "devenv.exe is unavailable: $devenv"
 Assert-Condition (Test-Path -LiteralPath $vsixInstaller -PathType Leaf) "VSIXInstaller.exe is unavailable: $vsixInstaller"
 
-$existing = @(Get-CopperfinExtensionDirectories -VisualStudioInstanceId $instanceId)
+$existing = @(Get-CopperfinExtensionDirectories `
+        -VisualStudioInstanceId $instanceId `
+        -VisualStudioRegistryVersion $registryVersion)
 Assert-Condition ($existing.Count -eq 0) 'Copperfin VSIX is already installed in the selected runner instance.'
 $vsixSha256 = (Get-FileHash -LiteralPath $resolvedVsix -Algorithm SHA256).Hash.ToLowerInvariant()
 $activityLog = Join-Path $resolvedEvidenceDirectory 'ActivityLog.xml'
@@ -166,10 +175,12 @@ $installedDirectory = $null
 $ideProcess = $null
 try {
     Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
-        '/quiet', '/shutdownprocesses', "/instanceIds:$instanceId", $resolvedVsix
+        '/q', '/norestart', "/instanceIds:$instanceId", $resolvedVsix
     ) -Name 'Copperfin VSIX installation' | Out-Null
 
-    $installed = @(Get-CopperfinExtensionDirectories -VisualStudioInstanceId $instanceId)
+    $installed = @(Get-CopperfinExtensionDirectories `
+            -VisualStudioInstanceId $instanceId `
+            -VisualStudioRegistryVersion $registryVersion)
     Assert-Condition ($installed.Count -eq 1) "Expected one installed Copperfin VSIX directory, found $($installed.Count)."
     $installedDirectory = $installed[0]
     $installedIdentity = Read-VsixIdentity -ManifestPath (Join-Path $installedDirectory 'extension.vsixmanifest')
@@ -220,12 +231,14 @@ finally {
     }
     if ($null -ne $installedDirectory) {
         Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
-            '/quiet', '/shutdownprocesses', "/instanceIds:$instanceId", '/uninstall:Copperfin.VisualStudio'
+            '/q', '/norestart', "/instanceIds:$instanceId", '/uninstall:Copperfin.VisualStudio'
         ) -Name 'Copperfin VSIX uninstall' | Out-Null
     }
 }
 
-$residue = @(Get-CopperfinExtensionDirectories -VisualStudioInstanceId $instanceId)
+$residue = @(Get-CopperfinExtensionDirectories `
+        -VisualStudioInstanceId $instanceId `
+        -VisualStudioRegistryVersion $registryVersion)
 Assert-Condition ($residue.Count -eq 0) "VSIX uninstall left installed extension residue: $($residue -join ', ')"
 
 $result = [ordered]@{
