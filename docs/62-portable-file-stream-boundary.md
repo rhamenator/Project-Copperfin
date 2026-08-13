@@ -47,6 +47,21 @@ fails the ownership contract, and substituting a successful no-op POSIX resize
 fails the direct shrink and extension assertions. Both mutations were restored
 before the final passing runs.
 
+Corrected exact implementation head `0c8e61d94` passes all eleven protected
+checks. Generated Launcher Validation run `31656236358` executes the direct
+behavior, ownership, and complete PRG file-I/O consumer selection on Windows,
+Ubuntu, and macOS; Windows environment/path run `31656236341`, Win32/x64
+DECLARE run `31656236369`, GCC/Clang executable-path run `31656236350`, DCO
+run `31656235157`, and both Socket checks pass. Automated review identified a
+real stale-`errno` path when `_fileno` or `fileno` returns a negative descriptor;
+both host branches now normalize that failure to `EBADF`, and the resolved
+source contract requires exactly two complete guards. The first corrected-head
+Ubuntu run then exposed a verifier-only CMake policy-baseline gap: all other 31
+selected tests passed, but `while(TRUE)` did not iterate under the newer policy
+state. The script now declares CMake 3.20 as its policy baseline. Local `6/6`
+passes again, and changing either one of the two errno guards still makes the
+counter fail at `1/2` before restoration.
+
 This is one bounded J1 ownership correction. It does not change VFP file-I/O
 syntax or return contracts, add asynchronous I/O, claim directory-entry
 durability, or complete the broader macOS/Linux host ports.

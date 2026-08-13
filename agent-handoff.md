@@ -14,7 +14,16 @@ file-I/O consumer, native-ownership contract, three-host workflow contract, and
 complete isolation metadata are load-bearing. GCC Release focused contracts
 and the complete PRG consumer pass `6/6`; Clang 21 ASan/UBSan passes `5/5`
 without findings. Native-ownership and no-op resize mutations fail at their
-intended assertions and are restored. See
+intended assertions and are restored. Corrected exact implementation head
+`0c8e61d94` passes all eleven protected checks: Generated Launcher Validation
+`31656236358` on Windows, Ubuntu, and macOS; Windows environment/path
+`31656236341`; Win32/x64 DECLARE `31656236369`; GCC/Clang executable-path
+`31656236350`; DCO `31656235157`; and both Socket checks. Automated review's
+stale-`errno` finding is corrected with two `EBADF` guards and its thread is
+resolved. A first Ubuntu rerun then exposed only that the verifier lacked an
+explicit CMake policy baseline; all 31 other selected tests passed. The script
+now declares CMake 3.20, local `6/6` passes, and a one-of-two guard mutation
+still fails at the intended counter. See
 `docs/62-portable-file-stream-boundary.md`.
 
 ## V1 portable exclusive verified-snapshot file writes
