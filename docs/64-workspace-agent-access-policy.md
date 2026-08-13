@@ -1,8 +1,9 @@
 # Workspace-Agent Access Policy
 
-Governing product/derived requirements: `RQ-CF-AGENT-001` and
-`RQ-CF-AGENT-002` in `docs/32-recovered-requirements-traceability.md`. The
-public policy header, descriptor implementation, and focused tests carry the
+Governing product/derived requirements: `RQ-CF-AGENT-001`,
+`RQ-CF-AGENT-002`, and `RQ-CF-AGENT-003` in
+`docs/32-recovered-requirements-traceability.md`. The public policy header,
+descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
 
 Copperfin's built-in coding assistant is intended to progress from advisory
@@ -88,11 +89,24 @@ switches, reordered switches, and attempted activation arguments return status
 is trusted product UI or manufacture warning consent. Actual activation remains
 reserved for the future trusted session/UI boundary.
 
+The shared managed `CopperfinWorkspaceAgentPolicyClient` consumes only that
+exact JSON descriptor command. Before exposing a descriptor to either the
+standalone Studio shell or VSIX, it requires the complete schema shape and
+field types, descriptor-only/no-activation state, advisory/default-disabled
+state, provider-auth separation, native permission and UI/audit/warning gates,
+the current warning identity, exactly three stable mode names with exact
+capabilities, localized nonempty warning prose, and permanent denial of
+elevation. Missing or unknown fields, aliases, duplicate members or modes,
+stale identities, type substitutions, and any capability expansion fail
+closed. This client is
+read-only and does not supply an activation or execution method.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
-localized warning, fail-closed admission, and read-only Studio-host descriptor
-contracts with direct regression coverage.
+localized warning, fail-closed admission, read-only Studio-host descriptor,
+and strict read-only managed-consumer contracts with direct regression
+coverage.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.
@@ -120,6 +134,19 @@ first Windows generated-launcher attempt was blocked before Copperfin
 configuration by an external R-version lookup failure; its failed job was
 rerun without a source change and passed. Exact run identifiers are retained
 in the safety traceability report.
+The managed smoke project and standalone Studio project compile warning-free
+against the net472 reference contract on Linux. Exact-head hosted Linux run
+`31677215316` executes the managed smoke under Mono/Xvfb and passes; its
+retained `copperfin-managed-ui-linux` artifact has digest
+`sha256:c2c2478e681db16907e2894ab77134506e9be5ebe277558c321870850720a4b1`
+and expires `2026-11-11T07:18:18Z`. Exact-head Windows Deep Validation
+`31677215577` passes `367/367` native tests, builds the VSIX and both managed
+hosts, and executes the managed VSIX, language-service, process-runner, and
+Designer smoke suites. The workspace-agent smoke passes its descriptor-only
+grammar and success assertions plus all twenty fail-closed cases. The retained
+`copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
+`sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`
+and expires `2026-11-11T07:18:19Z`.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
 session indicator, or the WinForms dialog that must render the warning.

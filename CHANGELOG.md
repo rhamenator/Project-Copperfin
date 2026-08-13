@@ -1,3 +1,13 @@
+- 2026-08-12: Added a strict read-only managed client for the Studio-host v1
+  workspace-agent policy descriptor. The shared Studio/VSIX parser requires
+  the complete typed schema, exact modes and capabilities, current warning,
+  provider-auth separation, descriptor-only state, and no elevation; omitted,
+  unknown, stale, aliased, duplicated, or risk-expanding input fails closed.
+  Duplicate JSON members, including escaped-equivalent names at any nested
+  object level, are rejected before the framework serializer can collapse them.
+  This slice adds no activation or execution path. See
+  `docs/64-workspace-agent-access-policy.md`.
+
 - 2026-08-12: Corrected the standalone Studio shell-command regression's
   portable-path dependency after Windows Deep Validation exposed an unresolved
   `path_to_utf8_string()` link. The test target now links
@@ -7787,3 +7797,13 @@ passes `1/1`.
   MCP host. The contract regression now also removes that executable and
   proves the incomplete installed inventory fails closed. Product packaging
   and runtime behavior are unchanged.
+- 2026-08-13: Added a shared strict managed consumer for the versioned
+  workspace-agent policy descriptor. Studio and VSIX code invoke only the
+  descriptor-only host grammar and reject missing, stale, wrongly typed,
+  duplicate, aliased, activation-capable, authority-expanding,
+  provider-authorizing, privilege-elevating, or malformed input. A bounded
+  pre-deserialization recognizer rejects duplicate JSON members, including
+  escaped-equivalent names. Exact-head Linux Mono/Xvfb and Windows Deep
+  Validation pass; the latter builds the VSIX and executes all strict managed
+  smoke cases. This remains read-only and adds no activation or execution
+  authority.

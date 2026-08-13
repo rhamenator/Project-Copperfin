@@ -44,6 +44,7 @@ internal static partial class Program
         runner.Run(nameof(SmokeVisualStudioHostSurfaceThemeContract), SmokeVisualStudioHostSurfaceThemeContract);
         runner.Run(nameof(SmokeProjectWorkflowWarningParsingLocalization), SmokeProjectWorkflowWarningParsingLocalization);
         runner.Run(nameof(SmokeManagedProjectProcessLaunchContracts), SmokeManagedProjectProcessLaunchContracts);
+        runner.Run(nameof(SmokeManagedWorkspaceAgentPolicyContract), SmokeManagedWorkspaceAgentPolicyContract);
         runner.Run(nameof(SmokeStandaloneStudioDocumentIdentity), SmokeStandaloneStudioDocumentIdentity);
         runner.Run(nameof(SmokeStandaloneStudioRevisitingDocumentPreservesSelectors), SmokeStandaloneStudioRevisitingDocumentPreservesSelectors);
         runner.Run(nameof(SmokeStandaloneStudioCloseDocumentTabs), SmokeStandaloneStudioCloseDocumentTabs);

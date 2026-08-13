@@ -923,8 +923,8 @@ standalone Studio shell, and FoxPro language-service layer."
 | E | `#111` (`E1`/`#22`, `E2`/`#23`, `E3`/`#24`) | Shared design model and designer fidelity (`E3` = report/label parity, the single largest lane in the repo) | Closed 2026-07-24 | Phase C |
 | F | `#112` (`F1`/`#25`, `F2`/`#26`) | VS extension parity + utility panes; standalone Studio as a full IDE | MVP implementation complete for standalone shell; hosted UI evidence remains under the RC gate | Phase C |
 | G | `#112` (`G1`/`#27`, `G2`/`#28`, `G3`/`#29`) | FoxPro language service: semantic resolution, navigation/refactoring, IntelliSense metadata | Recorded G1/G2/G3 slices closed; broader MVP scope remains under the live tree | Phase C |
-| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Portable route/artifact execution, trusted runtime-host composition, PRG dispatch, Native AOT C# leaf, admitted Python/R sidecar leaves, one bounded read-only MCP DBF-header tool, and provider-independent workspace-agent access modes implemented; provider adapters, OAuth, mutable execution, and user-facing assistant integration remain | v1 item 3 |
-| I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | RBAC/audit/secrets/signing baseline plus dedicated workspace-agent RBAC, capabilities, localized unrestricted warning, and fail-closed activation policy implemented; host enforcement and audit commit integration remain | v1 item 4 |
+| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Portable route/artifact execution, trusted runtime-host composition, PRG dispatch, Native AOT C# leaf, admitted Python/R sidecar leaves, one bounded read-only MCP DBF-header tool, provider-independent workspace-agent access modes, and strict read-only native/managed descriptors implemented; provider adapters, OAuth, mutable execution, and user-facing assistant integration remain | v1 item 3 |
+| I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | RBAC/audit/secrets/signing baseline plus dedicated workspace-agent RBAC, capabilities, localized unrestricted warning, fail-closed activation policy, and non-activating descriptor/client boundary implemented; trusted host activation enforcement and audit commit integration remain | v1 item 4 |
 | J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Studio launch-error and POSIX root-identity seams, portable public path/environment/executable-search, APRINTERS and AFONT host discovery, file-version, code-page, disk-space, exclusive-file, and PRG stream boundaries, private SQLite native ABI isolation, portable interpreter-to-CLR-host contract, and native DECLARE loader/invocation boundaries shipped; broader OLE/report-printing seams and ports open | v1 item 5 |
 
 Current G1 evidence includes #4874 at product/test head `e70c89e87`: editor
@@ -1153,7 +1153,9 @@ rendering reason as above.
 bounded, read-only local SQLite execution slice behind the deterministic
 planner. `H3`/`I2` now have a provider-independent workspace-agent authority
 policy with exact sandboxed/unrestricted capabilities, nondefault RBAC, and a
-versioned localized warning gate; `I1` retains the `cf_security` RBAC/audit/
+versioned localized warning gate. A strict read-only native descriptor and
+managed Studio/VSIX consumer expose that policy without an activation path;
+`I1` retains the `cf_security` RBAC/audit/
 secrets/signing seed. **What's left, and what it takes:** other relational
 providers, provider sessions/cursors, mutation contracts, provider/OAuth
 adapters, the mutable agent executor and sandbox, host UI, and audit commit

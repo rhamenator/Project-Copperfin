@@ -32,8 +32,22 @@ retained exact-head results, hazards, limitations, and reverse links. Existing
 Copperfin behavior is no longer an allowed requirement source in the issue/PR
 workflow.
 
-The stacked follow-on exposes this policy through the real Studio host as a
-versioned read-only text/JSON descriptor. Capabilities come from the evaluator,
+The strict read-only managed consumer is shared by
+the standalone Studio shell, VSIX, and Designer smoke assembly. It calls only
+the descriptor JSON grammar and rejects missing/unknown/wrongly typed fields,
+activation claims, provider-auth authority, stale warning identity,
+duplicate/aliased modes, capability expansion, and elevation. The serializer
+boundary also rejects duplicate members at every nesting level, including
+escaped-equivalent member names. Exact-head Linux managed-UI run `31677215316`
+passes the smoke under Mono/Xvfb. Windows Deep Validation `31677215577` passes
+`367/367` native tests, builds the VSIX and managed hosts, and executes the
+managed VSIX, language-service, process-runner, Studio, Designer, debugger, and
+strict workspace-agent smoke contracts. Retained artifact digests and expiry
+are recorded in the current evidence section below. This client has no
+activation or executor API.
+
+The preceding native slice exposes this policy through the real Studio host as
+a versioned read-only text/JSON descriptor. Capabilities come from the evaluator,
 and the descriptor includes default-disabled/advisory state, RBAC/UI/audit
 gates, the localized warning, provider separation, and no elevation. Its
 exclusive argument grammar rejects mixed operational or license-status
@@ -5316,3 +5330,20 @@ the direct evidence. A scratch race probe confirmed that permanent target
 replacement is rejected and that the already documented same-identity ABA
 limitation is real. Other relational providers, sessions/cursors, mutation,
 transactions, and non-relational execution remain separate H1 scope.
+
+# 2026-08-13 Strict managed workspace-agent policy evidence
+
+PR #4987 exact signed/DCO implementation head `91e35d3bf` now has direct
+managed execution on Linux and Windows. Linux managed-UI run `31677215316`
+passes under Mono/Xvfb and retains `copperfin-managed-ui-linux` with digest
+`sha256:c2c2478e681db16907e2894ab77134506e9be5ebe277558c321870850720a4b1`.
+Windows Deep Validation `31677215577` passes `367/367` native tests, builds the
+VSIX and managed hosts, and passes the managed VSIX, language-service,
+process-runner, Studio, Designer, debugger, and strict workspace-agent smoke
+contracts. Its retained artifact digest is
+`sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`.
+Automated review's duplicate-member finding was corrected with a bounded strict
+JSON recognizer and the rebased exact-head rereview found no major issue.
+`RQ-CF-AGENT-003` is defined; mutable activation, provider authentication,
+sessions, audit commits, executor, sandbox, stop/diff/undo, and trusted UI
+remain separate implementation gaps.
