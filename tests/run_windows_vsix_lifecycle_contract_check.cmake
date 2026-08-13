@@ -46,6 +46,7 @@ require_text("${script}" "\"/instanceIds:$instanceId\"" "exact Visual Studio ins
 require_text("${script}" "'/quiet', \"/instanceIds:$instanceId\"" "noninteractive instance-scoped VSIX operation")
 require_text("${script}" "installationVersion -match" "version-independent Visual Studio profile selection")
 require_text("${script}" "Copperfin VSIX is already installed" "clean-runner precondition")
+require_text("${script}" "'/updateconfiguration'" "post-install package-registration refresh")
 require_text("${script}" "Copperfin.ShowCommandWindow" "representative installed command")
 require_text("${script}" "MainWindowHandle" "bounded IDE readiness observation")
 require_text("${script}" "Copperfin registered command invocation" "post-startup command forwarding")

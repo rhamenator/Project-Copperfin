@@ -191,6 +191,12 @@ try {
     Assert-Condition (Test-Path -LiteralPath (Join-Path $installedDirectory 'Copperfin.VisualStudio.dll') -PathType Leaf) `
         'Installed VSIX is missing Copperfin.VisualStudio.dll.'
 
+    Write-Host 'VSIX lifecycle phase: refresh Visual Studio package registration'
+    Invoke-BoundedProcess `
+        -FilePath $devenv `
+        -Arguments @('/updateconfiguration') `
+        -Name 'Visual Studio package-registration refresh' | Out-Null
+
     Write-Host 'VSIX lifecycle phase: open runner-owned PRG'
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $devenv

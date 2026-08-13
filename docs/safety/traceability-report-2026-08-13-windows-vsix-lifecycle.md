@@ -38,6 +38,10 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   blocking process. MSBuild node reuse is disabled so the package-construction
   process does not remain as an installer blocker. Later managed tests consume
   the same built package only after uninstall and residue verification succeed.
+- After installation and exact installed-payload verification, the workflow
+  runs the selected IDE's bounded `/updateconfiguration` operation before first
+  launch. This admits the VSIX-generated package registration into a fresh
+  hosted profile; merely finding copied extension files is not load evidence.
 - The PRG fixture, activity log, and extracted package live under one explicit
   runner-temporary evidence root. Visual Studio launches with that directory as
   its working directory, so the smoke does not rely on the source checkout.
