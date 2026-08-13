@@ -29,8 +29,10 @@
   sequence opens it through the hosted General profile's shortcut, gives the
   lazy WPF surface a conservative bounded startup interval. Run `31726161585`
   proved a three-second delay still raced the queued shortcut/Common IDE package
-  load. The corrected sequence waits beyond that observed interval, refocuses
-  the same IDE, repeats the shortcut to activate the loaded surface, and enters only
+  load. Run `31727207629` proved two shortcuts and a ten-second delay within one
+  helper were likewise serviced only after the external sender exited. The
+  corrected sequence uses separate bounded processes for lazy-load activation,
+  loaded-surface activation, and command input, with parent-side waits, and enters only
   `Copperfin.ShowCommandWindow`,
   proves that process's command surface, explicitly forwards `/Edit` plus the
   fixture to it, and requires exact document proof plus explicit successful-load

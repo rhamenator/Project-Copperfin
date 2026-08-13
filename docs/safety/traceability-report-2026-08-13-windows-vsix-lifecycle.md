@@ -55,10 +55,12 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   request before bounded tree termination fallback.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
   IDE process launched by the helper. The helper focuses the exact IDE window,
+  uses three separate bounded input processes because hosted Visual Studio
+  services queued `SendWait` input until each external sender exited. The first
   opens Visual Studio's documented Command window through the hosted General
-  profile's `Ctrl+Alt+A` shortcut, gives that lazy WPF surface a bounded load
-  interval, refocuses the same IDE, repeats the shortcut to activate the loaded
-  surface, and enters only the invariant
+  profile's `Ctrl+Alt+A` shortcut; after a parent-side bounded load interval,
+  the second repeats the shortcut to activate the loaded surface; after another
+  parent-side bounded interval, the third enters only the invariant
   `Copperfin.ShowCommandWindow` command, finds the exact Copperfin Command
   surface in that same IDE process, and explicitly forwards `/Edit` plus the
   runner-owned fixture to the now-running IDE. A visible window, launched
@@ -131,10 +133,12 @@ package load followed. Run `31724537954` confirmed that the Command Window is
 not exposed as a UI Automation descendant on this hosted image. The
 next run `31725371043` proved the ActivityLog is not flushed while the IDE is
 running, so its load record cannot serve as a live readiness signal. The
-further-corrected helper focuses the exact IDE, opens Visual Studio's Command
-window through the hosted General profile's `Ctrl+Alt+A` shortcut, gives that
-surface a conservative bounded startup interval, refocuses the exact IDE,
-repeats the shortcut to activate the loaded surface, and enters only the invariant
+next run `31726161585` proved a three-second in-helper delay still raced the
+queued shortcut and Common IDE package load. Run `31727207629` then proved
+that even two shortcuts and a ten-second in-helper delay were serviced only
+after the external helper exited. The further-corrected sequence therefore
+uses separate bounded activation, loaded-surface activation, and input
+processes with parent-side waits, focuses only the exact IDE, and enters only the invariant
 `Copperfin.ShowCommandWindow` command, and
 proves the resulting pane in that process. It explicitly
 forwards `/Edit` plus the fixture to the running IDE and uses process-scoped UI

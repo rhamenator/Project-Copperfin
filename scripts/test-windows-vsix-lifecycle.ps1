@@ -329,7 +329,10 @@ if (-not $observed) {
     [System.IO.File]::WriteAllText($invokeCommandWindowScript, @'
 param(
     [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
-    [Parameter(Mandatory = $true)][string]$CommandName
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('Activate', 'Input')]
+    [string]$Mode,
+    [string]$CommandName = ''
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
@@ -345,7 +348,7 @@ public static class CopperfinForegroundWindow
     public static extern IntPtr GetForegroundWindow();
 }
 "@
-if ($CommandName -ne 'Copperfin.ShowCommandWindow') {
+if ($Mode -eq 'Input' -and $CommandName -ne 'Copperfin.ShowCommandWindow') {
     throw "Unexpected Visual Studio command name '$CommandName'."
 }
 $ideProcess = Get-Process -Id $ExpectedProcessId -ErrorAction Stop
@@ -357,30 +360,38 @@ Start-Sleep -Milliseconds 500
 if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
     throw "Visual Studio process $ExpectedProcessId could not be focused for Command-window activation."
 }
-[System.Windows.Forms.SendKeys]::SendWait('^%a')
-# The hosted WPF Command Window is not a UI Automation descendant and its
-# ActivityLog records are buffered until IDE shutdown. Give the documented
-# shortcut a bounded lazy-load interval, then invoke it again to focus the now-
-# loaded surface. The pane and package-load checks below, not these delays, are
-# the positive command evidence.
-Start-Sleep -Milliseconds 10000
-[void][CopperfinForegroundWindow]::SetForegroundWindow($ideProcess.MainWindowHandle)
-Start-Sleep -Milliseconds 250
-if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
-    throw "Visual Studio process $ExpectedProcessId could not be refocused for Command-window input."
+if ($Mode -eq 'Activate') {
+    [System.Windows.Forms.SendKeys]::SendWait('^%a')
+    exit 0
 }
-[System.Windows.Forms.SendKeys]::SendWait('^%a')
-Start-Sleep -Milliseconds 1000
 [System.Windows.Forms.SendKeys]::SendWait($CommandName)
 [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
 '@, [System.Text.UTF8Encoding]::new($false))
     Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through Command window'
+    # Hosted Visual Studio services SendWait input only after the external sender exits.
+    # Keep lazy-load activation, loaded-surface activation, and
+    # command input in separate bounded processes, with parent-side waits.
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
             '-ExpectedProcessId', "$($ideProcess.Id)",
+            '-Mode', 'Activate') `
+        -Name 'Visual Studio Command-window lazy-load activation' | Out-Null
+    Start-Sleep -Milliseconds 10000
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)",
+            '-Mode', 'Activate') `
+        -Name 'Visual Studio loaded Command-window activation' | Out-Null
+    Start-Sleep -Milliseconds 2000
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)",
+            '-Mode', 'Input',
             '-CommandName', 'Copperfin.ShowCommandWindow') `
-        -Name 'Copperfin Command-window invocation' | Out-Null
+        -Name 'Copperfin Command-window input' | Out-Null
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `

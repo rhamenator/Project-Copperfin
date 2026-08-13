@@ -380,9 +380,11 @@ shutdown and cannot be a live readiness signal. The corrected verifier opens it
 through the hosted General profile's shortcut, gives the lazy WPF surface a
 conservative bounded startup interval. Run `31726161585` proved the first
 shortcut remained queued long enough that a three-second delay still raced the
-Common IDE package load. The corrected verifier waits beyond that observed
-interval, refocuses the same IDE, repeats the shortcut to activate the loaded
-surface, and enters only
+Common IDE package load. Run `31727207629` proved that two shortcuts and a
+ten-second delay inside the same helper were likewise serviced only after that
+external sender exited. The corrected verifier uses separate bounded helper
+processes for lazy-load activation, loaded-surface activation, and command
+input, with parent-side waits between them, and enters only
 `Copperfin.ShowCommandWindow`, proves that
 process's pane,
 explicitly forwards `/Edit` plus the fixture to it, then requires exact
