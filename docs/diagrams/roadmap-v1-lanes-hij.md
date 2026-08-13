@@ -38,7 +38,7 @@ flowchart TB
 
       subgraph LANEJ["Lane J - root #114 'Portability and portable core boundary' (still OPEN, seeded)"]
         direction LR
-        J1["J1 Preserve Portable Core<br/>Boundary<br/>root #35 - PARTIAL:<br/>path/environment/search, code-page/disk isolation"]
+        J1["J1 Preserve Portable Core<br/>Boundary<br/>root #35 - PARTIAL:<br/>path/env/search, code-page/disk/file isolation"]
         J2["J2 Port Standalone IDE<br/>+ Core to macOS<br/>root #36"]
         J3["J3 Port Standalone IDE<br/>+ Core to Linux<br/>root #37"]
         J1 --> J2
@@ -76,12 +76,15 @@ benchmark evidence; and `I1` has a security baseline. These real seeds are
 translator/execution-planning lane, the trusted polyglot host and route-impact
 boundary, and `cf_security`'s RBAC/audit/secrets/signing baseline, respectively.
 `J1` now has explicit portable public path, process-environment,
-executable-search, file-version metadata, code-page, and disk-space boundaries plus a private SQLite
-native-ABI boundary:
+executable-search, file-version metadata, code-page, disk-space, exclusive-file,
+and PRG standard-stream boundaries plus a private SQLite native-ABI boundary:
 platform-neutral declarations remain in the broadly consumed headers while
 Windows/POSIX selection and native implementation stay private to
 `cf_platform_support`, with direct and source-contract tests scheduled on all
 three hosts.
+PRG path/mode, handle, error, verified-byte, flush, and close policy remains in
+the interpreter while native Unicode stream opening and descriptor resizing are
+private to that platform layer.
 `AGETFILEVERSION()` keeps its seven-row VFP and verified-snapshot contracts
 while Windows version-resource APIs and the POSIX PE-resource fallback remain
 private to that base layer.

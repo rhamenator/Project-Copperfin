@@ -4873,6 +4873,10 @@ copperfin_add_test(test_platform_exclusive_file cf_platform_support
     test_platform_exclusive_file.cpp
 )
 
+copperfin_add_test(test_platform_file_stream cf_platform_support
+    test_platform_file_stream.cpp
+)
+
 add_test(
     NAME test_platform_path_boundary_contract
     COMMAND ${CMAKE_COMMAND}
@@ -4920,6 +4924,13 @@ add_test(
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_platform_exclusive_file_boundary_contract_check.cmake
+)
+
+add_test(
+    NAME test_platform_file_stream_boundary_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_platform_file_stream_boundary_contract_check.cmake
 )
 
 add_test(

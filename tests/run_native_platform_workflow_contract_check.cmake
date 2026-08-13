@@ -519,6 +519,26 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     6
     "cross-platform verified-snapshot consumer path, build, and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/run_platform_file_stream_boundary_contract_check.cmake"
+    2
+    "cross-platform file-stream boundary path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "tests/test_platform_file_stream.cpp"
+    2
+    "cross-platform file-stream behavior path triggers")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_file_stream_boundary_contract"
+    2
+    "cross-platform file-stream boundary tests")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_platform_file_stream"
+    8
+    "cross-platform file-stream behavior path, build, and test entries")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
+    "test_prg_engine_file_io_functions"
+    6
+    "cross-platform PRG file-I/O consumer path, build, and test entries")
+require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_portable_clr_host_boundary_contract"
     2
     "cross-platform portable CLR-host boundary tests")
