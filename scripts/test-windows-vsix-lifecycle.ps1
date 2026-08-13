@@ -250,7 +250,7 @@ try {
     $startInfo.FileName = $devenv
     $startInfo.UseShellExecute = $false
     $startInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @('/NoSplash', '/Log', $activityLog)) {
+    foreach ($argument in @('/NoSplash', '/Log', $activityLog, '/Command', 'View.CommandWindow')) {
         [void]$startInfo.ArgumentList.Add($argument)
     }
     $ideProcess = [System.Diagnostics.Process]::Start($startInfo)
@@ -329,10 +329,7 @@ if (-not $observed) {
     [System.IO.File]::WriteAllText($invokeCommandWindowScript, @'
 param(
     [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
-    [Parameter(Mandatory = $true)]
-    [ValidateSet('Activate', 'Input')]
-    [string]$Mode,
-    [string]$CommandName = ''
+    [Parameter(Mandatory = $true)][string]$CommandName
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
@@ -348,7 +345,7 @@ public static class CopperfinForegroundWindow
     public static extern IntPtr GetForegroundWindow();
 }
 "@
-if ($Mode -eq 'Input' -and $CommandName -ne 'Copperfin.ShowCommandWindow') {
+if ($CommandName -ne 'Copperfin.ShowCommandWindow') {
     throw "Unexpected Visual Studio command name '$CommandName'."
 }
 $ideProcess = Get-Process -Id $ExpectedProcessId -ErrorAction Stop
@@ -358,38 +355,20 @@ if ($ideProcess.MainWindowHandle -eq [IntPtr]::Zero) {
 [void][CopperfinForegroundWindow]::SetForegroundWindow($ideProcess.MainWindowHandle)
 Start-Sleep -Milliseconds 500
 if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
-    throw "Visual Studio process $ExpectedProcessId could not be focused for Command-window activation."
-}
-if ($Mode -eq 'Activate') {
-    [System.Windows.Forms.SendKeys]::SendWait('^%a')
-    exit 0
+    throw "Visual Studio process $ExpectedProcessId could not be focused for Command-window input."
 }
 [System.Windows.Forms.SendKeys]::SendWait($CommandName)
 [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
 '@, [System.Text.UTF8Encoding]::new($false))
     Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through Command window'
-    # Hosted Visual Studio services SendWait input only after the external sender exits.
-    # Keep lazy-load activation, loaded-surface activation, and
-    # command input in separate bounded processes, with parent-side waits.
-    Invoke-BoundedProcess `
-        -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-Mode', 'Activate') `
-        -Name 'Visual Studio Command-window lazy-load activation' | Out-Null
+    # The controlled IDE opens its built-in Command Window during startup. A
+    # parent-side bounded interval lets that IDE-owned command finish before
+    # this helper sends only the invariant Copperfin command.
     Start-Sleep -Milliseconds 10000
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
             '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-Mode', 'Activate') `
-        -Name 'Visual Studio loaded Command-window activation' | Out-Null
-    Start-Sleep -Milliseconds 2000
-    Invoke-BoundedProcess `
-        -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-Mode', 'Input',
             '-CommandName', 'Copperfin.ShowCommandWindow') `
         -Name 'Copperfin Command-window input' | Out-Null
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'

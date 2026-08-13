@@ -54,13 +54,10 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   Visual Studio has a bounded observation window, then receives a normal close
   request before bounded tree termination fallback.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
-  IDE process launched by the helper. The helper focuses the exact IDE window,
-  uses three separate bounded input processes because hosted Visual Studio
-  services queued `SendWait` input until each external sender exited. The first
-  opens Visual Studio's documented Command window through the hosted General
-  profile's `Ctrl+Alt+A` shortcut; after a parent-side bounded load interval,
-  the second repeats the shortcut to activate the loaded surface; after another
-  parent-side bounded interval, the third enters only the invariant
+  IDE process launched by the helper. The controlled IDE opens Visual Studio's
+  built-in Command Window through startup `/Command View.CommandWindow`; after
+  a parent-side bounded interval, the input helper focuses only that exact IDE
+  and enters only the invariant
   `Copperfin.ShowCommandWindow` command, finds the exact Copperfin Command
   surface in that same IDE process, and explicitly forwards `/Edit` plus the
   runner-owned fixture to the now-running IDE. A visible window, launched
@@ -136,9 +133,12 @@ running, so its load record cannot serve as a live readiness signal. The
 next run `31726161585` proved a three-second in-helper delay still raced the
 queued shortcut and Common IDE package load. Run `31727207629` then proved
 that even two shortcuts and a ten-second in-helper delay were serviced only
-after the external helper exited. The further-corrected sequence therefore
-uses separate bounded activation, loaded-surface activation, and input
-processes with parent-side waits, focuses only the exact IDE, and enters only the invariant
+after the external helper exited. Run `31728514403` proved that separating the
+senders inside the same lifecycle process did not change that dispatch boundary:
+the Common IDE package again began loading only after final command input, so
+the Copperfin pane remained absent. The further-corrected sequence makes the
+controlled IDE open its own built-in Command Window at startup, waits within a
+parent-owned bound, focuses only the exact IDE, and enters only the invariant
 `Copperfin.ShowCommandWindow` command, and
 proves the resulting pane in that process. It explicitly
 forwards `/Edit` plus the fixture to the running IDE and uses process-scoped UI

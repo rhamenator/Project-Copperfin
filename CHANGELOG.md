@@ -31,8 +31,11 @@
   proved a three-second delay still raced the queued shortcut/Common IDE package
   load. Run `31727207629` proved two shortcuts and a ten-second delay within one
   helper were likewise serviced only after the external sender exited. The
-  corrected sequence uses separate bounded processes for lazy-load activation,
-  loaded-surface activation, and command input, with parent-side waits, and enters only
+  next run `31728514403` proved that separate senders inside the lifecycle
+  process still queued the shortcut until final command input and exposed no
+  Copperfin pane. The corrected sequence opens the built-in Command Window via
+  the controlled IDE's `/Command View.CommandWindow` startup request, waits
+  within a parent-owned bound, and enters only
   `Copperfin.ShowCommandWindow`,
   proves that process's command surface, explicitly forwards `/Edit` plus the
   fixture to it, and requires exact document proof plus explicit successful-load

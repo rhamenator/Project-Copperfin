@@ -382,9 +382,11 @@ conservative bounded startup interval. Run `31726161585` proved the first
 shortcut remained queued long enough that a three-second delay still raced the
 Common IDE package load. Run `31727207629` proved that two shortcuts and a
 ten-second delay inside the same helper were likewise serviced only after that
-external sender exited. The corrected verifier uses separate bounded helper
-processes for lazy-load activation, loaded-surface activation, and command
-input, with parent-side waits between them, and enters only
+external sender exited. Run `31728514403` proved that separate helper senders
+inside the lifecycle process still queued the shortcut until final command
+input, so no Copperfin pane appeared. The corrected verifier launches the
+controlled IDE with `/Command View.CommandWindow`, waits within a parent-owned
+bound for that IDE-owned built-in command, and then enters only
 `Copperfin.ShowCommandWindow`, proves that
 process's pane,
 explicitly forwards `/Edit` plus the fixture to it, then requires exact
