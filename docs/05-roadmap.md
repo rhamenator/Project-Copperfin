@@ -351,10 +351,12 @@ into an ephemeral-runner Visual Studio instance, verifies identity/version,
 package load, a runner-owned PRG and registered command outside the checkout,
 then uninstalls and checks extension residue. Same-version VSIX reinstall,
 previous-version VSIX upgrade, and disablement remain `NOT_RUN` pending direct
-evidence. Exact-head VS2022 run `31711406714` passes that lifecycle at
-`f26086a09`; independently downloaded producer/lifecycle JSON is identical and
-matches VSIX SHA-256
-`a02b11f77c35d798642780641b40a940b02c001105a1c64da6e4c9ebb8dc922c`.
+evidence. Exact-head VS2022 run `31711406714` completed the lifecycle at
+`f26086a09`, but independent review found its PRG and package-load admission
+signals were insufficient: a visible IDE did not prove the document opened and
+an activity-log substring could represent registration or failure. Corrected
+same-instance DTE document/command proof plus explicit successful-load XML and
+matching-error rejection require fresh exact-head execution.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

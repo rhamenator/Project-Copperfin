@@ -78,6 +78,39 @@ function Read-VsixIdentity {
     }
 }
 
+function Get-CopperfinPackageLoadState {
+    param([Parameter(Mandatory = $true)][string]$ActivityLogPath)
+    [xml]$activity = Get-Content -LiteralPath $ActivityLogPath -Raw -ErrorAction Stop
+    $packageGuid = '{1DE4E419-0DE5-4FB7-9C0F-C0212D97D4A5}'
+    $successfulLoad = $false
+    $matchingErrors = @()
+    foreach ($entry in @($activity.SelectNodes('/activity/entry'))) {
+        $type = [string]$entry.type
+        $description = [string]$entry.description
+        $guidNode = $entry.SelectSingleNode('guid')
+        $pathNode = $entry.SelectSingleNode('path')
+        $recordNode = $entry.SelectSingleNode('record')
+        $guid = if ($null -eq $guidNode) { '' } else { [string]$guidNode.InnerText }
+        $path = if ($null -eq $pathNode) { '' } else { [string]$pathNode.InnerText }
+        $record = if ($null -eq $recordNode) { '?' } else { [string]$recordNode.InnerText }
+        if ($type -eq 'Information' -and
+                $description -eq 'End package load [CopperfinPackage]' -and
+                $guid.Equals($packageGuid, [System.StringComparison]::OrdinalIgnoreCase)) {
+            $successfulLoad = $true
+        }
+        if ($type -eq 'Error' -and
+                ($guid.Equals($packageGuid, [System.StringComparison]::OrdinalIgnoreCase) -or
+                 $description -match '(?i)Copperfin' -or
+                 $path -match '(?i)Copperfin')) {
+            $matchingErrors += "record=$record description='$description'"
+        }
+    }
+    return [pscustomobject]@{
+        SuccessfulLoad = $successfulLoad
+        MatchingErrors = $matchingErrors
+    }
+}
+
 function Get-CopperfinExtensionDirectories {
     param(
         [Parameter(Mandatory = $true)][string]$VisualStudioInstanceId,
@@ -104,7 +137,8 @@ function Get-CopperfinExtensionDirectories {
 }
 
 if ($SelfTest) {
-    $fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) 'copperfin-vsix-lifecycle-self-test'
+    $fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) `
+        "copperfin-vsix-lifecycle-self-test-$([Guid]::NewGuid().ToString('N'))"
     $manifestPath = Join-Path $fixtureRoot 'extension.vsixmanifest'
     [System.IO.Directory]::CreateDirectory($fixtureRoot) | Out-Null
     try {
@@ -116,6 +150,20 @@ if ($SelfTest) {
         $identity = Read-VsixIdentity -ManifestPath $manifestPath
         Assert-Condition ($identity.Id -eq 'Copperfin.VisualStudio') 'Self-test rejected the expected VSIX identity.'
         Assert-Condition ($identity.Version -eq '0.1.0') 'Self-test rejected the expected VSIX version.'
+        $successfulLog = Join-Path $fixtureRoot 'successful-activity.xml'
+        $failedLog = Join-Path $fixtureRoot 'failed-activity.xml'
+        @'
+<activity><entry><record>1</record><type>Information</type><source>VisualStudio</source><description>End package load [CopperfinPackage]</description><guid>{1DE4E419-0DE5-4FB7-9C0F-C0212D97D4A5}</guid></entry></activity>
+'@ | Set-Content -LiteralPath $successfulLog -Encoding utf8NoBOM
+        @'
+<activity><entry><record>2</record><type>Information</type><source>VisualStudio</source><description>End package load [CopperfinPackage]</description><guid>{1DE4E419-0DE5-4FB7-9C0F-C0212D97D4A5}</guid></entry><entry><record>3</record><type>Error</type><source>VisualStudio</source><description>CreateInstance failed for CopperfinPackage</description><guid>{1DE4E419-0DE5-4FB7-9C0F-C0212D97D4A5}</guid></entry></activity>
+'@ | Set-Content -LiteralPath $failedLog -Encoding utf8NoBOM
+        $successfulState = Get-CopperfinPackageLoadState -ActivityLogPath $successfulLog
+        $failedState = Get-CopperfinPackageLoadState -ActivityLogPath $failedLog
+        Assert-Condition ($successfulState.SuccessfulLoad -and $successfulState.MatchingErrors.Count -eq 0) `
+            'Self-test rejected an explicit successful Copperfin package-load record.'
+        Assert-Condition ($failedState.SuccessfulLoad -and $failedState.MatchingErrors.Count -eq 1) `
+            'Self-test did not preserve a Copperfin error alongside a nominal success record.'
     }
     finally { [System.IO.Directory]::Delete($fixtureRoot, $true) }
     Write-Host 'Windows VSIX lifecycle helper self-test passed.'
@@ -173,7 +221,6 @@ $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
 
 $installedDirectory = $null
 $ideProcess = $null
-$commandProcess = $null
 try {
     Write-Host 'VSIX lifecycle phase: install'
     Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
@@ -218,62 +265,92 @@ try {
     Assert-Condition ($ideProcess.MainWindowHandle -ne [IntPtr]::Zero) `
         'Visual Studio did not expose a main window within the bounded startup interval.'
 
-    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command'
-    $commandStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
-    $commandStartInfo.FileName = $devenv
-    $commandStartInfo.UseShellExecute = $false
-    $commandStartInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @('/Command', 'Copperfin.ShowCommandWindow')) {
-        [void]$commandStartInfo.ArgumentList.Add($argument)
+    Write-Host 'VSIX lifecycle phase: prove PRG document and invoke registered Copperfin command'
+    $automationScript = Join-Path $resolvedEvidenceDirectory 'observe-running-visual-studio.ps1'
+    [System.IO.File]::WriteAllText($automationScript, @'
+param(
+    [Parameter(Mandatory = $true)][string]$DteProgId,
+    [Parameter(Mandatory = $true)][string]$ExpectedDocument,
+    [Parameter(Mandatory = $true)][string]$CommandName,
+    [Parameter(Mandatory = $true)][int]$TimeoutSeconds
+)
+$ErrorActionPreference = 'Stop'
+$deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+$dte = $null
+while ([DateTime]::UtcNow -lt $deadline -and $null -eq $dte) {
+    try { $dte = [System.Runtime.InteropServices.Marshal]::GetActiveObject($DteProgId) }
+    catch { Start-Sleep -Milliseconds 500 }
+}
+if ($null -eq $dte) { throw "Running Visual Studio DTE '$DteProgId' was not observable." }
+$expected = [System.IO.Path]::GetFullPath($ExpectedDocument)
+$documentObserved = $false
+$lastDocumentError = ''
+while ([DateTime]::UtcNow -lt $deadline -and -not $documentObserved) {
+    try {
+        for ($index = 1; $index -le $dte.Documents.Count; $index++) {
+            $document = $dte.Documents.Item($index)
+            if ($null -ne $document -and -not [string]::IsNullOrWhiteSpace([string]$document.FullName) -and
+                    [string]::Equals([System.IO.Path]::GetFullPath([string]$document.FullName), $expected,
+                        [System.StringComparison]::OrdinalIgnoreCase)) {
+                $documentObserved = $true
+                break
+            }
+        }
     }
-    $commandProcess = [System.Diagnostics.Process]::Start($commandStartInfo)
-    Assert-Condition ($null -ne $commandProcess) 'Copperfin registered command invocation did not start.'
-
-    # devenv /Command may forward to the running IDE or remain as another IDE process.
-    # A persistent process is therefore not a timeout. The package-load record below
-    # is the observable contract for successful command discovery and invocation.
-    $commandObservationDeadline = [DateTime]::UtcNow.AddSeconds($ProcessTimeoutSeconds)
-    while ([DateTime]::UtcNow -lt $commandObservationDeadline -and
-            -not $commandProcess.HasExited -and
-            -not (Test-Path -LiteralPath $activityLog -PathType Leaf)) {
+    catch { $lastDocumentError = $_.Exception.Message }
+    if (-not $documentObserved) { Start-Sleep -Milliseconds 500 }
+}
+if (-not $documentObserved) { throw "Expected PRG document was not open in Visual Studio: $expected. Last DTE error: $lastDocumentError" }
+$commandInvoked = $false
+$lastCommandError = ''
+while ([DateTime]::UtcNow -lt $deadline -and -not $commandInvoked) {
+    try {
+        $dte.ExecuteCommand($CommandName)
+        $commandInvoked = $true
+    }
+    catch {
+        $lastCommandError = $_.Exception.Message
         Start-Sleep -Milliseconds 500
     }
-    if ($commandProcess.HasExited) {
-        Assert-Condition ($commandProcess.ExitCode -eq 0) `
-            "Copperfin registered command invocation exited with code $($commandProcess.ExitCode)."
+}
+if (-not $commandInvoked) { throw "Registered command '$CommandName' could not be invoked. Last DTE error: $lastCommandError" }
+'@, [System.Text.UTF8Encoding]::new($false))
+    $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
+        "Windows PowerShell is unavailable for DTE observation: $windowsPowerShell"
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
+            '-DteProgId', "VisualStudio.DTE.$registryVersion", '-ExpectedDocument', $fixturePrg,
+            '-CommandName', 'Copperfin.ShowCommandWindow', '-TimeoutSeconds', "$ProcessTimeoutSeconds") `
+        -Name 'Copperfin PRG and registered-command DTE observation' | Out-Null
+
+    Start-Sleep -Seconds 2
+    try { [void]$ideProcess.CloseMainWindow() } catch {}
+    if (-not $ideProcess.WaitForExit(15000)) {
+        try { $ideProcess.Kill($true) } catch { Write-Warning "Visual Studio could not be terminated after evidence collection: $($_.Exception.Message)" }
+        [void]$ideProcess.WaitForExit(15000)
     }
 
     $deadline = [DateTime]::UtcNow.AddSeconds(60)
-    $packageObserved = $false
-    while ([DateTime]::UtcNow -lt $deadline -and -not $ideProcess.HasExited) {
+    $packageState = $null
+    while ([DateTime]::UtcNow -lt $deadline) {
         if (Test-Path -LiteralPath $activityLog -PathType Leaf) {
             try {
-                $activity = Get-Content -LiteralPath $activityLog -Raw -ErrorAction Stop
-                if ($activity -match '1de4e419-0de5-4fb7-9c0f-c0212d97d4a5' -or
-                    $activity -match 'Copperfin\.VisualStudio') {
-                    $packageObserved = $true
-                    break
-                }
+                $packageState = Get-CopperfinPackageLoadState -ActivityLogPath $activityLog
+                break
             }
             catch { Start-Sleep -Milliseconds 500 }
         }
         Start-Sleep -Milliseconds 500
     }
-    Assert-Condition (-not $ideProcess.HasExited) `
-        "Visual Studio exited before the Copperfin package load could be observed (exit $($ideProcess.ExitCode))."
-    Assert-Condition $packageObserved 'ActivityLog did not prove Copperfin package loading after command invocation.'
+    Assert-Condition ($null -ne $packageState) 'Visual Studio ActivityLog was not readable after bounded IDE shutdown.'
+    Assert-Condition ($packageState.MatchingErrors.Count -eq 0) `
+        "ActivityLog contains Copperfin package-load errors: $($packageState.MatchingErrors -join '; ')"
+    Assert-Condition $packageState.SuccessfulLoad `
+        'ActivityLog did not contain an explicit successful End package load [CopperfinPackage] record.'
 }
 finally {
-    if ($null -ne $commandProcess) {
-        if (-not $commandProcess.HasExited) {
-            try { [void]$commandProcess.CloseMainWindow() } catch {}
-            if (-not $commandProcess.WaitForExit(15000)) {
-                try { $commandProcess.Kill($true) } catch { Write-Warning "Command-bearing Visual Studio process could not be terminated: $($_.Exception.Message)" }
-                [void]$commandProcess.WaitForExit(15000)
-            }
-        }
-        $commandProcess.Dispose()
-    }
     if ($null -ne $ideProcess) {
         if (-not $ideProcess.HasExited) {
             try { [void]$ideProcess.CloseMainWindow() } catch {}

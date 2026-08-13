@@ -11,7 +11,7 @@ checkout, observes package loading in the Visual Studio activity log, then
 uninstalls the exact extension and rejects matching residue. Installer and IDE
 processes are bounded. The result binds to the VSIX SHA-256. Same-version
 reinstall, previous-version upgrade, and disablement remain `NOT_RUN` rather
-than inferred. Exact-head hosted run `31711406714` passed the complete VS2022
+than inferred. Exact-head hosted run `31711406714` completed the VS2022
 lifecycle and all existing VSIX/managed suites at `f26086a09`. Independently
 downloaded lifecycle and producer JSON are identical, and their VSIX SHA-256
 `a02b11f77c35d798642780641b40a940b02c001105a1c64da6e4c9ebb8dc922c`
@@ -19,8 +19,13 @@ matches the downloaded package. Producer artifact `9185674193` has GitHub
 digest `sha256:76e659eecec432073033ce20740e0b3efe01343b331645f5782c786e37bf618a`;
 diagnostic artifact `9185671767` has digest
 `sha256:cc7308165fe5800a29be43e3c03063a46d0a91c7a8d5bb6cfe4fab268b844de6`;
-both expire 2026-11-11. `RQ-CF-REL-003` is defined; independent review and the
-remaining PR checks remain merge gates.
+both expire 2026-11-11. Independent review invalidated admission of that result:
+the old activity-log substring could match registration or failed-load records,
+and a main window did not prove the PRG opened. The corrected helper requires
+the exact open document through same-instance DTE, invokes the command through
+that DTE, requires an explicit successful package-load XML entry, and rejects
+matching errors. `RQ-CF-REL-003` is reset to `gap` pending corrected exact-head
+execution and rereview.
 
 ## V1 Windows installer lifecycle
 

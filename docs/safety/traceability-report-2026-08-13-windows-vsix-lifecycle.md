@@ -53,12 +53,14 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
 - VSIXInstaller has a bounded wait and timed-out process-tree termination.
   Visual Studio has a bounded observation window, then receives a normal close
   request before bounded tree termination fallback.
-- The activity log must identify the Copperfin assembly or package GUID after
-  invoking the registered `Copperfin.ShowCommandWindow` command. Visual Studio
-  first opens the runner-owned PRG and exposes a real main window; a second
-  bounded `devenv` invocation then forwards the command to that running
-  instance. A process that merely starts does not count as package-load
-  evidence.
+- A same-instance DTE observation must find the exact runner-owned PRG in the
+  running IDE's Documents collection before invoking the registered
+  `Copperfin.ShowCommandWindow` command. A visible window or launched process
+  alone is not PRG-open or command evidence. After bounded IDE shutdown flushes
+  the activity log, XML entry parsing requires the exact informational
+  `End package load [CopperfinPackage]` record and package GUID and rejects any
+  Copperfin-related error entry. Package-name, assembly-path, or GUID substring
+  mentions elsewhere in the log cannot admit lifecycle evidence.
 - Same-version reinstall, previous-version upgrade/coexistence, and disablement
   remain explicit `NOT_RUN` states. They cannot be promoted by this slice.
 
@@ -75,7 +77,7 @@ coverage, and issue the next sequential immutable candidate.
 ## Verification And Residual Gaps
 
 Local helper self-test, focused contract, RC assembler self-test, and schema
-validation pass. Exact-head hosted VS2022 run `31711406714` passed the direct
+validation pass. Exact-head hosted VS2022 run `31711406714` completed the direct
 lifecycle and every existing VSIX/managed step at signed head `f26086a09`.
 The independently downloaded producer and lifecycle result files are identical;
 their VSIX SHA-256
@@ -85,10 +87,16 @@ matches an independent digest of the downloaded package. Producer artifact
 `sha256:76e659eecec432073033ce20740e0b3efe01343b331645f5782c786e37bf618a`;
 diagnostic artifact `9185671767` has digest
 `sha256:cc7308165fe5800a29be43e3c03063a46d0a91c7a8d5bb6cfe4fab268b844de6`;
-both report expiry on 2026-11-11. The retained result records `PASS` for install,
-identity/version, package registration/load, runner-owned PRG and command,
-uninstall, residue, and checkout independence. `RQ-CF-REL-003` is therefore
-`defined`.
+both report expiry on 2026-11-11. Independent review found that the old helper
+could emit that nominal result without proving two required relationships: a
+main window did not prove the supplied PRG was an open document, and a package
+GUID/assembly substring could be a registration or failed-load mention rather
+than successful initialization. The corrected helper uses same-instance DTE to
+observe the exact document and invoke the command, then requires the exact
+informational `End package load [CopperfinPackage]` XML entry/package GUID and
+rejects matching error entries. The self-test includes nominal-success and
+success-plus-error records. Corrected exact-head hosted execution is pending;
+`RQ-CF-REL-003` is reset to `gap`.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its

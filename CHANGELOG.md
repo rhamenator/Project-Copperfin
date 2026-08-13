@@ -5,9 +5,10 @@
   uninstalls the exact extension, and checks residue under bounded processes.
   The retained JSON binds to the VSIX SHA-256; same-version reinstall,
   previous-version upgrade, and disablement remain explicitly `NOT_RUN`.
-  Exact-head hosted VS2022 run `31711406714` passes the complete lifecycle and
-  managed suite; independently downloaded evidence matches VSIX SHA-256
-  `a02b11f77c35d798642780641b40a940b02c001105a1c64da6e4c9ebb8dc922c`.
+  Initial hosted VS2022 run `31711406714` completed the lifecycle and managed
+  suite, but review invalidated its PRG-open and package-load admission signals.
+  Corrected same-instance document/command proof and explicit successful-load
+  XML/error rejection require fresh exact-head evidence.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
