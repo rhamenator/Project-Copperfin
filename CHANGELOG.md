@@ -41,11 +41,10 @@
   could not distinguish an unrelated foreground window from a same-process
   Visual Studio tool window. Run `31732427063` then passed installation in about
   234 seconds but correctly rejected its second synthetic input because another
-  process owned the foreground window. The corrected sequence instead binds a
-  version-matched Visual Studio DTE object's main-window owner to the controlled
-  IDE PID, executes only `Copperfin.ShowCommandWindow`, proves that process's
-  command surface, opens the exact runner-owned PRG through the same bound
-  object, and requires exact document proof plus explicit successful-load
+  process owned the foreground window. The corrected sequence instead invokes
+  only `devenv /Command Copperfin.ShowCommandWindow`, proves the command surface
+  in the already controlled IDE PID, opens the exact runner-owned PRG through
+  `/Edit`, and requires exact same-process document proof plus successful-load
   XML/error rejection in fresh exact-head evidence.
   Run `31731652063` did not reach the focus correction because hosted VSIX
   installation exceeded the 240-second process bound after prior installs
@@ -55,7 +54,10 @@
   corrected lookup follows Microsoft's documented Running Object Table pattern,
   selects only the version- and process-specific
   `VisualStudio.DTE.<version>:<PID>` suffix, and independently verifies the DTE
-  main-window owner before use.
+  main-window owner before use. Run `31734701283` proved that exact moniker was
+  also absent. The current sequence uses Visual Studio's documented
+  `devenv /Command` and `/Edit` interfaces and independently requires the pane
+  and document in the already controlled IDE PID.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

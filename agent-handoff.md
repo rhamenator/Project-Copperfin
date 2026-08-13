@@ -64,10 +64,10 @@ could not distinguish an unrelated foreground window from a same-process
 Visual Studio tool window. Run `31732427063` proved the resulting exact-process
 foreground check fail-closed when another process owned the second input, even
 though installation completed in about 234 seconds. The current correction
-uses the version-matched Visual Studio DTE object, binds its main-window owner
-to the exact controlled IDE PID, looks up and executes only
-`Copperfin.ShowCommandWindow`, proves the resulting pane in that process, opens
-the exact runner-owned PRG through the same bound automation object, and then
+uses Visual Studio's documented `devenv /Command` interface to execute only
+`Copperfin.ShowCommandWindow`, proves the resulting pane in the already
+controlled IDE PID, opens the exact runner-owned PRG through documented
+`/Edit`, and then
 requires the exact document descendant or fixture
 window-title prefix. It also requires an explicit successful package-load XML
 entry and rejects matching errors.
@@ -80,7 +80,9 @@ required. Run `31733561020` subsequently proved the generic DTE active object
 was unavailable. The current correction follows Microsoft's documented
 Running Object Table pattern and selects only the version- and process-specific
 `VisualStudio.DTE.<version>:<PID>` suffix before the independent main-window
-owner check.
+owner check. Run `31734701283` proved that exact moniker was also absent. The
+current correction uses the documented `devenv /Command` and `/Edit`
+interfaces, with independent same-process pane and document proof.
 
 ## V1 Windows installer lifecycle
 

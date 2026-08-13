@@ -324,142 +324,11 @@ if (-not $observed) {
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
-    $invokeAutomationScript = Join-Path $resolvedEvidenceDirectory 'invoke-visual-studio-automation.ps1'
-    [System.IO.File]::WriteAllText($invokeAutomationScript, @'
-param(
-    [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
-    [Parameter(Mandatory = $true)][string]$VisualStudioRegistryVersion,
-    [string]$CommandName = '',
-    [string]$DocumentPath = '',
-    [Parameter(Mandatory = $true)][int]$TimeoutSeconds
-)
-$ErrorActionPreference = 'Stop'
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-public static class CopperfinWindowOwner
-{
-    [DllImport("user32.dll")]
-    public static extern uint GetWindowThreadProcessId(IntPtr windowHandle, out uint processId);
-}
-
-public static class CopperfinRunningObjectTable
-{
-    [DllImport("ole32.dll")]
-    private static extern int CreateBindCtx(uint reserved, out IBindCtx bindContext);
-
-    public static object GetObject(string expectedDisplayName)
-    {
-        IBindCtx bindContext = null;
-        IRunningObjectTable runningObjectTable = null;
-        IEnumMoniker monikerEnumerator = null;
-        try
-        {
-            Marshal.ThrowExceptionForHR(CreateBindCtx(0, out bindContext));
-            bindContext.GetRunningObjectTable(out runningObjectTable);
-            runningObjectTable.EnumRunning(out monikerEnumerator);
-            IMoniker[] monikers = new IMoniker[1];
-            while (monikerEnumerator.Next(1, monikers, IntPtr.Zero) == 0)
-            {
-                IMoniker moniker = monikers[0];
-                try
-                {
-                    string displayName;
-                    moniker.GetDisplayName(bindContext, null, out displayName);
-                    if (!String.IsNullOrWhiteSpace(displayName) &&
-                            displayName.EndsWith(expectedDisplayName, StringComparison.Ordinal))
-                    {
-                        object runningObject;
-                        runningObjectTable.GetObject(moniker, out runningObject);
-                        return runningObject;
-                    }
-                }
-                catch (UnauthorizedAccessException) { }
-                finally
-                {
-                    if (moniker != null) { Marshal.ReleaseComObject(moniker); }
-                }
-            }
-            return null;
-        }
-        finally
-        {
-            if (monikerEnumerator != null) { Marshal.ReleaseComObject(monikerEnumerator); }
-            if (runningObjectTable != null) { Marshal.ReleaseComObject(runningObjectTable); }
-            if (bindContext != null) { Marshal.ReleaseComObject(bindContext); }
-        }
-    }
-}
-"@
-if ([string]::IsNullOrWhiteSpace($CommandName) -eq [string]::IsNullOrWhiteSpace($DocumentPath)) {
-    throw 'Exactly one Visual Studio automation operation is required.'
-}
-if (-not [string]::IsNullOrWhiteSpace($CommandName) -and $CommandName -ne 'Copperfin.ShowCommandWindow') {
-    throw "Unexpected Visual Studio command name '$CommandName'."
-}
-if (-not [string]::IsNullOrWhiteSpace($DocumentPath) -and
-        -not (Test-Path -LiteralPath $DocumentPath -PathType Leaf)) {
-    throw "Visual Studio automation document does not exist: $DocumentPath"
-}
-$runningObjectDisplayName = "VisualStudio.DTE.$VisualStudioRegistryVersion`:$ExpectedProcessId"
-$deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
-$dte = $null
-$lastError = ''
-while ([DateTime]::UtcNow -lt $deadline -and $null -eq $dte) {
-    $candidate = $null
-    try {
-        $candidate = [CopperfinRunningObjectTable]::GetObject($runningObjectDisplayName)
-        if ($null -eq $candidate) {
-            $lastError = "Running object '$runningObjectDisplayName' is not registered."
-            Start-Sleep -Milliseconds 500
-            continue
-        }
-        $mainWindowHandle = [IntPtr][int64]$candidate.MainWindow.HWnd
-        [uint32]$ownerProcessId = 0
-        [void][CopperfinWindowOwner]::GetWindowThreadProcessId($mainWindowHandle, [ref]$ownerProcessId)
-        if ($ownerProcessId -eq [uint32]$ExpectedProcessId) {
-            $dte = $candidate
-            $candidate = $null
-            break
-        }
-        $lastError = "DTE main window owner $ownerProcessId did not match expected process $ExpectedProcessId."
-    }
-    catch { $lastError = $_.Exception.Message }
-    finally {
-        if ($null -ne $candidate -and [Runtime.InteropServices.Marshal]::IsComObject($candidate)) {
-            [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($candidate)
-        }
-    }
-    Start-Sleep -Milliseconds 500
-}
-if ($null -eq $dte) {
-    throw "Exact-process Visual Studio automation was unavailable through '$runningObjectDisplayName'. Last error: $lastError"
-}
-try {
-    if (-not [string]::IsNullOrWhiteSpace($CommandName)) {
-        [void]$dte.Commands.Item($CommandName, 0)
-        $dte.ExecuteCommand($CommandName)
-    }
-    else {
-        [void]$dte.ItemOperations.OpenFile([System.IO.Path]::GetFullPath($DocumentPath))
-    }
-}
-finally {
-    if ([Runtime.InteropServices.Marshal]::IsComObject($dte)) {
-        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($dte)
-    }
-}
-'@, [System.Text.UTF8Encoding]::new($false))
-    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through exact-process automation'
+    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through devenv command routing'
     Invoke-BoundedProcess `
-        -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeAutomationScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-VisualStudioRegistryVersion', $registryVersion,
-            '-CommandName', 'Copperfin.ShowCommandWindow',
-            '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Copperfin exact-process registered-command automation' | Out-Null
+        -FilePath $devenv `
+        -Arguments @('/Command', 'Copperfin.ShowCommandWindow') `
+        -Name 'Copperfin registered-command routing' | Out-Null
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
@@ -471,13 +340,9 @@ finally {
 
     Write-Host 'VSIX lifecycle phase: open runner-owned PRG through running IDE'
     Invoke-BoundedProcess `
-        -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeAutomationScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-VisualStudioRegistryVersion', $registryVersion,
-            '-DocumentPath', $fixturePrg,
-            '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Copperfin exact-process PRG-open automation' | Out-Null
+        -FilePath $devenv `
+        -Arguments @('/Edit', $fixturePrg) `
+        -Name 'Copperfin PRG-open routing' | Out-Null
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,

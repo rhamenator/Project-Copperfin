@@ -151,11 +151,11 @@ and required the exact controlled IDE PID. Run `31732427063` passed the widened
 installer boundary, completing installation in about 234 seconds, but the
 second input was owned by another process. That confirms synthetic foreground
 input is not a stable evidence boundary on the hosted desktop. The next
-correction obtains the version-matched Visual Studio DTE automation object,
-binds its main-window HWND owner to the exact controlled IDE PID, looks up and
-executes only `Copperfin.ShowCommandWindow`, and proves the resulting pane in
-that process. The same process-bound automation object opens the exact
-runner-owned PRG, after which process-scoped UI Automation proves either an
+correction invokes only `devenv /Command Copperfin.ShowCommandWindow` through
+Visual Studio's documented semantic command interface and proves the resulting
+pane in the already controlled IDE PID. It then uses the documented `/Edit`
+interface for the exact runner-owned PRG, after which process-scoped UI
+Automation proves either an
 exact document descendant or the exact fixture leaf followed by Visual
 Studio's title separator. It then requires the exact
 informational `End package load [CopperfinPackage]` XML entry/package GUID and
@@ -178,8 +178,11 @@ document proof. Run `31733561020` then showed that the generic
 interval. Following Microsoft's documented launch-and-DTE pattern, the next
 correction enumerates the COM Running Object Table for only the version- and
 process-specific `VisualStudio.DTE.<version>:<PID>` suffix, then independently
-verifies that object's main-window owner before use. This remains a gap pending
-fresh exact-head evidence.
+verifies that object's main-window owner before use. Run `31734701283` proved
+that the exact per-process DTE moniker was also absent. The current correction
+therefore uses the documented `devenv /Command` and `/Edit` interfaces while
+requiring all resulting UI evidence in the already controlled IDE PID. This
+remains a gap pending fresh exact-head evidence.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its

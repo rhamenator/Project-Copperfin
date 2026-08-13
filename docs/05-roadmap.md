@@ -394,10 +394,9 @@ whether it was a same-process Visual Studio tool window. The corrected verifier
 resolves that window's Win32 process owner and requires the exact controlled IDE
 PID. Run `31732427063` passed the widened installer boundary in about 234
 seconds, but correctly rejected the second synthetic input because another
-process owned the foreground window. The current verifier instead binds the
-version-matched Visual Studio DTE object's main-window owner to the controlled
-IDE PID, looks up and executes `Copperfin.ShowCommandWindow`, proves that
-process's pane, opens the exact runner-owned PRG through that same bound object,
+process owned the foreground window. The current verifier instead invokes
+`devenv /Command Copperfin.ShowCommandWindow`, proves the pane in the already
+controlled IDE PID, opens the exact runner-owned PRG through `/Edit`,
 then requires exact fixture-title proof, explicit successful-load XML, and
 matching-error rejection
 in fresh exact-head execution.
@@ -409,7 +408,10 @@ Run `31733561020` proved the generic DTE active object was unavailable. The
 current verifier follows Microsoft's documented Running Object Table lookup,
 selects only the version- and process-specific
 `VisualStudio.DTE.<version>:<PID>` suffix, and still verifies the DTE
-main-window owner independently before use.
+main-window owner independently before use. Run `31734701283` proved that exact
+moniker was also absent. The current verifier therefore uses Visual Studio's
+documented `devenv /Command` and `/Edit` interfaces and admits only independent
+same-process pane and document proof.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse
