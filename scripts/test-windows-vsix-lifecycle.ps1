@@ -273,6 +273,7 @@ param(
     [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
     [Parameter(Mandatory = $true)][string]$ExpectedName,
     [string]$AlternateExpectedName = '',
+    [switch]$AllowProcessWindowTitlePrefix,
     [Parameter(Mandatory = $true)][string]$EvidenceDescription,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
 )
@@ -286,6 +287,7 @@ if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
 }
 $observed = $false
 $lastAutomationError = ''
+$lastProcessWindowName = ''
 while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
     try {
         $processCondition = [System.Windows.Automation.PropertyCondition]::new(
@@ -293,6 +295,12 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
         $ide = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
             [System.Windows.Automation.TreeScope]::Children, $processCondition)
         if ($null -ne $ide) {
+            $lastProcessWindowName = [string]$ide.Current.Name
+            if ($AllowProcessWindowTitlePrefix -and
+                    $ide.Current.Name.StartsWith("$ExpectedName - ", [System.StringComparison]::OrdinalIgnoreCase)) {
+                $observed = $true
+                break
+            }
             foreach ($expectedName in $expectedNames) {
                 $nameCondition = [System.Windows.Automation.PropertyCondition]::new(
                     [System.Windows.Automation.AutomationElement]::NameProperty, $expectedName)
@@ -311,7 +319,7 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
     Start-Sleep -Milliseconds 500
 }
 if (-not $observed) {
-    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Last UI Automation error: $lastAutomationError"
+    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
 }
 '@, [System.Text.UTF8Encoding]::new($false))
     $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
@@ -324,6 +332,7 @@ if (-not $observed) {
             '-ExpectedProcessId', "$($ideProcess.Id)",
             '-ExpectedName', [System.IO.Path]::GetFileName($fixturePrg),
             '-AlternateExpectedName', [System.IO.Path]::GetFullPath($fixturePrg),
+            '-AllowProcessWindowTitlePrefix',
             '-EvidenceDescription', 'Exact runner-owned PRG document tab',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin PRG document UI Automation observation' | Out-Null

@@ -26,7 +26,11 @@ timed out during installation; exact-head retry `31713867127` reached the DTE
 boundary but generic ProgID lookup did not identify the launched IDE. The
 process-specific retry `31715126080` proved the hosted IDE published no matching
 DTE moniker. The further-corrected helper uses Windows UI Automation scoped to
-the exact launched IDE process to require the exact PRG document tab, invokes
+the exact launched IDE process. Run `31716407669` did not find an exact-named
+document descendant, but its query excluded the process root's window title;
+the command was not invoked and the result is inconclusive. The
+next correction admits only either an exact document descendant or the exact
+fixture leaf followed by Visual Studio's window-title separator, then invokes
 the registered command, then requires the exact Copperfin Command surface in
 that same process. It also requires an explicit successful package-load XML
 entry and rejects matching errors.

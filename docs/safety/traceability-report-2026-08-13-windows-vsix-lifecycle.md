@@ -99,8 +99,13 @@ than successful initialization. The first corrected hosted attempt
 lookup could not reliably discover the launched IDE. Process-specific Running
 Object Table run `31715126080` then proved that the hosted IDE published no
 matching DTE moniker at all. None of these failures is admissible lifecycle
-evidence. The further-corrected helper uses process-scoped Windows UI
-Automation to prove the exact document tab, invokes the registered command,
+evidence. UI Automation run `31716407669` did not find an exact-named document
+descendant, but that verifier excluded the process root where Visual Studio
+normally exposes its active-document title; its result is inconclusive and its
+command boundary was never reached. The
+further-corrected helper uses process-scoped Windows UI Automation to prove
+either an exact document descendant or the exact fixture leaf followed by the
+Visual Studio window-title separator, invokes the registered command,
 and requires the exact command surface in that same process. It then requires the exact
 informational `End package load [CopperfinPackage]` XML entry/package GUID and
 rejects matching error entries. The self-test includes nominal-success and

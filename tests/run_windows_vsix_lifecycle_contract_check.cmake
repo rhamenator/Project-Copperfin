@@ -51,6 +51,7 @@ require_text("${script}" "Copperfin.ShowCommandWindow" "representative installed
 require_text("${script}" "MainWindowHandle" "bounded IDE readiness observation")
 require_text("${script}" "UIAutomationClient" "Windows UI Automation evidence boundary")
 require_text("${script}" "ProcessIdProperty, $ExpectedProcessId" "launched-process UI identity binding")
+require_text("${script}" "StartsWith(\"$ExpectedName - \"" "exact active-document window-title boundary")
 require_text("${script}" "Exact runner-owned PRG document tab" "exact PRG-open proof")
 require_text("${script}" "'/Command', 'Copperfin.ShowCommandWindow'" "registered-command invocation")
 require_text("${script}" "Registered Copperfin Command surface" "same-process command-surface proof")

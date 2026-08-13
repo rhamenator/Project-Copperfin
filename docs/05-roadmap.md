@@ -358,8 +358,10 @@ an activity-log substring could represent registration or failure. A corrected
 retry reached the stronger observation boundary but generic DTE discovery did
 not identify the launched instance; a subsequent process-specific retry proved
 that this hosted IDE published no matching DTE moniker. Exact-process Windows
-UI Automation document-tab/command-surface proof plus explicit successful-load
-XML and matching-error rejection require fresh exact-head execution.
+UI Automation then failed to find an exact-named document descendant, but that
+verifier did not inspect the process root's active-document window title.
+Exact fixture-title/command-surface proof plus explicit successful-load XML and
+matching-error rejection require fresh exact-head execution.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

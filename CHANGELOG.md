@@ -9,8 +9,10 @@
   suite, but review invalidated its PRG-open and package-load admission signals.
   Corrected retries proved that neither generic nor process-specific DTE
   discovery can identify the hosted IDE. Exact-process Windows UI Automation
-  document-tab/command-surface proof and explicit successful-load XML/error
-  rejection require fresh exact-head evidence.
+  did not find an exact-named document descendant but excluded the process
+  root's active-document title; the corrected
+  active-document title/command-surface proof and explicit successful-load
+  XML/error rejection require fresh exact-head evidence.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
