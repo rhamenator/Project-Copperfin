@@ -141,6 +141,13 @@ rechecks foreground ownership, and submits only the invariant canonical
 `Copperfin.ShowCommandWindow` command. Those input boundaries, the same-process
 pane, and explicit successful package load remain separately required and
 retained. `RQ-CF-REL-003` remains `gap` pending exact-head execution.
+Runs `31749596542` and `31750359174` did not exercise that path because both
+reached exactly the prior 360-second VSIXInstaller bound. The installer now has
+a separate bounded 600-second allowance, emits retained versioned operation
+timing/outcome JSON, and re-inventories the selected instance on failure before
+deciding whether exact-identity uninstall is needed. These are installer
+scheduling and containment corrections only; fresh exact-head lifecycle
+execution and rereview remain required.
 
 ## V1 Windows installer lifecycle
 

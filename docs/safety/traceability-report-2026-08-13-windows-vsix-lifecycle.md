@@ -50,7 +50,12 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
 - The PRG fixture, activity log, and extracted package live under one explicit
   runner-temporary evidence root. Visual Studio launches with that directory as
   its working directory, so the smoke does not rely on the source checkout.
-- VSIXInstaller has a bounded wait and timed-out process-tree termination.
+- VSIXInstaller has a separate bounded 600-second wait, timed-out process-tree
+  termination, and retained structured install/uninstall timing and outcome
+  diagnostics. Failure cleanup re-inventories the selected instance before
+  deciding whether an exact-identity uninstall is required; a timeout cannot
+  make an installed extension invisible to cleanup merely because the normal
+  install-return path was not reached.
   Visual Studio has a bounded observation window, then receives a normal close
   request before bounded tree termination fallback.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
@@ -285,6 +290,18 @@ still belongs to the exact IDE PID, and submits only the invariant canonical
 successful package-load record, and absence of Copperfin load errors remain
 independent admission conditions. The run is retained negative activation
 evidence and does not advance `RQ-CF-REL-003`.
+
+Exact-head run `31749596542` and its unchanged-head rerun `31750359174`
+both stopped at exactly the existing 360-second VSIXInstaller bound. They did
+not reach registration, the evidence IDE, or canonical-command submission and
+therefore say nothing about the corrected command path. They are retained as
+bounded installer-scheduling evidence. The correction separates the installer
+allowance from the 360-second IDE/process allowance, keeps installation and
+uninstallation bounded at 600 seconds, retains a versioned installer-operation
+JSON diagnostic on success or failure, and discovers any installed Copperfin
+extension again during failure cleanup before deciding whether uninstall is
+needed. This is a containment and evidence correction, not lifecycle success;
+`RQ-CF-REL-003` remains `gap` pending fresh exact-head execution.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its

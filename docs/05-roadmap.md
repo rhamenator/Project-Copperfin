@@ -467,6 +467,13 @@ shortcut only after exact-PID foreground proof, verifies the foreground PID
 again before input, and submits only the invariant canonical
 `Copperfin.ShowCommandWindow` command. The same-process pane and explicit
 successful package-load record remain independent admission conditions.
+Runs `31749596542` and `31750359174` did not reach that command correction:
+both stopped at exactly the existing 360-second installer bound. Installation
+and uninstallation now have a separate bounded 600-second allowance, retain a
+versioned operation diagnostic, and re-inventory the selected instance during
+failure cleanup so an installed extension cannot escape exact-identity
+uninstall merely because installer return timed out. The requirement remains a
+gap pending direct exact-head lifecycle evidence.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

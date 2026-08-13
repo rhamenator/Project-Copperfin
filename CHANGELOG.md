@@ -106,6 +106,11 @@
   the verifier now rechecks foreground ownership and submits only the exact
   canonical `Copperfin.ShowCommandWindow` command, while same-process pane and
   explicit package-load evidence remain mandatory.
+  Runs `31749596542` and `31750359174` both stopped at exactly the prior
+  360-second installer bound before registration or IDE evidence. Installer
+  operations now use a separate bounded 600-second allowance, retain versioned
+  timing/outcome JSON even on failure, and re-inventory the exact Visual Studio
+  instance during cleanup so a timed-out install cannot evade uninstall.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

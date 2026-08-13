@@ -75,7 +75,7 @@ jobs:
           New-Item -ItemType Directory -Path 'artifacts/windows-vsix-lifecycle' -Force | Out-Null
           if (Test-Path -LiteralPath $sourceDirectory -PathType Container) {
             Get-ChildItem -LiteralPath $sourceDirectory -File |
-              Where-Object { $_.Name -in @('windows-vsix-lifecycle.json', 'ActivityLog.xml', 'ActivityLog-registration.xml', 'ui-automation-command.json', 'ui-automation-prg.json') } |
+              Where-Object { $_.Name -in @('windows-vsix-lifecycle.json', 'vsix-installer-operations.json', 'ActivityLog.xml', 'ActivityLog-registration.xml', 'ui-automation-command.json', 'ui-automation-prg.json') } |
               Copy-Item -Destination 'artifacts/windows-vsix-lifecycle'
           }
 

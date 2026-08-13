@@ -19,6 +19,10 @@ param(
     [ValidateRange(30, 600)]
     [int]$ProcessTimeoutSeconds = 360,
 
+    [Parameter(ParameterSetName = 'Lifecycle')]
+    [ValidateRange(60, 600)]
+    [int]$InstallerTimeoutSeconds = 600,
+
     [Parameter(Mandatory = $true, ParameterSetName = 'SelfTest')]
     [switch]$SelfTest
 )
@@ -35,7 +39,8 @@ function Invoke-BoundedProcess {
     param(
         [Parameter(Mandatory = $true)][string]$FilePath,
         [string[]]$Arguments = @(),
-        [Parameter(Mandatory = $true)][string]$Name
+        [Parameter(Mandatory = $true)][string]$Name,
+        [ValidateRange(30, 600)][int]$TimeoutSeconds = $ProcessTimeoutSeconds
     )
 
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
@@ -51,9 +56,9 @@ function Invoke-BoundedProcess {
         Assert-Condition $process.Start() "$Name did not start."
         $stdoutTask = $process.StandardOutput.ReadToEndAsync()
         $stderrTask = $process.StandardError.ReadToEndAsync()
-        if (-not $process.WaitForExit($ProcessTimeoutSeconds * 1000)) {
+        if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
             try { $process.Kill($true) } catch { Write-Warning "$Name could not be terminated: $($_.Exception.Message)" }
-            throw "$Name exceeded the bounded $ProcessTimeoutSeconds-second timeout."
+            throw "$Name exceeded the bounded $TimeoutSeconds-second timeout."
         }
         $stdout = $stdoutTask.GetAwaiter().GetResult()
         $stderr = $stderrTask.GetAwaiter().GetResult()
@@ -63,6 +68,48 @@ function Invoke-BoundedProcess {
         return [pscustomobject]@{ Stdout = $stdout; Stderr = $stderr }
     }
     finally { $process.Dispose() }
+}
+
+function Invoke-RecordedInstallerOperation {
+    param(
+        [Parameter(Mandatory = $true)][string[]]$Arguments,
+        [Parameter(Mandatory = $true)][string]$Name,
+        [Parameter(Mandatory = $true)][string]$Operation
+    )
+
+    $startedAt = [DateTime]::UtcNow
+    $outcome = 'ERROR'
+    $diagnosticMessage = ''
+    try {
+        $result = Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments $Arguments -Name $Name `
+            -TimeoutSeconds $InstallerTimeoutSeconds
+        $outcome = 'PASS'
+        return $result
+    }
+    catch {
+        $diagnosticMessage = $_.Exception.Message
+        throw
+    }
+    finally {
+        $finishedAt = [DateTime]::UtcNow
+        $installerOperations.Add([pscustomobject][ordered]@{
+            operation = $Operation
+            outcome = $outcome
+            started_at_utc = $startedAt.ToString('o')
+            finished_at_utc = $finishedAt.ToString('o')
+            duration_seconds = [Math]::Round(($finishedAt - $startedAt).TotalSeconds, 3)
+            timeout_seconds = $InstallerTimeoutSeconds
+            diagnostic = $diagnosticMessage
+        })
+        [ordered]@{
+            schema_version = 1
+            kind = 'copperfin-windows-vsix-installer-operations'
+            vsix_sha256 = $vsixSha256
+            visual_studio_instance_id = $instanceId
+            extension_id = $packageIdentity.Id
+            operations = @($installerOperations)
+        } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $installerDiagnosticsPath -Encoding utf8NoBOM
+    }
 }
 
 function Read-VsixIdentity {
@@ -218,6 +265,8 @@ $vsixSha256 = (Get-FileHash -LiteralPath $resolvedVsix -Algorithm SHA256).Hash.T
 $registrationActivityLog = Join-Path $resolvedEvidenceDirectory 'ActivityLog-registration.xml'
 $activityLog = Join-Path $resolvedEvidenceDirectory 'ActivityLog.xml'
 $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
+$installerDiagnosticsPath = Join-Path $resolvedEvidenceDirectory 'vsix-installer-operations.json'
+$installerOperations = [System.Collections.Generic.List[object]]::new()
 [System.IO.File]::WriteAllText($fixturePrg, "? 'Copperfin VSIX lifecycle smoke'`r`n", [System.Text.UTF8Encoding]::new($false))
 
 $installedDirectory = $null
@@ -225,9 +274,9 @@ $registrationProcess = $null
 $ideProcess = $null
 try {
     Write-Host 'VSIX lifecycle phase: install'
-    Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
+    Invoke-RecordedInstallerOperation -Arguments @(
         '/quiet', "/instanceIds:$instanceId", $resolvedVsix
-    ) -Name 'Copperfin VSIX installation' | Out-Null
+    ) -Name 'Copperfin VSIX installation' -Operation 'install' | Out-Null
 
     $installed = @(Get-CopperfinExtensionDirectories `
             -VisualStudioInstanceId $instanceId `
@@ -501,11 +550,23 @@ finally {
         }
         $ideProcess.Dispose()
     }
+    if ($null -eq $installedDirectory) {
+        try {
+            $cleanupCandidates = @(Get-CopperfinExtensionDirectories `
+                    -VisualStudioInstanceId $instanceId `
+                    -VisualStudioRegistryVersion $registryVersion)
+            if ($cleanupCandidates.Count -gt 0) {
+                $installedDirectory = $cleanupCandidates[0]
+                Write-Warning 'Discovered an installed Copperfin extension during failure cleanup.'
+            }
+        }
+        catch { Write-Warning "Installed-extension cleanup discovery failed: $($_.Exception.Message)" }
+    }
     if ($null -ne $installedDirectory) {
         Write-Host 'VSIX lifecycle phase: uninstall'
-        Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
+        Invoke-RecordedInstallerOperation -Arguments @(
             '/quiet', "/instanceIds:$instanceId", '/uninstall:Copperfin.VisualStudio'
-        ) -Name 'Copperfin VSIX uninstall' | Out-Null
+        ) -Name 'Copperfin VSIX uninstall' -Operation 'uninstall' | Out-Null
     }
 }
 
