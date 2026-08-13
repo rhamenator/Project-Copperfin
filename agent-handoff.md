@@ -13,9 +13,13 @@ The stacked follow-on exposes this policy through the real Studio host as a
 versioned read-only text/JSON descriptor. Capabilities come from the evaluator,
 and the descriptor includes default-disabled/advisory state, RBAC/UI/audit
 gates, the localized warning, provider separation, and no elevation. Its
-exclusive argument grammar rejects mixed operational switches and generic CLI
-activation; trusted UI activation is still unimplemented. The dedicated
-process regression covers both the stable output and those fail-closed cases.
+exclusive argument grammar rejects mixed operational or license-status
+switches, duplicate/reordered descriptor switches, and generic CLI activation;
+trusted UI activation is still unimplemented. The dedicated process regression
+covers the stable output and those fail-closed cases. Policy validation now
+precedes the optional archived license-status handler; a separate
+licensing-enabled Release build passes the process and source-order contracts
+`2/2` while the shipping product-licensing default remains off.
 Release policy/host/isolation/safety evidence passes `4/4`; Clang ASan/UBSan
 with leak detection passes the policy and real host process `2/2` without
 findings; direct `jq` evaluation accepts the emitted versioned schema.

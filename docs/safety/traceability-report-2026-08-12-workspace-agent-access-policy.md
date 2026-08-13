@@ -65,14 +65,17 @@ names, explicit outside-workspace and network risk, permanent denial of
 elevation, the native permission, trusted-UI/audit gates, provider separation,
 descriptor-only/no-activation state, and the current warning identity. The endpoint derives capabilities by calling
 the policy evaluator. The regression also requires fail-closed status 2 and no
-partial stdout for a mixed descriptor/operational request, and rejects a
-generic command-line unrestricted-activation attempt. This is a read-only
-contract and supplies no activation path. A qps-ploc process case requires
+partial stdout for mixed descriptor/operational and descriptor/license-status
+requests, duplicate or reordered descriptor switches, and a generic
+command-line unrestricted-activation attempt. This is a read-only contract and
+supplies no activation path. A qps-ploc process case requires
 localized warning prose while the warning id and mode names remain invariant.
 The focused Release policy/host/isolation/safety selection passes `4/4`. The
 policy and real host-process tests pass under Clang ASan/UBSan with leak
 detection `2/2` and no findings; direct `jq` evaluation accepts the emitted
-schema and required invariant fields.
+schema and required invariant fields. A separate Release configuration with
+the archived product-licensing build flag enabled passes the real host process
+and licensing-policy source contract `2/2`; the shipping default remains off.
 
 ### DV-V1-workspace-agent-misuse-walkthrough
 
@@ -99,6 +102,14 @@ also requested, but no response was made an acknowledgment or merge deadlock.
 The direct capability, RBAC, warning, fail-closed, localization, mutation, and
 remaining-work evidence above therefore remains load-bearing rather than being
 replaced by the automated verdict.
+
+Review of the descriptor follow-up found that the optional product-license
+status handler preceded policy validation and, when that archived build flag
+was enabled, could consume a mixed policy request. Policy-bearing arguments are
+now validated first. The process test covers the mixed request, the
+licensing-policy source contract protects dispatch order, and a fresh
+licensing-enabled build passes both contracts `2/2` without changing the
+default-disabled product-licensing policy.
 
 ### Protected exact-head matrix
 

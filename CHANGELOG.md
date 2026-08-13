@@ -16,8 +16,12 @@
   workspace-agent policy. It exposes exact defaults, modes, capabilities,
   permission/UI/audit gates, localized warning, provider-auth separation, and
   the no-elevation invariant by consuming the policy evaluator itself. Its
-  exclusive CLI grammar rejects mixed operational switches and generic
+  exclusive CLI grammar rejects mixed operational/license-status switches,
+  duplicate or reordered descriptor switches, and generic
   unrestricted-activation attempts; it cannot manufacture trusted-UI consent.
+  Policy validation precedes the optional archived license-status handler, and
+  the opt-in licensing configuration is covered without changing its disabled
+  shipping default.
   Actual activation, execution, sandbox, audit commits, providers, and UI remain
   follow-on work. See `docs/64-workspace-agent-access-policy.md`.
 

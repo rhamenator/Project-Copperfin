@@ -84,6 +84,14 @@ int main(int argc, char** argv) {
 
     result = copperfin::test_support::normalize_captured_process_line_endings(
         copperfin::test_support::run_process_capture(
+            argv[1], {"--license-status", "--workspace-agent-policy", "--json"}, work));
+    expect(result.started && result.exit_code == 2,
+        "license-status must not consume a mixed policy request");
+    expect(result.stdout_text.empty(),
+        "mixed license and policy switches must not emit a partial descriptor");
+
+    result = copperfin::test_support::normalize_captured_process_line_endings(
+        copperfin::test_support::run_process_capture(
             argv[1], {"--workspace-agent-policy", "--workspace-agent-policy"}, work));
     expect(result.started && result.exit_code == 2, "duplicate policy switches must fail");
     expect(result.stdout_text.empty(), "duplicate policy switches must not emit a partial descriptor");
