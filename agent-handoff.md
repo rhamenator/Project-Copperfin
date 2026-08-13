@@ -15,12 +15,14 @@ that field, macOS productbuild, Linux DEB/RPM, and VSIX lifecycle remain
 NSIS executable. Independent review then found two false-clean paths in the
 registry verifier: suppressed read errors and an exact leftover CPack key with
 cleared values. The corrected implementation fails closed and recognizes the
-generated exact key independently of its values. `RQ-CF-REL-002` is again a
-gap until corrected exact-head Windows execution passes.
+generated exact key independently of its values. `RQ-CF-REL-002` was reset to
+`gap` pending corrected exact-head Windows execution.
 The first corrected run, `31700912913`, exposed a successful empty registry-key
 read represented as no pipeline object before installer launch. Empty keys are
-now normalized explicitly without suppressing real read errors; another exact-
-head run is required.
+now normalized explicitly without suppressing real read errors. Exact-head run
+`31702317708` passed the corrected full lifecycle at `2c38492c1`; downloaded
+artifact evidence matches NSIS SHA-256 `f77217c135ee223746f876b672b1a98366b1ba44ff38a94184e58f9fa408dcc6`.
+`RQ-CF-REL-002` is defined; exact-head rereview and checks remain merge gates.
 
 ## V1 RC evidence truthfulness
 

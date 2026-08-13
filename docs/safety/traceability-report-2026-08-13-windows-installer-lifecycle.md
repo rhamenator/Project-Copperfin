@@ -12,7 +12,7 @@ suitability for a safety-critical deployment.
 
 | Requirement | Verification | Controlled hazards |
 | --- | --- | --- |
-| `RQ-CF-REL-002`; `DQ-windows-installer-lifecycle-scope` — lifecycle evidence must be direct, bounded, exact-artifact-bound, and must not overstate same-version maintenance as upgrade | `DV-windows-installer-lifecycle-contract`; assembler self-test; corrected exact-head hosted Windows execution pending | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
+| `RQ-CF-REL-002`; `DQ-windows-installer-lifecycle-scope` — lifecycle evidence must be direct, bounded, exact-artifact-bound, and must not overstate same-version maintenance as upgrade | `DV-windows-installer-lifecycle-contract`; assembler self-test; exact-head hosted Windows run `31702317708` at `2c38492c16edc957af0c4e1ba67d83df71301ecd` | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 
 Reverse traceability is carried by `.github/workflows/build-installers.yml`,
 `scripts/test-windows-installer-lifecycle.ps1`,
@@ -67,22 +67,18 @@ asset, profile, or customer data is placed in the test root.
 
 Local portable verification covers workflow/script structure, timeout and
 root boundaries, honest upgrade classification, retained result shape, and RC
-assembler ingestion. Exact-head hosted run `31698722081` passed the Windows
-fresh-install, installed-tree/catalog, installed-CLI, same-version reinstall,
-silent-uninstall, and filesystem/registry-residue stages. The retained result
-records one uninstall registration after install and 21 installed files. Its
-installer SHA-256, `832cc4cb5b3c5f2df8d260103545e58c6847d3f729718c687a446ac76b48afbe`,
+assembler ingestion. Earlier runs `31698722081` and `31700912913` are retained
+as discovery evidence for the review and empty-key corrections. Exact-head run
+`31702317708` passed the corrected Windows fresh-install,
+installed-tree/catalog, installed-CLI, same-version reinstall, silent-uninstall,
+and filesystem/registry-residue stages. The retained result records one
+uninstall registration after install and 21 installed files. Installer
+SHA-256 `f77217c135ee223746f876b672b1a98366b1ba44ff38a94184e58f9fa408dcc6`
 was independently recomputed from the downloaded NSIS executable and matches
-the JSON evidence. Artifact `9180809446` has GitHub digest
-`sha256:1c0344a9555b73d5bc8d5a89eabd36860658fbb2a63a7e107af152c2792cc153`
-and expires 2026-11-11. Independent review then found that registry read errors
-could be suppressed and a leftover exact CPack key with cleared values could
-escape the old filter. That run is retained as discovery evidence but does not
-verify the corrected implementation. `RQ-CF-REL-002` therefore remains `gap`
-until the corrected exact-head hosted lifecycle passes and is retained.
-Corrected-head run `31700912913` exposed the empty-key provider representation
-before installer launch; macOS/Linux packaging passed, while its Windows result
-is discovery evidence only.
+the JSON evidence. Artifact `9182240713` has GitHub digest
+`sha256:11abc6768decc8f193e5e18265634358e3fe5acb2e77400af439f300937e1dda`
+and expires 2026-11-11. `RQ-CF-REL-002` is `defined`; exact-head rereview and
+protected checks remain merge gates rather than missing requirement evidence.
 
 macOS productbuild, Linux DEB/RPM, previous-version Windows upgrade, VSIX
 lifecycle, human UI smoke, and platform signing are outside this slice and

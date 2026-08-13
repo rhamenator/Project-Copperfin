@@ -7853,5 +7853,6 @@ passes `1/1`.
   run `31700912913` then exposed PowerShell's successful zero-output
   representation for a no-value registry key before installer launch. Such
   keys are now normalized to explicit empty property objects without
-  suppressing real read errors. Another exact-head hosted execution remains
-  required before `RQ-CF-REL-002` advances.
+  suppressing real read errors. Exact-head run `31702317708` passed the
+  corrected full lifecycle at `2c38492c1`; the downloaded JSON digest matches
+  the retained NSIS executable. `RQ-CF-REL-002` is defined.

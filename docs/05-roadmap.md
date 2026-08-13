@@ -343,7 +343,9 @@ Independent review subsequently found that the old verifier suppressed
 registry-read errors and could miss the exact CPack key after its values were
 cleared. The corrected verifier terminates on read failure and admits the
 generated exact key independently of values; corrected exact-head Windows
-execution remains required. Prior-version Windows
+run `31702317708` passed, and independently downloaded evidence matches the
+retained NSIS SHA-256 `f77217c135ee223746f876b672b1a98366b1ba44ff38a94184e58f9fa408dcc6`.
+Prior-version Windows
 upgrade, macOS productbuild, Linux DEB/RPM, and VSIX lifecycles remain
 `NOT_RUN`. The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
