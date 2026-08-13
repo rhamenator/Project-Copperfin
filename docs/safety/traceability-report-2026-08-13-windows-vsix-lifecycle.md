@@ -303,6 +303,21 @@ extension again during failure cleanup before deciding whether uninstall is
 needed. This is a containment and evidence correction, not lifecycle success;
 `RQ-CF-REL-003` remains `gap` pending fresh exact-head execution.
 
+Run `31751652834` then completed exact-artifact installation in 337.930
+seconds, exact PkgDef priming, evidence-IDE launch, and exact-identity uninstall
+in 21.688 seconds. Retained digest- and instance-bound installer diagnostics
+prove both operations passed. The command diagnostic proves the exact IDE was
+foreground, the Command Window shortcut was sent, foreground PID ownership was
+reverified, and only `Copperfin.ShowCommandWindow` was submitted. No pane or
+Copperfin package-load record appeared while that sender remained alive. This
+matches the earlier directly observed hosted dispatch boundary: queued input is
+serviced only after the external sender exits. The corrected sequence therefore
+uses one bounded process solely to submit and retain the exact input, lets that
+process exit, and uses a separate bounded process to observe the pane in the
+same IDE PID. Submission is not surface or package-load evidence; all later
+admission conditions remain unchanged. The run is negative command-dispatch
+evidence and `RQ-CF-REL-003` remains `gap`.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

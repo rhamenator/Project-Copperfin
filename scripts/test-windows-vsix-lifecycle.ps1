@@ -373,6 +373,7 @@ param(
     [string]$AlternateExpectedName = '',
     [switch]$AllowProcessWindowTitlePrefix,
     [string]$InvokeCanonicalCommand = '',
+    [switch]$SubmitCanonicalCommandOnly,
     [Parameter(Mandatory = $true)][string]$DiagnosticPath,
     [Parameter(Mandatory = $true)][string]$EvidenceDescription,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
@@ -430,6 +431,7 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
                         [System.Windows.Forms.SendKeys]::SendWait(">$InvokeCanonicalCommand{ENTER}")
                         $canonicalCommandSubmitted = $true
                         $commandSubmitted = $true
+                        if ($SubmitCanonicalCommandOnly) { break }
                     }
                 }
             }
@@ -464,6 +466,7 @@ $diagnostic = [ordered]@{
     expected_process_id = $ExpectedProcessId
     expected_surface = $ExpectedName
     invoke_canonical_command = $InvokeCanonicalCommand
+    submission_only = [bool]$SubmitCanonicalCommandOnly
     foreground_process_verified = $foregroundProcessVerified
     command_window_shortcut_sent = $commandWindowShortcutSent
     command_input_foreground_verified = $commandInputForegroundVerified
@@ -473,6 +476,12 @@ $diagnostic = [ordered]@{
     last_automation_error = $lastAutomationError
 }
 $diagnostic | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $DiagnosticPath -Encoding utf8
+if ($SubmitCanonicalCommandOnly) {
+    if (-not $canonicalCommandSubmitted) {
+        throw "$EvidenceDescription was not submitted to Visual Studio process $ExpectedProcessId within the bounded interval. Foreground process verified: $foregroundProcessVerified. Command Window shortcut sent: $commandWindowShortcutSent. Command-input foreground verified: $commandInputForegroundVerified."
+    }
+    return
+}
 if (-not $observed) {
     throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Foreground process verified: $foregroundProcessVerified. Command Window shortcut sent: $commandWindowShortcutSent. Command-input foreground verified: $commandInputForegroundVerified. Canonical command submitted: $canonicalCommandSubmitted. Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
 }
@@ -481,16 +490,27 @@ if (-not $observed) {
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
-    Write-Host 'VSIX lifecycle phase: invoke exact installed Copperfin command'
+    Write-Host 'VSIX lifecycle phase: submit exact installed Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
             '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
             '-InvokeCanonicalCommand', 'Copperfin.ShowCommandWindow',
+            '-SubmitCanonicalCommandOnly',
+            '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command-input.json'),
+            '-EvidenceDescription', 'Canonical Copperfin command',
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
+        -Name 'Copperfin canonical command submission' | Out-Null
+
+    Write-Host 'VSIX lifecycle phase: observe exact installed Copperfin command surface'
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
             '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command.json'),
             '-EvidenceDescription', 'Registered Copperfin Command surface',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Copperfin canonical command UI Automation observation' | Out-Null
+        -Name 'Copperfin command-surface UI Automation observation' | Out-Null
 
     Write-Host 'VSIX lifecycle phase: observe startup-opened runner-owned PRG'
     Invoke-BoundedProcess `

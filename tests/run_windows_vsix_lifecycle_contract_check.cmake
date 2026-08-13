@@ -69,6 +69,8 @@ require_text("${script}" "[System.Windows.Forms.SendKeys]::SendWait('^%a')" "bou
 require_text("${script}" "command_window_shortcut_sent" "machine-readable Command Window shortcut state")
 require_text("${script}" "command_input_foreground_verified" "second foreground identity boundary")
 require_text("${script}" "canonical_command_submitted" "machine-readable canonical command submission state")
+require_text("${script}" "SubmitCanonicalCommandOnly" "sender-exit command dispatch boundary")
+require_text("${script}" "ui-automation-command-input.json" "retained command-input diagnostics")
 require_text("${script}" "ui-automation-command.json" "retained command-observation diagnostics")
 require_text("${script}" "ui-automation-prg.json" "retained PRG-observation diagnostics")
 require_text("${script}" "StartsWith(\"$ExpectedName - \"" "exact active-document window-title boundary")
@@ -96,6 +98,7 @@ require_text("${workflow}" "/nodeReuse:false" "MSBuild descendant shutdown befor
 require_text("${workflow}" "windows-vsix-lifecycle.json" "retained lifecycle evidence upload")
 require_text("${workflow}" "ActivityLog-registration.xml" "retained registration-prime diagnostics")
 require_text("${workflow}" "vsix-installer-operations.json" "retained installer operation diagnostics")
+require_text("${workflow}" "ui-automation-command-input.json" "retained command-input diagnostics")
 require_text("${workflow}" "ui-automation-command.json" "retained command UI Automation diagnostics")
 require_text("${workflow}" "ui-automation-prg.json" "retained PRG UI Automation diagnostics")
 require_text("${workflow}" "Upload Windows VSIX lifecycle diagnostics" "retained failure diagnostics")
@@ -105,6 +108,9 @@ string(FIND "${script_contents}" "VSIX lifecycle phase: prime per-user package r
 string(FIND "${script_contents}" "matchingPkgDefImports.Count -ge 1" registration_proof_offset)
 string(FIND "${script_contents}" "VSIX lifecycle phase: launch evidence Visual Studio" launch_phase_offset)
 string(FIND "${script_contents}" "Copperfin canonical command UI Automation observation" command_observation_offset)
+if(command_observation_offset EQUAL -1)
+    string(FIND "${script_contents}" "Copperfin command-surface UI Automation observation" command_observation_offset)
+endif()
 string(FIND "${script_contents}" "Copperfin startup PRG document UI Automation observation" document_observation_offset)
 if(registration_phase_offset EQUAL -1 OR registration_proof_offset EQUAL -1 OR
         launch_phase_offset EQUAL -1 OR command_observation_offset EQUAL -1 OR

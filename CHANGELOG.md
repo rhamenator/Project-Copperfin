@@ -111,6 +111,11 @@
   operations now use a separate bounded 600-second allowance, retain versioned
   timing/outcome JSON even on failure, and re-inventory the exact Visual Studio
   instance during cleanup so a timed-out install cannot evade uninstall.
+  Run `31751652834` retained direct install/uninstall success and exact
+  canonical-command input proof, but Visual Studio did not service the queued
+  input while its external sender remained alive. Submission and same-process
+  pane observation now run in separate bounded processes with separate retained
+  JSON; command input alone still cannot admit lifecycle success.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

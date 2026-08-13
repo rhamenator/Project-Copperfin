@@ -474,6 +474,12 @@ versioned operation diagnostic, and re-inventory the selected instance during
 failure cleanup so an installed extension cannot escape exact-identity
 uninstall merely because installer return timed out. The requirement remains a
 gap pending direct exact-head lifecycle evidence.
+Run `31751652834` passed install, PkgDef priming, and uninstall, and proved all
+foreground/input boundaries, but no pane appeared while the input-sender
+process remained alive. The correction now exits that bounded sender after
+retaining its submission diagnostic, then observes the pane from a separate
+bounded process in the same IDE PID. Input remains non-admissible without the
+independent pane and package-load proof.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

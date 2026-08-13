@@ -148,6 +148,13 @@ timing/outcome JSON, and re-inventories the selected instance on failure before
 deciding whether exact-identity uninstall is needed. These are installer
 scheduling and containment corrections only; fresh exact-head lifecycle
 execution and rereview remain required.
+Run `31751652834` passed install in 337.930 seconds, exact PkgDef priming, and
+uninstall in 21.688 seconds. It proved exact foreground ownership and canonical
+command submission, but no pane appeared until the sender's bounded interval
+expired. This matches earlier evidence that hosted Visual Studio services the
+queued input only after its external sender exits. The current head separates
+bounded submission from bounded same-IDE observation and retains both JSON
+records; pane/package-load admission remains independent.
 
 ## V1 Windows installer lifecycle
 
