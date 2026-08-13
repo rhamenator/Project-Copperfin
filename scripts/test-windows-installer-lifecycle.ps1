@@ -4,24 +4,28 @@
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true, ParameterSetName = 'Lifecycle')]
     [ValidateNotNullOrEmpty()]
     [string]$InstallerPath,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true, ParameterSetName = 'Lifecycle')]
     [ValidateNotNullOrEmpty()]
     [string]$BinaryDirectory,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true, ParameterSetName = 'Lifecycle')]
     [ValidateNotNullOrEmpty()]
     [string]$InstallRoot,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true, ParameterSetName = 'Lifecycle')]
     [ValidateNotNullOrEmpty()]
     [string]$EvidenceDirectory,
 
+    [Parameter(ParameterSetName = 'Lifecycle')]
     [ValidateRange(10, 600)]
-    [int]$ProcessTimeoutSeconds = 180
+    [int]$ProcessTimeoutSeconds = 180,
+
+    [Parameter(Mandatory = $true, ParameterSetName = 'SelfTest')]
+    [switch]$SelfTest
 )
 
 $ErrorActionPreference = "Stop"
@@ -112,10 +116,42 @@ function Get-OptionalPropertyValue {
     return $property.Value
 }
 
+function Test-NormalizedPathEquals {
+    param(
+        [AllowNull()]
+        [object]$Candidate,
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedPath
+    )
+
+    if ($null -eq $Candidate) {
+        return $false
+    }
+    $candidateText = ([string]$Candidate).Trim()
+    if ($candidateText.Length -ge 2 -and
+        $candidateText[0] -eq '"' -and
+        $candidateText[$candidateText.Length - 1] -eq '"') {
+        $candidateText = $candidateText.Substring(1, $candidateText.Length - 2)
+    }
+    if ([string]::IsNullOrWhiteSpace($candidateText)) {
+        return $false
+    }
+    try {
+        return [string]::Equals(
+            [System.IO.Path]::GetFullPath($candidateText).TrimEnd('\'),
+            [System.IO.Path]::GetFullPath($ExpectedPath).TrimEnd('\'),
+            [System.StringComparison]::OrdinalIgnoreCase)
+    }
+    catch {
+        return $false
+    }
+}
+
 function Get-CopperfinUninstallEntries {
     param([Parameter(Mandatory = $true)][string]$ExpectedInstallRoot)
 
     $normalizedRoot = [System.IO.Path]::GetFullPath($ExpectedInstallRoot).TrimEnd('\')
+    $expectedUninstaller = Join-Path $normalizedRoot 'Uninstall.exe'
     $registryRoots = @(
         'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
         'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
@@ -125,23 +161,32 @@ function Get-CopperfinUninstallEntries {
         foreach ($registryRoot in $registryRoots) {
             Get-ItemProperty -Path $registryRoot -ErrorAction SilentlyContinue | Where-Object {
                 $installLocation = Get-OptionalPropertyValue -InputObject $_ -Name 'InstallLocation'
-                $location = if ($null -eq $installLocation) { '' } else { [string]$installLocation }
-                $normalizedLocation = $location.Trim('"').TrimEnd('\')
-                if ([string]::IsNullOrWhiteSpace($normalizedLocation)) {
-                    return $false
-                }
-                try {
-                    return [string]::Equals(
-                        [System.IO.Path]::GetFullPath($normalizedLocation),
-                        $normalizedRoot,
-                        [System.StringComparison]::OrdinalIgnoreCase)
-                }
-                catch {
-                    return $false
-                }
+                $uninstallString = Get-OptionalPropertyValue -InputObject $_ -Name 'UninstallString'
+                return (Test-NormalizedPathEquals -Candidate $installLocation -ExpectedPath $normalizedRoot) -or
+                    (Test-NormalizedPathEquals -Candidate $uninstallString -ExpectedPath $expectedUninstaller)
             }
         }
     )
+}
+
+if ($SelfTest) {
+    $sparseEntry = [pscustomobject]@{ DisplayName = 'Unrelated product' }
+    Assert-Condition `
+        ($null -eq (Get-OptionalPropertyValue -InputObject $sparseEntry -Name 'InstallLocation')) `
+        'Sparse registry entry unexpectedly exposed InstallLocation.'
+    $fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) 'copperfin-installer-lifecycle-self-test'
+    $fixtureUninstaller = Join-Path $fixtureRoot 'Uninstall.exe'
+    Assert-Condition `
+        (Test-NormalizedPathEquals -Candidate "`"$fixtureUninstaller`"" -ExpectedPath $fixtureUninstaller) `
+        'Quoted exact CPack uninstall path did not match.'
+    Assert-Condition `
+        (-not (Test-NormalizedPathEquals -Candidate "$fixtureUninstaller /S" -ExpectedPath $fixtureUninstaller)) `
+        'Uninstall path with command arguments was accepted.'
+    Assert-Condition `
+        (-not (Test-NormalizedPathEquals -Candidate (Join-Path $fixtureRoot 'Sibling.exe') -ExpectedPath $fixtureUninstaller)) `
+        'Sibling uninstall path was accepted.'
+    Write-Host 'Windows installer lifecycle helper self-test passed.'
+    return
 }
 
 $resolvedInstaller = (Resolve-Path -LiteralPath $InstallerPath).Path

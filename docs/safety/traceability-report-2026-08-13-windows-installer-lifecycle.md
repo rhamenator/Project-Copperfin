@@ -42,6 +42,10 @@ matrix row.
   `InstallLocation`. Optional values are read through the PowerShell property
   collection so strict mode treats absence as a non-match rather than aborting
   before the Copperfin installer runs.
+- CPack NSIS records the quoted exact uninstaller path but does not require an
+  `InstallLocation` value in its uninstall entry. Registration matching accepts
+  either an exact normalized install location or the exact normalized
+  `<root>\Uninstall.exe` path, and rejects command arguments or sibling paths.
 
 Potential severity is **high** because false lifecycle evidence could admit an
 installer that cannot be safely deployed or removed. No user project, legacy
