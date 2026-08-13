@@ -126,6 +126,12 @@ with the exact runner-owned PRG, invokes the installed `Copperfin Command` item
 from the process-scoped Tools menu through UI Automation, and independently
 requires the pane plus successful package-load evidence. `RQ-CF-REL-003`
 remains `gap` pending exact-head execution and rereview.
+Run `31745965381` also failed before package load or pane observation, and its
+first-generation menu observer did not reveal which discovery/invocation
+boundary was absent. The current exact-head correction retains separate JSON
+state for Tools-menu discovery, exact command discovery, invocation-pattern
+availability, invocation, pane observation, and PRG observation. This is a
+diagnostic-only correction; product behavior remains unchanged.
 
 ## V1 Windows installer lifecycle
 

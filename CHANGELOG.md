@@ -95,6 +95,10 @@
   evidence IDE now uses process-scoped UI Automation to invoke the exact
   installed `Copperfin Command` item from the Tools menu, then independently
   requires the command pane, runner-owned PRG document, and package-load record.
+  Run `31745965381` did not observe the pane and its ActivityLog contained no
+  Copperfin load or error record. Separate versioned UI Automation diagnostic
+  JSON now retains Tools-menu discovery, exact command discovery, invocation,
+  pane, and PRG observation state instead of leaving that boundary ambiguous.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

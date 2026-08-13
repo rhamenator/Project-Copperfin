@@ -452,6 +452,12 @@ pane. The corrected evidence path uses process-scoped UI Automation to expand
 the installed Tools menu and invoke the exact `Copperfin Command` item, then
 separately requires the pane, PRG document, and package-load record. The
 requirement remains a gap pending fresh exact-head evidence and review.
+Run `31745965381` did not observe the pane and retained no Copperfin load or
+error record, but its original failure output did not distinguish menu
+discovery from invocation. The current correction retains machine-readable,
+process-bound UI Automation state for the Tools menu, exact command item,
+invocation pattern, invocation completion, pane, and PRG observations before
+any further behavior correction.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

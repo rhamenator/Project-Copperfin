@@ -324,6 +324,7 @@ param(
     [string]$AlternateExpectedName = '',
     [switch]$AllowProcessWindowTitlePrefix,
     [string]$InvokeToolsMenuItem = '',
+    [Parameter(Mandatory = $true)][string]$DiagnosticPath,
     [Parameter(Mandatory = $true)][string]$EvidenceDescription,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
 )
@@ -339,6 +340,11 @@ $observed = $false
 $lastAutomationError = ''
 $lastProcessWindowName = ''
 $menuItemInvoked = [string]::IsNullOrWhiteSpace($InvokeToolsMenuItem)
+$toolsMenuObserved = $false
+$toolsExpandPatternObserved = $false
+$toolsInvokePatternObserved = $false
+$commandMenuItemObserved = $false
+$commandInvokePatternObserved = $false
 while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
     try {
         $processCondition = [System.Windows.Automation.PropertyCondition]::new(
@@ -357,10 +363,12 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
                     $menuItemCondition, $toolsNameCondition)
                 $toolsMenu = $ide.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $toolsCondition)
                 if ($null -ne $toolsMenu) {
+                    $toolsMenuObserved = $true
                     $expandPattern = $null
                     if ($toolsMenu.TryGetCurrentPattern(
                             [System.Windows.Automation.ExpandCollapsePattern]::Pattern,
                             [ref]$expandPattern)) {
+                        $toolsExpandPatternObserved = $true
                         $expandPattern.Expand()
                     }
                     else {
@@ -368,6 +376,7 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
                         if ($toolsMenu.TryGetCurrentPattern(
                                 [System.Windows.Automation.InvokePattern]::Pattern,
                                 [ref]$invokeToolsPattern)) {
+                            $toolsInvokePatternObserved = $true
                             $invokeToolsPattern.Invoke()
                         }
                     }
@@ -381,10 +390,12 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
                     $commandItem = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
                         [System.Windows.Automation.TreeScope]::Descendants, $processCommandCondition)
                     if ($null -ne $commandItem) {
+                        $commandMenuItemObserved = $true
                         $invokeCommandPattern = $null
                         if ($commandItem.TryGetCurrentPattern(
                                 [System.Windows.Automation.InvokePattern]::Pattern,
                                 [ref]$invokeCommandPattern)) {
+                            $commandInvokePatternObserved = $true
                             $invokeCommandPattern.Invoke()
                             $menuItemInvoked = $true
                         }
@@ -417,8 +428,24 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
     catch { $lastAutomationError = $_.Exception.Message }
     Start-Sleep -Milliseconds 500
 }
+$diagnostic = [ordered]@{
+    schema_version = 1
+    expected_process_id = $ExpectedProcessId
+    expected_surface = $ExpectedName
+    invoke_tools_menu_item = $InvokeToolsMenuItem
+    tools_menu_observed = $toolsMenuObserved
+    tools_expand_pattern_observed = $toolsExpandPatternObserved
+    tools_invoke_pattern_observed = $toolsInvokePatternObserved
+    command_menu_item_observed = $commandMenuItemObserved
+    command_invoke_pattern_observed = $commandInvokePatternObserved
+    command_invoked = $menuItemInvoked
+    surface_observed = $observed
+    last_process_window_name = $lastProcessWindowName
+    last_automation_error = $lastAutomationError
+}
+$diagnostic | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $DiagnosticPath -Encoding utf8
 if (-not $observed) {
-    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
+    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Tools menu observed: $toolsMenuObserved. Command item observed: $commandMenuItemObserved. Command invoked: $menuItemInvoked. Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
 }
 '@, [System.Text.UTF8Encoding]::new($false))
     $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
@@ -431,6 +458,7 @@ if (-not $observed) {
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
             '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
             '-InvokeToolsMenuItem', 'Copperfin Command',
+            '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command.json'),
             '-EvidenceDescription', 'Registered Copperfin Command surface',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin Tools-menu command UI Automation observation' | Out-Null
@@ -443,6 +471,7 @@ if (-not $observed) {
             '-ExpectedName', [System.IO.Path]::GetFileName($fixturePrg),
             '-AlternateExpectedName', [System.IO.Path]::GetFullPath($fixturePrg),
             '-AllowProcessWindowTitlePrefix',
+            '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-prg.json'),
             '-EvidenceDescription', 'Exact runner-owned PRG document tab',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin startup PRG document UI Automation observation' | Out-Null

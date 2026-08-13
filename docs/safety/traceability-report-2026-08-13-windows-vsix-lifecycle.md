@@ -259,6 +259,16 @@ installed Tools-menu item through UI Automation in the controlled IDE process;
 the resulting pane and successful package-load record remain independently
 required. The run is retained negative command-activation evidence only.
 
+Run `31745965381` exercised the process-scoped Tools-menu approach but again
+did not observe the pane or any Copperfin package-load record. Its retained
+ActivityLogs prove the exact installed PkgDef import and contain no matching
+Copperfin error, while the initial UI Automation failure text did not identify
+whether Tools, the exact command item, or its invocation pattern was absent.
+The corrected observer retains separate versioned JSON state for command and
+PRG observation, including each menu-discovery and invocation boundary. No
+product behavior is changed until that direct diagnostic identifies the next
+gap.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede
