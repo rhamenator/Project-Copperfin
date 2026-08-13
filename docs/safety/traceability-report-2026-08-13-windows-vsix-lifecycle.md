@@ -75,7 +75,24 @@ coverage, and issue the next sequential immutable candidate.
 ## Verification And Residual Gaps
 
 Local helper self-test, focused contract, RC assembler self-test, and schema
-validation pass. Exact-head hosted Windows execution is pending. Therefore
-`RQ-CF-REL-003` remains `gap`; this report does not claim direct lifecycle
-success yet. VSIX signing, same-version reinstall, previous-version upgrade,
-disablement, and human visual review remain separate.
+validation pass. Exact-head hosted VS2022 run `31711406714` passed the direct
+lifecycle and every existing VSIX/managed step at signed head `f26086a09`.
+The independently downloaded producer and lifecycle result files are identical;
+their VSIX SHA-256
+`a02b11f77c35d798642780641b40a940b02c001105a1c64da6e4c9ebb8dc922c`
+matches an independent digest of the downloaded package. Producer artifact
+`9185674193` has GitHub digest
+`sha256:76e659eecec432073033ce20740e0b3efe01343b331645f5782c786e37bf618a`;
+diagnostic artifact `9185671767` has digest
+`sha256:cc7308165fe5800a29be43e3c03063a46d0a91c7a8d5bb6cfe4fab268b844de6`;
+both report expiry on 2026-11-11. The retained result records `PASS` for install,
+identity/version, package registration/load, runner-owned PRG and command,
+uninstall, residue, and checkout independence. `RQ-CF-REL-003` is therefore
+`defined`.
+
+Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
+moving `windows-latest` image installed the package but did not admit its
+per-user pkgdef path into that fresh hosted profile. This does not supersede
+separate direct VS18 host evidence and is not generalized into a product
+compatibility claim. VSIX signing, same-version reinstall, previous-version
+upgrade, disablement, and human visual review remain separate.
