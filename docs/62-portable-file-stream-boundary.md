@@ -20,6 +20,8 @@ file now belong to `cf_platform_support` through
 - Sizes that cannot be represented by a native signed file offset fail with
   `EFBIG` before narrowing. Existing VFP runtime requests are already bounded
   to nonnegative signed 64-bit values.
+- A stream that cannot yield a native descriptor fails with `EBADF`, so the
+  runtime never maps stale `errno` state on that failure path.
 
 The platform API exposes only standard C++ filesystem, string-view, integer,
 and `std::FILE` types. It does not expose native descriptors, create parent

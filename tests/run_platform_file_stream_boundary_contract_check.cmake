@@ -46,6 +46,25 @@ function(forbid_text contents forbidden description)
     endif()
 endfunction()
 
+function(require_text_count contents expected expected_count description)
+    set(remaining "${contents}")
+    set(actual_count 0)
+    string(LENGTH "${expected}" expected_length)
+    while(TRUE)
+        string(FIND "${remaining}" "${expected}" offset)
+        if(offset EQUAL -1)
+            break()
+        endif()
+        math(EXPR actual_count "${actual_count} + 1")
+        math(EXPR next_offset "${offset} + ${expected_length}")
+        string(SUBSTRING "${remaining}" ${next_offset} -1 remaining)
+    endwhile()
+    if(NOT actual_count EQUAL expected_count)
+        message(FATAL_ERROR
+            "Expected ${expected_count} ${description}, found ${actual_count}: ${expected}")
+    endif()
+endfunction()
+
 foreach(token IN ITEMS
         "_WIN32"
         "io.h"
@@ -72,6 +91,10 @@ foreach(token IN ITEMS
         "::ftruncate(")
     require_text("${source_text}" "${token}" "private file-stream implementation")
 endforeach()
+require_text_count("${source_text}"
+    "if (descriptor < 0) {\n        errno = EBADF;\n        return -1;\n    }"
+    2
+    "invalid-descriptor errno guards")
 require_text("${runtime_text}"
     "copperfin::platform::open_file_stream(path, mode)"
     "FOPEN platform delegation")

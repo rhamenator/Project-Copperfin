@@ -44,18 +44,22 @@ int resize_file_stream(std::FILE* stream, const std::uint64_t size) {
         return -1;
     }
     const int descriptor = ::_fileno(stream);
-    return descriptor >= 0
-        ? ::_chsize_s(descriptor, static_cast<std::int64_t>(size))
-        : -1;
+    if (descriptor < 0) {
+        errno = EBADF;
+        return -1;
+    }
+    return ::_chsize_s(descriptor, static_cast<std::int64_t>(size));
 #else
     if (size > static_cast<std::uint64_t>((std::numeric_limits<off_t>::max)())) {
         errno = EFBIG;
         return -1;
     }
     const int descriptor = ::fileno(stream);
-    return descriptor >= 0
-        ? ::ftruncate(descriptor, static_cast<off_t>(size))
-        : -1;
+    if (descriptor < 0) {
+        errno = EBADF;
+        return -1;
+    }
+    return ::ftruncate(descriptor, static_cast<off_t>(size));
 #endif
 }
 
