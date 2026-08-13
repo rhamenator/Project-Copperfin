@@ -36,7 +36,9 @@ The next stacked follow-on adds a strict read-only managed consumer shared by
 the standalone Studio shell, VSIX, and Designer smoke assembly. It calls only
 the descriptor JSON grammar and rejects missing/unknown/wrongly typed fields,
 activation claims, provider-auth authority, stale warning identity,
-duplicate/aliased modes, capability expansion, and elevation. The smoke and
+duplicate/aliased modes, capability expansion, and elevation. The serializer
+boundary also rejects duplicate members at every nesting level, including
+escaped-equivalent member names. The smoke and
 standalone projects compile warning-free against net472 on Linux; direct Mono
 execution and the Windows VSIX build remain scheduled hosted evidence. This
 client has no activation or executor API.

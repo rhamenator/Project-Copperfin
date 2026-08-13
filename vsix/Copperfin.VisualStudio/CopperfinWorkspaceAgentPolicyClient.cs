@@ -57,6 +57,11 @@ internal static class CopperfinWorkspaceAgentPolicyClient
     {
         try
         {
+            if (!CopperfinStrictJsonMemberValidator.HasValidUniqueMembers(json))
+            {
+                return Failure(InvalidContract,
+                    "The workspace-agent policy JSON is malformed or contains duplicate members.");
+            }
             var serializer = new JavaScriptSerializer { MaxJsonLength = 1024 * 1024 };
             var shapeError = ValidateShape(serializer.DeserializeObject(json));
             if (!string.IsNullOrEmpty(shapeError))

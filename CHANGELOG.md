@@ -3,6 +3,8 @@
   the complete typed schema, exact modes and capabilities, current warning,
   provider-auth separation, descriptor-only state, and no elevation; omitted,
   unknown, stale, aliased, duplicated, or risk-expanding input fails closed.
+  Duplicate JSON members, including escaped-equivalent names at any nested
+  object level, are rejected before the framework serializer can collapse them.
   This slice adds no activation or execution path. See
   `docs/64-workspace-agent-access-policy.md`.
 

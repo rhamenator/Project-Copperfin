@@ -53,6 +53,18 @@ internal static partial class Program
             "incorrectly typed security fields");
         ExpectPolicyRejected(WorkspaceAgentPolicyJson.Replace("\"schemaVersion\":1", "\"schemaVersion\":1,\"unexpected\":true"),
             "unknown envelope fields");
+        ExpectPolicyRejected(WorkspaceAgentPolicyJson.Replace("\"descriptorOnly\":true", "\"descriptorOnly\":false,\"descriptorOnly\":true"),
+            "duplicate envelope members");
+        ExpectPolicyRejected(WorkspaceAgentPolicyJson.Replace("\"permissionId\":\"ai.workspace_agent\"", "\"permissionId\":\"developer\",\"permissionId\":\"ai.workspace_agent\""),
+            "duplicate activation members");
+        ExpectPolicyRejected(WorkspaceAgentPolicyJson.Replace("\"id\":\"workspace-agent.unrestricted-local.v1\"", "\"id\":\"stale\",\"id\":\"workspace-agent.unrestricted-local.v1\""),
+            "duplicate warning members");
+        ExpectPolicyRejected(WorkspaceAgentPolicyJson.Replace("\"name\":\"advisory\"", "\"name\":\"other\",\"name\":\"advisory\""),
+            "duplicate mode members");
+        ExpectPolicyRejected(WorkspaceAgentPolicyJson.Replace("\"readWorkspaceFiles\":false", "\"readWorkspaceFiles\":true,\"readWorkspaceFiles\":false"),
+            "duplicate capability members");
+        ExpectPolicyRejected(WorkspaceAgentPolicyJson.Replace("\"descriptorOnly\":true", "\"descriptorOnly\":false,\"descriptor\\u004fnly\":true"),
+            "escaped duplicate member names");
         ExpectPolicyRejected(WorkspaceAgentPolicyJson.Replace("\"descriptorOnly\":true", "\"descriptorOnly\":false"),
             "non-descriptor endpoints");
         ExpectPolicyRejected(WorkspaceAgentPolicyJson.Replace("\"activationAvailable\":false", "\"activationAvailable\":true"),

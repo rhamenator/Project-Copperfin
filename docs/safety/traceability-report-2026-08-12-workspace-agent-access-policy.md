@@ -84,9 +84,10 @@ and licensing-policy source contract `2/2`; the shipping default remains off.
 `SmokeManagedWorkspaceAgentPolicyContract` verifies that the shared managed
 client invokes only `--workspace-agent-policy --json`, accepts localized prose
 under the invariant schema, and fails closed for unsupported versions, omitted
-false-valued security fields, wrong types, unknown fields, non-descriptor or
-activation-capable envelopes, provider-auth authority, substituted permission
-or warning identifiers, duplicate/aliased modes, capability expansion,
+false-valued security fields, wrong types, unknown fields, duplicate members
+(including escaped-equivalent names), non-descriptor or activation-capable
+envelopes, provider-auth authority, substituted permission or warning
+identifiers, duplicate/aliased modes, capability expansion,
 privilege elevation, and malformed JSON. Both the complete Designer smoke
 assembly and standalone Studio shell compile warning-free against the net472
 contract on Linux. Direct managed execution and the VSIX package build remain

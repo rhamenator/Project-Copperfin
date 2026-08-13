@@ -96,8 +96,9 @@ field types, descriptor-only/no-activation state, advisory/default-disabled
 state, provider-auth separation, native permission and UI/audit/warning gates,
 the current warning identity, exactly three stable mode names with exact
 capabilities, localized nonempty warning prose, and permanent denial of
-elevation. Missing or unknown fields, aliases, duplicates, stale identities,
-type substitutions, and any capability expansion fail closed. This client is
+elevation. Missing or unknown fields, aliases, duplicate members or modes,
+stale identities, type substitutions, and any capability expansion fail
+closed. This client is
 read-only and does not supply an activation or execution method.
 
 ## Current implementation and remaining work
