@@ -35,8 +35,10 @@ initial startup did not open it, and the command was still not invoked. Run
 `31718662961` then launched the IDE bare and requested `/Command` from a second
 `devenv` process. The controlled IDE stayed responsive but exposed no Copperfin
 Command surface, and its ActivityLog contained imported Copperfin registration
-but no `CopperfinPackage` load. The next correction starts the controlled IDE
-itself with `/Command`, proves the exact Copperfin Command surface in that
+but no `CopperfinPackage` load. Run `31719897147` then launched the controlled
+IDE itself with `/Command` and proved the same negative boundary. The next
+correction invokes the exact registered Copperfin Command item through that
+process's user-visible Tools menu, proves the resulting pane in the same
 process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
 then requires the exact document descendant or fixture window-title prefix. It
 also requires an explicit successful package-load XML entry and rejects

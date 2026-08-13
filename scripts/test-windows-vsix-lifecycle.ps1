@@ -245,14 +245,12 @@ try {
         -Arguments @('/updateconfiguration') `
         -Name 'Visual Studio package-registration refresh' | Out-Null
 
-    Write-Host 'VSIX lifecycle phase: launch Visual Studio with registered Copperfin command'
+    Write-Host 'VSIX lifecycle phase: launch Visual Studio'
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $devenv
     $startInfo.UseShellExecute = $false
     $startInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @(
-            '/NoSplash', '/Log', $activityLog,
-            '/Command', 'Copperfin.ShowCommandWindow')) {
+    foreach ($argument in @('/NoSplash', '/Log', $activityLog)) {
         [void]$startInfo.ArgumentList.Add($argument)
     }
     $ideProcess = [System.Diagnostics.Process]::Start($startInfo)
@@ -327,6 +325,81 @@ if (-not $observed) {
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
+    $invokeMenuScript = Join-Path $resolvedEvidenceDirectory 'invoke-visual-studio-menu-command.ps1'
+    [System.IO.File]::WriteAllText($invokeMenuScript, @'
+param(
+    [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
+    [Parameter(Mandatory = $true)][string]$MenuName,
+    [Parameter(Mandatory = $true)][string]$CommandName,
+    [Parameter(Mandatory = $true)][int]$TimeoutSeconds
+)
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+$deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+$processCondition = [System.Windows.Automation.PropertyCondition]::new(
+    [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ExpectedProcessId)
+$menuCondition = [System.Windows.Automation.AndCondition]::new(@(
+    $processCondition,
+    [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::NameProperty, $MenuName),
+    [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+        [System.Windows.Automation.ControlType]::MenuItem)))
+$commandCondition = [System.Windows.Automation.AndCondition]::new(@(
+    $processCondition,
+    [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::NameProperty, $CommandName),
+    [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+        [System.Windows.Automation.ControlType]::MenuItem)))
+$lastError = ''
+while ([DateTime]::UtcNow -lt $deadline) {
+    try {
+        $toolsMenu = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+            [System.Windows.Automation.TreeScope]::Descendants, $menuCondition)
+        if ($null -ne $toolsMenu) {
+            $expandPattern = $null
+            if ($toolsMenu.TryGetCurrentPattern(
+                    [System.Windows.Automation.ExpandCollapsePattern]::Pattern,
+                    [ref]$expandPattern)) {
+                $expandPattern.Expand()
+            }
+            else {
+                $menuInvokePattern = $null
+                if ($toolsMenu.TryGetCurrentPattern(
+                        [System.Windows.Automation.InvokePattern]::Pattern,
+                        [ref]$menuInvokePattern)) {
+                    $menuInvokePattern.Invoke()
+                }
+            }
+            Start-Sleep -Milliseconds 250
+            $command = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+                [System.Windows.Automation.TreeScope]::Descendants, $commandCondition)
+            if ($null -ne $command) {
+                $commandInvokePattern = $null
+                if (-not $command.TryGetCurrentPattern(
+                        [System.Windows.Automation.InvokePattern]::Pattern,
+                        [ref]$commandInvokePattern)) {
+                    throw "Menu item '$CommandName' does not expose InvokePattern."
+                }
+                $commandInvokePattern.Invoke()
+                exit 0
+            }
+        }
+    }
+    catch { $lastError = $_.Exception.Message }
+    Start-Sleep -Milliseconds 500
+}
+throw "Exact menu command '$MenuName > $CommandName' was not invocable in Visual Studio process $ExpectedProcessId. Last UI Automation error: $lastError"
+'@, [System.Text.UTF8Encoding]::new($false))
+    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through Tools menu'
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeMenuScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)", '-MenuName', 'Tools',
+            '-CommandName', 'Copperfin Command', '-TimeoutSeconds', "$automationTimeoutSeconds") `
+        -Name 'Copperfin Tools-menu command invocation' | Out-Null
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
