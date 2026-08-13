@@ -173,7 +173,9 @@ $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
 
 $installedDirectory = $null
 $ideProcess = $null
+$commandProcess = $null
 try {
+    Write-Host 'VSIX lifecycle phase: install'
     Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
         '/quiet', "/instanceIds:$instanceId", $resolvedVsix
     ) -Name 'Copperfin VSIX installation' | Out-Null
@@ -189,6 +191,7 @@ try {
     Assert-Condition (Test-Path -LiteralPath (Join-Path $installedDirectory 'Copperfin.VisualStudio.dll') -PathType Leaf) `
         'Installed VSIX is missing Copperfin.VisualStudio.dll.'
 
+    Write-Host 'VSIX lifecycle phase: open runner-owned PRG'
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $devenv
     $startInfo.UseShellExecute = $false
@@ -209,10 +212,30 @@ try {
     Assert-Condition ($ideProcess.MainWindowHandle -ne [IntPtr]::Zero) `
         'Visual Studio did not expose a main window within the bounded startup interval.'
 
-    Invoke-BoundedProcess `
-        -FilePath $devenv `
-        -Arguments @('/Command', 'Copperfin.ShowCommandWindow') `
-        -Name 'Copperfin registered command invocation' | Out-Null
+    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command'
+    $commandStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $commandStartInfo.FileName = $devenv
+    $commandStartInfo.UseShellExecute = $false
+    $commandStartInfo.WorkingDirectory = $resolvedEvidenceDirectory
+    foreach ($argument in @('/Command', 'Copperfin.ShowCommandWindow')) {
+        [void]$commandStartInfo.ArgumentList.Add($argument)
+    }
+    $commandProcess = [System.Diagnostics.Process]::Start($commandStartInfo)
+    Assert-Condition ($null -ne $commandProcess) 'Copperfin registered command invocation did not start.'
+
+    # devenv /Command may forward to the running IDE or remain as another IDE process.
+    # A persistent process is therefore not a timeout. The package-load record below
+    # is the observable contract for successful command discovery and invocation.
+    $commandObservationDeadline = [DateTime]::UtcNow.AddSeconds($ProcessTimeoutSeconds)
+    while ([DateTime]::UtcNow -lt $commandObservationDeadline -and
+            -not $commandProcess.HasExited -and
+            -not (Test-Path -LiteralPath $activityLog -PathType Leaf)) {
+        Start-Sleep -Milliseconds 500
+    }
+    if ($commandProcess.HasExited) {
+        Assert-Condition ($commandProcess.ExitCode -eq 0) `
+            "Copperfin registered command invocation exited with code $($commandProcess.ExitCode)."
+    }
 
     $deadline = [DateTime]::UtcNow.AddSeconds(60)
     $packageObserved = $false
@@ -235,6 +258,16 @@ try {
     Assert-Condition $packageObserved 'ActivityLog did not prove Copperfin package loading after command invocation.'
 }
 finally {
+    if ($null -ne $commandProcess) {
+        if (-not $commandProcess.HasExited) {
+            try { [void]$commandProcess.CloseMainWindow() } catch {}
+            if (-not $commandProcess.WaitForExit(15000)) {
+                try { $commandProcess.Kill($true) } catch { Write-Warning "Command-bearing Visual Studio process could not be terminated: $($_.Exception.Message)" }
+                [void]$commandProcess.WaitForExit(15000)
+            }
+        }
+        $commandProcess.Dispose()
+    }
     if ($null -ne $ideProcess) {
         if (-not $ideProcess.HasExited) {
             try { [void]$ideProcess.CloseMainWindow() } catch {}
@@ -246,6 +279,7 @@ finally {
         $ideProcess.Dispose()
     }
     if ($null -ne $installedDirectory) {
+        Write-Host 'VSIX lifecycle phase: uninstall'
         Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
             '/quiet', "/instanceIds:$instanceId", '/uninstall:Copperfin.VisualStudio'
         ) -Name 'Copperfin VSIX uninstall' | Out-Null
