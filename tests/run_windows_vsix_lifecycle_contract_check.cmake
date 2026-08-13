@@ -53,7 +53,7 @@ require_text("${script}" "UIAutomationClient" "Windows UI Automation evidence bo
 require_text("${script}" "ProcessIdProperty, $ExpectedProcessId" "launched-process UI identity binding")
 require_text("${script}" "StartsWith(\"$ExpectedName - \"" "exact active-document window-title boundary")
 require_text("${script}" "Exact runner-owned PRG document tab" "exact PRG-open proof")
-require_text("${script}" "'/Command', 'Copperfin.ShowCommandWindow'" "registered-command invocation")
+require_text("${script}" "'/Command', 'Copperfin.ShowCommandWindow'" "registered-command launch argument")
 require_text("${script}" "Registered Copperfin Command surface" "same-process command-surface proof")
 require_text("${script}" "'/Edit', $fixturePrg" "explicit running-IDE document-open request")
 require_text("${script}" "lifecycle-smoke.prg" "runner-owned PRG open fixture")
@@ -74,7 +74,7 @@ require_text("${workflow}" "windows-vsix-lifecycle.json" "retained lifecycle evi
 require_text("${workflow}" "Upload Windows VSIX lifecycle diagnostics" "retained failure diagnostics")
 require_text("${workflow}" "always()" "failure-path evidence staging")
 file(READ "${SOURCE_DIR}/${script}" script_contents)
-string(FIND "${script_contents}" "VSIX lifecycle phase: invoke registered Copperfin command" command_phase_offset)
+string(FIND "${script_contents}" "VSIX lifecycle phase: launch Visual Studio with registered Copperfin command" command_phase_offset)
 string(FIND "${script_contents}" "VSIX lifecycle phase: open runner-owned PRG through running IDE" document_phase_offset)
 if(command_phase_offset EQUAL -1 OR document_phase_offset EQUAL -1 OR
         NOT command_phase_offset LESS document_phase_offset)

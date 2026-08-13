@@ -221,7 +221,6 @@ $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
 
 $installedDirectory = $null
 $ideProcess = $null
-$commandProcess = $null
 $documentProcess = $null
 try {
     Write-Host 'VSIX lifecycle phase: install'
@@ -246,12 +245,14 @@ try {
         -Arguments @('/updateconfiguration') `
         -Name 'Visual Studio package-registration refresh' | Out-Null
 
-    Write-Host 'VSIX lifecycle phase: launch Visual Studio'
+    Write-Host 'VSIX lifecycle phase: launch Visual Studio with registered Copperfin command'
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $devenv
     $startInfo.UseShellExecute = $false
     $startInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @('/NoSplash', '/Log', $activityLog)) {
+    foreach ($argument in @(
+            '/NoSplash', '/Log', $activityLog,
+            '/Command', 'Copperfin.ShowCommandWindow')) {
         [void]$startInfo.ArgumentList.Add($argument)
     }
     $ideProcess = [System.Diagnostics.Process]::Start($startInfo)
@@ -326,16 +327,7 @@ if (-not $observed) {
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
-    Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command'
-    $commandStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
-    $commandStartInfo.FileName = $devenv
-    $commandStartInfo.UseShellExecute = $false
-    $commandStartInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @('/Command', 'Copperfin.ShowCommandWindow')) {
-        [void]$commandStartInfo.ArgumentList.Add($argument)
-    }
-    $commandProcess = [System.Diagnostics.Process]::Start($commandStartInfo)
-    Assert-Condition ($null -ne $commandProcess) 'Copperfin registered command invocation did not start.'
+    Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
@@ -343,10 +335,6 @@ if (-not $observed) {
             '-EvidenceDescription', 'Registered Copperfin Command surface',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin registered-command UI Automation observation' | Out-Null
-    if ($commandProcess.HasExited) {
-        Assert-Condition ($commandProcess.ExitCode -eq 0) `
-            "Copperfin registered command invocation exited with code $($commandProcess.ExitCode)."
-    }
 
     Write-Host 'VSIX lifecycle phase: open runner-owned PRG through running IDE'
     $documentStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
@@ -408,16 +396,6 @@ finally {
             }
         }
         $documentProcess.Dispose()
-    }
-    if ($null -ne $commandProcess) {
-        if (-not $commandProcess.HasExited) {
-            try { [void]$commandProcess.CloseMainWindow() } catch {}
-            if (-not $commandProcess.WaitForExit(15000)) {
-                try { $commandProcess.Kill($true) } catch { Write-Warning "Command-bearing Visual Studio process could not be terminated: $($_.Exception.Message)" }
-                [void]$commandProcess.WaitForExit(15000)
-            }
-        }
-        $commandProcess.Dispose()
     }
     if ($null -ne $ideProcess) {
         if (-not $ideProcess.HasExited) {

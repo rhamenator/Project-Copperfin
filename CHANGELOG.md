@@ -12,10 +12,13 @@
   did not find an exact-named document descendant but excluded the process
   root's possible active-document title. The next run proved that root remained
   `Microsoft Visual Studio`, so initial PRG input did not open the fixture. The
-  corrected sequence initializes and proves the command surface, explicitly
-  forwards `/Edit` plus the fixture to the running IDE, and requires exact
-  document proof plus explicit successful-load XML/error rejection in fresh
-  exact-head evidence.
+  next sequence invoked `/Command` from a second `devenv` process, and run
+  `31718662961` proved that this did not activate the command in the original
+  controlled process or load `CopperfinPackage`. The corrected sequence now
+  starts the controlled IDE with `/Command`, proves that process's command
+  surface, explicitly forwards `/Edit` plus the fixture to it, and requires
+  exact document proof plus explicit successful-load XML/error rejection in
+  fresh exact-head evidence.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

@@ -31,12 +31,16 @@ document descendant, but its query excluded the process root's window title;
 the command was not invoked and the result is inconclusive. The
 next run `31717503945` checked both, proving the process root remained
 `Microsoft Visual Studio` and no fixture descendant existed; passing the PRG at
-initial startup did not open it, and the command was still not invoked. The
-next correction launches the IDE first, invokes and proves the exact Copperfin
-Command surface in that process, explicitly forwards `/Edit` plus the fixture
-to the running IDE, and then requires the exact document descendant or fixture
-window-title prefix. It also requires an explicit successful package-load XML
-entry and rejects matching errors.
+initial startup did not open it, and the command was still not invoked. Run
+`31718662961` then launched the IDE bare and requested `/Command` from a second
+`devenv` process. The controlled IDE stayed responsive but exposed no Copperfin
+Command surface, and its ActivityLog contained imported Copperfin registration
+but no `CopperfinPackage` load. The next correction starts the controlled IDE
+itself with `/Command`, proves the exact Copperfin Command surface in that
+process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
+then requires the exact document descendant or fixture window-title prefix. It
+also requires an explicit successful package-load XML entry and rejects
+matching errors.
 `RQ-CF-REL-003` remains `gap` pending corrected exact-head execution and
 rereview.
 

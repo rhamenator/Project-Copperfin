@@ -54,12 +54,12 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   Visual Studio has a bounded observation window, then receives a normal close
   request before bounded tree termination fallback.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
-  IDE process launched by the helper. It must find the exact runner-owned PRG
-  document-tab name after the helper invokes the registered
-  `Copperfin.ShowCommandWindow` command, finds the exact Copperfin Command
-  surface in that same IDE process, and explicitly forwards `/Edit` plus the
-  runner-owned fixture to the now-running IDE. A visible window, launched process, or
-  command-line attempt alone is not PRG-open or command evidence. After bounded IDE shutdown flushes
+  IDE process launched by the helper. The helper starts that controlled process
+  with the registered `Copperfin.ShowCommandWindow` command, finds the exact
+  Copperfin Command surface in that same IDE process, and explicitly forwards
+  `/Edit` plus the runner-owned fixture to the now-running IDE. A visible
+  window, launched process, or command-line attempt alone is not PRG-open or
+  command evidence. After bounded IDE shutdown flushes
   the activity log, XML entry parsing requires the exact informational
   `End package load [CopperfinPackage]` record and package GUID and rejects any
   Copperfin-related error entry. Package-name, assembly-path, or GUID substring
@@ -107,11 +107,16 @@ boundary was never reached. Run `31717503945` added the root-title check and
 proved something stronger: the process title remained exactly `Microsoft
 Visual Studio`, no fixture-named descendant existed, and the command boundary
 was never reached. Passing the PRG as initial startup input therefore did not
-open it on this hosted profile. The further-corrected helper launches the IDE,
-invokes and proves the registered command surface to initialize the package,
-then explicitly forwards `/Edit` plus the fixture to that running IDE and uses
-process-scoped UI Automation to prove either an exact document descendant or
-the exact fixture leaf followed by Visual Studio's title separator. It then requires the exact
+open it on this hosted profile. Run `31718662961` launched the controlled IDE
+bare and requested `/Command` from a second `devenv` process. The controlled
+process remained responsive but exposed no Copperfin Command surface; its
+ActivityLog recorded Copperfin pkgdef import but no `CopperfinPackage` load.
+That run is diagnostic evidence, not lifecycle evidence. The further-corrected
+helper launches the controlled IDE itself with the registered command and
+proves that process's command surface, then explicitly forwards `/Edit` plus the
+fixture to the running IDE and uses process-scoped UI Automation to prove either
+an exact document descendant or the exact fixture leaf followed by Visual
+Studio's title separator. It then requires the exact
 informational `End package load [CopperfinPackage]` XML entry/package GUID and
 rejects matching error entries. The self-test includes nominal-success and
 success-plus-error records. Corrected exact-head hosted execution is pending;
