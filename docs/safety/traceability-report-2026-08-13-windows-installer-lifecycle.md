@@ -43,7 +43,9 @@ identifiers; the focused check enforces those reverse links.
 - Registry inventory is heterogeneous: unrelated uninstall entries may omit
   `InstallLocation`. Optional values are read through the PowerShell property
   collection so strict mode treats absence as a non-match rather than aborting
-  before the Copperfin installer runs.
+  before the Copperfin installer runs. The caller also array-wraps the complete
+  query before counting, so zero matches remain the integer `0` rather than a
+  strict-mode `$null.Count` failure.
 - CPack NSIS records the quoted exact uninstaller path but does not require an
   `InstallLocation` value in its uninstall entry. Registration matching accepts
   either an exact normalized install location or the exact normalized

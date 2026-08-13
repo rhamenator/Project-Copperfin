@@ -172,6 +172,12 @@ function Get-CopperfinUninstallEntries {
     )
 }
 
+function Get-CopperfinUninstallEntryCount {
+    param([Parameter(Mandatory = $true)][string]$ExpectedInstallRoot)
+
+    return @(Get-CopperfinUninstallEntries -ExpectedInstallRoot $ExpectedInstallRoot).Count
+}
+
 if ($SelfTest) {
     $sparseEntry = [pscustomobject]@{ DisplayName = 'Unrelated product' }
     Assert-Condition `
@@ -211,7 +217,7 @@ Assert-Condition ([System.IO.Path]::GetFileName($resolvedInstallRoot) -match '^c
     "Installation root leaf does not match the lifecycle allowlist: $resolvedInstallRoot"
 Assert-Condition (-not (Test-Path -LiteralPath $resolvedInstallRoot)) `
     "Fresh-install root already exists: $resolvedInstallRoot"
-Assert-Condition ((Get-CopperfinUninstallEntries -ExpectedInstallRoot $resolvedInstallRoot).Count -eq 0) `
+Assert-Condition ((Get-CopperfinUninstallEntryCount -ExpectedInstallRoot $resolvedInstallRoot) -eq 0) `
     "Fresh-install root already has an uninstall registration: $resolvedInstallRoot"
 
 New-Item -ItemType Directory -Path $resolvedEvidenceDirectory -Force | Out-Null
@@ -259,7 +265,7 @@ try {
         "Installed copperfin_inspect help wrote unexpected stderr: $($inspectResult.Stderr)"
     $inspectOutput = $inspectResult.Stdout
 
-    $uninstallRegistrationCount = (Get-CopperfinUninstallEntries -ExpectedInstallRoot $resolvedInstallRoot).Count
+    $uninstallRegistrationCount = Get-CopperfinUninstallEntryCount -ExpectedInstallRoot $resolvedInstallRoot
     Assert-Condition ($uninstallRegistrationCount -eq 1) `
         "Fresh installation must create exactly one uninstall registration for its root; found $uninstallRegistrationCount."
 
@@ -273,7 +279,7 @@ try {
     $maintenanceSnapshot = Get-InstalledSnapshot -Root $resolvedInstallRoot
     Assert-Condition (($installedSnapshot | ConvertTo-Json -Compress) -ceq ($maintenanceSnapshot | ConvertTo-Json -Compress)) `
         'Same-version maintenance reinstall changed the installed file inventory or hashes.'
-    Assert-Condition ((Get-CopperfinUninstallEntries -ExpectedInstallRoot $resolvedInstallRoot).Count -eq 1) `
+    Assert-Condition ((Get-CopperfinUninstallEntryCount -ExpectedInstallRoot $resolvedInstallRoot) -eq 1) `
         'Same-version maintenance reinstall did not preserve exactly one uninstall registration.'
 
     $uninstaller = Join-Path $resolvedInstallRoot 'Uninstall.exe'
@@ -290,7 +296,7 @@ try {
     }
     Assert-Condition (-not (Test-Path -LiteralPath $resolvedInstallRoot)) `
         "Silent uninstall left installation-root residue: $resolvedInstallRoot"
-    Assert-Condition ((Get-CopperfinUninstallEntries -ExpectedInstallRoot $resolvedInstallRoot).Count -eq 0) `
+    Assert-Condition ((Get-CopperfinUninstallEntryCount -ExpectedInstallRoot $resolvedInstallRoot) -eq 0) `
         "Silent uninstall left an uninstall registration for: $resolvedInstallRoot"
 
     $evidence = [ordered]@{

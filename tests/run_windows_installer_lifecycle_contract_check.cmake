@@ -70,6 +70,12 @@ require_text("${script}" "@('--locale', 'en-US', '--help')" "installed executabl
 require_text("${script}" "same-version maintenance reinstall" "maintenance reinstall execution")
 require_text("${script}" "upgrade_from_previous_version = 'NOT_RUN'" "honest upgrade limitation")
 require_text("${script}" "Get-CopperfinUninstallEntries" "uninstall-registration inspection")
+require_text("${script}" "return @(Get-CopperfinUninstallEntries -ExpectedInstallRoot $ExpectedInstallRoot).Count"
+    "strict-mode-safe empty uninstall-entry counting")
+require_text("${script}" "Get-CopperfinUninstallEntryCount -ExpectedInstallRoot $resolvedInstallRoot"
+    "centralized uninstall-entry count use")
+forbid_text("${script}" "(Get-CopperfinUninstallEntries -ExpectedInstallRoot $resolvedInstallRoot).Count"
+    "strict-mode-unsafe direct uninstall-entry count")
 require_text("${script}" "PSObject.Properties[$Name]" "strict-mode-safe optional registry property lookup")
 require_text("${script}" "Get-OptionalPropertyValue -InputObject $_ -Name 'InstallLocation'"
     "optional InstallLocation lookup")
