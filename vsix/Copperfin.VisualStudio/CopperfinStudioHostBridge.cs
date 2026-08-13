@@ -64,6 +64,11 @@ internal static class CopperfinStudioHostBridge
         return $"--json --toolbox-palette-query --toolbox-context {Quote(toolboxContext)}";
     }
 
+    public static string BuildWorkspaceAgentPolicyArguments()
+    {
+        return "--workspace-agent-policy --json";
+    }
+
     public static string BuildToolboxCreateArguments(
         string documentPath,
         string toolboxItemId,

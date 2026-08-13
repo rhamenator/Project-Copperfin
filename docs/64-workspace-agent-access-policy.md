@@ -88,11 +88,23 @@ switches, reordered switches, and attempted activation arguments return status
 is trusted product UI or manufacture warning consent. Actual activation remains
 reserved for the future trusted session/UI boundary.
 
+The shared managed `CopperfinWorkspaceAgentPolicyClient` consumes only that
+exact JSON descriptor command. Before exposing a descriptor to either the
+standalone Studio shell or VSIX, it requires the complete schema shape and
+field types, descriptor-only/no-activation state, advisory/default-disabled
+state, provider-auth separation, native permission and UI/audit/warning gates,
+the current warning identity, exactly three stable mode names with exact
+capabilities, localized nonempty warning prose, and permanent denial of
+elevation. Missing or unknown fields, aliases, duplicates, stale identities,
+type substitutions, and any capability expansion fail closed. This client is
+read-only and does not supply an activation or execution method.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
-localized warning, fail-closed admission, and read-only Studio-host descriptor
-contracts with direct regression coverage.
+localized warning, fail-closed admission, read-only Studio-host descriptor,
+and strict read-only managed-consumer contracts with direct regression
+coverage.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.
@@ -120,6 +132,10 @@ first Windows generated-launcher attempt was blocked before Copperfin
 configuration by an external R-version lookup failure; its failed job was
 rerun without a source change and passed. Exact run identifiers are retained
 in the safety traceability report.
+The managed smoke project and standalone Studio project compile warning-free
+against the net472 reference contract on Linux. Executing the new managed smoke
+and building the VSIX itself require the hosted Mono/Windows matrices and remain
+scheduled evidence for this stacked slice.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
 session indicator, or the WinForms dialog that must render the warning.

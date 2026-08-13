@@ -32,6 +32,15 @@ retained exact-head results, hazards, limitations, and reverse links. Existing
 Copperfin behavior is no longer an allowed requirement source in the issue/PR
 workflow.
 
+The next stacked follow-on adds a strict read-only managed consumer shared by
+the standalone Studio shell, VSIX, and Designer smoke assembly. It calls only
+the descriptor JSON grammar and rejects missing/unknown/wrongly typed fields,
+activation claims, provider-auth authority, stale warning identity,
+duplicate/aliased modes, capability expansion, and elevation. The smoke and
+standalone projects compile warning-free against net472 on Linux; direct Mono
+execution and the Windows VSIX build remain scheduled hosted evidence. This
+client has no activation or executor API.
+
 The stacked follow-on exposes this policy through the real Studio host as a
 versioned read-only text/JSON descriptor. Capabilities come from the evaluator,
 and the descriptor includes default-disabled/advisory state, RBAC/UI/audit

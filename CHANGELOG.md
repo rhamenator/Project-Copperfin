@@ -1,3 +1,11 @@
+- 2026-08-12: Added a strict read-only managed client for the Studio-host v1
+  workspace-agent policy descriptor. The shared Studio/VSIX parser requires
+  the complete typed schema, exact modes and capabilities, current warning,
+  provider-auth separation, descriptor-only state, and no elevation; omitted,
+  unknown, stale, aliased, duplicated, or risk-expanding input fails closed.
+  This slice adds no activation or execution path. See
+  `docs/64-workspace-agent-access-policy.md`.
+
 - 2026-08-12: Corrected the standalone Studio shell-command regression's
   portable-path dependency after Windows Deep Validation exposed an unresolved
   `path_to_utf8_string()` link. The test target now links

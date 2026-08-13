@@ -46,5 +46,7 @@
     <Compile Include="..\Copperfin.VisualStudio\CopperfinStudioHostBridge.cs" Link="Shared\CopperfinStudioHostBridge.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinStudioSnapshotClient.cs" Link="Shared\CopperfinStudioSnapshotClient.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinStudioSnapshotModels.cs" Link="Shared\CopperfinStudioSnapshotModels.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinWorkspaceAgentPolicyClient.cs" Link="Shared\CopperfinWorkspaceAgentPolicyClient.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinWorkspaceAgentPolicyModels.cs" Link="Shared\CopperfinWorkspaceAgentPolicyModels.cs" />
   </ItemGroup>
 </Project>

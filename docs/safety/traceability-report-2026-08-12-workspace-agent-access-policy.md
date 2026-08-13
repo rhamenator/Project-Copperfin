@@ -21,9 +21,9 @@
 
 | Product / documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
-| `DQ-V1-workspace-agent-explicit-authority` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-misuse-walkthrough`; `DV-V1-workspace-agent-independent-review` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-V1-workspace-agent-unrestricted-warning` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-localization`; `DV-V1-workspace-agent-independent-review` | `HZ-doc-command-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-explicit-authority` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-misuse-walkthrough`; `DV-V1-workspace-agent-independent-review` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-unrestricted-warning` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-localization`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-independent-review` | `HZ-doc-command-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-001` | `DV-V1-workspace-agent-policy-regression`; protected exact-head matrix; reverse links in the public policy header and focused test | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 | `RQ-CF-AGENT-002` | `DV-V1-workspace-agent-host-descriptor`; reverse links in the descriptor implementation and process test; protected exact-head matrix | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
@@ -76,6 +76,20 @@ detection `2/2` and no findings; direct `jq` evaluation accepts the emitted
 schema and required invariant fields. A separate Release configuration with
 the archived product-licensing build flag enabled passes the real host process
 and licensing-policy source contract `2/2`; the shipping default remains off.
+
+### DV-V1-workspace-agent-managed-client
+
+`SmokeManagedWorkspaceAgentPolicyContract` verifies that the shared managed
+client invokes only `--workspace-agent-policy --json`, accepts localized prose
+under the invariant schema, and fails closed for unsupported versions, omitted
+false-valued security fields, wrong types, unknown fields, non-descriptor or
+activation-capable envelopes, provider-auth authority, substituted permission
+or warning identifiers, duplicate/aliased modes, capability expansion,
+privilege elevation, and malformed JSON. Both the complete Designer smoke
+assembly and standalone Studio shell compile warning-free against the net472
+contract on Linux. Direct managed execution and the VSIX package build remain
+scheduled for their Mono and Windows hosted matrices; they are not claimed by
+the local compilation evidence.
 
 ### DV-V1-workspace-agent-misuse-walkthrough
 
