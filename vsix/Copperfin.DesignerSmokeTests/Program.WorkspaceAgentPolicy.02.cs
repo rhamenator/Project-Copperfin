@@ -11,6 +11,7 @@ internal static partial class Program
 {
     private static void SmokeStandaloneStudioWorkspaceAgentPolicySurface()
     {
+        // Verification of RQ-CF-AGENT-004.
         var parsed = CopperfinWorkspaceAgentPolicyClient.TryParse(WorkspaceAgentPolicyJson);
         Expect(parsed.Success && parsed.Descriptor is not null,
             "standalone workspace-agent policy smoke requires the validated descriptor fixture");

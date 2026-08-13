@@ -245,6 +245,7 @@ internal sealed class StudioMainForm : Form
         UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
     }
 
+    // RQ-CF-AGENT-004 owns this trusted product-UI preview and error boundary.
     internal string WorkspaceAgentPolicyMenuText => workspaceAgentPolicyMenuItem.Text;
 
     internal StudioWorkspaceAgentPolicyDialog CreateWorkspaceAgentPolicyDialogForTest(

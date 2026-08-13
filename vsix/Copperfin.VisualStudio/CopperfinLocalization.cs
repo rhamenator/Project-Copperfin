@@ -9,6 +9,7 @@ using System.Text;
 
 namespace Copperfin.VisualStudio;
 
+// Workspace-assistant entries provide localization evidence for RQ-CF-AGENT-004.
 internal sealed class CopperfinLocalization
 {
     public const string DefaultLocale = "en";

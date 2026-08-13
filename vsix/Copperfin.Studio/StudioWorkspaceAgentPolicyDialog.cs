@@ -9,6 +9,7 @@ using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
 
+// Implements RQ-CF-AGENT-004: localized, accessible, read-only policy preview.
 internal sealed class StudioWorkspaceAgentPolicyDialog : Form
 {
     private sealed class ModeItem
