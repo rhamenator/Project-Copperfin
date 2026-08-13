@@ -330,11 +330,10 @@ if (-not $observed) {
 param(
     [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
     [Parameter(Mandatory = $true)][string]$CommandName,
+    [Parameter(Mandatory = $true)][string]$ActivityLogPath,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
 )
 $ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName UIAutomationClient
-Add-Type -AssemblyName UIAutomationTypes
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type @"
 using System;
@@ -351,6 +350,9 @@ public static class CopperfinForegroundWindow
 if ($CommandName -ne 'Copperfin.ShowCommandWindow') {
     throw "Unexpected Visual Studio command name '$CommandName'."
 }
+$commonIdeLoadMarker = '<description>End package load [Visual Studio Common IDE Package]</description>'
+$commonIdeAlreadyLoaded = (Test-Path -LiteralPath $ActivityLogPath -PathType Leaf) -and
+    ((Get-Content -LiteralPath $ActivityLogPath -Raw -ErrorAction Stop).Contains($commonIdeLoadMarker))
 $ideProcess = Get-Process -Id $ExpectedProcessId -ErrorAction Stop
 if ($ideProcess.MainWindowHandle -eq [IntPtr]::Zero) {
     throw "Visual Studio process $ExpectedProcessId has no focusable main window."
@@ -362,23 +364,23 @@ if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindo
 }
 [System.Windows.Forms.SendKeys]::SendWait('^%a')
 $deadline = [DateTime]::UtcNow.AddSeconds([Math]::Min($TimeoutSeconds, 30))
-$processCondition = [System.Windows.Automation.PropertyCondition]::new(
-    [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ExpectedProcessId)
-$nameCondition = [System.Windows.Automation.PropertyCondition]::new(
-    [System.Windows.Automation.AutomationElement]::NameProperty, 'Command Window')
-$commandWindowCondition = [System.Windows.Automation.AndCondition]::new(@(
-    $processCondition, $nameCondition))
-$commandWindow = $null
-while ([DateTime]::UtcNow -lt $deadline -and $null -eq $commandWindow) {
-    $commandWindow = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
-        [System.Windows.Automation.TreeScope]::Descendants, $commandWindowCondition)
-    if ($null -eq $commandWindow) { Start-Sleep -Milliseconds 250 }
+$commonIdeLoaded = $commonIdeAlreadyLoaded
+while ([DateTime]::UtcNow -lt $deadline -and -not $commonIdeLoaded) {
+    if (Test-Path -LiteralPath $ActivityLogPath -PathType Leaf) {
+        $logText = Get-Content -LiteralPath $ActivityLogPath -Raw -ErrorAction Stop
+        $commonIdeLoaded = $logText.Contains($commonIdeLoadMarker)
+    }
+    if (-not $commonIdeLoaded) { Start-Sleep -Milliseconds 250 }
 }
-if ($null -eq $commandWindow) {
-    throw "Visual Studio process $ExpectedProcessId did not expose its Command Window before input."
+if (-not $commonIdeLoaded) {
+    throw "Visual Studio process $ExpectedProcessId did not finish loading its Command Window before input."
 }
-$commandWindow.SetFocus()
+Start-Sleep -Milliseconds 500
+[void][CopperfinForegroundWindow]::SetForegroundWindow($ideProcess.MainWindowHandle)
 Start-Sleep -Milliseconds 250
+if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
+    throw "Visual Studio process $ExpectedProcessId could not be refocused for Command-window input."
+}
 [System.Windows.Forms.SendKeys]::SendWait($CommandName)
 [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
 '@, [System.Text.UTF8Encoding]::new($false))
@@ -387,7 +389,8 @@ Start-Sleep -Milliseconds 250
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
             '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-CommandName', 'Copperfin.ShowCommandWindow', '-TimeoutSeconds', "$automationTimeoutSeconds") `
+            '-CommandName', 'Copperfin.ShowCommandWindow', '-ActivityLogPath', $activityLog,
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin Command-window invocation' | Out-Null
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `

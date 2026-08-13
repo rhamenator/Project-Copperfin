@@ -374,8 +374,10 @@ opened Tools through its normal access key, but the hosted window exposed zero
 same-process UI Automation `MenuItem` elements. The corrected verifier focuses
 the exact IDE. Run `31723497158` proved `Ctrl+Alt+A` started the Common IDE
 package, but input raced ahead of Command-window readiness and was lost. The
-corrected verifier opens the Command window through the hosted General profile's
-shortcut, waits for and focuses its exact same-process surface, enters only
+next run proved the hosted Command Window is not a UI Automation descendant.
+The corrected verifier opens it through the hosted General profile's shortcut,
+waits for exact Common IDE package-load completion in the runner-owned
+ActivityLog, refocuses the same IDE, enters only
 `Copperfin.ShowCommandWindow`, proves that
 process's pane,
 explicitly forwards `/Edit` plus the fixture to it, then requires exact

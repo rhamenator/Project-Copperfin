@@ -56,8 +56,9 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
   IDE process launched by the helper. The helper focuses the exact IDE window,
   opens Visual Studio's documented Command window through the hosted General
-  profile's `Ctrl+Alt+A` shortcut, waits for and focuses the exact same-process
-  Command Window surface, enters only the invariant
+  profile's `Ctrl+Alt+A` shortcut, waits for the exact Common IDE package-load
+  completion record in the runner-owned ActivityLog, refocuses the same IDE,
+  enters only the invariant
   `Copperfin.ShowCommandWindow` command, finds the exact Copperfin Command
   surface in that same IDE process, and explicitly forwards `/Edit` plus the
   runner-owned fixture to the now-running IDE. A visible window, launched
@@ -126,10 +127,13 @@ as a hosted UI Automation limitation, not evidence that the Copperfin command
 is absent. Run `31723497158` then proved `Ctrl+Alt+A` started loading Visual
 Studio's Common IDE package, but the helper entered the Copperfin command before
 that package and the Command window finished loading; no Copperfin surface or
-package load followed. The further-corrected helper focuses the exact IDE, opens Visual
+package load followed. Run `31724537954` confirmed that the Command Window is
+not exposed as a UI Automation descendant on this hosted image. The
+further-corrected helper focuses the exact IDE, opens Visual
 Studio's Command window through the hosted General profile's `Ctrl+Alt+A`
-shortcut, waits for and focuses the exact same-process Command Window, enters
-only the invariant `Copperfin.ShowCommandWindow` command, and
+shortcut, waits for the exact Common IDE package-load completion record in the
+runner-owned ActivityLog, refocuses the exact IDE, enters only the invariant
+`Copperfin.ShowCommandWindow` command, and
 proves the resulting pane in that process. It explicitly
 forwards `/Edit` plus the fixture to the running IDE and uses process-scoped UI
 Automation to prove either an exact document descendant or the exact fixture

@@ -44,9 +44,11 @@ opened Tools through its normal English access key, but the hosted window
 exposed zero same-process UI Automation `MenuItem` elements. The next correction
 focuses the exact IDE. Run `31723497158` proved `Ctrl+Alt+A` started loading the
 Common IDE package, but the helper entered the command before the package and
-Command window finished loading. The next correction opens Visual Studio's
-Command window through the hosted General profile's shortcut, waits for and
-focuses the exact same-process surface, enters only the invariant
+Command window finished loading. Run `31724537954` proved the hosted Command
+Window is not a UI Automation descendant. The next correction opens Visual
+Studio's Command window through the hosted General profile's shortcut, waits
+for exact Common IDE package-load completion in the runner-owned ActivityLog,
+refocuses the same IDE, enters only the invariant
 `Copperfin.ShowCommandWindow` command, proves the resulting pane in the same
 process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
 then requires the exact document descendant or fixture

@@ -23,9 +23,11 @@
   same-process UI Automation `MenuItem` elements. The corrected sequence focuses
   the exact IDE. Run `31723497158` proved `Ctrl+Alt+A` started loading the Common
   IDE package, but command input raced ahead of Command-window readiness and was
-  lost. The corrected sequence opens Visual Studio's Command window through the
-  hosted General profile's shortcut, waits for and focuses its exact
-  same-process surface, enters only `Copperfin.ShowCommandWindow`,
+  lost. Run `31724537954` proved the hosted Command Window is not a UI Automation
+  descendant. The corrected sequence opens it through the hosted General
+  profile's shortcut, waits for exact Common IDE package-load completion in the
+  runner-owned ActivityLog, refocuses the same IDE, enters only
+  `Copperfin.ShowCommandWindow`,
   proves that process's command surface, explicitly forwards `/Edit` plus the
   fixture to it, and requires exact document proof plus explicit successful-load
   XML/error rejection in fresh exact-head evidence.
