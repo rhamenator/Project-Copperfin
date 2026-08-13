@@ -110,6 +110,10 @@ bounded, normally closed registration-prime launch and requires an exact path
 match for the installed Copperfin PkgDef import before starting the separate
 evidence IDE. Registration priming is not promoted to command/load evidence;
 `RQ-CF-REL-003` remains `gap` pending exact-head execution and rereview.
+Run `31742224692` reached input-idle registration priming but did not exit
+within the initial 30-second normal-close allowance, so it never reached PkgDef
+proof or the evidence IDE. The corrected allowance is a bounded 120 seconds;
+always-run staging now retains `ActivityLog-registration.xml` on failure.
 
 ## V1 Windows installer lifecycle
 

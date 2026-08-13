@@ -270,7 +270,7 @@ try {
         'Visual Studio registration-prime process did not reach input-idle state within the bounded interval.'
     Assert-Condition $registrationProcess.CloseMainWindow() `
         'Visual Studio registration-prime main window rejected the close request.'
-    Assert-Condition $registrationProcess.WaitForExit(30000) `
+    Assert-Condition $registrationProcess.WaitForExit(120000) `
         'Visual Studio registration-prime process did not exit after the bounded close request.'
     Assert-Condition ($registrationProcess.ExitCode -eq 0) `
         "Visual Studio registration-prime process exited with code $($registrationProcess.ExitCode)."

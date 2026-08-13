@@ -82,6 +82,10 @@
   usable. A separate bounded registration-prime launch now closes normally and
   must prove the exact installed PkgDef import before the later evidence IDE
   starts; registration import alone is never reported as package-load success.
+  Run `31742224692` reached input-idle registration priming but exceeded its
+  initial 30-second normal-close allowance before any product evidence. The
+  allowance is now a bounded 120 seconds, and failure artifacts retain the
+  registration ActivityLog alongside the evidence ActivityLog.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

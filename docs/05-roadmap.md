@@ -438,6 +438,10 @@ a bounded registration-prime launch, requires its ActivityLog to identify the
 exact installed Copperfin PkgDef path, and uses a later process for all command,
 document, and package-load evidence. The requirement remains a gap pending that
 fresh exact-head result and review.
+Run `31742224692` reached an input-idle prime IDE but its normal close exceeded
+the initial 30-second allowance. The bounded allowance is now 120 seconds and
+failure staging retains the registration ActivityLog as well as the evidence
+ActivityLog. The run did not reach product evidence and does not change the gap.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

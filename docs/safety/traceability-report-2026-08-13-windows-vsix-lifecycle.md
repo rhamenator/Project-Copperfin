@@ -230,6 +230,15 @@ subsequent clean IDE process receives the PRG and command inputs and supplies
 the direct UI and package-load evidence. A prime launch or PkgDef import is
 registration evidence only, never command or package-load evidence.
 
+Run `31742224692` reached the registration-prime main window and input-idle
+state, but its normal close took longer than the initial 30-second shutdown
+allowance. It therefore never reached PkgDef-path verification or the evidence
+launch, and the workflow's diagnostic staging initially omitted the new prime
+log. The corrected close allowance is 120 seconds, remains bounded with
+process-tree cleanup, and the always-run diagnostic artifact now includes both
+prime and evidence ActivityLogs. This run is process-scheduling and diagnostic-
+retention evidence only, not a product lifecycle result.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede
