@@ -25,7 +25,9 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
   behind after uninstall.
 - The workflow runs on a disposable hosted Windows VM and selects exactly one
   instance containing the required Core Editor component. Install and uninstall
-  receive that instance ID and the exact `Copperfin.VisualStudio` identity.
+  receive that instance ID and the exact `Copperfin.VisualStudio` identity;
+  both operations use VSIXInstaller's quiet mode without restart/elevation
+  behavior being inferred.
   Profile inventory derives the registry/profile major from the selected
   installation version rather than assuming one Visual Studio release.
 - The precondition rejects an already installed Copperfin extension. The

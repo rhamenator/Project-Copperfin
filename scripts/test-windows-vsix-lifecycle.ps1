@@ -175,7 +175,7 @@ $installedDirectory = $null
 $ideProcess = $null
 try {
     Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
-        '/q', '/norestart', "/instanceIds:$instanceId", $resolvedVsix
+        '/quiet', "/instanceIds:$instanceId", $resolvedVsix
     ) -Name 'Copperfin VSIX installation' | Out-Null
 
     $installed = @(Get-CopperfinExtensionDirectories `
@@ -231,7 +231,7 @@ finally {
     }
     if ($null -ne $installedDirectory) {
         Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
-            '/q', '/norestart', "/instanceIds:$instanceId", '/uninstall:Copperfin.VisualStudio'
+            '/quiet', "/instanceIds:$instanceId", '/uninstall:Copperfin.VisualStudio'
         ) -Name 'Copperfin VSIX uninstall' | Out-Null
     }
 }
