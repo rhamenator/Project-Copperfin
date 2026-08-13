@@ -1,3 +1,19 @@
+- 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
+  to standalone Studio. It displays the validated native policy descriptor,
+  exact modes and capabilities, and current unrestricted warning, while
+  explicitly keeping activation unavailable and offering no consent, session,
+  provider, or execution control. Fixed localized errors prevent raw parser,
+  process, or untrusted host-output details from becoming UI prose while
+  preserving catalog-owned missing-host and timeout guidance, and the mode,
+  capability, status, and Close surfaces have localized accessibility names.
+  The validated versioned warning identity selects catalog-owned warning prose;
+  host-supplied warning text cannot replace trusted UI guidance.
+  Exact-head Linux Mono/Xvfb and Windows Studio/Designer execution pass; the
+  latter also passes all `367/367` native tests. Activation and mutable tooling
+  remain deliberately unimplemented.
+  See
+  `docs/64-workspace-agent-access-policy.md`.
+
 - 2026-08-12: Added a strict read-only managed client for the Studio-host v1
   workspace-agent policy descriptor. The shared Studio/VSIX parser requires
   the complete typed schema, exact modes and capabilities, current warning,

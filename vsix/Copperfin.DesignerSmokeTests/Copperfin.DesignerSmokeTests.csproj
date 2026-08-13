@@ -29,6 +29,7 @@
     <Compile Include="..\Copperfin.Studio\StudioCommandWindowControl.cs" Link="Shared\StudioCommandWindowControl.cs" />
     <Compile Include="..\Copperfin.Studio\StudioTerminalWindowControl.cs" Link="Shared\StudioTerminalWindowControl.cs" />
     <Compile Include="..\Copperfin.Studio\StudioMainForm.cs" Link="Shared\StudioMainForm.cs" />
+    <Compile Include="..\Copperfin.Studio\StudioWorkspaceAgentPolicyDialog.cs" Link="Shared\StudioWorkspaceAgentPolicyDialog.cs" />
     <Compile Include="..\Copperfin.Studio\StudioShellLayoutState.cs" Link="Shared\StudioShellLayoutState.cs" />
     <Compile Include="..\Copperfin.Studio\CopperfinStudioOpenDialogFilter.cs" Link="Shared\CopperfinStudioOpenDialogFilter.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinLocalization.cs" Link="Shared\CopperfinLocalization.cs" />

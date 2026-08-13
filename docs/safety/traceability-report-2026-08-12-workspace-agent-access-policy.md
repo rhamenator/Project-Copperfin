@@ -2,8 +2,8 @@
 
 ## Scope And Procedural Delta
 
-- Governing requirements: `RQ-CF-AGENT-001`, `RQ-CF-AGENT-002`, and
-  `RQ-CF-AGENT-003` in
+- Governing requirements: `RQ-CF-AGENT-001`, `RQ-CF-AGENT-002`,
+  `RQ-CF-AGENT-003`, and `RQ-CF-AGENT-004` in
   `docs/32-recovered-requirements-traceability.md`.
 
 - Boundary: activation of a built-in local coding agent with mutable machine
@@ -22,12 +22,13 @@
 
 | Product / documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
-| `DQ-V1-workspace-agent-explicit-authority` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-misuse-walkthrough`; `DV-V1-workspace-agent-independent-review` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-V1-workspace-agent-unrestricted-warning` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-localization`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-independent-review` | `HZ-doc-command-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-explicit-authority` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-policy-preview`; `DV-V1-workspace-agent-misuse-walkthrough`; `DV-V1-workspace-agent-independent-review` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-unrestricted-warning` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-localization`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-policy-preview`; `DV-V1-workspace-agent-independent-review` | `HZ-doc-command-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-001` | `DV-V1-workspace-agent-policy-regression`; protected exact-head matrix; reverse links in the public policy header and focused test | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 | `RQ-CF-AGENT-002` | `DV-V1-workspace-agent-host-descriptor`; reverse links in the descriptor implementation and process test; protected exact-head matrix | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-003` | `DV-V1-workspace-agent-managed-client`; reverse links in the strict managed client and smoke; exact-head Linux execution `31677215316`; exact-head Windows execution `31677215577` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `RQ-CF-AGENT-004` | `DV-V1-workspace-agent-policy-preview`; reverse links in standalone Studio, the dialog, managed localization, and focused smoke; background-load responsiveness regression; exact product/test head `4d76b3277` passes Linux `31687794634` and Windows `31687794715` | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 
 ## Verification Evidence
 
@@ -102,6 +103,39 @@ success assertions plus all twenty fail-closed cases pass directly. The retained
 `copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
 `sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`
 and expires `2026-11-11T07:18:19Z`.
+
+### DV-V1-workspace-agent-policy-preview
+
+`SmokeStandaloneStudioWorkspaceAgentPolicySurface` requires localized standalone
+Studio menu/dialog chrome, advisory default selection, exactly three modes,
+catalog-owned unrestricted warning prose selected by the validated versioned
+warning identity, explicit false elevation, and only a localized Close button.
+It rejects host-controlled warning text as trusted UI and requires localized
+accessibility names for the mode selector, capability text, and Close action
+and exercises pseudo-localized chrome. The preview
+has no activation, consent, provider, session, or executor control; selecting a
+mode changes displayed information only. Malformed descriptor details map to a
+localized generic UI error while retaining the stable diagnostic code. A
+synthetic nonzero-host result likewise proves that raw host output is retained
+outside the user-facing message rather than treated as trusted prose. Synthetic
+missing-host and timeout results prove their messages are selected from fixed
+catalog text by diagnostic code rather than copied from the result. Both the full Designer smoke assembly
+and standalone Studio shell compile warning-free against net472 locally.
+Exact product/test head `4d76b3277` passes hosted Linux Mono/Xvfb run
+`31687794634`, including the catalog-owned warning and substituted-host-prose
+regression. Its retained `copperfin-managed-ui-linux` artifact has digest
+`sha256:ce816aa5755edea6bbb3750307831a56debbb1a4a1d5aa02aff5150dd028bb60`
+and expires `2026-11-11T09:42:16Z`. Exact-head Windows Deep Validation
+`31687794715` passes `367/367` native tests, builds the VSIX and managed hosts,
+and executes the complete managed, Studio, and Designer smoke selection. The
+direct preview assertions pass for localized access, nonblocking background
+loading and completion, advisory/no-activation chrome, catalog-owned warning
+prose, permanent no-elevation, and pseudo-localization. Its retained
+`copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
+`sha256:83a8f7c96ffefd173b98781f21e0f8498610534164f5acf2f0afb7a6c4114ad9`
+and expires `2026-11-11T09:42:15Z`. Fixture-dependent real-asset cases and the
+separate runtime/xAsset/report/menu deep stages were skipped in this run and
+are not evidence for `RQ-CF-AGENT-004`.
 
 ### DV-V1-workspace-agent-misuse-walkthrough
 
@@ -204,6 +238,13 @@ sessions, audit commits, executor, sandbox, or trusted activation UI.
 The credible failure is unintended file deletion, secret disclosure, process
 execution, or network activity under the user's identity. Misuse severity is
 high; uncontrolled data corruption can intersect `HZ-data-corruption-01`.
+For the read-only preview, an additional boundary failure would be presenting
+untrusted host stderr as product guidance or exposing a control whose purpose
+cannot be determined by assistive technology. The UI therefore maps every
+load failure to fixed localized product prose and labels its interactive and
+read-only surfaces without granting them mutable authority. The versioned
+warning identity selects catalog-owned prose so a stale or substituted host
+cannot replace the title, body, or acknowledgement shown by product UI.
 Current policy controls are disabled-by-default feature state, nondefault
 high-risk RBAC, trusted-UI origin, versioned warning consent, mandatory audit
 availability, and no elevation. Required integration controls still to ship

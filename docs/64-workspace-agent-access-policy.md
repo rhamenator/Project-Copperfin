@@ -1,7 +1,7 @@
 # Workspace-Agent Access Policy
 
 Governing product/derived requirements: `RQ-CF-AGENT-001`,
-`RQ-CF-AGENT-002`, and `RQ-CF-AGENT-003` in
+`RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, and `RQ-CF-AGENT-004` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -101,12 +101,30 @@ stale identities, type substitutions, and any capability expansion fail
 closed. This client is
 read-only and does not supply an activation or execution method.
 
+Standalone Studio exposes that validated descriptor through a localized
+**Workspace Assistant Access** preview under **View**. The dialog defaults to
+advisory, lets the user inspect all three exact modes and capabilities, and
+uses the host's validated current warning identity to select catalog-owned
+warning prose when unrestricted mode is selected. Host-provided warning text is
+never rendered as trusted product guidance.
+It states that activation is unavailable and contains only a Close button: it
+does not enable a feature, grant permission, record consent, start a session,
+authenticate a provider, or execute a tool. Invalid descriptor diagnostics are
+kept behind fixed localized UI text rather than exposing raw parser, process,
+or untrusted host-output details. Missing-host and timeout diagnostics select
+their catalog-owned actionable guidance; invalid, unknown, start-failure, and
+nonzero-host-output cases use the generic verification error. The mode
+selector, capability text, status, and Close action expose localized
+accessibility names. Selecting a mode only updates the displayed descriptor
+information.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
 localized warning, fail-closed admission, read-only Studio-host descriptor,
 and strict read-only managed-consumer contracts with direct regression
-coverage.
+coverage. A localized read-only Studio preview makes that contract visible
+without weakening the activation boundary.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.
@@ -147,9 +165,21 @@ grammar and success assertions plus all twenty fail-closed cases. The retained
 `copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
 `sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`
 and expires `2026-11-11T07:18:19Z`.
+The read-only preview's exact product/test head `4d76b3277` passes Linux
+Mono/Xvfb run `31687794634`; its retained `copperfin-managed-ui-linux`
+artifact has digest
+`sha256:ce816aa5755edea6bbb3750307831a56debbb1a4a1d5aa02aff5150dd028bb60`
+and expires `2026-11-11T09:42:16Z`. Windows Deep Validation `31687794715`
+passes `367/367` native tests and the complete managed/Studio/Designer
+selection, including direct localized-preview, background-load,
+catalog-owned-warning, and pseudo-localization assertions. Its retained
+`copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
+`sha256:83a8f7c96ffefd173b98781f21e0f8498610534164f5acf2f0afb7a6c4114ad9`
+and expires `2026-11-11T09:42:15Z`.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
-session indicator, or the WinForms dialog that must render the warning.
+session indicator, or the WinForms consent dialog that must render and bind the
+warning during a real activation attempt.
 
 Those surfaces must consume this policy rather than duplicate it. The trusted
 host must record content-free activation outcome events, keep unrestricted

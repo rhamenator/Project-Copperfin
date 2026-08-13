@@ -1,0 +1,116 @@
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
+// Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
+
+using System;
+using System.Linq;
+using System.Threading;
+
+namespace Copperfin.VisualStudio;
+
+internal static partial class Program
+{
+    private static void SmokeStandaloneStudioWorkspaceAgentPolicySurface()
+    {
+        // Verification of RQ-CF-AGENT-004.
+        var parsed = CopperfinWorkspaceAgentPolicyClient.TryParse(WorkspaceAgentPolicyJson);
+        Expect(parsed.Success && parsed.Descriptor is not null,
+            "standalone workspace-agent policy smoke requires the validated descriptor fixture");
+        if (parsed.Descriptor is null)
+        {
+            return;
+        }
+
+        var spanish = new CopperfinLocalization("es-419");
+        using var form = new StudioMainForm(spanish, new InMemoryStudioShellLayoutStore());
+        Expect(form.WorkspaceAgentPolicyMenuText == "Acceso del asistente del área de trabajo...",
+            "standalone Studio should expose localized workspace-assistant policy access");
+        var invalidPolicy = CopperfinWorkspaceAgentPolicyClient.TryParse("not-json");
+        Expect(form.WorkspaceAgentPolicyErrorTextForTest(invalidPolicy) ==
+               "Copperfin no pudo verificar la política de acceso del asistente del área de trabajo.",
+            "standalone Studio should not expose raw invariant parser details as user-facing policy errors");
+        var failedHost = new CopperfinWorkspaceAgentPolicyResult
+        {
+            Success = false,
+            DiagnosticCode = "workspace-agent-policy.host-failed",
+            Error = "untrusted host stderr"
+        };
+        Expect(form.WorkspaceAgentPolicyErrorTextForTest(failedHost) ==
+               "Copperfin no pudo verificar la política de acceso del asistente del área de trabajo.",
+            "standalone Studio should not expose raw host output as user-facing policy errors");
+        Expect(spanish.Text("Studio.WorkspaceAgent.Error.Generic") ==
+               "Copperfin no pudo mostrar la política de acceso del asistente del área de trabajo." &&
+               new CopperfinLocalization(CopperfinLocalization.PseudoLocale)
+                   .Text("Studio.WorkspaceAgent.Error.Generic") != "Studio.WorkspaceAgent.Error.Generic",
+            "unexpected workspace-assistant UI failures should resolve to fixed localized prose");
+        var missingHost = new CopperfinWorkspaceAgentPolicyResult
+        {
+            Success = false,
+            DiagnosticCode = "workspace-agent-policy.host-missing",
+            Error = "untrusted replacement text"
+        };
+        var timedOutHost = new CopperfinWorkspaceAgentPolicyResult
+        {
+            Success = false,
+            DiagnosticCode = "workspace-agent-policy.host-timed-out",
+            Error = "untrusted replacement text"
+        };
+        Expect(form.WorkspaceAgentPolicyErrorTextForTest(missingHost) ==
+               "No se encontró el host de Copperfin Studio. Defina COPPERFIN_STUDIO_HOST_PATH o coloque/compile el host junto al shell administrado o bajo la salida de compilación del repositorio." &&
+               form.WorkspaceAgentPolicyErrorTextForTest(timedOutHost) ==
+               "Tiempo de espera agotado esperando el host de Copperfin Studio.",
+            "standalone Studio should select safe catalog-owned host guidance by diagnostic code");
+
+        using var loaderStarted = new ManualResetEventSlim(false);
+        using var loaderFinished = new ManualResetEventSlim(false);
+        using var releaseLoader = new ManualResetEventSlim(false);
+        using var asyncForm = new StudioMainForm(
+            spanish,
+            new InMemoryStudioShellLayoutStore(),
+            _ =>
+            {
+                loaderStarted.Set();
+                releaseLoader.Wait();
+                loaderFinished.Set();
+                return parsed;
+            });
+        var pendingLoad = asyncForm.LoadWorkspaceAgentPolicyForTestAsync();
+        try
+        {
+            Expect(loaderStarted.Wait(TimeSpan.FromSeconds(2)) && !pendingLoad.IsCompleted,
+                "workspace-assistant policy host loading should not block the Studio UI caller");
+        }
+        finally
+        {
+            releaseLoader.Set();
+        }
+        Expect(loaderFinished.Wait(TimeSpan.FromSeconds(2)),
+            "workspace-assistant policy background loader should finish after release");
+
+        using var dialog = form.CreateWorkspaceAgentPolicyDialogForTest(parsed.Descriptor);
+        var dialogButtons = FindButtons(dialog).ToList();
+        Expect(dialog.Text == "Acceso del asistente del área de trabajo" &&
+               dialog.ActivationStatusText == "Vista previa de solo lectura; la activación del asistente aún no está disponible." &&
+               dialog.ModeCount == 3 && dialog.SelectedModeName == "advisory" &&
+               dialog.ModeSelectorAccessibleName == "Modo de acceso:" &&
+               dialog.DetailsAccessibleName == "Capacidades" &&
+               dialogButtons.Count == 1 && dialogButtons[0].Text == "Cerrar" &&
+               dialogButtons[0].AccessibleName == "Cerrar",
+            "workspace-assistant policy surface should localize its chrome and default to advisory without activation");
+
+        dialog.SelectModeForTest("unrestricted_local");
+        Expect(dialog.SelectedModeName == "unrestricted_local" &&
+               dialog.DetailsText.Contains("Habilitar acceso local sin restricciones para el agente?", StringComparison.Ordinal) &&
+               dialog.DetailsText.Contains("El inicio de sesion con el proveedor no concede este acceso.", StringComparison.Ordinal) &&
+               dialog.DetailsText.Contains("Entiendo los riesgos y deseo habilitar el acceso sin restricciones.", StringComparison.Ordinal) &&
+               !dialog.DetailsText.Contains("[!! localized", StringComparison.Ordinal) &&
+               dialog.DetailsText.Contains("Elevar privilegios: Falso", StringComparison.Ordinal),
+            "unrestricted policy preview should show catalog-owned warning prose and permanent no-elevation state");
+
+        var pseudo = new CopperfinLocalization(CopperfinLocalization.PseudoLocale);
+        using var pseudoDialog = new StudioWorkspaceAgentPolicyDialog(parsed.Descriptor, pseudo);
+        Expect(pseudoDialog.Text == pseudo.Text("Studio.WorkspaceAgent.Title") &&
+               pseudoDialog.ActivationStatusText == pseudo.Text("Studio.WorkspaceAgent.ActivationUnavailable"),
+            "workspace-assistant policy surface should remain pseudo-localization ready");
+    }
+}

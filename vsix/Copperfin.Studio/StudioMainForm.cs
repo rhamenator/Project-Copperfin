@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
@@ -30,10 +31,13 @@ internal sealed class StudioMainForm : Form
     private readonly ToolStripMenuItem debugProjectMenuItem;
     private readonly ToolStripMenuItem commandWindowMenuItem;
     private readonly ToolStripMenuItem terminalWindowMenuItem;
+    private readonly ToolStripMenuItem workspaceAgentPolicyMenuItem;
     private readonly ToolStripMenuItem floatCommandWindowMenuItem;
     private readonly ToolStripMenuItem floatTerminalWindowMenuItem;
     private readonly CopperfinLocalization localization;
     private readonly IStudioShellLayoutStore shellLayoutStore;
+    private readonly Func<CopperfinLocalization, CopperfinWorkspaceAgentPolicyResult>
+        workspaceAgentPolicyLoader;
     private readonly Dictionary<string, TabPage> openDocuments =
         new(CopperfinDocumentPathIdentity.CreateComparer());
     private const int DefaultSplitterDistance = 720;
@@ -51,9 +55,22 @@ internal sealed class StudioMainForm : Form
     public StudioMainForm(
         CopperfinLocalization? localization = null,
         IStudioShellLayoutStore? shellLayoutStore = null)
+        : this(
+            localization,
+            shellLayoutStore,
+            CopperfinWorkspaceAgentPolicyClient.TryLoad)
+    {
+    }
+
+    internal StudioMainForm(
+        CopperfinLocalization? localization,
+        IStudioShellLayoutStore? shellLayoutStore,
+        Func<CopperfinLocalization, CopperfinWorkspaceAgentPolicyResult> workspaceAgentPolicyLoader)
     {
         this.localization = localization ?? CopperfinLocalization.FromEnvironment();
         this.shellLayoutStore = shellLayoutStore ?? StudioShellLayoutFileStore.CreateDefault();
+        this.workspaceAgentPolicyLoader = workspaceAgentPolicyLoader ??
+            throw new ArgumentNullException(nameof(workspaceAgentPolicyLoader));
 
         Text = this.localization.Text("Studio.AppTitle");
         Width = 1480;
@@ -137,6 +154,10 @@ internal sealed class StudioMainForm : Form
             Checked = true
         };
         terminalWindowMenuItem.CheckedChanged += (_, _) => SetTerminalWindowVisible(terminalWindowMenuItem.Checked);
+        workspaceAgentPolicyMenuItem = new ToolStripMenuItem(
+            this.localization.Text("Studio.WorkspaceAgent.Menu"),
+            null,
+            OnWorkspaceAgentPolicyMenuItemClick);
         floatCommandWindowMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.FloatCommandWindowMenu"))
         {
             CheckOnClick = true
@@ -161,6 +182,7 @@ internal sealed class StudioMainForm : Form
         };
         viewMenu.DropDownItems.Add(commandWindowMenuItem);
         viewMenu.DropDownItems.Add(terminalWindowMenuItem);
+        viewMenu.DropDownItems.Add(workspaceAgentPolicyMenuItem);
         viewMenu.DropDownItems.Add(new ToolStripSeparator());
         viewMenu.DropDownItems.Add(floatCommandWindowMenuItem);
         viewMenu.DropDownItems.Add(floatTerminalWindowMenuItem);
@@ -237,6 +259,104 @@ internal sealed class StudioMainForm : Form
             RestoreShellLayout();
         };
         UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
+    }
+
+    // RQ-CF-AGENT-004 owns this trusted product-UI preview and error boundary.
+    internal string WorkspaceAgentPolicyMenuText => workspaceAgentPolicyMenuItem.Text;
+
+    internal StudioWorkspaceAgentPolicyDialog CreateWorkspaceAgentPolicyDialogForTest(
+        CopperfinWorkspaceAgentPolicyDescriptor descriptor)
+    {
+        return new StudioWorkspaceAgentPolicyDialog(descriptor, localization);
+    }
+
+    private async Task ShowWorkspaceAgentPolicyAsync()
+    {
+        workspaceAgentPolicyMenuItem.Enabled = false;
+        try
+        {
+            CopperfinWorkspaceAgentPolicyResult result;
+            try
+            {
+                result = await LoadWorkspaceAgentPolicyForTestAsync();
+            }
+            catch (Exception ex)
+            {
+                result = new CopperfinWorkspaceAgentPolicyResult
+                {
+                    Success = false,
+                    DiagnosticCode = "workspace-agent-policy.host-failed",
+                    Error = ex.Message
+                };
+            }
+            if (IsDisposed || Disposing)
+            {
+                return;
+            }
+            if (!result.Success || result.Descriptor is null)
+            {
+                MessageBox.Show(
+                    this,
+                    WorkspaceAgentPolicyErrorText(result),
+                    localization.Text("Studio.WorkspaceAgent.Title"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            using var dialog = new StudioWorkspaceAgentPolicyDialog(result.Descriptor, localization);
+            dialog.ShowDialog(this);
+        }
+        catch (Exception)
+        {
+            // Keep unexpected UI failures inside fixed, localized product
+            // prose; raw exception detail remains outside the dialog boundary.
+            if (!IsDisposed && !Disposing)
+            {
+                MessageBox.Show(
+                    this,
+                    localization.Text("Studio.WorkspaceAgent.Error.Generic"),
+                    localization.Text("Studio.WorkspaceAgent.Title"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+        }
+        finally
+        {
+            if (!IsDisposed && !Disposing)
+            {
+                workspaceAgentPolicyMenuItem.Enabled = true;
+            }
+        }
+    }
+
+    private void OnWorkspaceAgentPolicyMenuItemClick(object? sender, EventArgs e)
+    {
+        _ = ShowWorkspaceAgentPolicyAsync();
+    }
+
+    internal Task<CopperfinWorkspaceAgentPolicyResult> LoadWorkspaceAgentPolicyForTestAsync()
+    {
+        return Task.Run(() => workspaceAgentPolicyLoader(localization));
+    }
+
+    internal string WorkspaceAgentPolicyErrorTextForTest(CopperfinWorkspaceAgentPolicyResult result)
+    {
+        return WorkspaceAgentPolicyErrorText(result);
+    }
+
+    private string WorkspaceAgentPolicyErrorText(CopperfinWorkspaceAgentPolicyResult result)
+    {
+        // Result.Error remains available to diagnostics, but raw parser,
+        // process, and host output are not trusted user-facing prose.
+        return result.DiagnosticCode switch
+        {
+            "workspace-agent-policy.host-missing" =>
+                localization.Text("AssetEditor.Dialog.StudioHostMissing"),
+            "workspace-agent-policy.host-timed-out" =>
+                localization.Text("AssetEditor.Dialog.StudioHostTimedOut"),
+            _ => localization.Text("Studio.WorkspaceAgent.InvalidPolicy")
+        };
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)
