@@ -56,8 +56,9 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
   IDE process launched by the helper. The controlled IDE opens Visual Studio's
   built-in Command Window through startup `/Command View.CommandWindow`. After
-  a parent-side bounded interval, the input helper focuses only that exact IDE
-  and enters only the invariant `Copperfin.ShowCommandWindow` pane-show
+  a parent-side bounded interval, the input helper requires the foreground
+  window to be owned by that exact IDE process and enters only the invariant
+  `Copperfin.ShowCommandWindow` pane-show
   command. Hosted Visual Studio may defer the startup command until that sender
   exits, so the parent waits within another bound and repeats only that same
   idempotent command. Neither attempt admits evidence by itself; the helper
@@ -142,8 +143,11 @@ the Common IDE package again began loading only after final command input, so
 the Copperfin pane remained absent. Run `31729613650` proved the IDE-owned
 startup command was likewise deferred until the first invariant input sender
 exited; the Common IDE package then loaded successfully, but that first input
-was already lost. The further-corrected sequence waits within another
-parent-owned bound and repeats only the same idempotent
+was already lost. Run `31730718257` reached the second attempt but exposed a
+verification gap: exact-main-HWND equality could not distinguish an unrelated
+foreground window from a same-process Visual Studio owned tool window. The
+further-corrected verifier resolves the foreground HWND's Win32 process owner,
+requires the exact controlled IDE PID, and repeats only the same idempotent
 `Copperfin.ShowCommandWindow` pane-show command, and
 proves the resulting pane in that process. It explicitly
 forwards `/Edit` plus the fixture to the running IDE and uses process-scoped UI

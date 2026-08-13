@@ -343,6 +343,9 @@ public static class CopperfinForegroundWindow
 
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    public static extern uint GetWindowThreadProcessId(IntPtr windowHandle, out uint processId);
 }
 "@
 if ($CommandName -ne 'Copperfin.ShowCommandWindow') {
@@ -354,8 +357,11 @@ if ($ideProcess.MainWindowHandle -eq [IntPtr]::Zero) {
 }
 [void][CopperfinForegroundWindow]::SetForegroundWindow($ideProcess.MainWindowHandle)
 Start-Sleep -Milliseconds 500
-if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
-    throw "Visual Studio process $ExpectedProcessId could not be focused for Command-window input."
+$foregroundWindow = [CopperfinForegroundWindow]::GetForegroundWindow()
+[uint32]$foregroundProcessId = 0
+[void][CopperfinForegroundWindow]::GetWindowThreadProcessId($foregroundWindow, [ref]$foregroundProcessId)
+if ($foregroundProcessId -ne [uint32]$ExpectedProcessId) {
+    throw "Visual Studio process $ExpectedProcessId did not own the foreground window for Command-window input (owner $foregroundProcessId)."
 }
 [System.Windows.Forms.SendKeys]::SendWait($CommandName)
 [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')

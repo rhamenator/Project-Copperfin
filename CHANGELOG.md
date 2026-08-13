@@ -37,7 +37,10 @@
   the controlled IDE's `/Command View.CommandWindow` startup request. Run
   `31729613650` proved that request was deferred until the first invariant input
   sender exited; the Common IDE package then loaded, but the input was lost.
-  The corrected sequence waits within another parent-owned bound and repeats only
+  Run `31730718257` reached the second attempt but exact-main-HWND equality
+  could not distinguish an unrelated foreground window from a same-process
+  Visual Studio tool window. The corrected sequence requires the foreground
+  HWND's Win32 process owner to be the exact controlled IDE PID and repeats only
   `Copperfin.ShowCommandWindow`,
   proves that process's command surface, explicitly forwards `/Edit` plus the
   fixture to it, and requires exact document proof plus explicit successful-load

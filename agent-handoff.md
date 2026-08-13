@@ -59,7 +59,10 @@ Copperfin pane appeared. The next correction launches the controlled IDE with
 `/Command View.CommandWindow`. Run `31729613650` proved that startup command
 was deferred until the first invariant input sender exited; the Common IDE
 package then loaded successfully, but the input was lost. The next correction
-waits within another parent-owned bound and repeats only the same idempotent
+reached its second attempt in run `31730718257`, but exact-main-HWND equality
+could not distinguish an unrelated foreground window from a same-process
+Visual Studio tool window. It now resolves the foreground HWND's Win32 process
+owner, requires the exact controlled IDE PID, and repeats only the same idempotent
 `Copperfin.ShowCommandWindow` command, proves the resulting pane in the same
 process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
 then requires the exact document descendant or fixture
