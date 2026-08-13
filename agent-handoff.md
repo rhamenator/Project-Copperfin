@@ -118,6 +118,14 @@ exact installed PkgDef was imported, but the prime IDE remained alive after a
 120-second close allowance. The corrected cleanup requests normal close, then
 uses bounded process-tree termination before the evidence IDE; always-run
 staging retains `ActivityLog-registration.xml` on failure.
+Run `31743866527` did not pass the existing 360-second installer bound. The
+unchanged-head rerun `31744711631` completed install, proved exact installed-
+PkgDef import, and reached the evidence IDE, but startup `/Command` never began
+loading `CopperfinPackage` and no pane appeared. The verifier now opens the IDE
+with the exact runner-owned PRG, invokes the installed `Copperfin Command` item
+from the process-scoped Tools menu through UI Automation, and independently
+requires the pane plus successful package-load evidence. `RQ-CF-REL-003`
+remains `gap` pending exact-head execution and rereview.
 
 ## V1 Windows installer lifecycle
 

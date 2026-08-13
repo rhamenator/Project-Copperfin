@@ -445,6 +445,13 @@ allowance. The corrected harness requests a normal close, then bounds cleanup
 with process-tree termination before launching the evidence IDE. Failure staging
 retains the registration ActivityLog as well as the evidence ActivityLog. The
 runs did not reach product evidence and do not change the gap.
+Run `31743866527` independently hit the existing 360-second installer bound;
+unchanged-head rerun `31744711631` then completed install and registration but
+proved that startup `/Command` still did not activate `CopperfinPackage` or its
+pane. The corrected evidence path uses process-scoped UI Automation to expand
+the installed Tools menu and invoke the exact `Copperfin Command` item, then
+separately requires the pane, PRG document, and package-load record. The
+requirement remains a gap pending fresh exact-head evidence and review.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

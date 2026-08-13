@@ -300,7 +300,7 @@ try {
     $startInfo.FileName = $devenv
     $startInfo.UseShellExecute = $false
     $startInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @('/NoSplash', '/Log', $activityLog, $fixturePrg, '/Command', 'Copperfin.ShowCommandWindow')) {
+    foreach ($argument in @('/NoSplash', '/Log', $activityLog, $fixturePrg)) {
         [void]$startInfo.ArgumentList.Add($argument)
     }
     $ideProcess = [System.Diagnostics.Process]::Start($startInfo)
@@ -323,6 +323,7 @@ param(
     [Parameter(Mandatory = $true)][string]$ExpectedName,
     [string]$AlternateExpectedName = '',
     [switch]$AllowProcessWindowTitlePrefix,
+    [string]$InvokeToolsMenuItem = '',
     [Parameter(Mandatory = $true)][string]$EvidenceDescription,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
 )
@@ -337,6 +338,7 @@ if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
 $observed = $false
 $lastAutomationError = ''
 $lastProcessWindowName = ''
+$menuItemInvoked = [string]::IsNullOrWhiteSpace($InvokeToolsMenuItem)
 while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
     try {
         $processCondition = [System.Windows.Automation.PropertyCondition]::new(
@@ -345,6 +347,54 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
             [System.Windows.Automation.TreeScope]::Children, $processCondition)
         if ($null -ne $ide) {
             $lastProcessWindowName = [string]$ide.Current.Name
+            if (-not $menuItemInvoked) {
+                $menuItemCondition = [System.Windows.Automation.PropertyCondition]::new(
+                    [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+                    [System.Windows.Automation.ControlType]::MenuItem)
+                $toolsNameCondition = [System.Windows.Automation.PropertyCondition]::new(
+                    [System.Windows.Automation.AutomationElement]::NameProperty, 'Tools')
+                $toolsCondition = [System.Windows.Automation.AndCondition]::new(
+                    $menuItemCondition, $toolsNameCondition)
+                $toolsMenu = $ide.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $toolsCondition)
+                if ($null -ne $toolsMenu) {
+                    $expandPattern = $null
+                    if ($toolsMenu.TryGetCurrentPattern(
+                            [System.Windows.Automation.ExpandCollapsePattern]::Pattern,
+                            [ref]$expandPattern)) {
+                        $expandPattern.Expand()
+                    }
+                    else {
+                        $invokeToolsPattern = $null
+                        if ($toolsMenu.TryGetCurrentPattern(
+                                [System.Windows.Automation.InvokePattern]::Pattern,
+                                [ref]$invokeToolsPattern)) {
+                            $invokeToolsPattern.Invoke()
+                        }
+                    }
+                    Start-Sleep -Milliseconds 500
+                    $commandNameCondition = [System.Windows.Automation.PropertyCondition]::new(
+                        [System.Windows.Automation.AutomationElement]::NameProperty, $InvokeToolsMenuItem)
+                    $commandCondition = [System.Windows.Automation.AndCondition]::new(
+                        $menuItemCondition, $commandNameCondition)
+                    $processCommandCondition = [System.Windows.Automation.AndCondition]::new(
+                        $processCondition, $commandCondition)
+                    $commandItem = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+                        [System.Windows.Automation.TreeScope]::Descendants, $processCommandCondition)
+                    if ($null -ne $commandItem) {
+                        $invokeCommandPattern = $null
+                        if ($commandItem.TryGetCurrentPattern(
+                                [System.Windows.Automation.InvokePattern]::Pattern,
+                                [ref]$invokeCommandPattern)) {
+                            $invokeCommandPattern.Invoke()
+                            $menuItemInvoked = $true
+                        }
+                    }
+                }
+            }
+            if (-not $menuItemInvoked) {
+                Start-Sleep -Milliseconds 500
+                continue
+            }
             if ($AllowProcessWindowTitlePrefix -and
                     $ide.Current.Name.StartsWith("$ExpectedName - ", [System.StringComparison]::OrdinalIgnoreCase)) {
                 $observed = $true
@@ -375,14 +425,15 @@ if (-not $observed) {
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
-    Write-Host 'VSIX lifecycle phase: observe startup-routed Copperfin command'
+    Write-Host 'VSIX lifecycle phase: invoke installed Copperfin command from Tools menu'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
             '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
+            '-InvokeToolsMenuItem', 'Copperfin Command',
             '-EvidenceDescription', 'Registered Copperfin Command surface',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Copperfin startup-command UI Automation observation' | Out-Null
+        -Name 'Copperfin Tools-menu command UI Automation observation' | Out-Null
 
     Write-Host 'VSIX lifecycle phase: observe startup-opened runner-owned PRG'
     Invoke-BoundedProcess `

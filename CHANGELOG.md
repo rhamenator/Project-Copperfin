@@ -89,6 +89,12 @@
   remained alive after a 120-second close allowance. The harness now requests a
   normal close, then performs bounded process-tree cleanup before evidence
   launch; failure artifacts retain both ActivityLogs.
+  Run `31743866527` hit the existing bounded installer timeout; unchanged-head
+  rerun `31744711631` completed install and registration but proved startup
+  `/Command` still never loaded `CopperfinPackage` or opened its pane. The
+  evidence IDE now uses process-scoped UI Automation to invoke the exact
+  installed `Copperfin Command` item from the Tools menu, then independently
+  requires the command pane, runner-owned PRG document, and package-load record.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

@@ -227,9 +227,11 @@ separate bounded registration-prime launch after `/updateconfiguration`, request
 a normal close with bounded process-tree termination as fallback, and parses
 its retained ActivityLog to require an exact
 case-insensitive path match for the installed Copperfin PkgDef import. Only a
-subsequent clean IDE process receives the PRG and command inputs and supplies
-the direct UI and package-load evidence. A prime launch or PkgDef import is
-registration evidence only, never command or package-load evidence.
+subsequent clean IDE process receives the PRG input; process-scoped UI
+Automation expands its Tools menu, invokes the exact `Copperfin Command` item,
+and independently observes the pane and package-load evidence. A prime launch
+and PkgDef import are registration evidence only; a startup command input is
+not accepted as command or package-load evidence.
 
 Run `31742224692` reached the registration-prime main window and input-idle
 state, but its normal close took longer than the initial 30-second shutdown
@@ -244,6 +246,18 @@ termination if necessary, and still requires the exact PkgDef-path proof before
 the evidence launch. Always-run diagnostics retain both prime and evidence
 ActivityLogs. These runs are process-scheduling and diagnostic-retention
 evidence only, not product lifecycle results.
+
+Run `31743866527` did not reach registration or product evidence because
+`VSIXInstaller.exe` exceeded its existing 360-second bound. An unchanged-head
+rerun, `31744711631`, completed installation, proved exact installed-PkgDef
+import, bounded the non-exiting prime IDE with process-tree cleanup, and reached
+the separate evidence IDE. Its cached extension was enabled and current, but
+the startup `/Command Copperfin.ShowCommandWindow` input never began loading
+`CopperfinPackage` and no pane appeared during the bounded observation. The
+corrected verifier removes startup-command inference and invokes the exact
+installed Tools-menu item through UI Automation in the controlled IDE process;
+the resulting pane and successful package-load record remain independently
+required. The run is retained negative command-activation evidence only.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
