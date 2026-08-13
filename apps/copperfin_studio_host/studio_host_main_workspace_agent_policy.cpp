@@ -6,6 +6,8 @@
 
 #include <array>
 
+// Implements RQ-CF-AGENT-002: a read-only, descriptor-only host bridge.
+
 namespace cf_studio_host_main_detail {
 namespace {
 

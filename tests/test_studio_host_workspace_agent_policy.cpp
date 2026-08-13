@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string>
 
+// Verification of RQ-CF-AGENT-002.
+
 namespace {
 int failures = 0;
 

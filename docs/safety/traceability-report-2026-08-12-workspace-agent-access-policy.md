@@ -2,7 +2,7 @@
 
 ## Scope And Procedural Delta
 
-- Governing requirement: `RQ-CF-AGENT-001` in
+- Governing requirements: `RQ-CF-AGENT-001` and `RQ-CF-AGENT-002` in
   `docs/32-recovered-requirements-traceability.md`.
 
 - Boundary: activation of a built-in local coding agent with mutable machine
@@ -25,6 +25,7 @@
 | `DQ-V1-workspace-agent-unrestricted-warning` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-localization`; `DV-V1-workspace-agent-independent-review` | `HZ-doc-command-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-001` | `DV-V1-workspace-agent-policy-regression`; protected exact-head matrix; reverse links in the public policy header and focused test | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
+| `RQ-CF-AGENT-002` | `DV-V1-workspace-agent-host-descriptor`; reverse links in the descriptor implementation and process test; exact-head hosted matrix pending | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 ## Verification Evidence
 
