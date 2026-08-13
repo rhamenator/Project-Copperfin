@@ -15,6 +15,12 @@ native-ownership contract, three-host workflow contract, and complete isolation
 metadata are load-bearing. GCC Release passes the complete focused selection
 `6/6`; Clang 21 ASan/UBSan passes `5/5` without findings. Native-ownership and
 POSIX-permission mutations fail at their intended assertions and are restored.
+Corrected exact implementation head `2452a00ac` passes all eleven protected
+checks: Generated Launcher Validation `31653594802` on Windows, Ubuntu, and
+macOS; Windows environment/path `31653594830`; Win32/x64 DECLARE
+`31653594843`; GCC/Clang executable-path `31653594824`; DCO `31653593588`;
+and both Socket checks. Automated review's missing direct `<string>` include is
+fixed in that head, and its only thread is answered, resolved, and outdated.
 See `docs/61-portable-exclusive-file-boundary.md`.
 
 ## V1 portable VFP path-identity comparison
