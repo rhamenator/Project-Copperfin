@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+cmake_minimum_required(VERSION 3.20)
+
 if(NOT DEFINED SOURCE_DIR OR "${SOURCE_DIR}" STREQUAL "")
     message(FATAL_ERROR "SOURCE_DIR is required")
 endif()
