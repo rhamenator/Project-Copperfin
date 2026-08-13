@@ -278,9 +278,16 @@ internal sealed class StudioMainForm : Form
 
     private string WorkspaceAgentPolicyErrorText(CopperfinWorkspaceAgentPolicyResult result)
     {
-        // Result.Error remains available to diagnostics, but host output and
-        // process details are not trusted user-facing prose.
-        return localization.Text("Studio.WorkspaceAgent.InvalidPolicy");
+        // Result.Error remains available to diagnostics, but raw parser,
+        // process, and host output are not trusted user-facing prose.
+        return result.DiagnosticCode switch
+        {
+            "workspace-agent-policy.host-missing" =>
+                localization.Text("AssetEditor.Dialog.StudioHostMissing"),
+            "workspace-agent-policy.host-timed-out" =>
+                localization.Text("AssetEditor.Dialog.StudioHostTimedOut"),
+            _ => localization.Text("Studio.WorkspaceAgent.InvalidPolicy")
+        };
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)

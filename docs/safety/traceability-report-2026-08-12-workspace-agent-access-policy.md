@@ -115,7 +115,9 @@ has no activation, consent, provider, session, or executor control; selecting a
 mode changes displayed information only. Malformed descriptor details map to a
 localized generic UI error while retaining the stable diagnostic code. A
 synthetic nonzero-host result likewise proves that raw host output is retained
-outside the user-facing message rather than treated as trusted prose. Both the full Designer smoke assembly
+outside the user-facing message rather than treated as trusted prose. Synthetic
+missing-host and timeout results prove their messages are selected from fixed
+catalog text by diagnostic code rather than copied from the result. Both the full Designer smoke assembly
 and standalone Studio shell compile warning-free against net472 locally;
 direct Mono and Windows hosted execution remain scheduled before merge.
 

@@ -108,10 +108,13 @@ shows the host-provided current warning when unrestricted mode is selected.
 It states that activation is unavailable and contains only a Close button: it
 does not enable a feature, grant permission, record consent, start a session,
 authenticate a provider, or execute a tool. Invalid descriptor diagnostics are
-kept behind a localized generic UI error rather than exposing parser, process,
-or untrusted host-output details. The mode selector, capability text, status,
-and Close action expose localized accessibility names. Selecting a mode only
-updates the displayed descriptor information.
+kept behind fixed localized UI text rather than exposing raw parser, process,
+or untrusted host-output details. Missing-host and timeout diagnostics select
+their catalog-owned actionable guidance; invalid, unknown, start-failure, and
+nonzero-host-output cases use the generic verification error. The mode
+selector, capability text, status, and Close action expose localized
+accessibility names. Selecting a mode only updates the displayed descriptor
+information.
 
 ## Current implementation and remaining work
 

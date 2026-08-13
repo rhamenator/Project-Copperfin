@@ -36,6 +36,23 @@ internal static partial class Program
         Expect(form.WorkspaceAgentPolicyErrorTextForTest(failedHost) ==
                "Copperfin no pudo verificar la política de acceso del asistente del área de trabajo.",
             "standalone Studio should not expose raw host output as user-facing policy errors");
+        var missingHost = new CopperfinWorkspaceAgentPolicyResult
+        {
+            Success = false,
+            DiagnosticCode = "workspace-agent-policy.host-missing",
+            Error = "untrusted replacement text"
+        };
+        var timedOutHost = new CopperfinWorkspaceAgentPolicyResult
+        {
+            Success = false,
+            DiagnosticCode = "workspace-agent-policy.host-timed-out",
+            Error = "untrusted replacement text"
+        };
+        Expect(form.WorkspaceAgentPolicyErrorTextForTest(missingHost) ==
+               "No se encontró el host de Copperfin Studio. Defina COPPERFIN_STUDIO_HOST_PATH o coloque/compile el host junto al shell administrado o bajo la salida de compilación del repositorio." &&
+               form.WorkspaceAgentPolicyErrorTextForTest(timedOutHost) ==
+               "Tiempo de espera agotado esperando el host de Copperfin Studio.",
+            "standalone Studio should select safe catalog-owned host guidance by diagnostic code");
 
         using var dialog = form.CreateWorkspaceAgentPolicyDialogForTest(parsed.Descriptor);
         var dialogButtons = FindButtons(dialog).ToList();
