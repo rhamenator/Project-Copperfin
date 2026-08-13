@@ -923,8 +923,8 @@ standalone Studio shell, and FoxPro language-service layer."
 | E | `#111` (`E1`/`#22`, `E2`/`#23`, `E3`/`#24`) | Shared design model and designer fidelity (`E3` = report/label parity, the single largest lane in the repo) | Closed 2026-07-24 | Phase C |
 | F | `#112` (`F1`/`#25`, `F2`/`#26`) | VS extension parity + utility panes; standalone Studio as a full IDE | MVP implementation complete for standalone shell; hosted UI evidence remains under the RC gate | Phase C |
 | G | `#112` (`G1`/`#27`, `G2`/`#28`, `G3`/`#29`) | FoxPro language service: semantic resolution, navigation/refactoring, IntelliSense metadata | Recorded G1/G2/G3 slices closed; broader MVP scope remains under the live tree | Phase C |
-| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Portable route/artifact execution, trusted runtime-host composition, PRG dispatch, Native AOT C# leaf, admitted Python/R sidecar leaves, and one bounded read-only MCP DBF-header tool implemented; broader managed-language environments and model/provider or mutable MCP integrations remain | v1 item 3 |
-| I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | Seeded (see gap analysis) | v1 item 4 |
+| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Portable route/artifact execution, trusted runtime-host composition, PRG dispatch, Native AOT C# leaf, admitted Python/R sidecar leaves, one bounded read-only MCP DBF-header tool, and provider-independent workspace-agent access modes implemented; provider adapters, OAuth, mutable execution, and user-facing assistant integration remain | v1 item 3 |
+| I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | RBAC/audit/secrets/signing baseline plus dedicated workspace-agent RBAC, capabilities, localized unrestricted warning, and fail-closed activation policy implemented; host enforcement and audit commit integration remain | v1 item 4 |
 | J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Studio launch-error and POSIX root-identity seams, portable public path/environment/executable-search, APRINTERS and AFONT host discovery, file-version, code-page, disk-space, exclusive-file, and PRG stream boundaries, private SQLite native ABI isolation, portable interpreter-to-CLR-host contract, and native DECLARE loader/invocation boundaries shipped; broader OLE/report-printing seams and ports open | v1 item 5 |
 
 Current G1 evidence includes #4874 at product/test head `e70c89e87`: editor
@@ -1149,17 +1149,22 @@ Diagram moved to
 [diagrams/roadmap-v1-lanes-hij.md](diagrams/roadmap-v1-lanes-hij.md) — same
 rendering reason as above.
 
-**What's done:** `H1`'s relational backend translators now include one live,
+**What's done:** `H1`'s relational backend translators include one live,
 bounded, read-only local SQLite execution slice behind the deterministic
-planner; `I1`'s security baseline has the `cf_security` RBAC/audit/secrets/
-signing seed. **What's left, and what it takes:** the other relational providers,
-provider sessions/cursors, and mutation contracts remain open. The wider view is
+planner. `H3`/`I2` now have a provider-independent workspace-agent authority
+policy with exact sandboxed/unrestricted capabilities, nondefault RBAC, and a
+versioned localized warning gate; `I1` retains the `cf_security` RBAC/audit/
+secrets/signing seed. **What's left, and what it takes:** other relational
+providers, provider sessions/cursors, mutation contracts, provider/OAuth
+adapters, the mutable agent executor and sandbox, host UI, and audit commit
+integration remain open. The wider view is
 covered in full, document-by-document, in
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md) —
 in particular its interop/federation/trust/security and language/data-fidelity
 gap diagrams give the `H`/`I` gaps in the same level of detail as this diagram
-gives their dependency shape. Lane `J` (portability) has no shipped evidence
-at all yet and is the most clearly not-started item in the entire v1 list.
+gives their dependency shape. Lane `J` now has multiple shipped portable-core
+boundaries, while broader shell, printing, OLE/COM, CLR-hosting, and complete
+macOS/Linux host ports remain open.
 
 ## Documentation Ownership
 

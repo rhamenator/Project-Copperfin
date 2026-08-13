@@ -801,10 +801,16 @@ Recommended rules:
 - keep ordinary relational query execution deterministic so AI is optional for the straightforward path
 - reserve AI planning for ambiguous document/vector query synthesis, explanation, and debugging help
 
-The shipped DBF-header tool satisfies the opt-in, provider-independent,
-deterministic foundation of these rules. It does not yet supply model policy,
-enterprise-provider integration, or the broader mutable developer tools listed
-above.
+The shipped DBF-header tool satisfies the first opt-in, provider-independent,
+deterministic execution boundary. `cf_security` now also has a portable local
+workspace-agent access policy with advisory, sandboxed-workspace, and warned
+unrestricted modes. Unrestricted activation requires a dedicated high-risk
+permission, trusted product UI, audit availability, the exact current warning,
+and affirmative consent; provider authentication is deliberately not an
+authorization input. See
+[`64-workspace-agent-access-policy.md`](64-workspace-agent-access-policy.md).
+Model/provider adapters, OAuth clients, the mutable executor and sandbox, and
+the user-facing assistant/dialog surfaces remain unimplemented.
 
 ## Why This Matters
 

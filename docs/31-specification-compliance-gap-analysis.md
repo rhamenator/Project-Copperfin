@@ -453,13 +453,14 @@ policy-controlled, auditable, local-or-enterprise model choice, user-selectable
 models within admin policy, and — critically — ordinary relational queries must
 stay deterministic and not require AI).
 
-**Current implementation:** `copperfin_mcp_host` is now a real portable,
-local-stdio product surface with one deterministic read-only DBF-header tool.
-Its process boundary is opt-in and permission-checked; bounded input, strict
-JSON, no network or caller-selected file access, no provider dependency,
-content-free audit events, and immutable output keep this
-first surface inside the documented rules. Broader model/provider policy,
-auditing integration, and mutable development tools remain future work.
+**Current implementation:** `copperfin_mcp_host` is a real portable local-stdio
+surface with one deterministic read-only DBF-header tool. A separate
+`cf_security` policy now defines advisory, workspace-sandbox, and warned
+unrestricted local-agent modes, exact capabilities, nondefault high-risk RBAC,
+localized warning identity, and fail-closed activation decisions. Provider
+authentication cannot grant local authority. Broader model/provider policy,
+OAuth and credential adapters, a mutable executor and real sandbox, audit
+commit integration, and user-facing assistant/dialog surfaces remain open.
 
 ### docs/21 — Database Federation And Query Translation
 
