@@ -60,6 +60,7 @@ body:
     id: source_of_truth
     attributes:
       label: Allowed Requirement Source
+      description: "Select all evidenced sources. For a GAP-* with no allowed source evidence, select only the unresolved-gap option and explain the missing evidence below."
       multiple: true
       options:
         - Real installed VFP9 observation
@@ -67,6 +68,7 @@ body:
         - Explicit repository-owner product policy
         - Registered known-bug or crash exception
         - Derived from identified parent requirement or hazard
+        - Unresolved recovery gap - no allowed source evidence yet
     validations:
       required: true
 

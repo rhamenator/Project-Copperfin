@@ -69,7 +69,7 @@ Compatibility delta notes (if any):
 
 ## Safety/Security Impact
 
-- Impact level: none | low | medium | high
+- Impact level: none | low | medium | high | catastrophic
 - Rationale:
 
 ## Checklist

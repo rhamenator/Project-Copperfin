@@ -75,6 +75,8 @@ require_community_text(".github/pull_request_template.md" "current Copperfin cod
 require_community_text(".github/pull_request_template.md" "Architecture/code/test reverse-traceability location")
 require_community_text(".github/ISSUE_TEMPLATE/traceability-slice.yml" "Explicit repository-owner product policy")
 require_community_text(".github/ISSUE_TEMPLATE/traceability-slice.yml" "Architecture And Reverse Traceability")
+require_community_text(".github/ISSUE_TEMPLATE/traceability-slice.yml" "Unresolved recovery gap - no allowed source evidence yet")
+require_community_text(".github/pull_request_template.md" "Impact level: none | low | medium | high | catastrophic")
 forbid_community_text(".github/ISSUE_TEMPLATE/traceability-slice.yml" "Existing Copperfin behavior")
 require_community_text(".github/ISSUE_TEMPLATE/config.yml" "blank_issues_enabled: false")
 require_community_text(".github/ISSUE_TEMPLATE/config.yml" "Contribution Guide")
