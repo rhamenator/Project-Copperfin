@@ -1,8 +1,9 @@
 # Workspace-Agent Access Policy
 
-Governing product/derived requirement: `RQ-CF-AGENT-001` in
-`docs/32-recovered-requirements-traceability.md`. The public header and focused
-policy test carry the reverse link back to that requirement.
+Governing product/derived requirements: `RQ-CF-AGENT-001` and
+`RQ-CF-AGENT-002` in `docs/32-recovered-requirements-traceability.md`. The
+public policy header, descriptor implementation, and focused tests carry the
+reverse links back to those requirements.
 
 Copperfin's built-in coding assistant is intended to progress from advisory
 help to useful workspace editing and process execution. Provider authentication
@@ -68,10 +69,30 @@ control. Authentication success is not an input to
 `evaluate_workspace_agent_activation()` and therefore cannot bypass the local
 policy.
 
+## Studio-host descriptor boundary
+
+`copperfin_studio_host --workspace-agent-policy --json` is the versioned,
+read-only bridge for trusted product clients. Schema version 1 reports the
+default-disabled feature state, advisory default, exact modes and capabilities,
+native permission id, trusted-UI and audit requirements, invariant warning id,
+localized warning prose, provider-authentication separation, and the permanent
+denial of privilege elevation. It explicitly reports `descriptorOnly: true`
+and `activationAvailable: false`. Capability fields are obtained from
+`evaluate_workspace_agent_activation()` rather than copied into a second policy
+table.
+
+This command only describes policy. Its strict grammar accepts the descriptor
+switch followed by an optional `--json`; mixed operational switches, duplicate
+switches, reordered switches, and attempted activation arguments return status
+2 without a partial descriptor. A command line therefore cannot assert that it
+is trusted product UI or manufacture warning consent. Actual activation remains
+reserved for the future trusted session/UI boundary.
+
 ## Current implementation and remaining work
 
-This slice implements the portable access-mode, capability, RBAC, localized
-warning, and fail-closed admission contracts with direct regression coverage.
+The current slices implement the portable access-mode, capability, RBAC,
+localized warning, fail-closed admission, and read-only Studio-host descriptor
+contracts with direct regression coverage.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.
@@ -81,6 +102,24 @@ Corrected signed/DCO head `4c4014f94` passes all eleven protected checks,
 including native execution on Windows, Ubuntu, and macOS. Exact run identifiers
 and the corrected independent-review record are in the safety traceability
 report.
+The descriptor process regression requires the versioned defaults, three mode
+names, risk-bearing capabilities, provider separation, RBAC/UI/audit gates,
+exact warning identity, and no elevation. It also proves mixed switches and a
+generic `--activate-unrestricted` attempt fail without emitting policy output;
+dedicated process cases likewise reject duplicate and reordered descriptor
+switches without partial output. Policy-bearing arguments are validated before
+the optional product-license status handler, so enabling the archived licensing
+build flag cannot consume a mixed request and bypass the exclusive grammar.
+The policy/descriptor pair passes Clang ASan/UBSan with leak detection `2/2`
+and no findings. The focused Release selection covering policy, the real host
+process, native isolation, and safety traceability passes `4/4`; the emitted
+schema also parses and satisfies its invariant fields with `jq`.
+Corrected signed/DCO descriptor head `def609305` passes all eleven protected
+checks, including direct native execution on Windows, Ubuntu, and macOS. The
+first Windows generated-launcher attempt was blocked before Copperfin
+configuration by an external R-version lookup failure; its failed job was
+rerun without a source change and passed. Exact run identifiers are retained
+in the safety traceability report.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
 session indicator, or the WinForms dialog that must render the warning.

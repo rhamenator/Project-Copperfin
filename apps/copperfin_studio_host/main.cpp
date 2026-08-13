@@ -20,6 +20,9 @@ int run_studio_host_main(int argc, char** argv) {
         args.emplace_back(argv[index]);
     }
 
+    if (const auto handled = try_handle_workspace_agent_policy(catalog, args)) {
+        return *handled;
+    }
     if (const auto handled = try_handle_license_status(catalog, args)) {
         return *handled;
     }

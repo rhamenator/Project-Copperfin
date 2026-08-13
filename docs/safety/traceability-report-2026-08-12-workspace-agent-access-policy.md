@@ -2,7 +2,7 @@
 
 ## Scope And Procedural Delta
 
-- Governing requirement: `RQ-CF-AGENT-001` in
+- Governing requirements: `RQ-CF-AGENT-001` and `RQ-CF-AGENT-002` in
   `docs/32-recovered-requirements-traceability.md`.
 
 - Boundary: activation of a built-in local coding agent with mutable machine
@@ -21,10 +21,11 @@
 
 | Product / documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
-| `DQ-V1-workspace-agent-explicit-authority` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-misuse-walkthrough`; `DV-V1-workspace-agent-independent-review` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-explicit-authority` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-misuse-walkthrough`; `DV-V1-workspace-agent-independent-review` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-V1-workspace-agent-unrestricted-warning` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-localization`; `DV-V1-workspace-agent-independent-review` | `HZ-doc-command-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-001` | `DV-V1-workspace-agent-policy-regression`; protected exact-head matrix; reverse links in the public policy header and focused test | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
+| `RQ-CF-AGENT-002` | `DV-V1-workspace-agent-host-descriptor`; reverse links in the descriptor implementation and process test; protected exact-head matrix | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 ## Verification Evidence
 
@@ -56,6 +57,26 @@ All four installed catalogs contain the warning and decision keys. The direct
 test checks invariant warning identity, reviewed en-US text, es-419 selection,
 and qps-ploc coverage. JSON parsing succeeds for every catalog.
 
+### DV-V1-workspace-agent-host-descriptor
+
+`test_studio_host_workspace_agent_policy` executes the real Studio host and
+requires schema version 1, advisory/default-disabled state, all three exact mode
+names, explicit outside-workspace and network risk, permanent denial of
+elevation, the native permission, trusted-UI/audit gates, provider separation,
+descriptor-only/no-activation state, and the current warning identity. The endpoint derives capabilities by calling
+the policy evaluator. The regression also requires fail-closed status 2 and no
+partial stdout for mixed descriptor/operational and descriptor/license-status
+requests, duplicate or reordered descriptor switches, and a generic
+command-line unrestricted-activation attempt. This is a read-only contract and
+supplies no activation path. A qps-ploc process case requires
+localized warning prose while the warning id and mode names remain invariant.
+The focused Release policy/host/isolation/safety selection passes `4/4`. The
+policy and real host-process tests pass under Clang ASan/UBSan with leak
+detection `2/2` and no findings; direct `jq` evaluation accepts the emitted
+schema and required invariant fields. A separate Release configuration with
+the archived product-licensing build flag enabled passes the real host process
+and licensing-policy source contract `2/2`; the shipping default remains off.
+
 ### DV-V1-workspace-agent-misuse-walkthrough
 
 The deterministic test walkthrough covers these credible mistakes:
@@ -82,6 +103,14 @@ The direct capability, RBAC, warning, fail-closed, localization, mutation, and
 remaining-work evidence above therefore remains load-bearing rather than being
 replaced by the automated verdict.
 
+Review of the descriptor follow-up found that the optional product-license
+status handler preceded policy validation and, when that archived build flag
+was enabled, could consume a mixed policy request. Policy-bearing arguments are
+now validated first. The process test covers the mixed request, the
+licensing-policy source contract protects dispatch order, and a fresh
+licensing-enabled build passes both contracts `2/2` without changing the
+default-disabled product-licensing policy.
+
 ### Protected exact-head matrix
 
 Corrected signed/DCO head `4c4014f94` passes all eleven protected checks:
@@ -97,6 +126,23 @@ The generated-launcher jobs include the portable policy regression through the
 native suite on all three hosts. This slice does not claim that those unrelated
 workflow names constitute execution of the still-unimplemented agent UI or
 executor.
+
+The descriptor follow-up's corrected signed/DCO implementation head
+`def609305` also passes all eleven protected checks:
+
+- Generated Launcher Validation `31666059568` passes on Windows, Ubuntu, and
+  macOS. The first Windows attempt failed before Copperfin configuration when
+  the external R-version resolver could not resolve R 4.6.1; rerunning only
+  that failed job passed setup, configuration, build, and tests without a
+  product change;
+- Windows DECLARE ABI Validation `31666059579` passes Win32 and x64;
+- Windows environment/path validation `31666059576` passes;
+- GCC/Clang executable-path validation `31666059522` passes;
+- DCO run `31666057944` and both Socket checks pass.
+
+These runs close the descriptor requirement and do not close the separately
+identified mutable activation, provider, session, audit-commit, executor,
+sandbox, or trusted-UI implementation gaps.
 
 ## Severity, Rollback, And Notification
 

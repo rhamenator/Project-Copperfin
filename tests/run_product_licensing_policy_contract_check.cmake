@@ -23,6 +23,18 @@ function(require_text relative_path expected_text)
     endif()
 endfunction()
 
+function(require_text_before relative_path earlier_text later_text)
+    require_file("${relative_path}")
+    file(READ "${COPPERFIN_SOURCE_ROOT}/${relative_path}" contents)
+    string(FIND "${contents}" "${earlier_text}" earlier_offset)
+    string(FIND "${contents}" "${later_text}" later_offset)
+    if(earlier_offset EQUAL -1 OR later_offset EQUAL -1 OR
+       NOT earlier_offset LESS later_offset)
+        message(FATAL_ERROR
+            "${relative_path} must place ${earlier_text} before ${later_text}")
+    endif()
+endfunction()
+
 require_text("LICENSE" "GNU GENERAL PUBLIC LICENSE")
 require_text("LICENSE" "COPPERFIN APPLICATION, RUNTIME, AND TOOLCHAIN EXCEPTION")
 require_text("LICENSE" "additional permission is granted under section 7")
@@ -84,6 +96,9 @@ require_text("src/licensing/license_status.cpp" "#if !COPPERFIN_ENABLE_PRODUCT_L
 require_text("src/licensing/license_status.cpp" "return {};")
 require_text("apps/copperfin_build_host/main.cpp" "if constexpr (copperfin::licensing::kProductLicensingEnabled)")
 require_text("apps/copperfin_studio_host/studio_host_main_shared_cli_infra.cpp" "if constexpr (!copperfin::licensing::kProductLicensingEnabled)")
+require_text_before("apps/copperfin_studio_host/main.cpp"
+    "try_handle_workspace_agent_policy(catalog, args)"
+    "try_handle_license_status(catalog, args)")
 require_text("vsix/Copperfin.VisualStudio/CopperfinAssetEditorControl.cs" "if (!string.IsNullOrEmpty(snapshot.LicenseProfile.State))")
 
 # Product licensing and release trust deliberately share low-level Ed25519
