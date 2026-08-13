@@ -49,8 +49,11 @@ Window is not a UI Automation descendant. Run `31725371043` proved its
 ActivityLog load record is buffered until IDE shutdown and cannot serve as a
 live readiness signal. The next correction opens Visual Studio's Command window
 through the hosted General profile's shortcut, gives the lazy WPF surface a
-conservative bounded startup interval, refocuses the same IDE, and enters only
-the invariant
+conservative bounded startup interval. Run `31726161585` proved the first
+shortcut remained queued long enough that a three-second delay still raced the
+Common IDE package load. The next correction waits beyond that observed
+interval, refocuses the same IDE, repeats the shortcut to activate the loaded
+surface, and enters only the invariant
 `Copperfin.ShowCommandWindow` command, proves the resulting pane in the same
 process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
 then requires the exact document descendant or fixture

@@ -378,7 +378,11 @@ next run proved the hosted Command Window is not a UI Automation descendant.
 Run `31725371043` then proved its ActivityLog load record is buffered until IDE
 shutdown and cannot be a live readiness signal. The corrected verifier opens it
 through the hosted General profile's shortcut, gives the lazy WPF surface a
-conservative bounded startup interval, refocuses the same IDE, and enters only
+conservative bounded startup interval. Run `31726161585` proved the first
+shortcut remained queued long enough that a three-second delay still raced the
+Common IDE package load. The corrected verifier waits beyond that observed
+interval, refocuses the same IDE, repeats the shortcut to activate the loaded
+surface, and enters only
 `Copperfin.ShowCommandWindow`, proves that
 process's pane,
 explicitly forwards `/Edit` plus the fixture to it, then requires exact

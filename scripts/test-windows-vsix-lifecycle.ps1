@@ -360,14 +360,17 @@ if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindo
 [System.Windows.Forms.SendKeys]::SendWait('^%a')
 # The hosted WPF Command Window is not a UI Automation descendant and its
 # ActivityLog records are buffered until IDE shutdown. Give the documented
-# shortcut a bounded startup interval; the pane and package-load checks below,
-# not this delay, are the positive command evidence.
-Start-Sleep -Milliseconds 3000
+# shortcut a bounded lazy-load interval, then invoke it again to focus the now-
+# loaded surface. The pane and package-load checks below, not these delays, are
+# the positive command evidence.
+Start-Sleep -Milliseconds 10000
 [void][CopperfinForegroundWindow]::SetForegroundWindow($ideProcess.MainWindowHandle)
 Start-Sleep -Milliseconds 250
 if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
     throw "Visual Studio process $ExpectedProcessId could not be refocused for Command-window input."
 }
+[System.Windows.Forms.SendKeys]::SendWait('^%a')
+Start-Sleep -Milliseconds 1000
 [System.Windows.Forms.SendKeys]::SendWait($CommandName)
 [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
 '@, [System.Text.UTF8Encoding]::new($false))

@@ -27,8 +27,10 @@
   descendant. Run `31725371043` proved its ActivityLog load record is buffered
   until IDE shutdown and cannot serve as a live readiness signal. The corrected
   sequence opens it through the hosted General profile's shortcut, gives the
-  lazy WPF surface a conservative bounded startup interval, refocuses the same
-  IDE, and enters only
+  lazy WPF surface a conservative bounded startup interval. Run `31726161585`
+  proved a three-second delay still raced the queued shortcut/Common IDE package
+  load. The corrected sequence waits beyond that observed interval, refocuses
+  the same IDE, repeats the shortcut to activate the loaded surface, and enters only
   `Copperfin.ShowCommandWindow`,
   proves that process's command surface, explicitly forwards `/Edit` plus the
   fixture to it, and requires exact document proof plus explicit successful-load

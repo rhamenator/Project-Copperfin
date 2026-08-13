@@ -56,8 +56,9 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
 - Process-scoped Windows UI Automation accepts only descendants of the exact
   IDE process launched by the helper. The helper focuses the exact IDE window,
   opens Visual Studio's documented Command window through the hosted General
-  profile's `Ctrl+Alt+A` shortcut, gives that lazy WPF surface a bounded startup
-  interval, refocuses the same IDE, and enters only the invariant
+  profile's `Ctrl+Alt+A` shortcut, gives that lazy WPF surface a bounded load
+  interval, refocuses the same IDE, repeats the shortcut to activate the loaded
+  surface, and enters only the invariant
   `Copperfin.ShowCommandWindow` command, finds the exact Copperfin Command
   surface in that same IDE process, and explicitly forwards `/Edit` plus the
   runner-owned fixture to the now-running IDE. A visible window, launched
@@ -133,7 +134,7 @@ running, so its load record cannot serve as a live readiness signal. The
 further-corrected helper focuses the exact IDE, opens Visual Studio's Command
 window through the hosted General profile's `Ctrl+Alt+A` shortcut, gives that
 surface a conservative bounded startup interval, refocuses the exact IDE,
-enters only the invariant
+repeats the shortcut to activate the loaded surface, and enters only the invariant
 `Copperfin.ShowCommandWindow` command, and
 proves the resulting pane in that process. It explicitly
 forwards `/Edit` plus the fixture to the running IDE and uses process-scoped UI
