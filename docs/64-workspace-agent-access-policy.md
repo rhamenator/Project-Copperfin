@@ -135,9 +135,18 @@ configuration by an external R-version lookup failure; its failed job was
 rerun without a source change and passed. Exact run identifiers are retained
 in the safety traceability report.
 The managed smoke project and standalone Studio project compile warning-free
-against the net472 reference contract on Linux. Executing the new managed smoke
-and building the VSIX itself require the hosted Mono/Windows matrices and remain
-scheduled evidence for this stacked slice.
+against the net472 reference contract on Linux. Exact-head hosted Linux run
+`31677215316` executes the managed smoke under Mono/Xvfb and passes; its
+retained `copperfin-managed-ui-linux` artifact has digest
+`sha256:c2c2478e681db16907e2894ab77134506e9be5ebe277558c321870850720a4b1`
+and expires `2026-11-11T07:18:18Z`. Exact-head Windows Deep Validation
+`31677215577` passes `367/367` native tests, builds the VSIX and both managed
+hosts, and executes the managed VSIX, language-service, process-runner, and
+Designer smoke suites. The workspace-agent smoke passes its descriptor-only
+grammar and success assertions plus all twenty fail-closed cases. The retained
+`copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
+`sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`
+and expires `2026-11-11T07:18:19Z`.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
 session indicator, or the WinForms dialog that must render the warning.

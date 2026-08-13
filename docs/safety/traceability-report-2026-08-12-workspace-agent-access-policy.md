@@ -27,7 +27,7 @@
 | `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-001` | `DV-V1-workspace-agent-policy-regression`; protected exact-head matrix; reverse links in the public policy header and focused test | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 | `RQ-CF-AGENT-002` | `DV-V1-workspace-agent-host-descriptor`; reverse links in the descriptor implementation and process test; protected exact-head matrix | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `RQ-CF-AGENT-003` | `DV-V1-workspace-agent-managed-client`; reverse links in the strict managed client and smoke; exact-head hosted matrix pending | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `RQ-CF-AGENT-003` | `DV-V1-workspace-agent-managed-client`; reverse links in the strict managed client and smoke; exact-head Linux execution `31677215316`; exact-head Windows execution `31677215577` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 ## Verification Evidence
 
@@ -90,9 +90,18 @@ envelopes, provider-auth authority, substituted permission or warning
 identifiers, duplicate/aliased modes, capability expansion,
 privilege elevation, and malformed JSON. Both the complete Designer smoke
 assembly and standalone Studio shell compile warning-free against the net472
-contract on Linux. Direct managed execution and the VSIX package build remain
-scheduled for their Mono and Windows hosted matrices; they are not claimed by
-the local compilation evidence.
+contract on Linux. Exact-head hosted Linux run `31677215316` executes the
+managed workspace-policy smoke under Mono/Xvfb and passes. Its retained
+`copperfin-managed-ui-linux` artifact has digest
+`sha256:c2c2478e681db16907e2894ab77134506e9be5ebe277558c321870850720a4b1`
+and expires `2026-11-11T07:18:18Z`. Exact-head Windows Deep Validation
+`31677215577` passes `367/367` native tests, builds the VSIX and both managed
+hosts, and executes the managed VSIX, language-service, process-runner, and
+Designer smoke suites. The workspace-agent smoke's descriptor-only grammar and
+success assertions plus all twenty fail-closed cases pass directly. The retained
+`copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
+`sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`
+and expires `2026-11-11T07:18:19Z`.
 
 ### DV-V1-workspace-agent-misuse-walkthrough
 
@@ -128,6 +137,15 @@ licensing-policy source contract protects dispatch order, and a fresh
 licensing-enabled build passes both contracts `2/2` without changing the
 default-disabled product-licensing policy.
 
+Review of the managed consumer found that `JavaScriptSerializer` could collapse
+duplicate object members before shape validation. The correction validates the
+JSON token stream before deserialization with a 1 MiB input ceiling and depth
+limit 64, rejects duplicate members in every object, and compares decoded member
+names so escaped-equivalent spellings also collide. Direct regressions cover
+duplicates in the envelope, activation object, warning object, modes,
+capabilities, and escaped names. A fresh automated review of rebased exact head
+`91e35d3bf3e26279cfe20e498ca57c7e52753aa9` found no further major issue.
+
 ### Protected exact-head matrix
 
 Corrected signed/DCO head `4c4014f94` passes all eleven protected checks:
@@ -160,6 +178,26 @@ The descriptor follow-up's corrected signed/DCO implementation head
 These runs close the descriptor requirement and do not close the separately
 identified mutable activation, provider, session, audit-commit, executor,
 sandbox, or trusted-UI implementation gaps.
+
+The managed-client rebased exact head
+`91e35d3bf3e26279cfe20e498ca57c7e52753aa9` has direct retained execution on
+both hosted paths:
+
+- Linux managed-UI run `31677215316` passes the workspace-agent smoke under
+  Mono/Xvfb. Its retained `copperfin-managed-ui-linux` artifact has digest
+  `sha256:c2c2478e681db16907e2894ab77134506e9be5ebe277558c321870850720a4b1`
+  and expires `2026-11-11T07:18:18Z`.
+- Windows Deep Validation `31677215577` passes `367/367` native tests, builds
+  the VSIX, passes localized-resource verification, executes the managed VSIX,
+  language-service, .NET Framework process-runner, Studio, and Designer
+  contracts, and passes the workspace-agent smoke. Its retained
+  `copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
+  `sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`
+  and expires `2026-11-11T07:18:19Z`.
+
+These runs define the strict read-only managed-consumer requirement. They do
+not implement or close mutable activation, provider authentication, sessions,
+audit commits, executor, sandbox, or trusted activation UI.
 
 ## Severity, Rollback, And Notification
 

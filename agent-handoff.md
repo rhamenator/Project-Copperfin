@@ -5327,3 +5327,20 @@ the direct evidence. A scratch race probe confirmed that permanent target
 replacement is rejected and that the already documented same-identity ABA
 limitation is real. Other relational providers, sessions/cursors, mutation,
 transactions, and non-relational execution remain separate H1 scope.
+
+# 2026-08-13 Strict managed workspace-agent policy evidence
+
+PR #4987 exact signed/DCO implementation head `91e35d3bf` now has direct
+managed execution on Linux and Windows. Linux managed-UI run `31677215316`
+passes under Mono/Xvfb and retains `copperfin-managed-ui-linux` with digest
+`sha256:c2c2478e681db16907e2894ab77134506e9be5ebe277558c321870850720a4b1`.
+Windows Deep Validation `31677215577` passes `367/367` native tests, builds the
+VSIX and managed hosts, and passes the managed VSIX, language-service,
+process-runner, Studio, Designer, debugger, and strict workspace-agent smoke
+contracts. Its retained artifact digest is
+`sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`.
+Automated review's duplicate-member finding was corrected with a bounded strict
+JSON recognizer and the rebased exact-head rereview found no major issue.
+`RQ-CF-AGENT-003` is defined; mutable activation, provider authentication,
+sessions, audit commits, executor, sandbox, stop/diff/undo, and trusted UI
+remain separate implementation gaps.
