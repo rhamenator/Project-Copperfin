@@ -30,6 +30,7 @@ internal sealed class StudioMainForm : Form
     private readonly ToolStripMenuItem debugProjectMenuItem;
     private readonly ToolStripMenuItem commandWindowMenuItem;
     private readonly ToolStripMenuItem terminalWindowMenuItem;
+    private readonly ToolStripMenuItem workspaceAgentPolicyMenuItem;
     private readonly ToolStripMenuItem floatCommandWindowMenuItem;
     private readonly ToolStripMenuItem floatTerminalWindowMenuItem;
     private readonly CopperfinLocalization localization;
@@ -137,6 +138,10 @@ internal sealed class StudioMainForm : Form
             Checked = true
         };
         terminalWindowMenuItem.CheckedChanged += (_, _) => SetTerminalWindowVisible(terminalWindowMenuItem.Checked);
+        workspaceAgentPolicyMenuItem = new ToolStripMenuItem(
+            this.localization.Text("Studio.WorkspaceAgent.Menu"),
+            null,
+            (_, _) => ShowWorkspaceAgentPolicy());
         floatCommandWindowMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.FloatCommandWindowMenu"))
         {
             CheckOnClick = true
@@ -161,6 +166,7 @@ internal sealed class StudioMainForm : Form
         };
         viewMenu.DropDownItems.Add(commandWindowMenuItem);
         viewMenu.DropDownItems.Add(terminalWindowMenuItem);
+        viewMenu.DropDownItems.Add(workspaceAgentPolicyMenuItem);
         viewMenu.DropDownItems.Add(new ToolStripSeparator());
         viewMenu.DropDownItems.Add(floatCommandWindowMenuItem);
         viewMenu.DropDownItems.Add(floatTerminalWindowMenuItem);
@@ -237,6 +243,32 @@ internal sealed class StudioMainForm : Form
             RestoreShellLayout();
         };
         UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
+    }
+
+    internal string WorkspaceAgentPolicyMenuText => workspaceAgentPolicyMenuItem.Text;
+
+    internal StudioWorkspaceAgentPolicyDialog CreateWorkspaceAgentPolicyDialogForTest(
+        CopperfinWorkspaceAgentPolicyDescriptor descriptor)
+    {
+        return new StudioWorkspaceAgentPolicyDialog(descriptor, localization);
+    }
+
+    private void ShowWorkspaceAgentPolicy()
+    {
+        var result = CopperfinWorkspaceAgentPolicyClient.TryLoad(localization);
+        if (!result.Success || result.Descriptor is null)
+        {
+            MessageBox.Show(
+                this,
+                result.Error,
+                localization.Text("Studio.WorkspaceAgent.Title"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+
+        using var dialog = new StudioWorkspaceAgentPolicyDialog(result.Descriptor, localization);
+        dialog.ShowDialog(this);
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)

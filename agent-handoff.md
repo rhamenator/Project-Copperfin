@@ -32,6 +32,14 @@ retained exact-head results, hazards, limitations, and reverse links. Existing
 Copperfin behavior is no longer an allowed requirement source in the issue/PR
 workflow.
 
+The next stacked UI slice adds a localized read-only Workspace Assistant
+Access preview under standalone Studio's View menu. It defaults to advisory,
+displays the three validated modes/capabilities and host-provided unrestricted
+warning, and contains only a Close button. It cannot activate, capture consent,
+authenticate, start a session, or execute. The Designer smoke and standalone
+projects compile warning-free against net472 locally; direct Mono/Windows UI
+evidence remains scheduled.
+
 The strict read-only managed consumer is shared by
 the standalone Studio shell, VSIX, and Designer smoke assembly. It calls only
 the descriptor JSON grammar and rejects missing/unknown/wrongly typed fields,

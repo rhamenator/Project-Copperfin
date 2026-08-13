@@ -101,12 +101,21 @@ stale identities, type substitutions, and any capability expansion fail
 closed. This client is
 read-only and does not supply an activation or execution method.
 
+Standalone Studio exposes that validated descriptor through a localized
+**Workspace Assistant Access** preview under **View**. The dialog defaults to
+advisory, lets the user inspect all three exact modes and capabilities, and
+shows the host-provided current warning when unrestricted mode is selected.
+It states that activation is unavailable and contains only a Close button: it
+does not enable a feature, grant permission, record consent, start a session,
+authenticate a provider, or execute a tool.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
 localized warning, fail-closed admission, read-only Studio-host descriptor,
 and strict read-only managed-consumer contracts with direct regression
-coverage.
+coverage. A localized read-only Studio preview makes that contract visible
+without weakening the activation boundary.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.
@@ -149,7 +158,8 @@ grammar and success assertions plus all twenty fail-closed cases. The retained
 and expires `2026-11-11T07:18:19Z`.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
-session indicator, or the WinForms dialog that must render the warning.
+session indicator, or the WinForms consent dialog that must render and bind the
+warning during a real activation attempt.
 
 Those surfaces must consume this policy rather than duplicate it. The trusted
 host must record content-free activation outcome events, keep unrestricted

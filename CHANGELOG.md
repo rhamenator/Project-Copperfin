@@ -1,3 +1,10 @@
+- 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
+  to standalone Studio. It displays the validated native policy descriptor,
+  exact modes and capabilities, and current unrestricted warning, while
+  explicitly keeping activation unavailable and offering no consent, session,
+  provider, or execution control. See
+  `docs/64-workspace-agent-access-policy.md`.
+
 - 2026-08-12: Added a strict read-only managed client for the Studio-host v1
   workspace-agent policy descriptor. The shared Studio/VSIX parser requires
   the complete typed schema, exact modes and capabilities, current warning,

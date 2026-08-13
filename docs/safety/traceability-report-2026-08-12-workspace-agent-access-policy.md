@@ -22,8 +22,8 @@
 
 | Product / documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
-| `DQ-V1-workspace-agent-explicit-authority` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-misuse-walkthrough`; `DV-V1-workspace-agent-independent-review` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-V1-workspace-agent-unrestricted-warning` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-localization`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-independent-review` | `HZ-doc-command-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-explicit-authority` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-policy-preview`; `DV-V1-workspace-agent-misuse-walkthrough`; `DV-V1-workspace-agent-independent-review` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-unrestricted-warning` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-localization`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-policy-preview`; `DV-V1-workspace-agent-independent-review` | `HZ-doc-command-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-managed-client`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-001` | `DV-V1-workspace-agent-policy-regression`; protected exact-head matrix; reverse links in the public policy header and focused test | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 | `RQ-CF-AGENT-002` | `DV-V1-workspace-agent-host-descriptor`; reverse links in the descriptor implementation and process test; protected exact-head matrix | `HZ-system-failure-01`; `HZ-data-corruption-01` |
@@ -102,6 +102,17 @@ success assertions plus all twenty fail-closed cases pass directly. The retained
 `copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
 `sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`
 and expires `2026-11-11T07:18:19Z`.
+
+### DV-V1-workspace-agent-policy-preview
+
+`SmokeStandaloneStudioWorkspaceAgentPolicySurface` requires localized standalone
+Studio menu/dialog chrome, advisory default selection, exactly three modes,
+host-provided unrestricted warning prose, explicit false elevation, and only a
+localized Close button. It also exercises pseudo-localized chrome. The preview
+has no activation, consent, provider, session, or executor control; selecting a
+mode changes displayed information only. Both the full Designer smoke assembly
+and standalone Studio shell compile warning-free against net472 locally;
+direct Mono and Windows hosted execution remain scheduled before merge.
 
 ### DV-V1-workspace-agent-misuse-walkthrough
 

@@ -29,6 +29,7 @@
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectEntryActivation.cs" Link="Shared\CopperfinProjectEntryActivation.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinExternalLocaleCatalog.cs" Link="Shared\CopperfinExternalLocaleCatalog.cs" />
     <Compile Include="StudioMainForm.cs" />
+    <Compile Include="StudioWorkspaceAgentPolicyDialog.cs" />
     <Compile Include="StudioShellLayoutState.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinLocalization.cs" Link="Shared\CopperfinLocalization.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinAssetEditorControl.cs" Link="Shared\CopperfinAssetEditorControl.cs" />
