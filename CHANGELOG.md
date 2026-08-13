@@ -66,6 +66,12 @@
   Run `31737231439` did not reach that correction because hosted VSIX
   installation exceeded 300 seconds. The 360-second default remains within the
   validated 30–600 range and retains timed-out process-tree termination.
+  Run `31738142144` completed installation but did not observe the Copperfin
+  pane; its ActivityLog shows registration paths but no Copperfin package load
+  or error. The verifier now proves command readiness semantically: it launches
+  the controlled IDE without a queued command, routes built-in
+  `View.CommandWindow` separately, observes the built-in Command Window in the
+  controlled IDE PID, and only then routes the Copperfin command.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

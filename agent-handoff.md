@@ -91,6 +91,13 @@ any still-attached router only after that independent proof.
 Run `31737231439` did not reach that correction because hosted VSIX installation
 exceeded 300 seconds. The corrected default is 360 seconds, still within the
 validated 30–600 range and still enforcing timed-out process-tree termination.
+Run `31738142144` completed installation but did not observe the Copperfin pane;
+its retained ActivityLog contains Copperfin registration paths but no package
+load completion or Copperfin package error. The next correction launches the
+controlled IDE without a queued command, routes built-in `View.CommandWindow`
+from a distinct bounded process, proves the built-in Command Window in that IDE
+PID, and only then routes `Copperfin.ShowCommandWindow`. Exact-head execution
+and rereview remain required; `RQ-CF-REL-003` remains `gap`.
 
 ## V1 Windows installer lifecycle
 

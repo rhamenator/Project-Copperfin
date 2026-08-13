@@ -199,6 +199,18 @@ seconds within the existing validated 30–600 range; timed-out process-tree
 termination remains mandatory. This run is installer scheduling diagnostics,
 not command or lifecycle evidence.
 
+Run `31738142144` completed installation and opened the controlled IDE, but the
+Copperfin command surface was not observable before the bounded interval
+expired. Its retained ActivityLog shows the installed Copperfin registration
+paths but neither package-load completion nor a Copperfin package error. This
+is negative command-readiness evidence, not lifecycle evidence. The corrected
+sequence launches the controlled IDE without a queued startup command, routes
+the built-in `View.CommandWindow` command from a distinct bounded process, and
+requires the built-in Command Window to be observable in the controlled IDE
+PID before routing `Copperfin.ShowCommandWindow`. The semantic readiness proof
+replaces an unevidenced timing assumption; it does not weaken the later exact
+Copperfin pane, PRG document, or package-load requirements.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

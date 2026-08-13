@@ -420,6 +420,12 @@ router process tree after independent proof.
 Run `31737231439` did not reach that proof because hosted VSIX installation
 exceeded 300 seconds. The corrected 360-second default remains within the
 validated 30–600 range and retains process-tree termination.
+Run `31738142144` reached the IDE but did not observe the Copperfin command;
+the retained ActivityLog shows registration paths but no Copperfin package load
+or package error. The verifier now establishes semantic command readiness by
+routing `View.CommandWindow` separately and proving the built-in Command Window
+inside the controlled IDE PID before routing the Copperfin command. This
+remains a gap pending fresh exact-head lifecycle evidence and review.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

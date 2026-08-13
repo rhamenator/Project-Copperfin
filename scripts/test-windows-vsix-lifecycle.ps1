@@ -221,6 +221,7 @@ $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
 
 $installedDirectory = $null
 $ideProcess = $null
+$readinessRoutingProcess = $null
 $commandRoutingProcess = $null
 $documentRoutingProcess = $null
 try {
@@ -251,7 +252,7 @@ try {
     $startInfo.FileName = $devenv
     $startInfo.UseShellExecute = $false
     $startInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @('/NoSplash', '/Log', $activityLog, '/Command', 'View.CommandWindow')) {
+    foreach ($argument in @('/NoSplash', '/Log', $activityLog)) {
         [void]$startInfo.ArgumentList.Add($argument)
     }
     $ideProcess = [System.Diagnostics.Process]::Start($startInfo)
@@ -326,6 +327,36 @@ if (-not $observed) {
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
+
+    Write-Host 'VSIX lifecycle phase: establish Visual Studio command readiness'
+    $readinessRoutingStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $readinessRoutingStartInfo.FileName = $devenv
+    $readinessRoutingStartInfo.UseShellExecute = $false
+    $readinessRoutingStartInfo.WorkingDirectory = $resolvedEvidenceDirectory
+    foreach ($argument in @('/Command', 'View.CommandWindow')) {
+        [void]$readinessRoutingStartInfo.ArgumentList.Add($argument)
+    }
+    $readinessRoutingProcess = [System.Diagnostics.Process]::Start($readinessRoutingStartInfo)
+    Assert-Condition ($null -ne $readinessRoutingProcess) 'Visual Studio command-readiness routing did not start.'
+    Assert-Condition ($readinessRoutingProcess.Id -ne $ideProcess.Id) `
+        'Command-readiness routing unexpectedly reused the controlled IDE process object.'
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Command Window',
+            '-EvidenceDescription', 'Built-in Visual Studio Command Window',
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
+        -Name 'Visual Studio command-readiness UI Automation observation' | Out-Null
+    if (-not $readinessRoutingProcess.HasExited) {
+        try { $readinessRoutingProcess.Kill($true) } catch { Write-Warning "Command-readiness routing process could not be terminated after pane proof: $($_.Exception.Message)" }
+        Assert-Condition $readinessRoutingProcess.WaitForExit(15000) `
+            'Command-readiness routing process remained after bounded termination.'
+    }
+    else {
+        Assert-Condition ($readinessRoutingProcess.ExitCode -eq 0) `
+            "Command-readiness routing exited with code $($readinessRoutingProcess.ExitCode)."
+    }
+
     Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through devenv command routing'
     $commandRoutingStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $commandRoutingStartInfo.FileName = $devenv
@@ -413,7 +444,7 @@ if (-not $observed) {
         'ActivityLog did not contain an explicit successful End package load [CopperfinPackage] record.'
 }
 finally {
-    foreach ($routingProcess in @($commandRoutingProcess, $documentRoutingProcess)) {
+    foreach ($routingProcess in @($readinessRoutingProcess, $commandRoutingProcess, $documentRoutingProcess)) {
         if ($null -ne $routingProcess) {
             if (-not $routingProcess.HasExited) {
                 try { $routingProcess.Kill($true) } catch { Write-Warning "Visual Studio routing process could not be terminated: $($_.Exception.Message)" }

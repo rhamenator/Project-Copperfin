@@ -54,7 +54,9 @@ require_text("${script}" "UIAutomationClient" "Windows UI Automation evidence bo
 require_text("${script}" "ProcessIdProperty, $ExpectedProcessId" "launched-process UI identity binding")
 require_text("${script}" "StartsWith(\"$ExpectedName - \"" "exact active-document window-title boundary")
 require_text("${script}" "Exact runner-owned PRG document tab" "exact PRG-open proof")
-require_text("${script}" "'/Command', 'View.CommandWindow'" "IDE-owned built-in Command-window startup")
+require_text("${script}" "@('/Command', 'View.CommandWindow')" "built-in command-readiness routing")
+require_text("${script}" "readinessRoutingProcess.Id -ne $ideProcess.Id" "separate readiness-router process identity")
+require_text("${script}" "Built-in Visual Studio Command Window" "same-process built-in readiness proof")
 require_text("${script}" "@('/Command', 'Copperfin.ShowCommandWindow')" "registered-command routing")
 require_text("${script}" "commandRoutingProcess.Id -ne $ideProcess.Id" "separate command-router process identity")
 require_text("${script}" "Registered Copperfin Command surface" "same-process command-surface proof")
@@ -80,22 +82,21 @@ require_text("${workflow}" "windows-vsix-lifecycle.json" "retained lifecycle evi
 require_text("${workflow}" "Upload Windows VSIX lifecycle diagnostics" "retained failure diagnostics")
 require_text("${workflow}" "always()" "failure-path evidence staging")
 file(READ "${SOURCE_DIR}/${script}" script_contents)
-string(FIND "${script_contents}" "'/Command', 'View.CommandWindow'" built_in_command_offset)
-string(FIND "${script_contents}" "Copperfin registered-command routing" command_automation_offset)
-if(built_in_command_offset EQUAL -1 OR command_automation_offset EQUAL -1 OR
-        NOT built_in_command_offset LESS command_automation_offset)
-    message(FATAL_ERROR "IDE startup and exact-process registered-command automation must remain ordered")
-endif()
+string(FIND "${script_contents}" "VSIX lifecycle phase: establish Visual Studio command readiness" readiness_phase_offset)
+string(FIND "${script_contents}" "Visual Studio command-readiness UI Automation observation" readiness_observation_offset)
 string(FIND "${script_contents}" "VSIX lifecycle phase: invoke registered Copperfin command through devenv command routing" command_phase_offset)
 string(FIND "${script_contents}" "Copperfin registered-command UI Automation observation" command_observation_offset)
 string(FIND "${script_contents}" "VSIX lifecycle phase: open runner-owned PRG through running IDE" document_phase_offset)
 string(FIND "${script_contents}" "Copperfin PRG document UI Automation observation" document_observation_offset)
-if(command_phase_offset EQUAL -1 OR command_observation_offset EQUAL -1 OR
+if(readiness_phase_offset EQUAL -1 OR readiness_observation_offset EQUAL -1 OR
+        command_phase_offset EQUAL -1 OR command_observation_offset EQUAL -1 OR
         document_phase_offset EQUAL -1 OR document_observation_offset EQUAL -1 OR
+        NOT readiness_phase_offset LESS readiness_observation_offset OR
+        NOT readiness_observation_offset LESS command_phase_offset OR
         NOT command_phase_offset LESS command_observation_offset OR
         NOT command_observation_offset LESS document_phase_offset OR
         NOT document_phase_offset LESS document_observation_offset)
-    message(FATAL_ERROR "semantic routing and same-process observations must remain ordered")
+    message(FATAL_ERROR "command readiness, semantic routing, and same-process observations must remain ordered")
 endif()
 file(READ "${SOURCE_DIR}/${workflow}" workflow_contents)
 string(FIND "${workflow_contents}" "Exercise Windows VSIX lifecycle" lifecycle_offset)
