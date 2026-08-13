@@ -161,6 +161,12 @@ The current head separates the Command Window request, a bounded ten-second
 settlement interval, canonical submission, and same-process pane observation;
 each input stage has its own retained diagnostic and remains non-admissible by
 itself.
+Run `31754211038` proved the Common IDE package began about 0.19 seconds after
+the later canonical sender exited rather than during the ten-second delay after
+the shortcut sender. The current head inserts a retained exact-PID
+foreground-only dispatch helper, exits it, waits for bounded lazy settlement,
+and then starts the separate canonical sender. The dispatch helper sends no
+product command and cannot satisfy pane/package-load admission.
 
 ## V1 Windows installer lifecycle
 

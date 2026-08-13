@@ -120,6 +120,10 @@
   before the lazy Common IDE package loaded. Command Window request, bounded
   initialization settlement, canonical command submission, and pane
   observation are now separate stages with distinct retained input evidence.
+  Run `31754211038` timestamped the remaining hosted seam: the lazy Common IDE
+  package began only after the later sender exited. A retained exact-PID
+  foreground-only helper now releases the queued shortcut before bounded
+  settlement and separate canonical submission; it sends no product command.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

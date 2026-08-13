@@ -374,6 +374,7 @@ param(
     [switch]$AllowProcessWindowTitlePrefix,
     [string]$InvokeCanonicalCommand = '',
     [switch]$RequestCommandWindowOnly,
+    [switch]$ForegroundOnly,
     [switch]$SubmitCanonicalCommandOnly,
     [switch]$CommandWindowAlreadyRequested,
     [Parameter(Mandatory = $true)][string]$DiagnosticPath,
@@ -392,7 +393,8 @@ if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
 $observed = $false
 $lastAutomationError = ''
 $lastProcessWindowName = ''
-$requiresInput = $RequestCommandWindowOnly -or -not [string]::IsNullOrWhiteSpace($InvokeCanonicalCommand)
+$requiresInput = $RequestCommandWindowOnly -or $ForegroundOnly -or `
+    -not [string]::IsNullOrWhiteSpace($InvokeCanonicalCommand)
 $commandSubmitted = -not $requiresInput
 $foregroundProcessVerified = $false
 $commandWindowShortcutSent = $false
@@ -420,6 +422,7 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
                     }
                 }
                 if ($foregroundProcessVerified -and -not $CommandWindowAlreadyRequested) {
+                    if ($ForegroundOnly) { break }
                     Add-Type -AssemblyName System.Windows.Forms
                     Start-Sleep -Seconds 2
                     [System.Windows.Forms.SendKeys]::SendWait('^%a')
@@ -474,6 +477,7 @@ $diagnostic = [ordered]@{
     expected_surface = $ExpectedName
     invoke_canonical_command = $InvokeCanonicalCommand
     request_command_window_only = [bool]$RequestCommandWindowOnly
+    foreground_only = [bool]$ForegroundOnly
     submission_only = [bool]$SubmitCanonicalCommandOnly
     command_window_already_requested = [bool]$CommandWindowAlreadyRequested
     foreground_process_verified = $foregroundProcessVerified
@@ -485,6 +489,12 @@ $diagnostic = [ordered]@{
     last_automation_error = $lastAutomationError
 }
 $diagnostic | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $DiagnosticPath -Encoding utf8
+if ($ForegroundOnly) {
+    if (-not $foregroundProcessVerified) {
+        throw "$EvidenceDescription did not foreground Visual Studio process $ExpectedProcessId within the bounded interval."
+    }
+    return
+}
 if ($RequestCommandWindowOnly) {
     if (-not $commandWindowShortcutSent) {
         throw "$EvidenceDescription was not requested in Visual Studio process $ExpectedProcessId within the bounded interval. Foreground process verified: $foregroundProcessVerified."
@@ -515,6 +525,18 @@ if (-not $observed) {
             '-EvidenceDescription', 'Visual Studio Command Window',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Visual Studio Command Window request' | Out-Null
+    Start-Sleep -Seconds 2
+
+    Write-Host 'VSIX lifecycle phase: release queued Command Window request'
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
+            '-ForegroundOnly',
+            '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command-window-dispatch.json'),
+            '-EvidenceDescription', 'Visual Studio Command Window dispatch boundary',
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
+        -Name 'Visual Studio Command Window dispatch boundary' | Out-Null
     Start-Sleep -Seconds 10
 
     Write-Host 'VSIX lifecycle phase: submit exact installed Copperfin command'

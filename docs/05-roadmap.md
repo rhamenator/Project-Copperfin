@@ -486,6 +486,12 @@ sender exited, so the command had already arrived before its surface existed.
 The harness now separates Command Window request, bounded lazy initialization,
 canonical command submission, and pane observation, retaining each input
 boundary independently.
+Run `31754211038` timestamped the remaining dispatch seam: the Common IDE
+package began about 0.19 seconds after the later command sender exited, not
+during the prior ten-second delay. The harness now inserts a separate
+exact-PID foreground-only helper to release the queued shortcut, exits that
+helper, allows bounded settlement, and only then starts canonical submission.
+That helper sends no product command and cannot admit lifecycle evidence.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

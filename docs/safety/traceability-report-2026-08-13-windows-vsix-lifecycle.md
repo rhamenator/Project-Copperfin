@@ -331,6 +331,21 @@ before submitting only the canonical command and exiting; then independently
 observe the pane. Each input stage has distinct retained JSON. Neither the
 settlement interval nor either input can admit lifecycle evidence.
 
+Run `31754211038` proved that a ten-second delay after the original shortcut
+sender was not itself the dispatch boundary. Both input diagnostics again
+proved exact-PID foreground ownership and exact canonical submission, while
+install and uninstall passed in 218.570 and 25.569 seconds. The retained
+ActivityLog timestamps show the Common IDE package began loading at
+`23:39:49.182`, approximately 0.19 seconds after the later canonical-command
+sender exited. The later helper's foreground transition released the previously
+queued shortcut; the command had already been sent before that lazy package was
+ready. The correction adds an exact-PID foreground-only helper between Command
+Window request and the bounded settlement interval. It emits its own retained
+diagnostic, sends no product command, and exits before the later canonical
+sender begins. Pane, package-load, PRG, error, uninstall, and residue admission
+remain independent. This run is negative dispatch-order evidence and
+`RQ-CF-REL-003` remains `gap`.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede
