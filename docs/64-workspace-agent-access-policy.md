@@ -1,8 +1,9 @@
 # Workspace-Agent Access Policy
 
-Governing product/derived requirements: `RQ-CF-AGENT-001` and
-`RQ-CF-AGENT-002` in `docs/32-recovered-requirements-traceability.md`. The
-public policy header, descriptor implementation, and focused tests carry the
+Governing product/derived requirements: `RQ-CF-AGENT-001`,
+`RQ-CF-AGENT-002`, and `RQ-CF-AGENT-003` in
+`docs/32-recovered-requirements-traceability.md`. The public policy header,
+descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
 
 Copperfin's built-in coding assistant is intended to progress from advisory

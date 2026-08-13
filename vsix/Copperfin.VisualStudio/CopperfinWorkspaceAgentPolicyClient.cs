@@ -11,6 +11,7 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinWorkspaceAgentPolicyClient
 {
+    // Implements RQ-CF-AGENT-003: strict, read-only managed consumption.
     private const string InvalidContract = "workspace-agent-policy.invalid-contract";
     private const string HostMissing = "workspace-agent-policy.host-missing";
     private const string HostFailed = "workspace-agent-policy.host-failed";

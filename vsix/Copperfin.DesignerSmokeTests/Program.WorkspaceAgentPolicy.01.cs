@@ -33,6 +33,7 @@ internal static partial class Program
 
     private static void SmokeManagedWorkspaceAgentPolicyContract()
     {
+        // Verification of RQ-CF-AGENT-003.
         Expect(string.Equals(
                 CopperfinStudioHostBridge.BuildWorkspaceAgentPolicyArguments(),
                 "--workspace-agent-policy --json",
