@@ -629,6 +629,7 @@ endif()
 add_executable(copperfin_studio_host
     apps/copperfin_studio_host/main.cpp
     apps/copperfin_studio_host/studio_host_main_shared_cli_infra.cpp
+    apps/copperfin_studio_host/studio_host_main_workspace_agent_policy.cpp
     apps/copperfin_studio_host/studio_host_main_rushmore.cpp
     apps/copperfin_studio_host/studio_host_main_shell_command.cpp
     apps/copperfin_studio_host/studio_host_main_builder.cpp

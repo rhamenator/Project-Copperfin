@@ -12,6 +12,15 @@
   boundary, rollback, and evidence analysis. `RQ-CF-AGENT-001` supplies that
   complete mapping for the workspace-agent security policy.
 
+- 2026-08-12: Added a versioned read-only Studio-host descriptor for the v1
+  workspace-agent policy. It exposes exact defaults, modes, capabilities,
+  permission/UI/audit gates, localized warning, provider-auth separation, and
+  the no-elevation invariant by consuming the policy evaluator itself. Its
+  exclusive CLI grammar rejects mixed operational switches and generic
+  unrestricted-activation attempts; it cannot manufacture trusted-UI consent.
+  Actual activation, execution, sandbox, audit commits, providers, and UI remain
+  follow-on work. See `docs/64-workspace-agent-access-policy.md`.
+
 - 2026-08-12: Seeded the v1 H3/I2 built-in coding-assistant boundary with a
   provider-independent `cf_security` access policy. Advisory, workspace
   sandbox, and warned unrestricted-local modes expose exact machine-readable

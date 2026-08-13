@@ -5120,6 +5120,24 @@ copperfin_add_test(test_workspace_agent_policy cf_security
     test_workspace_agent_policy.cpp
 )
 
+add_executable(test_studio_host_workspace_agent_policy
+    test_studio_host_workspace_agent_policy.cpp
+)
+target_link_libraries(test_studio_host_workspace_agent_policy PRIVATE
+    cf_test_process_capture_support
+    cf_platform_support
+)
+if(MSVC)
+    target_compile_options(test_studio_host_workspace_agent_policy PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_workspace_agent_policy PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_test(
+    NAME test_studio_host_workspace_agent_policy
+    COMMAND $<TARGET_FILE:test_studio_host_workspace_agent_policy>
+        $<TARGET_FILE:copperfin_studio_host>
+)
+
 copperfin_add_test(test_security_audit_concurrency "cf_security;cf_test_process_capture_support"
     test_security_audit_concurrency.cpp
 )

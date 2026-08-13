@@ -68,10 +68,29 @@ control. Authentication success is not an input to
 `evaluate_workspace_agent_activation()` and therefore cannot bypass the local
 policy.
 
+## Studio-host descriptor boundary
+
+`copperfin_studio_host --workspace-agent-policy --json` is the versioned,
+read-only bridge for trusted product clients. Schema version 1 reports the
+default-disabled feature state, advisory default, exact modes and capabilities,
+native permission id, trusted-UI and audit requirements, invariant warning id,
+localized warning prose, provider-authentication separation, and the permanent
+denial of privilege elevation. Capability fields are obtained from
+`evaluate_workspace_agent_activation()` rather than copied into a second policy
+table.
+
+This command only describes policy. Its strict grammar accepts the descriptor
+switch followed by an optional `--json`; mixed operational switches, duplicate
+switches, reordered switches, and attempted activation arguments return status
+2 without a partial descriptor. A command line therefore cannot assert that it
+is trusted product UI or manufacture warning consent. Actual activation remains
+reserved for the future trusted session/UI boundary.
+
 ## Current implementation and remaining work
 
-This slice implements the portable access-mode, capability, RBAC, localized
-warning, and fail-closed admission contracts with direct regression coverage.
+The current slices implement the portable access-mode, capability, RBAC,
+localized warning, fail-closed admission, and read-only Studio-host descriptor
+contracts with direct regression coverage.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.
@@ -81,6 +100,10 @@ Corrected signed/DCO head `4c4014f94` passes all eleven protected checks,
 including native execution on Windows, Ubuntu, and macOS. Exact run identifiers
 and the corrected independent-review record are in the safety traceability
 report.
+The descriptor process regression requires the versioned defaults, three mode
+names, risk-bearing capabilities, provider separation, RBAC/UI/audit gates,
+exact warning identity, and no elevation. It also proves mixed switches and a
+generic `--activate-unrestricted` attempt fail without emitting policy output.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
 session indicator, or the WinForms dialog that must render the warning.

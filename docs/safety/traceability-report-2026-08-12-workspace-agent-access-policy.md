@@ -21,9 +21,9 @@
 
 | Product / documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
-| `DQ-V1-workspace-agent-explicit-authority` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-misuse-walkthrough`; `DV-V1-workspace-agent-independent-review` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-explicit-authority` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-misuse-walkthrough`; `DV-V1-workspace-agent-independent-review` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-V1-workspace-agent-unrestricted-warning` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-localization`; `DV-V1-workspace-agent-independent-review` | `HZ-doc-command-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-001` | `DV-V1-workspace-agent-policy-regression`; protected exact-head matrix; reverse links in the public policy header and focused test | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 
 ## Verification Evidence
@@ -55,6 +55,19 @@ the feature-disabled audit assertion; restoration returns it to green.
 All four installed catalogs contain the warning and decision keys. The direct
 test checks invariant warning identity, reviewed en-US text, es-419 selection,
 and qps-ploc coverage. JSON parsing succeeds for every catalog.
+
+### DV-V1-workspace-agent-host-descriptor
+
+`test_studio_host_workspace_agent_policy` executes the real Studio host and
+requires schema version 1, advisory/default-disabled state, all three exact mode
+names, explicit outside-workspace and network risk, permanent denial of
+elevation, the native permission, trusted-UI/audit gates, provider separation,
+and the current warning identity. The endpoint derives capabilities by calling
+the policy evaluator. The regression also requires fail-closed status 2 and no
+partial stdout for a mixed descriptor/operational request, and rejects a
+generic command-line unrestricted-activation attempt. This is a read-only
+contract and supplies no activation path. A qps-ploc process case requires
+localized warning prose while the warning id and mode names remain invariant.
 
 ### DV-V1-workspace-agent-misuse-walkthrough
 

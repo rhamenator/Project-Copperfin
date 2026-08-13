@@ -287,6 +287,7 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
     print_localized_object_usage_line(catalog, "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePathTitle", "--default-file-path-object --default-file-path <value> [--default-file-path-target-object-name <name>] [--default-file-path-target-unique-id <id>]");
     print_localized_object_usage_line(catalog, "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAliasTitle", "--initial-selected-alias-object --initial-selected-alias <value> [--initial-selected-alias-target-object-name <name>] [--initial-selected-alias-target-unique-id <id>]");
     print_alternate_usage_line(catalog, "copperfin_studio_host --list-subsystems [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --workspace-agent-policy [--json]");
     print_alternate_usage_line(catalog, "copperfin_studio_host <asset>");
     print_selection_context_tokens_line(catalog, "visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment");
 }

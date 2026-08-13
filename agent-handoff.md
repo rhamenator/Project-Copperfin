@@ -9,6 +9,14 @@ retained exact-head results, hazards, limitations, and reverse links. Existing
 Copperfin behavior is no longer an allowed requirement source in the issue/PR
 workflow.
 
+The stacked follow-on exposes this policy through the real Studio host as a
+versioned read-only text/JSON descriptor. Capabilities come from the evaluator,
+and the descriptor includes default-disabled/advisory state, RBAC/UI/audit
+gates, the localized warning, provider separation, and no elevation. Its
+exclusive argument grammar rejects mixed operational switches and generic CLI
+activation; trusted UI activation is still unimplemented. The dedicated
+process regression covers both the stable output and those fail-closed cases.
+
 The current H3/I2 slice defines provider-independent `advisory`,
 `workspace_sandbox`, and `unrestricted_local` modes in `cf_security`. Mode
 names round-trip through one strict parser that rejects aliases and unknown

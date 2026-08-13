@@ -13,6 +13,7 @@
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/security/process_hardening.h"
 #include "copperfin/security/security_model.h"
+#include "copperfin/security/workspace_agent_policy.h"
 #include "copperfin/studio/builder_dispatch.h"
 #include "copperfin/studio/builder_invocation_admission.h"
 #include "copperfin/studio/builder_registry.h"
@@ -311,6 +312,9 @@ void print_document(
 void print_json_subsystems(const copperfin::localization::LocalizedCatalog& catalog);
 void print_subsystems(const copperfin::localization::LocalizedCatalog& catalog);
 std::optional<int> try_handle_list_subsystems(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args);
+std::optional<int> try_handle_workspace_agent_policy(
     const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args);
 
