@@ -2890,6 +2890,7 @@
   "Studio.WorkspaceAgent.Title": "[Workspace Assistant Access]",
   "Studio.WorkspaceAgent.ActivationUnavailable": "[Read-only preview; assistant activation is not available yet.]",
   "Studio.WorkspaceAgent.InvalidPolicy": "[Copperfin could not verify the workspace-assistant access policy.]",
+  "Studio.WorkspaceAgent.Error.Generic": "[Copperfin could not display the workspace-assistant access policy.]",
   "Studio.WorkspaceAgent.ModeLabel": "[Access mode:]",
   "Studio.WorkspaceAgent.Mode.Advisory": "[Advisory (advisory)]",
   "Studio.WorkspaceAgent.Mode.WorkspaceSandbox": "[Workspace sandbox (workspace_sandbox)]",

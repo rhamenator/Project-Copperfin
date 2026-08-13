@@ -38,6 +38,11 @@ internal static partial class Program
         Expect(form.WorkspaceAgentPolicyErrorTextForTest(failedHost) ==
                "Copperfin no pudo verificar la política de acceso del asistente del área de trabajo.",
             "standalone Studio should not expose raw host output as user-facing policy errors");
+        Expect(spanish.Text("Studio.WorkspaceAgent.Error.Generic") ==
+               "Copperfin no pudo mostrar la política de acceso del asistente del área de trabajo." &&
+               new CopperfinLocalization(CopperfinLocalization.PseudoLocale)
+                   .Text("Studio.WorkspaceAgent.Error.Generic") != "Studio.WorkspaceAgent.Error.Generic",
+            "unexpected workspace-assistant UI failures should resolve to fixed localized prose");
         var missingHost = new CopperfinWorkspaceAgentPolicyResult
         {
             Success = false,
