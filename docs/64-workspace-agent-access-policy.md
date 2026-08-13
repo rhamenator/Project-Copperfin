@@ -105,7 +105,9 @@ report.
 The descriptor process regression requires the versioned defaults, three mode
 names, risk-bearing capabilities, provider separation, RBAC/UI/audit gates,
 exact warning identity, and no elevation. It also proves mixed switches and a
-generic `--activate-unrestricted` attempt fail without emitting policy output.
+generic `--activate-unrestricted` attempt fail without emitting policy output;
+dedicated process cases likewise reject duplicate and reordered descriptor
+switches without partial output.
 The policy/descriptor pair passes Clang ASan/UBSan with leak detection `2/2`
 and no findings. The focused Release selection covering policy, the real host
 process, native isolation, and safety traceability passes `4/4`; the emitted

@@ -84,6 +84,18 @@ int main(int argc, char** argv) {
 
     result = copperfin::test_support::normalize_captured_process_line_endings(
         copperfin::test_support::run_process_capture(
+            argv[1], {"--workspace-agent-policy", "--workspace-agent-policy"}, work));
+    expect(result.started && result.exit_code == 2, "duplicate policy switches must fail");
+    expect(result.stdout_text.empty(), "duplicate policy switches must not emit a partial descriptor");
+
+    result = copperfin::test_support::normalize_captured_process_line_endings(
+        copperfin::test_support::run_process_capture(
+            argv[1], {"--json", "--workspace-agent-policy"}, work));
+    expect(result.started && result.exit_code == 2, "reordered policy switches must fail");
+    expect(result.stdout_text.empty(), "reordered policy switches must not emit a partial descriptor");
+
+    result = copperfin::test_support::normalize_captured_process_line_endings(
+        copperfin::test_support::run_process_capture(
             argv[1], {"--workspace-agent-policy", "--activate-unrestricted"}, work));
     expect(result.started && result.exit_code == 2, "generic CLI activation attempts must fail");
 
