@@ -32,7 +32,7 @@ retained exact-head results, hazards, limitations, and reverse links. Existing
 Copperfin behavior is no longer an allowed requirement source in the issue/PR
 workflow.
 
-The next stacked UI slice adds a localized read-only Workspace Assistant
+The current UI slice adds a localized read-only Workspace Assistant
 Access preview under standalone Studio's View menu. It defaults to advisory,
 displays the three validated modes/capabilities and the host-provided
 unrestricted-warning identity with catalog-owned warning prose, and contains
@@ -41,8 +41,15 @@ activate, capture consent, authenticate, start a session, or execute. The Design
 projects compile warning-free against net472 locally. All load failures map by
 stable diagnostic code to fixed localized product prose rather than exposing
 raw parser/process/host output; safe missing-host and timeout guidance remains
-actionable. Key surfaces have localized accessibility names. `RQ-CF-AGENT-004`
-remains `gap` until direct Mono/Windows UI evidence passes.
+actionable. Key surfaces have localized accessibility names. Exact product/test
+head `4d76b3277` passes hosted Linux Mono/Xvfb run `31687794634` and Windows
+Deep Validation `31687794715`; retained artifact identities are recorded in the
+safety report. The Windows run passed `367/367` native tests and directly passed
+the localized preview, background-load responsiveness, catalog-owned warning,
+and pseudo-localization assertions. `RQ-CF-AGENT-004` is therefore `defined`
+for this deliberately non-activating preview. Provider/OAuth, activation,
+consent, audit commits, session/stop controls, executor, sandbox, diff, and undo
+remain open.
 
 The strict read-only managed consumer is shared by
 the standalone Studio shell, VSIX, and Designer smoke assembly. It calls only

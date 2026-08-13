@@ -28,7 +28,7 @@
 | `RQ-CF-AGENT-001` | `DV-V1-workspace-agent-policy-regression`; protected exact-head matrix; reverse links in the public policy header and focused test | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 | `RQ-CF-AGENT-002` | `DV-V1-workspace-agent-host-descriptor`; reverse links in the descriptor implementation and process test; protected exact-head matrix | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-003` | `DV-V1-workspace-agent-managed-client`; reverse links in the strict managed client and smoke; exact-head Linux execution `31677215316`; exact-head Windows execution `31677215577` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `RQ-CF-AGENT-004` | `DV-V1-workspace-agent-policy-preview`; reverse links in standalone Studio, the dialog, managed localization, and focused smoke; background-load responsiveness regression; local managed compile passes while exact-head Linux/Windows execution remains required | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
+| `RQ-CF-AGENT-004` | `DV-V1-workspace-agent-policy-preview`; reverse links in standalone Studio, the dialog, managed localization, and focused smoke; background-load responsiveness regression; exact product/test head `4d76b3277` passes Linux `31687794634` and Windows `31687794715` | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 
 ## Verification Evidence
 
@@ -120,8 +120,22 @@ synthetic nonzero-host result likewise proves that raw host output is retained
 outside the user-facing message rather than treated as trusted prose. Synthetic
 missing-host and timeout results prove their messages are selected from fixed
 catalog text by diagnostic code rather than copied from the result. Both the full Designer smoke assembly
-and standalone Studio shell compile warning-free against net472 locally;
-direct Mono and Windows hosted execution remain scheduled before merge.
+and standalone Studio shell compile warning-free against net472 locally.
+Exact product/test head `4d76b3277` passes hosted Linux Mono/Xvfb run
+`31687794634`, including the catalog-owned warning and substituted-host-prose
+regression. Its retained `copperfin-managed-ui-linux` artifact has digest
+`sha256:ce816aa5755edea6bbb3750307831a56debbb1a4a1d5aa02aff5150dd028bb60`
+and expires `2026-11-11T09:42:16Z`. Exact-head Windows Deep Validation
+`31687794715` passes `367/367` native tests, builds the VSIX and managed hosts,
+and executes the complete managed, Studio, and Designer smoke selection. The
+direct preview assertions pass for localized access, nonblocking background
+loading and completion, advisory/no-activation chrome, catalog-owned warning
+prose, permanent no-elevation, and pseudo-localization. Its retained
+`copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
+`sha256:83a8f7c96ffefd173b98781f21e0f8498610534164f5acf2f0afb7a6c4114ad9`
+and expires `2026-11-11T09:42:15Z`. Fixture-dependent real-asset cases and the
+separate runtime/xAsset/report/menu deep stages were skipped in this run and
+are not evidence for `RQ-CF-AGENT-004`.
 
 ### DV-V1-workspace-agent-misuse-walkthrough
 

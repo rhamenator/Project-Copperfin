@@ -8,6 +8,9 @@
   capability, status, and Close surfaces have localized accessibility names.
   The validated versioned warning identity selects catalog-owned warning prose;
   host-supplied warning text cannot replace trusted UI guidance.
+  Exact-head Linux Mono/Xvfb and Windows Studio/Designer execution pass; the
+  latter also passes all `367/367` native tests. Activation and mutable tooling
+  remain deliberately unimplemented.
   See
   `docs/64-workspace-agent-access-policy.md`.
 

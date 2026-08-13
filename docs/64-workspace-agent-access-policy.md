@@ -1,7 +1,7 @@
 # Workspace-Agent Access Policy
 
 Governing product/derived requirements: `RQ-CF-AGENT-001`,
-`RQ-CF-AGENT-002`, and `RQ-CF-AGENT-003` in
+`RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, and `RQ-CF-AGENT-004` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -165,6 +165,17 @@ grammar and success assertions plus all twenty fail-closed cases. The retained
 `copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
 `sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`
 and expires `2026-11-11T07:18:19Z`.
+The read-only preview's exact product/test head `4d76b3277` passes Linux
+Mono/Xvfb run `31687794634`; its retained `copperfin-managed-ui-linux`
+artifact has digest
+`sha256:ce816aa5755edea6bbb3750307831a56debbb1a4a1d5aa02aff5150dd028bb60`
+and expires `2026-11-11T09:42:16Z`. Windows Deep Validation `31687794715`
+passes `367/367` native tests and the complete managed/Studio/Designer
+selection, including direct localized-preview, background-load,
+catalog-owned-warning, and pseudo-localization assertions. Its retained
+`copperfin-windows-deep-validation-Release-build-2-test-2` artifact has digest
+`sha256:83a8f7c96ffefd173b98781f21e0f8498610534164f5acf2f0afb7a6c4114ad9`
+and expires `2026-11-11T09:42:15Z`.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
 session indicator, or the WinForms consent dialog that must render and bind the
