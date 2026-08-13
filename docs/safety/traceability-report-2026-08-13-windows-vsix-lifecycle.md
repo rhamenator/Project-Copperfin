@@ -33,6 +33,11 @@ the schema-v3 contract, durable matrix row, RC guide, and focused contract.
 - The precondition rejects an already installed Copperfin extension. The
   verifier inventories only that selected instance and never deletes extension
   directories to manufacture a clean result.
+- Lifecycle execution immediately follows package construction, before managed
+  test programs run, so a test descendant cannot become a VSIXInstaller
+  blocking process. MSBuild node reuse is disabled so the package-construction
+  process does not remain as an installer blocker. Later managed tests consume
+  the same built package only after uninstall and residue verification succeed.
 - The PRG fixture, activity log, and extracted package live under one explicit
   runner-temporary evidence root. Visual Studio launches with that directory as
   its working directory, so the smoke does not rely on the source checkout.

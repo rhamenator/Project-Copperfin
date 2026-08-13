@@ -39,7 +39,18 @@ jobs:
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
 
       - name: Restore and build VSIX
-        run: msbuild vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj /restore /t:Rebuild /p:Configuration=Release /p:DeployExtension=false
+        run: msbuild vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj /restore /t:Rebuild /nodeReuse:false /p:Configuration=Release /p:DeployExtension=false
+
+      - name: Exercise Windows VSIX lifecycle
+        shell: pwsh
+        run: |
+          $vsix = @(Get-ChildItem -LiteralPath 'vsix/Copperfin.VisualStudio/bin/Release/net472' -Filter '*.vsix' -File)
+          if ($vsix.Count -ne 1) {
+            throw "Expected exactly one VSIX artifact, found $($vsix.Count)."
+          }
+          ./scripts/test-windows-vsix-lifecycle.ps1 `
+            -VsixPath $vsix[0].FullName `
+            -EvidenceDirectory (Join-Path $env:RUNNER_TEMP "copperfin-vsix-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT")
 
       - name: Verify localized command resources
         shell: pwsh
@@ -53,17 +64,6 @@ jobs:
 
       - name: Run .NET Framework process-runner tests
         run: dotnet run --project vsix/Copperfin.ProcessRunnerNetFrameworkTests/Copperfin.ProcessRunnerNetFrameworkTests.csproj --configuration Release
-
-      - name: Exercise Windows VSIX lifecycle
-        shell: pwsh
-        run: |
-          $vsix = @(Get-ChildItem -LiteralPath 'vsix/Copperfin.VisualStudio/bin/Release/net472' -Filter '*.vsix' -File)
-          if ($vsix.Count -ne 1) {
-            throw "Expected exactly one VSIX artifact, found $($vsix.Count)."
-          }
-          ./scripts/test-windows-vsix-lifecycle.ps1 `
-            -VsixPath $vsix[0].FullName `
-            -EvidenceDirectory (Join-Path $env:RUNNER_TEMP "copperfin-vsix-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT")
 
       - name: Stage Windows VSIX lifecycle evidence
         shell: pwsh

@@ -58,7 +58,15 @@ require_text("${script}" "development_checkout_dependency = 'PASS'" "checkout-in
 require_text("${script}" "windows-vsix-lifecycle.json" "machine-readable retained evidence")
 require_text("${workflow}" "workflow_dispatch:" "manual exact-head validation trigger")
 require_text("${workflow}" "Exercise Windows VSIX lifecycle" "hosted lifecycle step")
+require_text("${workflow}" "/nodeReuse:false" "MSBuild descendant shutdown before installation")
 require_text("${workflow}" "windows-vsix-lifecycle.json" "retained lifecycle evidence upload")
+file(READ "${SOURCE_DIR}/${workflow}" workflow_contents)
+string(FIND "${workflow_contents}" "Exercise Windows VSIX lifecycle" lifecycle_offset)
+string(FIND "${workflow_contents}" "Run managed VSIX behavior tests" managed_test_offset)
+if(lifecycle_offset EQUAL -1 OR managed_test_offset EQUAL -1 OR
+        NOT lifecycle_offset LESS managed_test_offset)
+    message(FATAL_ERROR "VSIX lifecycle must run before managed test processes can remain")
+endif()
 require_text("scripts/assemble-rc-candidate.py" "require_windows_vsix_lifecycle_evidence" "fail-closed RC evidence ingestion")
 require_text("docs/contracts/rc-validation-manifest-v3.schema.json" "windows_disablement" "manifest disablement field")
 
