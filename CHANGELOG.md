@@ -72,6 +72,11 @@
   the controlled IDE without a queued command, routes built-in
   `View.CommandWindow` separately, observes the built-in Command Window in the
   controlled IDE PID, and only then routes the Copperfin command.
+  Run `31739502436` proved the second `devenv` process did not route even the
+  built-in command into the controlled IDE. Cross-process routing is now
+  removed: one controlled IDE receives the exact runner-owned PRG and Copperfin
+  command as startup inputs, while UI Automation and ActivityLog evidence must
+  still independently prove the document, command pane, and package load.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

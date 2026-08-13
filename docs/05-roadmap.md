@@ -426,6 +426,11 @@ or package error. The verifier now establishes semantic command readiness by
 routing `View.CommandWindow` separately and proving the built-in Command Window
 inside the controlled IDE PID before routing the Copperfin command. This
 remains a gap pending fresh exact-head lifecycle evidence and review.
+Run `31739502436` proved a second `devenv` process did not route even that
+built-in command into the controlled IDE. The verifier now removes the
+cross-process dependency: the single controlled IDE receives the exact fixture
+and Copperfin command as startup inputs, then independently requires both UI
+surfaces and package-load evidence from that same process.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

@@ -98,6 +98,11 @@ controlled IDE without a queued command, routes built-in `View.CommandWindow`
 from a distinct bounded process, proves the built-in Command Window in that IDE
 PID, and only then routes `Copperfin.ShowCommandWindow`. Exact-head execution
 and rereview remain required; `RQ-CF-REL-003` remains `gap`.
+Run `31739502436` proved the second `devenv` process did not route even the
+built-in command into the controlled IDE. The current verifier therefore uses
+one controlled IDE process, supplies the exact PRG and Copperfin command as
+startup inputs, and independently requires both UI surfaces plus successful
+package-load evidence from that process. Inputs alone are not evidence.
 
 ## V1 Windows installer lifecycle
 

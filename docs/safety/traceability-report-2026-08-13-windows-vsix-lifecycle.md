@@ -209,7 +209,14 @@ the built-in `View.CommandWindow` command from a distinct bounded process, and
 requires the built-in Command Window to be observable in the controlled IDE
 PID before routing `Copperfin.ShowCommandWindow`. The semantic readiness proof
 replaces an unevidenced timing assumption; it does not weaken the later exact
-Copperfin pane, PRG document, or package-load requirements.
+Copperfin pane, PRG document, or package-load requirements. Run
+`31739502436` then proved the second `devenv /Command` process did not route
+even the built-in command into the controlled IDE, despite completed
+environment and window-management package loads. The current correction
+eliminates cross-process routing: the one controlled IDE receives the exact
+runner-owned PRG path and `Copperfin.ShowCommandWindow` on its startup command
+line, after which UI Automation must independently prove both surfaces in that
+same process. Startup inputs do not themselves count as proof.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
