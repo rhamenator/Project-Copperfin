@@ -107,7 +107,8 @@ advisory, lets the user inspect all three exact modes and capabilities, and
 shows the host-provided current warning when unrestricted mode is selected.
 It states that activation is unavailable and contains only a Close button: it
 does not enable a feature, grant permission, record consent, start a session,
-authenticate a provider, or execute a tool.
+authenticate a provider, or execute a tool. Invalid descriptor diagnostics are
+kept behind a localized generic UI error rather than exposing parser details.
 
 ## Current implementation and remaining work
 

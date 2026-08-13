@@ -260,7 +260,7 @@ internal sealed class StudioMainForm : Form
         {
             MessageBox.Show(
                 this,
-                result.Error,
+                WorkspaceAgentPolicyErrorText(result),
                 localization.Text("Studio.WorkspaceAgent.Title"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
@@ -269,6 +269,21 @@ internal sealed class StudioMainForm : Form
 
         using var dialog = new StudioWorkspaceAgentPolicyDialog(result.Descriptor, localization);
         dialog.ShowDialog(this);
+    }
+
+    internal string WorkspaceAgentPolicyErrorTextForTest(CopperfinWorkspaceAgentPolicyResult result)
+    {
+        return WorkspaceAgentPolicyErrorText(result);
+    }
+
+    private string WorkspaceAgentPolicyErrorText(CopperfinWorkspaceAgentPolicyResult result)
+    {
+        return string.Equals(
+                result.DiagnosticCode,
+                "workspace-agent-policy.invalid-contract",
+                StringComparison.Ordinal)
+            ? localization.Text("Studio.WorkspaceAgent.InvalidPolicy")
+            : result.Error;
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)

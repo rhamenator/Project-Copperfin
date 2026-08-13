@@ -23,6 +23,10 @@ internal static partial class Program
         using var form = new StudioMainForm(spanish, new InMemoryStudioShellLayoutStore());
         Expect(form.WorkspaceAgentPolicyMenuText == "Acceso del asistente del área de trabajo...",
             "standalone Studio should expose localized workspace-assistant policy access");
+        var invalidPolicy = CopperfinWorkspaceAgentPolicyClient.TryParse("not-json");
+        Expect(form.WorkspaceAgentPolicyErrorTextForTest(invalidPolicy) ==
+               "Copperfin no pudo verificar la política de acceso del asistente del área de trabajo.",
+            "standalone Studio should not expose raw invariant parser details as user-facing policy errors");
 
         using var dialog = form.CreateWorkspaceAgentPolicyDialogForTest(parsed.Descriptor);
         var dialogButtons = FindButtons(dialog).ToList();

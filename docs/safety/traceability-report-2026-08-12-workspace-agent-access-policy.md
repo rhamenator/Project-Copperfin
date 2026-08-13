@@ -110,7 +110,8 @@ Studio menu/dialog chrome, advisory default selection, exactly three modes,
 host-provided unrestricted warning prose, explicit false elevation, and only a
 localized Close button. It also exercises pseudo-localized chrome. The preview
 has no activation, consent, provider, session, or executor control; selecting a
-mode changes displayed information only. Both the full Designer smoke assembly
+mode changes displayed information only. Malformed descriptor details map to a
+localized generic UI error while retaining the stable diagnostic code. Both the full Designer smoke assembly
 and standalone Studio shell compile warning-free against net472 locally;
 direct Mono and Windows hosted execution remain scheduled before merge.
 
