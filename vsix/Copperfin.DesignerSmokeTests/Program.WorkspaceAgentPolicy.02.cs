@@ -57,6 +57,7 @@ internal static partial class Program
             "standalone Studio should select safe catalog-owned host guidance by diagnostic code");
 
         using var loaderStarted = new ManualResetEventSlim(false);
+        using var loaderFinished = new ManualResetEventSlim(false);
         using var releaseLoader = new ManualResetEventSlim(false);
         using var asyncForm = new StudioMainForm(
             spanish,
@@ -65,9 +66,10 @@ internal static partial class Program
             {
                 loaderStarted.Set();
                 releaseLoader.Wait();
+                loaderFinished.Set();
                 return parsed;
             });
-        var pendingLoad = asyncForm.LoadWorkspaceAgentPolicyAsyncForTest();
+        var pendingLoad = asyncForm.LoadWorkspaceAgentPolicyForTestAsync();
         try
         {
             Expect(loaderStarted.Wait(TimeSpan.FromSeconds(2)) && !pendingLoad.IsCompleted,
@@ -77,8 +79,8 @@ internal static partial class Program
         {
             releaseLoader.Set();
         }
-        Expect(pendingLoad.GetAwaiter().GetResult().Success,
-            "workspace-assistant policy background loading should return the validated descriptor");
+        Expect(loaderFinished.Wait(TimeSpan.FromSeconds(2)),
+            "workspace-assistant policy background loader should finish after release");
 
         using var dialog = form.CreateWorkspaceAgentPolicyDialogForTest(parsed.Descriptor);
         var dialogButtons = FindButtons(dialog).ToList();

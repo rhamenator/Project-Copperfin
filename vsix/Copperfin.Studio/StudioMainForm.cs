@@ -157,7 +157,7 @@ internal sealed class StudioMainForm : Form
         workspaceAgentPolicyMenuItem = new ToolStripMenuItem(
             this.localization.Text("Studio.WorkspaceAgent.Menu"),
             null,
-            async (_, _) => await ShowWorkspaceAgentPolicyAsync());
+            OnWorkspaceAgentPolicyMenuItemClick);
         floatCommandWindowMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.FloatCommandWindowMenu"))
         {
             CheckOnClick = true
@@ -275,7 +275,20 @@ internal sealed class StudioMainForm : Form
         workspaceAgentPolicyMenuItem.Enabled = false;
         try
         {
-            var result = await LoadWorkspaceAgentPolicyAsyncForTest();
+            CopperfinWorkspaceAgentPolicyResult result;
+            try
+            {
+                result = await LoadWorkspaceAgentPolicyForTestAsync();
+            }
+            catch (Exception ex)
+            {
+                result = new CopperfinWorkspaceAgentPolicyResult
+                {
+                    Success = false,
+                    DiagnosticCode = "workspace-agent-policy.host-failed",
+                    Error = ex.Message
+                };
+            }
             if (IsDisposed || Disposing)
             {
                 return;
@@ -303,7 +316,29 @@ internal sealed class StudioMainForm : Form
         }
     }
 
-    internal Task<CopperfinWorkspaceAgentPolicyResult> LoadWorkspaceAgentPolicyAsyncForTest()
+    private async void OnWorkspaceAgentPolicyMenuItemClick(object? sender, EventArgs e)
+    {
+        try
+        {
+            await ShowWorkspaceAgentPolicyAsync();
+        }
+        catch (Exception)
+        {
+            // Event handlers cannot return a faulted task. Keep any unexpected
+            // UI failure inside the fixed, localized product-message boundary.
+            if (!IsDisposed && !Disposing)
+            {
+                MessageBox.Show(
+                    this,
+                    localization.Text("Studio.WorkspaceAgent.Error.Generic"),
+                    localization.Text("Studio.WorkspaceAgent.Title"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+        }
+    }
+
+    internal Task<CopperfinWorkspaceAgentPolicyResult> LoadWorkspaceAgentPolicyForTestAsync()
     {
         return Task.Run(() => workspaceAgentPolicyLoader(localization));
     }
