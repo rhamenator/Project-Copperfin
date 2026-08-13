@@ -7850,4 +7850,8 @@ passes `1/1`.
   paths: suppressed read failures and an exact CPack uninstall key with cleared
   values. The corrected verifier fails closed on existing-base/key reads and
   matches the generated exact key independently of its values. Corrected
-  exact-head hosted execution remains required before `RQ-CF-REL-002` advances.
+  run `31700912913` then exposed PowerShell's successful zero-output
+  representation for a no-value registry key before installer launch. Such
+  keys are now normalized to explicit empty property objects without
+  suppressing real read errors. Another exact-head hosted execution remains
+  required before `RQ-CF-REL-002` advances.

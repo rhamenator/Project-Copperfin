@@ -17,6 +17,10 @@ registry verifier: suppressed read errors and an exact leftover CPack key with
 cleared values. The corrected implementation fails closed and recognizes the
 generated exact key independently of its values. `RQ-CF-REL-002` is again a
 gap until corrected exact-head Windows execution passes.
+The first corrected run, `31700912913`, exposed a successful empty registry-key
+read represented as no pipeline object before installer launch. Empty keys are
+now normalized explicitly without suppressing real read errors; another exact-
+head run is required.
 
 ## V1 RC evidence truthfulness
 

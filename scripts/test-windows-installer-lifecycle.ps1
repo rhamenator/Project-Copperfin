@@ -191,7 +191,10 @@ function Get-CopperfinUninstallEntries {
                 continue
             }
             foreach ($registryKey in @(Get-ChildItem -LiteralPath $registryBase -ErrorAction Stop)) {
-                $entry = Get-ItemProperty -LiteralPath $registryKey.PSPath -ErrorAction Stop
+                $entryResults = @(Get-ItemProperty -LiteralPath $registryKey.PSPath -ErrorAction Stop)
+                Assert-Condition ($entryResults.Count -le 1) `
+                    "Registry key returned multiple property objects: $($registryKey.PSPath)"
+                $entry = if ($entryResults.Count -eq 0) { [pscustomobject]@{} } else { $entryResults[0] }
                 if (Test-IsCopperfinUninstallEntry `
                         -Entry $entry `
                         -ActualRegistryKeyName $registryKey.PSChildName `

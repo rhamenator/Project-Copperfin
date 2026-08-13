@@ -55,7 +55,9 @@ identifiers; the focused check enforces those reverse links.
   cannot be misreported as zero residue. The configured CPack uninstall-key
   identity is generated into the build contract and passed explicitly to the
   verifier; an exact key remains residue even when all of its values were
-  cleared.
+  cleared. A successfully read unrelated key with no values is normalized to
+  an explicit empty property object; that provider representation is distinct
+  from a terminating read error and remains eligible for exact-key matching.
 
 Potential severity is **high** because false lifecycle evidence could admit an
 installer that cannot be safely deployed or removed. No user project, legacy
@@ -78,6 +80,9 @@ could be suppressed and a leftover exact CPack key with cleared values could
 escape the old filter. That run is retained as discovery evidence but does not
 verify the corrected implementation. `RQ-CF-REL-002` therefore remains `gap`
 until the corrected exact-head hosted lifecycle passes and is retained.
+Corrected-head run `31700912913` exposed the empty-key provider representation
+before installer launch; macOS/Linux packaging passed, while its Windows result
+is discovery evidence only.
 
 macOS productbuild, Linux DEB/RPM, previous-version Windows upgrade, VSIX
 lifecycle, human UI smoke, and platform signing are outside this slice and

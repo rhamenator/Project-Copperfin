@@ -90,8 +90,10 @@ require_text("${script}" "[System.StringComparison]::OrdinalIgnoreCase"
     "exact case-insensitive CPack uninstall-key identity")
 require_text("${script}" "Get-ChildItem -LiteralPath $registryBase -ErrorAction Stop"
     "fail-closed uninstall-key enumeration")
-require_text("${script}" "Get-ItemProperty -LiteralPath $registryKey.PSPath -ErrorAction Stop"
+require_text("${script}" "@(Get-ItemProperty -LiteralPath $registryKey.PSPath -ErrorAction Stop)"
     "fail-closed uninstall-entry read")
+require_text("${script}" "if ($entryResults.Count -eq 0) { [pscustomobject]@{} }"
+    "successful empty registry-key normalization")
 forbid_text("${script}" "ErrorAction SilentlyContinue" "suppressed registry-read failure")
 require_text("${script}" "Exact CPack uninstall key with cleared values escaped residue detection"
     "sparse exact-key executable regression")
