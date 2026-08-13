@@ -68,7 +68,11 @@ process, explicitly forwards `/Edit` plus the fixture to the running IDE, and
 then requires the exact document descendant or fixture
 window-title prefix. It also requires an explicit successful package-load XML
 entry and rejects matching errors.
-`RQ-CF-REL-003` remains `gap` pending corrected exact-head execution and
+`RQ-CF-REL-003` remains `gap` pending corrected exact-head execution. Run
+`31731652063` did not reach the focus correction because hosted VSIX
+installation exceeded a brittle 240-second bound after prior installs
+approached 238 seconds. The corrected default is 300 seconds, still bounded
+with process-tree termination.
 rereview.
 
 ## V1 Windows installer lifecycle

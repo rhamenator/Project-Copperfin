@@ -158,6 +158,13 @@ rejects matching error entries. The self-test includes nominal-success and
 success-plus-error records. Corrected exact-head hosted execution is pending;
 `RQ-CF-REL-003` is reset to `gap`.
 
+Run `31731652063` did not exercise that foreground-owner correction: hosted
+VSIX installation exceeded the 240-second process bound after prior installs
+had approached 238 seconds. The default remains bounded with process-tree
+termination but is widened to 300 seconds for demonstrated hosted scheduling
+variation; the run is retained as installer-timeout diagnostics, not command
+or lifecycle evidence.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

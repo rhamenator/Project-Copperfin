@@ -17,7 +17,7 @@ param(
 
     [Parameter(ParameterSetName = 'Lifecycle')]
     [ValidateRange(30, 600)]
-    [int]$ProcessTimeoutSeconds = 240,
+    [int]$ProcessTimeoutSeconds = 300,
 
     [Parameter(Mandatory = $true, ParameterSetName = 'SelfTest')]
     [switch]$SelfTest

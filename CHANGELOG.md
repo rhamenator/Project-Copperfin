@@ -45,6 +45,10 @@
   proves that process's command surface, explicitly forwards `/Edit` plus the
   fixture to it, and requires exact document proof plus explicit successful-load
   XML/error rejection in fresh exact-head evidence.
+  Run `31731652063` did not reach the focus correction because hosted VSIX
+  installation exceeded the 240-second process bound after prior installs
+  approached 238 seconds. The corrected 300-second default remains bounded and
+  retains timed-out process-tree termination.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

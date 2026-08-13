@@ -398,6 +398,10 @@ process's pane,
 explicitly forwards `/Edit` plus the fixture to it, then requires exact
 fixture-title proof, explicit successful-load XML, and matching-error rejection
 in fresh exact-head execution.
+Run `31731652063` did not reach that correction because VSIX installation
+exceeded the 240-second bound after prior hosted installs approached 238
+seconds. The default is widened, still bounded, to 300 seconds and retains
+timed-out process-tree termination.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse
