@@ -62,7 +62,7 @@ and qps-ploc coverage. JSON parsing succeeds for every catalog.
 requires schema version 1, advisory/default-disabled state, all three exact mode
 names, explicit outside-workspace and network risk, permanent denial of
 elevation, the native permission, trusted-UI/audit gates, provider separation,
-and the current warning identity. The endpoint derives capabilities by calling
+descriptor-only/no-activation state, and the current warning identity. The endpoint derives capabilities by calling
 the policy evaluator. The regression also requires fail-closed status 2 and no
 partial stdout for a mixed descriptor/operational request, and rejects a
 generic command-line unrestricted-activation attempt. This is a read-only

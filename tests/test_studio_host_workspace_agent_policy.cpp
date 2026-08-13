@@ -45,6 +45,8 @@ int main(int argc, char** argv) {
             argv[1], {"--workspace-agent-policy", "--json"}, work));
     expect(result.started && result.exit_code == 0, "JSON policy descriptor should succeed");
     expect_contains(result.stdout_text, "\"schemaVersion\": 1", "descriptor version must be explicit");
+    expect_contains(result.stdout_text, "\"descriptorOnly\": true", "endpoint must identify itself as descriptor-only");
+    expect_contains(result.stdout_text, "\"activationAvailable\": false", "descriptor endpoint must not claim activation availability");
     expect_contains(result.stdout_text, "\"defaultMode\": \"advisory\"", "advisory must be the default");
     expect_contains(result.stdout_text, "\"featureEnabledByDefault\": false", "feature must default off");
     expect_contains(result.stdout_text, "\"providerAuthenticationGrantsLocalAuthority\": false", "provider authentication must not grant local authority");

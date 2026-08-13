@@ -62,6 +62,8 @@ void print_workspace_agent_policy_json(
     const copperfin::localization::LocalizedCatalog& catalog) {
     const auto warning = copperfin::security::unrestricted_workspace_agent_warning(catalog);
     std::cout << "{\n  \"schemaVersion\": 1,\n  \"status\": \"ok\",\n";
+    std::cout << "  \"descriptorOnly\": true,\n";
+    std::cout << "  \"activationAvailable\": false,\n";
     std::cout << "  \"defaultMode\": \"advisory\",\n";
     std::cout << "  \"featureEnabledByDefault\": false,\n";
     std::cout << "  \"providerAuthenticationGrantsLocalAuthority\": false,\n";
@@ -106,6 +108,7 @@ void print_workspace_agent_policy_text(
     const copperfin::localization::LocalizedCatalog& catalog) {
     const auto warning = copperfin::security::unrestricted_workspace_agent_warning(catalog);
     std::cout << "schema_version: 1\nstatus: ok\ndefault_mode: advisory\n";
+    std::cout << "descriptor_only: true\nactivation_available: false\n";
     std::cout << "feature_enabled_by_default: false\n";
     std::cout << "provider_authentication_grants_local_authority: false\n";
     std::cout << "activation.permission_id: ai.workspace_agent\n";

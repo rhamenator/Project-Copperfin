@@ -75,7 +75,8 @@ read-only bridge for trusted product clients. Schema version 1 reports the
 default-disabled feature state, advisory default, exact modes and capabilities,
 native permission id, trusted-UI and audit requirements, invariant warning id,
 localized warning prose, provider-authentication separation, and the permanent
-denial of privilege elevation. Capability fields are obtained from
+denial of privilege elevation. It explicitly reports `descriptorOnly: true`
+and `activationAvailable: false`. Capability fields are obtained from
 `evaluate_workspace_agent_activation()` rather than copied into a second policy
 table.
 
