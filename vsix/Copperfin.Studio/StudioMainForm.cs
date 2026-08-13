@@ -278,12 +278,9 @@ internal sealed class StudioMainForm : Form
 
     private string WorkspaceAgentPolicyErrorText(CopperfinWorkspaceAgentPolicyResult result)
     {
-        return string.Equals(
-                result.DiagnosticCode,
-                "workspace-agent-policy.invalid-contract",
-                StringComparison.Ordinal)
-            ? localization.Text("Studio.WorkspaceAgent.InvalidPolicy")
-            : result.Error;
+        // Result.Error remains available to diagnostics, but host output and
+        // process details are not trusted user-facing prose.
+        return localization.Text("Studio.WorkspaceAgent.InvalidPolicy");
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)

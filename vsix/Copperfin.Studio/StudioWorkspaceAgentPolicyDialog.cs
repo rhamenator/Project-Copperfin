@@ -46,6 +46,7 @@ internal sealed class StudioWorkspaceAgentPolicyDialog : Form
 
         activationStatusLabel = new Label
         {
+            AccessibleName = localization.Text("Studio.WorkspaceAgent.ActivationUnavailable"),
             AutoSize = true,
             Dock = DockStyle.Top,
             Font = new Font(Font, FontStyle.Bold),
@@ -61,6 +62,7 @@ internal sealed class StudioWorkspaceAgentPolicyDialog : Form
         };
         modeSelector = new ComboBox
         {
+            AccessibleName = localization.Text("Studio.WorkspaceAgent.ModeLabel"),
             Dock = DockStyle.Top,
             DropDownStyle = ComboBoxStyle.DropDownList
         };
@@ -72,6 +74,7 @@ internal sealed class StudioWorkspaceAgentPolicyDialog : Form
 
         detailsTextBox = new TextBox
         {
+            AccessibleName = localization.Text("Studio.WorkspaceAgent.Capabilities"),
             Dock = DockStyle.Fill,
             Multiline = true,
             ReadOnly = true,
@@ -82,6 +85,7 @@ internal sealed class StudioWorkspaceAgentPolicyDialog : Form
 
         var closeButton = new Button
         {
+            AccessibleName = localization.Text("Studio.WorkspaceAgent.Close"),
             AutoSize = true,
             DialogResult = DialogResult.OK,
             Text = localization.Text("Studio.WorkspaceAgent.Close")
@@ -119,6 +123,8 @@ internal sealed class StudioWorkspaceAgentPolicyDialog : Form
         (modeSelector.SelectedItem as ModeItem)?.Descriptor.Name ?? string.Empty;
     internal string DetailsText => detailsTextBox.Text;
     internal string ActivationStatusText => activationStatusLabel.Text;
+    internal string ModeSelectorAccessibleName => modeSelector.AccessibleName;
+    internal string DetailsAccessibleName => detailsTextBox.AccessibleName;
 
     internal void SelectModeForTest(string name)
     {

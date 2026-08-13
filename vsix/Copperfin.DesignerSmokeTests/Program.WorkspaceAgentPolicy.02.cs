@@ -27,13 +27,25 @@ internal static partial class Program
         Expect(form.WorkspaceAgentPolicyErrorTextForTest(invalidPolicy) ==
                "Copperfin no pudo verificar la política de acceso del asistente del área de trabajo.",
             "standalone Studio should not expose raw invariant parser details as user-facing policy errors");
+        var failedHost = new CopperfinWorkspaceAgentPolicyResult
+        {
+            Success = false,
+            DiagnosticCode = "workspace-agent-policy.host-failed",
+            Error = "untrusted host stderr"
+        };
+        Expect(form.WorkspaceAgentPolicyErrorTextForTest(failedHost) ==
+               "Copperfin no pudo verificar la política de acceso del asistente del área de trabajo.",
+            "standalone Studio should not expose raw host output as user-facing policy errors");
 
         using var dialog = form.CreateWorkspaceAgentPolicyDialogForTest(parsed.Descriptor);
         var dialogButtons = FindButtons(dialog).ToList();
         Expect(dialog.Text == "Acceso del asistente del área de trabajo" &&
                dialog.ActivationStatusText == "Vista previa de solo lectura; la activación del asistente aún no está disponible." &&
                dialog.ModeCount == 3 && dialog.SelectedModeName == "advisory" &&
-               dialogButtons.Count == 1 && dialogButtons[0].Text == "Cerrar",
+               dialog.ModeSelectorAccessibleName == "Modo de acceso:" &&
+               dialog.DetailsAccessibleName == "Capacidades" &&
+               dialogButtons.Count == 1 && dialogButtons[0].Text == "Cerrar" &&
+               dialogButtons[0].AccessibleName == "Cerrar",
             "workspace-assistant policy surface should localize its chrome and default to advisory without activation");
 
         dialog.SelectModeForTest("unrestricted_local");
