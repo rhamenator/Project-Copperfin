@@ -68,6 +68,10 @@ partial stdout for a mixed descriptor/operational request, and rejects a
 generic command-line unrestricted-activation attempt. This is a read-only
 contract and supplies no activation path. A qps-ploc process case requires
 localized warning prose while the warning id and mode names remain invariant.
+The focused Release policy/host/isolation/safety selection passes `4/4`. The
+policy and real host-process tests pass under Clang ASan/UBSan with leak
+detection `2/2` and no findings; direct `jq` evaluation accepts the emitted
+schema and required invariant fields.
 
 ### DV-V1-workspace-agent-misuse-walkthrough
 

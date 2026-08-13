@@ -104,6 +104,10 @@ The descriptor process regression requires the versioned defaults, three mode
 names, risk-bearing capabilities, provider separation, RBAC/UI/audit gates,
 exact warning identity, and no elevation. It also proves mixed switches and a
 generic `--activate-unrestricted` attempt fail without emitting policy output.
+The policy/descriptor pair passes Clang ASan/UBSan with leak detection `2/2`
+and no findings. The focused Release selection covering policy, the real host
+process, native isolation, and safety traceability passes `4/4`; the emitted
+schema also parses and satisfies its invariant fields with `jq`.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
 session indicator, or the WinForms dialog that must render the warning.
