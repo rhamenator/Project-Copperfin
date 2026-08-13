@@ -15,6 +15,14 @@ next sequential RC number.
 2. Extract it into a new directory.
 3. Compare the tag and 40-character revision in
    `rc-validation-manifest.json` with the workflow page.
+   Validate that manifest against the bundled
+   `rc-validation-manifest.schema.json`. Schema version 2 separates package
+   construction/static checks from actual installer and VSIX lifecycle
+   execution. `NOT_RUN` means the bundle workflow did not perform that
+   lifecycle; it must not be read as a failure or a pass.
+   The signing, linguistic-review, and real-installed-VFP9 fields use the same
+   vocabulary and describe only this exact candidate workflow. Evidence from a
+   separate protected or human run must not be inferred into this manifest.
 4. Verify every entry in `SHA256SUMS.txt` before opening or installing a
    payload. On Windows, use `Get-FileHash -Algorithm SHA256`; on macOS or
    Linux, use `shasum -a 256` or `sha256sum`.
@@ -28,6 +36,8 @@ next sequential RC number.
 - `installers/macos/` contains the productbuild package and portable TGZ.
 - `installers/linux/` contains DEB, RPM, and portable TGZ packages.
 - `ide/visual-studio/` contains the Visual Studio VSIX.
+- `rc-validation-manifest.schema.json` defines the invariant status vocabulary
+  and exact machine-readable validation fields used by the candidate manifest.
 - `source/` contains the exact Corresponding Source archive for the tagged
   revision.
 - `sbom/` contains the CycloneDX software bill of materials.

@@ -23,6 +23,7 @@ from typing import BinaryIO
 CANDIDATE_TAG_PATTERN = re.compile(r"v0\.1\.0-rc\.[1-9][0-9]*\Z")
 RETENTION_DAYS = 90
 SOURCE_PREFIX = "Project-Copperfin-source-"
+VALIDATION_MANIFEST_SCHEMA = "rc-validation-manifest.schema.json"
 SCAN_BLOCK_SIZE = 1024 * 1024
 # Construct the boundaries so this scanner's own source does not contain a
 # complete private-key sentinel and falsely reject the Corresponding Source
@@ -241,8 +242,19 @@ def assemble(args: argparse.Namespace) -> Path:
     )
     copy_verified(tester_guide, output_root / "RC-TESTER-README.md", "RC tester guide")
 
+    manifest_schema = require_regular(
+        repository_root / "docs/contracts/rc-validation-manifest-v2.schema.json",
+        "RC validation manifest schema",
+    )
+    copy_verified(
+        manifest_schema,
+        output_root / VALIDATION_MANIFEST_SCHEMA,
+        "RC validation manifest schema",
+    )
+
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "schema": VALIDATION_MANIFEST_SCHEMA,
         "kind": "copperfin-private-evaluation-release-candidate",
         "candidate_tag": args.candidate_tag,
         "revision": args.revision,
@@ -254,17 +266,29 @@ def assemble(args: argparse.Namespace) -> Path:
             "url": f"{args.server_url.rstrip('/')}/{args.repository}/actions/runs/{args.run_id}",
         },
         "validation": {
-            "exact_tag_and_revision": "passed",
-            "native_release_readiness": "passed",
-            "managed_ui": "passed",
-            "installers": "passed",
-            "visual_studio_vsix": "passed",
-            "security_and_sbom": "passed",
+            "exact_tag_and_revision": "PASS",
+            "native_release_readiness": "PASS",
+            "managed_ui_build_and_smoke": "PASS",
+            "installer_artifact_build_and_static_checks": "PASS",
+            "installer_lifecycle": "NOT_RUN",
+            "visual_studio_vsix_build_and_static_checks": "PASS",
+            "visual_studio_vsix_lifecycle": "NOT_RUN",
+            "security_and_sbom": "PASS",
         },
         "signing": {
-            "windows_launcher_release_trust": "not claimed by this evaluation workflow",
-            "macos_platform_signing": "unsupported",
-            "linux_platform_signing": "unsupported",
+            "windows_launcher_release_trust": "NOT_RUN",
+            "windows_authenticode": "UNSUPPORTED_AND_DISCLOSED",
+            "visual_studio_vsix": "UNSUPPORTED_AND_DISCLOSED",
+            "macos_developer_id_and_notarization": "UNSUPPORTED_AND_DISCLOSED",
+            "linux_package_repository": "UNSUPPORTED_AND_DISCLOSED",
+        },
+        "localization": {
+            "catalog_structure_and_routing_checks": "PASS",
+            "spanish_portuguese_linguistic_review": "NOT_RUN",
+        },
+        "compatibility": {
+            "automated_compatibility_tests": "PASS",
+            "real_installed_vfp9_samples": "NOT_RUN",
         },
         "limitations": {
             "translations": "machine-generated catalogs retain documented human-review limits",
@@ -334,6 +358,11 @@ def self_test() -> None:
             "THIRD_PARTY_NOTICES.md": b"Notices\n",
             "LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt": b"Exception\n",
             "docs/contracts/release-license-metadata.json": b"{}\n",
+            "docs/contracts/rc-validation-manifest-v2.schema.json": Path(
+                __file__
+            ).parent.parent.joinpath(
+                "docs/contracts/rc-validation-manifest-v2.schema.json"
+            ).read_bytes(),
             "docs/35-rc1-evaluation-guide.md": b"# RC candidate\n",
         }
         for relative, data in licenses.items():
@@ -378,6 +407,7 @@ def self_test() -> None:
             "licensing/LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt",
             "licensing/THIRD_PARTY_NOTICES.md",
             "licensing/docs/contracts/release-license-metadata.json",
+            VALIDATION_MANIFEST_SCHEMA,
             "rc-validation-manifest.json",
             "sbom/sbom.cdx.json",
             f"source/{source_name}",
@@ -388,8 +418,49 @@ def self_test() -> None:
         if actual_bundle_files != expected_bundle_files:
             raise AssemblyError("self-test produced an unexpected evaluation bundle layout")
         manifest = json.loads((bundle / "rc-validation-manifest.json").read_text(encoding="utf-8"))
-        if manifest["revision"] != revision or manifest["official_release"] is not False:
+        expected_validation = {
+            "exact_tag_and_revision": "PASS",
+            "native_release_readiness": "PASS",
+            "managed_ui_build_and_smoke": "PASS",
+            "installer_artifact_build_and_static_checks": "PASS",
+            "installer_lifecycle": "NOT_RUN",
+            "visual_studio_vsix_build_and_static_checks": "PASS",
+            "visual_studio_vsix_lifecycle": "NOT_RUN",
+            "security_and_sbom": "PASS",
+        }
+        expected_signing = {
+            "windows_launcher_release_trust": "NOT_RUN",
+            "windows_authenticode": "UNSUPPORTED_AND_DISCLOSED",
+            "visual_studio_vsix": "UNSUPPORTED_AND_DISCLOSED",
+            "macos_developer_id_and_notarization": "UNSUPPORTED_AND_DISCLOSED",
+            "linux_package_repository": "UNSUPPORTED_AND_DISCLOSED",
+        }
+        expected_localization = {
+            "catalog_structure_and_routing_checks": "PASS",
+            "spanish_portuguese_linguistic_review": "NOT_RUN",
+        }
+        expected_compatibility = {
+            "automated_compatibility_tests": "PASS",
+            "real_installed_vfp9_samples": "NOT_RUN",
+        }
+        if (
+            manifest["schema_version"] != 2
+            or manifest["schema"] != VALIDATION_MANIFEST_SCHEMA
+            or manifest["revision"] != revision
+            or manifest["official_release"] is not False
+            or manifest["validation"] != expected_validation
+            or manifest["signing"] != expected_signing
+            or manifest["localization"] != expected_localization
+            or manifest["compatibility"] != expected_compatibility
+        ):
             raise AssemblyError("self-test validation manifest is invalid")
+        if "installers" in manifest["validation"] or "visual_studio_vsix" in manifest["validation"]:
+            raise AssemblyError("self-test validation manifest retains an ambiguous lifecycle claim")
+        bundled_schema = bundle / VALIDATION_MANIFEST_SCHEMA
+        if sha256(bundled_schema) != sha256(
+            repository / "docs/contracts/rc-validation-manifest-v2.schema.json"
+        ):
+            raise AssemblyError("self-test validation manifest schema is not the exact repository schema")
 
         for invalid_tag in (
             "v0.1.0-rc.0",
