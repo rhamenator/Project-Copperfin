@@ -83,6 +83,11 @@ Running Object Table pattern and selects only the version- and process-specific
 owner check. Run `31734701283` proved that exact moniker was also absent. The
 current correction uses the documented `devenv /Command` and `/Edit`
 interfaces, with independent same-process pane and document proof.
+Run `31736024834` proved `/Command` can remain attached beyond the process
+bound when the verifier waits synchronously. The corrected sequence starts each
+routing request separately, proves its PID differs from the controlled IDE,
+observes the required pane/document in the controlled IDE PID, and terminates
+any still-attached router only after that independent proof.
 
 ## V1 Windows installer lifecycle
 

@@ -184,6 +184,15 @@ therefore uses the documented `devenv /Command` and `/Edit` interfaces while
 requiring all resulting UI evidence in the already controlled IDE PID. This
 remains a gap pending fresh exact-head evidence.
 
+Run `31736024834` proved that the documented `/Command` routing process can
+remain attached to the existing IDE beyond the full 300-second process bound.
+Because the verifier synchronously waited for that routing process, it never
+reached the independent pane observation. The corrected sequence starts each
+documented `/Command` or `/Edit` request as a distinct process, requires its PID
+to differ from the controlled IDE, observes the pane or exact document in the
+controlled IDE PID, and then terminates any still-attached routing process tree.
+Routing-process lifetime or exit cannot itself admit evidence.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

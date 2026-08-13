@@ -221,6 +221,8 @@ $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
 
 $installedDirectory = $null
 $ideProcess = $null
+$commandRoutingProcess = $null
+$documentRoutingProcess = $null
 try {
     Write-Host 'VSIX lifecycle phase: install'
     Invoke-BoundedProcess -FilePath $vsixInstaller -Arguments @(
@@ -325,10 +327,17 @@ if (-not $observed) {
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
     Write-Host 'VSIX lifecycle phase: invoke registered Copperfin command through devenv command routing'
-    Invoke-BoundedProcess `
-        -FilePath $devenv `
-        -Arguments @('/Command', 'Copperfin.ShowCommandWindow') `
-        -Name 'Copperfin registered-command routing' | Out-Null
+    $commandRoutingStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $commandRoutingStartInfo.FileName = $devenv
+    $commandRoutingStartInfo.UseShellExecute = $false
+    $commandRoutingStartInfo.WorkingDirectory = $resolvedEvidenceDirectory
+    foreach ($argument in @('/Command', 'Copperfin.ShowCommandWindow')) {
+        [void]$commandRoutingStartInfo.ArgumentList.Add($argument)
+    }
+    $commandRoutingProcess = [System.Diagnostics.Process]::Start($commandRoutingStartInfo)
+    Assert-Condition ($null -ne $commandRoutingProcess) 'Copperfin registered-command routing did not start.'
+    Assert-Condition ($commandRoutingProcess.Id -ne $ideProcess.Id) `
+        'Registered-command routing unexpectedly reused the controlled IDE process object.'
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
@@ -337,12 +346,28 @@ if (-not $observed) {
             '-EvidenceDescription', 'Registered Copperfin Command surface',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin registered-command UI Automation observation' | Out-Null
+    if (-not $commandRoutingProcess.HasExited) {
+        try { $commandRoutingProcess.Kill($true) } catch { Write-Warning "Registered-command routing process could not be terminated after pane proof: $($_.Exception.Message)" }
+        Assert-Condition $commandRoutingProcess.WaitForExit(15000) `
+            'Registered-command routing process remained after bounded termination.'
+    }
+    else {
+        Assert-Condition ($commandRoutingProcess.ExitCode -eq 0) `
+            "Registered-command routing exited with code $($commandRoutingProcess.ExitCode)."
+    }
 
     Write-Host 'VSIX lifecycle phase: open runner-owned PRG through running IDE'
-    Invoke-BoundedProcess `
-        -FilePath $devenv `
-        -Arguments @('/Edit', $fixturePrg) `
-        -Name 'Copperfin PRG-open routing' | Out-Null
+    $documentRoutingStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $documentRoutingStartInfo.FileName = $devenv
+    $documentRoutingStartInfo.UseShellExecute = $false
+    $documentRoutingStartInfo.WorkingDirectory = $resolvedEvidenceDirectory
+    foreach ($argument in @('/Edit', $fixturePrg)) {
+        [void]$documentRoutingStartInfo.ArgumentList.Add($argument)
+    }
+    $documentRoutingProcess = [System.Diagnostics.Process]::Start($documentRoutingStartInfo)
+    Assert-Condition ($null -ne $documentRoutingProcess) 'Copperfin PRG-open routing did not start.'
+    Assert-Condition ($documentRoutingProcess.Id -ne $ideProcess.Id) `
+        'PRG-open routing unexpectedly reused the controlled IDE process object.'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
@@ -353,6 +378,15 @@ if (-not $observed) {
             '-EvidenceDescription', 'Exact runner-owned PRG document tab',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin PRG document UI Automation observation' | Out-Null
+    if (-not $documentRoutingProcess.HasExited) {
+        try { $documentRoutingProcess.Kill($true) } catch { Write-Warning "PRG-open routing process could not be terminated after document proof: $($_.Exception.Message)" }
+        Assert-Condition $documentRoutingProcess.WaitForExit(15000) `
+            'PRG-open routing process remained after bounded termination.'
+    }
+    else {
+        Assert-Condition ($documentRoutingProcess.ExitCode -eq 0) `
+            "PRG-open routing exited with code $($documentRoutingProcess.ExitCode)."
+    }
     Start-Sleep -Seconds 2
     try { [void]$ideProcess.CloseMainWindow() } catch {}
     if (-not $ideProcess.WaitForExit(15000)) {
@@ -379,6 +413,16 @@ if (-not $observed) {
         'ActivityLog did not contain an explicit successful End package load [CopperfinPackage] record.'
 }
 finally {
+    foreach ($routingProcess in @($commandRoutingProcess, $documentRoutingProcess)) {
+        if ($null -ne $routingProcess) {
+            if (-not $routingProcess.HasExited) {
+                try { $routingProcess.Kill($true) } catch { Write-Warning "Visual Studio routing process could not be terminated: $($_.Exception.Message)" }
+                Assert-Condition $routingProcess.WaitForExit(15000) `
+                    'Visual Studio routing process remained after bounded cleanup.'
+            }
+            $routingProcess.Dispose()
+        }
+    }
     if ($null -ne $ideProcess) {
         if (-not $ideProcess.HasExited) {
             try { [void]$ideProcess.CloseMainWindow() } catch {}

@@ -56,8 +56,12 @@ require_text("${script}" "StartsWith(\"$ExpectedName - \"" "exact active-documen
 require_text("${script}" "Exact runner-owned PRG document tab" "exact PRG-open proof")
 require_text("${script}" "'/Command', 'View.CommandWindow'" "IDE-owned built-in Command-window startup")
 require_text("${script}" "@('/Command', 'Copperfin.ShowCommandWindow')" "registered-command routing")
+require_text("${script}" "commandRoutingProcess.Id -ne $ideProcess.Id" "separate command-router process identity")
 require_text("${script}" "Registered Copperfin Command surface" "same-process command-surface proof")
 require_text("${script}" "@('/Edit', $fixturePrg)" "explicit running-IDE document-open request")
+require_text("${script}" "documentRoutingProcess.Id -ne $ideProcess.Id" "separate document-router process identity")
+require_text("${script}" "Kill($true)" "bounded routing-process termination")
+require_text("${script}" "remained after bounded termination" "fail-closed routing-process termination")
 require_text("${script}" "lifecycle-smoke.prg" "runner-owned PRG open fixture")
 require_text("${script}" "End package load [CopperfinPackage]" "explicit successful package-load proof")
 require_text("${script}" "MatchingErrors.Count -eq 0" "Copperfin package-load error rejection")
@@ -83,10 +87,15 @@ if(built_in_command_offset EQUAL -1 OR command_automation_offset EQUAL -1 OR
     message(FATAL_ERROR "IDE startup and exact-process registered-command automation must remain ordered")
 endif()
 string(FIND "${script_contents}" "VSIX lifecycle phase: invoke registered Copperfin command through devenv command routing" command_phase_offset)
+string(FIND "${script_contents}" "Copperfin registered-command UI Automation observation" command_observation_offset)
 string(FIND "${script_contents}" "VSIX lifecycle phase: open runner-owned PRG through running IDE" document_phase_offset)
-if(command_phase_offset EQUAL -1 OR document_phase_offset EQUAL -1 OR
-        NOT command_phase_offset LESS document_phase_offset)
-    message(FATAL_ERROR "registered package command must load before the PRG is opened through the running IDE")
+string(FIND "${script_contents}" "Copperfin PRG document UI Automation observation" document_observation_offset)
+if(command_phase_offset EQUAL -1 OR command_observation_offset EQUAL -1 OR
+        document_phase_offset EQUAL -1 OR document_observation_offset EQUAL -1 OR
+        NOT command_phase_offset LESS command_observation_offset OR
+        NOT command_observation_offset LESS document_phase_offset OR
+        NOT document_phase_offset LESS document_observation_offset)
+    message(FATAL_ERROR "semantic routing and same-process observations must remain ordered")
 endif()
 file(READ "${SOURCE_DIR}/${workflow}" workflow_contents)
 string(FIND "${workflow_contents}" "Exercise Windows VSIX lifecycle" lifecycle_offset)

@@ -412,6 +412,11 @@ main-window owner independently before use. Run `31734701283` proved that exact
 moniker was also absent. The current verifier therefore uses Visual Studio's
 documented `devenv /Command` and `/Edit` interfaces and admits only independent
 same-process pane and document proof.
+Run `31736024834` proved synchronous `/Command` routing can remain attached for
+the full process bound. The corrected verifier starts `/Command` and `/Edit` as
+separate routing processes, proves each differs from the controlled IDE,
+observes the pane/document in the controlled IDE PID, and bounds any remaining
+router process tree after independent proof.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

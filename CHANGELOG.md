@@ -58,6 +58,11 @@
   also absent. The current sequence uses Visual Studio's documented
   `devenv /Command` and `/Edit` interfaces and independently requires the pane
   and document in the already controlled IDE PID.
+  Run `31736024834` proved synchronous `/Command` routing can remain attached
+  for the full process bound. The corrected sequence starts `/Command` and
+  `/Edit` as distinct routing processes, verifies they differ from the
+  controlled IDE, admits only same-process pane/document observation, and
+  terminates any still-attached router after independent proof.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
