@@ -307,25 +307,10 @@ internal sealed class StudioMainForm : Form
             using var dialog = new StudioWorkspaceAgentPolicyDialog(result.Descriptor, localization);
             dialog.ShowDialog(this);
         }
-        finally
-        {
-            if (!IsDisposed && !Disposing)
-            {
-                workspaceAgentPolicyMenuItem.Enabled = true;
-            }
-        }
-    }
-
-    private async void OnWorkspaceAgentPolicyMenuItemClick(object? sender, EventArgs e)
-    {
-        try
-        {
-            await ShowWorkspaceAgentPolicyAsync();
-        }
         catch (Exception)
         {
-            // Event handlers cannot return a faulted task. Keep any unexpected
-            // UI failure inside the fixed, localized product-message boundary.
+            // Keep unexpected UI failures inside fixed, localized product
+            // prose; raw exception detail remains outside the dialog boundary.
             if (!IsDisposed && !Disposing)
             {
                 MessageBox.Show(
@@ -336,6 +321,18 @@ internal sealed class StudioMainForm : Form
                     MessageBoxIcon.Warning);
             }
         }
+        finally
+        {
+            if (!IsDisposed && !Disposing)
+            {
+                workspaceAgentPolicyMenuItem.Enabled = true;
+            }
+        }
+    }
+
+    private void OnWorkspaceAgentPolicyMenuItemClick(object? sender, EventArgs e)
+    {
+        _ = ShowWorkspaceAgentPolicyAsync();
     }
 
     internal Task<CopperfinWorkspaceAgentPolicyResult> LoadWorkspaceAgentPolicyForTestAsync()
