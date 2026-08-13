@@ -32,19 +32,22 @@ retained exact-head results, hazards, limitations, and reverse links. Existing
 Copperfin behavior is no longer an allowed requirement source in the issue/PR
 workflow.
 
-The next stacked follow-on adds a strict read-only managed consumer shared by
+The strict read-only managed consumer is shared by
 the standalone Studio shell, VSIX, and Designer smoke assembly. It calls only
 the descriptor JSON grammar and rejects missing/unknown/wrongly typed fields,
 activation claims, provider-auth authority, stale warning identity,
 duplicate/aliased modes, capability expansion, and elevation. The serializer
 boundary also rejects duplicate members at every nesting level, including
-escaped-equivalent member names. The smoke and
-standalone projects compile warning-free against net472 on Linux; direct Mono
-execution and the Windows VSIX build remain scheduled hosted evidence. This
-client has no activation or executor API.
+escaped-equivalent member names. Exact-head Linux managed-UI run `31677215316`
+passes the smoke under Mono/Xvfb. Windows Deep Validation `31677215577` passes
+`367/367` native tests, builds the VSIX and managed hosts, and executes the
+managed VSIX, language-service, process-runner, Studio, Designer, debugger, and
+strict workspace-agent smoke contracts. Retained artifact digests and expiry
+are recorded in the current evidence section below. This client has no
+activation or executor API.
 
-The stacked follow-on exposes this policy through the real Studio host as a
-versioned read-only text/JSON descriptor. Capabilities come from the evaluator,
+The preceding native slice exposes this policy through the real Studio host as
+a versioned read-only text/JSON descriptor. Capabilities come from the evaluator,
 and the descriptor includes default-disabled/advisory state, RBAC/UI/audit
 gates, the localized warning, provider separation, and no elevation. Its
 exclusive argument grammar rejects mixed operational or license-status

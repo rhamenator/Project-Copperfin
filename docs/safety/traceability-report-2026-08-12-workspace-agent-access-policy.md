@@ -195,9 +195,9 @@ both hosted paths:
   `sha256:d0ea4b744ad2924ba37e82bbe8eff86c988cbadc3ea5e159b951134493026b5d`
   and expires `2026-11-11T07:18:19Z`.
 
-These runs define the strict read-only managed-consumer requirement. They do
-not implement or close mutable activation, provider authentication, sessions,
-audit commits, executor, sandbox, or trusted activation UI.
+These runs verify and close the strict read-only managed-consumer requirement.
+They do not implement or close mutable activation, provider authentication,
+sessions, audit commits, executor, sandbox, or trusted activation UI.
 
 ## Severity, Rollback, And Notification
 
