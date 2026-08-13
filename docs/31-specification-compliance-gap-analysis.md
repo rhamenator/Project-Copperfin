@@ -140,14 +140,18 @@ the shared normalized case-insensitive runtime path-identity helper, POSIX
 environment calls, and process-wide synchronization are private implementation
 in `cf_platform_support`. Strict verified-byte snapshot exclusive creation and
 durable content writes also cross that boundary while admission, naming,
-sidecar, cleanup, and diagnostics remain runtime policy. Direct portable
+sidecar, cleanup, and diagnostics remain runtime policy. PRG standard-stream
+open and underlying-file resize operations also cross the boundary while VFP
+path/mode, handle, error, flush, verified-byte, and close policy remain in the
+runtime. Direct portable
 regressions and source-level contracts run in the Windows, Linux, and macOS
 validation workflow, so the boundaries are load-bearing rather than
 documentary. See
-`docs/50-portable-public-path-boundary.md` and
+`docs/50-portable-public-path-boundary.md`,
 `docs/51-portable-public-environment-boundary.md`,
+`docs/52-portable-executable-search-default.md`,
 `docs/61-portable-exclusive-file-boundary.md`, and
-`docs/52-portable-executable-search-default.md`, plus
+`docs/62-portable-file-stream-boundary.md`, plus
 `docs/53-private-sqlite-native-api-boundary.md` and
 `docs/54-portable-clr-host-boundary.md`, plus
 `docs/55-native-declare-loader-boundary.md` and

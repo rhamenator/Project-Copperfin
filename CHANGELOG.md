@@ -1,3 +1,11 @@
+- 2026-08-12: Continued v1 portability lane J1 by moving PRG standard-stream
+  opening and file resizing behind `cf_platform_support`. Windows Unicode
+  `_wfopen`/`_chsize_s` and POSIX `fopen`/`ftruncate` details no longer live in
+  the interpreter; VFP path/mode policy, handle allocation, pre-resize flush,
+  `FERROR()` mapping, verified-byte admission, and close ownership remain
+  unchanged. Direct behavior, native ownership, full PRG file-I/O consumer,
+  workflow, and isolation coverage are scheduled on all three hosts.
+
 - 2026-08-12: Continued v1 portability and security lane J1 by moving strict
   verified-snapshot exclusive file creation and durable byte writes behind
   `cf_platform_support`. Admission, naming, sidecar policy, cleanup, and

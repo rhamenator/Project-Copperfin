@@ -5,6 +5,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "prg_engine_file_io_functions.h"
 
+#include "copperfin/platform/file_stream.h"
 #include "copperfin/platform/path.h"
 #include "prg_engine_helpers.h"
 
@@ -17,12 +18,6 @@
 #include <fstream>
 #include <limits>
 #include <unordered_map>
-
-#if defined(_WIN32)
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
 
 namespace copperfin::runtime {
 
@@ -84,19 +79,6 @@ std::filesystem::path resolve_file_path(const std::string& raw_path, const std::
         path = copperfin::platform::path_from_utf8_string(default_directory) / path;
     }
     return path.lexically_normal();
-}
-
-std::FILE* open_file_utf8(const std::filesystem::path& path, const std::string& mode) {
-#if defined(_WIN32)
-    std::wstring wide_mode;
-    wide_mode.reserve(mode.size());
-    for (const unsigned char ch : mode) {
-        wide_mode.push_back(static_cast<wchar_t>(ch));
-    }
-    return ::_wfopen(path.c_str(), wide_mode.c_str());
-#else
-    return std::fopen(path.c_str(), mode.c_str());
-#endif
 }
 
 OpenFileHandle* resolve_open_handle(int handle) {
@@ -229,13 +211,13 @@ std::optional<PrgValue> evaluate_file_io_function(
             return make_number_value(static_cast<double>(handle));
         }
 
-        std::FILE* opened = open_file_utf8(path, mode);
+        std::FILE* opened = copperfin::platform::open_file_stream(path, mode);
         if (opened == nullptr &&
             fopen_numeric_read_write_mode(arguments.size() >= 2U ? arguments[1] : make_number_value(0.0)) &&
             errno == ENOENT) {
             // rb+ preserves existing contents; only create a missing file after
             // that first open proves the path does not exist.
-            opened = open_file_utf8(path, "wb+");
+            opened = copperfin::platform::open_file_stream(path, "wb+");
         }
         if (opened == nullptr) {
             set_file_error_from_errno();
@@ -546,13 +528,9 @@ std::optional<PrgValue> evaluate_file_io_function(
 
         const long long requested_size = static_cast<long long>(std::max(0.0, value_as_number(arguments[1])));
         std::fflush(opened->file);
-#if defined(_WIN32)
-        const int fd = _fileno(opened->file);
-        const int result = fd >= 0 ? _chsize_s(fd, static_cast<std::size_t>(requested_size)) : -1;
-#else
-        const int fd = fileno(opened->file);
-        const int result = fd >= 0 ? ftruncate(fd, static_cast<off_t>(requested_size)) : -1;
-#endif
+        const int result = copperfin::platform::resize_file_stream(
+            opened->file,
+            static_cast<std::uint64_t>(requested_size));
         if (result == 0) {
             clear_file_error();
         } else {
