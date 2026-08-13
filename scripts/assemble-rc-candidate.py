@@ -3,7 +3,12 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
-"""Assemble and verify an immutable Copperfin RC evaluation bundle."""
+"""Assemble and verify an immutable Copperfin RC evaluation bundle.
+
+Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation;
+DV-rc-evidence-v2-assembly-self-test; DV-rc-evidence-v2-schema-validation;
+HZ-system-failure-01; HZ-doc-command-01.
+"""
 
 from __future__ import annotations
 
@@ -159,6 +164,140 @@ def relative_file_records(bundle_root: Path) -> list[dict[str, object]]:
     return records
 
 
+def _json_values_equal(left: object, right: object) -> bool:
+    """Compare JSON values without treating booleans as integers."""
+    return type(left) is type(right) and left == right
+
+
+SCHEMA_KEYWORDS = {
+    "$schema",
+    "$id",
+    "$comment",
+    "$defs",
+    "title",
+    "type",
+    "const",
+    "enum",
+    "required",
+    "additionalProperties",
+    "properties",
+    "pattern",
+    "minLength",
+    "minimum",
+    "items",
+}
+
+
+def check_schema_vocabulary(schema: object, location: str = "$") -> None:
+    if not isinstance(schema, dict):
+        raise AssemblyError(f"manifest schema at {location} must be an object")
+    if location == "$" and schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+        raise AssemblyError("manifest schema must declare JSON Schema Draft 2020-12")
+    unsupported = sorted(set(schema) - SCHEMA_KEYWORDS)
+    if unsupported:
+        raise AssemblyError(
+            f"manifest schema at {location} uses unsupported keywords: {', '.join(unsupported)}"
+        )
+    for container_name in ("properties", "$defs"):
+        children = schema.get(container_name, {})
+        if not isinstance(children, dict):
+            raise AssemblyError(
+                f"manifest schema {container_name} at {location} must be an object"
+            )
+        for name, child in children.items():
+            check_schema_vocabulary(child, f"{location}.{container_name}.{name}")
+    if "items" in schema:
+        check_schema_vocabulary(schema["items"], f"{location}.items")
+
+
+def validate_schema_instance(instance: object, schema: object, location: str = "$") -> None:
+    """Validate against the closed JSON Schema subset used by the RC manifest.
+
+    This dependency-free validator deliberately rejects unsupported schema
+    keywords. That keeps the release workflow fail-closed if the bundled
+    Draft 2020-12 schema evolves beyond the vocabulary implemented here.
+    """
+    check_schema_vocabulary(schema, location)
+
+    expected_type = schema.get("type")
+    type_matches = {
+        "object": lambda value: isinstance(value, dict),
+        "array": lambda value: isinstance(value, list),
+        "string": lambda value: isinstance(value, str),
+        "integer": lambda value: isinstance(value, int) and not isinstance(value, bool),
+        "boolean": lambda value: isinstance(value, bool),
+    }
+    if expected_type is not None:
+        if expected_type not in type_matches:
+            raise AssemblyError(
+                f"manifest schema at {location} has unsupported type {expected_type!r}"
+            )
+        if not type_matches[expected_type](instance):
+            raise AssemblyError(f"manifest value at {location} must be {expected_type}")
+
+    if "const" in schema and not _json_values_equal(instance, schema["const"]):
+        raise AssemblyError(f"manifest value at {location} does not match its required constant")
+    if "enum" in schema:
+        enum_values = schema["enum"]
+        if not isinstance(enum_values, list):
+            raise AssemblyError(f"manifest schema enum at {location} must be an array")
+        if not any(_json_values_equal(instance, value) for value in enum_values):
+            raise AssemblyError(f"manifest value at {location} is outside its allowed values")
+
+    if isinstance(instance, dict):
+        required = schema.get("required", [])
+        properties = schema.get("properties", {})
+        if not isinstance(required, list) or not all(isinstance(name, str) for name in required):
+            raise AssemblyError(f"manifest schema required list at {location} is invalid")
+        if not isinstance(properties, dict):
+            raise AssemblyError(f"manifest schema properties at {location} must be an object")
+        missing = [name for name in required if name not in instance]
+        if missing:
+            raise AssemblyError(
+                f"manifest value at {location} is missing required properties: {', '.join(missing)}"
+            )
+        if schema.get("additionalProperties") is False:
+            extras = sorted(set(instance) - set(properties))
+            if extras:
+                raise AssemblyError(
+                    f"manifest value at {location} has unexpected properties: {', '.join(extras)}"
+                )
+        for name, value in instance.items():
+            if name in properties:
+                validate_schema_instance(value, properties[name], f"{location}.{name}")
+
+    if isinstance(instance, list) and "items" in schema:
+        for index, value in enumerate(instance):
+            validate_schema_instance(value, schema["items"], f"{location}[{index}]")
+
+    if isinstance(instance, str):
+        minimum_length = schema.get("minLength")
+        if minimum_length is not None:
+            if not isinstance(minimum_length, int) or minimum_length < 0:
+                raise AssemblyError(f"manifest schema minLength at {location} is invalid")
+            if len(instance) < minimum_length:
+                raise AssemblyError(f"manifest string at {location} is shorter than allowed")
+        pattern = schema.get("pattern")
+        if pattern is not None:
+            if not isinstance(pattern, str):
+                raise AssemblyError(f"manifest schema pattern at {location} must be a string")
+            try:
+                matches = re.search(pattern, instance) is not None
+            except re.error as error:
+                raise AssemblyError(
+                    f"manifest schema pattern at {location} is invalid: {error}"
+                ) from error
+            if not matches:
+                raise AssemblyError(f"manifest string at {location} does not match its pattern")
+
+    if isinstance(instance, int) and not isinstance(instance, bool) and "minimum" in schema:
+        minimum = schema["minimum"]
+        if not isinstance(minimum, (int, float)) or isinstance(minimum, bool):
+            raise AssemblyError(f"manifest schema minimum at {location} is invalid")
+        if instance < minimum:
+            raise AssemblyError(f"manifest integer at {location} is below its minimum")
+
+
 def assemble(args: argparse.Namespace) -> Path:
     if CANDIDATE_TAG_PATTERN.fullmatch(args.candidate_tag) is None:
         raise AssemblyError("candidate tag must match v0.1.0-rc.N with a positive RC number")
@@ -246,6 +385,11 @@ def assemble(args: argparse.Namespace) -> Path:
         repository_root / "docs/contracts/rc-validation-manifest-v2.schema.json",
         "RC validation manifest schema",
     )
+    try:
+        manifest_schema_document = json.loads(manifest_schema.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise AssemblyError(f"RC validation manifest schema is not valid JSON: {error}") from error
+    check_schema_vocabulary(manifest_schema_document)
     copy_verified(
         manifest_schema,
         output_root / VALIDATION_MANIFEST_SCHEMA,
@@ -295,6 +439,7 @@ def assemble(args: argparse.Namespace) -> Path:
         },
         "files": relative_file_records(output_root),
     }
+    validate_schema_instance(manifest, manifest_schema_document)
     manifest_path = output_root / "rc-validation-manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
@@ -417,6 +562,41 @@ def self_test() -> None:
         if actual_bundle_files != expected_bundle_files:
             raise AssemblyError("self-test produced an unexpected evaluation bundle layout")
         manifest = json.loads((bundle / "rc-validation-manifest.json").read_text(encoding="utf-8"))
+        bundled_schema_document = json.loads(
+            (bundle / VALIDATION_MANIFEST_SCHEMA).read_text(encoding="utf-8")
+        )
+        validate_schema_instance(manifest, bundled_schema_document)
+
+        def require_schema_rejection(mutated_manifest: object, description: str) -> None:
+            try:
+                validate_schema_instance(mutated_manifest, bundled_schema_document)
+            except AssemblyError:
+                return
+            raise AssemblyError(f"self-test schema accepted {description}")
+
+        for required_field in (
+            "kind",
+            "candidate_tag",
+            "repository",
+            "workflow_run",
+            "limitations",
+            "files",
+        ):
+            missing_field_manifest = json.loads(json.dumps(manifest))
+            del missing_field_manifest[required_field]
+            require_schema_rejection(
+                missing_field_manifest,
+                f"manifest without required field {required_field}",
+            )
+        for malformed_url in (
+            "not a URI",
+            "https://github.example/example/Project-Copperfin/actions/runs/123\n",
+            "https://github..example/example/Project-Copperfin/actions/runs/123",
+        ):
+            malformed_url_manifest = json.loads(json.dumps(manifest))
+            malformed_url_manifest["workflow_run"]["url"] = malformed_url
+            require_schema_rejection(malformed_url_manifest, "malformed workflow URL")
+
         expected_validation = {
             "exact_tag_and_revision": "PASS",
             "native_release_readiness": "PASS",

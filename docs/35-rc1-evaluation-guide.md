@@ -1,5 +1,11 @@
 # Project Copperfin RC Evaluation Guide
 
+Traceability: `RQ-CF-REL-001`, `DQ-rc-evidence-v2-scope-separation`,
+`DV-rc-evidence-v2-assembly-self-test`, `DV-rc-evidence-v2-schema-validation`,
+`DV-rc-evidence-v2-workflow-contract`, `HZ-system-failure-01`, and
+`HZ-doc-command-01` govern the release-evidence distinctions and checks in
+this guide.
+
 Each Project Copperfin `v0.1.0-rc.N` candidate is a private-evaluation release
 candidate. It is not an official Project Copperfin release and is not
 distributed through a published GitHub Release. The bundle is produced by a

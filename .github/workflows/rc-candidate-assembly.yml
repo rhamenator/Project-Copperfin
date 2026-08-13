@@ -1,5 +1,8 @@
 name: Assemble RC Evaluation Candidate
 
+# Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation;
+# DV-rc-evidence-v2-workflow-contract; HZ-system-failure-01; HZ-doc-command-01.
+
 on:
   workflow_dispatch:
     inputs:

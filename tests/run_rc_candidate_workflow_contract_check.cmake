@@ -1,6 +1,8 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
+# Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation;
+# DV-rc-evidence-v2-workflow-contract; HZ-system-failure-01; HZ-doc-command-01.
 
 cmake_minimum_required(VERSION 3.20)
 
@@ -35,6 +37,8 @@ function(require_text_count expected expected_count description)
 endfunction()
 
 require_text("workflow_dispatch:" "manual-only dispatch")
+require_text("RQ-CF-REL-001" "reverse requirement traceability")
+require_text("DV-rc-evidence-v2-workflow-contract" "reverse verification traceability")
 require_text("candidate_tag:" "explicit candidate tag input")
 require_text("expected_tag=\"$COPPERFIN_CANDIDATE_TAG\"" "exact requested RC tag binding")
 require_text("^v0\\.1\\.0-rc\\.[1-9][0-9]*$" "sequential RC tag allowlist")
@@ -60,6 +64,25 @@ require_text_count("uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8
     5 "immutable download-artifact pins")
 require_text_count("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1"
     1 "authoritative RC bundle upload")
+
+foreach(traceability_file IN ITEMS
+        scripts/assemble-rc-candidate.py
+        docs/contracts/rc-validation-manifest-v2.schema.json
+        docs/35-rc1-evaluation-guide.md
+        tests/run_rc_candidate_workflow_contract_check.cmake)
+    file(READ "${SOURCE_DIR}/${traceability_file}" traceability_contents)
+    foreach(traceability_id IN ITEMS
+            RQ-CF-REL-001
+            DQ-rc-evidence-v2-scope-separation
+            HZ-system-failure-01
+            HZ-doc-command-01)
+        string(FIND "${traceability_contents}" "${traceability_id}" traceability_offset)
+        if(traceability_offset EQUAL -1)
+            message(FATAL_ERROR
+                "${traceability_file} lacks reverse traceability to ${traceability_id}")
+        endif()
+    endforeach()
+endforeach()
 
 foreach(reusable_workflow IN ITEMS
         build-installers.yml

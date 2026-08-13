@@ -7831,5 +7831,8 @@ passes `1/1`.
   qualified linguistic review, and real installed-VFP9 evidence are also
   separate machine fields. Unperformed lifecycle and external evidence remain
   `NOT_RUN` or `UNSUPPORTED_AND_DISCLOSED`; existing immutable RC1/RC2 bundles
-  are not rewritten. See `docs/35-rc1-evaluation-guide.md` and
+  are not rewritten. The producer now validates each output against the exact
+  bundled Draft 2020-12 schema, rejects malformed workflow URLs without
+  optional format assertions, and preserves reverse RQ/DQ/DV/hazard links in
+  every mapped artifact. See `docs/35-rc1-evaluation-guide.md` and
   `docs/safety/traceability-report-2026-08-13-rc-evidence-truth.md`.

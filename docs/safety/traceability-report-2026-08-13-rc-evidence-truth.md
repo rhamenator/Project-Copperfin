@@ -18,7 +18,11 @@ for a safety-critical deployment.
 Reverse traceability is carried by
 `scripts/assemble-rc-candidate.py`,
 `docs/contracts/rc-validation-manifest-v2.schema.json`,
+`.github/workflows/rc-candidate-assembly.yml`,
 `docs/35-rc1-evaluation-guide.md`, and the `RQ-CF-REL-001` matrix row.
+The focused `tests/run_rc_candidate_workflow_contract_check.cmake` check also
+anchors the governing requirement, derived requirement, verification claim,
+and hazards directly in executable verification.
 
 ## Procedural Delta And Misuse Analysis
 
@@ -52,9 +56,12 @@ so the potential severity is **high**.
 
 At the current local implementation state:
 
-- `python3 scripts/assemble-rc-candidate.py --self-test` passes and proves the
+- `python3 scripts/assemble-rc-candidate.py --self-test` passes and validates
+  the generated manifest against the exact bundled schema. It also proves the
   exact schema-v2 field mapping, absence of the old ambiguous keys, bundle
-  layout, and byte identity of the bundled schema.
+  layout, byte identity of the bundled schema, rejection of missing governing
+  fields, and rejection of a malformed workflow URL without optional format
+  assertions.
 - `python3 -m json.tool docs/contracts/rc-validation-manifest-v2.schema.json`
   passes.
 - `jsonschema.Draft202012Validator.check_schema(...)` accepts the schema.

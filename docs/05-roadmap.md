@@ -334,7 +334,11 @@ VSIX artifact construction/static checks separately from lifecycle execution,
 and separately reports platform signing, linguistic review, and real installed
 VFP9 evidence. The current assembly workflow does not execute installer or
 VSIX install/launch/upgrade/uninstall lifecycles, so those fields remain
-`NOT_RUN`. Existing immutable RC1/RC2 manifests predate this correction; their
+`NOT_RUN`. The producer validates its output against the exact bundled Draft
+2020-12 schema without relying on optional URI-format assertions, and the
+mapped producer/schema/workflow/guide/contract artifacts carry reverse
+requirement, verification, and hazard identifiers. Existing immutable RC1/RC2
+manifests predate this correction; their
 ambiguous `installers: passed` and `visual_studio_vsix: passed` values prove
 only their producer jobs completed, not lifecycle validation. A later
 sequential RC must carry schema v2 and current lifecycle evidence before those
