@@ -23,6 +23,14 @@ licensing-enabled Release build passes the process and source-order contracts
 Release policy/host/isolation/safety evidence passes `4/4`; Clang ASan/UBSan
 with leak detection passes the policy and real host process `2/2` without
 findings; direct `jq` evaluation accepts the emitted versioned schema.
+Corrected signed/DCO descriptor head `def609305` passes all eleven protected
+checks: Generated Launcher `31666059568` on Windows/Ubuntu/macOS, Win32/x64
+DECLARE `31666059579`, Windows environment/path `31666059576`, GCC/Clang
+executable path `31666059522`, DCO `31666057944`, and both Socket checks. The
+first Windows generated-launcher attempt failed in the external R-version
+resolver before Copperfin configured; retrying only that job passed without a
+product change. `RQ-CF-AGENT-002` is therefore defined for the read-only
+descriptor boundary; mutable activation and execution remain open.
 
 The current H3/I2 slice defines provider-independent `advisory`,
 `workspace_sandbox`, and `unrestricted_local` modes in `cf_security`. Mode

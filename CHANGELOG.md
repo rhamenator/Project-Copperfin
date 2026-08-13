@@ -24,6 +24,9 @@
   shipping default.
   Actual activation, execution, sandbox, audit commits, providers, and UI remain
   follow-on work. See `docs/64-workspace-agent-access-policy.md`.
+  Corrected signed/DCO descriptor head `def609305` passes all eleven protected
+  checks on Windows, Ubuntu, and macOS; exact run evidence and the transient
+  pre-configuration Windows R-resolver retry are retained in the safety report.
 
 - 2026-08-12: Seeded the v1 H3/I2 built-in coding-assistant boundary with a
   provider-independent `cf_security` access policy. Advisory, workspace

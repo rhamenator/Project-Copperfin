@@ -114,6 +114,12 @@ The policy/descriptor pair passes Clang ASan/UBSan with leak detection `2/2`
 and no findings. The focused Release selection covering policy, the real host
 process, native isolation, and safety traceability passes `4/4`; the emitted
 schema also parses and satisfies its invariant fields with `jq`.
+Corrected signed/DCO descriptor head `def609305` passes all eleven protected
+checks, including direct native execution on Windows, Ubuntu, and macOS. The
+first Windows generated-launcher attempt was blocked before Copperfin
+configuration by an external R-version lookup failure; its failed job was
+rerun without a source change and passed. Exact run identifiers are retained
+in the safety traceability report.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
 tool executor, sandbox implementation, diff/undo surface, stop control,
 session indicator, or the WinForms dialog that must render the warning.

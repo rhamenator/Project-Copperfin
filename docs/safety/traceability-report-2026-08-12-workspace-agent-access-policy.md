@@ -25,7 +25,7 @@
 | `DQ-V1-workspace-agent-unrestricted-warning` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-localization`; `DV-V1-workspace-agent-independent-review` | `HZ-doc-command-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-V1-workspace-agent-provider-separation` | `DV-V1-workspace-agent-policy-regression`; `DV-V1-workspace-agent-host-descriptor`; `DV-V1-workspace-agent-misuse-walkthrough` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-001` | `DV-V1-workspace-agent-policy-regression`; protected exact-head matrix; reverse links in the public policy header and focused test | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
-| `RQ-CF-AGENT-002` | `DV-V1-workspace-agent-host-descriptor`; reverse links in the descriptor implementation and process test; exact-head hosted matrix pending | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `RQ-CF-AGENT-002` | `DV-V1-workspace-agent-host-descriptor`; reverse links in the descriptor implementation and process test; protected exact-head matrix | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 ## Verification Evidence
 
@@ -126,6 +126,23 @@ The generated-launcher jobs include the portable policy regression through the
 native suite on all three hosts. This slice does not claim that those unrelated
 workflow names constitute execution of the still-unimplemented agent UI or
 executor.
+
+The descriptor follow-up's corrected signed/DCO implementation head
+`def609305` also passes all eleven protected checks:
+
+- Generated Launcher Validation `31666059568` passes on Windows, Ubuntu, and
+  macOS. The first Windows attempt failed before Copperfin configuration when
+  the external R-version resolver could not resolve R 4.6.1; rerunning only
+  that failed job passed setup, configuration, build, and tests without a
+  product change;
+- Windows DECLARE ABI Validation `31666059579` passes Win32 and x64;
+- Windows environment/path validation `31666059576` passes;
+- GCC/Clang executable-path validation `31666059522` passes;
+- DCO run `31666057944` and both Socket checks pass.
+
+These runs close the descriptor requirement and do not close the separately
+identified mutable activation, provider, session, audit-commit, executor,
+sandbox, or trusted-UI implementation gaps.
 
 ## Severity, Rollback, And Notification
 
