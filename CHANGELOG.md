@@ -7,6 +7,8 @@
   implies administrator/root elevation. Provider authentication cannot grant
   local authority. Model/OAuth adapters, mutable execution, sandbox and audit
   enforcement, and user-facing assistant UI remain explicit follow-on work.
+  Every allow or denial requires an audit outcome, including feature-disabled
+  attempts, so disabling authority cannot also disable observability.
   See `docs/64-workspace-agent-access-policy.md`.
 
 - 2026-08-12: Continued v1 portability lane J1 by moving `AFONT()`'s ordered

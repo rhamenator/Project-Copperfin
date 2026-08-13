@@ -152,6 +152,8 @@ void test_provider_identity_cannot_bypass_local_admission() {
     expect(!decision.allowed &&
                decision.diagnostic_code == "workspace_agent.feature_disabled",
            "provider authentication should not override the user's disabled feature state");
+    expect(decision.audit_required,
+           "feature-disabled activation attempts should still require a denial audit event");
 }
 
 void test_unknown_mode_fails_closed() {

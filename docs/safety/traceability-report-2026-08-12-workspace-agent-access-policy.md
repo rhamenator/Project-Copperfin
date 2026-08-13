@@ -34,7 +34,8 @@ rejects disabled features, missing native permission, untrusted callers,
 missing audit, absent warnings, stale warnings, and canceled warnings, and
 rejects an out-of-range serialized mode even when all unrestricted consent
 fields are present. It also proves that unrestricted mode still denies
-privilege elevation. The focused
+privilege elevation and that a feature-disabled denial still requires a
+content-free audit event. The focused
 policy, platform-model, complete native-isolation, and broad localization
 selection passes locally `4/4`.
 The focused policy test passes under Clang ASan/UBSan with leak detection and
@@ -42,6 +43,8 @@ no findings.
 Temporarily weakening the warning-identity comparison to admit a stale
 nonempty warning makes the policy test fail at the intended stale-warning
 assertion; restoring the comparison returns the test to green.
+Temporarily clearing the denial audit requirement makes the same test fail at
+the feature-disabled audit assertion; restoration returns it to green.
 
 ### DV-V1-workspace-agent-localization
 

@@ -19,7 +19,6 @@ std::string policy_text(
 }
 
 WorkspaceAgentActivationDecision deny(
-    const WorkspaceAgentActivationRequest& request,
     std::string diagnostic_code,
     std::string message,
     bool warning_required = false) {
@@ -28,7 +27,7 @@ WorkspaceAgentActivationDecision deny(
     decision.diagnostic_code = std::move(diagnostic_code);
     decision.message = std::move(message);
     decision.warning_required = warning_required;
-    decision.audit_required = request.feature_enabled;
+    decision.audit_required = true;
     return decision;
 }
 
@@ -102,25 +101,21 @@ WorkspaceAgentActivationDecision evaluate_workspace_agent_activation(
     const localization::LocalizedCatalog& catalog) {
     if (!request.feature_enabled) {
         return deny(
-            request,
             "workspace_agent.feature_disabled",
             policy_text(catalog, "Security.WorkspaceAgent.Decision.FeatureDisabled"));
     }
     if (!request.permission_granted) {
         return deny(
-            request,
             "workspace_agent.permission_denied",
             policy_text(catalog, "Security.WorkspaceAgent.Decision.PermissionDenied"));
     }
     if (!request.trusted_product_ui) {
         return deny(
-            request,
             "workspace_agent.trusted_ui_required",
             policy_text(catalog, "Security.WorkspaceAgent.Decision.TrustedUiRequired"));
     }
     if (!request.audit_sink_available) {
         return deny(
-            request,
             "workspace_agent.audit_unavailable",
             policy_text(catalog, "Security.WorkspaceAgent.Decision.AuditUnavailable"));
     }
@@ -145,28 +140,24 @@ WorkspaceAgentActivationDecision evaluate_workspace_agent_activation(
             break;
         default:
             return deny(
-                request,
                 "workspace_agent.invalid_mode",
                 policy_text(catalog, "Security.WorkspaceAgent.Decision.InvalidMode"));
     }
 
     if (!request.warning_presented) {
         return deny(
-            request,
             "workspace_agent.warning_required",
             policy_text(catalog, "Security.WorkspaceAgent.Decision.WarningRequired"),
             true);
     }
     if (request.warning_id != workspace_agent_unrestricted_warning_id) {
         return deny(
-            request,
             "workspace_agent.warning_version_mismatch",
             policy_text(catalog, "Security.WorkspaceAgent.Decision.WarningVersionMismatch"),
             true);
     }
     if (!request.user_confirmed) {
         return deny(
-            request,
             "workspace_agent.confirmation_required",
             policy_text(catalog, "Security.WorkspaceAgent.Decision.ConfirmationRequired"),
             true);

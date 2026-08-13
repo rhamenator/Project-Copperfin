@@ -41,6 +41,9 @@ Missing consent, a stale or substituted warning, direct adapter activation,
 missing permission, and missing audit all fail closed. Warning identity and
 diagnostic codes are invariant machine contracts; warning and decision prose
 is localized through the normal Copperfin catalogs.
+Every activation decision requires a content-free audit outcome, including a
+request denied because the feature is disabled; disabled state removes local
+authority, not security observability.
 Unknown or out-of-range serialized access modes also fail closed without any
 capabilities, even if every unrestricted-warning field is present.
 

@@ -11,7 +11,8 @@ Unrestricted access fails closed without explicit feature enablement, the
 nondefault high-risk `ai.workspace_agent` permission, trusted Copperfin UI,
 available audit, the exact `workspace-agent.unrestricted-local.v1` localized
 warning, and affirmative consent. Provider authentication is intentionally not
-an admission input, and out-of-range mode values fail closed. Focused policy, platform-model, full native-isolation, and
+an admission input, out-of-range mode values fail closed, and every decision
+requires a content-free audit outcome even when disabled. Focused policy, platform-model, full native-isolation, and
 broad localization coverage passes locally `4/4`; Clang ASan/UBSan passes the
 policy test `1/1` with leak detection and no findings; all locale JSON parses. Host dialog/executor/
 sandbox/audit commits, provider/OAuth adapters, and the assistant UI remain
