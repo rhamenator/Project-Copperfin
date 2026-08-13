@@ -1,5 +1,14 @@
 # Agent Handoff
 
+## V1 Studio install-contract MCP fixture
+
+Windows Deep Validation at managed-policy head `387dae521` built the complete
+native tree, then found one pre-existing test-fixture mismatch: the production
+Studio install contract correctly requires `bin/copperfin_mcp_host.exe`, but
+its synthetic passing fixture did not create that file. The fixture now stages
+the required executable and directly proves that removing it fails closed.
+This is test-only; installed inventory and product behavior are unchanged.
+
 ## V1 shell-command portable-path test linkage
 
 Windows Deep Validation `31662374490` compiled for 44 minutes before MSVC

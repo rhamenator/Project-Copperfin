@@ -22,6 +22,7 @@ foreach(path IN ITEMS
         "bin/studio/Copperfin.Studio.exe"
         "bin/studio/Copperfin.Studio.exe.config"
         "bin/copperfin_studio_host.exe"
+        "bin/copperfin_mcp_host.exe"
         "share/copperfin/locales/en-US/strings.json"
         "share/copperfin/locales/es-419/strings.json"
         "share/copperfin/locales/pt-BR/strings.json"
@@ -44,6 +45,20 @@ execute_process(
 if(NOT complete_result EQUAL 0)
     message(FATAL_ERROR "Relative install-root Studio contract fixture should pass")
 endif()
+
+file(REMOVE "${TEST_ROOT}/bin/copperfin_mcp_host.exe")
+execute_process(
+    COMMAND "${CMAKE_COMMAND}"
+        -DWIN32=TRUE
+        "-DBINARY_DIR=${relative_binary_dir}"
+        "-DINSTALL_ROOT=${relative_test_root}"
+        -P "${CMAKE_CURRENT_LIST_DIR}/run_studio_install_contract_check.cmake"
+    WORKING_DIRECTORY "${source_root}"
+    RESULT_VARIABLE missing_mcp_host_result)
+if(missing_mcp_host_result EQUAL 0)
+    message(FATAL_ERROR "Studio contract fixture without the installed MCP host should fail")
+endif()
+file(WRITE "${TEST_ROOT}/bin/copperfin_mcp_host.exe" "contract fixture\n")
 
 file(WRITE "${TEST_ROOT}/bin/studio/unexpected.txt" "unexpected\n")
 execute_process(
