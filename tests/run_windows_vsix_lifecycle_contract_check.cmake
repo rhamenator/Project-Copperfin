@@ -58,6 +58,8 @@ require_text("${script}" "-CommandName', 'Copperfin.ShowCommandWindow'" "exact i
 require_text("${script}" "SetForegroundWindow" "exact IDE foreground activation")
 require_text("${script}" "GetForegroundWindow() -ne $ideProcess.MainWindowHandle" "foreground identity verification")
 require_text("${script}" "SendWait('^%a')" "Visual Studio Command-window activation")
+require_text("${script}" "NameProperty, 'Command Window'" "exact Command-window readiness boundary")
+require_text("${script}" "$commandWindow.SetFocus()" "Command-window input focus")
 require_text("${script}" "SendWait($CommandName)" "invariant command input")
 require_text("${script}" "SendWait('{ENTER}')" "Command-window execution")
 require_text("${script}" "Registered Copperfin Command surface" "same-process command-surface proof")

@@ -372,8 +372,11 @@ direct menu-tree expansion, but did not distinguish an inaccessible Tools menu
 from an absent extension item. Run `31722176750` then focused the exact IDE and
 opened Tools through its normal access key, but the hosted window exposed zero
 same-process UI Automation `MenuItem` elements. The corrected verifier focuses
-the exact IDE, opens the Command window through the hosted General profile's
-`Ctrl+Alt+A` shortcut, enters only `Copperfin.ShowCommandWindow`, proves that
+the exact IDE. Run `31723497158` proved `Ctrl+Alt+A` started the Common IDE
+package, but input raced ahead of Command-window readiness and was lost. The
+corrected verifier opens the Command window through the hosted General profile's
+shortcut, waits for and focuses its exact same-process surface, enters only
+`Copperfin.ShowCommandWindow`, proves that
 process's pane,
 explicitly forwards `/Edit` plus the fixture to it, then requires exact
 fixture-title proof, explicit successful-load XML, and matching-error rejection

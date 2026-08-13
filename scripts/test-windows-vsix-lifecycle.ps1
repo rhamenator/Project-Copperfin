@@ -329,9 +329,12 @@ if (-not $observed) {
     [System.IO.File]::WriteAllText($invokeCommandWindowScript, @'
 param(
     [Parameter(Mandatory = $true)][int]$ExpectedProcessId,
-    [Parameter(Mandatory = $true)][string]$CommandName
+    [Parameter(Mandatory = $true)][string]$CommandName,
+    [Parameter(Mandatory = $true)][int]$TimeoutSeconds
 )
 $ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type @"
 using System;
@@ -358,10 +361,24 @@ if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindo
     throw "Visual Studio process $ExpectedProcessId could not be focused for Command-window activation."
 }
 [System.Windows.Forms.SendKeys]::SendWait('^%a')
-Start-Sleep -Milliseconds 750
-if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindowHandle) {
-    throw "Visual Studio process $ExpectedProcessId lost focus before Command-window input."
+$deadline = [DateTime]::UtcNow.AddSeconds([Math]::Min($TimeoutSeconds, 30))
+$processCondition = [System.Windows.Automation.PropertyCondition]::new(
+    [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ExpectedProcessId)
+$nameCondition = [System.Windows.Automation.PropertyCondition]::new(
+    [System.Windows.Automation.AutomationElement]::NameProperty, 'Command Window')
+$commandWindowCondition = [System.Windows.Automation.AndCondition]::new(@(
+    $processCondition, $nameCondition))
+$commandWindow = $null
+while ([DateTime]::UtcNow -lt $deadline -and $null -eq $commandWindow) {
+    $commandWindow = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+        [System.Windows.Automation.TreeScope]::Descendants, $commandWindowCondition)
+    if ($null -eq $commandWindow) { Start-Sleep -Milliseconds 250 }
 }
+if ($null -eq $commandWindow) {
+    throw "Visual Studio process $ExpectedProcessId did not expose its Command Window before input."
+}
+$commandWindow.SetFocus()
+Start-Sleep -Milliseconds 250
 [System.Windows.Forms.SendKeys]::SendWait($CommandName)
 [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
 '@, [System.Text.UTF8Encoding]::new($false))
@@ -370,7 +387,7 @@ if ([CopperfinForegroundWindow]::GetForegroundWindow() -ne $ideProcess.MainWindo
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $invokeCommandWindowScript,
             '-ExpectedProcessId', "$($ideProcess.Id)",
-            '-CommandName', 'Copperfin.ShowCommandWindow') `
+            '-CommandName', 'Copperfin.ShowCommandWindow', '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin Command-window invocation' | Out-Null
     Write-Host 'VSIX lifecycle phase: observe registered Copperfin command'
     Invoke-BoundedProcess `

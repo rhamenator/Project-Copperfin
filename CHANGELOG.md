@@ -21,8 +21,11 @@
   from an absent extension item. Run `31722176750` focused the exact IDE and
   opened Tools through the normal access key, but the hosted window exposed zero
   same-process UI Automation `MenuItem` elements. The corrected sequence focuses
-  the exact IDE, opens Visual Studio's Command window through the hosted General
-  profile's `Ctrl+Alt+A` shortcut, enters only `Copperfin.ShowCommandWindow`,
+  the exact IDE. Run `31723497158` proved `Ctrl+Alt+A` started loading the Common
+  IDE package, but command input raced ahead of Command-window readiness and was
+  lost. The corrected sequence opens Visual Studio's Command window through the
+  hosted General profile's shortcut, waits for and focuses its exact
+  same-process surface, enters only `Copperfin.ShowCommandWindow`,
   proves that process's command surface, explicitly forwards `/Edit` plus the
   fixture to it, and requires exact document proof plus explicit successful-load
   XML/error rejection in fresh exact-head evidence.
