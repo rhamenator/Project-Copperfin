@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
@@ -35,6 +36,8 @@ internal sealed class StudioMainForm : Form
     private readonly ToolStripMenuItem floatTerminalWindowMenuItem;
     private readonly CopperfinLocalization localization;
     private readonly IStudioShellLayoutStore shellLayoutStore;
+    private readonly Func<CopperfinLocalization, CopperfinWorkspaceAgentPolicyResult>
+        workspaceAgentPolicyLoader;
     private readonly Dictionary<string, TabPage> openDocuments =
         new(CopperfinDocumentPathIdentity.CreateComparer());
     private const int DefaultSplitterDistance = 720;
@@ -52,9 +55,22 @@ internal sealed class StudioMainForm : Form
     public StudioMainForm(
         CopperfinLocalization? localization = null,
         IStudioShellLayoutStore? shellLayoutStore = null)
+        : this(
+            localization,
+            shellLayoutStore,
+            CopperfinWorkspaceAgentPolicyClient.TryLoad)
+    {
+    }
+
+    internal StudioMainForm(
+        CopperfinLocalization? localization,
+        IStudioShellLayoutStore? shellLayoutStore,
+        Func<CopperfinLocalization, CopperfinWorkspaceAgentPolicyResult> workspaceAgentPolicyLoader)
     {
         this.localization = localization ?? CopperfinLocalization.FromEnvironment();
         this.shellLayoutStore = shellLayoutStore ?? StudioShellLayoutFileStore.CreateDefault();
+        this.workspaceAgentPolicyLoader = workspaceAgentPolicyLoader ??
+            throw new ArgumentNullException(nameof(workspaceAgentPolicyLoader));
 
         Text = this.localization.Text("Studio.AppTitle");
         Width = 1480;
@@ -141,7 +157,7 @@ internal sealed class StudioMainForm : Form
         workspaceAgentPolicyMenuItem = new ToolStripMenuItem(
             this.localization.Text("Studio.WorkspaceAgent.Menu"),
             null,
-            (_, _) => ShowWorkspaceAgentPolicy());
+            async (_, _) => await ShowWorkspaceAgentPolicyAsync());
         floatCommandWindowMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.FloatCommandWindowMenu"))
         {
             CheckOnClick = true
@@ -254,22 +270,42 @@ internal sealed class StudioMainForm : Form
         return new StudioWorkspaceAgentPolicyDialog(descriptor, localization);
     }
 
-    private void ShowWorkspaceAgentPolicy()
+    private async Task ShowWorkspaceAgentPolicyAsync()
     {
-        var result = CopperfinWorkspaceAgentPolicyClient.TryLoad(localization);
-        if (!result.Success || result.Descriptor is null)
+        workspaceAgentPolicyMenuItem.Enabled = false;
+        try
         {
-            MessageBox.Show(
-                this,
-                WorkspaceAgentPolicyErrorText(result),
-                localization.Text("Studio.WorkspaceAgent.Title"),
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
-            return;
-        }
+            var result = await LoadWorkspaceAgentPolicyAsyncForTest();
+            if (IsDisposed || Disposing)
+            {
+                return;
+            }
+            if (!result.Success || result.Descriptor is null)
+            {
+                MessageBox.Show(
+                    this,
+                    WorkspaceAgentPolicyErrorText(result),
+                    localization.Text("Studio.WorkspaceAgent.Title"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
 
-        using var dialog = new StudioWorkspaceAgentPolicyDialog(result.Descriptor, localization);
-        dialog.ShowDialog(this);
+            using var dialog = new StudioWorkspaceAgentPolicyDialog(result.Descriptor, localization);
+            dialog.ShowDialog(this);
+        }
+        finally
+        {
+            if (!IsDisposed && !Disposing)
+            {
+                workspaceAgentPolicyMenuItem.Enabled = true;
+            }
+        }
+    }
+
+    internal Task<CopperfinWorkspaceAgentPolicyResult> LoadWorkspaceAgentPolicyAsyncForTest()
+    {
+        return Task.Run(() => workspaceAgentPolicyLoader(localization));
     }
 
     internal string WorkspaceAgentPolicyErrorTextForTest(CopperfinWorkspaceAgentPolicyResult result)

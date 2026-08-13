@@ -28,7 +28,7 @@
 | `RQ-CF-AGENT-001` | `DV-V1-workspace-agent-policy-regression`; protected exact-head matrix; reverse links in the public policy header and focused test | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 | `RQ-CF-AGENT-002` | `DV-V1-workspace-agent-host-descriptor`; reverse links in the descriptor implementation and process test; protected exact-head matrix | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `RQ-CF-AGENT-003` | `DV-V1-workspace-agent-managed-client`; reverse links in the strict managed client and smoke; exact-head Linux execution `31677215316`; exact-head Windows execution `31677215577` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `RQ-CF-AGENT-004` | `DV-V1-workspace-agent-policy-preview`; reverse links in standalone Studio, the dialog, managed localization, and focused smoke; local managed compile passes while exact-head Linux/Windows execution remains required | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
+| `RQ-CF-AGENT-004` | `DV-V1-workspace-agent-policy-preview`; reverse links in standalone Studio, the dialog, managed localization, and focused smoke; background-load responsiveness regression; local managed compile passes while exact-head Linux/Windows execution remains required | `HZ-system-failure-01`; `HZ-data-corruption-01`; `HZ-doc-command-01` |
 
 ## Verification Evidence
 

@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 
 namespace Copperfin.VisualStudio;
 
@@ -54,6 +55,30 @@ internal static partial class Program
                form.WorkspaceAgentPolicyErrorTextForTest(timedOutHost) ==
                "Tiempo de espera agotado esperando el host de Copperfin Studio.",
             "standalone Studio should select safe catalog-owned host guidance by diagnostic code");
+
+        using var loaderStarted = new ManualResetEventSlim(false);
+        using var releaseLoader = new ManualResetEventSlim(false);
+        using var asyncForm = new StudioMainForm(
+            spanish,
+            new InMemoryStudioShellLayoutStore(),
+            _ =>
+            {
+                loaderStarted.Set();
+                releaseLoader.Wait();
+                return parsed;
+            });
+        var pendingLoad = asyncForm.LoadWorkspaceAgentPolicyAsyncForTest();
+        try
+        {
+            Expect(loaderStarted.Wait(TimeSpan.FromSeconds(2)) && !pendingLoad.IsCompleted,
+                "workspace-assistant policy host loading should not block the Studio UI caller");
+        }
+        finally
+        {
+            releaseLoader.Set();
+        }
+        Expect(pendingLoad.GetAwaiter().GetResult().Success,
+            "workspace-assistant policy background loading should return the validated descriptor");
 
         using var dialog = form.CreateWorkspaceAgentPolicyDialogForTest(parsed.Descriptor);
         var dialogButtons = FindButtons(dialog).ToList();
