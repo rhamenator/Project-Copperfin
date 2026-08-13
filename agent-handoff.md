@@ -34,9 +34,10 @@ workflow.
 
 The next stacked UI slice adds a localized read-only Workspace Assistant
 Access preview under standalone Studio's View menu. It defaults to advisory,
-displays the three validated modes/capabilities and host-provided unrestricted
-warning, and contains only a Close button. It cannot activate, capture consent,
-authenticate, start a session, or execute. The Designer smoke and standalone
+displays the three validated modes/capabilities and the host-provided
+unrestricted-warning identity with catalog-owned warning prose, and contains
+only a Close button. Host-provided warning text is not rendered. It cannot
+activate, capture consent, authenticate, start a session, or execute. The Designer smoke and standalone
 projects compile warning-free against net472 locally. All load failures map by
 stable diagnostic code to fixed localized product prose rather than exposing
 raw parser/process/host output; safe missing-host and timeout guidance remains

@@ -25,7 +25,6 @@ internal sealed class StudioWorkspaceAgentPolicyDialog : Form
         public override string ToString() => DisplayName;
     }
 
-    private readonly CopperfinWorkspaceAgentPolicyDescriptor descriptor;
     private readonly CopperfinLocalization localization;
     private readonly Label activationStatusLabel;
     private readonly ComboBox modeSelector;
@@ -35,7 +34,7 @@ internal sealed class StudioWorkspaceAgentPolicyDialog : Form
         CopperfinWorkspaceAgentPolicyDescriptor descriptor,
         CopperfinLocalization localization)
     {
-        this.descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
+        descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
         this.localization = localization ?? throw new ArgumentNullException(nameof(localization));
 
         Text = localization.Text("Studio.WorkspaceAgent.Title");
@@ -172,12 +171,14 @@ internal sealed class StudioWorkspaceAgentPolicyDialog : Form
         };
         if (string.Equals(selected.Descriptor.Name, "unrestricted_local", StringComparison.Ordinal))
         {
-            var warning = descriptor.UnrestrictedWarning!;
             lines.Add(string.Empty);
             lines.Add(localization.Text("Studio.WorkspaceAgent.Warning"));
-            lines.Add(warning.Title);
-            lines.Add(warning.Body);
-            lines.Add(warning.Acknowledgement);
+            // The descriptor supplies only the validated, versioned warning
+            // identity. Trusted product prose always comes from the active
+            // Copperfin catalog, never from host-controlled descriptor text.
+            lines.Add(localization.Text("Security.WorkspaceAgent.Warning.Unrestricted.Title"));
+            lines.Add(localization.Text("Security.WorkspaceAgent.Warning.Unrestricted.Body"));
+            lines.Add(localization.Text("Security.WorkspaceAgent.Warning.Unrestricted.Acknowledgement"));
         }
         detailsTextBox.Text = string.Join(Environment.NewLine, lines);
     }

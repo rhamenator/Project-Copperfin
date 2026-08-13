@@ -6,6 +6,8 @@
   process, or untrusted host-output details from becoming UI prose while
   preserving catalog-owned missing-host and timeout guidance, and the mode,
   capability, status, and Close surfaces have localized accessibility names.
+  The validated versioned warning identity selects catalog-owned warning prose;
+  host-supplied warning text cannot replace trusted UI guidance.
   See
   `docs/64-workspace-agent-access-policy.md`.
 

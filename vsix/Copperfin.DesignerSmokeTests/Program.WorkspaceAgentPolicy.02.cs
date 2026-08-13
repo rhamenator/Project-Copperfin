@@ -100,9 +100,12 @@ internal static partial class Program
 
         dialog.SelectModeForTest("unrestricted_local");
         Expect(dialog.SelectedModeName == "unrestricted_local" &&
-               dialog.DetailsText.Contains("[!! localized title !!]", StringComparison.Ordinal) &&
+               dialog.DetailsText.Contains("Habilitar acceso local sin restricciones para el agente?", StringComparison.Ordinal) &&
+               dialog.DetailsText.Contains("El inicio de sesion con el proveedor no concede este acceso.", StringComparison.Ordinal) &&
+               dialog.DetailsText.Contains("Entiendo los riesgos y deseo habilitar el acceso sin restricciones.", StringComparison.Ordinal) &&
+               !dialog.DetailsText.Contains("[!! localized", StringComparison.Ordinal) &&
                dialog.DetailsText.Contains("Elevar privilegios: Falso", StringComparison.Ordinal),
-            "unrestricted policy preview should show host-provided warning prose and permanent no-elevation state");
+            "unrestricted policy preview should show catalog-owned warning prose and permanent no-elevation state");
 
         var pseudo = new CopperfinLocalization(CopperfinLocalization.PseudoLocale);
         using var pseudoDialog = new StudioWorkspaceAgentPolicyDialog(parsed.Descriptor, pseudo);

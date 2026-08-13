@@ -104,7 +104,9 @@ read-only and does not supply an activation or execution method.
 Standalone Studio exposes that validated descriptor through a localized
 **Workspace Assistant Access** preview under **View**. The dialog defaults to
 advisory, lets the user inspect all three exact modes and capabilities, and
-shows the host-provided current warning when unrestricted mode is selected.
+uses the host's validated current warning identity to select catalog-owned
+warning prose when unrestricted mode is selected. Host-provided warning text is
+never rendered as trusted product guidance.
 It states that activation is unavailable and contains only a Close button: it
 does not enable a feature, grant permission, record consent, start a session,
 authenticate a provider, or execute a tool. Invalid descriptor diagnostics are

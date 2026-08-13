@@ -108,10 +108,11 @@ and expires `2026-11-11T07:18:19Z`.
 
 `SmokeStandaloneStudioWorkspaceAgentPolicySurface` requires localized standalone
 Studio menu/dialog chrome, advisory default selection, exactly three modes,
-host-provided unrestricted warning prose, explicit false elevation, and only a
-localized Close button. It requires localized accessibility names for the mode
-selector, capability text, and Close action and exercises pseudo-localized
-chrome. The preview
+catalog-owned unrestricted warning prose selected by the validated versioned
+warning identity, explicit false elevation, and only a localized Close button.
+It rejects host-controlled warning text as trusted UI and requires localized
+accessibility names for the mode selector, capability text, and Close action
+and exercises pseudo-localized chrome. The preview
 has no activation, consent, provider, session, or executor control; selecting a
 mode changes displayed information only. Malformed descriptor details map to a
 localized generic UI error while retaining the stable diagnostic code. A
@@ -227,7 +228,9 @@ For the read-only preview, an additional boundary failure would be presenting
 untrusted host stderr as product guidance or exposing a control whose purpose
 cannot be determined by assistive technology. The UI therefore maps every
 load failure to fixed localized product prose and labels its interactive and
-read-only surfaces without granting them mutable authority.
+read-only surfaces without granting them mutable authority. The versioned
+warning identity selects catalog-owned prose so a stale or substituted host
+cannot replace the title, body, or acknowledgement shown by product UI.
 Current policy controls are disabled-by-default feature state, nondefault
 high-risk RBAC, trusted-UI origin, versioned warning consent, mandatory audit
 availability, and no elevation. Required integration controls still to ship
