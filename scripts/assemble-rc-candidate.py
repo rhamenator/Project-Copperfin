@@ -7,7 +7,9 @@
 
 Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation;
 DV-rc-evidence-v2-assembly-self-test; DV-rc-evidence-v2-schema-validation;
-HZ-system-failure-01; HZ-doc-command-01.
+RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
+DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
+HZ-data-corruption-01; HZ-doc-command-01.
 """
 
 from __future__ import annotations

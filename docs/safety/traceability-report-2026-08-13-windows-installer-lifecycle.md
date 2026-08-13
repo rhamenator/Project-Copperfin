@@ -17,7 +17,9 @@ suitability for a safety-critical deployment.
 Reverse traceability is carried by `.github/workflows/build-installers.yml`,
 `scripts/test-windows-installer-lifecycle.ps1`,
 `scripts/assemble-rc-candidate.py`, the schema-v3 contract, and the durable
-matrix row.
+matrix row. The RC evaluation guide and focused lifecycle contract also carry
+the governing requirement, derived requirement, verification, and hazard
+identifiers; the focused check enforces those reverse links.
 
 ## Hazard, Misuse, And Boundary Analysis
 

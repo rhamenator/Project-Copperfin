@@ -1,6 +1,9 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
+# Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
+# DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
+# HZ-data-corruption-01; HZ-doc-command-01.
 
 if(NOT DEFINED SOURCE_DIR OR "${SOURCE_DIR}" STREQUAL "")
     message(FATAL_ERROR "SOURCE_DIR is required")
@@ -34,6 +37,25 @@ endfunction()
 
 set(script "scripts/test-windows-installer-lifecycle.ps1")
 set(workflow ".github/workflows/build-installers.yml")
+
+foreach(traceability_file IN ITEMS
+        scripts/assemble-rc-candidate.py
+        scripts/test-windows-installer-lifecycle.ps1
+        docs/contracts/rc-validation-manifest-v3.schema.json
+        .github/workflows/build-installers.yml
+        docs/35-rc1-evaluation-guide.md
+        tests/run_windows_installer_lifecycle_contract_check.cmake)
+    foreach(traceability_id IN ITEMS
+            RQ-CF-REL-002
+            DQ-windows-installer-lifecycle-scope
+            DV-windows-installer-lifecycle-contract
+            HZ-system-failure-01
+            HZ-data-corruption-01
+            HZ-doc-command-01)
+        require_text("${traceability_file}" "${traceability_id}"
+            "reverse traceability to ${traceability_id}")
+    endforeach()
+endforeach()
 
 require_text("${script}" "[ValidateRange(10, 600)]" "bounded process-timeout contract")
 require_text("${script}" "WaitForExit($ProcessTimeoutSeconds * 1000)" "bounded child-process wait")

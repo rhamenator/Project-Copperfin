@@ -1,5 +1,9 @@
 name: Build Standalone Installers
 
+# Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
+# DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
+# HZ-data-corruption-01; HZ-doc-command-01.
+
 on:
   push:
     branches: [main]

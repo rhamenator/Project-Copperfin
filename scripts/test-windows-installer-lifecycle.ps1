@@ -1,6 +1,9 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
+# Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
+# DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
+# HZ-data-corruption-01; HZ-doc-command-01.
 
 [CmdletBinding()]
 param(
