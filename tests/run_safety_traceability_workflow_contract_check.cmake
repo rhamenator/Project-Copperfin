@@ -540,6 +540,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "compound-placeholder-signoff-qualification")
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer"
+        "qualification: <b class=\\\"status\\\">TBD</b>: add qualification evidence later"
+        "inline-html-placeholder-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
         "qualification: p&#101;nding review"
         "entity-encoded-signoff-qualification")
     assert_high_signoff_mutation_rejected(
@@ -574,6 +578,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries"
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: TODO: record verification after the run"
         "compound-placeholder-signoff-verification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries"
+        "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: <em>TODO</em>: record verification after the run"
+        "inline-html-placeholder-signoff-verification")
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer"
         "qualification: not qualified"
@@ -814,6 +822,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "verification: deferred: perform verification later"
         "compound-placeholder-self-review-verification")
     assert_low_self_review_mutation_rejected(
+        "verification: procedure and rendered guidance checked"
+        "verification: <strong>deferred</strong>: perform verification later"
+        "inline-html-placeholder-self-review-verification")
+    assert_low_self_review_mutation_rejected(
         "automated evidence: focused documentation contracts pass"
         "automated evidence: pending review"
         "placeholder-self-review-automation")
@@ -821,6 +833,14 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: focused documentation contracts pass"
         "automated evidence: TBD: add workflow evidence later"
         "compound-placeholder-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: <b>TBD</b>: add workflow evidence later"
+        "inline-html-placeholder-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: <b title=\\\"future > evidence\\\">TBD</b>: add workflow evidence later"
+        "quoted-angle-inline-html-placeholder-self-review-automation")
     assert_low_self_review_mutation_rejected(
         "automated evidence: focused documentation contracts pass"
         "automated evidence: failed verification run"

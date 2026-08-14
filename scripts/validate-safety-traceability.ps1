@@ -351,7 +351,14 @@ function Get-RenderedInlineEvidenceText {
         $rendered,
         '\\(?<escaped>[!"#$%&''()*+,\-./:;<=>?@\[\\\]^_`{|}~])',
         '${escaped}')
-    return [System.Net.WebUtility]::HtmlDecode($rendered)
+    $rendered = [System.Net.WebUtility]::HtmlDecode($rendered)
+    # Inline HTML tags are presentation syntax, not semantic evidence. Remove
+    # them after entity decoding so wrappers cannot hide placeholder states;
+    # URI and email autolinks do not match this tag grammar.
+    return [regex]::Replace(
+        $rendered,
+        '</?[A-Za-z][A-Za-z0-9-]*(?=[\s/>])(?:[^"''<>]|"[^"]*"|''[^'']*'')*>',
+        '')
 }
 
 function Get-MarkdownSection {

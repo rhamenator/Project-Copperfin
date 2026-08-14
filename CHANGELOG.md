@@ -16,7 +16,8 @@
   assertions. Review evidence is punctuation-normalized before rejecting
   negative, incomplete, missing, deferred, unavailable, skipped, or failed
   states, including placeholder-state prefixes followed by additional prose,
-  while retaining affirmative `does not`/`never` safety guarantees and
+  after removing inline HTML presentation tags, while retaining affirmative
+  `does not`/`never` safety guarantees and
   legitimate failure-boundary scope prose. Outcome/status `failure` forms still
   fail closed. Live review
   loading re-fetches the issue after comment pagination and fails closed if the
