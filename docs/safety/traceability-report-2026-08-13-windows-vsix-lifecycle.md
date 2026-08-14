@@ -411,6 +411,24 @@ package-load, error-free, uninstall, and residue evidence. Artifact
 and expires 2026-11-12. `RQ-CF-REL-003` remains `gap` pending exact-head
 execution of this input correction.
 
+Run `31759758376` proved the direct-input mechanism itself is complete but
+exposed an exact command-text defect. Installation and uninstall passed
+(296.502 and 21.490 seconds), all six shortcut events and all 58 requested
+command/Enter events were inserted into the exact foreground IDE process, and
+cleanup left zero Copperfin residue; no Copperfin pane or package load
+followed. The harness had incorrectly included a literal `>` before
+`Copperfin.ShowCommandWindow`. Microsoft's
+[Command Window documentation](https://learn.microsoft.com/en-us/visualstudio/ide/command-window?view=visualstudio)
+defines `>` as the prompt displayed at the left edge of new input lines and
+instructs users to enter Command Window input without that sign. The corrected
+helper therefore injects only the invariant command plus Enter, and the
+focused contract both requires that prompt-free assignment and rejects the
+old prefixed form. Pane, package-load, PRG, error, uninstall, and residue gates
+remain independent. Diagnostic artifact `9204474322` has digest
+`sha256:5675ea5273edace48be9d22b950fa5168e40b9ab4667ba52a191b9a42e023a53`
+and expires 2026-11-12. `RQ-CF-REL-003` remains `gap` pending corrected
+exact-head execution.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

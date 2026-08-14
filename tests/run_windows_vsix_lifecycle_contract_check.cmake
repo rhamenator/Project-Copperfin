@@ -24,6 +24,14 @@ function(require_text relative_path expected_text description)
     endif()
 endfunction()
 
+function(reject_text relative_path rejected_text description)
+    file(READ "${SOURCE_DIR}/${relative_path}" contents)
+    string(FIND "${contents}" "${rejected_text}" match_index)
+    if(NOT match_index EQUAL -1)
+        message(FATAL_ERROR "${relative_path} contains ${description}")
+    endif()
+endfunction()
+
 set(script "scripts/test-windows-vsix-lifecycle.ps1")
 set(workflow ".github/workflows/build-vsix.yml")
 foreach(path IN ITEMS
@@ -62,6 +70,8 @@ require_text("${script}" "UIAutomationClient" "Windows UI Automation evidence bo
 require_text("${script}" "ProcessIdProperty, $ExpectedProcessId" "launched-process UI identity binding")
 require_text("${script}" "InvokeCanonicalCommand" "exact canonical command activation")
 require_text("${script}" "Copperfin.ShowCommandWindow" "registered canonical command identity")
+require_text("${script}" "$commandText = $InvokeCanonicalCommand" "prompt-free canonical Command Window input")
+reject_text("${script}" "$commandText = \">$InvokeCanonicalCommand\"" "a typed Command Window prompt prefix")
 require_text("${script}" "SetForegroundWindow" "exact evidence-IDE foreground request")
 require_text("${script}" "GetWindowThreadProcessId" "foreground process identity check")
 require_text("${script}" "foreground_process_verified" "machine-readable foreground identity state")

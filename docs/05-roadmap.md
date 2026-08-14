@@ -512,6 +512,11 @@ seconds even though Common IDE had been ready for more than eight seconds. The
 hosted harness now uses exact-foreground-PID-bound Win32 `SendInput`, verifies
 every injected event count, and retains the counts separately from product
 surface, package-load, PRG, uninstall, and residue admission.
+Run `31759758376` proved every direct-input event was inserted and cleanup was
+clean, but also proved the harness incorrectly typed the Command Window's
+displayed `>` prompt before the canonical command. The correction injects only
+`Copperfin.ShowCommandWindow` plus Enter and adds a regression rejection of the
+prompt-prefixed form; exact-head hosted evidence remains pending.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

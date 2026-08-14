@@ -565,7 +565,9 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
                         $commandInputWindow, [ref]$commandInputProcessId)
                     $commandInputForegroundVerified = $commandInputProcessId -eq $ExpectedProcessId
                     if ($commandInputForegroundVerified) {
-                        $commandText = ">$InvokeCanonicalCommand"
+                        # The greater-than character is the Command Window's displayed
+                        # prompt. It is not part of the command entered by the user.
+                        $commandText = $InvokeCanonicalCommand
                         $commandInputEventsExpected = (2 * $commandText.Length) + 2
                         $commandInputEventsInjected = [CopperfinLifecycle.NativeMethods]::SendUnicodeTextAndEnter($commandText)
                         $canonicalCommandSubmitted = $commandInputEventsInjected -eq $commandInputEventsExpected

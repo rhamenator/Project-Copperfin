@@ -191,6 +191,13 @@ mechanism with exact-foreground-PID-bound Win32 `SendInput`, explicit shortcut
 and Unicode command events, fail-closed inserted-event counts, and an
 executable embedded-C# compile regression. All product admission gates remain
 independent.
+Run `31759758376` proved that mechanism inserted all six shortcut events and
+all 58 requested command/Enter events, while install, uninstall, and zero
+residue also passed, but no Copperfin load followed. The retained command text
+included the Command Window's displayed `>` prompt. Microsoft documents that
+prompt as UI rather than user-entered command text. The current head removes
+that prefix and the focused contract rejects its reintroduction;
+`RQ-CF-REL-003` remains `gap` pending exact-head hosted execution.
 
 ## V1 Windows installer lifecycle
 

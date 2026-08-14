@@ -140,6 +140,10 @@
   now injects explicit shortcut and Unicode command events, fails on any short
   inserted-event count, and retains those counts without weakening independent
   product evidence.
+  Run `31759758376` then inserted every requested event but exposed that the
+  harness typed the Command Window's displayed `>` prompt as command text. The
+  helper now injects only `Copperfin.ShowCommandWindow` plus Enter, with a
+  focused regression that rejects the prompt-prefixed form.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
