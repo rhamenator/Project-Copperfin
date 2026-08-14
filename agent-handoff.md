@@ -1,28 +1,24 @@
 # Agent Handoff
 
-## Solo-maintainer assurance gate reconciliation
+## V1 workspace-agent session lifecycle
 
-The adopted solo-maintainer policy now has one consistent executable boundary.
-Ordinary `none`/`low`/`medium` safety-documentation changes may use explicit
-maintainer self-review plus applicable automation without claiming independence;
-`high`/`catastrophic` changes still require an approved second-qualified-human
-review, and completed-project/first-stable-release review remains unchanged. A
-reviewer-authored sign-off must contain meaningful qualification and verification
-evidence and the SHA-256 of the exact issue body reviewed; later body edits and
-placeholder or negated fields fail closed. Lower-risk self-review verification
-and automation use the same meaningful-evidence boundary, which normalizes
-punctuation and rejects negative, incomplete, missing, deferred, unavailable,
-skipped, and failed evidence states.
-Affirmative `does not`/`never` safety guarantees and legitimate failure-boundary
-scope prose remain valid; outcome/status `failure` forms fail closed. The live loader re-fetches
-the issue after comment pagination and admits only a stable body, comment count,
-and update identity.
-The issue form, validator, agent rules, triage rubric, deterministic fixtures,
-and `LLR-CF-ASSURANCE-001` carry that boundary. The charter and active guidance
-also make requirements recovery an ongoing baseline and forbid using existing
-implementation as its own requirement source. Focused safety-traceability,
-community-health, YAML/JSON parse, and diff checks pass locally; protected review
-and hosted results remain to be recorded before merge.
+`RQ-CF-AGENT-005` is defined at merged commit `e8a1a0ae6`. The non-executing
+native controller binds one policy-admitted mode and capability snapshot only
+after a content-free start audit receives a nonempty receipt, rejects session
+replacement, and clears authority before stop auditing. Policy-evaluation
+exceptions become audited denials and restore the transition. Audit JSON is
+locale-independent. Exact implementation head `65bb48915` passed all eleven
+protected checks in runs `31827637259`, `31827638217`, `31827638262`,
+`31827638271`, and `31827638315`; all three review threads are resolved. Local
+Release `4/4`, fresh Clang ASan/UBSan `2/2`, safety-traceability, community, and
+diff gates also pass.
+
+This boundary still executes no tool and provides no provider/OAuth adapter,
+real sandbox, persistent audit sink, trusted activation/consent UI, product stop
+control, session indicator, diff, or undo. The highest-value adjacent gap is a
+persistent content-free audit sink that consumes the versioned lifecycle event
+without storing prompt, path, workspace, credential, token, or receipt content.
+Keep that slice non-activating and provider-independent.
 
 ## V1 Windows VSIX lifecycle
 

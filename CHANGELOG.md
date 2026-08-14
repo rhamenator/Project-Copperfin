@@ -11,6 +11,10 @@
   test-owned filesystem and process-environment mutations.
   Audit JSON now explicitly uses the classic locale, preventing process-global
   digit grouping from corrupting numeric fields or Unicode escapes.
+  Exact implementation head `65bb48915` passes all eleven protected checks,
+  including Windows, Ubuntu, macOS, GCC, Clang, Win32/x64 DECLARE, Windows
+  environment-path, DCO, and both supply-chain checks; `RQ-CF-AGENT-005` is now
+  defined with direct retained evidence.
 
 - 2026-08-14: Reconciled the safety-documentation template, validator, agent
   rules, and triage rubric with the adopted solo-maintainer assurance policy.

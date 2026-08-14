@@ -29,8 +29,10 @@ Mapped architecture and code:
 - `DV-workspace-agent-session-002`: fresh Clang 21 ASan/UBSan policy/session
   execution with leak detection passes `2/2` with no finding.
 - `DV-workspace-agent-session-003`: safety-traceability, community-health, and
-  diff-validation contracts pass locally; protected exact-head execution and
-  review remain pending below.
+  diff-validation contracts pass locally. Exact implementation head
+  `65bb48915` passes all eleven protected checks in runs `31827637259`,
+  `31827638217`, `31827638262`, `31827638271`, and `31827638315`; all review
+  threads are resolved.
 
 ## Procedural delta map
 
@@ -111,9 +113,16 @@ recovery, successful later start, and immediate revocation. Its isolation
 declaration records the unique test-owned filesystem and scoped process
 environment mutations instead of claiming no filesystem access.
 
-Protected Windows, Ubuntu, and macOS execution and exact-head review are still
-pending. Until those results exist, `RQ-CF-AGENT-005` remains `gap`, not
-`defined`.
+Exact implementation head `65bb48915` passes all eleven protected checks.
+Generated-launcher run `31827638262` passes Windows, Ubuntu, and macOS; run
+`31827638315` passes GCC and Clang executable-path coverage; run `31827638271`
+passes Win32 and x64 DECLARE validation; run `31827638217` passes Windows
+environment-path validation; and DCO run `31827637259` passes. Both
+supply-chain checks also pass. Automated review identified transition recovery,
+test-isolation truth, and locale-dependent JSON issues; the first two are fixed
+at `1c8fb7af1`, the final issue is fixed at `65bb48915`, all three threads are
+resolved, and the exact final head has the documented maintainer self-review
+below. `RQ-CF-AGENT-005` is therefore `defined`.
 
 ## Assurance statement
 
