@@ -10,7 +10,7 @@
     "review_comments": [
       {
         "user": { "login": "copperfin-reviewer", "type": "User" },
-        "body": "## Independent Review Sign-Off\n\nreviewer: copperfin-reviewer\nqualification: qualified historical documentation reviewer\nverification: historical no-hazard fixture review\nreviewed issue body sha256: 3fd476e30d73c085b3c553dc6a2c398efc3b90a48c818293fe48638bd9b2847a\nresult: approved"
+        "body": "## Independent Review Sign-Off\n\nreviewer: copperfin-reviewer\nqualification: qualified historical documentation reviewer\nverification: historical no-hazard fixture review\nverification result: passed\nreviewed issue body sha256: 3fd476e30d73c085b3c553dc6a2c398efc3b90a48c818293fe48638bd9b2847a\nresult: approved"
       }
     ],
     "body": "## Documentation Requirement IDs\n\n- DQ-no-hazard\n\n## Documentation Verification IDs\n\n- DV-no-hazard\n\n## Hazard Linkage IDs\n\n- HZ-NONE\n\n## DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-no-hazard | DV-no-hazard | HZ-NONE |\n\nProcedural Delta Map\nMisuse Analysis\nSeverity: low\n\n## Independent Review Evidence\n\nreviewer: copperfin-reviewer\nverification: historical no-hazard fixture review\nresult: approved\n\nSimulation walkthrough\nRollback plan and field notification plan"

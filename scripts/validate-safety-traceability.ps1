@@ -277,6 +277,26 @@ function Get-EvidenceField {
     return $matches[0].Groups["value"].Value.Trim()
 }
 
+function Get-EvidenceFieldGroup {
+    param(
+        [string]$Text,
+        [string[]]$Names
+    )
+
+    $values = @()
+    foreach ($name in $Names) {
+        $escapedName = [regex]::Escape($name)
+        foreach ($match in [regex]::Matches($Text, "(?im)^\s*$escapedName\s*:\s*(?<value>[^\r\n]*?)\s*$")) {
+            $values += $match.Groups["value"].Value.Trim()
+        }
+    }
+
+    if ($values.Count -ne 1) {
+        return ""
+    }
+    return $values[0]
+}
+
 function Get-GitHubLogin {
     param([string]$Value)
 
@@ -316,6 +336,8 @@ function Test-MeaningfulReviewEvidence {
     $rejectedTokens = @{
         "absent" = $true
         "blocked" = $true
+        "canceled" = $true
+        "cancelled" = $true
         "deferred" = $true
         "incomplete" = $true
         "later" = $true
@@ -326,6 +348,7 @@ function Test-MeaningfulReviewEvidence {
         "skipped" = $true
         "tbd" = $true
         "todo" = $true
+        "timeout" = $true
         "unavailable" = $true
         "unchecked" = $true
         "unqualified" = $true
@@ -343,7 +366,7 @@ function Test-MeaningfulReviewEvidence {
     # whether explicitly unsuccessful evidence is admitted.
     $failureScrubbed = [regex]::Replace(
         $normalized,
-        '\bfailure\s+(?:boundary|boundaries|case|cases|handling|mode|modes|path|paths|recovery|scenario|scenarios|semantics)\b',
+        '\bfailure\s+boundaries\b',
         '')
     if ($normalized -match '\b(?:does\s+not|do\s+not|never|cannot|prevents?|contains?|isolates?|recovers?|rolls?\s+back)\b') {
         $failureScrubbed = [regex]::Replace(
@@ -354,14 +377,21 @@ function Test-MeaningfulReviewEvidence {
     $failureScrubbed = [regex]::Replace($failureScrubbed, '\bnever\s+failed\b', '')
 
     $terminalEvidenceState = '(?:available|checked|complete|completed|done|finish|finished|pass|passed|provided|qualified|reviewed|run|ran|succeed|succeeded|successful|verified)'
-    $negatedEvidenceState = '(?:(?:no|not|never|cannot)(?:\s+[a-z0-9]+){0,5}\s+|un\s*)' + $terminalEvidenceState
-    $contractedNegativeState = '(?:aren|isn|wasn|weren|hasn|haven|hadn|didn|doesn|don|can|cann|couldn|shouldn|wouldn)\s+t(?:\s+[a-z0-9]+){0,5}\s+' + $terminalEvidenceState
-    $yetToComplete = '\byet(?:\s+[a-z0-9]+){0,3}\s+to\s+' + $terminalEvidenceState + '\b'
+    $hasNegatedTerminalState = $false
+    foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
+        $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
+        if ($normalizedClause -match "\b(?:no|not|never|cannot)(?:\s+[a-z0-9]+)*\s+$terminalEvidenceState\b" -or
+            $normalizedClause -match "\b(?:aren|isn|wasn|weren|hasn|haven|hadn|didn|doesn|don|can|cann|couldn|shouldn|wouldn)\s+t(?:\s+[a-z0-9]+)*\s+$terminalEvidenceState\b" -or
+            $normalizedClause -match "\byet(?:\s+[a-z0-9]+)*\s+to\s+$terminalEvidenceState\b") {
+            $hasNegatedTerminalState = $true
+            break
+        }
+    }
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
         $failureScrubbed -match '\b(?:failed|failure|unsuccessful)\b' -or
+        $normalized -match '\btimed\s+out\b' -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
-        $normalized -match "\b(?:$negatedEvidenceState|$contractedNegativeState)\b" -or
-        $normalized -match $yetToComplete) {
+        $hasNegatedTerminalState) {
         return $false
     }
 
@@ -392,14 +422,13 @@ function Test-AuthenticatedIndependentReview {
         $signOffQualification = Get-EvidenceField -Text $signOff -Name "qualification"
         $signOffVerification = Get-EvidenceField -Text $signOff -Name "verification"
         $signOffIssueBodySha256 = (Get-EvidenceField -Text $signOff -Name "reviewed issue body sha256").ToLowerInvariant()
-        $signOffResult = (Get-EvidenceField -Text $signOff -Name "result").ToLowerInvariant()
-        if ([string]::IsNullOrWhiteSpace($signOffResult)) {
-            $signOffResult = (Get-EvidenceField -Text $signOff -Name "status").ToLowerInvariant()
-        }
+        $signOffVerificationResult = (Get-EvidenceField -Text $signOff -Name "verification result").ToLowerInvariant()
+        $signOffResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("result", "status")).ToLowerInvariant()
 
         if ($signOffReviewer -eq $commentAuthor -and
             (Test-MeaningfulReviewEvidence -Value $signOffQualification) -and
             (Test-MeaningfulReviewEvidence -Value $signOffVerification) -and
+            $signOffVerificationResult -eq "passed" -and
             $signOffIssueBodySha256 -match '^[a-f0-9]{64}$' -and
             $signOffIssueBodySha256 -eq $issueBodySha256 -and
             $signOffResult -match '^(?:approved|passed)$') {
@@ -531,11 +560,10 @@ foreach ($issue in $issues) {
     $currentMode = (Get-EvidenceField -Text $reviewEvidence -Name "mode").ToLowerInvariant()
     $currentReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $reviewEvidence -Name "reviewer")
     $currentVerification = Get-EvidenceField -Text $reviewEvidence -Name "verification"
+    $currentVerificationResult = (Get-EvidenceField -Text $reviewEvidence -Name "verification result").ToLowerInvariant()
     $currentAutomation = Get-EvidenceField -Text $reviewEvidence -Name "automated evidence"
-    $currentResult = (Get-EvidenceField -Text $reviewEvidence -Name "result").ToLowerInvariant()
-    if ([string]::IsNullOrWhiteSpace($currentResult)) {
-        $currentResult = (Get-EvidenceField -Text $reviewEvidence -Name "status").ToLowerInvariant()
-    }
+    $currentAutomationResult = (Get-EvidenceField -Text $reviewEvidence -Name "automated evidence result").ToLowerInvariant()
+    $currentResult = (Get-EvidenceFieldGroup -Text $reviewEvidence -Names @("result", "status")).ToLowerInvariant()
     $currentApproved = $currentResult -match '^(?:approved|passed)$'
     $currentSelfReview = $currentMode -eq "maintainer self-review"
     $currentIndependentReview = $currentMode -eq "independent human review"
@@ -546,7 +574,9 @@ foreach ($issue in $issues) {
         $currentApproved
     $hasStructuredCurrentSelfReview = $hasStructuredCurrentReview -and
         $currentSelfReview -and $currentReviewer -eq $authorLogin -and
-        (Test-MeaningfulReviewEvidence -Value $currentAutomation)
+        $currentVerificationResult -eq "passed" -and
+        (Test-MeaningfulReviewEvidence -Value $currentAutomation) -and
+        $currentAutomationResult -eq "passed"
     $hasStructuredCurrentIndependentReview = $hasStructuredCurrentReview -and
         $currentIndependentReview -and $currentReviewer -ne $authorLogin
     $hasAuthenticatedCurrentIndependentReview = $hasStructuredCurrentIndependentReview -and
@@ -556,10 +586,7 @@ foreach ($issue in $issues) {
 
     $legacyReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "reviewer")
     $legacyVerification = Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "verification"
-    $legacyResult = (Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "result").ToLowerInvariant()
-    if ([string]::IsNullOrWhiteSpace($legacyResult)) {
-        $legacyResult = (Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "status").ToLowerInvariant()
-    }
+    $legacyResult = (Get-EvidenceFieldGroup -Text $legacyIndependentReviewEvidence -Names @("result", "status")).ToLowerInvariant()
     $hasStructuredLegacyIndependentReview = $hasLegacyIndependentReviewEvidence -and
         -not [string]::IsNullOrWhiteSpace($authorLogin) -and
         -not [string]::IsNullOrWhiteSpace($legacyReviewer) -and
