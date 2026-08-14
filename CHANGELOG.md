@@ -15,7 +15,9 @@
   substrings, and rejects incomplete low-risk evidence or issue-author identity
   assertions. Review evidence is punctuation-normalized before rejecting
   negative, incomplete, missing, deferred, unavailable, skipped, or failed
-  states.
+  states while retaining affirmative negative safety guarantees. Live review
+  loading re-fetches the issue after comment pagination and fails closed if the
+  body, comment count, or update identity does not stabilize.
   The charter, README, agent rules, ontology, and traceability matrix
   now make requirements recovery an ongoing project-wide baseline and forbid
   treating existing implementation as its own requirement source. No product or

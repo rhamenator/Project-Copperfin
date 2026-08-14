@@ -109,18 +109,35 @@ function Get-IssuesFromGitHub {
 
     foreach ($num in $numberList) {
         $uri = "https://api.github.com/repos/$Repo/issues/$num"
-        $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
-        $reviewComments = @()
-        $commentCount = [int]$response.comments
-        if ($commentCount -gt 0) {
-            $pageCount = [int][Math]::Ceiling($commentCount / 100.0)
-            for ($page = 1; $page -le $pageCount; $page++) {
-                $commentsUri = "$($response.comments_url)?per_page=100&page=$page"
-                $reviewComments += @(Invoke-RestMethod -Uri $commentsUri -Headers $headers -Method Get)
+        $stableResponse = $null
+        for ($attempt = 1; $attempt -le 3; $attempt++) {
+            $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+            $reviewComments = @()
+            $commentCount = [int]$response.comments
+            if ($commentCount -gt 0) {
+                $pageCount = [int][Math]::Ceiling($commentCount / 100.0)
+                for ($page = 1; $page -le $pageCount; $page++) {
+                    $commentsUri = "$($response.comments_url)?per_page=100&page=$page"
+                    $reviewComments += @(Invoke-RestMethod -Uri $commentsUri -Headers $headers -Method Get)
+                }
+            }
+
+            # Re-fetch after pagination. A body/comment edit during the page
+            # walk must never validate against the stale pre-walk snapshot.
+            $latestResponse = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+            if ([string]$latestResponse.body -eq [string]$response.body -and
+                [int]$latestResponse.comments -eq $commentCount -and
+                [string]$latestResponse.updated_at -eq [string]$response.updated_at) {
+                $latestResponse | Add-Member -NotePropertyName review_comments -NotePropertyValue @($reviewComments) -Force
+                $stableResponse = $latestResponse
+                break
             }
         }
-        $response | Add-Member -NotePropertyName review_comments -NotePropertyValue @($reviewComments) -Force
-        $issues += $response
+
+        if ($null -eq $stableResponse) {
+            throw "Issue #$num changed while review evidence was being loaded; rerun validation against a stable snapshot."
+        }
+        $issues += $stableResponse
     }
 
     return $issues
@@ -266,12 +283,12 @@ function Test-MeaningfulReviewEvidence {
         "absent" = $true
         "blocked" = $true
         "deferred" = $true
+        "failed" = $true
         "incomplete" = $true
         "later" = $true
         "missing" = $true
         "never" = $true
         "none" = $true
-        "not" = $true
         "pending" = $true
         "placeholder" = $true
         "skipped" = $true
@@ -282,7 +299,6 @@ function Test-MeaningfulReviewEvidence {
         "unqualified" = $true
         "unverified" = $true
         "unknown" = $true
-        "without" = $true
     }
     foreach ($token in ($normalized -split '\s+')) {
         if ($rejectedTokens.ContainsKey($token)) {
@@ -291,8 +307,7 @@ function Test-MeaningfulReviewEvidence {
     }
 
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
-        $normalized -match '^(?:failed|failure|no)\b' -or
-        $normalized -match '\b(?:(?:failed|failure)\s+(?:check|evidence|review|run|test|verification)|(?:check|evidence|review|run|test|verification)\s+(?:failed|failure))\b' -or
+        $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
         $normalized -match '\b(?:not|un)(?:available|checked|qualified|verified)\b') {
         return $false
     }

@@ -138,7 +138,11 @@ qualification/verification, and placeholder lower-risk self-review verification
 or automation. The shared evidence predicate normalizes punctuation and rejects
 negative, incomplete, missing, deferred, unavailable, skipped, and failed-state
 tokens; dedicated mutations cover `not-qualified`, `unavailable at this time`,
-and failed automation;
+and failed automation. Failed workflow evidence is rejected independently of
+its neighboring noun, while affirmative safety guarantees such as `does not
+mutate user data` remain valid. The live GitHub loader re-fetches the issue
+after comment pagination and accepts only a stable body, comment-count, and
+update snapshot;
 accepts reviewer-authored current and historical sign-offs bound to their exact
 fixture bodies; and reruns malformed mapping/hazard cases, classifier behavior,
 and hostile issue-number probes through the production PowerShell validator.
@@ -157,3 +161,8 @@ Focused results are recorded with the final signed commit and protected workflow
 results after review. The durable requirement-to-code-to-test row is
 `LLR-CF-ASSURANCE-001` in
 `docs/32-recovered-requirements-traceability.md`.
+
+A live API probe against issue `#4403` reached a stable post-comment snapshot
+through the production loader and then failed closed at its expected legacy
+review-evidence boundary. It did not fail in pagination, refresh, or snapshot
+stabilization.

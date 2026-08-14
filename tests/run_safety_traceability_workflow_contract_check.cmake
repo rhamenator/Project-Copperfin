@@ -13,6 +13,8 @@ endif()
 
 file(READ "${workflow_path}" workflow)
 string(REPLACE "\r\n" "\n" workflow "${workflow}")
+file(READ "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1" validator_source)
+string(REPLACE "\r\n" "\n" validator_source "${validator_source}")
 
 function(require_text expected_text description)
     string(FIND "${workflow}" "${expected_text}" match_index)
@@ -38,6 +40,13 @@ function(require_text_count expected_text expected_count description)
     if(NOT actual_count EQUAL expected_count)
         message(FATAL_ERROR
             "Safety traceability workflow must contain ${expected_count} ${description}; found ${actual_count}")
+    endif()
+endfunction()
+
+function(require_validator_text expected_text description)
+    string(FIND "${validator_source}" "${expected_text}" match_index)
+    if(match_index EQUAL -1)
+        message(FATAL_ERROR "Safety validator is missing ${description}")
     endif()
 endfunction()
 
@@ -267,6 +276,30 @@ function(assert_low_self_review_mutation_rejected search_text replacement_text s
     file(REMOVE "${fixture}" "${report}")
 endfunction()
 
+function(assert_affirmative_negative_guarantee_accepted)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-affirmative-negative-guarantee-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-affirmative-negative-guarantee-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_low_self_review_issues.json" source_contents)
+    string(REPLACE
+        "verification: procedure and rendered guidance checked"
+        "verification: confirmed rollback does not mutate user data"
+        fixture_contents "${source_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator rejected an affirmative negative safety guarantee: ${standard_output}\n${standard_error}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer"
@@ -308,6 +341,11 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: focused documentation contracts pass"
         "automated evidence: verification run failed"
         "suffix-failed-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: GitHub Actions workflow failed"
+        "workflow-failed-self-review-automation")
+    assert_affirmative_negative_guarantee_accepted()
 endfunction()
 
 function(assert_pending_legacy_high_review_rejected)
@@ -532,6 +570,12 @@ require_text("REQUIRE_CLOSED_ISSUES: \${{ inputs.require_closed_issues }}" "envi
 require_text("REQUIRE_PRIMARY_HAZARDS: \${{ inputs.require_primary_hazards }}" "environment-bound primary-hazard input")
 require_text_count("\${{ inputs.issue_numbers }}" 1 "issue-number dispatch interpolation")
 forbid_text("-IssueNumbers \"\${{ inputs.issue_numbers }}\"" "quoted direct issue-number interpolation")
+require_validator_text(
+    [=[$latestResponse = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get]=]
+    "post-comment issue re-fetch")
+require_validator_text(
+    [=[Issue #$num changed while review evidence was being loaded]=]
+    "unstable live-snapshot rejection")
 
 assert_probe_is_environment_data([=[2201"; Write-Output injected]=])
 assert_probe_is_environment_data([=[2201; Write-Output injected]=])
