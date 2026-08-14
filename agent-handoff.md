@@ -13,15 +13,18 @@ protected checks in runs `31827637259`, `31827638217`, `31827638262`,
 Release `4/4`, fresh Clang ASan/UBSan `2/2`, safety-traceability, community, and
 diff gates also pass.
 
-The current adjacent candidate adds a provider-independent persistent sink for
-`RQ-CF-AGENT-006`. It exact-allowlists the controller lifecycle tuples, appends
-content-free JSON through the existing contained hash-chain writer, returns the
-committed entry hash as the receipt, and bounds the log under the writer lock.
-Invalid events/configuration, pre-existing or raced redirection, fully validated
-corrupt chains, and full logs fail closed without activation. Local Release
-`6/6` and fresh Clang ASan/UBSan `4/4`
-pass; protected exact-head checks and hosted review remain pending, so the
-requirement remains a gap. The boundary still executes no tool and
+`RQ-CF-AGENT-006` is defined at merged commit `49a58d455`. The
+provider-independent persistent sink exact-allowlists controller lifecycle
+tuples, appends content-free JSON through the existing contained hash-chain
+writer, returns the committed entry hash as the receipt, and bounds the log
+under the writer lock.
+Invalid events/configuration, embedded-NUL paths, pre-existing or raced
+redirection, fully validated corrupt chains, and full logs fail closed without
+activation. Exact implementation head `22745e49c` passed all eleven protected
+checks in runs `31844043782`, `31844046687`, `31844046646`, `31844046673`, and
+`31844046667`; all ten review threads are resolved. Local Release `6/6`, fresh
+Clang ASan/UBSan `4/4`, safety-traceability, community, and diff gates also pass.
+The boundary still executes no tool and
 provides no provider/OAuth adapter, real sandbox, trusted activation/consent UI,
 product stop control, session indicator, diff, or undo. Root ACL selection,
 rotation/retention, authenticated anchoring, recovery UI, and multi-host

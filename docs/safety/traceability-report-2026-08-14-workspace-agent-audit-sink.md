@@ -25,7 +25,7 @@ Mapped architecture and code:
 | Documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
 | `DQ-workspace-agent-audit-001`: define exact lifecycle-event admission, content exclusions, committed-hash receipt binding, and fail-closed authority behavior | `DV-workspace-agent-audit-001`; `DV-workspace-agent-audit-002`; `DV-workspace-agent-audit-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-audit-002`: define canonical-root/relative-path containment, concurrent writer behavior, malformed-chain rejection, and a size bound checked before allocation or mutation | `DV-workspace-agent-audit-001`; `DV-workspace-agent-audit-002`; `DV-workspace-agent-audit-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-audit-002`: define original-path validation, canonical-root/relative-path containment, concurrent writer behavior, malformed-chain rejection, and a size bound checked before path mutation and input-sized work | `DV-workspace-agent-audit-001`; `DV-workspace-agent-audit-002`; `DV-workspace-agent-audit-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-audit-003`: state that an unkeyed hash chain is not a signature or external ledger and retain root ownership, rotation, anchoring, recovery, and correlation as gaps | `DV-workspace-agent-audit-001`; `DV-workspace-agent-audit-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-audit-001`: local focused Release isolation,
@@ -34,8 +34,10 @@ Mapped architecture and code:
 - `DV-workspace-agent-audit-002`: fresh Clang 21 ASan/UBSan execution with leak
   detection passes `4/4` with no finding.
 - `DV-workspace-agent-audit-003`: safety-traceability, community-health, diff,
-  and maintainer self-review pass locally; protected exact-head checks and
-  hosted review remain pending.
+  and maintainer self-review pass locally. Exact implementation head
+  `22745e49c` passes all eleven protected checks in runs `31844043782`,
+  `31844046687`, `31844046646`, `31844046673`, and `31844046667`; all ten
+  review threads are resolved.
 
 ## Procedural delta map
 
@@ -103,6 +105,13 @@ Local Release verification on Linux currently records:
   `4/4` pass with leak detection and no finding;
 - `git diff --check`: pass.
 
+Exact implementation head `22745e49c` passes all eleven protected checks.
+Generated-launcher run `31844046646` passes Windows, Ubuntu, and macOS; run
+`31844046687` passes GCC and Clang executable-path coverage; run `31844046673`
+passes Win32 and x64 DECLARE validation; run `31844046667` passes Windows
+environment-path validation; and DCO run `31844043782` passes. Both
+supply-chain checks also pass.
+
 The focused sink regression proves exact persistent bytes and receipt hashes,
 content exclusions, malformed-event rejection without mutation, rejection of
 the controller's zero and exhausted generation sentinels, traversal and
@@ -117,8 +126,16 @@ Existing security-control regressions supply direct
 tail verification, concurrency, containment, symlink/reparse, and hard-link
 coverage for the reused writer.
 
-Exact-head protected and hosted-review results will replace the remaining
-pending entries above before `RQ-CF-AGENT-006` advances from `gap`.
+Automated review across successive exact heads identified the exhausted
+generation sentinel, incomplete existing-chain validation, in-root redirect
+canonicalization, input work before size admission, parent-directory mutation,
+the omitted `GENESIS` field, and embedded-NUL leaf/root/normalization paths.
+The final corrections land at `22745e49c`, all ten threads are resolved, and
+the exact final head has the documented maintainer self-review below. Two
+requests for an additional connector review of that final head remained
+unconsumed; this unavailable optional service is not presented as independent
+evidence. `RQ-CF-AGENT-006` is therefore `defined` on the retained local,
+protected, resolved-review, and repository-owner evidence.
 
 ## Assurance statement
 
@@ -136,7 +153,9 @@ assigned software level, or suitability for a safety-critical deployment.
 - verification result: passed
 - automated evidence: local focused Release `6/6`, fresh Clang ASan/UBSan
   `4/4`, safety-traceability workflow contract, repository community-health
-  contract, and `git diff --check`; protected exact-head evidence pending
-- automated evidence result: passed for local evidence
+  contract, `git diff --check`, and all eleven exact-head protected checks in
+  runs `31844043782`, `31844046687`, `31844046646`, `31844046673`, and
+  `31844046667`
+- automated evidence result: passed
 - scope: medium-severity persistent workspace-agent audit boundary
 - result: approved as maintainer self-review; no independence claim
