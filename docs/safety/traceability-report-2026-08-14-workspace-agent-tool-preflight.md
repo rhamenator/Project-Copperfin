@@ -30,8 +30,10 @@ Mapped architecture and code:
 - `DV-workspace-agent-tool-preflight-002`: fresh Clang ASan/UBSan session
   execution with leak detection passes `1/1` with no finding.
 - `DV-workspace-agent-tool-preflight-003`: safety-traceability,
-  community-health, diff, and maintainer self-review pass locally; protected
-  exact-head checks are pending.
+  community-health, diff, and maintainer self-review pass locally. Exact
+  implementation head `d098ce1ab` passes all eleven protected checks in runs
+  `31848306252`, `31848306709`, `31848306641`, `31848306644`, and
+  `31848306672`; thread-aware review reports zero review threads.
 
 ## Procedural delta map
 
@@ -100,8 +102,16 @@ The focused regression proves unknown-schema, empty-request, inactive-session,
 zero-generation, mismatched-generation, capability-subset, mixed-capability,
 no-elevation, post-stop, start-transition, and stop-transition behavior. It
 also proves the sandbox and unrestricted mode matrices without executing any
-tool. Exact-head protected evidence remains required before
-`RQ-CF-AGENT-007` advances from `gap`.
+tool.
+
+Exact implementation head `d098ce1ab` passes all eleven protected checks.
+Generated-launcher run `31848306641` passes Windows, Ubuntu, and macOS; run
+`31848306709` passes GCC and Clang executable-path coverage; run `31848306644`
+passes Win32 and x64 DECLARE validation; run `31848306672` passes Windows
+environment-path validation; and DCO run `31848306252` passes. Both
+supply-chain checks also pass. Thread-aware review reports zero review threads.
+Together with the local evidence and maintainer self-review, this advances
+`RQ-CF-AGENT-007` to `defined` without claiming independent review.
 
 ## Assurance statement
 
@@ -119,8 +129,9 @@ assigned software level, or suitability for a safety-critical deployment.
 - verification result: passed for the local candidate
 - automated evidence: focused Release `3/3`, Clang ASan/UBSan `1/1`, safety
   traceability workflow contract, repository community-health contract, and
-  `git diff --check`; protected exact-head checks pending
-- automated evidence result: passed for local evidence
+  `git diff --check`, plus all eleven exact-head protected checks in runs
+  `31848306252`, `31848306709`, `31848306641`, `31848306644`, and
+  `31848306672`
+- automated evidence result: passed
 - scope: medium-severity non-executing workspace-agent tool preflight
-- result: approved as maintainer self-review for the local candidate; no
-  independence claim
+- result: approved as maintainer self-review; no independence claim

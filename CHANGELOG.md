@@ -8,6 +8,10 @@
   point-in-time decision rather than a reusable execution token; this slice
   executes no tool, accesses no workspace, and does not claim tool-outcome
   audit, sandbox, provider, UI, diff, or undo functionality.
+  Exact implementation head `d098ce1ab` passes all eleven protected checks in
+  runs `31848306252`, `31848306709`, `31848306641`, `31848306644`, and
+  `31848306672`; thread-aware review reports zero review threads, and
+  `RQ-CF-AGENT-007` is defined with retained evidence.
 
 - 2026-08-14: Added a non-activating, provider-independent persistent workspace-
   agent lifecycle audit sink. It admits only the exact versioned controller
