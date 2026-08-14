@@ -551,12 +551,20 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "unbound-compound-scope-self-review-automation")
     assert_low_self_review_mutation_rejected(
         "automated evidence: focused documentation contracts pass"
+        "automated evidence: automation is incomplete-transaction recovery tests passed"
+        "copular-compound-scope-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
         "automated evidence: workflow was cancelled while recovery tests passed"
         "unbound-cancellation-success-self-review-automation")
     assert_low_self_review_mutation_rejected(
         "automated evidence: focused documentation contracts pass"
         "automated evidence: GitHub Actions workflow that was cancelled"
         "producer-relative-cancellation-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: workflow was cancelled-request cleanup tests passed"
+        "producer-compound-cancellation-self-review-automation")
     assert_low_self_review_mutation_rejected(
         "automated evidence result: passed"
         "automated evidence result: passed\\nautomated evidence status: failed"
