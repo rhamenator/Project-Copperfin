@@ -334,8 +334,22 @@ function Test-MeaningfulReviewEvidence {
 
     $normalized = [regex]::Replace($trimmed.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
     $placeholderState = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)(?:\s+(?:at\s+this\s+time|automation|check|evidence|later|review|run|test|verification))?$'
-    $subjectState = '^(?:automation|check|evidence|review|run|test|verification|workflow)(?:\s+(?:is|was|has\s+been))?\s+(?:absent|blocked|deferred|incomplete|missing|pending|placeholder|skipped|unavailable|unchecked|unqualified|unverified|unknown)\b'
-    if ($normalized -match $placeholderState -or $normalized -match $subjectState) {
+    $subjectState = '\b(?:automation|changes|check|evidence|review|reviewer|run|test|verification|workflow)(?:\s+(?:is|was|has\s+been))?\s+(?:absent|blocked|deferred|incomplete|missing|pending|placeholder|skipped|unavailable|unchecked|unqualified|unverified|unknown)\b'
+    $hasSubjectStateWithoutPassingContext = $false
+    foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
+        $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
+        foreach ($stateMatch in [regex]::Matches($normalizedClause, $subjectState)) {
+            $afterState = $normalizedClause.Substring($stateMatch.Index + $stateMatch.Length)
+            if ($afterState -notmatch '\b(?:pass|passed|succeed|succeeded|successful|verified)\b') {
+                $hasSubjectStateWithoutPassingContext = $true
+                break
+            }
+        }
+        if ($hasSubjectStateWithoutPassingContext) {
+            break
+        }
+    }
+    if ($normalized -match $placeholderState -or $hasSubjectStateWithoutPassingContext) {
         return $false
     }
 
@@ -355,11 +369,18 @@ function Test-MeaningfulReviewEvidence {
     $failureScrubbed = [regex]::Replace($failureScrubbed, '\bnever\s+failed\b', '')
 
     $terminalOutcomeWithoutPassingContext = $false
-    $terminalOutcome = [regex]::Match($normalized, '\b(?:canceled|cancelled|timed\s+out|timeout)\b')
-    if ($terminalOutcome.Success) {
-        $afterOutcome = $normalized.Substring($terminalOutcome.Index + $terminalOutcome.Length)
-        $terminalOutcomeWithoutPassingContext =
-            $afterOutcome -notmatch '\b(?:pass|passed|succeed|succeeded|successful|verified)\b'
+    foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
+        $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
+        foreach ($terminalOutcome in [regex]::Matches($normalizedClause, '\b(?:canceled|cancelled|timed\s+out|timeout)\b')) {
+            $afterOutcome = $normalizedClause.Substring($terminalOutcome.Index + $terminalOutcome.Length)
+            if ($afterOutcome -notmatch '\b(?:pass|passed|succeed|succeeded|successful|verified)\b') {
+                $terminalOutcomeWithoutPassingContext = $true
+                break
+            }
+        }
+        if ($terminalOutcomeWithoutPassingContext) {
+            break
+        }
     }
 
     $terminalEvidenceState = '(?:available|checked|complete|completed|done|finish|finished|pass|passed|provided|qualified|reviewed|run|ran|succeed|succeeded|successful|verified)'
