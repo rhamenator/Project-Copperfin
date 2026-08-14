@@ -511,6 +511,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: qualified safety-documentation reviewer\\n\\n    <test-result status=\\\"passed\\\"/>"
         "indented-raw-html-example")
     assert_high_signoff_mutation_accepted(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: qualified safety-documentation reviewer\\n\\n<https://example.com/review-evidence>"
+        "markdown-autolink-evidence")
+    assert_high_signoff_mutation_accepted(
         "## Independent Review Sign-Off"
         "## Independent Review Sign-Off ##"
         "atx-heading-closing-sequence")
@@ -1145,6 +1149,10 @@ if(POWERSHELL_EXECUTABLE)
         "### Review Evidence"
         "## Independent Review Evidence\\n\\nreviewer: copperfin-reviewer\\nverification: historical review was withdrawn\\nresult: rejected\\n\\n### Review Evidence"
         "mixed-current-and-legacy-review-schemas")
+    assert_issue_form_body_mutation_rejected(
+        "### Review Evidence"
+        "### Review Evidence\\n\\nmode: maintainer self-review\\nreviewer: rhamenator\\nverification: procedure and rendered guidance checked\\nverification result: passed\\nautomated evidence: focused documentation contracts pass\\nautomated evidence result: passed\\nresult: rejected\\n\\n### Review Evidence\\n\\n## Independent Review Evidence\\n\\nreviewer: copperfin-reviewer\\nverification: historical independent review\\nresult: approved"
+        "duplicate-current-with-legacy-review-schema")
     assert_issue_form_body_mutation_accepted(
         "No operator procedure changes."
         "No operator procedure changes.\\n\\n<details>\\n<summary>Additional context</summary>\\n\\nThis free-form note is not review evidence.\\n\\n</details>"

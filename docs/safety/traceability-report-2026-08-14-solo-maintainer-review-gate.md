@@ -45,8 +45,11 @@ level, or safety for a particular deployment.
   once when present. Historical rendered marker text remains valid only when
   the corresponding structured heading is absent. Current Review Evidence and
   legacy Independent Review Evidence schemas are mutually exclusive. Raw HTML
-  blocks are excluded without blanking unrelated rendered evidence. The raw
-  body is retained only for the reviewer-bound digest.
+  blocks are excluded without blanking unrelated rendered evidence; Markdown
+  autolinks remain ordinary rendered evidence. Schema presence is counted
+  independently from successful section extraction, so duplicate current
+  headings cannot fall through to a legacy approval. The raw body is retained
+  only for the reviewer-bound digest.
 - `DQ-assurance-baseline-001`: requirements recovery and bidirectional
   traceability are an ongoing project-wide baseline; existing implementation
   is never its own requirement source.
@@ -70,8 +73,9 @@ level, or safety for a particular deployment.
   inside a rendered section, and mixed section/legacy declarations.
 - `DV-assurance-review-006`: reject duplicate rendered Review Evidence and
   DQ/DV/HZ Mapping sections and mixed current/legacy review schemas; accept
-  unrelated raw-HTML detail blocks while preserving the exact raw-body digest
-  binding.
+  unrelated raw-HTML detail blocks and Markdown autolinks while preserving the
+  exact raw-body digest binding. Reject duplicate current review headings even
+  when a structurally valid legacy approval is also present.
 - `DV-assurance-review-005`: parse a high-severity issue-form value with a
   same-line rationale and reject its legacy review section when that section
   says independent approval remains open.
