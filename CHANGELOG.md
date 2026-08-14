@@ -1,3 +1,17 @@
+- 2026-08-14: Added a non-executing native workspace-agent session-lifecycle
+  contract. Session authority now requires the existing policy decision plus a
+  committed content-free audit receipt, binds one immutable generation and
+  capability snapshot, rejects active-session replacement, and is revoked
+  before stop auditing. Audit failure cannot extend authority. This slice adds
+  no provider authentication, tool execution, filesystem/process/network
+  access, product activation UI, or command-line activation path.
+  Policy-evaluation exceptions now fail closed as audited denials and restore
+  the controller transition for later valid activation. A deterministic POSIX
+  regression covers that recovery, and its isolation metadata records the
+  test-owned filesystem and process-environment mutations.
+  Audit JSON now explicitly uses the classic locale, preventing process-global
+  digit grouping from corrupting numeric fields or Unicode escapes.
+
 - 2026-08-14: Reconciled the safety-documentation template, validator, agent
   rules, and triage rubric with the adopted solo-maintainer assurance policy.
   `none`/`low`/`medium` changes may now record explicit repository-owner

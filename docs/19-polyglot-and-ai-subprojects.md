@@ -811,9 +811,12 @@ authorization input. See
 [`64-workspace-agent-access-policy.md`](64-workspace-agent-access-policy.md).
 A versioned native descriptor and strict shared managed client expose this
 policy read-only while rejecting schema drift and authority expansion; neither
-can activate an agent. Model/provider adapters, OAuth clients, the mutable
-executor and sandbox, and the user-facing assistant/dialog surfaces remain
-unimplemented.
+can activate an agent. A separate non-executing native session controller
+requires policy admission plus a committed content-free audit receipt, prevents
+active-session replacement, and revokes authority before stop auditing. It is
+not yet connected to product UI or an executor. Model/provider adapters, OAuth
+clients, the mutable executor and sandbox, persistent audit storage, and the
+user-facing assistant/dialog surfaces remain unimplemented.
 
 ## Why This Matters
 
