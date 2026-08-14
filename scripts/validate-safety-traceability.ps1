@@ -226,23 +226,63 @@ function Test-SafetyDocIssue {
 function Get-RenderedInlineEvidenceText {
     param(
         [AllowEmptyString()][string]$Value,
-        [switch]$NormalizeReferenceLinks
+        [switch]$NormalizeReferenceLinks,
+        [AllowEmptyString()][string]$ReferenceText = ''
     )
 
     $rendered = $Value
+    $linkTextPattern = '(?:\\.|[^\]\\\r\n])*'
     $rendered = [regex]::Replace(
         $rendered,
         '!?(?:\[(?<text>[^\]\r\n]*)\])\([^\r\n)]*\)',
         '${text}')
     if ($NormalizeReferenceLinks) {
+        $referenceLabels = @{}
+        if (-not [string]::IsNullOrWhiteSpace($ReferenceText)) {
+            foreach ($definition in [regex]::Matches(
+                $ReferenceText,
+                '(?m)^ {0,3}\[(?<label>(?:\\.|[^\]\\\r\n])+)\]:[ \t]+\S')) {
+                $normalizedLabel = [regex]::Replace(
+                    $definition.Groups['label'].Value.ToLowerInvariant(),
+                    '[ \t\r\n]+',
+                    ' ').Trim()
+                $referenceLabels[$normalizedLabel] = $true
+            }
+        }
         $rendered = [regex]::Replace(
             $rendered,
-            '!?(?:\[(?<text>[^\]\r\n]+)\])\[[^\]\r\n]*\]',
-            '${text}')
+            "!?\[(?<text>$linkTextPattern)\]\[(?<label>$linkTextPattern)\]",
+            {
+                param($match)
+                $label = $match.Groups['label'].Value
+                if ([string]::IsNullOrEmpty($label)) {
+                    $label = $match.Groups['text'].Value
+                }
+                $normalizedLabel = [regex]::Replace(
+                    $label.ToLowerInvariant(),
+                    '[ \t\r\n]+',
+                    ' ').Trim()
+                if ($referenceLabels.Count -eq 0 -or
+                    $referenceLabels.ContainsKey($normalizedLabel)) {
+                    return $match.Groups['text'].Value
+                }
+                return $match.Value
+            })
         $rendered = [regex]::Replace(
             $rendered,
-            '!?(?:\[(?<text>[^\]\r\n]+)\])',
-            '${text}')
+            "!?\[(?<text>$linkTextPattern)\]",
+            {
+                param($match)
+                $normalizedLabel = [regex]::Replace(
+                    $match.Groups['text'].Value.ToLowerInvariant(),
+                    '[ \t\r\n]+',
+                    ' ').Trim()
+                if ($referenceLabels.Count -eq 0 -or
+                    $referenceLabels.ContainsKey($normalizedLabel)) {
+                    return $match.Groups['text'].Value
+                }
+                return $match.Value
+            })
     }
     foreach ($pattern in @(
         '(?<!\*)\*\*(?=\S)(?<text>.*?\S)\*\*(?!\*)',
@@ -275,7 +315,9 @@ function Get-MarkdownSection {
             continue
         }
         $renderedHeading = Get-RenderedInlineEvidenceText `
-            -Value $headingMatch.Groups['text'].Value
+            -Value $headingMatch.Groups['text'].Value `
+            -NormalizeReferenceLinks `
+            -ReferenceText $Body
         $renderedHeading = [regex]::Replace(
             $renderedHeading,
             '[ \t]+#+[ \t]*$',
@@ -318,7 +360,9 @@ function Get-MarkdownHeadingCount {
             continue
         }
         $renderedHeading = Get-RenderedInlineEvidenceText `
-            -Value $headingMatch.Groups['text'].Value
+            -Value $headingMatch.Groups['text'].Value `
+            -NormalizeReferenceLinks `
+            -ReferenceText $Body
         $renderedHeading = [regex]::Replace(
             $renderedHeading,
             '[ \t]+#+[ \t]*$',
