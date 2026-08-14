@@ -389,6 +389,28 @@ Artifact `9203383723` has digest
 `sha256:e0d429358e14bda7040464a73ae41659dfe69c80bf16cd09f912487311aef163`
 and expires 2026-11-12. `RQ-CF-REL-003` remains `gap`.
 
+Run `31758122162` disproved the queued-input-release model. Installation and
+uninstall passed (466.424 and 22.283 seconds), Common IDE completed at
+`00:54:20.706`, and the final shortcut sender did not begin until
+`00:54:29.224`; nevertheless `SendKeys.SendWait` blocked for approximately
+203.9 seconds and no Copperfin pane or package load followed. Primary failure,
+successful cleanup, and zero residue were preserved independently. The
+correction replaces `SendKeys` with Win32 `SendInput`: six explicit virtual-key
+events request the Command Window, Unicode key-down/key-up pairs enter only the
+invariant canonical command, and Enter is an explicit down/up pair. The helper
+retains expected and inserted counts and fails unless every event was inserted.
+Microsoft documents both the returned inserted-event count and UIPI boundary in
+[SendInput](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput),
+and the Unicode foreground-queue behavior in
+[KEYBDINPUT](https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-keybdinput).
+The verifier still proves the exact foreground PID immediately before input,
+does not elevate either process, and independently requires pane, PRG,
+package-load, error-free, uninstall, and residue evidence. Artifact
+`9204004929` has digest
+`sha256:a85b55fff25621f7410730b21200eb527cb616b2217f19d95364e7d676b83c8a`
+and expires 2026-11-12. `RQ-CF-REL-003` remains `gap` pending exact-head
+execution of this input correction.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

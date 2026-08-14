@@ -135,6 +135,11 @@
   a bounded post-canonical settlement now precedes it. Lifecycle and cleanup
   failures are retained together so cleanup cannot mask the primary evidence
   failure.
+  Run `31758122162` proved hosted `SendKeys.SendWait` could block for roughly
+  204 seconds after Common IDE readiness. Exact-PID-bound Win32 `SendInput`
+  now injects explicit shortcut and Unicode command events, fails on any short
+  inserted-event count, and retains those counts without weakening independent
+  product evidence.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

@@ -507,6 +507,11 @@ still starting, 0.151 seconds after canonical-sender exit. A bounded
 post-canonical settlement now precedes final dispatch. Primary evidence and
 cleanup failures are also preserved together rather than allowing cleanup to
 mask the governing failure.
+Run `31758122162` then proved `SendKeys.SendWait` itself blocked for about 204
+seconds even though Common IDE had been ready for more than eight seconds. The
+hosted harness now uses exact-foreground-PID-bound Win32 `SendInput`, verifies
+every injected event count, and retains the counts separately from product
+surface, package-load, PRG, uninstall, and residue admission.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

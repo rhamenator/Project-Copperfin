@@ -184,6 +184,13 @@ loading, only 0.151 seconds after canonical-sender exit. The current head waits
 a bounded ten seconds after canonical exit before final built-in dispatch. It
 also preserves the primary observation failure alongside cleanup exit `2004`
 and residue inventory instead of allowing cleanup to overwrite the root cause.
+Run `31758122162` retained PASS install/uninstall and zero residue but showed
+`SendKeys.SendWait` blocked for about 204 seconds after Common IDE was already
+ready, with no Copperfin load. The current head replaces only that hosted input
+mechanism with exact-foreground-PID-bound Win32 `SendInput`, explicit shortcut
+and Unicode command events, fail-closed inserted-event counts, and an
+executable embedded-C# compile regression. All product admission gates remain
+independent.
 
 ## V1 Windows installer lifecycle
 

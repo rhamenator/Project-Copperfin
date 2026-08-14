@@ -211,6 +211,20 @@ if ($SelfTest) {
             'Self-test rejected an explicit successful Copperfin package-load record.'
         Assert-Condition ($failedState.SuccessfulLoad -and $failedState.MatchingErrors.Count -eq 1) `
             'Self-test did not preserve a Copperfin error alongside a nominal success record.'
+        $scriptSource = Get-Content -LiteralPath $PSCommandPath -Raw -ErrorAction Stop
+        $nativeSourceMatches = @([regex]::Matches(
+            $scriptSource, '(?s)Add-Type -TypeDefinition @"(.*?)"@') | Where-Object {
+                $_.Groups[1].Value.Contains('namespace CopperfinLifecycle')
+            })
+        Assert-Condition ($nativeSourceMatches.Count -eq 1) `
+            'Self-test could not locate the generated Win32 input source.'
+        Add-Type -TypeDefinition $nativeSourceMatches[0].Groups[1].Value
+        Assert-Condition ($null -ne ('CopperfinLifecycle.NativeMethods' -as [type])) `
+            'Self-test did not compile the generated Win32 input source.'
+        $inputType = [CopperfinLifecycle.NativeMethods].Assembly.GetType('CopperfinLifecycle.INPUT')
+        $expectedInputSize = if ([IntPtr]::Size -eq 8) { 40 } else { 28 }
+        Assert-Condition ([Runtime.InteropServices.Marshal]::SizeOf([System.Type]$inputType) -eq $expectedInputSize) `
+            'Self-test found an invalid Win32 INPUT structure size.'
     }
     finally { [System.IO.Directory]::Delete($fixtureRoot, $true) }
     Write-Host 'Windows VSIX lifecycle helper self-test passed.'
@@ -386,7 +400,113 @@ param(
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
-Add-Type -Namespace CopperfinLifecycle -Name NativeMethods -MemberDefinition '[DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd); [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow(); [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);'
+Add-Type -TypeDefinition @"
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+
+namespace CopperfinLifecycle {
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MOUSEINPUT {
+        internal int dx;
+        internal int dy;
+        internal uint mouseData;
+        internal uint dwFlags;
+        internal uint time;
+        internal UIntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct KEYBDINPUT {
+        internal ushort wVk;
+        internal ushort wScan;
+        internal uint dwFlags;
+        internal uint time;
+        internal UIntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct HARDWAREINPUT {
+        internal uint uMsg;
+        internal ushort wParamL;
+        internal ushort wParamH;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    internal struct INPUTUNION {
+        [FieldOffset(0)] internal MOUSEINPUT mi;
+        [FieldOffset(0)] internal KEYBDINPUT ki;
+        [FieldOffset(0)] internal HARDWAREINPUT hi;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct INPUT {
+        internal uint type;
+        internal INPUTUNION data;
+    }
+
+    public static class NativeMethods {
+        private const uint INPUT_KEYBOARD = 1;
+        private const uint KEYEVENTF_KEYUP = 0x0002;
+        private const uint KEYEVENTF_UNICODE = 0x0004;
+        private const ushort VK_CONTROL = 0x11;
+        private const ushort VK_MENU = 0x12;
+        private const ushort VK_A = 0x41;
+        private const ushort VK_RETURN = 0x0D;
+
+        [DllImport("user32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint SendInput(uint inputCount, INPUT[] inputs, int inputSize);
+
+        private static INPUT VirtualKey(ushort key, bool keyUp) {
+            INPUT input = new INPUT();
+            input.type = INPUT_KEYBOARD;
+            input.data.ki.wVk = key;
+            input.data.ki.dwFlags = keyUp ? KEYEVENTF_KEYUP : 0;
+            return input;
+        }
+
+        private static INPUT Unicode(char value, bool keyUp) {
+            INPUT input = new INPUT();
+            input.type = INPUT_KEYBOARD;
+            input.data.ki.wScan = value;
+            input.data.ki.dwFlags = KEYEVENTF_UNICODE | (keyUp ? KEYEVENTF_KEYUP : 0);
+            return input;
+        }
+
+        private static uint Inject(INPUT[] inputs) {
+            return SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+        }
+
+        public static uint SendCommandWindowShortcut() {
+            return Inject(new INPUT[] {
+                VirtualKey(VK_CONTROL, false), VirtualKey(VK_MENU, false),
+                VirtualKey(VK_A, false), VirtualKey(VK_A, true),
+                VirtualKey(VK_MENU, true), VirtualKey(VK_CONTROL, true)
+            });
+        }
+
+        public static uint SendUnicodeTextAndEnter(string value) {
+            List<INPUT> inputs = new List<INPUT>();
+            foreach (char character in value) {
+                inputs.Add(Unicode(character, false));
+                inputs.Add(Unicode(character, true));
+            }
+            inputs.Add(VirtualKey(VK_RETURN, false));
+            inputs.Add(VirtualKey(VK_RETURN, true));
+            return Inject(inputs.ToArray());
+        }
+    }
+}
+"@
 $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
 $expectedNames = @($ExpectedName)
 if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
@@ -399,8 +519,12 @@ $requiresInput = $RequestCommandWindowOnly -or -not [string]::IsNullOrWhiteSpace
 $commandSubmitted = -not $requiresInput
 $foregroundProcessVerified = $false
 $commandWindowShortcutSent = $false
+$shortcutInputEventsExpected = 0
+$shortcutInputEventsInjected = 0
 $commandInputForegroundVerified = $false
 $canonicalCommandSubmitted = $false
+$commandInputEventsExpected = 0
+$commandInputEventsInjected = 0
 while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
     try {
         $processCondition = [System.Windows.Automation.PropertyCondition]::new(
@@ -423,23 +547,32 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
                     }
                 }
                 if ($foregroundProcessVerified -and -not $CommandWindowAlreadyRequested) {
-                    Add-Type -AssemblyName System.Windows.Forms
                     Start-Sleep -Seconds 2
-                    [System.Windows.Forms.SendKeys]::SendWait('^%a')
-                    $commandWindowShortcutSent = $true
+                    $shortcutInputEventsExpected = 6
+                    $shortcutInputEventsInjected = [CopperfinLifecycle.NativeMethods]::SendCommandWindowShortcut()
+                    $commandWindowShortcutSent = $shortcutInputEventsInjected -eq $shortcutInputEventsExpected
+                    if (-not $commandWindowShortcutSent) {
+                        $nativeError = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+                        throw "SendInput inserted $shortcutInputEventsInjected of $shortcutInputEventsExpected Command Window shortcut events (Win32 error $nativeError)."
+                    }
                     Start-Sleep -Seconds 1
                     if ($RequestCommandWindowOnly) { break }
                 }
                 if ($foregroundProcessVerified -and -not $RequestCommandWindowOnly) {
-                    Add-Type -AssemblyName System.Windows.Forms
                     [uint32]$commandInputProcessId = 0
                     $commandInputWindow = [CopperfinLifecycle.NativeMethods]::GetForegroundWindow()
                     [void][CopperfinLifecycle.NativeMethods]::GetWindowThreadProcessId(
                         $commandInputWindow, [ref]$commandInputProcessId)
                     $commandInputForegroundVerified = $commandInputProcessId -eq $ExpectedProcessId
                     if ($commandInputForegroundVerified) {
-                        [System.Windows.Forms.SendKeys]::SendWait(">$InvokeCanonicalCommand{ENTER}")
-                        $canonicalCommandSubmitted = $true
+                        $commandText = ">$InvokeCanonicalCommand"
+                        $commandInputEventsExpected = (2 * $commandText.Length) + 2
+                        $commandInputEventsInjected = [CopperfinLifecycle.NativeMethods]::SendUnicodeTextAndEnter($commandText)
+                        $canonicalCommandSubmitted = $commandInputEventsInjected -eq $commandInputEventsExpected
+                        if (-not $canonicalCommandSubmitted) {
+                            $nativeError = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+                            throw "SendInput inserted $commandInputEventsInjected of $commandInputEventsExpected canonical-command events (Win32 error $nativeError)."
+                        }
                         $commandSubmitted = $true
                         if ($SubmitCanonicalCommandOnly) { break }
                     }
@@ -481,8 +614,12 @@ $diagnostic = [ordered]@{
     command_window_already_requested = [bool]$CommandWindowAlreadyRequested
     foreground_process_verified = $foregroundProcessVerified
     command_window_shortcut_sent = $commandWindowShortcutSent
+    shortcut_input_events_expected = $shortcutInputEventsExpected
+    shortcut_input_events_injected = $shortcutInputEventsInjected
     command_input_foreground_verified = $commandInputForegroundVerified
     canonical_command_submitted = $canonicalCommandSubmitted
+    command_input_events_expected = $commandInputEventsExpected
+    command_input_events_injected = $commandInputEventsInjected
     surface_observed = $observed
     last_process_window_name = $lastProcessWindowName
     last_automation_error = $lastAutomationError
