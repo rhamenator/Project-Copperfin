@@ -167,6 +167,11 @@ the shortcut sender. The current head inserts a retained exact-PID
 foreground-only dispatch helper, exits it, waits for bounded lazy settlement,
 and then starts the separate canonical sender. The dispatch helper sends no
 product command and cannot satisfy pane/package-load admission.
+Run `31755148469` proved the foreground-only stage generated no dispatch event:
+the Common IDE package again began after the later input sender exited. The
+current head replaces it with a second isolated built-in Command Window
+shortcut sender, exits that sender, allows bounded settlement, and only then
+starts the distinct Copperfin canonical sender.
 
 ## V1 Windows installer lifecycle
 

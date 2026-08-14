@@ -492,6 +492,11 @@ during the prior ten-second delay. The harness now inserts a separate
 exact-PID foreground-only helper to release the queued shortcut, exits that
 helper, allows bounded settlement, and only then starts canonical submission.
 That helper sends no product command and cannot admit lifecycle evidence.
+Run `31755148469` proved a foreground-only helper did not release queued input;
+the Common IDE package again began only after the later input sender exited.
+The dispatch stage now repeats only Visual Studio's built-in Command Window
+shortcut in an isolated sender, exits, then allows bounded settlement before
+the distinct Copperfin canonical-command sender starts.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

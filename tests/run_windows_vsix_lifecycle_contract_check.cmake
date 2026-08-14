@@ -71,7 +71,7 @@ require_text("${script}" "command_input_foreground_verified" "second foreground 
 require_text("${script}" "canonical_command_submitted" "machine-readable canonical command submission state")
 require_text("${script}" "SubmitCanonicalCommandOnly" "sender-exit command dispatch boundary")
 require_text("${script}" "RequestCommandWindowOnly" "separate lazy Command Window request boundary")
-require_text("${script}" "ForegroundOnly" "separate queued-input dispatch boundary")
+require_text("${script}" "repeat and release queued Command Window request" "separate queued-input dispatch boundary")
 require_text("${script}" "CommandWindowAlreadyRequested" "post-readiness canonical command boundary")
 require_text("${script}" "ui-automation-command-window-input.json" "retained Command Window request diagnostics")
 require_text("${script}" "ui-automation-command-window-dispatch.json" "retained Command Window dispatch diagnostics")

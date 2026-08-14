@@ -346,6 +346,19 @@ sender begins. Pane, package-load, PRG, error, uninstall, and residue admission
 remain independent. This run is negative dispatch-order evidence and
 `RQ-CF-REL-003` remains `gap`.
 
+Run `31755148469` showed that an exact-PID foreground-only helper generated no
+input and therefore did not release the queued shortcut. Install and uninstall
+again passed (202.112 and 26.615 seconds), every retained foreground boundary
+passed, and the Common IDE package again began only after the later
+canonical-input sender exited. The correction replaces that ineffective
+foreground-only stage with a second isolated built-in Command Window shortcut
+request. It exits before the bounded settlement interval, carries no Copperfin
+command, and exists only to release the first queued built-in request. The
+later canonical sender and all independent admission conditions remain
+unchanged. Microsoft documents `>`-prefixed examples in the Command Window, so
+the exact submitted canonical syntax is retained rather than changed from
+speculation.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

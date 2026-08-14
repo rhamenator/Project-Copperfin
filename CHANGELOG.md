@@ -124,6 +124,9 @@
   package began only after the later sender exited. A retained exact-PID
   foreground-only helper now releases the queued shortcut before bounded
   settlement and separate canonical submission; it sends no product command.
+  Run `31755148469` proved foreground alone did not release queued input. The
+  dispatch stage now repeats only the built-in Command Window shortcut from an
+  isolated sender, exits, settles, and then starts canonical submission.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
