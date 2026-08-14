@@ -96,12 +96,14 @@ body:
     id: review_evidence
     attributes:
       label: Review Evidence
-      description: "State the review mode, reviewer's GitHub login, meaningful completed verification/evidence, and result; pending, placeholder, negated, or unavailable evidence does not pass. Maintainer self-review plus applicable automated verification is permitted for none/low/medium severity, must name the issue author's login, and must not be called independent. High/catastrophic severity requires a different qualified human reviewer, who must post the structured sign-off comment shown below from that GitHub account for the exact current issue-body SHA-256."
+      description: "State the review mode, reviewer's GitHub login, meaningful verification scope, and exactly one overall result/status. Maintainer self-review must also record explicit `verification result: passed` and `automated evidence result: passed` fields plus the evidence references; pending, placeholder, negated, unavailable, cancelled, timed-out, or non-passing evidence does not pass. Maintainer self-review is permitted for none/low/medium severity, must name the issue author's login, and must not be called independent. High/catastrophic severity requires a different qualified human reviewer, who must post the structured sign-off comment shown below from that GitHub account for the exact current issue-body SHA-256."
       placeholder: |
         mode: maintainer self-review | independent human review
         reviewer: <github-login>
         verification: procedure correctness vs runtime behavior
+        verification result: passed
         automated evidence: <workflow/test/artifact references>
+        automated evidence result: passed
         result: approved
     validations:
       required: true
@@ -120,6 +122,7 @@ body:
         reviewer: <github-login>
         qualification: <relevant qualification basis>
         verification: <scope and evidence checked>
+        verification result: passed
         reviewed issue body sha256: <64 lowercase hexadecimal characters>
         result: approved
         ```

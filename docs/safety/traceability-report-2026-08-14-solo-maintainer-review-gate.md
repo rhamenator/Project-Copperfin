@@ -24,6 +24,10 @@ level, or safety for a particular deployment.
   reviewer-controlled sign-off must carry meaningful qualification and
   verification evidence and bind to the SHA-256 of the exact issue body
   reviewed; a later body edit requires renewed sign-off.
+- `DQ-assurance-review-003`: machine-evaluated review closure must use unique,
+  explicit structured outcome fields. Free-form verification scope identifies
+  what was checked but cannot substitute for a `passed` verification or
+  automation result.
 - `DQ-assurance-baseline-001`: requirements recovery and bidirectional
   traceability are an ongoing project-wide baseline; existing implementation
   is never its own requirement source.
@@ -60,6 +64,12 @@ level, or safety for a particular deployment.
   unless the named distinct reviewer personally posts a structured sign-off
   from a GitHub `User` account containing their login, qualification basis,
   verification, and affirmative result.
+- `DV-assurance-review-012`: reject missing, non-passing, duplicated, or
+  result/status-aliased verification and automation outcomes; accept only the
+  required unique structured `passed` fields.
+- `DV-assurance-review-013`: reject failed, cancelled, timed-out, or negated
+  evidence without relying on a producer-name whitelist or a bounded number of
+  intervening words, while retaining affirmative failure-boundary guarantees.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -75,6 +85,7 @@ level, or safety for a particular deployment.
 | --- | --- | --- |
 | `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-006`; `DV-assurance-review-009` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010`; `DV-assurance-review-011` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-003` | `DV-assurance-review-012`; `DV-assurance-review-013` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-baseline-001` | `DV-assurance-baseline-001` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 
 ## Procedural Delta Map
@@ -88,8 +99,8 @@ level, or safety for a particular deployment.
   `high`/`catastrophic`, and admits current or historical Independent Review
   records only when a structured sign-off comment is authored by the named
   reviewer account, rejects placeholder or negated qualification/verification,
-  applies the same meaningful-evidence rule to lower-risk self-review
-  verification and automation, and binds
+  requires unique structured passing verification/automation outcomes rather
+  than inferring success from producer-specific prose, and binds
   the comment to the exact current issue-body SHA-256. Stable-release review
   requirements are unchanged.
 - Requirements recovery: charter and operating guidance now state that the
@@ -120,8 +131,10 @@ Potential Severity If Misused: medium
 - verification: policy consistency, severity parsing, legacy compatibility,
   fail-closed high/catastrophic behavior, and ongoing requirements-recovery
   wording
+- verification result: passed
 - automated evidence: focused safety-traceability and community-health
   contracts, YAML/JSON parsing, and diff validation
+- automated evidence result: passed
 - scope: policy consistency, severity parsing, legacy compatibility, fail-closed
   high/catastrophic behavior, and ongoing requirements-recovery wording
 - result: approved as maintainer self-review; no independence claim

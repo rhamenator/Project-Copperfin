@@ -361,6 +361,14 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: qualified safety-documentation reviewer"
         "qualification: qualified safety-documentation reviewer\\nqualification: reviewer is not qualified"
         "duplicate-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "verification result: passed"
+        "verification result: failed"
+        "failed-signoff-verification-result")
+    assert_high_signoff_mutation_rejected(
+        "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved"
+        "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved\\nresult: pending\\nstatus: approved"
+        "duplicate-signoff-result-aliases")
     assert_low_self_review_mutation_rejected(
         "verification: procedure and rendered guidance checked"
         "verification: pending review"
@@ -461,6 +469,38 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: focused documentation contracts pass"
         "automated evidence: deployment has failed"
         "deployment-failed-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: test result: failure case 7"
+        "failure-case-outcome-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "verification: procedure and rendered guidance checked"
+        "verification: reviewer cannot based on any of the currently available evidence be considered qualified"
+        "unbounded-negated-self-review-verification")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: CI has not across all required platform specific jobs passed"
+        "unbounded-negated-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: GitHub Actions workflow was cancelled before tests ran"
+        "cancelled-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: the verification job timed out"
+        "timed-out-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "verification result: passed"
+        "verification result: failed"
+        "failed-self-review-verification-result")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence result: passed"
+        "automated evidence result: cancelled"
+        "cancelled-self-review-automation-result")
+    assert_low_self_review_mutation_rejected(
+        "result: approved"
+        "result: approved\\nstatus: approved"
+        "duplicate-self-review-result-alias")
     assert_affirmative_negative_guarantee_accepted(
         "checks have never failed"
         "affirmative-never-failed-automation")
