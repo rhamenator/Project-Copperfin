@@ -36,9 +36,17 @@ Interop maturity:
 
 Requirements Recovery:
 
-- Copperfin's eventual requirements-recovery goal is to build a DO-178-style low-level requirement, code, and test traceability matrix from the implementation and validated VFP9 behavior, because the project did not start with a complete requirements set.
-- Recovered requirements must be grounded in real installed VFP9 behavior or shipped documentation, with known-bug and crash exceptions catalogued explicitly. Decompiled VFP binaries are not acceptable requirement sources under the clean-room rules.
-- This is a standing product-quality goal. It is one subgoal in the roadmap tree and should be selected when its evidence and dependencies make it the highest-value unfinished work.
+- Requirements recovery and bidirectional traceability are a continuing
+  DO-178C-inspired project-quality baseline because Copperfin did not start with
+  a complete requirements set; they are not a deferred pass.
+- Recovered requirements must come from real installed VFP9 behavior, shipped
+  Microsoft/VFP documentation, explicit repository-owner product policy, or
+  registered known-bug/crash exceptions. Existing Copperfin code and decompiled
+  VFP binaries are not requirement sources.
+- Every behavior-changing slice must identify its governing requirement or a
+  properly evidenced recovery gap and link requirements, constraints, code,
+  tests, results, hazards, and exceptions in both directions. Broader recovery
+  backlog work remains risk- and evidence-prioritized.
 
 Why "Copperfin"?
 

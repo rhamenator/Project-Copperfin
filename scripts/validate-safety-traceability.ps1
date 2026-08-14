@@ -179,6 +179,28 @@ function Get-MarkdownSection {
     return $match.Groups["content"].Value
 }
 
+function Get-SeverityClassification {
+    param([string]$Body)
+
+    $severityPattern = '(none|low|medium|high|catastrophic)'
+    $section = Get-MarkdownSection -Body $Body -Heading "Potential Severity If Misused"
+    $match = [regex]::Match($section, "(?im)^\s*(?:[-*]\s*)?$severityPattern\s*$")
+    if ($match.Success) {
+        return $match.Groups[1].Value.ToLowerInvariant()
+    }
+
+    # Retain compatibility with evidence created before the issue form emitted
+    # the severity as its own Markdown section.
+    $match = [regex]::Match(
+        $Body,
+        "(?im)^\s*(?:potential\s+)?severity(?:\s+if\s+misused)?\s*:\s*$severityPattern\s*$")
+    if ($match.Success) {
+        return $match.Groups[1].Value.ToLowerInvariant()
+    }
+
+    return ""
+}
+
 function Get-TraceabilityIds {
     param(
         [AllowEmptyString()]
@@ -289,6 +311,18 @@ foreach ($issue in $issues) {
     $validatedCount++
     $issueErrors = @()
     $upperBody = $body.ToUpperInvariant()
+    $severity = Get-SeverityClassification -Body $body
+    $reviewEvidence = Get-MarkdownSection -Body $body -Heading "Review Evidence"
+    $hasCurrentReviewEvidence = -not [string]::IsNullOrWhiteSpace($reviewEvidence)
+    $hasLegacyIndependentReview = $upperBody -match 'INDEPENDENT\s+(?:HUMAN\s+)?REVIEW'
+    $hasReviewEvidence = $hasCurrentReviewEvidence -or $hasLegacyIndependentReview
+    $hasApprovedIndependentReview = if ($hasCurrentReviewEvidence) {
+        $reviewEvidence -match '(?im)^\s*mode\s*:\s*independent\s+human\s+review\s*$' -and
+            $reviewEvidence -match '(?im)^\s*(?:result|status)\s*:\s*(?:approved|pass(?:ed)?)\s*$'
+    } else {
+        # Preserve historical issue evidence created under the former field.
+        $hasLegacyIndependentReview
+    }
 
     if ($enforceClosedIssues -and $state.ToLowerInvariant() -ne "closed") {
         $issueErrors += "Issue is not closed (state=$state)."
@@ -417,8 +451,10 @@ foreach ($issue in $issues) {
     if ($upperBody -notmatch 'MISUSE\s+ANALYSIS') {
         $issueErrors += "Missing Misuse Analysis section."
     }
-    if ($upperBody -notmatch 'INDEPENDENT\s+REVIEW') {
-        $issueErrors += "Missing Independent Review evidence."
+    if (-not $hasReviewEvidence) {
+        $issueErrors += "Missing Review Evidence."
+    } elseif (($severity -eq "high" -or $severity -eq "catastrophic") -and -not $hasApprovedIndependentReview) {
+        $issueErrors += "Severity '$severity' requires approved Independent Human Review evidence from a second qualified reviewer."
     }
     if ($upperBody -notmatch 'SIMULATION|WALKTHROUGH') {
         $issueErrors += "Missing Simulation/Walkthrough evidence."
@@ -429,7 +465,7 @@ foreach ($issue in $issues) {
     if ($upperBody -notmatch 'FIELD\s+NOTIFICATION|NOTIFICATION\s+PLAN') {
         $issueErrors += "Missing field-notification plan detail."
     }
-    if ($upperBody -notmatch 'NONE|LOW|MEDIUM|HIGH|CATASTROPHIC') {
+    if ([string]::IsNullOrWhiteSpace($severity)) {
         $issueErrors += "Missing severity classification."
     }
 

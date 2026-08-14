@@ -120,6 +120,63 @@ function(assert_no_hazard_fixture)
     file(REMOVE "${no_hazard_report}")
 endfunction()
 
+function(assert_low_self_review_fixture)
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-low-self-review-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_low_self_review_issues.json"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator rejected permitted low-severity maintainer self-review:\n${standard_output}\n${standard_error}")
+    endif()
+    file(REMOVE "${report}")
+endfunction()
+
+function(assert_high_self_review_rejected)
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-high-self-review-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_self_review_issues.json"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted high-severity maintainer self-review without independent human review")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "requires approved Independent Human Review evidence from a second qualified reviewer"
+        independent_review_index)
+    if(independent_review_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not report the high-severity independent-review requirement: ${all_output}")
+    endif()
+    file(REMOVE "${report}")
+endfunction()
+
+function(assert_high_independent_review_fixture)
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-high-independent-review-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_independent_review_issues.json"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator rejected approved high-severity independent human review:\n${standard_output}\n${standard_error}")
+    endif()
+    file(REMOVE "${report}")
+endfunction()
+
 function(assert_invalid_hz_none_row_fixture)
     set(invalid_report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-invalid-hz-none-row-report.json")
     execute_process(
@@ -242,6 +299,9 @@ if(POWERSHELL_EXECUTABLE)
 
     assert_invalid_mapping_fixture()
     assert_no_hazard_fixture()
+    assert_low_self_review_fixture()
+    assert_high_self_review_rejected()
+    assert_high_independent_review_fixture()
     assert_invalid_hz_none_row_fixture()
     assert_invalid_mixed_hazard_fixture()
     assert_invalid_row_hazard_fixture()

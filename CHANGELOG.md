@@ -1,3 +1,24 @@
+- 2026-08-14: Reconciled the safety-documentation template, validator, agent
+  rules, and triage rubric with the adopted solo-maintainer assurance policy.
+  `none`/`low`/`medium` changes may now record explicit maintainer self-review
+  plus applicable automation without claiming independence; `high` and
+  `catastrophic` changes still fail closed without second-qualified-human review,
+  and completed-project/first-stable-release review is unchanged. Deterministic
+  fixtures prove both sides while preserving historical Independent Review
+  records. The charter, README, agent rules, ontology, and traceability matrix
+  now make requirements recovery an ongoing project-wide baseline and forbid
+  treating existing implementation as its own requirement source. No product or
+  runtime behavior changed.
+
+- 2026-08-13: Adopted a solo-maintainer assurance model for development
+  changes. Per-pull-request independent human approval is not required;
+  protected automated quality, security, traceability, testing, provenance,
+  and change-control gates remain in force. Self-review and automation are not
+  represented as independent verification. Independent human review is now a
+  documented completed-project or first-stable-release readiness gate, with
+  earlier review retained where a project-specific safety or security risk
+  requires it. No product or runtime behavior changed.
+
 - 2026-08-13: Added direct Windows VSIX lifecycle evidence for private RC
   assembly. An ephemeral hosted Visual Studio instance now installs the exact
   VSIX, verifies installed identity/version and package load, opens a
@@ -327,7 +348,6 @@
   ownership/delegation mutations fail as intended; and Clang ASan/UBSan passes
   the focused selection `4/4` without findings. Three-host evidence is tracked
   in `docs/59-portable-code-page-boundary.md`.
-
 - 2026-08-12: Superseded the protected Windows launcher-trust fixture evidence
   after differentiating the dependency and runtime-configuration sidecar
   payloads. Protected run `31635868978` passed at exact `main` merge
