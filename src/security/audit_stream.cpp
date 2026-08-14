@@ -309,7 +309,8 @@ std::optional<std::wstring> audit_mutex_name(const std::filesystem::path& leaf_p
 AuditAppendResult append_contained_audit_event(
     const ContainedAuditPath& path,
     const std::string& event_name,
-    const std::string& detail) {
+    const std::string& detail,
+    const std::size_t max_log_bytes) {
     std::vector<ScopedHandle> directory_handles;
     ScopedHandle root_handle(::CreateFileW(
         path.canonical_root.c_str(),
@@ -404,6 +405,10 @@ AuditAppendResult append_contained_audit_event(
                     static_cast<unsigned long long>(std::numeric_limits<std::size_t>::max())) {
                 return {.ok = false, .error = security_text("Security.Audit.Error.ReadExistingLogFailed"), .entry_hash = {}};
             }
+            if (static_cast<unsigned long long>(file_size.QuadPart) >
+                static_cast<unsigned long long>(max_log_bytes)) {
+                return {.ok = false, .error = security_text("Security.Audit.Error.AppendLogEntryFailed"), .entry_hash = {}};
+            }
             existing_text.assign(static_cast<std::size_t>(file_size.QuadPart), '\0');
             std::size_t read_offset = 0U;
             while (read_offset < existing_text.size()) {
@@ -429,6 +434,9 @@ AuditAppendResult append_contained_audit_event(
     const AuditAppendResult prepared = prepare_audit_line(existing_text, event_name, detail, line);
     if (!prepared.ok) {
         return prepared;
+    }
+    if (line.size() > max_log_bytes - existing_text.size()) {
+        return {.ok = false, .error = security_text("Security.Audit.Error.AppendLogEntryFailed"), .entry_hash = {}};
     }
     const std::string updated_text = existing_text + line;
     std::filesystem::path temp_path;
@@ -524,7 +532,8 @@ private:
 AuditAppendResult append_contained_audit_event(
     const ContainedAuditPath& path,
     const std::string& event_name,
-    const std::string& detail) {
+    const std::string& detail,
+    const std::size_t max_log_bytes) {
     ScopedFileDescriptor current_directory(::open(
         path.canonical_root.c_str(),
         O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
@@ -593,6 +602,10 @@ AuditAppendResult append_contained_audit_event(
                 static_cast<std::uintmax_t>(std::numeric_limits<std::size_t>::max())) {
             return {.ok = false, .error = security_text("Security.Audit.Error.ReadExistingLogFailed"), .entry_hash = {}};
         }
+        if (static_cast<std::uintmax_t>(file_status.st_size) >
+            static_cast<std::uintmax_t>(max_log_bytes)) {
+            return {.ok = false, .error = security_text("Security.Audit.Error.AppendLogEntryFailed"), .entry_hash = {}};
+        }
         existing_text.assign(static_cast<std::size_t>(file_status.st_size), '\0');
         std::size_t read_offset = 0U;
         while (read_offset < existing_text.size()) {
@@ -615,6 +628,9 @@ AuditAppendResult append_contained_audit_event(
     const AuditAppendResult prepared = prepare_audit_line(existing_text, event_name, detail, line);
     if (!prepared.ok) {
         return prepared;
+    }
+    if (line.size() > max_log_bytes - existing_text.size()) {
+        return {.ok = false, .error = security_text("Security.Audit.Error.AppendLogEntryFailed"), .entry_hash = {}};
     }
     const std::string updated_text = existing_text + line;
     std::string temp_name;
@@ -696,7 +712,11 @@ AuditAppendResult append_immutable_audit_event(
     if (!contained_path.has_value()) {
         return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
     }
-    return append_contained_audit_event(*contained_path, event_name, detail);
+    return append_contained_audit_event(
+        *contained_path,
+        event_name,
+        detail,
+        std::numeric_limits<std::size_t>::max());
 }
 
 AuditAppendResult append_immutable_audit_event_to_contained_file(
@@ -708,7 +728,28 @@ AuditAppendResult append_immutable_audit_event_to_contained_file(
     if (!contained_path.has_value()) {
         return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
     }
-    return append_contained_audit_event(*contained_path, event_name, detail);
+    return append_contained_audit_event(
+        *contained_path,
+        event_name,
+        detail,
+        std::numeric_limits<std::size_t>::max());
+}
+
+AuditAppendResult append_bounded_immutable_audit_event_to_contained_file(
+    const std::string& log_path,
+    const std::string& package_root,
+    const std::string& event_name,
+    const std::string& detail,
+    const std::size_t max_log_bytes) {
+    const auto contained_path = resolve_contained_audit_path(log_path, package_root);
+    if (!contained_path.has_value()) {
+        return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
+    }
+    return append_contained_audit_event(
+        *contained_path,
+        event_name,
+        detail,
+        max_log_bytes);
 }
 
 AuditChainVerifyResult verify_immutable_audit_chain(const std::string& log_path) {

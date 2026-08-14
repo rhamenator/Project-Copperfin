@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <string>
 
 namespace copperfin::security {
@@ -30,6 +31,13 @@ AuditAppendResult append_immutable_audit_event_to_contained_file(
     const std::string& package_root,
     const std::string& event_name,
     const std::string& detail);
+
+AuditAppendResult append_bounded_immutable_audit_event_to_contained_file(
+    const std::string& log_path,
+    const std::string& package_root,
+    const std::string& event_name,
+    const std::string& detail,
+    std::size_t max_log_bytes);
 
 AuditChainVerifyResult verify_immutable_audit_chain(const std::string& log_path);
 

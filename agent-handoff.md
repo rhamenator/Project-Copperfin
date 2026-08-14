@@ -13,12 +13,18 @@ protected checks in runs `31827637259`, `31827638217`, `31827638262`,
 Release `4/4`, fresh Clang ASan/UBSan `2/2`, safety-traceability, community, and
 diff gates also pass.
 
-This boundary still executes no tool and provides no provider/OAuth adapter,
-real sandbox, persistent audit sink, trusted activation/consent UI, product stop
-control, session indicator, diff, or undo. The highest-value adjacent gap is a
-persistent content-free audit sink that consumes the versioned lifecycle event
-without storing prompt, path, workspace, credential, token, or receipt content.
-Keep that slice non-activating and provider-independent.
+The current adjacent candidate adds a provider-independent persistent sink for
+`RQ-CF-AGENT-006`. It exact-allowlists the controller lifecycle tuples, appends
+content-free JSON through the existing contained hash-chain writer, returns the
+committed entry hash as the receipt, and bounds the log under the writer lock.
+Invalid events/configuration, redirection, corrupt tails, and full logs fail
+closed without activation. Local Release `6/6` and fresh Clang ASan/UBSan `4/4`
+pass; protected exact-head checks and hosted review remain pending, so the
+requirement remains a gap. The boundary still executes no tool and
+provides no provider/OAuth adapter, real sandbox, trusted activation/consent UI,
+product stop control, session indicator, diff, or undo. Root ACL selection,
+rotation/retention, authenticated anchoring, recovery UI, and multi-host
+correlation remain separate gaps.
 
 ## V1 Windows VSIX lifecycle
 
