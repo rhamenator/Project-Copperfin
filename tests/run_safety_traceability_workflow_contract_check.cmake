@@ -246,6 +246,53 @@ function(assert_high_signoff_mutation_rejected search_text replacement_text slug
     file(REMOVE "${fixture}" "${report}")
 endfunction()
 
+function(assert_high_signoff_mutation_accepted search_text replacement_text slug)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_independent_review_issues.json" source_contents)
+    string(REPLACE "${search_text}" "${replacement_text}" fixture_contents "${source_contents}")
+    if("${fixture_contents}" STREQUAL "${source_contents}")
+        message(FATAL_ERROR "Safety mutation ${slug} did not alter its source fixture")
+    endif()
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator rejected valid independent-review evidence mutation ${slug}: ${standard_output}\n${standard_error}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
+function(assert_withdrawn_independent_review_rejected)
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-withdrawn-independent-review-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_withdrawn_review_issues.json"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted an independent review withdrawn by its reviewer")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "requires an approved structured sign-off comment authored by the named distinct reviewer"
+        withdrawn_review_index)
+    if(withdrawn_review_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not report the withdrawn independent review: ${all_output}")
+    endif()
+    file(REMOVE "${report}")
+endfunction()
+
 function(assert_low_self_review_mutation_rejected search_text replacement_text slug)
     set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
@@ -343,6 +390,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "reviewer-first-unqualified-signoff-qualification")
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer remains unqualified for this change"
+        "reviewer-remains-unqualified-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
         "qualification: reviewer is unqualified for safety review despite having passed a general course"
         "reviewer-unqualified-with-unrelated-success-signoff-qualification")
     assert_high_signoff_mutation_rejected(
@@ -389,6 +440,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved"
         "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved\\nresult: pending\\nstatus: approved"
         "duplicate-signoff-result-aliases")
+    assert_high_signoff_mutation_accepted(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer is not only qualified but experienced in recovery procedures"
+        "affirmative-not-only-qualified-signoff-qualification")
     assert_low_self_review_mutation_rejected(
         "verification: procedure and rendered guidance checked"
         "verification: pending review"
@@ -896,6 +951,7 @@ if(POWERSHELL_EXECUTABLE)
     assert_high_self_review_rejected()
     assert_high_independent_review_fixture()
     assert_stale_independent_review_rejected()
+    assert_withdrawn_independent_review_rejected()
     assert_placeholder_and_negated_review_evidence_rejected()
     assert_pending_legacy_high_review_rejected()
     assert_issue_form_heading_fixture()

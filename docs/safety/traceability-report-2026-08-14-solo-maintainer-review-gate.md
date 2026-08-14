@@ -23,7 +23,8 @@ level, or safety for a particular deployment.
   changes require a second qualified human reviewer before closure. The
   reviewer-controlled sign-off must carry meaningful qualification and
   verification evidence and bind to the SHA-256 of the exact issue body
-  reviewed; a later body edit requires renewed sign-off.
+  reviewed; a later body edit requires renewed sign-off, and the latest
+  applicable sign-off for that reviewer and digest supersedes earlier approval.
 - `DQ-assurance-review-003`: machine-evaluated review closure must use unique,
   explicit structured outcome fields. Free-form verification scope identifies
   what was checked but cannot substitute for a `qualified` qualification result
