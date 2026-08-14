@@ -485,6 +485,22 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "## Independent Review Sign-Off"
         "##Independent Review Sign-Off"
         "atx-heading-without-space")
+    assert_high_signoff_mutation_rejected(
+        "## Independent Review Sign-Off"
+        "<!-- withdrawn -->## Independent Review Sign-Off"
+        "comment-removal-heading-promotion")
+    assert_high_signoff_mutation_accepted(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: qualified safety-documentation reviewer\\n\\n```xml\\n<test-result status=\\\"passed\\\"/>\\n```"
+        "fenced-raw-html-example")
+    assert_high_signoff_mutation_accepted(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: qualified safety-documentation reviewer\\n\\n    <test-result status=\\\"passed\\\"/>"
+        "indented-raw-html-example")
+    assert_high_signoff_mutation_accepted(
+        "## Independent Review Sign-Off"
+        "## Independent Review Sign-Off ##"
+        "atx-heading-closing-sequence")
     assert_high_signoff_mutation_accepted(
         "qualification: qualified safety-documentation reviewer"
         "qualification: reviewer is not only qualified but experienced in recovery procedures"
