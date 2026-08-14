@@ -40,6 +40,11 @@ level, or safety for a particular deployment.
   severity section, or from exactly one legacy severity field when no rendered
   section exists. Hidden, duplicated, or mixed severity declarations fail
   closed and cannot select a weaker review lane.
+- `DQ-assurance-review-005`: structured issue-body evidence sections and
+  traceability mappings must be parsed from rendered Markdown and occur exactly
+  once when present. Historical rendered marker text remains valid only when
+  the corresponding structured heading is absent. The raw body is retained
+  only for the reviewer-bound digest.
 - `DQ-assurance-baseline-001`: requirements recovery and bidirectional
   traceability are an ongoing project-wide baseline; existing implementation
   is never its own requirement source.
@@ -60,6 +65,8 @@ level, or safety for a particular deployment.
 - `DV-assurance-review-005`: reject fenced/commented severity downgrades before
   a rendered high classification and reject duplicate rendered severity
   sections.
+- `DV-assurance-review-006`: reject duplicate rendered Review Evidence and
+  DQ/DV/HZ Mapping sections while preserving the exact raw-body digest binding.
 - `DV-assurance-review-005`: parse a high-severity issue-form value with a
   same-line rationale and reject its legacy review section when that section
   says independent approval remains open.
