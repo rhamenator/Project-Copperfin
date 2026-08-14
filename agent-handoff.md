@@ -13,7 +13,8 @@ placeholder or negated fields fail closed. Lower-risk self-review verification
 and automation use the same meaningful-evidence boundary, which normalizes
 punctuation and rejects negative, incomplete, missing, deferred, unavailable,
 skipped, and failed evidence states.
-Affirmative negative safety guarantees remain valid. The live loader re-fetches
+Affirmative `does not`/`never` safety guarantees and legitimate failure-boundary
+scope prose remain valid; outcome/status `failure` forms fail closed. The live loader re-fetches
 the issue after comment pagination and admits only a stable body, comment count,
 and update identity.
 The issue form, validator, agent rules, triage rubric, deterministic fixtures,

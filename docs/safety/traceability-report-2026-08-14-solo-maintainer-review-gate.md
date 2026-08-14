@@ -138,9 +138,10 @@ qualification/verification, and placeholder lower-risk self-review verification
 or automation. The shared evidence predicate normalizes punctuation and rejects
 negative, incomplete, missing, deferred, unavailable, skipped, and failed-state
 tokens; dedicated mutations cover `not-qualified`, `unavailable at this time`,
-and failed automation. Failed workflow evidence is rejected independently of
-its neighboring noun, while affirmative safety guarantees such as `does not
-mutate user data` remain valid. The live GitHub loader re-fetches the issue
+and failed automation. Failed workflow evidence and status/outcome `failure`
+forms are rejected while legitimate `failure boundaries` scope prose remains
+valid. Affirmative safety guarantees such as `does not mutate user data` and
+`never mutates user data` also remain valid. The live GitHub loader re-fetches the issue
 after comment pagination and accepts only a stable body, comment-count, and
 update snapshot;
 accepts reviewer-authored current and historical sign-offs bound to their exact

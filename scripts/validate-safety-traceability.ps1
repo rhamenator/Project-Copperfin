@@ -287,7 +287,6 @@ function Test-MeaningfulReviewEvidence {
         "incomplete" = $true
         "later" = $true
         "missing" = $true
-        "never" = $true
         "none" = $true
         "pending" = $true
         "placeholder" = $true
@@ -307,6 +306,7 @@ function Test-MeaningfulReviewEvidence {
     }
 
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
+        $normalized -match '\b(?:(?:automation|check|ci|pipeline|run|test|verification|workflow)\s+failure|(?:conclusion|outcome|result|status)\s+failure)\b' -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
         $normalized -match '\b(?:not|un)(?:available|checked|qualified|verified)\b') {
         return $false

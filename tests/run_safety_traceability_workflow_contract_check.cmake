@@ -276,13 +276,13 @@ function(assert_low_self_review_mutation_rejected search_text replacement_text s
     file(REMOVE "${fixture}" "${report}")
 endfunction()
 
-function(assert_affirmative_negative_guarantee_accepted)
-    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-affirmative-negative-guarantee-issues.json")
-    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-affirmative-negative-guarantee-report.json")
+function(assert_affirmative_negative_guarantee_accepted replacement_text slug)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
     file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_low_self_review_issues.json" source_contents)
     string(REPLACE
         "verification: procedure and rendered guidance checked"
-        "verification: confirmed rollback does not mutate user data"
+        "verification: ${replacement_text}"
         fixture_contents "${source_contents}")
     file(WRITE "${fixture}" "${fixture_contents}")
     execute_process(
@@ -345,7 +345,16 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: focused documentation contracts pass"
         "automated evidence: GitHub Actions workflow failed"
         "workflow-failed-self-review-automation")
-    assert_affirmative_negative_guarantee_accepted()
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: GitHub Actions workflow conclusion: failure"
+        "workflow-failure-self-review-automation")
+    assert_affirmative_negative_guarantee_accepted(
+        "confirmed rollback does not mutate user data"
+        "affirmative-does-not-guarantee")
+    assert_affirmative_negative_guarantee_accepted(
+        "verified rollback never mutates user data"
+        "affirmative-never-guarantee")
 endfunction()
 
 function(assert_pending_legacy_high_review_rejected)
