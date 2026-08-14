@@ -177,6 +177,29 @@ function(assert_high_independent_review_fixture)
     file(REMOVE "${report}")
 endfunction()
 
+function(assert_pending_legacy_high_review_rejected)
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-high-pending-legacy-review-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_pending_legacy_review_issues.json"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted pending legacy high-severity review as approval")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "Severity 'high' requires approved Independent Human Review evidence"
+        pending_review_index)
+    if(pending_review_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not preserve high severity while rejecting pending legacy review: ${all_output}")
+    endif()
+    file(REMOVE "${report}")
+endfunction()
+
 function(assert_invalid_hz_none_row_fixture)
     set(invalid_report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-invalid-hz-none-row-report.json")
     execute_process(
@@ -302,6 +325,7 @@ if(POWERSHELL_EXECUTABLE)
     assert_low_self_review_fixture()
     assert_high_self_review_rejected()
     assert_high_independent_review_fixture()
+    assert_pending_legacy_high_review_rejected()
     assert_invalid_hz_none_row_fixture()
     assert_invalid_mixed_hazard_fixture()
     assert_invalid_row_hazard_fixture()

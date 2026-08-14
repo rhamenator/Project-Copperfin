@@ -184,7 +184,7 @@ function Get-SeverityClassification {
 
     $severityPattern = '(none|low|medium|high|catastrophic)'
     $section = Get-MarkdownSection -Body $Body -Heading "Potential Severity If Misused"
-    $match = [regex]::Match($section, "(?im)^\s*(?:[-*]\s*)?$severityPattern\s*$")
+    $match = [regex]::Match($section, "(?im)^\s*(?:[-*]\s*)?$severityPattern\b[^\r\n]*$")
     if ($match.Success) {
         return $match.Groups[1].Value.ToLowerInvariant()
     }
@@ -313,15 +313,20 @@ foreach ($issue in $issues) {
     $upperBody = $body.ToUpperInvariant()
     $severity = Get-SeverityClassification -Body $body
     $reviewEvidence = Get-MarkdownSection -Body $body -Heading "Review Evidence"
+    $legacyIndependentReviewEvidence = Get-MarkdownSection -Body $body -Heading "Independent Review Evidence"
     $hasCurrentReviewEvidence = -not [string]::IsNullOrWhiteSpace($reviewEvidence)
     $hasLegacyIndependentReview = $upperBody -match 'INDEPENDENT\s+(?:HUMAN\s+)?REVIEW'
     $hasReviewEvidence = $hasCurrentReviewEvidence -or $hasLegacyIndependentReview
     $hasApprovedIndependentReview = if ($hasCurrentReviewEvidence) {
         $reviewEvidence -match '(?im)^\s*mode\s*:\s*independent\s+human\s+review\s*$' -and
             $reviewEvidence -match '(?im)^\s*(?:result|status)\s*:\s*(?:approved|pass(?:ed)?)\s*$'
+    } elseif (-not [string]::IsNullOrWhiteSpace($legacyIndependentReviewEvidence)) {
+        $legacyIndependentReviewEvidence -match '(?i)\b(?:approved|passed|verified|confirmed|sign(?:ed)?[- ]?off)\b' -and
+            $legacyIndependentReviewEvidence -notmatch '(?i)\b(?:pending|unavailable|not\s+fully|must\s+still|remain(?:s|ed)?\s+open|required\s+before)\b'
     } else {
-        # Preserve historical issue evidence created under the former field.
-        $hasLegacyIndependentReview
+        # Historical low/medium fixtures used a standalone legacy marker. It
+        # remains review evidence, but can never satisfy a high-risk approval.
+        $false
     }
 
     if ($enforceClosedIssues -and $state.ToLowerInvariant() -ne "closed") {
