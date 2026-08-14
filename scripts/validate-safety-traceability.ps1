@@ -74,6 +74,39 @@ function Get-IssuesFromJson {
     return @($parsed)
 }
 
+function Get-ReviewComments {
+    param(
+        $Issue,
+        $Headers
+    )
+
+    $comments = @()
+    $commentCount = [int]$Issue.comments
+    if ($commentCount -gt 0) {
+        $pageCount = [int][Math]::Ceiling($commentCount / 100.0)
+        for ($page = 1; $page -le $pageCount; $page++) {
+            $commentsUri = "$($Issue.comments_url)?per_page=100&page=$page"
+            $comments += @(Invoke-RestMethod -Uri $commentsUri -Headers $Headers -Method Get)
+        }
+    }
+
+    return @($comments)
+}
+
+function Get-ReviewCommentFingerprint {
+    param($Comments)
+
+    $canonical = @($Comments | ForEach-Object {
+        [pscustomobject]@{
+            id = [string]$_.id
+            updated_at = [string]$_.updated_at
+            author = [string]$_.user.login
+            body = [string]$_.body
+        }
+    } | Sort-Object -Property id)
+    return Get-TextSha256 -Value ($canonical | ConvertTo-Json -Depth 4 -Compress)
+}
+
 function Get-IssuesFromGitHub {
     param(
         [string]$Repo,
@@ -112,23 +145,19 @@ function Get-IssuesFromGitHub {
         $stableResponse = $null
         for ($attempt = 1; $attempt -le 3; $attempt++) {
             $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
-            $reviewComments = @()
             $commentCount = [int]$response.comments
-            if ($commentCount -gt 0) {
-                $pageCount = [int][Math]::Ceiling($commentCount / 100.0)
-                for ($page = 1; $page -le $pageCount; $page++) {
-                    $commentsUri = "$($response.comments_url)?per_page=100&page=$page"
-                    $reviewComments += @(Invoke-RestMethod -Uri $commentsUri -Headers $headers -Method Get)
-                }
-            }
+            $reviewComments = @(Get-ReviewComments -Issue $response -Headers $headers)
 
-            # Re-fetch after pagination. A body/comment edit during the page
-            # walk must never validate against the stale pre-walk snapshot.
+            # Re-fetch both the issue and its comments after pagination. Issue
+            # metadata alone does not reliably expose an in-flight comment edit.
             $latestResponse = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+            $latestReviewComments = @(Get-ReviewComments -Issue $latestResponse -Headers $headers)
             if ([string]$latestResponse.body -eq [string]$response.body -and
                 [int]$latestResponse.comments -eq $commentCount -and
-                [string]$latestResponse.updated_at -eq [string]$response.updated_at) {
-                $latestResponse | Add-Member -NotePropertyName review_comments -NotePropertyValue @($reviewComments) -Force
+                [string]$latestResponse.updated_at -eq [string]$response.updated_at -and
+                (Get-ReviewCommentFingerprint -Comments $latestReviewComments) -eq
+                    (Get-ReviewCommentFingerprint -Comments $reviewComments)) {
+                $latestResponse | Add-Member -NotePropertyName review_comments -NotePropertyValue @($latestReviewComments) -Force
                 $stableResponse = $latestResponse
                 break
             }
@@ -283,7 +312,6 @@ function Test-MeaningfulReviewEvidence {
         "absent" = $true
         "blocked" = $true
         "deferred" = $true
-        "failed" = $true
         "incomplete" = $true
         "later" = $true
         "missing" = $true
@@ -305,8 +333,11 @@ function Test-MeaningfulReviewEvidence {
         }
     }
 
+    $evidenceSubject = '(?:automation|check|checks|ci|pipeline|run|test|tests|verification|workflow)'
+    $outcomeLink = '(?:(?:run|job|check|checks|status|conclusion|outcome|result|was|is)\s+){0,3}'
+    $unsuccessfulOutcome = '(?:failed|failure|not\s+successful|unsuccessful)'
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
-        $normalized -match '\b(?:(?:automation|check|ci|pipeline|run|test|verification|workflow)\s+failure|(?:conclusion|outcome|result|status)\s+failure)\b' -or
+        $normalized -match "\b(?:failed\s+$evidenceSubject|$evidenceSubject(?:\s+[a-z0-9]+){0,3}\s+(?:did|does|do)\s+not\s+pass|$evidenceSubject\s+$outcomeLink$unsuccessfulOutcome|(?:conclusion|outcome|result|status)\s+$outcomeLink$unsuccessfulOutcome)\b" -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
         $normalized -match '\b(?:not|un)(?:available|checked|qualified|verified)\b') {
         return $false
