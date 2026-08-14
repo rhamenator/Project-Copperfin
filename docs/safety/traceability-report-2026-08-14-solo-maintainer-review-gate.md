@@ -28,9 +28,10 @@ level, or safety for a particular deployment.
 - `DQ-assurance-review-003`: machine-evaluated review closure must use unique,
   explicit structured outcome fields and exactly one rendered independent
   sign-off section per sign-off comment. Headings and fields inside fenced or
-  indented code or HTML comments are not evidence. Free-form verification scope
-  identifies what was checked but cannot substitute for a `qualified`
-  qualification result or a `passed` verification or automation result.
+  indented code, HTML comments, or raw HTML blocks are not evidence. Free-form
+  verification scope identifies what was checked but cannot substitute for a
+  `qualified` qualification result or a `passed` verification or automation
+  result.
 - `DQ-assurance-baseline-001`: requirements recovery and bidirectional
   traceability are an ongoing project-wide baseline; existing implementation
   is never its own requirement source.

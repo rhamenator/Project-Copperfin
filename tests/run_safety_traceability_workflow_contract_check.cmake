@@ -474,6 +474,8 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_hidden_high_signoff_rejected("```text\\n" "\\n```" "fenced-signoff")
     assert_hidden_high_signoff_rejected("<!--\\n" "\\n-->" "html-comment-signoff")
     assert_hidden_high_signoff_rejected("    " "" "indented-signoff-heading")
+    assert_hidden_high_signoff_rejected("<pre>\\n" "\\n</pre>" "pre-html-block-signoff")
+    assert_hidden_high_signoff_rejected("<div>\\n" "\\n</div>" "div-html-block-signoff")
     assert_high_signoff_mutation_accepted(
         "qualification: qualified safety-documentation reviewer"
         "qualification: reviewer is not only qualified but experienced in recovery procedures"

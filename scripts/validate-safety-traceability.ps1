@@ -248,8 +248,19 @@ function Get-RenderedMarkdownEvidenceText {
     $inFence = $false
     $fenceCharacter = ''
     $fenceLength = 0
+    $inRawHtmlBlock = $false
+    $rawHtmlTag = ''
+    $rawHtmlBlockTags = 'address|article|aside|base|basefont|blockquote|body|caption|center|code|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|pre|script|search|section|style|summary|table|tbody|td|textarea|tfoot|th|thead|title|tr|track|ul'
 
     foreach ($line in ($withoutComments -split '\r?\n')) {
+        if ($inRawHtmlBlock) {
+            if ($line -match "(?i)</$([regex]::Escape($rawHtmlTag))\s*>") {
+                $inRawHtmlBlock = $false
+                $rawHtmlTag = ''
+            }
+            continue
+        }
+
         if ($inFence) {
             $escapedFenceCharacter = [regex]::Escape($fenceCharacter)
             if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
@@ -263,6 +274,20 @@ function Get-RenderedMarkdownEvidenceText {
             $inFence = $true
             $fenceCharacter = $fenceMatch.Groups['fence'].Value.Substring(0, 1)
             $fenceLength = $fenceMatch.Groups['fence'].Value.Length
+            continue
+        }
+
+        $htmlBlockMatch = [regex]::Match(
+            $line,
+            "^ {0,3}<(?<tag>$rawHtmlBlockTags)(?:\s|/?>)",
+            [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+        if ($htmlBlockMatch.Success) {
+            $rawHtmlTag = $htmlBlockMatch.Groups['tag'].Value
+            if ($line -notmatch "(?i)</$([regex]::Escape($rawHtmlTag))\s*>") {
+                $inRawHtmlBlock = $true
+            } else {
+                $rawHtmlTag = ''
+            }
             continue
         }
 
