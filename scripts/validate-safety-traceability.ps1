@@ -334,13 +334,17 @@ function Test-MeaningfulReviewEvidence {
 
     $normalized = [regex]::Replace($trimmed.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
     $placeholderState = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)(?:\s+(?:at\s+this\s+time|automation|check|evidence|later|review|run|test|verification))?$'
-    $subjectState = '\b(?:automation|changes|check|evidence|review|reviewer|run|test|verification|workflow)(?:\s+(?:is|was|has\s+been))?\s+(?:absent|blocked|deferred|incomplete|missing|pending|placeholder|skipped|unavailable|unchecked|unqualified|unverified|unknown)\b'
+    $subjectState = '\b(?:automation|changes|check|evidence|review|reviewer|run|test|verification|workflow)(?:\s+(?:is|was|has\s+been))?\s+(?<state>absent|blocked|deferred|incomplete|missing|pending|placeholder|skipped|unavailable|unchecked|unqualified|unverified|unknown)\b'
     $hasSubjectStateWithoutPassingContext = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
+        $rawClause = $clause.ToLowerInvariant()
         $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
         foreach ($stateMatch in [regex]::Matches($normalizedClause, $subjectState)) {
-            $afterState = $normalizedClause.Substring($stateMatch.Index + $stateMatch.Length)
-            if ($afterState -notmatch '\b(?:pass|passed|succeed|succeeded|successful|verified)\b') {
+            $state = $stateMatch.Groups['state'].Value
+            $isPassingCompoundScope =
+                $state -match '^(?:blocked|incomplete)$' -and
+                $rawClause -match "\b$state-[a-z0-9-]+\b.*\b(?:pass|passed|succeed|succeeded|successful|verified)\b"
+            if (-not $isPassingCompoundScope) {
                 $hasSubjectStateWithoutPassingContext = $true
                 break
             }
@@ -370,10 +374,18 @@ function Test-MeaningfulReviewEvidence {
 
     $terminalOutcomeWithoutPassingContext = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
+        $rawClause = $clause.ToLowerInvariant()
         $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
-        foreach ($terminalOutcome in [regex]::Matches($normalizedClause, '\b(?:canceled|cancelled|timed\s+out|timeout)\b')) {
-            $afterOutcome = $normalizedClause.Substring($terminalOutcome.Index + $terminalOutcome.Length)
-            if ($afterOutcome -notmatch '\b(?:pass|passed|succeed|succeeded|successful|verified)\b') {
+        foreach ($terminalOutcome in [regex]::Matches($rawClause, '\b(?:canceled|cancelled|timed[ -]+out|timeout)\b')) {
+            $beforeOutcome = $rawClause.Substring(0, $terminalOutcome.Index)
+            $afterOutcome = $rawClause.Substring($terminalOutcome.Index + $terminalOutcome.Length)
+            $isCompoundScope = $afterOutcome.StartsWith('-')
+            $isRelativeScope = $beforeOutcome -match '\b(?:that|which)\s+(?:are|is|was|were)\s*$'
+            $hasPassingContext = $afterOutcome -match '\b(?:pass|passed|succeed|succeeded|successful|verified)\b'
+            $hasNegativeContrast = $afterOutcome -match '^\s*(?:,\s*)?(?:not|rather\s+than|instead\s+of)\b'
+            if (-not $isCompoundScope -and
+                -not $isRelativeScope -and
+                (-not $hasPassingContext -or $hasNegativeContrast)) {
                 $terminalOutcomeWithoutPassingContext = $true
                 break
             }
