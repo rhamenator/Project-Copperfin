@@ -246,6 +246,33 @@ function(assert_high_signoff_mutation_rejected search_text replacement_text slug
     file(REMOVE "${fixture}" "${report}")
 endfunction()
 
+function(assert_hidden_high_signoff_rejected wrapper_start wrapper_end slug)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_independent_review_issues.json" source_contents)
+    string(REPLACE
+        "## Independent Review Sign-Off"
+        "${wrapper_start}## Independent Review Sign-Off"
+        fixture_contents "${source_contents}")
+    string(REPLACE
+        "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved"
+        "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved${wrapper_end}"
+        fixture_contents "${fixture_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted non-rendered sign-off evidence ${slug}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_high_signoff_mutation_accepted search_text replacement_text slug)
     set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
@@ -444,6 +471,9 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved"
         "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved\\n\\n## Independent Review Sign-Off\\n\\nreviewer: copperfin-reviewer\\nqualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries\\nverification result: passed\\nreviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: rejected"
         "duplicate-signoff-section-withdrawal")
+    assert_hidden_high_signoff_rejected("```text\\n" "\\n```" "fenced-signoff")
+    assert_hidden_high_signoff_rejected("<!--\\n" "\\n-->" "html-comment-signoff")
+    assert_hidden_high_signoff_rejected("    " "" "indented-signoff-heading")
     assert_high_signoff_mutation_accepted(
         "qualification: qualified safety-documentation reviewer"
         "qualification: reviewer is not only qualified but experienced in recovery procedures"
