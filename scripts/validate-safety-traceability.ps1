@@ -891,11 +891,20 @@ function Test-MeaningfulReviewEvidence {
     $normalized = [regex]::Replace($trimmed.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
     $placeholderState = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)(?:\s+(?:at\s+this\s+time|automation|check|evidence|later|review|run|test|verification))?$'
     $placeholderPrefix = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)\b'
+    $unambiguousPlaceholderToken = '\b(?:placeholder|tbd|todo)\b'
+    $copularPlaceholderState = '\b(?:is|are|was|were|has\s+been|have\s+been|had\s+been|remain(?:s|ed)?)\s+(?:not\s+only\s+)?(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)\b'
     $isCompoundScopePrefix = $trimmed.ToLowerInvariant() -match '^(?:blocked|incomplete)-[a-z0-9-]+\b'
     $subjectState = '\b(?:automation|changes|check|evidence|review|reviewer|run|test|verification|workflow)(?:\s+(?:is|was|has\s+been|remain(?:s|ed)?))?\s+(?:not\s+only\s+)?(?<state>absent|blocked|deferred|incomplete|missing|pending|placeholder|skipped|unavailable|unchecked|unqualified|unverified|unknown)\b'
     $hasSubjectStateWithoutPassingContext = $false
+    $hasClausePlaceholderPrefix = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
         $rawClause = $clause.ToLowerInvariant()
+        $normalizedClause = [regex]::Replace($rawClause, '[^a-z0-9]+', ' ').Trim()
+        $isCompoundScopeClause = $rawClause.Trim() -match '^(?:blocked|incomplete)-[a-z0-9-]+\b'
+        if ($normalizedClause -match $placeholderPrefix -and -not $isCompoundScopeClause) {
+            $hasClausePlaceholderPrefix = $true
+            break
+        }
         foreach ($stateMatch in [regex]::Matches($rawClause, $subjectState)) {
             $state = $stateMatch.Groups['state'].Value
             $afterState = $rawClause.Substring($stateMatch.Index + $stateMatch.Length)
@@ -914,6 +923,9 @@ function Test-MeaningfulReviewEvidence {
     }
     if ($normalized -match $placeholderState -or
         ($normalized -match $placeholderPrefix -and -not $isCompoundScopePrefix) -or
+        $normalized -match $unambiguousPlaceholderToken -or
+        $trimmed.ToLowerInvariant() -match $copularPlaceholderState -or
+        $hasClausePlaceholderPrefix -or
         $hasSubjectStateWithoutPassingContext) {
         return $false
     }

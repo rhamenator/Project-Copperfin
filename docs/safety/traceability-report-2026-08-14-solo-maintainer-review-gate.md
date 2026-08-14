@@ -145,6 +145,10 @@ level, or safety for a particular deployment.
 - `DV-assurance-review-029`: remove rendered inline HTML tag syntax before
   semantic evidence checks so tag wrappers cannot conceal placeholder prefixes;
   retain URI and email autolinks outside that tag grammar.
+- `DV-assurance-review-030`: reject unambiguous placeholder tokens anywhere in
+  evidence, placeholder states following a copula despite intermediate nouns,
+  and placeholder-prefixed later clauses while retaining admitted hyphenated
+  failure-boundary scope names.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -227,7 +231,8 @@ rejects stale issue-body digests, placeholder or negated independent-review
 qualification/verification, and placeholder lower-risk self-review verification
 or automation, including compound `TBD: ...`, `TODO: ...`, and `deferred: ...`
 prefixes and the same states wrapped in inline HTML. The shared evidence
-predicate normalizes punctuation and rejects
+predicate also rejects intermediate-noun forms such as `workflow results are
+TBD` and placeholder-prefixed later clauses. It normalizes punctuation and rejects
 negative, incomplete, missing, deferred, unavailable, skipped, and failed-state
 tokens; dedicated mutations cover `not-qualified`, `unavailable at this time`,
 and failed automation. Failed workflow evidence and status/outcome `failure`
