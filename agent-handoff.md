@@ -220,6 +220,10 @@ Run `31764541030` stopped before installation because the minimal driver
 project lacked the explicit net472 `System.Design` reference required by its
 menu-command registration. The reference and focused contract are corrected;
 the run is compile diagnostics only.
+Run `31764703993` installed the command-triggered driver but did not resolve its
+`DefaultInvisible` startup command; dual uninstall/residue checks remained
+clean. The correction removes only that flag from the test-only driver command
+so `/Command` can request the owning package. No shipping UI or artifact changes.
 
 ## V1 Windows installer lifecycle
 

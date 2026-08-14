@@ -90,7 +90,6 @@ require_text("${driver_project}" "<TemplateOutputDirectory>" "VSSDK template-man
 require_text("${driver_project}" "LifecycleDriver.vsct" "test-only driver command-table compilation")
 require_text("${driver_project}" "<Reference Include=\"System.Design\" />" "menu-command service framework reference")
 require_text("${driver_vsct}" ".Copperfin.LifecycleDriver.Activate" "test-only canonical activation command")
-require_text("${driver_vsct}" "DefaultInvisible" "test-only command visibility boundary")
 require_text("${script}" "'/Command', 'Copperfin.LifecycleDriver.Activate'" "semantic driver package-load trigger")
 require_text("${script}" "ui-automation-command.json" "retained command-observation diagnostics")
 require_text("${script}" "ui-automation-prg.json" "retained PRG-observation diagnostics")

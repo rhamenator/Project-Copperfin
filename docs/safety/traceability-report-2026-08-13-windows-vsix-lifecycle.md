@@ -501,7 +501,7 @@ passed (22.040 and 31.477 seconds) with zero residue. The diagnostic artifact
 and expires 2026-11-12.
 
 The current correction removes ambient autoload as the driver trigger. The
-test-only driver declares an invisible canonical activation command in its own
+test-only driver declares a canonical activation command in its own
 compiled command table, and the controlled evidence IDE starts with
 `/Command Copperfin.LifecycleDriver.Activate`. Microsoft documents that
 `/Command` executes the named command after IDE startup; command resolution
@@ -516,6 +516,18 @@ because the minimal net472 project did not explicitly reference
 `System.Design`, which defines the inherited menu-command service API. The
 project and focused contract now carry that framework reference. No VSIX was
 installed and no lifecycle mutation occurred in this compile-only run.
+
+Run `31764703993` compiled and packaged the command-triggered driver, installed
+both extensions (195.784 and 55.465 seconds), and loaded the evidence IDE, but
+the command marked `DefaultInvisible` was not resolved by startup `/Command`;
+the driver package did not load or retain a result. Both uninstalls passed
+(22.532 and 31.768 seconds) with zero residue. The corrected test-only command
+remains scoped to the separately installed driver VSIX but is no longer hidden,
+so Visual Studio can resolve it semantically during the controlled run. The
+driver is still absent from every shipping artifact. Diagnostic artifact
+`9206005192` has digest
+`sha256:c909f3f5e022f7576418afe0653c0d1be1491dcefb47d7baed7f4e950140e968`
+and expires 2026-11-12.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its

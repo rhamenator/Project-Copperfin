@@ -15,7 +15,6 @@
     <Buttons>
       <Button guid="guidLifecycleDriverCommandSet" id="ActivateLifecycleDriver" priority="0x0100" type="Button">
         <Parent guid="guidLifecycleDriverCommandSet" id="LifecycleDriverGroup" />
-        <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Copperfin Lifecycle Driver</ButtonText>
           <LocCanonicalName>.Copperfin.LifecycleDriver.Activate</LocCanonicalName>

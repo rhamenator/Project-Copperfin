@@ -165,6 +165,10 @@
   The first command-trigger build stopped before installation and identified
   the minimal net472 project's missing explicit `System.Design` reference for
   menu-command registration; the project and contract now include it.
+  Run `31764703993` then installed the command-triggered driver but did not
+  resolve its `DefaultInvisible` startup command. The test-only command is now
+  visible only while its separate evidence VSIX is installed, allowing
+  `/Command` to request the owning package without changing shipping UI.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
