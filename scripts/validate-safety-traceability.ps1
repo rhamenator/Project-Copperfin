@@ -223,6 +223,33 @@ function Test-SafetyDocIssue {
     return $false
 }
 
+function Test-MarkdownLinkDestination {
+    param([AllowEmptyString()][string]$Value)
+
+    if ($Value -match '^<(?:\\.|[^<>\\\r\n])*>$') {
+        return $true
+    }
+    if ([string]::IsNullOrWhiteSpace($Value) -or
+        $Value -match '[\x00-\x20\x7F<>]') {
+        return $false
+    }
+
+    $depth = 0
+    for ($index = 0; $index -lt $Value.Length; $index++) {
+        if ($Value[$index] -eq '\') {
+            $index++
+            continue
+        }
+        if ($Value[$index] -eq '(') {
+            $depth++
+        } elseif ($Value[$index] -eq ')') {
+            $depth--
+            if ($depth -lt 0) { return $false }
+        }
+    }
+    return $depth -eq 0
+}
+
 function Get-RenderedInlineEvidenceText {
     param(
         [AllowEmptyString()][string]$Value,
@@ -233,16 +260,27 @@ function Get-RenderedInlineEvidenceText {
 
     $rendered = $Value
     $linkTextPattern = '(?:(?>[^\[\]\\\r\n]+)|\\.|(?<depth>\[)|(?<-depth>\]))*(?(depth)(?!))'
+    $inlineLinkPattern = "!?\[(?<text>$linkTextPattern)\]\((?<destination>(?:(?>[^()\\\r\n]+)|\\.|(?<paren>\()|(?<-paren>\)))*(?(paren)(?!)))\)"
     $rendered = [regex]::Replace(
         $rendered,
-        '!?(?:\[(?<text>[^\]\r\n]*)\])\([^\r\n)]*\)',
-        '${text}')
+        $inlineLinkPattern,
+        {
+            param($match)
+            if (Test-MarkdownLinkDestination -Value $match.Groups['destination'].Value) {
+                return $match.Groups['text'].Value
+            }
+            return $match.Value
+        })
     if ($NormalizeReferenceLinks) {
         $referenceLabels = @{}
         if (-not [string]::IsNullOrWhiteSpace($ReferenceText)) {
             foreach ($definition in [regex]::Matches(
                 $ReferenceText,
-                '(?m)^ {0,3}\[(?<label>(?:\\.|[^\]\\\r\n])+)\]:[ \t]+\S')) {
+                '(?m)^ {0,3}\[(?<label>(?:\\.|[^\]\\\r\n])+)\]:[ \t]*(?<destination>\S+)[ \t]*$')) {
+                if (-not (Test-MarkdownLinkDestination `
+                        -Value $definition.Groups['destination'].Value)) {
+                    continue
+                }
                 $normalizedLabel = [regex]::Replace(
                     $definition.Groups['label'].Value.ToLowerInvariant(),
                     '[ \t\r\n]+',

@@ -133,6 +133,9 @@ level, or safety for a particular deployment.
   text, and directly exercise full, collapsed, and shortcut reference evidence.
 - `DV-assurance-review-025`: keep undefined heading references literal and parse
   balanced nested brackets in reference-link evidence before semantic checks.
+- `DV-assurance-review-026`: require valid shared destination grammar before
+  resolving inline links or reference definitions, including balanced escaped
+  link text and balanced bare or complete angle destinations.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -147,8 +150,8 @@ level, or safety for a particular deployment.
 | Documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
 | `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-009`; `DV-assurance-review-019` | `HZ-system-failure-01`; `HZ-doc-command-01` |
-| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010`; `DV-assurance-review-011`; `DV-assurance-review-014`; `DV-assurance-review-015`; `DV-assurance-review-016`; `DV-assurance-review-017`; `DV-assurance-review-020`; `DV-assurance-review-021`; `DV-assurance-review-022`; `DV-assurance-review-023`; `DV-assurance-review-024`; `DV-assurance-review-025` | `HZ-system-failure-01`; `HZ-doc-command-01` |
-| `DQ-assurance-review-003` | `DV-assurance-review-012`; `DV-assurance-review-013`; `DV-assurance-review-020`; `DV-assurance-review-021`; `DV-assurance-review-022`; `DV-assurance-review-023`; `DV-assurance-review-024`; `DV-assurance-review-025` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010`; `DV-assurance-review-011`; `DV-assurance-review-014`; `DV-assurance-review-015`; `DV-assurance-review-016`; `DV-assurance-review-017`; `DV-assurance-review-020`; `DV-assurance-review-021`; `DV-assurance-review-022`; `DV-assurance-review-023`; `DV-assurance-review-024`; `DV-assurance-review-025`; `DV-assurance-review-026` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-003` | `DV-assurance-review-012`; `DV-assurance-review-013`; `DV-assurance-review-020`; `DV-assurance-review-021`; `DV-assurance-review-022`; `DV-assurance-review-023`; `DV-assurance-review-024`; `DV-assurance-review-025`; `DV-assurance-review-026` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-004` | `DV-assurance-review-005`; `DV-assurance-review-018`; `DV-assurance-review-020`; `DV-assurance-review-022` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-005` | `DV-assurance-review-006`; `DV-assurance-review-015`; `DV-assurance-review-019` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-baseline-001` | `DV-assurance-baseline-001` | `HZ-system-failure-01`; `HZ-doc-command-01` |
