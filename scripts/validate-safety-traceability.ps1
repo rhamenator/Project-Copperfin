@@ -201,6 +201,24 @@ function Get-SeverityClassification {
     return ""
 }
 
+function Test-NamedReviewer {
+    param([string]$Text)
+
+    $match = [regex]::Match($Text, '(?im)^\s*reviewer\s*:\s*(?<name>[^\r\n]+?)\s*$')
+    if (-not $match.Success) {
+        return $false
+    }
+
+    $name = $match.Groups["name"].Value.Trim()
+    if ([string]::IsNullOrWhiteSpace($name) -or
+        $name -match '^<[^>]+>$' -or
+        $name -match '^(?i:tbd|pending|none|unavailable)$') {
+        return $false
+    }
+
+    return $true
+}
+
 function Get-TraceabilityIds {
     param(
         [AllowEmptyString()]
@@ -319,9 +337,11 @@ foreach ($issue in $issues) {
     $hasReviewEvidence = $hasCurrentReviewEvidence -or $hasLegacyIndependentReview
     $hasApprovedIndependentReview = if ($hasCurrentReviewEvidence) {
         $reviewEvidence -match '(?im)^\s*mode\s*:\s*independent\s+human\s+review\s*$' -and
+            (Test-NamedReviewer -Text $reviewEvidence) -and
             $reviewEvidence -match '(?im)^\s*(?:result|status)\s*:\s*(?:approved|pass(?:ed)?)\s*$'
     } elseif (-not [string]::IsNullOrWhiteSpace($legacyIndependentReviewEvidence)) {
         $legacyIndependentReviewEvidence -match '(?i)\b(?:approved|passed|verified|confirmed|sign(?:ed)?[- ]?off)\b' -and
+            (Test-NamedReviewer -Text $legacyIndependentReviewEvidence) -and
             $legacyIndependentReviewEvidence -notmatch '(?i)\b(?:pending|unavailable|not\s+fully|must\s+still|remain(?:s|ed)?\s+open|required\s+before)\b'
     } else {
         # Historical low/medium fixtures used a standalone legacy marker. It
