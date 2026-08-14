@@ -150,8 +150,9 @@ level, or safety for a particular deployment.
   copula, and placeholder-prefixed later clauses while retaining only the
   admitted hyphenated failure-boundary scope names.
 - `DV-assurance-review-031`: reject modal, planned, scheduled, intended, or
-  expected future promises tied to terminal evidence states while retaining an
-  affirmative future-tense negative safety guarantee.
+  expected future promises tied to terminal evidence states, including weak or
+  conditional auxiliaries, while retaining an affirmative future-tense
+  negative safety guarantee.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -237,7 +238,9 @@ prefixes and the same states wrapped in inline HTML. The shared evidence
 predicate also rejects intermediate-noun forms such as `workflow results are
 TBD`, noncopular forms such as `workflow results pending update`, and
 placeholder-prefixed later clauses. It normalizes punctuation and rejects
-future promises such as `workflow will be run after merge` while retaining
+future promises such as `workflow will be run after merge`. It applies the same
+rejection to `can`, `could`, `may`, `might`, `must`, `shall`, `should`, and
+`would` terminal-state promises while retaining
 affirmative guarantees such as `rollback will not mutate user data`. It rejects
 negative, incomplete, missing, deferred, unavailable, skipped, and failed-state
 tokens; dedicated mutations cover `not-qualified`, `unavailable at this time`,

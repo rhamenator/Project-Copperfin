@@ -20,8 +20,9 @@
   `does not`/`never` safety guarantees. Every intermediate-noun placeholder
   state, with or without a copula, and later-clause placeholder forms also fail
   closed, while the explicitly admitted hyphenated failure-boundary scope prose
-  remains valid. Future promises tied to terminal evidence states also fail
-  closed without excluding future-tense negative safety guarantees.
+  remains valid. Future promises tied to terminal evidence states across the
+  full modal auxiliary set also fail closed without excluding future-tense
+  negative safety guarantees.
   Outcome/status `failure` forms still
   fail closed. Live review
   loading re-fetches the issue after comment pagination and fails closed if the

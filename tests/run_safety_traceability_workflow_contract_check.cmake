@@ -867,6 +867,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "future-promise-self-review-automation")
     assert_low_self_review_mutation_rejected(
         "automated evidence: focused documentation contracts pass"
+        "automated evidence: workflow may be run after merge"
+        "may-future-promise-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
         "automated evidence: workflow is scheduled to pass after merge"
         "scheduled-future-promise-self-review-automation")
     assert_low_self_review_mutation_rejected(
@@ -877,6 +881,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: qualified safety-documentation reviewer"
         "qualification: reviewer training will be completed later"
         "future-promise-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer training might be completed after merge"
+        "might-future-promise-signoff-qualification")
     assert_low_self_review_mutation_rejected(
         "automated evidence: focused documentation contracts pass"
         "automated evidence: failed verification run"

@@ -992,7 +992,7 @@ function Test-MeaningfulReviewEvidence {
             $hasNegatedTerminalState = $true
             break
         }
-        if ($normalizedClause -match "\b(?:will|would|shall)\s+(?:(?:eventually|later|subsequently|then)\s+)*(?:have\s+(?:been\s+)?|be\s+)?$terminalEvidenceState\b" -or
+        if ($normalizedClause -match "\b(?:can|could|may|might|must|shall|should|will|would)\s+(?:(?:eventually|later|subsequently|then)\s+)*(?:have\s+(?:been\s+)?|be\s+)?$terminalEvidenceState\b" -or
             $normalizedClause -match "\bgoing\s+to\s+(?:be\s+)?$terminalEvidenceState\b" -or
             $normalizedClause -match "\b(?:is|are|was|were)\s+(?:planned|scheduled|intended|expected)\s+to\s+(?:be\s+)?$terminalEvidenceState\b" -or
             $normalizedClause -match "\bto\s+(?:be\s+)?$terminalEvidenceState\s+(?:after|later|once|when)\b") {
