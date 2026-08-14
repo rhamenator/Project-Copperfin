@@ -5,6 +5,7 @@
 #pragma once
 
 #include "copperfin/security/workspace_agent_policy.h"
+#include "copperfin/security/workspace_agent_tool_registry.h"
 
 #include <cstdint>
 #include <mutex>
@@ -69,22 +70,19 @@ struct WorkspaceAgentSessionStopResult {
     WorkspaceAgentSessionSnapshot session{};
 };
 
-// Reuse the policy capability shape so requirements cannot acquire a parallel
-// vocabulary that drifts from the admitted session snapshot.
-using WorkspaceAgentToolRequirements = WorkspaceAgentCapabilities;
-
 struct WorkspaceAgentToolPreflightRequest {
     std::uint32_t schema_version = 1U;
     std::uint64_t session_generation = 0U;
-    // A trusted executor must derive this complete set from its registered
-    // tool definition. Provider/model input must not select these fields.
-    WorkspaceAgentToolRequirements requirements{};
+    // Exact lookup in the immutable product registry supplies the complete
+    // capability set. Provider/model input cannot declare capability fields.
+    std::string tool_id;
 };
 
 struct WorkspaceAgentToolPreflightResult {
     bool allowed = false;
     std::uint64_t session_generation = 0U;
     WorkspaceAgentAccessMode effective_mode = WorkspaceAgentAccessMode::advisory;
+    std::string tool_id;
     std::string diagnostic_code;
 };
 
@@ -98,9 +96,9 @@ public:
     [[nodiscard]] WorkspaceAgentSessionSnapshot snapshot() const;
 
     // This is a point-in-time, non-executing preflight, not a reusable
-    // authority token. A future executor must submit the complete capability
-    // set again immediately beside each controlled side effect and must audit
-    // the actual tool outcome separately.
+    // authority token. A future executor must submit the registered tool id
+    // again immediately beside each controlled side effect and must apply
+    // target containment and audit the actual tool outcome separately.
     [[nodiscard]] WorkspaceAgentToolPreflightResult preflight_tool_request(
         const WorkspaceAgentToolPreflightRequest& request) const;
 

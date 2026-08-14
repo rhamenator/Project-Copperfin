@@ -95,15 +95,6 @@ WorkspaceAgentActivationDecision controller_denial(std::string diagnostic_code) 
     return decision;
 }
 
-bool has_tool_requirement(const WorkspaceAgentToolRequirements& requirements) noexcept {
-    return requirements.read_workspace_files ||
-        requirements.write_workspace_files ||
-        requirements.run_local_processes ||
-        requirements.access_outside_workspace ||
-        requirements.use_network ||
-        requirements.elevate_privileges;
-}
-
 bool satisfies_tool_requirements(
     const WorkspaceAgentCapabilities& capabilities,
     const WorkspaceAgentToolRequirements& requirements) noexcept {
@@ -249,8 +240,10 @@ WorkspaceAgentToolPreflightResult WorkspaceAgentSessionController::preflight_too
         result.diagnostic_code = "workspace_agent.tool_invalid_schema";
         return result;
     }
-    if (!has_tool_requirement(request.requirements)) {
-        result.diagnostic_code = "workspace_agent.tool_empty_requirements";
+    const WorkspaceAgentToolDefinition* definition =
+        find_workspace_agent_product_tool(request.tool_id);
+    if (definition == nullptr) {
+        result.diagnostic_code = "workspace_agent.tool_not_registered";
         return result;
     }
 
@@ -270,7 +263,10 @@ WorkspaceAgentToolPreflightResult WorkspaceAgentSessionController::preflight_too
     }
     result.session_generation = active_session_.generation;
     result.effective_mode = active_session_.effective_mode;
-    if (!satisfies_tool_requirements(active_session_.capabilities, request.requirements)) {
+    result.tool_id = std::string(definition->id);
+    if (!satisfies_tool_requirements(
+            active_session_.capabilities,
+            definition->requirements)) {
         result.diagnostic_code = "workspace_agent.tool_capability_denied";
         return result;
     }
