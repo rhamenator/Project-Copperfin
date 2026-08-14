@@ -338,12 +338,12 @@ function Test-MeaningfulReviewEvidence {
     $hasSubjectStateWithoutPassingContext = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
         $rawClause = $clause.ToLowerInvariant()
-        $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
-        foreach ($stateMatch in [regex]::Matches($normalizedClause, $subjectState)) {
+        foreach ($stateMatch in [regex]::Matches($rawClause, $subjectState)) {
             $state = $stateMatch.Groups['state'].Value
+            $afterState = $rawClause.Substring($stateMatch.Index + $stateMatch.Length)
             $isPassingCompoundScope =
                 $state -match '^(?:blocked|incomplete)$' -and
-                $rawClause -match "\b$state-[a-z0-9-]+\b.*\b(?:pass|passed|succeed|succeeded|successful|verified)\b"
+                $afterState -match '^-[a-z0-9-]+\b.*\b(?:pass|passed|succeed|succeeded|successful|verified)\b'
             if (-not $isPassingCompoundScope) {
                 $hasSubjectStateWithoutPassingContext = $true
                 break
@@ -380,12 +380,13 @@ function Test-MeaningfulReviewEvidence {
             $beforeOutcome = $rawClause.Substring(0, $terminalOutcome.Index)
             $afterOutcome = $rawClause.Substring($terminalOutcome.Index + $terminalOutcome.Length)
             $isCompoundScope = $afterOutcome.StartsWith('-')
-            $isRelativeScope = $beforeOutcome -match '\b(?:that|which)\s+(?:are|is|was|were)\s*$'
-            $hasPassingContext = $afterOutcome -match '\b(?:pass|passed|succeed|succeeded|successful|verified)\b'
+            $isRelativeInputScope = $beforeOutcome -match '\b(?:attempts?|cases?|files?|inputs?|operations?|records?|requests?|transactions?)\s+(?:that|which)\s+(?:are|is|was|were)\s*$'
+            $isExplicitOutcome = $beforeOutcome -match '\b[a-z0-9]+(?:[ \t]+[a-z0-9]+){0,5}[ \t]+(?:are|had|has|have|is|was|were|has[ \t]+been|have[ \t]+been|had[ \t]+been)[ \t]*$'
+            $isPassingScope = $afterOutcome -match '^\s+(?!although\b|but\b|despite\b|rather\b|though\b|while\b|whereas\b)[a-z0-9-]+(?:\s+[a-z0-9-]+)*\s+(?:pass|passed|succeed|succeeded|successful|verified)\b'
             $hasNegativeContrast = $afterOutcome -match '^\s*(?:,\s*)?(?:not|rather\s+than|instead\s+of)\b'
             if (-not $isCompoundScope -and
-                -not $isRelativeScope -and
-                (-not $hasPassingContext -or $hasNegativeContrast)) {
+                -not $isRelativeInputScope -and
+                ($isExplicitOutcome -or -not $isPassingScope -or $hasNegativeContrast)) {
                 $terminalOutcomeWithoutPassingContext = $true
                 break
             }
