@@ -169,6 +169,17 @@
   resolve its `DefaultInvisible` startup command. The test-only command is now
   visible only while its separate evidence VSIX is installed, allowing
   `/Command` to request the owning package without changing shipping UI.
+  Run `31765250426` proved visibility did not repair the per-user command-cache
+  boundary: both pkgdefs were imported, but the driver package was never
+  requested; both uninstall operations still passed with zero residue. The
+  correction removes the test VSIX entirely. The evidence IDE starts in
+  `/Embedding` mode while retaining `/Log`; a transient helper discovers only
+  the DTE automation object ending in the exact launched Visual Studio PID,
+  opens and verifies the runner-owned solution, opens the exact PRG through its
+  installed editor association, and raises the exact product command GUID/ID.
+  Versioned dispatch JSON, same-process pane/document UI Automation,
+  ActivityLog package-load/error checks, uninstall, and zero product residue
+  remain independently mandatory.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

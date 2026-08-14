@@ -529,6 +529,25 @@ driver is still absent from every shipping artifact. Diagnostic artifact
 `sha256:c909f3f5e022f7576418afe0653c0d1be1491dcefb47d7baed7f4e950140e968`
 and expires 2026-11-12.
 
+Run `31765250426` proved command visibility was not the governing boundary. It
+installed both extensions, imported both exact pkgdefs, opened the evidence IDE,
+and still never requested the driver package. Both uninstall operations passed
+and left zero residue. Diagnostic artifact `9206231192` has installer-operation
+evidence bound to product SHA-256
+`15bd058aee8f36fea9dfeaacaadd3e41ae9a0b9216d5cead5af7b5fd52878e98`.
+The corrected design removes the test VSIX and its command-cache dependency.
+The evidence IDE starts in COM-automation `/Embedding` mode while retaining
+`/Log`. A transient Windows PowerShell helper enumerates its Running Object
+Table entry and accepts only the DTE object whose moniker ends in the exact
+launched IDE PID. It
+then opens and verifies the runner-owned solution path, opens the exact PRG
+through the installed editor association (which semantically requests the
+product package), and raises the exact public Copperfin command GUID/ID. A
+versioned JSON result binds PID, paths, command identity, and completion.
+Independent same-process UI Automation, ActivityLog package-load/error checks,
+uninstall, and zero-residue gates remain mandatory. `RQ-CF-REL-003` remains
+`gap` pending corrected exact-head hosted execution.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

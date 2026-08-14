@@ -224,6 +224,16 @@ Run `31764703993` installed the command-triggered driver but did not resolve its
 `DefaultInvisible` startup command; dual uninstall/residue checks remained
 clean. The correction removes only that flag from the test-only driver command
 so `/Command` can request the owning package. No shipping UI or artifact changes.
+Run `31765250426` then proved visibility was not the governing issue: both
+pkgdefs were imported, but the newly installed driver command still was not
+merged into the per-user command-name cache, so its package never loaded. The
+current correction removes that test VSIX entirely. The evidence IDE starts in
+COM-automation `/Embedding` mode with `/Log`; a bounded Windows PowerShell
+helper discovers its exact Visual Studio DTE object by PID,
+opens and verifies the runner-owned solution, opens the exact PRG through its
+registered editor association, and raises product command group
+`4b56ff76-d352-4027-bb18-ef4c759d260b`/ID `0x0300`. JSON, UI Automation,
+ActivityLog, uninstall, and zero-residue gates remain independent.
 
 ## V1 Windows installer lifecycle
 

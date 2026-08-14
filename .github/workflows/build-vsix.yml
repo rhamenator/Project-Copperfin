@@ -43,7 +43,6 @@ jobs:
       - name: Restore and build VSIX
         run: |
           msbuild vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj /restore /t:Rebuild /nodeReuse:false /p:Configuration=Release /p:DeployExtension=false
-          msbuild tests/vsix/Copperfin.VisualStudio.LifecycleDriver/Copperfin.VisualStudio.LifecycleDriver.csproj /restore /t:Rebuild /nodeReuse:false /p:Configuration=Release /p:DeployExtension=false
 
       - name: Exercise Windows VSIX lifecycle
         shell: pwsh
@@ -52,13 +51,8 @@ jobs:
           if ($vsix.Count -ne 1) {
             throw "Expected exactly one VSIX artifact, found $($vsix.Count)."
           }
-          $driverVsix = @(Get-ChildItem -LiteralPath 'tests/vsix/Copperfin.VisualStudio.LifecycleDriver/bin/Release/net472' -Filter '*.vsix' -File)
-          if ($driverVsix.Count -ne 1) {
-            throw "Expected exactly one lifecycle-driver VSIX, found $($driverVsix.Count)."
-          }
           ./scripts/test-windows-vsix-lifecycle.ps1 `
             -VsixPath $vsix[0].FullName `
-            -DriverVsixPath $driverVsix[0].FullName `
             -EvidenceDirectory (Join-Path $env:RUNNER_TEMP "copperfin-vsix-lifecycle-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT")
 
       - name: Verify localized command resources
@@ -82,7 +76,7 @@ jobs:
           New-Item -ItemType Directory -Path 'artifacts/windows-vsix-lifecycle' -Force | Out-Null
           if (Test-Path -LiteralPath $sourceDirectory -PathType Container) {
             Get-ChildItem -LiteralPath $sourceDirectory -File |
-              Where-Object { $_.Name -in @('windows-vsix-lifecycle.json', 'vsix-installer-operations.json', 'vsix-lifecycle-driver.json', 'ActivityLog.xml', 'ActivityLog-registration.xml', 'ui-automation-command.json', 'ui-automation-prg.json') } |
+              Where-Object { $_.Name -in @('windows-vsix-lifecycle.json', 'vsix-installer-operations.json', 'vsix-automation-dispatch.json', 'ActivityLog.xml', 'ActivityLog-registration.xml', 'ui-automation-command.json', 'ui-automation-prg.json') } |
               Copy-Item -Destination 'artifacts/windows-vsix-lifecycle'
           }
 

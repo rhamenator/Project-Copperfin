@@ -519,12 +519,15 @@ displayed `>` prompt before the canonical command. The correction injects only
 prompt-prefixed form; exact-head hosted evidence remains pending.
 Run `31761029410` confirmed the corrected 56 prompt-free events were inserted,
 but the external sender still remained attached for about 204 seconds and no
-product load followed. The hosted gate now builds a separate test-only
-command-triggered `AsyncPackage`, invokes the exact public command group/ID through
-Visual Studio's in-process command service, opens the runner-owned PRG through
-in-process DTE only after verifying the exact runner-owned empty-solution
-identity, and remains fail-closed on independent pane, PRG, package-load,
-uninstall, and product/driver residue evidence. The driver is not shipped.
+product load followed. Later runs proved a separately installed test package
+could not be admitted through ambient autoload or a newly merged canonical
+command without privileged `/Setup`. The hosted gate now launches the evidence
+IDE in COM-automation `/Embedding` mode while retaining `/Log`, then binds to
+the exact process through its public DTE automation object, opens and
+verifies the runner-owned empty solution, opens the exact PRG through the
+installed editor association, and raises the exact Copperfin command GUID/ID.
+It remains fail-closed on retained dispatch, pane, PRG, package-load, uninstall,
+and product-residue evidence; no test extension is built or installed.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse
