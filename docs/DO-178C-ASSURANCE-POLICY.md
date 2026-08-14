@@ -31,7 +31,7 @@ Derived requirements and assumptions must be called out explicitly. A change mus
 
 - CI must build or validate the project and execute its automated test suite.
 - New behavior and corrected defects require regression tests unless the pull request documents why automation is impractical and supplies alternate evidence.
-- Static analysis, dependency review, and CodeQL (for supported languages) are enforcement gates.
+- Automated security and quality checks configured for the affected scope must pass before merge. Static analysis, dependency review, and CodeQL are required only when corresponding supported workflows are present; no unavailable check is claimed as an enforcement gate.
 - Tests must be deterministic, isolated from production systems, and free of embedded credentials.
 - Coverage claims must name the tool, scope, and measurement. A passing test count alone is not a coverage claim.
 - Safety-critical projects must maintain project-specific plans for requirements, design, verification, configuration management, quality assurance, certification liaison, coverage objectives, and tool qualification.
