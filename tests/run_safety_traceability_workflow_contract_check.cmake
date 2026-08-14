@@ -490,6 +490,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "<!-- withdrawn -->## Independent Review Sign-Off"
         "comment-removal-heading-promotion")
     assert_high_signoff_mutation_accepted(
+        "## Independent Review Sign-Off"
+        "## Independent Review Sign-Off <!-- evidence note -->"
+        "atx-heading-trailing-html-comment")
+    assert_high_signoff_mutation_accepted(
         "qualification: qualified safety-documentation reviewer"
         "qualification: qualified safety-documentation reviewer\\n\\n```xml\\n<test-result status=\\\"passed\\\"/>\\n```"
         "fenced-raw-html-example")
