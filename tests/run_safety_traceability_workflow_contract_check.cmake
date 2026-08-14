@@ -327,6 +327,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "contracted-negated-signoff-qualification")
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer isn't independently qualified"
+        "modified-contracted-negated-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
         "qualification: unavailable at this time"
         "unavailable-signoff-qualification")
     assert_high_signoff_mutation_rejected(
@@ -337,6 +341,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: qualified safety-documentation reviewer\\nverification: procedure correctness and failure boundaries"
         "qualification: qualified safety-documentation reviewer\\nverification: these changes were not verified"
         "embedded-negated-signoff-verification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer\\nverification: procedure correctness and failure boundaries"
+        "qualification: qualified safety-documentation reviewer\\nverification: these changes weren't fully verified"
+        "modified-contracted-negated-signoff-verification")
     assert_low_self_review_mutation_rejected(
         "verification: procedure and rendered guidance checked"
         "verification: pending review"
@@ -401,6 +409,22 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: focused documentation contracts pass"
         "automated evidence: CI checks had not been successful"
         "perfect-had-not-been-successful-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: workflow has not yet been successful"
+        "modified-perfect-not-successful-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: CI checks have never passed"
+        "perfect-never-passed-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: build has failed"
+        "build-failed-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: GitHub Actions job has failed"
+        "job-failed-self-review-automation")
     assert_affirmative_negative_guarantee_accepted(
         "confirmed rollback does not mutate user data"
         "affirmative-does-not-guarantee")
