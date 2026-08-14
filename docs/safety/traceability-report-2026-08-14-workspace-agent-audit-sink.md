@@ -61,9 +61,9 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
 - Path substitution: the host supplies an existing canonical storage root and
   safe relative path. The contained writer rejects intermediate and final
   redirection, hard links, cross-device replacement, and unsafe file types.
-- Corrupt or racing writers: the common writer locks across validation and
-  append, verifies the existing tail, and rejects malformed state without
-  mutation.
+- Corrupt or racing writers: the bounded common-writer path locks across full
+  existing-chain validation and append, recomputes every entry hash, and
+  rejects malformed or well-shaped tampered state without mutation.
 - Resource exhaustion: configuration is restricted to 512 bytes through
   64 MiB, defaults to 4 MiB, and checks existing plus prospective size under
   the writer lock before allocating the existing-file buffer or appending.
@@ -99,7 +99,10 @@ content exclusions, malformed-event rejection without mutation, rejection of
 the controller's zero and exhausted generation sentinels, traversal and
 absolute-path rejection, missing-root and invalid-size rejection, full-log and
 malformed-tail fail-closed behavior, and intermediate-symlink containment when
-the platform supports it. Existing security-control regressions supply direct
+the platform supports it. It also alters detail bytes while retaining a
+well-shaped stale hash, proves standalone verification rejects the chain, and
+proves bounded persistence returns no receipt and preserves the tampered bytes.
+Existing security-control regressions supply direct
 tail verification, concurrency, containment, symlink/reparse, and hard-link
 coverage for the reused writer.
 

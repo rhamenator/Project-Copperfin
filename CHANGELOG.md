@@ -2,10 +2,11 @@
   agent lifecycle audit sink. It admits only the exact versioned controller
   event tuples, stores content-free JSON in the existing contained immutable
   hash chain, and returns the committed entry hash as the session receipt.
-  Invalid configuration or events, redirected paths, malformed tails, and full
-  bounded logs fail start closed without granting authority or mutating an
-  existing chain. The default limit is 4 MiB and the supported configured range
-  is 512 bytes through 64 MiB. No provider authentication, executor, sandbox,
+  Invalid configuration or events, redirected paths, malformed or tampered
+  existing chains, and full bounded logs fail start closed without granting
+  authority or mutating existing bytes. The default limit is 4 MiB and the
+  supported configured range is 512 bytes through 64 MiB. No provider
+  authentication, executor, sandbox,
   activation UI, command-line activation, rotation, external anchoring, or
   multi-host correlation is introduced.
 

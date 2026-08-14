@@ -134,7 +134,9 @@ receipt.
 The product host must supply an existing product-owned storage root and a
 relative log path. The sink canonicalizes that root and relies on the common
 contained writer to reject symlink/reparse and hard-link substitution,
-cross-device replacement, malformed tails, and concurrent-process races. A
+cross-device replacement, malformed or hash-invalid existing chains, and
+concurrent-process races. Bounded persistence recomputes the complete existing
+chain under the writer lock before admitting a new receipt. A
 bounded size is checked under the writer lock before allocation or mutation;
 the default is 4 MiB and admitted configuration range is 512 bytes through
 64 MiB. Invalid configuration or event shape, containment failure, malformed

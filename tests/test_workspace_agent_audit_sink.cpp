@@ -314,6 +314,36 @@ void test_configuration_containment_and_size_limit_fail_closed() {
                read_bytes(bounded_log) == bounded_before,
            "RQ-CF-AGENT-006: a full bounded log must withhold authority and preserve existing bytes");
 
+    const fs::path tampered_log = root.path() / "tampered.log";
+    const auto clean_entry =
+        copperfin::security::append_immutable_audit_event_to_contained_file(
+            copperfin::platform::path_to_utf8_string(tampered_log),
+            copperfin::platform::path_to_utf8_string(root.path()),
+            "test.clean",
+            "clean-detail");
+    expect(clean_entry.ok, "RQ-CF-AGENT-006: tampered-chain fixture append should succeed");
+    std::string tampered_before = read_bytes(tampered_log);
+    const std::size_t detail_offset = tampered_before.find("clean-detail");
+    expect(detail_offset != std::string::npos,
+           "RQ-CF-AGENT-006: tampered-chain fixture should contain its detail");
+    if (detail_offset != std::string::npos) {
+        tampered_before[detail_offset] = 'X';
+        std::ofstream output(tampered_log, std::ios::binary | std::ios::trunc);
+        output << tampered_before;
+    }
+    const auto tampered_verification = copperfin::security::verify_immutable_audit_chain(
+        copperfin::platform::path_to_utf8_string(tampered_log));
+    WorkspaceAgentSessionAuditFileSink tampered(root.path(), "tampered.log");
+    WorkspaceAgentSessionController tampered_controller;
+    const auto tampered_start = tampered_controller.start(
+        request_for(WorkspaceAgentAccessMode::workspace_sandbox),
+        tampered.session_sink());
+    expect(!tampered_verification.ok && !tampered_start.activated &&
+               !tampered_start.audit_committed &&
+               !tampered_controller.snapshot().active &&
+               read_bytes(tampered_log) == tampered_before,
+           "RQ-CF-AGENT-006: a well-shaped tampered chain must fail closed without mutation");
+
     const fs::path broken_log = root.path() / "broken.log";
     {
         std::ofstream output(broken_log, std::ios::binary | std::ios::trunc);
