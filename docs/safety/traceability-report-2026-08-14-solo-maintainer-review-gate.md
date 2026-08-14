@@ -36,6 +36,10 @@ level, or safety for a particular deployment.
   verification scope identifies what was checked but cannot substitute for a
   `qualified` qualification result or a `passed` verification or automation
   result.
+- `DQ-assurance-review-004`: severity must come from exactly one rendered
+  severity section, or from exactly one legacy severity field when no rendered
+  section exists. Hidden, duplicated, or mixed severity declarations fail
+  closed and cannot select a weaker review lane.
 - `DQ-assurance-baseline-001`: requirements recovery and bidirectional
   traceability are an ongoing project-wide baseline; existing implementation
   is never its own requirement source.
@@ -53,6 +57,9 @@ level, or safety for a particular deployment.
 - `DV-assurance-review-004`: accept a closed high-severity fixture only when its
   current Review Evidence explicitly records independent-human mode and an
   approved result.
+- `DV-assurance-review-005`: reject fenced/commented severity downgrades before
+  a rendered high classification and reject duplicate rendered severity
+  sections.
 - `DV-assurance-review-005`: parse a high-severity issue-form value with a
   same-line rationale and reject its legacy review section when that section
   says independent approval remains open.

@@ -783,6 +783,32 @@ function(assert_issue_form_heading_fixture)
     file(REMOVE "${report}")
 endfunction()
 
+function(assert_issue_form_severity_mutation_rejected replacement_text slug)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_issue_form_heading_issues.json" source_contents)
+    string(REPLACE
+        "### Potential Severity If Misused\\n\\nlow"
+        "${replacement_text}"
+        fixture_contents "${source_contents}")
+    if("${fixture_contents}" STREQUAL "${source_contents}")
+        message(FATAL_ERROR "Severity mutation ${slug} did not alter its source fixture")
+    endif()
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted ambiguous or hidden severity mutation ${slug}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_placeholder_high_reviewer_rejected)
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-high-placeholder-reviewer-report.json")
     execute_process(
@@ -1020,6 +1046,15 @@ if(POWERSHELL_EXECUTABLE)
     assert_placeholder_and_negated_review_evidence_rejected()
     assert_pending_legacy_high_review_rejected()
     assert_issue_form_heading_fixture()
+    assert_issue_form_severity_mutation_rejected(
+        "```text\\n### Potential Severity If Misused\\n\\nlow\\n```\\n\\n### Potential Severity If Misused\\n\\nhigh"
+        "fenced-low-before-rendered-high-severity")
+    assert_issue_form_severity_mutation_rejected(
+        "<!--\\n### Potential Severity If Misused\\n\\nlow\\n-->\\n\\n### Potential Severity If Misused\\n\\nhigh"
+        "commented-low-before-rendered-high-severity")
+    assert_issue_form_severity_mutation_rejected(
+        "### Potential Severity If Misused\\n\\nlow\\n\\n### Potential Severity If Misused\\n\\nhigh"
+        "duplicate-rendered-severity")
     assert_placeholder_high_reviewer_rejected()
     assert_same_author_independent_review_rejected()
     assert_unattested_independent_review_rejected()
