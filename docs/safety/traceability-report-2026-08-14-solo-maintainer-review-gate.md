@@ -20,7 +20,10 @@ level, or safety for a particular deployment.
   changes accept explicit maintainer self-review plus applicable automated
   verification during development, without an independence claim.
 - `DQ-assurance-review-002`: `high` and `catastrophic` safety-documentation
-  changes require a second qualified human reviewer before closure.
+  changes require a second qualified human reviewer before closure. The
+  reviewer-controlled sign-off must carry meaningful qualification and
+  verification evidence and bind to the SHA-256 of the exact issue body
+  reviewed; a later body edit requires renewed sign-off.
 - `DQ-assurance-baseline-001`: requirements recovery and bidirectional
   traceability are an ongoing project-wide baseline; existing implementation
   is never its own requirement source.
@@ -84,7 +87,9 @@ level, or safety for a particular deployment.
   admits explicit self-review for `none`/`low`/`medium`, rejects it for
   `high`/`catastrophic`, and admits current or historical Independent Review
   records only when a structured sign-off comment is authored by the named
-  reviewer account. Stable-release review requirements are unchanged.
+  reviewer account, rejects placeholder qualification/verification, and binds
+  the comment to the exact current issue-body SHA-256. Stable-release review
+  requirements are unchanged.
 - Requirements recovery: charter and operating guidance now state that the
   traceability baseline applies to every behavior-changing slice rather than a
   later optional pass.
@@ -126,9 +131,10 @@ forbidden high-severity self-review fixture, and an approved high-severity
 independent-human-review fixture. It also reruns legacy independent-review
 fixtures; rejects incomplete low-risk evidence, author-as-independent-reviewer,
 unattested login claims, placeholder reviewers, and negated legacy results;
-accepts reviewer-authored current and historical sign-offs; and reruns malformed
-mapping/hazard cases, classifier behavior, and hostile issue-number probes
-through the production PowerShell validator.
+rejects stale issue-body digests and placeholder qualification/verification;
+accepts reviewer-authored current and historical sign-offs bound to their exact
+fixture bodies; and reruns malformed mapping/hazard cases, classifier behavior,
+and hostile issue-number probes through the production PowerShell validator.
 
 ## Rollback And Field Notification Plan
 

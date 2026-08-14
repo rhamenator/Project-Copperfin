@@ -6,7 +6,10 @@ The adopted solo-maintainer policy now has one consistent executable boundary.
 Ordinary `none`/`low`/`medium` safety-documentation changes may use explicit
 maintainer self-review plus applicable automation without claiming independence;
 `high`/`catastrophic` changes still require an approved second-qualified-human
-review, and completed-project/first-stable-release review remains unchanged.
+review, and completed-project/first-stable-release review remains unchanged. A
+reviewer-authored sign-off must contain meaningful qualification and verification
+evidence and the SHA-256 of the exact issue body reviewed; later body edits and
+placeholder fields fail closed.
 The issue form, validator, agent rules, triage rubric, deterministic fixtures,
 and `LLR-CF-ASSURANCE-001` carry that boundary. The charter and active guidance
 also make requirements recovery an ongoing baseline and forbid using existing
