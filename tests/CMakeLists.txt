@@ -399,6 +399,9 @@ add_test(
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_safety_traceability_workflow_contract_check.cmake
 )
+set_tests_properties(test_safety_traceability_workflow_contract PROPERTIES
+    TIMEOUT 600
+)
 
 add_test(
     NAME test_runtime_host_binding
