@@ -333,29 +333,9 @@ function Test-MeaningfulReviewEvidence {
     }
 
     $normalized = [regex]::Replace($trimmed.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
-    $rejectedTokens = @{
-        "absent" = $true
-        "blocked" = $true
-        "deferred" = $true
-        "incomplete" = $true
-        "later" = $true
-        "missing" = $true
-        "none" = $true
-        "pending" = $true
-        "placeholder" = $true
-        "skipped" = $true
-        "tbd" = $true
-        "todo" = $true
-        "unavailable" = $true
-        "unchecked" = $true
-        "unqualified" = $true
-        "unverified" = $true
-        "unknown" = $true
-    }
-    foreach ($token in ($normalized -split '\s+')) {
-        if ($rejectedTokens.ContainsKey($token)) {
-            return $false
-        }
+    $placeholderState = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)(?:\s+(?:at\s+this\s+time|automation|check|evidence|later|review|run|test|verification))?$'
+    if ($normalized -match $placeholderState) {
+        return $false
     }
 
     # Outcome rejection is deliberately subject-independent. A producer name
@@ -386,6 +366,8 @@ function Test-MeaningfulReviewEvidence {
     }
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
         $failureScrubbed -match '\b(?:failed|failure|unsuccessful)\b' -or
+        $normalized -match '\b(?:automation|build|check|checks|job|pipeline|run|suite|test|tests|verification|workflow)\s+(?:(?:was|were|is|are|has\s+been|have\s+been)\s+)?(?:canceled|cancelled)\b' -or
+        $normalized -match '\b(?:automation|build|check|checks|job|pipeline|run|suite|test|tests|verification|workflow)\s+(?:timed\s+out|ended\s+in\s+timeout)\b' -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
         $hasNegatedTerminalState) {
         return $false
