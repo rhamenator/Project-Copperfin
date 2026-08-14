@@ -703,6 +703,30 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "## Independent Review Sign-Off"
         "## [Independent Review Sign-Off](https://example.com/sign-off \\\"review evidence\\\")"
         "titled-inline-link-signoff-heading")
+    assert_high_signoff_mutation_accepted(
+        "## Independent Review Sign-Off"
+        "## [Independent Review Sign-Off](review(v2))"
+        "balanced-bare-destination-signoff-heading")
+    assert_high_signoff_mutation_accepted(
+        "## Independent Review Sign-Off"
+        "## [Independent Review Sign-Off](<https://example.com/review>)"
+        "angle-destination-signoff-heading")
+    assert_high_signoff_mutation_accepted(
+        "## Independent Review Sign-Off"
+        "## [Independent Review Sign-Off](review\\\\<v2)"
+        "escaped-punctuation-destination-signoff-heading")
+    assert_high_signoff_mutation_accepted(
+        "## Independent Review Sign-Off"
+        "## [Independent Review Sign-Off](https://example.com/sign-off 'review evidence')"
+        "single-quoted-title-signoff-heading")
+    assert_high_signoff_mutation_accepted(
+        "## Independent Review Sign-Off"
+        "## [Independent Review Sign-Off](https://example.com/sign-off (review evidence))"
+        "parenthesis-title-signoff-heading")
+    assert_high_signoff_mutation_accepted(
+        "## Independent Review Sign-Off"
+        "## [Independent Review Sign-Off](https://example.com/sign-off \\\"review ) evidence\\\")"
+        "quoted-title-parenthesis-signoff-heading")
     assert_high_signoff_mutation_rejected(
         "## Independent Review Sign-Off"
         "## Independent Review &#42;Sign-Off&#42;"

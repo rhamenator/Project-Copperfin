@@ -237,8 +237,7 @@ function Test-MarkdownLinkDestination {
     if ($destination -match '^<(?:\\.|[^<>\\\r\n])*>$') {
         return $true
     }
-    if ([string]::IsNullOrWhiteSpace($destination) -or
-        $destination -match '[\x00-\x20\x7F<>]') {
+    if ([string]::IsNullOrWhiteSpace($destination)) {
         return $false
     }
 
@@ -247,6 +246,11 @@ function Test-MarkdownLinkDestination {
         if ($destination[$index] -eq '\') {
             $index++
             continue
+        }
+        $characterCode = [int][char]$destination[$index]
+        if ($characterCode -le 0x20 -or $characterCode -eq 0x7F -or
+            $destination[$index] -eq '<' -or $destination[$index] -eq '>') {
+            return $false
         }
         if ($destination[$index] -eq '(') {
             $depth++
@@ -268,7 +272,11 @@ function Get-RenderedInlineEvidenceText {
 
     $rendered = $Value
     $linkTextPattern = '(?:(?>[^\[\]\\\r\n]+)|\\.|(?<depth>\[)|(?<-depth>\]))*(?(depth)(?!))'
-    $inlineLinkPattern = "!?\[(?<text>$linkTextPattern)\]\((?<destination>(?:(?>[^()\\\r\n]+)|\\.|(?<paren>\()|(?<-paren>\)))*(?(paren)(?!)))\)"
+    $angleDestinationPattern = '<(?:\\.|[^<>\\\r\n])*>'
+    $bareDestinationPattern = '(?:(?>[^\s()<>\\\r\n]+)|\\.|(?<paren>\()|(?<-paren>\)))*(?(paren)(?!))'
+    $linkTitlePattern = '(?:"(?:\\.|[^"\\\r\n])*"|''(?:\\.|[^''\\\r\n])*''|\((?:\\.|[^()\\\r\n])*\))'
+    $inlineTargetPattern = "(?:$angleDestinationPattern|$bareDestinationPattern)(?:[ \t]+$linkTitlePattern)?"
+    $inlineLinkPattern = "!?\[(?<text>$linkTextPattern)\]\((?<destination>$inlineTargetPattern)\)"
     $rendered = [regex]::Replace(
         $rendered,
         $inlineLinkPattern,
@@ -284,7 +292,7 @@ function Get-RenderedInlineEvidenceText {
         if (-not [string]::IsNullOrWhiteSpace($ReferenceText)) {
             foreach ($definition in [regex]::Matches(
                 $ReferenceText,
-                '(?m)^ {0,3}\[(?<label>(?:\\.|[^\]\\\r\n])+)\]:[ \t]*(?<destination>.+?)[ \t]*$')) {
+                "(?m)^ {0,3}\[(?<label>(?:\\.|[^\]\\\r\n])+)\]:[ \t]*(?<destination>$inlineTargetPattern)[ \t]*$")) {
                 if (-not (Test-MarkdownLinkDestination `
                         -Value $definition.Groups['destination'].Value)) {
                     continue
