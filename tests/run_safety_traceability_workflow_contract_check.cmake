@@ -513,6 +513,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "inline-code-comment-example")
     assert_high_signoff_mutation_accepted(
         "qualification: qualified safety-documentation reviewer"
+        "qualification: qualified safety-documentation reviewer with `literal\\\\` code"
+        "backslash-before-code-span-closer")
+    assert_high_signoff_mutation_accepted(
+        "qualification: qualified safety-documentation reviewer"
         "qualification: qualified safety-documentation reviewer\\n\\n    <test-result status=\\\"passed\\\"/>"
         "indented-raw-html-example")
     assert_high_signoff_mutation_accepted(

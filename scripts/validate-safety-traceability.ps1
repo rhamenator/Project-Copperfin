@@ -319,7 +319,9 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
 
             if ($codeSpanLength -gt 0) {
                 $characters[$searchIndex] = ' '
-                if ($line[$searchIndex] -eq '`' -and -not $isEscaped) {
+                # Backslash escapes do not apply inside a CommonMark code span;
+                # an exact delimiter run closes even when preceded by '\'.
+                if ($line[$searchIndex] -eq '`') {
                     $runEnd = $searchIndex
                     while ($runEnd -lt $line.Length -and $line[$runEnd] -eq '`') {
                         $characters[$runEnd] = ' '
