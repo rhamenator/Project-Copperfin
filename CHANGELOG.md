@@ -10,6 +10,12 @@
   authentication, executor, sandbox,
   activation UI, command-line activation, rotation, external anchoring, or
   multi-host correlation is introduced.
+  Embedded-NUL roots and original log-path components now fail before
+  canonicalization or lexical normalization, and prospective empty-chain size
+  includes `GENESIS` before any directory creation. Exact implementation head
+  `22745e49c` passes all eleven protected checks in runs `31844043782`,
+  `31844046687`, `31844046646`, `31844046673`, and `31844046667`; all ten review
+  threads are resolved, and `RQ-CF-AGENT-006` is defined with retained evidence.
 
 - 2026-08-14: Added a non-executing native workspace-agent session-lifecycle
   contract. Session authority now requires the existing policy decision plus a
