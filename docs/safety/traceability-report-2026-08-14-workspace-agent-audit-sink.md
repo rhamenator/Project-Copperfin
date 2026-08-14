@@ -70,8 +70,9 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
 - Resource exhaustion: configuration is restricted to 512 bytes through
   64 MiB, defaults to 4 MiB, and checks existing plus prospective size under
   the writer lock. Existing-file size is rejected before its buffer allocation;
-  exact prospective line size is checked with overflow-safe subtraction before
-  any input-sized copy, concatenation, hash work, or append.
+  an empty-log prospective line is checked with overflow-safe subtraction before
+  path traversal can create directories, then exact prospective size is checked
+  under the lock before any input-sized copy, concatenation, hash work, or append.
 - Overstated integrity: the unkeyed chain detects ordinary mutation but does
   not authenticate the complete ledger. A storage-root attacker can delete or
   replace the entire chain.
@@ -103,7 +104,7 @@ The focused sink regression proves exact persistent bytes and receipt hashes,
 content exclusions, malformed-event rejection without mutation, rejection of
 the controller's zero and exhausted generation sentinels, traversal and
 absolute-path rejection, missing-root and invalid-size rejection, full-log and
-oversized-direct-input rejection without file creation, malformed-tail
+oversized-direct-input rejection without directory or file creation, malformed-tail
 fail-closed behavior, and outside-root, in-root, and
 post-construction intermediate-symlink containment when the platform supports
 it. It also alters detail bytes while retaining a

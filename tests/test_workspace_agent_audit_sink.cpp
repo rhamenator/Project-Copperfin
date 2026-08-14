@@ -288,7 +288,8 @@ void test_configuration_containment_and_size_limit_fail_closed() {
                !too_large.ready() && too_large.session_sink().commit == nullptr,
            "RQ-CF-AGENT-006: escaping, missing-root, and unsafe-size configurations must be inert");
 
-    const fs::path oversized_log = root.path() / "oversized.log";
+    const fs::path oversized_parent = root.path() / "oversized" / "nested";
+    const fs::path oversized_log = oversized_parent / "audit.log";
     const auto oversized =
         copperfin::security::append_bounded_immutable_audit_event_to_contained_file(
             copperfin::platform::path_to_utf8_string(oversized_log),
@@ -296,8 +297,9 @@ void test_configuration_containment_and_size_limit_fail_closed() {
             std::string(copperfin::security::workspace_agent_audit_min_log_bytes, 'E'),
             std::string(copperfin::security::workspace_agent_audit_min_log_bytes, 'D'),
             copperfin::security::workspace_agent_audit_min_log_bytes);
-    expect(!oversized.ok && oversized.entry_hash.empty() && !fs::exists(oversized_log),
-           "RQ-CF-AGENT-006: oversized direct inputs must fail before persistent mutation");
+    expect(!oversized.ok && oversized.entry_hash.empty() &&
+               !fs::exists(oversized_parent) && !fs::exists(oversized_log),
+           "RQ-CF-AGENT-006: oversized direct inputs must fail before path mutation");
 
     const fs::path bounded_log = root.path() / "bounded.log";
     std::size_t prefilled_size = 0U;

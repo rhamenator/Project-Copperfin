@@ -355,6 +355,7 @@ AuditAppendResult prepare_audit_line(
     const std::string& detail,
     const bool validate_existing_chain,
     const std::size_t max_log_bytes,
+    const std::string& fixed_timestamp,
     std::string& line) {
     const auto tail = validate_existing_chain
         ? read_validated_last_hash_from_text(existing_text)
@@ -363,7 +364,9 @@ AuditAppendResult prepare_audit_line(
         return {.ok = false, .error = tail.error, .entry_hash = {}};
     }
 
-    const std::string timestamp = now_utc_compact();
+    const std::string timestamp = fixed_timestamp.empty()
+        ? now_utc_compact()
+        : fixed_timestamp;
     std::size_t prospective_size = 0U;
     const std::size_t available = max_log_bytes - existing_text.size();
     const auto admit_component = [&](const std::size_t size) {
@@ -481,7 +484,8 @@ AuditAppendResult append_contained_audit_event(
     const std::string& event_name,
     const std::string& detail,
     const std::size_t max_log_bytes,
-    const bool validate_existing_chain) {
+    const bool validate_existing_chain,
+    const std::string& fixed_timestamp) {
     std::vector<ScopedHandle> directory_handles;
     ScopedHandle root_handle(::CreateFileW(
         path.canonical_root.c_str(),
@@ -608,6 +612,7 @@ AuditAppendResult append_contained_audit_event(
         detail,
         validate_existing_chain,
         max_log_bytes,
+        fixed_timestamp,
         line);
     if (!prepared.ok) {
         return prepared;
@@ -711,7 +716,8 @@ AuditAppendResult append_contained_audit_event(
     const std::string& event_name,
     const std::string& detail,
     const std::size_t max_log_bytes,
-    const bool validate_existing_chain) {
+    const bool validate_existing_chain,
+    const std::string& fixed_timestamp) {
     ScopedFileDescriptor current_directory(::open(
         path.canonical_root.c_str(),
         O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
@@ -809,6 +815,7 @@ AuditAppendResult append_contained_audit_event(
         detail,
         validate_existing_chain,
         max_log_bytes,
+        fixed_timestamp,
         line);
     if (!prepared.ok) {
         return prepared;
@@ -901,7 +908,8 @@ AuditAppendResult append_immutable_audit_event(
         event_name,
         detail,
         std::numeric_limits<std::size_t>::max(),
-        false);
+        false,
+        {});
 }
 
 AuditAppendResult append_immutable_audit_event_to_contained_file(
@@ -918,7 +926,8 @@ AuditAppendResult append_immutable_audit_event_to_contained_file(
         event_name,
         detail,
         std::numeric_limits<std::size_t>::max(),
-        false);
+        false,
+        {});
 }
 
 AuditAppendResult append_bounded_immutable_audit_event_to_contained_file(
@@ -927,6 +936,25 @@ AuditAppendResult append_bounded_immutable_audit_event_to_contained_file(
     const std::string& event_name,
     const std::string& detail,
     const std::size_t max_log_bytes) {
+    const std::string timestamp = now_utc_compact();
+    std::size_t minimum_line_size = 0U;
+    const auto admit_component = [&](const std::size_t size) {
+        if (size > max_log_bytes - minimum_line_size) {
+            return false;
+        }
+        minimum_line_size += size;
+        return true;
+    };
+    if (!admit_component(timestamp.size()) ||
+        !admit_component(event_name.size()) ||
+        !admit_component(detail.size()) ||
+        !admit_component(64U) ||
+        !admit_component(5U)) {
+        return {
+            .ok = false,
+            .error = security_text("Security.Audit.Error.AppendLogEntryFailed"),
+            .entry_hash = {}};
+    }
     const auto contained_path =
         resolve_lexically_contained_audit_path(log_path, package_root);
     if (!contained_path.has_value()) {
@@ -937,7 +965,8 @@ AuditAppendResult append_bounded_immutable_audit_event_to_contained_file(
         event_name,
         detail,
         max_log_bytes,
-        true);
+        true,
+        timestamp);
 }
 
 AuditChainVerifyResult verify_immutable_audit_chain(const std::string& log_path) {
