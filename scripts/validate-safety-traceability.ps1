@@ -774,8 +774,23 @@ function Test-AuthenticatedIndependentReview {
     $issueBodySha256 = Get-TextSha256 -Value ([string]$Issue.body)
 
     $reviewComments = @($Issue.review_comments)
-    [array]::Reverse($reviewComments)
-    foreach ($comment in $reviewComments) {
+    $indexedReviewComments = for ($index = 0; $index -lt $reviewComments.Count; $index++) {
+        [pscustomobject]@{
+            Comment = $reviewComments[$index]
+            Index = $index
+            LatestTimestamp = if (-not [string]::IsNullOrWhiteSpace(
+                    ([string]$reviewComments[$index].updated_at))) {
+                [string]$reviewComments[$index].updated_at
+            } else {
+                [string]$reviewComments[$index].created_at
+            }
+        }
+    }
+    $orderedReviewComments = @($indexedReviewComments | Sort-Object -Property `
+        @{ Expression = { $_.LatestTimestamp }; Descending = $true }, `
+        @{ Expression = { $_.Index }; Descending = $true })
+    foreach ($entry in $orderedReviewComments) {
+        $comment = $entry.Comment
         $commentAuthor = Get-GitHubLogin -Value ([string]$comment.user.login)
         $commentAuthorType = ([string]$comment.user.type).ToLowerInvariant()
         if ($commentAuthor -ne $Reviewer -or $commentAuthorType -ne "user") {
