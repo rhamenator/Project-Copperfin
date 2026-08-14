@@ -339,6 +339,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "modified-contracted-negated-signoff-qualification")
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer is unqualified for safety review"
+        "reviewer-first-unqualified-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
         "qualification: unavailable at this time"
         "unavailable-signoff-qualification")
     assert_high_signoff_mutation_rejected(
@@ -518,6 +522,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: workflow has timed out"
         "auxiliary-timeout-self-review-automation")
     assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: cancelled-request cleanup tests passed; deployment timed out"
+        "later-timeout-self-review-automation")
+    assert_low_self_review_mutation_rejected(
         "verification: procedure and rendered guidance checked"
         "verification: the verification job timed out"
         "timed-out-producer-self-review-verification")
@@ -564,6 +572,12 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_affirmative_negative_guarantee_accepted(
         "incomplete-transaction recovery boundaries"
         "affirmative-incomplete-transaction-scope")
+    assert_affirmative_negative_guarantee_accepted(
+        "test incomplete-transaction recovery passed"
+        "affirmative-subject-incomplete-transaction-scope")
+    assert_affirmative_negative_guarantee_accepted(
+        "automation blocked-request cleanup tests passed"
+        "affirmative-subject-blocked-request-scope")
     assert_affirmative_negative_guarantee_accepted(
         "confirmed rollback does not mutate user data"
         "affirmative-does-not-guarantee")
