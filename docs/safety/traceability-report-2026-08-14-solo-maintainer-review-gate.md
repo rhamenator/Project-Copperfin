@@ -135,7 +135,10 @@ fixtures; rejects incomplete low-risk evidence, author-as-independent-reviewer,
 unattested login claims, placeholder reviewers, and negated legacy results;
 rejects stale issue-body digests, placeholder or negated independent-review
 qualification/verification, and placeholder lower-risk self-review verification
-or automation;
+or automation. The shared evidence predicate normalizes punctuation and rejects
+negative, incomplete, missing, deferred, unavailable, skipped, and failed-state
+tokens; dedicated mutations cover `not-qualified`, `unavailable at this time`,
+and failed automation;
 accepts reviewer-authored current and historical sign-offs bound to their exact
 fixture bodies; and reruns malformed mapping/hazard cases, classifier behavior,
 and hostile issue-number probes through the production PowerShell validator.

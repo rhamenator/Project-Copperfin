@@ -261,7 +261,43 @@ function Test-MeaningfulReviewEvidence {
         return $false
     }
 
-    return $trimmed -notmatch '^(?i:n/?a|none|pending(?:\s+.*)?|tbd(?:\s+.*)?|todo(?:\s+.*)?|unknown|unqualified|unverified|unchecked|placeholder(?:\s+.*)?|later|not(?:\s+.*)?)$'
+    $normalized = [regex]::Replace($trimmed.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
+    $rejectedTokens = @{
+        "absent" = $true
+        "blocked" = $true
+        "deferred" = $true
+        "incomplete" = $true
+        "later" = $true
+        "missing" = $true
+        "never" = $true
+        "none" = $true
+        "not" = $true
+        "pending" = $true
+        "placeholder" = $true
+        "skipped" = $true
+        "tbd" = $true
+        "todo" = $true
+        "unavailable" = $true
+        "unchecked" = $true
+        "unqualified" = $true
+        "unverified" = $true
+        "unknown" = $true
+        "without" = $true
+    }
+    foreach ($token in ($normalized -split '\s+')) {
+        if ($rejectedTokens.ContainsKey($token)) {
+            return $false
+        }
+    }
+
+    if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
+        $normalized -match '^(?:failed|failure|no)\b' -or
+        $normalized -match '\b(?:(?:failed|failure)\s+(?:check|evidence|review|run|test|verification)|(?:check|evidence|review|run|test|verification)\s+(?:failed|failure))\b' -or
+        $normalized -match '\b(?:not|un)(?:available|checked|qualified|verified)\b') {
+        return $false
+    }
+
+    return $true
 }
 
 function Test-AuthenticatedIndependentReview {
