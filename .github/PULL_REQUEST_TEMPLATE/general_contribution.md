@@ -25,6 +25,7 @@
 
 ## Checklist
 
+- [ ] I performed an explicit self-review; I do not claim independent verification unless separate reviewer evidence is attached
 - [ ] Existing tests pass, and I added/updated tests if behavior changed
 - [ ] User-visible strings are localized (or none changed) — see [docs/22-vfp-language-reference-coverage.md](../../docs/22-vfp-language-reference-coverage.md) if touching runtime language coverage
 - [ ] I updated `CHANGELOG.md` if this is a lasting, user-visible change

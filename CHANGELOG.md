@@ -1,3 +1,12 @@
+- 2026-08-13: Adopted a solo-maintainer assurance model for development
+  changes. Per-pull-request independent human approval is not required;
+  protected automated quality, security, traceability, testing, provenance,
+  and change-control gates remain in force. Self-review and automation are not
+  represented as independent verification. Independent human review is now a
+  documented completed-project or first-stable-release readiness gate, with
+  earlier review retained where a project-specific safety or security risk
+  requires it. No product or runtime behavior changed.
+
 - 2026-08-12: Superseded the protected Windows launcher-trust fixture evidence
   after differentiating the dependency and runtime-configuration sidecar
   payloads. Protected run `31635868978` passed at exact `main` merge
