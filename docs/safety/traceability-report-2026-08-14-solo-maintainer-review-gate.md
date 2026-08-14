@@ -18,7 +18,9 @@ level, or safety for a particular deployment.
 
 - `DQ-assurance-review-001`: `none`, `low`, and `medium` safety-documentation
   changes accept explicit maintainer self-review plus applicable automated
-  verification during development, without an independence claim.
+  verification during development, without an independence claim, only when
+  the repository owner is both the issue author and named reviewer. An external
+  reporter cannot self-approve.
 - `DQ-assurance-review-002`: `high` and `catastrophic` safety-documentation
   changes require a second qualified human reviewer before closure. The
   reviewer-controlled sign-off must carry meaningful qualification and
@@ -157,6 +159,9 @@ level, or safety for a particular deployment.
   current issue-body digest as applicable for supersession; duplicated or
   otherwise ambiguous reviewer or digest fields make that latest sign-off
   authoritative but invalid instead of allowing fallback to an older approval.
+- `DV-assurance-review-033`: bind maintainer self-review to the authenticated
+  repository owner, reject an external reporter who names their own login, and
+  fail closed when configured and repository-path owner identities conflict.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -170,7 +175,7 @@ level, or safety for a particular deployment.
 
 | Documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
-| `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-009`; `DV-assurance-review-019` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-009`; `DV-assurance-review-019`; `DV-assurance-review-033` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010`; `DV-assurance-review-011`; `DV-assurance-review-014`; `DV-assurance-review-015`; `DV-assurance-review-016`; `DV-assurance-review-017`; `DV-assurance-review-020`; `DV-assurance-review-021`; `DV-assurance-review-022`; `DV-assurance-review-023`; `DV-assurance-review-024`; `DV-assurance-review-025`; `DV-assurance-review-026`; `DV-assurance-review-027` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-003` | `DV-assurance-review-012`; `DV-assurance-review-013`; `DV-assurance-review-020`; `DV-assurance-review-021`; `DV-assurance-review-022`; `DV-assurance-review-023`; `DV-assurance-review-024`; `DV-assurance-review-025`; `DV-assurance-review-026`; `DV-assurance-review-027` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-004` | `DV-assurance-review-005`; `DV-assurance-review-018`; `DV-assurance-review-020`; `DV-assurance-review-022` | `HZ-system-failure-01`; `HZ-doc-command-01` |
@@ -184,10 +189,12 @@ level, or safety for a particular deployment.
   though the controlling solo-maintainer policy permitted documented self-review
   for ordinary development.
 - After: the form requests Review Evidence and records its mode. The validator
-  admits explicit self-review for `none`/`low`/`medium`, rejects it for
-  `high`/`catastrophic`, and admits current or historical Independent Review
-  records only when a structured sign-off comment is authored by the named
-  reviewer account, rejects placeholder or negated qualification/verification,
+  admits repository-owner self-review for `none`/`low`/`medium`, rejects an
+  external reporter's self-approval, rejects owner-identity conflicts, rejects
+  self-review for `high`/`catastrophic`, and admits current or historical
+  Independent Review records only when a structured sign-off comment is
+  authored by the named reviewer account, rejects placeholder or negated
+  qualification/verification,
   requires unique structured passing verification/automation outcomes rather
   than inferring success from producer-specific prose, and binds
   the comment to the exact current issue-body SHA-256. Stable-release review
@@ -210,6 +217,9 @@ approval is pending, unavailable, incomplete, or still required cannot satisfy
 the high/catastrophic gate. A distinct login typed by the issue author is not
 independent evidence; the validator fetches issue comments and requires the
 named reviewer to author the approved sign-off and state a qualification basis.
+An external reporter cannot use the lower-risk self-review lane merely by
+repeating their own login: that lane is bound to the repository owner as both
+issue author and reviewer, and conflicting owner sources fail closed.
 
 Potential Severity If Misused: medium
 
@@ -231,6 +241,7 @@ Potential Severity If Misused: medium
 ## Simulation/Walkthrough Evidence
 
 The focused contract executes a permitted low-severity self-review fixture, a
+forbidden external-reporter self-review fixture, a conflicting-owner fixture, a
 forbidden high-severity self-review fixture, and an approved high-severity
 independent-human-review fixture. It also reruns legacy independent-review
 fixtures; rejects incomplete low-risk evidence, author-as-independent-reviewer,

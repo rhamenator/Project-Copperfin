@@ -1,11 +1,13 @@
 - 2026-08-14: Reconciled the safety-documentation template, validator, agent
   rules, and triage rubric with the adopted solo-maintainer assurance policy.
-  `none`/`low`/`medium` changes may now record explicit maintainer self-review
-  plus applicable automation without claiming independence; `high` and
+  `none`/`low`/`medium` changes may now record explicit repository-owner
+  maintainer self-review plus applicable automation without claiming
+  independence; external reporters cannot self-approve, and `high` and
   `catastrophic` changes still fail closed without second-qualified-human review,
   and completed-project/first-stable-release review is unchanged. Deterministic
   fixtures prove both sides while preserving structured historical Independent
-  Review records. The validator binds self-review to the issue author, binds
+  Review records. The validator binds self-review to the repository owner as
+  both issue author and reviewer, rejects conflicting owner identities, binds
   independent review to a distinct GitHub login and a structured sign-off
   comment authored by that account, records the qualification and verification
   basis, binds the sign-off to the SHA-256 of the exact issue body reviewed,

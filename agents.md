@@ -140,8 +140,9 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
 3. Require a procedural delta map for each safety-relevant documentation change.
 4. Require misuse analysis and severity classification: `none`, `low`, `medium`, `high`, or `catastrophic`.
 5. Require explicit review evidence. For `none`, `low`, and `medium` severity,
-   documented maintainer self-review plus applicable automated verification is
-   sufficient during development and must not be described as independent.
+   documented repository-owner maintainer self-review plus applicable automated
+   verification is sufficient during development and must not be described as
+   independent. An external issue reporter cannot self-approve.
    Verification and automated-evidence fields must be meaningful and completed;
    placeholder, deferred, unavailable, or negated values fail closed.
    `high` and `catastrophic` changes require evidence from a second qualified

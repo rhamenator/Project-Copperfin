@@ -4,6 +4,7 @@
 
 param(
     [string]$Repository = $env:GITHUB_REPOSITORY,
+    [string]$RepositoryOwner = $env:GITHUB_REPOSITORY_OWNER,
     [string]$IssueNumbers,
     [string]$IssueJsonPath,
     [string]$HazardRegisterPath,
@@ -1248,6 +1249,29 @@ if ($issues.Count -eq 0) {
     throw "No issues found for validation."
 }
 
+$repositoryPathOwner = ""
+if (-not [string]::IsNullOrWhiteSpace($Repository)) {
+    $repositoryMatch = [regex]::Match(
+        $Repository,
+        '^(?<owner>[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?)/[A-Za-z0-9_.-]+$')
+    if ($repositoryMatch.Success) {
+        $repositoryPathOwner = Get-GitHubLogin -Value $repositoryMatch.Groups['owner'].Value
+    }
+}
+$configuredRepositoryOwner = Get-GitHubLogin -Value $RepositoryOwner
+if (-not [string]::IsNullOrWhiteSpace($repositoryPathOwner)) {
+    if (-not [string]::IsNullOrWhiteSpace($configuredRepositoryOwner) -and
+        $configuredRepositoryOwner -ne $repositoryPathOwner) {
+        throw "Repository owner does not match the repository path owner."
+    }
+    $trustedRepositoryOwner = $repositoryPathOwner
+} else {
+    $trustedRepositoryOwner = $configuredRepositoryOwner
+}
+if ([string]::IsNullOrWhiteSpace($trustedRepositoryOwner)) {
+    throw "Repository owner identity is required for maintainer self-review validation."
+}
+
 $knownHazards = @{}
 foreach ($hazard in $hazardIds) {
     $knownHazards[$hazard] = $true
@@ -1312,7 +1336,9 @@ foreach ($issue in $issues) {
         (Test-MeaningfulReviewEvidence -Value $currentVerification) -and
         $currentApproved
     $hasStructuredCurrentSelfReview = $hasStructuredCurrentReview -and
-        $currentSelfReview -and $currentReviewer -eq $authorLogin -and
+        $currentSelfReview -and
+        $authorLogin -eq $trustedRepositoryOwner -and
+        $currentReviewer -eq $trustedRepositoryOwner -and
         $currentVerificationResult -eq "passed" -and
         (Test-MeaningfulReviewEvidence -Value $currentAutomation) -and
         $currentAutomationResult -eq "passed"

@@ -25,6 +25,7 @@ file(READ "${workflow_path}" workflow)
 string(REPLACE "\r\n" "\n" workflow "${workflow}")
 file(READ "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1" validator_source)
 string(REPLACE "\r\n" "\n" validator_source "${validator_source}")
+set(ENV{GITHUB_REPOSITORY_OWNER} "rhamenator")
 
 function(require_text expected_text description)
     string(FIND "${workflow}" "${expected_text}" match_index)
@@ -152,6 +153,60 @@ function(assert_low_self_review_fixture)
     if(NOT result EQUAL 0)
         message(FATAL_ERROR
             "Safety validator rejected permitted low-severity maintainer self-review:\n${standard_output}\n${standard_error}")
+    endif()
+    file(REMOVE "${report}")
+endfunction()
+
+function(assert_external_reporter_self_review_rejected)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-external-self-review-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-external-self-review-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_low_self_review_issues.json" fixture_contents)
+    string(REPLACE "rhamenator" "external-reporter" fixture_contents "${fixture_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator accepted an external reporter's self-review as maintainer review")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "Review Evidence must record an approved structured mode"
+        external_self_review_index)
+    if(external_self_review_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not reject external-reporter self-review: ${all_output}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
+function(assert_repository_owner_mismatch_rejected)
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-owner-mismatch-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -Repository "different-owner/Project-Copperfin"
+            -RepositoryOwner "rhamenator"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_low_self_review_issues.json"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator accepted conflicting repository-owner identities")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "Repository owner does not match the repository path owner"
+        owner_mismatch_index)
+    if(owner_mismatch_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not fail closed on repository-owner mismatch: ${all_output}")
     endif()
     file(REMOVE "${report}")
 endfunction()
@@ -1488,6 +1543,8 @@ if(POWERSHELL_EXECUTABLE)
     assert_invalid_mapping_fixture()
     assert_no_hazard_fixture()
     assert_low_self_review_fixture()
+    assert_external_reporter_self_review_rejected()
+    assert_repository_owner_mismatch_rejected()
     assert_high_self_review_rejected()
     assert_high_independent_review_fixture()
     assert_stale_independent_review_rejected()
