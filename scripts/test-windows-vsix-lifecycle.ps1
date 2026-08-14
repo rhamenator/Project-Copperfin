@@ -461,12 +461,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 
-public sealed class CopperfinAutomationResult
-{
-    public string SolutionPath { get; set; }
-    public string PrgPath { get; set; }
-}
-
 public static class CopperfinVisualStudioAutomation
 {
     [DllImport("ole32.dll")]
@@ -475,7 +469,7 @@ public static class CopperfinVisualStudioAutomation
     [DllImport("ole32.dll")]
     private static extern int CreateBindCtx(int reserved, out IBindCtx context);
 
-    private static object FindDte(int processId, int timeoutSeconds)
+    public static object FindDte(int processId, int timeoutSeconds)
     {
         DateTime deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
         string suffix = ":" + processId.ToString();
@@ -506,48 +500,6 @@ public static class CopperfinVisualStudioAutomation
         throw new TimeoutException("The exact Visual Studio process did not publish its DTE automation object.");
     }
 
-    public static CopperfinAutomationResult Drive(
-        int processId, string solutionPath, string prgPath, int timeoutSeconds)
-    {
-        dynamic dte = FindDte(processId, timeoutSeconds);
-        dte.SuppressUI = false;
-        dte.MainWindow.Visible = true;
-        dte.UserControl = true;
-        dte.Solution.Open(solutionPath);
-        DateTime deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
-        string activeSolution = Convert.ToString(dte.Solution.FullName);
-        while (!String.Equals(activeSolution, solutionPath, StringComparison.OrdinalIgnoreCase) &&
-               DateTime.UtcNow < deadline)
-        {
-            Thread.Sleep(250);
-            activeSolution = Convert.ToString(dte.Solution.FullName);
-        }
-        if (!String.Equals(activeSolution, solutionPath, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Visual Studio did not load the exact runner-owned solution.");
-
-        dte.ItemOperations.OpenFile(prgPath);
-        Exception lastCommandError = null;
-        bool commandRaised = false;
-        while (DateTime.UtcNow < deadline && !commandRaised)
-        {
-            try
-            {
-                object input = null;
-                object output = null;
-                dte.Commands.Raise("{4b56ff76-d352-4027-bb18-ef4c759d260b}", 0x0300, ref input, ref output);
-                commandRaised = true;
-            }
-            catch (Exception error)
-            {
-                lastCommandError = error;
-                Thread.Sleep(250);
-            }
-        }
-        if (!commandRaised)
-            throw new InvalidOperationException(
-                "Copperfin command did not become available after opening the exact PRG.", lastCommandError);
-        return new CopperfinAutomationResult { SolutionPath = activeSolution, PrgPath = prgPath };
-    }
 }
 "@
 $result = [ordered]@{
@@ -563,10 +515,41 @@ $result = [ordered]@{
     diagnostic = ''
 }
 try {
-    $dispatch = [CopperfinVisualStudioAutomation]::Drive(
-        $ExpectedProcessId, $result.solution_path, $result.prg_path, $TimeoutSeconds)
-    $result.solution_path = [string]$dispatch.SolutionPath
-    $result.prg_path = [string]$dispatch.PrgPath
+    $dte = [CopperfinVisualStudioAutomation]::FindDte($ExpectedProcessId, $TimeoutSeconds)
+    $dte.SuppressUI = $false
+    $dte.MainWindow.Visible = $true
+    $dte.UserControl = $true
+    $dte.Solution.Open($result.solution_path)
+    $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+    $activeSolution = [string]$dte.Solution.FullName
+    while (-not [string]::Equals($activeSolution, $result.solution_path,
+            [System.StringComparison]::OrdinalIgnoreCase) -and [DateTime]::UtcNow -lt $deadline) {
+        Start-Sleep -Milliseconds 250
+        $activeSolution = [string]$dte.Solution.FullName
+    }
+    if (-not [string]::Equals($activeSolution, $result.solution_path,
+            [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Visual Studio did not load the exact runner-owned solution.'
+    }
+    $result.solution_path = $activeSolution
+    [void]$dte.ItemOperations.OpenFile($result.prg_path)
+    $lastCommandError = ''
+    while ([DateTime]::UtcNow -lt $deadline -and -not $result.command_raise_completed) {
+        try {
+            $inputValue = $null
+            $outputValue = $null
+            $dte.Commands.Raise('{4b56ff76-d352-4027-bb18-ef4c759d260b}', 0x0300,
+                [ref]$inputValue, [ref]$outputValue)
+            $result.command_raise_completed = $true
+        }
+        catch {
+            $lastCommandError = $_.Exception.Message
+            Start-Sleep -Milliseconds 250
+        }
+    }
+    if (-not $result.command_raise_completed) {
+        throw "Copperfin command did not become available after opening the exact PRG: $lastCommandError"
+    }
     $result.command_raise_completed = $true
     $result.outcome = 'PASS'
 }

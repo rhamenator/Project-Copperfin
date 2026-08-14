@@ -548,6 +548,16 @@ Independent same-process UI Automation, ActivityLog package-load/error checks,
 uninstall, and zero-residue gates remain mandatory. `RQ-CF-REL-003` remains
 `gap` pending corrected exact-head hosted execution.
 
+Run `31766391236` stopped before exercising the `/Embedding` automation
+boundary because Windows PowerShell 5.1's `Add-Type` compiler did not implicitly
+reference `Microsoft.CSharp.RuntimeBinder` for the helper's C# `dynamic` calls.
+Product installation and uninstall passed (215.874 and 29.024 seconds) and left
+zero product residue. The correction removes `dynamic`: compiled C# now performs
+only exact-PID Running Object Table discovery, while the STA Windows PowerShell
+host performs DTE property and method calls through COM. This is compile/process
+diagnostic evidence only; it does not establish product lifecycle behavior.
+Diagnostic artifact `9206591770` expires 2026-11-12.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

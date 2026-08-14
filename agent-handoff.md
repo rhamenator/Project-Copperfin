@@ -234,6 +234,11 @@ opens and verifies the runner-owned solution, opens the exact PRG through its
 registered editor association, and raises product command group
 `4b56ff76-d352-4027-bb18-ef4c759d260b`/ID `0x0300`. JSON, UI Automation,
 ActivityLog, uninstall, and zero-residue gates remain independent.
+Run `31766391236` stopped before that boundary because Windows PowerShell 5.1
+did not implicitly reference `Microsoft.CSharp.RuntimeBinder` for C# `dynamic`.
+Install/uninstall and zero residue remained clean. The helper now confines C#
+to exact-PID ROT discovery and performs all DTE COM calls in the existing STA
+Windows PowerShell host, eliminating the runtime-binder dependency.
 
 ## V1 Windows installer lifecycle
 

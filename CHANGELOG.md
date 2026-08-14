@@ -180,6 +180,11 @@
   Versioned dispatch JSON, same-process pane/document UI Automation,
   ActivityLog package-load/error checks, uninstall, and zero product residue
   remain independently mandatory.
+  Run `31766391236` then stopped before automation because Windows PowerShell
+  5.1 did not implicitly reference the C# runtime binder required by `dynamic`;
+  product install/uninstall and zero residue stayed clean. The corrected helper
+  compiles only exact-PID ROT discovery in C# and performs DTE COM calls directly
+  in the STA Windows PowerShell host, removing that framework-reference seam.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
