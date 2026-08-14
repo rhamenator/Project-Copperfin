@@ -24,7 +24,9 @@ bool relative_log_path_is_safe(const std::filesystem::path& path) {
         return false;
     }
     for (const auto& component : path) {
-        if (component == "." || component == "..") {
+        if (component == "." || component == ".." ||
+            component.native().find(std::filesystem::path::value_type{}) !=
+                std::filesystem::path::string_type::npos) {
             return false;
         }
     }

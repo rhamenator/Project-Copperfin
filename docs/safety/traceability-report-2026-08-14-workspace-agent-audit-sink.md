@@ -59,7 +59,8 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   so the controller creates no session authority. Stop has already revoked
   authority before its append.
 - Path substitution: the host supplies an existing canonical storage root and
-  safe relative path. Existing redirecting components make the sink inert. The
+  safe relative path. Embedded-NUL and existing redirecting components make the
+  sink inert. The
   bounded resolver preserves the lexical relative path rather than erasing
   indirection through canonicalization, so the contained writer also rejects a
   post-construction intermediate or final redirection, hard links, cross-device
@@ -104,7 +105,7 @@ Local Release verification on Linux currently records:
 The focused sink regression proves exact persistent bytes and receipt hashes,
 content exclusions, malformed-event rejection without mutation, rejection of
 the controller's zero and exhausted generation sentinels, traversal and
-absolute-path rejection, missing-root and invalid-size rejection, full-log and
+absolute-path and embedded-NUL rejection, missing-root and invalid-size rejection, full-log and
 oversized-direct-input rejection without directory or file creation, malformed-tail
 fail-closed behavior, and outside-root, in-root, and
 post-construction intermediate-symlink containment when the platform supports

@@ -288,6 +288,28 @@ void test_configuration_containment_and_size_limit_fail_closed() {
                !too_large.ready() && too_large.session_sink().commit == nullptr,
            "RQ-CF-AGENT-006: escaping, missing-root, and unsafe-size configurations must be inert");
 
+    auto embedded_nul_name = fs::path("target.log").native();
+    embedded_nul_name.push_back(fs::path::value_type{});
+    embedded_nul_name += fs::path("different").native();
+    WorkspaceAgentSessionAuditFileSink embedded_nul(
+        root.path(), fs::path(embedded_nul_name));
+    expect(!embedded_nul.ready() && embedded_nul.session_sink().commit == nullptr &&
+               !fs::exists(root.path() / "target.log"),
+           "RQ-CF-AGENT-006: embedded-NUL log paths must be inert before syscall truncation");
+    auto direct_nul_name = (root.path() / "direct.log").native();
+    direct_nul_name.push_back(fs::path::value_type{});
+    direct_nul_name += fs::path("different").native();
+    const auto direct_embedded_nul =
+        copperfin::security::append_bounded_immutable_audit_event_to_contained_file(
+            copperfin::platform::path_to_utf8_string(fs::path(direct_nul_name)),
+            copperfin::platform::path_to_utf8_string(root.path()),
+            "event",
+            "detail",
+            copperfin::security::workspace_agent_audit_min_log_bytes);
+    expect(!direct_embedded_nul.ok && direct_embedded_nul.entry_hash.empty() &&
+               !fs::exists(root.path() / "direct.log"),
+           "RQ-CF-AGENT-006: the bounded writer must reject embedded-NUL paths directly");
+
     const fs::path oversized_parent = root.path() / "oversized" / "nested";
     const fs::path oversized_log = oversized_parent / "audit.log";
     const auto oversized =

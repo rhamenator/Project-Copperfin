@@ -244,7 +244,9 @@ bool relative_path_is_contained(const std::filesystem::path& path) {
         return false;
     }
     for (const auto& part : path) {
-        if (part == "..") {
+        if (part == ".." ||
+            part.native().find(std::filesystem::path::value_type{}) !=
+                std::filesystem::path::string_type::npos) {
             return false;
         }
     }
