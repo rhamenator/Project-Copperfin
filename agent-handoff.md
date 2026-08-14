@@ -1,5 +1,256 @@
 # Agent Handoff
 
+## V1 Windows VSIX lifecycle
+
+The current bounded slice advances `RQ-CF-REL-003` from the existing VSIX
+build/static gate to direct hosted lifecycle evidence. The workflow targets one
+ephemeral-runner Visual Studio instance by `vswhere` identity, installs the
+exact VSIX, verifies installed identity/version/payload, opens a runner-owned
+PRG and invokes the registered Copperfin Command window outside the source
+checkout, observes package loading in the Visual Studio activity log, then
+uninstalls the exact extension and rejects matching residue. Installer and IDE
+processes are bounded. The result binds to the VSIX SHA-256. Same-version
+reinstall, previous-version upgrade, and disablement remain `NOT_RUN` rather
+than inferred. Exact-head hosted run `31711406714` completed the VS2022
+lifecycle and all existing VSIX/managed suites at `f26086a09`. Independently
+downloaded lifecycle and producer JSON are identical, and their VSIX SHA-256
+`a02b11f77c35d798642780641b40a940b02c001105a1c64da6e4c9ebb8dc922c`
+matches the downloaded package. Producer artifact `9185674193` has GitHub
+digest `sha256:76e659eecec432073033ce20740e0b3efe01343b331645f5782c786e37bf618a`;
+diagnostic artifact `9185671767` has digest
+`sha256:cc7308165fe5800a29be43e3c03063a46d0a91c7a8d5bb6cfe4fab268b844de6`;
+both expire 2026-11-11. Independent review invalidated admission of that result:
+the old activity-log substring could match registration or failed-load records,
+and a main window did not prove the PRG opened. Corrected run `31713227592`
+timed out during installation; exact-head retry `31713867127` reached the DTE
+boundary but generic ProgID lookup did not identify the launched IDE. The
+process-specific retry `31715126080` proved the hosted IDE published no matching
+DTE moniker. The further-corrected helper uses Windows UI Automation scoped to
+the exact launched IDE process. Run `31716407669` did not find an exact-named
+document descendant, but its query excluded the process root's window title;
+the command was not invoked and the result is inconclusive. The
+next run `31717503945` checked both, proving the process root remained
+`Microsoft Visual Studio` and no fixture descendant existed; passing the PRG at
+initial startup did not open it, and the command was still not invoked. Run
+`31718662961` then launched the IDE bare and requested `/Command` from a second
+`devenv` process. The controlled IDE stayed responsive but exposed no Copperfin
+Command surface, and its ActivityLog contained imported Copperfin registration
+but no `CopperfinPackage` load. Run `31719897147` then launched the controlled
+IDE itself with `/Command` and proved the same negative boundary. The next
+run `31721057446` found no invocable exact item through direct UI Automation
+menu-tree expansion, but that helper did not distinguish an inaccessible Tools
+menu from an absent extension item. Run `31722176750` focused the exact IDE and
+opened Tools through its normal English access key, but the hosted window
+exposed zero same-process UI Automation `MenuItem` elements. The next correction
+focuses the exact IDE. Run `31723497158` proved `Ctrl+Alt+A` started loading the
+Common IDE package, but the helper entered the command before the package and
+Command window finished loading. Run `31724537954` proved the hosted Command
+Window is not a UI Automation descendant. Run `31725371043` proved its
+ActivityLog load record is buffered until IDE shutdown and cannot serve as a
+live readiness signal. The next correction opens Visual Studio's Command window
+through the hosted General profile's shortcut, gives the lazy WPF surface a
+conservative bounded startup interval. Run `31726161585` proved the first
+shortcut remained queued long enough that a three-second delay still raced the
+Common IDE package load. Run `31727207629` proved that two shortcuts and a
+ten-second delay in one helper were also serviced only after the external
+sender exited. Run `31728514403` proved that separate senders within the same
+lifecycle process still queued the shortcut until final command input, so no
+Copperfin pane appeared. The next correction launches the controlled IDE with
+`/Command View.CommandWindow`. Run `31729613650` proved that startup command
+was deferred until the first invariant input sender exited; the Common IDE
+package then loaded successfully, but the input was lost. The next correction
+reached its second attempt in run `31730718257`, but exact-main-HWND equality
+could not distinguish an unrelated foreground window from a same-process
+Visual Studio tool window. Run `31732427063` proved the resulting exact-process
+foreground check fail-closed when another process owned the second input, even
+though installation completed in about 234 seconds. The current correction
+uses Visual Studio's documented `devenv /Command` interface to execute only
+`Copperfin.ShowCommandWindow`, proves the resulting pane in the already
+controlled IDE PID, opens the exact runner-owned PRG through documented
+`/Edit`, and then
+requires the exact document descendant or fixture
+window-title prefix. It also requires an explicit successful package-load XML
+entry and rejects matching errors.
+`RQ-CF-REL-003` remains `gap` pending corrected exact-head execution. Run
+`31731652063` did not reach the focus correction because hosted VSIX
+installation exceeded a brittle 240-second bound after prior installs
+approached 238 seconds. The corrected default is 300 seconds, still bounded
+with process-tree termination. Fresh exact-head execution and rereview remain
+required. Run `31733561020` subsequently proved the generic DTE active object
+was unavailable. The current correction follows Microsoft's documented
+Running Object Table pattern and selects only the version- and process-specific
+`VisualStudio.DTE.<version>:<PID>` suffix before the independent main-window
+owner check. Run `31734701283` proved that exact moniker was also absent. The
+current correction uses the documented `devenv /Command` and `/Edit`
+interfaces, with independent same-process pane and document proof.
+Run `31736024834` proved `/Command` can remain attached beyond the process
+bound when the verifier waits synchronously. The corrected sequence starts each
+routing request separately, proves its PID differs from the controlled IDE,
+observes the required pane/document in the controlled IDE PID, and terminates
+any still-attached router only after that independent proof.
+Run `31737231439` did not reach that correction because hosted VSIX installation
+exceeded 300 seconds. The corrected default is 360 seconds, still within the
+validated 30–600 range and still enforcing timed-out process-tree termination.
+Run `31738142144` completed installation but did not observe the Copperfin pane;
+its retained ActivityLog contains Copperfin registration paths but no package
+load completion or Copperfin package error. The next correction launches the
+controlled IDE without a queued command, routes built-in `View.CommandWindow`
+from a distinct bounded process, proves the built-in Command Window in that IDE
+PID, and only then routes `Copperfin.ShowCommandWindow`. Exact-head execution
+and rereview remain required; `RQ-CF-REL-003` remains `gap`.
+Run `31739502436` proved the second `devenv` process did not route even the
+built-in command into the controlled IDE. The current verifier therefore uses
+one controlled IDE process, supplies the exact PRG and Copperfin command as
+startup inputs, and independently requires both UI surfaces plus successful
+package-load evidence from that process. Inputs alone are not evidence.
+Run `31740807424` showed that process was simultaneously regenerating its stale
+per-user PkgDef cache and importing Copperfin, so the startup command was not
+usable and the package never began loading. The verifier now performs a
+bounded registration-prime launch, requests a normal close with bounded
+process-tree termination as fallback, and requires an exact path match for the
+installed Copperfin PkgDef import before starting the separate
+evidence IDE. Registration priming is not promoted to command/load evidence;
+`RQ-CF-REL-003` remains `gap` pending exact-head execution and rereview.
+Run `31742224692` reached input-idle registration priming but did not exit
+within the initial 30-second normal-close allowance, so it never reached PkgDef
+proof or the evidence IDE. Run `31742937078` retained direct proof that the
+exact installed PkgDef was imported, but the prime IDE remained alive after a
+120-second close allowance. The corrected cleanup requests normal close, then
+uses bounded process-tree termination before the evidence IDE; always-run
+staging retains `ActivityLog-registration.xml` on failure.
+Run `31743866527` did not pass the existing 360-second installer bound. The
+unchanged-head rerun `31744711631` completed install, proved exact installed-
+PkgDef import, and reached the evidence IDE, but startup `/Command` never began
+loading `CopperfinPackage` and no pane appeared. The verifier now opens the IDE
+with the exact runner-owned PRG, invokes the installed `Copperfin Command` item
+from the process-scoped Tools menu through UI Automation, and independently
+requires the pane plus successful package-load evidence. `RQ-CF-REL-003`
+remains `gap` pending exact-head execution and rereview.
+Run `31745965381` also failed before package load or pane observation, and its
+first-generation menu observer did not reveal which discovery/invocation
+boundary was absent. The current exact-head correction retains separate JSON
+state for Tools-menu discovery, exact command discovery, invocation-pattern
+availability, invocation, pane observation, and PRG observation. This is a
+diagnostic-only correction; product behavior remains unchanged.
+Run `31747101809` then proved `tools_menu_observed=false`, with no command item
+or invocation and no automation exception. The current correction foregrounds
+the exact evidence IDE. Run `31748419105` verified that foreground PID, sent the
+English Tools accelerator, and still exposed no exact command item. The current
+correction instead sends Visual Studio's English Command Window shortcut,
+rechecks foreground ownership, and submits only the invariant canonical
+`Copperfin.ShowCommandWindow` command. Those input boundaries, the same-process
+pane, and explicit successful package load remain separately required and
+retained. `RQ-CF-REL-003` remains `gap` pending exact-head execution.
+Runs `31749596542` and `31750359174` did not exercise that path because both
+reached exactly the prior 360-second VSIXInstaller bound. The installer now has
+a separate bounded 600-second allowance, emits retained versioned operation
+timing/outcome JSON, and re-inventories the selected instance on failure before
+deciding whether exact-identity uninstall is needed. These are installer
+scheduling and containment corrections only; fresh exact-head lifecycle
+execution and rereview remain required.
+Run `31751652834` passed install in 337.930 seconds, exact PkgDef priming, and
+uninstall in 21.688 seconds. It proved exact foreground ownership and canonical
+command submission, but no pane appeared until the sender's bounded interval
+expired. This matches earlier evidence that hosted Visual Studio services the
+queued input only after its external sender exits. The current head separates
+bounded submission from bounded same-IDE observation and retains both JSON
+records; pane/package-load admission remains independent.
+Run `31753021409` proved the combined shortcut/command sender still queued the
+canonical command before the lazy Common IDE package loaded after sender exit.
+The current head separates the Command Window request, a bounded ten-second
+settlement interval, canonical submission, and same-process pane observation;
+each input stage has its own retained diagnostic and remains non-admissible by
+itself.
+Run `31754211038` proved the Common IDE package began about 0.19 seconds after
+the later canonical sender exited rather than during the ten-second delay after
+the shortcut sender. The current head inserts a retained exact-PID
+foreground-only dispatch helper, exits it, waits for bounded lazy settlement,
+and then starts the separate canonical sender. The dispatch helper sends no
+product command and cannot satisfy pane/package-load admission.
+Run `31755148469` proved the foreground-only stage generated no dispatch event:
+the Common IDE package again began after the later input sender exited. The
+current head replaces it with a second isolated built-in Command Window
+shortcut sender, exits that sender, allows bounded settlement, and only then
+starts the distinct Copperfin canonical sender.
+Run `31756018725` retained PASS install/uninstall and exact foreground-bound
+input but no product pane or package load. The Common IDE package began about
+0.25 seconds after canonical-sender exit, proving that sender released the
+preceding queued shortcut while leaving its own canonical input queued. The
+current head adds a final isolated built-in Command Window request after
+canonical submission to release that preceding input; it has separate retained
+JSON and cannot substitute for pane, PRG, package-load, error, or residue proof.
+Run `31757029866` showed that final dispatch began while Common IDE was still
+loading, only 0.151 seconds after canonical-sender exit. The current head waits
+a bounded ten seconds after canonical exit before final built-in dispatch. It
+also preserves the primary observation failure alongside cleanup exit `2004`
+and residue inventory instead of allowing cleanup to overwrite the root cause.
+Run `31758122162` retained PASS install/uninstall and zero residue but showed
+`SendKeys.SendWait` blocked for about 204 seconds after Common IDE was already
+ready, with no Copperfin load. The current head replaces only that hosted input
+mechanism with exact-foreground-PID-bound Win32 `SendInput`, explicit shortcut
+and Unicode command events, fail-closed inserted-event counts, and an
+executable embedded-C# compile regression. All product admission gates remain
+independent.
+Run `31759758376` proved that mechanism inserted all six shortcut events and
+all 58 requested command/Enter events, while install, uninstall, and zero
+residue also passed, but no Copperfin load followed. The retained command text
+included the Command Window's displayed `>` prompt. Microsoft documents that
+prompt as UI rather than user-entered command text. The current head removes
+that prefix and the focused contract rejects its reintroduction;
+`RQ-CF-REL-003` remains `gap` pending exact-head hosted execution.
+Run `31761029410` retained the corrected 56-event input and clean
+install/uninstall/residue boundaries, but external desktop input still did not
+load Copperfin. The current head replaces that activation seam with a separate
+test-only solution-triggered `AsyncPackage`: it is inert outside the controlled
+evidence process, posts the exact public command group/ID through
+`IVsUIShell`, opens the runner-owned PRG through in-process DTE, retains its
+dispatch HRESULT, and is uninstalled with an independent residue gate. It is
+not part of the shipping VSIX. Pane, PRG, product package-load/error, and
+cleanup proof remain independent; exact-head hosted execution is pending.
+Run `31762937993` installed and registered both VSIXes but proved the driver
+did not autoload in the no-solution context; both uninstalls and residue checks
+stayed clean. Run `31763800302` then loaded an exact runner-owned empty solution
+but proved `SolutionExists` still did not request the driver; dual cleanup
+again passed with zero residue. The correction removes ambient autoload and
+starts the evidence IDE with the driver's own compiled, invisible canonical
+command. Visual Studio `/Command` must resolve and load the owning test package;
+the driver then records and verifies the DTE solution identity before any PRG
+open or product-command dispatch.
+Run `31764541030` stopped before installation because the minimal driver
+project lacked the explicit net472 `System.Design` reference required by its
+menu-command registration. The reference and focused contract are corrected;
+the run is compile diagnostics only.
+Run `31764703993` installed the command-triggered driver but did not resolve its
+`DefaultInvisible` startup command; dual uninstall/residue checks remained
+clean. The correction removes only that flag from the test-only driver command
+so `/Command` can request the owning package. No shipping UI or artifact changes.
+Run `31765250426` then proved visibility was not the governing issue: both
+pkgdefs were imported, but the newly installed driver command still was not
+merged into the per-user command-name cache, so its package never loaded. The
+current correction removes that test VSIX entirely. The evidence IDE starts in
+COM-automation `/Embedding` mode with `/Log`; a bounded Windows PowerShell
+helper discovers its exact Visual Studio DTE object by PID,
+opens and verifies the runner-owned solution, opens the exact PRG through its
+registered editor association, and raises product command group
+`4b56ff76-d352-4027-bb18-ef4c759d260b`/ID `0x0300`. JSON, UI Automation,
+ActivityLog, uninstall, and zero-residue gates remain independent.
+Run `31766391236` stopped before that boundary because Windows PowerShell 5.1
+did not implicitly reference `Microsoft.CSharp.RuntimeBinder` for C# `dynamic`.
+Install/uninstall and zero residue remained clean. The helper now confines C#
+to exact-PID ROT discovery and performs all DTE COM calls in the existing STA
+Windows PowerShell host, eliminating the runtime-binder dependency.
+Exact-head run `31770453468` passed the complete lifecycle at `26df3a63b`:
+digest-bound install, exact PID/solution/PRG/command dispatch, same-process pane
+and PRG observation with respective `ControlType.Pane` and `ControlType.TabItem`
+proof, explicit error-free Copperfin package load, uninstall, exact installed-
+directory absence plus zero manifest residue, all managed suites, exact
+Corresponding Source, and shipping VSIX upload. Artifact IDs are `9208063377`
+(diagnostics) and `9208064960` (shipping);
+the exact VSIX SHA-256 is
+`39bda85037bb3605c13c11418cb987e0128022ad891e0d8d7a9e7fb5e059e3b9`.
+Same-version reinstall, upgrade, disablement, signing, and human visual review
+remain separate.
+
 ## V1 Windows installer lifecycle
 
 The current stacked slice advances the validation manifest to schema v3 and

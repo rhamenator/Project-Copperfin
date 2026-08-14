@@ -627,6 +627,17 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    copperfin_set_test_isolation(test_windows_vsix_lifecycle_contract
+        PARALLEL_SAFE
+        FILESYSTEM process-owned
+        ENVIRONMENT none
+        CHILD_PROCESSES bounded
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
     copperfin_set_test_isolation(test_package_signer_contract
         PARALLEL_SAFE
         FILESYSTEM process-owned
