@@ -7,6 +7,7 @@
 #include "copperfin/platform/path.h"
 #include "copperfin/security/audit_stream.h"
 
+#include <limits>
 #include <string_view>
 
 namespace copperfin::security {
@@ -76,7 +77,8 @@ bool allowed_start_is_valid(const WorkspaceAgentSessionAuditEvent& event) {
 }
 
 bool session_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) {
-    if (event.schema_version != 1U || event.session_generation == 0U) {
+    if (event.schema_version != 1U || event.session_generation == 0U ||
+        event.session_generation == std::numeric_limits<std::uint64_t>::max()) {
         return false;
     }
     switch (event.kind) {

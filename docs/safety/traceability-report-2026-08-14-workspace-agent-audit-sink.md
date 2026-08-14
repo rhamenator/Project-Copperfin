@@ -95,7 +95,8 @@ Local Release verification on Linux currently records:
 - `git diff --check`: pass.
 
 The focused sink regression proves exact persistent bytes and receipt hashes,
-content exclusions, malformed-event rejection without mutation, traversal and
+content exclusions, malformed-event rejection without mutation, rejection of
+the controller's zero and exhausted generation sentinels, traversal and
 absolute-path rejection, missing-root and invalid-size rejection, full-log and
 malformed-tail fail-closed behavior, and intermediate-symlink containment when
 the platform supports it. Existing security-control regressions supply direct

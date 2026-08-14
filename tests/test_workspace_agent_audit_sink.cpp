@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -232,6 +233,10 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
     auto zero_generation = valid;
     zero_generation.session_generation = 0U;
     malformed.push_back(zero_generation);
+    auto exhausted_generation = valid;
+    exhausted_generation.session_generation =
+        std::numeric_limits<std::uint64_t>::max();
+    malformed.push_back(exhausted_generation);
     auto substituted_outcome = valid;
     substituted_outcome.outcome = "denied";
     malformed.push_back(substituted_outcome);
