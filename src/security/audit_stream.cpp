@@ -39,6 +39,8 @@ namespace copperfin::security {
 
 namespace {
 
+constexpr char audit_genesis_hash[] = "GENESIS";
+
 std::string now_utc_compact() {
     const auto now = std::chrono::system_clock::now().time_since_epoch();
     const auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
@@ -88,7 +90,7 @@ AuditTailReadResult read_last_hash_from_text(const std::string& text) {
     if (text.empty()) {
         return {
             .ok = true,
-            .hash = "GENESIS",
+            .hash = audit_genesis_hash,
             .error = {}};
     }
 
@@ -111,7 +113,7 @@ AuditTailReadResult read_last_hash_from_text(const std::string& text) {
     if (last_line.empty()) {
         return {
             .ok = true,
-            .hash = "GENESIS",
+            .hash = audit_genesis_hash,
             .error = {}};
     }
     if (final_byte != '\n') {
@@ -124,7 +126,7 @@ AuditTailReadResult read_last_hash_from_text(const std::string& text) {
     const auto fields = split_audit_line(last_line);
     if (fields.size() != 5U ||
         fields[0].empty() ||
-        (fields[3] != "GENESIS" && !is_sha256_hex(fields[3])) ||
+        (fields[3] != audit_genesis_hash && !is_sha256_hex(fields[3])) ||
         !is_sha256_hex(fields[4])) {
         return {
             .ok = false,
@@ -150,7 +152,7 @@ std::string compute_entry_hash(const std::string& timestamp,
 AuditTextVerifyResult verify_audit_chain_input(std::istream& input) {
     std::string line;
     std::size_t line_number = 0U;
-    std::string previous_hash = "GENESIS";
+    std::string previous_hash = audit_genesis_hash;
     std::size_t verified = 0U;
     while (std::getline(input, line)) {
         if (line.empty()) {
@@ -948,6 +950,7 @@ AuditAppendResult append_bounded_immutable_audit_event_to_contained_file(
     if (!admit_component(timestamp.size()) ||
         !admit_component(event_name.size()) ||
         !admit_component(detail.size()) ||
+        !admit_component(sizeof(audit_genesis_hash) - 1U) ||
         !admit_component(64U) ||
         !admit_component(5U)) {
         return {

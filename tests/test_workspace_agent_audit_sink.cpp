@@ -301,6 +301,25 @@ void test_configuration_containment_and_size_limit_fail_closed() {
                !fs::exists(oversized_parent) && !fs::exists(oversized_log),
            "RQ-CF-AGENT-006: oversized direct inputs must fail before path mutation");
 
+    const fs::path genesis_boundary_parent = root.path() / "genesis-boundary" / "nested";
+    const fs::path genesis_boundary_log = genesis_boundary_parent / "audit.log";
+    const auto now = std::chrono::system_clock::now().time_since_epoch();
+    const auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+    const std::size_t timestamp_size = std::to_string(millis).size();
+    const std::size_t boundary_max =
+        copperfin::security::workspace_agent_audit_min_log_bytes;
+    const std::size_t boundary_event_size = boundary_max - timestamp_size - 64U - 5U;
+    const auto genesis_boundary =
+        copperfin::security::append_bounded_immutable_audit_event_to_contained_file(
+            copperfin::platform::path_to_utf8_string(genesis_boundary_log),
+            copperfin::platform::path_to_utf8_string(root.path()),
+            std::string(boundary_event_size, 'E'),
+            {},
+            boundary_max);
+    expect(!genesis_boundary.ok && genesis_boundary.entry_hash.empty() &&
+               !fs::exists(genesis_boundary_parent) && !fs::exists(genesis_boundary_log),
+           "RQ-CF-AGENT-006: empty-chain GENESIS bytes must be preflighted before path mutation");
+
     const fs::path bounded_log = root.path() / "bounded.log";
     std::size_t prefilled_size = 0U;
     for (int index = 0; index < 8 && prefilled_size <
