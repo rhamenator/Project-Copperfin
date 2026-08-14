@@ -22,6 +22,7 @@ Mapped architecture and code:
 | --- | --- | --- |
 | `DQ-workspace-agent-session-001`: describe the fail-closed audited start, immutable admitted authority, immediate revocation, and non-executing boundary without implying that provider, UI, executor, or sandbox functionality exists | `DV-workspace-agent-session-001`; `DV-workspace-agent-session-002`; `DV-workspace-agent-session-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-session-002`: describe policy-dependency failure as an audited denial that grants no authority and does not permanently wedge the transition | `DV-workspace-agent-session-001`; `DV-workspace-agent-session-002`; `DV-workspace-agent-session-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-session-003`: define the content-free audit event as locale-independent versioned JSON whose numeric fields and escapes remain machine-readable under process-global locale changes | `DV-workspace-agent-session-001`; `DV-workspace-agent-session-002`; `DV-workspace-agent-session-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-session-001`: focused Release policy, session,
   localization, and native-isolation regressions pass `4/4`.
@@ -56,6 +57,9 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
 - Sensitive audit content: the versioned event contains only lifecycle kind,
   generation, requested/effective mode, outcome, and diagnostic code. It has no
   prompt, path, credential, provider token, workspace content, or receipt.
+- Locale-dependent machine output: serialization explicitly uses the classic
+  locale, preventing process-wide digit grouping from corrupting JSON numbers
+  or control-character escapes.
 - Provider/authority confusion: provider authentication is outside this API and
   is not an activation input.
 - Reentrant or concurrent transition: one mutex-guarded transition is admitted
@@ -93,6 +97,9 @@ The focused test directly proves admitted sandbox capabilities, committed
 receipt binding, active-session replacement denial, revocation-before-callback,
 inactive snapshot clearing, policy-denial auditing, stale-warning denial,
 missing/failing/empty/throwing audit behavior, and stable content-free JSON.
+The serialization case installs a process-global every-digit grouping locale
+and proves generation `1234567` plus a control-character escape remain canonical
+JSON rather than inheriting localized separators.
 It also blocks one start audit on a worker thread under a five-second test
 bound and proves
 that an overlapping unrestricted start sees no partial authority and cannot

@@ -141,6 +141,8 @@ visible but cannot prolong authority. Inactive snapshots retain neither
 capabilities nor the activation receipt. The versioned JSON audit event carries
 only event kind, generation, requested/effective mode, outcome, and stable
 diagnostic code; it carries no prompt, workspace path, credential, or receipt.
+Serialization uses the classic locale, so process-wide digit grouping cannot
+change numeric fields or control-character escapes into invalid JSON.
 This native contract has no command-line or product-UI activation surface and
 does not itself access files, run processes, use the network, or authenticate a
 provider.

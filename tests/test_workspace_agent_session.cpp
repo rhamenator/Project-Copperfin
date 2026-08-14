@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <locale>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -26,6 +27,17 @@ using copperfin::security::WorkspaceAgentSessionAuditSink;
 using copperfin::security::WorkspaceAgentSessionController;
 
 int failures = 0;
+
+class GroupEveryDigit final : public std::numpunct<char> {
+protected:
+    char do_thousands_sep() const override {
+        return ',';
+    }
+
+    std::string do_grouping() const override {
+        return "\1";
+    }
+};
 
 void expect(bool condition, const std::string& message) {
     if (!condition) {
@@ -368,19 +380,22 @@ void test_overlapping_start_cannot_observe_or_replace_partial_authority() {
 void test_audit_serialization_is_stable_and_content_free() {
     const WorkspaceAgentSessionAuditEvent event{
         .kind = copperfin::security::WorkspaceAgentSessionEventKind::start,
-        .session_generation = 42U,
+        .session_generation = 1234567U,
         .requested_mode = WorkspaceAgentAccessMode::unrestricted_local,
         .effective_mode = WorkspaceAgentAccessMode::advisory,
         .outcome = "denied",
-        .diagnostic_code = "workspace_agent.test\ncode"};
+        .diagnostic_code = std::string("workspace_agent.test") + '\x7f'};
+    const std::locale previous_locale = std::locale();
+    std::locale::global(std::locale(previous_locale, new GroupEveryDigit));
     const std::string serialized =
         copperfin::security::serialize_workspace_agent_session_audit_event(event);
+    std::locale::global(previous_locale);
     expect(
         serialized ==
-            "{\"schema_version\":1,\"event\":\"start\",\"session_generation\":42,"
+            "{\"schema_version\":1,\"event\":\"start\",\"session_generation\":1234567,"
             "\"requested_mode\":\"unrestricted_local\",\"effective_mode\":\"advisory\","
-            "\"outcome\":\"denied\",\"diagnostic_code\":\"workspace_agent.test\\ncode\"}",
-        "RQ-CF-AGENT-005: session audit JSON should preserve its versioned machine contract");
+            "\"outcome\":\"denied\",\"diagnostic_code\":\"workspace_agent.test\\u007f\"}",
+        "RQ-CF-AGENT-005: session audit JSON should preserve its locale-independent machine contract");
     expect(serialized.find("prompt") == std::string::npos &&
                serialized.find("path") == std::string::npos &&
                serialized.find("credential") == std::string::npos &&

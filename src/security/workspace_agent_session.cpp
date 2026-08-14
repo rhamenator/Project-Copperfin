@@ -6,6 +6,7 @@
 
 #include <iomanip>
 #include <limits>
+#include <locale>
 #include <sstream>
 #include <string_view>
 #include <utility>
@@ -48,6 +49,7 @@ std::string event_kind_name(WorkspaceAgentSessionEventKind kind) {
 
 std::string json_escape(std::string_view value) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     for (const unsigned char character : value) {
         switch (character) {
             case '\"':
@@ -223,6 +225,7 @@ WorkspaceAgentSessionSnapshot WorkspaceAgentSessionController::snapshot() const 
 std::string serialize_workspace_agent_session_audit_event(
     const WorkspaceAgentSessionAuditEvent& event) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << "{\"schema_version\":" << event.schema_version
            << ",\"event\":\"" << event_kind_name(event.kind)
            << "\",\"session_generation\":" << event.session_generation
