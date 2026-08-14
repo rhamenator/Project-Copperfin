@@ -232,7 +232,7 @@ function Get-MarkdownSection {
     $escapedHeading = [regex]::Escape($Heading)
     $match = [regex]::Match(
         $Body,
-        "(?ims)^ {0,3}#{2,3}[ \t]+$escapedHeading[ \t]*\r?\n(?<content>.*?)(?=^ {0,3}#{2,3}[ \t]+|\z)")
+        "(?ims)^ {0,3}#{2,3}[ \t]+$escapedHeading(?:[ \t]+#+)?[ \t]*\r?\n(?<content>.*?)(?=^ {0,3}#{2,3}[ \t]+|\z)")
     if (-not $match.Success) {
         return ""
     }
@@ -243,34 +243,24 @@ function Get-MarkdownSection {
 function Get-RenderedMarkdownEvidenceText {
     param([AllowEmptyString()][string]$Body)
 
-    $withoutComments = [regex]::Replace($Body, '(?s)<!--.*?-->', '')
-    # Structured sign-off comments have no need for raw HTML. Rejecting any
-    # top-level raw-HTML construct is deliberately stricter than trying to
-    # reimplement every CommonMark/GFM raw-block form here.
-    if ($withoutComments -match '(?m)^ {0,3}<') {
-        return ''
-    }
     $renderedLines = [System.Collections.Generic.List[string]]::new()
     $inFence = $false
     $fenceCharacter = ''
     $fenceLength = 0
-    $inRawHtmlBlock = $false
-    $rawHtmlTag = ''
-    $rawHtmlBlockTags = 'address|article|aside|base|basefont|blockquote|body|caption|center|code|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|pre|script|search|section|style|summary|table|tbody|td|textarea|tfoot|th|thead|title|tr|track|ul'
+    $inHtmlComment = $false
 
-    foreach ($line in ($withoutComments -split '\r?\n')) {
-        if ($inRawHtmlBlock) {
-            if ($line -match "(?i)</$([regex]::Escape($rawHtmlTag))\s*>") {
-                $inRawHtmlBlock = $false
-                $rawHtmlTag = ''
-            }
-            continue
-        }
-
+    foreach ($line in ($Body -split '\r?\n')) {
         if ($inFence) {
             $escapedFenceCharacter = [regex]::Escape($fenceCharacter)
             if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
                 $inFence = $false
+            }
+            continue
+        }
+
+        if ($inHtmlComment) {
+            if ($line -match '-->') {
+                $inHtmlComment = $false
             }
             continue
         }
@@ -283,23 +273,26 @@ function Get-RenderedMarkdownEvidenceText {
             continue
         }
 
-        $htmlBlockMatch = [regex]::Match(
-            $line,
-            "^ {0,3}<(?<tag>$rawHtmlBlockTags)(?:\s|/?>)",
-            [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
-        if ($htmlBlockMatch.Success) {
-            $rawHtmlTag = $htmlBlockMatch.Groups['tag'].Value
-            if ($line -notmatch "(?i)</$([regex]::Escape($rawHtmlTag))\s*>") {
-                $inRawHtmlBlock = $true
-            } else {
-                $rawHtmlTag = ''
-            }
-            continue
-        }
-
         if ($line -match '^(?: {4}|\t)') {
             continue
         }
+
+        if ($line -match '<!--') {
+            if ($line -notmatch '<!--.*?-->') {
+                $inHtmlComment = $true
+            }
+            # Discard the complete source line so removing a comment cannot
+            # promote same-line suffix text into a new Markdown construct.
+            continue
+        }
+
+        # Structured sign-off comments have no need for raw HTML. Rejecting
+        # any top-level construct is stricter and safer than partially
+        # reimplementing every CommonMark/GFM raw-block form here.
+        if ($line -match '^ {0,3}<') {
+            return ''
+        }
+
         $renderedLines.Add($line)
     }
 
@@ -515,7 +508,7 @@ function Test-AuthenticatedIndependentReview {
         $commentBody = Get-RenderedMarkdownEvidenceText -Body ([string]$comment.body)
         $signOffHeadingCount = [regex]::Matches(
             $commentBody,
-            '(?im)^ {0,3}#{2,3}[ \t]+Independent Review Sign-Off[ \t]*$').Count
+            '(?im)^ {0,3}#{2,3}[ \t]+Independent Review Sign-Off(?:[ \t]+#+)?[ \t]*$').Count
         if ($signOffHeadingCount -eq 0) {
             continue
         }
