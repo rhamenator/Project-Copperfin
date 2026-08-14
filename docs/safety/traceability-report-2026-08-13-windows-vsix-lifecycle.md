@@ -443,9 +443,9 @@ and expires 2026-11-12.
 The current correction retires synthetic desktop input as the hosted command
 activation mechanism. The workflow builds and installs a separate test-only
 lifecycle-driver VSIX alongside the unchanged product VSIX. The driver is an
-`AsyncPackage` registered only for Visual Studio's no-solution context and is
-inert unless the controlled evidence process supplies two runner-owned
-environment variables. In that process it opens the exact temporary PRG
+`AsyncPackage` and is inert unless the controlled evidence process supplies
+the runner-owned result, PRG, and solution paths. In that process it opens the
+exact temporary PRG
 through the in-process DTE service and posts the exact public Copperfin command
 group/ID through `IVsUIShell.PostExecCommand`. It retains a versioned dispatch
 result with the command identity and HRESULT. The outer verifier still admits
@@ -473,6 +473,23 @@ driver deploys no templates; the corrected project explicitly sets
 `DeployVSTemplates=false` and a deterministic intermediate template-output
 directory, matching the shipping VSIX project's package boundary. No
 installation or IDE mutation occurred.
+
+Run `31762937993` built and packaged both VSIXes, installed the product and
+test-only driver, and proved exact PkgDef import for each. The driver did not
+autoload in the no-solution startup context, so it retained no dispatch result;
+the harness then uninstalled both extensions and left zero identity residue.
+This is negative activation evidence, not product lifecycle evidence.
+Microsoft documents that `UIContextGuids80.SolutionExists` becomes active when
+a solution is loaded or created, including an empty solution. The corrected
+harness therefore creates and opens an exact runner-owned empty solution, and
+the driver uses that documented context. Before opening the PRG or posting the
+product command, it independently compares the in-process DTE solution path to
+the expected runner-owned path and retains the verified identity in its JSON
+result. The solution, driver, and result remain test-only and outside the
+shipping VSIX. Diagnostic artifact `9205428325` has digest
+`sha256:b09b07874cd2dc368cdef7433edad210209eb0928df477eb1bb865aae3ebce9f`
+and expires 2026-11-12. `RQ-CF-REL-003` remains `gap` pending corrected
+exact-head hosted execution.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its

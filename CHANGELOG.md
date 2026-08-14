@@ -146,7 +146,7 @@
   with a focused regression rejecting the prompt-prefixed form.
   Run `31761029410` confirmed all 56 prompt-free events were inserted but that
   external desktop input remained non-semantic on the hosted runner. The gate
-  now uses a separately packaged, test-only no-solution `AsyncPackage` to post
+  now uses a separately packaged, test-only solution-triggered `AsyncPackage` to post
   the exact public command group/ID and open the runner-owned PRG in-process;
   it is never included in the product VSIX, and independent pane, PRG,
   package-load, uninstall, and product/driver residue gates remain mandatory.
@@ -154,6 +154,11 @@
   `Microsoft.VisualStudio.OLE.Interop` import before any lifecycle mutation.
   The next hosted build compiled the driver and corrected its explicit
   non-template VSSDK packaging properties before installation began.
+  Run `31762937993` then installed and registered both packages but showed that
+  the driver did not autoload in the no-solution context. The harness now opens
+  an exact runner-owned empty solution under `SolutionExists`; the driver
+  verifies and retains that DTE solution identity before opening the PRG or
+  posting the product command. Clean dual uninstall/residue gates are retained.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

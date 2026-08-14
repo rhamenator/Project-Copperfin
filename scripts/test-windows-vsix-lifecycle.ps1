@@ -294,10 +294,19 @@ $driverVsixSha256 = (Get-FileHash -LiteralPath $resolvedDriverVsix -Algorithm SH
 $registrationActivityLog = Join-Path $resolvedEvidenceDirectory 'ActivityLog-registration.xml'
 $activityLog = Join-Path $resolvedEvidenceDirectory 'ActivityLog.xml'
 $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
+$fixtureSolution = Join-Path $resolvedEvidenceDirectory 'lifecycle-driver.sln'
 $installerDiagnosticsPath = Join-Path $resolvedEvidenceDirectory 'vsix-installer-operations.json'
 $driverResultPath = Join-Path $resolvedEvidenceDirectory 'vsix-lifecycle-driver.json'
 $installerOperations = [System.Collections.Generic.List[object]]::new()
 [System.IO.File]::WriteAllText($fixturePrg, "? 'Copperfin VSIX lifecycle smoke'`r`n", [System.Text.UTF8Encoding]::new($false))
+[System.IO.File]::WriteAllText($fixtureSolution, @'
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Global
+EndGlobal
+'@, [System.Text.UTF8Encoding]::new($false))
 
 $installedDirectory = $null
 $installedDriverDirectory = $null
@@ -417,7 +426,8 @@ try {
     $startInfo.WorkingDirectory = $resolvedEvidenceDirectory
     $startInfo.EnvironmentVariables['COPPERFIN_VSIX_LIFECYCLE_DRIVER_RESULT'] = $driverResultPath
     $startInfo.EnvironmentVariables['COPPERFIN_VSIX_LIFECYCLE_DRIVER_PRG'] = $fixturePrg
-    foreach ($argument in @('/NoSplash', '/Log', $activityLog)) {
+    $startInfo.EnvironmentVariables['COPPERFIN_VSIX_LIFECYCLE_DRIVER_SOLUTION'] = $fixtureSolution
+    foreach ($argument in @('/NoSplash', '/Log', $activityLog, $fixtureSolution)) {
         [void]$startInfo.ArgumentList.Add($argument)
     }
     $ideProcess = [System.Diagnostics.Process]::Start($startInfo)
@@ -525,6 +535,11 @@ if (-not $observed) {
         "Lifecycle-driver command dispatch failed with HRESULT $($driverResult.command_post_hresult): $($driverResult.diagnostic)"
     Assert-Condition ([bool]$driverResult.prg_open_requested) `
         'Lifecycle driver did not request the exact runner-owned PRG.'
+    Assert-Condition ([bool]$driverResult.solution_identity_verified) `
+        'Lifecycle driver did not verify the exact runner-owned solution identity.'
+    Assert-Condition ([string]::Equals([System.IO.Path]::GetFullPath([string]$driverResult.solution_path),
+            [System.IO.Path]::GetFullPath($fixtureSolution), [System.StringComparison]::OrdinalIgnoreCase)) `
+        "Lifecycle driver observed an unexpected solution: $($driverResult.solution_path)"
     Assert-Condition ([string]$driverResult.outcome -eq 'PASS') `
         "Lifecycle-driver dispatch failed: $($driverResult.diagnostic)"
 
@@ -728,6 +743,7 @@ $result = [ordered]@{
     package_registration_and_load = 'PASS'
     extension_version_check = 'PASS'
     supported_prg_open_and_command = 'PASS'
+    runner_owned_solution_identity = 'PASS'
     same_version_reinstall = 'NOT_RUN'
     upgrade_from_previous_version = 'NOT_RUN'
     disablement = 'NOT_RUN'

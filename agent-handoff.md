@@ -201,12 +201,17 @@ that prefix and the focused contract rejects its reintroduction;
 Run `31761029410` retained the corrected 56-event input and clean
 install/uninstall/residue boundaries, but external desktop input still did not
 load Copperfin. The current head replaces that activation seam with a separate
-test-only no-solution `AsyncPackage`: it is inert outside the controlled
+test-only solution-triggered `AsyncPackage`: it is inert outside the controlled
 evidence process, posts the exact public command group/ID through
 `IVsUIShell`, opens the runner-owned PRG through in-process DTE, retains its
 dispatch HRESULT, and is uninstalled with an independent residue gate. It is
 not part of the shipping VSIX. Pane, PRG, product package-load/error, and
 cleanup proof remain independent; exact-head hosted execution is pending.
+Run `31762937993` installed and registered both VSIXes but proved the driver
+did not autoload in the no-solution context; both uninstalls and residue checks
+stayed clean. The correction launches an exact runner-owned empty solution
+under `SolutionExists`, and the driver records and verifies that DTE solution
+identity before any PRG open or product-command dispatch.
 
 ## V1 Windows installer lifecycle
 

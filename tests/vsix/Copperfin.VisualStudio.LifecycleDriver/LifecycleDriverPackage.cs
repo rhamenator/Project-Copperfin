@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace Copperfin.VisualStudio.LifecycleDriver;
 
 [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-[ProvideAutoLoad(UIContextGuids80.NoSolution, PackageAutoLoadFlags.BackgroundLoad)]
+[ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
 [Guid(PackageGuid)]
 public sealed class LifecycleDriverPackage : AsyncPackage
 {
@@ -29,6 +29,7 @@ public sealed class LifecycleDriverPackage : AsyncPackage
     private const uint ShowCommandWindowId = 0x0300;
     private const string ResultVariable = "COPPERFIN_VSIX_LIFECYCLE_DRIVER_RESULT";
     private const string PrgVariable = "COPPERFIN_VSIX_LIFECYCLE_DRIVER_PRG";
+    private const string SolutionVariable = "COPPERFIN_VSIX_LIFECYCLE_DRIVER_SOLUTION";
 
     protected override async Task InitializeAsync(
         CancellationToken cancellationToken,
@@ -36,7 +37,9 @@ public sealed class LifecycleDriverPackage : AsyncPackage
     {
         var resultPath = Environment.GetEnvironmentVariable(ResultVariable);
         var prgPath = Environment.GetEnvironmentVariable(PrgVariable);
-        if (string.IsNullOrWhiteSpace(resultPath) || string.IsNullOrWhiteSpace(prgPath))
+        var expectedSolutionPath = Environment.GetEnvironmentVariable(SolutionVariable);
+        if (string.IsNullOrWhiteSpace(resultPath) || string.IsNullOrWhiteSpace(prgPath) ||
+            string.IsNullOrWhiteSpace(expectedSolutionPath))
         {
             return;
         }
@@ -49,6 +52,8 @@ public sealed class LifecycleDriverPackage : AsyncPackage
             ["product_command_id"] = ShowCommandWindowId,
             ["command_post_hresult"] = -1,
             ["prg_open_requested"] = false,
+            ["solution_identity_verified"] = false,
+            ["solution_path"] = string.Empty,
             ["outcome"] = "ERROR",
             ["diagnostic"] = string.Empty,
         };
@@ -57,6 +62,7 @@ public sealed class LifecycleDriverPackage : AsyncPackage
         {
             resultPath = Path.GetFullPath(resultPath);
             prgPath = Path.GetFullPath(prgPath);
+            expectedSolutionPath = Path.GetFullPath(expectedSolutionPath);
             var resultDirectory = Path.GetDirectoryName(resultPath);
             if (string.IsNullOrWhiteSpace(resultDirectory) || !Directory.Exists(resultDirectory))
             {
@@ -70,6 +76,13 @@ public sealed class LifecycleDriverPackage : AsyncPackage
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             var dte = await GetServiceAsync(typeof(EnvDTE.DTE)) as EnvDTE.DTE
                 ?? throw new InvalidOperationException("Visual Studio DTE service is unavailable in-process.");
+            var activeSolutionPath = Path.GetFullPath(dte.Solution.FullName);
+            result["solution_path"] = activeSolutionPath;
+            if (!string.Equals(activeSolutionPath, expectedSolutionPath, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Visual Studio did not load the exact runner-owned lifecycle solution.");
+            }
+            result["solution_identity_verified"] = true;
             _ = dte.ItemOperations.OpenFile(prgPath, EnvDTE.Constants.vsViewKindTextView);
             result["prg_open_requested"] = true;
 
