@@ -157,37 +157,54 @@ selection, rotation and retention, external or authenticated anchoring,
 multi-host correlation, recovery UI, and integration with the eventual trusted
 activation host remain explicit gaps.
 
-## Session-bound tool-request preflight
+## Product-owned tool registry and session-bound preflight
 
 Before a mutable adapter exists, the native session controller exposes one
 non-executing preflight for future tool dispatch. The version-1 request carries
-only the exact active session generation and the complete set of capabilities
-the contemplated operation would require: workspace read, workspace write,
-local process, outside-workspace access, network access, and privilege
-elevation. It carries no prompt, path, command, credential, provider token, or
-user content.
-The trusted executor, not model output or a provider adapter, must derive the
-complete set from the product-owned registered tool definition.
+only the exact active session generation and one stable tool identifier. It
+carries no caller-selected capability fields, prompt, path, command,
+credential, provider token, or user content. The native product registry maps
+that identifier to the complete capability set; model output, provider
+adapters, workspace configuration, and user content cannot add definitions or
+weaken their requirements.
 
-The controller evaluates that complete set under the same mutex that protects
-session start, stop, and the immutable capability snapshot. Unknown schemas,
-an empty capability set, a session transition, no active session, generation
-zero or mismatch, and any unavailable capability fail closed with stable
-machine diagnostics. Advisory mode admits no tool request. Workspace-sandbox
-mode can admit workspace read/write and local-process requirements but not
-outside-workspace, network, or elevation requirements. Unrestricted-local mode
-can additionally admit outside-workspace and network requirements after its
-existing activation warning gate, but it still cannot admit privilege
-elevation.
+The version-1 product inventory is declarative:
+
+| Tool identifier | Complete required capabilities |
+| --- | --- |
+| `workspace.inspect.v1` | workspace read |
+| `workspace.apply_edit.v1` | workspace read and write |
+| `workspace.run_process.v1` | workspace read/write and local process |
+| `local.inspect.v1` | workspace read and outside-workspace access |
+| `local.apply_edit.v1` | workspace read/write and outside-workspace access |
+| `local.run_process.v1` | workspace read/write, local process, outside-workspace access, and network |
+| `network.request.v1` | network |
+
+Registry construction is compile-time validated for canonical unique IDs,
+nonempty requirements, and the permanent absence of privilege elevation.
+Lookup is exact and case-sensitive; aliases, surrounding whitespace, embedded
+NULs, unknown versions, and provider-defined IDs do not resolve. The list
+declares future operation classes only. It implements no handler and does not
+make a path, process, or endpoint safe.
+
+The controller resolves the ID through that registry, then evaluates its full
+requirement set under the same mutex that protects session start, stop, and the
+immutable capability snapshot. Unknown schemas or tool IDs, a session
+transition, no active session, generation zero or mismatch, and any unavailable
+capability fail closed with stable machine diagnostics. Advisory mode admits no
+tool request. Workspace-sandbox mode can admit the three `workspace.*` entries
+but not outside-workspace or network entries. Unrestricted-local mode can
+additionally admit the `local.*` and network entries after its existing
+activation warning gate. No registered entry requests privilege elevation.
 
 An allowed result is a point-in-time preflight, not a transferable or reusable
 authority token. It does not execute a tool, reserve a session, keep authority
 alive after stop, or prove a later side effect was authorized. A future trusted
-executor must derive and resubmit the operation's complete capability set from
-its product-owned tool definition immediately
-beside every controlled side effect, revalidate its target through the
-applicable containment or process boundary, and separately audit the actual
-tool outcome. Provider authentication remains unrelated to this decision.
+executor must resubmit the registered tool ID immediately beside every
+controlled side effect, resolve the same product definition again, revalidate
+the specific target through the applicable containment or process boundary,
+and separately audit the actual tool outcome. Provider authentication remains
+unrelated to this decision.
 
 ## Current implementation and remaining work
 
@@ -216,10 +233,12 @@ change numeric fields or control-character escapes into invalid JSON.
 This native contract has no command-line or product-UI activation surface and
 does not itself access files, run processes, use the network, or authenticate a
 provider.
-The same controller now supplies the session-bound tool-request preflight
-described above. It closes only the capability-comparison prerequisite for a
-future executor; it is not itself an executor or authorization token and it
-does not add a tool-outcome audit record.
+The same controller now supplies the product-registry-backed session preflight
+described above. The public request cannot supply capability booleans; native
+lookup supplies the complete immutable definition. This closes only the
+tool-definition and capability-comparison prerequisites for a future executor;
+it is not itself an executor or authorization token and it does not add target
+containment, a real sandbox, or a tool-outcome audit record.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.

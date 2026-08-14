@@ -1,3 +1,14 @@
+- 2026-08-14: Replaced caller-declared workspace-agent preflight capabilities
+  with an immutable product-owned tool registry. The versioned public request
+  now carries only the exact session generation and a stable tool ID; native
+  lookup supplies the complete workspace/local/process/network requirements.
+  The seven declarative product entries are compile-time checked for canonical
+  unique IDs, nonempty requirements, and no privilege elevation. Unknown,
+  aliased, case-changed, whitespace-modified, embedded-NUL, and provider-defined
+  IDs fail closed. This adds no handler, target containment, executor, provider,
+  UI activation, filesystem/process/network side effect, outcome audit, diff,
+  or undo capability.
+
 - 2026-08-14: Added a non-executing workspace-agent tool-request preflight to
   the native session controller. A versioned request declares its complete
   file, process, outside-workspace, network, and elevation requirements and is
