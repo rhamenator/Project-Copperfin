@@ -93,16 +93,40 @@ body:
       required: true
 
   - type: textarea
-    id: independent_review
+    id: review_evidence
     attributes:
-      label: Independent Review Evidence
-      description: "Identify reviewer and what was verified."
+      label: Review Evidence
+      description: "State the review mode, reviewer's GitHub login, verification scope, and exactly one overall result/status. Scope and evidence prose describe what was examined; do not encode pass/fail state in those prose fields. Maintainer self-review must record exactly one `verification result`/`verification status` with value `passed` and exactly one `automated evidence result`/`automated evidence status` with value `passed`, plus the evidence references. Maintainer self-review is permitted for none/low/medium severity, must name the issue author's login, and must not be called independent. High/catastrophic severity requires a different qualified human reviewer, who must post the structured sign-off comment shown below from that GitHub account for the exact current issue-body SHA-256."
       placeholder: |
-        reviewer: <name>
+        mode: maintainer self-review | independent human review
+        reviewer: <github-login>
         verification: procedure correctness vs runtime behavior
+        verification result: passed
+        automated evidence: <workflow/test/artifact references>
+        automated evidence result: passed
         result: approved
     validations:
       required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        For independent review, the named reviewer must personally post this
+        comment. Replace every placeholder with meaningful evidence and the
+        lowercase SHA-256 of the exact current issue body. Any later issue-body
+        edit invalidates the sign-off and requires a renewed review comment.
+
+        ```text
+        ## Independent Review Sign-Off
+
+        reviewer: <github-login>
+        qualification: <relevant qualification basis>
+        qualification result: qualified
+        verification: <scope and evidence checked>
+        verification result: passed
+        reviewed issue body sha256: <64 lowercase hexadecimal characters>
+        result: approved
+        ```
 
   - type: textarea
     id: simulation_evidence

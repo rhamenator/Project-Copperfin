@@ -154,7 +154,14 @@ managed projects today, not a target.
 
 - **Issue hierarchy**: umbrella issues → parent/lane issues → prompt-sized child issues (only the last are execution units) — `agents.md`.
 - **Execution status**: the ontology describes repository structure, not the active work queue. Current MVP workstreams and their completion gates live in `docs/05-roadmap.md`; issue-linked evidence lives in `agent-handoff.md` and progress documents.
-- **Requirements Recovery**: a standing-but-deferred goal to build a DO-178-style requirement↔code↔test traceability matrix, grounded only in real installed VFP9 behavior or shipped docs (never decompiled binaries, per `docs/07-clean-room-rules.md`), with known-bug/crash exceptions tracked in `docs/27-known-vfp9-bug-exceptions.md`.
+- **Requirements Recovery**: a continuing DO-178C-inspired quality baseline,
+  not a deferred pass. Each behavior-changing slice maps its permitted-evidence
+  requirement or recovery gap bidirectionally through constraints, code, tests,
+  results, hazards, and exceptions. Permitted sources are real installed VFP9
+  observations, shipped Microsoft/VFP documentation, explicit repository-owner
+  product policy, and registered known-bug/crash exceptions; existing code and
+  decompiled binaries are not requirement sources. See
+  `docs/07-clean-room-rules.md` and `docs/27-known-vfp9-bug-exceptions.md`.
 - **Safety documentation traceability**: `DQ-*`/`DV-*`/`HZ-*` identifiers link doc changes to `docs/safety/hazard-register.md` when operator-facing/procedural docs change.
 - **Handoff contract**: `agent-handoff.md` (compact, current-state) vs. `remaining-work.md` (deprecated, do not use as a planning source) vs. `issues.txt` (local snapshot only, never authoritative over live GitHub issue state).
 

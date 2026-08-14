@@ -18,7 +18,20 @@ Use these sources in order:
 
 ## Standing Goal: Requirements Recovery
 
-Eventual goal, restated here because it keeps getting dropped from condensed guidance: build a DO-178-style LLR <-> code <-> test traceability matrix via requirements recovery, since Copperfin's requirements were never written before its code. See `docs/01-product-charter.md` (Compatibility Fidelity Rule) and `docs/27-known-vfp9-bug-exceptions.md` (bug/crash exception registry). A recovered requirement must validate against real installed VFP9 or shipped docs only, never decompiled binaries (`docs/07-clean-room-rules.md`). Select this subgoal when its evidence, dependencies, or release impact make it the highest-value unfinished work; do not let it block a more important MVP acceptance gap.
+Requirements recovery is a continuing project-wide quality baseline because
+Copperfin's requirements were not written before its code. For every behavior-
+changing slice, identify the governing requirement or record a properly
+evidenced recovery gap, then preserve bidirectional links among requirements,
+derived constraints, architecture/code, tests, retained results, hazards, and
+registered exceptions. Existing implementation is never its own requirement
+source. Recover requirements only from real installed VFP9 observations,
+shipped Microsoft/VFP documentation, explicit repository-owner product policy,
+or registered known-bug/crash exceptions—never decompiled binaries. See
+`docs/01-product-charter.md`, `docs/07-clean-room-rules.md`, and
+`docs/27-known-vfp9-bug-exceptions.md`. Select broader recovery backlog slices
+proportionally by evidence, risk, dependencies, and release impact, but never
+declare changed behavior complete while its governing requirement and
+verification relationship are unknown.
 
 ## Product And Roadmap Intent
 
@@ -90,7 +103,17 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
    - `HZ-*` for hazard linkage from `docs/safety/hazard-register.md`
 3. Require a procedural delta map for each safety-relevant documentation change.
 4. Require misuse analysis and severity classification: `none`, `low`, `medium`, `high`, or `catastrophic`.
-5. Require independent verification evidence from a second qualified reviewer.
+5. Require explicit review evidence. For `none`, `low`, and `medium` severity,
+   documented maintainer self-review plus applicable automated verification is
+   sufficient during development and must not be described as independent.
+   Verification and automated-evidence fields must be meaningful and completed;
+   placeholder, deferred, unavailable, or negated values fail closed.
+   `high` and `catastrophic` changes require evidence from a second qualified
+   human reviewer before closure. The named reviewer must personally post the
+   structured sign-off from that GitHub account; an issue-author claim is not
+   reviewer-controlled evidence. The sign-off must state meaningful, non-
+   placeholder and non-negated qualification and verification evidence and the SHA-256 of the
+   exact issue body reviewed. Any later body edit requires renewed sign-off.
 6. Require simulation or walkthrough evidence that validates the expected operator outcome.
 7. Require rollback and field-notification planning for incorrect documentation.
 8. Do not close a safety-relevant documentation issue without investigation-ready evidence auditable by a third party.

@@ -1,0 +1,13 @@
+[
+  {
+    "number": 9007,
+    "title": "[docs-safety] author cannot approve own independent review",
+    "state": "closed",
+    "user": { "login": "rhamenator" },
+    "labels": [
+      { "name": "documentation" },
+      { "name": "safety" }
+    ],
+    "body": "### Documentation Requirement IDs\n\n- DQ-same-author-review-high\n\n### Documentation Verification IDs\n\n- DV-same-author-review-high\n\n### Hazard Linkage IDs\n\n- HZ-system-failure-01\n\n### DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-same-author-review-high | DV-same-author-review-high | HZ-system-failure-01 |\n\n### Procedural Delta Map\n\nChanges a system-recovery procedure.\n\n### Misuse Analysis\n\nIncorrect steps could cause system failure.\n\n### Potential Severity If Misused\n\nhigh\n\n### Review Evidence\n\nmode: independent human review\nreviewer: rhamenator\nverification: procedure correctness and failure boundaries\nresult: approved\n\n### Simulation/Walkthrough Evidence\n\nWalkthrough confirmed the expected recovery sequence.\n\n### Rollback And Field Notification Plan\n\nRollback the documentation commit and notify affected users."
+  }
+]

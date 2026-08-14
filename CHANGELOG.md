@@ -1,3 +1,30 @@
+- 2026-08-14: Reconciled the safety-documentation template, validator, agent
+  rules, and triage rubric with the adopted solo-maintainer assurance policy.
+  `none`/`low`/`medium` changes may now record explicit maintainer self-review
+  plus applicable automation without claiming independence; `high` and
+  `catastrophic` changes still fail closed without second-qualified-human review,
+  and completed-project/first-stable-release review is unchanged. Deterministic
+  fixtures prove both sides while preserving structured historical Independent
+  Review records. The validator binds self-review to the issue author, binds
+  independent review to a distinct GitHub login and a structured sign-off
+  comment authored by that account, records the qualification and verification
+  basis, binds the sign-off to the SHA-256 of the exact issue body reviewed,
+  rejects stale digests plus placeholder or negated qualification/verification,
+  applies the same meaningful-evidence rule to lower-risk self-review
+  verification and automation, parses affirmative results rather than approval
+  substrings, and rejects incomplete low-risk evidence or issue-author identity
+  assertions. Review evidence is punctuation-normalized before rejecting
+  negative, incomplete, missing, deferred, unavailable, skipped, or failed
+  states while retaining affirmative `does not`/`never` safety guarantees and
+  legitimate failure-boundary scope prose. Outcome/status `failure` forms still
+  fail closed. Live review
+  loading re-fetches the issue after comment pagination and fails closed if the
+  body, comment count, or update identity does not stabilize.
+  The charter, README, agent rules, ontology, and traceability matrix
+  now make requirements recovery an ongoing project-wide baseline and forbid
+  treating existing implementation as its own requirement source. No product or
+  runtime behavior changed.
+
 - 2026-08-13: Adopted a solo-maintainer assurance model for development
   changes. Per-pull-request independent human approval is not required;
   protected automated quality, security, traceability, testing, provenance,
