@@ -9,9 +9,11 @@
   independent review to a distinct GitHub login and a structured sign-off
   comment authored by that account, records the qualification and verification
   basis, binds the sign-off to the SHA-256 of the exact issue body reviewed,
-  rejects stale digests and placeholder qualification/verification, parses
-  affirmative results rather than approval substrings, and rejects incomplete
-  low-risk evidence or issue-author identity assertions.
+  rejects stale digests plus placeholder or negated qualification/verification,
+  applies the same meaningful-evidence rule to lower-risk self-review
+  verification and automation, parses affirmative results rather than approval
+  substrings, and rejects incomplete low-risk evidence or issue-author identity
+  assertions.
   The charter, README, agent rules, ontology, and traceability matrix
   now make requirements recovery an ongoing project-wide baseline and forbid
   treating existing implementation as its own requirement source. No product or

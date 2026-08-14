@@ -261,7 +261,7 @@ function Test-MeaningfulReviewEvidence {
         return $false
     }
 
-    return $trimmed -notmatch '^(?i:n/?a|none|pending(?:\s+.*)?|tbd(?:\s+.*)?|todo(?:\s+.*)?|unknown|unverified|unchecked|placeholder(?:\s+.*)?|later|not\s+(?:applicable|provided|done))$'
+    return $trimmed -notmatch '^(?i:n/?a|none|pending(?:\s+.*)?|tbd(?:\s+.*)?|todo(?:\s+.*)?|unknown|unqualified|unverified|unchecked|placeholder(?:\s+.*)?|later|not(?:\s+.*)?)$'
 }
 
 function Test-AuthenticatedIndependentReview {
@@ -438,11 +438,11 @@ foreach ($issue in $issues) {
     $hasStructuredCurrentReview = $hasCurrentReviewEvidence -and
         -not [string]::IsNullOrWhiteSpace($authorLogin) -and
         -not [string]::IsNullOrWhiteSpace($currentReviewer) -and
-        -not [string]::IsNullOrWhiteSpace($currentVerification) -and
+        (Test-MeaningfulReviewEvidence -Value $currentVerification) -and
         $currentApproved
     $hasStructuredCurrentSelfReview = $hasStructuredCurrentReview -and
         $currentSelfReview -and $currentReviewer -eq $authorLogin -and
-        -not [string]::IsNullOrWhiteSpace($currentAutomation)
+        (Test-MeaningfulReviewEvidence -Value $currentAutomation)
     $hasStructuredCurrentIndependentReview = $hasStructuredCurrentReview -and
         $currentIndependentReview -and $currentReviewer -ne $authorLogin
     $hasAuthenticatedCurrentIndependentReview = $hasStructuredCurrentIndependentReview -and
@@ -460,7 +460,7 @@ foreach ($issue in $issues) {
         -not [string]::IsNullOrWhiteSpace($authorLogin) -and
         -not [string]::IsNullOrWhiteSpace($legacyReviewer) -and
         $legacyReviewer -ne $authorLogin -and
-        -not [string]::IsNullOrWhiteSpace($legacyVerification) -and
+        (Test-MeaningfulReviewEvidence -Value $legacyVerification) -and
         $legacyResult -match '^(?:approved|passed)$'
     $hasAuthenticatedLegacyIndependentReview = $hasStructuredLegacyIndependentReview -and
         (Test-AuthenticatedIndependentReview -Issue $issue -Reviewer $legacyReviewer)
