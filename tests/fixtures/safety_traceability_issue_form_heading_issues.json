@@ -1,0 +1,13 @@
+[
+  {
+    "number": 9005,
+    "title": "[docs-safety] GitHub issue-form heading compatibility",
+    "state": "closed",
+    "user": { "login": "rhamenator" },
+    "labels": [
+      { "name": "documentation" },
+      { "name": "safety" }
+    ],
+    "body": "### Documentation Requirement IDs\n\n- DQ-issue-form-heading\n\n### Documentation Verification IDs\n\n- DV-issue-form-heading\n\n### Hazard Linkage IDs\n\n- HZ-NONE\n\n### DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-issue-form-heading | DV-issue-form-heading | HZ-NONE |\n\n### Procedural Delta Map\n\nNo operator procedure changes.\n\n### Misuse Analysis\n\nIncorrect prose could cause minor confusion.\n\n### Potential Severity If Misused\n\nlow\n\n### Review Evidence\n\nmode: maintainer self-review\nreviewer: rhamenator\nverification: procedure and rendered guidance checked\nverification result: passed\nautomated evidence: focused documentation contracts pass\nautomated evidence result: passed\nresult: approved\n\n### Simulation/Walkthrough Evidence\n\nWalkthrough confirmed the rendered guidance.\n\n### Rollback And Field Notification Plan\n\nRollback the documentation commit and publish a correction notice."
+  }
+]

@@ -139,7 +139,18 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
    - `HZ-*` for hazard linkage from `docs/safety/hazard-register.md`
 3. Require a procedural delta map for each safety-relevant documentation change.
 4. Require misuse analysis and severity classification: `none`, `low`, `medium`, `high`, or `catastrophic`.
-5. Require independent verification evidence from a second qualified reviewer.
+5. Require explicit review evidence. For `none`, `low`, and `medium` severity,
+   documented repository-owner maintainer self-review plus applicable automated
+   verification is sufficient during development and must not be described as
+   independent. An external issue reporter cannot self-approve.
+   Verification and automated-evidence fields must be meaningful and completed;
+   placeholder, deferred, unavailable, or negated values fail closed.
+   `high` and `catastrophic` changes require evidence from a second qualified
+   human reviewer before closure. The named reviewer must personally post the
+   structured sign-off from that GitHub account; an issue-author claim is not
+   reviewer-controlled evidence. The sign-off must state meaningful, non-
+   placeholder and non-negated qualification and verification evidence and the SHA-256 of the
+   exact issue body reviewed. Any later body edit requires renewed sign-off.
 6. Require simulation or walkthrough evidence that validates the expected operator outcome.
 7. Require rollback and field-notification planning for incorrect documentation.
 8. Do not close a safety-relevant documentation issue without investigation-ready evidence auditable by a third party.

@@ -4,6 +4,7 @@
 
 param(
     [string]$Repository = $env:GITHUB_REPOSITORY,
+    [string]$RepositoryOwner = $env:GITHUB_REPOSITORY_OWNER,
     [string]$IssueNumbers,
     [string]$IssueJsonPath,
     [string]$HazardRegisterPath,
@@ -74,6 +75,39 @@ function Get-IssuesFromJson {
     return @($parsed)
 }
 
+function Get-ReviewComments {
+    param(
+        $Issue,
+        $Headers
+    )
+
+    $comments = @()
+    $commentCount = [int]$Issue.comments
+    if ($commentCount -gt 0) {
+        $pageCount = [int][Math]::Ceiling($commentCount / 100.0)
+        for ($page = 1; $page -le $pageCount; $page++) {
+            $commentsUri = "$($Issue.comments_url)?per_page=100&page=$page"
+            $comments += @(Invoke-RestMethod -Uri $commentsUri -Headers $Headers -Method Get)
+        }
+    }
+
+    return @($comments)
+}
+
+function Get-ReviewCommentFingerprint {
+    param($Comments)
+
+    $canonical = @($Comments | ForEach-Object {
+        [pscustomobject]@{
+            id = [string]$_.id
+            updated_at = [string]$_.updated_at
+            author = [string]$_.user.login
+            body = [string]$_.body
+        }
+    } | Sort-Object -Property id)
+    return Get-TextSha256 -Value ($canonical | ConvertTo-Json -Depth 4 -Compress)
+}
+
 function Get-IssuesFromGitHub {
     param(
         [string]$Repo,
@@ -109,8 +143,36 @@ function Get-IssuesFromGitHub {
 
     foreach ($num in $numberList) {
         $uri = "https://api.github.com/repos/$Repo/issues/$num"
-        $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
-        $issues += $response
+        $stableResponse = $null
+        for ($attempt = 1; $attempt -le 3; $attempt++) {
+            $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+            $commentCount = [int]$response.comments
+            $reviewComments = @(Get-ReviewComments -Issue $response -Headers $headers)
+
+            # Bracket the second comment pass with issue reads. Issue metadata
+            # alone does not reliably expose an in-flight comment edit, while a
+            # comment pass alone cannot expose an in-flight issue-body edit.
+            $latestResponse = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+            $latestReviewComments = @(Get-ReviewComments -Issue $latestResponse -Headers $headers)
+            $finalResponse = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+            if ([string]$latestResponse.body -eq [string]$response.body -and
+                [string]$finalResponse.body -eq [string]$latestResponse.body -and
+                [int]$latestResponse.comments -eq $commentCount -and
+                [int]$finalResponse.comments -eq [int]$latestResponse.comments -and
+                [string]$latestResponse.updated_at -eq [string]$response.updated_at -and
+                [string]$finalResponse.updated_at -eq [string]$latestResponse.updated_at -and
+                (Get-ReviewCommentFingerprint -Comments $latestReviewComments) -eq
+                    (Get-ReviewCommentFingerprint -Comments $reviewComments)) {
+                $finalResponse | Add-Member -NotePropertyName review_comments -NotePropertyValue @($latestReviewComments) -Force
+                $stableResponse = $finalResponse
+                break
+            }
+        }
+
+        if ($null -eq $stableResponse) {
+            throw "Issue #$num changed while review evidence was being loaded; rerun validation against a stable snapshot."
+        }
+        $issues += $stableResponse
     }
 
     return $issues
@@ -162,21 +224,948 @@ function Test-SafetyDocIssue {
     return $false
 }
 
+function Test-MarkdownLinkDestination {
+    param([AllowEmptyString()][string]$Value)
+
+    $candidate = $Value.Trim()
+    $targetMatch = [regex]::Match(
+        $candidate,
+        '^(?<destination><(?:\\.|[^<>\\\r\n])*>|\S+)(?:[ \t]+(?<title>"(?:\\.|[^"\\\r\n])*"|''(?:\\.|[^''\\\r\n])*''|\((?:\\.|[^()\\\r\n])*\)))?$')
+    if (-not $targetMatch.Success) {
+        return $false
+    }
+    $destination = $targetMatch.Groups['destination'].Value
+    if ($destination -match '^<(?:\\.|[^<>\\\r\n])*>$') {
+        return $true
+    }
+    if ([string]::IsNullOrWhiteSpace($destination)) {
+        return $false
+    }
+
+    $depth = 0
+    for ($index = 0; $index -lt $destination.Length; $index++) {
+        if ($destination[$index] -eq '\') {
+            $index++
+            continue
+        }
+        $characterCode = [int][char]$destination[$index]
+        if ($characterCode -le 0x20 -or $characterCode -eq 0x7F -or
+            $destination[$index] -eq '<' -or $destination[$index] -eq '>') {
+            return $false
+        }
+        if ($destination[$index] -eq '(') {
+            $depth++
+        } elseif ($destination[$index] -eq ')') {
+            $depth--
+            if ($depth -lt 0) { return $false }
+        }
+    }
+    return $depth -eq 0
+}
+
+function Get-RenderedInlineEvidenceText {
+    param(
+        [AllowEmptyString()][string]$Value,
+        [switch]$NormalizeReferenceLinks,
+        [AllowEmptyString()][string]$ReferenceText = '',
+        [switch]$RequireDefinedReferences
+    )
+
+    $rendered = $Value
+    $linkTextPattern = '(?:(?>[^\[\]\\\r\n]+)|\\.|(?<depth>\[)|(?<-depth>\]))*(?(depth)(?!))'
+    $angleDestinationPattern = '<(?:\\.|[^<>\\\r\n])*>'
+    $bareDestinationPattern = '(?:(?>[^\s()<>\\\r\n]+)|\\.|(?<paren>\()|(?<-paren>\)))*(?(paren)(?!))'
+    $linkTitlePattern = '(?:"(?:\\.|[^"\\\r\n])*"|''(?:\\.|[^''\\\r\n])*''|\((?:\\.|[^()\\\r\n])*\))'
+    $inlineTargetPattern = "(?:$angleDestinationPattern|$bareDestinationPattern)(?:[ \t]+$linkTitlePattern)?"
+    $inlineLinkPattern = "!?\[(?<text>$linkTextPattern)\]\((?<destination>$inlineTargetPattern)\)"
+    $rendered = [regex]::Replace(
+        $rendered,
+        $inlineLinkPattern,
+        {
+            param($match)
+            if (Test-MarkdownLinkDestination -Value $match.Groups['destination'].Value) {
+                return $match.Groups['text'].Value
+            }
+            return $match.Value
+        })
+    if ($NormalizeReferenceLinks) {
+        $referenceLabels = @{}
+        if (-not [string]::IsNullOrWhiteSpace($ReferenceText)) {
+            foreach ($definition in [regex]::Matches(
+                $ReferenceText,
+                "(?m)^ {0,3}\[(?<label>(?:\\.|[^\]\\\r\n])+)\]:[ \t]*(?<destination>$inlineTargetPattern)[ \t]*$")) {
+                if (-not (Test-MarkdownLinkDestination `
+                        -Value $definition.Groups['destination'].Value)) {
+                    continue
+                }
+                $normalizedLabel = [regex]::Replace(
+                    $definition.Groups['label'].Value.ToLowerInvariant(),
+                    '[ \t\r\n]+',
+                    ' ').Trim()
+                $referenceLabels[$normalizedLabel] = $true
+            }
+        }
+        $rendered = [regex]::Replace(
+            $rendered,
+            "!?\[(?<text>$linkTextPattern)\]\[(?<label>$linkTextPattern)\]",
+            {
+                param($match)
+                $label = $match.Groups['label'].Value
+                if ([string]::IsNullOrEmpty($label)) {
+                    $label = $match.Groups['text'].Value
+                }
+                $normalizedLabel = [regex]::Replace(
+                    $label.ToLowerInvariant(),
+                    '[ \t\r\n]+',
+                    ' ').Trim()
+                if ((-not $RequireDefinedReferences -and $referenceLabels.Count -eq 0) -or
+                    $referenceLabels.ContainsKey($normalizedLabel)) {
+                    return $match.Groups['text'].Value
+                }
+                return $match.Value
+            })
+        $rendered = [regex]::Replace(
+            $rendered,
+            "!?\[(?<text>$linkTextPattern)\]",
+            {
+                param($match)
+                $normalizedLabel = [regex]::Replace(
+                    $match.Groups['text'].Value.ToLowerInvariant(),
+                    '[ \t\r\n]+',
+                    ' ').Trim()
+                if ((-not $RequireDefinedReferences -and $referenceLabels.Count -eq 0) -or
+                    $referenceLabels.ContainsKey($normalizedLabel)) {
+                    return $match.Groups['text'].Value
+                }
+                return $match.Value
+            })
+    }
+    foreach ($pattern in @(
+        '(?<!\*)\*\*(?=\S)(?<text>.*?\S)\*\*(?!\*)',
+        '(?<!_)__(?=\S)(?<text>.*?\S)__(?!_)',
+        '(?<!~)~~(?=\S)(?<text>.*?\S)~~(?!~)',
+        '(?<!\*)\*(?=\S)(?<text>.*?\S)\*(?!\*)',
+        '(?<!_)_(?=\S)(?<text>.*?\S)_(?!_)')) {
+        $rendered = [regex]::Replace($rendered, $pattern, '${text}')
+    }
+    $rendered = [regex]::Replace(
+        $rendered,
+        '\\(?<escaped>[!"#$%&''()*+,\-./:;<=>?@\[\\\]^_`{|}~])',
+        '${escaped}')
+    $rendered = [System.Net.WebUtility]::HtmlDecode($rendered)
+    # Inline HTML tags are presentation syntax, not semantic evidence. Remove
+    # them after entity decoding so wrappers cannot hide placeholder states;
+    # URI and email autolinks do not match this tag grammar.
+    return [regex]::Replace(
+        $rendered,
+        '</?[A-Za-z][A-Za-z0-9-]*(?=[\s/>])(?:[^"''<>]|"[^"]*"|''[^'']*'')*>',
+        '')
+}
+
 function Get-MarkdownSection {
     param(
         [string]$Body,
         [string]$Heading
     )
 
-    $escapedHeading = [regex]::Escape($Heading)
-    $match = [regex]::Match(
-        $Body,
-        "(?ims)^\s*##\s*$escapedHeading\s*\r?\n(?<content>.*?)(?=^\s*##\s|\z)")
-    if (-not $match.Success) {
+    $lines = @($Body -split '\r?\n')
+    $targetIndexes = @()
+    for ($index = 0; $index -lt $lines.Count; $index++) {
+        $headingMatch = [regex]::Match(
+            $lines[$index],
+            '^ {0,3}#{2,3}[ \t]+(?<text>.*?)[ \t]*$')
+        if (-not $headingMatch.Success) {
+            continue
+        }
+        $renderedHeading = Get-RenderedInlineEvidenceText `
+            -Value $headingMatch.Groups['text'].Value `
+            -NormalizeReferenceLinks `
+            -ReferenceText $Body `
+            -RequireDefinedReferences
+        $renderedHeading = [regex]::Replace(
+            $renderedHeading,
+            '[ \t]+#+[ \t]*$',
+            '').Trim()
+        if ($renderedHeading -eq $Heading) {
+            $targetIndexes += $index
+        }
+    }
+    if ($targetIndexes.Count -ne 1) {
         return ""
     }
 
-    return $match.Groups["content"].Value
+    $startIndex = $targetIndexes[0] + 1
+    $endIndex = $lines.Count
+    for ($index = $startIndex; $index -lt $lines.Count; $index++) {
+        if ($lines[$index] -match '^ {0,3}#{2,3}[ \t]+') {
+            $endIndex = $index
+            break
+        }
+    }
+    if ($endIndex -le $startIndex) {
+        return ""
+    }
+
+    return ($lines[$startIndex..($endIndex - 1)] -join "`n")
+}
+
+function Get-MarkdownHeadingCount {
+    param(
+        [string]$Body,
+        [string]$Heading
+    )
+
+    $count = 0
+    foreach ($line in ($Body -split '\r?\n')) {
+        $headingMatch = [regex]::Match(
+            $line,
+            '^ {0,3}#{2,3}[ \t]+(?<text>.*?)[ \t]*$')
+        if (-not $headingMatch.Success) {
+            continue
+        }
+        $renderedHeading = Get-RenderedInlineEvidenceText `
+            -Value $headingMatch.Groups['text'].Value `
+            -NormalizeReferenceLinks `
+            -ReferenceText $Body `
+            -RequireDefinedReferences
+        $renderedHeading = [regex]::Replace(
+            $renderedHeading,
+            '[ \t]+#+[ \t]*$',
+            '').Trim()
+        if ($renderedHeading -eq $Heading) {
+            $count++
+        }
+    }
+    return $count
+}
+
+function Get-RawMarkdownSectionAtRenderedBoundaries {
+    param(
+        [string]$RawBody,
+        [string]$RenderedBody,
+        [string]$Heading
+    )
+
+    $rawLines = @($RawBody -split '\r?\n')
+    $renderedLines = @($RenderedBody -split '\r?\n')
+    if ($rawLines.Count -ne $renderedLines.Count) {
+        return ''
+    }
+
+    $escapedHeading = [regex]::Escape($Heading)
+    $targetPattern = "^ {0,3}#{2,3}[ \t]+$escapedHeading(?:[ \t]+#+)?[ \t]*$"
+    $nextHeadingPattern = '^ {0,3}#{2,3}[ \t]+'
+    $targetIndexes = @()
+    for ($index = 0; $index -lt $renderedLines.Count; $index++) {
+        if ($renderedLines[$index] -match $targetPattern) {
+            $targetIndexes += $index
+        }
+    }
+    if ($targetIndexes.Count -ne 1) {
+        return ''
+    }
+
+    $startIndex = $targetIndexes[0] + 1
+    $endIndex = $renderedLines.Count
+    for ($index = $startIndex; $index -lt $renderedLines.Count; $index++) {
+        if ($renderedLines[$index] -match $nextHeadingPattern) {
+            $endIndex = $index
+            break
+        }
+    }
+    if ($endIndex -le $startIndex) {
+        return ''
+    }
+
+    return ($rawLines[$startIndex..($endIndex - 1)] -join "`n")
+}
+
+function Mask-MarkdownHtmlCommentsOutsideCode {
+    param([AllowEmptyString()][string]$Body)
+
+    $maskedLines = [System.Collections.Generic.List[string]]::new()
+    $inFence = $false
+    $fenceCharacter = ''
+    $fenceLength = 0
+    $inComment = $false
+    $codeSpanLength = 0
+    $paragraphInterruptHtmlTags = 'address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|pre|script|search|section|style|summary|table|tbody|td|textarea|tfoot|th|thead|title|tr|track|ul'
+
+    foreach ($line in ($Body -split '\r?\n')) {
+        $interruptsParagraph = $line -match '^ {0,3}(?:<!--|<\?|<!\[CDATA\[|<![A-Z]|`{3,}|~{3,})' -or
+            $line -match "^ {0,3}</?(?:$paragraphInterruptHtmlTags)(?:\s|/?>|$)"
+        if ($codeSpanLength -gt 0 -and
+            ([string]::IsNullOrWhiteSpace($line) -or $interruptsParagraph)) {
+            # A CommonMark code span cannot cross the blank line that ends its
+            # paragraph or a block construct that interrupts that paragraph.
+            # Treat an unmatched opener conservatively as masked text, then
+            # resume block classification at the boundary.
+            $codeSpanLength = 0
+        }
+        if ([string]::IsNullOrWhiteSpace($line)) {
+            $maskedLines.Add($line)
+            continue
+        }
+
+        if ($inFence -and -not $inComment -and $codeSpanLength -eq 0) {
+            $maskedLines.Add(' ' * $line.Length)
+            $escapedFenceCharacter = [regex]::Escape($fenceCharacter)
+            if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
+                $inFence = $false
+            }
+            continue
+        }
+
+        if (-not $inComment -and $codeSpanLength -eq 0) {
+            $fenceMatch = [regex]::Match($line, '^ {0,3}(?<fence>`{3,}|~{3,})')
+            if ($fenceMatch.Success) {
+                $maskedLines.Add(' ' * $line.Length)
+                $inFence = $true
+                $fenceCharacter = $fenceMatch.Groups['fence'].Value.Substring(0, 1)
+                $fenceLength = $fenceMatch.Groups['fence'].Value.Length
+                continue
+            }
+
+            if ($line -match '^(?: {4}|\t)') {
+                $maskedLines.Add(' ' * $line.Length)
+                continue
+            }
+        }
+
+        $characters = $line.ToCharArray()
+        $searchIndex = 0
+        while ($searchIndex -lt $line.Length) {
+            if ($inComment) {
+                $commentStart = $searchIndex
+                $commentEnd = $line.IndexOf('-->', $searchIndex, [System.StringComparison]::Ordinal)
+                $maskEnd = if ($commentEnd -ge 0) { $commentEnd + 3 } else { $line.Length }
+                while ($commentEnd -ge 0 -and $maskEnd -lt $line.Length -and
+                    $line.IndexOf('<!--', $maskEnd, [System.StringComparison]::Ordinal) -eq $maskEnd) {
+                    $commentEnd = $line.IndexOf('-->', $maskEnd + 4, [System.StringComparison]::Ordinal)
+                    $maskEnd = if ($commentEnd -ge 0) { $commentEnd + 3 } else { $line.Length }
+                }
+                for ($index = $searchIndex; $index -lt $maskEnd; $index++) {
+                    $characters[$index] = ' '
+                }
+                if ($commentEnd -lt 0) {
+                    $searchIndex = $line.Length
+                } else {
+                    if ($commentStart -gt 0 -and $maskEnd -lt $line.Length -and
+                        [char]::IsLetterOrDigit($line[$commentStart - 1]) -and
+                        [char]::IsLetterOrDigit($line[$maskEnd])) {
+                        # Removing this rendered inline comment would join two
+                        # token fragments. Mark the body as ambiguous so the
+                        # structured evidence path fails closed.
+                        $characters[$commentStart] = [char]0xFFFD
+                    }
+                    $inComment = $false
+                    $searchIndex = $maskEnd
+                }
+                continue
+            }
+
+            $precedingBackslashes = 0
+            for ($probeIndex = $searchIndex - 1;
+                $probeIndex -ge 0 -and $line[$probeIndex] -eq '\';
+                $probeIndex--) {
+                $precedingBackslashes++
+            }
+            $isEscaped = ($precedingBackslashes % 2) -eq 1
+
+            if ($codeSpanLength -gt 0) {
+                $characters[$searchIndex] = ' '
+                # Backslash escapes do not apply inside a CommonMark code span;
+                # an exact delimiter run closes even when preceded by '\'.
+                if ($line[$searchIndex] -eq '`') {
+                    $runEnd = $searchIndex
+                    while ($runEnd -lt $line.Length -and $line[$runEnd] -eq '`') {
+                        $characters[$runEnd] = ' '
+                        $runEnd++
+                    }
+                    if (($runEnd - $searchIndex) -eq $codeSpanLength) {
+                        $codeSpanLength = 0
+                    }
+                    $searchIndex = $runEnd
+                } else {
+                    $searchIndex++
+                }
+                continue
+            }
+
+            if (-not $isEscaped -and
+                $line.IndexOf('<!--', $searchIndex, [System.StringComparison]::Ordinal) -eq $searchIndex) {
+                $inComment = $true
+                continue
+            }
+
+            if ($line[$searchIndex] -eq '`' -and -not $isEscaped) {
+                $runEnd = $searchIndex
+                while ($runEnd -lt $line.Length -and $line[$runEnd] -eq '`') {
+                    $characters[$runEnd] = ' '
+                    $runEnd++
+                }
+                $codeSpanLength = $runEnd - $searchIndex
+                $searchIndex = $runEnd
+                continue
+            }
+
+            $searchIndex++
+        }
+        $maskedLines.Add(($characters -join ''))
+    }
+
+    return ($maskedLines -join "`n")
+}
+
+function Get-RenderedMarkdownEvidenceText {
+    param(
+        [AllowEmptyString()][string]$Body,
+        [switch]$RejectTopLevelRawHtml
+    )
+
+    $commentMaskedBody = Mask-MarkdownHtmlCommentsOutsideCode -Body $Body
+    if ($commentMaskedBody.Contains([char]0xFFFD)) {
+        return ''
+    }
+    $renderedLines = [System.Collections.Generic.List[string]]::new()
+    $inFence = $false
+    $fenceCharacter = ''
+    $fenceLength = 0
+    $rawHtmlEndToken = ''
+    $rawHtmlUntilBlank = $false
+    $rawHtmlBlockTags = 'address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul'
+    $emailAutolinkPattern = '^<[A-Za-z0-9.!#$%&''*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*>[ \t]*$'
+
+    foreach ($line in ($commentMaskedBody -split '\r?\n')) {
+        if (-not [string]::IsNullOrEmpty($rawHtmlEndToken)) {
+            if ($line.Contains($rawHtmlEndToken, [System.StringComparison]::OrdinalIgnoreCase)) {
+                $rawHtmlEndToken = ''
+            }
+            $renderedLines.Add(' ' * $line.Length)
+            continue
+        }
+        if ($rawHtmlUntilBlank) {
+            if ([string]::IsNullOrWhiteSpace($line)) {
+                $rawHtmlUntilBlank = $false
+                $renderedLines.Add($line)
+            } else {
+                $renderedLines.Add(' ' * $line.Length)
+            }
+            continue
+        }
+
+        if ($inFence) {
+            $escapedFenceCharacter = [regex]::Escape($fenceCharacter)
+            if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
+                $inFence = $false
+            }
+            $renderedLines.Add(' ' * $line.Length)
+            continue
+        }
+
+        $fenceMatch = [regex]::Match($line, '^ {0,3}(?<fence>`{3,}|~{3,})')
+        if ($fenceMatch.Success) {
+            $inFence = $true
+            $fenceCharacter = $fenceMatch.Groups['fence'].Value.Substring(0, 1)
+            $fenceLength = $fenceMatch.Groups['fence'].Value.Length
+            $renderedLines.Add(' ' * $line.Length)
+            continue
+        }
+
+        if ($line -match '^(?: {4}|\t)') {
+            $renderedLines.Add(' ' * $line.Length)
+            continue
+        }
+
+        if ($line -match '^ {0,3}<') {
+            $trimmedHtmlLine = $line.TrimStart()
+            $isAutolink = $trimmedHtmlLine -match '^<[A-Za-z][A-Za-z0-9+.-]{1,31}:[^\x00-\x20\x7F<>]*>[ \t]*$' -or
+                $trimmedHtmlLine -match $emailAutolinkPattern
+            if ($isAutolink) {
+                $renderedLines.Add($line)
+                continue
+            }
+
+            $isRawHtmlBlock = $false
+            $typeOneMatch = [regex]::Match(
+                $trimmedHtmlLine,
+                '^<(?<tag>pre|script|style|textarea)(?:\s|>|$)',
+                [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+            if ($typeOneMatch.Success) {
+                $isRawHtmlBlock = $true
+                $closingToken = "</$($typeOneMatch.Groups['tag'].Value)>"
+                if (-not $trimmedHtmlLine.Contains($closingToken, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    $rawHtmlEndToken = $closingToken
+                }
+            } elseif ($trimmedHtmlLine.StartsWith('<?')) {
+                $isRawHtmlBlock = $true
+                if (-not $trimmedHtmlLine.Contains('?>')) { $rawHtmlEndToken = '?>' }
+            } elseif ($trimmedHtmlLine.StartsWith('<![CDATA[', [System.StringComparison]::OrdinalIgnoreCase)) {
+                $isRawHtmlBlock = $true
+                if (-not $trimmedHtmlLine.Contains(']]>')) { $rawHtmlEndToken = ']]>' }
+            } elseif ($trimmedHtmlLine -match '^<![A-Z]') {
+                $isRawHtmlBlock = $true
+                if (-not $trimmedHtmlLine.Contains('>')) { $rawHtmlEndToken = '>' }
+            } elseif ($trimmedHtmlLine -match "^</?(?:$rawHtmlBlockTags)(?:\s|/?>)" -or
+                $trimmedHtmlLine -match '^</?[A-Za-z][A-Za-z0-9-]*(?:\s+[^>]*)?/?>\s*$') {
+                $isRawHtmlBlock = $true
+                $rawHtmlUntilBlank = $true
+            }
+
+            # At a top-level line start, any angle-bracket construct that is
+            # not a proven autolink is excluded conservatively. This covers
+            # quoted '>' characters and future HTML forms without weakening
+            # the sign-off boundary.
+            if (-not $isRawHtmlBlock) {
+                $isRawHtmlBlock = $true
+                $rawHtmlUntilBlank = $true
+            }
+
+            if ($isRawHtmlBlock) {
+                if ($RejectTopLevelRawHtml) {
+                    return ''
+                }
+                $renderedLines.Add(' ' * $line.Length)
+                continue
+            }
+        }
+
+        $renderedLines.Add($line)
+    }
+
+    return ($renderedLines -join "`n")
+}
+
+function Test-UniqueRenderedSectionOrLegacyText {
+    param(
+        [string]$Body,
+        [string]$Heading,
+        [string]$LegacyPattern
+    )
+
+    $escapedHeading = [regex]::Escape($Heading)
+    $headingPattern = "(?im)^ {0,3}#{2,3}[ \t]+$escapedHeading(?:[ \t]+#+)?[ \t]*$"
+    $headingCount = [regex]::Matches($Body, $headingPattern).Count
+    if ($headingCount -gt 1) {
+        return $false
+    }
+    if ($headingCount -eq 1) {
+        return -not [string]::IsNullOrWhiteSpace(
+            (Get-MarkdownSection -Body $Body -Heading $Heading))
+    }
+
+    return $Body -match $LegacyPattern
+}
+
+function Get-SeverityClassification {
+    param([string]$Body)
+
+    $renderedBody = Get-RenderedMarkdownEvidenceText -Body $Body
+    $severityPattern = '(none|low|medium|high|catastrophic)'
+    $legacySeverityPattern = "(?im)^\s*(?:potential\s+)?severity(?:\s+if\s+misused)?\s*:\s*$severityPattern\s*$"
+    $rawSeverityHeadingCount = Get-MarkdownHeadingCount `
+        -Body $Body `
+        -Heading 'Potential Severity If Misused'
+    $severityHeadingCount = Get-MarkdownHeadingCount `
+        -Body $renderedBody `
+        -Heading 'Potential Severity If Misused'
+    $rawLegacySeverityCount = [regex]::Matches($Body, $legacySeverityPattern).Count
+    $renderedLegacySeverityMatches = [regex]::Matches($renderedBody, $legacySeverityPattern)
+    if ($rawSeverityHeadingCount -ne $severityHeadingCount -or
+        $rawLegacySeverityCount -ne $renderedLegacySeverityMatches.Count -or
+        $severityHeadingCount -gt 1) {
+        return ""
+    }
+
+    if ($severityHeadingCount -eq 1) {
+        if ($renderedLegacySeverityMatches.Count -ne 0) {
+            return ""
+        }
+        $rawSection = Get-RawMarkdownSectionAtRenderedBoundaries `
+            -RawBody $Body `
+            -RenderedBody $renderedBody `
+            -Heading "Potential Severity If Misused"
+        $section = Get-MarkdownSection -Body $renderedBody -Heading "Potential Severity If Misused"
+        $decodedRawSection = Get-RenderedInlineEvidenceText `
+            -Value $rawSection `
+            -NormalizeReferenceLinks
+        $decodedSection = Get-RenderedInlineEvidenceText `
+            -Value $section `
+            -NormalizeReferenceLinks
+        $rawSectionSeverityMatches = [regex]::Matches(
+            $decodedRawSection,
+            "(?i)\b(?<severity>$severityPattern)\b")
+        $sectionSeverityMatches = [regex]::Matches(
+            $decodedSection,
+            "(?i)\b(?<severity>$severityPattern)\b")
+        if ($rawSectionSeverityMatches.Count -eq $sectionSeverityMatches.Count -and
+            $sectionSeverityMatches.Count -eq 1 -and
+            $rawSectionSeverityMatches[0].Groups['severity'].Value.Equals(
+                $sectionSeverityMatches[0].Groups['severity'].Value,
+                [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $sectionSeverityMatches[0].Groups['severity'].Value.ToLowerInvariant()
+        }
+        return ""
+    }
+
+    # Retain compatibility with evidence created before the issue form emitted
+    # the severity as its own Markdown section.
+    if ($renderedLegacySeverityMatches.Count -eq 1) {
+        return $renderedLegacySeverityMatches[0].Groups[1].Value.ToLowerInvariant()
+    }
+
+    return ""
+}
+
+function Get-EvidenceField {
+    param(
+        [string]$Text,
+        [string]$Name
+    )
+
+    $escapedName = [regex]::Escape($Name)
+    $matches = [regex]::Matches($Text, "(?im)^\s*$escapedName\s*:\s*(?<value>[^\r\n]*?)\s*$")
+    if ($matches.Count -ne 1) {
+        return ""
+    }
+
+    return $matches[0].Groups["value"].Value.Trim()
+}
+
+function Get-EvidenceFieldGroup {
+    param(
+        [string]$Text,
+        [string[]]$Names
+    )
+
+    $values = @()
+    foreach ($name in $Names) {
+        $escapedName = [regex]::Escape($name)
+        foreach ($match in [regex]::Matches($Text, "(?im)^\s*$escapedName\s*:\s*(?<value>[^\r\n]*?)\s*$")) {
+            $values += $match.Groups["value"].Value.Trim()
+        }
+    }
+
+    if ($values.Count -ne 1) {
+        return ""
+    }
+    return $values[0]
+}
+
+function Test-EvidenceFieldContainsValue {
+    param(
+        [string]$Text,
+        [string]$Name,
+        [string]$Value
+    )
+
+    $escapedName = [regex]::Escape($Name)
+    foreach ($match in [regex]::Matches(
+        $Text,
+        "(?im)^\s*$escapedName\s*:\s*(?<value>[^\r\n]*?)\s*$")) {
+        if ($match.Groups['value'].Value.Trim().Equals(
+            $Value,
+            [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Get-GitHubLogin {
+    param([string]$Value)
+
+    $login = $Value.Trim().TrimStart('@')
+    if ($login -notmatch '^(?=.{1,39}$)[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$') {
+        return ""
+    }
+
+    if ($login -match '^(?i:me|self|author|maintainer|owner|reviewer|repository-?maintainer|second-qualified-reviewer)$') {
+        return ""
+    }
+
+    return $login.ToLowerInvariant()
+}
+
+function Get-TextSha256 {
+    param([AllowEmptyString()][string]$Value)
+
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Value)
+        return ([System.BitConverter]::ToString($sha256.ComputeHash($bytes))).Replace("-", "").ToLowerInvariant()
+    } finally {
+        $sha256.Dispose()
+    }
+}
+
+function Test-MeaningfulReviewEvidence {
+    param([string]$Value)
+
+    $trimmed = (Get-RenderedInlineEvidenceText `
+        -Value $Value `
+        -NormalizeReferenceLinks).Trim()
+    if ($trimmed.Length -lt 12 -or $trimmed -match '^<[^>]+>$') {
+        return $false
+    }
+
+    $normalized = [regex]::Replace($trimmed.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
+    $semanticPlaceholderText = [regex]::Replace(
+        $trimmed.ToLowerInvariant(),
+        '\b(?:blocked|incomplete)-[a-z0-9-]+\b',
+        '')
+    $semanticPlaceholderState = '\b(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)\b'
+    $placeholderState = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)(?:\s+(?:at\s+this\s+time|automation|check|evidence|later|review|run|test|verification))?$'
+    $placeholderPrefix = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)\b'
+    $unambiguousPlaceholderToken = '\b(?:placeholder|tbd|todo)\b'
+    $copularPlaceholderState = '\b(?:is|are|was|were|has\s+been|have\s+been|had\s+been|remain(?:s|ed)?)\s+(?:not\s+only\s+)?(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)\b'
+    $isCompoundScopePrefix = $trimmed.ToLowerInvariant() -match '^(?:blocked|incomplete)-[a-z0-9-]+\b'
+    $subjectState = '\b(?:automation|changes|check|evidence|review|reviewer|run|test|verification|workflow)(?:\s+(?:is|was|has\s+been|remain(?:s|ed)?))?\s+(?:not\s+only\s+)?(?<state>absent|blocked|deferred|incomplete|missing|pending|placeholder|skipped|unavailable|unchecked|unqualified|unverified|unknown)\b'
+    $hasSubjectStateWithoutPassingContext = $false
+    $hasClausePlaceholderPrefix = $false
+    foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
+        $rawClause = $clause.ToLowerInvariant()
+        $normalizedClause = [regex]::Replace($rawClause, '[^a-z0-9]+', ' ').Trim()
+        $isCompoundScopeClause = $rawClause.Trim() -match '^(?:blocked|incomplete)-[a-z0-9-]+\b'
+        if ($normalizedClause -match $placeholderPrefix -and -not $isCompoundScopeClause) {
+            $hasClausePlaceholderPrefix = $true
+            break
+        }
+        foreach ($stateMatch in [regex]::Matches($rawClause, $subjectState)) {
+            $state = $stateMatch.Groups['state'].Value
+            $afterState = $rawClause.Substring($stateMatch.Index + $stateMatch.Length)
+            $isPassingCompoundScope =
+                $state -match '^(?:blocked|incomplete)$' -and
+                $stateMatch.Value -notmatch '\b(?:is|was|has\s+been|remain(?:s|ed)?)\b' -and
+                $afterState -match '^-[a-z0-9-]+\b.*\b(?:pass|passed|succeed|succeeded|successful|verified)\b'
+            if (-not $isPassingCompoundScope) {
+                $hasSubjectStateWithoutPassingContext = $true
+                break
+            }
+        }
+        if ($hasSubjectStateWithoutPassingContext) {
+            break
+        }
+    }
+    if ($normalized -match $placeholderState -or
+        ($normalized -match $placeholderPrefix -and -not $isCompoundScopePrefix) -or
+        $semanticPlaceholderText -match $semanticPlaceholderState -or
+        $normalized -match $unambiguousPlaceholderToken -or
+        $trimmed.ToLowerInvariant() -match $copularPlaceholderState -or
+        $hasClausePlaceholderPrefix -or
+        $hasSubjectStateWithoutPassingContext) {
+        return $false
+    }
+
+    # Outcome rejection is deliberately subject-independent. A producer name
+    # (build, lint, scan, deployment, or a future tool) must not determine
+    # whether explicitly unsuccessful evidence is admitted.
+    $failureScrubbed = [regex]::Replace(
+        $normalized,
+        '\bfailure\s+boundaries\b',
+        '')
+    if ($normalized -match '\b(?:does\s+not|do\s+not|never|cannot|prevents?|contains?|isolates?|recovers?|rolls?\s+back)\b') {
+        $failureScrubbed = [regex]::Replace(
+            $failureScrubbed,
+            '\bfailed\s+(?:attempt|attempts|input|inputs|operation|operations|request|requests|transaction|transactions)\b',
+            '')
+    }
+    $failureScrubbed = [regex]::Replace($failureScrubbed, '\bnever\s+failed\b', '')
+
+    $terminalOutcomeWithoutPassingContext = $false
+    foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
+        $rawClause = $clause.ToLowerInvariant()
+        $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
+        foreach ($terminalOutcome in [regex]::Matches($rawClause, '\b(?:canceled|cancelled|timed[ -]+out|timeout)\b')) {
+            $beforeOutcome = $rawClause.Substring(0, $terminalOutcome.Index)
+            $afterOutcome = $rawClause.Substring($terminalOutcome.Index + $terminalOutcome.Length)
+            $isCompoundScope = $afterOutcome.StartsWith('-')
+            $isRelativeInputScope = $beforeOutcome -match '\b(?:attempts?|cases?|files?|inputs?|operations?|records?|requests?|transactions?)\s+(?:that|which)\s+(?:are|is|was|were)\s*$'
+            $isExplicitOutcome =
+                -not $isRelativeInputScope -and
+                $beforeOutcome -match '\b[a-z0-9]+(?:[ \t]+[a-z0-9]+){0,5}[ \t]+(?:are|had|has|have|is|was|were|has[ \t]+been|have[ \t]+been|had[ \t]+been)[ \t]*$'
+            $isPassingScope = $afterOutcome -match '^\s+(?!although\b|but\b|despite\b|rather\b|though\b|while\b|whereas\b)[a-z0-9-]+(?:\s+[a-z0-9-]+)*\s+(?:pass|passed|succeed|succeeded|successful|verified)\b'
+            $hasNegativeContrast = $afterOutcome -match '^\s*(?:,\s*)?(?:not|rather\s+than|instead\s+of)\b'
+            if ($isExplicitOutcome -or
+                $hasNegativeContrast -or
+                (-not $isCompoundScope -and -not $isRelativeInputScope -and -not $isPassingScope)) {
+                $terminalOutcomeWithoutPassingContext = $true
+                break
+            }
+        }
+        if ($terminalOutcomeWithoutPassingContext) {
+            break
+        }
+    }
+
+    $terminalEvidenceState = '(?:available|built|checked|complete|completed|done|executed|finish|finished|pass|passed|performed|provided|qualified|reviewed|run|ran|succeed|succeeded|successful|tested|validated|verified)'
+    $hasNegatedTerminalState = $false
+    $hasPromisedTerminalState = $false
+    foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
+        $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
+        $negationClause = $normalizedClause
+        if ($negationClause -match '\bnot\s+only\b.*\bbut\b') {
+            $negationClause = [regex]::Replace($negationClause, '\bnot\s+only\b', '')
+        }
+        if ($negationClause -match "\b(?:no|not|never|cannot)(?:\s+[a-z0-9]+)*\s+$terminalEvidenceState\b" -or
+            $negationClause -match "\b(?:aren|isn|wasn|weren|hasn|haven|hadn|didn|doesn|don|can|cann|couldn|shouldn|wouldn)\s+t(?:\s+[a-z0-9]+)*\s+$terminalEvidenceState\b" -or
+            $negationClause -match "\byet(?:\s+[a-z0-9]+)*\s+to\s+$terminalEvidenceState\b") {
+            $hasNegatedTerminalState = $true
+            break
+        }
+        if ($normalizedClause -match "\b(?:can|could|may|might|must|shall|should|will|would)\s+(?:(?:eventually|later|subsequently|then)\s+)*(?:have\s+(?:been\s+)?|be\s+)?$terminalEvidenceState\b" -or
+            $normalizedClause -match "\bgoing\s+to\s+(?:be\s+)?$terminalEvidenceState\b" -or
+            $normalizedClause -match "\b(?:is|are|was|were)\s+(?:planned|scheduled|intended|expected)\s+to\s+(?:be\s+)?$terminalEvidenceState\b" -or
+            $normalizedClause -match "\bto\s+(?:be\s+)?$terminalEvidenceState\s+(?:after|later|once|when)\b") {
+            $hasPromisedTerminalState = $true
+            break
+        }
+    }
+    if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
+        $failureScrubbed -match '\b(?:failed|failure|unsuccessful)\b' -or
+        $terminalOutcomeWithoutPassingContext -or
+        $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
+        $hasNegatedTerminalState -or
+        $hasPromisedTerminalState) {
+        return $false
+    }
+
+    return $true
+}
+
+function Test-AuthenticatedIndependentReview {
+    param(
+        $Issue,
+        [string]$Reviewer
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Reviewer)) {
+        return $false
+    }
+
+    $issueBodySha256 = Get-TextSha256 -Value ([string]$Issue.body)
+
+    $reviewComments = @($Issue.review_comments)
+    $indexedReviewComments = for ($index = 0; $index -lt $reviewComments.Count; $index++) {
+        [pscustomobject]@{
+            Comment = $reviewComments[$index]
+            Index = $index
+            LatestTimestamp = if (-not [string]::IsNullOrWhiteSpace(
+                    ([string]$reviewComments[$index].updated_at))) {
+                [string]$reviewComments[$index].updated_at
+            } else {
+                [string]$reviewComments[$index].created_at
+            }
+        }
+    }
+    $applicableTimestampRecords = @($indexedReviewComments | ForEach-Object {
+        $candidateAuthor = Get-GitHubLogin -Value ([string]$_.Comment.user.login)
+        if ($candidateAuthor -ne $Reviewer -or
+            ([string]$_.Comment.user.type).ToLowerInvariant() -ne 'user' -or
+            [string]::IsNullOrWhiteSpace($_.LatestTimestamp)) {
+            return
+        }
+        $rawCandidateBody = [string]$_.Comment.body
+        $candidatePositionMask = Mask-MarkdownHtmlCommentsOutsideCode -Body $rawCandidateBody
+        $candidateHasAmbiguousJoin = $candidatePositionMask.Contains([char]0xFFFD)
+        $candidateBody = Get-RenderedMarkdownEvidenceText `
+            -Body $rawCandidateBody `
+            -RejectTopLevelRawHtml
+        $candidateHeadingCount = Get-MarkdownHeadingCount `
+            -Body $candidateBody `
+            -Heading 'Independent Review Sign-Off'
+        if ($candidateHeadingCount -ne 1) {
+            if ($candidateHasAmbiguousJoin) {
+                $rawCandidateTargetsCurrentDigest = Test-EvidenceFieldContainsValue `
+                    -Text $rawCandidateBody `
+                    -Name 'reviewed issue body sha256' `
+                    -Value $issueBodySha256
+                if ($rawCandidateTargetsCurrentDigest) {
+                    [pscustomobject]@{ LatestTimestamp = $_.LatestTimestamp }
+                }
+            }
+            return
+        }
+        $candidateSignOff = Get-MarkdownSection `
+            -Body $candidateBody `
+            -Heading 'Independent Review Sign-Off'
+        $candidateTargetsCurrentDigest = Test-EvidenceFieldContainsValue `
+            -Text $candidateSignOff `
+            -Name 'reviewed issue body sha256' `
+            -Value $issueBodySha256
+        if ($candidateTargetsCurrentDigest) {
+            [pscustomobject]@{ LatestTimestamp = $_.LatestTimestamp }
+        }
+    })
+    $latestApplicableTimestamp = @($applicableTimestampRecords |
+        Sort-Object -Property LatestTimestamp -Descending |
+        Select-Object -First 1).LatestTimestamp
+    $ambiguousTimestampGroups = @($applicableTimestampRecords |
+        Where-Object { $_.LatestTimestamp -eq $latestApplicableTimestamp } |
+        Group-Object -Property LatestTimestamp |
+        Where-Object { $_.Count -gt 1 })
+    if ($ambiguousTimestampGroups.Count -gt 0) {
+        return $false
+    }
+    $orderedReviewComments = @($indexedReviewComments | Sort-Object -Property `
+        @{ Expression = { $_.LatestTimestamp }; Descending = $true }, `
+        @{ Expression = { $_.Index }; Descending = $true })
+    foreach ($entry in $orderedReviewComments) {
+        $comment = $entry.Comment
+        $commentAuthor = Get-GitHubLogin -Value ([string]$comment.user.login)
+        $commentAuthorType = ([string]$comment.user.type).ToLowerInvariant()
+        if ($commentAuthor -ne $Reviewer -or $commentAuthorType -ne "user") {
+            continue
+        }
+
+        $rawCommentBody = [string]$comment.body
+        $positionMaskedCommentBody = Mask-MarkdownHtmlCommentsOutsideCode -Body $rawCommentBody
+        $hasAmbiguousInlineJoin = $positionMaskedCommentBody.Contains([char]0xFFFD)
+        $rawSignOffHeadingCount = Get-MarkdownHeadingCount `
+            -Body $rawCommentBody `
+            -Heading 'Independent Review Sign-Off'
+        $commentBody = Get-RenderedMarkdownEvidenceText -Body $rawCommentBody -RejectTopLevelRawHtml
+        if ([string]::IsNullOrWhiteSpace($commentBody) -and
+            ($rawSignOffHeadingCount -gt 0 -or $hasAmbiguousInlineJoin)) {
+            return $false
+        }
+        $signOffHeadingCount = Get-MarkdownHeadingCount `
+            -Body $commentBody `
+            -Heading 'Independent Review Sign-Off'
+        if ($signOffHeadingCount -eq 0) {
+            continue
+        }
+        if ($signOffHeadingCount -ne 1) {
+            return $false
+        }
+
+        $signOff = Get-MarkdownSection -Body $commentBody -Heading "Independent Review Sign-Off"
+        $signOffReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $signOff -Name "reviewer")
+        $signOffQualification = Get-EvidenceField -Text $signOff -Name "qualification"
+        $signOffQualificationResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("qualification result", "qualification status")).ToLowerInvariant()
+        $signOffVerification = Get-EvidenceField -Text $signOff -Name "verification"
+        $signOffIssueBodySha256 = (Get-EvidenceField -Text $signOff -Name "reviewed issue body sha256").ToLowerInvariant()
+        $signOffVerificationResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("verification result", "verification status")).ToLowerInvariant()
+        $signOffResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("result", "status")).ToLowerInvariant()
+
+        $signOffTargetsCurrentDigest = Test-EvidenceFieldContainsValue `
+            -Text $signOff `
+            -Name 'reviewed issue body sha256' `
+            -Value $issueBodySha256
+        if ($signOffTargetsCurrentDigest) {
+            return (
+                $signOffReviewer -eq $commentAuthor -and
+                $signOffIssueBodySha256 -match '^[a-f0-9]{64}$' -and
+                $signOffIssueBodySha256 -eq $issueBodySha256 -and
+                (Test-MeaningfulReviewEvidence -Value $signOffQualification) -and
+                $signOffQualificationResult -eq "qualified" -and
+                (Test-MeaningfulReviewEvidence -Value $signOffVerification) -and
+                $signOffVerificationResult -eq "passed" -and
+                $signOffResult -match '^(?:approved|passed)$')
+        }
+    }
+
+    return $false
 }
 
 function Get-TraceabilityIds {
@@ -260,6 +1249,29 @@ if ($issues.Count -eq 0) {
     throw "No issues found for validation."
 }
 
+$repositoryPathOwner = ""
+if (-not [string]::IsNullOrWhiteSpace($Repository)) {
+    $repositoryMatch = [regex]::Match(
+        $Repository,
+        '^(?<owner>[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?)/[A-Za-z0-9_.-]+$')
+    if ($repositoryMatch.Success) {
+        $repositoryPathOwner = Get-GitHubLogin -Value $repositoryMatch.Groups['owner'].Value
+    }
+}
+$configuredRepositoryOwner = Get-GitHubLogin -Value $RepositoryOwner
+if (-not [string]::IsNullOrWhiteSpace($repositoryPathOwner)) {
+    if (-not [string]::IsNullOrWhiteSpace($configuredRepositoryOwner) -and
+        $configuredRepositoryOwner -ne $repositoryPathOwner) {
+        throw "Repository owner does not match the repository path owner."
+    }
+    $trustedRepositoryOwner = $repositoryPathOwner
+} else {
+    $trustedRepositoryOwner = $configuredRepositoryOwner
+}
+if ([string]::IsNullOrWhiteSpace($trustedRepositoryOwner)) {
+    throw "Repository owner identity is required for maintainer self-review validation."
+}
+
 $knownHazards = @{}
 foreach ($hazard in $hazardIds) {
     $knownHazards[$hazard] = $true
@@ -288,22 +1300,92 @@ foreach ($issue in $issues) {
 
     $validatedCount++
     $issueErrors = @()
-    $upperBody = $body.ToUpperInvariant()
+    $renderedBody = Get-RenderedMarkdownEvidenceText -Body $body
+    $severity = Get-SeverityClassification -Body $body
+    $authorLogin = Get-GitHubLogin -Value ([string]$issue.user.login)
+    $currentReviewHeadingCount = Get-MarkdownHeadingCount -Body $renderedBody -Heading "Review Evidence"
+    $legacyReviewHeadingCount = Get-MarkdownHeadingCount -Body $renderedBody -Heading "Independent Review Evidence"
+    $reviewEvidence = Get-MarkdownSection -Body $renderedBody -Heading "Review Evidence"
+    $legacyIndependentReviewEvidence = Get-MarkdownSection -Body $renderedBody -Heading "Independent Review Evidence"
+    $hasProceduralDeltaMap = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Procedural Delta Map" -LegacyPattern '(?im)^\s*Procedural\s+Delta\s+Map\s*$'
+    $hasMisuseAnalysis = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Misuse Analysis" -LegacyPattern '(?im)^\s*Misuse\s+Analysis\s*$'
+    $hasSimulationEvidence = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Simulation/Walkthrough Evidence" -LegacyPattern '(?im)^\s*(?:Simulation\b.*|.*\bWalkthrough\b.*)$'
+    $hasRollbackAndNotificationPlan = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Rollback And Field Notification Plan" -LegacyPattern '(?im)^\s*Rollback\b.*\b(?:field\s+notification|notification\s+plan)\b'
+    $hasCurrentReviewSchema = $currentReviewHeadingCount -gt 0
+    $hasLegacyReviewSchema = $legacyReviewHeadingCount -gt 0
+    $hasCurrentReviewEvidence = $currentReviewHeadingCount -eq 1 -and
+        -not [string]::IsNullOrWhiteSpace($reviewEvidence)
+    $hasLegacyIndependentReviewEvidence = $legacyReviewHeadingCount -eq 1 -and
+        -not [string]::IsNullOrWhiteSpace($legacyIndependentReviewEvidence)
+    $hasMixedReviewSchemas = $hasCurrentReviewSchema -and $hasLegacyReviewSchema
+    $hasReviewEvidence = $hasCurrentReviewSchema -or $hasLegacyReviewSchema
+
+    $currentMode = (Get-EvidenceField -Text $reviewEvidence -Name "mode").ToLowerInvariant()
+    $currentReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $reviewEvidence -Name "reviewer")
+    $currentVerification = Get-EvidenceField -Text $reviewEvidence -Name "verification"
+    $currentVerificationResult = (Get-EvidenceFieldGroup -Text $reviewEvidence -Names @("verification result", "verification status")).ToLowerInvariant()
+    $currentAutomation = Get-EvidenceField -Text $reviewEvidence -Name "automated evidence"
+    $currentAutomationResult = (Get-EvidenceFieldGroup -Text $reviewEvidence -Names @("automated evidence result", "automated evidence status")).ToLowerInvariant()
+    $currentResult = (Get-EvidenceFieldGroup -Text $reviewEvidence -Names @("result", "status")).ToLowerInvariant()
+    $currentApproved = $currentResult -match '^(?:approved|passed)$'
+    $currentSelfReview = $currentMode -eq "maintainer self-review"
+    $currentIndependentReview = $currentMode -eq "independent human review"
+    $hasStructuredCurrentReview = $hasCurrentReviewEvidence -and
+        -not [string]::IsNullOrWhiteSpace($authorLogin) -and
+        -not [string]::IsNullOrWhiteSpace($currentReviewer) -and
+        (Test-MeaningfulReviewEvidence -Value $currentVerification) -and
+        $currentApproved
+    $hasStructuredCurrentSelfReview = $hasStructuredCurrentReview -and
+        $currentSelfReview -and
+        $authorLogin -eq $trustedRepositoryOwner -and
+        $currentReviewer -eq $trustedRepositoryOwner -and
+        $currentVerificationResult -eq "passed" -and
+        (Test-MeaningfulReviewEvidence -Value $currentAutomation) -and
+        $currentAutomationResult -eq "passed"
+    $hasStructuredCurrentIndependentReview = $hasStructuredCurrentReview -and
+        $currentIndependentReview -and $currentReviewer -ne $authorLogin
+    $hasAuthenticatedCurrentIndependentReview = $hasStructuredCurrentIndependentReview -and
+        (Test-AuthenticatedIndependentReview -Issue $issue -Reviewer $currentReviewer)
+    $hasValidCurrentReview = $hasStructuredCurrentSelfReview -or
+        $hasAuthenticatedCurrentIndependentReview
+
+    $legacyReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "reviewer")
+    $legacyVerification = Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "verification"
+    $legacyResult = (Get-EvidenceFieldGroup -Text $legacyIndependentReviewEvidence -Names @("result", "status")).ToLowerInvariant()
+    $hasStructuredLegacyIndependentReview = $hasLegacyIndependentReviewEvidence -and
+        -not [string]::IsNullOrWhiteSpace($authorLogin) -and
+        -not [string]::IsNullOrWhiteSpace($legacyReviewer) -and
+        $legacyReviewer -ne $authorLogin -and
+        (Test-MeaningfulReviewEvidence -Value $legacyVerification) -and
+        $legacyResult -match '^(?:approved|passed)$'
+    $hasAuthenticatedLegacyIndependentReview = $hasStructuredLegacyIndependentReview -and
+        (Test-AuthenticatedIndependentReview -Issue $issue -Reviewer $legacyReviewer)
+    $hasValidLegacyIndependentReview = $hasAuthenticatedLegacyIndependentReview
+
+    $hasValidReviewEvidence = -not $hasMixedReviewSchemas -and
+        ($hasValidCurrentReview -or $hasValidLegacyIndependentReview)
+    $hasApprovedIndependentReview =
+        -not $hasMixedReviewSchemas -and
+        ($hasAuthenticatedCurrentIndependentReview -or
+        $hasValidLegacyIndependentReview)
+    $hasUnauthenticatedIndependentClaim =
+        ($hasStructuredCurrentIndependentReview -and -not $hasAuthenticatedCurrentIndependentReview) -or
+        ($hasStructuredLegacyIndependentReview -and -not $hasAuthenticatedLegacyIndependentReview)
 
     if ($enforceClosedIssues -and $state.ToLowerInvariant() -ne "closed") {
         $issueErrors += "Issue is not closed (state=$state)."
     }
 
-    $dqMatches = [regex]::Matches($body, '\bDQ-[A-Za-z0-9-]+\b')
-    $dvMatches = [regex]::Matches($body, '\bDV-[A-Za-z0-9-]+\b')
+    $dqMatches = [regex]::Matches($renderedBody, '\bDQ-[A-Za-z0-9-]+\b')
+    $dvMatches = [regex]::Matches($renderedBody, '\bDV-[A-Za-z0-9-]+\b')
 
-    $declaredDqIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Documentation Requirement IDs") -Prefix DQ)
-    $declaredDvIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Documentation Verification IDs") -Prefix DV)
-    $declaredHzIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Hazard Linkage IDs") -Prefix HZ)
+    $declaredDqIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $renderedBody -Heading "Documentation Requirement IDs") -Prefix DQ)
+    $declaredDvIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $renderedBody -Heading "Documentation Verification IDs") -Prefix DV)
+    $declaredHzIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $renderedBody -Heading "Hazard Linkage IDs") -Prefix HZ)
     $hasNoHazardId = $declaredHzIds -contains "HZ-NONE"
     $hasExplicitNoHazard = $declaredHzIds.Count -eq 1 -and $hasNoHazardId
-    $mappingSection = Get-MarkdownSection -Body $body -Heading "DQ/DV/HZ Mapping"
-    $mappingRows = @(Get-TraceabilityMappingRows -Body $body)
+    $mappingSection = Get-MarkdownSection -Body $renderedBody -Heading "DQ/DV/HZ Mapping"
+    $mappingRows = @(Get-TraceabilityMappingRows -Body $renderedBody)
 
     if ($dqMatches.Count -eq 0) {
         $issueErrors += "Missing DQ-* identifier(s)."
@@ -411,25 +1493,31 @@ foreach ($issue in $issues) {
         }
     }
 
-    if ($upperBody -notmatch 'PROCEDURAL\s+DELTA\s+MAP') {
+    if (-not $hasProceduralDeltaMap) {
         $issueErrors += "Missing Procedural Delta Map section."
     }
-    if ($upperBody -notmatch 'MISUSE\s+ANALYSIS') {
+    if (-not $hasMisuseAnalysis) {
         $issueErrors += "Missing Misuse Analysis section."
     }
-    if ($upperBody -notmatch 'INDEPENDENT\s+REVIEW') {
-        $issueErrors += "Missing Independent Review evidence."
+    if (-not $hasReviewEvidence) {
+        $issueErrors += "Missing Review Evidence."
+    } elseif ($hasMixedReviewSchemas) {
+        $issueErrors += "Review Evidence and legacy Independent Review Evidence sections are mutually exclusive."
+    } elseif ($hasUnauthenticatedIndependentClaim) {
+        $issueErrors += "Independent Human Review requires an approved structured sign-off comment authored by the named distinct reviewer."
+    } elseif (-not $hasValidReviewEvidence) {
+        $issueErrors += "Review Evidence must record an approved structured mode, issue-author or distinct reviewer identity as applicable, verification, and automated evidence for maintainer self-review."
+    } elseif (($severity -eq "high" -or $severity -eq "catastrophic") -and -not $hasApprovedIndependentReview) {
+        $issueErrors += "Severity '$severity' requires approved Independent Human Review evidence from a second qualified reviewer."
     }
-    if ($upperBody -notmatch 'SIMULATION|WALKTHROUGH') {
+    if (-not $hasSimulationEvidence) {
         $issueErrors += "Missing Simulation/Walkthrough evidence."
     }
-    if ($upperBody -notmatch 'ROLLBACK') {
+    if (-not $hasRollbackAndNotificationPlan) {
         $issueErrors += "Missing rollback plan detail."
-    }
-    if ($upperBody -notmatch 'FIELD\s+NOTIFICATION|NOTIFICATION\s+PLAN') {
         $issueErrors += "Missing field-notification plan detail."
     }
-    if ($upperBody -notmatch 'NONE|LOW|MEDIUM|HIGH|CATASTROPHIC') {
+    if ([string]::IsNullOrWhiteSpace($severity)) {
         $issueErrors += "Missing severity classification."
     }
 

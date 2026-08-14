@@ -1,3 +1,51 @@
+- 2026-08-14: Reconciled the safety-documentation template, validator, agent
+  rules, and triage rubric with the adopted solo-maintainer assurance policy.
+  `none`/`low`/`medium` changes may now record explicit repository-owner
+  maintainer self-review plus applicable automation without claiming
+  independence; external reporters cannot self-approve, and `high` and
+  `catastrophic` changes still fail closed without second-qualified-human review,
+  and completed-project/first-stable-release review is unchanged. Deterministic
+  fixtures prove both sides while preserving structured historical Independent
+  Review records. The validator binds self-review to the repository owner as
+  both issue author and reviewer, rejects conflicting owner identities, binds
+  independent review to a distinct GitHub login and a structured sign-off
+  comment authored by that account, records the qualification and verification
+  basis, binds the sign-off to the SHA-256 of the exact issue body reviewed,
+  rejects stale digests plus placeholder or negated qualification/verification,
+  applies the same meaningful-evidence rule to lower-risk self-review
+  verification and automation, parses affirmative results rather than approval
+  substrings, and rejects incomplete low-risk evidence or issue-author identity
+  assertions. Review evidence is punctuation-normalized before rejecting
+  negative, incomplete, missing, deferred, unavailable, skipped, or failed
+  states, including placeholder-state prefixes followed by additional prose,
+  after removing inline HTML presentation tags, while retaining affirmative
+  `does not`/`never` safety guarantees. Every intermediate-noun placeholder
+  state, with or without a copula, and later-clause placeholder forms also fail
+  closed, while the explicitly admitted hyphenated failure-boundary scope prose
+  remains valid. Future promises tied to terminal evidence states across the
+  full modal auxiliary set also fail closed without excluding future-tense
+  negative safety guarantees.
+  A reviewer-authored latest sign-off containing the current issue-body digest
+  now supersedes older approval even when duplicated identity or digest fields
+  make that latest sign-off invalid.
+  Outcome/status `failure` forms still
+  fail closed. Live review
+  loading re-fetches the issue after comment pagination and fails closed if the
+  body, comment count, or update identity does not stabilize.
+  The charter, README, agent rules, ontology, and traceability matrix
+  now make requirements recovery an ongoing project-wide baseline and forbid
+  treating existing implementation as its own requirement source. No product or
+  runtime behavior changed.
+
+- 2026-08-13: Adopted a solo-maintainer assurance model for development
+  changes. Per-pull-request independent human approval is not required;
+  protected automated quality, security, traceability, testing, provenance,
+  and change-control gates remain in force. Self-review and automation are not
+  represented as independent verification. Independent human review is now a
+  documented completed-project or first-stable-release readiness gate, with
+  earlier review retained where a project-specific safety or security risk
+  requires it. No product or runtime behavior changed.
+
 - 2026-08-13: Added direct Windows VSIX lifecycle evidence for private RC
   assembly. An ephemeral hosted Visual Studio instance now installs the exact
   VSIX, verifies installed identity/version and package load, opens a
@@ -327,7 +375,6 @@
   ownership/delegation mutations fail as intended; and Clang ASan/UBSan passes
   the focused selection `4/4` without findings. Three-host evidence is tracked
   in `docs/59-portable-code-page-boundary.md`.
-
 - 2026-08-12: Superseded the protected Windows launcher-trust fixture evidence
   after differentiating the dependency and runtime-configuration sidecar
   payloads. Protected run `31635868978` passed at exact `main` merge
