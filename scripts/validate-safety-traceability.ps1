@@ -232,7 +232,7 @@ function Get-MarkdownSection {
     $escapedHeading = [regex]::Escape($Heading)
     $match = [regex]::Match(
         $Body,
-        "(?ims)^\s*#{2,3}\s*$escapedHeading\s*\r?\n(?<content>.*?)(?=^\s*#{2,3}\s|\z)")
+        "(?ims)^ {0,3}#{2,3}[ \t]+$escapedHeading[ \t]*\r?\n(?<content>.*?)(?=^ {0,3}#{2,3}[ \t]+|\z)")
     if (-not $match.Success) {
         return ""
     }
@@ -244,6 +244,12 @@ function Get-RenderedMarkdownEvidenceText {
     param([AllowEmptyString()][string]$Body)
 
     $withoutComments = [regex]::Replace($Body, '(?s)<!--.*?-->', '')
+    # Structured sign-off comments have no need for raw HTML. Rejecting any
+    # top-level raw-HTML construct is deliberately stricter than trying to
+    # reimplement every CommonMark/GFM raw-block form here.
+    if ($withoutComments -match '(?m)^ {0,3}<') {
+        return ''
+    }
     $renderedLines = [System.Collections.Generic.List[string]]::new()
     $inFence = $false
     $fenceCharacter = ''
@@ -509,7 +515,7 @@ function Test-AuthenticatedIndependentReview {
         $commentBody = Get-RenderedMarkdownEvidenceText -Body ([string]$comment.body)
         $signOffHeadingCount = [regex]::Matches(
             $commentBody,
-            '(?im)^\s*#{2,3}\s*Independent Review Sign-Off\s*$').Count
+            '(?im)^ {0,3}#{2,3}[ \t]+Independent Review Sign-Off[ \t]*$').Count
         if ($signOffHeadingCount -eq 0) {
             continue
         }

@@ -476,6 +476,15 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_hidden_high_signoff_rejected("    " "" "indented-signoff-heading")
     assert_hidden_high_signoff_rejected("<pre>\\n" "\\n</pre>" "pre-html-block-signoff")
     assert_hidden_high_signoff_rejected("<div>\\n" "\\n</div>" "div-html-block-signoff")
+    assert_hidden_high_signoff_rejected("<?review\\n" "\\n?>" "processing-instruction-signoff")
+    assert_hidden_high_signoff_rejected("<!REVIEW\\n" "\\n>" "declaration-signoff")
+    assert_hidden_high_signoff_rejected("<![CDATA[\\n" "\\n]]>" "cdata-signoff")
+    assert_hidden_high_signoff_rejected("<custom-review>\\n" "\\n</custom-review>" "custom-html-block-signoff")
+    assert_hidden_high_signoff_rejected("</custom-review>\\n" "" "closing-html-block-signoff")
+    assert_high_signoff_mutation_rejected(
+        "## Independent Review Sign-Off"
+        "##Independent Review Sign-Off"
+        "atx-heading-without-space")
     assert_high_signoff_mutation_accepted(
         "qualification: qualified safety-documentation reviewer"
         "qualification: reviewer is not only qualified but experienced in recovery procedures"
