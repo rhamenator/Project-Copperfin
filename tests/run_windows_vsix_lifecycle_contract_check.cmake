@@ -88,6 +88,8 @@ require_text("${script}" "$primaryFailure = $_" "primary lifecycle failure prese
 require_text("${script}" "Cleanup also failed" "cleanup failure aggregation")
 require_text("${script}" "Residue inventory also failed" "residue-inventory failure aggregation")
 require_text("${script}" "'/uninstall:Copperfin.VisualStudio'" "exact extension uninstall identity")
+require_text("${script}" "Test-ExactInstalledDirectoryAbsent -InstalledDirectory $installedDirectory" "exact installed-directory residue check")
+require_text("${script}" "VSIX uninstall left the exact installed extension directory" "exact installed-directory residue rejection")
 require_text("${script}" "vsix-installer-operations.json" "retained installer operation diagnostics")
 require_text("${script}" "vsix_sha256 = $vsixSha256" "installer diagnostic package-digest binding")
 require_text("${script}" "Discovered an installed Copperfin extension during failure cleanup" "post-failure residue discovery")

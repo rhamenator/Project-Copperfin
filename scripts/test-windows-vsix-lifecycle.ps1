@@ -186,6 +186,14 @@ function Get-ExtensionDirectories {
     )
 }
 
+function Test-ExactInstalledDirectoryAbsent {
+    param([Parameter(Mandatory = $true)][string]$InstalledDirectory)
+    if ([string]::IsNullOrWhiteSpace($InstalledDirectory)) {
+        throw 'Installed extension directory identity is empty.'
+    }
+    return -not (Test-Path -LiteralPath $InstalledDirectory -ErrorAction Stop)
+}
+
 if ($SelfTest) {
     $fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) `
         "copperfin-vsix-lifecycle-self-test-$([Guid]::NewGuid().ToString('N'))"
@@ -214,6 +222,13 @@ if ($SelfTest) {
             'Self-test rejected an explicit successful Copperfin package-load record.'
         Assert-Condition ($failedState.SuccessfulLoad -and $failedState.MatchingErrors.Count -eq 1) `
             'Self-test did not preserve a Copperfin error alongside a nominal success record.'
+        $residueProbe = Join-Path $fixtureRoot 'installed-extension-residue'
+        [System.IO.Directory]::CreateDirectory($residueProbe) | Out-Null
+        Assert-Condition (-not (Test-ExactInstalledDirectoryAbsent -InstalledDirectory $residueProbe)) `
+            'Self-test did not detect an exact installed extension directory.'
+        [System.IO.Directory]::Delete($residueProbe, $true)
+        Assert-Condition (Test-ExactInstalledDirectoryAbsent -InstalledDirectory $residueProbe) `
+            'Self-test rejected removal of the exact installed extension directory.'
     }
     finally { [System.IO.Directory]::Delete($fixtureRoot, $true) }
     Write-Host 'Windows VSIX lifecycle helper self-test passed.'
@@ -701,18 +716,28 @@ finally {
 }
 
 $residue = @()
+$installedDirectoryResidue = $false
 try {
     $residue = @(Get-ExtensionDirectories `
             -VisualStudioInstanceId $instanceId `
             -VisualStudioRegistryVersion $registryVersion `
             -ExtensionId $packageIdentity.Id)
+    if ($null -ne $installedDirectory) {
+        $installedDirectoryResidue = -not (
+            Test-ExactInstalledDirectoryAbsent -InstalledDirectory $installedDirectory)
+    }
 }
 catch {
     $residueInventoryFailure = $_
 }
-$residueFailure = if ($residue.Count -eq 0) { '' } else {
-    "VSIX uninstall left installed extension residue: $($residue -join ', ')"
+$residueFailures = @()
+if ($residue.Count -gt 0) {
+    $residueFailures += "VSIX uninstall left manifest-identified extension residue: $($residue -join ', ')"
 }
+if ($installedDirectoryResidue) {
+    $residueFailures += "VSIX uninstall left the exact installed extension directory: $installedDirectory"
+}
+$residueFailure = $residueFailures -join ' '
 if ($null -ne $primaryFailure) {
     $failureMessage = "VSIX lifecycle failed: $($primaryFailure.Exception.Message)"
     if ($null -ne $cleanupFailure) {
@@ -723,9 +748,6 @@ if ($null -ne $primaryFailure) {
     }
     if (-not [string]::IsNullOrWhiteSpace($residueFailure)) {
         $failureMessage += " $residueFailure"
-    }
-    if ($null -ne $residueInventoryFailure) {
-        $failureMessage += " Residue inventory also failed: $($residueInventoryFailure.Exception.Message)"
     }
     throw $failureMessage
 }
@@ -740,6 +762,8 @@ if ($null -ne $cleanupFailure) {
     throw $failureMessage
 }
 Assert-Condition ($residue.Count -eq 0) "VSIX uninstall left installed extension residue: $($residue -join ', ')"
+Assert-Condition (-not $installedDirectoryResidue) `
+    "VSIX uninstall left the exact installed extension directory: $installedDirectory"
 
 $result = [ordered]@{
     schema_version = 1
