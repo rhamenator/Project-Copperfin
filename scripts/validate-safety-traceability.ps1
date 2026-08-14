@@ -289,20 +289,31 @@ function Get-RenderedMarkdownEvidenceText {
 function Get-SeverityClassification {
     param([string]$Body)
 
+    $renderedBody = Get-RenderedMarkdownEvidenceText -Body $Body
     $severityPattern = '(none|low|medium|high|catastrophic)'
-    $section = Get-MarkdownSection -Body $Body -Heading "Potential Severity If Misused"
+    $severityHeadingCount = [regex]::Matches(
+        $renderedBody,
+        '(?im)^ {0,3}#{2,3}[ \t]+Potential Severity If Misused(?:[ \t]+#+)?[ \t]*$').Count
+    if ($severityHeadingCount -gt 1) {
+        return ""
+    }
+
+    $section = Get-MarkdownSection -Body $renderedBody -Heading "Potential Severity If Misused"
     $match = [regex]::Match($section, "(?im)^\s*(?:[-*]\s*)?$severityPattern\b[^\r\n]*$")
     if ($match.Success) {
         return $match.Groups[1].Value.ToLowerInvariant()
     }
+    if ($severityHeadingCount -eq 1) {
+        return ""
+    }
 
     # Retain compatibility with evidence created before the issue form emitted
     # the severity as its own Markdown section.
-    $match = [regex]::Match(
-        $Body,
+    $matches = [regex]::Matches(
+        $renderedBody,
         "(?im)^\s*(?:potential\s+)?severity(?:\s+if\s+misused)?\s*:\s*$severityPattern\s*$")
-    if ($match.Success) {
-        return $match.Groups[1].Value.ToLowerInvariant()
+    if ($matches.Count -eq 1) {
+        return $matches[0].Groups[1].Value.ToLowerInvariant()
     }
 
     return ""
