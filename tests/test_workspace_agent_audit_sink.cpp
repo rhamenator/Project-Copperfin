@@ -310,6 +310,43 @@ void test_configuration_containment_and_size_limit_fail_closed() {
                !fs::exists(root.path() / "direct.log"),
            "RQ-CF-AGENT-006: the bounded writer must reject embedded-NUL paths directly");
 
+    auto embedded_nul_root_name = root.path().native();
+    embedded_nul_root_name.push_back(fs::path::value_type{});
+    embedded_nul_root_name += fs::path("different").native();
+    const fs::path embedded_nul_root(embedded_nul_root_name);
+    WorkspaceAgentSessionAuditFileSink embedded_nul_storage_root(
+        embedded_nul_root, "root-event.log");
+    expect(!embedded_nul_storage_root.ready() &&
+               embedded_nul_storage_root.session_sink().commit == nullptr &&
+               !fs::exists(root.path() / "root-event.log"),
+           "RQ-CF-AGENT-006: embedded-NUL storage roots must fail before canonicalization");
+    const auto direct_embedded_nul_root =
+        copperfin::security::append_bounded_immutable_audit_event_to_contained_file(
+            copperfin::platform::path_to_utf8_string(root.path() / "root-direct.log"),
+            copperfin::platform::path_to_utf8_string(embedded_nul_root),
+            "event",
+            "detail",
+            copperfin::security::workspace_agent_audit_min_log_bytes);
+    expect(!direct_embedded_nul_root.ok && direct_embedded_nul_root.entry_hash.empty() &&
+               !fs::exists(root.path() / "root-direct.log"),
+           "RQ-CF-AGENT-006: bounded-writer roots must reject NULs before canonicalization");
+
+    auto cancelled_component_name = fs::path("discard").native();
+    cancelled_component_name.push_back(fs::path::value_type{});
+    cancelled_component_name += fs::path("suffix").native();
+    const fs::path cancellable_log =
+        root.path() / fs::path(cancelled_component_name) / ".." / "cancelled.log";
+    const auto cancelled_embedded_nul =
+        copperfin::security::append_bounded_immutable_audit_event_to_contained_file(
+            copperfin::platform::path_to_utf8_string(cancellable_log),
+            copperfin::platform::path_to_utf8_string(root.path()),
+            "event",
+            "detail",
+            copperfin::security::workspace_agent_audit_min_log_bytes);
+    expect(!cancelled_embedded_nul.ok && cancelled_embedded_nul.entry_hash.empty() &&
+               !fs::exists(root.path() / "cancelled.log"),
+           "RQ-CF-AGENT-006: NUL components must fail before lexical normalization can erase them");
+
     const fs::path oversized_parent = root.path() / "oversized" / "nested";
     const fs::path oversized_log = oversized_parent / "audit.log";
     const auto oversized =

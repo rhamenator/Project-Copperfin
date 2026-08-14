@@ -18,15 +18,24 @@ namespace {
 constexpr std::string_view workspace_agent_session_audit_event_name =
     "workspace_agent.session.v1";
 
+bool path_has_embedded_nul(const std::filesystem::path& path) {
+    for (const auto& component : path) {
+        if (component.native().find(std::filesystem::path::value_type{}) !=
+            std::filesystem::path::string_type::npos) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool relative_log_path_is_safe(const std::filesystem::path& path) {
     if (path.empty() || path.is_absolute() || path.has_root_name() ||
-        path.has_root_directory() || path.filename().empty()) {
+        path.has_root_directory() || path.filename().empty() ||
+        path_has_embedded_nul(path)) {
         return false;
     }
     for (const auto& component : path) {
-        if (component == "." || component == ".." ||
-            component.native().find(std::filesystem::path::value_type{}) !=
-                std::filesystem::path::string_type::npos) {
+        if (component == "." || component == "..") {
             return false;
         }
     }
@@ -130,7 +139,8 @@ WorkspaceAgentSessionAuditFileSink::WorkspaceAgentSessionAuditFileSink(
     const std::filesystem::path& storage_root,
     const std::filesystem::path& relative_log_path,
     const std::size_t max_log_bytes) {
-    if (!relative_log_path_is_safe(relative_log_path) ||
+    if (path_has_embedded_nul(storage_root) ||
+        !relative_log_path_is_safe(relative_log_path) ||
         max_log_bytes < workspace_agent_audit_min_log_bytes ||
         max_log_bytes > workspace_agent_audit_max_log_bytes) {
         return;

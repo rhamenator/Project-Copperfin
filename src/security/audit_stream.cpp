@@ -261,6 +261,10 @@ struct ContainedAuditPath {
 std::optional<ContainedAuditPath> resolve_contained_audit_path(
     const std::string& log_path,
     const std::string& package_root) {
+    if (log_path.find('\0') != std::string::npos ||
+        package_root.find('\0') != std::string::npos) {
+        return std::nullopt;
+    }
     std::error_code error;
     const std::filesystem::path canonical_root =
         std::filesystem::canonical(
@@ -307,6 +311,10 @@ std::optional<ContainedAuditPath> resolve_contained_audit_path(
 std::optional<ContainedAuditPath> resolve_lexically_contained_audit_path(
     const std::string& log_path,
     const std::string& package_root) {
+    if (log_path.find('\0') != std::string::npos ||
+        package_root.find('\0') != std::string::npos) {
+        return std::nullopt;
+    }
     std::error_code error;
     const std::filesystem::path canonical_root = std::filesystem::canonical(
         copperfin::platform::path_from_utf8_string(package_root), error);

@@ -59,8 +59,9 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   so the controller creates no session authority. Stop has already revoked
   authority before its append.
 - Path substitution: the host supplies an existing canonical storage root and
-  safe relative path. Embedded-NUL and existing redirecting components make the
-  sink inert. The
+  safe relative path. Embedded-NUL roots and original log-path components fail
+  before canonicalization or lexical normalization; existing redirecting
+  components make the sink inert. The
   bounded resolver preserves the lexical relative path rather than erasing
   indirection through canonicalization, so the contained writer also rejects a
   post-construction intermediate or final redirection, hard links, cross-device
