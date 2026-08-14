@@ -243,24 +243,20 @@ function Get-MarkdownSection {
 function Get-RenderedMarkdownEvidenceText {
     param([AllowEmptyString()][string]$Body)
 
+    $commentMaskedBody = [regex]::Replace(
+        $Body,
+        '(?s)<!--.*?(?:-->|\z)',
+        { param($commentMatch) [regex]::Replace($commentMatch.Value, '[^\r\n]', ' ') })
     $renderedLines = [System.Collections.Generic.List[string]]::new()
     $inFence = $false
     $fenceCharacter = ''
     $fenceLength = 0
-    $inHtmlComment = $false
 
-    foreach ($line in ($Body -split '\r?\n')) {
+    foreach ($line in ($commentMaskedBody -split '\r?\n')) {
         if ($inFence) {
             $escapedFenceCharacter = [regex]::Escape($fenceCharacter)
             if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
                 $inFence = $false
-            }
-            continue
-        }
-
-        if ($inHtmlComment) {
-            if ($line -match '-->') {
-                $inHtmlComment = $false
             }
             continue
         }
@@ -274,15 +270,6 @@ function Get-RenderedMarkdownEvidenceText {
         }
 
         if ($line -match '^(?: {4}|\t)') {
-            continue
-        }
-
-        if ($line -match '<!--') {
-            if ($line -notmatch '<!--.*?-->') {
-                $inHtmlComment = $true
-            }
-            # Discard the complete source line so removing a comment cannot
-            # promote same-line suffix text into a new Markdown construct.
             continue
         }
 
