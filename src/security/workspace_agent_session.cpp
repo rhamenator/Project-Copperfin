@@ -119,41 +119,54 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
         session_already_active = active_session_.active;
     }
 
-    WorkspaceAgentActivationDecision decision = session_already_active
-        ? controller_denial("workspace_agent.session_already_active")
-        : evaluate_workspace_agent_activation(request);
-    const WorkspaceAgentSessionAuditEvent event{
-        .kind = WorkspaceAgentSessionEventKind::start,
-        .session_generation = candidate_generation,
-        .requested_mode = request.requested_mode,
-        .effective_mode = decision.effective_mode,
-        .outcome = decision.allowed ? "allowed" : "denied",
-        .diagnostic_code = decision.diagnostic_code};
-    const AuditOutcome audit = commit_audit_event(event, audit_sink);
-
-    WorkspaceAgentSessionStartResult result;
-    result.audit_committed = audit.committed;
-    result.audit_receipt = audit.receipt;
-    result.policy_decision = decision;
-    result.diagnostic_code = audit.committed
-        ? decision.diagnostic_code
-        : "workspace_agent.session_audit_commit_failed";
-
-    {
-        std::lock_guard lock(mutex_);
-        if (audit.committed && decision.allowed && !active_session_.active) {
-            active_session_ = {
-                .active = true,
-                .generation = candidate_generation,
-                .effective_mode = decision.effective_mode,
-                .capabilities = decision.capabilities,
-                .activation_audit_receipt = audit.receipt};
-            result.activated = true;
+    try {
+        WorkspaceAgentActivationDecision decision;
+        if (session_already_active) {
+            decision = controller_denial("workspace_agent.session_already_active");
+        } else {
+            try {
+                decision = evaluate_workspace_agent_activation(request);
+            } catch (...) {
+                decision = controller_denial("workspace_agent.policy_evaluation_failed");
+            }
         }
+        const WorkspaceAgentSessionAuditEvent event{
+            .kind = WorkspaceAgentSessionEventKind::start,
+            .session_generation = candidate_generation,
+            .requested_mode = request.requested_mode,
+            .effective_mode = decision.effective_mode,
+            .outcome = decision.allowed ? "allowed" : "denied",
+            .diagnostic_code = decision.diagnostic_code};
+        const AuditOutcome audit = commit_audit_event(event, audit_sink);
+
+        WorkspaceAgentSessionStartResult result;
+        result.audit_committed = audit.committed;
+        result.audit_receipt = audit.receipt;
+        result.policy_decision = decision;
+        result.diagnostic_code = audit.committed
+            ? decision.diagnostic_code
+            : "workspace_agent.session_audit_commit_failed";
+
+        {
+            std::lock_guard lock(mutex_);
+            if (audit.committed && decision.allowed && !active_session_.active) {
+                active_session_ = {
+                    .active = true,
+                    .generation = candidate_generation,
+                    .effective_mode = decision.effective_mode,
+                    .capabilities = decision.capabilities,
+                    .activation_audit_receipt = audit.receipt};
+                result.activated = true;
+            }
+            transition_ = Transition::idle;
+            result.session = active_session_;
+        }
+        return result;
+    } catch (...) {
+        std::lock_guard lock(mutex_);
         transition_ = Transition::idle;
-        result.session = active_session_;
+        throw;
     }
-    return result;
 }
 
 WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(

@@ -5,6 +5,10 @@
   before stop auditing. Audit failure cannot extend authority. This slice adds
   no provider authentication, tool execution, filesystem/process/network
   access, product activation UI, or command-line activation path.
+  Policy-evaluation exceptions now fail closed as audited denials and restore
+  the controller transition for later valid activation. A deterministic POSIX
+  regression covers that recovery, and its isolation metadata records the
+  test-owned filesystem and process-environment mutations.
 
 - 2026-08-14: Reconciled the safety-documentation template, validator, agent
   rules, and triage rubric with the adopted solo-maintainer assurance policy.

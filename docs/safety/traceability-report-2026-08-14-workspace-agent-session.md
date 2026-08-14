@@ -16,6 +16,32 @@ Mapped architecture and code:
 - `tests/test_workspace_agent_session.cpp`
 - `docs/64-workspace-agent-access-policy.md`
 
+## DQ/DV/HZ mapping
+
+| Documentation requirement | Verification evidence | Controlled hazards |
+| --- | --- | --- |
+| `DQ-workspace-agent-session-001`: describe the fail-closed audited start, immutable admitted authority, immediate revocation, and non-executing boundary without implying that provider, UI, executor, or sandbox functionality exists | `DV-workspace-agent-session-001`; `DV-workspace-agent-session-002`; `DV-workspace-agent-session-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-session-002`: describe policy-dependency failure as an audited denial that grants no authority and does not permanently wedge the transition | `DV-workspace-agent-session-001`; `DV-workspace-agent-session-002`; `DV-workspace-agent-session-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+
+- `DV-workspace-agent-session-001`: focused Release policy, session,
+  localization, and native-isolation regressions pass `4/4`.
+- `DV-workspace-agent-session-002`: fresh Clang 21 ASan/UBSan policy/session
+  execution with leak detection passes `2/2` with no finding.
+- `DV-workspace-agent-session-003`: safety-traceability, community-health, and
+  diff-validation contracts pass locally; protected exact-head execution and
+  review remain pending below.
+
+## Procedural delta map
+
+- Before: the lifecycle text covered policy admission, audit receipts,
+  capability binding, replacement denial, and revoke-before-audit behavior, but
+  did not state what happens if policy evaluation itself throws.
+- After: the policy and traceability text state that dependency failure becomes
+  a content-free audited denial, grants no authority, restores the transition,
+  and is directly exercised by a bounded regression.
+
+Potential Severity If Misused: medium
+
 ## Hazard and misuse analysis
 
 Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
@@ -34,6 +60,9 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   is not an activation input.
 - Reentrant or concurrent transition: one mutex-guarded transition is admitted
   at a time; an active snapshot is not partially replaced.
+- Policy dependency failure: an exception while resolving or evaluating policy
+  becomes a content-free audited denial, grants no authority, and restores the
+  transition so one failure cannot permanently deny later valid activation.
 
 ## Boundary and rollback
 
@@ -68,6 +97,12 @@ It also blocks one start audit on a worker thread under a five-second test
 bound and proves
 that an overlapping unrestricted start sees no partial authority and cannot
 replace or expand the pending sandbox session.
+On POSIX, a bounded deleted-working-directory fixture deterministically forces
+catalog-backed policy evaluation to throw; the regression proves an audited
+`workspace_agent.policy_evaluation_failed` denial, absent authority, transition
+recovery, successful later start, and immediate revocation. Its isolation
+declaration records the unique test-owned filesystem and scoped process
+environment mutations instead of claiming no filesystem access.
 
 Protected Windows, Ubuntu, and macOS execution and exact-head review are still
 pending. Until those results exist, `RQ-CF-AGENT-005` remains `gap`, not
@@ -78,3 +113,19 @@ pending. Until those results exist, `RQ-CF-AGENT-005` remains `gap`, not
 This is DO-178C-inspired development assurance adapted to a general-purpose
 C++/.NET platform. It is not a claim of DO-178C compliance, certification, an
 assigned software level, or suitability for a safety-critical deployment.
+
+## Review evidence
+
+- mode: maintainer self-review
+- reviewer: rhamenator
+- verification: fail-closed policy-dependency behavior, transition recovery,
+  authority absence, audit observability, isolation truth, boundary wording,
+  rollback, and requirements/code/test mapping
+- verification result: passed
+- automated evidence: focused Release `4/4`, Clang ASan/UBSan `2/2`, safety
+  traceability workflow contract, repository community-health contract, and
+  `git diff --check`
+- automated evidence result: passed
+- scope: medium-severity workspace-agent lifecycle documentation and native
+  security-boundary correction
+- result: approved as maintainer self-review; no independence claim

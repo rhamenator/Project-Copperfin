@@ -132,8 +132,11 @@ session-lifecycle boundary. It reevaluates the existing activation policy,
 withholds all authority until a content-free start event is durably accepted
 with a nonempty audit receipt, and binds the admitted mode and capabilities to
 one immutable session generation. A second start cannot replace or expand an
-active session. Stop clears the authority snapshot before invoking the audit
-sink, so a missing, failing, empty-receipt, or throwing stop sink remains
+active session. An unexpected policy-evaluation failure becomes a content-free,
+audited denial and restores the controller to an idle transition; it creates no
+authority and cannot permanently block a later valid start. Stop clears the
+authority snapshot before invoking the audit sink, so a missing, failing,
+empty-receipt, or throwing stop sink remains
 visible but cannot prolong authority. Inactive snapshots retain neither
 capabilities nor the activation receipt. The versioned JSON audit event carries
 only event kind, generation, requested/effective mode, outcome, and stable

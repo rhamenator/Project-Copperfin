@@ -1331,9 +1331,8 @@ function(copperfin_configure_native_test_isolation)
         AUDIT complete
     )
     copperfin_set_test_isolation(test_workspace_agent_session
-        PARALLEL_SAFE
-        FILESYSTEM none
-        ENVIRONMENT none
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT scoped-process
         CHILD_PROCESSES none
         NETWORK none
         SAMPLES none

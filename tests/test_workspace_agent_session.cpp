@@ -7,6 +7,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <mutex>
 #include <stdexcept>
@@ -233,6 +234,76 @@ void test_audit_failures_withhold_start_but_cannot_extend_stop() {
            "RQ-CF-AGENT-005: stop audit failure must remain visible without extending authority");
 }
 
+void test_policy_exception_fails_closed_and_restores_transition() {
+#if !defined(_WIN32)
+    namespace fs = std::filesystem;
+    const fs::path original_directory = fs::current_path();
+    const fs::path removed_directory = fs::temp_directory_path() /
+        ("copperfin-workspace-agent-session-" +
+         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::error_code filesystem_error;
+    fs::create_directories(removed_directory, filesystem_error);
+    if (filesystem_error) {
+        expect(false, "RQ-CF-AGENT-005: policy-exception fixture directory should be created");
+        return;
+    }
+    fs::current_path(removed_directory, filesystem_error);
+    if (filesystem_error) {
+        fs::remove_all(removed_directory, filesystem_error);
+        expect(false, "RQ-CF-AGENT-005: policy-exception fixture should become the working directory");
+        return;
+    }
+
+    const char* configured_locale = std::getenv("COPPERFIN_LOCALE_DIR");
+    const bool had_configured_locale = configured_locale != nullptr;
+    const std::string saved_locale = had_configured_locale ? configured_locale : "";
+    unsetenv("COPPERFIN_LOCALE_DIR");
+    filesystem_error.clear();
+    fs::remove(removed_directory, filesystem_error);
+    if (filesystem_error) {
+        fs::current_path(original_directory, filesystem_error);
+        fs::remove_all(removed_directory, filesystem_error);
+        if (had_configured_locale) {
+            setenv("COPPERFIN_LOCALE_DIR", saved_locale.c_str(), 1);
+        }
+        expect(false, "RQ-CF-AGENT-005: policy-exception fixture directory should be removable");
+        return;
+    }
+
+    WorkspaceAgentSessionController controller;
+    AuditContext failed_policy_audit;
+    const auto denied = controller.start(
+        request_for(WorkspaceAgentAccessMode::workspace_sandbox),
+        sink_for(failed_policy_audit));
+
+    filesystem_error.clear();
+    fs::current_path(original_directory, filesystem_error);
+    if (had_configured_locale) {
+        setenv("COPPERFIN_LOCALE_DIR", saved_locale.c_str(), 1);
+    }
+    expect(!filesystem_error,
+           "RQ-CF-AGENT-005: policy-exception fixture should restore the working directory");
+    expect(!denied.activated && denied.audit_committed &&
+               denied.diagnostic_code == "workspace_agent.policy_evaluation_failed" &&
+               denied.policy_decision.diagnostic_code ==
+                   "workspace_agent.policy_evaluation_failed" &&
+               failed_policy_audit.events.size() == 1U &&
+               failed_policy_audit.events.front().outcome == "denied" &&
+               !controller.snapshot().active,
+           "RQ-CF-AGENT-005: a throwing policy dependency should fail closed with an audited denial");
+
+    AuditContext recovery_audit;
+    const auto recovered = controller.start(
+        request_for(WorkspaceAgentAccessMode::workspace_sandbox),
+        sink_for(recovery_audit));
+    expect(recovered.activated && recovered.audit_committed && recovered.session.active,
+           "RQ-CF-AGENT-005: policy failure must restore the transition for a later valid start");
+    AuditContext stop_audit;
+    expect(controller.stop(sink_for(stop_audit)).revoked,
+           "RQ-CF-AGENT-005: recovered session should remain immediately revocable");
+#endif
+}
+
 void test_overlapping_start_cannot_observe_or_replace_partial_authority() {
     WorkspaceAgentSessionController controller;
     AuditContext blocked_audit;
@@ -323,6 +394,7 @@ int main() {
     test_audited_session_lifecycle_and_capability_binding();
     test_denials_are_audited_without_creating_authority();
     test_audit_failures_withhold_start_but_cannot_extend_stop();
+    test_policy_exception_fails_closed_and_restores_transition();
     test_overlapping_start_cannot_observe_or_replace_partial_authority();
     test_audit_serialization_is_stable_and_content_free();
 
