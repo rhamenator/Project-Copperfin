@@ -840,6 +840,30 @@ function(assert_issue_form_body_mutation_rejected search_text replacement_text s
     file(REMOVE "${fixture}" "${report}")
 endfunction()
 
+function(assert_issue_form_body_mutation_accepted search_text replacement_text slug)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_issue_form_heading_issues.json" source_contents)
+    string(REPLACE "${search_text}" "${replacement_text}" fixture_contents "${source_contents}")
+    if("${fixture_contents}" STREQUAL "${source_contents}")
+        message(FATAL_ERROR "Issue-body mutation ${slug} did not alter its source fixture")
+    endif()
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator rejected valid issue-body mutation ${slug}: ${standard_output}\n${standard_error}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_placeholder_high_reviewer_rejected)
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-high-placeholder-reviewer-report.json")
     execute_process(
@@ -1107,6 +1131,14 @@ if(POWERSHELL_EXECUTABLE)
         "### Procedural Delta Map"
         "### Procedural Delta Map\\n\\nNo operator procedure changes.\\n\\n### Procedural Delta Map"
         "duplicate-rendered-procedural-delta")
+    assert_issue_form_body_mutation_rejected(
+        "### Review Evidence"
+        "## Independent Review Evidence\\n\\nreviewer: copperfin-reviewer\\nverification: historical review was withdrawn\\nresult: rejected\\n\\n### Review Evidence"
+        "mixed-current-and-legacy-review-schemas")
+    assert_issue_form_body_mutation_accepted(
+        "No operator procedure changes."
+        "No operator procedure changes.\\n\\n<details>\\n<summary>Additional context</summary>\\n\\nThis free-form note is not review evidence.\\n\\n</details>"
+        "unrelated-details-block")
     assert_placeholder_high_reviewer_rejected()
     assert_same_author_independent_review_rejected()
     assert_unattested_independent_review_rejected()

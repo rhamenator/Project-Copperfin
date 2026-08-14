@@ -322,15 +322,35 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
 }
 
 function Get-RenderedMarkdownEvidenceText {
-    param([AllowEmptyString()][string]$Body)
+    param(
+        [AllowEmptyString()][string]$Body,
+        [switch]$RejectTopLevelRawHtml
+    )
 
     $commentMaskedBody = Mask-MarkdownHtmlCommentsOutsideCode -Body $Body
     $renderedLines = [System.Collections.Generic.List[string]]::new()
     $inFence = $false
     $fenceCharacter = ''
     $fenceLength = 0
+    $rawHtmlEndToken = ''
+    $rawHtmlUntilBlank = $false
+    $rawHtmlBlockTags = 'address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul'
 
     foreach ($line in ($commentMaskedBody -split '\r?\n')) {
+        if (-not [string]::IsNullOrEmpty($rawHtmlEndToken)) {
+            if ($line.Contains($rawHtmlEndToken, [System.StringComparison]::OrdinalIgnoreCase)) {
+                $rawHtmlEndToken = ''
+            }
+            continue
+        }
+        if ($rawHtmlUntilBlank) {
+            if ([string]::IsNullOrWhiteSpace($line)) {
+                $rawHtmlUntilBlank = $false
+                $renderedLines.Add($line)
+            }
+            continue
+        }
+
         if ($inFence) {
             $escapedFenceCharacter = [regex]::Escape($fenceCharacter)
             if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
@@ -351,11 +371,32 @@ function Get-RenderedMarkdownEvidenceText {
             continue
         }
 
-        # Structured sign-off comments have no need for raw HTML. Rejecting
-        # any top-level construct is stricter and safer than partially
-        # reimplementing every CommonMark/GFM raw-block form here.
         if ($line -match '^ {0,3}<') {
-            return ''
+            if ($RejectTopLevelRawHtml) {
+                return ''
+            }
+
+            $trimmedHtmlLine = $line.TrimStart()
+            $typeOneMatch = [regex]::Match(
+                $trimmedHtmlLine,
+                '^<(?<tag>pre|script|style|textarea)(?:\s|>|$)',
+                [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+            if ($typeOneMatch.Success) {
+                $closingToken = "</$($typeOneMatch.Groups['tag'].Value)>"
+                if (-not $trimmedHtmlLine.Contains($closingToken, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    $rawHtmlEndToken = $closingToken
+                }
+            } elseif ($trimmedHtmlLine.StartsWith('<?')) {
+                if (-not $trimmedHtmlLine.Contains('?>')) { $rawHtmlEndToken = '?>' }
+            } elseif ($trimmedHtmlLine.StartsWith('<![CDATA[', [System.StringComparison]::OrdinalIgnoreCase)) {
+                if (-not $trimmedHtmlLine.Contains(']]>')) { $rawHtmlEndToken = ']]>' }
+            } elseif ($trimmedHtmlLine -match '^<![A-Z]') {
+                if (-not $trimmedHtmlLine.Contains('>')) { $rawHtmlEndToken = '>' }
+            } elseif ($trimmedHtmlLine -match "^</?(?:$rawHtmlBlockTags)(?:\s|/?>)" -or
+                $trimmedHtmlLine -match '^</?[A-Za-z][A-Za-z0-9-]*(?:\s+[^>]*)?/?>\s*$') {
+                $rawHtmlUntilBlank = $true
+            }
+            continue
         }
 
         $renderedLines.Add($line)
@@ -611,7 +652,7 @@ function Test-AuthenticatedIndependentReview {
             continue
         }
 
-        $commentBody = Get-RenderedMarkdownEvidenceText -Body ([string]$comment.body)
+        $commentBody = Get-RenderedMarkdownEvidenceText -Body ([string]$comment.body) -RejectTopLevelRawHtml
         $signOffHeadingCount = [regex]::Matches(
             $commentBody,
             '(?im)^ {0,3}#{2,3}[ \t]+Independent Review Sign-Off(?:[ \t]+#+)?[ \t]*$').Count
@@ -766,6 +807,7 @@ foreach ($issue in $issues) {
     $hasRollbackAndNotificationPlan = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Rollback And Field Notification Plan" -LegacyPattern '(?im)^\s*Rollback\b.*\b(?:field\s+notification|notification\s+plan)\b'
     $hasCurrentReviewEvidence = -not [string]::IsNullOrWhiteSpace($reviewEvidence)
     $hasLegacyIndependentReviewEvidence = -not [string]::IsNullOrWhiteSpace($legacyIndependentReviewEvidence)
+    $hasMixedReviewSchemas = $hasCurrentReviewEvidence -and $hasLegacyIndependentReviewEvidence
     $hasReviewEvidence = $hasCurrentReviewEvidence -or $hasLegacyIndependentReviewEvidence
 
     $currentMode = (Get-EvidenceField -Text $reviewEvidence -Name "mode").ToLowerInvariant()
@@ -808,10 +850,12 @@ foreach ($issue in $issues) {
         (Test-AuthenticatedIndependentReview -Issue $issue -Reviewer $legacyReviewer)
     $hasValidLegacyIndependentReview = $hasAuthenticatedLegacyIndependentReview
 
-    $hasValidReviewEvidence = $hasValidCurrentReview -or $hasValidLegacyIndependentReview
+    $hasValidReviewEvidence = -not $hasMixedReviewSchemas -and
+        ($hasValidCurrentReview -or $hasValidLegacyIndependentReview)
     $hasApprovedIndependentReview =
-        $hasAuthenticatedCurrentIndependentReview -or
-        $hasValidLegacyIndependentReview
+        -not $hasMixedReviewSchemas -and
+        ($hasAuthenticatedCurrentIndependentReview -or
+        $hasValidLegacyIndependentReview)
     $hasUnauthenticatedIndependentClaim =
         ($hasStructuredCurrentIndependentReview -and -not $hasAuthenticatedCurrentIndependentReview) -or
         ($hasStructuredLegacyIndependentReview -and -not $hasAuthenticatedLegacyIndependentReview)
@@ -945,6 +989,8 @@ foreach ($issue in $issues) {
     }
     if (-not $hasReviewEvidence) {
         $issueErrors += "Missing Review Evidence."
+    } elseif ($hasMixedReviewSchemas) {
+        $issueErrors += "Review Evidence and legacy Independent Review Evidence sections are mutually exclusive."
     } elseif ($hasUnauthenticatedIndependentClaim) {
         $issueErrors += "Independent Human Review requires an approved structured sign-off comment authored by the named distinct reviewer."
     } elseif (-not $hasValidReviewEvidence) {

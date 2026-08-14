@@ -43,8 +43,10 @@ level, or safety for a particular deployment.
 - `DQ-assurance-review-005`: structured issue-body evidence sections and
   traceability mappings must be parsed from rendered Markdown and occur exactly
   once when present. Historical rendered marker text remains valid only when
-  the corresponding structured heading is absent. The raw body is retained
-  only for the reviewer-bound digest.
+  the corresponding structured heading is absent. Current Review Evidence and
+  legacy Independent Review Evidence schemas are mutually exclusive. Raw HTML
+  blocks are excluded without blanking unrelated rendered evidence. The raw
+  body is retained only for the reviewer-bound digest.
 - `DQ-assurance-baseline-001`: requirements recovery and bidirectional
   traceability are an ongoing project-wide baseline; existing implementation
   is never its own requirement source.
@@ -66,7 +68,9 @@ level, or safety for a particular deployment.
   either risk direction, duplicate rendered severity sections, multiple values
   within one section, and mixed section/legacy declarations.
 - `DV-assurance-review-006`: reject duplicate rendered Review Evidence and
-  DQ/DV/HZ Mapping sections while preserving the exact raw-body digest binding.
+  DQ/DV/HZ Mapping sections and mixed current/legacy review schemas; accept
+  unrelated raw-HTML detail blocks while preserving the exact raw-body digest
+  binding.
 - `DV-assurance-review-005`: parse a high-severity issue-form value with a
   same-line rationale and reject its legacy review section when that section
   says independent approval remains open.
