@@ -558,30 +558,32 @@ host performs DTE property and method calls through COM. This is compile/process
 diagnostic evidence only; it does not establish product lifecycle behavior.
 Diagnostic artifact `9206591770` expires 2026-11-12.
 
-Exact-head run `31766849974` passed the complete Windows VSIX lifecycle at
-signed revision `5a403ff0d7fe3ef60fefee64366db72b0e67ff20`. A separate
+Exact-head run `31770453468` passed the complete Windows VSIX lifecycle at
+signed revision `26df3a63bb95b28ac81254430962c7fe02b7865f`. A separate
 post-run download and inspection established:
 
-- lifecycle artifact `9206775536`, GitHub archive digest
-  `sha256:c1fc192f48082b86ec6dfe21381433786a83f7d72ec71ede32ac9860fb112827`;
-- shipping artifact `9206776694`, GitHub archive digest
-  `sha256:7ddbb1ec736455451d3e91937b5c19d14973d90a3d4b724aad2b20429efe5ccf`;
+- lifecycle artifact `9208063377`, GitHub archive digest
+  `sha256:171f85e798b04c3d55b23128558d9bf53785e4db0883d196ea8f5ed470c8e6f6`;
+- shipping artifact `9208064960`, GitHub archive digest
+  `sha256:e8d36a408c94ffc9f02569987191c938bf5c51bfb8d2137c77c0e768393267ed`;
 - exact VSIX SHA-256
-  `10fed042d44ae0213d25b21de500f8efa82e4fa3555abe3f1af9137424e4eab0`,
-  matching both retained lifecycle records and the independently hashed VSIX;
-- install and uninstall `PASS` in 239.658 and 26.790 seconds, followed by zero
-  matching extension residue;
-- automation dispatch `PASS` for Visual Studio PID 6596, the exact runner-owned
+  `39bda85037bb3605c13c11418cb987e0128022ad891e0d8d7a9e7fb5e059e3b9`,
+  matching both retained lifecycle records and the separately hashed VSIX;
+- install and uninstall `PASS` in 201.971 and 25.998 seconds, followed by both
+  zero matching manifest residue and absence of the exact captured installed
+  extension directory;
+- automation dispatch `PASS` for Visual Studio PID 3600, the exact runner-owned
   solution and PRG, command group
   `4b56ff76-d352-4027-bb18-ef4c759d260b`, and command ID 768;
-- same-process UI Automation observation of both `Copperfin Command` and
-  `lifecycle-smoke.prg`;
+- same-process UI Automation observation of `Copperfin Command` as
+  `ControlType.Pane` and `lifecycle-smoke.prg` as `ControlType.TabItem`, so an
+  identically labelled menu item or button cannot satisfy command-surface proof;
 - exact `End package load [CopperfinPackage]` with package GUID
   `{1DE4E419-0DE5-4FB7-9C0F-C0212D97D4A5}` and no Copperfin-scoped ActivityLog
   error; and
 - a Corresponding Source archive named and rooted at the exact tested revision,
   with SHA-256
-  `6d489b539ffebd660edef8eef0bea6bf08b7d59e809acdddd74fc0a92e626c33`.
+  `def67181deef0283ca34e4e03ed3a051aa62ed8ea397acd11b3868a4ae47bc7c`.
 
 The shipping VSIX inventory contains no lifecycle-driver or transient-helper
 payload. Local helper, workflow-contract, RC-assembler, safety-traceability, and

@@ -185,11 +185,12 @@
   product install/uninstall and zero residue stayed clean. The corrected helper
   compiles only exact-PID ROT discovery in C# and performs DTE COM calls directly
   in the STA Windows PowerShell host, removing that framework-reference seam.
-  Exact-head run `31766849974` passed the corrected complete lifecycle at
-  `5a403ff0d`: exact digest-bound install, PID/solution/PRG/command dispatch,
-  same-process pane/document observation, explicit error-free Copperfin package
-  load, uninstall, zero residue, all downstream managed suites, shipping VSIX,
-  and exact Corresponding Source upload. Same-version reinstall, prior-version
+  Exact-head run `31770453468` passed the corrected complete lifecycle at
+  `26df3a63b`: exact digest-bound install, PID/solution/PRG/command dispatch,
+  actual command-pane and PRG-tab control-type observation, explicit error-free
+  Copperfin package load, uninstall, exact installed-directory absence plus zero
+  manifest residue, all downstream managed suites, shipping VSIX, and exact
+  Corresponding Source upload. Same-version reinstall, prior-version
   upgrade, disablement, signing, and human visual review remain separate.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview

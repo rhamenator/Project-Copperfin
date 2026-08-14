@@ -528,10 +528,11 @@ verifies the runner-owned empty solution, opens the exact PRG through the
 installed editor association, and raises the exact Copperfin command GUID/ID.
 It remains fail-closed on retained dispatch, pane, PRG, package-load, uninstall,
 and product-residue evidence; no test extension is built or installed.
-Exact-head run `31766849974` passed that complete lifecycle at `5a403ff0d` and
-uploaded independently inspected diagnostics, the exact VSIX, and Corresponding
-Source. The VSIX SHA-256 is
-`10fed042d44ae0213d25b21de500f8efa82e4fa3555abe3f1af9137424e4eab0`.
+Exact-head run `31770453468` passed that complete lifecycle at `26df3a63b` and
+uploaded separately inspected diagnostics, the exact VSIX, and Corresponding
+Source. It proves the actual command pane control type and exact installed-
+directory absence; the VSIX SHA-256 is
+`39bda85037bb3605c13c11418cb987e0128022ad891e0d8d7a9e7fb5e059e3b9`.
 Fresh install/use/uninstall/residue evidence is complete; same-version reinstall,
 prior-version upgrade, disablement, signing, and human visual review remain
 separate.
