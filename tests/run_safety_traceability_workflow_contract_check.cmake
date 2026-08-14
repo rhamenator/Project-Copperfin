@@ -440,6 +440,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved"
         "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved\\nresult: pending\\nstatus: approved"
         "duplicate-signoff-result-aliases")
+    assert_high_signoff_mutation_rejected(
+        "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved"
+        "reviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved\\n\\n## Independent Review Sign-Off\\n\\nreviewer: copperfin-reviewer\\nqualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries\\nverification result: passed\\nreviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: rejected"
+        "duplicate-signoff-section-withdrawal")
     assert_high_signoff_mutation_accepted(
         "qualification: qualified safety-documentation reviewer"
         "qualification: reviewer is not only qualified but experienced in recovery procedures"
