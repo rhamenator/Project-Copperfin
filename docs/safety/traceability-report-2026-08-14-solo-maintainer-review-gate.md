@@ -26,8 +26,8 @@ level, or safety for a particular deployment.
   reviewed; a later body edit requires renewed sign-off.
 - `DQ-assurance-review-003`: machine-evaluated review closure must use unique,
   explicit structured outcome fields. Free-form verification scope identifies
-  what was checked but cannot substitute for a `passed` verification or
-  automation result.
+  what was checked but cannot substitute for a `qualified` qualification result
+  or a `passed` verification or automation result.
 - `DQ-assurance-baseline-001`: requirements recovery and bidirectional
   traceability are an ongoing project-wide baseline; existing implementation
   is never its own requirement source.
@@ -65,8 +65,8 @@ level, or safety for a particular deployment.
   from a GitHub `User` account containing their login, qualification basis,
   verification, and affirmative result.
 - `DV-assurance-review-012`: reject missing, non-passing, duplicated, or
-  result/status-aliased verification and automation outcomes; accept only the
-  required unique structured `passed` fields.
+  result/status-aliased qualification, verification, and automation outcomes;
+  accept only the required unique structured `qualified`/`passed` fields.
 - `DV-assurance-review-013`: reject failed, cancelled, timed-out, or negated
   evidence without relying on a producer-name whitelist or a bounded number of
   intervening words, while retaining affirmative failure-boundary guarantees.

@@ -373,7 +373,7 @@ function Test-MeaningfulReviewEvidence {
     }
     $failureScrubbed = [regex]::Replace($failureScrubbed, '\bnever\s+failed\b', '')
 
-    $terminalEvidenceState = '(?:approval|available|checked|complete|completed|completion|done|evidence|finish|finished|pass|passed|provided|qualification|qualified|reviewed|run|ran|succeed|succeeded|successful|verification|verified)'
+    $terminalEvidenceState = '(?:available|checked|complete|completed|done|finish|finished|pass|passed|provided|qualified|reviewed|run|ran|succeed|succeeded|successful|verified)'
     $hasNegatedTerminalState = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
         $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
@@ -386,8 +386,6 @@ function Test-MeaningfulReviewEvidence {
     }
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
         $failureScrubbed -match '\b(?:failed|failure|unsuccessful)\b' -or
-        $trimmed -match '(?i:\btimed\s+out\b)' -or
-        $normalized -match '\b(?:(?:was|were|is|are|been|got)\s+(?:canceled|cancelled)|(?:canceled|cancelled)\s+before|(?:workflow|job|run|build|test|tests)\s+(?:canceled|cancelled))\b' -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
         $hasNegatedTerminalState) {
         return $false
@@ -418,13 +416,15 @@ function Test-AuthenticatedIndependentReview {
         $signOff = Get-MarkdownSection -Body ([string]$comment.body) -Heading "Independent Review Sign-Off"
         $signOffReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $signOff -Name "reviewer")
         $signOffQualification = Get-EvidenceField -Text $signOff -Name "qualification"
+        $signOffQualificationResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("qualification result", "qualification status")).ToLowerInvariant()
         $signOffVerification = Get-EvidenceField -Text $signOff -Name "verification"
         $signOffIssueBodySha256 = (Get-EvidenceField -Text $signOff -Name "reviewed issue body sha256").ToLowerInvariant()
-        $signOffVerificationResult = (Get-EvidenceField -Text $signOff -Name "verification result").ToLowerInvariant()
+        $signOffVerificationResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("verification result", "verification status")).ToLowerInvariant()
         $signOffResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("result", "status")).ToLowerInvariant()
 
         if ($signOffReviewer -eq $commentAuthor -and
             (Test-MeaningfulReviewEvidence -Value $signOffQualification) -and
+            $signOffQualificationResult -eq "qualified" -and
             (Test-MeaningfulReviewEvidence -Value $signOffVerification) -and
             $signOffVerificationResult -eq "passed" -and
             $signOffIssueBodySha256 -match '^[a-f0-9]{64}$' -and
@@ -558,9 +558,9 @@ foreach ($issue in $issues) {
     $currentMode = (Get-EvidenceField -Text $reviewEvidence -Name "mode").ToLowerInvariant()
     $currentReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $reviewEvidence -Name "reviewer")
     $currentVerification = Get-EvidenceField -Text $reviewEvidence -Name "verification"
-    $currentVerificationResult = (Get-EvidenceField -Text $reviewEvidence -Name "verification result").ToLowerInvariant()
+    $currentVerificationResult = (Get-EvidenceFieldGroup -Text $reviewEvidence -Names @("verification result", "verification status")).ToLowerInvariant()
     $currentAutomation = Get-EvidenceField -Text $reviewEvidence -Name "automated evidence"
-    $currentAutomationResult = (Get-EvidenceField -Text $reviewEvidence -Name "automated evidence result").ToLowerInvariant()
+    $currentAutomationResult = (Get-EvidenceFieldGroup -Text $reviewEvidence -Names @("automated evidence result", "automated evidence status")).ToLowerInvariant()
     $currentResult = (Get-EvidenceFieldGroup -Text $reviewEvidence -Names @("result", "status")).ToLowerInvariant()
     $currentApproved = $currentResult -match '^(?:approved|passed)$'
     $currentSelfReview = $currentMode -eq "maintainer self-review"
