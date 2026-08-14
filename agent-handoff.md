@@ -2,8 +2,8 @@
 
 ## V1 workspace-agent tool preflight
 
-The current bounded candidate derives `RQ-CF-AGENT-007` from the established
-agent policy and audited session boundary. The native controller evaluates one
+`RQ-CF-AGENT-007` is defined at merged commit `45032ee55`. The native
+controller evaluates one
 versioned, nonempty complete capability set against the exact active session
 generation under its mutex. Unknown schemas, empty requests, inactive or
 transitioning sessions, stale generations, and unavailable capabilities fail
@@ -12,7 +12,9 @@ point-in-time preflight, not an execution token. It performs no file, process,
 network, provider, UI, or tool action and does not claim outcome auditing.
 Local Release policy/session/audit-sink tests pass `3/3`; Clang ASan/UBSan
 `1/1`, safety-traceability, community, and diff gates pass.
-Protected exact-head checks remain pending, so `RQ-CF-AGENT-007` remains a gap.
+Exact implementation head `d098ce1ab` passed all eleven protected checks in
+runs `31848306252`, `31848306709`, `31848306641`, `31848306644`, and
+`31848306672`; thread-aware review reports zero review threads.
 
 ## V1 workspace-agent session lifecycle
 
