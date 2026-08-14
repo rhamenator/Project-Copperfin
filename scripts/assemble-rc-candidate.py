@@ -370,6 +370,7 @@ def require_windows_vsix_lifecycle_evidence(path: Path, vsix: Path) -> None:
         "package_registration_and_load",
         "extension_version_check",
         "supported_prg_open_and_command",
+        "runner_owned_solution_identity",
         "same_version_reinstall",
         "upgrade_from_previous_version",
         "disablement",
@@ -384,6 +385,7 @@ def require_windows_vsix_lifecycle_evidence(path: Path, vsix: Path) -> None:
         "package_registration_and_load",
         "extension_version_check",
         "supported_prg_open_and_command",
+        "runner_owned_solution_identity",
         "uninstall",
         "extension_residue_check",
     )
@@ -677,6 +679,7 @@ def self_test() -> None:
             "package_registration_and_load": "PASS",
             "extension_version_check": "PASS",
             "supported_prg_open_and_command": "PASS",
+            "runner_owned_solution_identity": "PASS",
             "same_version_reinstall": "NOT_RUN",
             "upgrade_from_previous_version": "NOT_RUN",
             "disablement": "NOT_RUN",
@@ -896,6 +899,11 @@ def self_test() -> None:
             ("false VSIX disablement status", "disablement", "PASS"),
             ("wrong VSIX digest", "vsix_sha256", "0" * 64),
             ("wrong VSIX identity", "extension_id", "Other.Extension"),
+            (
+                "unproved runner-owned solution identity",
+                "runner_owned_solution_identity",
+                "NOT_RUN",
+            ),
             ("unproved checkout independence", "development_checkout_dependency", "NOT_RUN"),
         )
         for description, field, replacement in vsix_lifecycle_mutations:
