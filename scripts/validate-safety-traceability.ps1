@@ -307,7 +307,7 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
     $codeSpanLength = 0
 
     foreach ($line in ($Body -split '\r?\n')) {
-        $interruptsParagraph = $line -match '^ {0,3}(?:<!--|<\?|<!\[CDATA\[|<![A-Z]|<(?:pre|script|style|textarea)(?:\s|>|$)|`{3,}|~{3,})'
+        $interruptsParagraph = $line -match '^ {0,3}(?:<!--|<\?|<!\[CDATA\[|<![A-Z]|<[A-Za-z]|`{3,}|~{3,})'
         if ($codeSpanLength -gt 0 -and
             ([string]::IsNullOrWhiteSpace($line) -or $interruptsParagraph)) {
             # A CommonMark code span cannot cross the blank line that ends its
@@ -488,7 +488,7 @@ function Get-RenderedMarkdownEvidenceText {
 
         if ($line -match '^ {0,3}<') {
             $trimmedHtmlLine = $line.TrimStart()
-            $isAutolink = $trimmedHtmlLine -match '^<[A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*>[ \t]*$' -or
+            $isAutolink = $trimmedHtmlLine -match '^<[A-Za-z][A-Za-z0-9+.-]{1,31}:[^\x00-\x20\x7F<>]*>[ \t]*$' -or
                 $trimmedHtmlLine -match $emailAutolinkPattern
             if ($isAutolink) {
                 $renderedLines.Add($line)

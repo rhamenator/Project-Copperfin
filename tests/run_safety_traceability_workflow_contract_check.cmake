@@ -534,6 +534,7 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_hidden_high_signoff_rejected("</custom-review>\\n" "" "closing-html-block-signoff")
     assert_hidden_high_signoff_rejected("<custom-review data-note=\\\">\\\">\\n" "\\n</custom-review>" "quoted-angle-html-block-signoff")
     assert_hidden_high_signoff_rejected("<x@y_>\\n" "" "invalid-email-autolink-signoff")
+    assert_hidden_high_signoff_rejected("<https:\tevidence>\\n" "" "control-character-uri-autolink-signoff")
     assert_hidden_high_signoff_rejected("`<!--``\\n" "\\n-->" "mismatched-code-span-comment-opener")
     assert_hidden_high_signoff_rejected("\\`<!--\\n" "\\n-->`" "escaped-backtick-comment-opener")
     assert_high_signoff_mutation_rejected(
@@ -544,6 +545,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "## Independent Review Sign-Off"
         "`unmatched paragraph tick\\n\\n<custom-review>\\n`\\n\\n</custom-review>\\n\\n## Independent Review Sign-Off"
         "unmatched-code-span-before-html-block")
+    assert_high_signoff_mutation_rejected(
+        "## Independent Review Sign-Off"
+        "`unmatched paragraph tick\\n<div>`\\n## Independent Review Sign-Off"
+        "unmatched-code-span-before-block-tag-html")
     assert_high_signoff_mutation_rejected(
         "## Independent Review Sign-Off"
         "##Independent Review Sign-Off"

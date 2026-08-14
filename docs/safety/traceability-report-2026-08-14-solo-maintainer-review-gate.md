@@ -112,6 +112,9 @@ level, or safety for a particular deployment.
 - `DV-assurance-review-016`: fail closed on ambiguous equal-timestamp sign-offs,
   inline comments that join evidence-token fragments, and entity-encoded
   placeholder or negation prose after decoding its rendered text.
+- `DV-assurance-review-017`: reset inline-span state at block-tag HTML
+  interruptions and reject URI-like angle constructs containing ASCII control
+  characters.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -126,7 +129,7 @@ level, or safety for a particular deployment.
 | Documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
 | `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-006`; `DV-assurance-review-009` | `HZ-system-failure-01`; `HZ-doc-command-01` |
-| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010`; `DV-assurance-review-011`; `DV-assurance-review-014`; `DV-assurance-review-015`; `DV-assurance-review-016` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010`; `DV-assurance-review-011`; `DV-assurance-review-014`; `DV-assurance-review-015`; `DV-assurance-review-016`; `DV-assurance-review-017` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-003` | `DV-assurance-review-012`; `DV-assurance-review-013` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-baseline-001` | `DV-assurance-baseline-001` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 
