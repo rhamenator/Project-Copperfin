@@ -191,7 +191,7 @@ function(assert_pending_legacy_high_review_rejected)
         message(FATAL_ERROR "Safety validator accepted pending legacy high-severity review as approval")
     endif()
     set(all_output "${standard_output}\n${standard_error}")
-    string(FIND "${all_output}" "Severity 'high' requires approved Independent Human Review evidence"
+    string(FIND "${all_output}" "Review Evidence must record an approved structured mode"
         pending_review_index)
     if(pending_review_index EQUAL -1)
         message(FATAL_ERROR
@@ -231,11 +231,57 @@ function(assert_placeholder_high_reviewer_rejected)
         message(FATAL_ERROR "Safety validator accepted a placeholder as the high-severity independent reviewer")
     endif()
     set(all_output "${standard_output}\n${standard_error}")
-    string(FIND "${all_output}" "requires approved Independent Human Review evidence"
+    string(FIND "${all_output}" "Review Evidence must record an approved structured mode"
         placeholder_reviewer_index)
     if(placeholder_reviewer_index EQUAL -1)
         message(FATAL_ERROR
             "Safety validator did not reject the placeholder independent reviewer: ${all_output}")
+    endif()
+    file(REMOVE "${report}")
+endfunction()
+
+function(assert_same_author_independent_review_rejected)
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-high-same-author-review-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_same_author_review_issues.json"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted the issue author as an independent reviewer")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "Review Evidence must record an approved structured mode"
+        same_author_index)
+    if(same_author_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not reject the issue author as independent reviewer: ${all_output}")
+    endif()
+    file(REMOVE "${report}")
+endfunction()
+
+function(assert_incomplete_low_review_rejected)
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-low-incomplete-review-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_low_incomplete_review_issues.json"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted incomplete low-severity self-review evidence")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "Review Evidence must record an approved structured mode"
+        incomplete_review_index)
+    if(incomplete_review_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not reject incomplete low-severity review evidence: ${all_output}")
     endif()
     file(REMOVE "${report}")
 endfunction()
@@ -368,6 +414,8 @@ if(POWERSHELL_EXECUTABLE)
     assert_pending_legacy_high_review_rejected()
     assert_issue_form_heading_fixture()
     assert_placeholder_high_reviewer_rejected()
+    assert_same_author_independent_review_rejected()
+    assert_incomplete_low_review_rejected()
     assert_invalid_hz_none_row_fixture()
     assert_invalid_mixed_hazard_fixture()
     assert_invalid_row_hazard_fixture()

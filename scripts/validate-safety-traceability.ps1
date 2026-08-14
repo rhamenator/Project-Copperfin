@@ -201,22 +201,34 @@ function Get-SeverityClassification {
     return ""
 }
 
-function Test-NamedReviewer {
-    param([string]$Text)
+function Get-EvidenceField {
+    param(
+        [string]$Text,
+        [string]$Name
+    )
 
-    $match = [regex]::Match($Text, '(?im)^\s*reviewer\s*:\s*(?<name>[^\r\n]+?)\s*$')
+    $escapedName = [regex]::Escape($Name)
+    $match = [regex]::Match($Text, "(?im)^\s*$escapedName\s*:\s*(?<value>[^\r\n]*?)\s*$")
     if (-not $match.Success) {
-        return $false
+        return ""
     }
 
-    $name = $match.Groups["name"].Value.Trim()
-    if ([string]::IsNullOrWhiteSpace($name) -or
-        $name -match '^<[^>]+>$' -or
-        $name -match '^(?i:tbd|pending|none|unavailable)$') {
-        return $false
+    return $match.Groups["value"].Value.Trim()
+}
+
+function Get-GitHubLogin {
+    param([string]$Value)
+
+    $login = $Value.Trim().TrimStart('@')
+    if ($login -notmatch '^(?=.{1,39}$)[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$') {
+        return ""
     }
 
-    return $true
+    if ($login -match '^(?i:me|self|author|maintainer|owner|reviewer|repository-?maintainer|second-qualified-reviewer)$') {
+        return ""
+    }
+
+    return $login.ToLowerInvariant()
 }
 
 function Get-TraceabilityIds {
@@ -330,24 +342,50 @@ foreach ($issue in $issues) {
     $issueErrors = @()
     $upperBody = $body.ToUpperInvariant()
     $severity = Get-SeverityClassification -Body $body
+    $authorLogin = Get-GitHubLogin -Value ([string]$issue.user.login)
     $reviewEvidence = Get-MarkdownSection -Body $body -Heading "Review Evidence"
     $legacyIndependentReviewEvidence = Get-MarkdownSection -Body $body -Heading "Independent Review Evidence"
     $hasCurrentReviewEvidence = -not [string]::IsNullOrWhiteSpace($reviewEvidence)
-    $hasLegacyIndependentReview = $upperBody -match 'INDEPENDENT\s+(?:HUMAN\s+)?REVIEW'
-    $hasReviewEvidence = $hasCurrentReviewEvidence -or $hasLegacyIndependentReview
-    $hasApprovedIndependentReview = if ($hasCurrentReviewEvidence) {
-        $reviewEvidence -match '(?im)^\s*mode\s*:\s*independent\s+human\s+review\s*$' -and
-            (Test-NamedReviewer -Text $reviewEvidence) -and
-            $reviewEvidence -match '(?im)^\s*(?:result|status)\s*:\s*(?:approved|pass(?:ed)?)\s*$'
-    } elseif (-not [string]::IsNullOrWhiteSpace($legacyIndependentReviewEvidence)) {
-        $legacyIndependentReviewEvidence -match '(?i)\b(?:approved|passed|verified|confirmed|sign(?:ed)?[- ]?off)\b' -and
-            (Test-NamedReviewer -Text $legacyIndependentReviewEvidence) -and
-            $legacyIndependentReviewEvidence -notmatch '(?i)\b(?:pending|unavailable|not\s+fully|must\s+still|remain(?:s|ed)?\s+open|required\s+before)\b'
-    } else {
-        # Historical low/medium fixtures used a standalone legacy marker. It
-        # remains review evidence, but can never satisfy a high-risk approval.
-        $false
+    $hasLegacyIndependentReviewEvidence = -not [string]::IsNullOrWhiteSpace($legacyIndependentReviewEvidence)
+    $hasReviewEvidence = $hasCurrentReviewEvidence -or $hasLegacyIndependentReviewEvidence
+
+    $currentMode = (Get-EvidenceField -Text $reviewEvidence -Name "mode").ToLowerInvariant()
+    $currentReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $reviewEvidence -Name "reviewer")
+    $currentVerification = Get-EvidenceField -Text $reviewEvidence -Name "verification"
+    $currentAutomation = Get-EvidenceField -Text $reviewEvidence -Name "automated evidence"
+    $currentResult = (Get-EvidenceField -Text $reviewEvidence -Name "result").ToLowerInvariant()
+    if ([string]::IsNullOrWhiteSpace($currentResult)) {
+        $currentResult = (Get-EvidenceField -Text $reviewEvidence -Name "status").ToLowerInvariant()
     }
+    $currentApproved = $currentResult -match '^(?:approved|passed)$'
+    $currentSelfReview = $currentMode -eq "maintainer self-review"
+    $currentIndependentReview = $currentMode -eq "independent human review"
+    $hasValidCurrentReview = $hasCurrentReviewEvidence -and
+        -not [string]::IsNullOrWhiteSpace($authorLogin) -and
+        -not [string]::IsNullOrWhiteSpace($currentReviewer) -and
+        -not [string]::IsNullOrWhiteSpace($currentVerification) -and
+        $currentApproved -and
+        (($currentSelfReview -and $currentReviewer -eq $authorLogin -and
+                -not [string]::IsNullOrWhiteSpace($currentAutomation)) -or
+            ($currentIndependentReview -and $currentReviewer -ne $authorLogin))
+
+    $legacyReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "reviewer")
+    $legacyVerification = Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "verification"
+    $legacyResult = (Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "result").ToLowerInvariant()
+    if ([string]::IsNullOrWhiteSpace($legacyResult)) {
+        $legacyResult = (Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "status").ToLowerInvariant()
+    }
+    $hasValidLegacyIndependentReview = $hasLegacyIndependentReviewEvidence -and
+        -not [string]::IsNullOrWhiteSpace($authorLogin) -and
+        -not [string]::IsNullOrWhiteSpace($legacyReviewer) -and
+        $legacyReviewer -ne $authorLogin -and
+        -not [string]::IsNullOrWhiteSpace($legacyVerification) -and
+        $legacyResult -match '^(?:approved|passed)$'
+
+    $hasValidReviewEvidence = $hasValidCurrentReview -or $hasValidLegacyIndependentReview
+    $hasApprovedIndependentReview =
+        ($hasValidCurrentReview -and $currentIndependentReview) -or
+        $hasValidLegacyIndependentReview
 
     if ($enforceClosedIssues -and $state.ToLowerInvariant() -ne "closed") {
         $issueErrors += "Issue is not closed (state=$state)."
@@ -478,6 +516,8 @@ foreach ($issue in $issues) {
     }
     if (-not $hasReviewEvidence) {
         $issueErrors += "Missing Review Evidence."
+    } elseif (-not $hasValidReviewEvidence) {
+        $issueErrors += "Review Evidence must record an approved structured mode, issue-author or distinct reviewer identity as applicable, verification, and automated evidence for maintainer self-review."
     } elseif (($severity -eq "high" -or $severity -eq "catastrophic") -and -not $hasApprovedIndependentReview) {
         $issueErrors += "Severity '$severity' requires approved Independent Human Review evidence from a second qualified reviewer."
     }

@@ -3,10 +3,11 @@
     "number": 9003,
     "title": "[docs-safety] high-severity approved independent review",
     "state": "closed",
+    "user": { "login": "rhamenator" },
     "labels": [
       { "name": "documentation" },
       { "name": "safety" }
     ],
-    "body": "## Documentation Requirement IDs\n\n- DQ-independent-review-high\n\n## Documentation Verification IDs\n\n- DV-independent-review-high\n\n## Hazard Linkage IDs\n\n- HZ-system-failure-01\n\n## DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-independent-review-high | DV-independent-review-high | HZ-system-failure-01 |\n\n## Procedural Delta Map\n\nChanges a system-recovery procedure.\n\n## Misuse Analysis\n\nIncorrect steps could cause system failure.\n\nSeverity: high\n\n## Review Evidence\n\nmode: independent human review\nreviewer: second qualified reviewer\nverification: procedure correctness and failure boundaries\nresult: approved\n\n## Simulation/Walkthrough Evidence\n\nWalkthrough confirmed the expected recovery sequence.\n\n## Rollback And Field Notification Plan\n\nRollback the documentation commit and notify affected users."
+    "body": "## Documentation Requirement IDs\n\n- DQ-independent-review-high\n\n## Documentation Verification IDs\n\n- DV-independent-review-high\n\n## Hazard Linkage IDs\n\n- HZ-system-failure-01\n\n## DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-independent-review-high | DV-independent-review-high | HZ-system-failure-01 |\n\n## Procedural Delta Map\n\nChanges a system-recovery procedure.\n\n## Misuse Analysis\n\nIncorrect steps could cause system failure.\n\nSeverity: high\n\n## Review Evidence\n\nmode: independent human review\nreviewer: copperfin-reviewer\nverification: procedure correctness and failure boundaries\nresult: approved\n\n## Simulation/Walkthrough Evidence\n\nWalkthrough confirmed the expected recovery sequence.\n\n## Rollback And Field Notification Plan\n\nRollback the documentation commit and notify affected users."
   }
 ]

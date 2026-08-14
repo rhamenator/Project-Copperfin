@@ -46,6 +46,13 @@ level, or safety for a particular deployment.
 - `DV-assurance-review-007`: reject a high-severity Review Evidence section whose
   reviewer is blank or an unfilled placeholder even when its mode and result
   claim independent approval.
+- `DV-assurance-review-008`: reject an independent-review claim whose reviewer
+  login equals the issue author's login.
+- `DV-assurance-review-009`: reject low-severity self-review that lacks an
+  affirmative result, verification scope, or automated-evidence field.
+- `DV-assurance-review-010`: parse legacy approval from an affirmative
+  `result`/`status` field so `not approved` and `not verified` cannot pass by
+  substring.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -59,8 +66,8 @@ level, or safety for a particular deployment.
 
 | Documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
-| `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-006` | `HZ-system-failure-01`; `HZ-doc-command-01` |
-| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-006`; `DV-assurance-review-009` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-baseline-001` | `DV-assurance-baseline-001` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 
 ## Procedural Delta Map
@@ -95,17 +102,25 @@ Potential Severity If Misused: medium
 ## Review Evidence
 
 - mode: maintainer self-review
+- reviewer: rhamenator
+- verification: policy consistency, severity parsing, legacy compatibility,
+  fail-closed high/catastrophic behavior, and ongoing requirements-recovery
+  wording
+- automated evidence: focused safety-traceability and community-health
+  contracts, YAML/JSON parsing, and diff validation
 - scope: policy consistency, severity parsing, legacy compatibility, fail-closed
   high/catastrophic behavior, and ongoing requirements-recovery wording
-- result: no independent-review claim; focused automated evidence required
+- result: approved as maintainer self-review; no independence claim
 
 ## Simulation/Walkthrough Evidence
 
 The focused contract executes a permitted low-severity self-review fixture, a
 forbidden high-severity self-review fixture, and an approved high-severity
 independent-human-review fixture. It also reruns legacy independent-review
-fixtures, malformed mapping/hazard cases, classifier behavior, and hostile issue-
-number probes through the production PowerShell validator.
+fixtures; rejects incomplete low-risk evidence, author-as-independent-reviewer,
+placeholder reviewers, and negated legacy results; and reruns malformed mapping/
+hazard cases, classifier behavior, and hostile issue-number probes through the
+production PowerShell validator.
 
 ## Rollback And Field Notification Plan
 

@@ -96,10 +96,10 @@ body:
     id: review_evidence
     attributes:
       label: Review Evidence
-      description: "State the review mode, reviewer, scope, evidence, and result. Maintainer self-review plus applicable automated verification is permitted for none/low/medium severity and must not be called independent. High/catastrophic severity requires a second qualified human reviewer."
+      description: "State the review mode, reviewer's GitHub login, scope, evidence, and result. Maintainer self-review plus applicable automated verification is permitted for none/low/medium severity, must name the issue author's login, and must not be called independent. High/catastrophic severity requires a different qualified human reviewer's login."
       placeholder: |
         mode: maintainer self-review | independent human review
-        reviewer: <name>
+        reviewer: <github-login>
         verification: procedure correctness vs runtime behavior
         automated evidence: <workflow/test/artifact references>
         result: approved
