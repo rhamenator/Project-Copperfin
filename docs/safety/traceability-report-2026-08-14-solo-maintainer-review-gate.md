@@ -71,7 +71,7 @@ level, or safety for a particular deployment.
   either risk direction, duplicate rendered severity sections, multiple values
   within one section (including multiple values on one line), hidden values
   inside a rendered section, raw/rendered value disagreements across hidden
-  heading boundaries, and mixed section/legacy declarations.
+  heading boundaries in either ordering, and mixed section/legacy declarations.
 - `DV-assurance-review-006`: reject duplicate rendered Review Evidence and
   DQ/DV/HZ Mapping sections and mixed current/legacy review schemas; accept
   unrelated raw-HTML detail blocks and Markdown autolinks while preserving the

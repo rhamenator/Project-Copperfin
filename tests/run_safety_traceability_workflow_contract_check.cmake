@@ -481,12 +481,17 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_hidden_high_signoff_rejected("<![CDATA[\\n" "\\n]]>" "cdata-signoff")
     assert_hidden_high_signoff_rejected("<custom-review>\\n" "\\n</custom-review>" "custom-html-block-signoff")
     assert_hidden_high_signoff_rejected("</custom-review>\\n" "" "closing-html-block-signoff")
+    assert_hidden_high_signoff_rejected("<custom-review data-note=\\\">\\\">\\n" "\\n</custom-review>" "quoted-angle-html-block-signoff")
     assert_hidden_high_signoff_rejected("`<!--``\\n" "\\n-->" "mismatched-code-span-comment-opener")
     assert_hidden_high_signoff_rejected("\\`<!--\\n" "\\n-->`" "escaped-backtick-comment-opener")
     assert_high_signoff_mutation_rejected(
         "reviewer: copperfin-reviewer\\nqualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries\\nverification result: passed\\nreviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved"
         "`\\nreviewer: copperfin-reviewer\\nqualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries\\nverification result: passed\\nreviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved\\n`"
         "multiline-code-span-signoff-fields")
+    assert_high_signoff_mutation_rejected(
+        "## Independent Review Sign-Off"
+        "`unmatched paragraph tick\\n\\n<custom-review>\\n`\\n\\n</custom-review>\\n\\n## Independent Review Sign-Off"
+        "unmatched-code-span-before-html-block")
     assert_high_signoff_mutation_rejected(
         "## Independent Review Sign-Off"
         "##Independent Review Sign-Off"
@@ -1127,6 +1132,9 @@ if(POWERSHELL_EXECUTABLE)
     assert_issue_form_severity_mutation_rejected(
         "### Potential Severity If Misused\\n\\n<!-- high\\n\\n### Hidden Boundary\\n\\ncommented detail -->\\n\\nlow"
         "commented-high-hidden-heading-before-rendered-low-severity")
+    assert_issue_form_severity_mutation_rejected(
+        "### Potential Severity If Misused\\n\\nlow\\n\\n<!--\\n### Hidden Boundary\\n\\nhigh\\n-->"
+        "visible-low-before-commented-hidden-heading-high-severity")
     assert_issue_form_severity_mutation_rejected(
         "### Potential Severity If Misused\\n\\nlow\\n\\n### Potential Severity If Misused\\n\\nhigh"
         "duplicate-rendered-severity")

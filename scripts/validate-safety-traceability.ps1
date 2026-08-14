@@ -255,6 +255,47 @@ function Get-MarkdownHeadingCount {
     return [regex]::Matches($Body, $headingPattern).Count
 }
 
+function Get-RawMarkdownSectionAtRenderedBoundaries {
+    param(
+        [string]$RawBody,
+        [string]$RenderedBody,
+        [string]$Heading
+    )
+
+    $rawLines = @($RawBody -split '\r?\n')
+    $renderedLines = @($RenderedBody -split '\r?\n')
+    if ($rawLines.Count -ne $renderedLines.Count) {
+        return ''
+    }
+
+    $escapedHeading = [regex]::Escape($Heading)
+    $targetPattern = "^ {0,3}#{2,3}[ \t]+$escapedHeading(?:[ \t]+#+)?[ \t]*$"
+    $nextHeadingPattern = '^ {0,3}#{2,3}[ \t]+'
+    $targetIndexes = @()
+    for ($index = 0; $index -lt $renderedLines.Count; $index++) {
+        if ($renderedLines[$index] -match $targetPattern) {
+            $targetIndexes += $index
+        }
+    }
+    if ($targetIndexes.Count -ne 1) {
+        return ''
+    }
+
+    $startIndex = $targetIndexes[0] + 1
+    $endIndex = $renderedLines.Count
+    for ($index = $startIndex; $index -lt $renderedLines.Count; $index++) {
+        if ($renderedLines[$index] -match $nextHeadingPattern) {
+            $endIndex = $index
+            break
+        }
+    }
+    if ($endIndex -le $startIndex) {
+        return ''
+    }
+
+    return ($rawLines[$startIndex..($endIndex - 1)] -join "`n")
+}
+
 function Mask-MarkdownHtmlCommentsOutsideCode {
     param([AllowEmptyString()][string]$Body)
 
@@ -266,8 +307,17 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
     $codeSpanLength = 0
 
     foreach ($line in ($Body -split '\r?\n')) {
-        if ($inFence -and -not $inComment -and $codeSpanLength -eq 0) {
+        if ($codeSpanLength -gt 0 -and [string]::IsNullOrWhiteSpace($line)) {
+            # A CommonMark code span cannot cross the blank line that ends its
+            # paragraph. Treat an unmatched opener conservatively as masked
+            # text, then resume block classification after the boundary.
+            $codeSpanLength = 0
             $maskedLines.Add($line)
+            continue
+        }
+
+        if ($inFence -and -not $inComment -and $codeSpanLength -eq 0) {
+            $maskedLines.Add(' ' * $line.Length)
             $escapedFenceCharacter = [regex]::Escape($fenceCharacter)
             if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
                 $inFence = $false
@@ -278,7 +328,7 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
         if (-not $inComment -and $codeSpanLength -eq 0) {
             $fenceMatch = [regex]::Match($line, '^ {0,3}(?<fence>`{3,}|~{3,})')
             if ($fenceMatch.Success) {
-                $maskedLines.Add($line)
+                $maskedLines.Add(' ' * $line.Length)
                 $inFence = $true
                 $fenceCharacter = $fenceMatch.Groups['fence'].Value.Substring(0, 1)
                 $fenceLength = $fenceMatch.Groups['fence'].Value.Length
@@ -286,7 +336,7 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
             }
 
             if ($line -match '^(?: {4}|\t)') {
-                $maskedLines.Add($line)
+                $maskedLines.Add(' ' * $line.Length)
                 continue
             }
         }
@@ -382,12 +432,15 @@ function Get-RenderedMarkdownEvidenceText {
             if ($line.Contains($rawHtmlEndToken, [System.StringComparison]::OrdinalIgnoreCase)) {
                 $rawHtmlEndToken = ''
             }
+            $renderedLines.Add(' ' * $line.Length)
             continue
         }
         if ($rawHtmlUntilBlank) {
             if ([string]::IsNullOrWhiteSpace($line)) {
                 $rawHtmlUntilBlank = $false
                 $renderedLines.Add($line)
+            } else {
+                $renderedLines.Add(' ' * $line.Length)
             }
             continue
         }
@@ -414,6 +467,13 @@ function Get-RenderedMarkdownEvidenceText {
 
         if ($line -match '^ {0,3}<') {
             $trimmedHtmlLine = $line.TrimStart()
+            $isAutolink = $trimmedHtmlLine -match '^<[A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*>[ \t]*$' -or
+                $trimmedHtmlLine -match '^<[^ <>@]+@[^ <>@]+>[ \t]*$'
+            if ($isAutolink) {
+                $renderedLines.Add($line)
+                continue
+            }
+
             $isRawHtmlBlock = $false
             $typeOneMatch = [regex]::Match(
                 $trimmedHtmlLine,
@@ -440,10 +500,20 @@ function Get-RenderedMarkdownEvidenceText {
                 $rawHtmlUntilBlank = $true
             }
 
+            # At a top-level line start, any angle-bracket construct that is
+            # not a proven autolink is excluded conservatively. This covers
+            # quoted '>' characters and future HTML forms without weakening
+            # the sign-off boundary.
+            if (-not $isRawHtmlBlock) {
+                $isRawHtmlBlock = $true
+                $rawHtmlUntilBlank = $true
+            }
+
             if ($isRawHtmlBlock) {
                 if ($RejectTopLevelRawHtml) {
                     return ''
                 }
+                $renderedLines.Add(' ' * $line.Length)
                 continue
             }
         }
@@ -498,7 +568,10 @@ function Get-SeverityClassification {
         if ($renderedLegacySeverityMatches.Count -ne 0) {
             return ""
         }
-        $rawSection = Get-MarkdownSection -Body $Body -Heading "Potential Severity If Misused"
+        $rawSection = Get-RawMarkdownSectionAtRenderedBoundaries `
+            -RawBody $Body `
+            -RenderedBody $renderedBody `
+            -Heading "Potential Severity If Misused"
         $section = Get-MarkdownSection -Body $renderedBody -Heading "Potential Severity If Misused"
         $rawSectionSeverityMatches = [regex]::Matches(
             $rawSection,
