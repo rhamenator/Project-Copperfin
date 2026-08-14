@@ -171,7 +171,7 @@ function Get-MarkdownSection {
     $escapedHeading = [regex]::Escape($Heading)
     $match = [regex]::Match(
         $Body,
-        "(?ims)^\s*##\s*$escapedHeading\s*\r?\n(?<content>.*?)(?=^\s*##\s|\z)")
+        "(?ims)^\s*#{2,3}\s*$escapedHeading\s*\r?\n(?<content>.*?)(?=^\s*#{2,3}\s|\z)")
     if (-not $match.Success) {
         return ""
     }
