@@ -15,7 +15,9 @@
   substrings, and rejects incomplete low-risk evidence or issue-author identity
   assertions. Review evidence is punctuation-normalized before rejecting
   negative, incomplete, missing, deferred, unavailable, skipped, or failed
-  states while retaining affirmative negative safety guarantees. Live review
+  states while retaining affirmative `does not`/`never` safety guarantees and
+  legitimate failure-boundary scope prose. Outcome/status `failure` forms still
+  fail closed. Live review
   loading re-fetches the issue after comment pagination and fails closed if the
   body, comment count, or update identity does not stabilize.
   The charter, README, agent rules, ontology, and traceability matrix
