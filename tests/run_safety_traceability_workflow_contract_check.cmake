@@ -386,6 +386,62 @@ function(assert_joined_latest_withdrawal_rejected)
     file(REMOVE "${fixture}" "${report}")
 endfunction()
 
+function(assert_newer_signoff_supersedes_older_timestamp_tie)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-newer-after-tie-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-newer-after-tie-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_edited_withdrawal_issues.json" fixture_contents)
+    string(REPLACE "2026-08-14T12:03:00Z" "2026-08-14T12:02:00Z" fixture_contents "${fixture_contents}")
+    string(REPLACE [=[      }
+    ],
+    "body":]=] [=[      },
+      {
+        "id": 3,
+        "created_at": "2026-08-14T12:04:00Z",
+        "updated_at": "2026-08-14T12:04:00Z",
+        "user": { "login": "copperfin-reviewer", "type": "User" },
+        "body": "## Independent Review Sign-Off\n\nreviewer: copperfin-reviewer\nqualification: qualified safety-documentation reviewer\nqualification result: qualified\nverification: procedure correctness and failure boundaries\nverification result: passed\nreviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\nresult: approved"
+      }
+    ],
+    "body":]=] fixture_contents "${fixture_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator let an older timestamp tie block a newer sign-off: ${standard_output}\n${standard_error}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
+function(assert_entity_heading_latest_withdrawal_rejected)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-entity-heading-withdrawal-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-entity-heading-withdrawal-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_withdrawn_review_issues.json" fixture_contents)
+    string(REPLACE
+        "<custom-review data-note=\\\">\\\">\\n\\n## Independent Review Sign-Off"
+        "<custom-review data-note=\\\">\\\">\\n\\n## Independent Review Sign-&#79;ff"
+        fixture_contents "${fixture_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator ignored an entity-rendered latest withdrawal heading")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_low_self_review_mutation_rejected search_text replacement_text slug)
     set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
@@ -1212,6 +1268,8 @@ if(POWERSHELL_EXECUTABLE)
     assert_edited_withdrawal_precedence()
     assert_equal_timestamp_signoffs_rejected()
     assert_joined_latest_withdrawal_rejected()
+    assert_newer_signoff_supersedes_older_timestamp_tie()
+    assert_entity_heading_latest_withdrawal_rejected()
     assert_placeholder_and_negated_review_evidence_rejected()
     assert_pending_legacy_high_review_rejected()
     assert_issue_form_heading_fixture()
