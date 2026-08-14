@@ -38,6 +38,9 @@ level, or safety for a particular deployment.
 - `DV-assurance-review-004`: accept a closed high-severity fixture only when its
   current Review Evidence explicitly records independent-human mode and an
   approved result.
+- `DV-assurance-review-005`: parse a high-severity issue-form value with a
+  same-line rationale and reject its legacy review section when that section
+  says independent approval remains open.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -52,7 +55,7 @@ level, or safety for a particular deployment.
 | Documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
 | `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003` | `HZ-system-failure-01`; `HZ-doc-command-01` |
-| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-baseline-001` | `DV-assurance-baseline-001` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 
 ## Procedural Delta Map
@@ -77,7 +80,10 @@ negative gate prevents that. If self-review were described as independent,
 downstream users could overestimate assurance; all controlling prose explicitly
 forbids that claim. If severity were detected by an unrelated word elsewhere in
 an issue, the wrong gate could apply; severity is now parsed from the issue-form
-section or its legacy `Severity: value` representation.
+section (including a same-line rationale after the selected value) or its legacy
+`Severity: value` representation. A legacy Independent Review section that says
+approval is pending, unavailable, incomplete, or still required cannot satisfy
+the high/catastrophic gate.
 
 Potential Severity If Misused: medium
 
