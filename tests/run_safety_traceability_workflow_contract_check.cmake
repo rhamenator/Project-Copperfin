@@ -506,6 +506,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: p&#101;nding review"
         "entity-encoded-signoff-qualification")
     assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: [pending review][q]\\n\\n[q]: https://example.com/qualification"
+        "reference-linked-placeholder-qualification")
+    assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries"
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: n/a"
         "placeholder-signoff-verification")
@@ -652,6 +656,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "## Independent Review Sign-Off"
         "## Independent Review *Sign-Off*"
         "emphasized-signoff-heading")
+    assert_high_signoff_mutation_rejected(
+        "## Independent Review Sign-Off"
+        "## Independent Review &#42;Sign-Off&#42;"
+        "entity-produced-literal-heading-delimiters")
     assert_high_signoff_mutation_rejected(
         "## Independent Review Sign-Off"
         "<!-- withdrawn -->## Independent Review Sign-Off"

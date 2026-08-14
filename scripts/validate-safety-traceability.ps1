@@ -224,13 +224,26 @@ function Test-SafetyDocIssue {
 }
 
 function Get-RenderedInlineEvidenceText {
-    param([AllowEmptyString()][string]$Value)
+    param(
+        [AllowEmptyString()][string]$Value,
+        [switch]$NormalizeReferenceLinks
+    )
 
-    $rendered = [System.Net.WebUtility]::HtmlDecode($Value)
+    $rendered = $Value
     $rendered = [regex]::Replace(
         $rendered,
         '!?(?:\[(?<text>[^\]\r\n]*)\])\([^\r\n)]*\)',
         '${text}')
+    if ($NormalizeReferenceLinks) {
+        $rendered = [regex]::Replace(
+            $rendered,
+            '!?(?:\[(?<text>[^\]\r\n]+)\])\[[^\]\r\n]*\]',
+            '${text}')
+        $rendered = [regex]::Replace(
+            $rendered,
+            '!?(?:\[(?<text>[^\]\r\n]+)\])',
+            '${text}')
+    }
     foreach ($pattern in @(
         '(?<!\*)\*\*(?=\S)(?<text>.*?\S)\*\*(?!\*)',
         '(?<!_)__(?=\S)(?<text>.*?\S)__(?!_)',
@@ -243,7 +256,7 @@ function Get-RenderedInlineEvidenceText {
         $rendered,
         '\\(?<escaped>[!"#$%&''()*+,\-./:;<=>?@\[\\\]^_`{|}~])',
         '${escaped}')
-    return $rendered
+    return [System.Net.WebUtility]::HtmlDecode($rendered)
 }
 
 function Get-MarkdownSection {
@@ -664,8 +677,12 @@ function Get-SeverityClassification {
             -RenderedBody $renderedBody `
             -Heading "Potential Severity If Misused"
         $section = Get-MarkdownSection -Body $renderedBody -Heading "Potential Severity If Misused"
-        $decodedRawSection = Get-RenderedInlineEvidenceText -Value $rawSection
-        $decodedSection = Get-RenderedInlineEvidenceText -Value $section
+        $decodedRawSection = Get-RenderedInlineEvidenceText `
+            -Value $rawSection `
+            -NormalizeReferenceLinks
+        $decodedSection = Get-RenderedInlineEvidenceText `
+            -Value $section `
+            -NormalizeReferenceLinks
         $rawSectionSeverityMatches = [regex]::Matches(
             $decodedRawSection,
             "(?i)\b(?<severity>$severityPattern)\b")
@@ -756,7 +773,9 @@ function Get-TextSha256 {
 function Test-MeaningfulReviewEvidence {
     param([string]$Value)
 
-    $trimmed = (Get-RenderedInlineEvidenceText -Value $Value).Trim()
+    $trimmed = (Get-RenderedInlineEvidenceText `
+        -Value $Value `
+        -NormalizeReferenceLinks).Trim()
     if ($trimmed.Length -lt 12 -or $trimmed -match '^<[^>]+>$') {
         return $false
     }
