@@ -343,6 +343,7 @@ function Test-MeaningfulReviewEvidence {
             $afterState = $rawClause.Substring($stateMatch.Index + $stateMatch.Length)
             $isPassingCompoundScope =
                 $state -match '^(?:blocked|incomplete)$' -and
+                $stateMatch.Value -notmatch '\b(?:is|was|has\s+been)\b' -and
                 $afterState -match '^-[a-z0-9-]+\b.*\b(?:pass|passed|succeed|succeeded|successful|verified)\b'
             if (-not $isPassingCompoundScope) {
                 $hasSubjectStateWithoutPassingContext = $true
@@ -381,12 +382,14 @@ function Test-MeaningfulReviewEvidence {
             $afterOutcome = $rawClause.Substring($terminalOutcome.Index + $terminalOutcome.Length)
             $isCompoundScope = $afterOutcome.StartsWith('-')
             $isRelativeInputScope = $beforeOutcome -match '\b(?:attempts?|cases?|files?|inputs?|operations?|records?|requests?|transactions?)\s+(?:that|which)\s+(?:are|is|was|were)\s*$'
-            $isExplicitOutcome = $beforeOutcome -match '\b[a-z0-9]+(?:[ \t]+[a-z0-9]+){0,5}[ \t]+(?:are|had|has|have|is|was|were|has[ \t]+been|have[ \t]+been|had[ \t]+been)[ \t]*$'
+            $isExplicitOutcome =
+                -not $isRelativeInputScope -and
+                $beforeOutcome -match '\b[a-z0-9]+(?:[ \t]+[a-z0-9]+){0,5}[ \t]+(?:are|had|has|have|is|was|were|has[ \t]+been|have[ \t]+been|had[ \t]+been)[ \t]*$'
             $isPassingScope = $afterOutcome -match '^\s+(?!although\b|but\b|despite\b|rather\b|though\b|while\b|whereas\b)[a-z0-9-]+(?:\s+[a-z0-9-]+)*\s+(?:pass|passed|succeed|succeeded|successful|verified)\b'
             $hasNegativeContrast = $afterOutcome -match '^\s*(?:,\s*)?(?:not|rather\s+than|instead\s+of)\b'
-            if (-not $isCompoundScope -and
-                -not $isRelativeInputScope -and
-                ($isExplicitOutcome -or -not $isPassingScope -or $hasNegativeContrast)) {
+            if ($isExplicitOutcome -or
+                $hasNegativeContrast -or
+                (-not $isCompoundScope -and -not $isRelativeInputScope -and -not $isPassingScope)) {
                 $terminalOutcomeWithoutPassingContext = $true
                 break
             }
