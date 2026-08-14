@@ -442,6 +442,29 @@ function(assert_entity_heading_latest_withdrawal_rejected)
     file(REMOVE "${fixture}" "${report}")
 endfunction()
 
+function(assert_reference_heading_latest_withdrawal_rejected)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-reference-heading-withdrawal-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-reference-heading-withdrawal-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_withdrawn_review_issues.json" fixture_contents)
+    string(REPLACE
+        "<custom-review data-note=\\\">\\\">\\n\\n## Independent Review Sign-Off"
+        "<custom-review data-note=\\\">\\\">\\n\\n## [Independent Review Sign-Off][q]\\n\\n[q]: https://example.com/sign-off"
+        fixture_contents "${fixture_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator ignored a reference-linked latest withdrawal heading")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_low_self_review_mutation_rejected search_text replacement_text slug)
     set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
@@ -509,6 +532,18 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: qualified safety-documentation reviewer"
         "qualification: [pending review][q]\\n\\n[q]: https://example.com/qualification"
         "reference-linked-placeholder-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: [pending review][]\\n\\n[pending review]: https://example.com/qualification"
+        "collapsed-reference-placeholder-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: [pending review]\\n\\n[pending review]: https://example.com/qualification"
+        "shortcut-reference-placeholder-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: [pending \\\\[review\\\\]][q]\\n\\n[q]: https://example.com/qualification"
+        "escaped-bracket-reference-placeholder-qualification")
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries"
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: n/a"
@@ -1290,6 +1325,7 @@ if(POWERSHELL_EXECUTABLE)
     assert_joined_latest_withdrawal_rejected()
     assert_newer_signoff_supersedes_older_timestamp_tie()
     assert_entity_heading_latest_withdrawal_rejected()
+    assert_reference_heading_latest_withdrawal_rejected()
     assert_placeholder_and_negated_review_evidence_rejected()
     assert_pending_legacy_high_review_rejected()
     assert_issue_form_heading_fixture()
