@@ -343,6 +343,26 @@ function(assert_edited_withdrawal_precedence)
     file(REMOVE "${report}")
 endfunction()
 
+function(assert_equal_timestamp_signoffs_rejected)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-equal-timestamp-signoffs-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-equal-timestamp-signoffs-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_edited_withdrawal_issues.json" fixture_contents)
+    string(REPLACE "2026-08-14T12:03:00Z" "2026-08-14T12:02:00Z" fixture_contents "${fixture_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted conflicting equal-timestamp sign-offs")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_low_self_review_mutation_rejected search_text replacement_text slug)
     set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
@@ -403,6 +423,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: pending review"
         "placeholder-signoff-qualification")
     assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: p&#101;nding review"
+        "entity-encoded-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries"
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: n/a"
         "placeholder-signoff-verification")
@@ -454,6 +478,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries"
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: not verified"
         "negated-signoff-verification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries"
+        "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: n&#111;t verified"
+        "entity-encoded-negated-signoff-verification")
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries"
         "qualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: these changes were not verified"
@@ -1146,6 +1174,7 @@ if(POWERSHELL_EXECUTABLE)
     assert_stale_independent_review_rejected()
     assert_withdrawn_independent_review_rejected()
     assert_edited_withdrawal_precedence()
+    assert_equal_timestamp_signoffs_rejected()
     assert_placeholder_and_negated_review_evidence_rejected()
     assert_pending_legacy_high_review_rejected()
     assert_issue_form_heading_fixture()
@@ -1173,6 +1202,9 @@ if(POWERSHELL_EXECUTABLE)
     assert_issue_form_severity_mutation_rejected(
         "### Potential Severity If Misused\\n\\nlow or high"
         "multiple-values-on-one-severity-line")
+    assert_issue_form_severity_mutation_rejected(
+        "### Potential Severity If Misused\\n\\nlow or h<!-- -->igh"
+        "inline-comment-joined-severity-token")
     assert_issue_form_severity_mutation_rejected(
         "### Potential Severity If Misused\\n\\nlow\\n\\n```text\\nhigh\\n```"
         "fenced-value-inside-rendered-severity")

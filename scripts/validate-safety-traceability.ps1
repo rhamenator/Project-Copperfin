@@ -350,6 +350,7 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
         $searchIndex = 0
         while ($searchIndex -lt $line.Length) {
             if ($inComment) {
+                $commentStart = $searchIndex
                 $commentEnd = $line.IndexOf('-->', $searchIndex, [System.StringComparison]::Ordinal)
                 $maskEnd = if ($commentEnd -ge 0) { $commentEnd + 3 } else { $line.Length }
                 for ($index = $searchIndex; $index -lt $maskEnd; $index++) {
@@ -358,6 +359,14 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
                 if ($commentEnd -lt 0) {
                     $searchIndex = $line.Length
                 } else {
+                    if ($commentStart -gt 0 -and $maskEnd -lt $line.Length -and
+                        [char]::IsLetterOrDigit($line[$commentStart - 1]) -and
+                        [char]::IsLetterOrDigit($line[$maskEnd])) {
+                        # Removing this rendered inline comment would join two
+                        # token fragments. Mark the body as ambiguous so the
+                        # structured evidence path fails closed.
+                        $characters[$commentStart] = [char]0xFFFD
+                    }
                     $inComment = $false
                     $searchIndex = $maskEnd
                 }
@@ -424,6 +433,9 @@ function Get-RenderedMarkdownEvidenceText {
     )
 
     $commentMaskedBody = Mask-MarkdownHtmlCommentsOutsideCode -Body $Body
+    if ($commentMaskedBody.Contains([char]0xFFFD)) {
+        return ''
+    }
     $renderedLines = [System.Collections.Generic.List[string]]::new()
     $inFence = $false
     $fenceCharacter = ''
@@ -672,7 +684,7 @@ function Get-TextSha256 {
 function Test-MeaningfulReviewEvidence {
     param([string]$Value)
 
-    $trimmed = $Value.Trim()
+    $trimmed = [System.Net.WebUtility]::HtmlDecode($Value).Trim()
     if ($trimmed.Length -lt 12 -or $trimmed -match '^<[^>]+>$') {
         return $false
     }
@@ -794,6 +806,17 @@ function Test-AuthenticatedIndependentReview {
                 [string]$reviewComments[$index].created_at
             }
         }
+    }
+    $ambiguousTimestampGroups = @($indexedReviewComments | Where-Object {
+        -not [string]::IsNullOrWhiteSpace($_.LatestTimestamp) -and
+        (Get-GitHubLogin -Value ([string]$_.Comment.user.login)) -eq $Reviewer -and
+        ([string]$_.Comment.user.type).ToLowerInvariant() -eq 'user' -and
+        [regex]::IsMatch(
+            [string]$_.Comment.body,
+            '(?im)^ {0,3}#{2,3}[ \t]+Independent Review Sign-Off(?:[ \t]+#+)?[ \t]*$')
+    } | Group-Object -Property LatestTimestamp | Where-Object { $_.Count -gt 1 })
+    if ($ambiguousTimestampGroups.Count -gt 0) {
+        return $false
     }
     $orderedReviewComments = @($indexedReviewComments | Sort-Object -Property `
         @{ Expression = { $_.LatestTimestamp }; Descending = $true }, `
