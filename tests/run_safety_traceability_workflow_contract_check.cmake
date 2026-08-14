@@ -363,6 +363,29 @@ function(assert_equal_timestamp_signoffs_rejected)
     file(REMOVE "${fixture}" "${report}")
 endfunction()
 
+function(assert_joined_latest_withdrawal_rejected)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-joined-latest-withdrawal-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-joined-latest-withdrawal-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_withdrawn_review_issues.json" fixture_contents)
+    string(REPLACE
+        "<custom-review data-note=\\\">\\\">\\n\\n## Independent Review Sign-Off"
+        "<custom-review data-note=\\\">\\\">\\n\\n## Independent Review Sign-O<!-- -->ff"
+        fixture_contents "${fixture_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator fell back after a joined-heading latest withdrawal")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_low_self_review_mutation_rejected search_text replacement_text slug)
     set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
@@ -1180,6 +1203,7 @@ if(POWERSHELL_EXECUTABLE)
     assert_withdrawn_independent_review_rejected()
     assert_edited_withdrawal_precedence()
     assert_equal_timestamp_signoffs_rejected()
+    assert_joined_latest_withdrawal_rejected()
     assert_placeholder_and_negated_review_evidence_rejected()
     assert_pending_legacy_high_review_rejected()
     assert_issue_form_heading_fixture()
@@ -1210,6 +1234,12 @@ if(POWERSHELL_EXECUTABLE)
     assert_issue_form_severity_mutation_rejected(
         "### Potential Severity If Misused\\n\\nlow or h<!-- -->igh"
         "inline-comment-joined-severity-token")
+    assert_issue_form_severity_mutation_rejected(
+        "### Potential Severity If Misused\\n\\nlow or h<!-- --><!-- -->igh"
+        "consecutive-inline-comments-joined-severity-token")
+    assert_issue_form_severity_mutation_rejected(
+        "### Potential Severity If Misused\\n\\nlow or h&#105;gh"
+        "entity-encoded-severity-token")
     assert_issue_form_severity_mutation_rejected(
         "### Potential Severity If Misused\\n\\nlow\\n\\n```text\\nhigh\\n```"
         "fenced-value-inside-rendered-severity")
