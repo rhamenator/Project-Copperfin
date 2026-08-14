@@ -307,11 +307,16 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
     $codeSpanLength = 0
 
     foreach ($line in ($Body -split '\r?\n')) {
-        if ($codeSpanLength -gt 0 -and [string]::IsNullOrWhiteSpace($line)) {
+        $interruptsParagraph = $line -match '^ {0,3}(?:<!--|<\?|<!\[CDATA\[|<![A-Z]|<(?:pre|script|style|textarea)(?:\s|>|$)|`{3,}|~{3,})'
+        if ($codeSpanLength -gt 0 -and
+            ([string]::IsNullOrWhiteSpace($line) -or $interruptsParagraph)) {
             # A CommonMark code span cannot cross the blank line that ends its
-            # paragraph. Treat an unmatched opener conservatively as masked
-            # text, then resume block classification after the boundary.
+            # paragraph or a block construct that interrupts that paragraph.
+            # Treat an unmatched opener conservatively as masked text, then
+            # resume block classification at the boundary.
             $codeSpanLength = 0
+        }
+        if ([string]::IsNullOrWhiteSpace($line)) {
             $maskedLines.Add($line)
             continue
         }
@@ -426,6 +431,7 @@ function Get-RenderedMarkdownEvidenceText {
     $rawHtmlEndToken = ''
     $rawHtmlUntilBlank = $false
     $rawHtmlBlockTags = 'address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul'
+    $emailAutolinkPattern = '^<[A-Za-z0-9.!#$%&''*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*>[ \t]*$'
 
     foreach ($line in ($commentMaskedBody -split '\r?\n')) {
         if (-not [string]::IsNullOrEmpty($rawHtmlEndToken)) {
@@ -450,6 +456,7 @@ function Get-RenderedMarkdownEvidenceText {
             if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
                 $inFence = $false
             }
+            $renderedLines.Add(' ' * $line.Length)
             continue
         }
 
@@ -458,17 +465,19 @@ function Get-RenderedMarkdownEvidenceText {
             $inFence = $true
             $fenceCharacter = $fenceMatch.Groups['fence'].Value.Substring(0, 1)
             $fenceLength = $fenceMatch.Groups['fence'].Value.Length
+            $renderedLines.Add(' ' * $line.Length)
             continue
         }
 
         if ($line -match '^(?: {4}|\t)') {
+            $renderedLines.Add(' ' * $line.Length)
             continue
         }
 
         if ($line -match '^ {0,3}<') {
             $trimmedHtmlLine = $line.TrimStart()
             $isAutolink = $trimmedHtmlLine -match '^<[A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*>[ \t]*$' -or
-                $trimmedHtmlLine -match '^<[^ <>@]+@[^ <>@]+>[ \t]*$'
+                $trimmedHtmlLine -match $emailAutolinkPattern
             if ($isAutolink) {
                 $renderedLines.Add($line)
                 continue
@@ -797,7 +806,14 @@ function Test-AuthenticatedIndependentReview {
             continue
         }
 
-        $commentBody = Get-RenderedMarkdownEvidenceText -Body ([string]$comment.body) -RejectTopLevelRawHtml
+        $rawCommentBody = [string]$comment.body
+        $rawSignOffHeadingCount = [regex]::Matches(
+            $rawCommentBody,
+            '(?im)^ {0,3}#{2,3}[ \t]+Independent Review Sign-Off(?:[ \t]+#+)?[ \t]*$').Count
+        $commentBody = Get-RenderedMarkdownEvidenceText -Body $rawCommentBody -RejectTopLevelRawHtml
+        if ([string]::IsNullOrWhiteSpace($commentBody) -and $rawSignOffHeadingCount -gt 0) {
+            return $false
+        }
         $signOffHeadingCount = [regex]::Matches(
             $commentBody,
             '(?im)^ {0,3}#{2,3}[ \t]+Independent Review Sign-Off(?:[ \t]+#+)?[ \t]*$').Count

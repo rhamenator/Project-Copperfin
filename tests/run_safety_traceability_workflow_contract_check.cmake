@@ -505,6 +505,7 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_hidden_high_signoff_rejected("<custom-review>\\n" "\\n</custom-review>" "custom-html-block-signoff")
     assert_hidden_high_signoff_rejected("</custom-review>\\n" "" "closing-html-block-signoff")
     assert_hidden_high_signoff_rejected("<custom-review data-note=\\\">\\\">\\n" "\\n</custom-review>" "quoted-angle-html-block-signoff")
+    assert_hidden_high_signoff_rejected("<x@y_>\\n" "" "invalid-email-autolink-signoff")
     assert_hidden_high_signoff_rejected("`<!--``\\n" "\\n-->" "mismatched-code-span-comment-opener")
     assert_hidden_high_signoff_rejected("\\`<!--\\n" "\\n-->`" "escaped-backtick-comment-opener")
     assert_high_signoff_mutation_rejected(
@@ -551,6 +552,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: qualified safety-documentation reviewer"
         "qualification: qualified safety-documentation reviewer\\n\\n<https://example.com/review-evidence>"
         "markdown-autolink-evidence")
+    assert_high_signoff_mutation_accepted(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: qualified safety-documentation reviewer\\n\\n<reviewer@example.com>"
+        "markdown-email-autolink-evidence")
     assert_high_signoff_mutation_accepted(
         "## Independent Review Sign-Off"
         "## Independent Review Sign-Off ##"
@@ -1201,6 +1206,10 @@ if(POWERSHELL_EXECUTABLE)
         "No operator procedure changes."
         "No operator procedure changes.\\n\\n<details>\\n<summary>Additional context</summary>\\n\\nThis free-form note is not review evidence.\\n\\n</details>"
         "unrelated-details-block")
+    assert_issue_form_body_mutation_accepted(
+        "Walkthrough confirmed the rendered guidance."
+        "Walkthrough confirmed the rendered guidance.\\n\\n```text\\nrecovery step transcript\\n```\\n\\n    indented transcript detail"
+        "code-blocks-preserve-severity-boundaries")
     assert_placeholder_high_reviewer_rejected()
     assert_same_author_independent_review_rejected()
     assert_unattested_independent_review_rejected()
