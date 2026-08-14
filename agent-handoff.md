@@ -198,6 +198,15 @@ included the Command Window's displayed `>` prompt. Microsoft documents that
 prompt as UI rather than user-entered command text. The current head removes
 that prefix and the focused contract rejects its reintroduction;
 `RQ-CF-REL-003` remains `gap` pending exact-head hosted execution.
+Run `31761029410` retained the corrected 56-event input and clean
+install/uninstall/residue boundaries, but external desktop input still did not
+load Copperfin. The current head replaces that activation seam with a separate
+test-only no-solution `AsyncPackage`: it is inert outside the controlled
+evidence process, posts the exact public command group/ID through
+`IVsUIShell`, opens the runner-owned PRG through in-process DTE, retains its
+dispatch HRESULT, and is uninstalled with an independent residue gate. It is
+not part of the shipping VSIX. Pane, PRG, product package-load/error, and
+cleanup proof remain independent; exact-head hosted execution is pending.
 
 ## V1 Windows installer lifecycle
 

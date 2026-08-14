@@ -517,6 +517,13 @@ clean, but also proved the harness incorrectly typed the Command Window's
 displayed `>` prompt before the canonical command. The correction injects only
 `Copperfin.ShowCommandWindow` plus Enter and adds a regression rejection of the
 prompt-prefixed form; exact-head hosted evidence remains pending.
+Run `31761029410` confirmed the corrected 56 prompt-free events were inserted,
+but the external sender still remained attached for about 204 seconds and no
+product load followed. The hosted gate now builds a separate test-only
+no-solution `AsyncPackage`, invokes the exact public command group/ID through
+Visual Studio's in-process command service, opens the runner-owned PRG through
+in-process DTE, and remains fail-closed on independent pane, PRG, package-load,
+uninstall, and product/driver residue evidence. The driver is not shipped.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

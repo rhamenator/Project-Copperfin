@@ -142,8 +142,14 @@
   product evidence.
   Run `31759758376` then inserted every requested event but exposed that the
   harness typed the Command Window's displayed `>` prompt as command text. The
-  helper now injects only `Copperfin.ShowCommandWindow` plus Enter, with a
-  focused regression that rejects the prompt-prefixed form.
+  prompt-free retry injected only `Copperfin.ShowCommandWindow` plus Enter,
+  with a focused regression rejecting the prompt-prefixed form.
+  Run `31761029410` confirmed all 56 prompt-free events were inserted but that
+  external desktop input remained non-semantic on the hosted runner. The gate
+  now uses a separately packaged, test-only no-solution `AsyncPackage` to post
+  the exact public command group/ID and open the runner-owned PRG in-process;
+  it is never included in the product VSIX, and independent pane, PRG,
+  package-load, uninstall, and product/driver residue gates remain mandatory.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

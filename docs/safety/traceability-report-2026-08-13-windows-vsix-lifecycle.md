@@ -421,13 +421,44 @@ followed. The harness had incorrectly included a literal `>` before
 [Command Window documentation](https://learn.microsoft.com/en-us/visualstudio/ide/command-window?view=visualstudio)
 defines `>` as the prompt displayed at the left edge of new input lines and
 instructs users to enter Command Window input without that sign. The corrected
-helper therefore injects only the invariant command plus Enter, and the
-focused contract both requires that prompt-free assignment and rejects the
-old prefixed form. Pane, package-load, PRG, error, uninstall, and residue gates
+helper therefore injected only the invariant command plus Enter, and its
+focused contract required that prompt-free assignment and rejected the old
+prefixed form. Pane, package-load, PRG, error, uninstall, and residue gates
 remain independent. Diagnostic artifact `9204474322` has digest
 `sha256:5675ea5273edace48be9d22b950fa5168e40b9ab4667ba52a191b9a42e023a53`
 and expires 2026-11-12. `RQ-CF-REL-003` remains `gap` pending corrected
 exact-head execution.
+
+Run `31761029410` confirmed that removing the displayed prompt corrected the
+retained command event count from 58 to 56, but did not make external desktop
+input a reliable semantic command boundary. All 56 prompt-free command/Enter
+events and all shortcut events were inserted into the exact foreground IDE;
+the final sender still remained attached for approximately 204 seconds, and
+no Copperfin pane or package load followed. Installation and uninstall passed
+(203.984 and 26.464 seconds) and cleanup left zero product residue. Diagnostic
+artifact `9204899781` has digest
+`sha256:9cf4476e59d6b402898a3ca31e0104cc997d4604091f79acd20688a444b4e13e`
+and expires 2026-11-12.
+
+The current correction retires synthetic desktop input as the hosted command
+activation mechanism. The workflow builds and installs a separate test-only
+lifecycle-driver VSIX alongside the unchanged product VSIX. The driver is an
+`AsyncPackage` registered only for Visual Studio's no-solution context and is
+inert unless the controlled evidence process supplies two runner-owned
+environment variables. In that process it opens the exact temporary PRG
+through the in-process DTE service and posts the exact public Copperfin command
+group/ID through `IVsUIShell.PostExecCommand`. It retains a versioned dispatch
+result with the command identity and HRESULT. The outer verifier still admits
+nothing until same-process UI Automation proves the pane and exact PRG,
+ActivityLog proves an error-free successful `CopperfinPackage` load, both
+VSIXInstaller uninstall operations pass, and both extension identities have
+zero residue. The driver is never included in the shipping VSIX or release
+artifact. Microsoft documents background `AsyncPackage` autoload and the
+asynchronous in-process command contract in
+[Use AsyncPackage to load VSPackages in the background](https://learn.microsoft.com/en-us/visualstudio/extensibility/how-to-use-asyncpackage-to-load-vspackages-in-the-background?view=visualstudio)
+and
+[IVsUIShell.PostExecCommand](https://learn.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.shell.interop.ivsuishell.postexeccommand?view=visualstudiosdk-2022).
+`RQ-CF-REL-003` remains `gap` pending exact-head hosted execution.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its

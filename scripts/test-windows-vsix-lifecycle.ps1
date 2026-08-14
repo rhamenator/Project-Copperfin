@@ -15,6 +15,10 @@ param(
     [ValidateNotNullOrEmpty()]
     [string]$EvidenceDirectory,
 
+    [Parameter(Mandatory = $true, ParameterSetName = 'Lifecycle')]
+    [ValidateNotNullOrEmpty()]
+    [string]$DriverVsixPath,
+
     [Parameter(ParameterSetName = 'Lifecycle')]
     [ValidateRange(30, 600)]
     [int]$ProcessTimeoutSeconds = 360,
@@ -74,7 +78,8 @@ function Invoke-RecordedInstallerOperation {
     param(
         [Parameter(Mandatory = $true)][string[]]$Arguments,
         [Parameter(Mandatory = $true)][string]$Name,
-        [Parameter(Mandatory = $true)][string]$Operation
+        [Parameter(Mandatory = $true)][string]$Operation,
+        [Parameter(Mandatory = $true)][string]$TargetExtensionId
     )
 
     $startedAt = [DateTime]::UtcNow
@@ -99,14 +104,17 @@ function Invoke-RecordedInstallerOperation {
             finished_at_utc = $finishedAt.ToString('o')
             duration_seconds = [Math]::Round(($finishedAt - $startedAt).TotalSeconds, 3)
             timeout_seconds = $InstallerTimeoutSeconds
+            target_extension_id = $TargetExtensionId
             diagnostic = $diagnosticMessage
         })
         [ordered]@{
             schema_version = 1
             kind = 'copperfin-windows-vsix-installer-operations'
             vsix_sha256 = $vsixSha256
+            lifecycle_driver_vsix_sha256 = $driverVsixSha256
             visual_studio_instance_id = $instanceId
             extension_id = $packageIdentity.Id
+            lifecycle_driver_extension_id = $driverIdentity.Id
             operations = @($installerOperations)
         } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $installerDiagnosticsPath -Encoding utf8NoBOM
     }
@@ -158,10 +166,11 @@ function Get-CopperfinPackageLoadState {
     }
 }
 
-function Get-CopperfinExtensionDirectories {
+function Get-ExtensionDirectories {
     param(
         [Parameter(Mandatory = $true)][string]$VisualStudioInstanceId,
-        [Parameter(Mandatory = $true)][string]$VisualStudioRegistryVersion
+        [Parameter(Mandatory = $true)][string]$VisualStudioRegistryVersion,
+        [Parameter(Mandatory = $true)][string]$ExtensionId
     )
     $visualStudioRoot = Join-Path $env:LOCALAPPDATA 'Microsoft\VisualStudio'
     if (-not (Test-Path -LiteralPath $visualStudioRoot -PathType Container)) { return @() }
@@ -173,7 +182,7 @@ function Get-CopperfinExtensionDirectories {
                 if (Test-Path -LiteralPath $extensionRoot -PathType Container) {
                     Get-ChildItem -LiteralPath $extensionRoot -Filter 'extension.vsixmanifest' -File -Recurse -ErrorAction Stop |
                         Where-Object {
-                            try { (Read-VsixIdentity -ManifestPath $_.FullName).Id -eq 'Copperfin.VisualStudio' }
+                            try { (Read-VsixIdentity -ManifestPath $_.FullName).Id -eq $ExtensionId }
                             catch { throw "Installed VSIX manifest could not be read: $($_.FullName): $($_.Exception.Message)" }
                         } |
                         ForEach-Object { $_.Directory.FullName }
@@ -211,20 +220,6 @@ if ($SelfTest) {
             'Self-test rejected an explicit successful Copperfin package-load record.'
         Assert-Condition ($failedState.SuccessfulLoad -and $failedState.MatchingErrors.Count -eq 1) `
             'Self-test did not preserve a Copperfin error alongside a nominal success record.'
-        $scriptSource = Get-Content -LiteralPath $PSCommandPath -Raw -ErrorAction Stop
-        $nativeSourceMatches = @([regex]::Matches(
-            $scriptSource, '(?s)Add-Type -TypeDefinition @"(.*?)"@') | Where-Object {
-                $_.Groups[1].Value.Contains('namespace CopperfinLifecycle')
-            })
-        Assert-Condition ($nativeSourceMatches.Count -eq 1) `
-            'Self-test could not locate the generated Win32 input source.'
-        Add-Type -TypeDefinition $nativeSourceMatches[0].Groups[1].Value
-        Assert-Condition ($null -ne ('CopperfinLifecycle.NativeMethods' -as [type])) `
-            'Self-test did not compile the generated Win32 input source.'
-        $inputType = [CopperfinLifecycle.NativeMethods].Assembly.GetType('CopperfinLifecycle.INPUT')
-        $expectedInputSize = if ([IntPtr]::Size -eq 8) { 40 } else { 28 }
-        Assert-Condition ([Runtime.InteropServices.Marshal]::SizeOf([System.Type]$inputType) -eq $expectedInputSize) `
-            'Self-test found an invalid Win32 INPUT structure size.'
     }
     finally { [System.IO.Directory]::Delete($fixtureRoot, $true) }
     Write-Host 'Windows VSIX lifecycle helper self-test passed.'
@@ -232,11 +227,17 @@ if ($SelfTest) {
 }
 
 $resolvedVsix = (Resolve-Path -LiteralPath $VsixPath).Path
+$resolvedDriverVsix = (Resolve-Path -LiteralPath $DriverVsixPath).Path
 $resolvedEvidenceDirectory = [System.IO.Path]::GetFullPath($EvidenceDirectory)
 $resolvedRunnerTemporaryRoot = [System.IO.Path]::GetFullPath($env:RUNNER_TEMP).TrimEnd('\')
 $evidenceParent = [System.IO.Directory]::GetParent($resolvedEvidenceDirectory)
 Assert-Condition ($resolvedVsix.EndsWith('.vsix', [System.StringComparison]::OrdinalIgnoreCase)) `
     "Lifecycle input must be a VSIX: $resolvedVsix"
+Assert-Condition ($resolvedDriverVsix.EndsWith('.vsix', [System.StringComparison]::OrdinalIgnoreCase)) `
+    "Lifecycle-driver input must be a VSIX: $resolvedDriverVsix"
+Assert-Condition (-not [string]::Equals($resolvedVsix, $resolvedDriverVsix,
+        [System.StringComparison]::OrdinalIgnoreCase)) `
+    'Product and lifecycle-driver VSIX paths must differ.'
 Assert-Condition ($null -ne $evidenceParent) "Evidence directory has no parent: $resolvedEvidenceDirectory"
 Assert-Condition ([string]::Equals($evidenceParent.FullName.TrimEnd('\'), $resolvedRunnerTemporaryRoot,
         [System.StringComparison]::OrdinalIgnoreCase)) `
@@ -247,11 +248,17 @@ Assert-Condition (-not (Test-Path -LiteralPath $resolvedEvidenceDirectory)) `
     "Evidence directory already exists: $resolvedEvidenceDirectory"
 
 $archiveRoot = Join-Path $resolvedEvidenceDirectory 'package'
+$driverArchiveRoot = Join-Path $resolvedEvidenceDirectory 'driver-package'
 [System.IO.Directory]::CreateDirectory($archiveRoot) | Out-Null
+[System.IO.Directory]::CreateDirectory($driverArchiveRoot) | Out-Null
 [System.IO.Compression.ZipFile]::ExtractToDirectory($resolvedVsix, $archiveRoot)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($resolvedDriverVsix, $driverArchiveRoot)
 $packageIdentity = Read-VsixIdentity -ManifestPath (Join-Path $archiveRoot 'extension.vsixmanifest')
 Assert-Condition ($packageIdentity.Id -eq 'Copperfin.VisualStudio') `
     "Unexpected VSIX identity: $($packageIdentity.Id)"
+$driverIdentity = Read-VsixIdentity -ManifestPath (Join-Path $driverArchiveRoot 'extension.vsixmanifest')
+Assert-Condition ($driverIdentity.Id -eq 'Copperfin.VisualStudio.LifecycleDriver') `
+    "Unexpected lifecycle-driver VSIX identity: $($driverIdentity.Id)"
 
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
 Assert-Condition (Test-Path -LiteralPath $vswhere -PathType Leaf) "vswhere.exe is unavailable: $vswhere"
@@ -271,33 +278,52 @@ $vsixInstaller = Join-Path $installationPath 'Common7\IDE\VSIXInstaller.exe'
 Assert-Condition (Test-Path -LiteralPath $devenv -PathType Leaf) "devenv.exe is unavailable: $devenv"
 Assert-Condition (Test-Path -LiteralPath $vsixInstaller -PathType Leaf) "VSIXInstaller.exe is unavailable: $vsixInstaller"
 
-$existing = @(Get-CopperfinExtensionDirectories `
+$existing = @(Get-ExtensionDirectories `
         -VisualStudioInstanceId $instanceId `
-        -VisualStudioRegistryVersion $registryVersion)
+        -VisualStudioRegistryVersion $registryVersion `
+        -ExtensionId $packageIdentity.Id)
 Assert-Condition ($existing.Count -eq 0) 'Copperfin VSIX is already installed in the selected runner instance.'
+$existingDriver = @(Get-ExtensionDirectories `
+        -VisualStudioInstanceId $instanceId `
+        -VisualStudioRegistryVersion $registryVersion `
+        -ExtensionId $driverIdentity.Id)
+Assert-Condition ($existingDriver.Count -eq 0) `
+    'Copperfin lifecycle-driver VSIX is already installed in the selected runner instance.'
 $vsixSha256 = (Get-FileHash -LiteralPath $resolvedVsix -Algorithm SHA256).Hash.ToLowerInvariant()
+$driverVsixSha256 = (Get-FileHash -LiteralPath $resolvedDriverVsix -Algorithm SHA256).Hash.ToLowerInvariant()
 $registrationActivityLog = Join-Path $resolvedEvidenceDirectory 'ActivityLog-registration.xml'
 $activityLog = Join-Path $resolvedEvidenceDirectory 'ActivityLog.xml'
 $fixturePrg = Join-Path $resolvedEvidenceDirectory 'lifecycle-smoke.prg'
 $installerDiagnosticsPath = Join-Path $resolvedEvidenceDirectory 'vsix-installer-operations.json'
+$driverResultPath = Join-Path $resolvedEvidenceDirectory 'vsix-lifecycle-driver.json'
 $installerOperations = [System.Collections.Generic.List[object]]::new()
 [System.IO.File]::WriteAllText($fixturePrg, "? 'Copperfin VSIX lifecycle smoke'`r`n", [System.Text.UTF8Encoding]::new($false))
 
 $installedDirectory = $null
+$installedDriverDirectory = $null
 $registrationProcess = $null
 $ideProcess = $null
 $primaryFailure = $null
 $cleanupFailure = $null
+$driverCleanupFailure = $null
 $residueInventoryFailure = $null
 try {
     Write-Host 'VSIX lifecycle phase: install'
     Invoke-RecordedInstallerOperation -Arguments @(
         '/quiet', "/instanceIds:$instanceId", $resolvedVsix
-    ) -Name 'Copperfin VSIX installation' -Operation 'install' | Out-Null
+    ) -Name 'Copperfin VSIX installation' -Operation 'install' `
+        -TargetExtensionId $packageIdentity.Id | Out-Null
 
-    $installed = @(Get-CopperfinExtensionDirectories `
+    Write-Host 'VSIX lifecycle phase: install test-only in-process driver'
+    Invoke-RecordedInstallerOperation -Arguments @(
+        '/quiet', "/instanceIds:$instanceId", $resolvedDriverVsix
+    ) -Name 'Copperfin lifecycle-driver VSIX installation' -Operation 'driver_install' `
+        -TargetExtensionId $driverIdentity.Id | Out-Null
+
+    $installed = @(Get-ExtensionDirectories `
             -VisualStudioInstanceId $instanceId `
-            -VisualStudioRegistryVersion $registryVersion)
+            -VisualStudioRegistryVersion $registryVersion `
+            -ExtensionId $packageIdentity.Id)
     Assert-Condition ($installed.Count -eq 1) "Expected one installed Copperfin VSIX directory, found $($installed.Count)."
     $installedDirectory = $installed[0]
     $installedIdentity = Read-VsixIdentity -ManifestPath (Join-Path $installedDirectory 'extension.vsixmanifest')
@@ -305,6 +331,20 @@ try {
         "Installed VSIX version '$($installedIdentity.Version)' differs from package '$($packageIdentity.Version)'."
     Assert-Condition (Test-Path -LiteralPath (Join-Path $installedDirectory 'Copperfin.VisualStudio.dll') -PathType Leaf) `
         'Installed VSIX is missing Copperfin.VisualStudio.dll.'
+    $installedDrivers = @(Get-ExtensionDirectories `
+            -VisualStudioInstanceId $instanceId `
+            -VisualStudioRegistryVersion $registryVersion `
+            -ExtensionId $driverIdentity.Id)
+    Assert-Condition ($installedDrivers.Count -eq 1) `
+        "Expected one installed lifecycle-driver VSIX directory, found $($installedDrivers.Count)."
+    $installedDriverDirectory = $installedDrivers[0]
+    $installedDriverIdentity = Read-VsixIdentity -ManifestPath `
+        (Join-Path $installedDriverDirectory 'extension.vsixmanifest')
+    Assert-Condition ($installedDriverIdentity.Version -eq $driverIdentity.Version) `
+        "Installed lifecycle-driver version '$($installedDriverIdentity.Version)' differs from package '$($driverIdentity.Version)'."
+    Assert-Condition (Test-Path -LiteralPath `
+            (Join-Path $installedDriverDirectory 'Copperfin.VisualStudio.LifecycleDriver.dll') -PathType Leaf) `
+        'Installed lifecycle-driver VSIX is missing its package assembly.'
 
     Write-Host 'VSIX lifecycle phase: refresh Visual Studio package registration'
     Invoke-BoundedProcess `
@@ -358,6 +398,15 @@ try {
     })
     Assert-Condition ($matchingPkgDefImports.Count -ge 1) `
         "Registration-prime ActivityLog did not prove import of the installed Copperfin pkgdef: $installedPkgDef"
+    $installedDriverPkgDef = [System.IO.Path]::GetFullPath(
+        (Join-Path $installedDriverDirectory 'Copperfin.VisualStudio.LifecycleDriver.pkgdef'))
+    $matchingDriverPkgDefImports = @($registrationActivity.activity.entry | Where-Object {
+        [string]$_.description -eq 'Importing pkgdef file' -and
+        [string]::Equals([System.IO.Path]::GetFullPath([string]$_.path), $installedDriverPkgDef,
+            [System.StringComparison]::OrdinalIgnoreCase)
+    })
+    Assert-Condition ($matchingDriverPkgDefImports.Count -ge 1) `
+        "Registration-prime ActivityLog did not prove import of the test-only lifecycle-driver pkgdef: $installedDriverPkgDef"
     $registrationProcess.Dispose()
     $registrationProcess = $null
 
@@ -366,7 +415,9 @@ try {
     $startInfo.FileName = $devenv
     $startInfo.UseShellExecute = $false
     $startInfo.WorkingDirectory = $resolvedEvidenceDirectory
-    foreach ($argument in @('/NoSplash', '/Log', $activityLog, $fixturePrg)) {
+    $startInfo.EnvironmentVariables['COPPERFIN_VSIX_LIFECYCLE_DRIVER_RESULT'] = $driverResultPath
+    $startInfo.EnvironmentVariables['COPPERFIN_VSIX_LIFECYCLE_DRIVER_PRG'] = $fixturePrg
+    foreach ($argument in @('/NoSplash', '/Log', $activityLog)) {
         [void]$startInfo.ArgumentList.Add($argument)
     }
     $ideProcess = [System.Diagnostics.Process]::Start($startInfo)
@@ -389,10 +440,6 @@ param(
     [Parameter(Mandatory = $true)][string]$ExpectedName,
     [string]$AlternateExpectedName = '',
     [switch]$AllowProcessWindowTitlePrefix,
-    [string]$InvokeCanonicalCommand = '',
-    [switch]$RequestCommandWindowOnly,
-    [switch]$SubmitCanonicalCommandOnly,
-    [switch]$CommandWindowAlreadyRequested,
     [Parameter(Mandatory = $true)][string]$DiagnosticPath,
     [Parameter(Mandatory = $true)][string]$EvidenceDescription,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
@@ -400,113 +447,6 @@ param(
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
-Add-Type -TypeDefinition @"
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-
-namespace CopperfinLifecycle {
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct MOUSEINPUT {
-        internal int dx;
-        internal int dy;
-        internal uint mouseData;
-        internal uint dwFlags;
-        internal uint time;
-        internal UIntPtr dwExtraInfo;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct KEYBDINPUT {
-        internal ushort wVk;
-        internal ushort wScan;
-        internal uint dwFlags;
-        internal uint time;
-        internal UIntPtr dwExtraInfo;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct HARDWAREINPUT {
-        internal uint uMsg;
-        internal ushort wParamL;
-        internal ushort wParamH;
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    internal struct INPUTUNION {
-        [FieldOffset(0)] internal MOUSEINPUT mi;
-        [FieldOffset(0)] internal KEYBDINPUT ki;
-        [FieldOffset(0)] internal HARDWAREINPUT hi;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct INPUT {
-        internal uint type;
-        internal INPUTUNION data;
-    }
-
-    public static class NativeMethods {
-        private const uint INPUT_KEYBOARD = 1;
-        private const uint KEYEVENTF_KEYUP = 0x0002;
-        private const uint KEYEVENTF_UNICODE = 0x0004;
-        private const ushort VK_CONTROL = 0x11;
-        private const ushort VK_MENU = 0x12;
-        private const ushort VK_A = 0x41;
-        private const ushort VK_RETURN = 0x0D;
-
-        [DllImport("user32.dll")]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        public static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll")]
-        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern uint SendInput(uint inputCount, INPUT[] inputs, int inputSize);
-
-        private static INPUT VirtualKey(ushort key, bool keyUp) {
-            INPUT input = new INPUT();
-            input.type = INPUT_KEYBOARD;
-            input.data.ki.wVk = key;
-            input.data.ki.dwFlags = keyUp ? KEYEVENTF_KEYUP : 0;
-            return input;
-        }
-
-        private static INPUT Unicode(char value, bool keyUp) {
-            INPUT input = new INPUT();
-            input.type = INPUT_KEYBOARD;
-            input.data.ki.wScan = value;
-            input.data.ki.dwFlags = KEYEVENTF_UNICODE | (keyUp ? KEYEVENTF_KEYUP : 0);
-            return input;
-        }
-
-        private static uint Inject(INPUT[] inputs) {
-            return SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
-        }
-
-        public static uint SendCommandWindowShortcut() {
-            return Inject(new INPUT[] {
-                VirtualKey(VK_CONTROL, false), VirtualKey(VK_MENU, false),
-                VirtualKey(VK_A, false), VirtualKey(VK_A, true),
-                VirtualKey(VK_MENU, true), VirtualKey(VK_CONTROL, true)
-            });
-        }
-
-        public static uint SendUnicodeTextAndEnter(string value) {
-            List<INPUT> inputs = new List<INPUT>();
-            foreach (char character in value) {
-                inputs.Add(Unicode(character, false));
-                inputs.Add(Unicode(character, true));
-            }
-            inputs.Add(VirtualKey(VK_RETURN, false));
-            inputs.Add(VirtualKey(VK_RETURN, true));
-            return Inject(inputs.ToArray());
-        }
-    }
-}
-"@
 $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
 $expectedNames = @($ExpectedName)
 if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
@@ -515,16 +455,6 @@ if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
 $observed = $false
 $lastAutomationError = ''
 $lastProcessWindowName = ''
-$requiresInput = $RequestCommandWindowOnly -or -not [string]::IsNullOrWhiteSpace($InvokeCanonicalCommand)
-$commandSubmitted = -not $requiresInput
-$foregroundProcessVerified = $false
-$commandWindowShortcutSent = $false
-$shortcutInputEventsExpected = 0
-$shortcutInputEventsInjected = 0
-$commandInputForegroundVerified = $false
-$canonicalCommandSubmitted = $false
-$commandInputEventsExpected = 0
-$commandInputEventsInjected = 0
 while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
     try {
         $processCondition = [System.Windows.Automation.PropertyCondition]::new(
@@ -533,57 +463,6 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
             [System.Windows.Automation.TreeScope]::Children, $processCondition)
         if ($null -ne $ide) {
             $lastProcessWindowName = [string]$ide.Current.Name
-            if (-not $commandSubmitted) {
-                $ideWindowHandle = [IntPtr]::new($ide.Current.NativeWindowHandle)
-                if ([CopperfinLifecycle.NativeMethods]::SetForegroundWindow($ideWindowHandle)) {
-                    $foregroundDeadline = [DateTime]::UtcNow.AddSeconds(5)
-                    while ([DateTime]::UtcNow -lt $foregroundDeadline -and -not $foregroundProcessVerified) {
-                        [uint32]$foregroundProcessId = 0
-                        $foregroundWindow = [CopperfinLifecycle.NativeMethods]::GetForegroundWindow()
-                        [void][CopperfinLifecycle.NativeMethods]::GetWindowThreadProcessId(
-                            $foregroundWindow, [ref]$foregroundProcessId)
-                        $foregroundProcessVerified = $foregroundProcessId -eq $ExpectedProcessId
-                        if (-not $foregroundProcessVerified) { Start-Sleep -Milliseconds 100 }
-                    }
-                }
-                if ($foregroundProcessVerified -and -not $CommandWindowAlreadyRequested) {
-                    Start-Sleep -Seconds 2
-                    $shortcutInputEventsExpected = 6
-                    $shortcutInputEventsInjected = [CopperfinLifecycle.NativeMethods]::SendCommandWindowShortcut()
-                    $commandWindowShortcutSent = $shortcutInputEventsInjected -eq $shortcutInputEventsExpected
-                    if (-not $commandWindowShortcutSent) {
-                        $nativeError = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
-                        throw "SendInput inserted $shortcutInputEventsInjected of $shortcutInputEventsExpected Command Window shortcut events (Win32 error $nativeError)."
-                    }
-                    Start-Sleep -Seconds 1
-                    if ($RequestCommandWindowOnly) { break }
-                }
-                if ($foregroundProcessVerified -and -not $RequestCommandWindowOnly) {
-                    [uint32]$commandInputProcessId = 0
-                    $commandInputWindow = [CopperfinLifecycle.NativeMethods]::GetForegroundWindow()
-                    [void][CopperfinLifecycle.NativeMethods]::GetWindowThreadProcessId(
-                        $commandInputWindow, [ref]$commandInputProcessId)
-                    $commandInputForegroundVerified = $commandInputProcessId -eq $ExpectedProcessId
-                    if ($commandInputForegroundVerified) {
-                        # The greater-than character is the Command Window's displayed
-                        # prompt. It is not part of the command entered by the user.
-                        $commandText = $InvokeCanonicalCommand
-                        $commandInputEventsExpected = (2 * $commandText.Length) + 2
-                        $commandInputEventsInjected = [CopperfinLifecycle.NativeMethods]::SendUnicodeTextAndEnter($commandText)
-                        $canonicalCommandSubmitted = $commandInputEventsInjected -eq $commandInputEventsExpected
-                        if (-not $canonicalCommandSubmitted) {
-                            $nativeError = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
-                            throw "SendInput inserted $commandInputEventsInjected of $commandInputEventsExpected canonical-command events (Win32 error $nativeError)."
-                        }
-                        $commandSubmitted = $true
-                        if ($SubmitCanonicalCommandOnly) { break }
-                    }
-                }
-            }
-            if (-not $commandSubmitted) {
-                Start-Sleep -Milliseconds 500
-                continue
-            }
             if ($AllowProcessWindowTitlePrefix -and
                     $ide.Current.Name.StartsWith("$ExpectedName - ", [System.StringComparison]::OrdinalIgnoreCase)) {
                 $observed = $true
@@ -610,93 +489,44 @@ $diagnostic = [ordered]@{
     schema_version = 1
     expected_process_id = $ExpectedProcessId
     expected_surface = $ExpectedName
-    invoke_canonical_command = $InvokeCanonicalCommand
-    request_command_window_only = [bool]$RequestCommandWindowOnly
-    submission_only = [bool]$SubmitCanonicalCommandOnly
-    command_window_already_requested = [bool]$CommandWindowAlreadyRequested
-    foreground_process_verified = $foregroundProcessVerified
-    command_window_shortcut_sent = $commandWindowShortcutSent
-    shortcut_input_events_expected = $shortcutInputEventsExpected
-    shortcut_input_events_injected = $shortcutInputEventsInjected
-    command_input_foreground_verified = $commandInputForegroundVerified
-    canonical_command_submitted = $canonicalCommandSubmitted
-    command_input_events_expected = $commandInputEventsExpected
-    command_input_events_injected = $commandInputEventsInjected
     surface_observed = $observed
     last_process_window_name = $lastProcessWindowName
     last_automation_error = $lastAutomationError
 }
 $diagnostic | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $DiagnosticPath -Encoding utf8
-if ($RequestCommandWindowOnly) {
-    if (-not $commandWindowShortcutSent) {
-        throw "$EvidenceDescription was not requested in Visual Studio process $ExpectedProcessId within the bounded interval. Foreground process verified: $foregroundProcessVerified."
-    }
-    return
-}
-if ($SubmitCanonicalCommandOnly) {
-    if (-not $canonicalCommandSubmitted) {
-        throw "$EvidenceDescription was not submitted to Visual Studio process $ExpectedProcessId within the bounded interval. Foreground process verified: $foregroundProcessVerified. Command Window shortcut sent: $commandWindowShortcutSent. Command-input foreground verified: $commandInputForegroundVerified."
-    }
-    return
-}
 if (-not $observed) {
-    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Foreground process verified: $foregroundProcessVerified. Command Window shortcut sent: $commandWindowShortcutSent. Command-input foreground verified: $commandInputForegroundVerified. Canonical command submitted: $canonicalCommandSubmitted. Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
+    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
 }
 '@, [System.Text.UTF8Encoding]::new($false))
     $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
     Assert-Condition (Test-Path -LiteralPath $windowsPowerShell -PathType Leaf) `
         "Windows PowerShell is unavailable for UI Automation observation: $windowsPowerShell"
     $automationTimeoutSeconds = [Math]::Max(30, $ProcessTimeoutSeconds - 30)
-    Write-Host 'VSIX lifecycle phase: request Visual Studio Command Window'
-    Invoke-BoundedProcess `
-        -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
-            '-RequestCommandWindowOnly',
-            '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command-window-input.json'),
-            '-EvidenceDescription', 'Visual Studio Command Window',
-            '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Visual Studio Command Window request' | Out-Null
-    Start-Sleep -Seconds 2
-
-    Write-Host 'VSIX lifecycle phase: repeat and release queued Command Window request'
-    Invoke-BoundedProcess `
-        -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
-            '-RequestCommandWindowOnly',
-            '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command-window-dispatch.json'),
-            '-EvidenceDescription', 'Repeated Visual Studio Command Window request',
-            '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Repeated Visual Studio Command Window request' | Out-Null
-    Start-Sleep -Seconds 10
-
-    Write-Host 'VSIX lifecycle phase: submit exact installed Copperfin command'
-    Invoke-BoundedProcess `
-        -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
-            '-InvokeCanonicalCommand', 'Copperfin.ShowCommandWindow',
-            '-SubmitCanonicalCommandOnly',
-            '-CommandWindowAlreadyRequested',
-            '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command-input.json'),
-            '-EvidenceDescription', 'Canonical Copperfin command',
-            '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Copperfin canonical command submission' | Out-Null
-
-    Write-Host 'VSIX lifecycle phase: settle post-canonical Command Window readiness'
-    Start-Sleep -Seconds 10
-
-    Write-Host 'VSIX lifecycle phase: release queued canonical command with built-in Command Window request'
-    Invoke-BoundedProcess `
-        -FilePath $windowsPowerShell `
-        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
-            '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
-            '-RequestCommandWindowOnly',
-            '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command-input-dispatch.json'),
-            '-EvidenceDescription', 'Post-command Visual Studio Command Window request',
-            '-TimeoutSeconds', "$automationTimeoutSeconds") `
-        -Name 'Post-command Visual Studio Command Window request' | Out-Null
+    Write-Host 'VSIX lifecycle phase: await test-only in-process driver dispatch'
+    $driverDeadline = [DateTime]::UtcNow.AddSeconds(60)
+    while ([DateTime]::UtcNow -lt $driverDeadline -and
+            -not (Test-Path -LiteralPath $driverResultPath -PathType Leaf)) {
+        Assert-Condition (-not $ideProcess.HasExited) `
+            "Visual Studio exited before lifecycle-driver dispatch (exit $($ideProcess.ExitCode))."
+        Start-Sleep -Milliseconds 250
+    }
+    Assert-Condition (Test-Path -LiteralPath $driverResultPath -PathType Leaf) `
+        'Test-only in-process lifecycle driver did not retain its dispatch result within 60 seconds.'
+    $driverResult = Get-Content -LiteralPath $driverResultPath -Raw -ErrorAction Stop | ConvertFrom-Json
+    Assert-Condition ([int]$driverResult.schema_version -eq 1) `
+        'Lifecycle-driver result has an unsupported schema version.'
+    Assert-Condition ([string]$driverResult.kind -eq 'copperfin-windows-vsix-lifecycle-driver') `
+        'Lifecycle-driver result has an unexpected kind.'
+    Assert-Condition ([string]$driverResult.product_command_group -eq '4b56ff76-d352-4027-bb18-ef4c759d260b') `
+        'Lifecycle-driver result does not bind the Copperfin command group.'
+    Assert-Condition ([uint32]$driverResult.product_command_id -eq 0x0300) `
+        'Lifecycle-driver result does not bind Copperfin.ShowCommandWindow.'
+    Assert-Condition ([int]$driverResult.command_post_hresult -eq 0) `
+        "Lifecycle-driver command dispatch failed with HRESULT $($driverResult.command_post_hresult): $($driverResult.diagnostic)"
+    Assert-Condition ([bool]$driverResult.prg_open_requested) `
+        'Lifecycle driver did not request the exact runner-owned PRG.'
+    Assert-Condition ([string]$driverResult.outcome -eq 'PASS') `
+        "Lifecycle-driver dispatch failed: $($driverResult.diagnostic)"
 
     Write-Host 'VSIX lifecycle phase: observe exact installed Copperfin command surface'
     Invoke-BoundedProcess `
@@ -771,9 +601,10 @@ finally {
     }
     if ($null -eq $installedDirectory) {
         try {
-            $cleanupCandidates = @(Get-CopperfinExtensionDirectories `
+            $cleanupCandidates = @(Get-ExtensionDirectories `
                     -VisualStudioInstanceId $instanceId `
-                    -VisualStudioRegistryVersion $registryVersion)
+                    -VisualStudioRegistryVersion $registryVersion `
+                    -ExtensionId $packageIdentity.Id)
             if ($cleanupCandidates.Count -gt 0) {
                 $installedDirectory = $cleanupCandidates[0]
                 Write-Warning 'Discovered an installed Copperfin extension during failure cleanup.'
@@ -781,12 +612,39 @@ finally {
         }
         catch { Write-Warning "Installed-extension cleanup discovery failed: $($_.Exception.Message)" }
     }
+    if ($null -eq $installedDriverDirectory) {
+        try {
+            $driverCleanupCandidates = @(Get-ExtensionDirectories `
+                    -VisualStudioInstanceId $instanceId `
+                    -VisualStudioRegistryVersion $registryVersion `
+                    -ExtensionId $driverIdentity.Id)
+            if ($driverCleanupCandidates.Count -gt 0) {
+                $installedDriverDirectory = $driverCleanupCandidates[0]
+                Write-Warning 'Discovered an installed lifecycle-driver extension during failure cleanup.'
+            }
+        }
+        catch { Write-Warning "Lifecycle-driver cleanup discovery failed: $($_.Exception.Message)" }
+    }
+    if ($null -ne $installedDriverDirectory) {
+        Write-Host 'VSIX lifecycle phase: uninstall test-only in-process driver'
+        try {
+            Invoke-RecordedInstallerOperation -Arguments @(
+                '/quiet', "/instanceIds:$instanceId", '/uninstall:Copperfin.VisualStudio.LifecycleDriver'
+            ) -Name 'Copperfin lifecycle-driver VSIX uninstall' -Operation 'driver_uninstall' `
+                -TargetExtensionId $driverIdentity.Id | Out-Null
+        }
+        catch {
+            $driverCleanupFailure = $_
+            Write-Warning "Lifecycle-driver uninstall cleanup failed: $($_.Exception.Message)"
+        }
+    }
     if ($null -ne $installedDirectory) {
         Write-Host 'VSIX lifecycle phase: uninstall'
         try {
             Invoke-RecordedInstallerOperation -Arguments @(
                 '/quiet', "/instanceIds:$instanceId", '/uninstall:Copperfin.VisualStudio'
-            ) -Name 'Copperfin VSIX uninstall' -Operation 'uninstall' | Out-Null
+            ) -Name 'Copperfin VSIX uninstall' -Operation 'uninstall' `
+                -TargetExtensionId $packageIdentity.Id | Out-Null
         }
         catch {
             $cleanupFailure = $_
@@ -796,10 +654,16 @@ finally {
 }
 
 $residue = @()
+$driverResidue = @()
 try {
-    $residue = @(Get-CopperfinExtensionDirectories `
+    $residue = @(Get-ExtensionDirectories `
             -VisualStudioInstanceId $instanceId `
-            -VisualStudioRegistryVersion $registryVersion)
+            -VisualStudioRegistryVersion $registryVersion `
+            -ExtensionId $packageIdentity.Id)
+    $driverResidue = @(Get-ExtensionDirectories `
+            -VisualStudioInstanceId $instanceId `
+            -VisualStudioRegistryVersion $registryVersion `
+            -ExtensionId $driverIdentity.Id)
 }
 catch {
     $residueInventoryFailure = $_
@@ -807,16 +671,25 @@ catch {
 $residueFailure = if ($residue.Count -eq 0) { '' } else {
     "VSIX uninstall left installed extension residue: $($residue -join ', ')"
 }
+$driverResidueFailure = if ($driverResidue.Count -eq 0) { '' } else {
+    "Lifecycle-driver uninstall left installed extension residue: $($driverResidue -join ', ')"
+}
 if ($null -ne $primaryFailure) {
     $failureMessage = "VSIX lifecycle failed: $($primaryFailure.Exception.Message)"
     if ($null -ne $cleanupFailure) {
         $failureMessage += " Cleanup also failed: $($cleanupFailure.Exception.Message)"
+    }
+    if ($null -ne $driverCleanupFailure) {
+        $failureMessage += " Lifecycle-driver cleanup also failed: $($driverCleanupFailure.Exception.Message)"
     }
     if ($null -ne $residueInventoryFailure) {
         $failureMessage += " Residue inventory also failed: $($residueInventoryFailure.Exception.Message)"
     }
     if (-not [string]::IsNullOrWhiteSpace($residueFailure)) {
         $failureMessage += " $residueFailure"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($driverResidueFailure)) {
+        $failureMessage += " $driverResidueFailure"
     }
     if ($null -ne $residueInventoryFailure) {
         $failureMessage += " Residue inventory also failed: $($residueInventoryFailure.Exception.Message)"
@@ -833,7 +706,16 @@ if ($null -ne $cleanupFailure) {
     }
     throw $failureMessage
 }
+if ($null -ne $driverCleanupFailure) {
+    $failureMessage = "Lifecycle-driver cleanup failed: $($driverCleanupFailure.Exception.Message)"
+    if (-not [string]::IsNullOrWhiteSpace($driverResidueFailure)) {
+        $failureMessage += " $driverResidueFailure"
+    }
+    throw $failureMessage
+}
 Assert-Condition ($residue.Count -eq 0) "VSIX uninstall left installed extension residue: $($residue -join ', ')"
+Assert-Condition ($driverResidue.Count -eq 0) `
+    "Lifecycle-driver uninstall left installed extension residue: $($driverResidue -join ', ')"
 
 $result = [ordered]@{
     schema_version = 1
