@@ -528,6 +528,13 @@ verifies the runner-owned empty solution, opens the exact PRG through the
 installed editor association, and raises the exact Copperfin command GUID/ID.
 It remains fail-closed on retained dispatch, pane, PRG, package-load, uninstall,
 and product-residue evidence; no test extension is built or installed.
+Exact-head run `31766849974` passed that complete lifecycle at `5a403ff0d` and
+uploaded independently inspected diagnostics, the exact VSIX, and Corresponding
+Source. The VSIX SHA-256 is
+`10fed042d44ae0213d25b21de500f8efa82e4fa3555abe3f1af9137424e4eab0`.
+Fresh install/use/uninstall/residue evidence is complete; same-version reinstall,
+prior-version upgrade, disablement, signing, and human visual review remain
+separate.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

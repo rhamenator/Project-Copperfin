@@ -239,6 +239,15 @@ did not implicitly reference `Microsoft.CSharp.RuntimeBinder` for C# `dynamic`.
 Install/uninstall and zero residue remained clean. The helper now confines C#
 to exact-PID ROT discovery and performs all DTE COM calls in the existing STA
 Windows PowerShell host, eliminating the runtime-binder dependency.
+Exact-head run `31766849974` passed the complete lifecycle at `5a403ff0d`:
+digest-bound install, exact PID/solution/PRG/command dispatch, same-process pane
+and PRG observation, explicit error-free Copperfin package load, uninstall,
+zero residue, all managed suites, exact Corresponding Source, and shipping VSIX
+upload. Artifact IDs are `9206775536` (diagnostics) and `9206776694` (shipping);
+the exact VSIX SHA-256 is
+`10fed042d44ae0213d25b21de500f8efa82e4fa3555abe3f1af9137424e4eab0`.
+Same-version reinstall, upgrade, disablement, signing, and human visual review
+remain separate.
 
 ## V1 Windows installer lifecycle
 
