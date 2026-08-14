@@ -336,8 +336,6 @@ function Test-MeaningfulReviewEvidence {
     $rejectedTokens = @{
         "absent" = $true
         "blocked" = $true
-        "canceled" = $true
-        "cancelled" = $true
         "deferred" = $true
         "incomplete" = $true
         "later" = $true
@@ -348,7 +346,6 @@ function Test-MeaningfulReviewEvidence {
         "skipped" = $true
         "tbd" = $true
         "todo" = $true
-        "timeout" = $true
         "unavailable" = $true
         "unchecked" = $true
         "unqualified" = $true
@@ -376,7 +373,7 @@ function Test-MeaningfulReviewEvidence {
     }
     $failureScrubbed = [regex]::Replace($failureScrubbed, '\bnever\s+failed\b', '')
 
-    $terminalEvidenceState = '(?:available|checked|complete|completed|done|finish|finished|pass|passed|provided|qualified|reviewed|run|ran|succeed|succeeded|successful|verified)'
+    $terminalEvidenceState = '(?:approval|available|checked|complete|completed|completion|done|evidence|finish|finished|pass|passed|provided|qualification|qualified|reviewed|run|ran|succeed|succeeded|successful|verification|verified)'
     $hasNegatedTerminalState = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
         $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
@@ -389,7 +386,8 @@ function Test-MeaningfulReviewEvidence {
     }
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
         $failureScrubbed -match '\b(?:failed|failure|unsuccessful)\b' -or
-        $normalized -match '\btimed\s+out\b' -or
+        $trimmed -match '(?i:\btimed\s+out\b)' -or
+        $normalized -match '\b(?:(?:was|were|is|are|been|got)\s+(?:canceled|cancelled)|(?:canceled|cancelled)\s+before|(?:workflow|job|run|build|test|tests)\s+(?:canceled|cancelled))\b' -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
         $hasNegatedTerminalState) {
         return $false

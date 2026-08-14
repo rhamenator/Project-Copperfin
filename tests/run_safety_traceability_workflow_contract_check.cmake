@@ -327,6 +327,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "cannot-signoff-qualification")
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer cannot substantiate qualification from supplied credentials"
+        "cannot-substantiate-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
         "qualification: reviewer can't be considered qualified"
         "cant-signoff-qualification")
     assert_high_signoff_mutation_rejected(
@@ -504,6 +508,12 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_affirmative_negative_guarantee_accepted(
         "checks have never failed"
         "affirmative-never-failed-automation")
+    assert_affirmative_negative_guarantee_accepted(
+        "cancelled-request cleanup tests passed"
+        "affirmative-cancelled-request-scope")
+    assert_affirmative_negative_guarantee_accepted(
+        "timeout recovery tests passed"
+        "affirmative-timeout-recovery-scope")
     assert_affirmative_negative_guarantee_accepted(
         "confirmed rollback does not mutate user data"
         "affirmative-does-not-guarantee")
