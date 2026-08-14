@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -20,7 +21,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace Copperfin.VisualStudio.LifecycleDriver;
 
 [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-[ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
+[ProvideMenuResource("Menus.ctmenu", 1)]
 [Guid(PackageGuid)]
 public sealed class LifecycleDriverPackage : AsyncPackage
 {
@@ -30,11 +31,21 @@ public sealed class LifecycleDriverPackage : AsyncPackage
     private const string ResultVariable = "COPPERFIN_VSIX_LIFECYCLE_DRIVER_RESULT";
     private const string PrgVariable = "COPPERFIN_VSIX_LIFECYCLE_DRIVER_PRG";
     private const string SolutionVariable = "COPPERFIN_VSIX_LIFECYCLE_DRIVER_SOLUTION";
+    private const string DriverCommandSet = "7d0bd1e6-e905-4a3e-8d62-8b43d1358f3e";
+    private const int DriverCommandId = 0x0100;
 
     protected override async Task InitializeAsync(
         CancellationToken cancellationToken,
         IProgress<ServiceProgressData> progress)
     {
+        await base.InitializeAsync(cancellationToken, progress);
+        await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+        var commandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService
+            ?? throw new InvalidOperationException("Visual Studio menu-command service is unavailable in-process.");
+        commandService.AddCommand(new OleMenuCommand(
+            (_, _) => { },
+            new CommandID(new Guid(DriverCommandSet), DriverCommandId)));
+
         var resultPath = Environment.GetEnvironmentVariable(ResultVariable);
         var prgPath = Environment.GetEnvironmentVariable(PrgVariable);
         var expectedSolutionPath = Environment.GetEnvironmentVariable(SolutionVariable);
@@ -73,7 +84,6 @@ public sealed class LifecycleDriverPackage : AsyncPackage
                 throw new FileNotFoundException("Lifecycle-driver PRG fixture is unavailable.", prgPath);
             }
 
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             var dte = await GetServiceAsync(typeof(EnvDTE.DTE)) as EnvDTE.DTE
                 ?? throw new InvalidOperationException("Visual Studio DTE service is unavailable in-process.");
             var activeSolutionPath = Path.GetFullPath(dte.Solution.FullName);

@@ -480,9 +480,9 @@ autoload in the no-solution startup context, so it retained no dispatch result;
 the harness then uninstalled both extensions and left zero identity residue.
 This is negative activation evidence, not product lifecycle evidence.
 Microsoft documents that `UIContextGuids80.SolutionExists` becomes active when
-a solution is loaded or created, including an empty solution. The corrected
-harness therefore creates and opens an exact runner-owned empty solution, and
-the driver uses that documented context. Before opening the PRG or posting the
+a solution is loaded or created, including an empty solution. The next harness
+attempt therefore created and opened an exact runner-owned empty solution and
+registered the driver for that documented context. Before opening the PRG or posting the
 product command, it independently compares the in-process DTE solution path to
 the expected runner-owned path and retains the verified identity in its JSON
 result. The solution, driver, and result remain test-only and outside the
@@ -490,6 +490,26 @@ shipping VSIX. Diagnostic artifact `9205428325` has digest
 `sha256:b09b07874cd2dc368cdef7433edad210209eb0928df477eb1bb865aae3ebce9f`
 and expires 2026-11-12. `RQ-CF-REL-003` remains `gap` pending corrected
 exact-head hosted execution.
+
+Run `31763800302` built and packaged the corrected driver, installed both
+VSIXes (218.350 and 85.203 seconds), loaded the runner-owned solution, and
+again retained no driver result: this Visual Studio host did not request the
+driver package through either well-known autoload context. Both uninstalls
+passed (22.040 and 31.477 seconds) with zero residue. The diagnostic artifact
+`9205723106` has digest
+`sha256:2d9f5480c7a9120787faac578a466041a64075b9720cff6a02a829e30012845e`
+and expires 2026-11-12.
+
+The current correction removes ambient autoload as the driver trigger. The
+test-only driver declares an invisible canonical activation command in its own
+compiled command table, and the controlled evidence IDE starts with
+`/Command Copperfin.LifecycleDriver.Activate`. Microsoft documents that
+`/Command` executes the named command after IDE startup; command resolution
+therefore semantically requests the owning driver package. Initialization
+registers the command handler, verifies the exact runner-owned solution, opens
+the PRG, and posts the exact public product command before the no-op driver
+command completes. The driver command, package, and solution remain test-only;
+all independent product and cleanup gates remain unchanged.
 
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its

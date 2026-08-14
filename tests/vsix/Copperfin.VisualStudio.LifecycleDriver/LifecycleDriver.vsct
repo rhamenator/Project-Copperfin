@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Traceability: RQ-CF-REL-003; DQ-windows-vsix-lifecycle-scope;
+     DV-windows-vsix-lifecycle-contract; HZ-system-failure-01;
+     HZ-data-corruption-01; HZ-doc-command-01. -->
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable">
+  <Extern href="stdidcmd.h" />
+  <Extern href="vsshlids.h" />
+
+  <Commands package="guidLifecycleDriverPackage">
+    <Groups>
+      <Group guid="guidLifecycleDriverCommandSet" id="LifecycleDriverGroup" priority="0x7fff">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
+      </Group>
+    </Groups>
+    <Buttons>
+      <Button guid="guidLifecycleDriverCommandSet" id="ActivateLifecycleDriver" priority="0x0100" type="Button">
+        <Parent guid="guidLifecycleDriverCommandSet" id="LifecycleDriverGroup" />
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Copperfin Lifecycle Driver</ButtonText>
+          <LocCanonicalName>.Copperfin.LifecycleDriver.Activate</LocCanonicalName>
+        </Strings>
+      </Button>
+    </Buttons>
+  </Commands>
+
+  <Symbols>
+    <GuidSymbol name="guidLifecycleDriverPackage" value="{9c9f5ea2-4bb2-4c82-a88d-66c0be2149d1}" />
+    <GuidSymbol name="guidLifecycleDriverCommandSet" value="{7d0bd1e6-e905-4a3e-8d62-8b43d1358f3e}">
+      <IDSymbol name="LifecycleDriverGroup" value="0x1020" />
+      <IDSymbol name="ActivateLifecycleDriver" value="0x0100" />
+    </GuidSymbol>
+  </Symbols>
+</CommandTable>

@@ -1,4 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- Traceability: RQ-CF-REL-003; DQ-windows-vsix-lifecycle-scope;
+       DV-windows-vsix-lifecycle-contract; HZ-system-failure-01;
+       HZ-data-corruption-01; HZ-doc-command-01. -->
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
@@ -28,6 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <VSCTCompile Include="LifecycleDriver.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+    </VSCTCompile>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>

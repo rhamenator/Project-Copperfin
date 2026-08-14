@@ -209,9 +209,13 @@ not part of the shipping VSIX. Pane, PRG, product package-load/error, and
 cleanup proof remain independent; exact-head hosted execution is pending.
 Run `31762937993` installed and registered both VSIXes but proved the driver
 did not autoload in the no-solution context; both uninstalls and residue checks
-stayed clean. The correction launches an exact runner-owned empty solution
-under `SolutionExists`, and the driver records and verifies that DTE solution
-identity before any PRG open or product-command dispatch.
+stayed clean. Run `31763800302` then loaded an exact runner-owned empty solution
+but proved `SolutionExists` still did not request the driver; dual cleanup
+again passed with zero residue. The correction removes ambient autoload and
+starts the evidence IDE with the driver's own compiled, invisible canonical
+command. Visual Studio `/Command` must resolve and load the owning test package;
+the driver then records and verifies the DTE solution identity before any PRG
+open or product-command dispatch.
 
 ## V1 Windows installer lifecycle
 

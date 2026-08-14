@@ -155,10 +155,13 @@
   The next hosted build compiled the driver and corrected its explicit
   non-template VSSDK packaging properties before installation began.
   Run `31762937993` then installed and registered both packages but showed that
-  the driver did not autoload in the no-solution context. The harness now opens
-  an exact runner-owned empty solution under `SolutionExists`; the driver
-  verifies and retains that DTE solution identity before opening the PRG or
-  posting the product command. Clean dual uninstall/residue gates are retained.
+  the driver did not autoload in the no-solution context. Run `31763800302`
+  loaded an exact runner-owned empty solution but showed that `SolutionExists`
+  still did not request the package; clean dual uninstall/residue gates passed
+  in both runs. The driver now owns a compiled, invisible canonical activation
+  command, and the evidence IDE uses documented `/Command` startup routing to
+  force semantic package resolution before the driver verifies the solution,
+  opens the PRG, and posts the public product command.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

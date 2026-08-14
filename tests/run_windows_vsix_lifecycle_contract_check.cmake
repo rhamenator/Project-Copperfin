@@ -28,10 +28,13 @@ set(script "scripts/test-windows-vsix-lifecycle.ps1")
 set(workflow ".github/workflows/build-vsix.yml")
 set(driver "tests/vsix/Copperfin.VisualStudio.LifecycleDriver/LifecycleDriverPackage.cs")
 set(driver_project "tests/vsix/Copperfin.VisualStudio.LifecycleDriver/Copperfin.VisualStudio.LifecycleDriver.csproj")
+set(driver_vsct "tests/vsix/Copperfin.VisualStudio.LifecycleDriver/LifecycleDriver.vsct")
 foreach(path IN ITEMS
         ${script}
         ${workflow}
         ${driver}
+        ${driver_project}
+        ${driver_vsct}
         scripts/assemble-rc-candidate.py
         tests/run_windows_vsix_lifecycle_contract_check.cmake)
     foreach(id IN ITEMS RQ-CF-REL-003 DQ-windows-vsix-lifecycle-scope
@@ -73,7 +76,9 @@ require_text("${script}" "lifecycle-driver.sln" "runner-owned empty solution fix
 require_text("${script}" "await test-only in-process driver dispatch" "bounded in-process dispatch boundary")
 require_text("${script}" "command_post_hresult" "machine-readable command-post result")
 require_text("${script}" "driver_uninstall" "test-only driver cleanup operation")
-require_text("${driver}" "ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)" "loaded-solution in-process driver activation")
+require_text("${driver}" "ProvideMenuResource(\"Menus.ctmenu\", 1)" "registered driver command table")
+require_text("${driver}" "await base.InitializeAsync(cancellationToken, progress)" "base package initialization")
+require_text("${driver}" "OleMenuCommandService" "driver command registration")
 require_text("${driver}" "solution_identity_verified" "exact solution identity proof")
 require_text("${driver}" "PostExecCommand" "public Visual Studio command-service dispatch")
 require_text("${driver}" "Microsoft.VisualStudio.OLE.Interop" "command execution option namespace")
@@ -82,6 +87,10 @@ require_text("${driver}" "ShowCommandWindowId = 0x0300" "exact Copperfin command
 require_text("${driver}" "ItemOperations.OpenFile" "in-process runner-owned PRG request")
 require_text("${driver_project}" "<DeployVSTemplates>false</DeployVSTemplates>" "test driver non-template package boundary")
 require_text("${driver_project}" "<TemplateOutputDirectory>" "VSSDK template-manifest output boundary")
+require_text("${driver_project}" "LifecycleDriver.vsct" "test-only driver command-table compilation")
+require_text("${driver_vsct}" ".Copperfin.LifecycleDriver.Activate" "test-only canonical activation command")
+require_text("${driver_vsct}" "DefaultInvisible" "test-only command visibility boundary")
+require_text("${script}" "'/Command', 'Copperfin.LifecycleDriver.Activate'" "semantic driver package-load trigger")
 require_text("${script}" "ui-automation-command.json" "retained command-observation diagnostics")
 require_text("${script}" "ui-automation-prg.json" "retained PRG-observation diagnostics")
 require_text("${script}" "StartsWith(\"$ExpectedName - \"" "exact active-document window-title boundary")

@@ -427,7 +427,8 @@ try {
     $startInfo.EnvironmentVariables['COPPERFIN_VSIX_LIFECYCLE_DRIVER_RESULT'] = $driverResultPath
     $startInfo.EnvironmentVariables['COPPERFIN_VSIX_LIFECYCLE_DRIVER_PRG'] = $fixturePrg
     $startInfo.EnvironmentVariables['COPPERFIN_VSIX_LIFECYCLE_DRIVER_SOLUTION'] = $fixtureSolution
-    foreach ($argument in @('/NoSplash', '/Log', $activityLog, $fixtureSolution)) {
+    foreach ($argument in @('/NoSplash', '/Log', $activityLog, $fixtureSolution,
+            '/Command', 'Copperfin.LifecycleDriver.Activate')) {
         [void]$startInfo.ArgumentList.Add($argument)
     }
     $ideProcess = [System.Diagnostics.Process]::Start($startInfo)
