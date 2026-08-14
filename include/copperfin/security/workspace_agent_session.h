@@ -12,7 +12,8 @@
 
 namespace copperfin::security {
 
-// Governing requirements: RQ-CF-AGENT-001 and RQ-CF-AGENT-005.
+// Governing requirements: RQ-CF-AGENT-001, RQ-CF-AGENT-005, and
+// RQ-CF-AGENT-007.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -68,6 +69,25 @@ struct WorkspaceAgentSessionStopResult {
     WorkspaceAgentSessionSnapshot session{};
 };
 
+// Reuse the policy capability shape so requirements cannot acquire a parallel
+// vocabulary that drifts from the admitted session snapshot.
+using WorkspaceAgentToolRequirements = WorkspaceAgentCapabilities;
+
+struct WorkspaceAgentToolPreflightRequest {
+    std::uint32_t schema_version = 1U;
+    std::uint64_t session_generation = 0U;
+    // A trusted executor must derive this complete set from its registered
+    // tool definition. Provider/model input must not select these fields.
+    WorkspaceAgentToolRequirements requirements{};
+};
+
+struct WorkspaceAgentToolPreflightResult {
+    bool allowed = false;
+    std::uint64_t session_generation = 0U;
+    WorkspaceAgentAccessMode effective_mode = WorkspaceAgentAccessMode::advisory;
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     [[nodiscard]] WorkspaceAgentSessionStartResult start(
@@ -76,6 +96,13 @@ public:
     [[nodiscard]] WorkspaceAgentSessionStopResult stop(
         const WorkspaceAgentSessionAuditSink& audit_sink);
     [[nodiscard]] WorkspaceAgentSessionSnapshot snapshot() const;
+
+    // This is a point-in-time, non-executing preflight, not a reusable
+    // authority token. A future executor must submit the complete capability
+    // set again immediately beside each controlled side effect and must audit
+    // the actual tool outcome separately.
+    [[nodiscard]] WorkspaceAgentToolPreflightResult preflight_tool_request(
+        const WorkspaceAgentToolPreflightRequest& request) const;
 
 private:
     enum class Transition {

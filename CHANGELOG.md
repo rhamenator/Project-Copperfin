@@ -1,3 +1,14 @@
+- 2026-08-14: Added a non-executing workspace-agent tool-request preflight to
+  the native session controller. A versioned request declares its complete
+  file, process, outside-workspace, network, and elevation requirements and is
+  admitted only when the exact active session generation owns every requested
+  capability. Unknown schemas, empty requirements, inactive or transitioning
+  sessions, stale generations, and any missing capability fail closed with
+  stable diagnostics. No mode permits privilege elevation. The result is a
+  point-in-time decision rather than a reusable execution token; this slice
+  executes no tool, accesses no workspace, and does not claim tool-outcome
+  audit, sandbox, provider, UI, diff, or undo functionality.
+
 - 2026-08-14: Added a non-activating, provider-independent persistent workspace-
   agent lifecycle audit sink. It admits only the exact versioned controller
   event tuples, stores content-free JSON in the existing contained immutable

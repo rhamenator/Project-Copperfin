@@ -157,6 +157,38 @@ selection, rotation and retention, external or authenticated anchoring,
 multi-host correlation, recovery UI, and integration with the eventual trusted
 activation host remain explicit gaps.
 
+## Session-bound tool-request preflight
+
+Before a mutable adapter exists, the native session controller exposes one
+non-executing preflight for future tool dispatch. The version-1 request carries
+only the exact active session generation and the complete set of capabilities
+the contemplated operation would require: workspace read, workspace write,
+local process, outside-workspace access, network access, and privilege
+elevation. It carries no prompt, path, command, credential, provider token, or
+user content.
+The trusted executor, not model output or a provider adapter, must derive the
+complete set from the product-owned registered tool definition.
+
+The controller evaluates that complete set under the same mutex that protects
+session start, stop, and the immutable capability snapshot. Unknown schemas,
+an empty capability set, a session transition, no active session, generation
+zero or mismatch, and any unavailable capability fail closed with stable
+machine diagnostics. Advisory mode admits no tool request. Workspace-sandbox
+mode can admit workspace read/write and local-process requirements but not
+outside-workspace, network, or elevation requirements. Unrestricted-local mode
+can additionally admit outside-workspace and network requirements after its
+existing activation warning gate, but it still cannot admit privilege
+elevation.
+
+An allowed result is a point-in-time preflight, not a transferable or reusable
+authority token. It does not execute a tool, reserve a session, keep authority
+alive after stop, or prove a later side effect was authorized. A future trusted
+executor must derive and resubmit the operation's complete capability set from
+its product-owned tool definition immediately
+beside every controlled side effect, revalidate its target through the
+applicable containment or process boundary, and separately audit the actual
+tool outcome. Provider authentication remains unrelated to this decision.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
@@ -184,6 +216,10 @@ change numeric fields or control-character escapes into invalid JSON.
 This native contract has no command-line or product-UI activation surface and
 does not itself access files, run processes, use the network, or authenticate a
 provider.
+The same controller now supplies the session-bound tool-request preflight
+described above. It closes only the capability-comparison prerequisite for a
+future executor; it is not itself an executor or authorization token and it
+does not add a tool-outcome audit record.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.
@@ -243,7 +279,9 @@ and bind the warning during a real activation attempt.
 Those surfaces must consume this policy rather than duplicate it. The trusted
 host must persist the controller's content-free activation outcome events,
 keep unrestricted activation session-scoped, visibly indicate the effective
-mode, and route stop through immediate revocation. Until that wiring exists, the
+mode, route stop through immediate revocation, and require a fresh complete
+preflight plus target-specific validation and outcome audit at each tool side
+effect. Until that wiring exists, the
 existing read-only MCP DBF-header host remains Copperfin's only executable AI
 tool surface.
 
