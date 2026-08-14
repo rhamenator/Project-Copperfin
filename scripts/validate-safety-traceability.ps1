@@ -110,6 +110,16 @@ function Get-IssuesFromGitHub {
     foreach ($num in $numberList) {
         $uri = "https://api.github.com/repos/$Repo/issues/$num"
         $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+        $reviewComments = @()
+        $commentCount = [int]$response.comments
+        if ($commentCount -gt 0) {
+            $pageCount = [int][Math]::Ceiling($commentCount / 100.0)
+            for ($page = 1; $page -le $pageCount; $page++) {
+                $commentsUri = "$($response.comments_url)?per_page=100&page=$page"
+                $reviewComments += @(Invoke-RestMethod -Uri $commentsUri -Headers $headers -Method Get)
+            }
+        }
+        $response | Add-Member -NotePropertyName review_comments -NotePropertyValue @($reviewComments) -Force
         $issues += $response
     }
 
@@ -229,6 +239,43 @@ function Get-GitHubLogin {
     }
 
     return $login.ToLowerInvariant()
+}
+
+function Test-AuthenticatedIndependentReview {
+    param(
+        $Issue,
+        [string]$Reviewer
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Reviewer)) {
+        return $false
+    }
+
+    foreach ($comment in @($Issue.review_comments)) {
+        $commentAuthor = Get-GitHubLogin -Value ([string]$comment.user.login)
+        $commentAuthorType = ([string]$comment.user.type).ToLowerInvariant()
+        if ($commentAuthor -ne $Reviewer -or $commentAuthorType -ne "user") {
+            continue
+        }
+
+        $signOff = Get-MarkdownSection -Body ([string]$comment.body) -Heading "Independent Review Sign-Off"
+        $signOffReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $signOff -Name "reviewer")
+        $signOffQualification = Get-EvidenceField -Text $signOff -Name "qualification"
+        $signOffVerification = Get-EvidenceField -Text $signOff -Name "verification"
+        $signOffResult = (Get-EvidenceField -Text $signOff -Name "result").ToLowerInvariant()
+        if ([string]::IsNullOrWhiteSpace($signOffResult)) {
+            $signOffResult = (Get-EvidenceField -Text $signOff -Name "status").ToLowerInvariant()
+        }
+
+        if ($signOffReviewer -eq $commentAuthor -and
+            -not [string]::IsNullOrWhiteSpace($signOffQualification) -and
+            -not [string]::IsNullOrWhiteSpace($signOffVerification) -and
+            $signOffResult -match '^(?:approved|passed)$') {
+            return $true
+        }
+    }
+
+    return $false
 }
 
 function Get-TraceabilityIds {
@@ -360,14 +407,20 @@ foreach ($issue in $issues) {
     $currentApproved = $currentResult -match '^(?:approved|passed)$'
     $currentSelfReview = $currentMode -eq "maintainer self-review"
     $currentIndependentReview = $currentMode -eq "independent human review"
-    $hasValidCurrentReview = $hasCurrentReviewEvidence -and
+    $hasStructuredCurrentReview = $hasCurrentReviewEvidence -and
         -not [string]::IsNullOrWhiteSpace($authorLogin) -and
         -not [string]::IsNullOrWhiteSpace($currentReviewer) -and
         -not [string]::IsNullOrWhiteSpace($currentVerification) -and
-        $currentApproved -and
-        (($currentSelfReview -and $currentReviewer -eq $authorLogin -and
-                -not [string]::IsNullOrWhiteSpace($currentAutomation)) -or
-            ($currentIndependentReview -and $currentReviewer -ne $authorLogin))
+        $currentApproved
+    $hasStructuredCurrentSelfReview = $hasStructuredCurrentReview -and
+        $currentSelfReview -and $currentReviewer -eq $authorLogin -and
+        -not [string]::IsNullOrWhiteSpace($currentAutomation)
+    $hasStructuredCurrentIndependentReview = $hasStructuredCurrentReview -and
+        $currentIndependentReview -and $currentReviewer -ne $authorLogin
+    $hasAuthenticatedCurrentIndependentReview = $hasStructuredCurrentIndependentReview -and
+        (Test-AuthenticatedIndependentReview -Issue $issue -Reviewer $currentReviewer)
+    $hasValidCurrentReview = $hasStructuredCurrentSelfReview -or
+        $hasAuthenticatedCurrentIndependentReview
 
     $legacyReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "reviewer")
     $legacyVerification = Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "verification"
@@ -375,17 +428,23 @@ foreach ($issue in $issues) {
     if ([string]::IsNullOrWhiteSpace($legacyResult)) {
         $legacyResult = (Get-EvidenceField -Text $legacyIndependentReviewEvidence -Name "status").ToLowerInvariant()
     }
-    $hasValidLegacyIndependentReview = $hasLegacyIndependentReviewEvidence -and
+    $hasStructuredLegacyIndependentReview = $hasLegacyIndependentReviewEvidence -and
         -not [string]::IsNullOrWhiteSpace($authorLogin) -and
         -not [string]::IsNullOrWhiteSpace($legacyReviewer) -and
         $legacyReviewer -ne $authorLogin -and
         -not [string]::IsNullOrWhiteSpace($legacyVerification) -and
         $legacyResult -match '^(?:approved|passed)$'
+    $hasAuthenticatedLegacyIndependentReview = $hasStructuredLegacyIndependentReview -and
+        (Test-AuthenticatedIndependentReview -Issue $issue -Reviewer $legacyReviewer)
+    $hasValidLegacyIndependentReview = $hasAuthenticatedLegacyIndependentReview
 
     $hasValidReviewEvidence = $hasValidCurrentReview -or $hasValidLegacyIndependentReview
     $hasApprovedIndependentReview =
-        ($hasValidCurrentReview -and $currentIndependentReview) -or
+        $hasAuthenticatedCurrentIndependentReview -or
         $hasValidLegacyIndependentReview
+    $hasUnauthenticatedIndependentClaim =
+        ($hasStructuredCurrentIndependentReview -and -not $hasAuthenticatedCurrentIndependentReview) -or
+        ($hasStructuredLegacyIndependentReview -and -not $hasAuthenticatedLegacyIndependentReview)
 
     if ($enforceClosedIssues -and $state.ToLowerInvariant() -ne "closed") {
         $issueErrors += "Issue is not closed (state=$state)."
@@ -516,6 +575,8 @@ foreach ($issue in $issues) {
     }
     if (-not $hasReviewEvidence) {
         $issueErrors += "Missing Review Evidence."
+    } elseif ($hasUnauthenticatedIndependentClaim) {
+        $issueErrors += "Independent Human Review requires an approved structured sign-off comment authored by the named distinct reviewer."
     } elseif (-not $hasValidReviewEvidence) {
         $issueErrors += "Review Evidence must record an approved structured mode, issue-author or distinct reviewer identity as applicable, verification, and automated evidence for maintainer self-review."
     } elseif (($severity -eq "high" -or $severity -eq "catastrophic") -and -not $hasApprovedIndependentReview) {

@@ -53,6 +53,10 @@ level, or safety for a particular deployment.
 - `DV-assurance-review-010`: parse legacy approval from an affirmative
   `result`/`status` field so `not approved` and `not verified` cannot pass by
   substring.
+- `DV-assurance-review-011`: reject an otherwise valid independent-review claim
+  unless the named distinct reviewer personally posts a structured sign-off
+  from a GitHub `User` account containing their login, qualification basis,
+  verification, and affirmative result.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -67,7 +71,7 @@ level, or safety for a particular deployment.
 | Documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
 | `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-006`; `DV-assurance-review-009` | `HZ-system-failure-01`; `HZ-doc-command-01` |
-| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010`; `DV-assurance-review-011` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-baseline-001` | `DV-assurance-baseline-001` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 
 ## Procedural Delta Map
@@ -78,8 +82,9 @@ level, or safety for a particular deployment.
   for ordinary development.
 - After: the form requests Review Evidence and records its mode. The validator
   admits explicit self-review for `none`/`low`/`medium`, rejects it for
-  `high`/`catastrophic`, and continues to admit historical Independent Review
-  records. Stable-release review requirements are unchanged.
+  `high`/`catastrophic`, and admits current or historical Independent Review
+  records only when a structured sign-off comment is authored by the named
+  reviewer account. Stable-release review requirements are unchanged.
 - Requirements recovery: charter and operating guidance now state that the
   traceability baseline applies to every behavior-changing slice rather than a
   later optional pass.
@@ -95,7 +100,9 @@ an issue, the wrong gate could apply; severity is now parsed from the issue-form
 section (including a same-line rationale after the selected value) or its legacy
 `Severity: value` representation. A legacy Independent Review section that says
 approval is pending, unavailable, incomplete, or still required cannot satisfy
-the high/catastrophic gate.
+the high/catastrophic gate. A distinct login typed by the issue author is not
+independent evidence; the validator fetches issue comments and requires the
+named reviewer to author the approved sign-off and state a qualification basis.
 
 Potential Severity If Misused: medium
 
@@ -118,9 +125,10 @@ The focused contract executes a permitted low-severity self-review fixture, a
 forbidden high-severity self-review fixture, and an approved high-severity
 independent-human-review fixture. It also reruns legacy independent-review
 fixtures; rejects incomplete low-risk evidence, author-as-independent-reviewer,
-placeholder reviewers, and negated legacy results; and reruns malformed mapping/
-hazard cases, classifier behavior, and hostile issue-number probes through the
-production PowerShell validator.
+unattested login claims, placeholder reviewers, and negated legacy results;
+accepts reviewer-authored current and historical sign-offs; and reruns malformed
+mapping/hazard cases, classifier behavior, and hostile issue-number probes
+through the production PowerShell validator.
 
 ## Rollback And Field Notification Plan
 

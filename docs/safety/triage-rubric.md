@@ -104,9 +104,9 @@ This rubric maps each issue template type to an expected initial response time, 
 | **Default severity** | S0 – Critical |
 | **Initial response target** | 2 business days for initial triage; full closure requires all evidence sections |
 | **Triage owner** | Maintainer lead |
-| **Escalation path** | Before any merge: verify `DQ-*`, `DV-*`, and `HZ-*` identifiers are present and misuse analysis classifies severity. `none`/`low`/`medium` may use documented maintainer self-review plus applicable automation; `high`/`catastrophic` require a second qualified human reviewer named separately from the author. |
+| **Escalation path** | Before any merge: verify `DQ-*`, `DV-*`, and `HZ-*` identifiers are present and misuse analysis classifies severity. `none`/`low`/`medium` may use documented maintainer self-review plus applicable automation; `high`/`catastrophic` require a second qualified human reviewer named separately from the author and an approved structured sign-off comment authored by that reviewer account. |
 | **Hazard linkage** | At least one `HZ-*` entry required. If the documentation change affects a behavior linked to `HZ-data-corruption-01`, `HZ-runtime-crash-01`, or `HZ-system-failure-01`, the linked hazard entry must be updated to reference this change. |
-| **Required before close** | All seven fields populated; `scripts/validate-safety-traceability.ps1` must pass; review evidence must identify its mode and result; `high`/`catastrophic` changes require a documented second-qualified-human sign-off; simulation or walkthrough evidence must be attached or linked. |
+| **Required before close** | All seven fields populated; `scripts/validate-safety-traceability.ps1` must pass; review evidence must identify its mode and result; `high`/`catastrophic` changes require a reviewer-authored structured sign-off that identifies the reviewer, qualification basis, verification, and approved result; simulation or walkthrough evidence must be attached or linked. |
 | **Release gate** | Unresolved open safety-critical documentation issues block release tagging. |
 
 ---

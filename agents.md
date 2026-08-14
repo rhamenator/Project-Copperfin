@@ -107,7 +107,9 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
    documented maintainer self-review plus applicable automated verification is
    sufficient during development and must not be described as independent.
    `high` and `catastrophic` changes require evidence from a second qualified
-   human reviewer before closure.
+   human reviewer before closure. The named reviewer must personally post the
+   structured sign-off from that GitHub account; an issue-author claim is not
+   reviewer-controlled evidence.
 6. Require simulation or walkthrough evidence that validates the expected operator outcome.
 7. Require rollback and field-notification planning for incorrect documentation.
 8. Do not close a safety-relevant documentation issue without investigation-ready evidence auditable by a third party.

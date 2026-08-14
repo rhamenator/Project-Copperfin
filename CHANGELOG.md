@@ -6,8 +6,10 @@
   and completed-project/first-stable-release review is unchanged. Deterministic
   fixtures prove both sides while preserving structured historical Independent
   Review records. The validator binds self-review to the issue author, binds
-  independent review to a distinct GitHub login, parses affirmative results
-  rather than approval substrings, and rejects incomplete low-risk evidence.
+  independent review to a distinct GitHub login and a structured sign-off
+  comment authored by that account, records the qualification and verification
+  basis, parses affirmative results rather than approval substrings, and
+  rejects incomplete low-risk evidence or issue-author identity assertions.
   The charter, README, agent rules, ontology, and traceability matrix
   now make requirements recovery an ongoing project-wide baseline and forbid
   treating existing implementation as its own requirement source. No product or

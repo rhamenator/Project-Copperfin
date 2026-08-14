@@ -96,7 +96,7 @@ body:
     id: review_evidence
     attributes:
       label: Review Evidence
-      description: "State the review mode, reviewer's GitHub login, scope, evidence, and result. Maintainer self-review plus applicable automated verification is permitted for none/low/medium severity, must name the issue author's login, and must not be called independent. High/catastrophic severity requires a different qualified human reviewer's login."
+      description: "State the review mode, reviewer's GitHub login, scope, evidence, and result. Maintainer self-review plus applicable automated verification is permitted for none/low/medium severity, must name the issue author's login, and must not be called independent. High/catastrophic severity requires a different qualified human reviewer, who must post the structured sign-off comment shown below from that GitHub account."
       placeholder: |
         mode: maintainer self-review | independent human review
         reviewer: <github-login>
@@ -105,6 +105,20 @@ body:
         result: approved
     validations:
       required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        For independent review, the named reviewer must personally post this comment:
+
+        ```text
+        ## Independent Review Sign-Off
+
+        reviewer: <github-login>
+        qualification: <relevant qualification basis>
+        verification: <scope and evidence checked>
+        result: approved
+        ```
 
   - type: textarea
     id: simulation_evidence
