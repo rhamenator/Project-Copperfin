@@ -323,6 +323,14 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "embedded-negated-signoff-qualification")
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer cannot be verified as qualified"
+        "cannot-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer can't be considered qualified"
+        "cant-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
         "qualification: reviewer isn't qualified"
         "contracted-negated-signoff-qualification")
     assert_high_signoff_mutation_rejected(
@@ -345,6 +353,14 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: qualified safety-documentation reviewer\\nverification: procedure correctness and failure boundaries"
         "qualification: qualified safety-documentation reviewer\\nverification: these changes weren't fully verified"
         "modified-contracted-negated-signoff-verification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer\\nverification: procedure correctness and failure boundaries"
+        "qualification: qualified safety-documentation reviewer\\nverification: these changes cannot be verified"
+        "cannot-signoff-verification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: qualified safety-documentation reviewer\\nqualification: reviewer is not qualified"
+        "duplicate-signoff-qualification")
     assert_low_self_review_mutation_rejected(
         "verification: procedure and rendered guidance checked"
         "verification: pending review"
@@ -425,6 +441,29 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: focused documentation contracts pass"
         "automated evidence: GitHub Actions job has failed"
         "job-failed-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: CI checks have not all passed"
+        "quantified-not-passed-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: CI checks have yet to pass"
+        "yet-to-pass-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: lint has failed"
+        "lint-failed-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: security scan has failed"
+        "scan-failed-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: deployment has failed"
+        "deployment-failed-self-review-automation")
+    assert_affirmative_negative_guarantee_accepted(
+        "checks have never failed"
+        "affirmative-never-failed-automation")
     assert_affirmative_negative_guarantee_accepted(
         "confirmed rollback does not mutate user data"
         "affirmative-does-not-guarantee")
