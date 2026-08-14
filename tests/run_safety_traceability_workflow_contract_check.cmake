@@ -320,6 +320,29 @@ function(assert_withdrawn_independent_review_rejected)
     file(REMOVE "${report}")
 endfunction()
 
+function(assert_edited_withdrawal_precedence)
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-edited-withdrawal-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_edited_withdrawal_issues.json"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator ignored the latest edited review withdrawal")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "requires an approved structured sign-off comment authored by the named distinct reviewer"
+        withdrawal_index)
+    if(withdrawal_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not report the latest edited withdrawal: ${all_output}")
+    endif()
+    file(REMOVE "${report}")
+endfunction()
+
 function(assert_low_self_review_mutation_rejected search_text replacement_text slug)
     set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
@@ -1117,6 +1140,7 @@ if(POWERSHELL_EXECUTABLE)
     assert_high_independent_review_fixture()
     assert_stale_independent_review_rejected()
     assert_withdrawn_independent_review_rejected()
+    assert_edited_withdrawal_precedence()
     assert_placeholder_and_negated_review_evidence_rejected()
     assert_pending_legacy_high_review_rejected()
     assert_issue_form_heading_fixture()
