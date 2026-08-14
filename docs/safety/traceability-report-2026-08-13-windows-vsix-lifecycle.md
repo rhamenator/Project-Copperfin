@@ -375,6 +375,20 @@ residue gates remain independent. Artifact `9203013733` has digest
 and expires 2026-11-12. `RQ-CF-REL-003` remains `gap` pending corrected
 exact-head execution.
 
+Run `31757029866` retained PASS installation in 186.447 seconds and all four
+exact-PID input diagnostics. The Common IDE package began at `00:26:59.337`,
+only 0.151 seconds after canonical-sender exit and while the new final dispatch
+sender was already starting. The dispatch therefore raced the same lazy
+surface initialization; it did not prove or activate Copperfin. The correction
+adds a bounded ten-second settlement after canonical-sender exit and before the
+final built-in dispatch. The run also exposed cleanup exit `2004`, which
+overwrote the primary pane-observation failure. Primary and cleanup failures
+are now captured separately, residue is still inventoried, and a combined
+fail-closed diagnostic preserves both without claiming successful cleanup.
+Artifact `9203383723` has digest
+`sha256:e0d429358e14bda7040464a73ae41659dfe69c80bf16cd09f912487311aef163`
+and expires 2026-11-12. `RQ-CF-REL-003` remains `gap`.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

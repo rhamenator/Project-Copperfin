@@ -77,6 +77,7 @@ require_text("${script}" "ui-automation-command-window-input.json" "retained Com
 require_text("${script}" "ui-automation-command-window-dispatch.json" "retained Command Window dispatch diagnostics")
 require_text("${script}" "ui-automation-command-input.json" "retained command-input diagnostics")
 require_text("${script}" "release queued canonical command with built-in Command Window request" "post-command queued-input dispatch boundary")
+require_text("${script}" "settle post-canonical Command Window readiness" "post-command lazy-readiness settlement boundary")
 require_text("${script}" "ui-automation-command-input-dispatch.json" "retained post-command dispatch diagnostics")
 require_text("${script}" "ui-automation-command.json" "retained command-observation diagnostics")
 require_text("${script}" "ui-automation-prg.json" "retained PRG-observation diagnostics")
@@ -88,6 +89,9 @@ require_text("${script}" "Kill($true)" "bounded process-tree termination")
 require_text("${script}" "lifecycle-smoke.prg" "runner-owned PRG open fixture")
 require_text("${script}" "End package load [CopperfinPackage]" "explicit successful package-load proof")
 require_text("${script}" "MatchingErrors.Count -eq 0" "Copperfin package-load error rejection")
+require_text("${script}" "$primaryFailure = $_" "primary lifecycle failure preservation")
+require_text("${script}" "Cleanup also failed" "cleanup failure aggregation")
+require_text("${script}" "Residue inventory also failed" "residue-inventory failure aggregation")
 require_text("${script}" "'/uninstall:Copperfin.VisualStudio'" "exact extension uninstall identity")
 require_text("${script}" "vsix-installer-operations.json" "retained installer operation diagnostics")
 require_text("${script}" "vsix_sha256 = $vsixSha256" "installer diagnostic package-digest binding")
@@ -118,6 +122,7 @@ string(FIND "${script_contents}" "VSIX lifecycle phase: prime per-user package r
 string(FIND "${script_contents}" "matchingPkgDefImports.Count -ge 1" registration_proof_offset)
 string(FIND "${script_contents}" "VSIX lifecycle phase: launch evidence Visual Studio" launch_phase_offset)
 string(FIND "${script_contents}" "VSIX lifecycle phase: submit exact installed Copperfin command" command_submission_offset)
+string(FIND "${script_contents}" "VSIX lifecycle phase: settle post-canonical Command Window readiness" command_settlement_offset)
 string(FIND "${script_contents}" "VSIX lifecycle phase: release queued canonical command with built-in Command Window request" command_dispatch_offset)
 string(FIND "${script_contents}" "Copperfin canonical command UI Automation observation" command_observation_offset)
 if(command_observation_offset EQUAL -1)
@@ -126,12 +131,14 @@ endif()
 string(FIND "${script_contents}" "Copperfin startup PRG document UI Automation observation" document_observation_offset)
 if(registration_phase_offset EQUAL -1 OR registration_proof_offset EQUAL -1 OR
         launch_phase_offset EQUAL -1 OR command_submission_offset EQUAL -1 OR
+        command_settlement_offset EQUAL -1 OR
         command_dispatch_offset EQUAL -1 OR command_observation_offset EQUAL -1 OR
         document_observation_offset EQUAL -1 OR
         NOT registration_phase_offset LESS registration_proof_offset OR
         NOT registration_proof_offset LESS launch_phase_offset OR
         NOT launch_phase_offset LESS command_submission_offset OR
-        NOT command_submission_offset LESS command_dispatch_offset OR
+        NOT command_submission_offset LESS command_settlement_offset OR
+        NOT command_settlement_offset LESS command_dispatch_offset OR
         NOT command_dispatch_offset LESS command_observation_offset OR
         NOT command_observation_offset LESS document_observation_offset)
     message(FATAL_ERROR "registration priming, evidence startup, command dispatch, and same-process observations must remain ordered")

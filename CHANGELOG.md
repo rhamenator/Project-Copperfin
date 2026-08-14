@@ -131,6 +131,10 @@
   shortcut while the canonical input itself remained queued. A final isolated
   built-in Command Window request now releases the preceding canonical input
   before independent pane, PRG, and package-load observation.
+  Run `31757029866` showed that final dispatch still raced Common IDE startup;
+  a bounded post-canonical settlement now precedes it. Lifecycle and cleanup
+  failures are retained together so cleanup cannot mask the primary evidence
+  failure.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

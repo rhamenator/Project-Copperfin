@@ -272,6 +272,9 @@ $installerOperations = [System.Collections.Generic.List[object]]::new()
 $installedDirectory = $null
 $registrationProcess = $null
 $ideProcess = $null
+$primaryFailure = $null
+$cleanupFailure = $null
+$residueInventoryFailure = $null
 try {
     Write-Host 'VSIX lifecycle phase: install'
     Invoke-RecordedInstallerOperation -Arguments @(
@@ -542,6 +545,9 @@ if (-not $observed) {
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin canonical command submission' | Out-Null
 
+    Write-Host 'VSIX lifecycle phase: settle post-canonical Command Window readiness'
+    Start-Sleep -Seconds 10
+
     Write-Host 'VSIX lifecycle phase: release queued canonical command with built-in Command Window request'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `
@@ -600,6 +606,9 @@ if (-not $observed) {
     Assert-Condition $packageState.SuccessfulLoad `
         'ActivityLog did not contain an explicit successful End package load [CopperfinPackage] record.'
 }
+catch {
+    $primaryFailure = $_
+}
 finally {
     if ($null -ne $registrationProcess) {
         if (-not $registrationProcess.HasExited) {
@@ -635,15 +644,56 @@ finally {
     }
     if ($null -ne $installedDirectory) {
         Write-Host 'VSIX lifecycle phase: uninstall'
-        Invoke-RecordedInstallerOperation -Arguments @(
-            '/quiet', "/instanceIds:$instanceId", '/uninstall:Copperfin.VisualStudio'
-        ) -Name 'Copperfin VSIX uninstall' -Operation 'uninstall' | Out-Null
+        try {
+            Invoke-RecordedInstallerOperation -Arguments @(
+                '/quiet', "/instanceIds:$instanceId", '/uninstall:Copperfin.VisualStudio'
+            ) -Name 'Copperfin VSIX uninstall' -Operation 'uninstall' | Out-Null
+        }
+        catch {
+            $cleanupFailure = $_
+            Write-Warning "VSIX uninstall cleanup failed after evidence collection: $($_.Exception.Message)"
+        }
     }
 }
 
-$residue = @(Get-CopperfinExtensionDirectories `
-        -VisualStudioInstanceId $instanceId `
-        -VisualStudioRegistryVersion $registryVersion)
+$residue = @()
+try {
+    $residue = @(Get-CopperfinExtensionDirectories `
+            -VisualStudioInstanceId $instanceId `
+            -VisualStudioRegistryVersion $registryVersion)
+}
+catch {
+    $residueInventoryFailure = $_
+}
+$residueFailure = if ($residue.Count -eq 0) { '' } else {
+    "VSIX uninstall left installed extension residue: $($residue -join ', ')"
+}
+if ($null -ne $primaryFailure) {
+    $failureMessage = "VSIX lifecycle failed: $($primaryFailure.Exception.Message)"
+    if ($null -ne $cleanupFailure) {
+        $failureMessage += " Cleanup also failed: $($cleanupFailure.Exception.Message)"
+    }
+    if ($null -ne $residueInventoryFailure) {
+        $failureMessage += " Residue inventory also failed: $($residueInventoryFailure.Exception.Message)"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($residueFailure)) {
+        $failureMessage += " $residueFailure"
+    }
+    if ($null -ne $residueInventoryFailure) {
+        $failureMessage += " Residue inventory also failed: $($residueInventoryFailure.Exception.Message)"
+    }
+    throw $failureMessage
+}
+if ($null -ne $residueInventoryFailure) {
+    throw "VSIX residue inventory failed: $($residueInventoryFailure.Exception.Message)"
+}
+if ($null -ne $cleanupFailure) {
+    $failureMessage = "VSIX lifecycle cleanup failed: $($cleanupFailure.Exception.Message)"
+    if (-not [string]::IsNullOrWhiteSpace($residueFailure)) {
+        $failureMessage += " $residueFailure"
+    }
+    throw $failureMessage
+}
 Assert-Condition ($residue.Count -eq 0) "VSIX uninstall left installed extension residue: $($residue -join ', ')"
 
 $result = [ordered]@{

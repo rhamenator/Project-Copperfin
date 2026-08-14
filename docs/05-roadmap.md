@@ -502,6 +502,11 @@ canonical sender exited: the Common IDE package began about 0.25 seconds later.
 The harness now uses one final isolated built-in Command Window request after
 canonical submission to release that preceding queued command, then
 independently observes the pane, PRG, and package-load evidence.
+Run `31757029866` showed the final dispatch itself began while Common IDE was
+still starting, 0.151 seconds after canonical-sender exit. A bounded
+post-canonical settlement now precedes final dispatch. Primary evidence and
+cleanup failures are also preserved together rather than allowing cleanup to
+mask the governing failure.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

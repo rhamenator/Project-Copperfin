@@ -179,6 +179,11 @@ preceding queued shortcut while leaving its own canonical input queued. The
 current head adds a final isolated built-in Command Window request after
 canonical submission to release that preceding input; it has separate retained
 JSON and cannot substitute for pane, PRG, package-load, error, or residue proof.
+Run `31757029866` showed that final dispatch began while Common IDE was still
+loading, only 0.151 seconds after canonical-sender exit. The current head waits
+a bounded ten seconds after canonical exit before final built-in dispatch. It
+also preserves the primary observation failure alongside cleanup exit `2004`
+and residue inventory instead of allowing cleanup to overwrite the root cause.
 
 ## V1 Windows installer lifecycle
 
