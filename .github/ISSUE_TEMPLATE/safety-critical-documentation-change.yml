@@ -93,13 +93,15 @@ body:
       required: true
 
   - type: textarea
-    id: independent_review
+    id: review_evidence
     attributes:
-      label: Independent Review Evidence
-      description: "Identify reviewer and what was verified."
+      label: Review Evidence
+      description: "State the review mode, reviewer, scope, evidence, and result. Maintainer self-review plus applicable automated verification is permitted for none/low/medium severity and must not be called independent. High/catastrophic severity requires a second qualified human reviewer."
       placeholder: |
+        mode: maintainer self-review | independent human review
         reviewer: <name>
         verification: procedure correctness vs runtime behavior
+        automated evidence: <workflow/test/artifact references>
         result: approved
     validations:
       required: true

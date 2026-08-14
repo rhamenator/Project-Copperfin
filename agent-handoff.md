@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## Solo-maintainer assurance gate reconciliation
+
+The adopted solo-maintainer policy now has one consistent executable boundary.
+Ordinary `none`/`low`/`medium` safety-documentation changes may use explicit
+maintainer self-review plus applicable automation without claiming independence;
+`high`/`catastrophic` changes still require an approved second-qualified-human
+review, and completed-project/first-stable-release review remains unchanged.
+The issue form, validator, agent rules, triage rubric, deterministic fixtures,
+and `LLR-CF-ASSURANCE-001` carry that boundary. The charter and active guidance
+also make requirements recovery an ongoing baseline and forbid using existing
+implementation as its own requirement source. Focused safety-traceability,
+community-health, YAML/JSON parse, and diff checks pass locally; protected review
+and hosted results remain to be recorded before merge.
+
 ## Launcher-trust distinct-payload evidence
 
 Protected run `31635868978` passes at exact `main` merge `477035ca2` with five

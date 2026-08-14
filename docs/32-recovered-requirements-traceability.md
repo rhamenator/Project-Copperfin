@@ -8,8 +8,9 @@ Recovery Principle in `docs/01-product-charter.md` without treating Copperfin's
 existing behavior as its own requirement source.
 
 Allowed requirement evidence is limited to observed behavior from a real,
-installed VFP9 environment, shipped Microsoft/VFP documentation, and registered
-known-bug or crash exceptions in `docs/27-known-vfp9-bug-exceptions.md`.
+installed VFP9 environment, shipped Microsoft/VFP documentation, explicit
+repository-owner product policy, and registered known-bug or crash exceptions
+in `docs/27-known-vfp9-bug-exceptions.md`.
 Decompiled or disassembled VFP binaries are prohibited inputs under
 `docs/07-clean-room-rules.md`.
 
@@ -28,6 +29,7 @@ Decompiled or disassembled VFP binaries are prohibited inputs under
 | LLR ID | Recovered low-level requirement | Allowed source evidence | Code | Tests | Verification | Status | Issue |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `LLR-VFP-NUM-001` | PRG numeric source and calculation text shall use a period as the decimal point independently of the host C/C++ locale or the VFP display-point setting. Comma-decimal text shall not be silently accepted as the same numeric literal. Machine numeric text routed back into parser/runtime contracts shall remain period-decimal and ungrouped. | Shipped VFP9 SP2 Help: [Numeric Data Type](https://vfphelp.com/vfp9/html/f0945c58-08e4-46fc-a15b-e1714a064d91.htm) defines numeric values using digits, an optional sign, and a decimal point. [SET POINT Command](https://www.vfphelp.com/help/html/ab6ea03e-d7f8-4ddb-b2e2-56755efd8857.htm) states that `SET POINT` changes display but calculations must use a period. | `include/copperfin/platform/invariant_numeric.h`; `src/platform/invariant_numeric.cpp`; `src/runtime/prg_engine_expression.inl` (`parse_number`) | `tests/test_prg_engine_parser_classes.cpp` (`test_invariant_numeric_parser_preserves_vfp_decimal_contract`, comma-decimal preprocessor locale test); `tests/test_prg_engine_data_io_save_restore.cpp` (`test_restore_from_parses_numeric_values_invariantly`) | macOS: both CTest targets under `C`, `en_US.UTF-8`, `pt_BR.UTF-8`, and `de_DE.UTF-8` (8/8). Linux seq1419: source/evidence mapping pass plus both targets under default, `C`, and `en_US.utf8` (6/6); `pt_BR`/`de_DE` were not installed and macOS supplies those executions. | `recovered` | closed `#4896` |
+| `LLR-CF-ASSURANCE-001` | During solo-maintainer development, safety-documentation changes classified `none`, `low`, or `medium` shall accept explicit maintainer self-review plus applicable automated verification without claiming independence. Changes classified `high` or `catastrophic` shall require a second qualified human reviewer before closure. Completed-project or first-stable-release readiness retains its independent-human-review gate. | Explicit repository-owner policy, 2026-08-14; `docs/DO-178C-ASSURANCE-POLICY.md`; `docs/RELEASE-READINESS-REVIEW.md` | `agents.md`; `.github/ISSUE_TEMPLATE/safety-critical-documentation-change.yml`; `scripts/validate-safety-traceability.ps1`; `docs/safety/triage-rubric.md` | `tests/run_safety_traceability_workflow_contract_check.cmake`; `tests/fixtures/safety_traceability_low_self_review_issues.json`; `tests/fixtures/safety_traceability_high_self_review_issues.json`; `tests/fixtures/safety_traceability_high_independent_review_issues.json`; legacy independent-review fixtures | Focused safety-traceability workflow contract proves permitted low-severity self-review, rejection of high-severity self-review without approved independent human evidence, acceptance of approved high-severity independent review, legacy evidence compatibility, mapping validation, and hostile issue-number rejection | `recovered` | repository-owner directive, 2026-08-14 |
 
 ## LLR-VFP-NUM-001 Evidence Boundary
 

@@ -108,15 +108,33 @@ This is a product requirement, not an optimization detail.
 
 ## Requirements Recovery Principle
 
-Copperfin did not begin with a complete up-front requirements set, so a later requirements-recovery pass is a product-quality goal rather than an optional documentation exercise.
+Copperfin did not begin with a complete up-front requirements set. Requirements
+recovery and bidirectional traceability are therefore a continuing project-wide
+quality baseline, not a later pass or an optional documentation subgoal. Every
+behavior-changing slice must identify its governing requirement or record a
+properly evidenced recovery gap; code and tests alone do not establish the
+intended behavior.
 
-The intended output is a DO-178-style traceability matrix that links recovered low-level requirements to code and tests. Recovered requirements must be derived from:
+The intended output is a DO-178C-inspired traceability system linking product
+and compatibility requirements, recovered high- and low-level requirements,
+derived requirements and safety constraints, architecture and implementing
+code, focused and broader verification, retained results, hazards, and registered
+known-bug/crash exceptions in both directions. Recovered requirements must be
+derived from:
 
 - observed behavior from a real installed VFP9 environment
 - shipped Microsoft/VFP documentation
+- explicit repository-owner product policy
 - Copperfin's documented compatibility exceptions for known VFP9 bugs and crash cases
 
-Recovered requirements must not be derived from decompiled VFP binaries or other restricted clean-room inputs. The compatibility fidelity rule above remains the source of truth for deciding when an observed edge case is a requirement, a known-bug exception, or a non-crash safety fallback.
+Existing Copperfin implementation may identify an area that needs recovery, but
+must never serve as its own requirement source. Recovered requirements must not
+be derived from decompiled VFP binaries or other restricted clean-room inputs.
+When implementation and permitted evidence disagree, record a gap or exception;
+do not rewrite the requirement to rationalize the code. The compatibility
+fidelity rule above remains the source of truth for deciding when an observed
+edge case is a requirement, a known-bug exception, or a non-crash safety
+fallback.
 
 ## Success Criteria
 

@@ -12,7 +12,7 @@ Normative certification work must use an authorized copy of RTCA DO-178C and app
 
 This repository is maintained by a solo developer. Independent human approval is not required for each development pull request. The maintainer may self-review and merge after the required automated quality, test, security, traceability, and change-control gates pass.
 
-Self-review and automated verification are not independent verification, and repository records must not represent them as such. Independent human review is deferred to the completed-project or first-stable-release readiness gate described in [`RELEASE-READINESS-REVIEW.md`](RELEASE-READINESS-REVIEW.md). A project-specific risk assessment may bring human review forward for a particular change.
+Self-review and automated verification are not independent verification, and repository records must not represent them as such. Independent human review is deferred to the completed-project or first-stable-release readiness gate described in [`RELEASE-READINESS-REVIEW.md`](RELEASE-READINESS-REVIEW.md). Safety-documentation changes classified `high` or `catastrophic`, and any other change whose documented risk assessment requires independence, bring qualified human review forward before closure. Changes classified `none`, `low`, or `medium` may use explicit maintainer self-review plus applicable automated verification during development.
 
 ## Change-control objectives
 

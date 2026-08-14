@@ -1,3 +1,15 @@
+- 2026-08-14: Reconciled the safety-documentation template, validator, agent
+  rules, and triage rubric with the adopted solo-maintainer assurance policy.
+  `none`/`low`/`medium` changes may now record explicit maintainer self-review
+  plus applicable automation without claiming independence; `high` and
+  `catastrophic` changes still fail closed without second-qualified-human review,
+  and completed-project/first-stable-release review is unchanged. Deterministic
+  fixtures prove both sides while preserving historical Independent Review
+  records. The charter, README, agent rules, ontology, and traceability matrix
+  now make requirements recovery an ongoing project-wide baseline and forbid
+  treating existing implementation as its own requirement source. No product or
+  runtime behavior changed.
+
 - 2026-08-13: Adopted a solo-maintainer assurance model for development
   changes. Per-pull-request independent human approval is not required;
   protected automated quality, security, traceability, testing, provenance,
