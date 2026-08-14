@@ -883,6 +883,8 @@ function Test-MeaningfulReviewEvidence {
 
     $normalized = [regex]::Replace($trimmed.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
     $placeholderState = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)(?:\s+(?:at\s+this\s+time|automation|check|evidence|later|review|run|test|verification))?$'
+    $placeholderPrefix = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)\b'
+    $isCompoundScopePrefix = $trimmed.ToLowerInvariant() -match '^(?:blocked|incomplete)-[a-z0-9-]+\b'
     $subjectState = '\b(?:automation|changes|check|evidence|review|reviewer|run|test|verification|workflow)(?:\s+(?:is|was|has\s+been|remain(?:s|ed)?))?\s+(?:not\s+only\s+)?(?<state>absent|blocked|deferred|incomplete|missing|pending|placeholder|skipped|unavailable|unchecked|unqualified|unverified|unknown)\b'
     $hasSubjectStateWithoutPassingContext = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
@@ -903,7 +905,9 @@ function Test-MeaningfulReviewEvidence {
             break
         }
     }
-    if ($normalized -match $placeholderState -or $hasSubjectStateWithoutPassingContext) {
+    if ($normalized -match $placeholderState -or
+        ($normalized -match $placeholderPrefix -and -not $isCompoundScopePrefix) -or
+        $hasSubjectStateWithoutPassingContext) {
         return $false
     }
 

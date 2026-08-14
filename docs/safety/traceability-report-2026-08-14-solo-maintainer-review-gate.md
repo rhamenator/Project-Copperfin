@@ -138,6 +138,10 @@ level, or safety for a particular deployment.
   link text and balanced bare or complete angle destinations.
 - `DV-assurance-review-027`: retain valid single-, double-, or parenthesis-
   quoted Markdown link titles without admitting unescaped destination spaces.
+- `DV-assurance-review-028`: reject a review-evidence value whose rendered text
+  begins with a placeholder state even when a delimiter and additional prose
+  follow it; exercise self-review automation and verification plus high-risk
+  qualification and verification fields.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -218,7 +222,8 @@ fixtures; rejects incomplete low-risk evidence, author-as-independent-reviewer,
 unattested login claims, placeholder reviewers, and negated legacy results;
 rejects stale issue-body digests, placeholder or negated independent-review
 qualification/verification, and placeholder lower-risk self-review verification
-or automation. The shared evidence predicate normalizes punctuation and rejects
+or automation, including compound `TBD: ...`, `TODO: ...`, and `deferred: ...`
+prefixes. The shared evidence predicate normalizes punctuation and rejects
 negative, incomplete, missing, deferred, unavailable, skipped, and failed-state
 tokens; dedicated mutations cover `not-qualified`, `unavailable at this time`,
 and failed automation. Failed workflow evidence and status/outcome `failure`
