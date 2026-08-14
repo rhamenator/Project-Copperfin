@@ -334,7 +334,7 @@ function Test-MeaningfulReviewEvidence {
 
     $normalized = [regex]::Replace($trimmed.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
     $placeholderState = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)(?:\s+(?:at\s+this\s+time|automation|check|evidence|later|review|run|test|verification))?$'
-    $subjectState = '\b(?:automation|changes|check|evidence|review|reviewer|run|test|verification|workflow)(?:\s+(?:is|was|has\s+been))?\s+(?<state>absent|blocked|deferred|incomplete|missing|pending|placeholder|skipped|unavailable|unchecked|unqualified|unverified|unknown)\b'
+    $subjectState = '\b(?:automation|changes|check|evidence|review|reviewer|run|test|verification|workflow)(?:\s+(?:is|was|has\s+been|remain(?:s|ed)?))?\s+(?:not\s+only\s+)?(?<state>absent|blocked|deferred|incomplete|missing|pending|placeholder|skipped|unavailable|unchecked|unqualified|unverified|unknown)\b'
     $hasSubjectStateWithoutPassingContext = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
         $rawClause = $clause.ToLowerInvariant()
@@ -343,7 +343,7 @@ function Test-MeaningfulReviewEvidence {
             $afterState = $rawClause.Substring($stateMatch.Index + $stateMatch.Length)
             $isPassingCompoundScope =
                 $state -match '^(?:blocked|incomplete)$' -and
-                $stateMatch.Value -notmatch '\b(?:is|was|has\s+been)\b' -and
+                $stateMatch.Value -notmatch '\b(?:is|was|has\s+been|remain(?:s|ed)?)\b' -and
                 $afterState -match '^-[a-z0-9-]+\b.*\b(?:pass|passed|succeed|succeeded|successful|verified)\b'
             if (-not $isPassingCompoundScope) {
                 $hasSubjectStateWithoutPassingContext = $true
@@ -403,9 +403,13 @@ function Test-MeaningfulReviewEvidence {
     $hasNegatedTerminalState = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
         $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
-        if ($normalizedClause -match "\b(?:no|not|never|cannot)(?:\s+[a-z0-9]+)*\s+$terminalEvidenceState\b" -or
-            $normalizedClause -match "\b(?:aren|isn|wasn|weren|hasn|haven|hadn|didn|doesn|don|can|cann|couldn|shouldn|wouldn)\s+t(?:\s+[a-z0-9]+)*\s+$terminalEvidenceState\b" -or
-            $normalizedClause -match "\byet(?:\s+[a-z0-9]+)*\s+to\s+$terminalEvidenceState\b") {
+        $negationClause = $normalizedClause
+        if ($negationClause -match '\bnot\s+only\b.*\bbut\b') {
+            $negationClause = [regex]::Replace($negationClause, '\bnot\s+only\b', '')
+        }
+        if ($negationClause -match "\b(?:no|not|never|cannot)(?:\s+[a-z0-9]+)*\s+$terminalEvidenceState\b" -or
+            $negationClause -match "\b(?:aren|isn|wasn|weren|hasn|haven|hadn|didn|doesn|don|can|cann|couldn|shouldn|wouldn)\s+t(?:\s+[a-z0-9]+)*\s+$terminalEvidenceState\b" -or
+            $negationClause -match "\byet(?:\s+[a-z0-9]+)*\s+to\s+$terminalEvidenceState\b") {
             $hasNegatedTerminalState = $true
             break
         }
@@ -433,7 +437,9 @@ function Test-AuthenticatedIndependentReview {
 
     $issueBodySha256 = Get-TextSha256 -Value ([string]$Issue.body)
 
-    foreach ($comment in @($Issue.review_comments)) {
+    $reviewComments = @($Issue.review_comments)
+    [array]::Reverse($reviewComments)
+    foreach ($comment in $reviewComments) {
         $commentAuthor = Get-GitHubLogin -Value ([string]$comment.user.login)
         $commentAuthorType = ([string]$comment.user.type).ToLowerInvariant()
         if ($commentAuthor -ne $Reviewer -or $commentAuthorType -ne "user") {
@@ -450,14 +456,14 @@ function Test-AuthenticatedIndependentReview {
         $signOffResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("result", "status")).ToLowerInvariant()
 
         if ($signOffReviewer -eq $commentAuthor -and
-            (Test-MeaningfulReviewEvidence -Value $signOffQualification) -and
-            $signOffQualificationResult -eq "qualified" -and
-            (Test-MeaningfulReviewEvidence -Value $signOffVerification) -and
-            $signOffVerificationResult -eq "passed" -and
             $signOffIssueBodySha256 -match '^[a-f0-9]{64}$' -and
-            $signOffIssueBodySha256 -eq $issueBodySha256 -and
-            $signOffResult -match '^(?:approved|passed)$') {
-            return $true
+            $signOffIssueBodySha256 -eq $issueBodySha256) {
+            return (
+                (Test-MeaningfulReviewEvidence -Value $signOffQualification) -and
+                $signOffQualificationResult -eq "qualified" -and
+                (Test-MeaningfulReviewEvidence -Value $signOffVerification) -and
+                $signOffVerificationResult -eq "passed" -and
+                $signOffResult -match '^(?:approved|passed)$')
         }
     }
 
