@@ -88,6 +88,7 @@ require_text("${driver}" "ItemOperations.OpenFile" "in-process runner-owned PRG 
 require_text("${driver_project}" "<DeployVSTemplates>false</DeployVSTemplates>" "test driver non-template package boundary")
 require_text("${driver_project}" "<TemplateOutputDirectory>" "VSSDK template-manifest output boundary")
 require_text("${driver_project}" "LifecycleDriver.vsct" "test-only driver command-table compilation")
+require_text("${driver_project}" "<Reference Include=\"System.Design\" />" "menu-command service framework reference")
 require_text("${driver_vsct}" ".Copperfin.LifecycleDriver.Activate" "test-only canonical activation command")
 require_text("${driver_vsct}" "DefaultInvisible" "test-only command visibility boundary")
 require_text("${script}" "'/Command', 'Copperfin.LifecycleDriver.Activate'" "semantic driver package-load trigger")

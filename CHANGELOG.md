@@ -162,6 +162,9 @@
   command, and the evidence IDE uses documented `/Command` startup routing to
   force semantic package resolution before the driver verifies the solution,
   opens the PRG, and posts the public product command.
+  The first command-trigger build stopped before installation and identified
+  the minimal net472 project's missing explicit `System.Design` reference for
+  menu-command registration; the project and contract now include it.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

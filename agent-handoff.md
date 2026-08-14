@@ -216,6 +216,10 @@ starts the evidence IDE with the driver's own compiled, invisible canonical
 command. Visual Studio `/Command` must resolve and load the owning test package;
 the driver then records and verifies the DTE solution identity before any PRG
 open or product-command dispatch.
+Run `31764541030` stopped before installation because the minimal driver
+project lacked the explicit net472 `System.Design` reference required by its
+menu-command registration. The reference and focused contract are corrected;
+the run is compile diagnostics only.
 
 ## V1 Windows installer lifecycle
 

@@ -511,6 +511,12 @@ the PRG, and posts the exact public product command before the no-op driver
 command completes. The driver command, package, and solution remain test-only;
 all independent product and cleanup gates remain unchanged.
 
+Run `31764541030` stopped while compiling that test-only command registration
+because the minimal net472 project did not explicitly reference
+`System.Design`, which defines the inherited menu-command service API. The
+project and focused contract now carry that framework reference. No VSIX was
+installed and no lifecycle mutation occurred in this compile-only run.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

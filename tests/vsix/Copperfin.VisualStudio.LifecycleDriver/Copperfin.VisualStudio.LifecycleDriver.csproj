@@ -25,6 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="System.Design" />
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.14.40265" ExcludeAssets="Runtime" NoWarn="NU1605" />
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.14.2120" PrivateAssets="all" />
     <Reference Include="System.Web.Extensions" />
