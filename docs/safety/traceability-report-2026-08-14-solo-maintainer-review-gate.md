@@ -119,6 +119,9 @@ level, or safety for a particular deployment.
   consecutive inline-comment token joins, and a rejected latest sign-off whose
   applicable heading is itself joined across a comment. Limit equal-timestamp
   ambiguity to parsed sign-offs for the current reviewer and issue-body digest.
+- `DV-assurance-review-021`: reset unmatched inline-span state for the exact
+  opening and closing CommonMark block-tag set while retaining span state across
+  inline URI autolinks.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -133,7 +136,7 @@ level, or safety for a particular deployment.
 | Documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
 | `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-009`; `DV-assurance-review-019` | `HZ-system-failure-01`; `HZ-doc-command-01` |
-| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010`; `DV-assurance-review-011`; `DV-assurance-review-014`; `DV-assurance-review-015`; `DV-assurance-review-016`; `DV-assurance-review-017` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010`; `DV-assurance-review-011`; `DV-assurance-review-014`; `DV-assurance-review-015`; `DV-assurance-review-016`; `DV-assurance-review-017`; `DV-assurance-review-021` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-003` | `DV-assurance-review-012`; `DV-assurance-review-013` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-004` | `DV-assurance-review-005`; `DV-assurance-review-018`; `DV-assurance-review-020` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-005` | `DV-assurance-review-006`; `DV-assurance-review-015`; `DV-assurance-review-019` | `HZ-system-failure-01`; `HZ-doc-command-01` |

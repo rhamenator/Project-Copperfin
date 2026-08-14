@@ -565,6 +565,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "`\\nreviewer: copperfin-reviewer\\nqualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries\\nverification result: passed\\nreviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved\\n`"
         "multiline-code-span-signoff-fields")
     assert_high_signoff_mutation_rejected(
+        "reviewer: copperfin-reviewer\\nqualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries\\nverification result: passed\\nreviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved"
+        "`\\n<https://example.com>\\nreviewer: copperfin-reviewer\\nqualification: qualified safety-documentation reviewer\\nqualification result: qualified\\nverification: procedure correctness and failure boundaries\\nverification result: passed\\nreviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\\nresult: approved\\n`"
+        "multiline-code-span-across-uri-autolink")
+    assert_high_signoff_mutation_rejected(
         "## Independent Review Sign-Off"
         "`unmatched paragraph tick\\n\\n<custom-review>\\n`\\n\\n</custom-review>\\n\\n## Independent Review Sign-Off"
         "unmatched-code-span-before-html-block")
@@ -572,6 +576,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "## Independent Review Sign-Off"
         "`unmatched paragraph tick\\n<div>`\\n## Independent Review Sign-Off"
         "unmatched-code-span-before-block-tag-html")
+    assert_high_signoff_mutation_rejected(
+        "## Independent Review Sign-Off"
+        "`unmatched paragraph tick\\n</div>`\\n## Independent Review Sign-Off"
+        "unmatched-code-span-before-closing-block-tag-html")
     assert_high_signoff_mutation_rejected(
         "## Independent Review Sign-Off"
         "##Independent Review Sign-Off"
