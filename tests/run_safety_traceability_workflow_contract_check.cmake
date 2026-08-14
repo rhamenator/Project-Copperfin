@@ -6,6 +6,16 @@ if(NOT DEFINED SOURCE_DIR OR "${SOURCE_DIR}" STREQUAL "")
     message(FATAL_ERROR "SOURCE_DIR is required")
 endif()
 
+file(READ "${SOURCE_DIR}/tests/CMakeLists.txt" test_registration_contents)
+string(FIND
+    "${test_registration_contents}"
+    "set_tests_properties(test_safety_traceability_workflow_contract PROPERTIES\n    TIMEOUT 600\n)"
+    safety_timeout_index)
+if(safety_timeout_index EQUAL -1)
+    message(FATAL_ERROR
+        "Safety traceability workflow contract must retain its explicit 600-second CTest timeout")
+endif()
+
 set(workflow_path "${SOURCE_DIR}/.github/workflows/safety-traceability-gate.yml")
 if(NOT EXISTS "${workflow_path}")
     message(FATAL_ERROR "Safety traceability workflow is missing")
