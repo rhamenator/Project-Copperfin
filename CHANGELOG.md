@@ -4,8 +4,11 @@
   plus applicable automation without claiming independence; `high` and
   `catastrophic` changes still fail closed without second-qualified-human review,
   and completed-project/first-stable-release review is unchanged. Deterministic
-  fixtures prove both sides while preserving historical Independent Review
-  records. The charter, README, agent rules, ontology, and traceability matrix
+  fixtures prove both sides while preserving structured historical Independent
+  Review records. The validator binds self-review to the issue author, binds
+  independent review to a distinct GitHub login, parses affirmative results
+  rather than approval substrings, and rejects incomplete low-risk evidence.
+  The charter, README, agent rules, ontology, and traceability matrix
   now make requirements recovery an ongoing project-wide baseline and forbid
   treating existing implementation as its own requirement source. No product or
   runtime behavior changed.
