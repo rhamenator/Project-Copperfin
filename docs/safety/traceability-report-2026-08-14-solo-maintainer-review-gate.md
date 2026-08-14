@@ -87,7 +87,9 @@ level, or safety for a particular deployment.
   admits explicit self-review for `none`/`low`/`medium`, rejects it for
   `high`/`catastrophic`, and admits current or historical Independent Review
   records only when a structured sign-off comment is authored by the named
-  reviewer account, rejects placeholder qualification/verification, and binds
+  reviewer account, rejects placeholder or negated qualification/verification,
+  applies the same meaningful-evidence rule to lower-risk self-review
+  verification and automation, and binds
   the comment to the exact current issue-body SHA-256. Stable-release review
   requirements are unchanged.
 - Requirements recovery: charter and operating guidance now state that the
@@ -131,7 +133,9 @@ forbidden high-severity self-review fixture, and an approved high-severity
 independent-human-review fixture. It also reruns legacy independent-review
 fixtures; rejects incomplete low-risk evidence, author-as-independent-reviewer,
 unattested login claims, placeholder reviewers, and negated legacy results;
-rejects stale issue-body digests and placeholder qualification/verification;
+rejects stale issue-body digests, placeholder or negated independent-review
+qualification/verification, and placeholder lower-risk self-review verification
+or automation;
 accepts reviewer-authored current and historical sign-offs bound to their exact
 fixture bodies; and reruns malformed mapping/hazard cases, classifier behavior,
 and hostile issue-number probes through the production PowerShell validator.

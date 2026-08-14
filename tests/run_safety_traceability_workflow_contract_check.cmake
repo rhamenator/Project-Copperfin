@@ -207,13 +207,14 @@ function(assert_stale_independent_review_rejected)
     file(REMOVE "${fixture}" "${report}")
 endfunction()
 
-function(assert_placeholder_signoff_evidence_rejected)
-    set(source_fixture "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_independent_review_issues.json")
-    file(READ "${source_fixture}" source_contents)
-
-    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-placeholder-qualification-issues.json")
-    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-placeholder-qualification-report.json")
-    string(REPLACE "qualification: qualified safety-documentation reviewer" "qualification: pending review" fixture_contents "${source_contents}")
+function(assert_high_signoff_mutation_rejected search_text replacement_text slug)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_independent_review_issues.json" source_contents)
+    string(REPLACE "${search_text}" "${replacement_text}" fixture_contents "${source_contents}")
+    if("${fixture_contents}" STREQUAL "${source_contents}")
+        message(FATAL_ERROR "Safety mutation ${slug} did not alter its source fixture")
+    endif()
     file(WRITE "${fixture}" "${fixture_contents}")
     execute_process(
         COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
@@ -224,20 +225,26 @@ function(assert_placeholder_signoff_evidence_rejected)
         OUTPUT_VARIABLE standard_output
         ERROR_VARIABLE standard_error)
     if(result EQUAL 0)
-        message(FATAL_ERROR "Safety validator accepted placeholder qualification evidence")
+        message(FATAL_ERROR "Safety validator accepted invalid independent-review evidence mutation ${slug}")
     endif()
     set(all_output "${standard_output}\n${standard_error}")
     string(FIND "${all_output}" "requires an approved structured sign-off comment authored by the named distinct reviewer"
         placeholder_evidence_index)
     if(placeholder_evidence_index EQUAL -1)
         message(FATAL_ERROR
-            "Safety validator did not reject placeholder qualification evidence: ${all_output}")
+            "Safety validator did not reject independent-review evidence mutation ${slug}: ${all_output}")
     endif()
     file(REMOVE "${fixture}" "${report}")
+endfunction()
 
-    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-placeholder-verification-issues.json")
-    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-placeholder-verification-report.json")
-    string(REPLACE "verification: procedure correctness and failure boundaries" "verification: n/a" fixture_contents "${source_contents}")
+function(assert_low_self_review_mutation_rejected search_text replacement_text slug)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_low_self_review_issues.json" source_contents)
+    string(REPLACE "${search_text}" "${replacement_text}" fixture_contents "${source_contents}")
+    if("${fixture_contents}" STREQUAL "${source_contents}")
+        message(FATAL_ERROR "Safety mutation ${slug} did not alter its source fixture")
+    endif()
     file(WRITE "${fixture}" "${fixture_contents}")
     execute_process(
         COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
@@ -248,16 +255,43 @@ function(assert_placeholder_signoff_evidence_rejected)
         OUTPUT_VARIABLE standard_output
         ERROR_VARIABLE standard_error)
     if(result EQUAL 0)
-        message(FATAL_ERROR "Safety validator accepted placeholder verification evidence")
+        message(FATAL_ERROR "Safety validator accepted invalid self-review evidence mutation ${slug}")
     endif()
     set(all_output "${standard_output}\n${standard_error}")
-    string(FIND "${all_output}" "requires an approved structured sign-off comment authored by the named distinct reviewer"
+    string(FIND "${all_output}" "Review Evidence must record an approved structured mode"
         placeholder_evidence_index)
     if(placeholder_evidence_index EQUAL -1)
         message(FATAL_ERROR
-            "Safety validator did not reject placeholder verification evidence: ${all_output}")
+            "Safety validator did not reject self-review evidence mutation ${slug}: ${all_output}")
     endif()
     file(REMOVE "${fixture}" "${report}")
+endfunction()
+
+function(assert_placeholder_and_negated_review_evidence_rejected)
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: pending review"
+        "placeholder-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer\\nverification: procedure correctness and failure boundaries"
+        "qualification: qualified safety-documentation reviewer\\nverification: n/a"
+        "placeholder-signoff-verification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: not qualified"
+        "negated-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer\\nverification: procedure correctness and failure boundaries"
+        "qualification: qualified safety-documentation reviewer\\nverification: not verified"
+        "negated-signoff-verification")
+    assert_low_self_review_mutation_rejected(
+        "verification: procedure and rendered guidance checked"
+        "verification: pending review"
+        "placeholder-self-review-verification")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: pending review"
+        "placeholder-self-review-automation")
 endfunction()
 
 function(assert_pending_legacy_high_review_rejected)
@@ -518,7 +552,7 @@ if(POWERSHELL_EXECUTABLE)
     assert_high_self_review_rejected()
     assert_high_independent_review_fixture()
     assert_stale_independent_review_rejected()
-    assert_placeholder_signoff_evidence_rejected()
+    assert_placeholder_and_negated_review_evidence_rejected()
     assert_pending_legacy_high_review_rejected()
     assert_issue_form_heading_fixture()
     assert_placeholder_high_reviewer_rejected()
