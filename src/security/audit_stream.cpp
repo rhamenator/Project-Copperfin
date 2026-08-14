@@ -354,6 +354,7 @@ AuditAppendResult prepare_audit_line(
     const std::string& event_name,
     const std::string& detail,
     const bool validate_existing_chain,
+    const std::size_t max_log_bytes,
     std::string& line) {
     const auto tail = validate_existing_chain
         ? read_validated_last_hash_from_text(existing_text)
@@ -363,6 +364,26 @@ AuditAppendResult prepare_audit_line(
     }
 
     const std::string timestamp = now_utc_compact();
+    std::size_t prospective_size = 0U;
+    const std::size_t available = max_log_bytes - existing_text.size();
+    const auto admit_component = [&](const std::size_t size) {
+        if (size > available - prospective_size) {
+            return false;
+        }
+        prospective_size += size;
+        return true;
+    };
+    if (!admit_component(timestamp.size()) ||
+        !admit_component(event_name.size()) ||
+        !admit_component(detail.size()) ||
+        !admit_component(tail.hash.size()) ||
+        !admit_component(64U) ||
+        !admit_component(5U)) {
+        return {
+            .ok = false,
+            .error = security_text("Security.Audit.Error.AppendLogEntryFailed"),
+            .entry_hash = {}};
+    }
     const std::string safe_event = escape_field(event_name);
     const std::string safe_detail = escape_field(detail);
     const std::string signed_payload =
@@ -582,7 +603,12 @@ AuditAppendResult append_contained_audit_event(
 
     std::string line;
     const AuditAppendResult prepared = prepare_audit_line(
-        existing_text, event_name, detail, validate_existing_chain, line);
+        existing_text,
+        event_name,
+        detail,
+        validate_existing_chain,
+        max_log_bytes,
+        line);
     if (!prepared.ok) {
         return prepared;
     }
@@ -778,7 +804,12 @@ AuditAppendResult append_contained_audit_event(
 
     std::string line;
     const AuditAppendResult prepared = prepare_audit_line(
-        existing_text, event_name, detail, validate_existing_chain, line);
+        existing_text,
+        event_name,
+        detail,
+        validate_existing_chain,
+        max_log_bytes,
+        line);
     if (!prepared.ok) {
         return prepared;
     }

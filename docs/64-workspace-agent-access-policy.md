@@ -139,7 +139,8 @@ contained writer, which also rejects reparse and hard-link substitution,
 cross-device replacement, malformed or hash-invalid existing chains, and
 concurrent-process races. Bounded persistence recomputes the complete existing
 chain under the writer lock before admitting a new receipt. A
-bounded size is checked under the writer lock before allocation or mutation;
+bounded size uses overflow-safe preflight under the writer lock before any
+input-sized copy, concatenation, hash work, or persistent mutation;
 the default is 4 MiB and admitted configuration range is 512 bytes through
 64 MiB. Invalid configuration or event shape, containment failure, malformed
 state, and a full log return no receipt. Start therefore grants no authority,
