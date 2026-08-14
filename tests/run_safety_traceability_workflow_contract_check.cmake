@@ -510,9 +510,25 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: GitHub Actions workflow was cancelled"
         "cancelled-producer-self-review-automation")
     assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: security scan was cancelled"
+        "cancelled-scan-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: workflow has timed out"
+        "auxiliary-timeout-self-review-automation")
+    assert_low_self_review_mutation_rejected(
         "verification: procedure and rendered guidance checked"
         "verification: the verification job timed out"
         "timed-out-producer-self-review-verification")
+    assert_low_self_review_mutation_rejected(
+        "verification: procedure and rendered guidance checked"
+        "verification: review deferred until later"
+        "subject-deferred-self-review-verification")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: automation unavailable pending rerun"
+        "subject-unavailable-self-review-automation")
     assert_low_self_review_mutation_rejected(
         "automated evidence result: passed"
         "automated evidence result: passed\\nautomated evidence status: failed"

@@ -334,7 +334,8 @@ function Test-MeaningfulReviewEvidence {
 
     $normalized = [regex]::Replace($trimmed.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
     $placeholderState = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)(?:\s+(?:at\s+this\s+time|automation|check|evidence|later|review|run|test|verification))?$'
-    if ($normalized -match $placeholderState) {
+    $subjectState = '^(?:automation|check|evidence|review|run|test|verification|workflow)(?:\s+(?:is|was|has\s+been))?\s+(?:absent|blocked|deferred|incomplete|missing|pending|placeholder|skipped|unavailable|unchecked|unqualified|unverified|unknown)\b'
+    if ($normalized -match $placeholderState -or $normalized -match $subjectState) {
         return $false
     }
 
@@ -353,6 +354,14 @@ function Test-MeaningfulReviewEvidence {
     }
     $failureScrubbed = [regex]::Replace($failureScrubbed, '\bnever\s+failed\b', '')
 
+    $terminalOutcomeWithoutPassingContext = $false
+    $terminalOutcome = [regex]::Match($normalized, '\b(?:canceled|cancelled|timed\s+out|timeout)\b')
+    if ($terminalOutcome.Success) {
+        $afterOutcome = $normalized.Substring($terminalOutcome.Index + $terminalOutcome.Length)
+        $terminalOutcomeWithoutPassingContext =
+            $afterOutcome -notmatch '\b(?:pass|passed|succeed|succeeded|successful|verified)\b'
+    }
+
     $terminalEvidenceState = '(?:available|checked|complete|completed|done|finish|finished|pass|passed|provided|qualified|reviewed|run|ran|succeed|succeeded|successful|verified)'
     $hasNegatedTerminalState = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
@@ -366,8 +375,7 @@ function Test-MeaningfulReviewEvidence {
     }
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
         $failureScrubbed -match '\b(?:failed|failure|unsuccessful)\b' -or
-        $normalized -match '\b(?:automation|build|check|checks|job|pipeline|run|suite|test|tests|verification|workflow)\s+(?:(?:was|were|is|are|has\s+been|have\s+been)\s+)?(?:canceled|cancelled)\b' -or
-        $normalized -match '\b(?:automation|build|check|checks|job|pipeline|run|suite|test|tests|verification|workflow)\s+(?:timed\s+out|ended\s+in\s+timeout)\b' -or
+        $terminalOutcomeWithoutPassingContext -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
         $hasNegatedTerminalState) {
         return $false
