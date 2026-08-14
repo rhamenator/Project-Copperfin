@@ -340,11 +340,13 @@ function Test-MeaningfulReviewEvidence {
 
     $evidenceSubject = '(?:automation|check|checks|ci|pipeline|run|test|tests|verification|workflow)'
     $outcomeLink = '(?:(?:run|job|check|checks|status|conclusion|outcome|result|was|were|is|are|has|have|had|been)\s+){0,4}'
-    $unsuccessfulOutcome = '(?:failed|failure|not\s+successful|unsuccessful)'
+    $unsuccessfulOutcome = '(?:failed|failure|not\s+(?:been\s+)?successful|unsuccessful)'
+    $negatedEvidenceState = '(?:not(?:\s+(?:a|an|been|fully|independently)){0,3}\s+|un\s*)(?:available|checked|qualified|verified)'
+    $contractedNegativeState = '(?:aren|isn|wasn|weren|hasn|haven|hadn|didn|doesn|don)\s+t(?:\s+been)?\s+(?:available|checked|passed|qualified|succeeded|successful|verified)'
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
-        $normalized -match "\b(?:failed\s+$evidenceSubject|$evidenceSubject(?:\s+[a-z0-9]+){0,3}\s+(?:did|does|do|has|have|had)\s+not\s+(?:pass|passed|succeed|succeeded)|$evidenceSubject\s+$outcomeLink$unsuccessfulOutcome|(?:conclusion|outcome|result|status)\s+$outcomeLink$unsuccessfulOutcome)\b" -or
+        $normalized -match "\b(?:failed\s+$evidenceSubject|$evidenceSubject(?:\s+[a-z0-9]+){0,3}\s+(?:did|does|do|has|have|had)\s+not\s+(?:been\s+)?(?:pass|passed|succeed|succeeded|successful)|$evidenceSubject\s+$outcomeLink$unsuccessfulOutcome|(?:conclusion|outcome|result|status)\s+$outcomeLink$unsuccessfulOutcome)\b" -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
-        $normalized -match '\b(?:not|un)(?:available|checked|qualified|verified)\b') {
+        $normalized -match "\b(?:$negatedEvidenceState|$contractedNegativeState)\b") {
         return $false
     }
 
