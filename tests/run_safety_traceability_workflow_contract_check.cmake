@@ -349,12 +349,26 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: focused documentation contracts pass"
         "automated evidence: GitHub Actions workflow conclusion: failure"
         "workflow-failure-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: CI checks did not pass"
+        "nonadjacent-negated-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: workflow status was failure"
+        "nonadjacent-failure-self-review-automation")
     assert_affirmative_negative_guarantee_accepted(
         "confirmed rollback does not mutate user data"
         "affirmative-does-not-guarantee")
     assert_affirmative_negative_guarantee_accepted(
         "verified rollback never mutates user data"
         "affirmative-never-guarantee")
+    assert_affirmative_negative_guarantee_accepted(
+        "verified failed requests never expose partial output"
+        "affirmative-failed-input-guarantee")
+    assert_affirmative_negative_guarantee_accepted(
+        "verification of failed requests never exposes partial output"
+        "affirmative-failed-input-verification")
 endfunction()
 
 function(assert_pending_legacy_high_review_rejected)
@@ -582,6 +596,12 @@ forbid_text("-IssueNumbers \"\${{ inputs.issue_numbers }}\"" "quoted direct issu
 require_validator_text(
     [=[$latestResponse = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get]=]
     "post-comment issue re-fetch")
+require_validator_text(
+    [=[$latestReviewComments = @(Get-ReviewComments -Issue $latestResponse -Headers $headers)]=]
+    "post-pagination comment re-fetch")
+require_validator_text(
+    [=[Get-ReviewCommentFingerprint -Comments $latestReviewComments]=]
+    "stable comment-content fingerprint")
 require_validator_text(
     [=[Issue #$num changed while review evidence was being loaded]=]
     "unstable live-snapshot rejection")
