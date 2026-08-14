@@ -809,6 +809,29 @@ function(assert_issue_form_severity_mutation_rejected replacement_text slug)
     file(REMOVE "${fixture}" "${report}")
 endfunction()
 
+function(assert_issue_form_body_mutation_rejected search_text replacement_text slug)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-${slug}-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_issue_form_heading_issues.json" source_contents)
+    string(REPLACE "${search_text}" "${replacement_text}" fixture_contents "${source_contents}")
+    if("${fixture_contents}" STREQUAL "${source_contents}")
+        message(FATAL_ERROR "Issue-body mutation ${slug} did not alter its source fixture")
+    endif()
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted ambiguous issue-body mutation ${slug}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_placeholder_high_reviewer_rejected)
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-high-placeholder-reviewer-report.json")
     execute_process(
@@ -1055,6 +1078,18 @@ if(POWERSHELL_EXECUTABLE)
     assert_issue_form_severity_mutation_rejected(
         "### Potential Severity If Misused\\n\\nlow\\n\\n### Potential Severity If Misused\\n\\nhigh"
         "duplicate-rendered-severity")
+    assert_issue_form_body_mutation_rejected(
+        "### Review Evidence"
+        "### Review Evidence\\n\\nmode: maintainer self-review\\nreviewer: rhamenator\\nverification: procedure and rendered guidance checked\\nverification result: passed\\nautomated evidence: focused documentation contracts pass\\nautomated evidence result: passed\\nresult: approved\\n\\n### Review Evidence"
+        "duplicate-rendered-review-evidence")
+    assert_issue_form_body_mutation_rejected(
+        "### DQ/DV/HZ Mapping"
+        "### DQ/DV/HZ Mapping\\n\\n| Documentation requirement | Verification evidence | Controlled hazards |\\n| --- | --- | --- |\\n| DQ-issue-form-heading | DV-issue-form-heading | HZ-NONE |\\n\\n### DQ/DV/HZ Mapping"
+        "duplicate-rendered-mapping")
+    assert_issue_form_body_mutation_rejected(
+        "### Procedural Delta Map"
+        "### Procedural Delta Map\\n\\nNo operator procedure changes.\\n\\n### Procedural Delta Map"
+        "duplicate-rendered-procedural-delta")
     assert_placeholder_high_reviewer_rejected()
     assert_same_author_independent_review_rejected()
     assert_unattested_independent_review_rejected()

@@ -230,6 +230,10 @@ function Get-MarkdownSection {
     )
 
     $escapedHeading = [regex]::Escape($Heading)
+    $headingPattern = "(?im)^ {0,3}#{2,3}[ \t]+$escapedHeading(?:[ \t]+#+)?[ \t]*$"
+    if ([regex]::Matches($Body, $headingPattern).Count -ne 1) {
+        return ""
+    }
     $match = [regex]::Match(
         $Body,
         "(?ims)^ {0,3}#{2,3}[ \t]+$escapedHeading(?:[ \t]+#+)?[ \t]*\r?\n(?<content>.*?)(?=^ {0,3}#{2,3}[ \t]+|\z)")
@@ -284,6 +288,27 @@ function Get-RenderedMarkdownEvidenceText {
     }
 
     return ($renderedLines -join "`n")
+}
+
+function Test-UniqueRenderedSectionOrLegacyText {
+    param(
+        [string]$Body,
+        [string]$Heading,
+        [string]$LegacyPattern
+    )
+
+    $escapedHeading = [regex]::Escape($Heading)
+    $headingPattern = "(?im)^ {0,3}#{2,3}[ \t]+$escapedHeading(?:[ \t]+#+)?[ \t]*$"
+    $headingCount = [regex]::Matches($Body, $headingPattern).Count
+    if ($headingCount -gt 1) {
+        return $false
+    }
+    if ($headingCount -eq 1) {
+        return -not [string]::IsNullOrWhiteSpace(
+            (Get-MarkdownSection -Body $Body -Heading $Heading))
+    }
+
+    return $Body -match $LegacyPattern
 }
 
 function Get-SeverityClassification {
@@ -647,11 +672,15 @@ foreach ($issue in $issues) {
 
     $validatedCount++
     $issueErrors = @()
-    $upperBody = $body.ToUpperInvariant()
+    $renderedBody = Get-RenderedMarkdownEvidenceText -Body $body
     $severity = Get-SeverityClassification -Body $body
     $authorLogin = Get-GitHubLogin -Value ([string]$issue.user.login)
-    $reviewEvidence = Get-MarkdownSection -Body $body -Heading "Review Evidence"
-    $legacyIndependentReviewEvidence = Get-MarkdownSection -Body $body -Heading "Independent Review Evidence"
+    $reviewEvidence = Get-MarkdownSection -Body $renderedBody -Heading "Review Evidence"
+    $legacyIndependentReviewEvidence = Get-MarkdownSection -Body $renderedBody -Heading "Independent Review Evidence"
+    $hasProceduralDeltaMap = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Procedural Delta Map" -LegacyPattern '(?im)^\s*Procedural\s+Delta\s+Map\s*$'
+    $hasMisuseAnalysis = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Misuse Analysis" -LegacyPattern '(?im)^\s*Misuse\s+Analysis\s*$'
+    $hasSimulationEvidence = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Simulation/Walkthrough Evidence" -LegacyPattern '(?im)^\s*(?:Simulation\b.*|.*\bWalkthrough\b.*)$'
+    $hasRollbackAndNotificationPlan = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Rollback And Field Notification Plan" -LegacyPattern '(?im)^\s*Rollback\b.*\b(?:field\s+notification|notification\s+plan)\b'
     $hasCurrentReviewEvidence = -not [string]::IsNullOrWhiteSpace($reviewEvidence)
     $hasLegacyIndependentReviewEvidence = -not [string]::IsNullOrWhiteSpace($legacyIndependentReviewEvidence)
     $hasReviewEvidence = $hasCurrentReviewEvidence -or $hasLegacyIndependentReviewEvidence
@@ -708,16 +737,16 @@ foreach ($issue in $issues) {
         $issueErrors += "Issue is not closed (state=$state)."
     }
 
-    $dqMatches = [regex]::Matches($body, '\bDQ-[A-Za-z0-9-]+\b')
-    $dvMatches = [regex]::Matches($body, '\bDV-[A-Za-z0-9-]+\b')
+    $dqMatches = [regex]::Matches($renderedBody, '\bDQ-[A-Za-z0-9-]+\b')
+    $dvMatches = [regex]::Matches($renderedBody, '\bDV-[A-Za-z0-9-]+\b')
 
-    $declaredDqIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Documentation Requirement IDs") -Prefix DQ)
-    $declaredDvIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Documentation Verification IDs") -Prefix DV)
-    $declaredHzIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Hazard Linkage IDs") -Prefix HZ)
+    $declaredDqIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $renderedBody -Heading "Documentation Requirement IDs") -Prefix DQ)
+    $declaredDvIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $renderedBody -Heading "Documentation Verification IDs") -Prefix DV)
+    $declaredHzIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $renderedBody -Heading "Hazard Linkage IDs") -Prefix HZ)
     $hasNoHazardId = $declaredHzIds -contains "HZ-NONE"
     $hasExplicitNoHazard = $declaredHzIds.Count -eq 1 -and $hasNoHazardId
-    $mappingSection = Get-MarkdownSection -Body $body -Heading "DQ/DV/HZ Mapping"
-    $mappingRows = @(Get-TraceabilityMappingRows -Body $body)
+    $mappingSection = Get-MarkdownSection -Body $renderedBody -Heading "DQ/DV/HZ Mapping"
+    $mappingRows = @(Get-TraceabilityMappingRows -Body $renderedBody)
 
     if ($dqMatches.Count -eq 0) {
         $issueErrors += "Missing DQ-* identifier(s)."
@@ -825,10 +854,10 @@ foreach ($issue in $issues) {
         }
     }
 
-    if ($upperBody -notmatch 'PROCEDURAL\s+DELTA\s+MAP') {
+    if (-not $hasProceduralDeltaMap) {
         $issueErrors += "Missing Procedural Delta Map section."
     }
-    if ($upperBody -notmatch 'MISUSE\s+ANALYSIS') {
+    if (-not $hasMisuseAnalysis) {
         $issueErrors += "Missing Misuse Analysis section."
     }
     if (-not $hasReviewEvidence) {
@@ -840,13 +869,11 @@ foreach ($issue in $issues) {
     } elseif (($severity -eq "high" -or $severity -eq "catastrophic") -and -not $hasApprovedIndependentReview) {
         $issueErrors += "Severity '$severity' requires approved Independent Human Review evidence from a second qualified reviewer."
     }
-    if ($upperBody -notmatch 'SIMULATION|WALKTHROUGH') {
+    if (-not $hasSimulationEvidence) {
         $issueErrors += "Missing Simulation/Walkthrough evidence."
     }
-    if ($upperBody -notmatch 'ROLLBACK') {
+    if (-not $hasRollbackAndNotificationPlan) {
         $issueErrors += "Missing rollback plan detail."
-    }
-    if ($upperBody -notmatch 'FIELD\s+NOTIFICATION|NOTIFICATION\s+PLAN') {
         $issueErrors += "Missing field-notification plan detail."
     }
     if ([string]::IsNullOrWhiteSpace($severity)) {
