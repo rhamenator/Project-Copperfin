@@ -227,11 +227,12 @@ function Get-RenderedInlineEvidenceText {
     param(
         [AllowEmptyString()][string]$Value,
         [switch]$NormalizeReferenceLinks,
-        [AllowEmptyString()][string]$ReferenceText = ''
+        [AllowEmptyString()][string]$ReferenceText = '',
+        [switch]$RequireDefinedReferences
     )
 
     $rendered = $Value
-    $linkTextPattern = '(?:\\.|[^\]\\\r\n])*'
+    $linkTextPattern = '(?:(?>[^\[\]\\\r\n]+)|\\.|(?<depth>\[)|(?<-depth>\]))*(?(depth)(?!))'
     $rendered = [regex]::Replace(
         $rendered,
         '!?(?:\[(?<text>[^\]\r\n]*)\])\([^\r\n)]*\)',
@@ -262,7 +263,7 @@ function Get-RenderedInlineEvidenceText {
                     $label.ToLowerInvariant(),
                     '[ \t\r\n]+',
                     ' ').Trim()
-                if ($referenceLabels.Count -eq 0 -or
+                if ((-not $RequireDefinedReferences -and $referenceLabels.Count -eq 0) -or
                     $referenceLabels.ContainsKey($normalizedLabel)) {
                     return $match.Groups['text'].Value
                 }
@@ -277,7 +278,7 @@ function Get-RenderedInlineEvidenceText {
                     $match.Groups['text'].Value.ToLowerInvariant(),
                     '[ \t\r\n]+',
                     ' ').Trim()
-                if ($referenceLabels.Count -eq 0 -or
+                if ((-not $RequireDefinedReferences -and $referenceLabels.Count -eq 0) -or
                     $referenceLabels.ContainsKey($normalizedLabel)) {
                     return $match.Groups['text'].Value
                 }
@@ -317,7 +318,8 @@ function Get-MarkdownSection {
         $renderedHeading = Get-RenderedInlineEvidenceText `
             -Value $headingMatch.Groups['text'].Value `
             -NormalizeReferenceLinks `
-            -ReferenceText $Body
+            -ReferenceText $Body `
+            -RequireDefinedReferences
         $renderedHeading = [regex]::Replace(
             $renderedHeading,
             '[ \t]+#+[ \t]*$',
@@ -362,7 +364,8 @@ function Get-MarkdownHeadingCount {
         $renderedHeading = Get-RenderedInlineEvidenceText `
             -Value $headingMatch.Groups['text'].Value `
             -NormalizeReferenceLinks `
-            -ReferenceText $Body
+            -ReferenceText $Body `
+            -RequireDefinedReferences
         $renderedHeading = [regex]::Replace(
             $renderedHeading,
             '[ \t]+#+[ \t]*$',
