@@ -127,6 +127,10 @@
   Run `31755148469` proved foreground alone did not release queued input. The
   dispatch stage now repeats only the built-in Command Window shortcut from an
   isolated sender, exits, settles, and then starts canonical submission.
+  Run `31756018725` proved that canonical-sender exit released that preceding
+  shortcut while the canonical input itself remained queued. A final isolated
+  built-in Command Window request now releases the preceding canonical input
+  before independent pane, PRG, and package-load observation.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

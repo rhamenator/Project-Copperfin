@@ -497,6 +497,11 @@ the Common IDE package again began only after the later input sender exited.
 The dispatch stage now repeats only Visual Studio's built-in Command Window
 shortcut in an isolated sender, exits, then allows bounded settlement before
 the distinct Copperfin canonical-command sender starts.
+Run `31756018725` proved that second shortcut remained queued until the
+canonical sender exited: the Common IDE package began about 0.25 seconds later.
+The harness now uses one final isolated built-in Command Window request after
+canonical submission to release that preceding queued command, then
+independently observes the pane, PRG, and package-load evidence.
 The producer validates its output against the exact bundled Draft
 2020-12 schema without relying on optional URI-format assertions, and the
 mapped producer/schema/workflow/guide/contract artifacts carry reverse

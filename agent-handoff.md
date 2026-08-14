@@ -172,6 +172,13 @@ the Common IDE package again began after the later input sender exited. The
 current head replaces it with a second isolated built-in Command Window
 shortcut sender, exits that sender, allows bounded settlement, and only then
 starts the distinct Copperfin canonical sender.
+Run `31756018725` retained PASS install/uninstall and exact foreground-bound
+input but no product pane or package load. The Common IDE package began about
+0.25 seconds after canonical-sender exit, proving that sender released the
+preceding queued shortcut while leaving its own canonical input queued. The
+current head adds a final isolated built-in Command Window request after
+canonical submission to release that preceding input; it has separate retained
+JSON and cannot substitute for pane, PRG, package-load, error, or residue proof.
 
 ## V1 Windows installer lifecycle
 

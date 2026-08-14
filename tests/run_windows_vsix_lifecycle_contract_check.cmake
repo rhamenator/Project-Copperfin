@@ -76,6 +76,8 @@ require_text("${script}" "CommandWindowAlreadyRequested" "post-readiness canonic
 require_text("${script}" "ui-automation-command-window-input.json" "retained Command Window request diagnostics")
 require_text("${script}" "ui-automation-command-window-dispatch.json" "retained Command Window dispatch diagnostics")
 require_text("${script}" "ui-automation-command-input.json" "retained command-input diagnostics")
+require_text("${script}" "release queued canonical command with built-in Command Window request" "post-command queued-input dispatch boundary")
+require_text("${script}" "ui-automation-command-input-dispatch.json" "retained post-command dispatch diagnostics")
 require_text("${script}" "ui-automation-command.json" "retained command-observation diagnostics")
 require_text("${script}" "ui-automation-prg.json" "retained PRG-observation diagnostics")
 require_text("${script}" "StartsWith(\"$ExpectedName - \"" "exact active-document window-title boundary")
@@ -106,6 +108,7 @@ require_text("${workflow}" "vsix-installer-operations.json" "retained installer 
 require_text("${workflow}" "ui-automation-command-input.json" "retained command-input diagnostics")
 require_text("${workflow}" "ui-automation-command-window-input.json" "retained Command Window request diagnostics")
 require_text("${workflow}" "ui-automation-command-window-dispatch.json" "retained Command Window dispatch diagnostics")
+require_text("${workflow}" "ui-automation-command-input-dispatch.json" "retained post-command dispatch diagnostics")
 require_text("${workflow}" "ui-automation-command.json" "retained command UI Automation diagnostics")
 require_text("${workflow}" "ui-automation-prg.json" "retained PRG UI Automation diagnostics")
 require_text("${workflow}" "Upload Windows VSIX lifecycle diagnostics" "retained failure diagnostics")
@@ -114,19 +117,24 @@ file(READ "${SOURCE_DIR}/${script}" script_contents)
 string(FIND "${script_contents}" "VSIX lifecycle phase: prime per-user package registration" registration_phase_offset)
 string(FIND "${script_contents}" "matchingPkgDefImports.Count -ge 1" registration_proof_offset)
 string(FIND "${script_contents}" "VSIX lifecycle phase: launch evidence Visual Studio" launch_phase_offset)
+string(FIND "${script_contents}" "VSIX lifecycle phase: submit exact installed Copperfin command" command_submission_offset)
+string(FIND "${script_contents}" "VSIX lifecycle phase: release queued canonical command with built-in Command Window request" command_dispatch_offset)
 string(FIND "${script_contents}" "Copperfin canonical command UI Automation observation" command_observation_offset)
 if(command_observation_offset EQUAL -1)
     string(FIND "${script_contents}" "Copperfin command-surface UI Automation observation" command_observation_offset)
 endif()
 string(FIND "${script_contents}" "Copperfin startup PRG document UI Automation observation" document_observation_offset)
 if(registration_phase_offset EQUAL -1 OR registration_proof_offset EQUAL -1 OR
-        launch_phase_offset EQUAL -1 OR command_observation_offset EQUAL -1 OR
+        launch_phase_offset EQUAL -1 OR command_submission_offset EQUAL -1 OR
+        command_dispatch_offset EQUAL -1 OR command_observation_offset EQUAL -1 OR
         document_observation_offset EQUAL -1 OR
         NOT registration_phase_offset LESS registration_proof_offset OR
         NOT registration_proof_offset LESS launch_phase_offset OR
-        NOT launch_phase_offset LESS command_observation_offset OR
+        NOT launch_phase_offset LESS command_submission_offset OR
+        NOT command_submission_offset LESS command_dispatch_offset OR
+        NOT command_dispatch_offset LESS command_observation_offset OR
         NOT command_observation_offset LESS document_observation_offset)
-    message(FATAL_ERROR "registration priming, evidence startup, and same-process observations must remain ordered")
+    message(FATAL_ERROR "registration priming, evidence startup, command dispatch, and same-process observations must remain ordered")
 endif()
 file(READ "${SOURCE_DIR}/${workflow}" workflow_contents)
 string(FIND "${workflow_contents}" "Exercise Windows VSIX lifecycle" lifecycle_offset)

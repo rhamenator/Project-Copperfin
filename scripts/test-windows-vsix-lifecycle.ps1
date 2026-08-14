@@ -542,6 +542,17 @@ if (-not $observed) {
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
         -Name 'Copperfin canonical command submission' | Out-Null
 
+    Write-Host 'VSIX lifecycle phase: release queued canonical command with built-in Command Window request'
+    Invoke-BoundedProcess `
+        -FilePath $windowsPowerShell `
+        -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
+            '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
+            '-RequestCommandWindowOnly',
+            '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command-input-dispatch.json'),
+            '-EvidenceDescription', 'Post-command Visual Studio Command Window request',
+            '-TimeoutSeconds', "$automationTimeoutSeconds") `
+        -Name 'Post-command Visual Studio Command Window request' | Out-Null
+
     Write-Host 'VSIX lifecycle phase: observe exact installed Copperfin command surface'
     Invoke-BoundedProcess `
         -FilePath $windowsPowerShell `

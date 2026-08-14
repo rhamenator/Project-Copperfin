@@ -359,6 +359,22 @@ unchanged. Microsoft documents `>`-prefixed examples in the Command Window, so
 the exact submitted canonical syntax is retained rather than changed from
 speculation.
 
+Run `31756018725` retained PASS install and uninstall (242.154 and 25.911
+seconds), exact PkgDef priming, two exact-PID built-in shortcut requests, and
+exact canonical-command submission, but no pane or Copperfin package load. Its
+ActivityLog timestamps show the Common IDE package began at `00:10:36.644`,
+approximately 0.25 seconds after the canonical sender exited and observation
+began—not during the ten-second interval following the second shortcut sender.
+The evidence therefore proves each later input sender releases the preceding
+queued input on this hosted desktop. The correction adds one final isolated,
+exact-PID, built-in Command Window request after canonical submission and
+before observation. It carries no Copperfin command, emits separate retained
+JSON, and cannot admit success; pane, package-load, PRG, error, uninstall, and
+residue gates remain independent. Artifact `9203013733` has digest
+`sha256:243d67035af65dccaccc86686092cf23f8957f6d453c4773c6d22c9ad7adb651`
+and expires 2026-11-12. `RQ-CF-REL-003` remains `gap` pending corrected
+exact-head execution.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede
