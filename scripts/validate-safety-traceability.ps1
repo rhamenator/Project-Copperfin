@@ -348,7 +348,7 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
 
     foreach ($line in ($Body -split '\r?\n')) {
         $interruptsParagraph = $line -match '^ {0,3}(?:<!--|<\?|<!\[CDATA\[|<![A-Z]|`{3,}|~{3,})' -or
-            $line -match "^ {0,3}</?(?:$paragraphInterruptHtmlTags)(?:\s|/?>)"
+            $line -match "^ {0,3}</?(?:$paragraphInterruptHtmlTags)(?:\s|/?>|$)"
         if ($codeSpanLength -gt 0 -and
             ([string]::IsNullOrWhiteSpace($line) -or $interruptsParagraph)) {
             # A CommonMark code span cannot cross the blank line that ends its
