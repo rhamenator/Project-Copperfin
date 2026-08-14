@@ -29,9 +29,9 @@ level, or safety for a particular deployment.
   explicit structured outcome fields and exactly one rendered independent
   sign-off section per sign-off comment. Headings and fields inside fenced or
   indented code or HTML comments are not evidence, and a sign-off comment that
-  contains a top-level raw-HTML construct fails closed. HTML comments are
-  masked while retaining source-line and column boundaries. ATX headings
-  require whitespace after their marker
+  contains a top-level raw-HTML construct fails closed. HTML comments outside
+  fenced, indented, and inline code are masked while retaining source-line and
+  column boundaries. ATX headings require whitespace after their marker
   and may use a whitespace-separated closing hash sequence. Free-form
   verification scope identifies what was checked but cannot substitute for a
   `qualified` qualification result or a `passed` verification or automation
@@ -62,9 +62,9 @@ level, or safety for a particular deployment.
 - `DV-assurance-review-004`: accept a closed high-severity fixture only when its
   current Review Evidence explicitly records independent-human mode and an
   approved result.
-- `DV-assurance-review-005`: reject fenced/commented severity downgrades before
-  a rendered high classification and reject duplicate rendered severity
-  sections.
+- `DV-assurance-review-005`: reject fenced/commented severity declarations in
+  either risk direction, duplicate rendered severity sections, multiple values
+  within one section, and mixed section/legacy declarations.
 - `DV-assurance-review-006`: reject duplicate rendered Review Evidence and
   DQ/DV/HZ Mapping sections while preserving the exact raw-body digest binding.
 - `DV-assurance-review-005`: parse a high-severity issue-form value with a

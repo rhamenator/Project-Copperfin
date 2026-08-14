@@ -244,13 +244,87 @@ function Get-MarkdownSection {
     return $match.Groups["content"].Value
 }
 
+function Mask-MarkdownHtmlCommentsOutsideCode {
+    param([AllowEmptyString()][string]$Body)
+
+    $maskedLines = [System.Collections.Generic.List[string]]::new()
+    $inFence = $false
+    $fenceCharacter = ''
+    $fenceLength = 0
+    $inComment = $false
+
+    foreach ($line in ($Body -split '\r?\n')) {
+        if ($inFence) {
+            $maskedLines.Add($line)
+            $escapedFenceCharacter = [regex]::Escape($fenceCharacter)
+            if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
+                $inFence = $false
+            }
+            continue
+        }
+
+        $fenceMatch = [regex]::Match($line, '^ {0,3}(?<fence>`{3,}|~{3,})')
+        if ($fenceMatch.Success) {
+            $maskedLines.Add($line)
+            $inFence = $true
+            $fenceCharacter = $fenceMatch.Groups['fence'].Value.Substring(0, 1)
+            $fenceLength = $fenceMatch.Groups['fence'].Value.Length
+            continue
+        }
+
+        if ($line -match '^(?: {4}|\t)') {
+            $maskedLines.Add($line)
+            continue
+        }
+
+        $probe = [regex]::Replace(
+            $line,
+            '(?<ticks>`+).*?\k<ticks>',
+            { param($codeSpan) ' ' * $codeSpan.Length })
+        $characters = $line.ToCharArray()
+        $searchIndex = 0
+        while ($searchIndex -lt $line.Length) {
+            if ($inComment) {
+                $commentEnd = $line.IndexOf('-->', $searchIndex, [System.StringComparison]::Ordinal)
+                $maskEnd = if ($commentEnd -ge 0) { $commentEnd + 3 } else { $line.Length }
+                for ($index = $searchIndex; $index -lt $maskEnd; $index++) {
+                    $characters[$index] = ' '
+                }
+                if ($commentEnd -lt 0) {
+                    $searchIndex = $line.Length
+                } else {
+                    $inComment = $false
+                    $searchIndex = $maskEnd
+                }
+                continue
+            }
+
+            $commentStart = $probe.IndexOf('<!--', $searchIndex, [System.StringComparison]::Ordinal)
+            if ($commentStart -lt 0) {
+                break
+            }
+            $commentEnd = $line.IndexOf('-->', $commentStart + 4, [System.StringComparison]::Ordinal)
+            $maskEnd = if ($commentEnd -ge 0) { $commentEnd + 3 } else { $line.Length }
+            for ($index = $commentStart; $index -lt $maskEnd; $index++) {
+                $characters[$index] = ' '
+            }
+            if ($commentEnd -lt 0) {
+                $inComment = $true
+                $searchIndex = $line.Length
+            } else {
+                $searchIndex = $maskEnd
+            }
+        }
+        $maskedLines.Add(($characters -join ''))
+    }
+
+    return ($maskedLines -join "`n")
+}
+
 function Get-RenderedMarkdownEvidenceText {
     param([AllowEmptyString()][string]$Body)
 
-    $commentMaskedBody = [regex]::Replace(
-        $Body,
-        '(?s)<!--.*?(?:-->|\z)',
-        { param($commentMatch) [regex]::Replace($commentMatch.Value, '[^\r\n]', ' ') })
+    $commentMaskedBody = Mask-MarkdownHtmlCommentsOutsideCode -Body $Body
     $renderedLines = [System.Collections.Generic.List[string]]::new()
     $inFence = $false
     $fenceCharacter = ''
@@ -316,29 +390,38 @@ function Get-SeverityClassification {
 
     $renderedBody = Get-RenderedMarkdownEvidenceText -Body $Body
     $severityPattern = '(none|low|medium|high|catastrophic)'
+    $severityHeadingPattern = '(?im)^ {0,3}#{2,3}[ \t]+Potential Severity If Misused(?:[ \t]+#+)?[ \t]*$'
+    $legacySeverityPattern = "(?im)^\s*(?:potential\s+)?severity(?:\s+if\s+misused)?\s*:\s*$severityPattern\s*$"
+    $rawSeverityHeadingCount = [regex]::Matches($Body, $severityHeadingPattern).Count
     $severityHeadingCount = [regex]::Matches(
         $renderedBody,
-        '(?im)^ {0,3}#{2,3}[ \t]+Potential Severity If Misused(?:[ \t]+#+)?[ \t]*$').Count
-    if ($severityHeadingCount -gt 1) {
+        $severityHeadingPattern).Count
+    $rawLegacySeverityCount = [regex]::Matches($Body, $legacySeverityPattern).Count
+    $renderedLegacySeverityMatches = [regex]::Matches($renderedBody, $legacySeverityPattern)
+    if ($rawSeverityHeadingCount -ne $severityHeadingCount -or
+        $rawLegacySeverityCount -ne $renderedLegacySeverityMatches.Count -or
+        $severityHeadingCount -gt 1) {
         return ""
     }
 
-    $section = Get-MarkdownSection -Body $renderedBody -Heading "Potential Severity If Misused"
-    $match = [regex]::Match($section, "(?im)^\s*(?:[-*]\s*)?$severityPattern\b[^\r\n]*$")
-    if ($match.Success) {
-        return $match.Groups[1].Value.ToLowerInvariant()
-    }
     if ($severityHeadingCount -eq 1) {
+        if ($renderedLegacySeverityMatches.Count -ne 0) {
+            return ""
+        }
+        $section = Get-MarkdownSection -Body $renderedBody -Heading "Potential Severity If Misused"
+        $sectionSeverityMatches = [regex]::Matches(
+            $section,
+            "(?im)^\s*(?:[-*]\s*)?(?<severity>$severityPattern)\b[^\r\n]*$")
+        if ($sectionSeverityMatches.Count -eq 1) {
+            return $sectionSeverityMatches[0].Groups['severity'].Value.ToLowerInvariant()
+        }
         return ""
     }
 
     # Retain compatibility with evidence created before the issue form emitted
     # the severity as its own Markdown section.
-    $matches = [regex]::Matches(
-        $renderedBody,
-        "(?im)^\s*(?:potential\s+)?severity(?:\s+if\s+misused)?\s*:\s*$severityPattern\s*$")
-    if ($matches.Count -eq 1) {
-        return $matches[0].Groups[1].Value.ToLowerInvariant()
+    if ($renderedLegacySeverityMatches.Count -eq 1) {
+        return $renderedLegacySeverityMatches[0].Groups[1].Value.ToLowerInvariant()
     }
 
     return ""
