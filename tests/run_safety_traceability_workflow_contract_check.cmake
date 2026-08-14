@@ -481,6 +481,7 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_hidden_high_signoff_rejected("<![CDATA[\\n" "\\n]]>" "cdata-signoff")
     assert_hidden_high_signoff_rejected("<custom-review>\\n" "\\n</custom-review>" "custom-html-block-signoff")
     assert_hidden_high_signoff_rejected("</custom-review>\\n" "" "closing-html-block-signoff")
+    assert_hidden_high_signoff_rejected("`<!--``\\n" "\\n-->" "mismatched-code-span-comment-opener")
     assert_high_signoff_mutation_rejected(
         "## Independent Review Sign-Off"
         "##Independent Review Sign-Off"
@@ -1116,6 +1117,15 @@ if(POWERSHELL_EXECUTABLE)
     assert_issue_form_severity_mutation_rejected(
         "### Potential Severity If Misused\\n\\nlow\\nhigh"
         "duplicate-values-in-rendered-severity")
+    assert_issue_form_severity_mutation_rejected(
+        "### Potential Severity If Misused\\n\\nlow or high"
+        "multiple-values-on-one-severity-line")
+    assert_issue_form_severity_mutation_rejected(
+        "### Potential Severity If Misused\\n\\nlow\\n\\n```text\\nhigh\\n```"
+        "fenced-value-inside-rendered-severity")
+    assert_issue_form_severity_mutation_rejected(
+        "### Potential Severity If Misused\\n\\nlow\\n\\n<!-- high -->"
+        "commented-value-inside-rendered-severity")
     assert_issue_form_severity_mutation_rejected(
         "### Potential Severity If Misused\\n\\nlow\\n\\nSeverity: high"
         "mixed-section-and-legacy-severity")

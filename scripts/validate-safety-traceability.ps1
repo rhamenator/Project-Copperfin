@@ -279,7 +279,7 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
 
         $probe = [regex]::Replace(
             $line,
-            '(?<ticks>`+).*?\k<ticks>',
+            '(?<!`)(?<ticks>`+)(?!`).*?(?<!`)\k<ticks>(?!`)',
             { param($codeSpan) ' ' * $codeSpan.Length })
         $characters = $line.ToCharArray()
         $searchIndex = 0
@@ -449,11 +449,16 @@ function Get-SeverityClassification {
         if ($renderedLegacySeverityMatches.Count -ne 0) {
             return ""
         }
+        $rawSection = Get-MarkdownSection -Body $Body -Heading "Potential Severity If Misused"
         $section = Get-MarkdownSection -Body $renderedBody -Heading "Potential Severity If Misused"
+        $rawSectionSeverityMatches = [regex]::Matches(
+            $rawSection,
+            "(?i)\b(?<severity>$severityPattern)\b")
         $sectionSeverityMatches = [regex]::Matches(
             $section,
-            "(?im)^\s*(?:[-*]\s*)?(?<severity>$severityPattern)\b[^\r\n]*$")
-        if ($sectionSeverityMatches.Count -eq 1) {
+            "(?i)\b(?<severity>$severityPattern)\b")
+        if ($rawSectionSeverityMatches.Count -eq $sectionSeverityMatches.Count -and
+            $sectionSeverityMatches.Count -eq 1) {
             return $sectionSeverityMatches[0].Groups['severity'].Value.ToLowerInvariant()
         }
         return ""
