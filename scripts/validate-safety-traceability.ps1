@@ -263,9 +263,10 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
     $fenceCharacter = ''
     $fenceLength = 0
     $inComment = $false
+    $codeSpanLength = 0
 
     foreach ($line in ($Body -split '\r?\n')) {
-        if ($inFence) {
+        if ($inFence -and -not $inComment -and $codeSpanLength -eq 0) {
             $maskedLines.Add($line)
             $escapedFenceCharacter = [regex]::Escape($fenceCharacter)
             if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
@@ -274,24 +275,22 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
             continue
         }
 
-        $fenceMatch = [regex]::Match($line, '^ {0,3}(?<fence>`{3,}|~{3,})')
-        if ($fenceMatch.Success) {
-            $maskedLines.Add($line)
-            $inFence = $true
-            $fenceCharacter = $fenceMatch.Groups['fence'].Value.Substring(0, 1)
-            $fenceLength = $fenceMatch.Groups['fence'].Value.Length
-            continue
+        if (-not $inComment -and $codeSpanLength -eq 0) {
+            $fenceMatch = [regex]::Match($line, '^ {0,3}(?<fence>`{3,}|~{3,})')
+            if ($fenceMatch.Success) {
+                $maskedLines.Add($line)
+                $inFence = $true
+                $fenceCharacter = $fenceMatch.Groups['fence'].Value.Substring(0, 1)
+                $fenceLength = $fenceMatch.Groups['fence'].Value.Length
+                continue
+            }
+
+            if ($line -match '^(?: {4}|\t)') {
+                $maskedLines.Add($line)
+                continue
+            }
         }
 
-        if ($line -match '^(?: {4}|\t)') {
-            $maskedLines.Add($line)
-            continue
-        }
-
-        $probe = [regex]::Replace(
-            $line,
-            '(?<!`)(?<ticks>`+)(?!`).*?(?<!`)\k<ticks>(?!`)',
-            { param($codeSpan) ' ' * $codeSpan.Length })
         $characters = $line.ToCharArray()
         $searchIndex = 0
         while ($searchIndex -lt $line.Length) {
@@ -310,21 +309,50 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
                 continue
             }
 
-            $commentStart = $probe.IndexOf('<!--', $searchIndex, [System.StringComparison]::Ordinal)
-            if ($commentStart -lt 0) {
-                break
+            $precedingBackslashes = 0
+            for ($probeIndex = $searchIndex - 1;
+                $probeIndex -ge 0 -and $line[$probeIndex] -eq '\';
+                $probeIndex--) {
+                $precedingBackslashes++
             }
-            $commentEnd = $line.IndexOf('-->', $commentStart + 4, [System.StringComparison]::Ordinal)
-            $maskEnd = if ($commentEnd -ge 0) { $commentEnd + 3 } else { $line.Length }
-            for ($index = $commentStart; $index -lt $maskEnd; $index++) {
-                $characters[$index] = ' '
+            $isEscaped = ($precedingBackslashes % 2) -eq 1
+
+            if ($codeSpanLength -gt 0) {
+                $characters[$searchIndex] = ' '
+                if ($line[$searchIndex] -eq '`' -and -not $isEscaped) {
+                    $runEnd = $searchIndex
+                    while ($runEnd -lt $line.Length -and $line[$runEnd] -eq '`') {
+                        $characters[$runEnd] = ' '
+                        $runEnd++
+                    }
+                    if (($runEnd - $searchIndex) -eq $codeSpanLength) {
+                        $codeSpanLength = 0
+                    }
+                    $searchIndex = $runEnd
+                } else {
+                    $searchIndex++
+                }
+                continue
             }
-            if ($commentEnd -lt 0) {
+
+            if (-not $isEscaped -and
+                $line.IndexOf('<!--', $searchIndex, [System.StringComparison]::Ordinal) -eq $searchIndex) {
                 $inComment = $true
-                $searchIndex = $line.Length
-            } else {
-                $searchIndex = $maskEnd
+                continue
             }
+
+            if ($line[$searchIndex] -eq '`' -and -not $isEscaped) {
+                $runEnd = $searchIndex
+                while ($runEnd -lt $line.Length -and $line[$runEnd] -eq '`') {
+                    $characters[$runEnd] = ' '
+                    $runEnd++
+                }
+                $codeSpanLength = $runEnd - $searchIndex
+                $searchIndex = $runEnd
+                continue
+            }
+
+            $searchIndex++
         }
         $maskedLines.Add(($characters -join ''))
     }
@@ -477,7 +505,10 @@ function Get-SeverityClassification {
             $section,
             "(?i)\b(?<severity>$severityPattern)\b")
         if ($rawSectionSeverityMatches.Count -eq $sectionSeverityMatches.Count -and
-            $sectionSeverityMatches.Count -eq 1) {
+            $sectionSeverityMatches.Count -eq 1 -and
+            $rawSectionSeverityMatches[0].Groups['severity'].Value.Equals(
+                $sectionSeverityMatches[0].Groups['severity'].Value,
+                [System.StringComparison]::OrdinalIgnoreCase)) {
             return $sectionSeverityMatches[0].Groups['severity'].Value.ToLowerInvariant()
         }
         return ""
