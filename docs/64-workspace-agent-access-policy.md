@@ -1,7 +1,8 @@
 # Workspace-Agent Access Policy
 
 Governing product/derived requirements: `RQ-CF-AGENT-001`,
-`RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, and `RQ-CF-AGENT-004` in
+`RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, `RQ-CF-AGENT-004`, and
+`RQ-CF-AGENT-005` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -125,6 +126,21 @@ localized warning, fail-closed admission, read-only Studio-host descriptor,
 and strict read-only managed-consumer contracts with direct regression
 coverage. A localized read-only Studio preview makes that contract visible
 without weakening the activation boundary.
+
+The native `WorkspaceAgentSessionController` is the first non-executing
+session-lifecycle boundary. It reevaluates the existing activation policy,
+withholds all authority until a content-free start event is durably accepted
+with a nonempty audit receipt, and binds the admitted mode and capabilities to
+one immutable session generation. A second start cannot replace or expand an
+active session. Stop clears the authority snapshot before invoking the audit
+sink, so a missing, failing, empty-receipt, or throwing stop sink remains
+visible but cannot prolong authority. Inactive snapshots retain neither
+capabilities nor the activation receipt. The versioned JSON audit event carries
+only event kind, generation, requested/effective mode, outcome, and stable
+diagnostic code; it carries no prompt, workspace path, credential, or receipt.
+This native contract has no command-line or product-UI activation surface and
+does not itself access files, run processes, use the network, or authenticate a
+provider.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.
@@ -177,14 +193,14 @@ catalog-owned-warning, and pseudo-localization assertions. Its retained
 `sha256:83a8f7c96ffefd173b98781f21e0f8498610534164f5acf2f0afb7a6c4114ad9`
 and expires `2026-11-11T09:42:15Z`.
 It does not yet ship a model adapter, OAuth client, conversation UI, mutable
-tool executor, sandbox implementation, diff/undo surface, stop control,
-session indicator, or the WinForms consent dialog that must render and bind the
-warning during a real activation attempt.
+tool executor, sandbox implementation, diff/undo surface, product-visible stop
+control or session indicator, or the WinForms consent dialog that must render
+and bind the warning during a real activation attempt.
 
 Those surfaces must consume this policy rather than duplicate it. The trusted
-host must record content-free activation outcome events, keep unrestricted
-activation session-scoped, visibly indicate the effective mode, and revoke
-capabilities immediately when the session stops. Until that wiring exists, the
+host must persist the controller's content-free activation outcome events,
+keep unrestricted activation session-scoped, visibly indicate the effective
+mode, and route stop through immediate revocation. Until that wiring exists, the
 existing read-only MCP DBF-header host remains Copperfin's only executable AI
 tool surface.
 

@@ -458,9 +458,12 @@ surface with one deterministic read-only DBF-header tool. A separate
 `cf_security` policy now defines advisory, workspace-sandbox, and warned
 unrestricted local-agent modes, exact capabilities, nondefault high-risk RBAC,
 localized warning identity, and fail-closed activation decisions. Provider
-authentication cannot grant local authority. Broader model/provider policy,
-OAuth and credential adapters, a mutable executor and real sandbox, audit
-commit integration, and user-facing assistant/dialog surfaces remain open.
+authentication cannot grant local authority. A non-executing native session
+controller now binds one admitted capability snapshot to a committed,
+content-free audit receipt and revokes authority before stop auditing. Broader
+model/provider policy, OAuth and credential adapters, a mutable executor and
+real sandbox, persistent audit integration, and user-facing assistant/dialog
+surfaces remain open.
 
 ### docs/21 — Database Federation And Query Translation
 

@@ -5140,6 +5140,10 @@ copperfin_add_test(test_workspace_agent_policy cf_security
     test_workspace_agent_policy.cpp
 )
 
+copperfin_add_test(test_workspace_agent_session cf_security
+    test_workspace_agent_session.cpp
+)
+
 add_executable(test_studio_host_workspace_agent_policy
     test_studio_host_workspace_agent_policy.cpp
 )

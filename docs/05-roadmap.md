@@ -1373,11 +1373,14 @@ bounded, read-only local SQLite execution slice behind the deterministic
 planner. `H3`/`I2` now have a provider-independent workspace-agent authority
 policy with exact sandboxed/unrestricted capabilities, nondefault RBAC, and a
 versioned localized warning gate. A strict read-only native descriptor and
-managed Studio/VSIX consumer expose that policy without an activation path;
+managed Studio/VSIX consumer expose that policy without an activation path. A
+non-executing native session controller now requires policy admission and a
+committed content-free audit receipt, binds one immutable capability snapshot,
+prevents replacement, and revokes before stop auditing.
 `I1` retains the `cf_security` RBAC/audit/
 secrets/signing seed. **What's left, and what it takes:** other relational
 providers, provider sessions/cursors, mutation contracts, provider/OAuth
-adapters, the mutable agent executor and sandbox, host UI, and audit commit
+adapters, the mutable agent executor and sandbox, host UI, and persistent audit
 integration remain open. The wider view is
 covered in full, document-by-document, in
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md) —
