@@ -446,7 +446,18 @@ function Test-AuthenticatedIndependentReview {
             continue
         }
 
-        $signOff = Get-MarkdownSection -Body ([string]$comment.body) -Heading "Independent Review Sign-Off"
+        $commentBody = [string]$comment.body
+        $signOffHeadingCount = [regex]::Matches(
+            $commentBody,
+            '(?im)^\s*#{2,3}\s*Independent Review Sign-Off\s*$').Count
+        if ($signOffHeadingCount -eq 0) {
+            continue
+        }
+        if ($signOffHeadingCount -ne 1) {
+            return $false
+        }
+
+        $signOff = Get-MarkdownSection -Body $commentBody -Heading "Independent Review Sign-Off"
         $signOffReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $signOff -Name "reviewer")
         $signOffQualification = Get-EvidenceField -Text $signOff -Name "qualification"
         $signOffQualificationResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("qualification result", "qualification status")).ToLowerInvariant()
