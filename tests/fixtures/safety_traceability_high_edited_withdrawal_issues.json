@@ -14,7 +14,7 @@
         "created_at": "2026-08-14T12:00:00Z",
         "updated_at": "2026-08-14T12:03:00Z",
         "user": { "login": "copperfin-reviewer", "type": "User" },
-        "body": "## Independent Review Sign-Off\n\nreviewer: copperfin-reviewer\nqualification: qualified safety-documentation reviewer\nqualification result: qualified\nverification: procedure correctness and failure boundaries\nverification result: passed\nreviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\nresult: rejected"
+        "body": "## Independent Review Sign-O<!-- -->ff\n\nreviewer: copperfin-reviewer\nqualification: qualified safety-documentation reviewer\nqualification result: qualified\nverification: procedure correctness and failure boundaries\nverification result: passed\nreviewed issue body sha256: c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21\nresult: rejected"
       },
       {
         "id": 2,
