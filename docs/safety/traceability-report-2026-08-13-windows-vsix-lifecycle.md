@@ -460,6 +460,12 @@ and
 [IVsUIShell.PostExecCommand](https://learn.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.shell.interop.ivsuishell.postexeccommand?view=visualstudiosdk-2022).
 `RQ-CF-REL-003` remains `gap` pending exact-head hosted execution.
 
+Run `31762614594` stopped during the test-only driver build before any
+installation or IDE mutation because `OLECMDEXECOPT` lacked its explicit
+`Microsoft.VisualStudio.OLE.Interop` namespace import. The corrected source and
+focused contract now carry that VSSDK type boundary. This run is compile
+diagnostic evidence only; it does not alter the lifecycle status.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

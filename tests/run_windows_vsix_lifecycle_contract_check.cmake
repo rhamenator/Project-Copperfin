@@ -72,6 +72,7 @@ require_text("${script}" "command_post_hresult" "machine-readable command-post r
 require_text("${script}" "driver_uninstall" "test-only driver cleanup operation")
 require_text("${driver}" "ProvideAutoLoad(UIContextGuids80.NoSolution, PackageAutoLoadFlags.BackgroundLoad)" "no-solution in-process driver activation")
 require_text("${driver}" "PostExecCommand" "public Visual Studio command-service dispatch")
+require_text("${driver}" "Microsoft.VisualStudio.OLE.Interop" "command execution option namespace")
 require_text("${driver}" "4b56ff76-d352-4027-bb18-ef4c759d260b" "exact Copperfin command group")
 require_text("${driver}" "ShowCommandWindowId = 0x0300" "exact Copperfin command ID")
 require_text("${driver}" "ItemOperations.OpenFile" "in-process runner-owned PRG request")

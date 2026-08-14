@@ -150,6 +150,8 @@
   the exact public command group/ID and open the runner-owned PRG in-process;
   it is never included in the product VSIX, and independent pane, PRG,
   package-load, uninstall, and product/driver residue gates remain mandatory.
+  The first hosted compile identified and corrected the driver's explicit
+  `Microsoft.VisualStudio.OLE.Interop` import before any lifecycle mutation.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,
