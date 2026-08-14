@@ -17,8 +17,9 @@ The current adjacent candidate adds a provider-independent persistent sink for
 `RQ-CF-AGENT-006`. It exact-allowlists the controller lifecycle tuples, appends
 content-free JSON through the existing contained hash-chain writer, returns the
 committed entry hash as the receipt, and bounds the log under the writer lock.
-Invalid events/configuration, redirection, fully validated corrupt chains, and
-full logs fail closed without activation. Local Release `6/6` and fresh Clang ASan/UBSan `4/4`
+Invalid events/configuration, pre-existing or raced redirection, fully validated
+corrupt chains, and full logs fail closed without activation. Local Release
+`6/6` and fresh Clang ASan/UBSan `4/4`
 pass; protected exact-head checks and hosted review remain pending, so the
 requirement remains a gap. The boundary still executes no tool and
 provides no provider/OAuth adapter, real sandbox, trusted activation/consent UI,

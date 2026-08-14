@@ -59,8 +59,11 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   so the controller creates no session authority. Stop has already revoked
   authority before its append.
 - Path substitution: the host supplies an existing canonical storage root and
-  safe relative path. The contained writer rejects intermediate and final
-  redirection, hard links, cross-device replacement, and unsafe file types.
+  safe relative path. Existing redirecting components make the sink inert. The
+  bounded resolver preserves the lexical relative path rather than erasing
+  indirection through canonicalization, so the contained writer also rejects a
+  post-construction intermediate or final redirection, hard links, cross-device
+  replacement, and unsafe file types.
 - Corrupt or racing writers: the bounded common-writer path locks across full
   existing-chain validation and append, recomputes every entry hash, and
   rejects malformed or well-shaped tampered state without mutation.
@@ -98,8 +101,9 @@ The focused sink regression proves exact persistent bytes and receipt hashes,
 content exclusions, malformed-event rejection without mutation, rejection of
 the controller's zero and exhausted generation sentinels, traversal and
 absolute-path rejection, missing-root and invalid-size rejection, full-log and
-malformed-tail fail-closed behavior, and intermediate-symlink containment when
-the platform supports it. It also alters detail bytes while retaining a
+malformed-tail fail-closed behavior, and outside-root, in-root, and
+post-construction intermediate-symlink containment when the platform supports
+it. It also alters detail bytes while retaining a
 well-shaped stale hash, proves standalone verification rejects the chain, and
 proves bounded persistence returns no receipt and preserves the tampered bytes.
 Existing security-control regressions supply direct

@@ -3,8 +3,9 @@
   event tuples, stores content-free JSON in the existing contained immutable
   hash chain, and returns the committed entry hash as the session receipt.
   Invalid configuration or events, redirected paths, malformed or tampered
-  existing chains, and full bounded logs fail start closed without granting
-  authority or mutating existing bytes. The default limit is 4 MiB and the
+  existing chains, pre-existing redirection, post-construction link swaps, and
+  full bounded logs fail start closed without granting authority or mutating
+  existing bytes. The default limit is 4 MiB and the
   supported configured range is 512 bytes through 64 MiB. No provider
   authentication, executor, sandbox,
   activation UI, command-line activation, rotation, external anchoring, or

@@ -369,10 +369,49 @@ void test_configuration_containment_and_size_limit_fail_closed() {
         const auto linked_start = linked_controller.start(
             request_for(WorkspaceAgentAccessMode::workspace_sandbox),
             linked.session_sink());
-        expect(linked.ready() && !linked_start.activated && !linked_start.audit_committed &&
+        expect(!linked.ready() && !linked_start.activated && !linked_start.audit_committed &&
                    !linked_controller.snapshot().active &&
                    !fs::exists(outside.path() / "events.log"),
                "RQ-CF-AGENT-006: an intermediate link must not redirect persistent audit bytes");
+    }
+
+    std::error_code in_root_symlink_error;
+    const fs::path in_root_target = root.path() / "real-audit-directory";
+    fs::create_directories(in_root_target, in_root_symlink_error);
+    const fs::path in_root_link = root.path() / "in-root-link";
+    if (!in_root_symlink_error) {
+        fs::create_directory_symlink(in_root_target, in_root_link, in_root_symlink_error);
+    }
+    if (!in_root_symlink_error) {
+        WorkspaceAgentSessionAuditFileSink linked(root.path(), "in-root-link/events.log");
+        WorkspaceAgentSessionController linked_controller;
+        const auto linked_start = linked_controller.start(
+            request_for(WorkspaceAgentAccessMode::workspace_sandbox),
+            linked.session_sink());
+        expect(!linked.ready() && !linked_start.activated && !linked_start.audit_committed &&
+                   !linked_controller.snapshot().active &&
+                   !fs::exists(in_root_target / "events.log"),
+               "RQ-CF-AGENT-006: an in-root link must not be canonicalized into an admitted path");
+    }
+
+    std::error_code swapped_symlink_error;
+    WorkspaceAgentSessionAuditFileSink swapped(root.path(), "swapped-link/events.log");
+    const fs::path swapped_target = root.path() / "swapped-real-directory";
+    fs::create_directories(swapped_target, swapped_symlink_error);
+    if (!swapped_symlink_error) {
+        fs::create_directory_symlink(
+            swapped_target, root.path() / "swapped-link", swapped_symlink_error);
+    }
+    if (!swapped_symlink_error) {
+        WorkspaceAgentSessionController swapped_controller;
+        const auto swapped_start = swapped_controller.start(
+            request_for(WorkspaceAgentAccessMode::workspace_sandbox),
+            swapped.session_sink());
+        expect(swapped.ready() && !swapped_start.activated &&
+                   !swapped_start.audit_committed &&
+                   !swapped_controller.snapshot().active &&
+                   !fs::exists(swapped_target / "events.log"),
+               "RQ-CF-AGENT-006: a post-construction in-root link swap must fail closed");
     }
 }
 

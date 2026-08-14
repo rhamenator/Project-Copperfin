@@ -9,6 +9,7 @@
 
 #include <limits>
 #include <string_view>
+#include <system_error>
 
 namespace copperfin::security {
 
@@ -28,6 +29,31 @@ bool relative_log_path_is_safe(const std::filesystem::path& path) {
         }
     }
     return true;
+}
+
+bool relative_log_path_has_existing_redirect(
+    const std::filesystem::path& canonical_root,
+    const std::filesystem::path& relative_log_path) {
+    std::filesystem::path candidate = canonical_root;
+    for (const auto& component : relative_log_path) {
+        candidate /= component;
+        std::error_code error;
+        const std::filesystem::file_status status =
+            std::filesystem::symlink_status(candidate, error);
+        if (error) {
+            if (error == std::errc::no_such_file_or_directory) {
+                return false;
+            }
+            return true;
+        }
+        if (std::filesystem::is_symlink(status)) {
+            return true;
+        }
+        if (!std::filesystem::exists(status)) {
+            return false;
+        }
+    }
+    return false;
 }
 
 bool mode_is_valid(const WorkspaceAgentAccessMode mode) {
@@ -111,7 +137,8 @@ WorkspaceAgentSessionAuditFileSink::WorkspaceAgentSessionAuditFileSink(
     std::error_code error;
     const std::filesystem::path canonical_root =
         std::filesystem::canonical(storage_root, error);
-    if (error || !std::filesystem::is_directory(canonical_root, error) || error) {
+    if (error || !std::filesystem::is_directory(canonical_root, error) || error ||
+        relative_log_path_has_existing_redirect(canonical_root, relative_log_path)) {
         return;
     }
 

@@ -300,6 +300,55 @@ std::optional<ContainedAuditPath> resolve_contained_audit_path(
     };
 }
 
+std::optional<ContainedAuditPath> resolve_lexically_contained_audit_path(
+    const std::string& log_path,
+    const std::string& package_root) {
+    std::error_code error;
+    const std::filesystem::path canonical_root = std::filesystem::canonical(
+        copperfin::platform::path_from_utf8_string(package_root), error);
+    if (error) {
+        return std::nullopt;
+    }
+    std::filesystem::path absolute_log_path =
+        copperfin::platform::path_from_utf8_string(log_path);
+    if (!absolute_log_path.is_absolute()) {
+        absolute_log_path = std::filesystem::absolute(absolute_log_path, error);
+        if (error) {
+            return std::nullopt;
+        }
+    }
+    absolute_log_path = absolute_log_path.lexically_normal();
+
+    std::filesystem::path relative_path;
+#if defined(_WIN32)
+    auto log_part = absolute_log_path.begin();
+    bool root_matches = true;
+    for (auto root_part = canonical_root.begin(); root_part != canonical_root.end();
+         ++root_part, ++log_part) {
+        if (log_part == absolute_log_path.end() ||
+            !copperfin::platform::path_component_equal_for_platform(
+                *log_part, *root_part)) {
+            root_matches = false;
+            break;
+        }
+    }
+    if (root_matches) {
+        for (; log_part != absolute_log_path.end(); ++log_part) {
+            relative_path /= *log_part;
+        }
+    }
+#else
+    relative_path = absolute_log_path.lexically_relative(canonical_root);
+#endif
+    if (!relative_path_is_contained(relative_path) ||
+        relative_path.filename().empty()) {
+        return std::nullopt;
+    }
+    return ContainedAuditPath{
+        .canonical_root = canonical_root,
+        .relative_path = relative_path};
+}
+
 AuditAppendResult prepare_audit_line(
     const std::string& existing_text,
     const std::string& event_name,
@@ -847,7 +896,8 @@ AuditAppendResult append_bounded_immutable_audit_event_to_contained_file(
     const std::string& event_name,
     const std::string& detail,
     const std::size_t max_log_bytes) {
-    const auto contained_path = resolve_contained_audit_path(log_path, package_root);
+    const auto contained_path =
+        resolve_lexically_contained_audit_path(log_path, package_root);
     if (!contained_path.has_value()) {
         return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
     }

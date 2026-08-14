@@ -132,8 +132,10 @@ credentials, provider tokens, warning text, user content, or the returned
 receipt.
 
 The product host must supply an existing product-owned storage root and a
-relative log path. The sink canonicalizes that root and relies on the common
-contained writer to reject symlink/reparse and hard-link substitution,
+relative log path. The sink canonicalizes that root but preserves the original
+relative path for no-follow traversal. Existing symlink redirection makes the
+configuration inert; a post-construction link swap is rejected by the common
+contained writer, which also rejects reparse and hard-link substitution,
 cross-device replacement, malformed or hash-invalid existing chains, and
 concurrent-process races. Bounded persistence recomputes the complete existing
 chain under the writer lock before admitting a new receipt. A
