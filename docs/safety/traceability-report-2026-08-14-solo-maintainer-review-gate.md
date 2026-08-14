@@ -146,9 +146,12 @@ level, or safety for a particular deployment.
   semantic evidence checks so tag wrappers cannot conceal placeholder prefixes;
   retain URI and email autolinks outside that tag grammar.
 - `DV-assurance-review-030`: reject unambiguous placeholder tokens anywhere in
-  evidence, placeholder states following a copula despite intermediate nouns,
-  and placeholder-prefixed later clauses while retaining admitted hyphenated
-  failure-boundary scope names.
+  evidence, every placeholder state despite intermediate nouns or an omitted
+  copula, and placeholder-prefixed later clauses while retaining only the
+  admitted hyphenated failure-boundary scope names.
+- `DV-assurance-review-031`: reject modal, planned, scheduled, intended, or
+  expected future promises tied to terminal evidence states while retaining an
+  affirmative future-tense negative safety guarantee.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -232,7 +235,10 @@ qualification/verification, and placeholder lower-risk self-review verification
 or automation, including compound `TBD: ...`, `TODO: ...`, and `deferred: ...`
 prefixes and the same states wrapped in inline HTML. The shared evidence
 predicate also rejects intermediate-noun forms such as `workflow results are
-TBD` and placeholder-prefixed later clauses. It normalizes punctuation and rejects
+TBD`, noncopular forms such as `workflow results pending update`, and
+placeholder-prefixed later clauses. It normalizes punctuation and rejects
+future promises such as `workflow will be run after merge` while retaining
+affirmative guarantees such as `rollback will not mutate user data`. It rejects
 negative, incomplete, missing, deferred, unavailable, skipped, and failed-state
 tokens; dedicated mutations cover `not-qualified`, `unavailable at this time`,
 and failed automation. Failed workflow evidence and status/outcome `failure`

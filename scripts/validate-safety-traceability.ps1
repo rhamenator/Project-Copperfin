@@ -889,6 +889,11 @@ function Test-MeaningfulReviewEvidence {
     }
 
     $normalized = [regex]::Replace($trimmed.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
+    $semanticPlaceholderText = [regex]::Replace(
+        $trimmed.ToLowerInvariant(),
+        '\b(?:blocked|incomplete)-[a-z0-9-]+\b',
+        '')
+    $semanticPlaceholderState = '\b(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)\b'
     $placeholderState = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)(?:\s+(?:at\s+this\s+time|automation|check|evidence|later|review|run|test|verification))?$'
     $placeholderPrefix = '^(?:absent|blocked|deferred|incomplete|later|missing|none|pending|placeholder|skipped|tbd|todo|unavailable|unchecked|unqualified|unverified|unknown)\b'
     $unambiguousPlaceholderToken = '\b(?:placeholder|tbd|todo)\b'
@@ -923,6 +928,7 @@ function Test-MeaningfulReviewEvidence {
     }
     if ($normalized -match $placeholderState -or
         ($normalized -match $placeholderPrefix -and -not $isCompoundScopePrefix) -or
+        $semanticPlaceholderText -match $semanticPlaceholderState -or
         $normalized -match $unambiguousPlaceholderToken -or
         $trimmed.ToLowerInvariant() -match $copularPlaceholderState -or
         $hasClausePlaceholderPrefix -or
@@ -971,8 +977,9 @@ function Test-MeaningfulReviewEvidence {
         }
     }
 
-    $terminalEvidenceState = '(?:available|checked|complete|completed|done|finish|finished|pass|passed|provided|qualified|reviewed|run|ran|succeed|succeeded|successful|verified)'
+    $terminalEvidenceState = '(?:available|built|checked|complete|completed|done|executed|finish|finished|pass|passed|performed|provided|qualified|reviewed|run|ran|succeed|succeeded|successful|tested|validated|verified)'
     $hasNegatedTerminalState = $false
+    $hasPromisedTerminalState = $false
     foreach ($clause in ($trimmed -split '[.;:\r\n]+')) {
         $normalizedClause = [regex]::Replace($clause.ToLowerInvariant(), '[^a-z0-9]+', ' ').Trim()
         $negationClause = $normalizedClause
@@ -985,12 +992,20 @@ function Test-MeaningfulReviewEvidence {
             $hasNegatedTerminalState = $true
             break
         }
+        if ($normalizedClause -match "\b(?:will|would|shall)\s+(?:(?:eventually|later|subsequently|then)\s+)*(?:have\s+(?:been\s+)?|be\s+)?$terminalEvidenceState\b" -or
+            $normalizedClause -match "\bgoing\s+to\s+(?:be\s+)?$terminalEvidenceState\b" -or
+            $normalizedClause -match "\b(?:is|are|was|were)\s+(?:planned|scheduled|intended|expected)\s+to\s+(?:be\s+)?$terminalEvidenceState\b" -or
+            $normalizedClause -match "\bto\s+(?:be\s+)?$terminalEvidenceState\s+(?:after|later|once|when)\b") {
+            $hasPromisedTerminalState = $true
+            break
+        }
     }
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
         $failureScrubbed -match '\b(?:failed|failure|unsuccessful)\b' -or
         $terminalOutcomeWithoutPassingContext -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
-        $hasNegatedTerminalState) {
+        $hasNegatedTerminalState -or
+        $hasPromisedTerminalState) {
         return $false
     }
 

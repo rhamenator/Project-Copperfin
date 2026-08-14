@@ -851,8 +851,32 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "intermediate-noun-placeholder-self-review-automation")
     assert_low_self_review_mutation_rejected(
         "automated evidence: focused documentation contracts pass"
+        "automated evidence: completed parser checks with workflow results pending update"
+        "noncopular-intermediate-noun-placeholder-self-review-automation")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer credentials unavailable pending update"
+        "noncopular-intermediate-noun-placeholder-signoff-qualification")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
         "automated evidence: completed parser checks; TODO add workflow evidence"
         "later-clause-placeholder-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: workflow will be run after merge"
+        "future-promise-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: workflow is scheduled to pass after merge"
+        "scheduled-future-promise-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: workflow to be tested after merge"
+        "infinitive-future-promise-self-review-automation")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer training will be completed later"
+        "future-promise-signoff-qualification")
     assert_low_self_review_mutation_rejected(
         "automated evidence: focused documentation contracts pass"
         "automated evidence: failed verification run"
@@ -1071,6 +1095,9 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_affirmative_negative_guarantee_accepted(
         "verified rollback never mutates user data"
         "affirmative-never-guarantee")
+    assert_affirmative_negative_guarantee_accepted(
+        "verified rollback will not mutate user data"
+        "affirmative-future-negative-guarantee")
     assert_affirmative_negative_guarantee_accepted(
         "verified failed requests never expose partial output"
         "affirmative-failed-input-guarantee")

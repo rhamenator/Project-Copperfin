@@ -17,9 +17,12 @@
   negative, incomplete, missing, deferred, unavailable, skipped, or failed
   states, including placeholder-state prefixes followed by additional prose,
   after removing inline HTML presentation tags, while retaining affirmative
-  `does not`/`never` safety guarantees. Intermediate-noun, copular, and later-
-  clause placeholder forms also fail closed, while legitimate failure-boundary
-  scope prose remains valid. Outcome/status `failure` forms still
+  `does not`/`never` safety guarantees. Every intermediate-noun placeholder
+  state, with or without a copula, and later-clause placeholder forms also fail
+  closed, while the explicitly admitted hyphenated failure-boundary scope prose
+  remains valid. Future promises tied to terminal evidence states also fail
+  closed without excluding future-tense negative safety guarantees.
+  Outcome/status `failure` forms still
   fail closed. Live review
   loading re-fetches the issue after comment pagination and fails closed if the
   body, comment count, or update identity does not stabilize.
