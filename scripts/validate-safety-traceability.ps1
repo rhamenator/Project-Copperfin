@@ -244,6 +244,17 @@ function Get-MarkdownSection {
     return $match.Groups["content"].Value
 }
 
+function Get-MarkdownHeadingCount {
+    param(
+        [string]$Body,
+        [string]$Heading
+    )
+
+    $escapedHeading = [regex]::Escape($Heading)
+    $headingPattern = "(?im)^ {0,3}#{2,3}[ \t]+$escapedHeading(?:[ \t]+#+)?[ \t]*$"
+    return [regex]::Matches($Body, $headingPattern).Count
+}
+
 function Mask-MarkdownHtmlCommentsOutsideCode {
     param([AllowEmptyString()][string]$Body)
 
@@ -372,31 +383,39 @@ function Get-RenderedMarkdownEvidenceText {
         }
 
         if ($line -match '^ {0,3}<') {
-            if ($RejectTopLevelRawHtml) {
-                return ''
-            }
-
             $trimmedHtmlLine = $line.TrimStart()
+            $isRawHtmlBlock = $false
             $typeOneMatch = [regex]::Match(
                 $trimmedHtmlLine,
                 '^<(?<tag>pre|script|style|textarea)(?:\s|>|$)',
                 [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
             if ($typeOneMatch.Success) {
+                $isRawHtmlBlock = $true
                 $closingToken = "</$($typeOneMatch.Groups['tag'].Value)>"
                 if (-not $trimmedHtmlLine.Contains($closingToken, [System.StringComparison]::OrdinalIgnoreCase)) {
                     $rawHtmlEndToken = $closingToken
                 }
             } elseif ($trimmedHtmlLine.StartsWith('<?')) {
+                $isRawHtmlBlock = $true
                 if (-not $trimmedHtmlLine.Contains('?>')) { $rawHtmlEndToken = '?>' }
             } elseif ($trimmedHtmlLine.StartsWith('<![CDATA[', [System.StringComparison]::OrdinalIgnoreCase)) {
+                $isRawHtmlBlock = $true
                 if (-not $trimmedHtmlLine.Contains(']]>')) { $rawHtmlEndToken = ']]>' }
             } elseif ($trimmedHtmlLine -match '^<![A-Z]') {
+                $isRawHtmlBlock = $true
                 if (-not $trimmedHtmlLine.Contains('>')) { $rawHtmlEndToken = '>' }
             } elseif ($trimmedHtmlLine -match "^</?(?:$rawHtmlBlockTags)(?:\s|/?>)" -or
                 $trimmedHtmlLine -match '^</?[A-Za-z][A-Za-z0-9-]*(?:\s+[^>]*)?/?>\s*$') {
+                $isRawHtmlBlock = $true
                 $rawHtmlUntilBlank = $true
             }
-            continue
+
+            if ($isRawHtmlBlock) {
+                if ($RejectTopLevelRawHtml) {
+                    return ''
+                }
+                continue
+            }
         }
 
         $renderedLines.Add($line)
@@ -804,16 +823,22 @@ foreach ($issue in $issues) {
     $renderedBody = Get-RenderedMarkdownEvidenceText -Body $body
     $severity = Get-SeverityClassification -Body $body
     $authorLogin = Get-GitHubLogin -Value ([string]$issue.user.login)
+    $currentReviewHeadingCount = Get-MarkdownHeadingCount -Body $renderedBody -Heading "Review Evidence"
+    $legacyReviewHeadingCount = Get-MarkdownHeadingCount -Body $renderedBody -Heading "Independent Review Evidence"
     $reviewEvidence = Get-MarkdownSection -Body $renderedBody -Heading "Review Evidence"
     $legacyIndependentReviewEvidence = Get-MarkdownSection -Body $renderedBody -Heading "Independent Review Evidence"
     $hasProceduralDeltaMap = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Procedural Delta Map" -LegacyPattern '(?im)^\s*Procedural\s+Delta\s+Map\s*$'
     $hasMisuseAnalysis = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Misuse Analysis" -LegacyPattern '(?im)^\s*Misuse\s+Analysis\s*$'
     $hasSimulationEvidence = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Simulation/Walkthrough Evidence" -LegacyPattern '(?im)^\s*(?:Simulation\b.*|.*\bWalkthrough\b.*)$'
     $hasRollbackAndNotificationPlan = Test-UniqueRenderedSectionOrLegacyText -Body $renderedBody -Heading "Rollback And Field Notification Plan" -LegacyPattern '(?im)^\s*Rollback\b.*\b(?:field\s+notification|notification\s+plan)\b'
-    $hasCurrentReviewEvidence = -not [string]::IsNullOrWhiteSpace($reviewEvidence)
-    $hasLegacyIndependentReviewEvidence = -not [string]::IsNullOrWhiteSpace($legacyIndependentReviewEvidence)
-    $hasMixedReviewSchemas = $hasCurrentReviewEvidence -and $hasLegacyIndependentReviewEvidence
-    $hasReviewEvidence = $hasCurrentReviewEvidence -or $hasLegacyIndependentReviewEvidence
+    $hasCurrentReviewSchema = $currentReviewHeadingCount -gt 0
+    $hasLegacyReviewSchema = $legacyReviewHeadingCount -gt 0
+    $hasCurrentReviewEvidence = $currentReviewHeadingCount -eq 1 -and
+        -not [string]::IsNullOrWhiteSpace($reviewEvidence)
+    $hasLegacyIndependentReviewEvidence = $legacyReviewHeadingCount -eq 1 -and
+        -not [string]::IsNullOrWhiteSpace($legacyIndependentReviewEvidence)
+    $hasMixedReviewSchemas = $hasCurrentReviewSchema -and $hasLegacyReviewSchema
+    $hasReviewEvidence = $hasCurrentReviewSchema -or $hasLegacyReviewSchema
 
     $currentMode = (Get-EvidenceField -Text $reviewEvidence -Name "mode").ToLowerInvariant()
     $currentReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $reviewEvidence -Name "reviewer")
