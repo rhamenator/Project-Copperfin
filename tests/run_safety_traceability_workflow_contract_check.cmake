@@ -499,6 +499,14 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "fenced-raw-html-example")
     assert_high_signoff_mutation_accepted(
         "qualification: qualified safety-documentation reviewer"
+        "qualification: qualified safety-documentation reviewer\\n\\n```text\\n<!-- unmatched literal comment marker\\n```"
+        "fenced-unmatched-comment-example")
+    assert_high_signoff_mutation_accepted(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: qualified safety-documentation reviewer with literal `<!--` example"
+        "inline-code-comment-example")
+    assert_high_signoff_mutation_accepted(
+        "qualification: qualified safety-documentation reviewer"
         "qualification: qualified safety-documentation reviewer\\n\\n    <test-result status=\\\"passed\\\"/>"
         "indented-raw-html-example")
     assert_high_signoff_mutation_accepted(
@@ -1076,8 +1084,17 @@ if(POWERSHELL_EXECUTABLE)
         "<!--\\n### Potential Severity If Misused\\n\\nlow\\n-->\\n\\n### Potential Severity If Misused\\n\\nhigh"
         "commented-low-before-rendered-high-severity")
     assert_issue_form_severity_mutation_rejected(
+        "<!--\\n### Potential Severity If Misused\\n\\nhigh\\n-->\\n\\n### Potential Severity If Misused\\n\\nlow"
+        "commented-high-before-rendered-low-severity")
+    assert_issue_form_severity_mutation_rejected(
         "### Potential Severity If Misused\\n\\nlow\\n\\n### Potential Severity If Misused\\n\\nhigh"
         "duplicate-rendered-severity")
+    assert_issue_form_severity_mutation_rejected(
+        "### Potential Severity If Misused\\n\\nlow\\nhigh"
+        "duplicate-values-in-rendered-severity")
+    assert_issue_form_severity_mutation_rejected(
+        "### Potential Severity If Misused\\n\\nlow\\n\\nSeverity: high"
+        "mixed-section-and-legacy-severity")
     assert_issue_form_body_mutation_rejected(
         "### Review Evidence"
         "### Review Evidence\\n\\nmode: maintainer self-review\\nreviewer: rhamenator\\nverification: procedure and rendered guidance checked\\nverification result: passed\\nautomated evidence: focused documentation contracts pass\\nautomated evidence result: passed\\nresult: approved\\n\\n### Review Evidence"
