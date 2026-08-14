@@ -223,6 +223,29 @@ function Test-SafetyDocIssue {
     return $false
 }
 
+function Get-RenderedInlineEvidenceText {
+    param([AllowEmptyString()][string]$Value)
+
+    $rendered = [System.Net.WebUtility]::HtmlDecode($Value)
+    $rendered = [regex]::Replace(
+        $rendered,
+        '!?(?:\[(?<text>[^\]\r\n]*)\])\([^\r\n)]*\)',
+        '${text}')
+    foreach ($pattern in @(
+        '(?<!\*)\*\*(?=\S)(?<text>.*?\S)\*\*(?!\*)',
+        '(?<!_)__(?=\S)(?<text>.*?\S)__(?!_)',
+        '(?<!~)~~(?=\S)(?<text>.*?\S)~~(?!~)',
+        '(?<!\*)\*(?=\S)(?<text>.*?\S)\*(?!\*)',
+        '(?<!_)_(?=\S)(?<text>.*?\S)_(?!_)')) {
+        $rendered = [regex]::Replace($rendered, $pattern, '${text}')
+    }
+    $rendered = [regex]::Replace(
+        $rendered,
+        '\\(?<escaped>[!"#$%&''()*+,\-./:;<=>?@\[\\\]^_`{|}~])',
+        '${escaped}')
+    return $rendered
+}
+
 function Get-MarkdownSection {
     param(
         [string]$Body,
@@ -238,8 +261,8 @@ function Get-MarkdownSection {
         if (-not $headingMatch.Success) {
             continue
         }
-        $renderedHeading = [System.Net.WebUtility]::HtmlDecode(
-            $headingMatch.Groups['text'].Value)
+        $renderedHeading = Get-RenderedInlineEvidenceText `
+            -Value $headingMatch.Groups['text'].Value
         $renderedHeading = [regex]::Replace(
             $renderedHeading,
             '[ \t]+#+[ \t]*$',
@@ -281,8 +304,8 @@ function Get-MarkdownHeadingCount {
         if (-not $headingMatch.Success) {
             continue
         }
-        $renderedHeading = [System.Net.WebUtility]::HtmlDecode(
-            $headingMatch.Groups['text'].Value)
+        $renderedHeading = Get-RenderedInlineEvidenceText `
+            -Value $headingMatch.Groups['text'].Value
         $renderedHeading = [regex]::Replace(
             $renderedHeading,
             '[ \t]+#+[ \t]*$',
@@ -641,8 +664,8 @@ function Get-SeverityClassification {
             -RenderedBody $renderedBody `
             -Heading "Potential Severity If Misused"
         $section = Get-MarkdownSection -Body $renderedBody -Heading "Potential Severity If Misused"
-        $decodedRawSection = [System.Net.WebUtility]::HtmlDecode($rawSection)
-        $decodedSection = [System.Net.WebUtility]::HtmlDecode($section)
+        $decodedRawSection = Get-RenderedInlineEvidenceText -Value $rawSection
+        $decodedSection = Get-RenderedInlineEvidenceText -Value $section
         $rawSectionSeverityMatches = [regex]::Matches(
             $decodedRawSection,
             "(?i)\b(?<severity>$severityPattern)\b")
@@ -733,7 +756,7 @@ function Get-TextSha256 {
 function Test-MeaningfulReviewEvidence {
     param([string]$Value)
 
-    $trimmed = [System.Net.WebUtility]::HtmlDecode($Value).Trim()
+    $trimmed = (Get-RenderedInlineEvidenceText -Value $Value).Trim()
     if ($trimmed.Length -lt 12 -or $trimmed -match '^<[^>]+>$') {
         return $false
     }
