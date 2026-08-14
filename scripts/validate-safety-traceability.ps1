@@ -338,13 +338,14 @@ function Test-MeaningfulReviewEvidence {
         }
     }
 
-    $evidenceSubject = '(?:automation|check|checks|ci|pipeline|run|test|tests|verification|workflow)'
+    $evidenceSubject = '(?:action|actions|automation|build|builds|check|checks|ci|job|jobs|pipeline|run|step|steps|suite|suites|test|tests|verification|workflow)'
     $outcomeLink = '(?:(?:run|job|check|checks|status|conclusion|outcome|result|was|were|is|are|has|have|had|been)\s+){0,4}'
     $unsuccessfulOutcome = '(?:failed|failure|not\s+(?:been\s+)?successful|unsuccessful)'
-    $negatedEvidenceState = '(?:not(?:\s+(?:a|an|been|fully|independently)){0,3}\s+|un\s*)(?:available|checked|qualified|verified)'
-    $contractedNegativeState = '(?:aren|isn|wasn|weren|hasn|haven|hadn|didn|doesn|don)\s+t(?:\s+been)?\s+(?:available|checked|passed|qualified|succeeded|successful|verified)'
+    $negatedEvidenceState = '(?:not(?:\s+[a-z0-9]+){0,4}\s+|un\s*)(?:available|checked|completed|done|provided|qualified|reviewed|verified)'
+    $contractedNegativeState = '(?:aren|isn|wasn|weren|hasn|haven|hadn|didn|doesn|don|couldn|shouldn|wouldn)\s+t(?:\s+[a-z0-9]+){0,4}\s+(?:available|checked|completed|done|passed|provided|qualified|reviewed|succeeded|successful|verified)'
+    $negativeOutcome = '(?:not|never)(?:\s+(?:yet|ever|been|fully|successfully)){0,4}\s+(?:pass|passed|succeed|succeeded|successful)'
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
-        $normalized -match "\b(?:failed\s+$evidenceSubject|$evidenceSubject(?:\s+[a-z0-9]+){0,3}\s+(?:did|does|do|has|have|had)\s+not\s+(?:been\s+)?(?:pass|passed|succeed|succeeded|successful)|$evidenceSubject\s+$outcomeLink$unsuccessfulOutcome|(?:conclusion|outcome|result|status)\s+$outcomeLink$unsuccessfulOutcome)\b" -or
+        $normalized -match "\b(?:failed\s+$evidenceSubject|$evidenceSubject(?:\s+[a-z0-9]+){0,3}\s+(?:did|does|do|has|have|had)\s+$negativeOutcome|$evidenceSubject\s+$outcomeLink$unsuccessfulOutcome|(?:conclusion|outcome|result|status)\s+$outcomeLink$unsuccessfulOutcome)\b" -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
         $normalized -match "\b(?:$negatedEvidenceState|$contractedNegativeState)\b") {
         return $false
