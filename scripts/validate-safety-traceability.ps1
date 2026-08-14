@@ -269,12 +269,12 @@ function Get-EvidenceField {
     )
 
     $escapedName = [regex]::Escape($Name)
-    $match = [regex]::Match($Text, "(?im)^\s*$escapedName\s*:\s*(?<value>[^\r\n]*?)\s*$")
-    if (-not $match.Success) {
+    $matches = [regex]::Matches($Text, "(?im)^\s*$escapedName\s*:\s*(?<value>[^\r\n]*?)\s*$")
+    if ($matches.Count -ne 1) {
         return ""
     }
 
-    return $match.Groups["value"].Value.Trim()
+    return $matches[0].Groups["value"].Value.Trim()
 }
 
 function Get-GitHubLogin {
@@ -338,16 +338,30 @@ function Test-MeaningfulReviewEvidence {
         }
     }
 
-    $evidenceSubject = '(?:action|actions|automation|build|builds|check|checks|ci|job|jobs|pipeline|run|step|steps|suite|suites|test|tests|verification|workflow)'
-    $outcomeLink = '(?:(?:run|job|check|checks|status|conclusion|outcome|result|was|were|is|are|has|have|had|been)\s+){0,4}'
-    $unsuccessfulOutcome = '(?:failed|failure|not\s+(?:been\s+)?successful|unsuccessful)'
-    $negatedEvidenceState = '(?:not(?:\s+[a-z0-9]+){0,4}\s+|un\s*)(?:available|checked|completed|done|provided|qualified|reviewed|verified)'
-    $contractedNegativeState = '(?:aren|isn|wasn|weren|hasn|haven|hadn|didn|doesn|don|couldn|shouldn|wouldn)\s+t(?:\s+[a-z0-9]+){0,4}\s+(?:available|checked|completed|done|passed|provided|qualified|reviewed|succeeded|successful|verified)'
-    $negativeOutcome = '(?:not|never)(?:\s+(?:yet|ever|been|fully|successfully)){0,4}\s+(?:pass|passed|succeed|succeeded|successful)'
+    # Outcome rejection is deliberately subject-independent. A producer name
+    # (build, lint, scan, deployment, or a future tool) must not determine
+    # whether explicitly unsuccessful evidence is admitted.
+    $failureScrubbed = [regex]::Replace(
+        $normalized,
+        '\bfailure\s+(?:boundary|boundaries|case|cases|handling|mode|modes|path|paths|recovery|scenario|scenarios|semantics)\b',
+        '')
+    if ($normalized -match '\b(?:does\s+not|do\s+not|never|cannot|prevents?|contains?|isolates?|recovers?|rolls?\s+back)\b') {
+        $failureScrubbed = [regex]::Replace(
+            $failureScrubbed,
+            '\bfailed\s+(?:attempt|attempts|input|inputs|operation|operations|request|requests|transaction|transactions)\b',
+            '')
+    }
+    $failureScrubbed = [regex]::Replace($failureScrubbed, '\bnever\s+failed\b', '')
+
+    $terminalEvidenceState = '(?:available|checked|complete|completed|done|finish|finished|pass|passed|provided|qualified|reviewed|run|ran|succeed|succeeded|successful|verified)'
+    $negatedEvidenceState = '(?:(?:no|not|never|cannot)(?:\s+[a-z0-9]+){0,5}\s+|un\s*)' + $terminalEvidenceState
+    $contractedNegativeState = '(?:aren|isn|wasn|weren|hasn|haven|hadn|didn|doesn|don|can|cann|couldn|shouldn|wouldn)\s+t(?:\s+[a-z0-9]+){0,5}\s+' + $terminalEvidenceState
+    $yetToComplete = '\byet(?:\s+[a-z0-9]+){0,3}\s+to\s+' + $terminalEvidenceState + '\b'
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
-        $normalized -match "\b(?:failed\s+$evidenceSubject|$evidenceSubject(?:\s+[a-z0-9]+){0,3}\s+(?:did|does|do|has|have|had)\s+$negativeOutcome|$evidenceSubject\s+$outcomeLink$unsuccessfulOutcome|(?:conclusion|outcome|result|status)\s+$outcomeLink$unsuccessfulOutcome)\b" -or
+        $failureScrubbed -match '\b(?:failed|failure|unsuccessful)\b' -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
-        $normalized -match "\b(?:$negatedEvidenceState|$contractedNegativeState)\b") {
+        $normalized -match "\b(?:$negatedEvidenceState|$contractedNegativeState)\b" -or
+        $normalized -match $yetToComplete) {
         return $false
     }
 
