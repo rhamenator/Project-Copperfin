@@ -343,6 +343,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "reviewer-first-unqualified-signoff-qualification")
     assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer"
+        "qualification: reviewer is unqualified for safety review despite having passed a general course"
+        "reviewer-unqualified-with-unrelated-success-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
         "qualification: unavailable at this time"
         "unavailable-signoff-qualification")
     assert_high_signoff_mutation_rejected(
@@ -523,6 +527,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "auxiliary-timeout-self-review-automation")
     assert_low_self_review_mutation_rejected(
         "automated evidence: focused documentation contracts pass"
+        "automated evidence: workflow was cancelled rather than passed"
+        "cancelled-rather-than-passed-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
         "automated evidence: cancelled-request cleanup tests passed; deployment timed out"
         "later-timeout-self-review-automation")
     assert_low_self_review_mutation_rejected(
@@ -563,6 +571,9 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_affirmative_negative_guarantee_accepted(
         "tests for requests that were cancelled passed"
         "affirmative-cancelled-request-prose")
+    assert_affirmative_negative_guarantee_accepted(
+        "cleanup behavior for requests that were cancelled"
+        "affirmative-relative-cancelled-request-scope")
     assert_affirmative_negative_guarantee_accepted(
         "verified timed out requests are rolled back and recovery tests passed"
         "affirmative-timed-out-request-prose")
