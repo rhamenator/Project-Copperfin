@@ -200,6 +200,23 @@ function(assert_pending_legacy_high_review_rejected)
     file(REMOVE "${report}")
 endfunction()
 
+function(assert_issue_form_heading_fixture)
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-issue-form-heading-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_issue_form_heading_issues.json"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator rejected GitHub issue-form level-three headings:\n${standard_output}\n${standard_error}")
+    endif()
+    file(REMOVE "${report}")
+endfunction()
+
 function(assert_invalid_hz_none_row_fixture)
     set(invalid_report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-invalid-hz-none-row-report.json")
     execute_process(
@@ -326,6 +343,7 @@ if(POWERSHELL_EXECUTABLE)
     assert_high_self_review_rejected()
     assert_high_independent_review_fixture()
     assert_pending_legacy_high_review_rejected()
+    assert_issue_form_heading_fixture()
     assert_invalid_hz_none_row_fixture()
     assert_invalid_mixed_hazard_fixture()
     assert_invalid_row_hazard_fixture()
