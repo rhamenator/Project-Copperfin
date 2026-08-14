@@ -506,6 +506,14 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence result: cancelled"
         "cancelled-self-review-automation-result")
     assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: GitHub Actions workflow was cancelled"
+        "cancelled-producer-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "verification: procedure and rendered guidance checked"
+        "verification: the verification job timed out"
+        "timed-out-producer-self-review-verification")
+    assert_low_self_review_mutation_rejected(
         "automated evidence result: passed"
         "automated evidence result: passed\\nautomated evidence status: failed"
         "duplicate-self-review-automation-outcome-alias")
@@ -534,6 +542,12 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
     assert_affirmative_negative_guarantee_accepted(
         "verified timed out requests are rolled back and recovery tests passed"
         "affirmative-timed-out-request-prose")
+    assert_affirmative_negative_guarantee_accepted(
+        "blocked-request cleanup and rollback behavior"
+        "affirmative-blocked-request-scope")
+    assert_affirmative_negative_guarantee_accepted(
+        "incomplete-transaction recovery boundaries"
+        "affirmative-incomplete-transaction-scope")
     assert_affirmative_negative_guarantee_accepted(
         "confirmed rollback does not mutate user data"
         "affirmative-does-not-guarantee")
