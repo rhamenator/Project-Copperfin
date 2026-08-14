@@ -241,6 +241,29 @@ function Get-GitHubLogin {
     return $login.ToLowerInvariant()
 }
 
+function Get-TextSha256 {
+    param([AllowEmptyString()][string]$Value)
+
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Value)
+        return ([System.BitConverter]::ToString($sha256.ComputeHash($bytes))).Replace("-", "").ToLowerInvariant()
+    } finally {
+        $sha256.Dispose()
+    }
+}
+
+function Test-MeaningfulReviewEvidence {
+    param([string]$Value)
+
+    $trimmed = $Value.Trim()
+    if ($trimmed.Length -lt 12 -or $trimmed -match '^<[^>]+>$') {
+        return $false
+    }
+
+    return $trimmed -notmatch '^(?i:n/?a|none|pending(?:\s+.*)?|tbd(?:\s+.*)?|todo(?:\s+.*)?|unknown|unverified|unchecked|placeholder(?:\s+.*)?|later|not\s+(?:applicable|provided|done))$'
+}
+
 function Test-AuthenticatedIndependentReview {
     param(
         $Issue,
@@ -250,6 +273,8 @@ function Test-AuthenticatedIndependentReview {
     if ([string]::IsNullOrWhiteSpace($Reviewer)) {
         return $false
     }
+
+    $issueBodySha256 = Get-TextSha256 -Value ([string]$Issue.body)
 
     foreach ($comment in @($Issue.review_comments)) {
         $commentAuthor = Get-GitHubLogin -Value ([string]$comment.user.login)
@@ -262,14 +287,17 @@ function Test-AuthenticatedIndependentReview {
         $signOffReviewer = Get-GitHubLogin -Value (Get-EvidenceField -Text $signOff -Name "reviewer")
         $signOffQualification = Get-EvidenceField -Text $signOff -Name "qualification"
         $signOffVerification = Get-EvidenceField -Text $signOff -Name "verification"
+        $signOffIssueBodySha256 = (Get-EvidenceField -Text $signOff -Name "reviewed issue body sha256").ToLowerInvariant()
         $signOffResult = (Get-EvidenceField -Text $signOff -Name "result").ToLowerInvariant()
         if ([string]::IsNullOrWhiteSpace($signOffResult)) {
             $signOffResult = (Get-EvidenceField -Text $signOff -Name "status").ToLowerInvariant()
         }
 
         if ($signOffReviewer -eq $commentAuthor -and
-            -not [string]::IsNullOrWhiteSpace($signOffQualification) -and
-            -not [string]::IsNullOrWhiteSpace($signOffVerification) -and
+            (Test-MeaningfulReviewEvidence -Value $signOffQualification) -and
+            (Test-MeaningfulReviewEvidence -Value $signOffVerification) -and
+            $signOffIssueBodySha256 -match '^[a-f0-9]{64}$' -and
+            $signOffIssueBodySha256 -eq $issueBodySha256 -and
             $signOffResult -match '^(?:approved|passed)$') {
             return $true
         }

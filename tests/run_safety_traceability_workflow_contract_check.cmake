@@ -177,6 +177,89 @@ function(assert_high_independent_review_fixture)
     file(REMOVE "${report}")
 endfunction()
 
+function(assert_stale_independent_review_rejected)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-stale-independent-review-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-stale-independent-review-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_independent_review_issues.json" fixture_contents)
+    string(REPLACE
+        "c8a66858f9b59db08b46950b69ab911f2e247cca3799a50e2686285e06401a21"
+        "0000000000000000000000000000000000000000000000000000000000000000"
+        fixture_contents "${fixture_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted a sign-off for a different issue-body revision")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "requires an approved structured sign-off comment authored by the named distinct reviewer"
+        stale_review_index)
+    if(stale_review_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not reject the stale independent-review sign-off: ${all_output}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
+function(assert_placeholder_signoff_evidence_rejected)
+    set(source_fixture "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_independent_review_issues.json")
+    file(READ "${source_fixture}" source_contents)
+
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-placeholder-qualification-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-placeholder-qualification-report.json")
+    string(REPLACE "qualification: qualified safety-documentation reviewer" "qualification: pending review" fixture_contents "${source_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted placeholder qualification evidence")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "requires an approved structured sign-off comment authored by the named distinct reviewer"
+        placeholder_evidence_index)
+    if(placeholder_evidence_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not reject placeholder qualification evidence: ${all_output}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-placeholder-verification-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-placeholder-verification-report.json")
+    string(REPLACE "verification: procedure correctness and failure boundaries" "verification: n/a" fixture_contents "${source_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted placeholder verification evidence")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "requires an approved structured sign-off comment authored by the named distinct reviewer"
+        placeholder_evidence_index)
+    if(placeholder_evidence_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not reject placeholder verification evidence: ${all_output}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_pending_legacy_high_review_rejected)
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-high-pending-legacy-review-report.json")
     execute_process(
@@ -434,6 +517,8 @@ if(POWERSHELL_EXECUTABLE)
     assert_low_self_review_fixture()
     assert_high_self_review_rejected()
     assert_high_independent_review_fixture()
+    assert_stale_independent_review_rejected()
+    assert_placeholder_signoff_evidence_rejected()
     assert_pending_legacy_high_review_rejected()
     assert_issue_form_heading_fixture()
     assert_placeholder_high_reviewer_rejected()
