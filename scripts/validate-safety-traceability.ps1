@@ -148,17 +148,22 @@ function Get-IssuesFromGitHub {
             $commentCount = [int]$response.comments
             $reviewComments = @(Get-ReviewComments -Issue $response -Headers $headers)
 
-            # Re-fetch both the issue and its comments after pagination. Issue
-            # metadata alone does not reliably expose an in-flight comment edit.
+            # Bracket the second comment pass with issue reads. Issue metadata
+            # alone does not reliably expose an in-flight comment edit, while a
+            # comment pass alone cannot expose an in-flight issue-body edit.
             $latestResponse = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
             $latestReviewComments = @(Get-ReviewComments -Issue $latestResponse -Headers $headers)
+            $finalResponse = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
             if ([string]$latestResponse.body -eq [string]$response.body -and
+                [string]$finalResponse.body -eq [string]$latestResponse.body -and
                 [int]$latestResponse.comments -eq $commentCount -and
+                [int]$finalResponse.comments -eq [int]$latestResponse.comments -and
                 [string]$latestResponse.updated_at -eq [string]$response.updated_at -and
+                [string]$finalResponse.updated_at -eq [string]$latestResponse.updated_at -and
                 (Get-ReviewCommentFingerprint -Comments $latestReviewComments) -eq
                     (Get-ReviewCommentFingerprint -Comments $reviewComments)) {
-                $latestResponse | Add-Member -NotePropertyName review_comments -NotePropertyValue @($latestReviewComments) -Force
-                $stableResponse = $latestResponse
+                $finalResponse | Add-Member -NotePropertyName review_comments -NotePropertyValue @($latestReviewComments) -Force
+                $stableResponse = $finalResponse
                 break
             }
         }
@@ -334,10 +339,10 @@ function Test-MeaningfulReviewEvidence {
     }
 
     $evidenceSubject = '(?:automation|check|checks|ci|pipeline|run|test|tests|verification|workflow)'
-    $outcomeLink = '(?:(?:run|job|check|checks|status|conclusion|outcome|result|was|is)\s+){0,3}'
+    $outcomeLink = '(?:(?:run|job|check|checks|status|conclusion|outcome|result|was|were|is|are)\s+){0,3}'
     $unsuccessfulOutcome = '(?:failed|failure|not\s+successful|unsuccessful)'
     if ($trimmed -match '^(?i:n\s*/?\s*a)$' -or
-        $normalized -match "\b(?:failed\s+$evidenceSubject|$evidenceSubject(?:\s+[a-z0-9]+){0,3}\s+(?:did|does|do)\s+not\s+pass|$evidenceSubject\s+$outcomeLink$unsuccessfulOutcome|(?:conclusion|outcome|result|status)\s+$outcomeLink$unsuccessfulOutcome)\b" -or
+        $normalized -match "\b(?:failed\s+$evidenceSubject|$evidenceSubject(?:\s+[a-z0-9]+){0,3}\s+(?:did|does|do)\s+not\s+(?:pass|succeed)|$evidenceSubject\s+$outcomeLink$unsuccessfulOutcome|(?:conclusion|outcome|result|status)\s+$outcomeLink$unsuccessfulOutcome)\b" -or
         $normalized -match '^(?:no|not|never|without)\s+(?:applicable|automation|available|check|checked|completed|done|evidence|provided|qualification|qualified|review|run|test|verification|verified)\b' -or
         $normalized -match '\b(?:not|un)(?:available|checked|qualified|verified)\b') {
         return $false
