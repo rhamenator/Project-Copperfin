@@ -1,8 +1,8 @@
 # Workspace-Agent Access Policy
 
 Governing product/derived requirements: `RQ-CF-AGENT-001`,
-`RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, `RQ-CF-AGENT-004`, and
-`RQ-CF-AGENT-005` in
+`RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, `RQ-CF-AGENT-004`,
+`RQ-CF-AGENT-005`, and `RQ-CF-AGENT-006` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -118,6 +118,44 @@ nonzero-host-output cases use the generic verification error. The mode
 selector, capability text, status, and Close action expose localized
 accessibility names. Selecting a mode only updates the displayed descriptor
 information.
+
+## Persistent lifecycle audit boundary
+
+The provider-independent `WorkspaceAgentSessionAuditFileSink` persists only
+the exact version-1 lifecycle tuples produced by the native session controller.
+Each accepted start, denial, or stop is appended as
+`workspace_agent.session.v1` to the existing contained immutable audit chain;
+the committed entry hash becomes the controller receipt. The record contains
+only lifecycle kind, generation, requested and effective mode, outcome, and
+diagnostic code. It does not contain prompts, workspace or file paths,
+credentials, provider tokens, warning text, user content, or the returned
+receipt.
+
+The product host must supply an existing product-owned storage root and a
+relative log path. The sink canonicalizes that root but preserves the original
+relative path for no-follow traversal. Existing symlink redirection makes the
+configuration inert; a post-construction link swap is rejected by the common
+contained writer, which also rejects embedded-NUL roots and original path
+components before canonicalization or lexical normalization, reparse and
+hard-link substitution,
+cross-device replacement, malformed or hash-invalid existing chains, and
+concurrent-process races. Bounded persistence recomputes the complete existing
+chain under the writer lock before admitting a new receipt. A
+bounded size uses overflow-safe preflight, including the empty-chain `GENESIS`
+field, before path mutation and repeats the
+check under the writer lock before any input-sized copy, concatenation, hash
+work, or persistent mutation;
+the default is 4 MiB and admitted configuration range is 512 bytes through
+64 MiB. Invalid configuration or event shape, containment failure, malformed
+state, and a full log return no receipt. Start therefore grants no authority,
+while stop authority has already been revoked before persistence is attempted.
+
+The chain uses unkeyed hashes for tamper evidence; it is not a digital
+signature or authenticated external ledger. An attacker controlling the
+storage root can delete or replace the whole chain. Product-owned root/ACL
+selection, rotation and retention, external or authenticated anchoring,
+multi-host correlation, recovery UI, and integration with the eventual trusted
+activation host remain explicit gaps.
 
 ## Current implementation and remaining work
 

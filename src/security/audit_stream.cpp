@@ -39,6 +39,8 @@ namespace copperfin::security {
 
 namespace {
 
+constexpr char audit_genesis_hash[] = "GENESIS";
+
 std::string now_utc_compact() {
     const auto now = std::chrono::system_clock::now().time_since_epoch();
     const auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
@@ -58,6 +60,13 @@ struct AuditTailReadResult {
     bool ok = false;
     std::string hash;
     std::string error;
+};
+
+struct AuditTextVerifyResult {
+    bool ok = false;
+    std::string error;
+    std::size_t entries = 0U;
+    std::string last_hash;
 };
 
 std::vector<std::string> split_audit_line(const std::string& line) {
@@ -81,7 +90,7 @@ AuditTailReadResult read_last_hash_from_text(const std::string& text) {
     if (text.empty()) {
         return {
             .ok = true,
-            .hash = "GENESIS",
+            .hash = audit_genesis_hash,
             .error = {}};
     }
 
@@ -104,7 +113,7 @@ AuditTailReadResult read_last_hash_from_text(const std::string& text) {
     if (last_line.empty()) {
         return {
             .ok = true,
-            .hash = "GENESIS",
+            .hash = audit_genesis_hash,
             .error = {}};
     }
     if (final_byte != '\n') {
@@ -117,7 +126,7 @@ AuditTailReadResult read_last_hash_from_text(const std::string& text) {
     const auto fields = split_audit_line(last_line);
     if (fields.size() != 5U ||
         fields[0].empty() ||
-        (fields[3] != "GENESIS" && !is_sha256_hex(fields[3])) ||
+        (fields[3] != audit_genesis_hash && !is_sha256_hex(fields[3])) ||
         !is_sha256_hex(fields[4])) {
         return {
             .ok = false,
@@ -140,12 +149,104 @@ std::string compute_entry_hash(const std::string& timestamp,
     return hash.ok ? hash.hex_digest : std::string{};
 }
 
+AuditTextVerifyResult verify_audit_chain_input(std::istream& input) {
+    std::string line;
+    std::size_t line_number = 0U;
+    std::string previous_hash = audit_genesis_hash;
+    std::size_t verified = 0U;
+    while (std::getline(input, line)) {
+        if (line.empty()) {
+            continue;
+        }
+        ++line_number;
+
+        const auto fields = split_audit_line(line);
+        if (fields.size() != 5U) {
+            return {
+                .ok = false,
+                .error = security_text(
+                    "Security.Audit.Error.MalformedLine",
+                    {{"lineNumber", std::to_string(line_number)}}),
+                .entries = verified,
+                .last_hash = {}};
+        }
+
+        const auto& timestamp = fields[0];
+        const auto& event_name = fields[1];
+        const auto& detail = fields[2];
+        const auto& expected_previous_hash = fields[3];
+        const auto& observed_hash = fields[4];
+        if (expected_previous_hash != previous_hash) {
+            return {
+                .ok = false,
+                .error = security_text(
+                    "Security.Audit.Error.ChainBrokenPreviousHashMismatch",
+                    {{"lineNumber", std::to_string(line_number)}}),
+                .entries = verified,
+                .last_hash = {}};
+        }
+
+        const std::string calculated_hash =
+            compute_entry_hash(timestamp, event_name, detail, expected_previous_hash);
+        if (calculated_hash.empty()) {
+            return {
+                .ok = false,
+                .error = security_text(
+                    "Security.Audit.Error.ComputeHashAtLineFailed",
+                    {{"lineNumber", std::to_string(line_number)}}),
+                .entries = verified,
+                .last_hash = {}};
+        }
+        if (calculated_hash != observed_hash) {
+            return {
+                .ok = false,
+                .error = security_text(
+                    "Security.Audit.Error.HashMismatchAtLine",
+                    {{"lineNumber", std::to_string(line_number)}}),
+                .entries = verified,
+                .last_hash = {}};
+        }
+
+        previous_hash = observed_hash;
+        ++verified;
+    }
+    if (input.bad()) {
+        return {
+            .ok = false,
+            .error = security_text("Security.Audit.Error.ReadExistingLogFailed"),
+            .entries = verified,
+            .last_hash = {}};
+    }
+    return {
+        .ok = true,
+        .error = {},
+        .entries = verified,
+        .last_hash = previous_hash};
+}
+
+AuditTailReadResult read_validated_last_hash_from_text(const std::string& text) {
+    if (!text.empty() && text.back() != '\n') {
+        return {
+            .ok = false,
+            .hash = {},
+            .error = security_text("Security.Audit.Error.InvalidExistingLogTail")};
+    }
+    std::istringstream input(text);
+    const AuditTextVerifyResult verified = verify_audit_chain_input(input);
+    return {
+        .ok = verified.ok,
+        .hash = verified.ok ? verified.last_hash : std::string{},
+        .error = verified.error};
+}
+
 bool relative_path_is_contained(const std::filesystem::path& path) {
     if (path.empty() || path.is_absolute()) {
         return false;
     }
     for (const auto& part : path) {
-        if (part == "..") {
+        if (part == ".." ||
+            part.native().find(std::filesystem::path::value_type{}) !=
+                std::filesystem::path::string_type::npos) {
             return false;
         }
     }
@@ -160,6 +261,10 @@ struct ContainedAuditPath {
 std::optional<ContainedAuditPath> resolve_contained_audit_path(
     const std::string& log_path,
     const std::string& package_root) {
+    if (log_path.find('\0') != std::string::npos ||
+        package_root.find('\0') != std::string::npos) {
+        return std::nullopt;
+    }
     std::error_code error;
     const std::filesystem::path canonical_root =
         std::filesystem::canonical(
@@ -203,17 +308,97 @@ std::optional<ContainedAuditPath> resolve_contained_audit_path(
     };
 }
 
+std::optional<ContainedAuditPath> resolve_lexically_contained_audit_path(
+    const std::string& log_path,
+    const std::string& package_root) {
+    if (log_path.find('\0') != std::string::npos ||
+        package_root.find('\0') != std::string::npos) {
+        return std::nullopt;
+    }
+    std::error_code error;
+    const std::filesystem::path canonical_root = std::filesystem::canonical(
+        copperfin::platform::path_from_utf8_string(package_root), error);
+    if (error) {
+        return std::nullopt;
+    }
+    std::filesystem::path absolute_log_path =
+        copperfin::platform::path_from_utf8_string(log_path);
+    if (!absolute_log_path.is_absolute()) {
+        absolute_log_path = std::filesystem::absolute(absolute_log_path, error);
+        if (error) {
+            return std::nullopt;
+        }
+    }
+    absolute_log_path = absolute_log_path.lexically_normal();
+
+    std::filesystem::path relative_path;
+#if defined(_WIN32)
+    auto log_part = absolute_log_path.begin();
+    bool root_matches = true;
+    for (auto root_part = canonical_root.begin(); root_part != canonical_root.end();
+         ++root_part, ++log_part) {
+        if (log_part == absolute_log_path.end() ||
+            !copperfin::platform::path_component_equal_for_platform(
+                *log_part, *root_part)) {
+            root_matches = false;
+            break;
+        }
+    }
+    if (root_matches) {
+        for (; log_part != absolute_log_path.end(); ++log_part) {
+            relative_path /= *log_part;
+        }
+    }
+#else
+    relative_path = absolute_log_path.lexically_relative(canonical_root);
+#endif
+    if (!relative_path_is_contained(relative_path) ||
+        relative_path.filename().empty()) {
+        return std::nullopt;
+    }
+    return ContainedAuditPath{
+        .canonical_root = canonical_root,
+        .relative_path = relative_path};
+}
+
 AuditAppendResult prepare_audit_line(
     const std::string& existing_text,
     const std::string& event_name,
     const std::string& detail,
+    const bool validate_existing_chain,
+    const std::size_t max_log_bytes,
+    const std::string& fixed_timestamp,
     std::string& line) {
-    const auto tail = read_last_hash_from_text(existing_text);
+    const auto tail = validate_existing_chain
+        ? read_validated_last_hash_from_text(existing_text)
+        : read_last_hash_from_text(existing_text);
     if (!tail.ok) {
         return {.ok = false, .error = tail.error, .entry_hash = {}};
     }
 
-    const std::string timestamp = now_utc_compact();
+    const std::string timestamp = fixed_timestamp.empty()
+        ? now_utc_compact()
+        : fixed_timestamp;
+    std::size_t prospective_size = 0U;
+    const std::size_t available = max_log_bytes - existing_text.size();
+    const auto admit_component = [&](const std::size_t size) {
+        if (size > available - prospective_size) {
+            return false;
+        }
+        prospective_size += size;
+        return true;
+    };
+    if (!admit_component(timestamp.size()) ||
+        !admit_component(event_name.size()) ||
+        !admit_component(detail.size()) ||
+        !admit_component(tail.hash.size()) ||
+        !admit_component(64U) ||
+        !admit_component(5U)) {
+        return {
+            .ok = false,
+            .error = security_text("Security.Audit.Error.AppendLogEntryFailed"),
+            .entry_hash = {}};
+    }
     const std::string safe_event = escape_field(event_name);
     const std::string safe_detail = escape_field(detail);
     const std::string signed_payload =
@@ -309,7 +494,10 @@ std::optional<std::wstring> audit_mutex_name(const std::filesystem::path& leaf_p
 AuditAppendResult append_contained_audit_event(
     const ContainedAuditPath& path,
     const std::string& event_name,
-    const std::string& detail) {
+    const std::string& detail,
+    const std::size_t max_log_bytes,
+    const bool validate_existing_chain,
+    const std::string& fixed_timestamp) {
     std::vector<ScopedHandle> directory_handles;
     ScopedHandle root_handle(::CreateFileW(
         path.canonical_root.c_str(),
@@ -404,6 +592,10 @@ AuditAppendResult append_contained_audit_event(
                     static_cast<unsigned long long>(std::numeric_limits<std::size_t>::max())) {
                 return {.ok = false, .error = security_text("Security.Audit.Error.ReadExistingLogFailed"), .entry_hash = {}};
             }
+            if (static_cast<unsigned long long>(file_size.QuadPart) >
+                static_cast<unsigned long long>(max_log_bytes)) {
+                return {.ok = false, .error = security_text("Security.Audit.Error.AppendLogEntryFailed"), .entry_hash = {}};
+            }
             existing_text.assign(static_cast<std::size_t>(file_size.QuadPart), '\0');
             std::size_t read_offset = 0U;
             while (read_offset < existing_text.size()) {
@@ -426,9 +618,19 @@ AuditAppendResult append_contained_audit_event(
     }
 
     std::string line;
-    const AuditAppendResult prepared = prepare_audit_line(existing_text, event_name, detail, line);
+    const AuditAppendResult prepared = prepare_audit_line(
+        existing_text,
+        event_name,
+        detail,
+        validate_existing_chain,
+        max_log_bytes,
+        fixed_timestamp,
+        line);
     if (!prepared.ok) {
         return prepared;
+    }
+    if (line.size() > max_log_bytes - existing_text.size()) {
+        return {.ok = false, .error = security_text("Security.Audit.Error.AppendLogEntryFailed"), .entry_hash = {}};
     }
     const std::string updated_text = existing_text + line;
     std::filesystem::path temp_path;
@@ -524,7 +726,10 @@ private:
 AuditAppendResult append_contained_audit_event(
     const ContainedAuditPath& path,
     const std::string& event_name,
-    const std::string& detail) {
+    const std::string& detail,
+    const std::size_t max_log_bytes,
+    const bool validate_existing_chain,
+    const std::string& fixed_timestamp) {
     ScopedFileDescriptor current_directory(::open(
         path.canonical_root.c_str(),
         O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
@@ -593,6 +798,10 @@ AuditAppendResult append_contained_audit_event(
                 static_cast<std::uintmax_t>(std::numeric_limits<std::size_t>::max())) {
             return {.ok = false, .error = security_text("Security.Audit.Error.ReadExistingLogFailed"), .entry_hash = {}};
         }
+        if (static_cast<std::uintmax_t>(file_status.st_size) >
+            static_cast<std::uintmax_t>(max_log_bytes)) {
+            return {.ok = false, .error = security_text("Security.Audit.Error.AppendLogEntryFailed"), .entry_hash = {}};
+        }
         existing_text.assign(static_cast<std::size_t>(file_status.st_size), '\0');
         std::size_t read_offset = 0U;
         while (read_offset < existing_text.size()) {
@@ -612,9 +821,19 @@ AuditAppendResult append_contained_audit_event(
     }
 
     std::string line;
-    const AuditAppendResult prepared = prepare_audit_line(existing_text, event_name, detail, line);
+    const AuditAppendResult prepared = prepare_audit_line(
+        existing_text,
+        event_name,
+        detail,
+        validate_existing_chain,
+        max_log_bytes,
+        fixed_timestamp,
+        line);
     if (!prepared.ok) {
         return prepared;
+    }
+    if (line.size() > max_log_bytes - existing_text.size()) {
+        return {.ok = false, .error = security_text("Security.Audit.Error.AppendLogEntryFailed"), .entry_hash = {}};
     }
     const std::string updated_text = existing_text + line;
     std::string temp_name;
@@ -696,7 +915,13 @@ AuditAppendResult append_immutable_audit_event(
     if (!contained_path.has_value()) {
         return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
     }
-    return append_contained_audit_event(*contained_path, event_name, detail);
+    return append_contained_audit_event(
+        *contained_path,
+        event_name,
+        detail,
+        std::numeric_limits<std::size_t>::max(),
+        false,
+        {});
 }
 
 AuditAppendResult append_immutable_audit_event_to_contained_file(
@@ -708,7 +933,53 @@ AuditAppendResult append_immutable_audit_event_to_contained_file(
     if (!contained_path.has_value()) {
         return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
     }
-    return append_contained_audit_event(*contained_path, event_name, detail);
+    return append_contained_audit_event(
+        *contained_path,
+        event_name,
+        detail,
+        std::numeric_limits<std::size_t>::max(),
+        false,
+        {});
+}
+
+AuditAppendResult append_bounded_immutable_audit_event_to_contained_file(
+    const std::string& log_path,
+    const std::string& package_root,
+    const std::string& event_name,
+    const std::string& detail,
+    const std::size_t max_log_bytes) {
+    const std::string timestamp = now_utc_compact();
+    std::size_t minimum_line_size = 0U;
+    const auto admit_component = [&](const std::size_t size) {
+        if (size > max_log_bytes - minimum_line_size) {
+            return false;
+        }
+        minimum_line_size += size;
+        return true;
+    };
+    if (!admit_component(timestamp.size()) ||
+        !admit_component(event_name.size()) ||
+        !admit_component(detail.size()) ||
+        !admit_component(sizeof(audit_genesis_hash) - 1U) ||
+        !admit_component(64U) ||
+        !admit_component(5U)) {
+        return {
+            .ok = false,
+            .error = security_text("Security.Audit.Error.AppendLogEntryFailed"),
+            .entry_hash = {}};
+    }
+    const auto contained_path =
+        resolve_lexically_contained_audit_path(log_path, package_root);
+    if (!contained_path.has_value()) {
+        return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
+    }
+    return append_contained_audit_event(
+        *contained_path,
+        event_name,
+        detail,
+        max_log_bytes,
+        true,
+        timestamp);
 }
 
 AuditChainVerifyResult verify_immutable_audit_chain(const std::string& log_path) {
@@ -718,59 +989,11 @@ AuditChainVerifyResult verify_immutable_audit_chain(const std::string& log_path)
         return {.ok = true, .error = {}, .entries = 0U};
     }
 
-    std::string line;
-    std::size_t line_number = 0U;
-    std::string previous_hash = "GENESIS";
-    std::size_t verified = 0U;
-    while (std::getline(input, line)) {
-        if (line.empty()) {
-            continue;
-        }
-        ++line_number;
-
-        const auto fields = split_audit_line(line);
-        if (fields.size() != 5U) {
-            return {.ok = false,
-                    .error = security_text(
-                        "Security.Audit.Error.MalformedLine",
-                        {{"lineNumber", std::to_string(line_number)}}),
-                    .entries = verified};
-        }
-
-        const auto& timestamp = fields[0];
-        const auto& event_name = fields[1];
-        const auto& detail = fields[2];
-        const auto& expected_previous_hash = fields[3];
-        const auto& observed_hash = fields[4];
-        if (expected_previous_hash != previous_hash) {
-            return {.ok = false,
-                    .error = security_text(
-                        "Security.Audit.Error.ChainBrokenPreviousHashMismatch",
-                        {{"lineNumber", std::to_string(line_number)}}),
-                    .entries = verified};
-        }
-
-        const auto calculated_hash = compute_entry_hash(timestamp, event_name, detail, expected_previous_hash);
-        if (calculated_hash.empty()) {
-            return {.ok = false,
-                    .error = security_text(
-                        "Security.Audit.Error.ComputeHashAtLineFailed",
-                        {{"lineNumber", std::to_string(line_number)}}),
-                    .entries = verified};
-        }
-        if (calculated_hash != observed_hash) {
-            return {.ok = false,
-                    .error = security_text(
-                        "Security.Audit.Error.HashMismatchAtLine",
-                        {{"lineNumber", std::to_string(line_number)}}),
-                    .entries = verified};
-        }
-
-        previous_hash = observed_hash;
-        ++verified;
-    }
-
-    return {.ok = true, .error = {}, .entries = verified};
+    const AuditTextVerifyResult verified = verify_audit_chain_input(input);
+    return {
+        .ok = verified.ok,
+        .error = verified.error,
+        .entries = verified.entries};
 }
 
 }  // namespace copperfin::security

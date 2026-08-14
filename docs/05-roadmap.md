@@ -1377,11 +1377,17 @@ managed Studio/VSIX consumer expose that policy without an activation path. A
 non-executing native session controller now requires policy admission and a
 committed content-free audit receipt, binds one immutable capability snapshot,
 prevents replacement, and revokes before stop auditing.
+Its provider-independent persistent sink now validates exact lifecycle event
+tuples, commits content-free JSON to the contained bounded immutable audit
+chain, and returns the committed hash as the receipt without activating an
+assistant.
 `I1` retains the `cf_security` RBAC/audit/
 secrets/signing seed. **What's left, and what it takes:** other relational
 providers, provider sessions/cursors, mutation contracts, provider/OAuth
-adapters, the mutable agent executor and sandbox, host UI, and persistent audit
-integration remain open. The wider view is
+adapters, the mutable agent executor and sandbox, host UI and activation
+integration, audit-root/ACL selection, rotation/retention, authenticated or
+external anchoring, recovery UI, and multi-host correlation remain open. The
+wider view is
 covered in full, document-by-document, in
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md) —
 in particular its interop/federation/trust/security and language/data-fidelity
