@@ -353,6 +353,11 @@ function Mask-MarkdownHtmlCommentsOutsideCode {
                 $commentStart = $searchIndex
                 $commentEnd = $line.IndexOf('-->', $searchIndex, [System.StringComparison]::Ordinal)
                 $maskEnd = if ($commentEnd -ge 0) { $commentEnd + 3 } else { $line.Length }
+                while ($commentEnd -ge 0 -and $maskEnd -lt $line.Length -and
+                    $line.IndexOf('<!--', $maskEnd, [System.StringComparison]::Ordinal) -eq $maskEnd) {
+                    $commentEnd = $line.IndexOf('-->', $maskEnd + 4, [System.StringComparison]::Ordinal)
+                    $maskEnd = if ($commentEnd -ge 0) { $commentEnd + 3 } else { $line.Length }
+                }
                 for ($index = $searchIndex; $index -lt $maskEnd; $index++) {
                     $characters[$index] = ' '
                 }
@@ -594,11 +599,13 @@ function Get-SeverityClassification {
             -RenderedBody $renderedBody `
             -Heading "Potential Severity If Misused"
         $section = Get-MarkdownSection -Body $renderedBody -Heading "Potential Severity If Misused"
+        $decodedRawSection = [System.Net.WebUtility]::HtmlDecode($rawSection)
+        $decodedSection = [System.Net.WebUtility]::HtmlDecode($section)
         $rawSectionSeverityMatches = [regex]::Matches(
-            $rawSection,
+            $decodedRawSection,
             "(?i)\b(?<severity>$severityPattern)\b")
         $sectionSeverityMatches = [regex]::Matches(
-            $section,
+            $decodedSection,
             "(?i)\b(?<severity>$severityPattern)\b")
         if ($rawSectionSeverityMatches.Count -eq $sectionSeverityMatches.Count -and
             $sectionSeverityMatches.Count -eq 1 -and
@@ -807,14 +814,38 @@ function Test-AuthenticatedIndependentReview {
             }
         }
     }
-    $ambiguousTimestampGroups = @($indexedReviewComments | Where-Object {
-        -not [string]::IsNullOrWhiteSpace($_.LatestTimestamp) -and
-        (Get-GitHubLogin -Value ([string]$_.Comment.user.login)) -eq $Reviewer -and
-        ([string]$_.Comment.user.type).ToLowerInvariant() -eq 'user' -and
-        [regex]::IsMatch(
-            [string]$_.Comment.body,
-            '(?im)^ {0,3}#{2,3}[ \t]+Independent Review Sign-Off(?:[ \t]+#+)?[ \t]*$')
-    } | Group-Object -Property LatestTimestamp | Where-Object { $_.Count -gt 1 })
+    $applicableTimestampRecords = @($indexedReviewComments | ForEach-Object {
+        $candidateAuthor = Get-GitHubLogin -Value ([string]$_.Comment.user.login)
+        if ($candidateAuthor -ne $Reviewer -or
+            ([string]$_.Comment.user.type).ToLowerInvariant() -ne 'user' -or
+            [string]::IsNullOrWhiteSpace($_.LatestTimestamp)) {
+            return
+        }
+        $candidateBody = Get-RenderedMarkdownEvidenceText `
+            -Body ([string]$_.Comment.body) `
+            -RejectTopLevelRawHtml
+        $candidateHeadingCount = [regex]::Matches(
+            $candidateBody,
+            '(?im)^ {0,3}#{2,3}[ \t]+Independent Review Sign-Off(?:[ \t]+#+)?[ \t]*$').Count
+        if ($candidateHeadingCount -ne 1) {
+            return
+        }
+        $candidateSignOff = Get-MarkdownSection `
+            -Body $candidateBody `
+            -Heading 'Independent Review Sign-Off'
+        $candidateReviewer = Get-GitHubLogin -Value (
+            Get-EvidenceField -Text $candidateSignOff -Name 'reviewer')
+        $candidateDigest = (Get-EvidenceField `
+            -Text $candidateSignOff `
+            -Name 'reviewed issue body sha256').ToLowerInvariant()
+        if ($candidateReviewer -eq $candidateAuthor -and
+            $candidateDigest -eq $issueBodySha256) {
+            [pscustomobject]@{ LatestTimestamp = $_.LatestTimestamp }
+        }
+    })
+    $ambiguousTimestampGroups = @($applicableTimestampRecords |
+        Group-Object -Property LatestTimestamp |
+        Where-Object { $_.Count -gt 1 })
     if ($ambiguousTimestampGroups.Count -gt 0) {
         return $false
     }
@@ -830,11 +861,14 @@ function Test-AuthenticatedIndependentReview {
         }
 
         $rawCommentBody = [string]$comment.body
+        $positionMaskedCommentBody = Mask-MarkdownHtmlCommentsOutsideCode -Body $rawCommentBody
+        $hasAmbiguousInlineJoin = $positionMaskedCommentBody.Contains([char]0xFFFD)
         $rawSignOffHeadingCount = [regex]::Matches(
             $rawCommentBody,
             '(?im)^ {0,3}#{2,3}[ \t]+Independent Review Sign-Off(?:[ \t]+#+)?[ \t]*$').Count
         $commentBody = Get-RenderedMarkdownEvidenceText -Body $rawCommentBody -RejectTopLevelRawHtml
-        if ([string]::IsNullOrWhiteSpace($commentBody) -and $rawSignOffHeadingCount -gt 0) {
+        if ([string]::IsNullOrWhiteSpace($commentBody) -and
+            ($rawSignOffHeadingCount -gt 0 -or $hasAmbiguousInlineJoin)) {
             return $false
         }
         $signOffHeadingCount = [regex]::Matches(

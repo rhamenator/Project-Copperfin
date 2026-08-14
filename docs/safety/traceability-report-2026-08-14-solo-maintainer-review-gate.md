@@ -77,10 +77,10 @@ level, or safety for a particular deployment.
   unrelated raw-HTML detail blocks and Markdown autolinks while preserving the
   exact raw-body digest binding. Reject duplicate current review headings even
   when a structurally valid legacy approval is also present.
-- `DV-assurance-review-005`: parse a high-severity issue-form value with a
+- `DV-assurance-review-018`: parse a high-severity issue-form value with a
   same-line rationale and reject its legacy review section when that section
   says independent approval remains open.
-- `DV-assurance-review-006`: accept the level-three Markdown headings emitted by
+- `DV-assurance-review-019`: accept the level-three Markdown headings emitted by
   a GitHub issue form as well as historical level-two headings.
 - `DV-assurance-review-007`: reject a high-severity Review Evidence section whose
   reviewer is blank or an unfilled placeholder even when its mode and result
@@ -115,6 +115,10 @@ level, or safety for a particular deployment.
 - `DV-assurance-review-017`: reset inline-span state at block-tag HTML
   interruptions and reject URI-like angle constructs containing ASCII control
   characters.
+- `DV-assurance-review-020`: reject entity-encoded severity ambiguity,
+  consecutive inline-comment token joins, and a rejected latest sign-off whose
+  applicable heading is itself joined across a comment. Limit equal-timestamp
+  ambiguity to parsed sign-offs for the current reviewer and issue-body digest.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -128,9 +132,11 @@ level, or safety for a particular deployment.
 
 | Documentation requirement | Verification evidence | Controlled hazards |
 | --- | --- | --- |
-| `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-006`; `DV-assurance-review-009` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-001` | `DV-assurance-review-001`; `DV-assurance-review-003`; `DV-assurance-review-009`; `DV-assurance-review-019` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-002` | `DV-assurance-review-002`; `DV-assurance-review-003`; `DV-assurance-review-004`; `DV-assurance-review-005`; `DV-assurance-review-007`; `DV-assurance-review-008`; `DV-assurance-review-010`; `DV-assurance-review-011`; `DV-assurance-review-014`; `DV-assurance-review-015`; `DV-assurance-review-016`; `DV-assurance-review-017` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-review-003` | `DV-assurance-review-012`; `DV-assurance-review-013` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-004` | `DV-assurance-review-005`; `DV-assurance-review-018`; `DV-assurance-review-020` | `HZ-system-failure-01`; `HZ-doc-command-01` |
+| `DQ-assurance-review-005` | `DV-assurance-review-006`; `DV-assurance-review-015`; `DV-assurance-review-019` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 | `DQ-assurance-baseline-001` | `DV-assurance-baseline-001` | `HZ-system-failure-01`; `HZ-doc-command-01` |
 
 ## Procedural Delta Map
