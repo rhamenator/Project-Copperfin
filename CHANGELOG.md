@@ -13,7 +13,9 @@
   applies the same meaningful-evidence rule to lower-risk self-review
   verification and automation, parses affirmative results rather than approval
   substrings, and rejects incomplete low-risk evidence or issue-author identity
-  assertions.
+  assertions. Review evidence is punctuation-normalized before rejecting
+  negative, incomplete, missing, deferred, unavailable, skipped, or failed
+  states.
   The charter, README, agent rules, ontology, and traceability matrix
   now make requirements recovery an ongoing project-wide baseline and forbid
   treating existing implementation as its own requirement source. No product or

@@ -281,6 +281,14 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "qualification: not qualified"
         "negated-signoff-qualification")
     assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: not-qualified reviewer"
+        "punctuated-negated-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
+        "qualification: qualified safety-documentation reviewer"
+        "qualification: unavailable at this time"
+        "unavailable-signoff-qualification")
+    assert_high_signoff_mutation_rejected(
         "qualification: qualified safety-documentation reviewer\\nverification: procedure correctness and failure boundaries"
         "qualification: qualified safety-documentation reviewer\\nverification: not verified"
         "negated-signoff-verification")
@@ -292,6 +300,14 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: focused documentation contracts pass"
         "automated evidence: pending review"
         "placeholder-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: failed verification run"
+        "failed-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: verification run failed"
+        "suffix-failed-self-review-automation")
 endfunction()
 
 function(assert_pending_legacy_high_review_rejected)

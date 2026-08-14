@@ -10,7 +10,9 @@ review, and completed-project/first-stable-release review remains unchanged. A
 reviewer-authored sign-off must contain meaningful qualification and verification
 evidence and the SHA-256 of the exact issue body reviewed; later body edits and
 placeholder or negated fields fail closed. Lower-risk self-review verification
-and automation use the same meaningful-evidence boundary.
+and automation use the same meaningful-evidence boundary, which normalizes
+punctuation and rejects negative, incomplete, missing, deferred, unavailable,
+skipped, and failed evidence states.
 The issue form, validator, agent rules, triage rubric, deterministic fixtures,
 and `LLR-CF-ASSURANCE-001` carry that boundary. The charter and active guidance
 also make requirements recovery an ongoing baseline and forbid using existing
