@@ -13,6 +13,8 @@
     <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
     <VisualStudioVersion>17.0</VisualStudioVersion>
     <UseCodebase>true</UseCodebase>
+    <DeployVSTemplates>false</DeployVSTemplates>
+    <TemplateOutputDirectory>$(BaseIntermediateOutputPath)vsix-templates\</TemplateOutputDirectory>
     <CreatePkgDefAssemblyToProcess>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).dll</CreatePkgDefAssemblyToProcess>
     <TargetVsixContainer>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).vsix</TargetVsixContainer>
     <BuildDependsOn>$(BuildDependsOn);GeneratePkgDef;CreateVsixContainer</BuildDependsOn>

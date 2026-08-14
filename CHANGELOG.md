@@ -152,6 +152,8 @@
   package-load, uninstall, and product/driver residue gates remain mandatory.
   The first hosted compile identified and corrected the driver's explicit
   `Microsoft.VisualStudio.OLE.Interop` import before any lifecycle mutation.
+  The next hosted build compiled the driver and corrected its explicit
+  non-template VSSDK packaging properties before installation began.
 
 - 2026-08-12: Added a localized, read-only Workspace Assistant Access preview
   to standalone Studio. It displays the validated native policy descriptor,

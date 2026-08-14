@@ -466,6 +466,14 @@ installation or IDE mutation because `OLECMDEXECOPT` lacked its explicit
 focused contract now carry that VSSDK type boundary. This run is compile
 diagnostic evidence only; it does not alter the lifecycle status.
 
+Run `31762774763` compiled the corrected net472 driver successfully, then
+stopped during VSIX packaging because the minimal project had not declared the
+VSSDK `TemplateOutputDirectory` required by its template-manifest target. The
+driver deploys no templates; the corrected project explicitly sets
+`DeployVSTemplates=false` and a deterministic intermediate template-output
+directory, matching the shipping VSIX project's package boundary. No
+installation or IDE mutation occurred.
+
 Failed exploratory VS18 hosted runs remain negative diagnostic evidence: the
 moving `windows-latest` image installed the package but did not admit its
 per-user pkgdef path into that fresh hosted profile. This does not supersede

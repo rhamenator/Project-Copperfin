@@ -27,6 +27,7 @@ endfunction()
 set(script "scripts/test-windows-vsix-lifecycle.ps1")
 set(workflow ".github/workflows/build-vsix.yml")
 set(driver "tests/vsix/Copperfin.VisualStudio.LifecycleDriver/LifecycleDriverPackage.cs")
+set(driver_project "tests/vsix/Copperfin.VisualStudio.LifecycleDriver/Copperfin.VisualStudio.LifecycleDriver.csproj")
 foreach(path IN ITEMS
         ${script}
         ${workflow}
@@ -76,6 +77,8 @@ require_text("${driver}" "Microsoft.VisualStudio.OLE.Interop" "command execution
 require_text("${driver}" "4b56ff76-d352-4027-bb18-ef4c759d260b" "exact Copperfin command group")
 require_text("${driver}" "ShowCommandWindowId = 0x0300" "exact Copperfin command ID")
 require_text("${driver}" "ItemOperations.OpenFile" "in-process runner-owned PRG request")
+require_text("${driver_project}" "<DeployVSTemplates>false</DeployVSTemplates>" "test driver non-template package boundary")
+require_text("${driver_project}" "<TemplateOutputDirectory>" "VSSDK template-manifest output boundary")
 require_text("${script}" "ui-automation-command.json" "retained command-observation diagnostics")
 require_text("${script}" "ui-automation-prg.json" "retained PRG-observation diagnostics")
 require_text("${script}" "StartsWith(\"$ExpectedName - \"" "exact active-document window-title boundary")
