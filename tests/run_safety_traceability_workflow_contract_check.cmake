@@ -638,6 +638,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "unmatched-code-span-before-closing-block-tag-html")
     assert_high_signoff_mutation_rejected(
         "## Independent Review Sign-Off"
+        "`unmatched paragraph tick\\n<pre\\n`\\n## Independent Review Sign-Off"
+        "unmatched-code-span-before-eol-block-tag-html")
+    assert_high_signoff_mutation_rejected(
+        "## Independent Review Sign-Off"
         "##Independent Review Sign-Off"
         "atx-heading-without-space")
     assert_high_signoff_mutation_rejected(
