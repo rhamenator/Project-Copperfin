@@ -240,6 +240,41 @@ function Get-MarkdownSection {
     return $match.Groups["content"].Value
 }
 
+function Get-RenderedMarkdownEvidenceText {
+    param([AllowEmptyString()][string]$Body)
+
+    $withoutComments = [regex]::Replace($Body, '(?s)<!--.*?-->', '')
+    $renderedLines = [System.Collections.Generic.List[string]]::new()
+    $inFence = $false
+    $fenceCharacter = ''
+    $fenceLength = 0
+
+    foreach ($line in ($withoutComments -split '\r?\n')) {
+        if ($inFence) {
+            $escapedFenceCharacter = [regex]::Escape($fenceCharacter)
+            if ($line -match "^ {0,3}$escapedFenceCharacter{$fenceLength,}[ \t]*$") {
+                $inFence = $false
+            }
+            continue
+        }
+
+        $fenceMatch = [regex]::Match($line, '^ {0,3}(?<fence>`{3,}|~{3,})')
+        if ($fenceMatch.Success) {
+            $inFence = $true
+            $fenceCharacter = $fenceMatch.Groups['fence'].Value.Substring(0, 1)
+            $fenceLength = $fenceMatch.Groups['fence'].Value.Length
+            continue
+        }
+
+        if ($line -match '^(?: {4}|\t)') {
+            continue
+        }
+        $renderedLines.Add($line)
+    }
+
+    return ($renderedLines -join "`n")
+}
+
 function Get-SeverityClassification {
     param([string]$Body)
 
@@ -446,7 +481,7 @@ function Test-AuthenticatedIndependentReview {
             continue
         }
 
-        $commentBody = [string]$comment.body
+        $commentBody = Get-RenderedMarkdownEvidenceText -Body ([string]$comment.body)
         $signOffHeadingCount = [regex]::Matches(
             $commentBody,
             '(?im)^\s*#{2,3}\s*Independent Review Sign-Off\s*$').Count
