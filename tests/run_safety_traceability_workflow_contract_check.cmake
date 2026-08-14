@@ -357,6 +357,14 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "automated evidence: focused documentation contracts pass"
         "automated evidence: workflow status was failure"
         "nonadjacent-failure-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: CI checks were unsuccessful"
+        "conjugated-unsuccessful-self-review-automation")
+    assert_low_self_review_mutation_rejected(
+        "automated evidence: focused documentation contracts pass"
+        "automated evidence: workflow did not succeed"
+        "negated-succeed-self-review-automation")
     assert_affirmative_negative_guarantee_accepted(
         "confirmed rollback does not mutate user data"
         "affirmative-does-not-guarantee")
@@ -599,6 +607,9 @@ require_validator_text(
 require_validator_text(
     [=[$latestReviewComments = @(Get-ReviewComments -Issue $latestResponse -Headers $headers)]=]
     "post-pagination comment re-fetch")
+require_validator_text(
+    [=[$finalResponse = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get]=]
+    "post-second-comment-pass issue re-fetch")
 require_validator_text(
     [=[Get-ReviewCommentFingerprint -Comments $latestReviewComments]=]
     "stable comment-content fingerprint")
