@@ -226,23 +226,31 @@ function Test-SafetyDocIssue {
 function Test-MarkdownLinkDestination {
     param([AllowEmptyString()][string]$Value)
 
-    if ($Value -match '^<(?:\\.|[^<>\\\r\n])*>$') {
+    $candidate = $Value.Trim()
+    $targetMatch = [regex]::Match(
+        $candidate,
+        '^(?<destination><(?:\\.|[^<>\\\r\n])*>|\S+)(?:[ \t]+(?<title>"(?:\\.|[^"\\\r\n])*"|''(?:\\.|[^''\\\r\n])*''|\((?:\\.|[^()\\\r\n])*\)))?$')
+    if (-not $targetMatch.Success) {
+        return $false
+    }
+    $destination = $targetMatch.Groups['destination'].Value
+    if ($destination -match '^<(?:\\.|[^<>\\\r\n])*>$') {
         return $true
     }
-    if ([string]::IsNullOrWhiteSpace($Value) -or
-        $Value -match '[\x00-\x20\x7F<>]') {
+    if ([string]::IsNullOrWhiteSpace($destination) -or
+        $destination -match '[\x00-\x20\x7F<>]') {
         return $false
     }
 
     $depth = 0
-    for ($index = 0; $index -lt $Value.Length; $index++) {
-        if ($Value[$index] -eq '\') {
+    for ($index = 0; $index -lt $destination.Length; $index++) {
+        if ($destination[$index] -eq '\') {
             $index++
             continue
         }
-        if ($Value[$index] -eq '(') {
+        if ($destination[$index] -eq '(') {
             $depth++
-        } elseif ($Value[$index] -eq ')') {
+        } elseif ($destination[$index] -eq ')') {
             $depth--
             if ($depth -lt 0) { return $false }
         }
@@ -276,7 +284,7 @@ function Get-RenderedInlineEvidenceText {
         if (-not [string]::IsNullOrWhiteSpace($ReferenceText)) {
             foreach ($definition in [regex]::Matches(
                 $ReferenceText,
-                '(?m)^ {0,3}\[(?<label>(?:\\.|[^\]\\\r\n])+)\]:[ \t]*(?<destination>\S+)[ \t]*$')) {
+                '(?m)^ {0,3}\[(?<label>(?:\\.|[^\]\\\r\n])+)\]:[ \t]*(?<destination>.+?)[ \t]*$')) {
                 if (-not (Test-MarkdownLinkDestination `
                         -Value $definition.Groups['destination'].Value)) {
                     continue

@@ -448,7 +448,7 @@ function(assert_reference_heading_latest_withdrawal_rejected)
     file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_withdrawn_review_issues.json" fixture_contents)
     string(REPLACE
         "<custom-review data-note=\\\">\\\">\\n\\n## Independent Review Sign-Off"
-        "<custom-review data-note=\\\">\\\">\\n\\n## [Independent Review Sign-Off][q]\\n\\n[q]: https://example.com/sign-off"
+        "<custom-review data-note=\\\">\\\">\\n\\n## [Independent Review Sign-Off][q]\\n\\n[q]: https://example.com/sign-off \\\"review evidence\\\""
         fixture_contents "${fixture_contents}")
     file(WRITE "${fixture}" "${fixture_contents}")
     execute_process(
@@ -699,6 +699,10 @@ function(assert_placeholder_and_negated_review_evidence_rejected)
         "## Independent Review Sign-Off"
         "## Independent Review *Sign-Off*"
         "emphasized-signoff-heading")
+    assert_high_signoff_mutation_accepted(
+        "## Independent Review Sign-Off"
+        "## [Independent Review Sign-Off](https://example.com/sign-off \\\"review evidence\\\")"
+        "titled-inline-link-signoff-heading")
     assert_high_signoff_mutation_rejected(
         "## Independent Review Sign-Off"
         "## Independent Review &#42;Sign-Off&#42;"
