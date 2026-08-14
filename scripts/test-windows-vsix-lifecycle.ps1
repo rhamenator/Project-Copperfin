@@ -398,6 +398,7 @@ param(
     [Parameter(Mandatory = $true)][string]$ExpectedName,
     [string]$AlternateExpectedName = '',
     [switch]$AllowProcessWindowTitlePrefix,
+    [switch]$RequireToolWindowSurface,
     [Parameter(Mandatory = $true)][string]$DiagnosticPath,
     [Parameter(Mandatory = $true)][string]$EvidenceDescription,
     [Parameter(Mandatory = $true)][int]$TimeoutSeconds
@@ -411,8 +412,14 @@ if (-not [string]::IsNullOrWhiteSpace($AlternateExpectedName)) {
     $expectedNames += $AlternateExpectedName
 }
 $observed = $false
+$observedControlType = ''
 $lastAutomationError = ''
 $lastProcessWindowName = ''
+$toolWindowControlTypeIds = @(
+    [System.Windows.Automation.ControlType]::Pane.Id,
+    [System.Windows.Automation.ControlType]::TabItem.Id,
+    [System.Windows.Automation.ControlType]::Window.Id
+)
 while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
     try {
         $processCondition = [System.Windows.Automation.PropertyCondition]::new(
@@ -429,11 +436,17 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $observed) {
             foreach ($expectedName in $expectedNames) {
                 $nameCondition = [System.Windows.Automation.PropertyCondition]::new(
                     [System.Windows.Automation.AutomationElement]::NameProperty, $expectedName)
-                $match = $ide.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $nameCondition)
-                if ($null -ne $match) {
-                    $observed = $true
-                    break
+                $matches = $ide.FindAll([System.Windows.Automation.TreeScope]::Descendants, $nameCondition)
+                foreach ($match in $matches) {
+                    $controlType = $match.Current.ControlType
+                    if (-not $RequireToolWindowSurface -or
+                            $toolWindowControlTypeIds -contains $controlType.Id) {
+                        $observedControlType = [string]$controlType.ProgrammaticName
+                        $observed = $true
+                        break
+                    }
                 }
+                if ($observed) { break }
             }
             if ($observed) {
                 break
@@ -447,13 +460,15 @@ $diagnostic = [ordered]@{
     schema_version = 1
     expected_process_id = $ExpectedProcessId
     expected_surface = $ExpectedName
+    require_tool_window_surface = [bool]$RequireToolWindowSurface
     surface_observed = $observed
+    observed_control_type = $observedControlType
     last_process_window_name = $lastProcessWindowName
     last_automation_error = $lastAutomationError
 }
 $diagnostic | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $DiagnosticPath -Encoding utf8
 if (-not $observed) {
-    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
+    throw "$EvidenceDescription was not observable in Visual Studio process $ExpectedProcessId. Expected one of: $($expectedNames -join ', '). Required tool-window surface: $([bool]$RequireToolWindowSurface). Last process window name: '$lastProcessWindowName'. Last UI Automation error: $lastAutomationError"
 }
 '@, [System.Text.UTF8Encoding]::new($false))
     $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
@@ -621,6 +636,7 @@ finally {
         -FilePath $windowsPowerShell `
         -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-STA', '-File', $automationScript,
             '-ExpectedProcessId', "$($ideProcess.Id)", '-ExpectedName', 'Copperfin Command',
+            '-RequireToolWindowSurface',
             '-DiagnosticPath', (Join-Path $resolvedEvidenceDirectory 'ui-automation-command.json'),
             '-EvidenceDescription', 'Registered Copperfin Command surface',
             '-TimeoutSeconds', "$automationTimeoutSeconds") `
