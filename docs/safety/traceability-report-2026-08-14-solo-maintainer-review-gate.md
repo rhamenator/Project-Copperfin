@@ -153,6 +153,10 @@ level, or safety for a particular deployment.
   expected future promises tied to terminal evidence states, including weak or
   conditional auxiliaries, while retaining an affirmative future-tense
   negative safety guarantee.
+- `DV-assurance-review-032`: treat any reviewer-authored sign-off containing the
+  current issue-body digest as applicable for supersession; duplicated or
+  otherwise ambiguous reviewer or digest fields make that latest sign-off
+  authoritative but invalid instead of allowing fallback to an older approval.
 - `DV-assurance-baseline-001`: inspect the charter, agent rules, README,
   assurance policy, ontology, and recovered-requirements matrix for one
   consistent permitted-source and ongoing-traceability boundary.
@@ -246,7 +250,9 @@ negative, incomplete, missing, deferred, unavailable, skipped, and failed-state
 tokens; dedicated mutations cover `not-qualified`, `unavailable at this time`,
 and failed automation. Failed workflow evidence and status/outcome `failure`
 forms are rejected while legitimate `failure boundaries` scope prose remains
-valid. Affirmative safety guarantees such as `does not mutate user data` and
+valid. A latest current-digest sign-off with duplicated reviewer identity also
+fails without falling back to an older approval. Affirmative safety guarantees
+such as `does not mutate user data` and
 `never mutates user data` also remain valid. The live GitHub loader re-fetches the issue
 after comment pagination and accepts only a stable body, comment-count, and
 update snapshot;

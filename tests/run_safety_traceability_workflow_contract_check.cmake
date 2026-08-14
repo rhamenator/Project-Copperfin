@@ -353,6 +353,37 @@ function(assert_edited_withdrawal_precedence)
     file(REMOVE "${report}")
 endfunction()
 
+function(assert_duplicate_reviewer_latest_withdrawal_rejected)
+    set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-duplicate-reviewer-withdrawal-issues.json")
+    set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-duplicate-reviewer-withdrawal-report.json")
+    file(READ "${SOURCE_DIR}/tests/fixtures/safety_traceability_high_edited_withdrawal_issues.json" fixture_contents)
+    string(REPLACE
+        "## Independent Review Sign-O<!-- -->ff\\n\\nreviewer: copperfin-reviewer"
+        "## Independent Review Sign-Off\\n\\nreviewer: copperfin-reviewer\\nreviewer: copperfin-reviewer"
+        fixture_contents "${fixture_contents}")
+    file(WRITE "${fixture}" "${fixture_contents}")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${fixture}"
+            -ReportPath "${report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator fell back after an ambiguous latest reviewer identity")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "requires an approved structured sign-off comment authored by the named distinct reviewer"
+        duplicate_reviewer_index)
+    if(duplicate_reviewer_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not report the ambiguous latest reviewer identity: ${all_output}")
+    endif()
+    file(REMOVE "${fixture}" "${report}")
+endfunction()
+
 function(assert_equal_timestamp_signoffs_rejected)
     set(fixture "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-equal-timestamp-signoffs-issues.json")
     set(report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-equal-timestamp-signoffs-report.json")
@@ -1462,6 +1493,7 @@ if(POWERSHELL_EXECUTABLE)
     assert_stale_independent_review_rejected()
     assert_withdrawn_independent_review_rejected()
     assert_edited_withdrawal_precedence()
+    assert_duplicate_reviewer_latest_withdrawal_rejected()
     assert_equal_timestamp_signoffs_rejected()
     assert_joined_latest_withdrawal_rejected()
     assert_newer_signoff_supersedes_older_timestamp_tie()

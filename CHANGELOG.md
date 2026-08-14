@@ -23,6 +23,9 @@
   remains valid. Future promises tied to terminal evidence states across the
   full modal auxiliary set also fail closed without excluding future-tense
   negative safety guarantees.
+  A reviewer-authored latest sign-off containing the current issue-body digest
+  now supersedes older approval even when duplicated identity or digest fields
+  make that latest sign-off invalid.
   Outcome/status `failure` forms still
   fail closed. Live review
   loading re-fetches the issue after comment pagination and fails closed if the

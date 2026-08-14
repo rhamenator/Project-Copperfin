@@ -851,6 +851,26 @@ function Get-EvidenceFieldGroup {
     return $values[0]
 }
 
+function Test-EvidenceFieldContainsValue {
+    param(
+        [string]$Text,
+        [string]$Name,
+        [string]$Value
+    )
+
+    $escapedName = [regex]::Escape($Name)
+    foreach ($match in [regex]::Matches(
+        $Text,
+        "(?im)^\s*$escapedName\s*:\s*(?<value>[^\r\n]*?)\s*$")) {
+        if ($match.Groups['value'].Value.Trim().Equals(
+            $Value,
+            [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $true
+        }
+    }
+    return $false
+}
+
 function Get-GitHubLogin {
     param([string]$Value)
 
@@ -1055,13 +1075,11 @@ function Test-AuthenticatedIndependentReview {
             -Heading 'Independent Review Sign-Off'
         if ($candidateHeadingCount -ne 1) {
             if ($candidateHasAmbiguousJoin) {
-                $rawCandidateReviewer = Get-GitHubLogin -Value (
-                    Get-EvidenceField -Text $rawCandidateBody -Name 'reviewer')
-                $rawCandidateDigest = (Get-EvidenceField `
+                $rawCandidateTargetsCurrentDigest = Test-EvidenceFieldContainsValue `
                     -Text $rawCandidateBody `
-                    -Name 'reviewed issue body sha256').ToLowerInvariant()
-                if ($rawCandidateReviewer -eq $candidateAuthor -and
-                    $rawCandidateDigest -eq $issueBodySha256) {
+                    -Name 'reviewed issue body sha256' `
+                    -Value $issueBodySha256
+                if ($rawCandidateTargetsCurrentDigest) {
                     [pscustomobject]@{ LatestTimestamp = $_.LatestTimestamp }
                 }
             }
@@ -1070,13 +1088,11 @@ function Test-AuthenticatedIndependentReview {
         $candidateSignOff = Get-MarkdownSection `
             -Body $candidateBody `
             -Heading 'Independent Review Sign-Off'
-        $candidateReviewer = Get-GitHubLogin -Value (
-            Get-EvidenceField -Text $candidateSignOff -Name 'reviewer')
-        $candidateDigest = (Get-EvidenceField `
+        $candidateTargetsCurrentDigest = Test-EvidenceFieldContainsValue `
             -Text $candidateSignOff `
-            -Name 'reviewed issue body sha256').ToLowerInvariant()
-        if ($candidateReviewer -eq $candidateAuthor -and
-            $candidateDigest -eq $issueBodySha256) {
+            -Name 'reviewed issue body sha256' `
+            -Value $issueBodySha256
+        if ($candidateTargetsCurrentDigest) {
             [pscustomobject]@{ LatestTimestamp = $_.LatestTimestamp }
         }
     })
@@ -1131,10 +1147,15 @@ function Test-AuthenticatedIndependentReview {
         $signOffVerificationResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("verification result", "verification status")).ToLowerInvariant()
         $signOffResult = (Get-EvidenceFieldGroup -Text $signOff -Names @("result", "status")).ToLowerInvariant()
 
-        if ($signOffReviewer -eq $commentAuthor -and
-            $signOffIssueBodySha256 -match '^[a-f0-9]{64}$' -and
-            $signOffIssueBodySha256 -eq $issueBodySha256) {
+        $signOffTargetsCurrentDigest = Test-EvidenceFieldContainsValue `
+            -Text $signOff `
+            -Name 'reviewed issue body sha256' `
+            -Value $issueBodySha256
+        if ($signOffTargetsCurrentDigest) {
             return (
+                $signOffReviewer -eq $commentAuthor -and
+                $signOffIssueBodySha256 -match '^[a-f0-9]{64}$' -and
+                $signOffIssueBodySha256 -eq $issueBodySha256 -and
                 (Test-MeaningfulReviewEvidence -Value $signOffQualification) -and
                 $signOffQualificationResult -eq "qualified" -and
                 (Test-MeaningfulReviewEvidence -Value $signOffVerification) -and
