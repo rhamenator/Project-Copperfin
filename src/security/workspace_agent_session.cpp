@@ -95,6 +95,26 @@ WorkspaceAgentActivationDecision controller_denial(std::string diagnostic_code) 
     return decision;
 }
 
+bool has_tool_requirement(const WorkspaceAgentToolRequirements& requirements) noexcept {
+    return requirements.read_workspace_files ||
+        requirements.write_workspace_files ||
+        requirements.run_local_processes ||
+        requirements.access_outside_workspace ||
+        requirements.use_network ||
+        requirements.elevate_privileges;
+}
+
+bool satisfies_tool_requirements(
+    const WorkspaceAgentCapabilities& capabilities,
+    const WorkspaceAgentToolRequirements& requirements) noexcept {
+    return (!requirements.read_workspace_files || capabilities.read_workspace_files) &&
+        (!requirements.write_workspace_files || capabilities.write_workspace_files) &&
+        (!requirements.run_local_processes || capabilities.run_local_processes) &&
+        (!requirements.access_outside_workspace || capabilities.access_outside_workspace) &&
+        (!requirements.use_network || capabilities.use_network) &&
+        (!requirements.elevate_privileges || capabilities.elevate_privileges);
+}
+
 }  // namespace
 
 WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
@@ -220,6 +240,43 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
 WorkspaceAgentSessionSnapshot WorkspaceAgentSessionController::snapshot() const {
     std::lock_guard lock(mutex_);
     return active_session_;
+}
+
+WorkspaceAgentToolPreflightResult WorkspaceAgentSessionController::preflight_tool_request(
+    const WorkspaceAgentToolPreflightRequest& request) const {
+    WorkspaceAgentToolPreflightResult result;
+    if (request.schema_version != 1U) {
+        result.diagnostic_code = "workspace_agent.tool_invalid_schema";
+        return result;
+    }
+    if (!has_tool_requirement(request.requirements)) {
+        result.diagnostic_code = "workspace_agent.tool_empty_requirements";
+        return result;
+    }
+
+    std::lock_guard lock(mutex_);
+    if (transition_ != Transition::idle) {
+        result.diagnostic_code = "workspace_agent.session_transition_in_progress";
+        return result;
+    }
+    if (!active_session_.active) {
+        result.diagnostic_code = "workspace_agent.session_not_active";
+        return result;
+    }
+    if (request.session_generation == 0U ||
+        request.session_generation != active_session_.generation) {
+        result.diagnostic_code = "workspace_agent.tool_stale_session";
+        return result;
+    }
+    result.session_generation = active_session_.generation;
+    result.effective_mode = active_session_.effective_mode;
+    if (!satisfies_tool_requirements(active_session_.capabilities, request.requirements)) {
+        result.diagnostic_code = "workspace_agent.tool_capability_denied";
+        return result;
+    }
+    result.allowed = true;
+    result.diagnostic_code = "workspace_agent.tool_request_allowed";
+    return result;
 }
 
 std::string serialize_workspace_agent_session_audit_event(

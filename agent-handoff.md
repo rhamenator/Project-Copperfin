@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 workspace-agent tool preflight
+
+The current bounded candidate derives `RQ-CF-AGENT-007` from the established
+agent policy and audited session boundary. The native controller evaluates one
+versioned, nonempty complete capability set against the exact active session
+generation under its mutex. Unknown schemas, empty requests, inactive or
+transitioning sessions, stale generations, and unavailable capabilities fail
+closed; no mode admits privilege elevation. The result is explicitly a
+point-in-time preflight, not an execution token. It performs no file, process,
+network, provider, UI, or tool action and does not claim outcome auditing.
+Local Release policy/session/audit-sink tests pass `3/3`; Clang ASan/UBSan
+`1/1`, safety-traceability, community, and diff gates pass.
+Protected exact-head checks remain pending, so `RQ-CF-AGENT-007` remains a gap.
+
 ## V1 workspace-agent session lifecycle
 
 `RQ-CF-AGENT-005` is defined at merged commit `e8a1a0ae6`. The non-executing

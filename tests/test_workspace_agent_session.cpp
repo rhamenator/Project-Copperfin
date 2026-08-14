@@ -25,6 +25,8 @@ using copperfin::security::WorkspaceAgentSessionAuditCommitResult;
 using copperfin::security::WorkspaceAgentSessionAuditEvent;
 using copperfin::security::WorkspaceAgentSessionAuditSink;
 using copperfin::security::WorkspaceAgentSessionController;
+using copperfin::security::WorkspaceAgentToolPreflightRequest;
+using copperfin::security::WorkspaceAgentToolRequirements;
 
 int failures = 0;
 
@@ -116,6 +118,138 @@ WorkspaceAgentSessionAuditCommitResult commit_event(
 
 WorkspaceAgentSessionAuditSink sink_for(AuditContext& context) {
     return {.commit = commit_event, .context = &context};
+}
+
+WorkspaceAgentToolPreflightRequest tool_request(
+    std::uint64_t generation,
+    WorkspaceAgentToolRequirements requirements) {
+    return {
+        .session_generation = generation,
+        .requirements = requirements};
+}
+
+void test_tool_preflight_is_session_bound_and_fail_closed() {
+    WorkspaceAgentSessionController controller;
+
+    const auto invalid_schema = controller.preflight_tool_request({
+        .schema_version = 2U,
+        .session_generation = 1U,
+        .requirements = {.read_workspace_files = true}});
+    expect(!invalid_schema.allowed &&
+               invalid_schema.diagnostic_code == "workspace_agent.tool_invalid_schema",
+           "RQ-CF-AGENT-007: unknown tool preflight schemas must fail closed");
+    const auto empty = controller.preflight_tool_request({
+        .session_generation = 1U});
+    expect(!empty.allowed &&
+               empty.diagnostic_code == "workspace_agent.tool_empty_requirements",
+           "RQ-CF-AGENT-007: a tool preflight must declare at least one capability");
+    const auto inactive = controller.preflight_tool_request(tool_request(
+        1U,
+        {.read_workspace_files = true}));
+    expect(!inactive.allowed &&
+               inactive.diagnostic_code == "workspace_agent.session_not_active",
+           "RQ-CF-AGENT-007: an inactive controller must grant no tool preflight");
+
+    AuditContext sandbox_audit;
+    const auto sandbox = controller.start(
+        request_for(WorkspaceAgentAccessMode::workspace_sandbox),
+        sink_for(sandbox_audit));
+    expect(sandbox.activated,
+           "RQ-CF-AGENT-007: sandbox fixture should establish audited authority");
+
+    const WorkspaceAgentToolRequirements workspace_work{
+        .read_workspace_files = true,
+        .write_workspace_files = true,
+        .run_local_processes = true};
+    const auto admitted = controller.preflight_tool_request(tool_request(
+        sandbox.session.generation,
+        workspace_work));
+    expect(admitted.allowed &&
+               admitted.session_generation == sandbox.session.generation &&
+               admitted.effective_mode == WorkspaceAgentAccessMode::workspace_sandbox &&
+               admitted.diagnostic_code == "workspace_agent.tool_request_allowed",
+           "RQ-CF-AGENT-007: sandbox preflight should admit its complete declared capability set");
+
+    const auto stale = controller.preflight_tool_request(tool_request(
+        sandbox.session.generation + 1U,
+        {.read_workspace_files = true}));
+    expect(!stale.allowed &&
+               stale.session_generation == 0U &&
+               stale.effective_mode == WorkspaceAgentAccessMode::advisory &&
+               stale.diagnostic_code == "workspace_agent.tool_stale_session",
+           "RQ-CF-AGENT-007: a mismatched generation must not reuse or disclose current session authority");
+    const auto zero_generation = controller.preflight_tool_request(tool_request(
+        0U,
+        {.read_workspace_files = true}));
+    expect(!zero_generation.allowed &&
+               zero_generation.diagnostic_code == "workspace_agent.tool_stale_session",
+           "RQ-CF-AGENT-007: generation zero must not identify an active session");
+
+    for (const auto denied_requirements : {
+             WorkspaceAgentToolRequirements{.access_outside_workspace = true},
+             WorkspaceAgentToolRequirements{.use_network = true},
+             WorkspaceAgentToolRequirements{.elevate_privileges = true},
+             WorkspaceAgentToolRequirements{
+                 .read_workspace_files = true,
+                 .use_network = true}}) {
+        const auto denied = controller.preflight_tool_request(tool_request(
+            sandbox.session.generation,
+            denied_requirements));
+        expect(!denied.allowed &&
+                   denied.diagnostic_code == "workspace_agent.tool_capability_denied",
+               "RQ-CF-AGENT-007: any unavailable capability must deny the complete tool request");
+    }
+
+    AuditContext sandbox_stop;
+    expect(controller.stop(sink_for(sandbox_stop)).revoked,
+           "RQ-CF-AGENT-007: sandbox fixture should revoke cleanly");
+    const auto after_stop = controller.preflight_tool_request(tool_request(
+        sandbox.session.generation,
+        {.read_workspace_files = true}));
+    expect(!after_stop.allowed &&
+               after_stop.diagnostic_code == "workspace_agent.session_not_active",
+           "RQ-CF-AGENT-007: a previously admitted generation must fail after stop");
+}
+
+void test_tool_preflight_mode_matrix_never_allows_elevation() {
+    for (const auto mode : {
+             WorkspaceAgentAccessMode::advisory,
+             WorkspaceAgentAccessMode::unrestricted_local}) {
+        WorkspaceAgentSessionController controller;
+        AuditContext start_audit;
+        const auto started = controller.start(request_for(mode), sink_for(start_audit));
+        expect(started.activated,
+               "RQ-CF-AGENT-007: mode fixture should establish audited authority");
+
+        const auto read = controller.preflight_tool_request(tool_request(
+            started.session.generation,
+            {.read_workspace_files = true}));
+        expect(read.allowed == (mode == WorkspaceAgentAccessMode::unrestricted_local),
+               "RQ-CF-AGENT-007: preflight must preserve the active mode's read capability");
+
+        const WorkspaceAgentToolRequirements unrestricted_requirements{
+            .read_workspace_files = true,
+            .write_workspace_files = true,
+            .run_local_processes = true,
+            .access_outside_workspace = true,
+            .use_network = true};
+        const auto broad = controller.preflight_tool_request(tool_request(
+            started.session.generation,
+            unrestricted_requirements));
+        expect(broad.allowed == (mode == WorkspaceAgentAccessMode::unrestricted_local),
+               "RQ-CF-AGENT-007: only unrestricted mode may preflight its non-elevated broad capability set");
+
+        const auto elevation = controller.preflight_tool_request(tool_request(
+            started.session.generation,
+            {.elevate_privileges = true}));
+        expect(!elevation.allowed &&
+                   elevation.diagnostic_code == "workspace_agent.tool_capability_denied",
+               "RQ-CF-AGENT-007: no workspace-agent mode may preflight privilege elevation");
+
+        AuditContext stop_audit;
+        expect(controller.stop(sink_for(stop_audit)).revoked,
+               "RQ-CF-AGENT-007: mode fixture should revoke cleanly");
+    }
 }
 
 void test_audited_session_lifecycle_and_capability_binding() {
@@ -348,6 +482,13 @@ void test_overlapping_start_cannot_observe_or_replace_partial_authority() {
     }
     expect(!controller.snapshot().active,
            "RQ-CF-AGENT-005: authority must remain absent while its start audit is uncommitted");
+    const auto during_start = controller.preflight_tool_request(tool_request(
+        1U,
+        {.read_workspace_files = true}));
+    expect(!during_start.allowed &&
+               during_start.diagnostic_code ==
+                   "workspace_agent.session_transition_in_progress",
+           "RQ-CF-AGENT-007: tool preflight must fail closed while session start is incomplete");
 
     AuditContext overlapping_audit;
     const auto overlapping = controller.start(
@@ -373,7 +514,44 @@ void test_overlapping_start_cannot_observe_or_replace_partial_authority() {
            "RQ-CF-AGENT-005: the serialized first start should retain only its admitted capabilities");
 
     AuditContext stop_audit;
-    expect(controller.stop(sink_for(stop_audit)).revoked,
+    stop_audit.block_commit = true;
+    copperfin::security::WorkspaceAgentSessionStopResult stop_result;
+    std::thread stop_thread([&controller, &stop_audit, &stop_result] {
+        stop_result = controller.stop(sink_for(stop_audit));
+    });
+    bool stop_commit_entered = false;
+    {
+        std::unique_lock lock(stop_audit.commit_mutex);
+        stop_commit_entered = stop_audit.commit_condition.wait_for(
+            lock,
+            std::chrono::seconds(5),
+            [&stop_audit] { return stop_audit.commit_entered; });
+    }
+    if (!stop_commit_entered) {
+        {
+            std::lock_guard lock(stop_audit.commit_mutex);
+            stop_audit.release_commit = true;
+        }
+        stop_audit.commit_condition.notify_all();
+        stop_thread.join();
+        expect(false,
+               "RQ-CF-AGENT-007: the blocking stop audit should begin within its test bound");
+        return;
+    }
+    const auto during_stop = controller.preflight_tool_request(tool_request(
+        first_result.session.generation,
+        {.read_workspace_files = true}));
+    expect(!during_stop.allowed &&
+               during_stop.diagnostic_code ==
+                   "workspace_agent.session_transition_in_progress",
+           "RQ-CF-AGENT-007: tool preflight must fail closed after authority is revoked during stop");
+    {
+        std::lock_guard lock(stop_audit.commit_mutex);
+        stop_audit.release_commit = true;
+    }
+    stop_audit.commit_condition.notify_all();
+    stop_thread.join();
+    expect(stop_result.revoked,
            "RQ-CF-AGENT-005: concurrency test cleanup should revoke the admitted session");
 }
 
@@ -406,6 +584,8 @@ void test_audit_serialization_is_stable_and_content_free() {
 }  // namespace
 
 int main() {
+    test_tool_preflight_is_session_bound_and_fail_closed();
+    test_tool_preflight_mode_matrix_never_allows_elevation();
     test_audited_session_lifecycle_and_capability_binding();
     test_denials_are_audited_without_creating_authority();
     test_audit_failures_withhold_start_but_cannot_extend_stop();
