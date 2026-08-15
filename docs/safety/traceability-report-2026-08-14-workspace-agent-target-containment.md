@@ -4,7 +4,8 @@ Date: 2026-08-14
 
 ## Scope and requirement
 
-This candidate implements the non-executing existing-file target preflight in
+The implementation at exact signed/DCO head `8fb49a834` provides the
+non-executing existing-file target preflight in
 `RQ-CF-AGENT-009`. The requirement derives from explicit repository-owner
 policy, `RQ-CF-AGENT-001`, `RQ-CF-AGENT-007`, `RQ-CF-AGENT-008`, and the
 filesystem target-confusion and data-corruption hazards. Existing Copperfin
@@ -40,11 +41,13 @@ Mapped architecture, code, and tests:
 - `DV-workspace-agent-target-002`: focused controller regression covers
   inactive, unconfigured, sandbox, unrestricted, stale, stopped, insufficient-
   capability, and wrong-target-class behavior without denied-path reflection.
-- `DV-workspace-agent-target-003`: candidate focused Release security, policy,
+- `DV-workspace-agent-target-003`: focused Release security, policy,
   session, registry, target, and audit-sink selection passes `6/6`; fresh Clang
   ASan/UBSan session/registry/target execution passes `3/3`; and community plus
   native-isolation contracts pass `2/2`; and the safety contract passes `1/1`.
-  Exact protected and review evidence are pending.
+  All eleven protected checks pass at the exact implementation head in runs
+  `31855574532`, `31855575850`, `31855575836`, `31855575835`, and
+  `31855575859`.
 
 ## Procedural delta map
 
@@ -81,7 +84,7 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
 
 ## Boundary and rollback
 
-This candidate performs filesystem metadata inspection and uses a short-lived
+This implementation performs filesystem metadata inspection and uses a short-lived
 attributes handle on Windows, but does not read file content, create, write,
 rename, delete, execute, or reserve a target. It does not authenticate a provider, activate a product UI,
 implement a sandbox, or record a tool outcome. Prospective-file containment,
@@ -91,7 +94,7 @@ activation UI, diff, and undo remain explicit gaps.
 
 Rollback is code-local: remove the target module and focused test, restore the
 registry definitions without target kinds, remove the controller target
-preflight, and restore the mapped documentation. The candidate creates no
+preflight, and restore the mapped documentation. The implementation creates no
 provider, workspace, user, or persistent product state.
 
 ## Verification
@@ -107,7 +110,14 @@ Current local Release evidence:
   generated isolation inventory covers `373` native tests;
 - safety-traceability workflow contract: `1/1` pass;
 - no product file content read or mutation by the new boundary;
-- protected and review evidence pending.
+- exact signed/DCO implementation head `8fb49a834` passed all eleven protected
+  checks: DCO run `31855574532`, GCC/Clang executable-path run `31855575850`,
+  Windows/macOS/Ubuntu generated-launcher run `31855575836`, Win32/x64 DECLARE
+  run `31855575835`, Windows environment/path run `31855575859`, and both
+  supply-chain checks;
+- thread-aware review found one actionable same-identity symlink-back
+  root-replacement gap. The exact tested head corrects and directly regresses
+  it, and the review thread is resolved.
 
 ## Assurance statement
 
@@ -117,14 +127,17 @@ assigned software level, or suitability for a safety-critical deployment.
 
 ## Review evidence
 
-- mode: maintainer self-review candidate
+- mode: maintainer self-review
 - reviewer: rhamenator
 - verification: trusted-root ownership, path grammar, physical identity,
   registry/session binding, non-execution boundary, rollback, and
   requirements/code/test mapping
-- verification result: passed for the local candidate
+- verification result: passed at exact signed/DCO implementation head
+  `8fb49a834`
 - automated evidence: focused Release `6/6`, fresh Clang ASan/UBSan `3/3`,
-  community/isolation `2/2`, and safety `1/1`; protected evidence pending
-- automated evidence result: pending
+  community/isolation `2/2`, safety `1/1`, and all eleven protected checks in
+  runs `31855574532`, `31855575850`, `31855575836`, `31855575835`, and
+  `31855575859`
+- automated evidence result: passed
 - scope: medium-severity non-executing existing-file target containment
 - result: approved as maintainer self-review; no independence claim
