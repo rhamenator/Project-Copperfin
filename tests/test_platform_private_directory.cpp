@@ -32,6 +32,7 @@ namespace {
 using copperfin::platform::PrivateDirectoryFailure;
 using copperfin::platform::create_private_directory;
 using copperfin::platform::create_private_directory_in_verified_parent;
+using copperfin::platform::remove_empty_private_directory_in_verified_parent;
 using copperfin::platform::verify_private_directory;
 
 int failures = 0;
@@ -126,6 +127,47 @@ void test_creation_and_verification() {
     expect(bound_child.ok &&
                verify_private_directory(private_root / "bound-child").ok,
            "RQ-CF-AGENT-014: identity-bound creation must create one direct private child");
+
+    const auto removed = remove_empty_private_directory_in_verified_parent(
+        private_root, identity.storage_id, identity.file_id, "bound-child",
+        bound_child.storage_id, bound_child.file_id);
+    expect(removed.ok &&
+               !std::filesystem::exists(private_root / "bound-child"),
+           "RQ-CF-AGENT-020: exact empty private child cleanup must remove only the identity-bound directory");
+
+    const auto retained = create_private_directory_in_verified_parent(
+        private_root, identity.storage_id, identity.file_id, "retained-child");
+    std::ofstream(private_root / "retained-child" / "content") << "retain\n";
+    const auto nonempty = remove_empty_private_directory_in_verified_parent(
+        private_root, identity.storage_id, identity.file_id, "retained-child",
+        retained.storage_id, retained.file_id);
+    expect(!nonempty.ok && nonempty.failure == PrivateDirectoryFailure::not_empty &&
+               std::filesystem::exists(
+                   private_root / "retained-child" / "content"),
+           "RQ-CF-AGENT-020: cleanup must never traverse or remove directory content");
+
+    const auto wrong_target = remove_empty_private_directory_in_verified_parent(
+        private_root, identity.storage_id, identity.file_id, "retained-child",
+        retained.storage_id, retained.file_id ^ 1U);
+    expect(!wrong_target.ok &&
+               wrong_target.failure == PrivateDirectoryFailure::verification_failed &&
+               std::filesystem::exists(private_root / "retained-child"),
+           "RQ-CF-AGENT-020: target identity mismatch must preserve the directory");
+    const auto wrong_parent = remove_empty_private_directory_in_verified_parent(
+        private_root, identity.storage_id, identity.file_id ^ 1U,
+        "retained-child", retained.storage_id, retained.file_id);
+    expect(!wrong_parent.ok &&
+               wrong_parent.failure ==
+                   PrivateDirectoryFailure::parent_identity_changed &&
+               std::filesystem::exists(private_root / "retained-child"),
+           "RQ-CF-AGENT-020: parent identity mismatch must preserve the directory");
+    const auto ambiguous = remove_empty_private_directory_in_verified_parent(
+        private_root, identity.storage_id, identity.file_id, "../retained-child",
+        retained.storage_id, retained.file_id);
+    expect(!ambiguous.ok &&
+               ambiguous.failure == PrivateDirectoryFailure::invalid_path &&
+               std::filesystem::exists(private_root / "retained-child"),
+           "RQ-CF-AGENT-020: ambiguous cleanup leaves must fail without removal");
     const auto mismatched = create_private_directory_in_verified_parent(
         private_root, identity.storage_id, identity.file_id ^ 1U,
         "mismatched-child");

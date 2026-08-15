@@ -487,9 +487,16 @@ authority is returned. Review showed that sequential rechecks cannot coherently
 bind the trusted root, executable, working directory, and revocation state.
 An allow path therefore remains unavailable until those targets are pinned and
 a revocation lease is retained through launch.
+Candidate `RQ-CF-AGENT-020` now returns exact session/child identities from
+successful preparation and exposes a separate trusted-host primitive that
+removes only that exact empty layout. It is intentionally disconnected from
+session lifecycle; durable receipt recovery, intent/outcome audit, partial-
+cleanup retry, and owned nonempty-content policy remain open. The POSIX
+descriptor verification followed by name-based `unlinkat` also retains a
+documented same-authority leaf-name race.
 Broader model/
-provider policy, OAuth and credential adapters, trusted-host environment-layout
-identity-aware cleanup, launch-adjacent handle pinning and synchronous executor
+provider policy, OAuth and credential adapters, trusted-host audit-backed
+lifecycle cleanup, launch-adjacent handle pinning and synchronous executor
 consumption, endpoint
 policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog

@@ -18,6 +18,10 @@
 namespace copperfin::security {
 namespace {
 
+constexpr std::array<std::string_view,
+    workspace_agent_session_layout_child_count> session_layout_child_names{
+    "home", "temp", "config", "cache", "data"};
+
 using CapturedDirectory = PhysicalPathContainmentResult;
 
 bool path_has_embedded_nul(const std::filesystem::path& path) {
@@ -350,7 +354,8 @@ WorkspaceAgentIsolatedEnvironmentBoundary::WorkspaceAgentIsolatedEnvironmentBoun
     std::optional<PhysicalPathContainmentResult> windows_system_root)
     : session_storage_root_(std::move(session_storage_root)),
       executable_directories_(std::move(executable_directories)),
-      windows_system_root_(std::move(windows_system_root)) {}
+      windows_system_root_(std::move(windows_system_root)),
+      cleanup_authority_(std::make_shared<const std::uint8_t>(0U)) {}
 
 std::optional<WorkspaceAgentIsolatedEnvironmentBoundary>
 WorkspaceAgentIsolatedEnvironmentBoundary::create(
@@ -477,9 +482,10 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
         return result;
     }
 
-    constexpr std::array<std::string_view, 5U> child_names{
-        "home", "temp", "config", "cache", "data"};
-    for (const auto child_name : child_names) {
+    std::array<PhysicalPathIdentity, workspace_agent_session_layout_child_count>
+        child_identities{};
+    for (std::size_t index = 0U; index < session_layout_child_names.size(); ++index) {
+        const auto child_name = session_layout_child_names[index];
         const auto child_created =
             copperfin::platform::create_private_directory_in_verified_parent(
                 session_root,
@@ -491,6 +497,9 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
                 "workspace_agent.environment_session_layout_incomplete";
             return result;
         }
+        child_identities[index] = {
+            .storage_id = child_created.storage_id,
+            .file_id = child_created.file_id};
     }
 
     const std::string_view final_configured_identity_failure =
@@ -500,27 +509,131 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
         result.diagnostic_code = final_configured_identity_failure;
         return result;
     }
+    const auto final_session = capture_contained_directory(
+        session_root, session_storage_root_);
     if (!captured_private_directory_matches(session_storage_root_) ||
-        !capture_contained_directory(
-             session_root, session_storage_root_).has_value()) {
+        !final_session.has_value() ||
+        final_session->identity.storage_id != session_created.storage_id ||
+        final_session->identity.file_id != session_created.file_id) {
         result.diagnostic_code =
             "workspace_agent.environment_session_layout_verification_failed";
         return result;
     }
-    for (const auto child_name : child_names) {
-        if (!capture_contained_directory(
-                 session_root / child_name,
-                 session_storage_root_).has_value()) {
+    for (std::size_t index = 0U; index < session_layout_child_names.size(); ++index) {
+        const auto final_child = capture_contained_directory(
+            session_root / session_layout_child_names[index],
+            session_storage_root_);
+        if (!final_child.has_value() ||
+            final_child->identity.storage_id != child_identities[index].storage_id ||
+            final_child->identity.file_id != child_identities[index].file_id) {
             result.diagnostic_code =
                 "workspace_agent.environment_session_layout_verification_failed";
             return result;
         }
+        child_identities[index] = final_child->identity;
     }
 
     result.prepared = true;
     result.session_generation = session_generation;
+    result.cleanup_receipt_ =
+        std::make_shared<const
+            WorkspaceAgentSessionLayoutPreparationResult::CleanupReceipt>(
+            WorkspaceAgentSessionLayoutPreparationResult::CleanupReceipt{
+                .session_generation = session_generation,
+                .session_directory_identity = final_session->identity,
+                .child_directory_identities = child_identities,
+                .boundary_authority = cleanup_authority_});
     result.diagnostic_code =
         "workspace_agent.environment_session_layout_prepared";
+    return result;
+}
+
+WorkspaceAgentSessionLayoutCleanupResult
+WorkspaceAgentIsolatedEnvironmentBoundary::cleanup_empty_session_layout(
+    const WorkspaceAgentSessionLayoutPreparationResult& preparation) const {
+    WorkspaceAgentSessionLayoutCleanupResult result;
+    result.session_generation = preparation.session_generation;
+    const auto receipt = preparation.cleanup_receipt_;
+    if (!preparation.prepared || preparation.session_generation == 0U ||
+        !receipt || receipt->session_generation != preparation.session_generation ||
+        receipt->boundary_authority != cleanup_authority_) {
+        result.diagnostic_code =
+            "workspace_agent.environment_session_layout_cleanup_invalid_receipt";
+        return result;
+    }
+    if (!captured_private_directory_matches(session_storage_root_)) {
+        result.diagnostic_code =
+            "workspace_agent.environment_storage_root_identity_changed";
+        return result;
+    }
+    const std::string session_name =
+        session_directory_name(preparation.session_generation);
+    if (session_name.empty()) {
+        result.diagnostic_code =
+            "workspace_agent.environment_session_layout_cleanup_invalid_receipt";
+        return result;
+    }
+    const std::filesystem::path session_root =
+        session_storage_root_.canonical_path / session_name;
+    const auto captured_session = capture_contained_directory(
+        session_root, session_storage_root_);
+    if (!captured_session.has_value() ||
+        captured_session->identity != receipt->session_directory_identity) {
+        result.diagnostic_code =
+            "workspace_agent.environment_session_layout_cleanup_identity_changed";
+        return result;
+    }
+
+    for (std::size_t index = 0U; index < session_layout_child_names.size(); ++index) {
+        const auto captured_child = capture_contained_directory(
+            session_root / session_layout_child_names[index],
+            session_storage_root_);
+        if (!captured_child.has_value() ||
+            captured_child->identity !=
+                receipt->child_directory_identities[index]) {
+            result.diagnostic_code =
+                "workspace_agent.environment_session_layout_cleanup_identity_changed";
+            return result;
+        }
+    }
+
+    for (std::size_t index = session_layout_child_names.size(); index-- > 0U;) {
+        const auto& identity = receipt->child_directory_identities[index];
+        const auto removed =
+            copperfin::platform::remove_empty_private_directory_in_verified_parent(
+                session_root,
+                receipt->session_directory_identity.storage_id,
+                receipt->session_directory_identity.file_id,
+                std::filesystem::path(session_layout_child_names[index]),
+                identity.storage_id,
+                identity.file_id);
+        if (!removed.ok) {
+            result.diagnostic_code =
+                removed.failure == copperfin::platform::PrivateDirectoryFailure::not_empty
+                ? "workspace_agent.environment_session_layout_cleanup_not_empty"
+                : "workspace_agent.environment_session_layout_cleanup_failed";
+            return result;
+        }
+    }
+    const auto removed_session =
+        copperfin::platform::remove_empty_private_directory_in_verified_parent(
+            session_storage_root_.canonical_path,
+            session_storage_root_.identity.storage_id,
+            session_storage_root_.identity.file_id,
+            std::filesystem::path(session_name),
+            receipt->session_directory_identity.storage_id,
+            receipt->session_directory_identity.file_id);
+    if (!removed_session.ok) {
+        result.diagnostic_code =
+            removed_session.failure ==
+                    copperfin::platform::PrivateDirectoryFailure::not_empty
+                ? "workspace_agent.environment_session_layout_cleanup_not_empty"
+                : "workspace_agent.environment_session_layout_cleanup_failed";
+        return result;
+    }
+    result.cleaned = true;
+    result.diagnostic_code =
+        "workspace_agent.environment_session_layout_cleaned";
     return result;
 }
 

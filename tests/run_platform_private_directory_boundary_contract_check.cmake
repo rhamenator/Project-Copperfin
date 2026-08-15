@@ -8,7 +8,11 @@ endif()
 
 set(header_path "${SOURCE_DIR}/include/copperfin/platform/private_directory.h")
 set(source_path "${SOURCE_DIR}/src/platform/private_directory.cpp")
+set(environment_header_path
+    "${SOURCE_DIR}/include/copperfin/security/workspace_agent_environment.h")
 set(consumer_path "${SOURCE_DIR}/src/security/workspace_agent_environment.cpp")
+set(environment_test_path
+    "${SOURCE_DIR}/tests/test_workspace_agent_isolated_environment.cpp")
 set(root_build_path "${SOURCE_DIR}/CMakeLists.txt")
 set(test_build_path "${SOURCE_DIR}/tests/CMakeLists.txt")
 set(workflow_path "${SOURCE_DIR}/.github/workflows/generated-launcher-validation.yml")
@@ -17,7 +21,9 @@ set(windows_workflow_path "${SOURCE_DIR}/.github/workflows/windows-environment-v
 foreach(path IN ITEMS
         "${header_path}"
         "${source_path}"
+        "${environment_header_path}"
         "${consumer_path}"
+        "${environment_test_path}"
         "${root_build_path}"
         "${test_build_path}"
         "${workflow_path}"
@@ -29,7 +35,9 @@ endforeach()
 
 file(READ "${header_path}" header_text)
 file(READ "${source_path}" source_text)
+file(READ "${environment_header_path}" environment_header_text)
 file(READ "${consumer_path}" consumer_text)
+file(READ "${environment_test_path}" environment_test_text)
 file(READ "${root_build_path}" root_build_text)
 file(READ "${test_build_path}" test_build_text)
 file(READ "${workflow_path}" workflow_text)
@@ -76,9 +84,7 @@ foreach(token IN ITEMS
     forbid_text("${header_text}" "${token}" "native token in portable private-directory API")
 endforeach()
 
-foreach(token IN ITEMS
-        "::RemoveDirectoryW("
-        "::rmdir(")
+foreach(token IN ITEMS "::RemoveDirectoryW(" "::rmdir(")
     forbid_text("${source_text}" "${token}"
         "path-based cleanup of an unverified directory")
 endforeach()
@@ -93,6 +99,14 @@ foreach(token IN ITEMS
         "ace->Mask != FILE_ALL_ACCESS")
     require_text("${source_text}" "${token}" "private platform implementation")
 endforeach()
+foreach(token IN ITEMS
+        "remove_empty_private_directory_in_verified_parent"
+        "::SetFileInformationByHandle("
+        "FileDispositionInfo"
+        "FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE")
+    require_text("${source_text}" "${token}"
+        "identity-bound empty-directory cleanup")
+endforeach()
 require_text_count("${source_text}"
     "windows_parent_components_are_direct(path)" 2
     "pre-create and verification Windows parent-reparse rejection")
@@ -101,6 +115,8 @@ foreach(token IN ITEMS
         "::openat("
         "O_NOFOLLOW"
         "::mkdirat("
+        "::unlinkat("
+        "AT_REMOVEDIR"
         "::fstat("
         "descriptor_has_no_extended_acl"
         "ACL_TYPE_EXTENDED"
@@ -130,6 +146,42 @@ require_text("${consumer_text}"
 require_text("${consumer_text}"
     "workspace_agent.environment_session_layout_unrepresentable"
     "pre-creation derived-environment denial")
+foreach(token IN ITEMS
+        "cleanup_empty_session_layout"
+        "workspace_agent.environment_session_layout_cleanup_invalid_receipt"
+        "workspace_agent.environment_session_layout_cleanup_not_empty"
+        "workspace_agent.environment_session_layout_cleaned")
+    require_text("${consumer_text}" "${token}"
+        "identity-bound workspace-agent layout cleanup")
+endforeach()
+foreach(token IN ITEMS
+        "struct CleanupReceipt"
+        "std::shared_ptr<const CleanupReceipt> cleanup_receipt_"
+        "std::shared_ptr<const std::uint8_t> boundary_authority"
+        "std::shared_ptr<const std::uint8_t> cleanup_authority_"
+        "const WorkspaceAgentIsolatedEnvironmentBoundary&) = delete"
+        "WorkspaceAgentIsolatedEnvironmentBoundary&&) noexcept = default")
+    require_text("${environment_header_text}" "${token}"
+        "opaque boundary-bound cleanup receipt")
+endforeach()
+foreach(token IN ITEMS
+        "receipt->boundary_authority != cleanup_authority_"
+        "receipt->session_generation != preparation.session_generation")
+    require_text("${consumer_text}" "${token}"
+        "cleanup receipt provenance validation")
+endforeach()
+foreach(token IN ITEMS
+        "HasPublicSessionDirectoryIdentity"
+        "HasPublicChildDirectoryIdentities"
+        "!std::is_copy_constructible_v<WorkspaceAgentIsolatedEnvironmentBoundary>"
+        "public status fields must not forge cleanup authority"
+        "receipt must remain bound to the boundary")
+    require_text("${environment_test_text}" "${token}"
+        "opaque-receipt regression coverage")
+endforeach()
+require_text_count("${consumer_text}"
+    "remove_empty_private_directory_in_verified_parent(" 2
+    "identity-bound child and generation cleanup")
 string(FIND "${consumer_text}" "const auto proposed_entries =" proposed_offset)
 string(FIND "${consumer_text}"
     "copperfin::platform::create_private_directory_in_verified_parent("
