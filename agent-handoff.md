@@ -16,6 +16,9 @@ never adopted, repaired, overwritten, or deleted; denial is content-free.
 POSIX parent traversal is descriptor-relative and no-follow; creation uses the
 bound parent descriptor, and direct tests reject redirected creation and
 verification through an intermediate symlink.
+Windows opens and rejects every reparse-point parent before creation and again
+during verification; its public creation call remains within the explicit
+same-authority full-path race limitation.
 
 This remains non-executing and is not yet wired to session start. Layout
 cleanup, platform argument serialization, Windows executable-format

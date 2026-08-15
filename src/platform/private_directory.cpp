@@ -179,6 +179,43 @@ bool ace_grants_private_full_control(
     return false;
 }
 
+bool windows_parent_components_are_direct(
+    const std::filesystem::path& path) noexcept {
+    try {
+        std::filesystem::path current = path.root_path();
+        if (current.empty()) {
+            return false;
+        }
+        for (const auto& component : path.relative_path().parent_path()) {
+            if (component.empty() || component == "." || component == "..") {
+                return false;
+            }
+            current /= component;
+            ScopedHandle directory(::CreateFileW(
+                current.c_str(),
+                FILE_READ_ATTRIBUTES,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                nullptr,
+                OPEN_EXISTING,
+                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+                nullptr));
+            if (!directory.valid()) {
+                return false;
+            }
+            BY_HANDLE_FILE_INFORMATION information{};
+            if (::GetFileInformationByHandle(
+                    directory.get(), &information) == 0 ||
+                (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
+                (information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+                return false;
+            }
+        }
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
 #endif
 
 #if !defined(_WIN32)
@@ -296,6 +333,9 @@ PrivateDirectoryResult verify_private_directory(
     }
 
 #if defined(_WIN32)
+    if (!windows_parent_components_are_direct(path)) {
+        return failed(PrivateDirectoryFailure::verification_failed);
+    }
     const auto user_sid = current_user_sid();
     const auto system_sid = local_system_sid();
     if (user_sid.empty() || system_sid.empty()) {
@@ -407,6 +447,9 @@ PrivateDirectoryResult create_private_directory(
     }
 
 #if defined(_WIN32)
+    if (!windows_parent_components_are_direct(path)) {
+        return failed(PrivateDirectoryFailure::parent_unavailable);
+    }
     const auto user_sid = current_user_sid();
     const auto system_sid = local_system_sid();
     if (user_sid.empty() || system_sid.empty()) {

@@ -382,6 +382,11 @@ descriptor-relative, no-follow directory opens, reject dot components and
 indirect parents, and perform `mkdirat`/leaf verification against the bound
 parent descriptor. A private leaf reached through a symbolic-link parent is
 therefore not accepted.
+Windows likewise opens and inspects every existing parent component with
+`FILE_FLAG_OPEN_REPARSE_POINT` before creation and repeats that validation
+during post-create verification; an existing symbolic-link or junction parent
+therefore fails before its target is modified. Public Win32 creation remains a
+full-path operation, so the same-authority race limitation below still applies.
 
 The trusted-host environment boundary requires the configured storage root to
 satisfy that same contract. Its explicit preparation method creates one new

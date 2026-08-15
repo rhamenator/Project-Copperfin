@@ -100,6 +100,9 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   parent through no-follow directory descriptors, then create and inspect the
   leaf relative to the bound parent. Direct regressions prove a symlink parent
   neither redirects creation nor makes an indirectly reached private leaf pass.
+  Windows opens and rejects reparse-point parent components before creation and
+  repeats the check during verification; its public creation API remains
+  full-path and within the recorded same-authority residual boundary.
 - Configured-path replacement: preparation rechecks every approved executable
   directory and the Windows system root, when present, before the first layout
   creation and before success. Direct replacement regressions prove a known

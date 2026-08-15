@@ -93,6 +93,9 @@ foreach(token IN ITEMS
         "ace->Mask != FILE_ALL_ACCESS")
     require_text("${source_text}" "${token}" "private platform implementation")
 endforeach()
+require_text_count("${source_text}"
+    "windows_parent_components_are_direct(path)" 2
+    "pre-create and verification Windows parent-reparse rejection")
 
 foreach(token IN ITEMS
         "::openat("
