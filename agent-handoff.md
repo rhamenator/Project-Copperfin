@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## V1 workspace-agent existing-file target containment candidate
+
+`RQ-CF-AGENT-009` has a local candidate on
+`agent/v1-workspace-agent-target-containment`. Product code binds one trusted
+absolute workspace root to physical identity; the registry binds each stable
+tool ID to a coherent workspace-file, local-file, process, or endpoint target
+kind. Exact-session file preflight admits strict relative workspace paths or,
+only with unrestricted capability, strict absolute local paths. It rejects
+path ambiguity, traversal, root replacement, indirection, cross-device
+workspace components, missing/nonregular targets, and hard links, then repeats
+session/tool admission after inspection. The result is point-in-time identity,
+not authority; it reads no file content and performs no mutation. Focused Release verification
+currently passes `6/6`; fresh Clang ASan/UBSan passes `3/3`, and community plus
+native-isolation contracts pass `2/2`; the safety contract passes `1/1`.
+Protected and review evidence are pending. File creation, handle-pinned
+I/O/mutation, delete/rename, process and
+endpoint containment, executor, outcome audit, real sandbox, provider/OAuth,
+trusted activation UI, diff, and undo remain explicit gaps.
+
 ## V1 workspace-agent product tool registry
 
 `RQ-CF-AGENT-008` is defined at merged commit `e0be7971c`. The public

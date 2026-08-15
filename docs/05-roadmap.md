@@ -1142,8 +1142,8 @@ standalone Studio shell, and FoxPro language-service layer."
 | E | `#111` (`E1`/`#22`, `E2`/`#23`, `E3`/`#24`) | Shared design model and designer fidelity (`E3` = report/label parity, the single largest lane in the repo) | Closed 2026-07-24 | Phase C |
 | F | `#112` (`F1`/`#25`, `F2`/`#26`) | VS extension parity + utility panes; standalone Studio as a full IDE | MVP implementation complete for standalone shell; hosted UI evidence remains under the RC gate | Phase C |
 | G | `#112` (`G1`/`#27`, `G2`/`#28`, `G3`/`#29`) | FoxPro language service: semantic resolution, navigation/refactoring, IntelliSense metadata | Recorded G1/G2/G3 slices closed; broader MVP scope remains under the live tree | Phase C |
-| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Portable route/artifact execution, trusted runtime-host composition, PRG dispatch, Native AOT C# leaf, admitted Python/R sidecar leaves, one bounded read-only MCP DBF-header tool, provider-independent workspace-agent access modes, strict read-only native/managed descriptors, a localized non-activating Studio preview, audited session lifecycle, persistent lifecycle sink, and product-registry-backed non-executing preflight implemented; provider adapters, OAuth, conversation UI, activation, mutable execution, outcome audit, diff, and undo remain | v1 item 3 |
-| I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | RBAC/audit/secrets/signing baseline plus dedicated workspace-agent RBAC, capabilities, localized unrestricted warning, fail-closed activation policy, non-activating descriptor/client boundary, trusted read-only preview, audited session/revocation, contained lifecycle persistence, immutable product-owned tool definitions, and exact-generation registered-tool preflight implemented; trusted host activation enforcement, consent binding, tool-outcome audit, executor, and sandbox remain | v1 item 4 |
+| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Portable route/artifact execution, trusted runtime-host composition, PRG dispatch, Native AOT C# leaf, admitted Python/R sidecar leaves, one bounded read-only MCP DBF-header tool, provider-independent workspace-agent access modes, strict read-only native/managed descriptors, a localized non-activating Studio preview, audited session lifecycle, persistent lifecycle sink, product-registry-backed non-executing preflight, and existing-file target identity preflight implemented; provider adapters, OAuth, conversation UI, activation, mutable execution, outcome audit, diff, and undo remain | v1 item 3 |
+| I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | RBAC/audit/secrets/signing baseline plus dedicated workspace-agent RBAC, capabilities, localized unrestricted warning, fail-closed activation policy, non-activating descriptor/client boundary, trusted read-only preview, audited session/revocation, contained lifecycle persistence, immutable product-owned tool definitions, exact-generation registered-tool preflight, and product-root-bound existing-file containment implemented; trusted host activation enforcement, consent binding, handle-pinned mutation, process/endpoint containment, tool-outcome audit, executor, and sandbox remain | v1 item 4 |
 | J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Studio launch-error and POSIX root-identity seams, portable public path/environment/executable-search, APRINTERS and AFONT host discovery, file-version, code-page, disk-space, exclusive-file, and PRG stream boundaries, private SQLite native ABI isolation, portable interpreter-to-CLR-host contract, and native DECLARE loader/invocation boundaries shipped; broader OLE/report-printing seams and ports open | v1 item 5 |
 
 Current G1 evidence includes #4874 at product/test head `e70c89e87`: editor
@@ -1382,16 +1382,23 @@ tuples, commits content-free JSON to the contained bounded immutable audit
 chain, and returns the committed hash as the receipt without activating an
 assistant.
 The adjacent immutable native product registry maps stable tool IDs to their
-complete capability requirements. Non-executing preflight accepts only an ID
+complete capability requirements and coherent target kind. Non-executing preflight accepts only an ID
 and exact session generation, resolves the requirements internally under the
 controller lock, and rejects unknown, stale, inactive, transitioning, or
 overbroad requests. Provider/model input cannot declare a weaker capability
 set. Its result is not a reusable execution token and no tool is connected by
-that slice.
+that slice. The adjacent existing-file target preflight binds a product-owned
+absolute workspace root to physical identity, admits strict relative workspace
+or absolute unrestricted-local paths only after exact-session tool admission,
+rejects indirection/cross-device workspace traversal and multiply linked or
+nonregular files, and repeats session admission after inspection. It still
+reads no file content and mutates nothing; its point-in-time identity is not
+an execution token.
 `I1` retains the `cf_security` RBAC/audit/
 secrets/signing seed. **What's left, and what it takes:** other relational
 providers, provider sessions/cursors, mutation contracts, provider/OAuth
-adapters, the mutable agent executor and sandbox, tool-outcome audit, host UI and activation
+adapters, prospective-file and handle-pinned mutation semantics, process and
+endpoint containment, the mutable agent executor and sandbox, tool-outcome audit, host UI and activation
 integration, audit-root/ACL selection, rotation/retention, authenticated or
 external anchoring, recovery UI, and multi-host correlation remain open. The
 wider view is

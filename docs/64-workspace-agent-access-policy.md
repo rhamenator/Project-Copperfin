@@ -2,7 +2,8 @@
 
 Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, `RQ-CF-AGENT-004`,
-`RQ-CF-AGENT-005`, and `RQ-CF-AGENT-006` in
+`RQ-CF-AGENT-005`, `RQ-CF-AGENT-006`, `RQ-CF-AGENT-007`,
+`RQ-CF-AGENT-008`, and `RQ-CF-AGENT-009` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -206,6 +207,40 @@ the specific target through the applicable containment or process boundary,
 and separately audit the actual tool outcome. Provider authentication remains
 unrelated to this decision.
 
+## Existing-file target containment preflight
+
+The next non-executing boundary binds an existing regular-file target to the
+registered file-tool class and exact active session generation. Product code
+constructs the controller with one trusted absolute workspace root; provider,
+model, prompt, and workspace content cannot select or replace that root. The
+boundary canonicalizes the root once, retains its physical storage/file
+identity, and checks that identity before and after each workspace inspection.
+The stored root pathname itself must remain a direct directory; replacing it
+with a symlink/reparse path back to the same physical directory still fails.
+
+`workspace.inspect.v1` and `workspace.apply_edit.v1` accept only strict
+relative paths without root syntax, `.`/`..`, trailing empty leaves, or
+embedded NULs. Physical inspection rejects traversal outside the configured
+root, symlink/reparse components, cross-device components, missing targets,
+directories, and multiply linked files. `local.inspect.v1` and
+`local.apply_edit.v1` require the unrestricted session capability plus a
+strict absolute path and apply direct-leaf, regular-file, and single-link
+identity checks. Sandbox denial occurs before local-path inspection, so it
+does not reflect whether an outside target exists.
+
+The registry assigns every tool one compile-time-validated target kind.
+Process and endpoint tools cannot be routed through the file boundary. The
+controller performs registered-tool/session preflight before filesystem
+inspection and repeats it afterward; inactive, transitioning, stale, stopped,
+unregistered, wrong-class, or insufficient-capability requests return no
+canonical path. An allowed result identifies only the canonical file and its
+point-in-time physical identity. It performs metadata inspection (including a
+short-lived attributes handle on Windows) but does not read file content,
+create, modify, delete, or reserve that target and is not an authority token. A future
+executor must repeat session, registry, target, identity, operation, and
+outcome-audit checks while holding an OS-backed handle beside each side
+effect.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
@@ -235,10 +270,13 @@ does not itself access files, run processes, use the network, or authenticate a
 provider.
 The same controller now supplies the product-registry-backed session preflight
 described above. The public request cannot supply capability booleans; native
-lookup supplies the complete immutable definition. This closes only the
-tool-definition and capability-comparison prerequisites for a future executor;
-it is not itself an executor or authorization token and it does not add target
-containment, a real sandbox, or a tool-outcome audit record.
+lookup supplies the complete immutable definition. The controller also
+supplies the existing-file target preflight described above. This closes the
+product-root and point-in-time identity prerequisite for existing file tools
+only; it is not an executor, authorization token, or real sandbox. Prospective
+file creation, descriptor/handle-pinned reads and writes, delete/rename
+semantics, process/working-directory containment, endpoint policy, and
+tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.
