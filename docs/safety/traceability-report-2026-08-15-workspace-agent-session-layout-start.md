@@ -2,7 +2,7 @@
 
 Date: 2026-08-15
 
-Scope: defined v1 `RQ-CF-AGENT-016` configured session-start integration
+Scope: implementation-complete candidate v1 `RQ-CF-AGENT-016` configured session-start integration
 for the private generation layout
 
 Allowed requirement source: explicit repository-owner product policy under
@@ -135,6 +135,12 @@ Current candidate evidence:
 - exact-head automated review reported no major issue, pagination found zero
   review threads, and PR `#5022` merged into `v1-development` as `05cefa60f`.
 
+Still required before `RQ-CF-AGENT-016` is defined:
+
+- qualified independent human sign-off for the retained `high` risk
+  classification, bound to the governing review record as required by the
+  repository assurance policy.
+
 ## Review evidence
 
 - mode: high-severity maintainer self-review; no independent final safety
@@ -145,4 +151,5 @@ Current candidate evidence:
   content-free denial, rollback, and traceability
 - result: Release `17/17`, sanitizer `3/3`, all eleven protected checks, DCO,
   both supply-chain checks, and exact-head zero-thread automated review pass;
-  the implementation merged as `05cefa60f`
+  the implementation merged as `05cefa60f`; qualified independent human
+  sign-off remains pending before assurance closure

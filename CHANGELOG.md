@@ -1,10 +1,13 @@
-- 2026-08-15: Defined `RQ-CF-AGENT-016` after exact signed/DCO implementation
+- 2026-08-15: Recorded complete implementation evidence for candidate
+  `RQ-CF-AGENT-016` after exact signed/DCO implementation
   head `9a382a764` passed warning-free local Release `17/17`, focused lifecycle
   `2/2`, fresh Clang 21 ASan/UBSan `3/3`, diff validation, all eleven protected
   checks in runs `31888008860`, `31888008825`, `31888008851`, `31888008846`,
   and `31888008790`, and both Socket checks. Exact-head automated review found
   no major issue and thread-aware inspection found zero threads; PR `#5022`
-  merged into `v1-development` as `05cefa60f`.
+  merged into `v1-development` as `05cefa60f`. Because the retained risk
+  classification is `high`, qualified independent human sign-off remains the
+  sole prerequisite before the requirement can be marked defined.
 
 - 2026-08-15: Added candidate `RQ-CF-AGENT-016` configured workspace-agent
   session-layout start integration. A process-capable session with supplied

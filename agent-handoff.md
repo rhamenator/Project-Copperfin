@@ -2,8 +2,8 @@
 
 ## V1 workspace-agent configured session-layout start integration
 
-`RQ-CF-AGENT-016` is defined at merged commit `05cefa60f`. It connects the
-existing private layout boundary to
+Candidate `RQ-CF-AGENT-016` is implementation-complete at merged commit
+`05cefa60f`. It connects the existing private layout boundary to
 configured process-capable session start. Policy admission runs first;
 preparation of the exact candidate generation then succeeds before the
 content-free start audit and authority activation. Supplied but invalid trusted
@@ -21,8 +21,10 @@ Exact signed/DCO implementation head `9a382a764` passed all eleven protected
 checks in runs `31888008860`, `31888008825`, `31888008851`, `31888008846`,
 and `31888008790`, including both Socket checks. Exact-head automated review
 reported no major issue and thread-aware inspection found zero threads before
-PR `#5022` merged as `05cefa60f`. No independent final safety approval is
-claimed. Root provisioning, identity-aware cleanup,
+PR `#5022` merged as `05cefa60f`. The retained risk classification is `high`;
+qualified independent human sign-off remains the sole assurance prerequisite
+before the requirement can be marked defined, and none is claimed. Root
+provisioning, identity-aware cleanup,
 Windows child-parser/executable-format compatibility, launch-adjacent
 pinning/revalidation, executor, sandbox, endpoint policy, outcome audit,
 provider/OAuth, trusted UI, diff, and undo remain explicit gaps.
