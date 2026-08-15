@@ -457,8 +457,18 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
         return result;
     }
     const auto session_created =
-        copperfin::platform::create_private_directory(session_root);
+        copperfin::platform::create_private_directory_in_verified_parent(
+            session_storage_root_.canonical_path,
+            session_storage_root_.identity.storage_id,
+            session_storage_root_.identity.file_id,
+            session_name);
     if (!session_created.ok) {
+        if (session_created.failure ==
+            copperfin::platform::PrivateDirectoryFailure::parent_identity_changed) {
+            result.diagnostic_code =
+                "workspace_agent.environment_storage_root_identity_changed";
+            return result;
+        }
         result.diagnostic_code =
             session_created.failure ==
                     copperfin::platform::PrivateDirectoryFailure::already_exists

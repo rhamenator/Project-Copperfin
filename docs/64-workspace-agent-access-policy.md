@@ -397,6 +397,12 @@ verification failure return content-free diagnostics. The method never adopts,
 repairs, overwrites, or deletes an existing or partial layout. A child failure
 may therefore leave a private partial generation that deliberately blocks
 reuse until a future trusted-host cleanup boundary handles it.
+Session-root creation opens the configured private root, compares that handle's
+storage/file identity to the captured identity, and on POSIX creates the leaf
+relative to the same bound descriptor. Root replacement therefore cannot
+redirect the session-root creation side effect on POSIX. Windows repeats the
+bound-parent identity check around its public full-path create and remains
+within the explicit trusted-parent/same-authority limitation.
 
 Before creating the session root, preparation derives the exact fixed
 platform environment entries through the same builder used by construction.

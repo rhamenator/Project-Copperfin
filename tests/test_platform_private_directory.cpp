@@ -10,7 +10,10 @@
 #include <iostream>
 #include <string>
 
-#if !defined(_WIN32)
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #include <sys/stat.h>
 #endif
 
@@ -18,6 +21,7 @@ namespace {
 
 using copperfin::platform::PrivateDirectoryFailure;
 using copperfin::platform::create_private_directory;
+using copperfin::platform::create_private_directory_in_verified_parent;
 using copperfin::platform::verify_private_directory;
 
 int failures = 0;
@@ -49,6 +53,44 @@ public:
     std::filesystem::path root;
 };
 
+struct TestDirectoryIdentity {
+    std::uint64_t storage_id = 0U;
+    std::uint64_t file_id = 0U;
+};
+
+TestDirectoryIdentity directory_identity(const std::filesystem::path& path) {
+#if defined(_WIN32)
+    const HANDLE directory = ::CreateFileW(
+        path.c_str(), FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+    if (directory == INVALID_HANDLE_VALUE) {
+        return {};
+    }
+    BY_HANDLE_FILE_INFORMATION information{};
+    const bool inspected =
+        ::GetFileInformationByHandle(directory, &information) != 0;
+    ::CloseHandle(directory);
+    if (!inspected) {
+        return {};
+    }
+    return {
+        .storage_id = information.dwVolumeSerialNumber,
+        .file_id =
+            (static_cast<std::uint64_t>(information.nFileIndexHigh) << 32U) |
+            information.nFileIndexLow};
+#else
+    struct stat status{};
+    if (::stat(path.c_str(), &status) != 0) {
+        return {};
+    }
+    return {
+        .storage_id = static_cast<std::uint64_t>(status.st_dev),
+        .file_id = static_cast<std::uint64_t>(status.st_ino)};
+#endif
+}
+
 void test_creation_and_verification() {
     TempTree tree;
     const auto private_root = tree.root / "private-root";
@@ -61,6 +103,21 @@ void test_creation_and_verification() {
     expect(create_private_directory(child).ok &&
                verify_private_directory(child).ok,
            "RQ-CF-AGENT-014: a private directory must support an explicit private child");
+
+    const auto identity = directory_identity(private_root);
+    const auto bound_child = create_private_directory_in_verified_parent(
+        private_root, identity.storage_id, identity.file_id, "bound-child");
+    expect(bound_child.ok &&
+               verify_private_directory(private_root / "bound-child").ok,
+           "RQ-CF-AGENT-014: identity-bound creation must create one direct private child");
+    const auto mismatched = create_private_directory_in_verified_parent(
+        private_root, identity.storage_id, identity.file_id ^ 1U,
+        "mismatched-child");
+    expect(!mismatched.ok &&
+               mismatched.failure ==
+                   PrivateDirectoryFailure::parent_identity_changed &&
+               !std::filesystem::exists(private_root / "mismatched-child"),
+           "RQ-CF-AGENT-014: parent identity mismatch must fail before child creation");
 
     const auto duplicate = create_private_directory(child);
     expect(!duplicate.ok &&

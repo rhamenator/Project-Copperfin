@@ -19,6 +19,10 @@ verification through an intermediate symlink.
 Windows opens and rejects every reparse-point parent before creation and again
 during verification; its public creation call remains within the explicit
 same-authority full-path race limitation.
+Session-root creation now also matches the open storage-root handle to its
+captured storage/file identity; POSIX creates relative to that bound descriptor,
+while Windows brackets its public full-path create and retains the documented
+trusted-parent residual.
 
 This remains non-executing and is not yet wired to session start. Layout
 cleanup, platform argument serialization, Windows executable-format

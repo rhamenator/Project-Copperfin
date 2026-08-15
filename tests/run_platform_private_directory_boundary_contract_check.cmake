@@ -112,6 +112,9 @@ require_text("${consumer_text}"
     "copperfin::platform::create_private_directory("
     "workspace-agent layout preparation delegation")
 require_text("${consumer_text}"
+    "copperfin::platform::create_private_directory_in_verified_parent("
+    "identity-bound workspace-agent session-root creation")
+require_text("${consumer_text}"
     "copperfin::platform::verify_private_directory("
     "workspace-agent layout verification delegation")
 require_text("${consumer_text}"
@@ -119,7 +122,7 @@ require_text("${consumer_text}"
     "pre-creation derived-environment denial")
 string(FIND "${consumer_text}" "const auto proposed_entries =" proposed_offset)
 string(FIND "${consumer_text}"
-    "copperfin::platform::create_private_directory(session_root)"
+    "copperfin::platform::create_private_directory_in_verified_parent("
     creation_offset)
 string(FIND "${consumer_text}"
     "const std::string_view preparation_identity_failure ="

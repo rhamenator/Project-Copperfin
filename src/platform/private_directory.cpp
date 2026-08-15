@@ -216,6 +216,17 @@ bool windows_parent_components_are_direct(
     }
 }
 
+bool windows_directory_identity_matches(
+    const HANDLE directory,
+    const std::uint64_t expected_storage_id,
+    const std::uint64_t expected_file_id) noexcept {
+    BY_HANDLE_FILE_INFORMATION information{};
+    return ::GetFileInformationByHandle(directory, &information) != 0 &&
+        information.dwVolumeSerialNumber == expected_storage_id &&
+        ((static_cast<std::uint64_t>(information.nFileIndexHigh) << 32U) |
+         information.nFileIndexLow) == expected_file_id;
+}
+
 #endif
 
 #if !defined(_WIN32)
@@ -304,6 +315,16 @@ bool descriptor_is_private_directory(const int descriptor) noexcept {
     struct stat status{};
     return ::fstat(descriptor, &status) == 0 && S_ISDIR(status.st_mode) &&
         status.st_uid == ::geteuid() && (status.st_mode & 07777) == 0700;
+}
+
+bool descriptor_identity_matches(
+    const int descriptor,
+    const std::uint64_t expected_storage_id,
+    const std::uint64_t expected_file_id) noexcept {
+    struct stat status{};
+    return ::fstat(descriptor, &status) == 0 &&
+        static_cast<std::uint64_t>(status.st_dev) == expected_storage_id &&
+        static_cast<std::uint64_t>(status.st_ino) == expected_file_id;
 }
 
 PrivateDirectoryFailure map_posix_creation_error(const int error) noexcept {
@@ -530,6 +551,78 @@ PrivateDirectoryResult create_private_directory(
     }
     return verified;
 #else
+    return {.ok = true, .failure = PrivateDirectoryFailure::none};
+#endif
+}
+
+PrivateDirectoryResult create_private_directory_in_verified_parent(
+    const std::filesystem::path& parent,
+    const std::uint64_t expected_storage_id,
+    const std::uint64_t expected_file_id,
+    const std::filesystem::path& leaf) noexcept {
+    if (!valid_absolute_path(parent) || leaf.empty() || leaf.is_absolute() ||
+        leaf.has_parent_path() || leaf == "." || leaf == ".." ||
+        leaf.native().find(typename std::filesystem::path::value_type{}) !=
+            std::filesystem::path::string_type::npos) {
+        return failed(PrivateDirectoryFailure::invalid_path);
+    }
+
+#if defined(_WIN32)
+    if (!windows_parent_components_are_direct(parent)) {
+        return failed(PrivateDirectoryFailure::parent_unavailable);
+    }
+    ScopedHandle bound_parent(::CreateFileW(
+        parent.c_str(),
+        FILE_READ_ATTRIBUTES | READ_CONTROL,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr));
+    if (!bound_parent.valid() ||
+        !windows_directory_identity_matches(
+            bound_parent.get(), expected_storage_id, expected_file_id) ||
+        !verify_private_directory(parent).ok) {
+        return failed(PrivateDirectoryFailure::parent_identity_changed);
+    }
+    const auto created = create_private_directory(parent / leaf);
+    if (!created.ok) {
+        return created;
+    }
+    if (!windows_directory_identity_matches(
+            bound_parent.get(), expected_storage_id, expected_file_id) ||
+        !verify_private_directory(parent).ok) {
+        return failed(PrivateDirectoryFailure::parent_identity_changed);
+    }
+    return created;
+#else
+    int parent_error = 0;
+    const auto parent_binding =
+        bind_non_indirect_parent(parent, parent_error);
+    if (!parent_binding.has_value()) {
+        return failed(map_posix_creation_error(parent_error));
+    }
+    ScopedFd bound_parent(::openat(
+        parent_binding->descriptor.get(), parent_binding->leaf.c_str(),
+        directory_open_flags()));
+    if (!bound_parent.valid() ||
+        !descriptor_is_private_directory(bound_parent.get()) ||
+        !descriptor_identity_matches(
+            bound_parent.get(), expected_storage_id, expected_file_id)) {
+        return failed(PrivateDirectoryFailure::parent_identity_changed);
+    }
+    const std::string leaf_name = leaf.native();
+    if (::mkdirat(bound_parent.get(), leaf_name.c_str(), 0700) != 0) {
+        return failed(map_posix_creation_error(errno));
+    }
+    ScopedFd directory(::openat(
+        bound_parent.get(), leaf_name.c_str(), directory_open_flags()));
+    if (!directory.valid() ||
+        !descriptor_is_private_directory(directory.get()) ||
+        !descriptor_identity_matches(
+            bound_parent.get(), expected_storage_id, expected_file_id)) {
+        return failed(PrivateDirectoryFailure::verification_failed);
+    }
     return {.ok = true, .failure = PrivateDirectoryFailure::none};
 #endif
 }
