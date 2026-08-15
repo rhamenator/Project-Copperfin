@@ -77,7 +77,7 @@ Potential Severity If Misused: high
 
 ## Verification
 
-Current candidate evidence:
+Completed implementation evidence:
 
 - warning-free GCC Release build of the boundary and integrated controller
   targets passes;
@@ -99,8 +99,14 @@ Current candidate evidence:
   still influence parsing; configuration now accepts only exact-digest product
   evidence for a self-contained parser image and rejects every other dependency
   contract pending authenticated closure support;
-- exact signed/DCO head, protected Windows/Ubuntu/macOS execution, and exact-
-  head review remain required before implementation evidence is complete.
+- exact signed/DCO head `8e2f71551` passed all eleven protected checks in runs
+  `31899195856`, `31899197341`, `31899197358`, `31899197362`, and
+  `31899197346`, including Windows Win32/x64 DECLARE, Windows environment,
+  Windows/Ubuntu/macOS generated-launcher, GCC/Clang, DCO, and both Socket jobs;
+- the final automated review found no major issue at exact head `8e2f71551`, all
+  three earlier P1 threads are resolved, and PR `#5026` merged into
+  `v1-development` as `51cc62123`.
 
-The retained risk classification is `high`. No independent final safety
-approval or launch readiness is claimed.
+The retained risk classification is `high`. Implementation evidence is
+complete, but requirement status remains `gap` because no qualified independent
+human final safety approval exists. No launch readiness is claimed.
