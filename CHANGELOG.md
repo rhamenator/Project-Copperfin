@@ -1,3 +1,11 @@
+- 2026-08-15: Defined `RQ-CF-AGENT-015` after exact signed/DCO head
+  `8adc52416` passed local Release `17/17`, fresh Clang ASan/UBSan `3/3`,
+  isolation inventory `380`, diff validation, all eleven protected checks in
+  runs `31885639477`, `31885639243`, `31885639342`, `31885639247`, and
+  `31885639220`, and both Socket checks. Thread-aware exact-head inspection
+  found no comments, reviews, or threads; PR `#5020` merged into
+  `v1-development` as `b41bbc80d`.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-015` platform process-argument
   serialization. One shared boundary preserves exact POSIX argument elements
   including `argv[0]`, or strictly converts and conventionally quotes a

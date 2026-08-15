@@ -2,7 +2,7 @@
 
 Date: 2026-08-15
 
-Scope: candidate v1 `RQ-CF-AGENT-015` native POSIX and Windows
+Scope: defined v1 `RQ-CF-AGENT-015` native POSIX and Windows
 process-argument serialization
 
 Allowed requirement source: explicit repository-owner product policy under
@@ -90,7 +90,7 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
 
 Rollback is code-local: restore the bounded-process private argument assembly
 and remove the shared serializer, controller result/method, focused
-tests/isolation declaration, candidate `RQ-CF-AGENT-015`, and mapped
+tests/isolation declaration, `RQ-CF-AGENT-015`, and mapped
 documentation. The candidate creates no persistent file, directory, process,
 credential, provider, network, audit, or user state.
 
@@ -109,8 +109,15 @@ Current local evidence:
 - generated native-test isolation inventory covers `380` tests;
 - `git diff --check` passes.
 
-Protected cross-platform exact-head and thread-aware review evidence remain
-pending before the requirement may move from `gap` to `defined`.
+- exact signed/DCO implementation head `8adc524160381656608cf3671e8b7596c35f67d7`
+  passed all eleven protected checks: contributor sign-off run
+  `31885639477`, Windows Win32/x64 DECLARE run `31885639243`,
+  Windows/Ubuntu/macOS generated-launcher run `31885639342`, Clang/GCC
+  executable-path run `31885639247`, Windows environment/executable-path run
+  `31885639220`, and both Socket checks;
+- thread-aware exact-head inspection found no conversation comments, reviews,
+  or review threads; PR `#5020` merged into `v1-development` as
+  `b41bbc80d198d60d20e8791344c97737d97f00ba`.
 
 ## Review evidence
 
@@ -120,5 +127,5 @@ pending before the requirement may move from `gap` to `defined`.
 - verification: element preservation, quoting, encoding, cap/overflow,
   denial clearing, exact-plan rebinding, direct-launch compatibility,
   non-execution boundary, rollback, and traceability
-- result: broader Release and fresh sanitizer verification pass; exact-head protected and
-  thread-aware review evidence remains pending
+- result: broader Release, fresh sanitizer, all eleven exact-head protected
+  checks, and clean thread-aware inspection passed before merge
