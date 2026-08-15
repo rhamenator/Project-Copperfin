@@ -2,8 +2,8 @@
 
 Date: 2026-08-15
 
-Scope: candidate v1 `RQ-CF-AGENT-017` structural Windows process-image
-compatibility preflight
+Scope: implementation-complete candidate v1 `RQ-CF-AGENT-017` structural
+Windows process-image compatibility preflight
 
 Allowed requirement source: explicit repository-owner Windows-first product
 and security policy under H3/I2; derived from `RQ-CF-AGENT-010`,
@@ -125,13 +125,22 @@ Current candidate evidence:
 - portable fixtures cover the direct machine matrix, CLR classification,
   malformed/truncated bounds, DLL/system/subsystem, entry-point, and raw-range
   cases;
-- `git diff --check` passes.
+- `git diff --check` passes;
+- exact signed/DCO implementation head `8c24c0258` passed all eleven protected
+  checks: contributor sign-off run `31893305926`, Clang/GCC executable-paths
+  run `31893307114`, Windows/Ubuntu/macOS generated-launcher run
+  `31893307124`, Win32/x64 DECLARE run `31893307104`, Windows environment and
+  executable-paths run `31893307106`, and both Socket checks;
+- the first Windows generated-launcher attempt passed `33/34` before the
+  existing Python sidecar exceeded its bounded candidate latency window; the
+  unchanged exact-head rerun passed the complete Windows job, including the
+  sidecar and the private workspace-agent regressions;
+- exact-head automated review reported no major issue, the sole earlier
+  actionable thread was addressed and resolved, read-only agent review found
+  no defect with Linux Debug `382/382` plus current-head focused `11/11`, and
+  PR `#5024` merged into `v1-development` as `75d8cf786`.
 
-Still required before implementation evidence is complete:
-
-- protected exact-head Windows, Ubuntu, and macOS checks;
-- DCO/signature and supply-chain checks;
-- exact-head thread-aware review with every actionable finding addressed.
+Implementation evidence is complete at merge commit `75d8cf786`.
 
 Still required before `RQ-CF-AGENT-017` is defined:
 
@@ -147,6 +156,8 @@ Still required before `RQ-CF-AGENT-017` is defined:
 - verification: parser bounds, image-kind/machine/subsystem denial, Windows
   write exclusion and identity recheck, managed-classifier compatibility,
   POSIX non-regression, rollback, and traceability
-- result: candidate focused Release `5/5`, broader Release `17/17`, safety
-  `1/1`, and fresh sanitizer `3/3` pass; protected, exact-head review, and
-  qualified independent evidence remain pending
+- result: focused Release `5/5`, broader Release `17/17`, safety `1/1`, fresh
+  sanitizer `3/3`, all eleven protected checks, DCO, both supply-chain checks,
+  resolved thread-aware exact-head review, and read-only agent corroboration
+  pass; the implementation merged as `75d8cf786`; qualified independent human
+  sign-off remains pending before assurance closure

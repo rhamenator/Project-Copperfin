@@ -1,3 +1,18 @@
+- 2026-08-15: Recorded complete implementation evidence for candidate
+  `RQ-CF-AGENT-017` after exact signed/DCO implementation head `8c24c0258`
+  passed warning-free local focused Release `5/5`, broader Release `17/17`,
+  safety `1/1`, fresh Clang 21 ASan/UBSan `3/3`, diff validation, and all eleven
+  protected checks in runs `31893305926`, `31893307114`, `31893307124`,
+  `31893307104`, and `31893307106`, including both Socket checks. The first
+  Windows generated-launcher attempt passed `33/34` before an existing Python
+  sidecar exceeded its bounded candidate latency window; the unchanged exact
+  head rerun passed the complete Windows job. Exact-head automated and
+  read-only agent reviews found no defect, and the sole earlier actionable
+  thread was addressed and resolved; PR `#5024` merged into `v1-development`
+  as `75d8cf786`. Because the retained risk classification is `high`, qualified
+  independent human sign-off remains the sole prerequisite before the
+  requirement can be marked defined.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-017` Windows workspace-agent
   process-image compatibility preflight. A shared portable PE parser now
   requires coherent machine/optional-header form, bounded sections and raw

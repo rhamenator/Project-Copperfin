@@ -2,8 +2,9 @@
 
 ## V1 workspace-agent Windows process-image compatibility
 
-Candidate `RQ-CF-AGENT-017` adds a portable bounded PE reader and integrates it
-into Windows process-target admission. The parser requires coherent x86/PE32 or
+Candidate `RQ-CF-AGENT-017` is implementation-complete at merged commit
+`75d8cf786`. It adds a portable bounded PE reader and integrates it into
+Windows process-target admission. The parser requires coherent x86/PE32 or
 x64-or-ARM64/PE32+ form, 1–96 bounded sections, raw ranges inside the file, a
 nonzero entry point in an executable section, the executable-image
 characteristic, and a Windows GUI or console subsystem. DLLs, system images,
@@ -19,10 +20,17 @@ unchanged. Focused warning-free Release parser, source-contract, process-target,
 invocation, and isolated-environment verification passes `5/5`; broader Release
 passes `17/17`; safety passes `1/1`; the generated isolation inventory covers
 `382` tests; and fresh Clang 21 ASan/UBSan with leak detection passes `3/3`.
-Protected Windows/Ubuntu/macOS execution, exact-head review, and the
-qualified independent human sign-off required by the retained `high` risk
-classification remain pending. This is structural point-in-time evidence, not
-a Windows-loader guarantee or launch token. Child argument-parser authority,
+Exact signed/DCO implementation head `8c24c0258` passed all eleven protected
+checks in runs `31893305926`, `31893307114`, `31893307124`, `31893307104`, and
+`31893307106`, including both Socket checks. The first Windows
+generated-launcher attempt passed `33/34` before the existing Python sidecar
+exceeded its bounded latency window; its unchanged exact-head rerun passed.
+Exact-head automated and read-only agent reviews found no defect, and the sole
+earlier actionable thread was addressed and resolved before merge. The retained
+risk classification is `high`; qualified independent human sign-off remains
+the sole assurance prerequisite before the requirement can be marked defined,
+and none is claimed. This is structural point-in-time evidence, not a
+Windows-loader guarantee or launch token. Child argument-parser authority,
 launch-adjacent pinning/revalidation, root provisioning, identity-aware cleanup,
 executor, sandbox, endpoint policy, outcome audit, provider/OAuth, trusted UI,
 diff, and undo remain explicit gaps.
