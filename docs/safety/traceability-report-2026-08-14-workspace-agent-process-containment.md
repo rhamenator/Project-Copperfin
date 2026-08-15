@@ -119,8 +119,15 @@ Current local evidence:
 - exact signed/DCO implementation head `4020d70a4` passes all eleven protected
   checks in runs `31858578884`, `31858578779`, `31858578771`, `31858578807`,
   and `31858578790`; both Socket checks pass;
-- implementation PR `#5006` merged as `7cb1499ce`; thread-aware review reports
-  zero review threads. No independent final review is claimed.
+- implementation PR `#5006` merged as `7cb1499ce`;
+- follow-up review identified that Windows accepts forward-slash and mixed-
+  separator UNC roots in addition to backslash UNC roots. Exact signed/DCO
+  correction head `a6f9044f3` structurally rejects all three forms and directly
+  regresses executable and working-directory variants. It passes all eleven
+  protected checks in runs `31860551945`, `31860553045`, `31860553024`,
+  `31860553090`, and `31860553147`; both Socket checks pass;
+- correction PR `#5008` merged as `53c51c433`; its sole review thread is
+  resolved and outdated. No independent final review is claimed.
 
 ## Assurance statement
 
@@ -135,10 +142,12 @@ assigned software level, or suitability for a safety-critical deployment.
 - verification: product-root ownership, path grammar, physical identity,
   registry/session binding, non-execution boundary, rollback, and
   requirements/code/test mapping
-- verification result: passed for exact implementation head `4020d70a4`
+- verification result: passed for exact corrected implementation head
+  `a6f9044f3`
 - automated evidence: focused Release `7/7`, fresh Clang ASan/UBSan `4/4`,
   community/isolation `2/2`, safety `1/1`, and all eleven exact-head protected
-  checks; both Socket checks pass
+  checks; both Socket checks pass; the forward-slash/mixed-separator UNC review
+  finding is directly regressed and its sole thread is resolved
 - automated evidence result: passed
 - scope: medium-severity non-executing process target containment
 - result: accepted for `RQ-CF-AGENT-010`; no independence claim
