@@ -53,7 +53,10 @@ Potential Severity If Misused: high
 
 - Authority ordering: cleanup runs only in the controller's serialized
   `cleaning` transition and is denied while a session is active. Start and stop
-  cannot overlap it.
+  cannot overlap it. The controller borrows the FIFO front only after entering
+  that transition; the non-throwing pointer assignment avoids copying
+  heap-backed receipt fields and cannot strand the transition on allocation
+  failure.
 - Receipt preservation: start-audit failure does not discard the opaque receipt.
   Multiple later generations append rather than replace older receipts, and
   explicit cleanup consumes only the oldest successful receipt. The queue is
@@ -99,8 +102,23 @@ the unrelated Studio policy target could link. The normal Release selection
 above isolates this slice; protected matrices remain authoritative for the
 repository's supported compilers.
 
-Protected Windows/Ubuntu/macOS, exact-head review, and merge evidence remain
-pending. The requirement remains a
-`gap`. No automatic stop/destructor cleanup, crash-recoverable receipt,
+The initial signed/DCO head `52250dea9` received an exact-head automated review
+that found one real P2 exception-safety gap: copying the cleanup receipt after
+entering `cleaning` could throw and leave the controller wedged in that state.
+Corrected signed/DCO head `4d3aaa558` borrows the stable FIFO front under the
+transition invariant, passed all eleven protected checks in runs
+`31913152575`, `31913153471`, `31913153473`, `31913153475`, and `31913153482`,
+and merged through PR `#5032` as `2504b7b3b` after the review thread was
+answered and resolved. The unrelated Python-sidecar timeout seen on the
+superseded head did not recur; the corrected Windows generated-launcher job
+passed in 18m34s. Implementation evidence is complete.
+
+This evidence-only update passes the product-licensing, repository-community,
+native-isolation, supply-chain-workflow, and safety-traceability contracts
+`5/5`; the repository-wide safety scan completed in 323.97 seconds.
+
+The requirement remains a `gap` solely for structured sign-off by a second
+qualified human reviewer because this documentation's potential severity is
+high. No automatic stop/destructor cleanup, crash-recoverable receipt,
 partial-removal retry, nonempty-content disposition, process launch, sandbox,
 endpoint enforcement, or executor readiness is claimed.
