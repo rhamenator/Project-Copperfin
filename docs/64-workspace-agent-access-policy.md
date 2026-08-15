@@ -386,9 +386,10 @@ may therefore leave a private partial generation that deliberately blocks
 reuse until a future trusted-host cleanup boundary handles it.
 
 Environment construction re-verifies both the captured storage-root identity
-and its current privacy contract before inspecting the generation and again
-before returning. Permission or DACL broadening therefore fails even when the
-root's filesystem identity has not changed.
+and its current privacy contract before inspecting the generation. Before
+returning, it re-verifies identity and current privacy for the root, session,
+and every fixed child. Permission or DACL broadening therefore fails even when
+the affected directory's filesystem identity has not changed.
 
 This preparation API is not yet wired to session start and is not a cleanup or
 execution capability. Its full-path operations assume the private root's owner

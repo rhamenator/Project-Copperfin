@@ -168,6 +168,12 @@ bool captured_directory_matches(const CapturedDirectory& captured) {
     return std::filesystem::is_directory(current.canonical_path, error) && !error;
 }
 
+bool captured_private_directory_matches(const CapturedDirectory& captured) {
+    return captured_directory_matches(captured) &&
+        copperfin::platform::verify_private_directory(
+            captured.canonical_path).ok;
+}
+
 std::optional<CapturedDirectory> capture_contained_directory(
     const std::filesystem::path& path,
     const CapturedDirectory& root) {
@@ -344,9 +350,7 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
             "workspace_agent.environment_invalid_session_generation";
         return result;
     }
-    if (!captured_directory_matches(session_storage_root_) ||
-        !copperfin::platform::verify_private_directory(
-             session_storage_root_.canonical_path).ok) {
+    if (!captured_private_directory_matches(session_storage_root_)) {
         result.diagnostic_code =
             "workspace_agent.environment_storage_root_identity_changed";
         return result;
@@ -383,9 +387,7 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
         }
     }
 
-    if (!captured_directory_matches(session_storage_root_) ||
-        !copperfin::platform::verify_private_directory(
-             session_storage_root_.canonical_path).ok ||
+    if (!captured_private_directory_matches(session_storage_root_) ||
         !capture_contained_directory(
              session_root, session_storage_root_).has_value()) {
         result.diagnostic_code =
@@ -419,9 +421,7 @@ WorkspaceAgentIsolatedEnvironmentBoundary::construct(
     if (policy != WorkspaceAgentProcessEnvironmentPolicy::isolated_session_v1) {
         return denied("workspace_agent.environment_invalid_policy");
     }
-    if (!captured_directory_matches(session_storage_root_) ||
-        !copperfin::platform::verify_private_directory(
-             session_storage_root_.canonical_path).ok) {
+    if (!captured_private_directory_matches(session_storage_root_)) {
         return denied("workspace_agent.environment_storage_root_identity_changed");
     }
     for (const auto& directory : executable_directories_) {
@@ -500,18 +500,14 @@ WorkspaceAgentIsolatedEnvironmentBoundary::construct(
         return denied("workspace_agent.environment_size_limit_exceeded");
     }
 
-    if (!copperfin::platform::verify_private_directory(
-             session_storage_root_.canonical_path).ok) {
-        return denied("workspace_agent.environment_identity_changed");
-    }
     const std::array<const PhysicalPathContainmentResult*, 6U> final_directories{
         &session_storage_root_, &*session, &*home, &*temporary, &*config, &*cache};
     for (const auto* directory : final_directories) {
-        if (!captured_directory_matches(*directory)) {
+        if (!captured_private_directory_matches(*directory)) {
             return denied("workspace_agent.environment_identity_changed");
         }
     }
-    if (!captured_directory_matches(*data)) {
+    if (!captured_private_directory_matches(*data)) {
         return denied("workspace_agent.environment_identity_changed");
     }
     for (const auto& directory : executable_directories_) {
