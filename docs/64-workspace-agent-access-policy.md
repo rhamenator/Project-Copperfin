@@ -4,7 +4,8 @@ Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, `RQ-CF-AGENT-004`,
 `RQ-CF-AGENT-005`, `RQ-CF-AGENT-006`, `RQ-CF-AGENT-007`,
 `RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`,
-`RQ-CF-AGENT-011`, `RQ-CF-AGENT-012`, and `RQ-CF-AGENT-013` in
+`RQ-CF-AGENT-011`, `RQ-CF-AGENT-012`, `RQ-CF-AGENT-013`,
+`RQ-CF-AGENT-014`, and `RQ-CF-AGENT-015` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -480,6 +481,35 @@ invoke the separate preparation boundary and later clean the session layout,
 repeat all identity/admission checks beside launch, consume the fixed
 serialized representation without ambient merging,
 pin/revalidate launch targets, apply containment, and audit content-free outcomes.
+
+## Platform process-argument serialization preflight
+
+`RQ-CF-AGENT-015` converts the revalidated canonical executable and admitted
+direct argument vector into one host representation without parsing command
+text. POSIX receives complete argument storage including exact `argv[0]`,
+empty elements, spaces, and arbitrary non-NUL bytes. Windows strictly decodes
+UTF-8 and quotes every element using the conventional C-runtime backslash/quote
+rules required to preserve spaces, quotes, and trailing backslashes. Its caller
+cap includes the terminating NUL and is fixed at the documented 32,767 UTF-16
+code-unit `CreateProcessW` command-line ceiling.
+
+The controller consumes only the canonical executable and arguments from a
+complete serialized-environment preflight. After serialization it repeats that
+entire preflight and compares the generation, mode, tool, both target paths and
+identities, argument vector, environment policy/platform/entries, and exact
+native environment representation. Denial clears the logical plan and both
+argument outputs. The existing bounded-process utility consumes the same
+serializer for direct POSIX `execve` and Windows `CreateProcessW` launch,
+removing a second quoting implementation without introducing shell or PATH
+behavior.
+
+This remains a non-executing workspace-agent preflight and never grants launch
+authority. A future executor must additionally establish Windows child-parser
+and executable-format compatibility, repeat and pin target checks beside
+launch, consume the fixed environment without ambient merging, apply the real
+sandbox and endpoint policy, own cancellation and descendants, and record only
+content-free outcome audit. Layout cleanup and session-start integration also
+remain separate.
 
 ## Current implementation and remaining work
 

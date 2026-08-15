@@ -5,6 +5,7 @@
 #include "copperfin/platform/bounded_process.h"
 
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/process_arguments.h"
 #include "copperfin/platform/process_environment.h"
 
 #include <algorithm>
@@ -259,29 +260,6 @@ std::wstring utf8_to_wide(const std::string& value, int& native_error) {
     return result;
 }
 
-std::wstring quote_argument(const std::wstring& value) {
-    std::wstring result(1U, L'"');
-    std::size_t backslashes = 0U;
-    for (const wchar_t character : value) {
-        if (character == L'\\') {
-            ++backslashes;
-            continue;
-        }
-        if (character == L'"') {
-            result.append(backslashes * 2U + 1U, L'\\');
-            result.push_back(L'"');
-            backslashes = 0U;
-            continue;
-        }
-        result.append(backslashes, L'\\');
-        backslashes = 0U;
-        result.push_back(character);
-    }
-    result.append(backslashes * 2U, L'\\');
-    result.push_back(L'"');
-    return result;
-}
-
 bool wait_for_terminated_process(
     const HANDLE process,
     BoundedProcessResult& result) {
@@ -422,18 +400,20 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         return result;
     }
 
-    std::wstring command_line = quote_argument(executable);
-    for (const auto& argument : request.arguments) {
-        const std::wstring converted = utf8_to_wide(argument, conversion_error);
-        if (conversion_error != 0) {
-            result.status = BoundedProcessStatus::launch_failed;
-            result.error_code = "polyglot.process.launch_failed";
-            result.native_error = conversion_error;
-            return result;
-        }
-        command_line.push_back(L' ');
-        command_line += quote_argument(converted);
+    auto serialized_arguments = serialize_process_arguments(
+        request.executable_path,
+        request.arguments,
+        ProcessArgumentTarget::windows_command_line_v1,
+        32767U);
+    if (!serialized_arguments.ok) {
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "polyglot.process.arguments_invalid";
+        result.native_error = ERROR_INVALID_PARAMETER;
+        return result;
     }
+    std::wstring command_line(
+        serialized_arguments.windows_command_line.begin(),
+        serialized_arguments.windows_command_line.end());
 
     auto serialized_environment = serialize_process_environment(
         request.environment,
@@ -1058,11 +1038,18 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         return result;
     }
 
-    std::vector<std::string> argument_storage;
-    argument_storage.reserve(request.arguments.size() + 1U);
-    argument_storage.push_back(request.executable_path);
-    argument_storage.insert(
-        argument_storage.end(), request.arguments.begin(), request.arguments.end());
+    auto serialized_arguments = serialize_process_arguments(
+        request.executable_path,
+        request.arguments,
+        ProcessArgumentTarget::posix_v1,
+        std::numeric_limits<std::size_t>::max());
+    if (!serialized_arguments.ok) {
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "polyglot.process.arguments_invalid";
+        return result;
+    }
+    std::vector<std::string> argument_storage =
+        std::move(serialized_arguments.posix_arguments);
     std::vector<char*> argv;
     argv.reserve(argument_storage.size() + 1U);
     for (auto& argument : argument_storage) {

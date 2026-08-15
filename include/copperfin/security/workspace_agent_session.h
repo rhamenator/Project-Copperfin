@@ -22,7 +22,8 @@ namespace copperfin::security {
 
 // Governing requirements: RQ-CF-AGENT-001, RQ-CF-AGENT-005, and
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
-// RQ-CF-AGENT-011, RQ-CF-AGENT-012, and RQ-CF-AGENT-013.
+// RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
+// RQ-CF-AGENT-014, and RQ-CF-AGENT-015.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -192,6 +193,20 @@ struct WorkspaceAgentSerializedProcessEnvironmentPreflightResult {
     std::string diagnostic_code;
 };
 
+struct WorkspaceAgentSerializedProcessInvocationPreflightResult {
+    bool allowed = false;
+    // The complete fixed environment and logical invocation remain attached to
+    // the platform argument representation they bracketed.
+    WorkspaceAgentSerializedProcessEnvironmentPreflightResult
+        serialized_environment{};
+    // Exactly one argument representation is populated on allow. POSIX
+    // includes argv[0]; Windows includes the complete CreateProcessW command
+    // line without its implicit terminating NUL.
+    std::vector<std::string> posix_arguments;
+    std::u16string windows_command_line;
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -254,6 +269,14 @@ public:
     // environment, constructs no command line, and starts no process.
     [[nodiscard]] WorkspaceAgentSerializedProcessEnvironmentPreflightResult
     preflight_serialized_process_environment_request(
+        const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
+
+    // Serializes the canonical executable as argv[0] and the admitted direct
+    // argument elements for the host platform, bracketed by complete repeated
+    // environment preflights. It performs no shell interpretation, executable
+    // read, sandbox operation, directory mutation, or process launch.
+    [[nodiscard]] WorkspaceAgentSerializedProcessInvocationPreflightResult
+    preflight_serialized_process_invocation_request(
         const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
 
 private:

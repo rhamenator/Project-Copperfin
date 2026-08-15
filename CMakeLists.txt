@@ -115,6 +115,7 @@ add_library(cf_platform_support
     src/platform/json.cpp
     src/platform/path.cpp
     src/platform/private_directory.cpp
+    src/platform/process_arguments.cpp
     src/platform/process_environment.cpp
     src/platform/safe_regex.cpp
 )
