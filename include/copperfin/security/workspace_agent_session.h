@@ -25,7 +25,7 @@ namespace copperfin::security {
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
 // RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
-// RQ-CF-AGENT-018.
+// RQ-CF-AGENT-018 and RQ-CF-AGENT-019.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -211,6 +211,11 @@ struct WorkspaceAgentSerializedProcessInvocationPreflightResult {
     std::string diagnostic_code;
 };
 
+struct WorkspaceAgentLaunchRevalidationResult {
+    bool allowed = false;
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -290,6 +295,17 @@ public:
     [[nodiscard]] WorkspaceAgentSerializedProcessInvocationPreflightResult
     preflight_serialized_process_invocation_request(
         const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
+
+    // Explicit fail-closed promotion gate. Point-in-time plans cannot become
+    // launch authority until a future executor retains the trusted containment
+    // root, executable and working-directory pins, and a revocation lease
+    // through the launch decision. Version 1 therefore always denies without
+    // returning or reflecting any part of either input.
+    [[nodiscard]] WorkspaceAgentLaunchRevalidationResult
+    revalidate_serialized_process_invocation_for_launch(
+        const WorkspaceAgentProcessInvocationPreflightRequest& request,
+        const WorkspaceAgentSerializedProcessInvocationPreflightResult&
+            admitted_plan) const;
 
 private:
     enum class Transition {

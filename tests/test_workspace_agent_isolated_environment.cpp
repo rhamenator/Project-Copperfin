@@ -476,6 +476,36 @@ void test_fixed_non_inheriting_environment() {
                    WorkspaceAgentProcessArgumentParserContract::posix_argv_v1,
            "RQ-CF-AGENT-018: POSIX preflight must retain native argv authority without a Windows parser binding");
 #endif
+
+    const auto launch_revalidation =
+        controller.revalidate_serialized_process_invocation_for_launch(
+            invocation_request(start.session.generation), serialized_invocation);
+    expect(!launch_revalidation.allowed &&
+               launch_revalidation.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_pinning_unavailable",
+           "RQ-CF-AGENT-019: even a valid point-in-time plan must fail closed until launch pins and revocation binding exist");
+
+    const auto invalid =
+        controller.revalidate_serialized_process_invocation_for_launch(
+            invocation_request(start.session.generation), {});
+    expect(!invalid.allowed &&
+               invalid.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_pinning_unavailable",
+           "RQ-CF-AGENT-019: a denied input plan must receive the same content-free unavailable result");
+
+    auto altered_plan = serialized_invocation;
+#if defined(_WIN32)
+    altered_plan.windows_command_line.push_back(u' ');
+#else
+    altered_plan.posix_arguments.push_back("injected");
+#endif
+    const auto altered =
+        controller.revalidate_serialized_process_invocation_for_launch(
+            invocation_request(start.session.generation), altered_plan);
+    expect(!altered.allowed &&
+               altered.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_pinning_unavailable",
+           "RQ-CF-AGENT-019: caller-held plan content must not affect the invariant denial contract");
 }
 
 void test_windows_serialization_requires_exact_parser_authority() {

@@ -101,8 +101,8 @@ private to that base layer.
 The read-only connector retains Windows/POSIX SQLite selection privately;
 public Copperfin headers reject host-selection and native SQLite API tokens.
 `H3`/`I2` still lack model/provider and OAuth adapters, identity-aware
-environment-layout cleanup, launch-adjacent
-pinning, mutable execution and sandbox enforcement, host UI, and tool-outcome
+environment-layout cleanup, launch-adjacent handle pinning and synchronous
+executor consumption, mutable execution and sandbox enforcement, host UI, and tool-outcome
 audit integration. **What's left, and what it
 takes:** this is
 covered in full, document-by-document, in

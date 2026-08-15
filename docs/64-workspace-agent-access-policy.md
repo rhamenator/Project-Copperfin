@@ -6,7 +6,7 @@ Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`,
 `RQ-CF-AGENT-011`, `RQ-CF-AGENT-012`, `RQ-CF-AGENT-013`,
 `RQ-CF-AGENT-014`, `RQ-CF-AGENT-015`, `RQ-CF-AGENT-016`,
-`RQ-CF-AGENT-017`, and candidate `RQ-CF-AGENT-018` in
+`RQ-CF-AGENT-017`, `RQ-CF-AGENT-018`, and candidate `RQ-CF-AGENT-019` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -595,6 +595,26 @@ attestation. This boundary does not infer parser behavior from a PE image,
 validate publisher trust, pin a handle beside launch, execute a process, apply
 sandbox or endpoint policy, manage descendants, or record a tool outcome.
 
+## Fail-closed launch-promotion gate
+
+Candidate `RQ-CF-AGENT-019` supplies an explicit non-executing gate between a
+point-in-time serialized plan and any future controlled launcher. In v1 the
+gate invariantly denies every request with the content-free diagnostic
+`workspace_agent.process_launch_revalidation_pinning_unavailable`. It does not
+inspect or reflect the submitted request or plan and returns no plan, digest,
+target identity, or reusable authority.
+
+Review of the earlier point-in-time allow design exposed independent races in
+executable contents, session revocation, containment-root identity, and working
+directory identity. Adding sequential snapshots or rechecks only moved the
+last unprotected interval. An allow path therefore remains unavailable until a
+future executor retains the original trusted containment root, platform-backed
+pins for both executable and working directory (or equivalent race-free target
+authority), and a revocation lease through launch. That executor must also
+enforce sandbox, endpoint, descendant, and outcome-audit policy. This gate
+starts no process and Windows dependency-closure restrictions from
+`RQ-CF-AGENT-018` continue to apply.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
@@ -632,7 +652,10 @@ candidate `RQ-CF-AGENT-017` additionally requires a structurally launchable,
 host-compatible direct PE image and rechecks its complete physical identity
 after inspection. Candidate `RQ-CF-AGENT-018` additionally requires an exact
 trusted-host executable-identity binding before Windows C-runtime command-line
-serialization; POSIX retains native argv semantics. The adjacent
+serialization; POSIX retains native argv semantics. Candidate
+`RQ-CF-AGENT-019` exposes a fail-closed promotion gate that returns no plan or
+digest and cannot authorize launch while coherent target pins and a revocation
+lease are unavailable. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
@@ -643,7 +666,7 @@ private layout before audit-backed activation and fails closed without adopting
 existing state. None of these results is an executor,
 authorization token, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, launch-adjacent handle/revalidation,
+semantics, launch-adjacent handle pinning and synchronous executor integration,
 identity-aware environment layout cleanup, endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning

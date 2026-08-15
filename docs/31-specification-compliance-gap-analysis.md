@@ -480,10 +480,17 @@ the parser is self-contained from mutable non-system load-time images, and
 repeats that authority check after
 serialization; POSIX
 continues to use native argv semantics. This is still non-executing point-in-
-time evidence rather than launch authority.
+time evidence rather than launch authority. Candidate `RQ-CF-AGENT-019` now
+provides an explicit fail-closed promotion gate: every submitted point-in-time
+plan is denied without inspection or reflection, and no plan, digest, or
+authority is returned. Review showed that sequential rechecks cannot coherently
+bind the trusted root, executable, working directory, and revocation state.
+An allow path therefore remains unavailable until those targets are pinned and
+a revocation lease is retained through launch.
 Broader model/
 provider policy, OAuth and credential adapters, trusted-host environment-layout
-identity-aware cleanup, launch-adjacent pinning, endpoint
+identity-aware cleanup, launch-adjacent handle pinning and synchronous executor
+consumption, endpoint
 policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog
 surfaces remain open.

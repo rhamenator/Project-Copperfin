@@ -45,9 +45,15 @@ require_text(src/security/workspace_agent_session.cpp
     "workspace_agent.process_argument_parser_authority_unavailable")
 require_text(src/security/workspace_agent_session.cpp
     "final_parser_contract != parser_contract")
+require_text(include/copperfin/security/workspace_agent_session.h
+    "revalidate_serialized_process_invocation_for_launch")
+require_text(src/security/workspace_agent_session.cpp
+    "workspace_agent.process_launch_revalidation_pinning_unavailable")
 require_text(tests/test_workspace_agent_process_parser.cpp "RQ-CF-AGENT-018")
 require_text(tests/test_workspace_agent_isolated_environment.cpp
     "workspace_agent.process_argument_parser_authority_unavailable")
+require_text(tests/test_workspace_agent_isolated_environment.cpp
+    "RQ-CF-AGENT-019")
 require_text(.github/workflows/windows-environment-validation.yml
     "test_workspace_agent_process_parser test_workspace_agent_isolated_environment")
 require_text(.github/workflows/generated-launcher-validation.yml

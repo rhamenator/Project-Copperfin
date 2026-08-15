@@ -861,6 +861,19 @@ WorkspaceAgentSessionController::preflight_serialized_process_invocation_request
     return result;
 }
 
+WorkspaceAgentLaunchRevalidationResult
+WorkspaceAgentSessionController::revalidate_serialized_process_invocation_for_launch(
+    const WorkspaceAgentProcessInvocationPreflightRequest& request,
+    const WorkspaceAgentSerializedProcessInvocationPreflightResult&
+        admitted_plan) const {
+    static_cast<void>(request);
+    static_cast<void>(admitted_plan);
+    WorkspaceAgentLaunchRevalidationResult result;
+    result.diagnostic_code =
+        "workspace_agent.process_launch_revalidation_pinning_unavailable";
+    return result;
+}
+
 std::string serialize_workspace_agent_session_audit_event(
     const WorkspaceAgentSessionAuditEvent& event) {
     std::ostringstream stream;

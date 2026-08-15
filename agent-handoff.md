@@ -1,5 +1,28 @@
 # Agent Handoff
 
+## V1 workspace-agent fail-closed launch-promotion gate
+
+Candidate `RQ-CF-AGENT-019` has an explicit fail-closed implementation on a
+dedicated branch. Exact-head review exposed four independent races in the
+earlier point-in-time allow design: restored executable metadata, revocation
+during hashing, containment-root substitution, and working-directory
+replacement. Sequential rechecks cannot bind those objects as one coherent
+launch authority, so the allow path was withdrawn.
+
+The native controller now denies every promotion request with
+`workspace_agent.process_launch_revalidation_pinning_unavailable`, without
+inspecting or reflecting request/plan content and without returning a plan,
+digest, target identity, or authority. It launches nothing. A future allow path
+requires a retained trusted root, platform-backed executable and working-
+directory pins (or equivalent race-free authority), and a revocation lease
+through launch, plus sandbox, endpoint, descendant, and outcome-audit
+enforcement. Retained risk is high and no independent final safety approval is
+claimed. Local warning-free Release workspace-agent tests pass `10/10`;
+focused/source-contract verification passes `2/2`; fresh Clang 21 ASan/UBSan
+passes `3/3`; community/isolation/safety gates pass `5/5`, including the fresh
+324-second safety scan; and diff validation passes. Protected and exact-head
+review evidence remain pending.
+
 ## V1 workspace-agent Windows process-parser authority
 
 Candidate `RQ-CF-AGENT-018` has complete implementation evidence. Bounded trusted product-host
