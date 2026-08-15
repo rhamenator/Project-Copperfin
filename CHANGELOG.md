@@ -1,3 +1,32 @@
+- 2026-08-15: Corrected the workspace-agent `RQ-CF-AGENT-013` serializer cap
+  after exact-head review found that the 32,768-byte logical ceiling accounted
+  for every entry terminator but not the additional final Windows block
+  terminator. A single overflow-safe policy helper now supplies the POSIX and
+  Windows caller caps, rejects invalid platforms, and has direct formula
+  regression coverage. This changes no admitted fixed profile or serialized
+  byte/code-unit content.
+
+- 2026-08-15: Corrected the `RQ-CF-AGENT-013` candidate after exact-head review
+  found that it misapplied the ANSI-only 32,767-character environment limit to
+  Unicode `CreateProcessW` blocks. The portable serializer now honors its
+  caller's explicit resource cap, the workspace-agent fixed profile retains its
+  bounded logical-profile cap, and the existing bounded-process utility no
+  longer rejects Unicode environments the prior implementation admitted. A
+  direct regression admits a 40,000-code-unit block and rejects the next unit;
+  focused Release and fresh Clang ASan/UBSan selections both pass `3/3`.
+
+- 2026-08-15: Added candidate `RQ-CF-AGENT-013` native process-environment
+  serialization. One portable parent-independent boundary preserves exact
+  POSIX `name=value` storage and emits a strictly decoded, case-insensitively
+  sorted, double-NUL Windows UTF-16 block under the native cap. Ambiguous names,
+  target-semantic duplicates, NUL, malformed Windows UTF-8, overflow, and size
+  violations fail without partial output. The workspace-agent controller binds
+  the native representation to a repeated complete logical preflight and still
+  performs no launch; the existing bounded-process utility now consumes the
+  same serializer. Release security/community/isolation/safety verification
+  passes `14/14`; fresh Clang 21 ASan/UBSan passes `3/3`; the generated
+  isolation inventory covers `377` tests; and diff validation passes.
+
 - 2026-08-15: `RQ-CF-AGENT-012` exact-head evidence is complete. Signed/DCO
   corrected head `9c2fa618c` passed all eleven protected checks in runs
   `31867096322`, `31867098781`, `31867098869`, `31867098752`, and

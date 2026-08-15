@@ -4,7 +4,7 @@ Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, `RQ-CF-AGENT-004`,
 `RQ-CF-AGENT-005`, `RQ-CF-AGENT-006`, `RQ-CF-AGENT-007`,
 `RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`,
-`RQ-CF-AGENT-011`, and `RQ-CF-AGENT-012` in
+`RQ-CF-AGENT-011`, `RQ-CF-AGENT-012`, and `RQ-CF-AGENT-013` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -356,14 +356,38 @@ inspect or certify path text as nonsensitive.
 
 The controller performs the complete invocation preflight, constructs the
 environment for that exact generation and policy, and performs the invocation
-preflight again before returning a point-in-time plan. It still creates or
-deletes no directory, serializes no POSIX `envp` or Windows environment block,
+preflight again before returning a point-in-time plan.
+
+## Platform process-environment serialization preflight
+
+`RQ-CF-AGENT-013` converts only that admitted fixed logical environment into a
+native representation. POSIX serialization preserves the deterministic input
+order and exact non-NUL value bytes as complete `name=value` storage strings;
+a future launcher remains responsible for its transient null-terminated
+pointer vector. Windows serialization strictly decodes UTF-8 into UTF-16,
+case-insensitively sorts names, rejects case-insensitive duplicates, and emits
+the required double-NUL-terminated environment block within an explicit caller
+resource cap. The Win32 32,767-character environment limit applies to ANSI,
+not the Unicode block used here. Both platforms require portable names matching
+`[A-Za-z_][A-Za-z0-9_]*`, reject embedded NUL, duplicates, invalid target
+contracts, and overflow, and return no partial representation on denial.
+
+The controller brackets serialization with the complete invocation and logical-
+environment preflight, compares the session, target identities, arguments,
+policy, platform, and every fixed entry, and returns both the exact plan and
+exactly one platform representation only if nothing changed. The shared
+serializer also replaces duplicate environment assembly in the existing
+bounded-process utility. Neither path consults or merges the parent environment.
+The workspace-agent cap adds one storage terminator per fixed entry and, on
+Windows, the additional final block terminator to the 32,768-byte logical
+profile ceiling.
+
+This boundary still creates or deletes no directory, serializes no arguments,
 starts no process, applies no sandbox or endpoint policy, injects no provider
 credential, and records no tool outcome. The future executor must securely
 create and clean the session layout, repeat all identity/admission checks beside
-launch, serialize the fixed entries losslessly, enforce platform limits,
-pin/revalidate launch targets, apply containment, and audit content-free
-outcomes.
+launch, consume the fixed serialized representation without ambient merging,
+pin/revalidate launch targets, apply containment, and audit content-free outcomes.
 
 ## Current implementation and remaining work
 
@@ -401,12 +425,13 @@ tools and explicit process executable/working-directory targets. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
-ambient variables. None of these results is an executor, authorization token,
-serialized platform environment, or real sandbox. Prospective
+ambient variables, and the next boundary serializes that exact plan for POSIX
+or Windows without launching. None of these results is an executor,
+authorization token, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
 semantics, launch-adjacent handle/revalidation, isolated environment
-layout creation/cleanup and access-control integration, platform environment
-and argument serialization, endpoint policy, process
+layout creation/cleanup and access-control integration, platform argument
+serialization, endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration

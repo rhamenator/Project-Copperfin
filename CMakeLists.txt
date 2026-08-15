@@ -114,6 +114,7 @@ add_library(cf_platform_support
     src/platform/invariant_numeric.cpp
     src/platform/json.cpp
     src/platform/path.cpp
+    src/platform/process_environment.cpp
     src/platform/safe_regex.cpp
 )
 

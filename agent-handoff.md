@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 workspace-agent native environment serialization candidate
+
+`RQ-CF-AGENT-013` is the active candidate. A new portable serializer consumes
+only an explicit complete environment: POSIX retains exact non-NUL bytes and
+entry order as `name=value` storage, while Windows strictly converts UTF-8 to
+UTF-16, sorts names case-insensitively, and emits a double-NUL block within an
+explicit caller cap. Portable-name, embedded-NUL, target-semantic duplicate,
+encoding, overflow, and size failures return no partial output. The controller
+brackets serialization with the complete invocation/logical-environment
+preflight and binds every target identity, argument, policy, platform, and
+entry. The existing bounded-process utility uses the same serializer. Local
+Release security/community/isolation/safety verification passes `14/14`, fresh
+Clang 21 ASan/UBSan with leak detection passes `3/3`, the generated isolation
+inventory covers `377` tests, and diff validation passes.
+
+This remains non-executing for the workspace agent. Secure layout lifecycle,
+platform argument serialization, Windows executable-format compatibility,
+launch-adjacent pin/revalidation, executor, sandbox, endpoint policy, outcome
+audit, provider/OAuth, trusted UI, diff, and undo remain explicit gaps.
+
 ## V1 workspace-agent isolated environment construction
 
 `RQ-CF-AGENT-012` is defined at merged commit `b3947335e`. A trusted-host boundary
@@ -30,7 +50,7 @@ defect in directory identity, later-generation lifecycle, replacement denial,
 the platform seam, fixed environment contents, or documentation fidelity.
 
 This is still a non-executing point-in-time plan. Trusted-host secure layout
-creation, access control, cleanup, platform environment/argument serialization,
+creation, access control, cleanup, platform argument serialization,
 Windows executable-format compatibility, launch-adjacent pin/revalidation,
 executor, real sandbox, endpoint policy, outcome audit, provider/OAuth, trusted
 UI, diff, and undo remain explicit gaps.
@@ -58,8 +78,9 @@ passed the focused eight-test workspace-agent selection and found no defect in
 bounds/overflow, UTF-8, denial clearing, final session recheck, sensitive-
 content wording, or the non-execution boundary. No independent final safety
 approval is claimed.
-`RQ-CF-AGENT-012` now supplies fixed-key logical environment construction.
-Secure layout lifecycle, platform serialization/limits, executable-format
+`RQ-CF-AGENT-012` now supplies fixed-key logical environment construction and
+candidate `RQ-CF-AGENT-013` supplies native environment serialization. Secure
+layout lifecycle, argument serialization/limits, executable-format
 compatibility, launch-adjacent pin/revalidation, executor, real sandbox,
 endpoint policy, outcome audit, provider/OAuth, trusted UI, diff, and undo
 remain explicit gaps.
@@ -87,7 +108,8 @@ thread is resolved and outdated. Implementation PR `#5006` merged as
 review is claimed.
 `RQ-CF-AGENT-011` supplies the bounded direct-argument and non-inheriting
 environment-policy shape, and `RQ-CF-AGENT-012` supplies fixed-key logical
-environment construction. Secure layout lifecycle, platform serialization/
+environment construction, and candidate `RQ-CF-AGENT-013` supplies native
+environment serialization. Secure layout lifecycle, argument serialization/
 limits, launch-adjacent handle/revalidation, executor, real
 sandbox, outcome audit, endpoint policy, provider/OAuth, trusted UI, diff, and
 undo remain explicit gaps.

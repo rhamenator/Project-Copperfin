@@ -4,6 +4,8 @@
 
 #include "copperfin/security/workspace_agent_session.h"
 
+#include "copperfin/platform/process_environment.h"
+
 #include <iomanip>
 #include <limits>
 #include <locale>
@@ -629,6 +631,75 @@ WorkspaceAgentSessionController::preflight_process_environment_request(
     result.environment_platform = environment.platform;
     result.environment_entries = environment.entries;
     result.diagnostic_code = "workspace_agent.process_environment_request_allowed";
+    return result;
+}
+
+WorkspaceAgentSerializedProcessEnvironmentPreflightResult
+WorkspaceAgentSessionController::preflight_serialized_process_environment_request(
+    const WorkspaceAgentProcessInvocationPreflightRequest& request) const {
+    WorkspaceAgentSerializedProcessEnvironmentPreflightResult result;
+    const auto preliminary = preflight_process_environment_request(request);
+    if (!preliminary.allowed) {
+        result.diagnostic_code = preliminary.diagnostic_code;
+        return result;
+    }
+
+    std::vector<copperfin::platform::ProcessEnvironmentEntry> entries;
+    entries.reserve(preliminary.environment_entries.size());
+    for (const auto& entry : preliminary.environment_entries) {
+        entries.push_back({.name = entry.name, .value = entry.value});
+    }
+    if (preliminary.environment_platform !=
+            WorkspaceAgentProcessEnvironmentPlatform::windows_v1 &&
+        preliminary.environment_platform !=
+            WorkspaceAgentProcessEnvironmentPlatform::posix_v1) {
+        result.diagnostic_code =
+            "workspace_agent.process_environment_serialization_invalid_platform";
+        return result;
+    }
+    const bool windows = preliminary.environment_platform ==
+        WorkspaceAgentProcessEnvironmentPlatform::windows_v1;
+    const auto target = windows
+        ? copperfin::platform::ProcessEnvironmentTarget::windows_utf16_v1
+        : copperfin::platform::ProcessEnvironmentTarget::posix_v1;
+    const std::size_t maximum_units =
+        workspace_agent_serialized_environment_maximum_units(
+            preliminary.environment_platform,
+            preliminary.environment_entries.size());
+    auto serialized = copperfin::platform::serialize_process_environment(
+        entries, target, maximum_units);
+    if (!serialized.ok) {
+        result.diagnostic_code = serialized.diagnostic_code;
+        return result;
+    }
+
+    // Serialization can allocate and copy. Repeat the complete logical
+    // preflight afterward and reject any changed session, target, argument,
+    // environment policy, or fixed entry set.
+    const auto final = preflight_process_environment_request(request);
+    if (!final.allowed ||
+        final.session_generation != preliminary.session_generation ||
+        final.effective_mode != preliminary.effective_mode ||
+        final.tool_id != preliminary.tool_id ||
+        final.canonical_executable_path != preliminary.canonical_executable_path ||
+        final.executable_identity != preliminary.executable_identity ||
+        final.canonical_working_directory != preliminary.canonical_working_directory ||
+        final.working_directory_identity != preliminary.working_directory_identity ||
+        final.arguments != preliminary.arguments ||
+        final.environment_policy != preliminary.environment_policy ||
+        final.environment_platform != preliminary.environment_platform ||
+        final.environment_entries != preliminary.environment_entries) {
+        result.diagnostic_code =
+            "workspace_agent.process_environment_serialization_stale_invocation";
+        return result;
+    }
+
+    result.allowed = true;
+    result.environment_plan = final;
+    result.posix_environment = std::move(serialized.posix_entries);
+    result.windows_environment_block = std::move(serialized.windows_block);
+    result.diagnostic_code =
+        "workspace_agent.process_environment_serialization_request_allowed";
     return result;
 }
 

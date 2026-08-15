@@ -465,10 +465,13 @@ preflights now bind registered existing-file targets and explicit process
 executable/working-directory pairs to exact active sessions without file I/O,
 PATH lookup, shell interpretation, or launch. A further non-executing preflight
 binds a bounded direct UTF-8 argument vector and non-inheriting isolated-session
-environment-policy selector to that exact target/session result. Broader model/
+environment-policy selector to that exact target/session result. The trusted-
+host boundary constructs its fixed generation-owned logical environment, and a
+portable non-executing boundary serializes it for POSIX or Windows without
+ambient inheritance. Broader model/
 provider policy, OAuth and credential adapters, trusted-host environment-layout
-creation/access control/cleanup, platform environment and argument
-serialization, endpoint policy, a mutable
+creation/access control/cleanup, platform argument serialization, endpoint
+policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog
 surfaces remain open.
 

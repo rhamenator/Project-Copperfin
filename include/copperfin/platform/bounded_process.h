@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "copperfin/platform/process_environment.h"
+
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -20,10 +22,7 @@ enum class BoundedProcessStatus {
     launch_failed
 };
 
-struct BoundedProcessEnvironmentVariable {
-    std::string name;
-    std::string value;
-};
+using BoundedProcessEnvironmentVariable = ProcessEnvironmentEntry;
 
 struct BoundedProcessRequest {
     std::string executable_path;
