@@ -25,6 +25,7 @@ using copperfin::security::WorkspaceAgentSessionAuditSink;
 using copperfin::security::WorkspaceAgentSessionController;
 
 int failures = 0;
+std::filesystem::path running_test_executable;
 
 template <typename T>
 concept HasCommandText = requires(T value) {
@@ -97,6 +98,17 @@ public:
     }
 
     static void write_executable(const std::filesystem::path& path) {
+#if defined(_WIN32)
+        std::error_code copy_error;
+        std::filesystem::copy_file(
+            running_test_executable,
+            path,
+            std::filesystem::copy_options::overwrite_existing,
+            copy_error);
+        if (copy_error) {
+            write_plain(path);
+        }
+#else
         write_plain(path);
         std::error_code permission_error;
         std::filesystem::permissions(
@@ -106,6 +118,7 @@ public:
                 std::filesystem::perms::others_exec,
             std::filesystem::perm_options::add,
             permission_error);
+#endif
     }
 
     std::filesystem::path root;
@@ -279,6 +292,13 @@ void test_boundary_requires_explicit_direct_process_targets() {
 #if !defined(_WIN32)
     expect(!boundary->inspect_workspace_process("not-executable", ".").allowed,
            "RQ-CF-AGENT-010: POSIX process targets must carry execute permission");
+#else
+    const auto non_image = boundary->inspect_workspace_process(
+        "not-executable", ".");
+    expect(!non_image.allowed &&
+               non_image.diagnostic_code ==
+                   "workspace_agent.process_executable_image_invalid",
+           "RQ-CF-AGENT-017: Windows shell/text content must not become a direct process image");
 #endif
 
     const auto local = boundary->inspect_local_process(
@@ -525,7 +545,18 @@ void test_workspace_root_replacement_fails_closed() {
 
 }  // namespace
 
-int main() {
+int main(int argc, char** argv) {
+    if (argc > 0 && argv[0] != nullptr) {
+        std::error_code canonical_error;
+        running_test_executable = std::filesystem::canonical(
+            std::filesystem::path(argv[0]), canonical_error);
+    }
+#if defined(_WIN32)
+    if (running_test_executable.empty()) {
+        std::cerr << "FAIL: Windows PE fixtures require the running test executable\n";
+        return EXIT_FAILURE;
+    }
+#endif
     test_boundary_requires_explicit_direct_process_targets();
     test_boundary_rejects_process_target_indirection_and_aliasing();
     test_session_bound_process_target_preflight();

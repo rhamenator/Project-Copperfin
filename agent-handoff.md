@@ -1,5 +1,32 @@
 # Agent Handoff
 
+## V1 workspace-agent Windows process-image compatibility
+
+Candidate `RQ-CF-AGENT-017` adds a portable bounded PE reader and integrates it
+into Windows process-target admission. The parser requires coherent x86/PE32 or
+x64-or-ARM64/PE32+ form, 1–96 bounded sections, raw ranges inside the file, a
+nonzero entry point in an executable section, the executable-image
+characteristic, and a Windows GUI or console subsystem. DLLs, system images,
+unsupported or mismatched machine types, malformed/truncated inputs, and
+unsupported subsystems fail closed. Host compatibility admits x86 on x86, x86
+or x64 on x64, and ARM64 on ARM64; unverified emulation combinations remain
+denied. Windows parsing holds the file without write sharing, then process
+containment requires the complete physical identity to remain unchanged.
+
+The existing DECLARE managed/native classifier consumes the same parser while
+retaining its CLR-directory-slot rule. POSIX process-target behavior is
+unchanged. Focused warning-free Release parser, source-contract, process-target,
+invocation, and isolated-environment verification passes `5/5`; broader Release
+passes `17/17`; safety passes `1/1`; the generated isolation inventory covers
+`382` tests; and fresh Clang 21 ASan/UBSan with leak detection passes `3/3`.
+Protected Windows/Ubuntu/macOS execution, exact-head review, and the
+qualified independent human sign-off required by the retained `high` risk
+classification remain pending. This is structural point-in-time evidence, not
+a Windows-loader guarantee or launch token. Child argument-parser authority,
+launch-adjacent pinning/revalidation, root provisioning, identity-aware cleanup,
+executor, sandbox, endpoint policy, outcome audit, provider/OAuth, trusted UI,
+diff, and undo remain explicit gaps.
+
 ## V1 workspace-agent configured session-layout start integration
 
 Candidate `RQ-CF-AGENT-016` is implementation-complete at merged commit
