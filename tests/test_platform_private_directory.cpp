@@ -79,6 +79,19 @@ void test_creation_and_verification() {
                ordinary_create.failure == PrivateDirectoryFailure::already_exists &&
                !verify_private_directory(ordinary).ok,
            "RQ-CF-AGENT-014: creation must not repair an existing broadened directory");
+
+#if !defined(_WIN32)
+    const auto special = private_root / "special";
+    expect(create_private_directory(special).ok,
+           "RQ-CF-AGENT-014: the special-mode fixture must start private");
+    std::filesystem::permissions(
+        special,
+        std::filesystem::perms::owner_all |
+            std::filesystem::perms::set_gid,
+        std::filesystem::perm_options::replace);
+    expect(!verify_private_directory(special).ok,
+           "RQ-CF-AGENT-014: setuid, setgid, and sticky permission bits must violate exact mode 0700");
+#endif
 }
 
 void test_invalid_and_wrong_kind_inputs() {

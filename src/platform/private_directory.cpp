@@ -271,7 +271,7 @@ PrivateDirectoryResult verify_private_directory(
     struct stat status{};
     if (::lstat(path.c_str(), &status) != 0 || !S_ISDIR(status.st_mode) ||
         S_ISLNK(status.st_mode) || status.st_uid != ::geteuid() ||
-        (status.st_mode & 0777) != 0700) {
+        (status.st_mode & 07777) != 0700) {
         return failed(PrivateDirectoryFailure::verification_failed);
     }
 #endif

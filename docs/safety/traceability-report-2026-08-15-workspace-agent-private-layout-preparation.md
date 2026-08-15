@@ -71,7 +71,8 @@ Potential Severity If Misused: high
 Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
 
 - Ambient-user disclosure: POSIX requires the effective user as owner and exact
-  mode `0700`. Windows requires the process user as owner and a protected DACL
+  mode `0700`, including rejection of setuid, setgid, and sticky bits. Windows
+  requires the process user as owner and a protected DACL
   containing no principal other than that user and LocalSystem, with no
   inherited or inherit-only ACE and no access-mask broadening.
 - Redirection and type confusion: verification uses `lstat` on POSIX and a

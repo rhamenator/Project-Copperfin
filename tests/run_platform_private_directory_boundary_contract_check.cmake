@@ -69,7 +69,7 @@ foreach(token IN ITEMS
         "::mkdir(path.c_str(), 0700)"
         "::lstat("
         "status.st_uid != ::geteuid()"
-        "(status.st_mode & 0777) != 0700")
+        "(status.st_mode & 07777) != 0700")
     require_text("${source_text}" "${token}" "private platform implementation")
 endforeach()
 
