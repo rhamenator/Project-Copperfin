@@ -2,7 +2,8 @@
 
 ## V1 workspace-agent platform argument serialization
 
-Candidate `RQ-CF-AGENT-015` adds one shared direct-argument serializer. POSIX
+`RQ-CF-AGENT-015` is defined at merged commit `b41bbc80d`. One shared direct-argument serializer
+preserves POSIX
 preserves exact non-NUL bytes and empty elements as complete storage including
 `argv[0]`; Windows strictly decodes UTF-8, quotes every element with the
 conventional C-runtime backslash/quote convention, and counts the terminating
@@ -16,8 +17,12 @@ POSIX and Windows without adding shell or PATH behavior.
 Warning-free Release security/community/isolation/safety verification passes
 `17/17`; focused Release and fresh Clang 21 ASan/UBSan with leak detection
 each pass `3/3`; and the generated isolation inventory covers `380` tests.
-Protected cross-platform, review, and merge evidence remain to define the
-candidate. Windows child-parser and
+Exact signed/DCO implementation head `8adc52416` passed all eleven protected
+checks in runs `31885639477`, `31885639243`, `31885639342`,
+`31885639247`, and `31885639220`, including both Socket checks. Thread-aware
+exact-head review found no comments, reviews, or threads before PR `#5020`
+merged as `b41bbc80d`. No independent final safety approval is claimed.
+Windows child-parser and
 executable-format compatibility, layout cleanup/session-start integration,
 launch-adjacent pinning, executor, sandbox, endpoint policy, outcome audit,
 provider/OAuth, trusted UI, diff, and undo remain explicit gaps.
