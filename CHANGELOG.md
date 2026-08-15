@@ -1,3 +1,18 @@
+- 2026-08-14: Added a non-executing, exact-session existing-file target
+  preflight for the workspace assistant. Product code binds a trusted absolute
+  workspace root to physical identity, and each registered tool now carries a
+  compile-time-validated target kind. Workspace file tools accept only strict
+  relative paths physically contained under the unchanged root; unrestricted
+  local file tools require strict absolute paths. Ambiguous paths, traversal,
+  indirection/reparse, cross-device workspace components, missing/nonregular
+  files, hard links, root replacement, wrong tool classes, insufficient
+  capabilities, and stale/stopped sessions fail closed without reflecting a
+  canonical path. The controller repeats session/tool admission after
+  inspection. This reads no file content and creates, modifies, deletes, or
+  reserves no file; it returns no authority token. Prospective-file and handle-pinned
+  mutation semantics, process/endpoint containment, executor, outcome audit,
+  sandbox, provider/OAuth, activation UI, diff, and undo remain gaps.
+
 - 2026-08-14: Replaced caller-declared workspace-agent preflight capabilities
   with an immutable product-owned tool registry. The versioned public request
   now carries only the exact session generation and a stable tool ID; native

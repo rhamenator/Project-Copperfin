@@ -15,6 +15,7 @@ namespace {
 
 using copperfin::security::WorkspaceAgentToolDefinition;
 using copperfin::security::WorkspaceAgentToolRequirements;
+using copperfin::security::WorkspaceAgentToolTargetKind;
 
 int failures = 0;
 
@@ -50,15 +51,18 @@ void test_exact_product_inventory_and_requirements() {
     struct ExpectedDefinition {
         std::string_view id;
         WorkspaceAgentToolRequirements requirements;
+        WorkspaceAgentToolTargetKind target_kind;
     };
     const std::array<ExpectedDefinition, 7U> expected{{
         {
             copperfin::security::workspace_agent_tool_workspace_inspect,
-            {.read_workspace_files = true}
+            {.read_workspace_files = true},
+            WorkspaceAgentToolTargetKind::workspace_file
         },
         {
             copperfin::security::workspace_agent_tool_workspace_apply_edit,
-            {.read_workspace_files = true, .write_workspace_files = true}
+            {.read_workspace_files = true, .write_workspace_files = true},
+            WorkspaceAgentToolTargetKind::workspace_file
         },
         {
             copperfin::security::workspace_agent_tool_workspace_run_process,
@@ -66,11 +70,13 @@ void test_exact_product_inventory_and_requirements() {
                 .read_workspace_files = true,
                 .write_workspace_files = true,
                 .run_local_processes = true
-            }
+            },
+            WorkspaceAgentToolTargetKind::workspace_process
         },
         {
             copperfin::security::workspace_agent_tool_local_inspect,
-            {.read_workspace_files = true, .access_outside_workspace = true}
+            {.read_workspace_files = true, .access_outside_workspace = true},
+            WorkspaceAgentToolTargetKind::local_file
         },
         {
             copperfin::security::workspace_agent_tool_local_apply_edit,
@@ -78,7 +84,8 @@ void test_exact_product_inventory_and_requirements() {
                 .read_workspace_files = true,
                 .write_workspace_files = true,
                 .access_outside_workspace = true
-            }
+            },
+            WorkspaceAgentToolTargetKind::local_file
         },
         {
             copperfin::security::workspace_agent_tool_local_run_process,
@@ -88,11 +95,13 @@ void test_exact_product_inventory_and_requirements() {
                 .run_local_processes = true,
                 .access_outside_workspace = true,
                 .use_network = true
-            }
+            },
+            WorkspaceAgentToolTargetKind::local_process
         },
         {
             copperfin::security::workspace_agent_tool_network_request,
-            {.use_network = true}
+            {.use_network = true},
+            WorkspaceAgentToolTargetKind::network_endpoint
         }
     }};
 
@@ -107,7 +116,8 @@ void test_exact_product_inventory_and_requirements() {
         expect(definitions[index].id == expected[index].id &&
                    equal_requirements(
                        definitions[index].requirements,
-                       expected[index].requirements),
+                       expected[index].requirements) &&
+                   definitions[index].target_kind == expected[index].target_kind,
                "RQ-CF-AGENT-008: every stable tool id must retain its complete product-owned requirements");
         expect(!definitions[index].requirements.elevate_privileges,
                "RQ-CF-AGENT-008: no registered tool may request privilege elevation");

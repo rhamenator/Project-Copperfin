@@ -11,15 +11,26 @@
 
 namespace copperfin::security {
 
-// Governing requirements: RQ-CF-AGENT-007 and RQ-CF-AGENT-008.
+// Governing requirements: RQ-CF-AGENT-007, RQ-CF-AGENT-008, and
+// RQ-CF-AGENT-009.
 
 // Reuse the policy capability shape so registered requirements cannot acquire
 // a parallel vocabulary that drifts from the admitted session snapshot.
 using WorkspaceAgentToolRequirements = WorkspaceAgentCapabilities;
 
+enum class WorkspaceAgentToolTargetKind {
+    workspace_file,
+    workspace_process,
+    local_file,
+    local_process,
+    network_endpoint
+};
+
 struct WorkspaceAgentToolDefinition {
     std::string_view id;
     WorkspaceAgentToolRequirements requirements{};
+    WorkspaceAgentToolTargetKind target_kind =
+        WorkspaceAgentToolTargetKind::workspace_file;
 };
 
 inline constexpr std::string_view workspace_agent_tool_workspace_inspect =
