@@ -49,6 +49,24 @@ function(forbid_text contents forbidden description)
     endif()
 endfunction()
 
+function(require_text_count contents expected minimum description)
+    set(remaining "${contents}")
+    set(count 0)
+    while(TRUE)
+        string(FIND "${remaining}" "${expected}" offset)
+        if(offset EQUAL -1)
+            break()
+        endif()
+        math(EXPR next_offset "${offset} + 1")
+        string(SUBSTRING "${remaining}" ${next_offset} -1 remaining)
+        math(EXPR count "${count} + 1")
+    endwhile()
+    if(count LESS minimum)
+        message(FATAL_ERROR
+            "Missing ${description}: expected at least ${minimum} occurrences of ${expected}, found ${count}")
+    endif()
+endfunction()
+
 foreach(token IN ITEMS
         "_WIN32"
         "windows.h"
@@ -117,6 +135,13 @@ foreach(contents IN ITEMS "${workflow_text}" "${windows_workflow_text}")
     require_text("${contents}"
         "test_workspace_agent_isolated_environment"
         "hosted workspace-agent consumer scheduling")
+endforeach()
+foreach(path IN ITEMS
+        "tests/test_platform_private_directory.cpp"
+        "tests/test_workspace_agent_isolated_environment.cpp"
+        "tests/run_platform_private_directory_boundary_contract_check.cmake")
+    require_text_count("${workflow_text}" "${path}" 2
+        "push and pull-request private-layout path-filter coverage")
 endforeach()
 
 message(STATUS "Portable private-directory boundary contract passed")
