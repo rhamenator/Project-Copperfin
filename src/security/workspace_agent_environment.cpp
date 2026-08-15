@@ -5,6 +5,7 @@
 #include "copperfin/security/workspace_agent_environment.h"
 
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/private_directory.h"
 
 #include <algorithm>
 #include <array>
@@ -176,7 +177,9 @@ std::optional<CapturedDirectory> capture_contained_directory(
         return std::nullopt;
     }
     std::error_code error;
-    if (!std::filesystem::is_directory(inspected.canonical_path, error) || error) {
+    if (!std::filesystem::is_directory(inspected.canonical_path, error) || error ||
+        !copperfin::platform::verify_private_directory(
+             inspected.canonical_path).ok) {
         return std::nullopt;
     }
     return inspected;
@@ -289,6 +292,10 @@ WorkspaceAgentIsolatedEnvironmentBoundary::create(
     if (!storage_root.has_value()) {
         return std::nullopt;
     }
+    if (!copperfin::platform::verify_private_directory(
+             storage_root->canonical_path).ok) {
+        return std::nullopt;
+    }
 
     std::vector<PhysicalPathContainmentResult> executable_directories;
     executable_directories.reserve(
@@ -326,6 +333,78 @@ WorkspaceAgentIsolatedEnvironmentBoundary::create(
         std::move(*storage_root),
         std::move(executable_directories),
         std::move(windows_system_root));
+}
+
+WorkspaceAgentSessionLayoutPreparationResult
+WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
+    const std::uint64_t session_generation) const {
+    WorkspaceAgentSessionLayoutPreparationResult result;
+    if (session_generation == 0U) {
+        result.diagnostic_code =
+            "workspace_agent.environment_invalid_session_generation";
+        return result;
+    }
+    if (!captured_directory_matches(session_storage_root_) ||
+        !copperfin::platform::verify_private_directory(
+             session_storage_root_.canonical_path).ok) {
+        result.diagnostic_code =
+            "workspace_agent.environment_storage_root_identity_changed";
+        return result;
+    }
+
+    const std::string session_name = session_directory_name(session_generation);
+    if (session_name.empty()) {
+        result.diagnostic_code =
+            "workspace_agent.environment_invalid_session_generation";
+        return result;
+    }
+    const std::filesystem::path session_root =
+        session_storage_root_.canonical_path / session_name;
+    const auto session_created =
+        copperfin::platform::create_private_directory(session_root);
+    if (!session_created.ok) {
+        result.diagnostic_code =
+            session_created.failure ==
+                    copperfin::platform::PrivateDirectoryFailure::already_exists
+                ? "workspace_agent.environment_session_layout_exists"
+                : "workspace_agent.environment_session_layout_creation_failed";
+        return result;
+    }
+
+    constexpr std::array<std::string_view, 5U> child_names{
+        "home", "temp", "config", "cache", "data"};
+    for (const auto child_name : child_names) {
+        const auto child_created = copperfin::platform::create_private_directory(
+            session_root / child_name);
+        if (!child_created.ok) {
+            result.diagnostic_code =
+                "workspace_agent.environment_session_layout_incomplete";
+            return result;
+        }
+    }
+
+    if (!captured_directory_matches(session_storage_root_) ||
+        !capture_contained_directory(
+             session_root, session_storage_root_).has_value()) {
+        result.diagnostic_code =
+            "workspace_agent.environment_session_layout_verification_failed";
+        return result;
+    }
+    for (const auto child_name : child_names) {
+        if (!capture_contained_directory(
+                 session_root / child_name,
+                 session_storage_root_).has_value()) {
+            result.diagnostic_code =
+                "workspace_agent.environment_session_layout_verification_failed";
+            return result;
+        }
+    }
+
+    result.prepared = true;
+    result.session_generation = session_generation;
+    result.diagnostic_code =
+        "workspace_agent.environment_session_layout_prepared";
+    return result;
 }
 
 WorkspaceAgentIsolatedEnvironmentConstruction

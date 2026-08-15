@@ -1,3 +1,14 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-014` private workspace-agent
+  generation-layout preparation. One portable platform seam creates exactly an
+  absent absolute leaf and verifies owner-only security: effective-user-owned
+  mode `0700` without indirection on POSIX, or a process-user-owned protected
+  DACL containing only the process user and LocalSystem on Windows. The trusted
+  host prepares and re-verifies one `session-N/{home,temp,config,cache,data}`
+  layout; existing, partial, broadened, inherited, replaced, indirect, or
+  unverifiable layouts fail without adoption, repair, overwrite, deletion, or
+  sensitive output. Cleanup, session-start integration, argument serialization,
+  launch, sandboxing, endpoint policy, and outcome audit remain explicit gaps.
+
 - 2026-08-15: Recorded independent final-head review for
   `RQ-CF-AGENT-013`. At `b5129e08a`, the reviewer verified the corrected
   Windows/POSIX caller-cap formulas, subtraction-safe overflow guard, and

@@ -16,7 +16,7 @@
 
 namespace copperfin::security {
 
-// Governing requirements: RQ-CF-AGENT-011 and RQ-CF-AGENT-012.
+// Governing requirements: RQ-CF-AGENT-011 through RQ-CF-AGENT-014.
 
 inline constexpr std::size_t workspace_agent_environment_max_path_directories = 16U;
 inline constexpr std::size_t workspace_agent_environment_max_entry_bytes = 4096U;
@@ -97,10 +97,18 @@ struct WorkspaceAgentIsolatedEnvironmentConstruction {
     std::string diagnostic_code;
 };
 
+struct WorkspaceAgentSessionLayoutPreparationResult {
+    bool prepared = false;
+    std::uint64_t session_generation = 0U;
+    std::string diagnostic_code;
+};
+
 // The boundary derives only session-<generation>/{home,temp,config,cache,data}
-// and product-configured executable directories. It never reads or modifies
-// the parent process environment and performs no directory creation, cleanup,
-// command serialization, sandboxing, or launch.
+// and product-configured executable directories. Its explicit preparation
+// method creates a new generation layout with the platform owner-only security
+// contract; construction then requires that contract. It never reads or
+// modifies the parent process environment and performs no cleanup, command
+// serialization, sandboxing, or launch.
 class WorkspaceAgentIsolatedEnvironmentBoundary {
 public:
     [[nodiscard]] static std::optional<WorkspaceAgentIsolatedEnvironmentBoundary>
@@ -109,6 +117,11 @@ public:
     [[nodiscard]] WorkspaceAgentIsolatedEnvironmentConstruction construct(
         std::uint64_t session_generation,
         WorkspaceAgentProcessEnvironmentPolicy policy) const;
+
+    // Creates exactly one previously absent generation layout. Existing or
+    // partial layouts are never adopted, repaired, overwritten, or deleted.
+    [[nodiscard]] WorkspaceAgentSessionLayoutPreparationResult
+    prepare_session_layout(std::uint64_t session_generation) const;
 
 private:
     WorkspaceAgentIsolatedEnvironmentBoundary(

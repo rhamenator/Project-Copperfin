@@ -114,6 +114,7 @@ add_library(cf_platform_support
     src/platform/invariant_numeric.cpp
     src/platform/json.cpp
     src/platform/path.cpp
+    src/platform/private_directory.cpp
     src/platform/process_environment.cpp
     src/platform/safe_regex.cpp
 )
@@ -130,6 +131,7 @@ else()
 endif()
 
 if(WIN32)
+    target_link_libraries(cf_platform_support PRIVATE advapi32)
     target_link_libraries(cf_platform_support PRIVATE user32)
     target_link_libraries(cf_platform_support PRIVATE version)
 else()

@@ -4951,6 +4951,13 @@ add_test(
 )
 
 add_test(
+    NAME test_platform_private_directory_boundary_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_platform_private_directory_boundary_contract_check.cmake
+)
+
+add_test(
     NAME test_platform_file_stream_boundary_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
@@ -5162,6 +5169,10 @@ copperfin_add_test(test_workspace_agent_process_invocation cf_security
 
 copperfin_add_test(test_workspace_agent_isolated_environment cf_security
     test_workspace_agent_isolated_environment.cpp
+)
+
+copperfin_add_test(test_platform_private_directory cf_platform_support
+    test_platform_private_directory.cpp
 )
 
 copperfin_add_test(test_process_environment_serialization cf_platform_support

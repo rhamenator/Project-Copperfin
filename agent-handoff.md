@@ -1,8 +1,31 @@
 # Agent Handoff
 
-## V1 workspace-agent native environment serialization candidate
+## V1 workspace-agent private generation-layout preparation candidate
 
-`RQ-CF-AGENT-013` is the active candidate. A new portable serializer consumes
+`RQ-CF-AGENT-014` is the active candidate. A portable platform seam creates
+exactly one absent absolute directory leaf and verifies owner-only access:
+effective-user-owned exact mode `0700` without symlink indirection on POSIX, or
+a process-user-owned non-reparse directory with a protected DACL containing
+only explicit inheritable full-control entries for the user and LocalSystem on
+Windows. The trusted-host environment boundary now requires a private storage
+root, prepares one new `session-N/{home,temp,config,cache,data}` layout, and
+re-verifies privacy and physical containment. Existing or partial layouts are
+never adopted, repaired, overwritten, or deleted; denial is content-free.
+
+This remains non-executing and is not yet wired to session start. Layout
+cleanup, platform argument serialization, Windows executable-format
+compatibility, launch-adjacent pin/revalidation, executor, sandbox, endpoint
+policy, outcome audit, provider/OAuth, trusted UI, diff, and undo remain
+explicit gaps. Protected evidence must be recorded before the candidate becomes
+defined. Local warning-free Release security/community/
+isolation/safety verification passes `15/15`; focused platform/workflow
+contracts pass `5/5`; fresh Clang 21 ASan/UBSan with leak detection passes
+`3/3`; the generated isolation inventory covers `379` tests; and diff
+validation passes. Protected exact-head and review evidence remain pending.
+
+## V1 workspace-agent native environment serialization
+
+`RQ-CF-AGENT-013` is defined. A portable serializer consumes
 only an explicit complete environment: POSIX retains exact non-NUL bytes and
 entry order as `name=value` storage, while Windows strictly converts UTF-8 to
 UTF-16, sorts names case-insensitively, and emits a double-NUL block within an
@@ -15,7 +38,8 @@ Release security/community/isolation/safety verification passes `14/14`, fresh
 Clang 21 ASan/UBSan with leak detection passes `3/3`, the generated isolation
 inventory covers `377` tests, and diff validation passes.
 
-This remains non-executing for the workspace agent. Secure layout lifecycle,
+This remains non-executing for the workspace agent. Layout cleanup and
+session-start integration,
 platform argument serialization, Windows executable-format compatibility,
 launch-adjacent pin/revalidation, executor, sandbox, endpoint policy, outcome
 audit, provider/OAuth, trusted UI, diff, and undo remain explicit gaps.

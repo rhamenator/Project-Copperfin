@@ -305,8 +305,9 @@ argument content, so an allow does not certify that arguments are secret-free.
 The adjacent isolated-environment boundary now supplies the fixed platform
 entries, approved executable-directory list, session-owned profile and
 temporary locations, and deterministic locale/time-zone values described
-below. Secure layout creation, access control, and cleanup remain trusted-host
-responsibilities. The executor must also repeat
+below. The adjacent private-layout boundary supplies fail-closed creation and
+verification for an absent generation; trusted-host root provisioning and
+cleanup remain separate responsibilities. The executor must also repeat
 target and session checks, encode each argument directly for the platform API,
 enforce the platform's smaller serialized-command limit if applicable, apply
 the real sandbox and endpoint policy, and audit only content-free outcome
@@ -324,12 +325,13 @@ system root. Provider, model, prompt, workspace content, and tool arguments
 cannot supply or extend those values. The boundary never reads the parent
 environment.
 
-For generation `N`, the trusted host must pre-create and access-control
-`session-N` beneath the configured storage root with direct `home`, `temp`,
-`config`, `cache`, and `data` directories. The boundary physically contains
-and identifies that fixed layout, rejects symlink/reparse and cross-device
-components, and checks the configured storage, executable, and Windows system
-directory identities before and after construction. Missing, replaced,
+For generation `N`, the trusted host must supply a verified private storage
+root and use the adjacent preparation boundary to create `session-N` beneath it
+with direct `home`, `temp`, `config`, `cache`, and `data` directories. The
+environment boundary physically contains and identifies that fixed layout,
+rejects symlink/reparse and cross-device components, and checks the configured
+storage, executable, and Windows system directory identities before and after
+construction. Missing, replaced,
 indirect, malformed, path-delimiter-ambiguous, invalidly encoded, excessive,
 or wrong-platform inputs fail without returning invocation targets, arguments,
 paths, or environment entries. Session directory names use locale-independent
@@ -358,6 +360,37 @@ The controller performs the complete invocation preflight, constructs the
 environment for that exact generation and policy, and performs the invocation
 preflight again before returning a point-in-time plan.
 
+## Private generation-layout preparation boundary
+
+Candidate `RQ-CF-AGENT-014` adds one portable trusted-host primitive before a
+workspace-agent process executor is connected. The platform API creates
+exactly one absent absolute directory leaf and verifies its access contract.
+On POSIX the object must be a non-symbolic-link directory owned by the effective
+user with exactly mode `0700`. On Windows it must be a non-reparse directory
+owned by the process user with a protected DACL containing only explicit,
+inheritable full-control entries for that user and LocalSystem. A missing
+parent, existing object, wrong kind, indirection, foreign owner, broadened or
+inherited access, unsupported security, or post-creation verification failure
+fails closed; existing objects are never adopted or modified.
+
+The trusted-host environment boundary requires the configured storage root to
+satisfy that same contract. Its explicit preparation method creates one new
+`session-N` root and the five fixed children, verifies physical containment and
+privacy again, and returns only the generation on success. Generation zero,
+root replacement, an existing or partial layout, creation failure, and final
+verification failure return content-free diagnostics. The method never adopts,
+repairs, overwrites, or deletes an existing or partial layout. A child failure
+may therefore leave a private partial generation that deliberately blocks
+reuse until a future trusted-host cleanup boundary handles it.
+
+This preparation API is not yet wired to session start and is not a cleanup or
+execution capability. Its full-path operations assume the private root's owner
+and LocalSystem are trusted host authorities; future executor work must retain
+sandbox separation from untrusted child processes and repeat identity and
+admission checks next to launch. The boundary serializes no arguments, starts
+no process, opens no endpoint, injects no provider credential, applies no real
+sandbox, and records no tool outcome.
+
 ## Platform process-environment serialization preflight
 
 `RQ-CF-AGENT-013` converts only that admitted fixed logical environment into a
@@ -382,11 +415,12 @@ The workspace-agent cap adds one storage terminator per fixed entry and, on
 Windows, the additional final block terminator to the 32,768-byte logical
 profile ceiling.
 
-This boundary still creates or deletes no directory, serializes no arguments,
-starts no process, applies no sandbox or endpoint policy, injects no provider
-credential, and records no tool outcome. The future executor must securely
-create and clean the session layout, repeat all identity/admission checks beside
-launch, consume the fixed serialized representation without ambient merging,
+The serialization boundary still creates or deletes no directory, serializes
+no arguments, starts no process, applies no sandbox or endpoint policy, injects
+no provider credential, and records no tool outcome. The future executor must
+invoke the separate preparation boundary and later clean the session layout,
+repeat all identity/admission checks beside launch, consume the fixed
+serialized representation without ambient merging,
 pin/revalidate launch targets, apply containment, and audit content-free outcomes.
 
 ## Current implementation and remaining work
