@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <optional>
 #include <string>
 #include <vector>
@@ -29,6 +30,31 @@ enum class WorkspaceAgentProcessEnvironmentPlatform : std::uint32_t {
     windows_v1 = 1U,
     posix_v1 = 2U
 };
+
+// Converts the logical UTF-8 profile limit into the serializer's storage-unit
+// cap. Every entry needs one terminator; a Windows environment block needs one
+// additional final terminator. Zero denotes an invalid platform or overflow.
+[[nodiscard]] constexpr std::size_t
+workspace_agent_serialized_environment_maximum_units(
+    const WorkspaceAgentProcessEnvironmentPlatform platform,
+    const std::size_t entry_count) noexcept {
+    std::size_t final_block_terminators = 0U;
+    switch (platform) {
+    case WorkspaceAgentProcessEnvironmentPlatform::windows_v1:
+        final_block_terminators = 1U;
+        break;
+    case WorkspaceAgentProcessEnvironmentPlatform::posix_v1:
+        break;
+    default:
+        return 0U;
+    }
+    if (entry_count > std::numeric_limits<std::size_t>::max() -
+            workspace_agent_environment_max_total_bytes - final_block_terminators) {
+        return 0U;
+    }
+    return workspace_agent_environment_max_total_bytes + entry_count +
+        final_block_terminators;
+}
 
 [[nodiscard]] constexpr bool workspace_agent_process_environment_inherits_parent(
     WorkspaceAgentProcessEnvironmentPolicy) noexcept {

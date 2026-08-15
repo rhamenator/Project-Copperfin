@@ -25,14 +25,17 @@ using copperfin::security::WorkspaceAgentActivationRequest;
 using copperfin::security::WorkspaceAgentEnvironmentEntry;
 using copperfin::security::WorkspaceAgentIsolatedEnvironmentBoundary;
 using copperfin::security::WorkspaceAgentIsolatedEnvironmentConfiguration;
+using copperfin::security::WorkspaceAgentProcessEnvironmentPlatform;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPreflightResult;
-using copperfin::security::WorkspaceAgentSerializedProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPolicy;
 using copperfin::security::WorkspaceAgentProcessInvocationPreflightRequest;
+using copperfin::security::WorkspaceAgentSerializedProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentSessionAuditCommitResult;
 using copperfin::security::WorkspaceAgentSessionAuditEvent;
 using copperfin::security::WorkspaceAgentSessionAuditSink;
 using copperfin::security::WorkspaceAgentSessionController;
+using copperfin::security::workspace_agent_environment_max_total_bytes;
+using copperfin::security::workspace_agent_serialized_environment_maximum_units;
 
 template <typename T>
 concept HasEnvironmentInput = requires(T value) {
@@ -210,6 +213,17 @@ void test_fixed_non_inheriting_environment() {
 
     const auto result = controller.preflight_process_environment_request(
         invocation_request(start.session.generation));
+    expect(
+        workspace_agent_serialized_environment_maximum_units(
+            WorkspaceAgentProcessEnvironmentPlatform::windows_v1, 10U) ==
+                workspace_agent_environment_max_total_bytes + 11U &&
+            workspace_agent_serialized_environment_maximum_units(
+                WorkspaceAgentProcessEnvironmentPlatform::posix_v1, 9U) ==
+                workspace_agent_environment_max_total_bytes + 9U &&
+            workspace_agent_serialized_environment_maximum_units(
+                static_cast<WorkspaceAgentProcessEnvironmentPlatform>(99U),
+                1U) == 0U,
+        "RQ-CF-AGENT-013: the caller cap must include every entry terminator and the final Windows block terminator");
     expect(result.allowed &&
                result.diagnostic_code ==
                    "workspace_agent.process_environment_request_allowed" &&

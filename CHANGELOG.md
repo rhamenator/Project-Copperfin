@@ -1,3 +1,11 @@
+- 2026-08-15: Corrected the workspace-agent `RQ-CF-AGENT-013` serializer cap
+  after exact-head review found that the 32,768-byte logical ceiling accounted
+  for every entry terminator but not the additional final Windows block
+  terminator. A single overflow-safe policy helper now supplies the POSIX and
+  Windows caller caps, rejects invalid platforms, and has direct formula
+  regression coverage. This changes no admitted fixed profile or serialized
+  byte/code-unit content.
+
 - 2026-08-15: Corrected the `RQ-CF-AGENT-013` candidate after exact-head review
   found that it misapplied the ANSI-only 32,767-character environment limit to
   Unicode `CreateProcessW` blocks. The portable serializer now honors its

@@ -378,6 +378,9 @@ policy, platform, and every fixed entry, and returns both the exact plan and
 exactly one platform representation only if nothing changed. The shared
 serializer also replaces duplicate environment assembly in the existing
 bounded-process utility. Neither path consults or merges the parent environment.
+The workspace-agent cap adds one storage terminator per fixed entry and, on
+Windows, the additional final block terminator to the 32,768-byte logical
+profile ceiling.
 
 This boundary still creates or deletes no directory, serializes no arguments,
 starts no process, applies no sandbox or endpoint policy, injects no provider

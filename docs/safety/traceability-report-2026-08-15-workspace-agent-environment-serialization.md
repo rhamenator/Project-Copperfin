@@ -131,3 +131,6 @@ cap; the workspace-agent caller remains bounded by its fixed logical-profile
 policy, while the existing Unicode bounded-process path preserves its prior
 large-environment compatibility. A direct 40,000-code-unit boundary regression
 and both focused Release and sanitizer selections pass after the correction.
+The corrected caller-cap calculation also includes the distinct final Windows
+block terminator after every per-entry terminator; a direct policy-cap
+regression fixes the Windows and POSIX formulas and rejects an invalid platform.
