@@ -24,6 +24,7 @@ on:
       - "tests/test_mcp_host_stdio.cmake"
       - "tests/run_platform_path_boundary_contract_check.cmake"
       - "tests/run_platform_private_directory_boundary_contract_check.cmake"
+      - "tests/run_workspace_agent_process_parser_boundary_contract_check.cmake"
       - "tests/run_platform_environment_boundary_contract_check.cmake"
       - "tests/run_platform_executable_path_boundary_contract_check.cmake"
       - "tests/run_platform_file_version_boundary_contract_check.cmake"
@@ -43,6 +44,7 @@ on:
       - "tests/test_platform_private_directory.cpp"
       - "tests/test_platform_path.cpp"
       - "tests/test_workspace_agent_isolated_environment.cpp"
+      - "tests/test_workspace_agent_process_parser.cpp"
       - "tests/test_platform_disk_space.cpp"
       - "tests/test_platform_exclusive_file.cpp"
       - "tests/test_platform_file_stream.cpp"
@@ -79,6 +81,7 @@ on:
       - "tests/test_mcp_host_stdio.cmake"
       - "tests/run_platform_path_boundary_contract_check.cmake"
       - "tests/run_platform_private_directory_boundary_contract_check.cmake"
+      - "tests/run_workspace_agent_process_parser_boundary_contract_check.cmake"
       - "tests/run_platform_environment_boundary_contract_check.cmake"
       - "tests/run_platform_executable_path_boundary_contract_check.cmake"
       - "tests/run_platform_file_version_boundary_contract_check.cmake"
@@ -98,6 +101,7 @@ on:
       - "tests/test_platform_private_directory.cpp"
       - "tests/test_platform_path.cpp"
       - "tests/test_workspace_agent_isolated_environment.cpp"
+      - "tests/test_workspace_agent_process_parser.cpp"
       - "tests/test_platform_disk_space.cpp"
       - "tests/test_platform_exclusive_file.cpp"
       - "tests/test_platform_file_stream.cpp"
@@ -151,11 +155,11 @@ jobs:
       - name: Run generated-launcher, portable-platform, polyglot, MCP, and SQLite federation tests
         run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_process|test_platform_path|test_platform_path_boundary_contract|test_platform_disk_space|test_platform_disk_space_boundary_contract|test_platform_exclusive_file|test_platform_exclusive_file_boundary_contract|test_platform_file_stream|test_platform_file_stream_boundary_contract|test_platform_font_directories|test_platform_font_directories_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_file_version_boundary_contract|test_platform_code_page_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_printer_shell_boundary_contract|test_prg_engine_arrays|test_prg_engine_file_io_functions|test_prg_engine_verified_dbf_security|test_prg_engine_locale_code_page|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar|test_mcp_host|test_mcp_host_stdio|test_sqlite_federation_connector|test_runtime_host_sqlite_federation)$"
 
-      - name: Build private workspace-agent layout regressions
-        run: cmake --build build --config Release --target test_platform_private_directory test_workspace_agent_isolated_environment --parallel 2
+      - name: Build private workspace-agent and parser-authority regressions
+        run: cmake --build build --config Release --target test_platform_private_directory test_workspace_agent_process_parser test_workspace_agent_isolated_environment --parallel 2
 
-      - name: Run private workspace-agent layout regressions
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_isolated_environment)$"
+      - name: Run private workspace-agent and parser-authority regressions
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"
 
   posix-generated-launcher:
     name: ${{ matrix.os }} generated launcher process
@@ -191,8 +195,8 @@ jobs:
       - name: Run POSIX generated-launcher, portable-platform, polyglot, MCP, and SQLite federation tests
         run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_posix_process|test_platform_path|test_platform_path_boundary_contract|test_platform_disk_space|test_platform_disk_space_boundary_contract|test_platform_exclusive_file|test_platform_exclusive_file_boundary_contract|test_platform_file_stream|test_platform_file_stream_boundary_contract|test_platform_font_directories|test_platform_font_directories_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_file_version_boundary_contract|test_platform_code_page_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_printer_shell_boundary_contract|test_prg_engine_arrays|test_prg_engine_file_io_functions|test_prg_engine_verified_dbf_security|test_prg_engine_locale_code_page|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar|test_mcp_host|test_mcp_host_stdio|test_sqlite_federation_connector|test_runtime_host_sqlite_federation)$"
 
-      - name: Build private workspace-agent layout regressions
-        run: cmake --build build --config Release --target test_platform_private_directory test_workspace_agent_isolated_environment --parallel 2
+      - name: Build private workspace-agent and parser-authority regressions
+        run: cmake --build build --config Release --target test_platform_private_directory test_workspace_agent_process_parser test_workspace_agent_isolated_environment --parallel 2
 
-      - name: Run private workspace-agent layout regressions
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_isolated_environment)$"
+      - name: Run private workspace-agent and parser-authority regressions
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"

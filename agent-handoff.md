@@ -1,5 +1,43 @@
 # Agent Handoff
 
+## V1 workspace-agent Windows process-parser authority
+
+Candidate `RQ-CF-AGENT-018` is under verification. Bounded trusted product-host
+configuration now binds the supported Windows C-runtime command-line parser to
+an exact canonical executable path, host-supplied expected complete physical
+identity, and expected lowercase SHA-256; construction hashes a physically
+contained snapshot and rejects whichever mutable file is present unless both
+expectations match. Provider,
+model, prompt, workspace, and tool-request input cannot create or select this
+authority. The exact-digest product record must also attest a self-contained
+parser image; adjacent-DLL-dependent parsers remain denied until a future
+authenticated dependency-closure and launch-isolation contract exists. Invalid
+schema, empty or excessive bindings, relative paths,
+directories, indirect or multiply linked files, unknown contracts, duplicates,
+wrong identities, malformed or mismatched digests or dependency contracts,
+changed identities, and
+changed contents fail closed with content-free
+diagnostics. The controller authorizes before serialization, repeats the check
+after serialization and the complete environment/target preflight, and requires
+the contract to remain equal. POSIX retains native argv semantics.
+
+Corrected-head focused Release/source/workflow contracts pass locally `8/8`;
+the 327-second safety gate passes; and fresh Clang 21 ASan/UBSan with leak
+detection passes the parser, source contract, and integration selection `3/3`.
+The sole earlier broader-selection failure was an unsupported
+new isolation-label spelling, after which the corrected isolation/focused set
+passed `4/4`. This remains point-in-time, non-executing evidence. A corrected-
+head review P1 about metadata-only authentication is addressed by the digest
+binding and same-file-content regression. A subsequent P1 about mutable
+adjacent parser dependencies is addressed by the required self-contained-image
+product attestation and fail-closed dependency contract. Exact
+signed/DCO head, protected Windows/Ubuntu/macOS execution, and exact-head review
+remain before implementation evidence is complete. The retained risk is
+`high`; no independent final safety approval is
+claimed. Publisher trust, launch-adjacent pinning/revalidation, identity-aware
+cleanup, executor, sandbox, endpoint policy, descendant management, outcome
+audit, provider/OAuth, trusted UI, diff, and undo remain explicit gaps.
+
 ## V1 workspace-agent Windows process-image compatibility
 
 Candidate `RQ-CF-AGENT-017` is implementation-complete at merged commit

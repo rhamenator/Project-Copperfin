@@ -4,7 +4,9 @@
 
 #include "copperfin/platform/path.h"
 #include "copperfin/platform/private_directory.h"
+#include "copperfin/security/sha256.h"
 #include "copperfin/security/workspace_agent_environment.h"
+#include "copperfin/security/workspace_agent_process_parser.h"
 #include "copperfin/security/workspace_agent_session.h"
 #include "copperfin/security/workspace_agent_tool_registry.h"
 
@@ -30,6 +32,9 @@ using copperfin::security::WorkspaceAgentIsolatedEnvironmentConfiguration;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPlatform;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPolicy;
+using copperfin::security::WorkspaceAgentProcessArgumentParserContract;
+using copperfin::security::WorkspaceAgentProcessParserDependencyContract;
+using copperfin::security::WorkspaceAgentProcessParserConfiguration;
 using copperfin::security::WorkspaceAgentProcessInvocationPreflightRequest;
 using copperfin::security::WorkspaceAgentSerializedProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentSerializedProcessInvocationPreflightResult;
@@ -98,6 +103,7 @@ public:
             create_session_layout(1U);
         }
         write_executable(workspace / "bin" / "workspace-tool");
+        write_executable(workspace / "bin" / "other-tool");
     }
 
     ~TempTree() {
@@ -158,6 +164,28 @@ public:
         result.trusted_windows_system_root = windows_system_root;
 #endif
         return result;
+    }
+
+    WorkspaceAgentProcessParserConfiguration parser_configuration() const {
+        const auto trusted =
+            copperfin::security::inspect_physical_path_containment(
+                workspace / "bin" / "workspace-tool", workspace / "bin");
+        const auto snapshot =
+            copperfin::security::read_physically_contained_file_snapshot(
+                trusted, workspace / "bin");
+        const auto digest = snapshot.ok
+            ? copperfin::security::sha256_hex_for_text(snapshot.bytes)
+            : copperfin::security::Sha256Result{};
+        return {
+            .windows_bindings = {{
+                .trusted_absolute_executable =
+                    workspace / "bin" / "workspace-tool",
+                .expected_identity = trusted.identity,
+                .expected_sha256 = digest.ok ? digest.hex_digest : std::string{},
+                .dependency_contract = WorkspaceAgentProcessParserDependencyContract::
+                    self_contained_parser_image_v1,
+                .contract = WorkspaceAgentProcessArgumentParserContract::
+                    windows_c_runtime_argv_v1}}};
     }
 
     std::filesystem::path root;
@@ -265,13 +293,16 @@ void expect_invocation_serialization_content_free_denial(
     expect(!result.allowed && result.diagnostic_code == diagnostic &&
                !result.serialized_environment.allowed &&
                result.posix_arguments.empty() &&
-               result.windows_command_line.empty(),
+               result.windows_command_line.empty() &&
+               result.argument_parser_contract ==
+                   WorkspaceAgentProcessArgumentParserContract::none,
            message);
 }
 
 void test_fixed_non_inheriting_environment() {
     TempTree tree;
-    WorkspaceAgentSessionController controller(tree.workspace, tree.configuration());
+    WorkspaceAgentSessionController controller(
+        tree.workspace, tree.configuration(), tree.parser_configuration());
     const auto start = controller.start(activation_request(), audit_sink());
     expect(start.activated && start.session.generation == 1U,
            "RQ-CF-AGENT-012: fixture session must activate at generation one");
@@ -428,8 +459,11 @@ void test_fixed_non_inheriting_environment() {
            "RQ-CF-AGENT-015: platform arguments must remain bound to the exact bracketed invocation and fixed environment");
 #if defined(_WIN32)
     expect(serialized_invocation.posix_arguments.empty() &&
-               !serialized_invocation.windows_command_line.empty(),
-           "RQ-CF-AGENT-015: Windows preflight must emit only a CreateProcessW command line");
+               !serialized_invocation.windows_command_line.empty() &&
+               serialized_invocation.argument_parser_contract ==
+                   WorkspaceAgentProcessArgumentParserContract::
+                       windows_c_runtime_argv_v1,
+           "RQ-CF-AGENT-018: Windows preflight must bind the command line to exact trusted C-runtime parser authority");
 #else
     std::vector<std::string> expected_arguments{
         copperfin::platform::path_to_utf8_string(
@@ -437,8 +471,56 @@ void test_fixed_non_inheriting_environment() {
     expected_arguments.insert(
         expected_arguments.end(), result.arguments.begin(), result.arguments.end());
     expect(serialized_invocation.windows_command_line.empty() &&
-               serialized_invocation.posix_arguments == expected_arguments,
-           "RQ-CF-AGENT-015: POSIX preflight must emit exact argv[0] and admitted direct elements");
+               serialized_invocation.posix_arguments == expected_arguments &&
+               serialized_invocation.argument_parser_contract ==
+                   WorkspaceAgentProcessArgumentParserContract::posix_argv_v1,
+           "RQ-CF-AGENT-018: POSIX preflight must retain native argv authority without a Windows parser binding");
+#endif
+}
+
+void test_windows_serialization_requires_exact_parser_authority() {
+#if defined(_WIN32)
+    TempTree missing_authority;
+    WorkspaceAgentSessionController missing_controller(
+        missing_authority.workspace, missing_authority.configuration());
+    const auto missing_start = missing_controller.start(
+        activation_request(), audit_sink());
+    expect_invocation_serialization_content_free_denial(
+        missing_controller.preflight_serialized_process_invocation_request(
+            invocation_request(missing_start.session.generation)),
+        "workspace_agent.process_argument_parser_authority_unavailable",
+        "RQ-CF-AGENT-018: Windows serialization without trusted-host parser configuration must fail without reflection");
+
+    TempTree wrong_identity;
+    auto parser_configuration = wrong_identity.parser_configuration();
+    parser_configuration.windows_bindings.front().trusted_absolute_executable =
+        wrong_identity.workspace / "bin" / "other-tool";
+    parser_configuration.windows_bindings.front().expected_identity =
+        copperfin::security::inspect_physical_path_containment(
+            wrong_identity.workspace / "bin" / "other-tool",
+            wrong_identity.workspace / "bin").identity;
+    const auto wrong_snapshot =
+        copperfin::security::read_physically_contained_file_snapshot(
+            copperfin::security::inspect_physical_path_containment(
+                wrong_identity.workspace / "bin" / "other-tool",
+                wrong_identity.workspace / "bin"),
+            wrong_identity.workspace / "bin");
+    const auto wrong_digest = wrong_snapshot.ok
+        ? copperfin::security::sha256_hex_for_text(wrong_snapshot.bytes)
+        : copperfin::security::Sha256Result{};
+    parser_configuration.windows_bindings.front().expected_sha256 =
+        wrong_digest.ok ? wrong_digest.hex_digest : std::string{};
+    WorkspaceAgentSessionController wrong_controller(
+        wrong_identity.workspace,
+        wrong_identity.configuration(),
+        parser_configuration);
+    const auto wrong_start = wrong_controller.start(
+        activation_request(), audit_sink());
+    expect_invocation_serialization_content_free_denial(
+        wrong_controller.preflight_serialized_process_invocation_request(
+            invocation_request(wrong_start.session.generation)),
+        "workspace_agent.process_argument_parser_not_trusted",
+        "RQ-CF-AGENT-018: Windows serialization must not transfer parser authority between executable identities");
 #endif
 }
 
@@ -956,6 +1038,7 @@ int main(int argc, char** argv) {
     }
 #endif
     test_fixed_non_inheriting_environment();
+    test_windows_serialization_requires_exact_parser_authority();
     test_secure_generation_layout_preparation();
 #if defined(__linux__)
     test_unrepresentable_layout_denied_before_creation();

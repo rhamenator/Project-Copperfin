@@ -201,6 +201,22 @@ WorkspaceAgentSessionController::WorkspaceAgentSessionController(
           trusted_environment_configuration)),
       process_environment_configuration_supplied_(true) {}
 
+WorkspaceAgentSessionController::WorkspaceAgentSessionController(
+    const std::filesystem::path& trusted_absolute_workspace_root,
+    const WorkspaceAgentIsolatedEnvironmentConfiguration&
+        trusted_environment_configuration,
+    const WorkspaceAgentProcessParserConfiguration&
+        trusted_process_parser_configuration)
+    : file_target_boundary_(WorkspaceAgentFileTargetBoundary::create(
+          trusted_absolute_workspace_root)),
+      process_target_boundary_(WorkspaceAgentProcessTargetBoundary::create(
+          trusted_absolute_workspace_root)),
+      process_environment_boundary_(WorkspaceAgentIsolatedEnvironmentBoundary::create(
+          trusted_environment_configuration)),
+      process_parser_boundary_(WorkspaceAgentProcessParserBoundary::create(
+          trusted_process_parser_configuration)),
+      process_environment_configuration_supplied_(true) {}
+
 WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
     const WorkspaceAgentActivationRequest& request,
     const WorkspaceAgentSessionAuditSink& audit_sink) {
@@ -749,6 +765,23 @@ WorkspaceAgentSessionController::preflight_serialized_process_invocation_request
     }
     const bool windows =
         platform == WorkspaceAgentProcessEnvironmentPlatform::windows_v1;
+    WorkspaceAgentProcessArgumentParserContract parser_contract =
+        WorkspaceAgentProcessArgumentParserContract::posix_argv_v1;
+    if (windows) {
+        if (!process_parser_boundary_.has_value()) {
+            result.diagnostic_code =
+                "workspace_agent.process_argument_parser_authority_unavailable";
+            return result;
+        }
+        const auto parser = process_parser_boundary_->authorize_windows(
+            preliminary.environment_plan.canonical_executable_path,
+            preliminary.environment_plan.executable_identity);
+        if (!parser.allowed) {
+            result.diagnostic_code = parser.diagnostic_code;
+            return result;
+        }
+        parser_contract = parser.contract;
+    }
     const auto target = windows
         ? copperfin::platform::ProcessArgumentTarget::windows_command_line_v1
         : copperfin::platform::ProcessArgumentTarget::posix_v1;
@@ -770,6 +803,18 @@ WorkspaceAgentSessionController::preflight_serialized_process_invocation_request
     // environment serialization preflight afterward; neither result is an
     // authority token and a future executor must repeat beside direct launch.
     const auto final = preflight_serialized_process_environment_request(request);
+    WorkspaceAgentProcessArgumentParserContract final_parser_contract =
+        WorkspaceAgentProcessArgumentParserContract::posix_argv_v1;
+    if (windows && final.allowed && final.environment_plan.allowed) {
+        const auto final_parser = process_parser_boundary_->authorize_windows(
+            final.environment_plan.canonical_executable_path,
+            final.environment_plan.executable_identity);
+        if (!final_parser.allowed) {
+            result.diagnostic_code = final_parser.diagnostic_code;
+            return result;
+        }
+        final_parser_contract = final_parser.contract;
+    }
     if (!final.allowed ||
         !final.environment_plan.allowed ||
         !preliminary.environment_plan.allowed ||
@@ -798,7 +843,8 @@ WorkspaceAgentSessionController::preflight_serialized_process_invocation_request
             preliminary.environment_plan.environment_entries ||
         final.posix_environment != preliminary.posix_environment ||
         final.windows_environment_block !=
-            preliminary.windows_environment_block) {
+            preliminary.windows_environment_block ||
+        final_parser_contract != parser_contract) {
         result.diagnostic_code =
             "workspace_agent.process_argument_serialization_stale_invocation";
         return result;
@@ -809,6 +855,7 @@ WorkspaceAgentSessionController::preflight_serialized_process_invocation_request
     result.posix_arguments = std::move(serialized.posix_arguments);
     result.windows_command_line =
         std::move(serialized.windows_command_line);
+    result.argument_parser_contract = parser_contract;
     result.diagnostic_code =
         "workspace_agent.process_argument_serialization_request_allowed";
     return result;

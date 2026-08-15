@@ -5163,6 +5163,17 @@ copperfin_add_test(test_workspace_agent_process_containment cf_security
     test_workspace_agent_process_containment.cpp
 )
 
+copperfin_add_test(test_workspace_agent_process_parser cf_security
+    test_workspace_agent_process_parser.cpp
+)
+
+add_test(
+    NAME test_workspace_agent_process_parser_boundary_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${PROJECT_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_workspace_agent_process_parser_boundary_contract_check.cmake
+)
+
 copperfin_add_test(test_workspace_agent_process_invocation cf_security
     test_workspace_agent_process_invocation.cpp
 )
