@@ -1,3 +1,11 @@
+- 2026-08-15: Defined `RQ-CF-AGENT-013` after final signed/DCO head
+  `b5129e08a` passed local Release `14/14`, fresh Clang ASan/UBSan `3/3`,
+  isolation inventory `377`, safety `1/1`, diff validation, all eleven
+  protected checks in runs `31870916071`, `31870917594`, `31870917602`,
+  `31870917599`, and `31870917583`, both Socket checks, and clean exact-head
+  automated review. Both actionable review threads were corrected and resolved;
+  PR `#5015` merged into `v1-development` as `94c705e6a`.
+
 - 2026-08-15: Corrected the workspace-agent `RQ-CF-AGENT-013` serializer cap
   after exact-head review found that the 32,768-byte logical ceiling accounted
   for every entry terminator but not the additional final Windows block
