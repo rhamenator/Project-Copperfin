@@ -49,6 +49,13 @@ require_text(include/copperfin/security/workspace_agent_session.h
     "revalidate_serialized_process_invocation_for_launch")
 require_text(src/security/workspace_agent_session.cpp
     "workspace_agent.process_launch_revalidation_pinning_unavailable")
+require_text(include/copperfin/security/workspace_agent_session.h
+    "acquire_process_launch_revocation_lease")
+require_text(include/copperfin/security/workspace_agent_session.h
+    "This is not launch authority")
+require_text(src/security/workspace_agent_session.cpp
+    "workspace_agent.process_launch_revocation_lease_acquired")
+require_text(tests/test_workspace_agent_session.cpp "RQ-CF-AGENT-022")
 require_text(tests/test_workspace_agent_process_parser.cpp "RQ-CF-AGENT-018")
 require_text(tests/test_workspace_agent_isolated_environment.cpp
     "workspace_agent.process_argument_parser_authority_unavailable")

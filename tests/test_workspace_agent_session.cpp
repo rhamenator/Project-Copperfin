@@ -15,6 +15,7 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -576,6 +577,128 @@ void test_audit_serialization_is_stable_and_content_free() {
            "RQ-CF-AGENT-005: session audit events must not carry content, paths, credentials, or receipts");
 }
 
+void test_launch_revocation_lease_is_generation_bound_and_blocks_stop() {
+    using copperfin::security::WorkspaceAgentSessionRevocationLease;
+    static_assert(!std::is_copy_constructible_v<WorkspaceAgentSessionRevocationLease>);
+    static_assert(!std::is_copy_assignable_v<WorkspaceAgentSessionRevocationLease>);
+    static_assert(std::is_nothrow_move_constructible_v<WorkspaceAgentSessionRevocationLease>);
+
+    WorkspaceAgentSessionController controller;
+    const auto inactive =
+        controller.acquire_process_launch_revocation_lease(1U);
+    expect(!inactive.acquired && !inactive.lease.has_value() &&
+               inactive.diagnostic_code == "workspace_agent.session_not_active",
+           "RQ-CF-AGENT-022: inactive sessions must not create a revocation lease");
+
+    AuditContext advisory_start_audit;
+    const auto advisory = controller.start(
+        request_for(WorkspaceAgentAccessMode::advisory),
+        sink_for(advisory_start_audit));
+    expect(advisory.activated,
+           "RQ-CF-AGENT-022: advisory denial fixture should establish audited authority");
+    const auto incapable = controller.acquire_process_launch_revocation_lease(
+        advisory.session.generation);
+    expect(!incapable.acquired && !incapable.lease.has_value() &&
+               incapable.diagnostic_code ==
+                   "workspace_agent.process_launch_lease_capability_denied",
+           "RQ-CF-AGENT-022: a generation without process capability must not acquire a launch lease");
+    AuditContext advisory_stop_audit;
+    expect(controller.stop(sink_for(advisory_stop_audit)).revoked,
+           "RQ-CF-AGENT-022: advisory denial fixture should revoke cleanly");
+
+    AuditContext start_audit;
+    const auto started = controller.start(
+        request_for(WorkspaceAgentAccessMode::workspace_sandbox),
+        sink_for(start_audit));
+    expect(started.activated,
+           "RQ-CF-AGENT-022: lease fixture should establish audited authority");
+    const auto stale = controller.acquire_process_launch_revocation_lease(
+        started.session.generation + 1U);
+    expect(!stale.acquired && !stale.lease.has_value() &&
+               stale.diagnostic_code ==
+                   "workspace_agent.process_launch_lease_stale_session",
+           "RQ-CF-AGENT-022: a different generation must not acquire a lease");
+
+    auto acquired = controller.acquire_process_launch_revocation_lease(
+        started.session.generation);
+    auto second = controller.acquire_process_launch_revocation_lease(
+        started.session.generation);
+    expect(acquired.acquired && acquired.lease.has_value() &&
+               acquired.lease->valid() &&
+               acquired.lease->session_generation() == started.session.generation &&
+               acquired.diagnostic_code ==
+                   "workspace_agent.process_launch_revocation_lease_acquired",
+           "RQ-CF-AGENT-022: the active exact generation should acquire one move-only lease");
+    expect(second.acquired && second.lease.has_value() && second.lease->valid(),
+           "RQ-CF-AGENT-022: one generation may hold multiple short launch-boundary leases");
+
+    AuditContext stop_audit;
+    stop_audit.block_commit = true;
+    copperfin::security::WorkspaceAgentSessionStopResult stop_result;
+    std::thread stop_thread([&controller, &stop_audit, &stop_result] {
+        stop_result = controller.stop(sink_for(stop_audit));
+    });
+    bool stop_transition_observed = false;
+    const auto transition_deadline =
+        std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (std::chrono::steady_clock::now() < transition_deadline) {
+        const auto during_stop = controller.preflight_tool_request(tool_request(
+            started.session.generation,
+            copperfin::security::workspace_agent_tool_workspace_inspect));
+        if (during_stop.diagnostic_code ==
+            "workspace_agent.session_transition_in_progress") {
+            stop_transition_observed = true;
+            break;
+        }
+        std::this_thread::yield();
+    }
+    expect(stop_transition_observed,
+           "RQ-CF-AGENT-022: stop should enter its serialized transition while the lease is held");
+    {
+        std::unique_lock lock(stop_audit.commit_mutex);
+        const bool stop_reached_audit = stop_audit.commit_condition.wait_for(
+            lock,
+            std::chrono::milliseconds(100),
+            [&stop_audit] { return stop_audit.commit_entered; });
+        expect(!stop_reached_audit,
+               "RQ-CF-AGENT-022: stop must wait for an outstanding launch revocation lease before auditing revocation");
+    }
+    const auto still_denied =
+        controller.revalidate_serialized_process_invocation_for_launch({}, {});
+    expect(!still_denied.allowed &&
+               still_denied.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_pinning_unavailable",
+           "RQ-CF-AGENT-022: a revocation lease alone must not make the launch-promotion gate allow");
+
+    acquired.lease.reset();
+    {
+        std::unique_lock lock(stop_audit.commit_mutex);
+        const bool stop_reached_audit = stop_audit.commit_condition.wait_for(
+            lock,
+            std::chrono::milliseconds(100),
+            [&stop_audit] { return stop_audit.commit_entered; });
+        expect(!stop_reached_audit,
+               "RQ-CF-AGENT-022: stop must wait until every outstanding lease is released");
+    }
+    second.lease.reset();
+    bool stop_reached_audit = false;
+    {
+        std::unique_lock lock(stop_audit.commit_mutex);
+        stop_reached_audit = stop_audit.commit_condition.wait_for(
+            lock,
+            std::chrono::seconds(5),
+            [&stop_audit] { return stop_audit.commit_entered; });
+        stop_audit.release_commit = true;
+    }
+    stop_audit.commit_condition.notify_all();
+    stop_thread.join();
+    expect(stop_reached_audit && stop_result.revoked &&
+               !controller.snapshot().active,
+           "RQ-CF-AGENT-022: releasing the lease must let stop revoke the session normally");
+    expect(!acquired.lease.has_value(),
+           "RQ-CF-AGENT-022: a released lease must retain no reusable authority");
+}
+
 }  // namespace
 
 int main() {
@@ -587,6 +710,7 @@ int main() {
     test_policy_exception_fails_closed_and_restores_transition();
     test_overlapping_start_cannot_observe_or_replace_partial_authority();
     test_audit_serialization_is_stable_and_content_free();
+    test_launch_revocation_lease_is_generation_bound_and_blocks_stop();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

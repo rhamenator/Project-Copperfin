@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
@@ -28,7 +29,7 @@ inline constexpr std::size_t
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
 // RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
-// RQ-CF-AGENT-018 through RQ-CF-AGENT-021.
+// RQ-CF-AGENT-018 through RQ-CF-AGENT-022.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -232,6 +233,42 @@ struct WorkspaceAgentLaunchRevalidationResult {
     std::string diagnostic_code;
 };
 
+struct WorkspaceAgentSessionRevocationLeaseState;
+
+// A short-lived, non-executing lease that prevents stop from completing while
+// a future executor performs one launch decision for the exact generation.
+// This is not launch authority and exposes no native process or target handle.
+class WorkspaceAgentSessionRevocationLease {
+public:
+    WorkspaceAgentSessionRevocationLease() = default;
+    ~WorkspaceAgentSessionRevocationLease();
+    WorkspaceAgentSessionRevocationLease(
+        WorkspaceAgentSessionRevocationLease&&) noexcept;
+    WorkspaceAgentSessionRevocationLease& operator=(
+        WorkspaceAgentSessionRevocationLease&&) noexcept;
+    WorkspaceAgentSessionRevocationLease(
+        const WorkspaceAgentSessionRevocationLease&) = delete;
+    WorkspaceAgentSessionRevocationLease& operator=(
+        const WorkspaceAgentSessionRevocationLease&) = delete;
+
+    [[nodiscard]] bool valid() const noexcept;
+    [[nodiscard]] std::uint64_t session_generation() const noexcept;
+
+private:
+    class Impl;
+    explicit WorkspaceAgentSessionRevocationLease(std::unique_ptr<Impl> impl);
+
+    std::unique_ptr<Impl> impl_;
+
+    friend class WorkspaceAgentSessionController;
+};
+
+struct WorkspaceAgentSessionRevocationLeaseResult {
+    bool acquired = false;
+    std::optional<WorkspaceAgentSessionRevocationLease> lease;
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -330,6 +367,15 @@ public:
         const WorkspaceAgentSerializedProcessInvocationPreflightResult&
             admitted_plan) const;
 
+    // Acquires only the revocation-lifetime prerequisite for a future direct
+    // launcher. While held, stop waits before revoking the exact generation.
+    // Callers must keep this lease only around the eventual launch syscall.
+    // It does not validate or return a plan, pin paths, apply a sandbox, start
+    // a process, or make the launch-promotion gate allow.
+    [[nodiscard]] WorkspaceAgentSessionRevocationLeaseResult
+    acquire_process_launch_revocation_lease(
+        std::uint64_t session_generation) const;
+
 private:
     enum class Transition {
         idle,
@@ -342,6 +388,8 @@ private:
     Transition transition_ = Transition::idle;
     std::uint64_t next_generation_ = 1U;
     WorkspaceAgentSessionSnapshot active_session_{};
+    std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState>
+        active_revocation_lease_state_;
     std::vector<WorkspaceAgentSessionLayoutPreparationResult>
         pending_layout_cleanups_;
     std::optional<WorkspaceAgentFileTargetBoundary> file_target_boundary_;

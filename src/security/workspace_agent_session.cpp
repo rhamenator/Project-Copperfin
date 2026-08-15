@@ -11,11 +11,55 @@
 #include <iomanip>
 #include <limits>
 #include <locale>
+#include <memory>
+#include <shared_mutex>
 #include <sstream>
 #include <string_view>
 #include <utility>
 
 namespace copperfin::security {
+
+struct WorkspaceAgentSessionRevocationLeaseState {
+    explicit WorkspaceAgentSessionRevocationLeaseState(
+        const std::uint64_t generation_value)
+        : generation(generation_value) {}
+
+    std::shared_mutex mutex;
+    std::uint64_t generation = 0U;
+    bool active = true;
+};
+
+class WorkspaceAgentSessionRevocationLease::Impl {
+public:
+    Impl(
+        std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState> state_value,
+        std::shared_lock<std::shared_mutex> lock_value)
+        : state(std::move(state_value)), lock(std::move(lock_value)) {}
+
+    std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState> state;
+    std::shared_lock<std::shared_mutex> lock;
+};
+
+WorkspaceAgentSessionRevocationLease::WorkspaceAgentSessionRevocationLease(
+    std::unique_ptr<Impl> impl)
+    : impl_(std::move(impl)) {}
+
+WorkspaceAgentSessionRevocationLease::~WorkspaceAgentSessionRevocationLease() = default;
+WorkspaceAgentSessionRevocationLease::WorkspaceAgentSessionRevocationLease(
+    WorkspaceAgentSessionRevocationLease&&) noexcept = default;
+WorkspaceAgentSessionRevocationLease&
+WorkspaceAgentSessionRevocationLease::operator=(
+    WorkspaceAgentSessionRevocationLease&&) noexcept = default;
+
+bool WorkspaceAgentSessionRevocationLease::valid() const noexcept {
+    return impl_ != nullptr && impl_->lock.owns_lock() && impl_->state != nullptr &&
+        impl_->state->active;
+}
+
+std::uint64_t
+WorkspaceAgentSessionRevocationLease::session_generation() const noexcept {
+    return valid() ? impl_->state->generation : 0U;
+}
 
 namespace {
 
@@ -257,6 +301,8 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
             }
         }
         std::optional<WorkspaceAgentSessionLayoutPreparationResult> preparation;
+        std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState>
+            candidate_revocation_state;
         if (decision.allowed && decision.capabilities.run_local_processes &&
             process_environment_configuration_supplied_) {
             if (!process_environment_boundary_.has_value()) {
@@ -299,6 +345,16 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
                 }
             }
         }
+        if (decision.allowed && decision.capabilities.run_local_processes) {
+            try {
+                candidate_revocation_state =
+                    std::make_shared<WorkspaceAgentSessionRevocationLeaseState>(
+                        candidate_generation);
+            } catch (...) {
+                decision = controller_denial(
+                    "workspace_agent.session_revocation_lease_unavailable");
+            }
+        }
         const WorkspaceAgentSessionAuditEvent event{
             .kind = WorkspaceAgentSessionEventKind::start,
             .session_generation = candidate_generation,
@@ -329,6 +385,8 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
                     .effective_mode = decision.effective_mode,
                     .capabilities = decision.capabilities,
                     .activation_audit_receipt = audit.receipt};
+                active_revocation_lease_state_ =
+                    std::move(candidate_revocation_state);
                 result.activated = true;
             }
             transition_ = Transition::idle;
@@ -445,6 +503,7 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
 WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
     const WorkspaceAgentSessionAuditSink& audit_sink) {
     WorkspaceAgentSessionSnapshot revoked_session;
+    std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState> revocation_state;
     {
         std::lock_guard lock(mutex_);
         if (transition_ != Transition::idle) {
@@ -461,7 +520,20 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
         }
         transition_ = Transition::stopping;
         revoked_session = active_session_;
+        revocation_state = active_revocation_lease_state_;
+    }
+
+    // A lease is held only around a future direct launch decision. Waiting
+    // here ensures stop cannot report revocation in the middle of that narrow
+    // boundary. The lease release path never takes the controller mutex.
+    if (revocation_state != nullptr) {
+        std::unique_lock revocation_lock(revocation_state->mutex);
+        revocation_state->active = false;
+    }
+    {
+        std::lock_guard lock(mutex_);
         active_session_ = {};
+        active_revocation_lease_state_.reset();
     }
 
     const WorkspaceAgentSessionAuditEvent event{
@@ -1000,6 +1072,53 @@ WorkspaceAgentSessionController::revalidate_serialized_process_invocation_for_la
     WorkspaceAgentLaunchRevalidationResult result;
     result.diagnostic_code =
         "workspace_agent.process_launch_revalidation_pinning_unavailable";
+    return result;
+}
+
+WorkspaceAgentSessionRevocationLeaseResult
+WorkspaceAgentSessionController::acquire_process_launch_revocation_lease(
+    const std::uint64_t session_generation) const {
+    WorkspaceAgentSessionRevocationLeaseResult result;
+    std::lock_guard controller_lock(mutex_);
+    if (transition_ != Transition::idle) {
+        result.diagnostic_code =
+            "workspace_agent.session_transition_in_progress";
+        return result;
+    }
+    if (!active_session_.active) {
+        result.diagnostic_code = "workspace_agent.session_not_active";
+        return result;
+    }
+    if (session_generation == 0U ||
+        session_generation != active_session_.generation) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_lease_stale_session";
+        return result;
+    }
+    if (!active_session_.capabilities.run_local_processes) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_lease_capability_denied";
+        return result;
+    }
+    const auto state = active_revocation_lease_state_;
+    if (state == nullptr || state->generation != session_generation) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_lease_unavailable";
+        return result;
+    }
+
+    std::shared_lock revocation_lock(state->mutex);
+    if (!state->active || state->generation != session_generation) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_lease_stale_session";
+        return result;
+    }
+    result.lease.emplace(WorkspaceAgentSessionRevocationLease(
+        std::make_unique<WorkspaceAgentSessionRevocationLease::Impl>(
+            state, std::move(revocation_lock))));
+    result.acquired = true;
+    result.diagnostic_code =
+        "workspace_agent.process_launch_revocation_lease_acquired";
     return result;
 }
 

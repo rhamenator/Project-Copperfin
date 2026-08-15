@@ -649,6 +649,28 @@ enforce sandbox, endpoint, descendant, and outcome-audit policy. This gate
 starts no process and Windows dependency-closure restrictions from
 `RQ-CF-AGENT-018` continue to apply.
 
+## Session-revocation lease prerequisite
+
+Candidate `RQ-CF-AGENT-022` supplies only the revocation-lifetime prerequisite
+identified by the fail-closed promotion gate. The controller can issue a
+move-only lease for the exact active process-capable session generation.
+Acquisition rejects inactive, stale, non-process-capable, and transitioning
+sessions without reflecting caller content.
+While a lease is held, `stop` enters its serialized transition but waits before
+revoking authority or recording the stop outcome. Releasing the lease permits
+revocation to continue. The lease exposes only validity and the exact admitted
+generation; it carries no plan, path, identity, argument, environment, native
+handle, or process capability.
+
+This lease is deliberately short-lived and is intended to bracket only a future
+direct launch syscall. Holding it across user interaction, network access,
+unbounded preparation, or child lifetime could delay revocation and is outside
+the contract. It is not launch authority: `RQ-CF-AGENT-019` continues to deny
+invariantly because trusted-root, executable, and working-directory pins,
+synchronous executor consumption, sandbox, endpoint and descendant controls,
+and outcome audit remain absent. The controller must outlive every lease it
+issues.
+
 ## Current implementation and remaining work
 
 Candidate `RQ-CF-AGENT-021` retains every successful configured layout
