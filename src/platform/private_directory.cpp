@@ -318,9 +318,10 @@ std::optional<BoundParent> bind_non_indirect_parent(
 
 bool descriptor_has_no_extended_acl(const int descriptor) noexcept {
 #if defined(__APPLE__)
+    errno = 0;
     acl_t acl = ::acl_get_fd_np(descriptor, ACL_TYPE_EXTENDED);
     if (acl == nullptr) {
-        return false;
+        return errno == ENOENT;
     }
     acl_entry_t entry = nullptr;
     errno = 0;
