@@ -2,8 +2,8 @@
 
 ## V1 workspace-agent fail-closed launch-promotion gate
 
-Candidate `RQ-CF-AGENT-019` has an explicit fail-closed implementation on a
-dedicated branch. Exact-head review exposed four independent races in the
+Candidate `RQ-CF-AGENT-019` has complete implementation evidence for its
+explicit fail-closed boundary. Exact-head review exposed four independent races in the
 earlier point-in-time allow design: restored executable metadata, revocation
 during hashing, containment-root substitution, and working-directory
 replacement. Sequential rechecks cannot bind those objects as one coherent
@@ -20,8 +20,14 @@ enforcement. Retained risk is high and no independent final safety approval is
 claimed. Local warning-free Release workspace-agent tests pass `10/10`;
 focused/source-contract verification passes `2/2`; fresh Clang 21 ASan/UBSan
 passes `3/3`; community/isolation/safety gates pass `5/5`, including the fresh
-324-second safety scan; and diff validation passes. Protected and exact-head
-review evidence remain pending.
+324-second safety scan; and diff validation passes. Exact signed/DCO head
+`e3e949414` passed all eleven protected checks in runs `31903337717`,
+`31903339126`, `31903339150`, `31903339171`, and `31903339187`. Exact-head
+automated review found no major issue, all four review threads are resolved,
+and PR `#5028` merged into `v1-development` as `0e9fac5c7`. Requirement status
+remains a retained-high-risk `gap` because the target pins, revocation-bound
+launch, and executor protections are not implemented; no execution or launch
+readiness is claimed.
 
 ## V1 workspace-agent Windows process-parser authority
 

@@ -1,3 +1,14 @@
+- 2026-08-15: Completed implementation evidence for candidate
+  `RQ-CF-AGENT-019` at exact signed/DCO head `e3e949414`. All eleven protected
+  checks passed in runs `31903337717`, `31903339126`, `31903339150`,
+  `31903339171`, and `31903339187`; exact-head automated review found no major
+  issue after four real P1 race findings caused the unsafe allow path to be
+  withdrawn, all review threads are resolved, and PR `#5028` merged into
+  `v1-development` as `0e9fac5c7`. The requirement remains a retained-high-risk
+  `gap` because coherent target pinning, revocation-bound launch, and the
+  executor protections are not implemented; no execution or launch readiness
+  is claimed.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-019` as an explicit fail-closed
   launch-promotion gate. Exact-head review showed that sequential preflight,
   snapshot, hash, and session checks cannot coherently bind the trusted root,
