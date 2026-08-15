@@ -7,6 +7,7 @@
 #include "copperfin/security/workspace_agent_policy.h"
 #include "copperfin/security/workspace_agent_environment.h"
 #include "copperfin/security/workspace_agent_process_containment.h"
+#include "copperfin/security/workspace_agent_process_parser.h"
 #include "copperfin/security/workspace_agent_target_containment.h"
 #include "copperfin/security/workspace_agent_tool_registry.h"
 
@@ -23,7 +24,8 @@ namespace copperfin::security {
 // Governing requirements: RQ-CF-AGENT-001, RQ-CF-AGENT-005, and
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
-// RQ-CF-AGENT-014, RQ-CF-AGENT-015, and RQ-CF-AGENT-016.
+// RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
+// RQ-CF-AGENT-018.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -204,6 +206,8 @@ struct WorkspaceAgentSerializedProcessInvocationPreflightResult {
     // line without its implicit terminating NUL.
     std::vector<std::string> posix_arguments;
     std::u16string windows_command_line;
+    WorkspaceAgentProcessArgumentParserContract argument_parser_contract =
+        WorkspaceAgentProcessArgumentParserContract::none;
     std::string diagnostic_code;
 };
 
@@ -216,6 +220,12 @@ public:
         const std::filesystem::path& trusted_absolute_workspace_root,
         const WorkspaceAgentIsolatedEnvironmentConfiguration&
             trusted_environment_configuration);
+    WorkspaceAgentSessionController(
+        const std::filesystem::path& trusted_absolute_workspace_root,
+        const WorkspaceAgentIsolatedEnvironmentConfiguration&
+            trusted_environment_configuration,
+        const WorkspaceAgentProcessParserConfiguration&
+            trusted_process_parser_configuration);
 
     [[nodiscard]] WorkspaceAgentSessionStartResult start(
         const WorkspaceAgentActivationRequest& request,
@@ -273,8 +283,10 @@ public:
 
     // Serializes the canonical executable as argv[0] and the admitted direct
     // argument elements for the host platform, bracketed by complete repeated
-    // environment preflights. It performs no shell interpretation, executable
-    // read, sandbox operation, directory mutation, or process launch.
+    // environment preflights. Windows additionally requires trusted-host parser
+    // authority bound to the exact canonical executable identity. It performs
+    // no shell interpretation, sandbox operation, directory mutation, or
+    // process launch.
     [[nodiscard]] WorkspaceAgentSerializedProcessInvocationPreflightResult
     preflight_serialized_process_invocation_request(
         const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
@@ -294,6 +306,8 @@ private:
     std::optional<WorkspaceAgentProcessTargetBoundary> process_target_boundary_;
     std::optional<WorkspaceAgentIsolatedEnvironmentBoundary>
         process_environment_boundary_;
+    std::optional<WorkspaceAgentProcessParserBoundary>
+        process_parser_boundary_;
     bool process_environment_configuration_supplied_ = false;
 };
 

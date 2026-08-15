@@ -1,3 +1,14 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-018` trusted-host Windows child
+  argument-parser authority. Versioned bounded configuration binds the supported
+  C-runtime parser contract to exact canonical executable identity; provider,
+  model, prompt, workspace, and tool-request data cannot select it. Windows
+  serialized invocation preflight authorizes before and after serialization and
+  the complete repeated environment/target check, while POSIX retains native
+  argv semantics. Invalid, missing, wrong, duplicate, indirect, multiply linked,
+  or changed authority fails with content-free diagnostics. This remains non-
+  executing point-in-time evidence; launch pinning, sandbox, endpoint policy,
+  execution, and outcome audit remain gaps.
+
 - 2026-08-15: Recorded complete implementation evidence for candidate
   `RQ-CF-AGENT-017` after exact signed/DCO implementation head `8c24c0258`
   passed warning-free local focused Release `5/5`, broader Release `17/17`,

@@ -5,8 +5,8 @@ Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-005`, `RQ-CF-AGENT-006`, `RQ-CF-AGENT-007`,
 `RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`,
 `RQ-CF-AGENT-011`, `RQ-CF-AGENT-012`, `RQ-CF-AGENT-013`,
-`RQ-CF-AGENT-014`, `RQ-CF-AGENT-015`, `RQ-CF-AGENT-016`, and
-`RQ-CF-AGENT-017` in
+`RQ-CF-AGENT-014`, `RQ-CF-AGENT-015`, `RQ-CF-AGENT-016`,
+`RQ-CF-AGENT-017`, and candidate `RQ-CF-AGENT-018` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -518,8 +518,7 @@ removing a second quoting implementation without introducing shell or PATH
 behavior.
 
 This remains a non-executing workspace-agent preflight and never grants launch
-authority. A future executor must additionally establish Windows child-parser
-authority, repeat and pin target checks beside
+authority. A future executor must additionally repeat and pin target checks beside
 launch, consume the fixed environment without ambient merging, apply the real
 sandbox and endpoint policy, own cancellation and descendants, and record only
 content-free outcome audit. Identity-aware layout cleanup remains separate.
@@ -556,6 +555,31 @@ parses `GetCommandLineW()`, validate publisher trust, pin an image beside
 launch, start a process, apply sandbox or endpoint policy, or record an outcome.
 Those remain separate trusted-host boundaries.
 
+## Windows child argument-parser authority
+
+Candidate `RQ-CF-AGENT-018` closes the known-parser half of the Windows command-
+line prerequisite. `CreateProcessW` supplies a command-line string, not an
+argument vector, and an arbitrary child may interpret that string differently.
+Copperfin therefore permits its conventional C-runtime quoting contract only
+for an exact canonical executable identity listed by trusted product-host
+configuration. Provider, model, prompt, workspace, and tool-request input cannot
+create or select this authority.
+
+Configuration is versioned, nonempty, bounded to sixty-four singly linked
+regular files, and rejects relative paths, duplicate canonical paths or physical
+identities, unsupported parser contracts, and invalid identities. Authorization
+requires the exact configured canonical path and complete physical identity,
+then reinspects the configured file and requires that identity to remain
+unchanged. Missing, invalid, stale, or wrong-executable authority yields only a
+stable content-free diagnostic and no serialized invocation. The controller
+repeats the parser authorization after argument serialization and the complete
+environment/target preflight and requires the parser contract to match.
+
+POSIX preserves its native `argv[]` contract and needs no Windows parser
+attestation. This boundary does not infer parser behavior from a PE image,
+validate publisher trust, pin a handle beside launch, execute a process, apply
+sandbox or endpoint policy, manage descendants, or record a tool outcome.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
@@ -591,7 +615,9 @@ close product-root and point-in-time identity prerequisites for existing file
 tools and explicit process executable/working-directory targets. On Windows,
 candidate `RQ-CF-AGENT-017` additionally requires a structurally launchable,
 host-compatible direct PE image and rechecks its complete physical identity
-after inspection. The adjacent
+after inspection. Candidate `RQ-CF-AGENT-018` additionally requires an exact
+trusted-host executable-identity binding before Windows C-runtime command-line
+serialization; POSIX retains native argv semantics. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
@@ -602,7 +628,7 @@ private layout before audit-backed activation and fails closed without adopting
 existing state. None of these results is an executor,
 authorization token, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, Windows child-parser authority, launch-adjacent handle/revalidation,
+semantics, launch-adjacent handle/revalidation,
 identity-aware environment layout cleanup, endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
