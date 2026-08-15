@@ -31,9 +31,11 @@ struct PrivateDirectoryResult {
 };
 
 // Creates exactly one absolute directory leaf. The parent must already exist.
-// POSIX uses effective-user-owned mode 0700. Windows uses a protected DACL
-// granting inheritable full control only to the process user and LocalSystem.
-// Existing objects are never adopted or modified.
+// POSIX requires an effective-user- or root-owned immediate parent that either
+// denies group/other writes or applies sticky rename protection, then creates
+// effective-user-owned mode 0700. Windows uses a protected DACL granting
+// inheritable full control only to the process user and LocalSystem. Existing
+// objects are never adopted or modified.
 [[nodiscard]] PrivateDirectoryResult create_private_directory(
     const std::filesystem::path& path) noexcept;
 

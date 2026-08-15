@@ -102,6 +102,8 @@ foreach(token IN ITEMS
         "O_NOFOLLOW"
         "::mkdirat("
         "::fstat("
+        "descriptor_is_trusted_creation_parent"
+        "(status.st_mode & S_ISVTX)"
         "status.st_uid == ::geteuid()"
         "(status.st_mode & 07777) == 0700")
     require_text("${source_text}" "${token}"

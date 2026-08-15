@@ -43,6 +43,12 @@ public:
                    std::filesystem::temp_directory_path()) /
             ("copperfin-private-directory-" + std::to_string(suffix));
         std::filesystem::create_directory(root);
+#if !defined(_WIN32)
+        std::filesystem::permissions(
+            root,
+            std::filesystem::perms::owner_all,
+            std::filesystem::perm_options::replace);
+#endif
     }
 
     ~TempTree() {
@@ -164,6 +170,28 @@ void test_creation_and_verification() {
                std::filesystem::is_directory(restricted) &&
                !verify_private_directory(restricted).ok,
            "RQ-CF-AGENT-014: a restrictive owner-bit umask must fail closed without path-based repair or deletion");
+
+    const auto writable_parent = tree.root / "writable-parent";
+    std::filesystem::create_directory(writable_parent);
+    std::filesystem::permissions(
+        writable_parent,
+        std::filesystem::perms::all,
+        std::filesystem::perm_options::replace);
+    const auto rejected_child = writable_parent / "rejected-child";
+    const auto rejected_result = create_private_directory(rejected_child);
+    expect(!rejected_result.ok &&
+               rejected_result.failure == PrivateDirectoryFailure::access_denied &&
+               !std::filesystem::exists(rejected_child),
+           "RQ-CF-AGENT-014: a non-sticky parent writable by another principal must fail before creation");
+    std::filesystem::permissions(
+        writable_parent,
+        std::filesystem::perms::all |
+            std::filesystem::perms::sticky_bit,
+        std::filesystem::perm_options::replace);
+    const auto sticky_child = writable_parent / "sticky-child";
+    expect(create_private_directory(sticky_child).ok &&
+               verify_private_directory(sticky_child).ok,
+           "RQ-CF-AGENT-014: a trusted sticky parent must retain safe leaf creation");
 #endif
 }
 

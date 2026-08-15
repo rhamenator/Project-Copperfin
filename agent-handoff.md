@@ -25,6 +25,9 @@ while Windows brackets its public full-path create and retains the documented
 trusted-parent residual.
 The returned session storage/file identity is required as the verified parent
 for all five child creations through the same operation.
+Generic POSIX creation now also fails before mutation beneath an untrusted
+immediate parent: ownership must be the effective user or root, and broad write
+permission requires sticky rename protection.
 
 This remains non-executing and is not yet wired to session start. Layout
 cleanup, platform argument serialization, Windows executable-format

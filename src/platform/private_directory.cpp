@@ -317,6 +317,16 @@ bool descriptor_is_private_directory(const int descriptor) noexcept {
         status.st_uid == ::geteuid() && (status.st_mode & 07777) == 0700;
 }
 
+bool descriptor_is_trusted_creation_parent(const int descriptor) noexcept {
+    struct stat status{};
+    if (::fstat(descriptor, &status) != 0 || !S_ISDIR(status.st_mode) ||
+        (status.st_uid != ::geteuid() && status.st_uid != 0U)) {
+        return false;
+    }
+    const bool broadly_writable = (status.st_mode & 0022) != 0;
+    return !broadly_writable || (status.st_mode & S_ISVTX) != 0;
+}
+
 bool descriptor_identity_matches(
     const int descriptor,
     const std::uint64_t expected_storage_id,
@@ -530,6 +540,9 @@ PrivateDirectoryResult create_private_directory(
     const auto parent = bind_non_indirect_parent(path, parent_error);
     if (!parent.has_value()) {
         return failed(map_posix_creation_error(parent_error));
+    }
+    if (!descriptor_is_trusted_creation_parent(parent->descriptor.get())) {
+        return failed(PrivateDirectoryFailure::access_denied);
     }
     if (::mkdirat(
             parent->descriptor.get(), parent->leaf.c_str(), 0700) != 0) {

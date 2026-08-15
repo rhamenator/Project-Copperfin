@@ -409,6 +409,13 @@ operation against that session identity, so a replacement path cannot receive
 the child-creation side effects on POSIX and fails the pre-create identity gate
 on Windows.
 
+The generic POSIX leaf-creation operation also rejects an immediate parent that
+is not owned by the effective user or root. If that parent permits group or
+other writes, it must provide sticky rename protection. This prevents a
+different unprivileged principal from replacing a just-created leaf before its
+identity-bound inspection; unsafe parents fail before creation. Same-user and
+privileged-host interference remain within the trusted-host boundary.
+
 Before creating the session root, preparation derives the exact fixed
 platform environment entries through the same builder used by construction.
 Invalid encoding, an empty required value, a per-entry overflow, or aggregate

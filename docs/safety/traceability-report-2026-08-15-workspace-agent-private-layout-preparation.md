@@ -104,6 +104,10 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   The returned session identity is required as the verified parent for all five
   child creations, preventing a replacement root/session path from receiving
   those later side effects.
+- POSIX generic leaf creation rejects an immediate parent not owned by the
+  effective user or root, and rejects group/other-writable parents without
+  sticky rename protection. A direct regression requires denial before any
+  leaf side effect and preserves creation beneath a trusted sticky parent.
 - Parent indirection: POSIX creation and verification walk every existing
   parent through no-follow directory descriptors, then create and inspect the
   leaf relative to the bound parent. Direct regressions prove a symlink parent

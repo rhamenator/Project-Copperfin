@@ -78,6 +78,13 @@ public:
         approved_two = root / "approved-two";
         windows_system_root = root / "windows-root";
         outside = root / "outside";
+        std::filesystem::create_directory(root);
+#if !defined(_WIN32)
+        std::filesystem::permissions(
+            root,
+            std::filesystem::perms::owner_all,
+            std::filesystem::perm_options::replace);
+#endif
         std::filesystem::create_directories(workspace / "bin");
         std::filesystem::create_directories(workspace / "working");
         std::filesystem::create_directories(approved_one);
@@ -505,6 +512,10 @@ void test_unrepresentable_layout_denied_before_creation() {
         long_parent /= std::string(component_bytes, 'a');
         std::filesystem::create_directory(long_parent);
     }
+    std::filesystem::permissions(
+        long_parent,
+        std::filesystem::perms::owner_all,
+        std::filesystem::perm_options::replace);
     tree.session_storage = long_parent / "sessions";
     TempTree::require_private_directory(tree.session_storage);
 
