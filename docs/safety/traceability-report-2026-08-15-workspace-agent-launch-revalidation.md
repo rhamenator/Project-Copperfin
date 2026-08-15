@@ -81,8 +81,12 @@ Completed local evidence for the fail-closed pivot:
 - native-platform and GitHub Actions workflow contracts passed; and
 - `git diff --check` passed.
 
-Protected-platform and exact-head review evidence for the invariant-denial
-head remain required.
+Exact signed/DCO head `e3e949414` passed all eleven protected checks in runs
+`31903337717`, `31903339126`, `31903339150`, `31903339171`, and `31903339187`,
+covering Windows, Ubuntu, macOS, GCC, Clang, DCO, DECLARE, generated-launcher,
+and supply-chain gates. Exact-head automated review found no major issue after
+the four actionable P1 threads drove withdrawal of the allow path; all four
+threads are resolved. PR `#5028` merged into `v1-development` as `0e9fac5c7`.
 
 The retained risk classification is `high`. No independent final safety
 approval or launch readiness is claimed; requirement status remains `gap`.
