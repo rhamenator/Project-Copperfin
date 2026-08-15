@@ -103,12 +103,23 @@ Exact-head automated review found two P2 authority-provenance gaps: at
 corrected opaque receipt, same-boundary authority check, deleted copy
 operations, preserved move operations, compile-time assertions, forged-status
 test, and cross-boundary test address both findings. Initial protected
-execution passed ten of
-eleven required checks; Windows generated-launcher run `31906276882` passed the
-generated launcher and 32 other tests but failed an unrelated existing Python
-sidecar assertion before reaching the private workspace-agent step. Corrected-
-head rerun evidence remains required.
+execution passed ten of eleven required checks; Windows generated-launcher run
+`31906276882` passed the generated launcher and 32 other tests but failed an
+unrelated existing Python sidecar assertion before reaching the private
+workspace-agent step. The later `aca08bb2c` head passed all eleven checks but
+was superseded by the copied-authority correction.
 
-Protected cross-platform execution, exact-head review, and merge evidence
-remain pending. Requirement status is therefore `gap`; no lifecycle cleanup or
-launch readiness is claimed.
+Final signed/DCO implementation head `4069ee487` passed all eleven protected
+checks in runs `31909056203`, `31909057274`, `31909057284`, `31909057285`, and
+`31909057287`, including Windows, Ubuntu, macOS, both DECLARE architectures,
+both executable-path compilers, DCO, and both Socket checks. Exact-head
+automated review found no major issue after both P2 threads were corrected and
+resolved. PR `#5030` merged into `v1-development` as `d33facaea`.
+The docs-only retained-evidence update passes the licensing, community,
+isolation, supply-chain, and safety contracts `5/5`, including the 327.62-second
+safety scan.
+
+Implementation evidence is complete. Requirement status remains `gap` solely
+because this high-severity documentation change still requires structured
+sign-off from a second qualified human reviewer under `agents.md`. No automatic
+lifecycle cleanup or launch readiness is claimed.
