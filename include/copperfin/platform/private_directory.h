@@ -26,6 +26,8 @@ enum class PrivateDirectoryFailure : std::uint32_t {
 struct PrivateDirectoryResult {
     bool ok = false;
     PrivateDirectoryFailure failure = PrivateDirectoryFailure::invalid_path;
+    std::uint64_t storage_id = 0U;
+    std::uint64_t file_id = 0U;
 };
 
 // Creates exactly one absolute directory leaf. The parent must already exist.

@@ -403,6 +403,11 @@ relative to the same bound descriptor. Root replacement therefore cannot
 redirect the session-root creation side effect on POSIX. Windows repeats the
 bound-parent identity check around its public full-path create and remains
 within the explicit trusted-parent/same-authority limitation.
+Successful bound creation returns the new session directory's storage/file
+identity. Every fixed child is created through the same verified-parent
+operation against that session identity, so a replacement path cannot receive
+the child-creation side effects on POSIX and fails the pre-create identity gate
+on Windows.
 
 Before creating the session root, preparation derives the exact fixed
 platform environment entries through the same builder used by construction.

@@ -23,6 +23,8 @@ Session-root creation now also matches the open storage-root handle to its
 captured storage/file identity; POSIX creates relative to that bound descriptor,
 while Windows brackets its public full-path create and retains the documented
 trusted-parent residual.
+The returned session storage/file identity is required as the verified parent
+for all five child creations through the same operation.
 
 This remains non-executing and is not yet wired to session start. Layout
 cleanup, platform argument serialization, Windows executable-format

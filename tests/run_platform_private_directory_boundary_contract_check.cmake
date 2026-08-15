@@ -108,12 +108,16 @@ foreach(token IN ITEMS
         "descriptor-relative POSIX private-directory operation")
 endforeach()
 
-require_text("${consumer_text}"
+forbid_text("${consumer_text}"
     "copperfin::platform::create_private_directory("
-    "workspace-agent layout preparation delegation")
-require_text("${consumer_text}"
+    "unbound workspace-agent layout preparation")
+require_text_count("${consumer_text}"
     "copperfin::platform::create_private_directory_in_verified_parent("
-    "identity-bound workspace-agent session-root creation")
+    2
+    "identity-bound workspace-agent root and child creation")
+require_text("${consumer_text}"
+    "session_created.storage_id"
+    "identity-bound workspace-agent child creation")
 require_text("${consumer_text}"
     "copperfin::platform::verify_private_directory("
     "workspace-agent layout verification delegation")

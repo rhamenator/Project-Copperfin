@@ -480,8 +480,12 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
     constexpr std::array<std::string_view, 5U> child_names{
         "home", "temp", "config", "cache", "data"};
     for (const auto child_name : child_names) {
-        const auto child_created = copperfin::platform::create_private_directory(
-            session_root / child_name);
+        const auto child_created =
+            copperfin::platform::create_private_directory_in_verified_parent(
+                session_root,
+                session_created.storage_id,
+                session_created.file_id,
+                std::filesystem::path(child_name));
         if (!child_created.ok) {
             result.diagnostic_code =
                 "workspace_agent.environment_session_layout_incomplete";

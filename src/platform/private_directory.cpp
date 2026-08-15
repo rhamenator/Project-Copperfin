@@ -594,7 +594,26 @@ PrivateDirectoryResult create_private_directory_in_verified_parent(
         !verify_private_directory(parent).ok) {
         return failed(PrivateDirectoryFailure::parent_identity_changed);
     }
-    return created;
+    ScopedHandle created_directory(::CreateFileW(
+        (parent / leaf).c_str(), FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
+    BY_HANDLE_FILE_INFORMATION created_information{};
+    if (!created_directory.valid() ||
+        ::GetFileInformationByHandle(
+            created_directory.get(), &created_information) == 0 ||
+        (created_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
+        (created_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+        return failed(PrivateDirectoryFailure::verification_failed);
+    }
+    return {
+        .ok = true,
+        .failure = PrivateDirectoryFailure::none,
+        .storage_id = created_information.dwVolumeSerialNumber,
+        .file_id =
+            (static_cast<std::uint64_t>(created_information.nFileIndexHigh) << 32U) |
+            created_information.nFileIndexLow};
 #else
     int parent_error = 0;
     const auto parent_binding =
@@ -623,7 +642,15 @@ PrivateDirectoryResult create_private_directory_in_verified_parent(
             bound_parent.get(), expected_storage_id, expected_file_id)) {
         return failed(PrivateDirectoryFailure::verification_failed);
     }
-    return {.ok = true, .failure = PrivateDirectoryFailure::none};
+    struct stat created_status{};
+    if (::fstat(directory.get(), &created_status) != 0) {
+        return failed(PrivateDirectoryFailure::verification_failed);
+    }
+    return {
+        .ok = true,
+        .failure = PrivateDirectoryFailure::none,
+        .storage_id = static_cast<std::uint64_t>(created_status.st_dev),
+        .file_id = static_cast<std::uint64_t>(created_status.st_ino)};
 #endif
 }
 
