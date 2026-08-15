@@ -12,7 +12,9 @@ namespace copperfin::runtime
 {
     PortableExecutableKind inspect_portable_executable(const std::filesystem::path &path) noexcept
     {
-        const auto inspection = copperfin::platform::inspect_windows_pe_image(path);
+        const auto inspection = copperfin::platform::inspect_windows_pe_image(
+            path,
+            copperfin::platform::WindowsPeReadSharing::allow_write_sharing);
         if (inspection.status == copperfin::platform::WindowsPeImageStatus::unreadable)
         {
             return PortableExecutableKind::unreadable;

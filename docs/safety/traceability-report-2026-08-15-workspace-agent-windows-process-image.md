@@ -46,7 +46,8 @@ loader acceptance, or suitability for a safety-critical deployment.
   boundary.
 - `DV-workspace-agent-windows-process-image-003`: exact Windows execution proves
   text/shell-dispatch input denial, real test-image admission, native host
-  selection, and post-inspection identity checks.
+  selection, strict-versus-legacy write-sharing behavior, and post-inspection
+  identity checks.
 - `DV-workspace-agent-windows-process-image-004`: warning-free Release, fresh
   sanitizer, broader security/community/isolation/safety tests, protected
   Windows/Ubuntu/macOS execution, diff validation, and exact-head review are
@@ -85,7 +86,9 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   point-in-time result; launch-adjacent handle pinning remains mandatory.
 - Shared parser: DECLARE managed/native classification uses the same parser but
   retains its additional CLR-directory-slot requirement. This avoids parallel
-  PE structure interpretations while preserving its established failures.
+  PE structure interpretations while preserving its established failures and
+  its legacy read sharing when another process has the DLL open for writing.
+  The workspace-agent call path retains the default no-write-sharing mode.
 - POSIX boundary: the new structural gate is used only for Windows process
   targets. Existing POSIX direct-file and execute-permission semantics remain
   unchanged.

@@ -548,8 +548,10 @@ a pinned launch handle.
 
 The same parser preserves the existing native/managed PE classification used by
 the DECLARE boundary, including its stricter requirement that the CLR directory
-slot be declared before classification succeeds. POSIX workspace-agent process
-target behavior is unchanged. This slice does not infer how an arbitrary child
+slot be declared before classification succeeds and its legacy read sharing
+when an IDE or build tool has the library open for writing. Workspace-agent
+admission retains the parser's default write exclusion. POSIX workspace-agent
+process target behavior is unchanged. This slice does not infer how an arbitrary child
 parses `GetCommandLineW()`, validate publisher trust, pin an image beside
 launch, start a process, apply sandbox or endpoint policy, or record an outcome.
 Those remain separate trusted-host boundaries.

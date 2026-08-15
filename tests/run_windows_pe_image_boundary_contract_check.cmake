@@ -25,6 +25,8 @@ require_text(include/copperfin/platform/windows_pe_image.h
 require_text(src/platform/windows_pe_image.cpp
     "FILE_SHARE_READ | FILE_SHARE_DELETE")
 require_text(src/platform/windows_pe_image.cpp
+    "WindowsPeReadSharing::allow_write_sharing")
+require_text(src/platform/windows_pe_image.cpp
     "dynamic_library_flag")
 require_text(src/platform/windows_pe_image.cpp
     "section_executable_flag")
@@ -37,9 +39,13 @@ require_text(src/security/workspace_agent_process_containment.cpp
 require_text(src/security/workspace_agent_process_containment.cpp
     "workspace_agent.process_executable_changed_during_image_inspection")
 require_text(src/runtime/managed_pe_image.cpp
-    "platform::inspect_windows_pe_image(path)")
+    "platform::WindowsPeReadSharing::allow_write_sharing")
 require_text(tests/test_windows_pe_image.cpp "RQ-CF-AGENT-017")
+require_text(tests/test_windows_pe_image.cpp
+    "WindowsPeReadSharing::allow_write_sharing")
 require_text(tests/test_workspace_agent_process_containment.cpp
     "workspace_agent.process_executable_image_invalid")
+require_text(.github/workflows/windows-environment-validation.yml
+    "test_windows_pe_image test_workspace_agent_process_containment")
 
 message(STATUS "Windows PE-image boundary contract passed")

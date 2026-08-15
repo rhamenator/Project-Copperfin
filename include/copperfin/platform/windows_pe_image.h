@@ -28,6 +28,11 @@ enum class WindowsPeSubsystem {
     windows_console
 };
 
+enum class WindowsPeReadSharing {
+    deny_write_sharing,
+    allow_write_sharing
+};
+
 struct WindowsPeImageInspection {
     WindowsPeImageStatus status = WindowsPeImageStatus::unreadable;
     WindowsPeMachine machine = WindowsPeMachine::unknown;
@@ -40,7 +45,9 @@ struct WindowsPeImageInspection {
 // Parses the loader-relevant PE headers without executing or mapping the image.
 // The result is portable so synthetic format regressions can run on every host.
 [[nodiscard]] WindowsPeImageInspection inspect_windows_pe_image(
-    const std::filesystem::path& path) noexcept;
+    const std::filesystem::path& path,
+    WindowsPeReadSharing sharing =
+        WindowsPeReadSharing::deny_write_sharing) noexcept;
 
 // Returns the native Windows host architecture. Non-Windows and unsupported
 // Windows architectures return unknown and therefore fail compatibility.

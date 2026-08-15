@@ -44,10 +44,16 @@ constexpr std::size_t clr_directory_index = 14U;
 
 class FileReader {
 public:
-    explicit FileReader(const std::filesystem::path& path) {
+    FileReader(
+        const std::filesystem::path& path,
+        const WindowsPeReadSharing sharing) {
 #if defined(_WIN32)
+        const DWORD share_mode = FILE_SHARE_READ | FILE_SHARE_DELETE |
+            (sharing == WindowsPeReadSharing::allow_write_sharing
+                 ? FILE_SHARE_WRITE
+                 : 0U);
         handle_ = ::CreateFileW(
-            path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE,
+            path.c_str(), GENERIC_READ, share_mode,
             nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (handle_ == INVALID_HANDLE_VALUE) {
             return;
@@ -60,6 +66,7 @@ public:
         }
         size_ = static_cast<std::uint64_t>(size.QuadPart);
 #else
+        (void)sharing;
         stream_.open(path, std::ios::binary);
         if (!stream_) {
             return;
@@ -236,8 +243,9 @@ bool section_table_is_valid(
 namespace {
 
 WindowsPeImageInspection inspect_windows_pe_image_impl(
-    const std::filesystem::path& path) {
-    FileReader reader(path);
+    const std::filesystem::path& path,
+    const WindowsPeReadSharing sharing) {
+    FileReader reader(path, sharing);
     if (!reader.open()) {
         return {};
     }
@@ -352,9 +360,10 @@ WindowsPeImageInspection inspect_windows_pe_image_impl(
 }  // namespace
 
 WindowsPeImageInspection inspect_windows_pe_image(
-    const std::filesystem::path& path) noexcept {
+    const std::filesystem::path& path,
+    const WindowsPeReadSharing sharing) noexcept {
     try {
-        return inspect_windows_pe_image_impl(path);
+        return inspect_windows_pe_image_impl(path, sharing);
     } catch (...) {
         return {};
     }

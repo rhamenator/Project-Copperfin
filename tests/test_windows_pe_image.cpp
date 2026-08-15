@@ -13,11 +13,22 @@
 #include <string>
 #include <vector>
 
+#if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+
 namespace {
 
 using copperfin::platform::WindowsPeImageInspection;
 using copperfin::platform::WindowsPeImageStatus;
 using copperfin::platform::WindowsPeMachine;
+using copperfin::platform::WindowsPeReadSharing;
 using copperfin::platform::WindowsPeSubsystem;
 using copperfin::platform::inspect_windows_pe_image;
 using copperfin::platform::windows_pe_image_is_launch_compatible;
@@ -307,6 +318,37 @@ void test_host_compatibility(const std::filesystem::path& root) {
         "RQ-CF-AGENT-017: ARM64 and unknown-host compatibility should fail closed outside the direct native case");
 }
 
+#if defined(_WIN32)
+void test_windows_read_sharing_modes(const std::filesystem::path& root) {
+    const auto path = root / "write-open.exe";
+    write_file(path, make_fixture());
+    const HANDLE writer = ::CreateFileW(
+        path.c_str(),
+        GENERIC_READ | GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_DELETE,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr);
+    expect(
+        writer != INVALID_HANDLE_VALUE,
+        "RQ-CF-AGENT-017: the Windows sharing fixture should open for writing");
+    if (writer == INVALID_HANDLE_VALUE) {
+        return;
+    }
+    expect(
+        inspect_windows_pe_image(path).status == WindowsPeImageStatus::unreadable,
+        "RQ-CF-AGENT-017: workspace-agent image inspection should deny concurrent write sharing");
+    expect(
+        inspect_windows_pe_image(
+            path,
+            WindowsPeReadSharing::allow_write_sharing).status ==
+            WindowsPeImageStatus::executable,
+        "RQ-CF-AGENT-017: legacy DECLARE inspection should retain explicit write sharing");
+    ::CloseHandle(writer);
+}
+#endif
+
 }  // namespace
 
 int main() {
@@ -318,6 +360,9 @@ int main() {
         test_valid_images(root);
         test_fail_closed_images(root);
         test_host_compatibility(root);
+#if defined(_WIN32)
+        test_windows_read_sharing_modes(root);
+#endif
     }
     std::filesystem::remove_all(root, error);
     if (failures != 0) {
