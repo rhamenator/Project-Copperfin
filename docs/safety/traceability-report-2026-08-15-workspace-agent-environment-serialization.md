@@ -143,3 +143,11 @@ regression fixes the Windows and POSIX formulas and rejects an invalid platform.
 Automated review of final exact head `b5129e08a` reported no further issue.
 This is maintainer/self-review evidence and does not claim independent safety
 approval or formal certification.
+
+Subsequent independent read-only review at final implementation head
+`b5129e08a` verified the Windows `maximum_total_bytes + entry_count + 1`
+formula, POSIX omission of the final block terminator, subtraction-safe overflow
+guard, and fail-closed invalid-platform path. Its focused workspace-agent,
+process-environment, and bounded-process selection passed `11/11`, with no
+remaining finding. This independent engineering review is not a formal safety
+approval or certification claim.

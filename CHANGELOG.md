@@ -1,3 +1,10 @@
+- 2026-08-15: Recorded independent final-head review for
+  `RQ-CF-AGENT-013`. At `b5129e08a`, the reviewer verified the corrected
+  Windows/POSIX caller-cap formulas, subtraction-safe overflow guard, and
+  fail-closed invalid-platform behavior; the focused selection passed `11/11`
+  with no remaining finding. This is engineering review evidence, not a formal
+  safety approval or certification claim.
+
 - 2026-08-15: Defined `RQ-CF-AGENT-013` after final signed/DCO head
   `b5129e08a` passed local Release `14/14`, fresh Clang ASan/UBSan `3/3`,
   isolation inventory `377`, safety `1/1`, diff validation, all eleven
