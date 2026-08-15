@@ -21,7 +21,10 @@ defined. Local warning-free Release security/community/
 isolation/safety verification passes `15/15`; focused platform/workflow
 contracts pass `5/5`; fresh Clang 21 ASan/UBSan with leak detection passes
 `3/3`; the generated isolation inventory covers `379` tests; and diff
-validation passes. Protected exact-head and review evidence remain pending.
+validation passes. A POSIX host `umask` that removes owner bits fails closed and
+leaves an unverified path for future identity-aware cleanup; the library does
+not mutate process-global `umask` state or chmod an unbound path. Protected
+exact-head and review evidence remain pending.
 
 ## V1 workspace-agent native environment serialization
 

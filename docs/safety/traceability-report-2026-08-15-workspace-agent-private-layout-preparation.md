@@ -85,6 +85,12 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   path is left for an identity-aware trusted-host cleanup decision. If creation
   of a new child fails, a private partial generation can remain and deliberately
   blocks reuse.
+- Process-state isolation: POSIX `umask` is process-global and `mkdir` returns no
+  identity-bound descriptor. A host `umask` that removes owner bits therefore
+  fails exact-mode verification and leaves the path untouched; the library does
+  not change global `umask` state or `fchmod` a path that could have been
+  replaced. A direct restrictive-umask regression preserves this fail-closed
+  tradeoff until identity-aware cleanup exists.
 - Root replacement: the environment boundary rechecks the captured private
   storage-root identity and current privacy contract before creation,
   after preparation, during construction, and before final return, then

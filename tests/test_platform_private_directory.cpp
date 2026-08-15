@@ -10,6 +10,10 @@
 #include <iostream>
 #include <string>
 
+#if !defined(_WIN32)
+#include <sys/stat.h>
+#endif
+
 namespace {
 
 using copperfin::platform::PrivateDirectoryFailure;
@@ -91,6 +95,17 @@ void test_creation_and_verification() {
         std::filesystem::perm_options::replace);
     expect(!verify_private_directory(special).ok,
            "RQ-CF-AGENT-014: setuid, setgid, and sticky permission bits must violate exact mode 0700");
+
+    const auto restricted = private_root / "restricted-umask";
+    const mode_t prior_umask = ::umask(0700);
+    const auto restricted_result = create_private_directory(restricted);
+    ::umask(prior_umask);
+    expect(!restricted_result.ok &&
+               restricted_result.failure ==
+                   PrivateDirectoryFailure::verification_failed &&
+               std::filesystem::is_directory(restricted) &&
+               !verify_private_directory(restricted).ok,
+           "RQ-CF-AGENT-014: a restrictive owner-bit umask must fail closed without path-based repair or deletion");
 #endif
 }
 
