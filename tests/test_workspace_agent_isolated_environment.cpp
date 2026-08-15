@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/private_directory.h"
 #include "copperfin/security/workspace_agent_environment.h"
 #include "copperfin/security/workspace_agent_session.h"
 #include "copperfin/security/workspace_agent_tool_registry.h"
@@ -16,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <stdexcept>
 #include <vector>
 
 namespace {
@@ -63,11 +65,12 @@ void expect(bool condition, const std::string& message) {
 
 class TempTree {
 public:
-    TempTree() {
+    explicit TempTree(const bool create_initial_layout = true) {
         const auto suffix = std::chrono::steady_clock::now()
                                 .time_since_epoch()
                                 .count();
-        root = std::filesystem::temp_directory_path() /
+        root = std::filesystem::canonical(
+                   std::filesystem::temp_directory_path()) /
             ("copperfin-agent-environment-" + std::to_string(suffix));
         workspace = root / "workspace";
         session_storage = root / "sessions";
@@ -75,14 +78,23 @@ public:
         approved_two = root / "approved-two";
         windows_system_root = root / "windows-root";
         outside = root / "outside";
+        std::filesystem::create_directory(root);
+#if !defined(_WIN32)
+        std::filesystem::permissions(
+            root,
+            std::filesystem::perms::owner_all,
+            std::filesystem::perm_options::replace);
+#endif
         std::filesystem::create_directories(workspace / "bin");
         std::filesystem::create_directories(workspace / "working");
-        std::filesystem::create_directories(session_storage);
         std::filesystem::create_directories(approved_one);
         std::filesystem::create_directories(approved_two);
         std::filesystem::create_directories(windows_system_root);
         std::filesystem::create_directories(outside);
-        create_session_layout(1U);
+        require_private_directory(session_storage);
+        if (create_initial_layout) {
+            create_session_layout(1U);
+        }
         write_executable(workspace / "bin" / "workspace-tool");
     }
 
@@ -94,9 +106,18 @@ public:
     void create_session_layout(std::uint64_t generation) const {
         const auto session =
             session_storage / ("session-" + std::to_string(generation));
+        require_private_directory(session);
         for (const std::string_view leaf :
              {"home", "temp", "config", "cache", "data"}) {
-            std::filesystem::create_directories(session / leaf);
+            require_private_directory(session / leaf);
+        }
+    }
+
+    static void require_private_directory(const std::filesystem::path& path) {
+        const auto created =
+            copperfin::platform::create_private_directory(path);
+        if (!created.ok) {
+            throw std::runtime_error("private test directory creation failed");
         }
     }
 
@@ -348,6 +369,172 @@ void test_fixed_non_inheriting_environment() {
 #endif
 }
 
+void test_secure_generation_layout_preparation() {
+    TempTree tree(false);
+    const auto boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(tree.configuration());
+    expect(boundary.has_value(),
+           "RQ-CF-AGENT-014: a private trusted storage root must create the preparation boundary");
+    if (!boundary.has_value()) {
+        return;
+    }
+
+    const auto zero = boundary->prepare_session_layout(0U);
+    expect(!zero.prepared && zero.session_generation == 0U &&
+               zero.diagnostic_code ==
+                   "workspace_agent.environment_invalid_session_generation",
+           "RQ-CF-AGENT-014: generation zero must fail without layout authority");
+
+    const auto prepared = boundary->prepare_session_layout(1U);
+    expect(prepared.prepared && prepared.session_generation == 1U &&
+               prepared.diagnostic_code ==
+                   "workspace_agent.environment_session_layout_prepared",
+           "RQ-CF-AGENT-014: a new generation must receive one complete private layout");
+    const auto session = tree.session_storage / "session-1";
+    bool complete_private_layout =
+        copperfin::platform::verify_private_directory(session).ok;
+    for (const std::string_view leaf :
+         {"home", "temp", "config", "cache", "data"}) {
+        complete_private_layout = complete_private_layout &&
+            copperfin::platform::verify_private_directory(session / leaf).ok;
+    }
+    expect(complete_private_layout,
+           "RQ-CF-AGENT-014: every prepared generation directory must satisfy the platform privacy contract");
+
+    const auto construction = boundary->construct(
+        1U, WorkspaceAgentProcessEnvironmentPolicy::isolated_session_v1);
+    expect(construction.allowed,
+           "RQ-CF-AGENT-014: the isolated environment must consume the verified prepared layout");
+
+    const auto repeated = boundary->prepare_session_layout(1U);
+    expect(!repeated.prepared && repeated.session_generation == 0U &&
+               repeated.diagnostic_code ==
+                   "workspace_agent.environment_session_layout_exists",
+           "RQ-CF-AGENT-014: preparation must never adopt or overwrite an existing generation");
+
+    TempTree partial_tree(false);
+    const auto partial_boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(
+            partial_tree.configuration());
+    expect(partial_boundary.has_value(),
+           "RQ-CF-AGENT-014: the partial-layout fixture must retain a valid private root");
+    if (!partial_boundary.has_value()) {
+        return;
+    }
+    TempTree::require_private_directory(
+        partial_tree.session_storage / "session-1");
+    TempTree::require_private_directory(
+        partial_tree.session_storage / "session-1" / "home");
+    const auto partial = partial_boundary->prepare_session_layout(1U);
+    expect(!partial.prepared && partial.session_generation == 0U &&
+               partial.diagnostic_code ==
+                   "workspace_agent.environment_session_layout_exists" &&
+               std::filesystem::exists(
+                   partial_tree.session_storage / "session-1" / "home"),
+           "RQ-CF-AGENT-014: a partial preexisting layout must fail without repair or deletion");
+
+    TempTree replaced_tree(false);
+    const auto replaced_boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(
+            replaced_tree.configuration());
+    expect(replaced_boundary.has_value(),
+           "RQ-CF-AGENT-014: the replacement fixture must capture a private root");
+    if (replaced_boundary.has_value()) {
+        const auto replacement = replaced_tree.root / "sessions-replacement";
+        TempTree::require_private_directory(replacement);
+        std::filesystem::remove(replaced_tree.session_storage);
+        std::filesystem::rename(replacement, replaced_tree.session_storage);
+        const auto replaced = replaced_boundary->prepare_session_layout(1U);
+        expect(!replaced.prepared && replaced.session_generation == 0U &&
+                   replaced.diagnostic_code ==
+                       "workspace_agent.environment_storage_root_identity_changed" &&
+                   !std::filesystem::exists(
+                       replaced_tree.session_storage / "session-1"),
+               "RQ-CF-AGENT-014: root replacement must fail before creating a generation layout");
+    }
+
+    TempTree path_tree(false);
+    const auto path_boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(
+            path_tree.configuration());
+    expect(path_boundary.has_value(),
+           "RQ-CF-AGENT-014: the executable-path replacement fixture must create its boundary");
+    if (path_boundary.has_value()) {
+        const auto replacement = path_tree.root / "approved-replacement";
+        std::filesystem::create_directory(replacement);
+        std::filesystem::remove(path_tree.approved_two);
+        std::filesystem::rename(replacement, path_tree.approved_two);
+        const auto replaced = path_boundary->prepare_session_layout(1U);
+        expect(!replaced.prepared && replaced.session_generation == 0U &&
+                   replaced.diagnostic_code ==
+                       "workspace_agent.environment_path_identity_changed" &&
+                   !std::filesystem::exists(
+                       path_tree.session_storage / "session-1"),
+               "RQ-CF-AGENT-014: executable-directory replacement must fail before creating a generation layout");
+    }
+
+#if defined(_WIN32)
+    TempTree system_tree(false);
+    const auto system_boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(
+            system_tree.configuration());
+    expect(system_boundary.has_value(),
+           "RQ-CF-AGENT-014: the system-root replacement fixture must create its boundary");
+    if (system_boundary.has_value()) {
+        const auto replacement =
+            system_tree.root / "windows-root-replacement";
+        std::filesystem::create_directory(replacement);
+        std::filesystem::remove(system_tree.windows_system_root);
+        std::filesystem::rename(replacement, system_tree.windows_system_root);
+        const auto replaced = system_boundary->prepare_session_layout(1U);
+        expect(!replaced.prepared && replaced.session_generation == 0U &&
+                   replaced.diagnostic_code ==
+                       "workspace_agent.environment_system_root_identity_changed" &&
+                   !std::filesystem::exists(
+                       system_tree.session_storage / "session-1"),
+               "RQ-CF-AGENT-014: Windows system-root replacement must fail before creating a generation layout");
+    }
+#endif
+}
+
+#if defined(__linux__)
+void test_unrepresentable_layout_denied_before_creation() {
+    TempTree tree(false);
+    std::filesystem::remove(tree.session_storage);
+
+    constexpr std::size_t target_parent_bytes = 4055U;
+    std::filesystem::path long_parent = tree.root;
+    while (long_parent.native().size() < target_parent_bytes) {
+        const std::size_t remaining =
+            target_parent_bytes - long_parent.native().size() - 1U;
+        const std::size_t component_bytes =
+            std::max<std::size_t>(1U, std::min<std::size_t>(200U, remaining));
+        long_parent /= std::string(component_bytes, 'a');
+        std::filesystem::create_directory(long_parent);
+    }
+    std::filesystem::permissions(
+        long_parent,
+        std::filesystem::perms::owner_all,
+        std::filesystem::perm_options::replace);
+    tree.session_storage = long_parent / "sessions";
+    TempTree::require_private_directory(tree.session_storage);
+
+    const auto boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(tree.configuration());
+    expect(boundary.has_value(),
+           "RQ-CF-AGENT-014: the long-path fixture must admit its private storage root");
+    if (!boundary.has_value()) {
+        return;
+    }
+    const auto result = boundary->prepare_session_layout(1U);
+    expect(!result.prepared && result.session_generation == 0U &&
+               result.diagnostic_code ==
+                   "workspace_agent.environment_session_layout_unrepresentable" &&
+               !std::filesystem::exists(tree.session_storage / "session-1"),
+           "RQ-CF-AGENT-014: an oversized derived environment entry must fail before layout creation");
+}
+#endif
+
 void test_configuration_and_layout_fail_closed() {
     TempTree tree;
     const auto valid_boundary =
@@ -442,6 +629,64 @@ void test_configuration_and_layout_fail_closed() {
             invocation_request(missing_layout_start.session.generation)),
         "workspace_agent.environment_session_layout_unavailable",
         "RQ-CF-AGENT-012: incomplete session-owned layout must fail without reflecting paths");
+
+    TempTree insecure_tree;
+    const auto insecure_cache =
+        insecure_tree.session_storage / "session-1" / "cache";
+    std::filesystem::remove(insecure_cache);
+    std::filesystem::create_directory(insecure_cache);
+#if !defined(_WIN32)
+    std::filesystem::permissions(
+        insecure_cache,
+        std::filesystem::perms::owner_all |
+            std::filesystem::perms::group_read |
+            std::filesystem::perms::group_exec,
+        std::filesystem::perm_options::replace);
+#endif
+    WorkspaceAgentSessionController insecure_layout(
+        insecure_tree.workspace, insecure_tree.configuration());
+    const auto insecure_start = insecure_layout.start(
+        activation_request(), audit_sink());
+    expect_content_free_denial(
+        insecure_layout.preflight_process_environment_request(
+            invocation_request(insecure_start.session.generation)),
+        "workspace_agent.environment_session_layout_unavailable",
+        "RQ-CF-AGENT-014: an inherited or broadened layout directory must fail closed");
+
+    TempTree insecure_root_tree(false);
+    std::filesystem::remove(insecure_root_tree.session_storage);
+    std::filesystem::create_directory(insecure_root_tree.session_storage);
+#if !defined(_WIN32)
+    std::filesystem::permissions(
+        insecure_root_tree.session_storage,
+        std::filesystem::perms::owner_all |
+            std::filesystem::perms::group_read |
+            std::filesystem::perms::group_exec,
+        std::filesystem::perm_options::replace);
+#endif
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                insecure_root_tree.configuration()).has_value(),
+           "RQ-CF-AGENT-014: an inherited or broadened trusted storage root must be rejected");
+
+#if !defined(_WIN32)
+    TempTree broadened_after_capture;
+    WorkspaceAgentSessionController broadened_controller(
+        broadened_after_capture.workspace,
+        broadened_after_capture.configuration());
+    const auto broadened_start = broadened_controller.start(
+        activation_request(), audit_sink());
+    std::filesystem::permissions(
+        broadened_after_capture.session_storage,
+        std::filesystem::perms::owner_all |
+            std::filesystem::perms::group_read |
+            std::filesystem::perms::group_exec,
+        std::filesystem::perm_options::replace);
+    expect_content_free_denial(
+        broadened_controller.preflight_process_environment_request(
+            invocation_request(broadened_start.session.generation)),
+        "workspace_agent.environment_storage_root_identity_changed",
+        "RQ-CF-AGENT-014: storage-root access broadening after capture must fail construction");
+#endif
 }
 
 void test_physical_identity_and_session_binding() {
@@ -543,6 +788,10 @@ void test_later_session_layout_is_not_root_replacement() {
 
 int main() {
     test_fixed_non_inheriting_environment();
+    test_secure_generation_layout_preparation();
+#if defined(__linux__)
+    test_unrepresentable_layout_denied_before_creation();
+#endif
     test_configuration_and_layout_fail_closed();
     test_physical_identity_and_session_binding();
     test_later_session_layout_is_not_root_replacement();

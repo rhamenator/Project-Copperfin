@@ -53,3 +53,9 @@ jobs:
 
       - name: Run environment and executable path regressions
         run: ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure -R "^(test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch|test_studio_host_shell_command|test_studio_host_report_section_selection_diagnostics)$"
+
+      - name: Build private workspace-agent layout regressions
+        run: cmake --build "$env:RUNNER_TEMP/copperfin-environment-build" --config Release --parallel 2 --target test_platform_private_directory test_workspace_agent_isolated_environment
+
+      - name: Run private workspace-agent layout regressions
+        run: ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_isolated_environment)$"

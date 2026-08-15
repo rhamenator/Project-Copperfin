@@ -466,11 +466,12 @@ executable/working-directory pairs to exact active sessions without file I/O,
 PATH lookup, shell interpretation, or launch. A further non-executing preflight
 binds a bounded direct UTF-8 argument vector and non-inheriting isolated-session
 environment-policy selector to that exact target/session result. The trusted-
-host boundary constructs its fixed generation-owned logical environment, and a
+host boundary constructs its fixed generation-owned logical environment, a
 portable non-executing boundary serializes it for POSIX or Windows without
-ambient inheritance. Broader model/
+ambient inheritance, and a separate candidate platform boundary creates and
+verifies an absent generation's private fixed layout. Broader model/
 provider policy, OAuth and credential adapters, trusted-host environment-layout
-creation/access control/cleanup, platform argument serialization, endpoint
+cleanup and session-start integration, platform argument serialization, endpoint
 policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog
 surfaces remain open.

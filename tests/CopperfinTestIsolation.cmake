@@ -332,12 +332,34 @@ function(copperfin_configure_native_test_isolation)
         PLATFORM portable
         AUDIT complete
     )
+    copperfin_set_test_isolation(test_platform_private_directory
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        RESOURCES none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
     copperfin_set_test_isolation(test_platform_path_boundary_contract
         PARALLEL_SAFE
         FILESYSTEM read-only
         ENVIRONMENT none
         CHILD_PROCESSES none
         NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+    copperfin_set_test_isolation(test_platform_private_directory_boundary_contract
+        PARALLEL_SAFE
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        RESOURCES none
         SAMPLES none
         PLATFORM portable
         AUDIT complete

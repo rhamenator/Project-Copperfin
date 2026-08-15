@@ -305,8 +305,9 @@ argument content, so an allow does not certify that arguments are secret-free.
 The adjacent isolated-environment boundary now supplies the fixed platform
 entries, approved executable-directory list, session-owned profile and
 temporary locations, and deterministic locale/time-zone values described
-below. Secure layout creation, access control, and cleanup remain trusted-host
-responsibilities. The executor must also repeat
+below. The adjacent private-layout boundary supplies fail-closed creation and
+verification for an absent generation; trusted-host root provisioning and
+cleanup remain separate responsibilities. The executor must also repeat
 target and session checks, encode each argument directly for the platform API,
 enforce the platform's smaller serialized-command limit if applicable, apply
 the real sandbox and endpoint policy, and audit only content-free outcome
@@ -324,12 +325,13 @@ system root. Provider, model, prompt, workspace content, and tool arguments
 cannot supply or extend those values. The boundary never reads the parent
 environment.
 
-For generation `N`, the trusted host must pre-create and access-control
-`session-N` beneath the configured storage root with direct `home`, `temp`,
-`config`, `cache`, and `data` directories. The boundary physically contains
-and identifies that fixed layout, rejects symlink/reparse and cross-device
-components, and checks the configured storage, executable, and Windows system
-directory identities before and after construction. Missing, replaced,
+For generation `N`, the trusted host must supply a verified private storage
+root and use the adjacent preparation boundary to create `session-N` beneath it
+with direct `home`, `temp`, `config`, `cache`, and `data` directories. The
+environment boundary physically contains and identifies that fixed layout,
+rejects symlink/reparse and cross-device components, and checks the configured
+storage, executable, and Windows system directory identities before and after
+construction. Missing, replaced,
 indirect, malformed, path-delimiter-ambiguous, invalidly encoded, excessive,
 or wrong-platform inputs fail without returning invocation targets, arguments,
 paths, or environment entries. Session directory names use locale-independent
@@ -358,6 +360,92 @@ The controller performs the complete invocation preflight, constructs the
 environment for that exact generation and policy, and performs the invocation
 preflight again before returning a point-in-time plan.
 
+## Private generation-layout preparation boundary
+
+Candidate `RQ-CF-AGENT-014` adds one portable trusted-host primitive before a
+workspace-agent process executor is connected. The platform API creates
+exactly one absent absolute directory leaf and verifies its access contract.
+On POSIX the object must be a non-symbolic-link directory owned by the effective
+user with exactly mode `0700`. On Windows it must be a non-reparse directory
+owned by the process user with a protected DACL containing only explicit,
+inheritable full-control entries for that user and LocalSystem. A missing
+parent, existing object, wrong kind, indirection, foreign owner, broadened or
+inherited access, unsupported security, or post-creation verification failure
+fails closed; existing objects are never adopted or modified. Because a path
+can be replaced between creation and verification, failed verification leaves
+the path untouched for a later identity-aware trusted-host cleanup decision.
+On POSIX, a process `umask` that removes owner bits can therefore make creation
+fail and leave an unverified partial path; the library does not mutate the
+process-global `umask` or path-chmod an object it cannot prove it created.
+POSIX creation and verification traverse every existing parent with
+descriptor-relative, no-follow directory opens, reject dot components and
+indirect parents, and perform `mkdirat`/leaf verification against the bound
+parent descriptor. A private leaf reached through a symbolic-link parent is
+therefore not accepted.
+Windows likewise opens and inspects every existing parent component with
+`FILE_FLAG_OPEN_REPARSE_POINT` before creation and repeats that validation
+during post-create verification; an existing symbolic-link or junction parent
+therefore fails before its target is modified. Public Win32 creation remains a
+full-path operation, so the same-authority race limitation below still applies.
+
+The trusted-host environment boundary requires the configured storage root to
+satisfy that same contract. Its explicit preparation method creates one new
+`session-N` root and the five fixed children, verifies physical containment and
+privacy again, and returns only the generation on success. Generation zero,
+root replacement, an existing or partial layout, creation failure, and final
+verification failure return content-free diagnostics. The method never adopts,
+repairs, overwrites, or deletes an existing or partial layout. A child failure
+may therefore leave a private partial generation that deliberately blocks
+reuse until a future trusted-host cleanup boundary handles it.
+Session-root creation opens the configured private root, compares that handle's
+storage/file identity to the captured identity, and on POSIX creates the leaf
+relative to the same bound descriptor. Root replacement therefore cannot
+redirect the session-root creation side effect on POSIX. Windows repeats the
+bound-parent identity check around its public full-path create and remains
+within the explicit trusted-parent/same-authority limitation.
+Successful bound creation returns the new session directory's storage/file
+identity. Every fixed child is created through the same verified-parent
+operation against that session identity, so a replacement path cannot receive
+the child-creation side effects on POSIX and fails the pre-create identity gate
+on Windows.
+
+The generic POSIX leaf-creation operation also rejects an immediate parent that
+is not owned by the effective user or root. If that parent permits group or
+other writes, it must provide sticky rename protection. This prevents a
+different unprivileged principal from replacing a just-created leaf before its
+identity-bound inspection; unsafe parents fail before creation. Same-user and
+privileged-host interference remain within the trusted-host boundary.
+
+POSIX privacy verification is also ACL-aware on supported hosts. macOS rejects
+any extended ACL entry retrieved from the bound directory descriptor. Linux
+rejects both access and default POSIX ACL xattrs retrieved from that same bound
+directory. ACL inspection failure is fail-closed; inherited or broadened ACLs
+are never treated as owner-only merely because `st_uid` and mode are `0700`.
+
+Before creating the session root, preparation derives the exact fixed
+platform environment entries through the same builder used by construction.
+Invalid encoding, an empty required value, a per-entry overflow, or aggregate
+overflow fails without creating any generation directory.
+Preparation also revalidates every configured executable-directory identity
+and, on Windows, the configured system-root identity before creating the
+session root and again before reporting success. A configuration already known
+to be replaced therefore cannot consume a generation merely because its cached
+canonical text still forms a valid environment entry.
+
+Environment construction re-verifies both the captured storage-root identity
+and its current privacy contract before inspecting the generation. Before
+returning, it re-verifies identity and current privacy for the root, session,
+and every fixed child. Permission or DACL broadening therefore fails even when
+the affected directory's filesystem identity has not changed.
+
+This preparation API is not yet wired to session start and is not a cleanup or
+execution capability. Its full-path operations assume the private root's owner
+and LocalSystem are trusted host authorities; future executor work must retain
+sandbox separation from untrusted child processes and repeat identity and
+admission checks next to launch. The boundary serializes no arguments, starts
+no process, opens no endpoint, injects no provider credential, applies no real
+sandbox, and records no tool outcome.
+
 ## Platform process-environment serialization preflight
 
 `RQ-CF-AGENT-013` converts only that admitted fixed logical environment into a
@@ -382,11 +470,12 @@ The workspace-agent cap adds one storage terminator per fixed entry and, on
 Windows, the additional final block terminator to the 32,768-byte logical
 profile ceiling.
 
-This boundary still creates or deletes no directory, serializes no arguments,
-starts no process, applies no sandbox or endpoint policy, injects no provider
-credential, and records no tool outcome. The future executor must securely
-create and clean the session layout, repeat all identity/admission checks beside
-launch, consume the fixed serialized representation without ambient merging,
+The serialization boundary still creates or deletes no directory, serializes
+no arguments, starts no process, applies no sandbox or endpoint policy, injects
+no provider credential, and records no tool outcome. The future executor must
+invoke the separate preparation boundary and later clean the session layout,
+repeat all identity/admission checks beside launch, consume the fixed
+serialized representation without ambient merging,
 pin/revalidate launch targets, apply containment, and audit content-free outcomes.
 
 ## Current implementation and remaining work
