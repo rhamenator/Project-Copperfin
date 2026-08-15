@@ -259,6 +259,59 @@ bool entries_within_limits(
     return true;
 }
 
+std::optional<std::vector<WorkspaceAgentEnvironmentEntry>>
+fixed_environment_entries(
+    const std::string& home,
+    const std::string& temporary,
+    const std::string& config,
+    const std::string& cache,
+    const std::string& data,
+    const std::string& search_path,
+    const std::optional<std::string>& windows_system_root) {
+    if (home.empty() || temporary.empty() || config.empty() || cache.empty() ||
+        data.empty() || search_path.empty()) {
+        return std::nullopt;
+    }
+
+    std::vector<WorkspaceAgentEnvironmentEntry> entries;
+#if defined(_WIN32)
+    (void)cache;
+    if (!windows_system_root.has_value() || windows_system_root->empty()) {
+        return std::nullopt;
+    }
+    entries = {
+        {"APPDATA", config},
+        {"HOME", home},
+        {"LOCALAPPDATA", data},
+        {"PATH", search_path},
+        {"SystemRoot", *windows_system_root},
+        {"TEMP", temporary},
+        {"TMP", temporary},
+        {"TZ", "UTC"},
+        {"USERPROFILE", home},
+        {"WINDIR", *windows_system_root}};
+#else
+    if (windows_system_root.has_value()) {
+        return std::nullopt;
+    }
+    entries = {
+        {"HOME", home},
+        {"LANG", "C"},
+        {"LC_ALL", "C"},
+        {"PATH", search_path},
+        {"TMPDIR", temporary},
+        {"TZ", "UTC"},
+        {"XDG_CACHE_HOME", cache},
+        {"XDG_CONFIG_HOME", config},
+        {"XDG_DATA_HOME", data}};
+#endif
+    std::sort(entries.begin(), entries.end(), entry_less);
+    if (!entries_within_limits(entries)) {
+        return std::nullopt;
+    }
+    return entries;
+}
+
 WorkspaceAgentIsolatedEnvironmentConstruction denied(std::string diagnostic) {
     WorkspaceAgentIsolatedEnvironmentConstruction result;
     result.diagnostic_code = std::move(diagnostic);
@@ -364,6 +417,23 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
     }
     const std::filesystem::path session_root =
         session_storage_root_.canonical_path / session_name;
+    std::optional<std::string> system_root_value;
+#if defined(_WIN32)
+    system_root_value = path_value(*windows_system_root_);
+#endif
+    const auto proposed_entries = fixed_environment_entries(
+        copperfin::platform::path_to_utf8_string(session_root / "home"),
+        copperfin::platform::path_to_utf8_string(session_root / "temp"),
+        copperfin::platform::path_to_utf8_string(session_root / "config"),
+        copperfin::platform::path_to_utf8_string(session_root / "cache"),
+        copperfin::platform::path_to_utf8_string(session_root / "data"),
+        joined_path_value(executable_directories_),
+        system_root_value);
+    if (!proposed_entries.has_value()) {
+        result.diagnostic_code =
+            "workspace_agent.environment_session_layout_unrepresentable";
+        return result;
+    }
     const auto session_created =
         copperfin::platform::create_private_directory(session_root);
     if (!session_created.ok) {
@@ -455,48 +525,19 @@ WorkspaceAgentIsolatedEnvironmentBoundary::construct(
         return denied("workspace_agent.environment_session_layout_unavailable");
     }
 
-    const std::string home_value = path_value(*home);
-    const std::string temporary_value = path_value(*temporary);
-    const std::string config_value = path_value(*config);
-    const std::string cache_value = path_value(*cache);
-    const std::string data_value = path_value(*data);
-    const std::string search_path = joined_path_value(executable_directories_);
-    if (home_value.empty() || temporary_value.empty() || config_value.empty() ||
-        cache_value.empty() || data_value.empty() || search_path.empty()) {
-        return denied("workspace_agent.environment_path_encoding_failed");
-    }
-
-    std::vector<WorkspaceAgentEnvironmentEntry> entries;
+    std::optional<std::string> system_root_value;
 #if defined(_WIN32)
-    const std::string system_root = path_value(*windows_system_root_);
-    if (system_root.empty()) {
-        return denied("workspace_agent.environment_path_encoding_failed");
-    }
-    entries = {
-        {"APPDATA", config_value},
-        {"HOME", home_value},
-        {"LOCALAPPDATA", data_value},
-        {"PATH", search_path},
-        {"SystemRoot", system_root},
-        {"TEMP", temporary_value},
-        {"TMP", temporary_value},
-        {"TZ", "UTC"},
-        {"USERPROFILE", home_value},
-        {"WINDIR", system_root}};
-#else
-    entries = {
-        {"HOME", home_value},
-        {"LANG", "C"},
-        {"LC_ALL", "C"},
-        {"PATH", search_path},
-        {"TMPDIR", temporary_value},
-        {"TZ", "UTC"},
-        {"XDG_CACHE_HOME", cache_value},
-        {"XDG_CONFIG_HOME", config_value},
-        {"XDG_DATA_HOME", data_value}};
+    system_root_value = path_value(*windows_system_root_);
 #endif
-    std::sort(entries.begin(), entries.end(), entry_less);
-    if (!entries_within_limits(entries)) {
+    auto entries = fixed_environment_entries(
+        path_value(*home),
+        path_value(*temporary),
+        path_value(*config),
+        path_value(*cache),
+        path_value(*data),
+        joined_path_value(executable_directories_),
+        system_root_value);
+    if (!entries.has_value()) {
         return denied("workspace_agent.environment_size_limit_exceeded");
     }
 
@@ -525,7 +566,7 @@ WorkspaceAgentIsolatedEnvironmentBoundary::construct(
         .session_generation = session_generation,
         .policy = policy,
         .platform = workspace_agent_process_environment_host_platform(),
-        .entries = std::move(entries),
+        .entries = std::move(*entries),
         .diagnostic_code = "workspace_agent.environment_constructed"};
 }
 

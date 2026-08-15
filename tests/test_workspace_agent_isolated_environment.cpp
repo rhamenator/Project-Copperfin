@@ -446,6 +446,40 @@ void test_secure_generation_layout_preparation() {
     }
 }
 
+#if defined(__linux__)
+void test_unrepresentable_layout_denied_before_creation() {
+    TempTree tree(false);
+    std::filesystem::remove(tree.session_storage);
+
+    constexpr std::size_t target_parent_bytes = 4055U;
+    std::filesystem::path long_parent = tree.root;
+    while (long_parent.native().size() < target_parent_bytes) {
+        const std::size_t remaining =
+            target_parent_bytes - long_parent.native().size() - 1U;
+        const std::size_t component_bytes =
+            std::max<std::size_t>(1U, std::min<std::size_t>(200U, remaining));
+        long_parent /= std::string(component_bytes, 'a');
+        std::filesystem::create_directory(long_parent);
+    }
+    tree.session_storage = long_parent / "sessions";
+    TempTree::require_private_directory(tree.session_storage);
+
+    const auto boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(tree.configuration());
+    expect(boundary.has_value(),
+           "RQ-CF-AGENT-014: the long-path fixture must admit its private storage root");
+    if (!boundary.has_value()) {
+        return;
+    }
+    const auto result = boundary->prepare_session_layout(1U);
+    expect(!result.prepared && result.session_generation == 0U &&
+               result.diagnostic_code ==
+                   "workspace_agent.environment_session_layout_unrepresentable" &&
+               !std::filesystem::exists(tree.session_storage / "session-1"),
+           "RQ-CF-AGENT-014: an oversized derived environment entry must fail before layout creation");
+}
+#endif
+
 void test_configuration_and_layout_fail_closed() {
     TempTree tree;
     const auto valid_boundary =
@@ -700,6 +734,9 @@ void test_later_session_layout_is_not_root_replacement() {
 int main() {
     test_fixed_non_inheriting_environment();
     test_secure_generation_layout_preparation();
+#if defined(__linux__)
+    test_unrepresentable_layout_denied_before_creation();
+#endif
     test_configuration_and_layout_fail_closed();
     test_physical_identity_and_session_binding();
     test_later_session_layout_is_not_root_replacement();

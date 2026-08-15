@@ -86,6 +86,18 @@ require_text("${consumer_text}"
 require_text("${consumer_text}"
     "copperfin::platform::verify_private_directory("
     "workspace-agent layout verification delegation")
+require_text("${consumer_text}"
+    "workspace_agent.environment_session_layout_unrepresentable"
+    "pre-creation derived-environment denial")
+string(FIND "${consumer_text}" "const auto proposed_entries =" proposed_offset)
+string(FIND "${consumer_text}"
+    "copperfin::platform::create_private_directory(session_root)"
+    creation_offset)
+if(proposed_offset EQUAL -1 OR creation_offset EQUAL -1 OR
+   NOT proposed_offset LESS creation_offset)
+    message(FATAL_ERROR
+        "Derived fixed environment must be validated before session-root creation")
+endif()
 require_text("${root_build_text}"
     "src/platform/private_directory.cpp"
     "platform-support source registration")

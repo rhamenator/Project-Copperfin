@@ -104,6 +104,10 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
 - Information exposure: success returns only the generation. Denials return a
   stable diagnostic and zero generation, never a path, identity, ACL, prompt,
   credential, argument, or provider value.
+- Unusable derived state: preparation builds and validates the exact fixed
+  platform environment entries before creating the session root. Encoding,
+  required-value, per-entry, and aggregate-limit failures therefore leave no
+  generation layout behind; construction consumes the same builder.
 - Execution boundary: this slice provisions no root, cleans no generation,
   binds no start lifecycle, serializes no argument, validates no executable
   format, starts no process, opens no endpoint, applies no sandbox, injects no

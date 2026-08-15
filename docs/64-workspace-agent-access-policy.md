@@ -388,6 +388,11 @@ repairs, overwrites, or deletes an existing or partial layout. A child failure
 may therefore leave a private partial generation that deliberately blocks
 reuse until a future trusted-host cleanup boundary handles it.
 
+Before creating the session root, preparation derives the exact fixed
+platform environment entries through the same builder used by construction.
+Invalid encoding, an empty required value, a per-entry overflow, or aggregate
+overflow fails without creating any generation directory.
+
 Environment construction re-verifies both the captured storage-root identity
 and its current privacy contract before inspecting the generation. Before
 returning, it re-verifies identity and current privacy for the root, session,
