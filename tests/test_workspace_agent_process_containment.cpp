@@ -245,6 +245,16 @@ void test_boundary_requires_explicit_direct_process_targets() {
                 R"(\\?\C:\Windows)")
                 .allowed,
            "RQ-CF-AGENT-010: Windows device paths must fail before lookup");
+    expect(!boundary->inspect_local_process(
+                R"(\\server\share\tool.exe)",
+                R"(C:\Windows)")
+                .allowed,
+           "RQ-CF-AGENT-010: UNC executables must fail before lookup");
+    expect(!boundary->inspect_local_process(
+                R"(C:\Windows\System32\cmd.exe)",
+                R"(\\server\share\working)")
+                .allowed,
+           "RQ-CF-AGENT-010: UNC working directories must fail before lookup");
 #endif
     expect(!boundary->inspect_workspace_process("missing", ".").allowed,
            "RQ-CF-AGENT-010: a missing executable must fail closed");

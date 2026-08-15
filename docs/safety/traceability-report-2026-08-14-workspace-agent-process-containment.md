@@ -72,7 +72,8 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   file at the workspace root and otherwise fails.
 - Path confusion: workspace targets are strict relative paths, with exact `.`
   reserved only for the workspace-root working directory. Local targets are
-  strict absolute paths; Windows device and alternate-stream syntax fails.
+  strict absolute paths; Windows device, alternate-stream, and UNC remote-share
+  syntax fails while endpoint containment remains unimplemented.
 - Physical redirection: workspace inspection rejects symlink/reparse and
   cross-device components, canonical escape, multiply linked executables, and
   replacement or redirection of the configured root identity. Local target

@@ -52,6 +52,9 @@ bool path_has_windows_device_or_stream_syntax(const std::filesystem::path& path)
         return true;
     }
     const auto root_name = path.root_name();
+    if (root_name.native().rfind(L"\\\\", 0U) == 0U) {
+        return true;
+    }
     for (const auto& component : path.relative_path()) {
         if (component.native().find(L':') != std::wstring::npos) {
             return true;
