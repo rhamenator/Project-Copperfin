@@ -20,6 +20,7 @@
 #include <string>
 #include <string_view>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 
 namespace {
@@ -75,6 +76,14 @@ static_assert(
         !HasPublicChildDirectoryIdentities<
             copperfin::security::WorkspaceAgentSessionLayoutPreparationResult>,
     "RQ-CF-AGENT-020: cleanup-authorizing identities must remain opaque");
+static_assert(
+    !std::is_copy_constructible_v<WorkspaceAgentIsolatedEnvironmentBoundary> &&
+        !std::is_copy_assignable_v<WorkspaceAgentIsolatedEnvironmentBoundary> &&
+        std::is_nothrow_move_constructible_v<
+            WorkspaceAgentIsolatedEnvironmentBoundary> &&
+        std::is_nothrow_move_assignable_v<
+            WorkspaceAgentIsolatedEnvironmentBoundary>,
+    "RQ-CF-AGENT-020: boundary authority must not be duplicated by copying");
 
 int failures = 0;
 std::filesystem::path running_test_executable;

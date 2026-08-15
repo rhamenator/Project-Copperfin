@@ -416,7 +416,9 @@ Candidate `RQ-CF-AGENT-020` extends successful preparation with an opaque,
 in-memory, boundary-bound receipt whose private payload contains the complete
 physical identity of the session root and all five fixed children. Public
 status fields and observable filesystem metadata cannot construct or alter
-cleanup authority, and a receipt from a separate boundary instance is denied.
+cleanup authority. The boundary is non-copyable so its authority cannot be
+duplicated into another object; move operations transfer the same logical
+boundary. A receipt from a separately created boundary instance is denied.
 A separate explicit trusted-host method accepts only that receipt, revalidates
 the private configured storage root, and requires the full
 identity of every layout directory to match before it removes anything. It then

@@ -136,6 +136,15 @@ struct WorkspaceAgentSessionLayoutCleanupResult {
 // serialization, sandboxing, or launch.
 class WorkspaceAgentIsolatedEnvironmentBoundary {
 public:
+    WorkspaceAgentIsolatedEnvironmentBoundary(
+        const WorkspaceAgentIsolatedEnvironmentBoundary&) = delete;
+    WorkspaceAgentIsolatedEnvironmentBoundary& operator=(
+        const WorkspaceAgentIsolatedEnvironmentBoundary&) = delete;
+    WorkspaceAgentIsolatedEnvironmentBoundary(
+        WorkspaceAgentIsolatedEnvironmentBoundary&&) noexcept = default;
+    WorkspaceAgentIsolatedEnvironmentBoundary& operator=(
+        WorkspaceAgentIsolatedEnvironmentBoundary&&) noexcept = default;
+
     [[nodiscard]] static std::optional<WorkspaceAgentIsolatedEnvironmentBoundary>
     create(const WorkspaceAgentIsolatedEnvironmentConfiguration& configuration);
 

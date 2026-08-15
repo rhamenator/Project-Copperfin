@@ -18,7 +18,7 @@ safety-critical deployment.
 
 | Derived requirement | Verification requirement | Hazard link |
 | --- | --- | --- |
-| `DQ-workspace-agent-layout-cleanup-001`: successful preparation shall return an opaque receipt that privately carries the complete physical identity of the exact new session directory and all five fixed children and is bound to the boundary instance that created it; failed or incomplete preparation shall return no cleanup receipt | `DV-workspace-agent-layout-cleanup-001`; `DV-workspace-agent-layout-cleanup-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-layout-cleanup-001`: successful preparation shall return an opaque receipt that privately carries the complete physical identity of the exact new session directory and all five fixed children and is bound to the non-copyable logical boundary that created it; failed or incomplete preparation shall return no cleanup receipt | `DV-workspace-agent-layout-cleanup-001`; `DV-workspace-agent-layout-cleanup-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-layout-cleanup-002`: cleanup shall require a successful, non-forgeable, same-boundary receipt, the unchanged trusted storage root, and exact full identity matches for the session directory and every child before the first mutation | `DV-workspace-agent-layout-cleanup-001`; `DV-workspace-agent-layout-cleanup-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-layout-cleanup-003`: cleanup shall remove only the five exact empty private child directories in reverse order and then their exact empty session root; it shall never recurse, remove content, adopt an existing generation, or derive authority from a generation number alone | `DV-workspace-agent-layout-cleanup-001`; `DV-workspace-agent-layout-cleanup-002` | `HZ-data-corruption-01` |
 | `DQ-workspace-agent-layout-cleanup-004`: denial and outcome diagnostics shall be stable and content-free, and the primitive shall not be invoked automatically by session start or stop | `DV-workspace-agent-layout-cleanup-002`; `DV-workspace-agent-layout-cleanup-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
@@ -29,8 +29,9 @@ safety-critical deployment.
   nonempty content.
 - `DV-workspace-agent-layout-cleanup-002`: compile-time and environment tests
   prove cleanup identities are not public, public status fields cannot forge a
-  receipt, receipts cannot cross boundary instances, exact receipts clean the
-  intended layout, and occupied or replaced layouts remain preserved.
+  receipt, boundary authority cannot be copied, receipts cannot cross
+  separately created boundary instances, exact receipts clean the intended
+  layout, and occupied or replaced layouts remain preserved.
 - `DV-workspace-agent-layout-cleanup-003`: source contracts, broader
   safety/isolation tests, sanitizer execution, protected Windows/Ubuntu/macOS
   matrices, exact-head review, and retained results are required before
@@ -53,10 +54,12 @@ Potential Severity If Misused: high
   and fails preflight. Even if content appears after preflight, the platform
   empty-directory operation fails without traversing or deleting content.
 - Forgery and replacement: cleanup-authorizing identities and the boundary
-  authority token are private. Public status fields, a generation number,
-  observed filesystem metadata, or a receipt from another boundary instance
-  cannot authorize cleanup. The trusted storage root, session, and every child
-  must still match the opaque receipt before mutation.
+  authority token are private, and the boundary is non-copyable. Public status
+  fields, a generation number, observed filesystem metadata, or a receipt from
+  another separately created boundary cannot authorize cleanup. Moving the
+  boundary transfers rather than duplicates its logical authority. The trusted
+  storage root, session, and every child must still match the opaque receipt
+  before mutation.
 - Windows boundary: the parent is held without delete sharing, the target is
   opened with delete authority and reparse-point semantics, and deletion is
   requested against the verified target handle.
@@ -91,13 +94,16 @@ Current local focused evidence:
 - fresh Clang 21 ASan/UBSan with leak detection passes the platform,
   environment, and session selection `3/3`; and
 - the repository-wide safety-traceability workflow contract passes `1/1` in
-  326.07 seconds after the receipt correction; and
+  325.46 seconds after the non-copyable-boundary correction; and
 - `git diff --check` passes.
 
-Exact-head automated review of `49884b726` found that the original public
-identity fields were forgeable. The corrected opaque receipt, same-boundary
-authority check, compile-time non-exposure assertions, forged-status test, and
-cross-boundary test address that P2. Initial protected execution passed ten of
+Exact-head automated review found two P2 authority-provenance gaps: at
+`49884b726` the original public identity fields were forgeable, and at
+`aca08bb2c` an implicit boundary copy duplicated the authority token. The
+corrected opaque receipt, same-boundary authority check, deleted copy
+operations, preserved move operations, compile-time assertions, forged-status
+test, and cross-boundary test address both findings. Initial protected
+execution passed ten of
 eleven required checks; Windows generated-launcher run `31906276882` passed the
 generated launcher and 32 other tests but failed an unrelated existing Python
 sidecar assertion before reaching the private workspace-agent step. Corrected-

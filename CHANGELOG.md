@@ -2,7 +2,9 @@
   workspace-agent layout cleanup. Successful preparation now returns an
   opaque, boundary-bound receipt carrying the exact full identities of the
   session root and five fixed children; public status fields and observed
-  metadata cannot forge it. The explicit
+  metadata cannot forge it. The boundary is non-copyable so a second object
+  cannot duplicate receipt authority; move semantics transfer the same logical
+  boundary. The explicit
   trusted-host primitive revalidates every identity and removes only those
   empty directories, never content. Automatic lifecycle use remains disabled
   pending durable receipt recovery, cleanup intent/outcome audit, partial-

@@ -158,7 +158,9 @@ foreach(token IN ITEMS
         "struct CleanupReceipt"
         "std::shared_ptr<const CleanupReceipt> cleanup_receipt_"
         "std::shared_ptr<const std::uint8_t> boundary_authority"
-        "std::shared_ptr<const std::uint8_t> cleanup_authority_")
+        "std::shared_ptr<const std::uint8_t> cleanup_authority_"
+        "const WorkspaceAgentIsolatedEnvironmentBoundary&) = delete"
+        "WorkspaceAgentIsolatedEnvironmentBoundary&&) noexcept = default")
     require_text("${environment_header_text}" "${token}"
         "opaque boundary-bound cleanup receipt")
 endforeach()
@@ -171,6 +173,7 @@ endforeach()
 foreach(token IN ITEMS
         "HasPublicSessionDirectoryIdentity"
         "HasPublicChildDirectoryIdentities"
+        "!std::is_copy_constructible_v<WorkspaceAgentIsolatedEnvironmentBoundary>"
         "public status fields must not forge cleanup authority"
         "receipt must remain bound to the boundary")
     require_text("${environment_test_text}" "${token}"
