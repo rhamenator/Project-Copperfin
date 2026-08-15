@@ -224,6 +224,26 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
         .diagnostic_code = "workspace_agent.advisory_allowed"};
     const auto initial = sink.commit(valid, sink.context);
     expect(initial.ok, "RQ-CF-AGENT-006: malformed-event setup should persist one valid event");
+    const WorkspaceAgentSessionAuditEvent cleanup_intent{
+        .kind = copperfin::security::WorkspaceAgentSessionEventKind::
+            layout_cleanup_intent,
+        .session_generation = 7U,
+        .requested_mode = WorkspaceAgentAccessMode::advisory,
+        .effective_mode = WorkspaceAgentAccessMode::advisory,
+        .outcome = "pending",
+        .diagnostic_code = "workspace_agent.session_layout_cleanup_intent"};
+    const WorkspaceAgentSessionAuditEvent cleanup_outcome{
+        .kind = copperfin::security::WorkspaceAgentSessionEventKind::
+            layout_cleanup_outcome,
+        .session_generation = 7U,
+        .requested_mode = WorkspaceAgentAccessMode::advisory,
+        .effective_mode = WorkspaceAgentAccessMode::advisory,
+        .outcome = "cleaned",
+        .diagnostic_code =
+            "workspace_agent.environment_session_layout_cleaned"};
+    expect(sink.commit(cleanup_intent, sink.context).ok &&
+               sink.commit(cleanup_outcome, sink.context).ok,
+           "RQ-CF-AGENT-021: the durable sink must admit exact cleanup intent and outcome records");
     const std::string before = read_bytes(file_sink.log_path());
 
     std::vector<WorkspaceAgentSessionAuditEvent> malformed;

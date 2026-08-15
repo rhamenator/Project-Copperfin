@@ -47,6 +47,10 @@ std::string event_kind_name(WorkspaceAgentSessionEventKind kind) {
             return "start";
         case WorkspaceAgentSessionEventKind::stop:
             return "stop";
+        case WorkspaceAgentSessionEventKind::layout_cleanup_intent:
+            return "layout_cleanup_intent";
+        case WorkspaceAgentSessionEventKind::layout_cleanup_outcome:
+            return "layout_cleanup_outcome";
     }
     return "invalid";
 }
@@ -252,6 +256,7 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
                 decision = controller_denial("workspace_agent.policy_evaluation_failed");
             }
         }
+        std::optional<WorkspaceAgentSessionLayoutPreparationResult> preparation;
         if (decision.allowed && decision.capabilities.run_local_processes &&
             process_environment_configuration_supplied_) {
             if (!process_environment_boundary_.has_value()) {
@@ -259,14 +264,34 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
                     "workspace_agent.session_environment_boundary_unavailable");
             } else {
                 try {
-                    const auto preparation =
-                        process_environment_boundary_->prepare_session_layout(
-                            candidate_generation);
-                    if (!preparation.prepared ||
-                        preparation.session_generation != candidate_generation) {
-                        decision = controller_denial(preparation.diagnostic_code.empty()
-                                ? "workspace_agent.session_environment_preparation_failed"
-                                : preparation.diagnostic_code);
+                    bool cleanup_receipt_capacity_available = false;
+                    {
+                        std::lock_guard lock(mutex_);
+                        cleanup_receipt_capacity_available =
+                            pending_layout_cleanups_.size() <
+                            workspace_agent_session_max_pending_layout_cleanups;
+                        if (cleanup_receipt_capacity_available) {
+                            // Allocate receipt storage before creating
+                            // filesystem state. The later move cannot orphan a
+                            // prepared layout merely because the FIFO grows.
+                            pending_layout_cleanups_.reserve(
+                                pending_layout_cleanups_.size() + 1U);
+                        }
+                    }
+                    if (!cleanup_receipt_capacity_available) {
+                        decision = controller_denial(
+                            "workspace_agent.session_layout_cleanup_capacity_reached");
+                    } else {
+                        preparation =
+                            process_environment_boundary_->prepare_session_layout(
+                                candidate_generation);
+                        if (!preparation->prepared ||
+                            preparation->session_generation != candidate_generation) {
+                            decision = controller_denial(
+                                preparation->diagnostic_code.empty()
+                                    ? "workspace_agent.session_environment_preparation_failed"
+                                    : preparation->diagnostic_code);
+                        }
                     }
                 } catch (...) {
                     decision = controller_denial(
@@ -293,6 +318,10 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
 
         {
             std::lock_guard lock(mutex_);
+            if (preparation.has_value() && preparation->prepared &&
+                preparation->session_generation == candidate_generation) {
+                pending_layout_cleanups_.push_back(std::move(*preparation));
+            }
             if (audit.committed && decision.allowed && !active_session_.active) {
                 active_session_ = {
                     .active = true,
@@ -304,6 +333,106 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
             }
             transition_ = Transition::idle;
             result.session = active_session_;
+        }
+        return result;
+    } catch (...) {
+        std::lock_guard lock(mutex_);
+        transition_ = Transition::idle;
+        throw;
+    }
+}
+
+WorkspaceAgentSessionLayoutCleanupAttemptResult
+WorkspaceAgentSessionController::cleanup_pending_session_layout(
+    const WorkspaceAgentSessionAuditSink& audit_sink) {
+    const WorkspaceAgentSessionLayoutPreparationResult* preparation = nullptr;
+    {
+        std::lock_guard lock(mutex_);
+        WorkspaceAgentSessionLayoutCleanupAttemptResult result;
+        if (transition_ != Transition::idle) {
+            result.diagnostic_code =
+                "workspace_agent.session_transition_in_progress";
+            return result;
+        }
+        if (active_session_.active) {
+            result.diagnostic_code =
+                "workspace_agent.session_layout_cleanup_active_session";
+            return result;
+        }
+        if (pending_layout_cleanups_.empty()) {
+            result.diagnostic_code =
+                "workspace_agent.session_layout_cleanup_not_pending";
+            return result;
+        }
+        transition_ = Transition::cleaning;
+        // The cleaning transition prevents every operation that can mutate the
+        // receipt FIFO. Borrow the front receipt instead of copying its
+        // heap-backed fields after changing state: this assignment cannot
+        // throw and therefore cannot strand the controller in `cleaning`.
+        preparation = &pending_layout_cleanups_.front();
+    }
+
+    try {
+        WorkspaceAgentSessionLayoutCleanupAttemptResult result;
+        result.session_generation = preparation->session_generation;
+        const WorkspaceAgentSessionAuditEvent intent{
+            .kind = WorkspaceAgentSessionEventKind::layout_cleanup_intent,
+            .session_generation = preparation->session_generation,
+            .requested_mode = WorkspaceAgentAccessMode::advisory,
+            .effective_mode = WorkspaceAgentAccessMode::advisory,
+            .outcome = "pending",
+            .diagnostic_code = "workspace_agent.session_layout_cleanup_intent"};
+        const AuditOutcome intent_audit = commit_audit_event(intent, audit_sink);
+        result.intent_audit_committed = intent_audit.committed;
+        result.intent_audit_receipt = intent_audit.receipt;
+        if (!intent_audit.committed) {
+            result.diagnostic_code =
+                "workspace_agent.session_layout_cleanup_intent_audit_failed";
+            std::lock_guard lock(mutex_);
+            transition_ = Transition::idle;
+            return result;
+        }
+
+        WorkspaceAgentSessionLayoutCleanupResult cleanup;
+        if (!process_environment_boundary_.has_value()) {
+            cleanup.diagnostic_code =
+                "workspace_agent.session_environment_boundary_unavailable";
+        } else {
+            try {
+                result.attempted = true;
+                cleanup =
+                    process_environment_boundary_->cleanup_empty_session_layout(
+                        *preparation);
+            } catch (...) {
+                cleanup.diagnostic_code =
+                    "workspace_agent.environment_session_layout_cleanup_failed";
+            }
+        }
+        result.cleaned = cleanup.cleaned;
+
+        const WorkspaceAgentSessionAuditEvent outcome{
+            .kind = WorkspaceAgentSessionEventKind::layout_cleanup_outcome,
+            .session_generation = preparation->session_generation,
+            .requested_mode = WorkspaceAgentAccessMode::advisory,
+            .effective_mode = WorkspaceAgentAccessMode::advisory,
+            .outcome = cleanup.cleaned ? "cleaned" : "retained",
+            .diagnostic_code = cleanup.diagnostic_code.empty()
+                ? "workspace_agent.environment_session_layout_cleanup_failed"
+                : cleanup.diagnostic_code};
+        const AuditOutcome outcome_audit = commit_audit_event(outcome, audit_sink);
+        result.outcome_audit_committed = outcome_audit.committed;
+        result.outcome_audit_receipt = outcome_audit.receipt;
+        result.diagnostic_code = outcome_audit.committed
+            ? outcome.diagnostic_code
+            : "workspace_agent.session_layout_cleanup_outcome_audit_failed";
+        {
+            std::lock_guard lock(mutex_);
+            if (cleanup.cleaned && !pending_layout_cleanups_.empty() &&
+                pending_layout_cleanups_.front().session_generation ==
+                    preparation->session_generation) {
+                pending_layout_cleanups_.erase(pending_layout_cleanups_.begin());
+            }
+            transition_ = Transition::idle;
         }
         return result;
     } catch (...) {

@@ -651,6 +651,23 @@ starts no process and Windows dependency-closure restrictions from
 
 ## Current implementation and remaining work
 
+Candidate `RQ-CF-AGENT-021` retains every successful configured layout
+preparation receipt inside the native controller, including preparations whose
+start audit later fails. The explicit cleanup operation is unavailable while
+session authority is active and serializes with start and stop. It commits a
+content-free intent event before invoking the `RQ-CF-AGENT-020` primitive and
+then submits a distinct `cleaned` or `retained` outcome. Failed intent audit
+causes no mutation; denied or failed cleanup retains the oldest receipt for an
+explicit retry; successful cleanup consumes it. Later fresh generations append
+without overwriting older pending receipts up to a fixed sixty-four-receipt
+cap; another process-capable start is audited and denied before layout creation
+when the cap is reached.
+
+This is not automatic stop or destructor cleanup. Receipts are not persisted
+across process restart, and a partial multi-directory removal cannot yet pass
+the primitive's complete-object preflight on retry. Owned nonempty-content
+disposition remains undefined, so content is preserved rather than removed.
+
 The current slices implement the portable access-mode, capability, RBAC,
 localized warning, fail-closed admission, read-only Studio-host descriptor,
 and strict read-only managed-consumer contracts with direct regression
@@ -701,7 +718,8 @@ existing state. None of these results is an executor,
 authorization token, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
 semantics, launch-adjacent handle pinning and synchronous executor integration,
-audit-backed lifecycle cleanup and durable receipt recovery, endpoint policy, process
+automatic lifecycle cleanup, crash-recoverable receipts, partial-cleanup retry,
+endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
