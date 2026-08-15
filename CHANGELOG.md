@@ -1,3 +1,12 @@
+- 2026-08-15: Completed implementation evidence for candidate
+  `RQ-CF-AGENT-018` at exact signed/DCO head `8e2f71551`. All eleven protected
+  checks passed in runs `31899195856`, `31899197341`, `31899197358`,
+  `31899197362`, and `31899197346`; exact-head automated review found no major
+  issue after three real P1 findings were corrected, all review threads are
+  resolved, and PR `#5026` merged into `v1-development` as `51cc62123`. The
+  requirement remains a retained-high-risk `gap` solely for qualified
+  independent human sign-off; no execution or launch readiness is claimed.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-018` trusted-host Windows child
   argument-parser authority. Versioned bounded configuration binds the supported
   C-runtime parser contract to exact canonical executable path, host-supplied

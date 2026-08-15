@@ -2,7 +2,7 @@
 
 ## V1 workspace-agent Windows process-parser authority
 
-Candidate `RQ-CF-AGENT-018` is under verification. Bounded trusted product-host
+Candidate `RQ-CF-AGENT-018` has complete implementation evidence. Bounded trusted product-host
 configuration now binds the supported Windows C-runtime command-line parser to
 an exact canonical executable path, host-supplied expected complete physical
 identity, and expected lowercase SHA-256; construction hashes a physically
@@ -30,11 +30,13 @@ passed `4/4`. This remains point-in-time, non-executing evidence. A corrected-
 head review P1 about metadata-only authentication is addressed by the digest
 binding and same-file-content regression. A subsequent P1 about mutable
 adjacent parser dependencies is addressed by the required self-contained-image
-product attestation and fail-closed dependency contract. Exact
-signed/DCO head, protected Windows/Ubuntu/macOS execution, and exact-head review
-remain before implementation evidence is complete. The retained risk is
+product attestation and fail-closed dependency contract. Exact signed/DCO head
+`8e2f71551`, all eleven protected checks in runs `31899195856`, `31899197341`,
+`31899197358`, `31899197362`, and `31899197346`, and the clean exact-head Codex
+review are retained; PR `#5026` merged as `51cc62123`. The retained risk is
 `high`; no independent final safety approval is
-claimed. Publisher trust, launch-adjacent pinning/revalidation, identity-aware
+claimed, so the requirement remains a `gap` pending qualified independent human
+sign-off. Publisher trust, launch-adjacent pinning/revalidation, identity-aware
 cleanup, executor, sandbox, endpoint policy, descendant management, outcome
 audit, provider/OAuth, trusted UI, diff, and undo remain explicit gaps.
 
