@@ -38,8 +38,10 @@ Mapped architecture and code:
   session, and persistent-sink selection passes `4/4`; community and native
   isolation contracts pass `2/2`; the safety contract passes `1/1`; fresh
   Clang ASan/UBSan registry/session execution passes `2/2`; and
-  `git diff --check` passes. Protected exact-head evidence remains to be
-  recorded.
+  `git diff --check` passes. Exact signed/DCO implementation head `10af4988a`
+  passes all eleven protected checks in runs `31851197930`, `31851197911`,
+  `31851197910`, `31851197916`, and `31851197924`; thread-aware review reports
+  zero threads.
 
 ## Procedural delta map
 
@@ -105,7 +107,15 @@ Local Release verification on Linux currently records:
   `2/2` pass with no finding;
 - `git diff --check`: pass;
 - no file, process, network, provider, or product-UI action by the new registry;
-- protected Windows, Ubuntu, and macOS execution pending.
+- exact implementation head `10af4988a`: all eleven protected checks pass;
+- Generated Launcher Validation run `31851197910`: Windows, Ubuntu, and macOS
+  pass;
+- Executable Path Validation run `31851197911`: GCC and Clang pass;
+- Windows DECLARE ABI Validation run `31851197916`: Win32 and x64 pass;
+- Windows Environment and Executable Path Validation run `31851197924`: pass;
+- DCO run `31851197930`: pass;
+- both supply-chain checks: pass;
+- thread-aware PR review: zero threads.
 
 The focused regressions cover exact inventory and ordering, complete capability
 sets, permanent no-elevation, exact and embedded-NUL lookup, provider/future ID
@@ -127,10 +137,9 @@ assigned software level, or suitability for a safety-critical deployment.
   rollback, and requirements/code/test mapping
 - verification result: passed for the local candidate
 - automated evidence: focused Release `4/4`, community/isolation `2/2`, safety
-  contract `1/1`, fresh Clang ASan/UBSan `2/2`, and `git diff --check`;
-  protected exact-head execution pending
-- automated evidence result: passed for all listed local candidate checks;
-  protected evidence is a separate admission gate
+  contract `1/1`, fresh Clang ASan/UBSan `2/2`, `git diff --check`, all eleven
+  exact-head protected checks in runs `31851197930`, `31851197911`,
+  `31851197910`, `31851197916`, and `31851197924`, and zero review threads
+- automated evidence result: passed
 - scope: medium-severity non-executing workspace-agent product tool registry
-- result: candidate approved for protected verification as maintainer
-  self-review; no independence claim
+- result: approved as maintainer self-review; no independence claim

@@ -7,7 +7,10 @@
   aliased, case-changed, whitespace-modified, embedded-NUL, and provider-defined
   IDs fail closed. This adds no handler, target containment, executor, provider,
   UI activation, filesystem/process/network side effect, outcome audit, diff,
-  or undo capability.
+  or undo capability. Exact signed/DCO head `10af4988a` passes all eleven
+  protected checks in runs `31851197930`, `31851197911`, `31851197910`,
+  `31851197916`, and `31851197924`; thread-aware review reports zero threads,
+  and `RQ-CF-AGENT-008` is defined with retained evidence.
 
 - 2026-08-14: Added a non-executing workspace-agent tool-request preflight to
   the native session controller. A versioned request declares its complete

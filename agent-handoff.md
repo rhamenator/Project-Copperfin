@@ -1,8 +1,8 @@
 # Agent Handoff
 
-## V1 workspace-agent product tool registry candidate
+## V1 workspace-agent product tool registry
 
-`RQ-CF-AGENT-008` is implemented locally from `RQ-CF-AGENT-007`. The public
+`RQ-CF-AGENT-008` is defined at merged commit `e0be7971c`. The public
 non-executing preflight request no longer accepts caller-declared capability
 booleans: it carries only schema, exact session generation, and stable tool ID.
 An immutable native registry supplies the complete requirements for seven
@@ -12,7 +12,9 @@ lookup rejects aliases and provider-defined IDs. Focused Release policy,
 registry, session, and persistent-sink tests pass `4/4`; community and native
 isolation contracts pass `2/2`; the safety contract passes `1/1`; and fresh
 Clang ASan/UBSan registry/session execution passes `2/2` with leak detection.
-Protected exact-head Windows, Ubuntu, and macOS evidence is pending. No handler,
+Exact signed/DCO head `10af4988a` passed all eleven protected checks in runs
+`31851197930`, `31851197911`, `31851197910`, `31851197916`, and
+`31851197924`; thread-aware review reports zero threads. No handler,
 target containment, executor, real sandbox, provider/OAuth adapter, product
 activation UI, filesystem/process/network side effect, outcome audit, diff, or
 undo is claimed.
