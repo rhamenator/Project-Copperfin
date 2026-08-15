@@ -59,6 +59,13 @@ foreach(token IN ITEMS
 endforeach()
 
 foreach(token IN ITEMS
+        "::RemoveDirectoryW("
+        "::rmdir(")
+    forbid_text("${source_text}" "${token}"
+        "path-based cleanup of an unverified directory")
+endforeach()
+
+foreach(token IN ITEMS
         "::CreateDirectoryW("
         "::SetEntriesInAclW("
         "SE_DACL_PROTECTED"

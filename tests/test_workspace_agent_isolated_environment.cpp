@@ -578,6 +578,26 @@ void test_configuration_and_layout_fail_closed() {
     expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
                 insecure_root_tree.configuration()).has_value(),
            "RQ-CF-AGENT-014: an inherited or broadened trusted storage root must be rejected");
+
+#if !defined(_WIN32)
+    TempTree broadened_after_capture;
+    WorkspaceAgentSessionController broadened_controller(
+        broadened_after_capture.workspace,
+        broadened_after_capture.configuration());
+    const auto broadened_start = broadened_controller.start(
+        activation_request(), audit_sink());
+    std::filesystem::permissions(
+        broadened_after_capture.session_storage,
+        std::filesystem::perms::owner_all |
+            std::filesystem::perms::group_read |
+            std::filesystem::perms::group_exec,
+        std::filesystem::perm_options::replace);
+    expect_content_free_denial(
+        broadened_controller.preflight_process_environment_request(
+            invocation_request(broadened_start.session.generation)),
+        "workspace_agent.environment_storage_root_identity_changed",
+        "RQ-CF-AGENT-014: storage-root access broadening after capture must fail construction");
+#endif
 }
 
 void test_physical_identity_and_session_binding() {

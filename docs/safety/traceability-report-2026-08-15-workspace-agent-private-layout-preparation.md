@@ -80,11 +80,15 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   points, regular files, missing paths, and wrong kinds fail closed.
 - Existing-state damage: creation is leaf-only. An existing complete or partial
   generation is not adopted, repaired, overwritten, permission-mutated, or
-  deleted. If creation of a new child fails, the newly created private partial
-  generation can remain and deliberately blocks reuse.
+  deleted. Post-creation verification never performs path-based cleanup because
+  a racing authority could have replaced the created object; the unverified
+  path is left for an identity-aware trusted-host cleanup decision. If creation
+  of a new child fails, a private partial generation can remain and deliberately
+  blocks reuse.
 - Root replacement: the environment boundary rechecks the captured private
-  storage-root identity before creation and again after layout preparation,
-  then physically contains and verifies every fixed directory.
+  storage-root identity and current privacy contract before creation,
+  construction, and final return, then physically contains and verifies every
+  fixed directory.
 - Same-authority boundary: creation currently uses full paths. It assumes the
   storage-root owner and LocalSystem are trusted host authorities; it is not a
   defense against a malicious process already operating with either authority.

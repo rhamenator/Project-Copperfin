@@ -359,11 +359,6 @@ PrivateDirectoryResult create_private_directory(
 
     const PrivateDirectoryResult verified = verify_private_directory(path);
     if (!verified.ok) {
-#if defined(_WIN32)
-        ::RemoveDirectoryW(path.c_str());
-#else
-        ::rmdir(path.c_str());
-#endif
         return failed(PrivateDirectoryFailure::verification_failed);
     }
     return verified;

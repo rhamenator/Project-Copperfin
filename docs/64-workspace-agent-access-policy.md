@@ -371,7 +371,9 @@ owned by the process user with a protected DACL containing only explicit,
 inheritable full-control entries for that user and LocalSystem. A missing
 parent, existing object, wrong kind, indirection, foreign owner, broadened or
 inherited access, unsupported security, or post-creation verification failure
-fails closed; existing objects are never adopted or modified.
+fails closed; existing objects are never adopted or modified. Because a path
+can be replaced between creation and verification, failed verification leaves
+the path untouched for a later identity-aware trusted-host cleanup decision.
 
 The trusted-host environment boundary requires the configured storage root to
 satisfy that same contract. Its explicit preparation method creates one new
@@ -382,6 +384,11 @@ verification failure return content-free diagnostics. The method never adopts,
 repairs, overwrites, or deletes an existing or partial layout. A child failure
 may therefore leave a private partial generation that deliberately blocks
 reuse until a future trusted-host cleanup boundary handles it.
+
+Environment construction re-verifies both the captured storage-root identity
+and its current privacy contract before inspecting the generation and again
+before returning. Permission or DACL broadening therefore fails even when the
+root's filesystem identity has not changed.
 
 This preparation API is not yet wired to session start and is not a cleanup or
 execution capability. Its full-path operations assume the private root's owner
