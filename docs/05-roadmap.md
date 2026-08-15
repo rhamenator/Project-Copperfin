@@ -1407,7 +1407,7 @@ session, preserves shell metacharacters literally, exposes no caller-selected
 environment, and requires the versioned non-inheriting `isolated_session_v1`
 environment policy. The adjacent trusted-host boundary constructs its fixed
 logical entries, the next portable boundary serializes them for POSIX or
-Windows, and a separate candidate boundary creates and verifies an absent
+Windows, and a separate boundary creates and verifies an absent
 generation's private fixed layout. These preflights perform no cleanup,
 argument serialization, sandboxing, or launch and return no execution
 authority.

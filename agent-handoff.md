@@ -1,9 +1,9 @@
 # Agent Handoff
 
-## V1 workspace-agent private generation-layout preparation candidate
+## V1 workspace-agent private generation-layout preparation
 
-`RQ-CF-AGENT-014` is the active candidate. A portable platform seam creates
-exactly one absent absolute directory leaf and verifies owner-only access:
+`RQ-CF-AGENT-014` is defined at merged commit `2d4ae0dd8`. A portable platform
+seam creates exactly one absent absolute directory leaf and verifies owner-only access:
 effective-user-owned exact mode `0700` without symlink indirection on POSIX, or
 a process-user-owned non-reparse directory with a protected DACL containing
 only explicit inheritable full-control entries for the user and LocalSystem on
@@ -35,15 +35,23 @@ This remains non-executing and is not yet wired to session start. Layout
 cleanup, platform argument serialization, Windows executable-format
 compatibility, launch-adjacent pin/revalidation, executor, sandbox, endpoint
 policy, outcome audit, provider/OAuth, trusted UI, diff, and undo remain
-explicit gaps. Protected evidence must be recorded before the candidate becomes
-defined. Local warning-free Release security/community/
-isolation/safety verification passes `15/15`; focused platform/workflow
-contracts pass `5/5`; fresh Clang 21 ASan/UBSan with leak detection passes
-`3/3`; the generated isolation inventory covers `379` tests; and diff
-validation passes. A POSIX host `umask` that removes owner bits fails closed and
-leaves an unverified path for future identity-aware cleanup; the library does
-not mutate process-global `umask` state or chmod an unbound path. Protected
-exact-head and review evidence remain pending.
+explicit gaps. Local warning-free Release security/community/isolation/safety
+verification passes `15/15`; focused platform/workflow contracts pass `5/5`;
+fresh Clang 21 ASan/UBSan with leak detection passes `3/3`; the generated
+isolation inventory covers `379` tests; and diff validation passes. Exact
+signed/DCO head `d415b0e993` passed all eleven protected checks in runs
+`31882646791`, `31882647956`, `31882647969`, `31882647954`, and `31882647967`,
+including the unchanged successful Windows rerun after one transient polyglot
+sidecar assertion. Both Socket checks passed. All fifteen actionable review
+threads were corrected, answered, and resolved; exact-head automated review and
+independent focused `11/11` read-only review found no remaining issue before PR
+`#5018` merged as `2d4ae0dd8`. No independent final safety approval is claimed.
+A POSIX host `umask` that removes owner bits fails closed and leaves an
+unverified path for future identity-aware cleanup; the library does not mutate
+process-global `umask` state or chmod an unbound path. Linux filesystems that
+cannot provide the required ACL xattr inspection and POSIX targets other than
+Linux or macOS fail closed. Platform argument serialization is the next bounded
+process-preflight gap; it must remain distinct from launch authority.
 
 ## V1 workspace-agent native environment serialization
 
