@@ -96,6 +96,10 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   after preparation, during construction, and before final return, then
   physically contains and re-verifies identity and privacy for every fixed
   session directory before returning a constructed environment.
+- Configured-path replacement: preparation rechecks every approved executable
+  directory and the Windows system root, when present, before the first layout
+  creation and before success. Direct replacement regressions prove a known
+  unusable configuration cannot consume a generation from cached path text.
 - Same-authority boundary: creation currently uses full paths. It assumes the
   storage-root owner and LocalSystem are trusted host authorities; it is not a
   defense against a malicious process already operating with either authority.

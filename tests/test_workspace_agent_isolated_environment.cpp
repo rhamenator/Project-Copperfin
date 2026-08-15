@@ -444,6 +444,49 @@ void test_secure_generation_layout_preparation() {
                        replaced_tree.session_storage / "session-1"),
                "RQ-CF-AGENT-014: root replacement must fail before creating a generation layout");
     }
+
+    TempTree path_tree(false);
+    const auto path_boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(
+            path_tree.configuration());
+    expect(path_boundary.has_value(),
+           "RQ-CF-AGENT-014: the executable-path replacement fixture must create its boundary");
+    if (path_boundary.has_value()) {
+        const auto replacement = path_tree.root / "approved-replacement";
+        std::filesystem::create_directory(replacement);
+        std::filesystem::remove(path_tree.approved_two);
+        std::filesystem::rename(replacement, path_tree.approved_two);
+        const auto replaced = path_boundary->prepare_session_layout(1U);
+        expect(!replaced.prepared && replaced.session_generation == 0U &&
+                   replaced.diagnostic_code ==
+                       "workspace_agent.environment_path_identity_changed" &&
+                   !std::filesystem::exists(
+                       path_tree.session_storage / "session-1"),
+               "RQ-CF-AGENT-014: executable-directory replacement must fail before creating a generation layout");
+    }
+
+#if defined(_WIN32)
+    TempTree system_tree(false);
+    const auto system_boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(
+            system_tree.configuration());
+    expect(system_boundary.has_value(),
+           "RQ-CF-AGENT-014: the system-root replacement fixture must create its boundary");
+    if (system_boundary.has_value()) {
+        const auto replacement =
+            system_tree.root / "windows-root-replacement";
+        std::filesystem::create_directory(replacement);
+        std::filesystem::remove(system_tree.windows_system_root);
+        std::filesystem::rename(replacement, system_tree.windows_system_root);
+        const auto replaced = system_boundary->prepare_session_layout(1U);
+        expect(!replaced.prepared && replaced.session_generation == 0U &&
+                   replaced.diagnostic_code ==
+                       "workspace_agent.environment_system_root_identity_changed" &&
+                   !std::filesystem::exists(
+                       system_tree.session_storage / "session-1"),
+               "RQ-CF-AGENT-014: Windows system-root replacement must fail before creating a generation layout");
+    }
+#endif
 }
 
 #if defined(__linux__)

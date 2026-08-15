@@ -174,6 +174,21 @@ bool captured_private_directory_matches(const CapturedDirectory& captured) {
             captured.canonical_path).ok;
 }
 
+std::string_view configured_directory_identity_failure(
+    const std::vector<CapturedDirectory>& executable_directories,
+    const std::optional<CapturedDirectory>& windows_system_root) {
+    for (const auto& directory : executable_directories) {
+        if (!captured_directory_matches(directory)) {
+            return "workspace_agent.environment_path_identity_changed";
+        }
+    }
+    if (windows_system_root.has_value() &&
+        !captured_directory_matches(*windows_system_root)) {
+        return "workspace_agent.environment_system_root_identity_changed";
+    }
+    return {};
+}
+
 std::optional<CapturedDirectory> capture_contained_directory(
     const std::filesystem::path& path,
     const CapturedDirectory& root) {
@@ -434,6 +449,13 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
             "workspace_agent.environment_session_layout_unrepresentable";
         return result;
     }
+    const std::string_view preparation_identity_failure =
+        configured_directory_identity_failure(
+            executable_directories_, windows_system_root_);
+    if (!preparation_identity_failure.empty()) {
+        result.diagnostic_code = preparation_identity_failure;
+        return result;
+    }
     const auto session_created =
         copperfin::platform::create_private_directory(session_root);
     if (!session_created.ok) {
@@ -457,6 +479,13 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
         }
     }
 
+    const std::string_view final_configured_identity_failure =
+        configured_directory_identity_failure(
+            executable_directories_, windows_system_root_);
+    if (!final_configured_identity_failure.empty()) {
+        result.diagnostic_code = final_configured_identity_failure;
+        return result;
+    }
     if (!captured_private_directory_matches(session_storage_root_) ||
         !capture_contained_directory(
              session_root, session_storage_root_).has_value()) {

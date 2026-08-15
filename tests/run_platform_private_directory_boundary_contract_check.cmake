@@ -111,10 +111,14 @@ string(FIND "${consumer_text}" "const auto proposed_entries =" proposed_offset)
 string(FIND "${consumer_text}"
     "copperfin::platform::create_private_directory(session_root)"
     creation_offset)
-if(proposed_offset EQUAL -1 OR creation_offset EQUAL -1 OR
-   NOT proposed_offset LESS creation_offset)
+string(FIND "${consumer_text}"
+    "const std::string_view preparation_identity_failure ="
+    configured_identity_offset)
+if(proposed_offset EQUAL -1 OR configured_identity_offset EQUAL -1 OR
+   creation_offset EQUAL -1 OR NOT proposed_offset LESS configured_identity_offset OR
+   NOT configured_identity_offset LESS creation_offset)
     message(FATAL_ERROR
-        "Derived fixed environment must be validated before session-root creation")
+        "Derived environment and configured identities must be validated before session-root creation")
 endif()
 require_text("${root_build_text}"
     "src/platform/private_directory.cpp"

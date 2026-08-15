@@ -9,7 +9,9 @@ a process-user-owned non-reparse directory with a protected DACL containing
 only explicit inheritable full-control entries for the user and LocalSystem on
 Windows. The trusted-host environment boundary now requires a private storage
 root, prepares one new `session-N/{home,temp,config,cache,data}` layout, and
-re-verifies privacy and physical containment. Existing or partial layouts are
+re-verifies privacy, physical containment, approved executable-directory
+identity, and the Windows system-root identity where applicable before creation
+and success. Existing or partial layouts are
 never adopted, repaired, overwritten, or deleted; denial is content-free.
 
 This remains non-executing and is not yet wired to session start. Layout

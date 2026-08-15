@@ -392,6 +392,11 @@ Before creating the session root, preparation derives the exact fixed
 platform environment entries through the same builder used by construction.
 Invalid encoding, an empty required value, a per-entry overflow, or aggregate
 overflow fails without creating any generation directory.
+Preparation also revalidates every configured executable-directory identity
+and, on Windows, the configured system-root identity before creating the
+session root and again before reporting success. A configuration already known
+to be replaced therefore cannot consume a generation merely because its cached
+canonical text still forms a valid environment entry.
 
 Environment construction re-verifies both the captured storage-root identity
 and its current privacy contract before inspecting the generation. Before
