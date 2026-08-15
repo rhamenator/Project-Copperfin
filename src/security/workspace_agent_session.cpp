@@ -986,6 +986,23 @@ WorkspaceAgentSessionController::revalidate_serialized_process_invocation_for_la
         return result;
     }
 
+    // Snapshotting and hashing may be long enough for concurrent revocation.
+    // Recheck the exact generation and registered tool after the final file
+    // inspection. The future executor must still bind this last authority
+    // check through launch; this result is not a revocation-resistant token.
+    const auto final_session = preflight_tool_request({
+        .schema_version = request.schema_version,
+        .session_generation = plan.session_generation,
+        .tool_id = plan.tool_id});
+    if (!final_session.allowed ||
+        final_session.session_generation != plan.session_generation ||
+        final_session.effective_mode != plan.effective_mode ||
+        final_session.tool_id != plan.tool_id) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_revalidation_session_revoked";
+        return result;
+    }
+
     result.allowed = true;
     result.serialized_invocation = final;
     result.executable_sha256 = final_digest.hex_digest;

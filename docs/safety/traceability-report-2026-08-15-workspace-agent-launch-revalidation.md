@@ -21,6 +21,7 @@ deployment.
 | `DQ-workspace-agent-launch-revalidation-001`: compare every material field of the caller-held complete plan with fresh trusted preflight before and after executable inspection | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-launch-revalidation-002`: bracket the final complete preflight with bounded physically contained exact-executable snapshots, require admitted identities and equal lowercase SHA-256 digests, and return only the final equal digest on complete success | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-launch-revalidation-003`: denied, altered, stale, replaced, changed, excessive, or unavailable input returns no plan, digest, path, argument, or environment content | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-002`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-launch-revalidation-005`: recheck the exact active session generation, effective mode, and registered tool after the final potentially long-running snapshot and hash | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-002`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-launch-revalidation-004`: the API remains non-executing and expressly preserves the post-return race, handle-pinning, sandbox, endpoint, descendant, and outcome-audit gaps | `DV-workspace-agent-launch-revalidation-002`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-launch-revalidation-001`: focused controller tests prove
@@ -57,16 +58,18 @@ Potential Severity If Misused: high
   after the final identity-based preflight must have equal identity and digest,
   preventing restored metadata from pairing an earlier digest with later bytes.
 - Session revocation and target replacement: either complete preflight fails or
-  differs, and denial returns no partial plan or digest.
+  differs, and denial returns no partial plan or digest. The exact generation,
+  mode, and registered tool are checked again after the final hash so revocation
+  during snapshotting cannot yield an allowed result.
 - Resource exhaustion: the executable snapshot has an explicit 512 MiB cap;
   existing argument, environment, registry, and parser caps remain in force.
 - Information exposure: all denials contain only stable diagnostic codes. They
   carry no path, argument, environment, prompt, credential, file bytes, or
   digest.
-- Race boundary: this API retains no handle and cannot close mutation after it
-  returns. A future controlled executor must consume the returned plan
-  synchronously, minimize and account for that interval, and use platform-
-  backed pinning where supported.
+- Race boundary: this API retains no handle and cannot close mutation or
+  revocation after its final checks. A future controlled executor must consume
+  the returned plan synchronously, minimize and account for that interval, bind
+  revocation through launch, and use platform-backed pinning where supported.
 - Non-claims: no process is launched; no sandbox, endpoint control, descendant
   management, publisher validation, provider authentication, or outcome audit
   is added.

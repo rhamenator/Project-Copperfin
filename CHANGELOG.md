@@ -2,7 +2,8 @@
   revalidation. The controller compares a caller-held complete serialized
   invocation with fresh trusted preflight, brackets the repeated complete
   preflight with contained executable snapshots, requires equal identities and
-  digests, and returns only the newly regenerated plan and final equal digest.
+  digests, rechecks exact session/tool authority after hashing, and returns only
+  the newly regenerated plan and final equal digest.
   Denial exposes
   no partial plan or digest. This remains non-executing point-in-time evidence;
   handle pinning, synchronous executor integration, sandbox and endpoint

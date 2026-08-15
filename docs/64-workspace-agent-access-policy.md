@@ -608,7 +608,9 @@ snapshot identity to equal the admitted identity, calculates lowercase SHA-256,
 repeats the complete trusted preflight and equality comparison, then repeats
 the contained snapshot and requires equal identity and digest. The second
 snapshot prevents an identity-only final preflight from pairing an earlier
-digest with later same-size bytes whose timestamp was restored.
+digest with later same-size bytes whose timestamp was restored. Because hashing
+can overlap a concurrent stop, the controller finally rechecks the exact active
+generation, effective mode, and registered tool before allowing the result.
 
 On success the boundary returns a newly generated plan and the final equal
 snapshot digest;
@@ -621,8 +623,9 @@ This is the revalidation half of the launch-adjacent prerequisite, not a launch
 authority. It starts no process, retains no file handle, applies no sandbox or
 endpoint policy, manages no descendant, and records no outcome. A future
 executor must consume the returned plan synchronously, minimize and account for
-the remaining post-return interval, and use platform-backed target pinning where
-the launch mechanism supports it. Windows dependency-closure restrictions from
+the remaining post-check interval, bind revocation through launch, and use
+platform-backed target pinning where the launch mechanism supports it. Windows
+dependency-closure restrictions from
 `RQ-CF-AGENT-018` continue to apply.
 
 ## Current implementation and remaining work
