@@ -471,7 +471,7 @@ portable non-executing boundary serializes it for POSIX or Windows without
 ambient inheritance, and a separate candidate platform boundary creates and
 verifies an absent generation's private fixed layout. Broader model/
 provider policy, OAuth and credential adapters, trusted-host environment-layout
-cleanup and session-start integration, platform argument serialization, endpoint
+identity-aware cleanup, endpoint
 policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog
 surfaces remain open.

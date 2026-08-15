@@ -23,7 +23,7 @@ namespace copperfin::security {
 // Governing requirements: RQ-CF-AGENT-001, RQ-CF-AGENT-005, and
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
-// RQ-CF-AGENT-014, and RQ-CF-AGENT-015.
+// RQ-CF-AGENT-014, RQ-CF-AGENT-015, and RQ-CF-AGENT-016.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -294,6 +294,7 @@ private:
     std::optional<WorkspaceAgentProcessTargetBoundary> process_target_boundary_;
     std::optional<WorkspaceAgentIsolatedEnvironmentBoundary>
         process_environment_boundary_;
+    bool process_environment_configuration_supplied_ = false;
 };
 
 [[nodiscard]] std::string serialize_workspace_agent_session_audit_event(

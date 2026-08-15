@@ -1,3 +1,16 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-016` configured workspace-agent
+  session-layout start integration. A process-capable session with supplied
+  trusted environment configuration now prepares its exact private generation
+  after policy admission but before start-audit commit and authority activation.
+  Invalid supplied configuration and preparation failures become content-free
+  audited denials; policy denials create no layout. Audit failure still grants
+  no authority, leaves the prepared generation untouched for later
+  identity-aware cleanup, and advances subsequent attempts rather than
+  adopting prior state. Warning-free Release security/community/isolation/
+  safety verification passes `17/17`, focused lifecycle verification passes
+  `2/2`, and fresh Clang 21 ASan/UBSan with leak detection passes `3/3`;
+  protected and exact-head review evidence remain required before definition.
+
 - 2026-08-15: Defined `RQ-CF-AGENT-015` after exact signed/DCO head
   `8adc52416` passed local Release `17/17`, fresh Clang ASan/UBSan `3/3`,
   isolation inventory `380`, diff validation, all eleven protected checks in

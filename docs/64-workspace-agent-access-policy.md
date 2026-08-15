@@ -5,7 +5,7 @@ Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-005`, `RQ-CF-AGENT-006`, `RQ-CF-AGENT-007`,
 `RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`,
 `RQ-CF-AGENT-011`, `RQ-CF-AGENT-012`, `RQ-CF-AGENT-013`,
-`RQ-CF-AGENT-014`, and `RQ-CF-AGENT-015` in
+`RQ-CF-AGENT-014`, `RQ-CF-AGENT-015`, and `RQ-CF-AGENT-016` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -442,8 +442,20 @@ returning, it re-verifies identity and current privacy for the root, session,
 and every fixed child. Permission or DACL broadening therefore fails even when
 the affected directory's filesystem identity has not changed.
 
-This preparation API is not yet wired to session start and is not a cleanup or
-execution capability. Its full-path operations assume the private root's owner
+For a controller constructed with trusted environment configuration,
+`RQ-CF-AGENT-016` now invokes this preparation boundary during an admitted
+process-capable session start. Preparation occurs before the content-free
+start audit and before authority activation. Invalid supplied configuration,
+preparation denial or exception, and a mismatched returned generation become
+audited denials. Policy-denied and non-process-capable sessions create no
+layout. A failed audit commit still withholds authority, leaves the prepared
+generation untouched, and advances a later attempt to a new generation rather
+than adopting the orphan. A controller constructed without environment
+configuration retains the earlier non-executing lifecycle behavior; its
+environment preflight remains unavailable.
+
+This preparation and lifecycle integration is not a cleanup or execution
+capability. Its full-path operations assume the private root's owner
 and LocalSystem are trusted host authorities; future executor work must retain
 sandbox separation from untrusted child processes and repeat identity and
 admission checks next to launch. The boundary serializes no arguments, starts
@@ -476,8 +488,9 @@ profile ceiling.
 
 The serialization boundary still creates or deletes no directory, serializes
 no arguments, starts no process, applies no sandbox or endpoint policy, injects
-no provider credential, and records no tool outcome. The future executor must
-invoke the separate preparation boundary and later clean the session layout,
+no provider credential, and records no tool outcome. Configured process-capable
+session start now invokes the separate preparation boundary; a future trusted
+host must later clean the session layout,
 repeat all identity/admission checks beside launch, consume the fixed
 serialized representation without ambient merging,
 pin/revalidate launch targets, apply containment, and audit content-free outcomes.
@@ -508,8 +521,7 @@ authority. A future executor must additionally establish Windows child-parser
 and executable-format compatibility, repeat and pin target checks beside
 launch, consume the fixed environment without ambient merging, apply the real
 sandbox and endpoint policy, own cancellation and descendants, and record only
-content-free outcome audit. Layout cleanup and session-start integration also
-remain separate.
+content-free outcome audit. Identity-aware layout cleanup remains separate.
 
 ## Current implementation and remaining work
 
@@ -548,12 +560,14 @@ invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
 ambient variables, and the next boundary serializes that exact plan for POSIX
-or Windows without launching. None of these results is an executor,
+or Windows without launching. When trusted environment configuration is
+supplied, process-capable session start prepares that exact generation's
+private layout before audit-backed activation and fails closed without adopting
+existing state. None of these results is an executor,
 authorization token, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, launch-adjacent handle/revalidation, isolated environment
-layout creation/cleanup and access-control integration, platform argument
-serialization, endpoint policy, process
+semantics, launch-adjacent handle/revalidation, identity-aware environment
+layout cleanup, endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration

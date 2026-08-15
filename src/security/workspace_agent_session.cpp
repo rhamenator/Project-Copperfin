@@ -198,7 +198,8 @@ WorkspaceAgentSessionController::WorkspaceAgentSessionController(
       process_target_boundary_(WorkspaceAgentProcessTargetBoundary::create(
           trusted_absolute_workspace_root)),
       process_environment_boundary_(WorkspaceAgentIsolatedEnvironmentBoundary::create(
-          trusted_environment_configuration)) {}
+          trusted_environment_configuration)),
+      process_environment_configuration_supplied_(true) {}
 
 WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
     const WorkspaceAgentActivationRequest& request,
@@ -233,6 +234,28 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
                 decision = evaluate_workspace_agent_activation(request);
             } catch (...) {
                 decision = controller_denial("workspace_agent.policy_evaluation_failed");
+            }
+        }
+        if (decision.allowed && decision.capabilities.run_local_processes &&
+            process_environment_configuration_supplied_) {
+            if (!process_environment_boundary_.has_value()) {
+                decision = controller_denial(
+                    "workspace_agent.session_environment_boundary_unavailable");
+            } else {
+                try {
+                    const auto preparation =
+                        process_environment_boundary_->prepare_session_layout(
+                            candidate_generation);
+                    if (!preparation.prepared ||
+                        preparation.session_generation != candidate_generation) {
+                        decision = controller_denial(preparation.diagnostic_code.empty()
+                                ? "workspace_agent.session_environment_preparation_failed"
+                                : preparation.diagnostic_code);
+                    }
+                } catch (...) {
+                    decision = controller_denial(
+                        "workspace_agent.session_environment_preparation_failed");
+                }
             }
         }
         const WorkspaceAgentSessionAuditEvent event{
