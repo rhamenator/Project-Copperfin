@@ -2,7 +2,7 @@
 
 Date: 2026-08-15
 
-Scope: candidate v1 `RQ-CF-AGENT-016` configured session-start integration
+Scope: implementation-complete candidate v1 `RQ-CF-AGENT-016` configured session-start integration
 for the private generation layout
 
 Allowed requirement source: explicit repository-owner product policy under
@@ -126,13 +126,20 @@ Current candidate evidence:
   finding;
 - direct private-layout, audited-denial, invalid-configuration, policy-denial,
   audit-failure, and later-generation recovery assertions pass;
-- `git diff --check` passes.
+- `git diff --check` passes;
+- exact signed/DCO implementation head `9a382a764` passed all eleven protected
+  checks: contributor sign-off run `31888008860`, Clang/GCC executable paths
+  run `31888008825`, Windows/Ubuntu/macOS generated launcher run
+  `31888008851`, Win32/x64 DECLARE run `31888008846`, Windows environment and
+  executable paths run `31888008790`, and both Socket checks;
+- exact-head automated review reported no major issue, pagination found zero
+  review threads, and PR `#5022` merged into `v1-development` as `05cefa60f`.
 
 Still required before `RQ-CF-AGENT-016` is defined:
 
-- protected Windows, Ubuntu, and macOS exact-head checks;
-- DCO/signature and supply-chain checks;
-- exact-head thread-aware review with every actionable finding addressed.
+- qualified independent human sign-off for the retained `high` risk
+  classification, bound to the governing review record as required by the
+  repository assurance policy.
 
 ## Review evidence
 
@@ -142,6 +149,7 @@ Still required before `RQ-CF-AGENT-016` is defined:
 - verification: authority ordering, invalid-configuration fail-closed behavior,
   existing-state preservation, audit-failure recovery, generation freshness,
   content-free denial, rollback, and traceability
-- result: candidate Release `17/17` and sanitizer `3/3` verification passes;
-  protected and
-  exact-head review evidence remain pending
+- result: Release `17/17`, sanitizer `3/3`, all eleven protected checks, DCO,
+  both supply-chain checks, and exact-head zero-thread automated review pass;
+  the implementation merged as `05cefa60f`; qualified independent human
+  sign-off remains pending before assurance closure
