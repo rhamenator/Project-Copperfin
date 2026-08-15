@@ -2,8 +2,7 @@
 
 ## V1 workspace-agent isolated environment construction
 
-`RQ-CF-AGENT-012` is an implementation candidate on
-`agent/v1-workspace-agent-isolated-environment`. A new trusted-host boundary
+`RQ-CF-AGENT-012` is defined at merged commit `b3947335e`. A trusted-host boundary
 constructs the exact active generation's fixed-key `isolated_session_v1`
 logical environment without reading ambient variables or accepting arbitrary
 environment names/values from a tool request. It physically identifies the
@@ -18,7 +17,14 @@ entries. `PATH` contains only approved directories. The warning-free Release
 security/agent/community/isolation selection passes `11/11`; fresh Clang 21
 ASan/UBSan with leak detection passes `6/6`; the generated isolation inventory
 covers `376` native tests; safety traceability passes `1/1`; and diff passes.
-Protected exact-head evidence remains pending.
+Exact signed/DCO corrected head `9c2fa618c` passed all eleven protected checks
+in runs `31867096322`, `31867098781`, `31867098869`, `31867098752`, and
+`31867098756`; both Socket checks passed. Automated review identified mutable
+directory metadata blocking later generations. The correction binds stable
+storage/file identity, directly regresses stop-generation-1/create-session-2/
+start-generation-2, and retains replacement denial. The sole review thread was
+answered and resolved before PR `#5012` merged as `b3947335e`. No independent
+final review is claimed.
 
 This is still a non-executing point-in-time plan. Trusted-host secure layout
 creation, access control, cleanup, platform environment/argument serialization,
