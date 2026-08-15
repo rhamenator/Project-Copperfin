@@ -476,6 +476,66 @@ void test_fixed_non_inheriting_environment() {
                    WorkspaceAgentProcessArgumentParserContract::posix_argv_v1,
            "RQ-CF-AGENT-018: POSIX preflight must retain native argv authority without a Windows parser binding");
 #endif
+
+    const auto launch_revalidation =
+        controller.revalidate_serialized_process_invocation_for_launch(
+            invocation_request(start.session.generation), serialized_invocation);
+    const auto executable_snapshot =
+        copperfin::security::read_physically_contained_file_snapshot(
+            copperfin::security::inspect_physical_path_containment(
+                tree.workspace / "bin" / "workspace-tool",
+                tree.workspace / "bin"),
+            tree.workspace / "bin");
+    const auto executable_digest = executable_snapshot.ok
+        ? copperfin::security::sha256_hex_for_text(executable_snapshot.bytes)
+        : copperfin::security::Sha256Result{};
+    expect(launch_revalidation.allowed &&
+               launch_revalidation.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_request_allowed" &&
+               launch_revalidation.serialized_invocation.allowed &&
+               executable_digest.ok &&
+               launch_revalidation.executable_sha256 ==
+                   executable_digest.hex_digest,
+           "RQ-CF-AGENT-019: launch revalidation must return a fresh complete plan bound to a physically snapshotted executable");
+
+    const auto invalid =
+        controller.revalidate_serialized_process_invocation_for_launch(
+            invocation_request(start.session.generation), {});
+    expect(!invalid.allowed && !invalid.serialized_invocation.allowed &&
+               invalid.executable_sha256.empty() &&
+               invalid.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_invalid_plan",
+           "RQ-CF-AGENT-019: a denied input plan must not be promoted or reflected");
+
+    auto altered_plan = serialized_invocation;
+#if defined(_WIN32)
+    altered_plan.windows_command_line.push_back(u' ');
+#else
+    altered_plan.posix_arguments.push_back("injected");
+#endif
+    const auto altered =
+        controller.revalidate_serialized_process_invocation_for_launch(
+            invocation_request(start.session.generation), altered_plan);
+    expect(!altered.allowed && altered.serialized_invocation.allowed == false &&
+               altered.executable_sha256.empty() &&
+               altered.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_stale_invocation",
+           "RQ-CF-AGENT-019: any caller-held plan alteration must fail without returning partial launch material");
+
+    {
+        std::ofstream changed_executable(
+            tree.workspace / "bin" / "workspace-tool",
+            std::ios::binary | std::ios::app);
+        changed_executable << "changed-after-admission";
+    }
+    const auto changed =
+        controller.revalidate_serialized_process_invocation_for_launch(
+            invocation_request(start.session.generation), serialized_invocation);
+    expect(!changed.allowed && !changed.serialized_invocation.allowed &&
+               changed.executable_sha256.empty() &&
+               changed.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_stale_invocation",
+           "RQ-CF-AGENT-019: executable mutation after admission must fail without returning stale launch material");
 }
 
 void test_windows_serialization_requires_exact_parser_authority() {

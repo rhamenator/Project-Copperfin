@@ -480,10 +480,15 @@ the parser is self-contained from mutable non-system load-time images, and
 repeats that authority check after
 serialization; POSIX
 continues to use native argv semantics. This is still non-executing point-in-
-time evidence rather than launch authority.
+time evidence rather than launch authority. Candidate `RQ-CF-AGENT-019` now
+compares that complete caller-held plan against fresh trusted preflight,
+snapshots and hashes the exact executable, and repeats preflight before
+returning only a new equal plan. It remains point-in-time revalidation rather
+than handle-pinned launch authority.
 Broader model/
 provider policy, OAuth and credential adapters, trusted-host environment-layout
-identity-aware cleanup, launch-adjacent pinning, endpoint
+identity-aware cleanup, launch-adjacent handle pinning and synchronous executor
+consumption, endpoint
 policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog
 surfaces remain open.

@@ -1,3 +1,12 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-019` portable launch-adjacent plan
+  revalidation. The controller compares a caller-held complete serialized
+  invocation with fresh trusted preflight, snapshots and hashes the exact
+  physically contained executable, repeats the complete preflight, and returns
+  only the newly regenerated plan and digest on exact equality. Denial exposes
+  no partial plan or digest. This remains non-executing point-in-time evidence;
+  handle pinning, synchronous executor integration, sandbox and endpoint
+  enforcement, descendant control, and outcome audit remain explicit gaps.
+
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-018` at exact signed/DCO head `8e2f71551`. All eleven protected
   checks passed in runs `31899195856`, `31899197341`, `31899197358`,

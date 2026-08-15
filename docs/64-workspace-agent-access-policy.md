@@ -6,7 +6,7 @@ Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`,
 `RQ-CF-AGENT-011`, `RQ-CF-AGENT-012`, `RQ-CF-AGENT-013`,
 `RQ-CF-AGENT-014`, `RQ-CF-AGENT-015`, `RQ-CF-AGENT-016`,
-`RQ-CF-AGENT-017`, and candidate `RQ-CF-AGENT-018` in
+`RQ-CF-AGENT-017`, `RQ-CF-AGENT-018`, and candidate `RQ-CF-AGENT-019` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -595,6 +595,32 @@ attestation. This boundary does not infer parser behavior from a PE image,
 validate publisher trust, pin a handle beside launch, execute a process, apply
 sandbox or endpoint policy, manage descendants, or record a tool outcome.
 
+## Launch-adjacent plan revalidation
+
+Candidate `RQ-CF-AGENT-019` supplies the non-executing revalidation seam a
+future controlled launcher must call immediately before consuming a plan. The
+caller submits both the original invocation request and its previously admitted
+complete serialized plan. The controller regenerates all trusted session,
+registry, target, argument, fixed-environment, native-serialization, and Windows
+parser checks and requires every material field to remain equal. It then reads
+a bounded physically contained snapshot of the exact executable, requires the
+snapshot identity to equal the admitted identity, calculates lowercase SHA-256,
+and repeats the complete trusted preflight and equality comparison.
+
+On success the boundary returns a newly generated plan and the snapshot digest;
+it never blesses or returns the caller's mutable copy. Denial returns neither
+plan nor digest and uses content-free diagnostics. Altered, inactive, stale,
+replaced, unreadable, excessive, or changed inputs therefore cannot carry
+earlier point-in-time evidence across this boundary.
+
+This is the revalidation half of the launch-adjacent prerequisite, not a launch
+authority. It starts no process, retains no file handle, applies no sandbox or
+endpoint policy, manages no descendant, and records no outcome. A future
+executor must consume the returned plan synchronously, minimize and account for
+the remaining post-return interval, and use platform-backed target pinning where
+the launch mechanism supports it. Windows dependency-closure restrictions from
+`RQ-CF-AGENT-018` continue to apply.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
@@ -632,7 +658,10 @@ candidate `RQ-CF-AGENT-017` additionally requires a structurally launchable,
 host-compatible direct PE image and rechecks its complete physical identity
 after inspection. Candidate `RQ-CF-AGENT-018` additionally requires an exact
 trusted-host executable-identity binding before Windows C-runtime command-line
-serialization; POSIX retains native argv semantics. The adjacent
+serialization; POSIX retains native argv semantics. Candidate
+`RQ-CF-AGENT-019` compares a caller-held complete plan with fresh trusted
+preflight, snapshots and hashes the exact executable, repeats preflight, and
+returns only the newly generated plan on equality. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
@@ -643,7 +672,7 @@ private layout before audit-backed activation and fails closed without adopting
 existing state. None of these results is an executor,
 authorization token, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, launch-adjacent handle/revalidation,
+semantics, launch-adjacent handle pinning and synchronous executor integration,
 identity-aware environment layout cleanup, endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning

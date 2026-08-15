@@ -25,7 +25,7 @@ namespace copperfin::security {
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
 // RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
-// RQ-CF-AGENT-018.
+// RQ-CF-AGENT-018 and RQ-CF-AGENT-019.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -211,6 +211,18 @@ struct WorkspaceAgentSerializedProcessInvocationPreflightResult {
     std::string diagnostic_code;
 };
 
+struct WorkspaceAgentLaunchRevalidationResult {
+    bool allowed = false;
+    // On allow, this is a newly generated complete plan rather than the
+    // caller's mutable copy. A launcher must consume it synchronously.
+    WorkspaceAgentSerializedProcessInvocationPreflightResult
+        serialized_invocation{};
+    // Lowercase SHA-256 of the physically contained executable snapshot read
+    // between the two complete trusted preflights.
+    std::string executable_sha256;
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -290,6 +302,19 @@ public:
     [[nodiscard]] WorkspaceAgentSerializedProcessInvocationPreflightResult
     preflight_serialized_process_invocation_request(
         const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
+
+    // Revalidates a previously admitted complete plan immediately before a
+    // future controlled launcher consumes the newly returned plan. It repeats
+    // the trusted preflight around a bounded physical executable snapshot and
+    // requires every material field to equal the caller-held plan. This
+    // performs no launch and does not close the interval after return; it is
+    // neither a reusable authority token nor a substitute for platform handle
+    // pinning where that is available.
+    [[nodiscard]] WorkspaceAgentLaunchRevalidationResult
+    revalidate_serialized_process_invocation_for_launch(
+        const WorkspaceAgentProcessInvocationPreflightRequest& request,
+        const WorkspaceAgentSerializedProcessInvocationPreflightResult&
+            admitted_plan) const;
 
 private:
     enum class Transition {

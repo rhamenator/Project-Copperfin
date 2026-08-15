@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 workspace-agent launch-adjacent plan revalidation
+
+Candidate `RQ-CF-AGENT-019` has a locally verified implementation on a
+dedicated branch. The native controller now accepts the original invocation
+request and a previously
+admitted complete serialized plan, regenerates and compares every trusted plan
+field, reads a bounded physically contained executable snapshot, binds its
+identity and SHA-256, then repeats the complete preflight before returning only
+a new plan. Altered or denied input yields no partial plan or digest.
+
+This is deliberately non-executing and point-in-time. It does not retain a
+handle, close the interval after return, apply sandbox or endpoint policy,
+manage descendants, or audit an outcome. Those remain prerequisites for the
+future controlled executor. Retained risk is high and no independent final
+safety approval is claimed. Local warning-free Release workspace-agent tests
+pass `10/10`; focused/source-contract verification passes `2/2`; fresh Clang 21
+ASan/UBSan passes `3/3`; community/isolation/safety gates pass `5/5`, including
+the 331-second safety scan; native and GitHub workflow contracts and diff
+validation pass. Protected and exact-head review evidence remain pending.
+
 ## V1 workspace-agent Windows process-parser authority
 
 Candidate `RQ-CF-AGENT-018` has complete implementation evidence. Bounded trusted product-host

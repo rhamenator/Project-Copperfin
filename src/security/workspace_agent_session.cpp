@@ -7,6 +7,8 @@
 #include "copperfin/platform/path.h"
 #include "copperfin/platform/process_arguments.h"
 #include "copperfin/platform/process_environment.h"
+#include "copperfin/security/physical_path_containment.h"
+#include "copperfin/security/sha256.h"
 
 #include <iomanip>
 #include <limits>
@@ -18,6 +20,9 @@
 namespace copperfin::security {
 
 namespace {
+
+constexpr std::uint64_t workspace_agent_launch_snapshot_maximum_bytes =
+    512U * 1024U * 1024U;
 
 struct AuditOutcome {
     bool committed = false;
@@ -90,6 +95,39 @@ std::string json_escape(std::string_view value) {
         }
     }
     return stream.str();
+}
+
+bool same_serialized_invocation(
+    const WorkspaceAgentSerializedProcessInvocationPreflightResult& left,
+    const WorkspaceAgentSerializedProcessInvocationPreflightResult& right) {
+    const auto& left_environment = left.serialized_environment;
+    const auto& right_environment = right.serialized_environment;
+    const auto& left_plan = left_environment.environment_plan;
+    const auto& right_plan = right_environment.environment_plan;
+    return left.allowed == right.allowed &&
+        left.diagnostic_code == right.diagnostic_code &&
+        left.posix_arguments == right.posix_arguments &&
+        left.windows_command_line == right.windows_command_line &&
+        left.argument_parser_contract == right.argument_parser_contract &&
+        left_environment.allowed == right_environment.allowed &&
+        left_environment.diagnostic_code == right_environment.diagnostic_code &&
+        left_environment.posix_environment == right_environment.posix_environment &&
+        left_environment.windows_environment_block ==
+            right_environment.windows_environment_block &&
+        left_plan.allowed == right_plan.allowed &&
+        left_plan.session_generation == right_plan.session_generation &&
+        left_plan.effective_mode == right_plan.effective_mode &&
+        left_plan.tool_id == right_plan.tool_id &&
+        left_plan.canonical_executable_path == right_plan.canonical_executable_path &&
+        left_plan.executable_identity == right_plan.executable_identity &&
+        left_plan.canonical_working_directory ==
+            right_plan.canonical_working_directory &&
+        left_plan.working_directory_identity == right_plan.working_directory_identity &&
+        left_plan.arguments == right_plan.arguments &&
+        left_plan.environment_policy == right_plan.environment_policy &&
+        left_plan.environment_platform == right_plan.environment_platform &&
+        left_plan.environment_entries == right_plan.environment_entries &&
+        left_plan.diagnostic_code == right_plan.diagnostic_code;
 }
 
 WorkspaceAgentActivationDecision controller_denial(std::string diagnostic_code) {
@@ -858,6 +896,71 @@ WorkspaceAgentSessionController::preflight_serialized_process_invocation_request
     result.argument_parser_contract = parser_contract;
     result.diagnostic_code =
         "workspace_agent.process_argument_serialization_request_allowed";
+    return result;
+}
+
+WorkspaceAgentLaunchRevalidationResult
+WorkspaceAgentSessionController::revalidate_serialized_process_invocation_for_launch(
+    const WorkspaceAgentProcessInvocationPreflightRequest& request,
+    const WorkspaceAgentSerializedProcessInvocationPreflightResult&
+        admitted_plan) const {
+    WorkspaceAgentLaunchRevalidationResult result;
+    if (!admitted_plan.allowed) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_revalidation_invalid_plan";
+        return result;
+    }
+
+    const auto preliminary =
+        preflight_serialized_process_invocation_request(request);
+    if (!preliminary.allowed ||
+        !same_serialized_invocation(preliminary, admitted_plan)) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_revalidation_stale_invocation";
+        return result;
+    }
+
+    const auto& plan = preliminary.serialized_environment.environment_plan;
+    const auto containment = inspect_physical_path_containment(
+        plan.canonical_executable_path,
+        plan.canonical_executable_path.parent_path());
+    if (!containment.allowed ||
+        containment.identity != plan.executable_identity) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_revalidation_executable_changed";
+        return result;
+    }
+    const auto snapshot = read_physically_contained_file_snapshot(
+        containment,
+        plan.canonical_executable_path.parent_path(),
+        workspace_agent_launch_snapshot_maximum_bytes);
+    if (!snapshot.ok || snapshot.containment.identity != plan.executable_identity) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_revalidation_executable_changed";
+        return result;
+    }
+    const auto digest = sha256_hex_for_text(snapshot.bytes);
+    if (!digest.ok) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_revalidation_hash_failed";
+        return result;
+    }
+
+    const auto final =
+        preflight_serialized_process_invocation_request(request);
+    if (!final.allowed ||
+        !same_serialized_invocation(preliminary, final) ||
+        !same_serialized_invocation(admitted_plan, final)) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_revalidation_stale_invocation";
+        return result;
+    }
+
+    result.allowed = true;
+    result.serialized_invocation = final;
+    result.executable_sha256 = digest.hex_digest;
+    result.diagnostic_code =
+        "workspace_agent.process_launch_revalidation_request_allowed";
     return result;
 }
 
