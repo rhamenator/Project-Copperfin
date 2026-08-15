@@ -13,6 +13,11 @@
   identities, not authority. Argument/environment policy, launch-adjacent
   handle/revalidation, executor, real sandbox, outcome audit, endpoint policy,
   provider/OAuth, trusted activation UI, diff, and undo remain gaps.
+  Exact signed/DCO implementation head `4020d70a4` passed all eleven protected
+  checks in runs `31858578884`, `31858578779`, `31858578771`, `31858578807`,
+  and `31858578790`; both Socket checks passed, thread-aware review reported
+  zero threads, and implementation PR `#5006` merged as `7cb1499ce`.
+  `RQ-CF-AGENT-010` is defined with retained evidence.
 
 - 2026-08-14: Added a non-executing, exact-session existing-file target
   preflight for the workspace assistant. Product code binds a trusted absolute

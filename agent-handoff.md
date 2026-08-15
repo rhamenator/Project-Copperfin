@@ -1,9 +1,8 @@
 # Agent Handoff
 
-## V1 workspace-agent process target containment candidate
+## V1 workspace-agent process target containment
 
-`RQ-CF-AGENT-010` has a local candidate on
-`agent/v1-workspace-agent-process-containment`. The native controller binds
+`RQ-CF-AGENT-010` is defined at merged commit `7cb1499ce`. The native controller binds
 the exact active session and registered process class to an explicit executable
 and working directory. Workspace mode requires strict relative targets under
 the unchanged physical workspace root; warned unrestricted mode requires
@@ -11,8 +10,11 @@ strict absolute targets with direct leaves. It performs no PATH search, shell
 interpretation, argument or environment handling, sandboxing, or process
 launch, and returns only point-in-time paths and identities. Focused Release
 passes `7/7`; fresh Clang ASan/UBSan passes `4/4` with leak detection;
-community/native-isolation passes `2/2`; and safety passes `1/1`. Protected and
-review evidence are pending.
+community/native-isolation passes `2/2`; and safety passes `1/1`. Exact signed/DCO
+implementation head `4020d70a4` passed all eleven protected checks in runs
+`31858578884`, `31858578779`, `31858578771`, `31858578807`, and
+`31858578790`; both Socket checks passed and thread-aware review reported zero
+threads. No independent final review is claimed.
 Argument/environment policy, launch-adjacent handle/revalidation, executor,
 real sandbox, outcome audit, endpoint policy, provider/OAuth, trusted UI,
 diff, and undo remain explicit gaps.
