@@ -3,7 +3,7 @@
 Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, `RQ-CF-AGENT-004`,
 `RQ-CF-AGENT-005`, `RQ-CF-AGENT-006`, `RQ-CF-AGENT-007`,
-`RQ-CF-AGENT-008`, and `RQ-CF-AGENT-009` in
+`RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, and `RQ-CF-AGENT-010` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -241,6 +241,37 @@ executor must repeat session, registry, target, identity, operation, and
 outcome-audit checks while holding an OS-backed handle beside each side
 effect.
 
+## Process and working-directory target containment preflight
+
+The non-executing process boundary binds one explicit executable and working
+directory to the registered process-tool class and exact active session
+generation. It never searches `PATH`, expands a bare command, invokes a shell,
+accepts arguments or environment values, or launches a process. Provider,
+model, prompt, and workspace content cannot replace the product-owned trusted
+workspace root.
+
+`workspace.run_process.v1` accepts a strict relative executable and either the
+exact `.` spelling for the workspace root or a strict relative working
+directory. Both targets must remain physically contained under the unchanged
+workspace identity. Indirect/reparse and cross-device components, missing or
+wrong-kind targets, POSIX executables without execute permission, and multiply linked
+executables fail closed. `local.run_process.v1` requires the warned
+unrestricted session and explicit strict absolute executable and working-
+directory paths; the executable and directory leaves must be direct, and the
+executable must be a single-link regular launch target. Windows device-path
+and alternate-data-stream spellings are not admitted. Sandbox capability
+denial precedes any local target inspection.
+
+The controller repeats registered-tool and exact-session admission after both
+filesystem inspections. An allowed result carries only canonical executable
+and working-directory paths plus their point-in-time physical identities. It
+does not parse a command, read the executable, construct or inherit an
+environment, grant network access, apply a sandbox, pin either target, or
+launch. A future executor must repeat the complete check immediately beside
+launch, use direct shell-free bounded process invocation with an explicit
+secret-free environment, pin or revalidate platform-backed targets as the OS
+allows, apply the selected sandbox, and audit the actual outcome.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
@@ -271,12 +302,14 @@ provider.
 The same controller now supplies the product-registry-backed session preflight
 described above. The public request cannot supply capability booleans; native
 lookup supplies the complete immutable definition. The controller also
-supplies the existing-file target preflight described above. This closes the
-product-root and point-in-time identity prerequisite for existing file tools
-only; it is not an executor, authorization token, or real sandbox. Prospective
+supplies the existing-file and process-target preflights described above. These
+close product-root and point-in-time identity prerequisites for existing file
+tools and explicit process executable/working-directory targets only; neither
+is an executor, authorization token, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, process/working-directory containment, endpoint policy, and
-tool-outcome auditing remain unimplemented.
+semantics, launch-adjacent handle/revalidation, command/argument/environment
+policy, endpoint policy, process execution, and tool-outcome auditing remain
+unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.

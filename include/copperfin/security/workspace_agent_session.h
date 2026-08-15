@@ -5,6 +5,7 @@
 #pragma once
 
 #include "copperfin/security/workspace_agent_policy.h"
+#include "copperfin/security/workspace_agent_process_containment.h"
 #include "copperfin/security/workspace_agent_target_containment.h"
 #include "copperfin/security/workspace_agent_tool_registry.h"
 
@@ -17,7 +18,7 @@
 namespace copperfin::security {
 
 // Governing requirements: RQ-CF-AGENT-001, RQ-CF-AGENT-005, and
-// RQ-CF-AGENT-007 and RQ-CF-AGENT-009.
+// RQ-CF-AGENT-007, RQ-CF-AGENT-009, and RQ-CF-AGENT-010.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -106,6 +107,26 @@ struct WorkspaceAgentFileTargetPreflightResult {
     std::string diagnostic_code;
 };
 
+struct WorkspaceAgentProcessTargetPreflightRequest {
+    std::uint32_t schema_version = 1U;
+    std::uint64_t session_generation = 0U;
+    std::string tool_id;
+    std::filesystem::path executable_path;
+    std::filesystem::path working_directory;
+};
+
+struct WorkspaceAgentProcessTargetPreflightResult {
+    bool allowed = false;
+    std::uint64_t session_generation = 0U;
+    WorkspaceAgentAccessMode effective_mode = WorkspaceAgentAccessMode::advisory;
+    std::string tool_id;
+    std::filesystem::path canonical_executable_path;
+    PhysicalPathIdentity executable_identity{};
+    std::filesystem::path canonical_working_directory;
+    PhysicalPathIdentity working_directory_identity{};
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -134,6 +155,15 @@ public:
     preflight_file_target_request(
         const WorkspaceAgentFileTargetPreflightRequest& request) const;
 
+    // Process-target inspection is a point-in-time, non-executing preflight.
+    // It performs no PATH search, command parsing, environment construction, or
+    // launch. A future executor must repeat the complete check beside launch,
+    // pin targets with platform-backed handles where possible, apply the real
+    // sandbox, and audit the actual outcome.
+    [[nodiscard]] WorkspaceAgentProcessTargetPreflightResult
+    preflight_process_target_request(
+        const WorkspaceAgentProcessTargetPreflightRequest& request) const;
+
 private:
     enum class Transition {
         idle,
@@ -146,6 +176,7 @@ private:
     std::uint64_t next_generation_ = 1U;
     WorkspaceAgentSessionSnapshot active_session_{};
     std::optional<WorkspaceAgentFileTargetBoundary> file_target_boundary_;
+    std::optional<WorkspaceAgentProcessTargetBoundary> process_target_boundary_;
 };
 
 [[nodiscard]] std::string serialize_workspace_agent_session_audit_event(
