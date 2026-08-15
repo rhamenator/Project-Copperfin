@@ -213,13 +213,6 @@ struct WorkspaceAgentSerializedProcessInvocationPreflightResult {
 
 struct WorkspaceAgentLaunchRevalidationResult {
     bool allowed = false;
-    // On allow, this is a newly generated complete plan rather than the
-    // caller's mutable copy. A launcher must consume it synchronously.
-    WorkspaceAgentSerializedProcessInvocationPreflightResult
-        serialized_invocation{};
-    // Lowercase SHA-256 shared by the physically contained executable
-    // snapshots bracketing the final complete trusted preflight.
-    std::string executable_sha256;
     std::string diagnostic_code;
 };
 
@@ -303,14 +296,11 @@ public:
     preflight_serialized_process_invocation_request(
         const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
 
-    // Revalidates a previously admitted complete plan immediately before a
-    // future controlled launcher consumes the newly returned plan. It repeats
-    // the trusted preflight between equal bounded physical executable
-    // snapshots and requires every material field to equal the caller-held
-    // plan. This
-    // performs no launch and does not close the interval after return; it is
-    // neither a reusable authority token nor a substitute for platform handle
-    // pinning where that is available.
+    // Explicit fail-closed promotion gate. Point-in-time plans cannot become
+    // launch authority until a future executor retains the trusted containment
+    // root, executable and working-directory pins, and a revocation lease
+    // through the launch decision. Version 1 therefore always denies without
+    // returning or reflecting any part of either input.
     [[nodiscard]] WorkspaceAgentLaunchRevalidationResult
     revalidate_serialized_process_invocation_for_launch(
         const WorkspaceAgentProcessInvocationPreflightRequest& request,

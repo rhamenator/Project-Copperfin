@@ -48,17 +48,7 @@ require_text(src/security/workspace_agent_session.cpp
 require_text(include/copperfin/security/workspace_agent_session.h
     "revalidate_serialized_process_invocation_for_launch")
 require_text(src/security/workspace_agent_session.cpp
-    "same_serialized_invocation(preliminary, admitted_plan)")
-require_text(src/security/workspace_agent_session.cpp
-    "read_physically_contained_file_snapshot")
-require_text(src/security/workspace_agent_session.cpp
-    "final_digest.hex_digest != digest.hex_digest")
-require_text(src/security/workspace_agent_session.cpp
-    "const auto final_session = preflight_tool_request")
-require_text(src/security/workspace_agent_session.cpp
-    "workspace_agent.process_launch_revalidation_session_revoked")
-require_text(src/security/workspace_agent_session.cpp
-    "workspace_agent.process_launch_revalidation_stale_invocation")
+    "workspace_agent.process_launch_revalidation_pinning_unavailable")
 require_text(tests/test_workspace_agent_process_parser.cpp "RQ-CF-AGENT-018")
 require_text(tests/test_workspace_agent_isolated_environment.cpp
     "workspace_agent.process_argument_parser_authority_unavailable")

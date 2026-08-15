@@ -1,13 +1,12 @@
-- 2026-08-15: Added candidate `RQ-CF-AGENT-019` portable launch-adjacent plan
-  revalidation. The controller compares a caller-held complete serialized
-  invocation with fresh trusted preflight, brackets the repeated complete
-  preflight with contained executable snapshots, requires equal identities and
-  digests, rechecks exact session/tool authority after hashing, and returns only
-  the newly regenerated plan and final equal digest.
-  Denial exposes
-  no partial plan or digest. This remains non-executing point-in-time evidence;
-  handle pinning, synchronous executor integration, sandbox and endpoint
-  enforcement, descendant control, and outcome audit remain explicit gaps.
+- 2026-08-15: Added candidate `RQ-CF-AGENT-019` as an explicit fail-closed
+  launch-promotion gate. Exact-head review showed that sequential preflight,
+  snapshot, hash, and session checks cannot coherently bind the trusted root,
+  executable, working directory, and revocation state. The earlier allow path
+  was withdrawn. The non-executing gate now denies every input with one
+  content-free diagnostic and returns no plan, digest, or authority. A future
+  allow path requires retained target pins, a revocation lease through launch,
+  executor enforcement, sandbox and endpoint policy, descendant control, and
+  outcome audit.
 
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-018` at exact signed/DCO head `8e2f71551`. All eleven protected

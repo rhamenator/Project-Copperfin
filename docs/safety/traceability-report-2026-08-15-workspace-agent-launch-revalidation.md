@@ -1,9 +1,9 @@
-# Workspace-Agent Launch Revalidation Traceability Report
+# Workspace-Agent Launch Promotion Gate Traceability Report
 
 Date: 2026-08-15
 
-Scope: candidate v1 `RQ-CF-AGENT-019` portable non-executing launch-adjacent
-serialized-plan and executable-snapshot revalidation
+Scope: candidate v1 `RQ-CF-AGENT-019` portable, non-executing, fail-closed
+promotion gate for serialized workspace-agent process plans
 
 Allowed requirement source: explicit repository-owner product policy for a
 useful built-in assistant under H3/I2; derived from `RQ-CF-AGENT-010` through
@@ -11,24 +11,23 @@ useful built-in assistant under H3/I2; derived from `RQ-CF-AGENT-010` through
 
 This report records DO-178C-inspired assurance adapted to a general-purpose
 C++/.NET platform. It claims neither formal compliance nor certification,
-assigned software level, launch readiness, or suitability for a safety-critical
-deployment.
+assigned software level, launch readiness, nor suitability for a
+safety-critical deployment.
 
 ## DQ/DV/HZ mapping
 
 | Derived requirement | Verification requirement | Hazard link |
 | --- | --- | --- |
-| `DQ-workspace-agent-launch-revalidation-001`: compare every material field of the caller-held complete plan with fresh trusted preflight before and after executable inspection | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-launch-revalidation-002`: bracket the final complete preflight with bounded physically contained exact-executable snapshots, require admitted identities and equal lowercase SHA-256 digests, and return only the final equal digest on complete success | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-launch-revalidation-003`: denied, altered, stale, replaced, changed, excessive, or unavailable input returns no plan, digest, path, argument, or environment content | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-002`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-launch-revalidation-005`: recheck the exact active session generation, effective mode, and registered tool after the final potentially long-running snapshot and hash | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-002`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-launch-revalidation-004`: the API remains non-executing and expressly preserves the post-return race, handle-pinning, sandbox, endpoint, descendant, and outcome-audit gaps | `DV-workspace-agent-launch-revalidation-002`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-launch-revalidation-001`: every request to promote a point-in-time serialized plan shall be denied with one stable content-free diagnostic while race-free launch authority is unavailable | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-launch-revalidation-002`: the denial boundary shall not inspect or reflect untrusted request/plan content and shall return no plan, digest, path, argument, environment entry, target identity, or reusable authority | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-launch-revalidation-003`: an allow path shall remain absent until an executor retains a trusted containment root, platform-backed executable and working-directory pins (or equivalent race-free target authority), and a revocation lease through launch, then enforces sandbox, endpoint, descendant, and outcome-audit policy | `DV-workspace-agent-launch-revalidation-002`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-launch-revalidation-004`: the API shall remain non-executing | `DV-workspace-agent-launch-revalidation-002`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-launch-revalidation-001`: focused controller tests prove
-  successful exact-plan/digest binding and rejection of caller-plan alteration.
+  that valid, empty, and altered inputs all receive the same denial and no
+  authority-bearing output.
 - `DV-workspace-agent-launch-revalidation-002`: source and documentation
-  contracts preserve the no-launch, no-token, no-handle-pinning boundary and
-  content-free denial.
+  contracts preserve invariant denial, no input reflection, and no launch.
 - `DV-workspace-agent-launch-revalidation-003`: warning-free Release,
   sanitizer, broader safety/isolation, protected Windows/Ubuntu/macOS, diff,
   and exact-head review evidence are required before implementation evidence is
@@ -36,62 +35,54 @@ deployment.
 
 ## Requirement delta
 
-- Before: a serialized invocation was bracketed internally, but a later
-  launcher had no product API to prove that its caller-held plan still equaled
-  current trusted session, target, environment, and parser state.
-- After: the caller-held plan must exactly equal fresh trusted preflight before
-  and after a bounded physical executable snapshot; success returns a fresh
-  plan and its snapshot digest for immediate future consumption.
+- Before: no explicit product boundary prevented a point-in-time serialized
+  plan from being promoted toward a future launcher despite unresolved
+  multi-object races.
+- After: the public promotion gate invariantly denies every request with
+  `workspace_agent.process_launch_revalidation_pinning_unavailable` and returns
+  no plan, digest, or authority.
 
 Potential Severity If Misused: high
 
 ## Hazard, misuse, boundary, and rollback analysis
 
-- Plan substitution: every nested allow flag, diagnostic, session/mode/tool,
-  canonical target and identity, direct argument, logical environment,
-  serialized native environment/argument representation, platform, and parser
-  contract must match; the caller's mutable plan is never returned as success.
-- Executable mutation: the snapshot is physically contained under the direct
-  parent, bounded to 512 MiB, checked against admitted complete identity, and
-  bracketed by the full workspace/local target preflight. SHA-256 identifies
-  the exact captured bytes returned with the fresh plan. A second snapshot
-  after the final identity-based preflight must have equal identity and digest,
-  preventing restored metadata from pairing an earlier digest with later bytes.
-- Session revocation and target replacement: either complete preflight fails or
-  differs, and denial returns no partial plan or digest. The exact generation,
-  mode, and registered tool are checked again after the final hash so revocation
-  during snapshotting cannot yield an allowed result.
-- Resource exhaustion: the executable snapshot has an explicit 512 MiB cap;
-  existing argument, environment, registry, and parser caps remain in force.
-- Information exposure: all denials contain only stable diagnostic codes. They
-  carry no path, argument, environment, prompt, credential, file bytes, or
-  digest.
-- Race boundary: this API retains no handle and cannot close mutation or
-  revocation after its final checks. A future controlled executor must consume
-  the returned plan synchronously, minimize and account for that interval, bind
-  revocation through launch, and use platform-backed pinning where supported.
-- Non-claims: no process is launched; no sandbox, endpoint control, descendant
-  management, publisher validation, provider authentication, or outcome audit
-  is added.
-- Rollback: remove the result type and controller method and withdraw candidate
-  `RQ-CF-AGENT-019`. Rollback must leave the future executor disconnected rather
-  than treating earlier serialized preflight as launch authority.
+- Executable mutation: review demonstrated that bytes can change after a hash
+  while metadata is restored. Repeating snapshots only moves the final
+  unprotected interval; it does not pin the executable used by launch.
+- Revocation: review demonstrated that a session can be stopped during a
+  potentially long hash. Rechecking afterward still leaves a final interval
+  unless authority is held under a revocation lease through launch.
+- Containment-root substitution: review demonstrated that an executable parent
+  can be renamed outside the workspace and replaced by a symlink. A fresh
+  snapshot rooted at that mutable parent is not the original trusted root.
+- Working-directory replacement: review demonstrated that the working
+  directory can change after its last complete preflight while an executable
+  snapshot is read. Reordering checks cannot provide one coherent target state.
+- Architectural conclusion: sequential point-in-time checks cannot bind the
+  trusted root, executable, working directory, and session as one launch
+  authority. The earlier allow design was withdrawn rather than rationalized.
+- Information exposure: every input receives the same stable diagnostic, with
+  no path, argument, environment, prompt, credential, file bytes, or digest.
+- Non-claims: no process is launched; no target is pinned; no sandbox, endpoint
+  control, descendant management, publisher validation, provider
+  authentication, or outcome audit is added.
+- Rollback: removing the gate must leave the future executor disconnected; it
+  must never make an earlier serialized preflight sufficient for launch.
 
 ## Verification
 
-Completed local evidence:
+Completed local evidence for the fail-closed pivot:
 
-- warning-free GCC Release workspace-agent selection passes `10/10`;
-- focused integrated and source-contract verification passes `2/2`;
-- fresh Clang 21 ASan/UBSan with leak detection passes parser, source contract,
-  and integrated revalidation `3/3`;
-- repository community, generated isolation, and safety gates pass `5/5`,
-  including the 331-second safety traceability scan;
-- native-platform and GitHub Actions workflow contracts pass; and
-- `git diff --check` passes.
+- warning-free GCC Release workspace-agent selection passed `10/10`;
+- focused integrated and source-contract verification passed `2/2`;
+- fresh Clang 21 ASan/UBSan with leak detection passed `3/3`;
+- repository community, generated isolation, and safety gates passed `5/5`,
+  including the fresh 324-second safety traceability scan;
+- native-platform and GitHub Actions workflow contracts passed; and
+- `git diff --check` passed.
 
-Protected Windows, Ubuntu, and macOS evidence, exact-head review, and final
-retained commit identifiers remain pending.
+Protected-platform and exact-head review evidence for the invariant-denial
+head remain required.
 
 The retained risk classification is `high`. No independent final safety
 approval or launch readiness is claimed; requirement status remains `gap`.

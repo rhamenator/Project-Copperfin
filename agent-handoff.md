@@ -1,26 +1,27 @@
 # Agent Handoff
 
-## V1 workspace-agent launch-adjacent plan revalidation
+## V1 workspace-agent fail-closed launch-promotion gate
 
-Candidate `RQ-CF-AGENT-019` has a locally verified implementation on a
-dedicated branch. The native controller now accepts the original invocation
-request and a previously
-admitted complete serialized plan, regenerates and compares every trusted plan
-field, brackets the repeated complete preflight with bounded physically
-contained executable snapshots, requires equal identities and SHA-256 digests,
-rechecks the exact active generation/mode/registered tool after hashing, then
-returns only a new plan and the final equal digest. Altered or denied input
-yields no partial plan or digest.
+Candidate `RQ-CF-AGENT-019` has an explicit fail-closed implementation on a
+dedicated branch. Exact-head review exposed four independent races in the
+earlier point-in-time allow design: restored executable metadata, revocation
+during hashing, containment-root substitution, and working-directory
+replacement. Sequential rechecks cannot bind those objects as one coherent
+launch authority, so the allow path was withdrawn.
 
-This is deliberately non-executing and point-in-time. It does not retain a
-handle, close the interval after return, apply sandbox or endpoint policy,
-manage descendants, or audit an outcome. Those remain prerequisites for the
-future controlled executor. Retained risk is high and no independent final
-safety approval is claimed. Local warning-free Release workspace-agent tests
-pass `10/10`; focused/source-contract verification passes `2/2`; fresh Clang 21
-ASan/UBSan passes `3/3`; community/isolation/safety gates pass `5/5`, including
-the 331-second safety scan; native and GitHub workflow contracts and diff
-validation pass. Protected and exact-head review evidence remain pending.
+The native controller now denies every promotion request with
+`workspace_agent.process_launch_revalidation_pinning_unavailable`, without
+inspecting or reflecting request/plan content and without returning a plan,
+digest, target identity, or authority. It launches nothing. A future allow path
+requires a retained trusted root, platform-backed executable and working-
+directory pins (or equivalent race-free authority), and a revocation lease
+through launch, plus sandbox, endpoint, descendant, and outcome-audit
+enforcement. Retained risk is high and no independent final safety approval is
+claimed. Local warning-free Release workspace-agent tests pass `10/10`;
+focused/source-contract verification passes `2/2`; fresh Clang 21 ASan/UBSan
+passes `3/3`; community/isolation/safety gates pass `5/5`, including the fresh
+324-second safety scan; and diff validation passes. Protected and exact-head
+review evidence remain pending.
 
 ## V1 workspace-agent Windows process-parser authority
 

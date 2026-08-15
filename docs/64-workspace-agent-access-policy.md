@@ -595,37 +595,24 @@ attestation. This boundary does not infer parser behavior from a PE image,
 validate publisher trust, pin a handle beside launch, execute a process, apply
 sandbox or endpoint policy, manage descendants, or record a tool outcome.
 
-## Launch-adjacent plan revalidation
+## Fail-closed launch-promotion gate
 
-Candidate `RQ-CF-AGENT-019` supplies the non-executing revalidation seam a
-future controlled launcher must call immediately before consuming a plan. The
-caller submits both the original invocation request and its previously admitted
-complete serialized plan. The controller regenerates all trusted session,
-registry, target, argument, fixed-environment, native-serialization, and Windows
-parser checks and requires every material field to remain equal. It then reads
-a bounded physically contained snapshot of the exact executable, requires the
-snapshot identity to equal the admitted identity, calculates lowercase SHA-256,
-repeats the complete trusted preflight and equality comparison, then repeats
-the contained snapshot and requires equal identity and digest. The second
-snapshot prevents an identity-only final preflight from pairing an earlier
-digest with later same-size bytes whose timestamp was restored. Because hashing
-can overlap a concurrent stop, the controller finally rechecks the exact active
-generation, effective mode, and registered tool before allowing the result.
+Candidate `RQ-CF-AGENT-019` supplies an explicit non-executing gate between a
+point-in-time serialized plan and any future controlled launcher. In v1 the
+gate invariantly denies every request with the content-free diagnostic
+`workspace_agent.process_launch_revalidation_pinning_unavailable`. It does not
+inspect or reflect the submitted request or plan and returns no plan, digest,
+target identity, or reusable authority.
 
-On success the boundary returns a newly generated plan and the final equal
-snapshot digest;
-it never blesses or returns the caller's mutable copy. Denial returns neither
-plan nor digest and uses content-free diagnostics. Altered, inactive, stale,
-replaced, unreadable, excessive, or changed inputs therefore cannot carry
-earlier point-in-time evidence across this boundary.
-
-This is the revalidation half of the launch-adjacent prerequisite, not a launch
-authority. It starts no process, retains no file handle, applies no sandbox or
-endpoint policy, manages no descendant, and records no outcome. A future
-executor must consume the returned plan synchronously, minimize and account for
-the remaining post-check interval, bind revocation through launch, and use
-platform-backed target pinning where the launch mechanism supports it. Windows
-dependency-closure restrictions from
+Review of the earlier point-in-time allow design exposed independent races in
+executable contents, session revocation, containment-root identity, and working
+directory identity. Adding sequential snapshots or rechecks only moved the
+last unprotected interval. An allow path therefore remains unavailable until a
+future executor retains the original trusted containment root, platform-backed
+pins for both executable and working directory (or equivalent race-free target
+authority), and a revocation lease through launch. That executor must also
+enforce sandbox, endpoint, descendant, and outcome-audit policy. This gate
+starts no process and Windows dependency-closure restrictions from
 `RQ-CF-AGENT-018` continue to apply.
 
 ## Current implementation and remaining work
@@ -666,9 +653,9 @@ host-compatible direct PE image and rechecks its complete physical identity
 after inspection. Candidate `RQ-CF-AGENT-018` additionally requires an exact
 trusted-host executable-identity binding before Windows C-runtime command-line
 serialization; POSIX retains native argv semantics. Candidate
-`RQ-CF-AGENT-019` compares a caller-held complete plan with fresh trusted
-preflight, snapshots and hashes the exact executable, repeats preflight, and
-returns only the newly generated plan on equality. The adjacent
+`RQ-CF-AGENT-019` exposes a fail-closed promotion gate that returns no plan or
+digest and cannot authorize launch while coherent target pins and a revocation
+lease are unavailable. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading

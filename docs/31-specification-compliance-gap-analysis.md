@@ -481,10 +481,12 @@ repeats that authority check after
 serialization; POSIX
 continues to use native argv semantics. This is still non-executing point-in-
 time evidence rather than launch authority. Candidate `RQ-CF-AGENT-019` now
-compares that complete caller-held plan against fresh trusted preflight,
-snapshots and hashes the exact executable, and repeats preflight before
-returning only a new equal plan. It remains point-in-time revalidation rather
-than handle-pinned launch authority.
+provides an explicit fail-closed promotion gate: every submitted point-in-time
+plan is denied without inspection or reflection, and no plan, digest, or
+authority is returned. Review showed that sequential rechecks cannot coherently
+bind the trusted root, executable, working directory, and revocation state.
+An allow path therefore remains unavailable until those targets are pinned and
+a revocation lease is retained through launch.
 Broader model/
 provider policy, OAuth and credential adapters, trusted-host environment-layout
 identity-aware cleanup, launch-adjacent handle pinning and synchronous executor
