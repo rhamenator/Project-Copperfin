@@ -17,6 +17,7 @@
 namespace {
 
 using copperfin::security::WorkspaceAgentProcessArgumentParserContract;
+using copperfin::security::WorkspaceAgentProcessParserDependencyContract;
 using copperfin::security::WorkspaceAgentProcessParserBoundary;
 using copperfin::security::WorkspaceAgentProcessParserConfiguration;
 using copperfin::security::WorkspaceAgentWindowsProcessParserBinding;
@@ -62,6 +63,8 @@ public:
                 .trusted_absolute_executable = root / "bin" / "trusted-tool",
                 .expected_identity = trusted.identity,
                 .expected_sha256 = digest_for(trusted),
+                .dependency_contract = WorkspaceAgentProcessParserDependencyContract::
+                    self_contained_parser_image_v1,
                 .contract = WorkspaceAgentProcessArgumentParserContract::
                     windows_c_runtime_argv_v1}}};
     }
@@ -221,6 +224,20 @@ void test_invalid_configuration_fails_closed() {
         static_cast<WorkspaceAgentProcessArgumentParserContract>(99U);
     expect(!WorkspaceAgentProcessParserBoundary::create(unknown_contract).has_value(),
            "RQ-CF-AGENT-018: unknown parser contracts must fail closed");
+
+    auto missing_dependency_contract = tree.configuration();
+    missing_dependency_contract.windows_bindings.front().dependency_contract =
+        WorkspaceAgentProcessParserDependencyContract::none;
+    expect(!WorkspaceAgentProcessParserBoundary::create(
+                missing_dependency_contract).has_value(),
+           "RQ-CF-AGENT-018: parser authority must require exact-digest trusted product evidence of a self-contained parser image");
+
+    auto unknown_dependency_contract = tree.configuration();
+    unknown_dependency_contract.windows_bindings.front().dependency_contract =
+        static_cast<WorkspaceAgentProcessParserDependencyContract>(99U);
+    expect(!WorkspaceAgentProcessParserBoundary::create(
+                unknown_dependency_contract).has_value(),
+           "RQ-CF-AGENT-018: unknown parser dependency contracts must fail closed");
 
     auto duplicate = tree.configuration();
     duplicate.windows_bindings.push_back(duplicate.windows_bindings.front());

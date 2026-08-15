@@ -19,6 +19,7 @@ a safety-critical deployment.
 | Derived requirement | Verification requirement | Hazard link |
 | --- | --- | --- |
 | `DQ-workspace-agent-process-parser-001`: trusted product-host configuration alone binds one supported Windows parser contract to exact canonical path, a host-supplied expected complete physical identity, and an expected lowercase SHA-256 | `DV-workspace-agent-process-parser-001`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-process-parser-005`: the trusted product record for the exact image digest attests that argument parsing is self-contained from mutable non-system load-time images; adjacent-DLL-dependent parser images remain unsupported until an authenticated dependency-closure and launch-isolation contract exists | `DV-workspace-agent-process-parser-001`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-process-parser-002`: invalid, excessive-count, oversized-image, indirect, multiply linked, duplicate, unknown-contract, missing, wrong-identity, malformed/mismatched-digest, changed-identity, and changed-content authority fails without sensitive reflection | `DV-workspace-agent-process-parser-001`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-process-parser-003`: Windows serialization authorizes before and after the complete serialized invocation preflight and requires equal contracts | `DV-workspace-agent-process-parser-002`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-process-parser-004`: POSIX retains native argv semantics and the boundary launches nothing | `DV-workspace-agent-process-parser-002`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01` |
@@ -55,6 +56,10 @@ Potential Severity If Misused: high
   physically contained snapshot to the host-supplied expected identity and
   SHA-256. Authorization re-hashes another contained snapshot, so equal-sized
   replacement bytes with restored filesystem metadata still fail closed.
+- Dependency substitution: the only supported dependency contract requires
+  trusted product review of the exact digest to establish a self-contained
+  parser image. Images whose parser can depend on mutable adjacent DLLs cannot
+  be configured; authenticating such a closure remains future work.
 - Aliasing and replacement: relative, indirect, multiply linked, duplicate, and
   identity-changed files fail closed. Authorization repeats physical inspection.
 - Race boundary: inspection remains point-in-time. A future executor must pin or
@@ -90,6 +95,10 @@ Current candidate evidence:
 - corrected-head review identified that physical metadata alone does not
   authenticate mutable executable bytes; the candidate now binds and
   revalidates trusted SHA-256 evidence, with direct regression coverage;
+- subsequent exact-head review identified that an adjacent mutable DLL could
+  still influence parsing; configuration now accepts only exact-digest product
+  evidence for a self-contained parser image and rejects every other dependency
+  contract pending authenticated closure support;
 - exact signed/DCO head, protected Windows/Ubuntu/macOS execution, and exact-
   head review remain required before implementation evidence is complete.
 

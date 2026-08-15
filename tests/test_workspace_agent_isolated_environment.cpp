@@ -33,6 +33,7 @@ using copperfin::security::WorkspaceAgentProcessEnvironmentPlatform;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPolicy;
 using copperfin::security::WorkspaceAgentProcessArgumentParserContract;
+using copperfin::security::WorkspaceAgentProcessParserDependencyContract;
 using copperfin::security::WorkspaceAgentProcessParserConfiguration;
 using copperfin::security::WorkspaceAgentProcessInvocationPreflightRequest;
 using copperfin::security::WorkspaceAgentSerializedProcessEnvironmentPreflightResult;
@@ -181,6 +182,8 @@ public:
                     workspace / "bin" / "workspace-tool",
                 .expected_identity = trusted.identity,
                 .expected_sha256 = digest.ok ? digest.hex_digest : std::string{},
+                .dependency_contract = WorkspaceAgentProcessParserDependencyContract::
+                    self_contained_parser_image_v1,
                 .contract = WorkspaceAgentProcessArgumentParserContract::
                     windows_c_runtime_argv_v1}}};
     }

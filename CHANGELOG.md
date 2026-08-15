@@ -3,7 +3,10 @@
   C-runtime parser contract to exact canonical executable path, host-supplied
   expected complete physical identity, and expected lowercase SHA-256. Capture
   and authorization hash physically contained snapshots so mutable same-file
-  bytes cannot borrow metadata-only authority; provider,
+  bytes cannot borrow metadata-only authority. The exact-digest trusted product
+  record must also attest a self-contained parser image; executables whose
+  parser depends on mutable adjacent DLLs remain denied pending a future
+  authenticated dependency-closure and launch-isolation contract. Provider,
   model, prompt, workspace, and tool-request data cannot select it. Windows
   serialized invocation preflight authorizes before and after serialization and
   the complete repeated environment/target check, while POSIX retains native

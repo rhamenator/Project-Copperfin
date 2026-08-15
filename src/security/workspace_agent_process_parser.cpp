@@ -29,6 +29,12 @@ bool supported_contract(
         WorkspaceAgentProcessArgumentParserContract::windows_c_runtime_argv_v1;
 }
 
+bool supported_dependency_contract(
+    const WorkspaceAgentProcessParserDependencyContract contract) noexcept {
+    return contract == WorkspaceAgentProcessParserDependencyContract::
+        self_contained_parser_image_v1;
+}
+
 bool valid_sha256(const std::string_view digest) noexcept {
     return digest.size() == 64U &&
         std::all_of(digest.begin(), digest.end(), [](const char character) {
@@ -60,6 +66,7 @@ std::optional<CapturedExecutable> capture_binding(
     const WorkspaceAgentWindowsProcessParserBinding& binding) {
     const auto& path = binding.trusted_absolute_executable;
     if (!supported_contract(binding.contract) ||
+        !supported_dependency_contract(binding.dependency_contract) ||
         !valid_sha256(binding.expected_sha256) || path.empty() ||
         path_has_embedded_nul(path) || !path.is_absolute() ||
         path.parent_path().empty()) {

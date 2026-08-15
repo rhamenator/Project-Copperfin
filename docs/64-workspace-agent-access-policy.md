@@ -568,11 +568,20 @@ expectations rather than trusting whichever mutable file is present during
 construction. Provider, model, prompt, workspace, and tool-request input cannot
 create or select this authority.
 
+The same trusted product record must attest
+`self_contained_parser_image_v1` for that exact digest: argument parsing may not
+depend on mutable non-system load-time images. This slice intentionally rejects
+executables whose parser behavior depends on adjacent DLLs; a later dependency-
+closure contract must authenticate and launch-isolate every such image before
+those executables can receive parser authority. The attestation is a product
+configuration obligation established through review of the exact digest, not an
+inference from PE structure.
+
 Configuration is versioned, nonempty, bounded to sixty-four singly linked
 regular files and 512 MiB per executable snapshot, and rejects relative paths,
 duplicate canonical paths or physical
 identities, unsupported parser contracts, invalid identities, and malformed or
-mismatched digests. Authorization requires the exact configured canonical path,
+mismatched digests or dependency contracts. Authorization requires the exact configured canonical path,
 complete physical identity, and authenticated bytes; initial capture must equal
 the host-supplied identity and digest. Authorization then reinspects and hashes
 a fresh physically contained snapshot. Missing, invalid, stale, changed-content,

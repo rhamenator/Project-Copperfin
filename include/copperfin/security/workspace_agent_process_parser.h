@@ -29,6 +29,14 @@ enum class WorkspaceAgentProcessArgumentParserContract : std::uint32_t {
     windows_c_runtime_argv_v1 = 2U
 };
 
+enum class WorkspaceAgentProcessParserDependencyContract : std::uint32_t {
+    none = 0U,
+    // Trusted product evidence for this exact image digest establishes that
+    // argument parsing does not depend on mutable non-system load-time images.
+    // General adjacent-DLL dependency closures are not supported by this slice.
+    self_contained_parser_image_v1 = 1U
+};
+
 struct WorkspaceAgentWindowsProcessParserBinding {
     std::filesystem::path trusted_absolute_executable;
     // Must be supplied by the trusted host from its product-owned executable
@@ -38,6 +46,8 @@ struct WorkspaceAgentWindowsProcessParserBinding {
     // Lowercase SHA-256 of the trusted product image. Physical identity alone
     // does not authenticate bytes in a mutable file object.
     std::string expected_sha256;
+    WorkspaceAgentProcessParserDependencyContract dependency_contract =
+        WorkspaceAgentProcessParserDependencyContract::none;
     WorkspaceAgentProcessArgumentParserContract contract =
         WorkspaceAgentProcessArgumentParserContract::windows_c_runtime_argv_v1;
 };
