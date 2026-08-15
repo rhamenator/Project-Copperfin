@@ -2,7 +2,7 @@
 
 Date: 2026-08-15
 
-Scope: candidate v1 `RQ-CF-AGENT-013` native POSIX and Windows process-
+Scope: defined v1 `RQ-CF-AGENT-013` native POSIX and Windows process-
 environment serialization
 
 Allowed requirement source: explicit repository-owner product policy under
@@ -111,7 +111,12 @@ Current local evidence:
 - generated native-test isolation inventory covers `377` tests;
 - safety traceability workflow contract: `1/1` pass;
 - `git diff --check` passes;
-- protected exact-head Windows, Ubuntu, and macOS evidence pending.
+- signed/DCO exact implementation head `b5129e08a` passed all eleven protected
+  checks: contributor sign-off `31870916071`, Win32/x64 DECLARE
+  `31870917594`, Windows/Ubuntu/macOS generated launcher `31870917602`,
+  Clang/GCC executable paths `31870917599`, Windows environment/executable
+  paths `31870917583`, and both Socket checks. PR `#5015` merged into
+  `v1-development` as `94c705e6a`.
 
 ## Review evidence
 
@@ -121,8 +126,9 @@ Current local evidence:
 - verification: parent independence, target semantics, UTF conversion,
   termination, bounds/overflow, denial clearing, exact-plan rebinding,
   non-execution boundary, rollback, and traceability
-- result: candidate local focused verification passed; protected and review
-  evidence pending
+- result: local focused verification, all eleven protected exact-head checks,
+  and exact-head automated review passed; both actionable review threads were
+  corrected, answered, and resolved before merge
 
 Automated exact-head review found that the initial candidate incorrectly
 treated the ANSI `CreateProcess` 32,767-character environment limit as a
@@ -134,3 +140,6 @@ and both focused Release and sanitizer selections pass after the correction.
 The corrected caller-cap calculation also includes the distinct final Windows
 block terminator after every per-entry terminator; a direct policy-cap
 regression fixes the Windows and POSIX formulas and rejects an invalid platform.
+Automated review of final exact head `b5129e08a` reported no further issue.
+This is maintainer/self-review evidence and does not claim independent safety
+approval or formal certification.
