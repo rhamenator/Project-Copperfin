@@ -111,6 +111,8 @@ bool satisfies_tool_requirements(
 WorkspaceAgentSessionController::WorkspaceAgentSessionController(
     const std::filesystem::path& trusted_absolute_workspace_root)
     : file_target_boundary_(WorkspaceAgentFileTargetBoundary::create(
+          trusted_absolute_workspace_root)),
+      process_target_boundary_(WorkspaceAgentProcessTargetBoundary::create(
           trusted_absolute_workspace_root)) {}
 
 WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
@@ -355,6 +357,85 @@ WorkspaceAgentSessionController::preflight_file_target_request(
     result.canonical_path = std::move(inspection.canonical_path);
     result.identity = inspection.identity;
     result.diagnostic_code = "workspace_agent.target_request_allowed";
+    return result;
+}
+
+WorkspaceAgentProcessTargetPreflightResult
+WorkspaceAgentSessionController::preflight_process_target_request(
+    const WorkspaceAgentProcessTargetPreflightRequest& request) const {
+    WorkspaceAgentProcessTargetPreflightResult result;
+    const WorkspaceAgentToolPreflightRequest tool_request{
+        .schema_version = request.schema_version,
+        .session_generation = request.session_generation,
+        .tool_id = request.tool_id};
+    const auto preliminary = preflight_tool_request(tool_request);
+    if (!preliminary.allowed) {
+        result.diagnostic_code = preliminary.diagnostic_code;
+        return result;
+    }
+
+    result.session_generation = preliminary.session_generation;
+    result.effective_mode = preliminary.effective_mode;
+    result.tool_id = preliminary.tool_id;
+    const WorkspaceAgentToolDefinition* definition =
+        find_workspace_agent_product_tool(preliminary.tool_id);
+    if (definition == nullptr) {
+        result.diagnostic_code = "workspace_agent.tool_not_registered";
+        return result;
+    }
+
+    WorkspaceAgentProcessTargetInspection inspection;
+    switch (definition->target_kind) {
+        case WorkspaceAgentToolTargetKind::workspace_process:
+            if (!process_target_boundary_.has_value()) {
+                result.diagnostic_code =
+                    "workspace_agent.process_workspace_root_not_configured";
+                return result;
+            }
+            inspection = process_target_boundary_->inspect_workspace_process(
+                request.executable_path, request.working_directory);
+            break;
+        case WorkspaceAgentToolTargetKind::local_process:
+            if (!process_target_boundary_.has_value()) {
+                result.diagnostic_code =
+                    "workspace_agent.process_workspace_root_not_configured";
+                return result;
+            }
+            inspection = process_target_boundary_->inspect_local_process(
+                request.executable_path, request.working_directory);
+            break;
+        case WorkspaceAgentToolTargetKind::workspace_file:
+        case WorkspaceAgentToolTargetKind::local_file:
+        case WorkspaceAgentToolTargetKind::network_endpoint:
+            result.diagnostic_code = "workspace_agent.target_not_process_tool";
+            return result;
+    }
+    if (!inspection.allowed) {
+        result.diagnostic_code = inspection.diagnostic_code;
+        return result;
+    }
+
+    // Recheck after both filesystem inspections. This closes only the
+    // point-in-time preflight interval; the executor must repeat beside launch.
+    const auto final_preflight = preflight_tool_request(tool_request);
+    if (!final_preflight.allowed ||
+        final_preflight.session_generation != preliminary.session_generation ||
+        final_preflight.tool_id != preliminary.tool_id) {
+        result = {};
+        result.diagnostic_code = final_preflight.allowed
+            ? "workspace_agent.tool_stale_session"
+            : final_preflight.diagnostic_code;
+        return result;
+    }
+
+    result.allowed = true;
+    result.canonical_executable_path =
+        std::move(inspection.canonical_executable_path);
+    result.executable_identity = inspection.executable_identity;
+    result.canonical_working_directory =
+        std::move(inspection.canonical_working_directory);
+    result.working_directory_identity = inspection.working_directory_identity;
+    result.diagnostic_code = "workspace_agent.process_target_request_allowed";
     return result;
 }
 

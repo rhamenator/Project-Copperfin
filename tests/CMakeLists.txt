@@ -5152,6 +5152,10 @@ copperfin_add_test(test_workspace_agent_target_containment cf_security
     test_workspace_agent_target_containment.cpp
 )
 
+copperfin_add_test(test_workspace_agent_process_containment cf_security
+    test_workspace_agent_process_containment.cpp
+)
+
 copperfin_add_test(test_workspace_agent_audit_sink cf_security
     test_workspace_agent_audit_sink.cpp
 )

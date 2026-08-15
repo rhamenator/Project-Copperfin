@@ -12,7 +12,7 @@
 namespace copperfin::security {
 
 // Governing requirements: RQ-CF-AGENT-007, RQ-CF-AGENT-008, and
-// RQ-CF-AGENT-009.
+// RQ-CF-AGENT-009 and RQ-CF-AGENT-010.
 
 // Reuse the policy capability shape so registered requirements cannot acquire
 // a parallel vocabulary that drifts from the admitted session snapshot.

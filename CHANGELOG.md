@@ -1,3 +1,19 @@
+- 2026-08-14: Added a non-executing, exact-session process-target preflight for
+  the workspace assistant. It binds the registered workspace/local process
+  class to one explicit executable and working directory without PATH search,
+  shell interpretation, arguments, environment construction, or launch.
+  Workspace targets must be strict relative paths physically contained under
+  the unchanged product-owned workspace root; warned unrestricted-local
+  targets must be strict absolute paths with direct leaves. Missing,
+  indirect/reparse, cross-device workspace, wrong-kind, POSIX non-executable,
+  and multiply linked executable targets fail closed, as do indirect working
+  directories, wrong tool classes, denied capabilities, stale sessions, and
+  Windows device/alternate-stream spellings. The controller repeats
+  session/tool admission after both inspections. Results are point-in-time
+  identities, not authority. Argument/environment policy, launch-adjacent
+  handle/revalidation, executor, real sandbox, outcome audit, endpoint policy,
+  provider/OAuth, trusted activation UI, diff, and undo remain gaps.
+
 - 2026-08-14: Added a non-executing, exact-session existing-file target
   preflight for the workspace assistant. Product code binds a trusted absolute
   workspace root to physical identity, and each registered tool now carries a

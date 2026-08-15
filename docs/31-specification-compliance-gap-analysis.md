@@ -460,10 +460,13 @@ unrestricted local-agent modes, exact capabilities, nondefault high-risk RBAC,
 localized warning identity, and fail-closed activation decisions. Provider
 authentication cannot grant local authority. A non-executing native session
 controller now binds one admitted capability snapshot to a committed,
-content-free audit receipt and revokes authority before stop auditing. Broader
-model/provider policy, OAuth and credential adapters, a mutable executor and
-real sandbox, persistent audit integration, and user-facing assistant/dialog
-surfaces remain open.
+content-free audit receipt and revokes authority before stop auditing. Native
+preflights now bind registered existing-file targets and explicit process
+executable/working-directory pairs to exact active sessions without file I/O,
+PATH lookup, shell interpretation, or launch. Broader model/provider policy,
+OAuth and credential adapters, command/argument/environment and endpoint
+policy, a mutable executor and real sandbox, outcome audit, and user-facing
+assistant/dialog surfaces remain open.
 
 ### docs/21 — Database Federation And Query Translation
 
@@ -542,7 +545,7 @@ excluded from the compliance map above:
 | 12 | VFP Asset Editing And Execution | Partial | xAsset execution is first-pass, bounded by language-surface coverage |
 | 13 | Index Format Notes | Partial | No index write fidelity; collation hints are heuristic, not named |
 | 18 | Native Security And RBAC | Partial (real baseline) | Not yet verified against docs/04's fuller vision |
-| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, Native AOT C# leaf, admitted Python/R sidecar leaves, advisory measured-route strategy, versioned benchmark evidence, and a bounded read-only MCP DBF-header host) | No general CLR/Python/R runtime surface or broader model/provider and mutable MCP tooling |
+| 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, Native AOT C# leaf, admitted Python/R sidecar leaves, advisory measured-route strategy, versioned benchmark evidence, bounded read-only MCP DBF-header host, and non-executing agent file/process target preflights) | No general CLR/Python/R runtime surface or broader model/provider and mutable MCP tooling |
 | 20 | Runtime Build And Debug Pipeline | Partial | Engine is PRG-first, not the full command surface |
 | 21 | Database Federation And Query Translation | Partial (real seed) | No live connector execution behind the translator/planner |
 | 22 | VFP Language Reference Coverage | Partial, measured | 1,411 documented items; official surface exceeds current runtime |

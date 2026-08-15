@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 workspace-agent process target containment candidate
+
+`RQ-CF-AGENT-010` has a local candidate on
+`agent/v1-workspace-agent-process-containment`. The native controller binds
+the exact active session and registered process class to an explicit executable
+and working directory. Workspace mode requires strict relative targets under
+the unchanged physical workspace root; warned unrestricted mode requires
+strict absolute targets with direct leaves. It performs no PATH search, shell
+interpretation, argument or environment handling, sandboxing, or process
+launch, and returns only point-in-time paths and identities. Focused Release
+passes `7/7`; fresh Clang ASan/UBSan passes `4/4` with leak detection;
+community/native-isolation passes `2/2`; and safety passes `1/1`. Protected and
+review evidence are pending.
+Argument/environment policy, launch-adjacent handle/revalidation, executor,
+real sandbox, outcome audit, endpoint policy, provider/OAuth, trusted UI,
+diff, and undo remain explicit gaps.
+
 ## V1 workspace-agent existing-file target containment
 
 `RQ-CF-AGENT-009` is defined at merged commit `6f26a9f85`. Product code binds one trusted
@@ -18,8 +35,8 @@ checks in runs `31855574532`, `31855575850`, `31855575836`, `31855575835`,
 and `31855575859`. The sole review thread found the same-identity symlink-back
 root-replacement gap; the tested head rejects and directly regresses that case,
 and the thread is resolved. File creation, handle-pinned
-I/O/mutation, delete/rename, process and
-endpoint containment, executor, outcome audit, real sandbox, provider/OAuth,
+I/O/mutation, delete/rename, launch-adjacent process target
+pinning/revalidation, endpoint containment, executor, outcome audit, real sandbox, provider/OAuth,
 trusted activation UI, diff, and undo remain explicit gaps.
 
 ## V1 workspace-agent product tool registry
