@@ -300,6 +300,17 @@ void test_workspace_root_replacement_fails_closed() {
     }
     const std::filesystem::path moved = tree.root.string() + "-moved";
     std::filesystem::rename(tree.workspace, moved);
+    std::error_code symlink_error;
+    std::filesystem::create_directory_symlink(
+        moved, tree.workspace, symlink_error);
+    if (!symlink_error) {
+        const auto redirected = boundary->inspect_workspace_file("inside.prg");
+        expect(!redirected.allowed &&
+                   redirected.diagnostic_code ==
+                       "workspace_agent.target_root_identity_changed",
+               "RQ-CF-AGENT-009: redirecting the configured root pathname back to the same identity must fail closed");
+        std::filesystem::remove(tree.workspace);
+    }
     std::filesystem::create_directories(tree.workspace);
     TempTree::write(tree.workspace / "inside.prg", "replacement\n");
     const auto replaced = boundary->inspect_workspace_file("inside.prg");

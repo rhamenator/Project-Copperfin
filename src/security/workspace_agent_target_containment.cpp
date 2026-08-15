@@ -7,6 +7,13 @@
 #include <system_error>
 #include <utility>
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
+#include <sys/stat.h>
+#endif
+
 namespace copperfin::security {
 namespace {
 
@@ -45,6 +52,19 @@ bool strict_absolute_file_path(const std::filesystem::path& path) {
     return !path.empty() && !path_has_embedded_nul(path) &&
         path.is_absolute() && !path_has_dot_component(path) &&
         !path.filename().empty();
+}
+
+bool path_is_direct_directory(const std::filesystem::path& path) {
+#if defined(_WIN32)
+    const DWORD attributes = ::GetFileAttributesW(path.c_str());
+    return attributes != INVALID_FILE_ATTRIBUTES &&
+        (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0U &&
+        (attributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0U;
+#else
+    struct stat status{};
+    return ::lstat(path.c_str(), &status) == 0 && S_ISDIR(status.st_mode) &&
+        !S_ISLNK(status.st_mode);
+#endif
 }
 
 std::string diagnostic_for_failure(PhysicalPathContainmentFailure failure) {
@@ -111,7 +131,8 @@ WorkspaceAgentFileTargetBoundary::create(
     if (trusted_absolute_workspace_root.empty() ||
         path_has_embedded_nul(trusted_absolute_workspace_root) ||
         !trusted_absolute_workspace_root.is_absolute() ||
-        path_has_dot_component(trusted_absolute_workspace_root)) {
+        path_has_dot_component(trusted_absolute_workspace_root) ||
+        !path_is_direct_directory(trusted_absolute_workspace_root)) {
         return std::nullopt;
     }
     const auto containment = inspect_physical_path_containment(
@@ -132,6 +153,9 @@ WorkspaceAgentFileTargetBoundary::create(
 }
 
 bool WorkspaceAgentFileTargetBoundary::workspace_root_identity_matches() const {
+    if (!path_is_direct_directory(canonical_workspace_root_)) {
+        return false;
+    }
     const auto current = inspect_physical_path_containment(
         canonical_workspace_root_, canonical_workspace_root_);
     return current.allowed &&

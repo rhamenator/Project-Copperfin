@@ -35,7 +35,8 @@ Mapped architecture, code, and tests:
   workspace and unrestricted-local existing files plus invalid roots, absolute
   versus relative path confusion, dot/traversal and embedded-NUL forms,
   missing/directory targets, symlink indirection where supported, hard links
-  where supported, and workspace-root identity replacement.
+  where supported, workspace-root identity replacement, and replacement of the
+  configured root pathname by a symlink back to the original identity.
 - `DV-workspace-agent-target-002`: focused controller regression covers
   inactive, unconfigured, sandbox, unrestricted, stale, stopped, insufficient-
   capability, and wrong-target-class behavior without denied-path reflection.

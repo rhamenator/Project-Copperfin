@@ -215,6 +215,8 @@ constructs the controller with one trusted absolute workspace root; provider,
 model, prompt, and workspace content cannot select or replace that root. The
 boundary canonicalizes the root once, retains its physical storage/file
 identity, and checks that identity before and after each workspace inspection.
+The stored root pathname itself must remain a direct directory; replacing it
+with a symlink/reparse path back to the same physical directory still fails.
 
 `workspace.inspect.v1` and `workspace.apply_edit.v1` accept only strict
 relative paths without root syntax, `.`/`..`, trailing empty leaves, or

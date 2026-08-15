@@ -7,7 +7,8 @@
   indirection/reparse, cross-device workspace components, missing/nonregular
   files, hard links, root replacement, wrong tool classes, insufficient
   capabilities, and stale/stopped sessions fail closed without reflecting a
-  canonical path. The controller repeats session/tool admission after
+  canonical path. Replacing the configured root pathname with a symlink back
+  to the same physical directory also fails. The controller repeats session/tool admission after
   inspection. This reads no file content and creates, modifies, deletes, or
   reserves no file; it returns no authority token. Prospective-file and handle-pinned
   mutation semantics, process/endpoint containment, executor, outcome audit,
