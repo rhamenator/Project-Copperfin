@@ -18,8 +18,8 @@ safety-critical deployment.
 
 | Derived requirement | Verification requirement | Hazard link |
 | --- | --- | --- |
-| `DQ-workspace-agent-layout-cleanup-001`: successful preparation shall return the complete physical identity of the exact new session directory and all five fixed children; failed or incomplete preparation shall return no cleanup receipt | `DV-workspace-agent-layout-cleanup-001`; `DV-workspace-agent-layout-cleanup-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-layout-cleanup-002`: cleanup shall require a successful receipt, the unchanged trusted storage root, and exact full identity matches for the session directory and every child before the first mutation | `DV-workspace-agent-layout-cleanup-001`; `DV-workspace-agent-layout-cleanup-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-layout-cleanup-001`: successful preparation shall return an opaque receipt that privately carries the complete physical identity of the exact new session directory and all five fixed children and is bound to the boundary instance that created it; failed or incomplete preparation shall return no cleanup receipt | `DV-workspace-agent-layout-cleanup-001`; `DV-workspace-agent-layout-cleanup-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-layout-cleanup-002`: cleanup shall require a successful, non-forgeable, same-boundary receipt, the unchanged trusted storage root, and exact full identity matches for the session directory and every child before the first mutation | `DV-workspace-agent-layout-cleanup-001`; `DV-workspace-agent-layout-cleanup-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-layout-cleanup-003`: cleanup shall remove only the five exact empty private child directories in reverse order and then their exact empty session root; it shall never recurse, remove content, adopt an existing generation, or derive authority from a generation number alone | `DV-workspace-agent-layout-cleanup-001`; `DV-workspace-agent-layout-cleanup-002` | `HZ-data-corruption-01` |
 | `DQ-workspace-agent-layout-cleanup-004`: denial and outcome diagnostics shall be stable and content-free, and the primitive shall not be invoked automatically by session start or stop | `DV-workspace-agent-layout-cleanup-002`; `DV-workspace-agent-layout-cleanup-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-layout-cleanup-005`: lifecycle integration shall remain unavailable until the trusted host durably retains the receipt, records cleanup intent and outcome, supports retry after partial cleanup, and defines retention for owned nonempty content | `DV-workspace-agent-layout-cleanup-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
@@ -27,9 +27,10 @@ safety-critical deployment.
 - `DV-workspace-agent-layout-cleanup-001`: platform tests prove exact empty
   removal and preservation on parent mismatch, target mismatch, ambiguity, and
   nonempty content.
-- `DV-workspace-agent-layout-cleanup-002`: environment tests compare the
-  returned receipt with independently observed full identities, prove complete
-  cleanup, and preserve occupied or replaced layouts.
+- `DV-workspace-agent-layout-cleanup-002`: compile-time and environment tests
+  prove cleanup identities are not public, public status fields cannot forge a
+  receipt, receipts cannot cross boundary instances, exact receipts clean the
+  intended layout, and occupied or replaced layouts remain preserved.
 - `DV-workspace-agent-layout-cleanup-003`: source contracts, broader
   safety/isolation tests, sanitizer execution, protected Windows/Ubuntu/macOS
   matrices, exact-head review, and retained results are required before
@@ -39,9 +40,10 @@ safety-critical deployment.
 
 - Before: preparation returned only a generation number, so later trusted-host
   cleanup had no exact object receipt and remained wholly unimplemented.
-- After: successful preparation returns the exact session and child identities,
-  and a separate explicit primitive can remove only that same empty layout.
-  The session controller does not call it.
+- After: successful preparation returns an opaque, boundary-bound receipt whose
+  private payload carries the exact session and child identities. A separate
+  explicit primitive can remove only that same empty layout. The session
+  controller does not call it.
 
 Potential Severity If Misused: high
 
@@ -50,9 +52,11 @@ Potential Severity If Misused: high
 - Data preservation: an added file changes the containing directory identity
   and fails preflight. Even if content appears after preflight, the platform
   empty-directory operation fails without traversing or deleting content.
-- Replacement: the trusted storage root, session, and every child must match
-  the receipt before mutation. A generation number or current path alone is
-  never cleanup authority.
+- Forgery and replacement: cleanup-authorizing identities and the boundary
+  authority token are private. Public status fields, a generation number,
+  observed filesystem metadata, or a receipt from another boundary instance
+  cannot authorize cleanup. The trusted storage root, session, and every child
+  must still match the opaque receipt before mutation.
 - Windows boundary: the parent is held without delete sharing, the target is
   opened with delete authority and reparse-point semantics, and deletion is
   requested against the verified target handle.
@@ -87,8 +91,17 @@ Current local focused evidence:
 - fresh Clang 21 ASan/UBSan with leak detection passes the platform,
   environment, and session selection `3/3`; and
 - the repository-wide safety-traceability workflow contract passes `1/1` in
-  322.33 seconds; and
+  326.07 seconds after the receipt correction; and
 - `git diff --check` passes.
+
+Exact-head automated review of `49884b726` found that the original public
+identity fields were forgeable. The corrected opaque receipt, same-boundary
+authority check, compile-time non-exposure assertions, forged-status test, and
+cross-boundary test address that P2. Initial protected execution passed ten of
+eleven required checks; Windows generated-launcher run `31906276882` passed the
+generated launcher and 32 other tests but failed an unrelated existing Python
+sidecar assertion before reaching the private workspace-agent step. Corrected-
+head rerun evidence remains required.
 
 Protected cross-platform execution, exact-head review, and merge evidence
 remain pending. Requirement status is therefore `gap`; no lifecycle cleanup or

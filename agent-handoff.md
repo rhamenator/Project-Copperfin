@@ -4,8 +4,10 @@
 
 Candidate `RQ-CF-AGENT-020` adds an explicit trusted-host cleanup primitive
 without wiring deletion into session lifecycle. Successful layout preparation
-now returns the complete physical identities of the session root and all five
-fixed children. Cleanup requires that receipt, an unchanged trusted storage
+now returns an opaque, boundary-bound receipt whose private payload contains
+the complete physical identities of the session root and all five fixed
+children. Public status fields, observed metadata, and a receipt from another
+boundary instance cannot forge cleanup authority. Cleanup requires that receipt, an unchanged trusted storage
 root, and exact full identity matches for every directory before mutation. It
 removes the five exact empty children in reverse order and then their exact
 empty root; it never enumerates, traverses, or removes content and cannot use a
@@ -21,8 +23,12 @@ lifecycle integration remain gaps. Local warning-free Release targets and the
 focused platform/source/environment/session selection pass `4/4`; the broader
 workspace-agent/host/community/isolation/workflow selection passes `17/17`;
 fresh Clang 21 ASan/UBSan passes `3/3`; and the repository-wide safety scan
-passes `1/1` in 322.33 seconds. Protected cross-platform, exact-head review,
-and merge evidence remain pending. No
+passes `1/1` in 326.07 seconds after the receipt correction. Exact-head review
+of `49884b726` found and drove the opaque-receipt correction. Initial protected
+execution passed `10/11`; Windows run `31906276882` passed the generated
+launcher and 32 other tests but failed an unrelated existing Python-sidecar
+assertion before the private workspace-agent step. Corrected-head protected
+execution, review, and merge evidence remain pending. No
 executor, sandbox, endpoint, launch, or lifecycle-cleanup readiness is claimed.
 
 ## V1 workspace-agent fail-closed launch-promotion gate

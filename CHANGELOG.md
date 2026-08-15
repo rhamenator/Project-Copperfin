@@ -1,6 +1,8 @@
 - 2026-08-15: Added candidate `RQ-CF-AGENT-020` identity-receipted empty
-  workspace-agent layout cleanup. Successful preparation now returns the exact
-  full identities of the session root and five fixed children; the explicit
+  workspace-agent layout cleanup. Successful preparation now returns an
+  opaque, boundary-bound receipt carrying the exact full identities of the
+  session root and five fixed children; public status fields and observed
+  metadata cannot forge it. The explicit
   trusted-host primitive revalidates every identity and removes only those
   empty directories, never content. Automatic lifecycle use remains disabled
   pending durable receipt recovery, cleanup intent/outcome audit, partial-

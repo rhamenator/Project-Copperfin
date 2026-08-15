@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -100,13 +101,25 @@ struct WorkspaceAgentIsolatedEnvironmentConstruction {
     std::string diagnostic_code;
 };
 
-struct WorkspaceAgentSessionLayoutPreparationResult {
+class WorkspaceAgentSessionLayoutPreparationResult {
+public:
     bool prepared = false;
     std::uint64_t session_generation = 0U;
-    PhysicalPathIdentity session_directory_identity{};
-    std::array<PhysicalPathIdentity, workspace_agent_session_layout_child_count>
-        child_directory_identities{};
     std::string diagnostic_code;
+
+private:
+    struct CleanupReceipt {
+        std::uint64_t session_generation = 0U;
+        PhysicalPathIdentity session_directory_identity{};
+        std::array<PhysicalPathIdentity,
+            workspace_agent_session_layout_child_count>
+            child_directory_identities{};
+        std::shared_ptr<const std::uint8_t> boundary_authority;
+    };
+
+    std::shared_ptr<const CleanupReceipt> cleanup_receipt_;
+
+    friend class WorkspaceAgentIsolatedEnvironmentBoundary;
 };
 
 struct WorkspaceAgentSessionLayoutCleanupResult {
@@ -152,6 +165,7 @@ private:
     PhysicalPathContainmentResult session_storage_root_;
     std::vector<PhysicalPathContainmentResult> executable_directories_;
     std::optional<PhysicalPathContainmentResult> windows_system_root_;
+    std::shared_ptr<const std::uint8_t> cleanup_authority_;
 };
 
 }  // namespace copperfin::security

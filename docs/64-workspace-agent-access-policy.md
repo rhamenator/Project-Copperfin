@@ -412,10 +412,13 @@ operation against that session identity, so a replacement path cannot receive
 the child-creation side effects on POSIX and fails the pre-create identity gate
 on Windows.
 
-Candidate `RQ-CF-AGENT-020` extends successful preparation with an in-memory
-receipt containing the complete physical identity of the session root and all
-five fixed children. A separate explicit trusted-host method accepts only that
-receipt, revalidates the private configured storage root, and requires the full
+Candidate `RQ-CF-AGENT-020` extends successful preparation with an opaque,
+in-memory, boundary-bound receipt whose private payload contains the complete
+physical identity of the session root and all five fixed children. Public
+status fields and observable filesystem metadata cannot construct or alter
+cleanup authority, and a receipt from a separate boundary instance is denied.
+A separate explicit trusted-host method accepts only that receipt, revalidates
+the private configured storage root, and requires the full
 identity of every layout directory to match before it removes anything. It then
 requests removal of the exact empty children in reverse order and finally the
 exact empty session root. A generation number by itself is not cleanup

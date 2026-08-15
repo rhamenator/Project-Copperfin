@@ -354,7 +354,8 @@ WorkspaceAgentIsolatedEnvironmentBoundary::WorkspaceAgentIsolatedEnvironmentBoun
     std::optional<PhysicalPathContainmentResult> windows_system_root)
     : session_storage_root_(std::move(session_storage_root)),
       executable_directories_(std::move(executable_directories)),
-      windows_system_root_(std::move(windows_system_root)) {}
+      windows_system_root_(std::move(windows_system_root)),
+      cleanup_authority_(std::make_shared<const std::uint8_t>(0U)) {}
 
 std::optional<WorkspaceAgentIsolatedEnvironmentBoundary>
 WorkspaceAgentIsolatedEnvironmentBoundary::create(
@@ -534,8 +535,14 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
 
     result.prepared = true;
     result.session_generation = session_generation;
-    result.session_directory_identity = final_session->identity;
-    result.child_directory_identities = child_identities;
+    result.cleanup_receipt_ =
+        std::make_shared<const
+            WorkspaceAgentSessionLayoutPreparationResult::CleanupReceipt>(
+            WorkspaceAgentSessionLayoutPreparationResult::CleanupReceipt{
+                .session_generation = session_generation,
+                .session_directory_identity = final_session->identity,
+                .child_directory_identities = child_identities,
+                .boundary_authority = cleanup_authority_});
     result.diagnostic_code =
         "workspace_agent.environment_session_layout_prepared";
     return result;
@@ -546,7 +553,10 @@ WorkspaceAgentIsolatedEnvironmentBoundary::cleanup_empty_session_layout(
     const WorkspaceAgentSessionLayoutPreparationResult& preparation) const {
     WorkspaceAgentSessionLayoutCleanupResult result;
     result.session_generation = preparation.session_generation;
-    if (!preparation.prepared || preparation.session_generation == 0U) {
+    const auto receipt = preparation.cleanup_receipt_;
+    if (!preparation.prepared || preparation.session_generation == 0U ||
+        !receipt || receipt->session_generation != preparation.session_generation ||
+        receipt->boundary_authority != cleanup_authority_) {
         result.diagnostic_code =
             "workspace_agent.environment_session_layout_cleanup_invalid_receipt";
         return result;
@@ -568,7 +578,7 @@ WorkspaceAgentIsolatedEnvironmentBoundary::cleanup_empty_session_layout(
     const auto captured_session = capture_contained_directory(
         session_root, session_storage_root_);
     if (!captured_session.has_value() ||
-        captured_session->identity != preparation.session_directory_identity) {
+        captured_session->identity != receipt->session_directory_identity) {
         result.diagnostic_code =
             "workspace_agent.environment_session_layout_cleanup_identity_changed";
         return result;
@@ -580,7 +590,7 @@ WorkspaceAgentIsolatedEnvironmentBoundary::cleanup_empty_session_layout(
             session_storage_root_);
         if (!captured_child.has_value() ||
             captured_child->identity !=
-                preparation.child_directory_identities[index]) {
+                receipt->child_directory_identities[index]) {
             result.diagnostic_code =
                 "workspace_agent.environment_session_layout_cleanup_identity_changed";
             return result;
@@ -588,12 +598,12 @@ WorkspaceAgentIsolatedEnvironmentBoundary::cleanup_empty_session_layout(
     }
 
     for (std::size_t index = session_layout_child_names.size(); index-- > 0U;) {
-        const auto& identity = preparation.child_directory_identities[index];
+        const auto& identity = receipt->child_directory_identities[index];
         const auto removed =
             copperfin::platform::remove_empty_private_directory_in_verified_parent(
                 session_root,
-                preparation.session_directory_identity.storage_id,
-                preparation.session_directory_identity.file_id,
+                receipt->session_directory_identity.storage_id,
+                receipt->session_directory_identity.file_id,
                 std::filesystem::path(session_layout_child_names[index]),
                 identity.storage_id,
                 identity.file_id);
@@ -611,8 +621,8 @@ WorkspaceAgentIsolatedEnvironmentBoundary::cleanup_empty_session_layout(
             session_storage_root_.identity.storage_id,
             session_storage_root_.identity.file_id,
             std::filesystem::path(session_name),
-            preparation.session_directory_identity.storage_id,
-            preparation.session_directory_identity.file_id);
+            receipt->session_directory_identity.storage_id,
+            receipt->session_directory_identity.file_id);
     if (!removed_session.ok) {
         result.diagnostic_code =
             removed_session.failure ==

@@ -55,10 +55,26 @@ concept HasEnvironmentEntriesInput = requires(T value) {
     value.environment_entries;
 };
 
+template <typename T>
+concept HasPublicSessionDirectoryIdentity = requires(T value) {
+    value.session_directory_identity;
+};
+
+template <typename T>
+concept HasPublicChildDirectoryIdentities = requires(T value) {
+    value.child_directory_identities;
+};
+
 static_assert(
     !HasEnvironmentInput<WorkspaceAgentProcessInvocationPreflightRequest> &&
         !HasEnvironmentEntriesInput<WorkspaceAgentProcessInvocationPreflightRequest>,
     "RQ-CF-AGENT-012: tool requests must not supply environment names or values");
+static_assert(
+    !HasPublicSessionDirectoryIdentity<
+        copperfin::security::WorkspaceAgentSessionLayoutPreparationResult> &&
+        !HasPublicChildDirectoryIdentities<
+            copperfin::security::WorkspaceAgentSessionLayoutPreparationResult>,
+    "RQ-CF-AGENT-020: cleanup-authorizing identities must remain opaque");
 
 int failures = 0;
 std::filesystem::path running_test_executable;
@@ -692,23 +708,20 @@ void test_identity_bound_empty_layout_cleanup() {
         return;
     }
     const auto prepared = boundary->prepare_session_layout(1U);
-    const auto session_path = tree.session_storage / "session-1";
-    const auto observed_session =
-        copperfin::security::inspect_physical_path_containment(
-            session_path, tree.session_storage);
-    bool receipt_complete = prepared.prepared && observed_session.allowed &&
-        observed_session.identity == prepared.session_directory_identity;
-    constexpr std::array<std::string_view, 5U> child_names{
-        "home", "temp", "config", "cache", "data"};
-    for (std::size_t index = 0U; index < child_names.size(); ++index) {
-        const auto observed_child =
-            copperfin::security::inspect_physical_path_containment(
-                session_path / child_names[index], tree.session_storage);
-        receipt_complete = receipt_complete && observed_child.allowed &&
-            observed_child.identity == prepared.child_directory_identities[index];
+    expect(prepared.prepared && prepared.session_generation == 1U,
+           "RQ-CF-AGENT-020: successful preparation must return an opaque cleanup receipt");
+    const auto other_boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(tree.configuration());
+    expect(other_boundary.has_value(),
+           "RQ-CF-AGENT-020: cross-boundary fixture must capture the same trusted root");
+    if (other_boundary.has_value()) {
+        const auto denied =
+            other_boundary->cleanup_empty_session_layout(prepared);
+        expect(!denied.cleaned && denied.diagnostic_code ==
+                   "workspace_agent.environment_session_layout_cleanup_invalid_receipt" &&
+                   std::filesystem::exists(tree.session_storage / "session-1"),
+               "RQ-CF-AGENT-020: an opaque receipt must remain bound to the boundary that prepared it");
     }
-    expect(receipt_complete,
-           "RQ-CF-AGENT-020: successful preparation must return exact session and child identities");
     const auto cleaned = boundary->cleanup_empty_session_layout(prepared);
     expect(cleaned.cleaned && cleaned.session_generation == 1U &&
                cleaned.diagnostic_code ==
@@ -720,6 +733,25 @@ void test_identity_bound_empty_layout_cleanup() {
     expect(!invalid.cleaned && invalid.diagnostic_code ==
                "workspace_agent.environment_session_layout_cleanup_invalid_receipt",
            "RQ-CF-AGENT-020: generation numbers without a complete preparation receipt must not authorize cleanup");
+
+    TempTree forged_tree(true);
+    const auto forged_boundary =
+        WorkspaceAgentIsolatedEnvironmentBoundary::create(
+            forged_tree.configuration());
+    expect(forged_boundary.has_value(),
+           "RQ-CF-AGENT-020: forged-receipt fixture must create its boundary");
+    if (forged_boundary.has_value()) {
+        copperfin::security::WorkspaceAgentSessionLayoutPreparationResult forged;
+        forged.prepared = true;
+        forged.session_generation = 1U;
+        const auto denied =
+            forged_boundary->cleanup_empty_session_layout(forged);
+        expect(!denied.cleaned && denied.diagnostic_code ==
+                   "workspace_agent.environment_session_layout_cleanup_invalid_receipt" &&
+                   std::filesystem::exists(
+                       forged_tree.session_storage / "session-1" / "data"),
+               "RQ-CF-AGENT-020: public status fields must not forge cleanup authority for a pre-existing layout");
+    }
 
     TempTree occupied_tree(false);
     const auto occupied_boundary =
