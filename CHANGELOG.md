@@ -13,6 +13,12 @@
   reserves no file; it returns no authority token. Prospective-file and handle-pinned
   mutation semantics, process/endpoint containment, executor, outcome audit,
   sandbox, provider/OAuth, activation UI, diff, and undo remain gaps.
+  Exact signed/DCO implementation head `8fb49a834` passes all eleven
+  protected checks in runs `31855574532`, `31855575850`, `31855575836`,
+  `31855575835`, and `31855575859`. The one review thread identified the
+  indirect same-identity root-replacement case; that case is corrected,
+  directly regressed, and the thread is resolved. `RQ-CF-AGENT-009` is
+  defined with retained evidence.
 
 - 2026-08-14: Replaced caller-declared workspace-agent preflight capabilities
   with an immutable product-owned tool registry. The versioned public request
