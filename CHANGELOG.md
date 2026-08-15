@@ -1,3 +1,15 @@
+- 2026-08-15: Completed implementation evidence for candidate
+  `RQ-CF-AGENT-020` at exact signed/DCO head `4069ee487`. All eleven protected
+  checks passed in runs `31909056203`, `31909057274`, `31909057284`,
+  `31909057285`, and `31909057287`; exact-head automated review found no major
+  issue after two real P2 authority-provenance findings were corrected, both
+  threads are resolved, and PR `#5030` merged into `v1-development` as
+  `d33facaea`. The docs-only evidence update passes its five licensing,
+  community, isolation, supply-chain, and safety contracts, including the
+  327.62-second safety scan. The requirement remains a `gap` solely for structured sign-off
+  from a second qualified human reviewer because its documentation severity is
+  high; automatic lifecycle cleanup remains unavailable.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-020` identity-receipted empty
   workspace-agent layout cleanup. Successful preparation now returns an
   opaque, boundary-bound receipt carrying the exact full identities of the

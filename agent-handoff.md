@@ -29,9 +29,17 @@ found and drove two corrections: opaque receipts after `49884b726`, then a
 non-copyable boundary after `aca08bb2c` exposed copied authority. Initial protected
 execution passed `10/11`; Windows run `31906276882` passed the generated
 launcher and 32 other tests but failed an unrelated existing Python-sidecar
-assertion before the private workspace-agent step. Corrected-head protected
-execution, review, and merge evidence remain pending. No
-executor, sandbox, endpoint, launch, or lifecycle-cleanup readiness is claimed.
+assertion before the private workspace-agent step. Final exact signed/DCO head
+`4069ee487` then passed all eleven protected checks in runs `31909056203`,
+`31909057274`, `31909057284`, `31909057285`, and `31909057287`; exact-head
+automated review found no major issue after both P2 threads were corrected and
+resolved; and PR `#5030` merged as `d33facaea`. Implementation evidence is
+complete. The docs-only evidence update passes the licensing, community,
+isolation, supply-chain, and safety contracts `5/5`, including the 327.62-second
+safety scan. Requirement status remains a `gap` solely for structured sign-off by
+a second qualified human reviewer because the documentation severity is high.
+No executor, sandbox, endpoint, launch, or lifecycle-cleanup readiness is
+claimed.
 
 ## V1 workspace-agent fail-closed launch-promotion gate
 
