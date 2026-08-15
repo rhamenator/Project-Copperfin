@@ -9,16 +9,19 @@
 #include "copperfin/security/workspace_agent_target_containment.h"
 #include "copperfin/security/workspace_agent_tool_registry.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <mutex>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace copperfin::security {
 
 // Governing requirements: RQ-CF-AGENT-001, RQ-CF-AGENT-005, and
-// RQ-CF-AGENT-007, RQ-CF-AGENT-009, and RQ-CF-AGENT-010.
+// RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
+// RQ-CF-AGENT-011.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -127,6 +130,47 @@ struct WorkspaceAgentProcessTargetPreflightResult {
     std::string diagnostic_code;
 };
 
+inline constexpr std::size_t workspace_agent_process_max_argument_count = 64U;
+inline constexpr std::size_t workspace_agent_process_max_argument_bytes = 4096U;
+inline constexpr std::size_t workspace_agent_process_max_total_argument_bytes =
+    8192U;
+
+enum class WorkspaceAgentProcessEnvironmentPolicy : std::uint32_t {
+    isolated_session_v1 = 1U
+};
+
+[[nodiscard]] constexpr bool workspace_agent_process_environment_inherits_parent(
+    WorkspaceAgentProcessEnvironmentPolicy) noexcept {
+    return false;
+}
+
+// Arguments exclude argv[0], which a future executor must derive from the
+// revalidated canonical executable. They are direct argument elements, not a
+// command line or shell fragment. No caller-selected environment is accepted.
+struct WorkspaceAgentProcessInvocationPreflightRequest {
+    std::uint32_t schema_version = 1U;
+    std::uint64_t session_generation = 0U;
+    std::string tool_id;
+    std::filesystem::path executable_path;
+    std::filesystem::path working_directory;
+    std::vector<std::string> arguments;
+};
+
+struct WorkspaceAgentProcessInvocationPreflightResult {
+    bool allowed = false;
+    std::uint64_t session_generation = 0U;
+    WorkspaceAgentAccessMode effective_mode = WorkspaceAgentAccessMode::advisory;
+    std::string tool_id;
+    std::filesystem::path canonical_executable_path;
+    PhysicalPathIdentity executable_identity{};
+    std::filesystem::path canonical_working_directory;
+    PhysicalPathIdentity working_directory_identity{};
+    std::vector<std::string> arguments;
+    WorkspaceAgentProcessEnvironmentPolicy environment_policy =
+        WorkspaceAgentProcessEnvironmentPolicy::isolated_session_v1;
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -163,6 +207,14 @@ public:
     [[nodiscard]] WorkspaceAgentProcessTargetPreflightResult
     preflight_process_target_request(
         const WorkspaceAgentProcessTargetPreflightRequest& request) const;
+
+    // Invocation preflight adds only a bounded direct argument vector and a
+    // mandatory non-inheriting environment profile to the process-target
+    // result. It does not serialize a platform command line, construct an
+    // environment, apply a sandbox, read an executable, or start a process.
+    [[nodiscard]] WorkspaceAgentProcessInvocationPreflightResult
+    preflight_process_invocation_request(
+        const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
 
 private:
     enum class Transition {

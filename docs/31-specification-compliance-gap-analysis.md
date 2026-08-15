@@ -463,10 +463,13 @@ controller now binds one admitted capability snapshot to a committed,
 content-free audit receipt and revokes authority before stop auditing. Native
 preflights now bind registered existing-file targets and explicit process
 executable/working-directory pairs to exact active sessions without file I/O,
-PATH lookup, shell interpretation, or launch. Broader model/provider policy,
-OAuth and credential adapters, command/argument/environment and endpoint
-policy, a mutable executor and real sandbox, outcome audit, and user-facing
-assistant/dialog surfaces remain open.
+PATH lookup, shell interpretation, or launch. A further non-executing preflight
+binds a bounded direct UTF-8 argument vector and non-inheriting isolated-session
+environment-policy selector to that exact target/session result. Broader model/
+provider policy, OAuth and credential adapters, actual isolated-environment
+construction, platform argument serialization, endpoint policy, a mutable
+executor and real sandbox, outcome audit, and user-facing assistant/dialog
+surfaces remain open.
 
 ### docs/21 — Database Federation And Query Translation
 

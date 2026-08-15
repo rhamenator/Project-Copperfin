@@ -1,5 +1,28 @@
 # Agent Handoff
 
+## V1 workspace-agent process invocation shape
+
+`RQ-CF-AGENT-011` is an implementation candidate on the dedicated
+`agent/v1-workspace-agent-process-invocation-contract` branch. The new
+non-executing preflight binds the exact registered process tool, active session,
+contained executable/working directory, and at most 64 direct UTF-8 argument
+elements (4,096 bytes each, 8,192 aggregate). It accepts no command string,
+shell, PATH search, or caller-selected environment; empty, spaced, wildcard,
+and shell-metacharacter arguments stay literal. Malformed UTF-8, embedded NUL,
+and all bound violations fail without reflecting targets or arguments. An allow
+requires the versioned non-inheriting `isolated_session_v1` environment policy,
+copies the bounded vector before a final session/tool recheck, and remains a
+point-in-time plan rather than authority. Warning-free GCC Release security,
+policy, session, registry, file/process-target, invocation, and audit-sink
+selection passes `8/8`; fresh Clang ASan/UBSan passes `5/5` with leak
+detection; community/native-isolation passes `2/2`; safety passes `1/1`; and
+diff passes. Protected exact-head and thread-aware review evidence remain
+pending.
+Environment construction, platform serialization/limits, executable-format
+compatibility, launch-adjacent pin/revalidation, executor, real sandbox,
+endpoint policy, outcome audit, provider/OAuth, trusted UI, diff, and undo
+remain explicit gaps.
+
 ## V1 workspace-agent process target containment
 
 `RQ-CF-AGENT-010` is defined, with its latest correction merged as
@@ -21,9 +44,11 @@ corrected head structurally rejects and directly regresses all forms; the sole
 thread is resolved and outdated. Implementation PR `#5006` merged as
 `7cb1499ce`; correction PR `#5008` merged as `53c51c433`. No independent final
 review is claimed.
-Argument/environment policy, launch-adjacent handle/revalidation, executor,
-real sandbox, outcome audit, endpoint policy, provider/OAuth, trusted UI,
-diff, and undo remain explicit gaps.
+`RQ-CF-AGENT-011` now supplies the bounded direct-argument and non-inheriting
+environment-policy shape. Isolated-environment construction, platform
+serialization/limits, launch-adjacent handle/revalidation, executor, real
+sandbox, outcome audit, endpoint policy, provider/OAuth, trusted UI, diff, and
+undo remain explicit gaps.
 
 ## V1 workspace-agent existing-file target containment
 

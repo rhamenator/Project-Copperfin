@@ -1,3 +1,20 @@
+- 2026-08-14: Added a versioned non-executing workspace-agent process
+  invocation-shape preflight. It binds the exact registered process tool,
+  active session, physically contained executable/working directory, and a
+  direct argument vector without accepting command text, a shell, PATH search,
+  or caller-selected environment. Version 1 allows at most 64 literal UTF-8
+  arguments, 4,096 bytes each and 8,192 bytes in aggregate; malformed UTF-8,
+  embedded NUL, and count/size violations fail without reflecting argument or
+  target content. Allowed results require the machine-readable non-inheriting
+  `isolated_session_v1` environment policy and are point-in-time plans, not
+  launch authority. Environment construction, platform serialization and
+  command limits, executable-format compatibility, launch-adjacent target
+  pinning/revalidation, sandbox and endpoint enforcement, execution, outcome
+  audit, provider/OAuth, activation UI, diff, and undo remain explicit gaps.
+  Local warning-free Release verification passes the focused `8/8` selection,
+  fresh Clang ASan/UBSan passes `5/5`, and community/isolation passes `2/2`;
+  safety passes `1/1`. Protected exact-head evidence remains pending.
+
 - 2026-08-14: Added a non-executing, exact-session process-target preflight for
   the workspace assistant. It binds the registered workspace/local process
   class to one explicit executable and working directory without PATH search,

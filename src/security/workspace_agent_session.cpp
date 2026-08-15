@@ -106,6 +106,76 @@ bool satisfies_tool_requirements(
         (!requirements.elevate_privileges || capabilities.elevate_privileges);
 }
 
+bool valid_utf8(std::string_view value) noexcept {
+    std::size_t offset = 0U;
+    while (offset < value.size()) {
+        const auto lead = static_cast<unsigned char>(value[offset]);
+        std::size_t continuation_count = 0U;
+        std::uint32_t scalar = 0U;
+        if (lead <= 0x7fU) {
+            ++offset;
+            continue;
+        }
+        if (lead >= 0xc2U && lead <= 0xdfU) {
+            continuation_count = 1U;
+            scalar = lead & 0x1fU;
+        } else if (lead >= 0xe0U && lead <= 0xefU) {
+            continuation_count = 2U;
+            scalar = lead & 0x0fU;
+        } else if (lead >= 0xf0U && lead <= 0xf4U) {
+            continuation_count = 3U;
+            scalar = lead & 0x07U;
+        } else {
+            return false;
+        }
+        if (continuation_count > value.size() - offset - 1U) {
+            return false;
+        }
+        for (std::size_t index = 1U; index <= continuation_count; ++index) {
+            const auto continuation =
+                static_cast<unsigned char>(value[offset + index]);
+            if ((continuation & 0xc0U) != 0x80U) {
+                return false;
+            }
+            scalar = (scalar << 6U) | (continuation & 0x3fU);
+        }
+        if ((continuation_count == 1U && scalar < 0x80U) ||
+            (continuation_count == 2U && scalar < 0x800U) ||
+            (continuation_count == 3U && scalar < 0x10000U) ||
+            scalar > 0x10ffffU ||
+            (scalar >= 0xd800U && scalar <= 0xdfffU)) {
+            return false;
+        }
+        offset += continuation_count + 1U;
+    }
+    return true;
+}
+
+std::string process_arguments_diagnostic(
+    const std::vector<std::string>& arguments) {
+    if (arguments.size() > workspace_agent_process_max_argument_count) {
+        return "workspace_agent.process_argument_count_exceeded";
+    }
+    std::size_t total_bytes = 0U;
+    for (const auto& argument : arguments) {
+        if (argument.size() > workspace_agent_process_max_argument_bytes) {
+            return "workspace_agent.process_argument_size_exceeded";
+        }
+        if (argument.find('\0') != std::string::npos) {
+            return "workspace_agent.process_argument_embedded_nul";
+        }
+        if (!valid_utf8(argument)) {
+            return "workspace_agent.process_argument_invalid_utf8";
+        }
+        if (argument.size() >
+            workspace_agent_process_max_total_argument_bytes - total_bytes) {
+            return "workspace_agent.process_argument_total_size_exceeded";
+        }
+        total_bytes += argument.size();
+    }
+    return {};
+}
+
 }  // namespace
 
 WorkspaceAgentSessionController::WorkspaceAgentSessionController(
@@ -436,6 +506,59 @@ WorkspaceAgentSessionController::preflight_process_target_request(
         std::move(inspection.canonical_working_directory);
     result.working_directory_identity = inspection.working_directory_identity;
     result.diagnostic_code = "workspace_agent.process_target_request_allowed";
+    return result;
+}
+
+WorkspaceAgentProcessInvocationPreflightResult
+WorkspaceAgentSessionController::preflight_process_invocation_request(
+    const WorkspaceAgentProcessInvocationPreflightRequest& request) const {
+    WorkspaceAgentProcessInvocationPreflightResult result;
+    const WorkspaceAgentProcessTargetPreflightRequest target_request{
+        .schema_version = request.schema_version,
+        .session_generation = request.session_generation,
+        .tool_id = request.tool_id,
+        .executable_path = request.executable_path,
+        .working_directory = request.working_directory};
+    const auto target = preflight_process_target_request(target_request);
+    if (!target.allowed) {
+        result.diagnostic_code = target.diagnostic_code;
+        return result;
+    }
+
+    result.diagnostic_code = process_arguments_diagnostic(request.arguments);
+    if (!result.diagnostic_code.empty()) {
+        return result;
+    }
+    std::vector<std::string> validated_arguments = request.arguments;
+
+    // Recheck after bounded argument validation and copying. This result is
+    // still point-in-time only; an executor must repeat every check beside
+    // direct launch and independently enforce the platform serialization cap.
+    const WorkspaceAgentToolPreflightRequest tool_request{
+        .schema_version = request.schema_version,
+        .session_generation = request.session_generation,
+        .tool_id = request.tool_id};
+    const auto final_preflight = preflight_tool_request(tool_request);
+    if (!final_preflight.allowed ||
+        final_preflight.session_generation != target.session_generation ||
+        final_preflight.tool_id != target.tool_id) {
+        result = {};
+        result.diagnostic_code = final_preflight.allowed
+            ? "workspace_agent.tool_stale_session"
+            : final_preflight.diagnostic_code;
+        return result;
+    }
+
+    result.allowed = true;
+    result.session_generation = target.session_generation;
+    result.effective_mode = target.effective_mode;
+    result.tool_id = target.tool_id;
+    result.canonical_executable_path = target.canonical_executable_path;
+    result.executable_identity = target.executable_identity;
+    result.canonical_working_directory = target.canonical_working_directory;
+    result.working_directory_identity = target.working_directory_identity;
+    result.arguments = std::move(validated_arguments);
+    result.diagnostic_code = "workspace_agent.process_invocation_request_allowed";
     return result;
 }
 
