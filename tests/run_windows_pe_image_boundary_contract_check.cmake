@@ -45,6 +45,8 @@ require_text(tests/test_windows_pe_image.cpp
     "WindowsPeReadSharing::allow_write_sharing")
 require_text(tests/test_workspace_agent_process_containment.cpp
     "workspace_agent.process_executable_image_invalid")
+require_text(tests/test_workspace_agent_isolated_environment.cpp
+    "Windows PE fixture copy failed")
 require_text(.github/workflows/windows-environment-validation.yml
     "test_windows_pe_image test_workspace_agent_process_containment")
 
