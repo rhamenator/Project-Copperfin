@@ -11,6 +11,12 @@ product policy, `RQ-CF-AGENT-001`, `RQ-CF-AGENT-007`, `RQ-CF-AGENT-008`,
 data-corruption hazards. Existing Copperfin code is not used as its requirement
 source.
 
+Follow-on status: this report remains the exact-head evidence for
+`RQ-CF-AGENT-011`. The later `RQ-CF-AGENT-012` boundary implements fixed-key
+logical environment construction; its distinct evidence and remaining secure-
+layout/platform-serialization gaps are recorded in
+`traceability-report-2026-08-15-workspace-agent-isolated-environment.md`.
+
 Mapped architecture, code, and tests:
 
 - `docs/64-workspace-agent-access-policy.md`

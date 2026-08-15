@@ -3,7 +3,8 @@
 Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-002`, `RQ-CF-AGENT-003`, `RQ-CF-AGENT-004`,
 `RQ-CF-AGENT-005`, `RQ-CF-AGENT-006`, `RQ-CF-AGENT-007`,
-`RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, and `RQ-CF-AGENT-010` in
+`RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`,
+`RQ-CF-AGENT-011`, and `RQ-CF-AGENT-012` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -294,21 +295,67 @@ field.
 
 An allowed result names the machine-readable
 `isolated_session_v1` environment policy, whose policy query reports parent-
-environment inheritance as false. That policy requires a future executor to
-construct a fresh session-owned environment from product-controlled inputs:
+environment inheritance as false. That policy requires a fresh session-owned
+environment constructed from product-controlled inputs:
 no provider/OAuth token, credential, parent variable, prompt content, or
 workspace-supplied environment entry may enter that environment. Provider
 credentials must remain in the provider adapter and must never be converted to
 process arguments. The preflight does not inspect or classify arbitrary
-argument content, so an allow does not certify that arguments are secret-free. Exact
-platform entries, approved executable directories, session-owned temporary and
-home locations, locale, and cleanup are executor responsibilities and must be
-versioned and tested before launch is connected. The executor must also repeat
+argument content, so an allow does not certify that arguments are secret-free.
+The adjacent isolated-environment boundary now supplies the fixed platform
+entries, approved executable-directory list, session-owned profile and
+temporary locations, and deterministic locale/time-zone values described
+below. Secure layout creation, access control, and cleanup remain trusted-host
+responsibilities. The executor must also repeat
 target and session checks, encode each argument directly for the platform API,
 enforce the platform's smaller serialized-command limit if applicable, apply
 the real sandbox and endpoint policy, and audit only content-free outcome
 metadata. This preflight does not construct that environment, serialize a
 command line, read an executable, start a process, or claim execution safety.
+
+## Isolated process-environment construction preflight
+
+`RQ-CF-AGENT-012` adds a concrete logical environment to the same exact
+invocation request without adding any request field for environment names or
+values. Product code creates the boundary from a versioned trusted-host
+configuration: one absolute session-storage root, between one and sixteen
+absolute approved executable directories, and, on Windows only, one explicit
+system root. Provider, model, prompt, workspace content, and tool arguments
+cannot supply or extend those values. The boundary never reads the parent
+environment.
+
+For generation `N`, the trusted host must pre-create and access-control
+`session-N` beneath the configured storage root with direct `home`, `temp`,
+`config`, `cache`, and `data` directories. The boundary physically contains
+and identifies that fixed layout, rejects symlink/reparse and cross-device
+components, and checks the configured storage, executable, and Windows system
+directory identities before and after construction. Missing, replaced,
+indirect, malformed, path-delimiter-ambiguous, invalidly encoded, excessive,
+or wrong-platform inputs fail without returning invocation targets, arguments,
+paths, or environment entries. Session directory names use locale-independent
+unsigned decimal generation values.
+
+The POSIX version emits only `HOME`, `LANG=C`, `LC_ALL=C`, `PATH`, `TMPDIR`,
+`TZ=UTC`, and the three `XDG_*_HOME` entries. The Windows version emits only
+`APPDATA`, `HOME`, `LOCALAPPDATA`, `PATH`, `SystemRoot`, `TEMP`, `TMP`,
+`TZ=UTC`, `USERPROFILE`, and `WINDIR`. `PATH` contains only the configured
+directories, in configured order; the Windows system root is not implicitly
+added. Entries are valid UTF-8, deterministically ordered for their platform,
+bounded to 4,096 bytes per `name=value` entry and 32,768 bytes in aggregate,
+and contain neither NUL nor caller-defined names. Common credential variables
+therefore cannot enter by inheritance. This structural exclusion does not
+inspect or certify path text as nonsensitive.
+
+The controller performs the complete invocation preflight, constructs the
+environment for that exact generation and policy, and performs the invocation
+preflight again before returning a point-in-time plan. It still creates or
+deletes no directory, serializes no POSIX `envp` or Windows environment block,
+starts no process, applies no sandbox or endpoint policy, injects no provider
+credential, and records no tool outcome. The future executor must securely
+create and clean the session layout, repeat all identity/admission checks beside
+launch, serialize the fixed entries losslessly, enforce platform limits,
+pin/revalidate launch targets, apply containment, and audit content-free
+outcomes.
 
 ## Current implementation and remaining work
 
@@ -344,11 +391,14 @@ supplies the existing-file and process-target preflights described above. These
 close product-root and point-in-time identity prerequisites for existing file
 tools and explicit process executable/working-directory targets. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
-non-inheriting environment-policy selector; none of these results is an
-executor, authorization token, environment implementation, or real sandbox. Prospective
+non-inheriting environment-policy selector. The adjacent trusted-host boundary
+constructs the fixed-key, generation-owned logical environment without reading
+ambient variables. None of these results is an executor, authorization token,
+serialized platform environment, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
 semantics, launch-adjacent handle/revalidation, isolated environment
-construction, platform argument serialization, endpoint policy, process
+layout creation/cleanup and access-control integration, platform environment
+and argument serialization, endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration

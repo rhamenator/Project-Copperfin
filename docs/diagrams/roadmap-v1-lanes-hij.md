@@ -25,14 +25,14 @@ flowchart TB
         direction LR
         H1["H1 Deterministic Relational<br/>Backend Translators<br/>root #30 - SEEDED:<br/>see docs/21, cf_platform_profile"]
         H2["H2 Document/Vector Backend<br/>+ AI-Assisted Planning<br/>root #31"]
-        H3["H3 .NET Outputs, MCP/AI<br/>Hooks, Python/R Sidecars<br/>root #32 - SEEDED:<br/>Native AOT + Python/R leaves,<br/>read-only MCP + agent preflights"]
+        H3["H3 .NET Outputs, MCP/AI<br/>Hooks, Python/R Sidecars<br/>root #32 - SEEDED:<br/>Native AOT + Python/R leaves,<br/>read-only MCP + agent plans"]
         H1 --> H2 --> H3
       end
 
       subgraph LANEI["Lane I - root #113 'Modernization/outputs/interop/security' (shared root with H)"]
         direction LR
         I1["I1 Runtime/Project Security<br/>Depth + Opt-In Generated-<br/>App Controls<br/>root #33 - SEEDED: cf_security baseline"]
-        I2["I2 Extension/Host/AI-MCP<br/>Security Boundary<br/>root #34 - SEEDED:<br/>agent RBAC/modes/target +<br/>invocation-shape containment"]
+        I2["I2 Extension/Host/AI-MCP<br/>Security Boundary<br/>root #34 - SEEDED:<br/>agent RBAC/targets/arguments +<br/>isolated environment"]
         I1 --> I2
       end
 
@@ -72,7 +72,8 @@ flowchart TB
 Native AOT leaf, admitted Python and R sidecar leaves, one bounded read-only MCP
 DBF-header host, a provider-independent workspace-agent authority policy plus
 non-executing file/process target containment and a bounded direct-argument,
-non-inheriting invocation-shape preflight,
+non-inheriting invocation-shape preflight plus fixed-key generation-owned
+logical environment construction,
 advisory measured-route strategy, and versioned representative benchmark
 evidence; `I1` has a security baseline and `I2` now has dedicated agent RBAC,
 capability modes, and a localized unrestricted warning gate. These real seeds are
@@ -98,8 +99,9 @@ while Windows version-resource APIs and the POSIX PE-resource fallback remain
 private to that base layer.
 The read-only connector retains Windows/POSIX SQLite selection privately;
 public Copperfin headers reject host-selection and native SQLite API tokens.
-`H3`/`I2` still lack model/provider and OAuth adapters, mutable execution and
-sandbox enforcement, host UI, and audit commit integration. **What's left, and what it
+`H3`/`I2` still lack model/provider and OAuth adapters, secure environment-
+layout lifecycle and platform serialization, mutable execution and sandbox
+enforcement, host UI, and tool-outcome audit integration. **What's left, and what it
 takes:** this is
 covered in full, document-by-document, in
 [31-specification-compliance-gap-analysis.md](../31-specification-compliance-gap-analysis.md) —
