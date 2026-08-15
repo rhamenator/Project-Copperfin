@@ -8,7 +8,8 @@
   indirect/reparse, cross-device workspace, wrong-kind, POSIX non-executable,
   and multiply linked executable targets fail closed, as do indirect working
   directories, wrong tool classes, denied capabilities, stale sessions, and
-  Windows device/alternate-stream spellings. The controller repeats
+  Windows device, alternate-stream, and UNC remote-share spellings. UNC
+  execution remains unavailable until endpoint containment is implemented. The controller repeats
   session/tool admission after both inspections. Results are point-in-time
   identities, not authority. Argument/environment policy, launch-adjacent
   handle/revalidation, executor, real sandbox, outcome audit, endpoint policy,

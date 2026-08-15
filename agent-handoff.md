@@ -8,7 +8,8 @@ and working directory. Workspace mode requires strict relative targets under
 the unchanged physical workspace root; warned unrestricted mode requires
 strict absolute targets with direct leaves. It performs no PATH search, shell
 interpretation, argument or environment handling, sandboxing, or process
-launch, and returns only point-in-time paths and identities. Focused Release
+launch, rejects Windows UNC remote-share targets while endpoint containment is
+unimplemented, and returns only point-in-time paths and identities. Focused Release
 passes `7/7`; fresh Clang ASan/UBSan passes `4/4` with leak detection;
 community/native-isolation passes `2/2`; and safety passes `1/1`. Exact signed/DCO
 implementation head `4020d70a4` passed all eleven protected checks in runs

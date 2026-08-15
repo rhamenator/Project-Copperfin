@@ -258,8 +258,9 @@ wrong-kind targets, POSIX executables without execute permission, and multiply l
 executables fail closed. `local.run_process.v1` requires the warned
 unrestricted session and explicit strict absolute executable and working-
 directory paths; the executable and directory leaves must be direct, and the
-executable must be a single-link regular launch target. Windows device-path
-and alternate-data-stream spellings are not admitted. Sandbox capability
+executable must be a single-link regular launch target. Windows device-path,
+alternate-data-stream, and UNC remote-share spellings are not admitted while
+endpoint containment remains unimplemented. Sandbox capability
 denial precedes any local target inspection.
 
 The controller repeats registered-tool and exact-session admission after both
