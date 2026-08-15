@@ -6,7 +6,8 @@ Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`,
 `RQ-CF-AGENT-011`, `RQ-CF-AGENT-012`, `RQ-CF-AGENT-013`,
 `RQ-CF-AGENT-014`, `RQ-CF-AGENT-015`, `RQ-CF-AGENT-016`,
-`RQ-CF-AGENT-017`, `RQ-CF-AGENT-018`, and candidate `RQ-CF-AGENT-019` in
+`RQ-CF-AGENT-017`, `RQ-CF-AGENT-018`, `RQ-CF-AGENT-019`, and candidate
+`RQ-CF-AGENT-020` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -411,6 +412,33 @@ operation against that session identity, so a replacement path cannot receive
 the child-creation side effects on POSIX and fails the pre-create identity gate
 on Windows.
 
+Candidate `RQ-CF-AGENT-020` extends successful preparation with an in-memory
+receipt containing the complete physical identity of the session root and all
+five fixed children. A separate explicit trusted-host method accepts only that
+receipt, revalidates the private configured storage root, and requires the full
+identity of every layout directory to match before it removes anything. It then
+requests removal of the exact empty children in reverse order and finally the
+exact empty session root. A generation number by itself is not cleanup
+authority. The operation never enumerates, traverses, or deletes contents;
+nonempty or replaced layouts are preserved and denied with content-free
+diagnostics.
+
+On Windows cleanup holds the verified parent without delete sharing, opens the
+target with delete access and reparse-point semantics, and requests disposition
+on that verified handle. On POSIX it binds the parent and target with no-follow
+descriptor-relative opens and removes the direct empty leaf with
+`unlinkat(..., AT_REMOVEDIR)`. POSIX retains a documented same-authority
+leaf-name race between target verification and name-based `unlinkat`; the
+operation cannot remove content, but this limitation prevents automatic
+sandbox lifecycle use. The five child removals and final root removal are also
+not atomic, so a late denial can leave an empty partial layout.
+
+The controller does not invoke this method on start failure or stop. Durable
+trusted receipt retention, cleanup intent and outcome audit, retry policy after
+partial cleanup, and disposition of owned nonempty content remain required
+before lifecycle integration. Recreating removed directories is not rollback,
+because it could manufacture or adopt changed authority.
+
 The generic POSIX leaf-creation operation also rejects an immediate parent that
 is not owned by the effective user or root. If that parent permits group or
 other writes, it must provide sticky rename protection. This prevents a
@@ -455,8 +483,9 @@ than adopting the orphan. A controller constructed without environment
 configuration retains the earlier non-executing lifecycle behavior; its
 environment preflight remains unavailable.
 
-This preparation and lifecycle integration is not a cleanup or execution
-capability. Its full-path operations assume the private root's owner
+Preparation and lifecycle start integration are not automatic cleanup or
+execution capabilities. The explicit empty-layout cleanup method remains
+disconnected from the controller. These operations assume the private root's owner
 and LocalSystem are trusted host authorities; future executor work must retain
 sandbox separation from untrusted child processes and repeat identity and
 admission checks next to launch. The boundary serializes no arguments, starts
@@ -667,7 +696,7 @@ existing state. None of these results is an executor,
 authorization token, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
 semantics, launch-adjacent handle pinning and synchronous executor integration,
-identity-aware environment layout cleanup, endpoint policy, process
+audit-backed lifecycle cleanup and durable receipt recovery, endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration

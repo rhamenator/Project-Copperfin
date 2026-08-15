@@ -100,8 +100,10 @@ while Windows version-resource APIs and the POSIX PE-resource fallback remain
 private to that base layer.
 The read-only connector retains Windows/POSIX SQLite selection privately;
 public Copperfin headers reject host-selection and native SQLite API tokens.
-`H3`/`I2` still lack model/provider and OAuth adapters, identity-aware
-environment-layout cleanup, launch-adjacent handle pinning and synchronous
+`H3`/`I2` now have an identity-receipted primitive that removes only an exact
+empty environment layout, but still lack its durable, audit-backed lifecycle
+integration and retry policy, model/provider and OAuth adapters,
+launch-adjacent handle pinning and synchronous
 executor consumption, mutable execution and sandbox enforcement, host UI, and tool-outcome
 audit integration. **What's left, and what it
 takes:** this is

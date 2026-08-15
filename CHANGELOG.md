@@ -1,3 +1,12 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-020` identity-receipted empty
+  workspace-agent layout cleanup. Successful preparation now returns the exact
+  full identities of the session root and five fixed children; the explicit
+  trusted-host primitive revalidates every identity and removes only those
+  empty directories, never content. Automatic lifecycle use remains disabled
+  pending durable receipt recovery, cleanup intent/outcome audit, partial-
+  cleanup retry, and owned nonempty-content policy. The POSIX same-authority
+  leaf-name race and non-atomic multi-directory boundary are documented.
+
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-019` at exact signed/DCO head `e3e949414`. All eleven protected
   checks passed in runs `31903337717`, `31903339126`, `31903339150`,

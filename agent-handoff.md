@@ -1,5 +1,30 @@
 # Agent Handoff
 
+## V1 workspace-agent identity-receipted empty-layout cleanup
+
+Candidate `RQ-CF-AGENT-020` adds an explicit trusted-host cleanup primitive
+without wiring deletion into session lifecycle. Successful layout preparation
+now returns the complete physical identities of the session root and all five
+fixed children. Cleanup requires that receipt, an unchanged trusted storage
+root, and exact full identity matches for every directory before mutation. It
+removes the five exact empty children in reverse order and then their exact
+empty root; it never enumerates, traverses, or removes content and cannot use a
+generation number as authority. Occupied or replaced layouts are preserved.
+
+Windows requests deletion on the verified target handle. POSIX uses no-follow
+descriptor-relative verification followed by `unlinkat(..., AT_REMOVEDIR)`;
+the same-authority leaf-name race inherent in that name-based final operation
+is retained explicitly. The multi-directory operation is not atomic and can
+leave an empty partial layout on a late failure. Durable receipt persistence,
+intent/outcome audit, retry, owned nonempty-content disposition, and automatic
+lifecycle integration remain gaps. Local warning-free Release targets and the
+focused platform/source/environment/session selection pass `4/4`; the broader
+workspace-agent/host/community/isolation/workflow selection passes `17/17`;
+fresh Clang 21 ASan/UBSan passes `3/3`; and the repository-wide safety scan
+passes `1/1` in 322.33 seconds. Protected cross-platform, exact-head review,
+and merge evidence remain pending. No
+executor, sandbox, endpoint, launch, or lifecycle-cleanup readiness is claimed.
+
 ## V1 workspace-agent fail-closed launch-promotion gate
 
 Candidate `RQ-CF-AGENT-019` has complete implementation evidence for its

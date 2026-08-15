@@ -232,6 +232,76 @@ bool windows_directory_identity_matches(
          information.nFileIndexLow) == expected_file_id;
 }
 
+bool windows_handle_is_private_directory(const HANDLE directory) noexcept {
+    BY_HANDLE_FILE_INFORMATION information{};
+    if (::GetFileInformationByHandle(directory, &information) == 0 ||
+        (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
+        (information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+        return false;
+    }
+
+    const auto user_sid = current_user_sid();
+    const auto system_sid = local_system_sid();
+    if (user_sid.empty() || system_sid.empty()) {
+        return false;
+    }
+    PSID owner = nullptr;
+    PACL dacl = nullptr;
+    PSECURITY_DESCRIPTOR raw_descriptor = nullptr;
+    const DWORD security_result = ::GetSecurityInfo(
+        directory,
+        SE_FILE_OBJECT,
+        OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+        &owner,
+        nullptr,
+        &dacl,
+        nullptr,
+        &raw_descriptor);
+    ScopedLocalMemory descriptor(raw_descriptor);
+    if (security_result != ERROR_SUCCESS || descriptor.get() == nullptr ||
+        owner == nullptr || dacl == nullptr ||
+        ::EqualSid(owner, const_cast<unsigned char*>(user_sid.data())) == 0) {
+        return false;
+    }
+
+    SECURITY_DESCRIPTOR_CONTROL control = 0U;
+    DWORD revision = 0U;
+    if (::GetSecurityDescriptorControl(
+            descriptor.get(), &control, &revision) == 0 ||
+        (control & SE_DACL_PRESENT) == 0U ||
+        (control & SE_DACL_PROTECTED) == 0U) {
+        return false;
+    }
+    ACL_SIZE_INFORMATION size_information{};
+    if (::GetAclInformation(
+            dacl, &size_information,
+            static_cast<DWORD>(sizeof(size_information)),
+            AclSizeInformation) == 0) {
+        return false;
+    }
+    const bool user_is_system = ::EqualSid(
+        const_cast<unsigned char*>(user_sid.data()),
+        const_cast<unsigned char*>(system_sid.data())) != 0;
+    if (size_information.AceCount != (user_is_system ? 1U : 2U)) {
+        return false;
+    }
+    bool found_user = false;
+    bool found_system = false;
+    for (DWORD index = 0U; index < size_information.AceCount; ++index) {
+        void* ace = nullptr;
+        if (::GetAce(dacl, index, &ace) == 0 ||
+            !ace_grants_private_full_control(
+                ace,
+                const_cast<unsigned char*>(user_sid.data()),
+                const_cast<unsigned char*>(system_sid.data()),
+                found_user,
+                found_system)) {
+            return false;
+        }
+    }
+    return found_user && (user_is_system || found_system);
+}
+
 #endif
 
 #if !defined(_WIN32)
@@ -407,12 +477,9 @@ PrivateDirectoryResult verify_private_directory(
     if (!windows_parent_components_are_direct(path)) {
         return failed(PrivateDirectoryFailure::verification_failed);
     }
-    const auto user_sid = current_user_sid();
-    const auto system_sid = local_system_sid();
-    if (user_sid.empty() || system_sid.empty()) {
+    if (current_user_sid().empty() || local_system_sid().empty()) {
         return failed(PrivateDirectoryFailure::security_unavailable);
     }
-
     ScopedHandle directory(::CreateFileW(
         path.c_str(),
         FILE_READ_ATTRIBUTES | READ_CONTROL,
@@ -424,72 +491,7 @@ PrivateDirectoryResult verify_private_directory(
     if (!directory.valid()) {
         return failed(PrivateDirectoryFailure::verification_failed);
     }
-    BY_HANDLE_FILE_INFORMATION information{};
-    if (::GetFileInformationByHandle(directory.get(), &information) == 0 ||
-        (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
-        (information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
-        return failed(PrivateDirectoryFailure::verification_failed);
-    }
-
-    PSID owner = nullptr;
-    PACL dacl = nullptr;
-    PSECURITY_DESCRIPTOR raw_descriptor = nullptr;
-    const DWORD security_result = ::GetSecurityInfo(
-        directory.get(),
-        SE_FILE_OBJECT,
-        OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
-        &owner,
-        nullptr,
-        &dacl,
-        nullptr,
-        &raw_descriptor);
-    ScopedLocalMemory descriptor(raw_descriptor);
-    if (security_result != ERROR_SUCCESS || descriptor.get() == nullptr ||
-        owner == nullptr || dacl == nullptr ||
-        ::EqualSid(owner, const_cast<unsigned char*>(user_sid.data())) == 0) {
-        return failed(PrivateDirectoryFailure::verification_failed);
-    }
-
-    SECURITY_DESCRIPTOR_CONTROL control = 0U;
-    DWORD revision = 0U;
-    if (::GetSecurityDescriptorControl(
-            descriptor.get(), &control, &revision) == 0 ||
-        (control & SE_DACL_PRESENT) == 0U ||
-        (control & SE_DACL_PROTECTED) == 0U) {
-        return failed(PrivateDirectoryFailure::verification_failed);
-    }
-
-    ACL_SIZE_INFORMATION size_information{};
-    if (::GetAclInformation(
-            dacl,
-            &size_information,
-            static_cast<DWORD>(sizeof(size_information)),
-            AclSizeInformation) == 0) {
-        return failed(PrivateDirectoryFailure::verification_failed);
-    }
-    const bool user_is_system = ::EqualSid(
-        const_cast<unsigned char*>(user_sid.data()),
-        const_cast<unsigned char*>(system_sid.data())) != 0;
-    const DWORD expected_aces = user_is_system ? 1U : 2U;
-    if (size_information.AceCount != expected_aces) {
-        return failed(PrivateDirectoryFailure::verification_failed);
-    }
-
-    bool found_user = false;
-    bool found_system = false;
-    for (DWORD index = 0U; index < size_information.AceCount; ++index) {
-        void* ace = nullptr;
-        if (::GetAce(dacl, index, &ace) == 0 ||
-            !ace_grants_private_full_control(
-                ace,
-                const_cast<unsigned char*>(user_sid.data()),
-                const_cast<unsigned char*>(system_sid.data()),
-                found_user,
-                found_system)) {
-            return failed(PrivateDirectoryFailure::verification_failed);
-        }
-    }
-    if (!found_user || (!user_is_system && !found_system)) {
+    if (!windows_handle_is_private_directory(directory.get())) {
         return failed(PrivateDirectoryFailure::verification_failed);
     }
 #else
@@ -509,6 +511,96 @@ PrivateDirectoryResult verify_private_directory(
 #endif
 
     return {.ok = true, .failure = PrivateDirectoryFailure::none};
+}
+
+PrivateDirectoryResult remove_empty_private_directory_in_verified_parent(
+    const std::filesystem::path& parent,
+    const std::uint64_t expected_parent_storage_id,
+    const std::uint64_t expected_parent_file_id,
+    const std::filesystem::path& leaf,
+    const std::uint64_t expected_directory_storage_id,
+    const std::uint64_t expected_directory_file_id) noexcept {
+    if (!valid_absolute_path(parent) || leaf.empty() || leaf.is_absolute() ||
+        leaf.has_parent_path() || leaf == "." || leaf == ".." ||
+        leaf.native().find(typename std::filesystem::path::value_type{}) !=
+            std::filesystem::path::string_type::npos) {
+        return failed(PrivateDirectoryFailure::invalid_path);
+    }
+
+#if defined(_WIN32)
+    if (!windows_parent_components_are_direct(parent)) {
+        return failed(PrivateDirectoryFailure::parent_unavailable);
+    }
+    ScopedHandle bound_parent(::CreateFileW(
+        parent.c_str(), FILE_READ_ATTRIBUTES | READ_CONTROL,
+        FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
+    if (!bound_parent.valid() ||
+        !windows_directory_identity_matches(
+            bound_parent.get(), expected_parent_storage_id,
+            expected_parent_file_id) ||
+        !windows_handle_is_private_directory(bound_parent.get())) {
+        return failed(PrivateDirectoryFailure::parent_identity_changed);
+    }
+    ScopedHandle directory(::CreateFileW(
+        (parent / leaf).c_str(),
+        FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        nullptr, OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
+    if (!directory.valid()) {
+        return failed(PrivateDirectoryFailure::verification_failed);
+    }
+    if (!windows_directory_identity_matches(
+            directory.get(), expected_directory_storage_id,
+            expected_directory_file_id) ||
+        !windows_handle_is_private_directory(directory.get())) {
+        return failed(PrivateDirectoryFailure::verification_failed);
+    }
+    FILE_DISPOSITION_INFO disposition{.DeleteFile = TRUE};
+    if (::SetFileInformationByHandle(
+            directory.get(), FileDispositionInfo,
+            &disposition, static_cast<DWORD>(sizeof(disposition))) == 0) {
+        const DWORD error = ::GetLastError();
+        return failed(error == ERROR_DIR_NOT_EMPTY
+                ? PrivateDirectoryFailure::not_empty
+                : PrivateDirectoryFailure::removal_failed);
+    }
+    return {.ok = true, .failure = PrivateDirectoryFailure::none};
+#else
+    int parent_error = 0;
+    const auto parent_binding = bind_non_indirect_parent(parent, parent_error);
+    if (!parent_binding.has_value()) {
+        return failed(map_posix_creation_error(parent_error));
+    }
+    ScopedFd bound_parent(::openat(
+        parent_binding->descriptor.get(), parent_binding->leaf.c_str(),
+        directory_open_flags()));
+    if (!bound_parent.valid() ||
+        !descriptor_is_private_directory(bound_parent.get()) ||
+        !descriptor_identity_matches(
+            bound_parent.get(), expected_parent_storage_id,
+            expected_parent_file_id)) {
+        return failed(PrivateDirectoryFailure::parent_identity_changed);
+    }
+    const std::string leaf_name = leaf.native();
+    ScopedFd directory(::openat(
+        bound_parent.get(), leaf_name.c_str(), directory_open_flags()));
+    if (!directory.valid() ||
+        !descriptor_is_private_directory(directory.get()) ||
+        !descriptor_identity_matches(
+            directory.get(), expected_directory_storage_id,
+            expected_directory_file_id)) {
+        return failed(PrivateDirectoryFailure::verification_failed);
+    }
+    if (::unlinkat(bound_parent.get(), leaf_name.c_str(), AT_REMOVEDIR) != 0) {
+        const int error = errno;
+        return failed(error == ENOTEMPTY || error == EEXIST
+                ? PrivateDirectoryFailure::not_empty
+                : PrivateDirectoryFailure::removal_failed);
+    }
+    return {.ok = true, .failure = PrivateDirectoryFailure::none};
+#endif
 }
 
 PrivateDirectoryResult create_private_directory(

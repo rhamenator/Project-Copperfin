@@ -76,9 +76,7 @@ foreach(token IN ITEMS
     forbid_text("${header_text}" "${token}" "native token in portable private-directory API")
 endforeach()
 
-foreach(token IN ITEMS
-        "::RemoveDirectoryW("
-        "::rmdir(")
+foreach(token IN ITEMS "::RemoveDirectoryW(" "::rmdir(")
     forbid_text("${source_text}" "${token}"
         "path-based cleanup of an unverified directory")
 endforeach()
@@ -93,6 +91,14 @@ foreach(token IN ITEMS
         "ace->Mask != FILE_ALL_ACCESS")
     require_text("${source_text}" "${token}" "private platform implementation")
 endforeach()
+foreach(token IN ITEMS
+        "remove_empty_private_directory_in_verified_parent"
+        "::SetFileInformationByHandle("
+        "FileDispositionInfo"
+        "FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE")
+    require_text("${source_text}" "${token}"
+        "identity-bound empty-directory cleanup")
+endforeach()
 require_text_count("${source_text}"
     "windows_parent_components_are_direct(path)" 2
     "pre-create and verification Windows parent-reparse rejection")
@@ -101,6 +107,8 @@ foreach(token IN ITEMS
         "::openat("
         "O_NOFOLLOW"
         "::mkdirat("
+        "::unlinkat("
+        "AT_REMOVEDIR"
         "::fstat("
         "descriptor_has_no_extended_acl"
         "ACL_TYPE_EXTENDED"
@@ -130,6 +138,17 @@ require_text("${consumer_text}"
 require_text("${consumer_text}"
     "workspace_agent.environment_session_layout_unrepresentable"
     "pre-creation derived-environment denial")
+foreach(token IN ITEMS
+        "cleanup_empty_session_layout"
+        "workspace_agent.environment_session_layout_cleanup_invalid_receipt"
+        "workspace_agent.environment_session_layout_cleanup_not_empty"
+        "workspace_agent.environment_session_layout_cleaned")
+    require_text("${consumer_text}" "${token}"
+        "identity-bound workspace-agent layout cleanup")
+endforeach()
+require_text_count("${consumer_text}"
+    "remove_empty_private_directory_in_verified_parent(" 2
+    "identity-bound child and generation cleanup")
 string(FIND "${consumer_text}" "const auto proposed_entries =" proposed_offset)
 string(FIND "${consumer_text}"
     "copperfin::platform::create_private_directory_in_verified_parent("

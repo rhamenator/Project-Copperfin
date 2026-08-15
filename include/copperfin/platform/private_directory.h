@@ -9,7 +9,7 @@
 
 namespace copperfin::platform {
 
-// Governing requirement: RQ-CF-AGENT-014.
+// Governing requirements: RQ-CF-AGENT-014 and candidate RQ-CF-AGENT-020.
 
 enum class PrivateDirectoryFailure : std::uint32_t {
     none = 0U,
@@ -20,7 +20,9 @@ enum class PrivateDirectoryFailure : std::uint32_t {
     parent_identity_changed,
     security_unavailable,
     creation_failed,
-    verification_failed
+    verification_failed,
+    not_empty,
+    removal_failed
 };
 
 struct PrivateDirectoryResult {
@@ -56,5 +58,21 @@ struct PrivateDirectoryResult {
 // fail closed.
 [[nodiscard]] PrivateDirectoryResult verify_private_directory(
     const std::filesystem::path& path) noexcept;
+
+// Removes one exact, empty, private direct child after binding the expected
+// private parent and matching both platform identities. It never traverses or
+// removes child content. Windows deletes the identity-bound directory through
+// its open handle. POSIX retains the verified child descriptor while issuing
+// the direct-parent unlink; callers must preserve the documented
+// same-authority leaf-name race limitation until a platform-independent
+// descriptor deletion primitive or sandbox exclusion is available.
+[[nodiscard]] PrivateDirectoryResult
+remove_empty_private_directory_in_verified_parent(
+    const std::filesystem::path& parent,
+    std::uint64_t expected_parent_storage_id,
+    std::uint64_t expected_parent_file_id,
+    const std::filesystem::path& leaf,
+    std::uint64_t expected_directory_storage_id,
+    std::uint64_t expected_directory_file_id) noexcept;
 
 }  // namespace copperfin::platform

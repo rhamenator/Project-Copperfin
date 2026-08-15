@@ -6,6 +6,7 @@
 
 #include "copperfin/security/physical_path_containment.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -16,11 +17,13 @@
 
 namespace copperfin::security {
 
-// Governing requirements: RQ-CF-AGENT-011 through RQ-CF-AGENT-014.
+// Governing requirements: RQ-CF-AGENT-011 through RQ-CF-AGENT-014 and
+// candidate RQ-CF-AGENT-020.
 
 inline constexpr std::size_t workspace_agent_environment_max_path_directories = 16U;
 inline constexpr std::size_t workspace_agent_environment_max_entry_bytes = 4096U;
 inline constexpr std::size_t workspace_agent_environment_max_total_bytes = 32768U;
+inline constexpr std::size_t workspace_agent_session_layout_child_count = 5U;
 
 enum class WorkspaceAgentProcessEnvironmentPolicy : std::uint32_t {
     isolated_session_v1 = 1U
@@ -100,6 +103,15 @@ struct WorkspaceAgentIsolatedEnvironmentConstruction {
 struct WorkspaceAgentSessionLayoutPreparationResult {
     bool prepared = false;
     std::uint64_t session_generation = 0U;
+    PhysicalPathIdentity session_directory_identity{};
+    std::array<PhysicalPathIdentity, workspace_agent_session_layout_child_count>
+        child_directory_identities{};
+    std::string diagnostic_code;
+};
+
+struct WorkspaceAgentSessionLayoutCleanupResult {
+    bool cleaned = false;
+    std::uint64_t session_generation = 0U;
     std::string diagnostic_code;
 };
 
@@ -122,6 +134,14 @@ public:
     // partial layouts are never adopted, repaired, overwritten, or deleted.
     [[nodiscard]] WorkspaceAgentSessionLayoutPreparationResult
     prepare_session_layout(std::uint64_t session_generation) const;
+
+    // Removes only the exact empty generation directory and five exact empty
+    // children described by a successful preparation receipt. It never
+    // traverses content, adopts an existing layout, or treats a generation
+    // number alone as cleanup authority.
+    [[nodiscard]] WorkspaceAgentSessionLayoutCleanupResult
+    cleanup_empty_session_layout(
+        const WorkspaceAgentSessionLayoutPreparationResult& preparation) const;
 
 private:
     WorkspaceAgentIsolatedEnvironmentBoundary(
