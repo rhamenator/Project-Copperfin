@@ -377,6 +377,11 @@ the path untouched for a later identity-aware trusted-host cleanup decision.
 On POSIX, a process `umask` that removes owner bits can therefore make creation
 fail and leave an unverified partial path; the library does not mutate the
 process-global `umask` or path-chmod an object it cannot prove it created.
+POSIX creation and verification traverse every existing parent with
+descriptor-relative, no-follow directory opens, reject dot components and
+indirect parents, and perform `mkdirat`/leaf verification against the bound
+parent descriptor. A private leaf reached through a symbolic-link parent is
+therefore not accepted.
 
 The trusted-host environment boundary requires the configured storage root to
 satisfy that same contract. Its explicit preparation method creates one new

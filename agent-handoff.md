@@ -13,6 +13,9 @@ re-verifies privacy, physical containment, approved executable-directory
 identity, and the Windows system-root identity where applicable before creation
 and success. Existing or partial layouts are
 never adopted, repaired, overwritten, or deleted; denial is content-free.
+POSIX parent traversal is descriptor-relative and no-follow; creation uses the
+bound parent descriptor, and direct tests reject redirected creation and
+verification through an intermediate symlink.
 
 This remains non-executing and is not yet wired to session start. Layout
 cleanup, platform argument serialization, Windows executable-format

@@ -90,12 +90,19 @@ foreach(token IN ITEMS
         "::GetSecurityInfo("
         "FILE_ATTRIBUTE_REPARSE_POINT"
         "header->AceFlags !="
-        "ace->Mask != FILE_ALL_ACCESS"
-        "::mkdir(path.c_str(), 0700)"
-        "::lstat("
-        "status.st_uid != ::geteuid()"
-        "(status.st_mode & 07777) != 0700")
+        "ace->Mask != FILE_ALL_ACCESS")
     require_text("${source_text}" "${token}" "private platform implementation")
+endforeach()
+
+foreach(token IN ITEMS
+        "::openat("
+        "O_NOFOLLOW"
+        "::mkdirat("
+        "::fstat("
+        "status.st_uid == ::geteuid()"
+        "(status.st_mode & 07777) == 0700")
+    require_text("${source_text}" "${token}"
+        "descriptor-relative POSIX private-directory operation")
 endforeach()
 
 require_text("${consumer_text}"

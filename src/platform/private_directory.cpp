@@ -4,6 +4,8 @@
 
 #include "copperfin/platform/private_directory.h"
 
+#include <algorithm>
+#include <optional>
 #include <system_error>
 
 #if defined(_WIN32)
@@ -15,6 +17,7 @@
 #include <vector>
 #else
 #include <cerrno>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
@@ -31,8 +34,13 @@ bool valid_absolute_path(const std::filesystem::path& path) noexcept {
         return false;
     }
     const auto& native = path.native();
-    return native.find(typename std::filesystem::path::value_type{}) ==
-        std::filesystem::path::string_type::npos;
+    if (native.find(typename std::filesystem::path::value_type{}) !=
+        std::filesystem::path::string_type::npos) {
+        return false;
+    }
+    return std::none_of(path.begin(), path.end(), [](const auto& component) {
+        return component == "." || component == "..";
+    });
 }
 
 #if defined(_WIN32)
@@ -173,6 +181,112 @@ bool ace_grants_private_full_control(
 
 #endif
 
+#if !defined(_WIN32)
+
+class ScopedFd {
+public:
+    explicit ScopedFd(const int value = -1) noexcept : value_(value) {}
+    ~ScopedFd() {
+        if (value_ >= 0) {
+            ::close(value_);
+        }
+    }
+
+    ScopedFd(const ScopedFd&) = delete;
+    ScopedFd& operator=(const ScopedFd&) = delete;
+
+    ScopedFd(ScopedFd&& other) noexcept : value_(other.value_) {
+        other.value_ = -1;
+    }
+    ScopedFd& operator=(ScopedFd&& other) noexcept {
+        if (this != &other) {
+            if (value_ >= 0) {
+                ::close(value_);
+            }
+            value_ = other.value_;
+            other.value_ = -1;
+        }
+        return *this;
+    }
+
+    [[nodiscard]] int get() const noexcept { return value_; }
+    [[nodiscard]] bool valid() const noexcept { return value_ >= 0; }
+
+private:
+    int value_ = -1;
+};
+
+constexpr int directory_open_flags() noexcept {
+#if defined(__linux__) && defined(O_PATH)
+    return O_PATH | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC;
+#else
+    return O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC;
+#endif
+}
+
+struct BoundParent {
+    ScopedFd descriptor;
+    std::string leaf;
+};
+
+std::optional<BoundParent> bind_non_indirect_parent(
+    const std::filesystem::path& path,
+    int& failure_error) {
+    failure_error = 0;
+    ScopedFd current(::open("/", directory_open_flags()));
+    if (!current.valid()) {
+        failure_error = errno;
+        return std::nullopt;
+    }
+    const auto relative = path.relative_path();
+    const auto leaf_path = relative.filename();
+    if (leaf_path.empty()) {
+        failure_error = EINVAL;
+        return std::nullopt;
+    }
+    for (const auto& component : relative.parent_path()) {
+        const std::string name = component.native();
+        if (name.empty() || name == "." || name == "..") {
+            failure_error = EINVAL;
+            return std::nullopt;
+        }
+        ScopedFd next(::openat(
+            current.get(), name.c_str(), directory_open_flags()));
+        if (!next.valid()) {
+            failure_error = errno;
+            return std::nullopt;
+        }
+        current = std::move(next);
+    }
+    return BoundParent{
+        .descriptor = std::move(current),
+        .leaf = leaf_path.native()};
+}
+
+bool descriptor_is_private_directory(const int descriptor) noexcept {
+    struct stat status{};
+    return ::fstat(descriptor, &status) == 0 && S_ISDIR(status.st_mode) &&
+        status.st_uid == ::geteuid() && (status.st_mode & 07777) == 0700;
+}
+
+PrivateDirectoryFailure map_posix_creation_error(const int error) noexcept {
+    switch (error) {
+    case EEXIST:
+        return PrivateDirectoryFailure::already_exists;
+    case ENOENT:
+    case ENOTDIR:
+    case ELOOP:
+        return PrivateDirectoryFailure::parent_unavailable;
+    case EACCES:
+    case EPERM:
+        return PrivateDirectoryFailure::access_denied;
+    default:
+        return PrivateDirectoryFailure::creation_failed;
+    }
+}
+
+#endif
+
 }  // namespace
 
 PrivateDirectoryResult verify_private_directory(
@@ -268,10 +382,17 @@ PrivateDirectoryResult verify_private_directory(
         return failed(PrivateDirectoryFailure::verification_failed);
     }
 #else
-    struct stat status{};
-    if (::lstat(path.c_str(), &status) != 0 || !S_ISDIR(status.st_mode) ||
-        S_ISLNK(status.st_mode) || status.st_uid != ::geteuid() ||
-        (status.st_mode & 07777) != 0700) {
+    int parent_error = 0;
+    const auto parent = bind_non_indirect_parent(path, parent_error);
+    (void)parent_error;
+    if (!parent.has_value()) {
+        return failed(PrivateDirectoryFailure::verification_failed);
+    }
+    ScopedFd directory(::openat(
+        parent->descriptor.get(), parent->leaf.c_str(),
+        directory_open_flags()));
+    if (!directory.valid() ||
+        !descriptor_is_private_directory(directory.get())) {
         return failed(PrivateDirectoryFailure::verification_failed);
     }
 #endif
@@ -341,27 +462,33 @@ PrivateDirectoryResult create_private_directory(
         return failed(map_creation_error(::GetLastError()));
     }
 #else
-    if (::mkdir(path.c_str(), 0700) != 0) {
-        switch (errno) {
-        case EEXIST:
-            return failed(PrivateDirectoryFailure::already_exists);
-        case ENOENT:
-        case ENOTDIR:
-            return failed(PrivateDirectoryFailure::parent_unavailable);
-        case EACCES:
-        case EPERM:
-            return failed(PrivateDirectoryFailure::access_denied);
-        default:
-            return failed(PrivateDirectoryFailure::creation_failed);
-        }
+    int parent_error = 0;
+    const auto parent = bind_non_indirect_parent(path, parent_error);
+    if (!parent.has_value()) {
+        return failed(map_posix_creation_error(parent_error));
+    }
+    if (::mkdirat(
+            parent->descriptor.get(), parent->leaf.c_str(), 0700) != 0) {
+        return failed(map_posix_creation_error(errno));
+    }
+    ScopedFd directory(::openat(
+        parent->descriptor.get(), parent->leaf.c_str(),
+        directory_open_flags()));
+    if (!directory.valid() ||
+        !descriptor_is_private_directory(directory.get())) {
+        return failed(PrivateDirectoryFailure::verification_failed);
     }
 #endif
 
+#if defined(_WIN32)
     const PrivateDirectoryResult verified = verify_private_directory(path);
     if (!verified.ok) {
         return failed(PrivateDirectoryFailure::verification_failed);
     }
     return verified;
+#else
+    return {.ok = true, .failure = PrivateDirectoryFailure::none};
+#endif
 }
 
 }  // namespace copperfin::platform

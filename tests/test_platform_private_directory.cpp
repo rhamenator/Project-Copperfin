@@ -122,6 +122,12 @@ void test_invalid_and_wrong_kind_inputs() {
                PrivateDirectoryFailure::parent_unavailable,
            "RQ-CF-AGENT-014: creation must not fabricate intermediate directories");
 
+    const auto dotted = tree.root / "." / "dotted";
+    expect(create_private_directory(dotted).failure ==
+               PrivateDirectoryFailure::invalid_path &&
+               !std::filesystem::exists(tree.root / "dotted"),
+           "RQ-CF-AGENT-014: dot-component ambiguity must fail without creating a leaf");
+
     const auto file = tree.root / "file";
     std::ofstream(file, std::ios::binary) << "not a directory\n";
     const auto file_create = create_private_directory(file);
@@ -138,6 +144,20 @@ void test_invalid_and_wrong_kind_inputs() {
     if (!link_error) {
         expect(!verify_private_directory(indirect).ok,
                "RQ-CF-AGENT-014: symbolic links and directory reparse points must fail closed");
+
+        const auto indirect_child = indirect / "child";
+        const auto indirect_creation =
+            create_private_directory(indirect_child);
+        expect(!indirect_creation.ok &&
+                   indirect_creation.failure ==
+                       PrivateDirectoryFailure::parent_unavailable &&
+                   !std::filesystem::exists(target / "child"),
+               "RQ-CF-AGENT-014: creation must reject a symbolic-link parent without modifying its target");
+
+        const auto direct_child = target / "direct-child";
+        expect(create_private_directory(direct_child).ok &&
+                   !verify_private_directory(indirect / "direct-child").ok,
+               "RQ-CF-AGENT-014: verification must reject a private leaf reached through a symbolic-link parent");
     }
 }
 

@@ -96,6 +96,10 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   after preparation, during construction, and before final return, then
   physically contains and re-verifies identity and privacy for every fixed
   session directory before returning a constructed environment.
+- Parent indirection: POSIX creation and verification walk every existing
+  parent through no-follow directory descriptors, then create and inspect the
+  leaf relative to the bound parent. Direct regressions prove a symlink parent
+  neither redirects creation nor makes an indirectly reached private leaf pass.
 - Configured-path replacement: preparation rechecks every approved executable
   directory and the Windows system root, when present, before the first layout
   creation and before success. Direct replacement regressions prove a known
