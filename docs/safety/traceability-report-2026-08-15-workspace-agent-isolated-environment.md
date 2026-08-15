@@ -133,17 +133,23 @@ Exact implementation evidence:
 - both Socket checks passed;
 - thread-aware review reported one actionable thread; corrected head
   `9c2fa618c` answered it with direct regression evidence, and the thread was
-  resolved before merge.
+  resolved before merge;
+- independent exact-head read-only review passed the focused workspace-agent
+  selection `9/9` and found no defect in directory identity semantics, later-
+  generation lifecycle, replacement denial, the public platform seam, fixed
+  environment contents, or documentation fidelity.
 
 ## Review evidence
 
-- mode: medium-severity maintainer self-review; no independent final review
+- mode: medium-severity maintainer self-review plus independent exact-head
+  read-only corroboration; no independent final safety approval
 - reviewer: rhamenator
 - verification: parent independence, fixed keys, trusted-root and exact-
   generation binding, physical identity, bounds/encoding, denial clearing,
   invocation recheck, non-execution boundary, rollback, and traceability
 - verification result: focused and protected exact-head verification passed;
-  the sole actionable review finding was corrected and resolved
+  the sole actionable review finding was corrected and resolved; independent
+  exact-head review found no defect
 - scope: medium-severity non-executing isolated logical environment construction
 - result: `RQ-CF-AGENT-012` defined at merge `b3947335e`; no independence claim
 

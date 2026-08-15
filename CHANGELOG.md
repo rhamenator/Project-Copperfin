@@ -3,7 +3,10 @@
   `31867096322`, `31867098781`, `31867098869`, `31867098752`, and
   `31867098756`, plus both Socket checks. The sole actionable review thread was
   corrected with a later-generation lifecycle regression, answered, and
-  resolved before PR `#5012` merged as `b3947335e`.
+  resolved before PR `#5012` merged as `b3947335e`. Independent exact-head
+  read-only review passed `9/9` focused workspace-agent tests and found no
+  defect across the corrected identity/lifecycle, replacement, platform-seam,
+  fixed-environment, or documentation boundaries.
 
 - 2026-08-15: Corrected the `RQ-CF-AGENT-012` candidate so public headers retain
   the native platform seam and normal creation of a later generation's session
