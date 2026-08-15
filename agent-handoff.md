@@ -2,8 +2,7 @@
 
 ## V1 workspace-agent process invocation shape
 
-`RQ-CF-AGENT-011` is an implementation candidate on the dedicated
-`agent/v1-workspace-agent-process-invocation-contract` branch. The new
+`RQ-CF-AGENT-011` is defined at merged commit `7361f76e0`. The new
 non-executing preflight binds the exact registered process tool, active session,
 contained executable/working directory, and at most 64 direct UTF-8 argument
 elements (4,096 bytes each, 8,192 aggregate). It accepts no command string,
@@ -16,8 +15,14 @@ point-in-time plan rather than authority. Warning-free GCC Release security,
 policy, session, registry, file/process-target, invocation, and audit-sink
 selection passes `8/8`; fresh Clang ASan/UBSan passes `5/5` with leak
 detection; community/native-isolation passes `2/2`; safety passes `1/1`; and
-diff passes. Protected exact-head and thread-aware review evidence remain
-pending.
+diff passes. Exact signed/DCO implementation head `487699f3f` passed all
+eleven protected checks in runs `31863899694`, `31863899698`, `31863899695`,
+`31863899697`, and `31863899696`; both Socket checks passed and thread-aware
+GitHub review reported zero threads. Independent exact-head read-only review
+passed the focused eight-test workspace-agent selection and found no defect in
+bounds/overflow, UTF-8, denial clearing, final session recheck, sensitive-
+content wording, or the non-execution boundary. No independent final safety
+approval is claimed.
 Environment construction, platform serialization/limits, executable-format
 compatibility, launch-adjacent pin/revalidation, executor, real sandbox,
 endpoint policy, outcome audit, provider/OAuth, trusted UI, diff, and undo
