@@ -15,9 +15,20 @@ process-capable start before layout creation. Local warning-free GCC Release foc
 session/environment/audit execution passes `3/3`; the combined broader/source/
 community/isolation selection passes `16/16`; and fresh Clang 21
 ASan/UBSan passes `3/3`. The repository-wide safety contract passes `1/1` in
-331.54 seconds. Protected, review, and merge evidence remain pending. Automatic stop/destructor
-cleanup, restart-persistent receipts, partial-removal retry, and owned nonempty
-content disposition remain gaps.
+331.54 seconds. Automated review at initial head `52250dea9` found one real P2:
+a heap-backed receipt copy after entering `cleaning` could throw and wedge the
+controller. Corrected signed/DCO head `4d3aaa558` borrows the stable FIFO front
+under the transition invariant, passes all eleven protected checks in runs
+`31913152575`, `31913153471`, `31913153473`, `31913153475`, and `31913153482`,
+and merged through PR `#5032` as `2504b7b3b` after the thread was answered and
+resolved. The unrelated Python-sidecar timeout on the superseded head did not
+recur in the corrected Windows generated-launcher run. Implementation evidence
+is complete. The evidence-only update passes the licensing, community,
+isolation, supply-chain, and safety contracts `5/5`, including the 323.97-second
+safety scan. Requirement status remains a `gap` solely for structured sign-off
+by a second qualified human reviewer because the documentation severity is high.
+Automatic stop/destructor cleanup, restart-persistent receipts,
+partial-removal retry, and owned nonempty content disposition remain gaps.
 
 ## V1 workspace-agent identity-receipted empty-layout cleanup
 
