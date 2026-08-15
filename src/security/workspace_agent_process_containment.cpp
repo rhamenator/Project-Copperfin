@@ -4,6 +4,8 @@
 
 #include "copperfin/security/workspace_agent_process_containment.h"
 
+#include "copperfin/platform/windows_pe_image.h"
+
 #include <system_error>
 #include <utility>
 
@@ -191,6 +193,32 @@ std::optional<PhysicalPathContainmentResult> inspect_executable(
         failure_result = denied("workspace_agent.process_executable_multiply_linked");
         return std::nullopt;
     }
+#if defined(_WIN32)
+    const auto image = platform::inspect_windows_pe_image(containment.canonical_path);
+    if (image.status == platform::WindowsPeImageStatus::unreadable) {
+        failure_result = denied("workspace_agent.process_executable_image_unreadable");
+        return std::nullopt;
+    }
+    if (image.status == platform::WindowsPeImageStatus::invalid) {
+        failure_result = denied("workspace_agent.process_executable_image_invalid");
+        return std::nullopt;
+    }
+    if (image.status != platform::WindowsPeImageStatus::executable) {
+        failure_result = denied("workspace_agent.process_executable_image_not_launchable");
+        return std::nullopt;
+    }
+    if (!platform::windows_pe_image_is_launch_compatible(
+            image, platform::native_windows_pe_host_machine())) {
+        failure_result = denied("workspace_agent.process_executable_machine_incompatible");
+        return std::nullopt;
+    }
+    const auto after_image = inspect_physical_path_containment(
+        containment.canonical_path, containment_root);
+    if (!after_image.allowed || after_image.identity != containment.identity) {
+        failure_result = denied("workspace_agent.process_executable_changed_during_image_inspection");
+        return std::nullopt;
+    }
+#endif
     return containment;
 }
 

@@ -5,7 +5,8 @@ Governing product/derived requirements: `RQ-CF-AGENT-001`,
 `RQ-CF-AGENT-005`, `RQ-CF-AGENT-006`, `RQ-CF-AGENT-007`,
 `RQ-CF-AGENT-008`, `RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`,
 `RQ-CF-AGENT-011`, `RQ-CF-AGENT-012`, `RQ-CF-AGENT-013`,
-`RQ-CF-AGENT-014`, `RQ-CF-AGENT-015`, and `RQ-CF-AGENT-016` in
+`RQ-CF-AGENT-014`, `RQ-CF-AGENT-015`, `RQ-CF-AGENT-016`, and
+`RQ-CF-AGENT-017` in
 `docs/32-recovered-requirements-traceability.md`. The public policy header,
 descriptor implementation, strict managed client, and focused tests carry the
 reverse links back to those requirements.
@@ -518,10 +519,42 @@ behavior.
 
 This remains a non-executing workspace-agent preflight and never grants launch
 authority. A future executor must additionally establish Windows child-parser
-and executable-format compatibility, repeat and pin target checks beside
+authority, repeat and pin target checks beside
 launch, consume the fixed environment without ambient merging, apply the real
 sandbox and endpoint policy, own cancellation and descendants, and record only
 content-free outcome audit. Identity-aware layout cleanup remains separate.
+
+## Windows process-image compatibility preflight
+
+Candidate `RQ-CF-AGENT-017` closes the structural executable-format half of the
+Windows launch prerequisite without claiming a child argument parser or process
+authority. A portable bounded reader parses the direct file's DOS, PE/COFF,
+optional, and section headers without mapping or executing it. It admits only
+coherent x86/PE32, x64/PE32+, or ARM64/PE32+ images with one to ninety-six
+bounded sections, raw-data ranges inside the file, a nonzero entry point in an
+executable section, the executable-image characteristic, and a Windows GUI or
+console subsystem. DLLs, system images, unsupported machines or subsystems,
+machine/magic mismatches, malformed or truncated headers, out-of-file section
+ranges, and non-executable entry-point sections fail closed.
+
+The host matrix is deliberately conservative: x86 Windows admits x86 images;
+x64 Windows admits x86 and x64 images; ARM64 Windows admits ARM64 images.
+Unknown hosts and unverified cross-architecture emulation combinations remain
+denied until direct evidence supports a wider contract. On Windows the parser
+opens without write sharing, and process-target inspection repeats physical
+containment afterward and requires the complete file identity to match the
+pre-inspection result. The result is still point-in-time evidence rather than
+a pinned launch handle.
+
+The same parser preserves the existing native/managed PE classification used by
+the DECLARE boundary, including its stricter requirement that the CLR directory
+slot be declared before classification succeeds and its legacy read sharing
+when an IDE or build tool has the library open for writing. Workspace-agent
+admission retains the parser's default write exclusion. POSIX workspace-agent
+process target behavior is unchanged. This slice does not infer how an arbitrary child
+parses `GetCommandLineW()`, validate publisher trust, pin an image beside
+launch, start a process, apply sandbox or endpoint policy, or record an outcome.
+Those remain separate trusted-host boundaries.
 
 ## Current implementation and remaining work
 
@@ -555,7 +588,10 @@ described above. The public request cannot supply capability booleans; native
 lookup supplies the complete immutable definition. The controller also
 supplies the existing-file and process-target preflights described above. These
 close product-root and point-in-time identity prerequisites for existing file
-tools and explicit process executable/working-directory targets. The adjacent
+tools and explicit process executable/working-directory targets. On Windows,
+candidate `RQ-CF-AGENT-017` additionally requires a structurally launchable,
+host-compatible direct PE image and rechecks its complete physical identity
+after inspection. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
@@ -566,8 +602,8 @@ private layout before audit-backed activation and fails closed without adopting
 existing state. None of these results is an executor,
 authorization token, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, launch-adjacent handle/revalidation, identity-aware environment
-layout cleanup, endpoint policy, process
+semantics, Windows child-parser authority, launch-adjacent handle/revalidation,
+identity-aware environment layout cleanup, endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration

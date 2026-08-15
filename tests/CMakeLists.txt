@@ -5183,6 +5183,17 @@ copperfin_add_test(test_process_argument_serialization cf_platform_support
     test_process_argument_serialization.cpp
 )
 
+copperfin_add_test(test_windows_pe_image cf_platform_support
+    test_windows_pe_image.cpp
+)
+
+add_test(
+    NAME test_windows_pe_image_boundary_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${PROJECT_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_windows_pe_image_boundary_contract_check.cmake
+)
+
 copperfin_add_test(test_workspace_agent_audit_sink cf_security
     test_workspace_agent_audit_sink.cpp
 )

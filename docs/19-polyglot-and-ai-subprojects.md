@@ -813,10 +813,18 @@ A versioned native descriptor and strict shared managed client expose this
 policy read-only while rejecting schema drift and authority expansion; neither
 can activate an agent. A separate non-executing native session controller
 requires policy admission plus a committed content-free audit receipt, prevents
-active-session replacement, and revokes authority before stop auditing. It is
-not yet connected to product UI or an executor. Model/provider adapters, OAuth
-clients, the mutable executor and sandbox, persistent audit storage, and the
-user-facing assistant/dialog surfaces remain unimplemented.
+active-session replacement, and revokes authority before stop auditing. A
+contained persistent sink records content-free lifecycle events. Product-owned
+tool definitions and exact-generation preflights now bind existing-file and
+process targets, direct arguments, fixed non-inheriting logical and native
+environments, and private generation layout preparation without executing a
+tool. Candidate `RQ-CF-AGENT-017` also requires a conservative structural and
+native-host-compatible PE process image on Windows while leaving POSIX target
+behavior unchanged. It is not yet connected to product activation UI or an
+executor. Model/provider adapters, OAuth clients, Windows child-parser
+authority, launch-adjacent pinning, identity-aware layout cleanup, the mutable
+executor and sandbox, endpoint enforcement, outcome audit, and the user-facing
+assistant/dialog surfaces remain unimplemented.
 
 ## Why This Matters
 

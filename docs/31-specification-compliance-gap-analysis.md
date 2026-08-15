@@ -469,9 +469,13 @@ environment-policy selector to that exact target/session result. The trusted-
 host boundary constructs its fixed generation-owned logical environment, a
 portable non-executing boundary serializes it for POSIX or Windows without
 ambient inheritance, and a separate candidate platform boundary creates and
-verifies an absent generation's private fixed layout. Broader model/
+verifies an absent generation's private fixed layout. Candidate
+`RQ-CF-AGENT-017` also rejects malformed, non-launchable, or native-host-
+incompatible Windows PE process images while preserving POSIX behavior; it is
+structural point-in-time evidence rather than a loader proof or launch token.
+Broader model/
 provider policy, OAuth and credential adapters, trusted-host environment-layout
-identity-aware cleanup, endpoint
+identity-aware cleanup, Windows child-parser authority, endpoint
 policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog
 surfaces remain open.

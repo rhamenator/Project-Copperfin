@@ -118,6 +118,7 @@ add_library(cf_platform_support
     src/platform/process_arguments.cpp
     src/platform/process_environment.cpp
     src/platform/safe_regex.cpp
+    src/platform/windows_pe_image.cpp
 )
 
 target_include_directories(cf_platform_support
@@ -189,7 +190,7 @@ else()
     target_compile_options(cf_security PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-target_link_libraries(cf_security PRIVATE cf_localization)
+target_link_libraries(cf_security PRIVATE cf_localization cf_platform_support)
 
 add_library(cf_licensing
     src/licensing/base64.cpp
@@ -551,6 +552,7 @@ target_link_libraries(cf_xbase_runtime
         cf_design_model
     PRIVATE
         cf_localization
+        cf_platform_support
         cf_platform_profile
         cf_security
 )

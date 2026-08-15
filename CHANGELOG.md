@@ -1,3 +1,15 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-017` Windows workspace-agent
+  process-image compatibility preflight. A shared portable PE parser now
+  requires coherent machine/optional-header form, bounded sections and raw
+  ranges, an executable entry-point section, executable-image flags, and a GUI
+  or console subsystem; it distinguishes DLLs and rejects malformed, truncated,
+  system, unsupported, and host-incompatible images. Windows target inspection
+  holds the image without write sharing and requires unchanged physical identity
+  after parsing. Existing managed/native DECLARE classification now consumes
+  the shared parser. POSIX target behavior and all non-execution boundaries are
+  unchanged; child-parser authority, launch pinning, sandboxing, execution, and
+  outcome audit remain explicit gaps.
+
 - 2026-08-15: Recorded complete implementation evidence for candidate
   `RQ-CF-AGENT-016` after exact signed/DCO implementation
   head `9a382a764` passed warning-free local Release `17/17`, focused lifecycle
