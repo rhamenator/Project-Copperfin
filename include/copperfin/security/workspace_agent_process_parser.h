@@ -19,6 +19,9 @@ namespace copperfin::security {
 
 inline constexpr std::size_t
     workspace_agent_maximum_windows_process_parser_bindings = 64U;
+inline constexpr std::uint64_t
+    workspace_agent_maximum_windows_process_parser_image_bytes =
+        512U * 1024U * 1024U;
 
 enum class WorkspaceAgentProcessArgumentParserContract : std::uint32_t {
     none = 0U,
@@ -32,6 +35,9 @@ struct WorkspaceAgentWindowsProcessParserBinding {
     // admission record. The boundary never manufactures expected identity from
     // whichever file happens to occupy the configured path.
     PhysicalPathIdentity expected_identity{};
+    // Lowercase SHA-256 of the trusted product image. Physical identity alone
+    // does not authenticate bytes in a mutable file object.
+    std::string expected_sha256;
     WorkspaceAgentProcessArgumentParserContract contract =
         WorkspaceAgentProcessArgumentParserContract::windows_c_runtime_argv_v1;
 };
@@ -66,6 +72,7 @@ private:
     struct CapturedBinding {
         std::filesystem::path canonical_executable;
         PhysicalPathIdentity identity{};
+        std::string sha256;
         WorkspaceAgentProcessArgumentParserContract contract =
             WorkspaceAgentProcessArgumentParserContract::none;
     };

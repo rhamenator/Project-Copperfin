@@ -4,6 +4,7 @@
 
 #include "copperfin/platform/path.h"
 #include "copperfin/platform/private_directory.h"
+#include "copperfin/security/sha256.h"
 #include "copperfin/security/workspace_agent_environment.h"
 #include "copperfin/security/workspace_agent_process_parser.h"
 #include "copperfin/security/workspace_agent_session.h"
@@ -168,11 +169,18 @@ public:
         const auto trusted =
             copperfin::security::inspect_physical_path_containment(
                 workspace / "bin" / "workspace-tool", workspace / "bin");
+        const auto snapshot =
+            copperfin::security::read_physically_contained_file_snapshot(
+                trusted, workspace / "bin");
+        const auto digest = snapshot.ok
+            ? copperfin::security::sha256_hex_for_text(snapshot.bytes)
+            : copperfin::security::Sha256Result{};
         return {
             .windows_bindings = {{
                 .trusted_absolute_executable =
                     workspace / "bin" / "workspace-tool",
                 .expected_identity = trusted.identity,
+                .expected_sha256 = digest.ok ? digest.hex_digest : std::string{},
                 .contract = WorkspaceAgentProcessArgumentParserContract::
                     windows_c_runtime_argv_v1}}};
     }
@@ -488,6 +496,17 @@ void test_windows_serialization_requires_exact_parser_authority() {
         copperfin::security::inspect_physical_path_containment(
             wrong_identity.workspace / "bin" / "other-tool",
             wrong_identity.workspace / "bin").identity;
+    const auto wrong_snapshot =
+        copperfin::security::read_physically_contained_file_snapshot(
+            copperfin::security::inspect_physical_path_containment(
+                wrong_identity.workspace / "bin" / "other-tool",
+                wrong_identity.workspace / "bin"),
+            wrong_identity.workspace / "bin");
+    const auto wrong_digest = wrong_snapshot.ok
+        ? copperfin::security::sha256_hex_for_text(wrong_snapshot.bytes)
+        : copperfin::security::Sha256Result{};
+    parser_configuration.windows_bindings.front().expected_sha256 =
+        wrong_digest.ok ? wrong_digest.hex_digest : std::string{};
     WorkspaceAgentSessionController wrong_controller(
         wrong_identity.workspace,
         wrong_identity.configuration(),

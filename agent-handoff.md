@@ -4,22 +4,27 @@
 
 Candidate `RQ-CF-AGENT-018` is under verification. Bounded trusted product-host
 configuration now binds the supported Windows C-runtime command-line parser to
-an exact canonical executable path and host-supplied expected complete physical
-identity; construction rejects whichever file is present unless it matches that
-expectation. Provider,
+an exact canonical executable path, host-supplied expected complete physical
+identity, and expected lowercase SHA-256; construction hashes a physically
+contained snapshot and rejects whichever mutable file is present unless both
+expectations match. Provider,
 model, prompt, workspace, and tool-request input cannot create or select this
 authority. Invalid schema, empty or excessive bindings, relative paths,
 directories, indirect or multiply linked files, unknown contracts, duplicates,
-wrong identities, and changed identities fail closed with content-free
+wrong identities, malformed or mismatched digests, changed identities, and
+changed contents fail closed with content-free
 diagnostics. The controller authorizes before serialization, repeats the check
 after serialization and the complete environment/target preflight, and requires
 the contract to remain equal. POSIX retains native argv semantics.
 
-Focused warning-free Release tests and the new source contract pass locally;
+Corrected-head focused Release/source/workflow contracts pass locally `8/8`;
 the 327-second safety gate passes; and fresh Clang 21 ASan/UBSan with leak
-detection passes `4/4`. The sole broader-selection failure was an unsupported
+detection passes the parser, source contract, and integration selection `3/3`.
+The sole earlier broader-selection failure was an unsupported
 new isolation-label spelling, after which the corrected isolation/focused set
-passed `4/4`. This remains point-in-time, non-executing evidence. Exact
+passed `4/4`. This remains point-in-time, non-executing evidence. A corrected-
+head review P1 about metadata-only authentication is addressed by the digest
+binding and same-file-content regression. Exact
 signed/DCO head, protected Windows/Ubuntu/macOS execution, and exact-head review
 remain before implementation evidence is complete. The retained risk is
 `high`; no independent final safety approval is

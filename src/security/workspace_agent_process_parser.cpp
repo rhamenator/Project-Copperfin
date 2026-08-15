@@ -4,7 +4,12 @@
 
 #include "copperfin/security/workspace_agent_process_parser.h"
 
+#include "copperfin/security/sha256.h"
+
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <string_view>
 #include <system_error>
 #include <utility>
 
@@ -24,10 +29,38 @@ bool supported_contract(
         WorkspaceAgentProcessArgumentParserContract::windows_c_runtime_argv_v1;
 }
 
-std::optional<PhysicalPathContainmentResult> capture_binding(
+bool valid_sha256(const std::string_view digest) noexcept {
+    return digest.size() == 64U &&
+        std::all_of(digest.begin(), digest.end(), [](const char character) {
+            return (character >= '0' && character <= '9') ||
+                (character >= 'a' && character <= 'f');
+        });
+}
+
+bool constant_time_equal(
+    const std::string_view left,
+    const std::string_view right) noexcept {
+    if (left.size() != right.size()) {
+        return false;
+    }
+    std::uint8_t difference = 0U;
+    for (std::size_t index = 0U; index < left.size(); ++index) {
+        difference |= static_cast<std::uint8_t>(left[index]) ^
+            static_cast<std::uint8_t>(right[index]);
+    }
+    return difference == 0U;
+}
+
+struct CapturedExecutable {
+    PhysicalPathContainmentResult containment;
+    std::string sha256;
+};
+
+std::optional<CapturedExecutable> capture_binding(
     const WorkspaceAgentWindowsProcessParserBinding& binding) {
     const auto& path = binding.trusted_absolute_executable;
-    if (!supported_contract(binding.contract) || path.empty() ||
+    if (!supported_contract(binding.contract) ||
+        !valid_sha256(binding.expected_sha256) || path.empty() ||
         path_has_embedded_nul(path) || !path.is_absolute() ||
         path.parent_path().empty()) {
         return std::nullopt;
@@ -40,7 +73,21 @@ std::optional<PhysicalPathContainmentResult> capture_binding(
             captured.canonical_path, filesystem_error) || filesystem_error) {
         return std::nullopt;
     }
-    return captured;
+    const auto snapshot = read_physically_contained_file_snapshot(
+        captured,
+        path.parent_path(),
+        workspace_agent_maximum_windows_process_parser_image_bytes);
+    if (!snapshot.ok) {
+        return std::nullopt;
+    }
+    const auto digest = sha256_hex_for_text(snapshot.bytes);
+    if (!digest.ok ||
+        !constant_time_equal(digest.hex_digest, binding.expected_sha256)) {
+        return std::nullopt;
+    }
+    return CapturedExecutable{
+        .containment = snapshot.containment,
+        .sha256 = digest.hex_digest};
 }
 
 WorkspaceAgentProcessParserAuthorization denied(std::string diagnostic_code) {
@@ -76,16 +123,20 @@ WorkspaceAgentProcessParserBoundary::create(
             captured_bindings.begin(),
             captured_bindings.end(),
             [&](const CapturedBinding& prior) {
-                return prior.canonical_executable == captured->canonical_path ||
-                    (prior.identity.storage_id == captured->identity.storage_id &&
-                     prior.identity.file_id == captured->identity.file_id);
+                return prior.canonical_executable ==
+                        captured->containment.canonical_path ||
+                    (prior.identity.storage_id ==
+                         captured->containment.identity.storage_id &&
+                     prior.identity.file_id ==
+                         captured->containment.identity.file_id);
             });
         if (duplicate) {
             return std::nullopt;
         }
         captured_bindings.push_back({
-            .canonical_executable = captured->canonical_path,
-            .identity = captured->identity,
+            .canonical_executable = captured->containment.canonical_path,
+            .identity = captured->containment.identity,
+            .sha256 = captured->sha256,
             .contract = binding.contract});
     }
     return WorkspaceAgentProcessParserBoundary(std::move(captured_bindings));
@@ -110,6 +161,18 @@ WorkspaceAgentProcessParserBoundary::authorize_windows(
     if (!current.allowed || current.canonical_path != binding->canonical_executable ||
         current.identity != binding->identity) {
         return denied("workspace_agent.process_argument_parser_identity_changed");
+    }
+
+    const auto snapshot = read_physically_contained_file_snapshot(
+        current,
+        binding->canonical_executable.parent_path(),
+        workspace_agent_maximum_windows_process_parser_image_bytes);
+    if (!snapshot.ok) {
+        return denied("workspace_agent.process_argument_parser_identity_changed");
+    }
+    const auto digest = sha256_hex_for_text(snapshot.bytes);
+    if (!digest.ok || !constant_time_equal(digest.hex_digest, binding->sha256)) {
+        return denied("workspace_agent.process_argument_parser_contents_changed");
     }
 
     return {

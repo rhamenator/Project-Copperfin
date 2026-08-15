@@ -1,12 +1,15 @@
 - 2026-08-15: Added candidate `RQ-CF-AGENT-018` trusted-host Windows child
   argument-parser authority. Versioned bounded configuration binds the supported
-  C-runtime parser contract to exact canonical executable path and host-supplied
-  expected complete physical identity; provider,
+  C-runtime parser contract to exact canonical executable path, host-supplied
+  expected complete physical identity, and expected lowercase SHA-256. Capture
+  and authorization hash physically contained snapshots so mutable same-file
+  bytes cannot borrow metadata-only authority; provider,
   model, prompt, workspace, and tool-request data cannot select it. Windows
   serialized invocation preflight authorizes before and after serialization and
   the complete repeated environment/target check, while POSIX retains native
   argv semantics. Invalid, missing, wrong, duplicate, indirect, multiply linked,
-  or changed authority fails with content-free diagnostics. This remains non-
+  malformed/mismatched-digest, or changed authority fails with content-free
+  diagnostics. This remains non-
   executing point-in-time evidence; launch pinning, sandbox, endpoint policy,
   execution, and outcome audit remain gaps.
 

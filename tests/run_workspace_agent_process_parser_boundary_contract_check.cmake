@@ -23,8 +23,16 @@ require_text(include/copperfin/security/workspace_agent_process_parser.h
     "Trusted product-host configuration only")
 require_text(include/copperfin/security/workspace_agent_process_parser.h
     "PhysicalPathIdentity expected_identity")
+require_text(include/copperfin/security/workspace_agent_process_parser.h
+    "std::string expected_sha256")
+require_text(include/copperfin/security/workspace_agent_process_parser.h
+    "workspace_agent_maximum_windows_process_parser_image_bytes")
 require_text(src/security/workspace_agent_process_parser.cpp
     "captured.identity != binding.expected_identity")
+require_text(src/security/workspace_agent_process_parser.cpp
+    "constant_time_equal(digest.hex_digest, binding.expected_sha256)")
+require_text(src/security/workspace_agent_process_parser.cpp
+    "workspace_agent.process_argument_parser_contents_changed")
 require_text(src/security/workspace_agent_process_parser.cpp
     "workspace_agent.process_argument_parser_not_trusted")
 require_text(src/security/workspace_agent_process_parser.cpp

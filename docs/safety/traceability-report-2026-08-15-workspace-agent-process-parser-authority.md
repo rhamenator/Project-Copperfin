@@ -18,8 +18,8 @@ a safety-critical deployment.
 
 | Derived requirement | Verification requirement | Hazard link |
 | --- | --- | --- |
-| `DQ-workspace-agent-process-parser-001`: trusted product-host configuration alone binds one supported Windows parser contract to exact canonical path and a host-supplied expected complete physical identity | `DV-workspace-agent-process-parser-001`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-process-parser-002`: invalid, excessive, indirect, multiply linked, duplicate, unknown-contract, missing, wrong-identity, and changed-identity authority fails without sensitive reflection | `DV-workspace-agent-process-parser-001`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-process-parser-001`: trusted product-host configuration alone binds one supported Windows parser contract to exact canonical path, a host-supplied expected complete physical identity, and an expected lowercase SHA-256 | `DV-workspace-agent-process-parser-001`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-process-parser-002`: invalid, excessive-count, oversized-image, indirect, multiply linked, duplicate, unknown-contract, missing, wrong-identity, malformed/mismatched-digest, changed-identity, and changed-content authority fails without sensitive reflection | `DV-workspace-agent-process-parser-001`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-process-parser-003`: Windows serialization authorizes before and after the complete serialized invocation preflight and requires equal contracts | `DV-workspace-agent-process-parser-002`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-process-parser-004`: POSIX retains native argv semantics and the boundary launches nothing | `DV-workspace-agent-process-parser-002`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01` |
 
@@ -37,8 +37,8 @@ a safety-critical deployment.
 - Before: Windows argument serialization used a conventional C-runtime quoting
   algorithm but could not establish that the selected child used that parser.
 - After: serialization is available only when bounded trusted-host configuration
-  binds that contract to the exact canonical executable identity and both
-  bracketed checks remain equal.
+  binds that contract to the exact canonical executable identity and authenticated
+  byte digest and both bracketed checks remain equal.
 
 Potential Severity If Misused: high
 
@@ -49,9 +49,12 @@ Potential Severity If Misused: high
   physical identity.
 - Authority injection: provider, model, prompt, workspace, and tool-request data
   cannot create or choose a binding.
-- Pre-positioning: boundary construction compares the captured file to the
-  host-supplied expected identity and cannot bless whichever file happens to
-  occupy the configured path.
+- Resource exhaustion: binding count is capped at 64 and each contained image
+  snapshot is capped at 512 MiB before allocation.
+- Pre-positioning or in-place overwrite: boundary construction compares a
+  physically contained snapshot to the host-supplied expected identity and
+  SHA-256. Authorization re-hashes another contained snapshot, so equal-sized
+  replacement bytes with restored filesystem metadata still fail closed.
 - Aliasing and replacement: relative, indirect, multiply linked, duplicate, and
   identity-changed files fail closed. Authorization repeats physical inspection.
 - Race boundary: inspection remains point-in-time. A future executor must pin or
@@ -80,9 +83,13 @@ Current candidate evidence:
   tests plus the 327-second safety gate; its sole failure was the new contract
   test's unsupported isolation-label spelling, after which the corrected
   isolation/focused selection passed `4/4`;
+- corrected-head GCC Release/source/workflow verification passes `8/8`;
 - fresh Clang 21 ASan/UBSan with explicit leak detection passes parser, source-
-  contract, integrated environment, and argument-serialization tests `4/4`;
+  contract, and integrated environment tests `3/3`;
 - `git diff --check` passes;
+- corrected-head review identified that physical metadata alone does not
+  authenticate mutable executable bytes; the candidate now binds and
+  revalidates trusted SHA-256 evidence, with direct regression coverage;
 - exact signed/DCO head, protected Windows/Ubuntu/macOS execution, and exact-
   head review remain required before implementation evidence is complete.
 

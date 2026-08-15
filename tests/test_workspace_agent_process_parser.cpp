@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/security/physical_path_containment.h"
+#include "copperfin/security/sha256.h"
 #include "copperfin/security/workspace_agent_process_parser.h"
 
 #include <chrono>
@@ -19,6 +20,7 @@ using copperfin::security::WorkspaceAgentProcessArgumentParserContract;
 using copperfin::security::WorkspaceAgentProcessParserBoundary;
 using copperfin::security::WorkspaceAgentProcessParserConfiguration;
 using copperfin::security::WorkspaceAgentWindowsProcessParserBinding;
+using copperfin::security::workspace_agent_maximum_windows_process_parser_image_bytes;
 namespace fs = std::filesystem;
 
 int failures = 0;
@@ -59,8 +61,22 @@ public:
             .windows_bindings = {{
                 .trusted_absolute_executable = root / "bin" / "trusted-tool",
                 .expected_identity = trusted.identity,
+                .expected_sha256 = digest_for(trusted),
                 .contract = WorkspaceAgentProcessArgumentParserContract::
                     windows_c_runtime_argv_v1}}};
+    }
+
+    static std::string digest_for(
+        const copperfin::security::PhysicalPathContainmentResult& containment) {
+        const auto snapshot =
+            copperfin::security::read_physically_contained_file_snapshot(
+                containment, containment.canonical_path.parent_path());
+        if (!snapshot.ok) {
+            return {};
+        }
+        const auto digest =
+            copperfin::security::sha256_hex_for_text(snapshot.bytes);
+        return digest.ok ? digest.hex_digest : std::string{};
     }
 
     fs::path root;
@@ -108,6 +124,27 @@ void test_configuration_and_exact_identity_authority() {
         "workspace_agent.process_argument_parser_not_trusted",
         "RQ-CF-AGENT-018: a mismatched supplied identity must not borrow parser authority");
 
+    std::error_code time_error;
+    const auto original_write_time =
+        fs::last_write_time(trusted.canonical_path, time_error);
+    if (!time_error) {
+        TempTree::write(tree.root / "bin" / "trusted-tool", "hostile-v1");
+        fs::last_write_time(
+            trusted.canonical_path, original_write_time, time_error);
+        const auto metadata_preserved =
+            copperfin::security::inspect_physical_path_containment(
+                trusted.canonical_path, trusted.canonical_path.parent_path());
+        if (!time_error && metadata_preserved.allowed &&
+            metadata_preserved.identity == trusted.identity) {
+            expect_content_free_denial(
+                boundary->authorize_windows(
+                    metadata_preserved.canonical_path,
+                    metadata_preserved.identity),
+                "workspace_agent.process_argument_parser_contents_changed",
+                "RQ-CF-AGENT-018: same-size overwritten bytes with restored filesystem metadata must revoke parser authority");
+        }
+    }
+
     TempTree::write(tree.root / "bin" / "trusted-tool", "trusted-v2-longer");
     expect_content_free_denial(
         boundary->authorize_windows(trusted.canonical_path, trusted.identity),
@@ -149,6 +186,23 @@ void test_invalid_configuration_fails_closed() {
                 wrong_expected_identity).has_value(),
            "RQ-CF-AGENT-018: a pre-positioned file must not manufacture the trusted host's expected identity");
 
+    auto absent_digest = tree.configuration();
+    absent_digest.windows_bindings.front().expected_sha256.clear();
+    expect(!WorkspaceAgentProcessParserBoundary::create(absent_digest).has_value(),
+           "RQ-CF-AGENT-018: trusted configuration must supply a canonical expected executable digest");
+
+    auto malformed_digest = tree.configuration();
+    malformed_digest.windows_bindings.front().expected_sha256 =
+        std::string(64U, 'A');
+    expect(!WorkspaceAgentProcessParserBoundary::create(malformed_digest).has_value(),
+           "RQ-CF-AGENT-018: non-lowercase or malformed expected digests must fail closed");
+
+    auto wrong_digest = tree.configuration();
+    wrong_digest.windows_bindings.front().expected_sha256 =
+        std::string(64U, '0');
+    expect(!WorkspaceAgentProcessParserBoundary::create(wrong_digest).has_value(),
+           "RQ-CF-AGENT-018: physical metadata must not authorize executable bytes that differ from trusted content evidence");
+
     std::error_code symlink_error;
     fs::create_symlink(
         tree.root / "bin" / "trusted-tool",
@@ -179,6 +233,27 @@ void test_invalid_configuration_fails_closed() {
         excessive.windows_bindings.front());
     expect(!WorkspaceAgentProcessParserBoundary::create(excessive).has_value(),
            "RQ-CF-AGENT-018: parser-binding count overflow must fail before capture");
+
+    const auto oversized_path = tree.root / "bin" / "oversized-tool";
+    TempTree::write(oversized_path, "");
+    std::error_code resize_error;
+    fs::resize_file(
+        oversized_path,
+        workspace_agent_maximum_windows_process_parser_image_bytes + 1U,
+        resize_error);
+    if (!resize_error) {
+        const auto oversized =
+            copperfin::security::inspect_physical_path_containment(
+                oversized_path, tree.root / "bin");
+        auto oversized_configuration = tree.configuration();
+        oversized_configuration.windows_bindings.front()
+            .trusted_absolute_executable = oversized_path;
+        oversized_configuration.windows_bindings.front().expected_identity =
+            oversized.identity;
+        expect(!WorkspaceAgentProcessParserBoundary::create(
+                    oversized_configuration).has_value(),
+               "RQ-CF-AGENT-018: oversized parser images must fail before snapshot allocation");
+    }
 
     std::error_code link_error;
     fs::create_hard_link(

@@ -474,8 +474,9 @@ verifies an absent generation's private fixed layout. Candidate
 incompatible Windows PE process images while preserving POSIX behavior; it is
 structural point-in-time evidence rather than a loader proof or launch token.
 Candidate `RQ-CF-AGENT-018` binds Windows C-runtime command-line serialization
-to an exact canonical executable identity attested by bounded trusted-host
-configuration and repeats that authority check after serialization; POSIX
+to an exact canonical executable identity and SHA-256-attested byte image from
+bounded trusted-host configuration and repeats that authority check after
+serialization; POSIX
 continues to use native argv semantics. This is still non-executing point-in-
 time evidence rather than launch authority.
 Broader model/
