@@ -335,6 +335,14 @@ or wrong-platform inputs fail without returning invocation targets, arguments,
 paths, or environment entries. Session directory names use locale-independent
 unsigned decimal generation values.
 
+Directory replacement checks bind the storage root, executable directories,
+system root, and session layout to stable storage/file identity. They do not
+treat mutable directory size, link count, or modification time as object
+identity, because normal creation and removal of generation-owned children
+changes that namespace metadata. Physical inspection and directory-kind checks
+still run before and after construction, so redirection or replacement fails
+closed while a trusted host can create a later `session-N` layout.
+
 The POSIX version emits only `HOME`, `LANG=C`, `LC_ALL=C`, `PATH`, `TMPDIR`,
 `TZ=UTC`, and the three `XDG_*_HOME` entries. The Windows version emits only
 `APPDATA`, `HOME`, `LOCALAPPDATA`, `PATH`, `SystemRoot`, `TEMP`, `TMP`,

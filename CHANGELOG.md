@@ -1,3 +1,10 @@
+- 2026-08-15: Corrected the `RQ-CF-AGENT-012` candidate so public headers retain
+  the native platform seam and normal creation of a later generation's session
+  layout is not misclassified as replacement of the trusted storage root.
+  Directory checks bind stable storage/file identity while continuing physical
+  redirection and type checks; lifecycle and replacement regressions cover both
+  sides of the boundary.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-012` isolated process-environment
   construction for the workspace assistant. Product-owned trusted
   configuration supplies the physically identified session-storage root,

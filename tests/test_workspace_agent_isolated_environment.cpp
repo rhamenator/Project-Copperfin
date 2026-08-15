@@ -441,12 +441,35 @@ void test_physical_identity_and_session_binding() {
 #endif
 }
 
+void test_later_session_layout_is_not_root_replacement() {
+    TempTree tree;
+    WorkspaceAgentSessionController controller(tree.workspace, tree.configuration());
+    const auto first = controller.start(activation_request(), audit_sink());
+    expect(first.activated && first.session.generation == 1U,
+           "RQ-CF-AGENT-012: first fixture generation must activate");
+    expect(controller.stop(audit_sink()).revoked,
+           "RQ-CF-AGENT-012: first fixture generation must stop");
+
+    tree.create_session_layout(2U);
+    const auto second = controller.start(activation_request(), audit_sink());
+    expect(second.activated && second.session.generation == 2U,
+           "RQ-CF-AGENT-012: later fixture generation must activate");
+    const auto result = controller.preflight_process_environment_request(
+        invocation_request(second.session.generation));
+    expect(result.allowed &&
+               result.diagnostic_code ==
+                   "workspace_agent.process_environment_request_allowed" &&
+               find_entry(result.environment_entries, "HOME") != nullptr,
+           "RQ-CF-AGENT-012: creating a later session layout must not be treated as storage-root replacement");
+}
+
 }  // namespace
 
 int main() {
     test_fixed_non_inheriting_environment();
     test_configuration_and_layout_fail_closed();
     test_physical_identity_and_session_binding();
+    test_later_session_layout_is_not_root_replacement();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

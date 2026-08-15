@@ -136,3 +136,13 @@ Required before implementation closure:
   exact-head review pending
 - scope: medium-severity non-executing isolated logical environment construction
 - result: candidate for `RQ-CF-AGENT-012`; no independence claim
+
+Candidate review corrections preserve the public platform seam by moving host
+selection out of the public header and bind directories by stable storage/file
+identity rather than mutable namespace metadata. A direct lifecycle regression
+proves that stopping generation 1, creating `session-2`, and starting generation
+2 remains admissible, while the existing storage-root replacement regression
+continues to fail closed. The corrected focused Release selection passes `9/9`,
+the exact public-header platform contract passes, the isolated-environment test
+passes under Clang ASan/UBSan with leak detection, the safety-traceability
+workflow contract passes, and `git diff --check` remains clean.

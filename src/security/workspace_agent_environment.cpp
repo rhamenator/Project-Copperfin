@@ -153,7 +153,14 @@ std::optional<CapturedDirectory> capture_directory(
 bool captured_directory_matches(const CapturedDirectory& captured) {
     const auto current = inspect_physical_path_containment(
         captured.canonical_path, captured.canonical_path);
-    if (!current.allowed || current.identity != captured.identity) {
+    // Directory size, link count, and modification time are mutable namespace
+    // metadata: creating a later session layout legitimately changes them on
+    // the storage root. Storage and file identity bind the directory object;
+    // the physical inspection and type check continue to reject redirection,
+    // replacement, and wrong-kind targets.
+    if (!current.allowed ||
+        current.identity.storage_id != captured.identity.storage_id ||
+        current.identity.file_id != captured.identity.file_id) {
         return false;
     }
     std::error_code error;
@@ -250,6 +257,15 @@ WorkspaceAgentIsolatedEnvironmentConstruction denied(std::string diagnostic) {
 }
 
 }  // namespace
+
+WorkspaceAgentProcessEnvironmentPlatform
+workspace_agent_process_environment_host_platform() noexcept {
+#if defined(_WIN32)
+    return WorkspaceAgentProcessEnvironmentPlatform::windows_v1;
+#else
+    return WorkspaceAgentProcessEnvironmentPlatform::posix_v1;
+#endif
+}
 
 WorkspaceAgentIsolatedEnvironmentBoundary::WorkspaceAgentIsolatedEnvironmentBoundary(
     PhysicalPathContainmentResult session_storage_root,

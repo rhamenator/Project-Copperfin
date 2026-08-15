@@ -35,14 +35,10 @@ enum class WorkspaceAgentProcessEnvironmentPlatform : std::uint32_t {
     return false;
 }
 
-[[nodiscard]] constexpr WorkspaceAgentProcessEnvironmentPlatform
-workspace_agent_process_environment_host_platform() noexcept {
-#if defined(_WIN32)
-    return WorkspaceAgentProcessEnvironmentPlatform::windows_v1;
-#else
-    return WorkspaceAgentProcessEnvironmentPlatform::posix_v1;
-#endif
-}
+// Platform selection is implemented behind the public portability seam. Public
+// consumers do not select native implementations with compiler macros.
+[[nodiscard]] WorkspaceAgentProcessEnvironmentPlatform
+workspace_agent_process_environment_host_platform() noexcept;
 
 struct WorkspaceAgentEnvironmentEntry {
     std::string name;
