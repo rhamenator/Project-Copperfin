@@ -21,6 +21,10 @@ require_text(include/copperfin/security/workspace_agent_process_parser.h
     "WorkspaceAgentProcessArgumentParserContract")
 require_text(include/copperfin/security/workspace_agent_process_parser.h
     "Trusted product-host configuration only")
+require_text(include/copperfin/security/workspace_agent_process_parser.h
+    "PhysicalPathIdentity expected_identity")
+require_text(src/security/workspace_agent_process_parser.cpp
+    "captured.identity != binding.expected_identity")
 require_text(src/security/workspace_agent_process_parser.cpp
     "workspace_agent.process_argument_parser_not_trusted")
 require_text(src/security/workspace_agent_process_parser.cpp

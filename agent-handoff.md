@@ -4,7 +4,9 @@
 
 Candidate `RQ-CF-AGENT-018` is under verification. Bounded trusted product-host
 configuration now binds the supported Windows C-runtime command-line parser to
-an exact canonical executable path and complete physical identity. Provider,
+an exact canonical executable path and host-supplied expected complete physical
+identity; construction rejects whichever file is present unless it matches that
+expectation. Provider,
 model, prompt, workspace, and tool-request input cannot create or select this
 authority. Invalid schema, empty or excessive bindings, relative paths,
 directories, indirect or multiply linked files, unknown contracts, duplicates,

@@ -561,14 +561,17 @@ Candidate `RQ-CF-AGENT-018` closes the known-parser half of the Windows command-
 line prerequisite. `CreateProcessW` supplies a command-line string, not an
 argument vector, and an arbitrary child may interpret that string differently.
 Copperfin therefore permits its conventional C-runtime quoting contract only
-for an exact canonical executable identity listed by trusted product-host
-configuration. Provider, model, prompt, workspace, and tool-request input cannot
+for an exact canonical executable path and expected complete physical identity
+supplied by trusted product-host configuration. The boundary compares the file
+at that path to the supplied expectation rather than trusting whichever file is
+present during construction. Provider, model, prompt, workspace, and tool-request input cannot
 create or select this authority.
 
 Configuration is versioned, nonempty, bounded to sixty-four singly linked
 regular files, and rejects relative paths, duplicate canonical paths or physical
 identities, unsupported parser contracts, and invalid identities. Authorization
 requires the exact configured canonical path and complete physical identity,
+and initial capture must equal the host-supplied expected identity. Authorization
 then reinspects the configured file and requires that identity to remain
 unchanged. Missing, invalid, stale, or wrong-executable authority yields only a
 stable content-free diagnostic and no serialized invocation. The controller

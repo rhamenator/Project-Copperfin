@@ -28,6 +28,10 @@ enum class WorkspaceAgentProcessArgumentParserContract : std::uint32_t {
 
 struct WorkspaceAgentWindowsProcessParserBinding {
     std::filesystem::path trusted_absolute_executable;
+    // Must be supplied by the trusted host from its product-owned executable
+    // admission record. The boundary never manufactures expected identity from
+    // whichever file happens to occupy the configured path.
+    PhysicalPathIdentity expected_identity{};
     WorkspaceAgentProcessArgumentParserContract contract =
         WorkspaceAgentProcessArgumentParserContract::windows_c_runtime_argv_v1;
 };

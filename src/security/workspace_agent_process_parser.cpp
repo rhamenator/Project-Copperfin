@@ -35,6 +35,7 @@ std::optional<PhysicalPathContainmentResult> capture_binding(
     auto captured = inspect_physical_path_containment(path, path.parent_path());
     std::error_code filesystem_error;
     if (!captured.allowed || captured.identity.link_count != 1U ||
+        captured.identity != binding.expected_identity ||
         !std::filesystem::is_regular_file(
             captured.canonical_path, filesystem_error) || filesystem_error) {
         return std::nullopt;

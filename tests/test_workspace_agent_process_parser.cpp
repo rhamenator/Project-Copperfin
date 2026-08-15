@@ -52,9 +52,13 @@ public:
     }
 
     WorkspaceAgentProcessParserConfiguration configuration() const {
+        const auto trusted =
+            copperfin::security::inspect_physical_path_containment(
+                root / "bin" / "trusted-tool", root / "bin");
         return {
             .windows_bindings = {{
                 .trusted_absolute_executable = root / "bin" / "trusted-tool",
+                .expected_identity = trusted.identity,
                 .contract = WorkspaceAgentProcessArgumentParserContract::
                     windows_c_runtime_argv_v1}}};
     }
@@ -131,6 +135,19 @@ void test_invalid_configuration_fails_closed() {
         tree.root / "bin";
     expect(!WorkspaceAgentProcessParserBoundary::create(directory).has_value(),
            "RQ-CF-AGENT-018: directories must not receive argument-parser authority");
+
+    auto absent_identity = tree.configuration();
+    absent_identity.windows_bindings.front().expected_identity = {};
+    expect(!WorkspaceAgentProcessParserBoundary::create(absent_identity).has_value(),
+           "RQ-CF-AGENT-018: trusted configuration must supply the expected executable identity");
+
+    auto wrong_expected_identity = tree.configuration();
+    wrong_expected_identity.windows_bindings.front().expected_identity =
+        copperfin::security::inspect_physical_path_containment(
+            tree.root / "bin" / "other-tool", tree.root / "bin").identity;
+    expect(!WorkspaceAgentProcessParserBoundary::create(
+                wrong_expected_identity).has_value(),
+           "RQ-CF-AGENT-018: a pre-positioned file must not manufacture the trusted host's expected identity");
 
     std::error_code symlink_error;
     fs::create_symlink(

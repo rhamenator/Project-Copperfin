@@ -165,10 +165,14 @@ public:
     }
 
     WorkspaceAgentProcessParserConfiguration parser_configuration() const {
+        const auto trusted =
+            copperfin::security::inspect_physical_path_containment(
+                workspace / "bin" / "workspace-tool", workspace / "bin");
         return {
             .windows_bindings = {{
                 .trusted_absolute_executable =
                     workspace / "bin" / "workspace-tool",
+                .expected_identity = trusted.identity,
                 .contract = WorkspaceAgentProcessArgumentParserContract::
                     windows_c_runtime_argv_v1}}};
     }
@@ -480,6 +484,10 @@ void test_windows_serialization_requires_exact_parser_authority() {
     auto parser_configuration = wrong_identity.parser_configuration();
     parser_configuration.windows_bindings.front().trusted_absolute_executable =
         wrong_identity.workspace / "bin" / "other-tool";
+    parser_configuration.windows_bindings.front().expected_identity =
+        copperfin::security::inspect_physical_path_containment(
+            wrong_identity.workspace / "bin" / "other-tool",
+            wrong_identity.workspace / "bin").identity;
     WorkspaceAgentSessionController wrong_controller(
         wrong_identity.workspace,
         wrong_identity.configuration(),

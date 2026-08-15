@@ -18,7 +18,7 @@ a safety-critical deployment.
 
 | Derived requirement | Verification requirement | Hazard link |
 | --- | --- | --- |
-| `DQ-workspace-agent-process-parser-001`: trusted product-host configuration alone binds one supported Windows parser contract to exact canonical executable identity | `DV-workspace-agent-process-parser-001`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-process-parser-001`: trusted product-host configuration alone binds one supported Windows parser contract to exact canonical path and a host-supplied expected complete physical identity | `DV-workspace-agent-process-parser-001`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-process-parser-002`: invalid, excessive, indirect, multiply linked, duplicate, unknown-contract, missing, wrong-identity, and changed-identity authority fails without sensitive reflection | `DV-workspace-agent-process-parser-001`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-process-parser-003`: Windows serialization authorizes before and after the complete serialized invocation preflight and requires equal contracts | `DV-workspace-agent-process-parser-002`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-process-parser-004`: POSIX retains native argv semantics and the boundary launches nothing | `DV-workspace-agent-process-parser-002`; `DV-workspace-agent-process-parser-003` | `HZ-system-failure-01` |
@@ -49,6 +49,9 @@ Potential Severity If Misused: high
   physical identity.
 - Authority injection: provider, model, prompt, workspace, and tool-request data
   cannot create or choose a binding.
+- Pre-positioning: boundary construction compares the captured file to the
+  host-supplied expected identity and cannot bless whichever file happens to
+  occupy the configured path.
 - Aliasing and replacement: relative, indirect, multiply linked, duplicate, and
   identity-changed files fail closed. Authorization repeats physical inspection.
 - Race boundary: inspection remains point-in-time. A future executor must pin or
