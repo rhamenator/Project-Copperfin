@@ -273,6 +273,43 @@ launch, use direct shell-free bounded process invocation with an explicit
 secret-free environment, pin or revalidate platform-backed targets as the OS
 allows, apply the selected sandbox, and audit the actual outcome.
 
+## Process invocation-shape preflight
+
+Before an executor exists, the next versioned non-executing preflight binds a
+direct argument vector to the exact process target, registered tool, and active
+session generation. The executable remains a separate canonical target and
+becomes `argv[0]` only in the future executor. Each supplied entry is one
+argument: no entry is parsed as a command, shell fragment, option bundle,
+response file, glob, variable expansion, or search request. Empty arguments,
+spaces, wildcard characters, and shell metacharacters therefore remain literal
+argument content.
+
+The version-1 vector is bounded to 64 entries, 4,096 UTF-8 bytes per entry, and
+8,192 UTF-8 bytes in aggregate. Malformed UTF-8, embedded NULs, and any bound
+violation fail closed without returning the argument vector or either target.
+The controller copies the bounded vector and then repeats exact-session and
+registered-tool admission. The public request has no command-string, PATH-
+search, environment, root, shell, standard-stream, timeout, or network-policy
+field.
+
+An allowed result names the machine-readable
+`isolated_session_v1` environment policy, whose policy query reports parent-
+environment inheritance as false. That policy requires a future executor to
+construct a fresh session-owned environment from product-controlled inputs:
+no provider/OAuth token, credential, parent variable, prompt content, or
+workspace-supplied environment entry may enter that environment. Provider
+credentials must remain in the provider adapter and must never be converted to
+process arguments. The preflight does not inspect or classify arbitrary
+argument content, so an allow does not certify that arguments are secret-free. Exact
+platform entries, approved executable directories, session-owned temporary and
+home locations, locale, and cleanup are executor responsibilities and must be
+versioned and tested before launch is connected. The executor must also repeat
+target and session checks, encode each argument directly for the platform API,
+enforce the platform's smaller serialized-command limit if applicable, apply
+the real sandbox and endpoint policy, and audit only content-free outcome
+metadata. This preflight does not construct that environment, serialize a
+command line, read an executable, start a process, or claim execution safety.
+
 ## Current implementation and remaining work
 
 The current slices implement the portable access-mode, capability, RBAC,
@@ -305,12 +342,14 @@ described above. The public request cannot supply capability booleans; native
 lookup supplies the complete immutable definition. The controller also
 supplies the existing-file and process-target preflights described above. These
 close product-root and point-in-time identity prerequisites for existing file
-tools and explicit process executable/working-directory targets only; neither
-is an executor, authorization token, or real sandbox. Prospective
+tools and explicit process executable/working-directory targets. The adjacent
+invocation-shape preflight adds a bounded direct argument vector and mandatory
+non-inheriting environment-policy selector; none of these results is an
+executor, authorization token, environment implementation, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, launch-adjacent handle/revalidation, command/argument/environment
-policy, endpoint policy, process execution, and tool-outcome auditing remain
-unimplemented.
+semantics, launch-adjacent handle/revalidation, isolated environment
+construction, platform argument serialization, endpoint policy, process
+execution, and tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.

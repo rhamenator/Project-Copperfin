@@ -32,7 +32,7 @@ flowchart TB
       subgraph LANEI["Lane I - root #113 'Modernization/outputs/interop/security' (shared root with H)"]
         direction LR
         I1["I1 Runtime/Project Security<br/>Depth + Opt-In Generated-<br/>App Controls<br/>root #33 - SEEDED: cf_security baseline"]
-        I2["I2 Extension/Host/AI-MCP<br/>Security Boundary<br/>root #34 - SEEDED:<br/>agent RBAC/modes/target containment"]
+        I2["I2 Extension/Host/AI-MCP<br/>Security Boundary<br/>root #34 - SEEDED:<br/>agent RBAC/modes/target +<br/>invocation-shape containment"]
         I1 --> I2
       end
 
@@ -71,7 +71,8 @@ flowchart TB
 **What's done:** `H1` has relational backend translators; `H3` has an admitted
 Native AOT leaf, admitted Python and R sidecar leaves, one bounded read-only MCP
 DBF-header host, a provider-independent workspace-agent authority policy plus
-non-executing file and process target containment,
+non-executing file/process target containment and a bounded direct-argument,
+non-inheriting invocation-shape preflight,
 advisory measured-route strategy, and versioned representative benchmark
 evidence; `I1` has a security baseline and `I2` now has dedicated agent RBAC,
 capability modes, and a localized unrestricted warning gate. These real seeds are
