@@ -1,5 +1,31 @@
 # Agent Handoff
 
+## V1 workspace-agent isolated environment construction
+
+`RQ-CF-AGENT-012` is an implementation candidate on
+`agent/v1-workspace-agent-isolated-environment`. A new trusted-host boundary
+constructs the exact active generation's fixed-key `isolated_session_v1`
+logical environment without reading ambient variables or accepting arbitrary
+environment names/values from a tool request. It physically identifies the
+session-storage root, one to sixteen approved executable directories, and the
+Windows system root where applicable; derives only direct
+`session-N/{home,temp,config,cache,data}` paths; rejects identity replacement,
+indirection, cross-device components, invalid UTF-8/NUL, PATH-delimiter
+ambiguity, duplicates, wrong-platform configuration, and byte/count limits;
+and rechecks the exact invocation around construction. POSIX emits nine fixed
+profile/locale/time-zone entries; Windows emits ten fixed profile/temp/system
+entries. `PATH` contains only approved directories. The warning-free Release
+security/agent/community/isolation selection passes `11/11`; fresh Clang 21
+ASan/UBSan with leak detection passes `6/6`; the generated isolation inventory
+covers `376` native tests; safety traceability passes `1/1`; and diff passes.
+Protected exact-head evidence remains pending.
+
+This is still a non-executing point-in-time plan. Trusted-host secure layout
+creation, access control, cleanup, platform environment/argument serialization,
+Windows executable-format compatibility, launch-adjacent pin/revalidation,
+executor, real sandbox, endpoint policy, outcome audit, provider/OAuth, trusted
+UI, diff, and undo remain explicit gaps.
+
 ## V1 workspace-agent process invocation shape
 
 `RQ-CF-AGENT-011` is defined at merged commit `7361f76e0`. The new
@@ -23,7 +49,8 @@ passed the focused eight-test workspace-agent selection and found no defect in
 bounds/overflow, UTF-8, denial clearing, final session recheck, sensitive-
 content wording, or the non-execution boundary. No independent final safety
 approval is claimed.
-Environment construction, platform serialization/limits, executable-format
+`RQ-CF-AGENT-012` now supplies fixed-key logical environment construction.
+Secure layout lifecycle, platform serialization/limits, executable-format
 compatibility, launch-adjacent pin/revalidation, executor, real sandbox,
 endpoint policy, outcome audit, provider/OAuth, trusted UI, diff, and undo
 remain explicit gaps.
@@ -49,9 +76,10 @@ corrected head structurally rejects and directly regresses all forms; the sole
 thread is resolved and outdated. Implementation PR `#5006` merged as
 `7cb1499ce`; correction PR `#5008` merged as `53c51c433`. No independent final
 review is claimed.
-`RQ-CF-AGENT-011` now supplies the bounded direct-argument and non-inheriting
-environment-policy shape. Isolated-environment construction, platform
-serialization/limits, launch-adjacent handle/revalidation, executor, real
+`RQ-CF-AGENT-011` supplies the bounded direct-argument and non-inheriting
+environment-policy shape, and `RQ-CF-AGENT-012` supplies fixed-key logical
+environment construction. Secure layout lifecycle, platform serialization/
+limits, launch-adjacent handle/revalidation, executor, real
 sandbox, outcome audit, endpoint policy, provider/OAuth, trusted UI, diff, and
 undo remain explicit gaps.
 

@@ -185,6 +185,17 @@ WorkspaceAgentSessionController::WorkspaceAgentSessionController(
       process_target_boundary_(WorkspaceAgentProcessTargetBoundary::create(
           trusted_absolute_workspace_root)) {}
 
+WorkspaceAgentSessionController::WorkspaceAgentSessionController(
+    const std::filesystem::path& trusted_absolute_workspace_root,
+    const WorkspaceAgentIsolatedEnvironmentConfiguration&
+        trusted_environment_configuration)
+    : file_target_boundary_(WorkspaceAgentFileTargetBoundary::create(
+          trusted_absolute_workspace_root)),
+      process_target_boundary_(WorkspaceAgentProcessTargetBoundary::create(
+          trusted_absolute_workspace_root)),
+      process_environment_boundary_(WorkspaceAgentIsolatedEnvironmentBoundary::create(
+          trusted_environment_configuration)) {}
+
 WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
     const WorkspaceAgentActivationRequest& request,
     const WorkspaceAgentSessionAuditSink& audit_sink) {
@@ -559,6 +570,65 @@ WorkspaceAgentSessionController::preflight_process_invocation_request(
     result.working_directory_identity = target.working_directory_identity;
     result.arguments = std::move(validated_arguments);
     result.diagnostic_code = "workspace_agent.process_invocation_request_allowed";
+    return result;
+}
+
+WorkspaceAgentProcessEnvironmentPreflightResult
+WorkspaceAgentSessionController::preflight_process_environment_request(
+    const WorkspaceAgentProcessInvocationPreflightRequest& request) const {
+    WorkspaceAgentProcessEnvironmentPreflightResult result;
+    const auto preliminary = preflight_process_invocation_request(request);
+    if (!preliminary.allowed) {
+        result.diagnostic_code = preliminary.diagnostic_code;
+        return result;
+    }
+    if (!process_environment_boundary_.has_value()) {
+        result.diagnostic_code =
+            "workspace_agent.process_environment_boundary_unavailable";
+        return result;
+    }
+
+    const auto environment = process_environment_boundary_->construct(
+        preliminary.session_generation, preliminary.environment_policy);
+    if (!environment.allowed) {
+        result.diagnostic_code = environment.diagnostic_code;
+        return result;
+    }
+
+    const auto final = preflight_process_invocation_request(request);
+    if (!final.allowed ||
+        final.session_generation != preliminary.session_generation ||
+        final.effective_mode != preliminary.effective_mode ||
+        final.tool_id != preliminary.tool_id ||
+        final.canonical_executable_path != preliminary.canonical_executable_path ||
+        final.executable_identity != preliminary.executable_identity ||
+        final.canonical_working_directory !=
+            preliminary.canonical_working_directory ||
+        final.working_directory_identity !=
+            preliminary.working_directory_identity ||
+        final.arguments != preliminary.arguments ||
+        final.environment_policy != preliminary.environment_policy ||
+        environment.session_generation != preliminary.session_generation ||
+        environment.policy != preliminary.environment_policy ||
+        environment.platform != workspace_agent_process_environment_host_platform()) {
+        result.diagnostic_code =
+            "workspace_agent.process_environment_stale_invocation";
+        return result;
+    }
+
+    result.allowed = true;
+    result.session_generation = final.session_generation;
+    result.effective_mode = final.effective_mode;
+    result.tool_id = final.tool_id;
+    result.canonical_executable_path = final.canonical_executable_path;
+    result.executable_identity = final.executable_identity;
+    result.canonical_working_directory = final.canonical_working_directory;
+    result.working_directory_identity = final.working_directory_identity;
+    result.arguments = final.arguments;
+    result.environment_policy = final.environment_policy;
+    result.environment_platform = environment.platform;
+    result.environment_entries = environment.entries;
+    result.diagnostic_code = "workspace_agent.process_environment_request_allowed";
     return result;
 }
 

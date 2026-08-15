@@ -466,8 +466,9 @@ executable/working-directory pairs to exact active sessions without file I/O,
 PATH lookup, shell interpretation, or launch. A further non-executing preflight
 binds a bounded direct UTF-8 argument vector and non-inheriting isolated-session
 environment-policy selector to that exact target/session result. Broader model/
-provider policy, OAuth and credential adapters, actual isolated-environment
-construction, platform argument serialization, endpoint policy, a mutable
+provider policy, OAuth and credential adapters, trusted-host environment-layout
+creation/access control/cleanup, platform environment and argument
+serialization, endpoint policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog
 surfaces remain open.
 

@@ -166,6 +166,7 @@ add_library(cf_security
     src/security/security_model.cpp
     src/security/workspace_agent_policy.cpp
     src/security/workspace_agent_audit_sink.cpp
+    src/security/workspace_agent_environment.cpp
     src/security/workspace_agent_process_containment.cpp
     src/security/workspace_agent_session.cpp
     src/security/workspace_agent_target_containment.cpp

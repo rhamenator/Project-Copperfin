@@ -1,3 +1,30 @@
+- 2026-08-15: Corrected the `RQ-CF-AGENT-012` candidate so public headers retain
+  the native platform seam and normal creation of a later generation's session
+  layout is not misclassified as replacement of the trusted storage root.
+  Directory checks bind stable storage/file identity while continuing physical
+  redirection and type checks; lifecycle and replacement regressions cover both
+  sides of the boundary.
+
+- 2026-08-15: Added candidate `RQ-CF-AGENT-012` isolated process-environment
+  construction for the workspace assistant. Product-owned trusted
+  configuration supplies the physically identified session-storage root,
+  bounded approved executable directories, and Windows system root; the tool
+  request still supplies no environment names or values. The boundary derives
+  only the active generation's direct `home`, `temp`, `config`, `cache`, and
+  `data` layout, emits a small fixed POSIX or Windows key set, fixes locale and
+  time zone, and builds `PATH` only from the approved directories. It reads no
+  parent variables and fails without reflection on stale identities,
+  indirection, cross-device layout, wrong-platform input, duplicate/delimited
+  paths, invalid UTF-8/NUL, or count/byte limits. The controller brackets
+  construction with the complete invocation preflight. This remains
+  non-executing: secure layout lifecycle, platform serialization, target
+  pinning, sandbox/endpoint enforcement, outcome audit, provider/OAuth, and UI
+  remain open. The warning-free Release security/agent/community/isolation
+  selection passes `11/11`; fresh Clang 21 ASan/UBSan with leak detection
+  passes `6/6`; the generated isolation inventory covers `376` native tests;
+  safety traceability passes `1/1`; and diff passes. Exact-head protected
+  evidence is pending.
+
 - 2026-08-14: Added a versioned non-executing workspace-agent process
   invocation-shape preflight. It binds the exact registered process tool,
   active session, physically contained executable/working directory, and a
