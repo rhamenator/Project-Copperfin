@@ -95,6 +95,8 @@ bool denied_start_is_valid(const WorkspaceAgentSessionAuditEvent& event) {
         event.diagnostic_code == "workspace_agent.trusted_ui_required" ||
         event.diagnostic_code == "workspace_agent.audit_unavailable" ||
         event.diagnostic_code == "workspace_agent.session_already_active" ||
+        event.diagnostic_code ==
+            "workspace_agent.session_layout_cleanup_capacity_reached" ||
         event.diagnostic_code == "workspace_agent.policy_evaluation_failed";
 }
 
@@ -129,6 +131,34 @@ bool session_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) 
                 mode_is_valid(event.requested_mode) &&
                 event.effective_mode == WorkspaceAgentAccessMode::advisory &&
                 event.diagnostic_code == "workspace_agent.session_stopped";
+        case WorkspaceAgentSessionEventKind::layout_cleanup_intent:
+            return event.outcome == "pending" &&
+                event.requested_mode == WorkspaceAgentAccessMode::advisory &&
+                event.effective_mode == WorkspaceAgentAccessMode::advisory &&
+                event.diagnostic_code ==
+                    "workspace_agent.session_layout_cleanup_intent";
+        case WorkspaceAgentSessionEventKind::layout_cleanup_outcome:
+            if (event.requested_mode != WorkspaceAgentAccessMode::advisory ||
+                event.effective_mode != WorkspaceAgentAccessMode::advisory) {
+                return false;
+            }
+            if (event.outcome == "cleaned") {
+                return event.diagnostic_code ==
+                    "workspace_agent.environment_session_layout_cleaned";
+            }
+            return event.outcome == "retained" &&
+                (event.diagnostic_code ==
+                     "workspace_agent.environment_session_layout_cleanup_invalid_receipt" ||
+                 event.diagnostic_code ==
+                     "workspace_agent.environment_storage_root_identity_changed" ||
+                 event.diagnostic_code ==
+                     "workspace_agent.environment_session_layout_cleanup_identity_changed" ||
+                 event.diagnostic_code ==
+                     "workspace_agent.environment_session_layout_cleanup_not_empty" ||
+                 event.diagnostic_code ==
+                     "workspace_agent.environment_session_layout_cleanup_failed" ||
+                 event.diagnostic_code ==
+                     "workspace_agent.session_environment_boundary_unavailable");
     }
     return false;
 }

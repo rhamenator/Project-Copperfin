@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## V1 workspace-agent audited pending-layout cleanup
+
+Candidate `RQ-CF-AGENT-021` retains successful configured layout-preparation
+receipts FIFO in the native controller, including after failed start audit. A
+new explicit cleanup call is denied while session authority is active and
+serializes with start/stop. It requires a committed content-free intent event
+before invoking the existing opaque identity-receipted empty-layout primitive,
+then submits a distinct `cleaned` or `retained` outcome. Failed intent audit
+mutates nothing; denied or failed cleanup retains the receipt for explicit
+retry; successful cleanup consumes it. Later generations remain permitted and
+cannot overwrite older receipts; a fixed cap of sixty-four denies another
+process-capable start before layout creation. Local warning-free GCC Release focused
+session/environment/audit execution passes `3/3`; the combined broader/source/
+community/isolation selection passes `16/16`; and fresh Clang 21
+ASan/UBSan passes `3/3`. The repository-wide safety contract passes `1/1` in
+331.54 seconds. Protected, review, and merge evidence remain pending. Automatic stop/destructor
+cleanup, restart-persistent receipts, partial-removal retry, and owned nonempty
+content disposition remain gaps.
+
 ## V1 workspace-agent identity-receipted empty-layout cleanup
 
 Candidate `RQ-CF-AGENT-020` adds an explicit trusted-host cleanup primitive

@@ -21,15 +21,20 @@
 
 namespace copperfin::security {
 
+inline constexpr std::size_t
+    workspace_agent_session_max_pending_layout_cleanups = 64U;
+
 // Governing requirements: RQ-CF-AGENT-001, RQ-CF-AGENT-005, and
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
 // RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
-// RQ-CF-AGENT-018 and RQ-CF-AGENT-019.
+// RQ-CF-AGENT-018 through RQ-CF-AGENT-021.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
-    stop
+    stop,
+    layout_cleanup_intent,
+    layout_cleanup_outcome
 };
 
 struct WorkspaceAgentSessionAuditEvent {
@@ -79,6 +84,17 @@ struct WorkspaceAgentSessionStopResult {
     std::string audit_receipt;
     std::string diagnostic_code;
     WorkspaceAgentSessionSnapshot session{};
+};
+
+struct WorkspaceAgentSessionLayoutCleanupAttemptResult {
+    bool attempted = false;
+    bool cleaned = false;
+    bool intent_audit_committed = false;
+    bool outcome_audit_committed = false;
+    std::uint64_t session_generation = 0U;
+    std::string intent_audit_receipt;
+    std::string outcome_audit_receipt;
+    std::string diagnostic_code;
 };
 
 struct WorkspaceAgentToolPreflightRequest {
@@ -237,6 +253,13 @@ public:
         const WorkspaceAgentSessionAuditSink& audit_sink);
     [[nodiscard]] WorkspaceAgentSessionStopResult stop(
         const WorkspaceAgentSessionAuditSink& audit_sink);
+    // Attempts cleanup of the oldest controller-retained preparation receipt.
+    // Authority must already be revoked. A durable intent record is required
+    // before mutation, and failed cleanup retains the receipt for an explicit
+    // retry. This does not run automatically during stop or process teardown.
+    [[nodiscard]] WorkspaceAgentSessionLayoutCleanupAttemptResult
+    cleanup_pending_session_layout(
+        const WorkspaceAgentSessionAuditSink& audit_sink);
     [[nodiscard]] WorkspaceAgentSessionSnapshot snapshot() const;
 
     // This is a point-in-time, non-executing preflight, not a reusable
@@ -311,13 +334,16 @@ private:
     enum class Transition {
         idle,
         starting,
-        stopping
+        stopping,
+        cleaning
     };
 
     mutable std::mutex mutex_;
     Transition transition_ = Transition::idle;
     std::uint64_t next_generation_ = 1U;
     WorkspaceAgentSessionSnapshot active_session_{};
+    std::vector<WorkspaceAgentSessionLayoutPreparationResult>
+        pending_layout_cleanups_;
     std::optional<WorkspaceAgentFileTargetBoundary> file_target_boundary_;
     std::optional<WorkspaceAgentProcessTargetBoundary> process_target_boundary_;
     std::optional<WorkspaceAgentIsolatedEnvironmentBoundary>

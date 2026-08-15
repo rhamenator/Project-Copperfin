@@ -234,6 +234,7 @@ WorkspaceAgentSessionAuditSink audit_sink() {
 
 struct AuditCapture {
     std::vector<WorkspaceAgentSessionAuditEvent> events;
+    std::size_t fail_on_event = 0U;
 };
 
 WorkspaceAgentSessionAuditCommitResult capture_audit(
@@ -244,6 +245,10 @@ WorkspaceAgentSessionAuditCommitResult capture_audit(
         return {};
     }
     capture->events.push_back(event);
+    if (capture->fail_on_event != 0U &&
+        capture->events.size() == capture->fail_on_event) {
+        return {};
+    }
     return {.ok = true, .receipt = "isolated-environment-captured-receipt"};
 }
 
@@ -1178,6 +1183,151 @@ void test_session_start_prepares_layout_before_authority() {
            "RQ-CF-AGENT-016: a later start must use a fresh generation rather than adopt an orphaned prepared layout");
 }
 
+void test_controller_retains_and_audits_explicit_layout_cleanup() {
+    TempTree tree;
+    WorkspaceAgentSessionController controller(tree.workspace, tree.configuration());
+    AuditCapture audit;
+    const auto started = controller.start(activation_request(), audit_sink(audit));
+    expect(started.activated &&
+               std::filesystem::exists(tree.session_storage / "session-1"),
+           "RQ-CF-AGENT-021: configured start must retain cleanup authority for its prepared generation");
+
+    const auto active_denial =
+        controller.cleanup_pending_session_layout(audit_sink(audit));
+    expect(!active_denial.attempted && !active_denial.cleaned &&
+               active_denial.diagnostic_code ==
+                   "workspace_agent.session_layout_cleanup_active_session" &&
+               audit.events.size() == 1U,
+           "RQ-CF-AGENT-021: cleanup must not begin while any session authority remains active");
+
+    const auto stopped = controller.stop(audit_sink(audit));
+    const auto cleaned =
+        controller.cleanup_pending_session_layout(audit_sink(audit));
+    expect(stopped.revoked && cleaned.attempted && cleaned.cleaned &&
+               cleaned.intent_audit_committed &&
+               cleaned.outcome_audit_committed &&
+               cleaned.session_generation == started.session.generation &&
+               cleaned.diagnostic_code ==
+                   "workspace_agent.environment_session_layout_cleaned" &&
+               !std::filesystem::exists(tree.session_storage / "session-1") &&
+               audit.events.size() == 4U &&
+               audit.events[2].kind ==
+                   copperfin::security::WorkspaceAgentSessionEventKind::
+                       layout_cleanup_intent &&
+               audit.events[2].outcome == "pending" &&
+               audit.events[3].kind ==
+                   copperfin::security::WorkspaceAgentSessionEventKind::
+                       layout_cleanup_outcome &&
+               audit.events[3].outcome == "cleaned",
+           "RQ-CF-AGENT-021: revoked empty layout cleanup must be bracketed by intent and outcome audit records");
+    const auto duplicate =
+        controller.cleanup_pending_session_layout(audit_sink(audit));
+    expect(!duplicate.attempted &&
+               duplicate.diagnostic_code ==
+                   "workspace_agent.session_layout_cleanup_not_pending" &&
+               audit.events.size() == 4U,
+           "RQ-CF-AGENT-021: a consumed cleanup receipt must not be reusable");
+
+    TempTree unaudited_tree;
+    WorkspaceAgentSessionController unaudited(
+        unaudited_tree.workspace, unaudited_tree.configuration());
+    const auto uncommitted = unaudited.start(activation_request(), {});
+    expect(!uncommitted.activated &&
+               std::filesystem::exists(
+                   unaudited_tree.session_storage / "session-1"),
+           "RQ-CF-AGENT-021: failed start audit fixture must leave its prepared layout pending");
+    const auto missing_intent = unaudited.cleanup_pending_session_layout({});
+    expect(!missing_intent.attempted && !missing_intent.cleaned &&
+               !missing_intent.intent_audit_committed &&
+               missing_intent.diagnostic_code ==
+                   "workspace_agent.session_layout_cleanup_intent_audit_failed" &&
+               std::filesystem::exists(
+                   unaudited_tree.session_storage / "session-1"),
+           "RQ-CF-AGENT-021: cleanup must not mutate without a durable intent receipt");
+    AuditCapture recovery_audit;
+    const auto recovered = unaudited.cleanup_pending_session_layout(
+        audit_sink(recovery_audit));
+    expect(recovered.cleaned && recovery_audit.events.size() == 2U &&
+               !std::filesystem::exists(
+                   unaudited_tree.session_storage / "session-1"),
+           "RQ-CF-AGENT-021: intent-audit failure must retain the opaque receipt for a later explicit retry");
+
+    TempTree outcome_failure_tree;
+    WorkspaceAgentSessionController outcome_failure(
+        outcome_failure_tree.workspace, outcome_failure_tree.configuration());
+    const auto outcome_start = outcome_failure.start(
+        activation_request(), audit_sink());
+    expect(outcome_start.activated && outcome_failure.stop(audit_sink()).revoked,
+           "RQ-CF-AGENT-021: outcome-audit failure fixture must first revoke authority");
+    AuditCapture failing_outcome;
+    failing_outcome.fail_on_event = 2U;
+    const auto cleaned_without_outcome =
+        outcome_failure.cleanup_pending_session_layout(
+            audit_sink(failing_outcome));
+    const auto consumed_after_outcome_failure =
+        outcome_failure.cleanup_pending_session_layout(audit_sink());
+    expect(cleaned_without_outcome.attempted &&
+               cleaned_without_outcome.cleaned &&
+               cleaned_without_outcome.intent_audit_committed &&
+               !cleaned_without_outcome.outcome_audit_committed &&
+               cleaned_without_outcome.diagnostic_code ==
+                   "workspace_agent.session_layout_cleanup_outcome_audit_failed" &&
+               failing_outcome.events.size() == 2U &&
+               !std::filesystem::exists(
+                   outcome_failure_tree.session_storage / "session-1") &&
+               !consumed_after_outcome_failure.attempted &&
+               consumed_after_outcome_failure.diagnostic_code ==
+                   "workspace_agent.session_layout_cleanup_not_pending",
+           "RQ-CF-AGENT-021: successful mutation must consume its receipt even when outcome audit persistence fails");
+
+    TempTree occupied_tree;
+    WorkspaceAgentSessionController occupied(
+        occupied_tree.workspace, occupied_tree.configuration());
+    AuditCapture occupied_audit;
+    const auto occupied_start = occupied.start(
+        activation_request(), audit_sink(occupied_audit));
+    std::ofstream(occupied_tree.session_storage / "session-1" / "data" /
+                  "retained.txt") << "retain\n";
+    expect(occupied.stop(audit_sink(occupied_audit)).revoked,
+           "RQ-CF-AGENT-021: occupied fixture must revoke before cleanup");
+    const auto retained = occupied.cleanup_pending_session_layout(
+        audit_sink(occupied_audit));
+    expect(occupied_start.activated && retained.attempted && !retained.cleaned &&
+               retained.intent_audit_committed &&
+               retained.outcome_audit_committed &&
+               retained.diagnostic_code !=
+                   "workspace_agent.environment_session_layout_cleaned" &&
+               std::filesystem::exists(
+                   occupied_tree.session_storage / "session-1" / "data" /
+                   "retained.txt") &&
+               occupied_audit.events.back().outcome == "retained",
+           "RQ-CF-AGENT-021: occupied content must be preserved and produce an audited retained outcome");
+
+    TempTree bounded_tree;
+    WorkspaceAgentSessionController bounded(
+        bounded_tree.workspace, bounded_tree.configuration());
+    for (std::size_t index = 0U;
+         index <
+             copperfin::security::
+                 workspace_agent_session_max_pending_layout_cleanups;
+         ++index) {
+        const auto bounded_start = bounded.start(activation_request(), audit_sink());
+        expect(bounded_start.activated && bounded.stop(audit_sink()).revoked,
+               "RQ-CF-AGENT-021: every generation below the pending-receipt cap must retain its distinct receipt");
+    }
+    AuditCapture capacity_audit;
+    const auto capacity_denied = bounded.start(
+        activation_request(), audit_sink(capacity_audit));
+    expect(!capacity_denied.activated && capacity_denied.audit_committed &&
+               capacity_denied.diagnostic_code ==
+                   "workspace_agent.session_layout_cleanup_capacity_reached" &&
+               capacity_audit.events.size() == 1U &&
+               capacity_audit.events.front().outcome == "denied" &&
+               !std::filesystem::exists(
+                   bounded_tree.session_storage / "session-65"),
+           "RQ-CF-AGENT-021: the fixed pending-receipt cap must deny before creating another layout");
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1203,6 +1353,7 @@ int main(int argc, char** argv) {
     test_physical_identity_and_session_binding();
     test_later_session_layout_is_not_root_replacement();
     test_session_start_prepares_layout_before_authority();
+    test_controller_retains_and_audits_explicit_layout_cleanup();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
