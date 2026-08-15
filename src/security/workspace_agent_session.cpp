@@ -4,6 +4,8 @@
 
 #include "copperfin/security/workspace_agent_session.h"
 
+#include "copperfin/platform/path.h"
+#include "copperfin/platform/process_arguments.h"
 #include "copperfin/platform/process_environment.h"
 
 #include <iomanip>
@@ -700,6 +702,92 @@ WorkspaceAgentSessionController::preflight_serialized_process_environment_reques
     result.windows_environment_block = std::move(serialized.windows_block);
     result.diagnostic_code =
         "workspace_agent.process_environment_serialization_request_allowed";
+    return result;
+}
+
+WorkspaceAgentSerializedProcessInvocationPreflightResult
+WorkspaceAgentSessionController::preflight_serialized_process_invocation_request(
+    const WorkspaceAgentProcessInvocationPreflightRequest& request) const {
+    WorkspaceAgentSerializedProcessInvocationPreflightResult result;
+    const auto preliminary =
+        preflight_serialized_process_environment_request(request);
+    if (!preliminary.allowed) {
+        result.diagnostic_code = preliminary.diagnostic_code;
+        return result;
+    }
+
+    const auto platform =
+        preliminary.environment_plan.environment_platform;
+    if (platform != WorkspaceAgentProcessEnvironmentPlatform::windows_v1 &&
+        platform != WorkspaceAgentProcessEnvironmentPlatform::posix_v1) {
+        result.diagnostic_code =
+            "workspace_agent.process_argument_serialization_invalid_platform";
+        return result;
+    }
+    const bool windows =
+        platform == WorkspaceAgentProcessEnvironmentPlatform::windows_v1;
+    const auto target = windows
+        ? copperfin::platform::ProcessArgumentTarget::windows_command_line_v1
+        : copperfin::platform::ProcessArgumentTarget::posix_v1;
+    const std::size_t maximum_units = windows
+        ? 32767U
+        : std::numeric_limits<std::size_t>::max();
+    auto serialized = copperfin::platform::serialize_process_arguments(
+        copperfin::platform::path_to_utf8_string(
+            preliminary.environment_plan.canonical_executable_path),
+        preliminary.environment_plan.arguments,
+        target,
+        maximum_units);
+    if (!serialized.ok) {
+        result.diagnostic_code = serialized.diagnostic_code;
+        return result;
+    }
+
+    // Argument serialization allocates and copies. Repeat the complete
+    // environment serialization preflight afterward; neither result is an
+    // authority token and a future executor must repeat beside direct launch.
+    const auto final = preflight_serialized_process_environment_request(request);
+    if (!final.allowed ||
+        !final.environment_plan.allowed ||
+        !preliminary.environment_plan.allowed ||
+        final.diagnostic_code != preliminary.diagnostic_code ||
+        final.environment_plan.diagnostic_code !=
+            preliminary.environment_plan.diagnostic_code ||
+        final.environment_plan.session_generation !=
+            preliminary.environment_plan.session_generation ||
+        final.environment_plan.effective_mode !=
+            preliminary.environment_plan.effective_mode ||
+        final.environment_plan.tool_id != preliminary.environment_plan.tool_id ||
+        final.environment_plan.canonical_executable_path !=
+            preliminary.environment_plan.canonical_executable_path ||
+        final.environment_plan.executable_identity !=
+            preliminary.environment_plan.executable_identity ||
+        final.environment_plan.canonical_working_directory !=
+            preliminary.environment_plan.canonical_working_directory ||
+        final.environment_plan.working_directory_identity !=
+            preliminary.environment_plan.working_directory_identity ||
+        final.environment_plan.arguments !=
+            preliminary.environment_plan.arguments ||
+        final.environment_plan.environment_policy !=
+            preliminary.environment_plan.environment_policy ||
+        final.environment_plan.environment_platform != platform ||
+        final.environment_plan.environment_entries !=
+            preliminary.environment_plan.environment_entries ||
+        final.posix_environment != preliminary.posix_environment ||
+        final.windows_environment_block !=
+            preliminary.windows_environment_block) {
+        result.diagnostic_code =
+            "workspace_agent.process_argument_serialization_stale_invocation";
+        return result;
+    }
+
+    result.allowed = true;
+    result.serialized_environment = final;
+    result.posix_arguments = std::move(serialized.posix_arguments);
+    result.windows_command_line =
+        std::move(serialized.windows_command_line);
+    result.diagnostic_code =
+        "workspace_agent.process_argument_serialization_request_allowed";
     return result;
 }
 

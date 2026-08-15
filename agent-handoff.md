@@ -1,5 +1,27 @@
 # Agent Handoff
 
+## V1 workspace-agent platform argument serialization
+
+Candidate `RQ-CF-AGENT-015` adds one shared direct-argument serializer. POSIX
+preserves exact non-NUL bytes and empty elements as complete storage including
+`argv[0]`; Windows strictly decodes UTF-8, quotes every element with the
+conventional C-runtime backslash/quote convention, and counts the terminating
+NUL within the 32,767-code-unit `CreateProcessW` ceiling. Invalid target,
+empty executable, NUL, malformed Windows UTF-8, overflow, and cap failures
+return no partial output. The workspace-agent controller binds the result to a
+complete bracketed serialized-environment preflight and still launches
+nothing. The existing bounded-process utility now uses the shared seam for
+POSIX and Windows without adding shell or PATH behavior.
+
+Warning-free Release security/community/isolation/safety verification passes
+`17/17`; focused Release and fresh Clang 21 ASan/UBSan with leak detection
+each pass `3/3`; and the generated isolation inventory covers `380` tests.
+Protected cross-platform, review, and merge evidence remain to define the
+candidate. Windows child-parser and
+executable-format compatibility, layout cleanup/session-start integration,
+launch-adjacent pinning, executor, sandbox, endpoint policy, outcome audit,
+provider/OAuth, trusted UI, diff, and undo remain explicit gaps.
+
 ## V1 workspace-agent private generation-layout preparation
 
 `RQ-CF-AGENT-014` is defined at merged commit `2d4ae0dd8`. A portable platform
@@ -32,7 +54,7 @@ POSIX verification also rejects macOS extended ACL entries and Linux
 access/default POSIX ACL xattrs through the bound directory descriptor.
 
 This remains non-executing and is not yet wired to session start. Layout
-cleanup, platform argument serialization, Windows executable-format
+cleanup, Windows child-parser/executable-format
 compatibility, launch-adjacent pin/revalidation, executor, sandbox, endpoint
 policy, outcome audit, provider/OAuth, trusted UI, diff, and undo remain
 explicit gaps. Local warning-free Release security/community/isolation/safety
@@ -50,8 +72,7 @@ A POSIX host `umask` that removes owner bits fails closed and leaves an
 unverified path for future identity-aware cleanup; the library does not mutate
 process-global `umask` state or chmod an unbound path. Linux filesystems that
 cannot provide the required ACL xattr inspection and POSIX targets other than
-Linux or macOS fail closed. Platform argument serialization is the next bounded
-process-preflight gap; it must remain distinct from launch authority.
+Linux or macOS fail closed.
 
 ## V1 workspace-agent native environment serialization
 

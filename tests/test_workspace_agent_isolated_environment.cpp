@@ -32,6 +32,7 @@ using copperfin::security::WorkspaceAgentProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPolicy;
 using copperfin::security::WorkspaceAgentProcessInvocationPreflightRequest;
 using copperfin::security::WorkspaceAgentSerializedProcessEnvironmentPreflightResult;
+using copperfin::security::WorkspaceAgentSerializedProcessInvocationPreflightResult;
 using copperfin::security::WorkspaceAgentSessionAuditCommitResult;
 using copperfin::security::WorkspaceAgentSessionAuditEvent;
 using copperfin::security::WorkspaceAgentSessionAuditSink;
@@ -225,6 +226,17 @@ void expect_serialization_content_free_denial(
            message);
 }
 
+void expect_invocation_serialization_content_free_denial(
+    const WorkspaceAgentSerializedProcessInvocationPreflightResult& result,
+    std::string_view diagnostic,
+    const std::string& message) {
+    expect(!result.allowed && result.diagnostic_code == diagnostic &&
+               !result.serialized_environment.allowed &&
+               result.posix_arguments.empty() &&
+               result.windows_command_line.empty(),
+           message);
+}
+
 void test_fixed_non_inheriting_environment() {
     TempTree tree;
     WorkspaceAgentSessionController controller(tree.workspace, tree.configuration());
@@ -366,6 +378,35 @@ void test_fixed_non_inheriting_environment() {
     }
     expect(exact_posix,
            "RQ-CF-AGENT-013: the controller must emit only exact POSIX name=value entries");
+#endif
+
+    const auto serialized_invocation =
+        controller.preflight_serialized_process_invocation_request(
+            invocation_request(start.session.generation));
+    expect(serialized_invocation.allowed &&
+               serialized_invocation.diagnostic_code ==
+                   "workspace_agent.process_argument_serialization_request_allowed" &&
+               serialized_invocation.serialized_environment.allowed &&
+               serialized_invocation.serialized_environment.environment_plan
+                       .canonical_executable_path ==
+                   result.canonical_executable_path &&
+               serialized_invocation.serialized_environment.environment_plan
+                       .arguments ==
+                   result.arguments,
+           "RQ-CF-AGENT-015: platform arguments must remain bound to the exact bracketed invocation and fixed environment");
+#if defined(_WIN32)
+    expect(serialized_invocation.posix_arguments.empty() &&
+               !serialized_invocation.windows_command_line.empty(),
+           "RQ-CF-AGENT-015: Windows preflight must emit only a CreateProcessW command line");
+#else
+    std::vector<std::string> expected_arguments{
+        copperfin::platform::path_to_utf8_string(
+            result.canonical_executable_path)};
+    expected_arguments.insert(
+        expected_arguments.end(), result.arguments.begin(), result.arguments.end());
+    expect(serialized_invocation.windows_command_line.empty() &&
+               serialized_invocation.posix_arguments == expected_arguments,
+           "RQ-CF-AGENT-015: POSIX preflight must emit exact argv[0] and admitted direct elements");
 #endif
 }
 
@@ -618,6 +659,11 @@ void test_configuration_and_layout_fail_closed() {
             invocation_request(no_boundary_start.session.generation)),
         "workspace_agent.process_environment_boundary_unavailable",
         "RQ-CF-AGENT-013: serialization denial must not reflect an invocation or environment");
+    expect_invocation_serialization_content_free_denial(
+        no_boundary.preflight_serialized_process_invocation_request(
+            invocation_request(no_boundary_start.session.generation)),
+        "workspace_agent.process_environment_boundary_unavailable",
+        "RQ-CF-AGENT-015: argument serialization denial must not reflect an invocation, environment, path, or argument");
 
     WorkspaceAgentSessionController missing_layout(
         tree.workspace, tree.configuration());

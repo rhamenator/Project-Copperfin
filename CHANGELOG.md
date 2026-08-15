@@ -1,3 +1,13 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-015` platform process-argument
+  serialization. One shared boundary preserves exact POSIX argument elements
+  including `argv[0]`, or strictly converts and conventionally quotes a
+  Windows `CreateProcessW` command line under its terminating-NUL-inclusive
+  32,767-code-unit cap. The workspace-agent controller brackets the result with
+  the complete serialized-environment preflight and remains non-executing; the
+  existing bounded-process utility now consumes the same serializer. Broader
+  Release verification passes `17/17` and fresh Clang ASan/UBSan passes
+  `3/3`; protected and review evidence remain required before definition.
+
 - 2026-08-15: Defined `RQ-CF-AGENT-014` after exact signed/DCO head
   `d415b0e993` passed local Release `15/15`, focused platform/workflow `5/5`,
   fresh Clang ASan/UBSan `3/3`, isolation inventory `379`, safety and diff
