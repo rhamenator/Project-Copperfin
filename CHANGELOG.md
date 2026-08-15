@@ -1,8 +1,9 @@
 - 2026-08-15: Added candidate `RQ-CF-AGENT-019` portable launch-adjacent plan
   revalidation. The controller compares a caller-held complete serialized
-  invocation with fresh trusted preflight, snapshots and hashes the exact
-  physically contained executable, repeats the complete preflight, and returns
-  only the newly regenerated plan and digest on exact equality. Denial exposes
+  invocation with fresh trusted preflight, brackets the repeated complete
+  preflight with contained executable snapshots, requires equal identities and
+  digests, and returns only the newly regenerated plan and final equal digest.
+  Denial exposes
   no partial plan or digest. This remains non-executing point-in-time evidence;
   handle pinning, synchronous executor integration, sandbox and endpoint
   enforcement, descendant control, and outcome audit remain explicit gaps.

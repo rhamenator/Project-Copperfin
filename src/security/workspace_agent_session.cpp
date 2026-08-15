@@ -956,9 +956,39 @@ WorkspaceAgentSessionController::revalidate_serialized_process_invocation_for_la
         return result;
     }
 
+    // The complete preflight is identity-based on POSIX. Snapshot again after
+    // it and require equal bytes so restored size/mtime metadata cannot pair
+    // the earlier digest with a later plan. Mutation after this final snapshot
+    // remains the explicitly retained post-return executor race.
+    const auto final_containment = inspect_physical_path_containment(
+        plan.canonical_executable_path,
+        plan.canonical_executable_path.parent_path());
+    if (!final_containment.allowed ||
+        final_containment.identity != plan.executable_identity) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_revalidation_executable_changed";
+        return result;
+    }
+    const auto final_snapshot = read_physically_contained_file_snapshot(
+        final_containment,
+        plan.canonical_executable_path.parent_path(),
+        workspace_agent_launch_snapshot_maximum_bytes);
+    if (!final_snapshot.ok ||
+        final_snapshot.containment.identity != plan.executable_identity) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_revalidation_executable_changed";
+        return result;
+    }
+    const auto final_digest = sha256_hex_for_text(final_snapshot.bytes);
+    if (!final_digest.ok || final_digest.hex_digest != digest.hex_digest) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_revalidation_executable_changed";
+        return result;
+    }
+
     result.allowed = true;
     result.serialized_invocation = final;
-    result.executable_sha256 = digest.hex_digest;
+    result.executable_sha256 = final_digest.hex_digest;
     result.diagnostic_code =
         "workspace_agent.process_launch_revalidation_request_allowed";
     return result;

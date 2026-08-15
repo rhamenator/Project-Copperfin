@@ -605,9 +605,13 @@ registry, target, argument, fixed-environment, native-serialization, and Windows
 parser checks and requires every material field to remain equal. It then reads
 a bounded physically contained snapshot of the exact executable, requires the
 snapshot identity to equal the admitted identity, calculates lowercase SHA-256,
-and repeats the complete trusted preflight and equality comparison.
+repeats the complete trusted preflight and equality comparison, then repeats
+the contained snapshot and requires equal identity and digest. The second
+snapshot prevents an identity-only final preflight from pairing an earlier
+digest with later same-size bytes whose timestamp was restored.
 
-On success the boundary returns a newly generated plan and the snapshot digest;
+On success the boundary returns a newly generated plan and the final equal
+snapshot digest;
 it never blesses or returns the caller's mutable copy. Denial returns neither
 plan nor digest and uses content-free diagnostics. Altered, inactive, stale,
 replaced, unreadable, excessive, or changed inputs therefore cannot carry

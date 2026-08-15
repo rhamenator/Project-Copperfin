@@ -19,7 +19,7 @@ deployment.
 | Derived requirement | Verification requirement | Hazard link |
 | --- | --- | --- |
 | `DQ-workspace-agent-launch-revalidation-001`: compare every material field of the caller-held complete plan with fresh trusted preflight before and after executable inspection | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-launch-revalidation-002`: read one bounded physically contained exact-executable snapshot, require admitted identity, and return lowercase SHA-256 only on complete success | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-launch-revalidation-002`: bracket the final complete preflight with bounded physically contained exact-executable snapshots, require admitted identities and equal lowercase SHA-256 digests, and return only the final equal digest on complete success | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-launch-revalidation-003`: denied, altered, stale, replaced, changed, excessive, or unavailable input returns no plan, digest, path, argument, or environment content | `DV-workspace-agent-launch-revalidation-001`; `DV-workspace-agent-launch-revalidation-002`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-launch-revalidation-004`: the API remains non-executing and expressly preserves the post-return race, handle-pinning, sandbox, endpoint, descendant, and outcome-audit gaps | `DV-workspace-agent-launch-revalidation-002`; `DV-workspace-agent-launch-revalidation-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
@@ -53,7 +53,9 @@ Potential Severity If Misused: high
 - Executable mutation: the snapshot is physically contained under the direct
   parent, bounded to 512 MiB, checked against admitted complete identity, and
   bracketed by the full workspace/local target preflight. SHA-256 identifies
-  the exact captured bytes returned with the fresh plan.
+  the exact captured bytes returned with the fresh plan. A second snapshot
+  after the final identity-based preflight must have equal identity and digest,
+  preventing restored metadata from pairing an earlier digest with later bytes.
 - Session revocation and target replacement: either complete preflight fails or
   differs, and denial returns no partial plan or digest.
 - Resource exhaustion: the executable snapshot has an explicit 512 MiB cap;

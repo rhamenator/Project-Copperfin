@@ -52,6 +52,8 @@ require_text(src/security/workspace_agent_session.cpp
 require_text(src/security/workspace_agent_session.cpp
     "read_physically_contained_file_snapshot")
 require_text(src/security/workspace_agent_session.cpp
+    "final_digest.hex_digest != digest.hex_digest")
+require_text(src/security/workspace_agent_session.cpp
     "workspace_agent.process_launch_revalidation_stale_invocation")
 require_text(tests/test_workspace_agent_process_parser.cpp "RQ-CF-AGENT-018")
 require_text(tests/test_workspace_agent_isolated_environment.cpp

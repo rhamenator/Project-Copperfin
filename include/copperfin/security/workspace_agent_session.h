@@ -217,8 +217,8 @@ struct WorkspaceAgentLaunchRevalidationResult {
     // caller's mutable copy. A launcher must consume it synchronously.
     WorkspaceAgentSerializedProcessInvocationPreflightResult
         serialized_invocation{};
-    // Lowercase SHA-256 of the physically contained executable snapshot read
-    // between the two complete trusted preflights.
+    // Lowercase SHA-256 shared by the physically contained executable
+    // snapshots bracketing the final complete trusted preflight.
     std::string executable_sha256;
     std::string diagnostic_code;
 };
@@ -305,8 +305,9 @@ public:
 
     // Revalidates a previously admitted complete plan immediately before a
     // future controlled launcher consumes the newly returned plan. It repeats
-    // the trusted preflight around a bounded physical executable snapshot and
-    // requires every material field to equal the caller-held plan. This
+    // the trusted preflight between equal bounded physical executable
+    // snapshots and requires every material field to equal the caller-held
+    // plan. This
     // performs no launch and does not close the interval after return; it is
     // neither a reusable authority token nor a substitute for platform handle
     // pinning where that is available.

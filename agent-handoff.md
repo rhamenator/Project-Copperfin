@@ -6,9 +6,10 @@ Candidate `RQ-CF-AGENT-019` has a locally verified implementation on a
 dedicated branch. The native controller now accepts the original invocation
 request and a previously
 admitted complete serialized plan, regenerates and compares every trusted plan
-field, reads a bounded physically contained executable snapshot, binds its
-identity and SHA-256, then repeats the complete preflight before returning only
-a new plan. Altered or denied input yields no partial plan or digest.
+field, brackets the repeated complete preflight with bounded physically
+contained executable snapshots, requires equal identities and SHA-256 digests,
+then returns only a new plan and the final equal digest. Altered or denied input
+yields no partial plan or digest.
 
 This is deliberately non-executing and point-in-time. It does not retain a
 handle, close the interval after return, apply sandbox or endpoint policy,
