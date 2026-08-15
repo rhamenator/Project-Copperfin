@@ -1,3 +1,14 @@
+- 2026-08-15: Defined `RQ-CF-AGENT-014` after exact signed/DCO head
+  `d415b0e993` passed local Release `15/15`, focused platform/workflow `5/5`,
+  fresh Clang ASan/UBSan `3/3`, isolation inventory `379`, safety and diff
+  validation, all eleven protected checks in runs `31882646791`, `31882647956`,
+  `31882647969`, `31882647954`, and `31882647967`, and both Socket checks. All
+  fifteen actionable review threads were corrected and resolved; final-head
+  automated review and independent focused `11/11` read-only review found no
+  remaining issue. PR `#5018` merged into `v1-development` as `2d4ae0dd8`.
+  Linux filesystems without required ACL-xattr inspection and other POSIX
+  targets without a native ACL implementation remain explicitly fail-closed.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-014` private workspace-agent
   generation-layout preparation. One portable platform seam creates exactly an
   absent absolute leaf and verifies owner-only security: effective-user-owned

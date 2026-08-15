@@ -362,7 +362,7 @@ preflight again before returning a point-in-time plan.
 
 ## Private generation-layout preparation boundary
 
-Candidate `RQ-CF-AGENT-014` adds one portable trusted-host primitive before a
+`RQ-CF-AGENT-014` adds one portable trusted-host primitive before a
 workspace-agent process executor is connected. The platform API creates
 exactly one absent absolute directory leaf and verifies its access contract.
 On POSIX the object must be a non-symbolic-link directory owned by the effective
@@ -421,6 +421,9 @@ any extended ACL entry retrieved from the bound directory descriptor. Linux
 rejects both access and default POSIX ACL xattrs retrieved from that same bound
 directory. ACL inspection failure is fail-closed; inherited or broadened ACLs
 are never treated as owner-only merely because `st_uid` and mode are `0700`.
+Linux filesystems that cannot expose those ACL xattrs are therefore rejected,
+as are POSIX targets other than Linux and macOS until they receive a native,
+descriptor-bound ACL inspection implementation and direct verification.
 
 Before creating the session root, preparation derives the exact fixed
 platform environment entries through the same builder used by construction.

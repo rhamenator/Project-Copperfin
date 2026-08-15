@@ -2,7 +2,7 @@
 
 Date: 2026-08-15
 
-Scope: candidate v1 `RQ-CF-AGENT-014` private storage-root verification and
+Scope: defined v1 `RQ-CF-AGENT-014` private storage-root verification and
 generation-owned session-layout preparation
 
 Allowed requirement source: explicit repository-owner product policy under
@@ -75,9 +75,10 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   requires the process user as owner and a protected DACL
   containing no principal other than that user and LocalSystem, with no
   inherited or inherit-only ACE and no access-mask broadening.
-- Redirection and type confusion: verification uses `lstat` on POSIX and a
-  reparse-point-aware directory handle on Windows. Symbolic links, reparse
-  points, regular files, missing paths, and wrong kinds fail closed.
+- Redirection and type confusion: POSIX verification walks and inspects bound
+  no-follow directory descriptors; Windows uses reparse-point-aware directory
+  handles. Symbolic links, reparse points, regular files, missing paths, and
+  wrong kinds fail closed.
 - Existing-state damage: creation is leaf-only. An existing complete or partial
   generation is not adopted, repaired, overwritten, permission-mutated, or
   deleted. Post-creation verification never performs path-based cleanup because
@@ -112,6 +113,10 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   and Linux access/default ACL xattrs. Platform regressions install an extended
   or default ACL where the filesystem supports it and require verification to
   fail despite otherwise private ownership/mode.
+- POSIX portability is fail-closed rather than inferred. A Linux filesystem
+  that cannot expose the required ACL xattrs is rejected, and POSIX targets
+  other than Linux and macOS are rejected until a native descriptor-bound ACL
+  inspection implementation and direct verification exist.
 - Parent indirection: POSIX creation and verification walk every existing
   parent through no-follow directory descriptors, then create and inspect the
   leaf relative to the bound parent. Direct regressions prove a symlink parent
@@ -123,11 +128,13 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   directory and the Windows system root, when present, before the first layout
   creation and before success. Direct replacement regressions prove a known
   unusable configuration cannot consume a generation from cached path text.
-- Same-authority boundary: creation currently uses full paths. It assumes the
-  storage-root owner and LocalSystem are trusted host authorities; it is not a
-  defense against a malicious process already operating with either authority.
-  A future sandbox must prevent an untrusted child from reaching this root, and
-  launch work must repeat identity and admission checks beside the operation.
+- Same-authority boundary: POSIX session and child creation is bound to verified
+  parent descriptors, while public Windows creation remains a bracketed
+  full-path operation. The boundary assumes the storage-root owner and, on
+  Windows, LocalSystem are trusted host authorities; it is not a defense against
+  a malicious process already operating with either authority. A future sandbox
+  must prevent an untrusted child from reaching this root, and launch work must
+  repeat identity and admission checks beside the operation.
 - Information exposure: success returns only the generation. Denials return a
   stable diagnostic and zero generation, never a path, identity, ACL, prompt,
   credential, argument, or provider value.
@@ -150,7 +157,7 @@ cleanup decision; rollback must not recursively delete an unresolved path.
 
 ## Verification
 
-Current local candidate evidence:
+Current direct evidence:
 
 - warning-free GCC Release build of the portable seam and environment consumer;
 - security, environment, invocation, target, registry, session, audit-sink,
@@ -163,12 +170,15 @@ Current local candidate evidence:
 - native-platform workflow, GitHub Actions, and private-directory boundary
   contracts: `3/3` pass;
 - safety traceability workflow contract: `1/1` pass;
-- `git diff --check` passes.
-
-Required before definition:
-
-- exact signed/DCO head on protected Windows, Ubuntu, and macOS workflows;
-- both supply-chain checks and thread-aware exact-head review.
+- `git diff --check` passes;
+- exact signed/DCO implementation head `d415b0e993` passed all eleven protected
+  checks: contributor sign-off `31882646791`, Windows/Ubuntu/macOS generated
+  launcher `31882647956`, Win32/x64 DECLARE `31882647969`, Windows environment
+  and executable paths `31882647954`, Clang/GCC executable paths `31882647967`,
+  and both Socket checks. The generated-launcher run succeeded unchanged on its
+  second Windows attempt after one transient failure in the unrelated existing
+  `test_polyglot_python_sidecar`; its other 33 tests had passed on the first
+  attempt. PR `#5018` merged into `v1-development` as `2d4ae0dd8`.
 
 ## Review evidence
 
@@ -178,5 +188,17 @@ Required before definition:
 - verification: ownership and ACL/mode policy, indirection and type rejection,
   existing/partial-state preservation, root identity, denial clearing,
   non-execution boundary, rollback, and traceability
-- result: candidate local evidence only; protected exact-head and review
-  evidence remain pending
+- result: local focused verification, all eleven protected exact-head checks,
+  both supply-chain checks, and final exact-head automated review passed; all
+  fifteen actionable review threads were corrected, answered, and resolved
+  before merge
+
+Automated review of final exact head `d415b0e993` reported no further issue.
+Independent read-only review at that exact head verified macOS no-ACL
+`ENOENT` handling, rejection of populated or errored ACL retrieval, Linux
+descriptor-relative access/default ACL checks, and trusted-parent reuse of the
+same predicate. Its focused workspace-agent selection passed `11/11` with no
+remaining finding. It recorded Linux filesystems without xattr support and
+non-Linux/non-macOS POSIX targets as deliberate fail-closed compatibility
+limitations, now retained above. This independent engineering review is not a
+formal safety approval or certification claim.
