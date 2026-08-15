@@ -66,7 +66,7 @@ void expect(bool condition, const std::string& message) {
 
 class TempTree {
 public:
-    explicit TempTree(const bool create_initial_layout = true) {
+    explicit TempTree(const bool create_initial_layout = false) {
         const auto suffix = std::chrono::steady_clock::now()
                                 .time_since_epoch()
                                 .count();
@@ -164,6 +164,25 @@ WorkspaceAgentSessionAuditCommitResult commit_audit(
 
 WorkspaceAgentSessionAuditSink audit_sink() {
     return {.commit = commit_audit};
+}
+
+struct AuditCapture {
+    std::vector<WorkspaceAgentSessionAuditEvent> events;
+};
+
+WorkspaceAgentSessionAuditCommitResult capture_audit(
+    const WorkspaceAgentSessionAuditEvent& event,
+    void* context) {
+    auto* capture = static_cast<AuditCapture*>(context);
+    if (capture == nullptr) {
+        return {};
+    }
+    capture->events.push_back(event);
+    return {.ok = true, .receipt = "isolated-environment-captured-receipt"};
+}
+
+WorkspaceAgentSessionAuditSink audit_sink(AuditCapture& capture) {
+    return {.commit = capture_audit, .context = &capture};
 }
 
 WorkspaceAgentActivationRequest activation_request() {
@@ -676,29 +695,6 @@ void test_configuration_and_layout_fail_closed() {
         "workspace_agent.environment_session_layout_unavailable",
         "RQ-CF-AGENT-012: incomplete session-owned layout must fail without reflecting paths");
 
-    TempTree insecure_tree;
-    const auto insecure_cache =
-        insecure_tree.session_storage / "session-1" / "cache";
-    std::filesystem::remove(insecure_cache);
-    std::filesystem::create_directory(insecure_cache);
-#if !defined(_WIN32)
-    std::filesystem::permissions(
-        insecure_cache,
-        std::filesystem::perms::owner_all |
-            std::filesystem::perms::group_read |
-            std::filesystem::perms::group_exec,
-        std::filesystem::perm_options::replace);
-#endif
-    WorkspaceAgentSessionController insecure_layout(
-        insecure_tree.workspace, insecure_tree.configuration());
-    const auto insecure_start = insecure_layout.start(
-        activation_request(), audit_sink());
-    expect_content_free_denial(
-        insecure_layout.preflight_process_environment_request(
-            invocation_request(insecure_start.session.generation)),
-        "workspace_agent.environment_session_layout_unavailable",
-        "RQ-CF-AGENT-014: an inherited or broadened layout directory must fail closed");
-
     TempTree insecure_root_tree(false);
     std::filesystem::remove(insecure_root_tree.session_storage);
     std::filesystem::create_directory(insecure_root_tree.session_storage);
@@ -817,7 +813,6 @@ void test_later_session_layout_is_not_root_replacement() {
     expect(controller.stop(audit_sink()).revoked,
            "RQ-CF-AGENT-012: first fixture generation must stop");
 
-    tree.create_session_layout(2U);
     const auto second = controller.start(activation_request(), audit_sink());
     expect(second.activated && second.session.generation == 2U,
            "RQ-CF-AGENT-012: later fixture generation must activate");
@@ -827,7 +822,110 @@ void test_later_session_layout_is_not_root_replacement() {
                result.diagnostic_code ==
                    "workspace_agent.process_environment_request_allowed" &&
                find_entry(result.environment_entries, "HOME") != nullptr,
-           "RQ-CF-AGENT-012: creating a later session layout must not be treated as storage-root replacement");
+           "RQ-CF-AGENT-016: session start must prepare a later generation without treating it as storage-root replacement");
+}
+
+void test_session_start_prepares_layout_before_authority() {
+    TempTree tree;
+    WorkspaceAgentSessionController controller(tree.workspace, tree.configuration());
+    const auto started = controller.start(activation_request(), audit_sink());
+    bool complete_private_layout = copperfin::platform::verify_private_directory(
+        tree.session_storage / "session-1").ok;
+    for (const std::string_view leaf :
+         {"home", "temp", "config", "cache", "data"}) {
+        complete_private_layout = complete_private_layout &&
+            copperfin::platform::verify_private_directory(
+                tree.session_storage / "session-1" / leaf).ok;
+    }
+    expect(started.activated && started.audit_committed &&
+               started.session.generation == 1U &&
+               complete_private_layout,
+           "RQ-CF-AGENT-016: configured process-capable start must prepare its exact private generation before authority");
+
+    TempTree preexisting;
+    preexisting.create_session_layout(1U);
+    WorkspaceAgentSessionController refuses_adoption(
+        preexisting.workspace, preexisting.configuration());
+    AuditCapture refused_audit;
+    const auto refused = refuses_adoption.start(
+        activation_request(), audit_sink(refused_audit));
+    expect(!refused.activated && refused.audit_committed &&
+               refused.diagnostic_code ==
+                   "workspace_agent.environment_session_layout_exists" &&
+               !refused.policy_decision.allowed &&
+               !refuses_adoption.snapshot().active &&
+               refused_audit.events.size() == 1U &&
+               refused_audit.events.front().outcome == "denied" &&
+               refused_audit.events.front().diagnostic_code ==
+                   refused.diagnostic_code,
+           "RQ-CF-AGENT-016: session start must audit denial and grant no authority when its generation already exists");
+
+    TempTree invalid;
+    auto invalid_configuration = invalid.configuration();
+    invalid_configuration.schema_version = 2U;
+    WorkspaceAgentSessionController invalid_boundary(
+        invalid.workspace, invalid_configuration);
+    const auto invalid_start = invalid_boundary.start(
+        activation_request(), audit_sink());
+    expect(!invalid_start.activated && invalid_start.audit_committed &&
+               invalid_start.diagnostic_code ==
+                   "workspace_agent.session_environment_boundary_unavailable" &&
+               !std::filesystem::exists(invalid.session_storage / "session-1"),
+           "RQ-CF-AGENT-016: supplied but invalid trusted environment configuration must fail start without creating authority or layout");
+
+    TempTree policy_denied;
+    WorkspaceAgentSessionController denied_controller(
+        policy_denied.workspace, policy_denied.configuration());
+    auto disabled = activation_request();
+    disabled.feature_enabled = false;
+    const auto denied = denied_controller.start(disabled, audit_sink());
+    expect(!denied.activated && denied.audit_committed &&
+               !std::filesystem::exists(
+                   policy_denied.session_storage / "session-1"),
+           "RQ-CF-AGENT-016: policy denial must occur without preparing an unused generation layout");
+
+    TempTree advisory;
+    WorkspaceAgentSessionController advisory_controller(
+        advisory.workspace, advisory.configuration());
+    auto advisory_request = activation_request();
+    advisory_request.requested_mode = WorkspaceAgentAccessMode::advisory;
+    const auto advisory_start = advisory_controller.start(
+        advisory_request, audit_sink());
+    expect(advisory_start.activated &&
+               !advisory_start.session.capabilities.run_local_processes &&
+               !std::filesystem::exists(
+                   advisory.session_storage / "session-1"),
+           "RQ-CF-AGENT-016: a non-process-capable session must not prepare an unused generation layout");
+    expect(advisory_controller.stop(audit_sink()).revoked,
+           "RQ-CF-AGENT-016: advisory fixture must revoke cleanly");
+    const auto process_after_advisory = advisory_controller.start(
+        activation_request(), audit_sink());
+    expect(process_after_advisory.activated &&
+               process_after_advisory.session.generation == 2U &&
+               std::filesystem::exists(
+                   advisory.session_storage / "session-2") &&
+               !std::filesystem::exists(
+                   advisory.session_storage / "session-1"),
+           "RQ-CF-AGENT-016: a later process-capable session must prepare only its own fresh generation");
+
+    TempTree audit_failed;
+    WorkspaceAgentSessionController audit_failed_controller(
+        audit_failed.workspace, audit_failed.configuration());
+    const auto uncommitted = audit_failed_controller.start(
+        activation_request(), {});
+    expect(!uncommitted.activated && !uncommitted.audit_committed &&
+               uncommitted.diagnostic_code ==
+                   "workspace_agent.session_audit_commit_failed" &&
+               std::filesystem::exists(
+                   audit_failed.session_storage / "session-1") &&
+               !audit_failed_controller.snapshot().active,
+           "RQ-CF-AGENT-016: audit failure must withhold authority and leave the prepared generation untouched for later identity-aware cleanup");
+    const auto recovered = audit_failed_controller.start(
+        activation_request(), audit_sink());
+    expect(recovered.activated && recovered.session.generation == 2U &&
+               std::filesystem::exists(
+                   audit_failed.session_storage / "session-2"),
+           "RQ-CF-AGENT-016: a later start must use a fresh generation rather than adopt an orphaned prepared layout");
 }
 
 }  // namespace
@@ -841,6 +939,7 @@ int main() {
     test_configuration_and_layout_fail_closed();
     test_physical_identity_and_session_binding();
     test_later_session_layout_is_not_root_replacement();
+    test_session_start_prepares_layout_before_authority();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

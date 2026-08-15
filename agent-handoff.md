@@ -1,10 +1,33 @@
 # Agent Handoff
 
+## V1 workspace-agent configured session-layout start integration
+
+Candidate `RQ-CF-AGENT-016` connects the existing private layout boundary to
+configured process-capable session start. Policy admission runs first;
+preparation of the exact candidate generation then succeeds before the
+content-free start audit and authority activation. Supplied but invalid trusted
+configuration, preparation denial or exception, and generation mismatch become
+audited denials. Policy-denied or non-process-capable sessions create no
+layout. An audit failure after successful preparation still grants no authority,
+leaves the generation untouched for later identity-aware cleanup, and forces a
+later attempt to advance rather than adopt it. Controllers constructed without
+environment configuration retain their non-executing lifecycle behavior.
+
+Warning-free Release security/community/isolation/safety verification passes
+`17/17`; focused session/environment verification passes `2/2`; fresh Clang 21
+ASan/UBSan with leak detection passes `3/3`; and diff validation passes.
+Protected Windows, Ubuntu, and macOS checks plus exact-head review remain
+required before `RQ-CF-AGENT-016` can be defined. Root provisioning,
+identity-aware cleanup,
+Windows child-parser/executable-format compatibility, launch-adjacent
+pinning/revalidation, executor, sandbox, endpoint policy, outcome audit,
+provider/OAuth, trusted UI, diff, and undo remain explicit gaps.
+
 ## V1 workspace-agent platform argument serialization
 
-`RQ-CF-AGENT-015` is defined at merged commit `b41bbc80d`. One shared direct-argument serializer
-preserves POSIX
-preserves exact non-NUL bytes and empty elements as complete storage including
+`RQ-CF-AGENT-015` is defined at merged commit `b41bbc80d`. One shared
+direct-argument serializer preserves exact POSIX non-NUL bytes and empty
+elements as complete storage including
 `argv[0]`; Windows strictly decodes UTF-8, quotes every element with the
 conventional C-runtime backslash/quote convention, and counts the terminating
 NUL within the 32,767-code-unit `CreateProcessW` ceiling. Invalid target,
@@ -22,8 +45,7 @@ checks in runs `31885639477`, `31885639243`, `31885639342`,
 `31885639247`, and `31885639220`, including both Socket checks. Thread-aware
 exact-head review found no comments, reviews, or threads before PR `#5020`
 merged as `b41bbc80d`. No independent final safety approval is claimed.
-Windows child-parser and
-executable-format compatibility, layout cleanup/session-start integration,
+Windows child-parser and executable-format compatibility, identity-aware layout cleanup,
 launch-adjacent pinning, executor, sandbox, endpoint policy, outcome audit,
 provider/OAuth, trusted UI, diff, and undo remain explicit gaps.
 
@@ -58,7 +80,8 @@ permission requires sticky rename protection.
 POSIX verification also rejects macOS extended ACL entries and Linux
 access/default POSIX ACL xattrs through the bound directory descriptor.
 
-This remains non-executing and is not yet wired to session start. Layout
+This remains non-executing; configured process-capable session start now
+invokes it before audit-backed authority activation. Identity-aware layout
 cleanup, Windows child-parser/executable-format
 compatibility, launch-adjacent pin/revalidation, executor, sandbox, endpoint
 policy, outcome audit, provider/OAuth, trusted UI, diff, and undo remain
@@ -94,9 +117,9 @@ Release security/community/isolation/safety verification passes `14/14`, fresh
 Clang 21 ASan/UBSan with leak detection passes `3/3`, the generated isolation
 inventory covers `377` tests, and diff validation passes.
 
-This remains non-executing for the workspace agent. Layout cleanup and
-session-start integration,
-platform argument serialization, Windows executable-format compatibility,
+This remains non-executing for the workspace agent. Configured process-capable
+session start now prepares the exact private generation before audit-backed
+activation. Identity-aware layout cleanup, Windows executable-format compatibility,
 launch-adjacent pin/revalidation, executor, sandbox, endpoint policy, outcome
 audit, provider/OAuth, trusted UI, diff, and undo remain explicit gaps.
 

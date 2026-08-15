@@ -1143,7 +1143,7 @@ standalone Studio shell, and FoxPro language-service layer."
 | F | `#112` (`F1`/`#25`, `F2`/`#26`) | VS extension parity + utility panes; standalone Studio as a full IDE | MVP implementation complete for standalone shell; hosted UI evidence remains under the RC gate | Phase C |
 | G | `#112` (`G1`/`#27`, `G2`/`#28`, `G3`/`#29`) | FoxPro language service: semantic resolution, navigation/refactoring, IntelliSense metadata | Recorded G1/G2/G3 slices closed; broader MVP scope remains under the live tree | Phase C |
 | H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Portable route/artifact execution, trusted runtime-host composition, PRG dispatch, Native AOT C# leaf, admitted Python/R sidecar leaves, one bounded read-only MCP DBF-header tool, provider-independent workspace-agent access modes, strict read-only native/managed descriptors, a localized non-activating Studio preview, audited session lifecycle, persistent lifecycle sink, product-registry-backed non-executing preflight, existing-file target identity preflight, explicit process/working-directory identity preflight, bounded direct arguments, fixed-key generation-owned logical environment construction, POSIX/Windows native environment and argument serialization, and private generation-layout preparation implemented; provider adapters, OAuth, conversation UI, activation, mutable execution, outcome audit, diff, and undo remain | v1 item 3 |
-| I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | RBAC/audit/secrets/signing baseline plus dedicated workspace-agent RBAC, capabilities, localized unrestricted warning, fail-closed activation policy, non-activating descriptor/client boundary, trusted read-only preview, audited session/revocation, contained lifecycle persistence, immutable product-owned tool definitions, exact-generation registered-tool preflight, product-root-bound existing-file containment, non-executing process target containment, direct-argument policy, fixed-key generation-owned isolated-environment construction, bounded native environment and argument serialization, and fail-closed POSIX/Windows private-layout preparation implemented; trusted host activation enforcement, consent binding, handle-pinned mutation/launch, layout cleanup and session-start integration, Windows child-parser/executable-format compatibility and endpoint policy, tool-outcome audit, executor, and sandbox remain | v1 item 4 |
+| I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | RBAC/audit/secrets/signing baseline plus dedicated workspace-agent RBAC, capabilities, localized unrestricted warning, fail-closed activation policy, non-activating descriptor/client boundary, trusted read-only preview, audited session/revocation, contained lifecycle persistence, immutable product-owned tool definitions, exact-generation registered-tool preflight, product-root-bound existing-file containment, non-executing process target containment, direct-argument policy, fixed-key generation-owned isolated-environment construction, bounded native environment and argument serialization, fail-closed POSIX/Windows private-layout preparation, and configured process-capable session-start preparation implemented; trusted host activation enforcement, consent binding, handle-pinned mutation/launch, identity-aware layout cleanup, Windows child-parser/executable-format compatibility and endpoint policy, tool-outcome audit, executor, and sandbox remain | v1 item 4 |
 | J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Studio launch-error and POSIX root-identity seams, portable public path/environment/executable-search, APRINTERS and AFONT host discovery, file-version, code-page, disk-space, exclusive-file, and PRG stream boundaries, private SQLite native ABI isolation, portable interpreter-to-CLR-host contract, and native DECLARE loader/invocation boundaries shipped; broader OLE/report-printing seams and ports open | v1 item 5 |
 
 Current G1 evidence includes #4874 at product/test head `e70c89e87`: editor
@@ -1409,15 +1409,20 @@ environment policy. The adjacent trusted-host boundary constructs its fixed
 logical entries, the next portable boundary serializes them for POSIX or
 Windows, a portable argument boundary serializes the canonical executable and
 direct elements for POSIX or Windows, and a separate boundary creates and verifies an absent
-generation's private fixed layout. These preflights perform no cleanup,
-sandboxing, or launch and return no execution
+generation's private fixed layout. A controller supplied with trusted
+environment configuration now invokes that boundary for the exact admitted
+process-capable session generation before committing its start audit and
+activating authority. Preparation failure becomes an audited denial; audit
+failure withholds authority and leaves the generation untouched for later
+identity-aware cleanup. These boundaries perform no cleanup, sandboxing, or
+launch and return no execution
 authority.
 `I1` retains the `cf_security` RBAC/audit/
 secrets/signing seed. **What's left, and what it takes:** other relational
 providers, provider sessions/cursors, mutation contracts, provider/OAuth
 adapters, prospective-file and handle-pinned mutation semantics,
 launch-adjacent target pinning/revalidation, trusted-host environment-layout
-cleanup and session-start integration, Windows child-parser/executable-format
+identity-aware cleanup, Windows child-parser/executable-format
 compatibility, endpoint
 policy, the mutable agent executor
 and sandbox, tool-outcome audit, host UI and activation
