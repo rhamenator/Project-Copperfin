@@ -5164,6 +5164,10 @@ copperfin_add_test(test_workspace_agent_isolated_environment cf_security
     test_workspace_agent_isolated_environment.cpp
 )
 
+copperfin_add_test(test_process_environment_serialization cf_platform_support
+    test_process_environment_serialization.cpp
+)
+
 copperfin_add_test(test_workspace_agent_audit_sink cf_security
     test_workspace_agent_audit_sink.cpp
 )

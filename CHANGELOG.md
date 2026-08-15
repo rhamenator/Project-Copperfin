@@ -1,3 +1,15 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-013` native process-environment
+  serialization. One portable parent-independent boundary preserves exact
+  POSIX `name=value` storage and emits a strictly decoded, case-insensitively
+  sorted, double-NUL Windows UTF-16 block under the native cap. Ambiguous names,
+  target-semantic duplicates, NUL, malformed Windows UTF-8, overflow, and size
+  violations fail without partial output. The workspace-agent controller binds
+  the native representation to a repeated complete logical preflight and still
+  performs no launch; the existing bounded-process utility now consumes the
+  same serializer. Release security/community/isolation/safety verification
+  passes `14/14`; fresh Clang 21 ASan/UBSan passes `3/3`; the generated
+  isolation inventory covers `377` tests; and diff validation passes.
+
 - 2026-08-15: `RQ-CF-AGENT-012` exact-head evidence is complete. Signed/DCO
   corrected head `9c2fa618c` passed all eleven protected checks in runs
   `31867096322`, `31867098781`, `31867098869`, `31867098752`, and

@@ -73,7 +73,7 @@ Native AOT leaf, admitted Python and R sidecar leaves, one bounded read-only MCP
 DBF-header host, a provider-independent workspace-agent authority policy plus
 non-executing file/process target containment and a bounded direct-argument,
 non-inheriting invocation-shape preflight plus fixed-key generation-owned
-logical environment construction,
+logical environment construction and native POSIX/Windows serialization,
 advisory measured-route strategy, and versioned representative benchmark
 evidence; `I1` has a security baseline and `I2` now has dedicated agent RBAC,
 capability modes, and a localized unrestricted warning gate. These real seeds are
@@ -100,7 +100,7 @@ private to that base layer.
 The read-only connector retains Windows/POSIX SQLite selection privately;
 public Copperfin headers reject host-selection and native SQLite API tokens.
 `H3`/`I2` still lack model/provider and OAuth adapters, secure environment-
-layout lifecycle and platform serialization, mutable execution and sandbox
+layout lifecycle and argument serialization, mutable execution and sandbox
 enforcement, host UI, and tool-outcome audit integration. **What's left, and what it
 takes:** this is
 covered in full, document-by-document, in

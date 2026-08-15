@@ -5,13 +5,13 @@
 #include "copperfin/platform/bounded_process.h"
 
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/process_environment.h"
 
 #include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <cerrno>
 #include <cstdint>
-#include <cwctype>
 #include <filesystem>
 #include <limits>
 #include <string>
@@ -435,47 +435,17 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         command_line += quote_argument(converted);
     }
 
-    std::vector<std::pair<std::wstring, std::wstring>> environment_entries;
-    environment_entries.reserve(request.environment.size());
-    for (const auto& variable : request.environment) {
-        std::wstring name = utf8_to_wide(variable.name, conversion_error);
-        if (conversion_error != 0) {
-            result.status = BoundedProcessStatus::launch_failed;
-            result.error_code = "polyglot.process.environment_invalid";
-            result.native_error = conversion_error;
-            return result;
-        }
-        std::wstring value = utf8_to_wide(variable.value, conversion_error);
-        if (conversion_error != 0 && !variable.value.empty()) {
-            result.status = BoundedProcessStatus::launch_failed;
-            result.error_code = "polyglot.process.environment_invalid";
-            result.native_error = conversion_error;
-            return result;
-        }
-        environment_entries.emplace_back(std::move(name), std::move(value));
+    auto serialized_environment = serialize_process_environment(
+        request.environment,
+        ProcessEnvironmentTarget::windows_utf16_v1,
+        windows_process_environment_max_code_units);
+    if (!serialized_environment.ok) {
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "polyglot.process.environment_invalid";
+        result.native_error = ERROR_INVALID_PARAMETER;
+        return result;
     }
-    std::sort(
-        environment_entries.begin(),
-        environment_entries.end(),
-        [](const auto& left, const auto& right) {
-            return std::lexicographical_compare(
-                left.first.begin(), left.first.end(),
-                right.first.begin(), right.first.end(),
-                [](const wchar_t left_character, const wchar_t right_character) {
-                    return ::towlower(left_character) < ::towlower(right_character);
-                });
-        });
-    std::vector<wchar_t> environment_block;
-    for (const auto& [name, value] : environment_entries) {
-        environment_block.insert(environment_block.end(), name.begin(), name.end());
-        environment_block.push_back(L'=');
-        environment_block.insert(environment_block.end(), value.begin(), value.end());
-        environment_block.push_back(L'\0');
-    }
-    environment_block.push_back(L'\0');
-    if (environment_entries.empty()) {
-        environment_block.push_back(L'\0');
-    }
+    static_assert(sizeof(char16_t) == sizeof(wchar_t));
 
     HANDLE stdout_read = nullptr;
     HANDLE stdout_write = nullptr;
@@ -598,7 +568,7 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         TRUE,
         CREATE_NO_WINDOW | CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
             EXTENDED_STARTUPINFO_PRESENT,
-        environment_block.data(),
+        serialized_environment.windows_block.data(),
         working_directory.c_str(),
         &startup_info.StartupInfo,
         &process_info);
@@ -1099,11 +1069,17 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         argv.push_back(argument.data());
     }
     argv.push_back(nullptr);
-    std::vector<std::string> environment_storage;
-    environment_storage.reserve(request.environment.size());
-    for (const auto& variable : request.environment) {
-        environment_storage.push_back(variable.name + "=" + variable.value);
+    const auto serialized_environment = serialize_process_environment(
+        request.environment,
+        ProcessEnvironmentTarget::posix_v1,
+        std::numeric_limits<std::size_t>::max());
+    if (!serialized_environment.ok) {
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "polyglot.process.environment_invalid";
+        return result;
     }
+    std::vector<std::string> environment_storage =
+        serialized_environment.posix_entries;
     std::vector<char*> environment;
     environment.reserve(environment_storage.size() + 1U);
     for (auto& variable : environment_storage) {

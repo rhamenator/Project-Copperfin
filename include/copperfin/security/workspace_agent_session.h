@@ -22,7 +22,7 @@ namespace copperfin::security {
 
 // Governing requirements: RQ-CF-AGENT-001, RQ-CF-AGENT-005, and
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
-// RQ-CF-AGENT-011, and RQ-CF-AGENT-012.
+// RQ-CF-AGENT-011, RQ-CF-AGENT-012, and RQ-CF-AGENT-013.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -181,6 +181,17 @@ struct WorkspaceAgentProcessEnvironmentPreflightResult {
     std::string diagnostic_code;
 };
 
+struct WorkspaceAgentSerializedProcessEnvironmentPreflightResult {
+    bool allowed = false;
+    // The complete logical plan is retained so serialization stays bound to
+    // the exact point-in-time invocation and fixed environment it consumed.
+    WorkspaceAgentProcessEnvironmentPreflightResult environment_plan{};
+    // Exactly one native representation is populated on allow.
+    std::vector<std::string> posix_environment;
+    std::u16string windows_environment_block;
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -236,6 +247,13 @@ public:
     // performs no command serialization, directory mutation, or launch.
     [[nodiscard]] WorkspaceAgentProcessEnvironmentPreflightResult
     preflight_process_environment_request(
+        const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
+
+    // Serializes only the fixed logical environment returned by a bracketed
+    // environment preflight. It reads no ambient state, accepts no caller
+    // environment, constructs no command line, and starts no process.
+    [[nodiscard]] WorkspaceAgentSerializedProcessEnvironmentPreflightResult
+    preflight_serialized_process_environment_request(
         const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
 
 private:

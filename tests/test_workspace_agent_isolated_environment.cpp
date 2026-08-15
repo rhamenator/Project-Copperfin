@@ -26,6 +26,7 @@ using copperfin::security::WorkspaceAgentEnvironmentEntry;
 using copperfin::security::WorkspaceAgentIsolatedEnvironmentBoundary;
 using copperfin::security::WorkspaceAgentIsolatedEnvironmentConfiguration;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPreflightResult;
+using copperfin::security::WorkspaceAgentSerializedProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPolicy;
 using copperfin::security::WorkspaceAgentProcessInvocationPreflightRequest;
 using copperfin::security::WorkspaceAgentSessionAuditCommitResult;
@@ -186,6 +187,20 @@ void expect_content_free_denial(
            message);
 }
 
+void expect_serialization_content_free_denial(
+    const WorkspaceAgentSerializedProcessEnvironmentPreflightResult& result,
+    std::string_view diagnostic,
+    const std::string& message) {
+    expect(!result.allowed && result.diagnostic_code == diagnostic &&
+               !result.environment_plan.allowed &&
+               result.environment_plan.session_generation == 0U &&
+               result.environment_plan.tool_id.empty() &&
+               result.environment_plan.environment_entries.empty() &&
+               result.posix_environment.empty() &&
+               result.windows_environment_block.empty(),
+           message);
+}
+
 void test_fixed_non_inheriting_environment() {
     TempTree tree;
     WorkspaceAgentSessionController controller(tree.workspace, tree.configuration());
@@ -275,6 +290,48 @@ void test_fixed_non_inheriting_environment() {
     const std::string* path = find_entry(result.environment_entries, "PATH");
     expect(path != nullptr && *path == expected_path,
            "RQ-CF-AGENT-012: PATH must contain only ordered product-approved directories");
+
+    const auto serialized =
+        controller.preflight_serialized_process_environment_request(
+            invocation_request(start.session.generation));
+    expect(serialized.allowed &&
+               serialized.diagnostic_code ==
+                   "workspace_agent.process_environment_serialization_request_allowed" &&
+               serialized.environment_plan.allowed &&
+               serialized.environment_plan.session_generation ==
+                   result.session_generation &&
+               serialized.environment_plan.canonical_executable_path ==
+                   result.canonical_executable_path &&
+               serialized.environment_plan.executable_identity ==
+                   result.executable_identity &&
+               serialized.environment_plan.canonical_working_directory ==
+                   result.canonical_working_directory &&
+               serialized.environment_plan.working_directory_identity ==
+                   result.working_directory_identity &&
+               serialized.environment_plan.arguments == result.arguments &&
+               serialized.environment_plan.environment_entries ==
+                   result.environment_entries,
+           "RQ-CF-AGENT-013: serialization must remain bound to the exact admitted invocation and environment");
+#if defined(_WIN32)
+    expect(serialized.posix_environment.empty() &&
+               serialized.windows_environment_block.size() >= 2U &&
+               serialized.windows_environment_block[
+                   serialized.windows_environment_block.size() - 1U] == u'\0' &&
+               serialized.windows_environment_block[
+                   serialized.windows_environment_block.size() - 2U] == u'\0',
+           "RQ-CF-AGENT-013: the controller must emit only a double-NUL Windows UTF-16 block");
+#else
+    bool exact_posix = serialized.windows_environment_block.empty() &&
+        serialized.posix_environment.size() == result.environment_entries.size();
+    for (std::size_t index = 0U;
+         exact_posix && index < result.environment_entries.size(); ++index) {
+        exact_posix = serialized.posix_environment[index] ==
+            result.environment_entries[index].name + "=" +
+                result.environment_entries[index].value;
+    }
+    expect(exact_posix,
+           "RQ-CF-AGENT-013: the controller must emit only exact POSIX name=value entries");
+#endif
 }
 
 void test_configuration_and_layout_fail_closed() {
@@ -355,6 +412,11 @@ void test_configuration_and_layout_fail_closed() {
             invocation_request(no_boundary_start.session.generation)),
         "workspace_agent.process_environment_boundary_unavailable",
         "RQ-CF-AGENT-012: a controller without trusted environment configuration must fail without reflection");
+    expect_serialization_content_free_denial(
+        no_boundary.preflight_serialized_process_environment_request(
+            invocation_request(no_boundary_start.session.generation)),
+        "workspace_agent.process_environment_boundary_unavailable",
+        "RQ-CF-AGENT-013: serialization denial must not reflect an invocation or environment");
 
     WorkspaceAgentSessionController missing_layout(
         tree.workspace, tree.configuration());
