@@ -384,6 +384,8 @@ WorkspaceAgentIsolatedEnvironmentBoundary::prepare_session_layout(
     }
 
     if (!captured_directory_matches(session_storage_root_) ||
+        !copperfin::platform::verify_private_directory(
+             session_storage_root_.canonical_path).ok ||
         !capture_contained_directory(
              session_root, session_storage_root_).has_value()) {
         result.diagnostic_code =

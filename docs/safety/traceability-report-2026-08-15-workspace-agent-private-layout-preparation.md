@@ -87,8 +87,8 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   blocks reuse.
 - Root replacement: the environment boundary rechecks the captured private
   storage-root identity and current privacy contract before creation,
-  construction, and final return, then physically contains and verifies every
-  fixed directory.
+  after preparation, during construction, and before final return, then
+  physically contains and verifies every fixed directory.
 - Same-authority boundary: creation currently uses full paths. It assumes the
   storage-root owner and LocalSystem are trusted host authorities; it is not a
   defense against a malicious process already operating with either authority.
