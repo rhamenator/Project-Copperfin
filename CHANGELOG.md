@@ -14,10 +14,13 @@
   identities, not authority. Argument/environment policy, launch-adjacent
   handle/revalidation, executor, real sandbox, outcome audit, endpoint policy,
   provider/OAuth, trusted activation UI, diff, and undo remain gaps.
-  Exact signed/DCO implementation head `4020d70a4` passed all eleven protected
-  checks in runs `31858578884`, `31858578779`, `31858578771`, `31858578807`,
-  and `31858578790`; both Socket checks passed, thread-aware review reported
-  zero threads, and implementation PR `#5006` merged as `7cb1499ce`.
+  Exact signed/DCO corrected head `a6f9044f3` passed all eleven protected
+  checks in runs `31860551945`, `31860553045`, `31860553024`, `31860553090`,
+  and `31860553147`; both Socket checks passed. Review found that Windows also
+  accepts forward-slash and mixed-separator UNC roots; both forms are now
+  rejected and directly regressed, the sole thread is resolved, implementation
+  PR `#5006` merged as `7cb1499ce`, and correction PR `#5008` merged as
+  `53c51c433`.
   `RQ-CF-AGENT-010` is defined with retained evidence.
 
 - 2026-08-14: Added a non-executing, exact-session existing-file target
