@@ -64,6 +64,8 @@ foreach(token IN ITEMS
         "SE_DACL_PROTECTED"
         "::GetSecurityInfo("
         "FILE_ATTRIBUTE_REPARSE_POINT"
+        "header->AceFlags !="
+        "ace->Mask != FILE_ALL_ACCESS"
         "::mkdir(path.c_str(), 0700)"
         "::lstat("
         "status.st_uid != ::geteuid()"

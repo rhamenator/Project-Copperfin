@@ -145,13 +145,12 @@ bool ace_grants_private_full_control(
     bool& found_system) noexcept {
     const auto* header = static_cast<const ACE_HEADER*>(raw_ace);
     if (header->AceType != ACCESS_ALLOWED_ACE_TYPE ||
-        (header->AceFlags & INHERITED_ACE) != 0U ||
-        (header->AceFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE)) !=
+        header->AceFlags !=
             (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE)) {
         return false;
     }
     const auto* ace = static_cast<const ACCESS_ALLOWED_ACE*>(raw_ace);
-    if ((ace->Mask & FILE_ALL_ACCESS) != FILE_ALL_ACCESS) {
+    if (ace->Mask != FILE_ALL_ACCESS) {
         return false;
     }
     const PSID sid = const_cast<DWORD*>(&ace->SidStart);
