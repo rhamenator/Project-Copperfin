@@ -108,6 +108,10 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   effective user or root, and rejects group/other-writable parents without
   sticky rename protection. A direct regression requires denial before any
   leaf side effect and preserves creation beneath a trusted sticky parent.
+- POSIX privacy checks reject descriptor-retrieved macOS extended ACL entries
+  and Linux access/default ACL xattrs. Platform regressions install an extended
+  or default ACL where the filesystem supports it and require verification to
+  fail despite otherwise private ownership/mode.
 - Parent indirection: POSIX creation and verification walk every existing
   parent through no-follow directory descriptors, then create and inspect the
   leaf relative to the bound parent. Direct regressions prove a symlink parent

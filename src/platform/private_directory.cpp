@@ -20,6 +20,11 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#if defined(__APPLE__)
+#include <sys/acl.h>
+#elif defined(__linux__)
+#include <sys/xattr.h>
+#endif
 #endif
 
 namespace copperfin::platform {
@@ -311,10 +316,43 @@ std::optional<BoundParent> bind_non_indirect_parent(
         .leaf = leaf_path.native()};
 }
 
+bool descriptor_has_no_extended_acl(const int descriptor) noexcept {
+#if defined(__APPLE__)
+    acl_t acl = ::acl_get_fd_np(descriptor, ACL_TYPE_EXTENDED);
+    if (acl == nullptr) {
+        return false;
+    }
+    acl_entry_t entry = nullptr;
+    errno = 0;
+    const int entry_result = ::acl_get_entry(acl, ACL_FIRST_ENTRY, &entry);
+    const int entry_error = errno;
+    (void)::acl_free(acl);
+    return entry_result == -1 && entry_error == EINVAL;
+#elif defined(__linux__)
+    ScopedFd readable(::openat(
+        descriptor, ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC));
+    if (!readable.valid()) {
+        return false;
+    }
+    const auto attribute_is_absent = [&readable](const char* name) noexcept {
+        errno = 0;
+        const ssize_t size =
+            ::fgetxattr(readable.get(), name, nullptr, 0U);
+        return size == -1 && errno == ENODATA;
+    };
+    return attribute_is_absent("system.posix_acl_access") &&
+        attribute_is_absent("system.posix_acl_default");
+#else
+    (void)descriptor;
+    return false;
+#endif
+}
+
 bool descriptor_is_private_directory(const int descriptor) noexcept {
     struct stat status{};
     return ::fstat(descriptor, &status) == 0 && S_ISDIR(status.st_mode) &&
-        status.st_uid == ::geteuid() && (status.st_mode & 07777) == 0700;
+        status.st_uid == ::geteuid() && (status.st_mode & 07777) == 0700 &&
+        descriptor_has_no_extended_acl(descriptor);
 }
 
 bool descriptor_is_trusted_creation_parent(const int descriptor) noexcept {
@@ -324,7 +362,8 @@ bool descriptor_is_trusted_creation_parent(const int descriptor) noexcept {
         return false;
     }
     const bool broadly_writable = (status.st_mode & 0022) != 0;
-    return !broadly_writable || (status.st_mode & S_ISVTX) != 0;
+    return (!broadly_writable || (status.st_mode & S_ISVTX) != 0) &&
+        descriptor_has_no_extended_acl(descriptor);
 }
 
 bool descriptor_identity_matches(

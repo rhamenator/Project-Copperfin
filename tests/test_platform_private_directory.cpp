@@ -5,6 +5,7 @@
 #include "copperfin/platform/private_directory.h"
 
 #include <chrono>
+#include <cerrno>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -15,6 +16,15 @@
 #include <windows.h>
 #else
 #include <sys/stat.h>
+#if defined(__APPLE__)
+#include <membership.h>
+#include <sys/acl.h>
+#include <unistd.h>
+#elif defined(__linux__)
+#include <linux/posix_acl.h>
+#include <linux/posix_acl_xattr.h>
+#include <sys/xattr.h>
+#endif
 #endif
 
 namespace {
@@ -192,6 +202,59 @@ void test_creation_and_verification() {
     expect(create_private_directory(sticky_child).ok &&
                verify_private_directory(sticky_child).ok,
            "RQ-CF-AGENT-014: a trusted sticky parent must retain safe leaf creation");
+
+    const auto acl_directory = private_root / "extended-acl";
+    expect(create_private_directory(acl_directory).ok,
+           "RQ-CF-AGENT-014: the extended-ACL fixture must start private");
+#if defined(__APPLE__)
+    acl_t acl = ::acl_init(1);
+    acl_entry_t entry = nullptr;
+    uuid_t qualifier{};
+    acl_permset_t permissions = nullptr;
+    const bool acl_installed = acl != nullptr &&
+        ::mbr_uid_to_uuid(::geteuid(), qualifier) == 0 &&
+        ::acl_create_entry(&acl, &entry) == 0 &&
+        ::acl_set_tag_type(entry, ACL_EXTENDED_ALLOW) == 0 &&
+        ::acl_set_qualifier(entry, qualifier) == 0 &&
+        ::acl_get_permset(entry, &permissions) == 0 &&
+        ::acl_clear_perms(permissions) == 0 &&
+        ::acl_add_perm(permissions, ACL_READ_DATA) == 0 &&
+        ::acl_set_permset(entry, permissions) == 0 &&
+        ::acl_set_file(
+            acl_directory.c_str(), ACL_TYPE_EXTENDED, acl) == 0;
+    if (acl != nullptr) {
+        (void)::acl_free(acl);
+    }
+    expect(acl_installed && !verify_private_directory(acl_directory).ok,
+           "RQ-CF-AGENT-014: a macOS extended ACL must violate private verification");
+#elif defined(__linux__)
+    struct DefaultAclBlob {
+        posix_acl_xattr_header header{};
+        posix_acl_xattr_entry entries[3]{};
+    } acl_blob;
+    acl_blob.header.a_version = POSIX_ACL_XATTR_VERSION;
+    acl_blob.entries[0] = {
+        .e_tag = ACL_USER_OBJ,
+        .e_perm = 7U,
+        .e_id = static_cast<__le32>(ACL_UNDEFINED_ID)};
+    acl_blob.entries[1] = {
+        .e_tag = ACL_GROUP_OBJ,
+        .e_perm = 0U,
+        .e_id = static_cast<__le32>(ACL_UNDEFINED_ID)};
+    acl_blob.entries[2] = {
+        .e_tag = ACL_OTHER,
+        .e_perm = 0U,
+        .e_id = static_cast<__le32>(ACL_UNDEFINED_ID)};
+    const int acl_result = ::setxattr(
+        acl_directory.c_str(), "system.posix_acl_default",
+        &acl_blob, sizeof(acl_blob), 0);
+    const int acl_error = errno;
+    expect(
+        (acl_result == 0 && !verify_private_directory(acl_directory).ok) ||
+            (acl_result == -1 &&
+                (acl_error == ENOTSUP || acl_error == EOPNOTSUPP)),
+        "RQ-CF-AGENT-014: a Linux POSIX ACL must violate private verification when the filesystem supports ACLs");
+#endif
 #endif
 }
 

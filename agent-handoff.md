@@ -28,6 +28,8 @@ for all five child creations through the same operation.
 Generic POSIX creation now also fails before mutation beneath an untrusted
 immediate parent: ownership must be the effective user or root, and broad write
 permission requires sticky rename protection.
+POSIX verification also rejects macOS extended ACL entries and Linux
+access/default POSIX ACL xattrs through the bound directory descriptor.
 
 This remains non-executing and is not yet wired to session start. Layout
 cleanup, platform argument serialization, Windows executable-format

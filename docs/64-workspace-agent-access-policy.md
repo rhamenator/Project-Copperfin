@@ -416,6 +416,12 @@ different unprivileged principal from replacing a just-created leaf before its
 identity-bound inspection; unsafe parents fail before creation. Same-user and
 privileged-host interference remain within the trusted-host boundary.
 
+POSIX privacy verification is also ACL-aware on supported hosts. macOS rejects
+any extended ACL entry retrieved from the bound directory descriptor. Linux
+rejects both access and default POSIX ACL xattrs retrieved from that same bound
+directory. ACL inspection failure is fail-closed; inherited or broadened ACLs
+are never treated as owner-only merely because `st_uid` and mode are `0700`.
+
 Before creating the session root, preparation derives the exact fixed
 platform environment entries through the same builder used by construction.
 Invalid encoding, an empty required value, a per-entry overflow, or aggregate
