@@ -120,10 +120,20 @@ Current local evidence:
 - safety-traceability workflow contract: `1/1` pass;
 - `git diff --check` passes.
 
-Required before implementation closure:
+Exact implementation evidence:
 
-- exact signed/DCO head under all protected Windows, Ubuntu, and macOS checks;
-- thread-aware review and resolution of every actionable finding.
+- exact signed/DCO corrected head: `9c2fa618c0c60bd74a11d26b3616e34d7c45b9af`;
+- implementation PR: `#5012`, merged as `b3947335e0d737d198a9201f2c165970c9c9b722`;
+- DCO: run `31867096322`;
+- Executable Path Validation: run `31867098781`, GCC and Clang passed;
+- Generated Launcher Validation: run `31867098869`, Windows, Ubuntu, and
+  macOS passed;
+- Windows DECLARE ABI Validation: run `31867098752`, Win32 and x64 passed;
+- Windows Environment and Executable Path Validation: run `31867098756`;
+- both Socket checks passed;
+- thread-aware review reported one actionable thread; corrected head
+  `9c2fa618c` answered it with direct regression evidence, and the thread was
+  resolved before merge.
 
 ## Review evidence
 
@@ -132,10 +142,10 @@ Required before implementation closure:
 - verification: parent independence, fixed keys, trusted-root and exact-
   generation binding, physical identity, bounds/encoding, denial clearing,
   invocation recheck, non-execution boundary, rollback, and traceability
-- verification result: focused candidate review passed; broader and protected
-  exact-head review pending
+- verification result: focused and protected exact-head verification passed;
+  the sole actionable review finding was corrected and resolved
 - scope: medium-severity non-executing isolated logical environment construction
-- result: candidate for `RQ-CF-AGENT-012`; no independence claim
+- result: `RQ-CF-AGENT-012` defined at merge `b3947335e`; no independence claim
 
 Candidate review corrections preserve the public platform seam by moving host
 selection out of the public header and bind directories by stable storage/file

@@ -1,3 +1,10 @@
+- 2026-08-15: `RQ-CF-AGENT-012` exact-head evidence is complete. Signed/DCO
+  corrected head `9c2fa618c` passed all eleven protected checks in runs
+  `31867096322`, `31867098781`, `31867098869`, `31867098752`, and
+  `31867098756`, plus both Socket checks. The sole actionable review thread was
+  corrected with a later-generation lifecycle regression, answered, and
+  resolved before PR `#5012` merged as `b3947335e`.
+
 - 2026-08-15: Corrected the `RQ-CF-AGENT-012` candidate so public headers retain
   the native platform seam and normal creation of a later generation's session
   layout is not misclassified as replacement of the trusted storage root.
@@ -22,8 +29,7 @@
   remain open. The warning-free Release security/agent/community/isolation
   selection passes `11/11`; fresh Clang 21 ASan/UBSan with leak detection
   passes `6/6`; the generated isolation inventory covers `376` native tests;
-  safety traceability passes `1/1`; and diff passes. Exact-head protected
-  evidence is pending.
+  safety traceability passes `1/1`; and diff passes.
 
 - 2026-08-14: Added a versioned non-executing workspace-agent process
   invocation-shape preflight. It binds the exact registered process tool,
