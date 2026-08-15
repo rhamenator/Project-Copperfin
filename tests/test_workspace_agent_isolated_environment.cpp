@@ -69,7 +69,8 @@ public:
         const auto suffix = std::chrono::steady_clock::now()
                                 .time_since_epoch()
                                 .count();
-        root = std::filesystem::temp_directory_path() /
+        root = std::filesystem::canonical(
+                   std::filesystem::temp_directory_path()) /
             ("copperfin-agent-environment-" + std::to_string(suffix));
         workspace = root / "workspace";
         session_storage = root / "sessions";

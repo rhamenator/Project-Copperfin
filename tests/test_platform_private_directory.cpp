@@ -35,7 +35,8 @@ public:
         const auto suffix = std::chrono::steady_clock::now()
                                 .time_since_epoch()
                                 .count();
-        root = std::filesystem::temp_directory_path() /
+        root = std::filesystem::canonical(
+                   std::filesystem::temp_directory_path()) /
             ("copperfin-private-directory-" + std::to_string(suffix));
         std::filesystem::create_directory(root);
     }
