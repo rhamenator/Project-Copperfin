@@ -191,9 +191,7 @@ SerializedProcessEnvironment serialize_process_environment(
             total += units;
         }
     } else {
-        const std::size_t maximum = std::min(
-            maximum_serialized_units,
-            windows_process_environment_max_code_units);
+        const std::size_t maximum = maximum_serialized_units;
         std::vector<ProcessEnvironmentEntry> sorted = entries;
         std::sort(sorted.begin(), sorted.end(), windows_name_less);
         std::u16string block;

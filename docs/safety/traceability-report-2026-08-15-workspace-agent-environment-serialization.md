@@ -76,9 +76,10 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
   scalars, invalid continuation bytes, and values above Unicode maximum before
   emitting UTF-16.
 - Truncation and exhaustion: subtraction-safe accounting includes every entry
-  terminator and the Windows final block terminator. Windows enforces both the
-  caller cap and the 32,767-code-unit native cap. Denial returns no partial
-  POSIX or Windows representation.
+  terminator and the Windows final block terminator. Windows enforces the
+  explicit caller resource cap without misapplying the ANSI-only 32,767-
+  character limit to Unicode blocks. Denial returns no partial POSIX or Windows
+  representation.
 - Stale authority: the controller repeats the complete logical environment
   preflight after serialization and compares all invocation, identity, policy,
   platform, and entry fields. Its output remains point-in-time evidence, not a
@@ -122,3 +123,11 @@ Current local evidence:
   non-execution boundary, rollback, and traceability
 - result: candidate local focused verification passed; protected and review
   evidence pending
+
+Automated exact-head review found that the initial candidate incorrectly
+treated the ANSI `CreateProcess` 32,767-character environment limit as a
+Unicode limit. The corrected serializer honors the caller's explicit resource
+cap; the workspace-agent caller remains bounded by its fixed logical-profile
+policy, while the existing Unicode bounded-process path preserves its prior
+large-environment compatibility. A direct 40,000-code-unit boundary regression
+and both focused Release and sanitizer selections pass after the correction.

@@ -438,7 +438,7 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
     auto serialized_environment = serialize_process_environment(
         request.environment,
         ProcessEnvironmentTarget::windows_utf16_v1,
-        windows_process_environment_max_code_units);
+        std::numeric_limits<std::size_t>::max());
     if (!serialized_environment.ok) {
         result.status = BoundedProcessStatus::launch_failed;
         result.error_code = "polyglot.process.environment_invalid";

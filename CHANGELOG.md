@@ -1,3 +1,12 @@
+- 2026-08-15: Corrected the `RQ-CF-AGENT-013` candidate after exact-head review
+  found that it misapplied the ANSI-only 32,767-character environment limit to
+  Unicode `CreateProcessW` blocks. The portable serializer now honors its
+  caller's explicit resource cap, the workspace-agent fixed profile retains its
+  bounded logical-profile cap, and the existing bounded-process utility no
+  longer rejects Unicode environments the prior implementation admitted. A
+  direct regression admits a 40,000-code-unit block and rejects the next unit;
+  focused Release and fresh Clang ASan/UBSan selections both pass `3/3`.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-013` native process-environment
   serialization. One portable parent-independent boundary preserves exact
   POSIX `name=value` storage and emits a strictly decoded, case-insensitively

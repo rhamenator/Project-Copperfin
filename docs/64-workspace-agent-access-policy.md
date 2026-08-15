@@ -366,8 +366,9 @@ order and exact non-NUL value bytes as complete `name=value` storage strings;
 a future launcher remains responsible for its transient null-terminated
 pointer vector. Windows serialization strictly decodes UTF-8 into UTF-16,
 case-insensitively sorts names, rejects case-insensitive duplicates, and emits
-the required double-NUL-terminated environment block within the 32,767-code-
-unit native cap. Both platforms require portable names matching
+the required double-NUL-terminated environment block within an explicit caller
+resource cap. The Win32 32,767-character environment limit applies to ANSI,
+not the Unicode block used here. Both platforms require portable names matching
 `[A-Za-z_][A-Za-z0-9_]*`, reject embedded NUL, duplicates, invalid target
 contracts, and overflow, and return no partial representation on denial.
 

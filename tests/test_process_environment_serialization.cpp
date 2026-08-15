@@ -13,7 +13,6 @@ namespace {
 using copperfin::platform::ProcessEnvironmentEntry;
 using copperfin::platform::ProcessEnvironmentTarget;
 using copperfin::platform::serialize_process_environment;
-using copperfin::platform::windows_process_environment_max_code_units;
 
 int failures = 0;
 
@@ -84,26 +83,26 @@ void test_windows_utf16_order_and_limits() {
         {{.name = "A", .value = "\xf0\x9f\x98\x80"}},
         ProcessEnvironmentTarget::windows_utf16_v1, 5U,
         "platform.process_environment.size_limit_exceeded",
-        "RQ-CF-AGENT-013: bounded decoding must stop before exceeding the native cap");
+        "RQ-CF-AGENT-013: bounded decoding must stop before exceeding the caller cap");
 
     const auto empty = serialize_process_environment(
         {}, ProcessEnvironmentTarget::windows_utf16_v1, 2U);
     expect(empty.ok && empty.windows_block == std::u16string(2U, u'\0'),
            "RQ-CF-AGENT-013: an empty Windows environment must be double-NUL terminated");
 
-    const std::string maximum_value(
-        windows_process_environment_max_code_units - 4U, 'x');
+    constexpr std::size_t caller_limit = 40000U;
+    const std::string maximum_value(caller_limit - 4U, 'x');
     expect(serialize_process_environment(
                {{.name = "A", .value = maximum_value}},
                ProcessEnvironmentTarget::windows_utf16_v1,
-               windows_process_environment_max_code_units).ok,
-           "RQ-CF-AGENT-013: the exact Windows native environment cap must pass");
+               caller_limit).ok,
+           "RQ-CF-AGENT-013: Unicode Windows blocks above the ANSI limit must remain admissible");
     expect_denied(
         {{.name = "A", .value = maximum_value + "x"}},
         ProcessEnvironmentTarget::windows_utf16_v1,
-        windows_process_environment_max_code_units,
+        caller_limit,
         "platform.process_environment.size_limit_exceeded",
-        "RQ-CF-AGENT-013: the Windows native environment cap must fail closed");
+        "RQ-CF-AGENT-013: the explicit Windows caller cap must fail closed");
 }
 
 void test_rejected_ambiguity_and_encoding() {

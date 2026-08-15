@@ -35,9 +35,6 @@ struct SerializedProcessEnvironment {
     std::string diagnostic_code;
 };
 
-inline constexpr std::size_t windows_process_environment_max_code_units =
-    32767U;
-
 // Serializes a complete child environment without reading or modifying the
 // parent environment. Names use the portable [A-Za-z_][A-Za-z0-9_]* grammar.
 // POSIX values are exact non-NUL bytes and retain input order. Windows values
@@ -45,7 +42,8 @@ inline constexpr std::size_t windows_process_environment_max_code_units =
 // sorted case-insensitively as required by the platform block contract.
 // maximum_serialized_units includes each POSIX entry's terminating null byte.
 // For Windows it also includes the final block terminator (or both terminators
-// for an empty block).
+// for an empty block). The caller supplies its product/resource bound; the
+// 32,767-character CreateProcess limit applies to ANSI, not Unicode, blocks.
 [[nodiscard]] SerializedProcessEnvironment serialize_process_environment(
     const std::vector<ProcessEnvironmentEntry>& entries,
     ProcessEnvironmentTarget target,

@@ -662,10 +662,8 @@ WorkspaceAgentSessionController::preflight_serialized_process_environment_reques
     const auto target = windows
         ? copperfin::platform::ProcessEnvironmentTarget::windows_utf16_v1
         : copperfin::platform::ProcessEnvironmentTarget::posix_v1;
-    const std::size_t maximum_units = windows
-        ? copperfin::platform::windows_process_environment_max_code_units
-        : workspace_agent_environment_max_total_bytes +
-            preliminary.environment_entries.size();
+    const std::size_t maximum_units = workspace_agent_environment_max_total_bytes +
+        preliminary.environment_entries.size();
     auto serialized = copperfin::platform::serialize_process_environment(
         entries, target, maximum_units);
     if (!serialized.ok) {

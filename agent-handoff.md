@@ -5,8 +5,8 @@
 `RQ-CF-AGENT-013` is the active candidate. A new portable serializer consumes
 only an explicit complete environment: POSIX retains exact non-NUL bytes and
 entry order as `name=value` storage, while Windows strictly converts UTF-8 to
-UTF-16, sorts names case-insensitively, and emits a double-NUL block within the
-32,767-code-unit cap. Portable-name, embedded-NUL, target-semantic duplicate,
+UTF-16, sorts names case-insensitively, and emits a double-NUL block within an
+explicit caller cap. Portable-name, embedded-NUL, target-semantic duplicate,
 encoding, overflow, and size failures return no partial output. The controller
 brackets serialization with the complete invocation/logical-environment
 preflight and binds every target identity, argument, policy, platform, and
