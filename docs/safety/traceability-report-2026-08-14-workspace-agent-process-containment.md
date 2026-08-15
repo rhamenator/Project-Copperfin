@@ -4,7 +4,7 @@ Date: 2026-08-14
 
 ## Scope and requirement
 
-This candidate implements the non-executing process and working-directory
+This implementation defines the non-executing process and working-directory
 target preflight in `RQ-CF-AGENT-010`. The requirement derives from explicit
 repository-owner product policy, `RQ-CF-AGENT-001`, `RQ-CF-AGENT-007`,
 `RQ-CF-AGENT-008`, and the process-target confusion, system-failure, and data-
@@ -47,7 +47,8 @@ Mapped architecture, code, and tests:
 - `DV-workspace-agent-process-target-003`: focused Release security selection
   passes `7/7`; fresh Clang ASan/UBSan session/registry/file/process selection
   passes `4/4`; community and native-isolation contracts pass `2/2`; and the
-  safety contract passes `1/1`. Protected and review evidence are pending.
+  safety contract passes `1/1`. Exact-head protected execution passes all
+  eleven required checks, and thread-aware review reports zero threads.
 
 ## Procedural delta map
 
@@ -89,7 +90,7 @@ Hazards: `HZ-system-failure-01` and `HZ-data-corruption-01`.
 
 ## Boundary and rollback
 
-This candidate performs filesystem metadata inspection only. It does not read
+This implementation performs filesystem metadata inspection only. It does not read
 an executable, inspect or inherit process environment, accept arguments, search
 `PATH`, invoke a shell, start a process, use the network, activate a product UI,
 authenticate a provider, apply a sandbox, or record a tool outcome. Launch-
@@ -99,7 +100,7 @@ UI, diff, and undo remain explicit gaps.
 
 Rollback is code-local: remove the process-containment module and focused test,
 remove the controller process preflight, and restore the mapped documentation.
-The candidate creates no provider, workspace, user, process, or persistent
+The implementation creates no provider, workspace, user, process, or persistent
 product state.
 
 ## Verification
@@ -114,7 +115,11 @@ Current local evidence:
 - repository-community and native-test-isolation contracts: `2/2` pass; the
   generated isolation inventory covers `374` native tests;
 - safety-traceability workflow contract: `1/1` pass;
-- protected and independent review evidence pending.
+- exact signed/DCO implementation head `4020d70a4` passes all eleven protected
+  checks in runs `31858578884`, `31858578779`, `31858578771`, `31858578807`,
+  and `31858578790`; both Socket checks pass;
+- implementation PR `#5006` merged as `7cb1499ce`; thread-aware review reports
+  zero review threads. No independent final review is claimed.
 
 ## Assurance statement
 
@@ -124,14 +129,15 @@ assigned software level, or suitability for a safety-critical deployment.
 
 ## Review evidence
 
-- mode: maintainer self-review candidate; independent technical review pending
+- mode: medium-severity maintainer self-review; no independent final review
 - reviewer: rhamenator
 - verification: product-root ownership, path grammar, physical identity,
   registry/session binding, non-execution boundary, rollback, and
   requirements/code/test mapping
-- verification result: passed for the local candidate
+- verification result: passed for exact implementation head `4020d70a4`
 - automated evidence: focused Release `7/7`, fresh Clang ASan/UBSan `4/4`,
-  community/isolation `2/2`, and safety `1/1`; protected evidence pending
-- automated evidence result: pending
+  community/isolation `2/2`, safety `1/1`, and all eleven exact-head protected
+  checks; both Socket checks pass
+- automated evidence result: passed
 - scope: medium-severity non-executing process target containment
-- result: candidate only; no final or independence claim
+- result: accepted for `RQ-CF-AGENT-010`; no independence claim
