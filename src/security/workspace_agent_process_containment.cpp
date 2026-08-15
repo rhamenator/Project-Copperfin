@@ -52,7 +52,12 @@ bool path_has_windows_device_or_stream_syntax(const std::filesystem::path& path)
         return true;
     }
     const auto root_name = path.root_name();
-    if (root_name.native().rfind(L"\\\\", 0U) == 0U) {
+    const auto& root_native = root_name.native();
+    const auto is_separator = [](wchar_t value) {
+        return value == L'\\' || value == L'/';
+    };
+    if (root_native.size() >= 2U && is_separator(root_native[0]) &&
+        is_separator(root_native[1])) {
         return true;
     }
     for (const auto& component : path.relative_path()) {
