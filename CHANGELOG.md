@@ -13,7 +13,12 @@
   audit, provider/OAuth, activation UI, diff, and undo remain explicit gaps.
   Local warning-free Release verification passes the focused `8/8` selection,
   fresh Clang ASan/UBSan passes `5/5`, and community/isolation passes `2/2`;
-  safety passes `1/1`. Protected exact-head evidence remains pending.
+  safety passes `1/1`. Exact signed/DCO head `487699f3f` passed all eleven
+  protected checks in runs `31863899694`, `31863899698`, `31863899695`,
+  `31863899697`, and `31863899696`; both Socket checks passed, GitHub review
+  reported zero threads, independent read-only review found no defect, and PR
+  `#5010` merged as `7361f76e0`. `RQ-CF-AGENT-011` is defined with retained
+  evidence.
 
 - 2026-08-14: Added a non-executing, exact-session process-target preflight for
   the workspace assistant. It binds the registered workspace/local process

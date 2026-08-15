@@ -110,12 +110,16 @@ Current local evidence:
 - repository-community and native-test-isolation contracts: `2/2` pass;
 - the generated isolation inventory covers `375` native tests;
 - safety-traceability workflow contract: `1/1` pass;
-- `git diff --check` passes.
-
-Required before implementation closure:
-
-- exact signed/DCO head under all protected Windows, Ubuntu, and macOS checks;
-- thread-aware review and resolution of every actionable finding.
+- `git diff --check` passes;
+- exact signed/DCO implementation head `487699f3f` passes all eleven protected
+  checks in runs `31863899694`, `31863899698`, `31863899695`, `31863899697`,
+  and `31863899696`; both Socket checks pass;
+- implementation PR `#5010` merged as `7361f76e0`; thread-aware GitHub review
+  reports zero threads;
+- independent read-only review at exact head `487699f3f` passed the focused
+  eight-test workspace-agent selection and found no defect in bounds/overflow,
+  UTF-8, denial clearing, the final session recheck, sensitive-content wording,
+  or the non-execution boundary.
 
 ## Assurance statement
 
@@ -130,11 +134,13 @@ assigned software level, or suitability for a safety-critical deployment.
 - verification: direct-vector grammar, bounds, UTF-8/NUL handling, target and
   session binding, non-inheriting environment selector, non-execution boundary,
   rollback, and requirements/code/test mapping
-- verification result: local focused review passed; protected exact-head review
-  pending
+- verification result: passed for exact signed/DCO implementation head
+  `487699f3f`
 - automated evidence: focused Release `8/8`, fresh Clang ASan/UBSan `5/5`,
-  community/isolation `2/2`, safety `1/1`, and diff pass; protected evidence
-  listed above remains required
-- automated evidence result: partial pending protected exact-head execution
+  community/isolation `2/2`, safety `1/1`, all eleven exact-head protected
+  checks, both Socket checks, zero GitHub threads, and independent focused
+  read-only review pass
+- automated evidence result: passed
 - scope: medium-severity non-executing process invocation-shape preflight
-- result: candidate for `RQ-CF-AGENT-011`; no independence claim
+- result: accepted for `RQ-CF-AGENT-011`; independent read-only review is
+  recorded without claiming an independent final safety approval
