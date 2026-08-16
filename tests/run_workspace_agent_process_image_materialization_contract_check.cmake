@@ -121,6 +121,7 @@ foreach(token IN ITEMS
         "OwnedDirectoryChain directory_chain"
         "directory_chain.lock(parent)"
         "image_identity_matches(final_path_check.get(), image_identity)"
+        "FILE_SHARE_READ | FILE_SHARE_DELETE"
         "launch_handle.release()"
         "image_descriptor.release()"
         "native_matches_bytes")

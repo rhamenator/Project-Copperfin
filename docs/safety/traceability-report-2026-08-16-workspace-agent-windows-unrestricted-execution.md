@@ -59,6 +59,11 @@ use.
   execution then proves `CreateProcessW` still launches the exact retained
   image.
 
+The final path observer requests only read access and shares delete solely so
+it can coexist with the already-authenticated retained handle's own delete
+access. The retained handle still omits write and delete sharing, so the
+observer does not admit a writer, deleter, or renamer.
+
 ## Hazard, misuse, boundary, and rollback analysis
 
 - Unrestricted authority: this mode is intentionally dangerous. The child has

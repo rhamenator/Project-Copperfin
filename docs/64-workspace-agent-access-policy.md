@@ -870,7 +870,8 @@ three fixed standard handles. Before exposing that internal launch path, the
 private image retains no-delete-share handles for every renameable directory
 below the stable drive or UNC share root through its private parent (the
 intrinsically non-renameable root itself needs no handle) and reopens the leaf
-once more to prove
+once more with a read-only observer that shares delete only for compatibility
+with the retained handle's own delete access. That observer proves
 the now-locked pathname still resolves to the authenticated image identity.
 Those locks remain owned through bounded process completion, so an ancestor
 rename or replacement cannot redirect `CreateProcessW` to different bytes.

@@ -746,7 +746,7 @@ materialize_private_executable_image_in_verified_parent(
             return result;
         }
         OwnedHandle final_path_check(open_path_for_exact_image(
-            image_path, GENERIC_READ, FILE_SHARE_READ));
+            image_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE));
         if (!image_identity_matches(final_path_check.get(), image_identity) ||
             !image_identity_matches(launch_handle.get(), image_identity) ||
             !handle_identity_matches(
