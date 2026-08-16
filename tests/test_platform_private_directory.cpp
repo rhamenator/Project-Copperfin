@@ -414,12 +414,27 @@ void test_exact_private_executable_image_materialization() {
                materialized.failure == PrivateExecutableImageFailure::none,
            "RQ-CF-AGENT-026: exact bytes must become one owned executable image");
 #if defined(_WIN32)
-    std::ifstream retained(private_root / leaf, std::ios::binary);
-    const std::vector<std::uint8_t> retained_bytes{
-        std::istreambuf_iterator<char>(retained),
-        std::istreambuf_iterator<char>()};
-    expect(retained_bytes == bytes,
+    const HANDLE retained_reader = ::CreateFileW(
+        (private_root / leaf).c_str(), GENERIC_READ,
+        FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+    LARGE_INTEGER retained_size{};
+    std::vector<std::uint8_t> retained_bytes(bytes.size());
+    DWORD retained_read = 0U;
+    const bool retained_exact =
+        retained_reader != INVALID_HANDLE_VALUE &&
+        ::GetFileSizeEx(retained_reader, &retained_size) != FALSE &&
+        retained_size.QuadPart == static_cast<LONGLONG>(bytes.size()) &&
+        ::ReadFile(
+            retained_reader, retained_bytes.data(),
+            static_cast<DWORD>(retained_bytes.size()), &retained_read,
+            nullptr) != FALSE &&
+        retained_read == retained_bytes.size() && retained_bytes == bytes;
+    expect(retained_exact,
            "RQ-CF-AGENT-026: the retained Windows image must contain only the supplied bytes");
+    if (retained_reader != INVALID_HANDLE_VALUE) {
+        (void)::CloseHandle(retained_reader);
+    }
     const HANDLE denied_writer = ::CreateFileW(
         (private_root / leaf).c_str(), GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
@@ -429,7 +444,6 @@ void test_exact_private_executable_image_materialization() {
     if (denied_writer != INVALID_HANDLE_VALUE) {
         (void)::CloseHandle(denied_writer);
     }
-    retained.close();
 #else
     expect(!std::filesystem::exists(private_root / leaf),
            "RQ-CF-AGENT-026: a POSIX image must leave no mutable pathname after creation");
