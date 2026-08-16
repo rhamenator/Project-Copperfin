@@ -1443,10 +1443,10 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             if (controls.cancellation_requested) {
                 native_request.transport.cancellation_requested =
                     [controller = this,
-                     callback = controls.cancellation_requested]() {
+                     callback = &controls.cancellation_requested]() {
                         const ControllerCallbackScope cancellation_scope(
                             controller, ControllerCallbackKind::cancellation);
-                        return callback();
+                        return (*callback)();
                     };
             }
             native_request.launch_committed = [](void* context) noexcept {
