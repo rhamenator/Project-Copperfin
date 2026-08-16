@@ -65,6 +65,7 @@ foreach(token IN ITEMS "HANDLE" "int descriptor" "native_handle" "path()")
 endforeach()
 
 foreach(token IN ITEMS
+        "#define NOMINMAX"
         "::CreateFileW("
         "CREATE_NEW"
         "GENERIC_READ | GENERIC_WRITE | DELETE"
