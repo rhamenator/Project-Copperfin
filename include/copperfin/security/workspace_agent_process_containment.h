@@ -7,16 +7,21 @@
 #include "copperfin/security/physical_path_containment.h"
 
 #include <filesystem>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
 
 namespace copperfin::security {
 
-// Governing requirements: RQ-CF-AGENT-010 and candidate RQ-CF-AGENT-023.
+// Governing requirements: RQ-CF-AGENT-010 and candidate RQ-CF-AGENT-023 and
+// RQ-CF-AGENT-024.
 
 struct WorkspaceAgentProcessTargetPinAuthority;
 struct WorkspaceAgentProcessTargetBoundaryAuthority;
+
+inline constexpr std::uint64_t
+    workspace_agent_process_max_executable_bytes = 256ULL * 1024ULL * 1024ULL;
 
 struct WorkspaceAgentProcessTargetInspection {
     bool allowed = false;
@@ -32,13 +37,19 @@ private:
     friend class WorkspaceAgentProcessTargetBoundary;
 };
 
+struct WorkspaceAgentProcessTargetAuthenticationResult {
+    bool authenticated = false;
+    std::string diagnostic_code;
+};
+
 // Move-only ownership of the exact workspace root, executable, and working
-// directory objects opened by the process-target boundary. It exposes no
-// native handle, path, or launch operation. Retention alone does not prove
-// executable-content immutability or authorize process creation.
+// directory objects opened by the process-target boundary plus an immutable
+// private executable-byte snapshot. It exposes no bytes, native handle, path,
+// or launch operation. Snapshot authentication does not authorize process
+// creation.
 class WorkspaceAgentProcessTargetPins {
 public:
-    WorkspaceAgentProcessTargetPins() = default;
+    WorkspaceAgentProcessTargetPins();
     ~WorkspaceAgentProcessTargetPins();
     WorkspaceAgentProcessTargetPins(WorkspaceAgentProcessTargetPins&&) noexcept;
     WorkspaceAgentProcessTargetPins& operator=(
@@ -49,6 +60,13 @@ public:
         const WorkspaceAgentProcessTargetPins&) = delete;
 
     [[nodiscard]] bool valid() const noexcept;
+
+    // Rehashes the immutable private byte snapshot captured during pin
+    // acquisition. No path is reopened and no bytes, digest, native handle, or
+    // launch authority are exposed. A future executor must consume exactly this
+    // snapshot while holding the separate revocation lease.
+    [[nodiscard]] WorkspaceAgentProcessTargetAuthenticationResult
+    verify_executable_bytes();
 
 private:
     class Impl;
@@ -89,6 +107,18 @@ public:
         const std::filesystem::path& strict_absolute_executable,
         const std::filesystem::path& strict_absolute_working_directory) const;
 
+    // These point-in-time-only variants avoid executable hashing and cannot
+    // later authorize pin acquisition. Session preflight uses them so repeated
+    // plan construction does not repeatedly stream a large executable.
+    [[nodiscard]] WorkspaceAgentProcessTargetInspection
+    preflight_workspace_process(
+        const std::filesystem::path& strict_relative_executable,
+        const std::filesystem::path& strict_relative_working_directory) const;
+    [[nodiscard]] WorkspaceAgentProcessTargetInspection
+    preflight_local_process(
+        const std::filesystem::path& strict_absolute_executable,
+        const std::filesystem::path& strict_absolute_working_directory) const;
+
     // Consumes the one-attempt private authority attached to an inspection
     // issued by this exact boundary and opens all three exact objects. Stale,
     // forged, edited, replayed, or cross-boundary inspections fail closed.
@@ -103,6 +133,16 @@ private:
         std::uint64_t workspace_file_id);
 
     [[nodiscard]] bool workspace_root_identity_matches() const;
+    [[nodiscard]] WorkspaceAgentProcessTargetInspection
+    inspect_workspace_process_impl(
+        const std::filesystem::path& strict_relative_executable,
+        const std::filesystem::path& strict_relative_working_directory,
+        bool authorize_pinning) const;
+    [[nodiscard]] WorkspaceAgentProcessTargetInspection
+    inspect_local_process_impl(
+        const std::filesystem::path& strict_absolute_executable,
+        const std::filesystem::path& strict_absolute_working_directory,
+        bool authorize_pinning) const;
 
     std::filesystem::path canonical_workspace_root_;
     std::uint64_t workspace_storage_id_ = 0U;

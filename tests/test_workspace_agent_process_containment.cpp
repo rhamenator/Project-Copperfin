@@ -19,6 +19,7 @@ namespace {
 using copperfin::security::WorkspaceAgentAccessMode;
 using copperfin::security::WorkspaceAgentActivationRequest;
 using copperfin::security::WorkspaceAgentProcessTargetBoundary;
+using copperfin::security::WorkspaceAgentProcessTargetAuthenticationResult;
 using copperfin::security::WorkspaceAgentProcessTargetInspection;
 using copperfin::security::WorkspaceAgentProcessTargetPins;
 using copperfin::security::WorkspaceAgentProcessTargetPreflightRequest;
@@ -65,6 +66,16 @@ concept HasPinnedPath = requires(T value) {
     value.canonical_path;
 };
 
+template <typename T>
+concept HasExecutableDigest = requires(T value) {
+    value.executable_sha256;
+};
+
+template <typename T>
+concept HasExecutableBytes = requires(T value) {
+    value.executable_snapshot;
+};
+
 static_assert(
     !HasCommandText<WorkspaceAgentProcessTargetPreflightRequest> &&
         !HasArguments<WorkspaceAgentProcessTargetPreflightRequest> &&
@@ -79,8 +90,17 @@ static_assert(
         std::is_nothrow_move_constructible_v<WorkspaceAgentProcessTargetPins> &&
         std::is_nothrow_move_assignable_v<WorkspaceAgentProcessTargetPins> &&
         !HasNativeHandle<WorkspaceAgentProcessTargetPins> &&
-        !HasPinnedPath<WorkspaceAgentProcessTargetPins>,
-    "RQ-CF-AGENT-023: target pins must be move-only and expose no native handle or path");
+        !HasPinnedPath<WorkspaceAgentProcessTargetPins> &&
+        !HasExecutableDigest<WorkspaceAgentProcessTargetPins> &&
+        !HasExecutableBytes<WorkspaceAgentProcessTargetPins>,
+    "RQ-CF-AGENT-024: authenticated target pins must remain move-only and expose no native handle, path, digest, or bytes");
+
+static_assert(
+    !HasNativeHandle<WorkspaceAgentProcessTargetAuthenticationResult> &&
+        !HasPinnedPath<WorkspaceAgentProcessTargetAuthenticationResult> &&
+        !HasExecutableDigest<WorkspaceAgentProcessTargetAuthenticationResult> &&
+        !HasExecutableBytes<WorkspaceAgentProcessTargetAuthenticationResult>,
+    "RQ-CF-AGENT-024: authentication results must expose only content-free status");
 
 static_assert(
     !std::is_copy_constructible_v<WorkspaceAgentProcessTargetBoundary> &&
@@ -593,6 +613,14 @@ void test_boundary_retains_exact_process_target_objects() {
                    "workspace_agent.process_target_pin_authority_unavailable",
            "RQ-CF-AGENT-023: caller-constructed inspection fields must not authorize pins");
 
+    const auto point_in_time = boundary->preflight_workspace_process(
+        "bin/workspace-tool", ".");
+    const auto point_in_time_pin = boundary->pin_process_targets(point_in_time);
+    expect(point_in_time.allowed && !point_in_time_pin.pinned &&
+               point_in_time_pin.diagnostic_code ==
+                   "workspace_agent.process_target_pin_authority_unavailable",
+           "RQ-CF-AGENT-024: ordinary point-in-time inspection must avoid hashing and cannot authorize retained pins");
+
     auto cross_boundary_inspection = boundary->inspect_workspace_process(
         "bin/workspace-tool", ".");
     const auto cross_boundary = other_boundary->pin_process_targets(
@@ -611,6 +639,16 @@ void test_boundary_retains_exact_process_target_objects() {
                replay.diagnostic_code ==
                    "workspace_agent.process_target_pin_authority_unavailable",
            "RQ-CF-AGENT-023: an inspection authority must not authorize a second pin bundle");
+    WorkspaceAgentProcessTargetPins moved_pins(
+        std::move(*correct_boundary.pins));
+    const auto moved_from_authentication =
+        correct_boundary.pins->verify_executable_bytes();
+    const auto moved_to_authentication = moved_pins.verify_executable_bytes();
+    expect(!correct_boundary.pins->valid() &&
+               !moved_from_authentication.authenticated &&
+               moved_to_authentication.authenticated,
+           "RQ-CF-AGENT-024: moving pins must transfer private digest authority and leave no authentication in the source");
+    moved_pins = WorkspaceAgentProcessTargetPins{};
     correct_boundary.pins.reset();
 
     auto move_source = WorkspaceAgentProcessTargetBoundary::create(tree.workspace);
@@ -637,9 +675,48 @@ void test_boundary_retains_exact_process_target_objects() {
     expect(!edited_denial.pinned && !edited_replay.pinned,
            "RQ-CF-AGENT-023: editing public inspection fields must fail and consume the one-attempt authority");
 
+    const auto original_executable = tree.workspace / "bin/workspace-tool";
+    auto stale_bytes = boundary->inspect_workspace_process(
+        "bin/workspace-tool", "nested");
+    const auto original_write_time =
+        std::filesystem::last_write_time(original_executable);
+    char original_final_byte = 0;
+    {
+        std::fstream bytes(
+            original_executable,
+            std::ios::binary | std::ios::in | std::ios::out);
+        bytes.seekg(-1, std::ios::end);
+        bytes.get(original_final_byte);
+        bytes.seekp(-1, std::ios::end);
+        bytes.put(static_cast<char>(original_final_byte ^ 0x01));
+        bytes.flush();
+    }
+    std::filesystem::last_write_time(
+        original_executable, original_write_time);
+    const auto metadata_restored = boundary->preflight_workspace_process(
+        "bin/workspace-tool", "nested");
+    expect(metadata_restored.allowed &&
+               metadata_restored.executable_identity ==
+                   stale_bytes.executable_identity,
+           "RQ-CF-AGENT-024: metadata-preserving mutation fixture must restore the complete public identity");
+    const auto stale_byte_pin = boundary->pin_process_targets(stale_bytes);
+    expect(!stale_byte_pin.pinned && !stale_byte_pin.pins.has_value() &&
+               stale_byte_pin.diagnostic_code ==
+                   "workspace_agent.process_executable_authentication_changed",
+           "RQ-CF-AGENT-024: a same-object byte change with restored metadata must fail private digest authentication");
+    {
+        std::fstream bytes(
+            original_executable,
+            std::ios::binary | std::ios::in | std::ios::out);
+        bytes.seekp(-1, std::ios::end);
+        bytes.put(original_final_byte);
+        bytes.flush();
+    }
+    std::filesystem::last_write_time(
+        original_executable, original_write_time);
+
     auto stale = boundary->inspect_workspace_process(
         "bin/workspace-tool", "nested");
-    const auto original_executable = tree.workspace / "bin/workspace-tool";
     const auto moved_executable = tree.workspace / "bin/workspace-tool-old";
     std::filesystem::rename(original_executable, moved_executable);
     TempTree::write_executable(original_executable);
@@ -657,6 +734,12 @@ void test_boundary_retains_exact_process_target_objects() {
     expect(retained_pin.pinned && retained_pin.pins.has_value() &&
                retained_pin.pins->valid(),
            "RQ-CF-AGENT-023: exact root, executable, and working directory objects must be retained opaquely");
+    const auto initial_authentication =
+        retained_pin.pins->verify_executable_bytes();
+    expect(initial_authentication.authenticated &&
+               initial_authentication.diagnostic_code ==
+                   "workspace_agent.process_executable_authentication_matched",
+           "RQ-CF-AGENT-024: retained executable bytes must match the private inspection digest before launch-adjacent use");
     std::error_code rename_error;
     std::filesystem::rename(
         original_executable, moved_executable, rename_error);
@@ -672,7 +755,48 @@ void test_boundary_retains_exact_process_target_objects() {
 #else
     expect(!rename_error && retained_pin.pins->valid(),
            "RQ-CF-AGENT-023: POSIX pins must retain the exact opened executable object across name replacement");
+    const auto renamed_authentication =
+        retained_pin.pins->verify_executable_bytes();
+    expect(renamed_authentication.authenticated,
+           "RQ-CF-AGENT-024: POSIX authentication must retain an immutable private byte snapshot after rename");
+    {
+        std::ofstream changed(moved_executable, std::ios::binary | std::ios::trunc);
+        changed << "evil\n";
+    }
+    const auto changed_authentication =
+        retained_pin.pins->verify_executable_bytes();
+    expect(changed_authentication.authenticated &&
+               changed_authentication.diagnostic_code ==
+                   "workspace_agent.process_executable_authentication_matched",
+           "RQ-CF-AGENT-024: later writes to the retained filesystem object must not alter the private executable snapshot");
 #endif
+}
+
+void test_boundary_rejects_executable_authentication_size_overflow() {
+    TempTree tree;
+    const auto oversized = tree.workspace / "bin" / "oversized-tool";
+    TempTree::write_executable(oversized);
+    std::error_code resize_error;
+    std::filesystem::resize_file(
+        oversized,
+        copperfin::security::workspace_agent_process_max_executable_bytes + 1U,
+        resize_error);
+    expect(!resize_error,
+           "RQ-CF-AGENT-024: oversized authentication fixture must be constructible as a sparse file");
+    if (resize_error) {
+        return;
+    }
+    auto boundary = WorkspaceAgentProcessTargetBoundary::create(tree.workspace);
+    expect(boundary.has_value(),
+           "RQ-CF-AGENT-024: oversized authentication fixture must configure a boundary");
+    if (!boundary.has_value()) {
+        return;
+    }
+    const auto denied = boundary->inspect_workspace_process(
+        "bin/oversized-tool", ".");
+    expect(!denied.allowed && denied.diagnostic_code ==
+               "workspace_agent.process_executable_authentication_size_limit",
+           "RQ-CF-AGENT-024: pin-intent inspection must fail before reading beyond its fixed byte cap");
 }
 
 void test_session_bound_process_target_pin_preflight() {
@@ -738,6 +862,10 @@ void test_session_bound_process_target_pin_preflight() {
     const auto stopped = controller.stop(audit_sink());
     expect(stopped.revoked && pinned.pins->valid(),
            "RQ-CF-AGENT-023: pins are resource retention only and must not substitute for the separate revocation lease");
+    const auto after_stop_authentication =
+        pinned.pins->verify_executable_bytes();
+    expect(after_stop_authentication.authenticated,
+           "RQ-CF-AGENT-024: byte verification after stop must remain resource authentication only, not retained session authority");
 }
 
 }  // namespace
@@ -759,6 +887,7 @@ int main(int argc, char** argv) {
     test_session_bound_process_target_preflight();
     test_workspace_root_replacement_fails_closed();
     test_boundary_retains_exact_process_target_objects();
+    test_boundary_rejects_executable_authentication_size_overflow();
     test_session_bound_process_target_pin_preflight();
 
     if (failures != 0) {

@@ -4,6 +4,8 @@
 
 #include "copperfin/security/sha256.h"
 
+#include "sha256_native.h"
+
 #include "copperfin/platform/path.h"
 #include "localized_text.h"
 
@@ -15,11 +17,17 @@
 
 #include <algorithm>
 #include <array>
+#include <cerrno>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <limits>
+#include <new>
 #include <vector>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 namespace copperfin::security {
 
@@ -204,6 +212,60 @@ Sha256Result hash_file_stream(std::ifstream& input, const std::string& path) {
         }
     }
     return finish_hash(context);
+}
+
+NativeFileSha256SnapshotResult snapshot_native_file(
+    const std::intptr_t native_handle,
+    const std::uint64_t maximum_bytes,
+    const bool retain_snapshot) {
+    const HANDLE handle = reinterpret_cast<HANDLE>(native_handle);
+    if (handle == nullptr || handle == INVALID_HANDLE_VALUE) {
+        return {.digest = file_read_failure({}), .bytes = {}};
+    }
+    LARGE_INTEGER beginning{};
+    if (::SetFilePointerEx(handle, beginning, nullptr, FILE_BEGIN) == 0) {
+        return {.digest = file_read_failure({}), .bytes = {}};
+    }
+
+    WindowsSha256Context context;
+    const auto initialized = initialize_hash(context);
+    if (!initialized.ok) {
+        return {.digest = initialized, .bytes = {}};
+    }
+    std::array<std::uint8_t, kFileReadChunkSize> buffer{};
+    std::vector<std::uint8_t> bytes;
+    std::uint64_t total = 0U;
+    for (;;) {
+        DWORD count = 0U;
+        if (::ReadFile(
+                handle,
+                buffer.data(),
+                static_cast<DWORD>(buffer.size()),
+                &count,
+                nullptr) == 0) {
+            return {.digest = file_read_failure({}), .bytes = {}};
+        }
+        if (count == 0U) {
+            break;
+        }
+        if (total > maximum_bytes ||
+            static_cast<std::uint64_t>(count) > maximum_bytes - total ||
+            !update_hash(context, buffer.data(), count)) {
+            return {.digest = file_read_failure({}), .bytes = {}};
+        }
+        if (retain_snapshot) {
+            try {
+                bytes.insert(bytes.end(), buffer.begin(), buffer.begin() + count);
+            } catch (const std::bad_alloc&) {
+                return {.digest = file_read_failure({}), .bytes = {}};
+            }
+        }
+        total += count;
+    }
+    if (::SetFilePointerEx(handle, beginning, nullptr, FILE_BEGIN) == 0) {
+        return {.digest = file_read_failure({}), .bytes = {}};
+    }
+    return {.digest = finish_hash(context), .bytes = std::move(bytes)};
 }
 
 #else
@@ -417,6 +479,59 @@ Sha256Result hash_file_stream(std::ifstream& input, const std::string& path) {
     return finish_hash(context);
 }
 
+NativeFileSha256SnapshotResult snapshot_native_file(
+    const std::intptr_t native_handle,
+    const std::uint64_t maximum_bytes,
+    const bool retain_snapshot) {
+    const int handle = static_cast<int>(native_handle);
+    if (handle < 0) {
+        return {.digest = file_read_failure({}), .bytes = {}};
+    }
+    PortableSha256Context context;
+    std::array<std::uint8_t, kFileReadChunkSize> buffer{};
+    std::vector<std::uint8_t> bytes;
+    std::uint64_t total = 0U;
+    std::uint64_t offset = 0U;
+    for (;;) {
+        if (offset > static_cast<std::uint64_t>(
+                std::numeric_limits<off_t>::max())) {
+            return {.digest = file_read_failure({}), .bytes = {}};
+        }
+        const ssize_t count = ::pread(
+            handle,
+            buffer.data(),
+            buffer.size(),
+            static_cast<off_t>(offset));
+        if (count < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return {.digest = file_read_failure({}), .bytes = {}};
+        }
+        if (count == 0) {
+            break;
+        }
+        const auto count_u64 = static_cast<std::uint64_t>(count);
+        if (total > maximum_bytes || count_u64 > maximum_bytes - total ||
+            offset > static_cast<std::uint64_t>(
+                std::numeric_limits<off_t>::max()) - count_u64) {
+            return {.digest = file_read_failure({}), .bytes = {}};
+        }
+        update_hash(context, buffer.data(), static_cast<std::size_t>(count));
+        if (retain_snapshot) {
+            try {
+                bytes.insert(
+                    bytes.end(), buffer.begin(), buffer.begin() + count);
+            } catch (const std::bad_alloc&) {
+                return {.digest = file_read_failure({}), .bytes = {}};
+            }
+        }
+        total += count_u64;
+        offset += count_u64;
+    }
+    return {.digest = finish_hash(context), .bytes = std::move(bytes)};
+}
+
 #endif
 
 }  // namespace
@@ -435,6 +550,39 @@ Sha256Result sha256_hex_for_file(const std::string& path) {
         return file_read_failure(path);
     }
     return hash_file_stream(input, path);
+}
+
+Sha256Result sha256_hex_for_native_file(
+    const std::intptr_t native_handle,
+    const std::uint64_t maximum_bytes) {
+    return snapshot_native_file(native_handle, maximum_bytes, false).digest;
+}
+
+NativeFileSha256SnapshotResult sha256_snapshot_for_native_file(
+    const std::intptr_t native_handle,
+    const std::uint64_t maximum_bytes) {
+    return snapshot_native_file(native_handle, maximum_bytes, true);
+}
+
+Sha256Result sha256_hex_for_native_bytes(
+    const std::vector<std::uint8_t>& bytes) {
+#if defined(_WIN32)
+    WindowsSha256Context context;
+    const auto initialized = initialize_hash(context);
+    if (!initialized.ok) {
+        return initialized;
+    }
+    if (!bytes.empty() && !update_hash(context, bytes.data(), bytes.size())) {
+        return file_read_failure({});
+    }
+    return finish_hash(context);
+#else
+    PortableSha256Context context;
+    if (!bytes.empty()) {
+        update_hash(context, bytes.data(), bytes.size());
+    }
+    return finish_hash(context);
+#endif
 }
 
 }  // namespace copperfin::security

@@ -742,7 +742,7 @@ WorkspaceAgentSessionController::preflight_process_target_request(
                     "workspace_agent.process_workspace_root_not_configured";
                 return result;
             }
-            inspection = process_target_boundary_->inspect_workspace_process(
+            inspection = process_target_boundary_->preflight_workspace_process(
                 request.executable_path, request.working_directory);
             break;
         case WorkspaceAgentToolTargetKind::local_process:
@@ -751,7 +751,7 @@ WorkspaceAgentSessionController::preflight_process_target_request(
                     "workspace_agent.process_workspace_root_not_configured";
                 return result;
             }
-            inspection = process_target_boundary_->inspect_local_process(
+            inspection = process_target_boundary_->preflight_local_process(
                 request.executable_path, request.working_directory);
             break;
         case WorkspaceAgentToolTargetKind::workspace_file:
