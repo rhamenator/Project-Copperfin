@@ -24,8 +24,14 @@ ThreadSanitizer focused sets each pass `3/3`. This does not
 authenticate bytes through the retained object, consume a serialized plan,
 acquire the separate revocation lease, sandbox, launch, manage endpoints/
 descendants, or audit outcomes; the promotion gate remains invariantly denied.
-Protected Windows/Ubuntu/macOS evidence, exact-head review, and qualified high-
-severity sign-off remain pending.
+The first protected Windows environment run exposed a test-only pin-lifetime
+defect: a completed early proof retained delete exclusion across a later
+throwing rename. Corrected exact signed/DCO head `f4fa82829` releases that
+bundle before the distinct replacement phase. All eleven protected checks
+passed in runs `31921408867`, `31921409617`, `31921409647`, `31921409664`, and
+`31921409722`; exact-head automated review found no major issue, zero review
+threads exist, and PR `#5036` merged as `44e9eafea`. Implementation evidence is
+complete. Qualified high-severity documentation sign-off remains pending.
 
 ## V1 workspace-agent session-revocation lease prerequisite
 

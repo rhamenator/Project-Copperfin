@@ -92,8 +92,16 @@ Current local evidence:
 - repository licensing, community, native-platform, GitHub Actions, isolation,
   supply-chain, and safety contracts passed `7/7`, including repeated
   329.84-, 325.82-, and post-correction 326.48-second safety scans;
-- `git diff --check` passed; and
-- protected Windows/Ubuntu/macOS, exact-head review, and qualified
-  high-severity sign-off remain pending.
+- the first protected Windows environment run exposed a test-only lifetime
+  defect: a completed early pin proof retained delete exclusion across a later
+  throwing rename. Corrected exact signed/DCO head `f4fa82829` releases that
+  bundle before the distinct replacement phase;
+- all eleven corrected-head protected checks passed in runs `31921408867`,
+  `31921409617`, `31921409647`, `31921409664`, and `31921409722`;
+- exact-head automated review found no major issue, zero review threads exist,
+  and PR `#5036` merged into `v1-development` as `44e9eafea`; and
+- `git diff --check` passed.
 
-Requirement status remains `gap`; no execution or launch readiness is claimed.
+Implementation evidence is complete. Requirement status remains `gap` only for
+the current qualified high-severity documentation sign-off rule; no execution
+or launch readiness is claimed.
