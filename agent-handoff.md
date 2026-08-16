@@ -31,13 +31,17 @@ execution, real workspace sandboxing, trusted provider/UI integration,
 endpoint policy, diff/undo, and crash-recoverable audit receipts remain gaps.
 
 Exact head `8cddbd441` passed adjacent Windows private-image and parser tests
-but both protected workflows rejected target-pin preparation. Inspection found
-that the binding unnecessarily required unrelated drive-root traversal solely
-for a repeated volume-serial query despite already retaining the authenticated
-working-directory handle. The current correction uses
-`GetVolumeInformationByHandleW` on that retained handle while preserving the
-native-device, fixed-drive, mount-manager, serial, retained-hierarchy, and
-exact-directory checks. A protected rerun remains required.
+but both protected workflows rejected target-pin preparation. Replacing its
+redundant drive-root serial query with `GetVolumeInformationByHandleW` on the
+retained authenticated directory handle did not change that result: exact head
+`ad779b9ab` again failed only `test_workspace_agent_isolated_environment` in
+protected runs `31966333205` and `31966333238`, while all adjacent tests and
+the Windows DECLARE, GCC, Clang, Ubuntu, and macOS jobs passed. The current
+diagnostic correction preserves every admission predicate and reports a fixed
+content-free reason for the path-shape, native-root, DOS mapping, fixed-drive,
+mount-manager, or volume-identity predicate that denied preparation. Another
+protected run is required to select the compatibility correction from direct
+Windows evidence.
 
 ## V1 workspace-agent Windows launch-handle transition
 

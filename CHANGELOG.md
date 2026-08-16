@@ -73,6 +73,12 @@
   `GetVolumeInformationByHandleW` on that retained handle; native-device and
   mount-manager checks continue to bind the fixed DOS drive without broadening
   the token or weakening path admission.
+  Both exact-head protected reruns still denied every candidate at the same
+  pre-execution binding boundary. The binding now reports a fixed, content-free
+  reason code for each path-shape, native-root, DOS mapping, fixed-drive,
+  mount-manager, and volume-identity predicate so protected evidence can
+  identify the incompatible Windows API without disclosing path data or
+  relaxing admission.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,

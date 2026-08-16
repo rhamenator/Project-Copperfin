@@ -271,4 +271,12 @@ already retained the exact authenticated directory handle. The correction
 queries the serial through that retained handle with
 `GetVolumeInformationByHandleW`; native-device and mount-manager checks continue
 to bind the DOS drive, while least-privilege root traversal is no longer an
-unnecessary prerequisite. Corrected protected execution remains required.
+unnecessary prerequisite. Exact-head protected runs `31966333205` and
+`31966333238` still denied every candidate at this same pre-execution boundary;
+all adjacent private-image and parser regressions passed. The binding now
+returns one of a closed set of content-free predicate diagnostics for invalid
+DOS shape, unavailable or unsupported native volume, unavailable or mismatched
+DOS mapping, non-fixed drive, absent mount-manager listing, or unavailable or
+mismatched volume identity. It emits no path or native-error content and changes
+no admission decision. A protected diagnostic run is required before changing
+the compatibility boundary.

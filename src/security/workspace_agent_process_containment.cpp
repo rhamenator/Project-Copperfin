@@ -669,7 +669,7 @@ bool mount_manager_lists_drive_root(
     }
 }
 
-bool dos_volume_binding_matches_handle(
+const char* dos_volume_binding_diagnostic(
     const std::filesystem::path& dos_path,
     const HANDLE handle,
     const std::uint64_t expected_storage_id) noexcept {
@@ -677,35 +677,48 @@ bool dos_volume_binding_matches_handle(
         const std::wstring& path = dos_path.native();
         if (path.size() < 7U || path.rfind(L"\\\\?\\", 0U) != 0U ||
             path[5U] != L':' || path[6U] != L'\\') {
-            return false;
+            return "workspace_agent.process_working_directory_dos_path_invalid";
         }
         const auto native_path = final_path_for_handle(handle, VOLUME_NAME_NT);
-        const auto native_root = native_path.has_value()
-            ? native_hard_disk_volume_root(*native_path)
-            : std::nullopt;
+        if (!native_path.has_value()) {
+            return "workspace_agent.process_working_directory_native_path_unavailable";
+        }
+        const auto native_root = native_hard_disk_volume_root(*native_path);
+        if (!native_root.has_value()) {
+            return "workspace_agent.process_working_directory_native_volume_unsupported";
+        }
         const std::wstring device{path[4U], L':'};
         const auto mapping = query_dos_device(device);
-        const std::wstring drive_root{path[4U], L':', L'\\'};
-        DWORD volume_serial = 0U;
-        return native_root.has_value() && mapping.has_value() &&
-            ::CompareStringOrdinal(
+        if (!mapping.has_value()) {
+            return "workspace_agent.process_working_directory_dos_mapping_unavailable";
+        }
+        if (::CompareStringOrdinal(
                 mapping->c_str(), static_cast<int>(mapping->size()),
                 native_root->c_str(), static_cast<int>(native_root->size()),
-                TRUE) == CSTR_EQUAL &&
-            ::GetDriveTypeW(drive_root.c_str()) == DRIVE_FIXED &&
-            mount_manager_lists_drive_root(handle, drive_root) &&
-            // Read the serial through the already-authenticated directory
-            // handle. A restricted token can retain that exact authority while
-            // lacking independent traversal access to the volume root; opening
-            // the drive root again would add no mapping proof beyond the mount-
-            // manager and native-device checks above and would reject that
-            // valid least-privilege case.
-            ::GetVolumeInformationByHandleW(
+                TRUE) != CSTR_EQUAL) {
+            return "workspace_agent.process_working_directory_dos_mapping_mismatch";
+        }
+        const std::wstring drive_root{path[4U], L':', L'\\'};
+        if (::GetDriveTypeW(drive_root.c_str()) != DRIVE_FIXED) {
+            return "workspace_agent.process_working_directory_drive_not_fixed";
+        }
+        if (!mount_manager_lists_drive_root(handle, drive_root)) {
+            return "workspace_agent.process_working_directory_mount_not_listed";
+        }
+        DWORD volume_serial = 0U;
+        // Read the serial through the already-authenticated directory handle.
+        // A restricted token can retain that exact authority while lacking
+        // independent traversal access to the volume root.
+        if (::GetVolumeInformationByHandleW(
                 handle, nullptr, 0U, &volume_serial, nullptr, nullptr, nullptr,
-                0U) != FALSE &&
-            volume_serial == expected_storage_id;
+                0U) == FALSE) {
+            return "workspace_agent.process_working_directory_volume_identity_unavailable";
+        }
+        return volume_serial == expected_storage_id
+            ? nullptr
+            : "workspace_agent.process_working_directory_volume_identity_mismatch";
     } catch (...) {
-        return false;
+        return "workspace_agent.process_working_directory_binding_unavailable";
     }
 }
 
@@ -1320,14 +1333,22 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
         stable_volume_path_for_handle(working_directory_handle.get());
     const auto dos_working_directory =
         dos_volume_path_for_handle(working_directory_handle.get());
+    if (!stable_working_directory.has_value() ||
+        !dos_working_directory.has_value()) {
+        result.diagnostic_code =
+            "workspace_agent.process_target_pin_identity_changed";
+        return result;
+    }
+    const char* binding_diagnostic = dos_volume_binding_diagnostic(
+        *dos_working_directory, working_directory_handle.get(),
+        working_directory_identity.storage_id);
+    if (binding_diagnostic != nullptr) {
+        result.diagnostic_code = binding_diagnostic;
+        return result;
+    }
     ScopedPinHandleChain working_directory_chain;
     PhysicalPathIdentity chained_working_directory_identity{};
-    if (!stable_working_directory.has_value() ||
-        !dos_working_directory.has_value() ||
-        !dos_volume_binding_matches_handle(
-            *dos_working_directory, working_directory_handle.get(),
-            working_directory_identity.storage_id) ||
-        !working_directory_chain.lock(
+    if (!working_directory_chain.lock(
             *stable_working_directory, working_directory_handle.get()) ||
         !read_handle_identity(
             working_directory_chain.back(), true,
@@ -1344,12 +1365,16 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
         !read_handle_identity(
             dos_working_directory_handle.get(), true,
             dos_working_directory_identity) ||
-        dos_working_directory_identity != authority->working_directory_identity ||
-        !dos_volume_binding_matches_handle(
-            *dos_working_directory, working_directory_handle.get(),
-            working_directory_identity.storage_id)) {
+        dos_working_directory_identity != authority->working_directory_identity) {
         result.diagnostic_code =
             "workspace_agent.process_target_pin_identity_changed";
+        return result;
+    }
+    binding_diagnostic = dos_volume_binding_diagnostic(
+        *dos_working_directory, working_directory_handle.get(),
+        working_directory_identity.storage_id);
+    if (binding_diagnostic != nullptr) {
+        result.diagnostic_code = binding_diagnostic;
         return result;
     }
 #endif
