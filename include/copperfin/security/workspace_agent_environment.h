@@ -5,6 +5,7 @@
 #pragma once
 
 #include "copperfin/security/physical_path_containment.h"
+#include "copperfin/platform/private_executable_image.h"
 
 #include <array>
 #include <cstddef>
@@ -19,7 +20,9 @@
 namespace copperfin::security {
 
 // Governing requirements: RQ-CF-AGENT-011 through RQ-CF-AGENT-014 and
-// candidate RQ-CF-AGENT-020.
+// candidate RQ-CF-AGENT-020 and RQ-CF-AGENT-026.
+
+class WorkspaceAgentSessionController;
 
 inline constexpr std::size_t workspace_agent_environment_max_path_directories = 16U;
 inline constexpr std::size_t workspace_agent_environment_max_entry_bytes = 4096U;
@@ -128,6 +131,43 @@ struct WorkspaceAgentSessionLayoutCleanupResult {
     std::string diagnostic_code;
 };
 
+// Opaque ownership of one native executable image made from the authenticated
+// snapshot retained by a prepared launch candidate. It exposes no path, bytes,
+// digest, native handle, or launch operation.
+class WorkspaceAgentMaterializedProcessImage {
+public:
+    WorkspaceAgentMaterializedProcessImage();
+    ~WorkspaceAgentMaterializedProcessImage();
+    WorkspaceAgentMaterializedProcessImage(
+        WorkspaceAgentMaterializedProcessImage&&) noexcept;
+    WorkspaceAgentMaterializedProcessImage& operator=(
+        WorkspaceAgentMaterializedProcessImage&&) noexcept;
+    WorkspaceAgentMaterializedProcessImage(
+        const WorkspaceAgentMaterializedProcessImage&) = delete;
+    WorkspaceAgentMaterializedProcessImage& operator=(
+        const WorkspaceAgentMaterializedProcessImage&) = delete;
+
+    [[nodiscard]] bool valid() const noexcept;
+    [[nodiscard]] std::uint64_t session_generation() const noexcept;
+
+private:
+    WorkspaceAgentMaterializedProcessImage(
+        std::uint64_t session_generation,
+        copperfin::platform::PrivateExecutableImage image) noexcept;
+
+    std::uint64_t session_generation_ = 0U;
+    copperfin::platform::PrivateExecutableImage image_;
+
+    friend class WorkspaceAgentIsolatedEnvironmentBoundary;
+};
+
+struct WorkspaceAgentProcessImageMaterializationResult {
+    bool materialized = false;
+    std::uint64_t session_generation = 0U;
+    std::optional<WorkspaceAgentMaterializedProcessImage> image;
+    std::string diagnostic_code;
+};
+
 // The boundary derives only session-<generation>/{home,temp,config,cache,data}
 // and product-configured executable directories. Its explicit preparation
 // method creates a new generation layout with the platform owner-only security
@@ -171,10 +211,21 @@ private:
         std::vector<PhysicalPathContainmentResult> executable_directories,
         std::optional<PhysicalPathContainmentResult> windows_system_root);
 
+    // Consumes only controller-retained receipt authority and trusted snapshot
+    // bytes. Provider/model/workspace input cannot call this primitive or
+    // choose its namespace leaf.
+    [[nodiscard]] WorkspaceAgentProcessImageMaterializationResult
+    materialize_process_image(
+        const WorkspaceAgentSessionLayoutPreparationResult& preparation,
+        std::uint64_t image_ordinal,
+        std::span<const std::uint8_t> snapshot) const;
+
     PhysicalPathContainmentResult session_storage_root_;
     std::vector<PhysicalPathContainmentResult> executable_directories_;
     std::optional<PhysicalPathContainmentResult> windows_system_root_;
     std::shared_ptr<const std::uint8_t> cleanup_authority_;
+
+    friend class WorkspaceAgentSessionController;
 };
 
 }  // namespace copperfin::security

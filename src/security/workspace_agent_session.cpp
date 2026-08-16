@@ -8,6 +8,7 @@
 #include "copperfin/platform/process_arguments.h"
 #include "copperfin/platform/process_environment.h"
 
+#include <algorithm>
 #include <condition_variable>
 #include <iomanip>
 #include <limits>
@@ -15,6 +16,7 @@
 #include <memory>
 #include <sstream>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 namespace copperfin::security {
@@ -88,21 +90,24 @@ public:
     Impl(
         WorkspaceAgentSerializedProcessInvocationPreflightResult plan_value,
         WorkspaceAgentProcessTargetPins pins_value,
-        WorkspaceAgentSessionRevocationLease lease_value) noexcept
-        : lease(std::move(lease_value)),
+        WorkspaceAgentSessionRevocationLease lease_value,
+        std::shared_ptr<const std::uint8_t> controller_authority_value) noexcept
+        : controller_authority(std::move(controller_authority_value)),
+          lease(std::move(lease_value)),
           pins(std::move(pins_value)),
           plan(std::move(plan_value)) {}
 
     [[nodiscard]] bool valid() const noexcept {
         return plan.allowed && plan.serialized_environment.allowed &&
             plan.serialized_environment.environment_plan.allowed &&
-            pins.valid() && lease.valid() &&
+            controller_authority != nullptr && pins.valid() && lease.valid() &&
             lease.session_generation() ==
                 plan.serialized_environment.environment_plan.session_generation;
     }
 
     // Destruction is reverse declaration order: discard the plan, close the
     // retained target objects, and only then release the revocation lease.
+    std::shared_ptr<const std::uint8_t> controller_authority;
     WorkspaceAgentSessionRevocationLease lease;
     WorkspaceAgentProcessTargetPins pins;
     WorkspaceAgentSerializedProcessInvocationPreflightResult plan;
@@ -131,6 +136,54 @@ WorkspaceAgentPreparedProcessLaunch::session_generation() const noexcept {
         ? impl_->plan.serialized_environment.environment_plan.session_generation
         : 0U;
 }
+
+class WorkspaceAgentMaterializedProcessLaunch::Impl {
+public:
+    Impl(
+        WorkspaceAgentPreparedProcessLaunch candidate_value,
+        WorkspaceAgentMaterializedProcessImage image_value) noexcept
+        : candidate(std::move(candidate_value)), image(std::move(image_value)) {}
+
+    [[nodiscard]] bool valid() const noexcept {
+        return candidate.valid() && image.valid() &&
+            candidate.session_generation() == image.session_generation();
+    }
+
+    // Destruction is reverse declaration order: remove/close the materialized
+    // image first, then discard the prepared candidate, whose own ordering
+    // closes target pins before releasing the revocation lease.
+    WorkspaceAgentPreparedProcessLaunch candidate;
+    WorkspaceAgentMaterializedProcessImage image;
+};
+
+WorkspaceAgentMaterializedProcessLaunch::WorkspaceAgentMaterializedProcessLaunch(
+    std::unique_ptr<Impl> impl) noexcept
+    : impl_(std::move(impl)) {}
+WorkspaceAgentMaterializedProcessLaunch::WorkspaceAgentMaterializedProcessLaunch() =
+    default;
+WorkspaceAgentMaterializedProcessLaunch::~WorkspaceAgentMaterializedProcessLaunch() =
+    default;
+WorkspaceAgentMaterializedProcessLaunch::WorkspaceAgentMaterializedProcessLaunch(
+    WorkspaceAgentMaterializedProcessLaunch&&) noexcept = default;
+WorkspaceAgentMaterializedProcessLaunch&
+WorkspaceAgentMaterializedProcessLaunch::operator=(
+    WorkspaceAgentMaterializedProcessLaunch&&) noexcept = default;
+
+bool WorkspaceAgentMaterializedProcessLaunch::valid() const noexcept {
+    return impl_ != nullptr && impl_->valid();
+}
+
+std::uint64_t
+WorkspaceAgentMaterializedProcessLaunch::session_generation() const noexcept {
+    return valid() ? impl_->candidate.session_generation() : 0U;
+}
+
+static_assert(
+    std::is_nothrow_default_constructible_v<
+        WorkspaceAgentMaterializedProcessLaunchResult> &&
+        std::is_nothrow_move_constructible_v<
+            WorkspaceAgentMaterializedProcessLaunchResult>,
+    "RQ-CF-AGENT-026: materialization failure fallback must not allocate");
 
 namespace {
 
@@ -1062,7 +1115,8 @@ WorkspaceAgentSessionController::prepare_process_launch_candidate(
         auto impl = std::make_unique<WorkspaceAgentPreparedProcessLaunch::Impl>(
             final,
             std::move(*pinned.pins),
-            std::move(*leased.lease));
+            std::move(*leased.lease),
+            process_launch_controller_authority_);
         result.candidate.emplace(
             WorkspaceAgentPreparedProcessLaunch(std::move(impl)));
         result.prepared = result.candidate->valid();
@@ -1071,6 +1125,119 @@ WorkspaceAgentSessionController::prepare_process_launch_candidate(
             : "workspace_agent.process_launch_candidate_unavailable";
         if (!result.prepared) {
             result.candidate.reset();
+        }
+        return result;
+    } catch (...) {
+        return unavailable;
+    }
+}
+
+WorkspaceAgentMaterializedProcessLaunchResult
+WorkspaceAgentSessionController::materialize_process_launch_candidate(
+    WorkspaceAgentPreparedProcessLaunch candidate) const {
+    WorkspaceAgentMaterializedProcessLaunchResult unavailable;
+    try {
+        WorkspaceAgentMaterializedProcessLaunchResult result;
+        if (!candidate.valid() || candidate.impl_ == nullptr ||
+            candidate.impl_->controller_authority !=
+                process_launch_controller_authority_) {
+            result.diagnostic_code =
+                "workspace_agent.process_image_candidate_unavailable";
+            return result;
+        }
+        // Serialize the complete one-attempt materialization with stop/start.
+        // Releasing this lock after only the preliminary state check would let
+        // stop enter its transition while a new native image was still being
+        // created from otherwise-live lease authority.
+        std::lock_guard lock(mutex_);
+        const std::uint64_t generation = candidate.session_generation();
+        WorkspaceAgentSessionLayoutPreparationResult preparation;
+        constexpr std::uint64_t maximum_name_attempts = 16U;
+        std::uint64_t first_ordinal = 0U;
+        if (transition_ != Transition::idle) {
+            result.diagnostic_code =
+                "workspace_agent.session_transition_in_progress";
+            return result;
+        }
+        if (!active_session_.active || generation == 0U ||
+            active_session_.generation != generation) {
+            result.diagnostic_code =
+                "workspace_agent.process_image_stale_session";
+            return result;
+        }
+        if (!process_environment_configuration_supplied_ ||
+            !process_environment_boundary_.has_value()) {
+            result.diagnostic_code =
+                "workspace_agent.process_image_boundary_unavailable";
+            return result;
+        }
+        const auto receipt = std::find_if(
+            pending_layout_cleanups_.begin(),
+            pending_layout_cleanups_.end(),
+            [generation](
+                const WorkspaceAgentSessionLayoutPreparationResult& entry) {
+                return entry.prepared &&
+                    entry.session_generation == generation;
+            });
+        if (receipt == pending_layout_cleanups_.end()) {
+            result.diagnostic_code =
+                "workspace_agent.process_image_layout_authority_unavailable";
+            return result;
+        }
+        if (next_materialized_process_image_ == 0U ||
+            next_materialized_process_image_ >
+                std::numeric_limits<std::uint64_t>::max() -
+                    maximum_name_attempts) {
+            result.diagnostic_code =
+                "workspace_agent.process_image_namespace_exhausted";
+            return result;
+        }
+        preparation = *receipt;
+        first_ordinal = next_materialized_process_image_;
+        next_materialized_process_image_ += maximum_name_attempts;
+
+        const auto authentication =
+            candidate.impl_->pins.verify_executable_bytes();
+        const auto* snapshot =
+            candidate.impl_->pins.executable_snapshot_for_materialization();
+        if (!authentication.authenticated || snapshot == nullptr ||
+            snapshot->empty()) {
+            result.diagnostic_code =
+                "workspace_agent.process_image_snapshot_unavailable";
+            return result;
+        }
+
+        WorkspaceAgentProcessImageMaterializationResult materialized;
+        for (std::uint64_t offset = 0U;
+             offset < maximum_name_attempts; ++offset) {
+            materialized = process_environment_boundary_->materialize_process_image(
+                preparation, first_ordinal + offset, *snapshot);
+            if (materialized.materialized ||
+                materialized.diagnostic_code !=
+                    "workspace_agent.process_image_name_collision") {
+                break;
+            }
+        }
+        if (!materialized.materialized || !materialized.image.has_value() ||
+            !materialized.image->valid() ||
+            materialized.session_generation != generation) {
+            result.diagnostic_code = materialized.diagnostic_code.empty()
+                ? "workspace_agent.process_image_materialization_failed"
+                : materialized.diagnostic_code;
+            return result;
+        }
+
+        auto impl =
+            std::make_unique<WorkspaceAgentMaterializedProcessLaunch::Impl>(
+                std::move(candidate), std::move(*materialized.image));
+        result.launch.emplace(
+            WorkspaceAgentMaterializedProcessLaunch(std::move(impl)));
+        result.materialized = result.launch->valid();
+        result.diagnostic_code = result.materialized
+            ? "workspace_agent.process_launch_materialized"
+            : "workspace_agent.process_image_materialization_failed";
+        if (!result.materialized) {
+            result.launch.reset();
         }
         return result;
     } catch (...) {

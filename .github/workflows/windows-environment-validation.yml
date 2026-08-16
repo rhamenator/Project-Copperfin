@@ -58,4 +58,4 @@ jobs:
         run: cmake --build "$env:RUNNER_TEMP/copperfin-environment-build" --config Release --parallel 2 --target test_platform_private_directory test_workspace_agent_session test_workspace_agent_process_parser test_workspace_agent_isolated_environment
 
       - name: Run private workspace-agent and parser-authority regressions
-        run: ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_session|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"
+        run: ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_process_image_materialization_contract|test_workspace_agent_session|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"

@@ -24,6 +24,7 @@ on:
       - "tests/test_mcp_host_stdio.cmake"
       - "tests/run_platform_path_boundary_contract_check.cmake"
       - "tests/run_platform_private_directory_boundary_contract_check.cmake"
+      - "tests/run_workspace_agent_process_image_materialization_contract_check.cmake"
       - "tests/run_workspace_agent_process_parser_boundary_contract_check.cmake"
       - "tests/run_platform_environment_boundary_contract_check.cmake"
       - "tests/run_platform_executable_path_boundary_contract_check.cmake"
@@ -82,6 +83,7 @@ on:
       - "tests/test_mcp_host_stdio.cmake"
       - "tests/run_platform_path_boundary_contract_check.cmake"
       - "tests/run_platform_private_directory_boundary_contract_check.cmake"
+      - "tests/run_workspace_agent_process_image_materialization_contract_check.cmake"
       - "tests/run_workspace_agent_process_parser_boundary_contract_check.cmake"
       - "tests/run_platform_environment_boundary_contract_check.cmake"
       - "tests/run_platform_executable_path_boundary_contract_check.cmake"
@@ -161,7 +163,7 @@ jobs:
         run: cmake --build build --config Release --target test_platform_private_directory test_workspace_agent_session test_workspace_agent_process_parser test_workspace_agent_isolated_environment --parallel 2
 
       - name: Run private workspace-agent and parser-authority regressions
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_session|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_process_image_materialization_contract|test_workspace_agent_session|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"
 
   posix-generated-launcher:
     name: ${{ matrix.os }} generated launcher process
@@ -201,4 +203,4 @@ jobs:
         run: cmake --build build --config Release --target test_platform_private_directory test_workspace_agent_session test_workspace_agent_process_parser test_workspace_agent_isolated_environment --parallel 2
 
       - name: Run private workspace-agent and parser-authority regressions
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_session|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_private_directory|test_platform_private_directory_boundary_contract|test_workspace_agent_process_image_materialization_contract|test_workspace_agent_session|test_workspace_agent_process_parser|test_workspace_agent_process_parser_boundary_contract|test_workspace_agent_isolated_environment)$"

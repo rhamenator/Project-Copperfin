@@ -1,3 +1,22 @@
+- 2026-08-16: Added candidate RQ-CF-AGENT-026, a one-attempt,
+  non-executing exact-snapshot materialization boundary. The trusted controller
+  now consumes only its own opaque prepared candidate, reauthenticates the
+  retained immutable executable snapshot, and creates one private native image
+  beneath the exact receipted generation temp directory while retaining the
+  serialized plan, target pins, and revocation lease. POSIX unlinks the image
+  before success and retains its descriptor; Windows retains the exclusive
+  handle-owned file and removes it during destruction. The move-only result
+  exposes no path, bytes, digest, native handle, plan, or execution operation.
+  Cross-controller, changed-parent, existing-leaf, verification, and allocation
+  failures remain fail closed. Focused GCC Release behavior and machine
+  contracts, fifty repeated lifecycle runs, ASan/UBSan/leak at 3/3,
+  ThreadSanitizer at 2/2, and the broader workspace-agent set at 11/11 pass
+  locally. The initial 339.49-second safety scan also passes; its only broader-
+  sweep finding was missing isolation metadata for the new machine contract,
+  corrected before its direct 2/2 rerun. Portable launch transition, sandbox, endpoint/
+  descendant policy, outcome audit, protected-platform evidence, and qualified
+  high-severity review remain open.
+
 - 2026-08-16: Completed implementation evidence for candidate
   `RQ-CF-AGENT-025` at corrected exact signed/DCO head `628cedc5b`. Initial
   review found that only final candidate construction was exception-contained;

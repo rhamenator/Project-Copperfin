@@ -1,5 +1,29 @@
 # Agent Handoff
 
+## V1 workspace-agent exact-snapshot materialization
+
+Candidate RQ-CF-AGENT-026 is the current implementation slice. It consumes one
+issuing-controller-bound opaque RQ-CF-AGENT-025 candidate and materializes only
+its immutable retained snapshot as a private native image beneath the exact
+receipted generation temp directory. POSIX immediately unlinks and retains a
+zero-link descriptor; Windows retains an exact non-write-shared handle-owned
+file. Image destruction precedes target-pin and lease release, so stop remains
+blocked across the complete authority lifetime. Cross-controller use, parent
+replacement, existing leaves, byte-verification failure, and allocation failure
+return no authority. The existing launch gate remains invariantly denied.
+
+Local GCC Release behavior and materialization/private-directory contracts pass
+5/5, fifty repeated lifecycle runs pass, ASan/UBSan/leak passes 3/3,
+ThreadSanitizer passes 2/2, the broader workspace-agent set passes 11/11, and
+focused workflow path-filter validation passes. The initial 339.49-second
+safety scan passes; the surrounding sweep found missing isolation metadata for
+the new contract, corrected before its direct 2/2 rerun. Remaining work for
+this slice is protected Windows/Ubuntu/macOS checks, exact-head review, and
+retained final-byte evidence. Do not claim execution readiness: Windows needs an explicit
+immutable-handle launch transition, and POSIX/macOS descriptor execution is not
+yet established. Sandbox, working-directory entry, endpoint/descendant policy,
+and outcome audit remain separate gaps.
+
 ## V1 workspace-agent prepared launch-candidate composition
 
 Candidate `RQ-CF-AGENT-025` adds a non-executing composition boundary between

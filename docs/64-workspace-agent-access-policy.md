@@ -753,6 +753,44 @@ a sandbox, enforce endpoint or descendant policy, or audit an outcome. The
 `RQ-CF-AGENT-019` promotion gate remains invariantly denied until those
 remaining boundaries are implemented and verified.
 
+## Exact-snapshot materialization prerequisite
+
+Candidate `RQ-CF-AGENT-026` consumes one valid prepared candidate by value,
+checks that it came from the same controller and still belongs to the exact
+active generation, reauthenticates its retained immutable snapshot, and creates
+one private native image beneath the exact receipted generation temp directory.
+The candidate cannot be replayed after success or denial. The result remains
+opaque and move-only and exposes only validity and generation, never its path,
+bytes, digest, native handle, serialized plan, or an execution operation.
+
+On POSIX, the platform seam creates an absent direct leaf with no-follow and
+exclusive-create semantics, immediately unlinks it, changes it to owner
+read/execute mode, writes and rereads the exact bytes, and retains the zero-link
+descriptor. On Windows, it creates an absent direct leaf, denies write and
+delete sharing, writes, flushes, and rereads the exact bytes, and retains the
+exact handle; destruction requests deletion through that handle before closing
+it. Existing leaves are preserved rather than adopted or overwritten. Parent
+identity is checked through a retained native object around creation, and every
+exception or verification failure releases partial resources without returning
+authority.
+
+The materialized image is destroyed before the prepared candidate, so its
+native object is removed before target pins close and the exact-generation
+lease releases. Stop therefore waits until the complete materialized launch
+authority is discarded. This slice corrects identity-bound empty-layout cleanup
+to compare stable storage/file identity rather than mutable directory
+timestamps, because controlled create/unlink operations legitimately update
+the directory's metadata.
+
+This remains a non-executing prerequisite. Windows' retained non-write-shared
+handle is intentionally immutable but is not yet claimed compatible with a
+later `CreateProcessW` open; the executor needs an explicit launch transition.
+POSIX retains an unlinked descriptor, but portable descriptor execution,
+especially on macOS, is likewise unresolved. No working-directory entry,
+sandbox, endpoint/descendant policy, outcome audit, or process creation is
+performed, and the `RQ-CF-AGENT-019` promotion gate remains invariantly
+denied.
+
 ## Current implementation and remaining work
 
 Candidate `RQ-CF-AGENT-021` retains every successful configured layout
@@ -812,8 +850,9 @@ serialization; POSIX retains native argv semantics. Candidate
 digest and cannot authorize launch while coherent target pins and a revocation
 lease are unavailable. Candidate `RQ-CF-AGENT-025` now composes the internally
 constructed exact serialized plan, authenticated pins, and exact-generation
-lease into one opaque move-only non-executing candidate, but it does not weaken
-that gate. The adjacent
+lease into one opaque move-only non-executing candidate. Candidate
+`RQ-CF-AGENT-026` consumes that candidate once and retains an exact private
+native image without exposing it, but neither slice weakens that gate. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
@@ -824,7 +863,7 @@ private layout before audit-backed activation and fails closed without adopting
 existing state. None of these results is an executor or real sandbox.
 Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, exact-snapshot materialization and execution,
+semantics, exact-snapshot execution and its platform launch transition,
 automatic lifecycle cleanup, crash-recoverable receipts, partial-cleanup retry,
 endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.

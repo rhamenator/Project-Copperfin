@@ -32,6 +32,9 @@ using copperfin::security::WorkspaceAgentActivationRequest;
 using copperfin::security::WorkspaceAgentEnvironmentEntry;
 using copperfin::security::WorkspaceAgentIsolatedEnvironmentBoundary;
 using copperfin::security::WorkspaceAgentIsolatedEnvironmentConfiguration;
+using copperfin::security::WorkspaceAgentMaterializedProcessImage;
+using copperfin::security::WorkspaceAgentMaterializedProcessLaunch;
+using copperfin::security::WorkspaceAgentMaterializedProcessLaunchResult;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPlatform;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentProcessEnvironmentPolicy;
@@ -156,6 +159,41 @@ static_assert(
         std::is_nothrow_move_constructible_v<
             WorkspaceAgentPreparedProcessLaunchResult>,
     "RQ-CF-AGENT-025: the allocation-failure denial must require no diagnostic allocation");
+static_assert(
+    !std::is_copy_constructible_v<WorkspaceAgentMaterializedProcessImage> &&
+        !std::is_copy_assignable_v<WorkspaceAgentMaterializedProcessImage> &&
+        std::is_nothrow_move_constructible_v<
+            WorkspaceAgentMaterializedProcessImage> &&
+        !HasPublicExecutableBytes<WorkspaceAgentMaterializedProcessImage> &&
+        !HasPublicNativeHandle<WorkspaceAgentMaterializedProcessImage> &&
+        !HasPublicPath<WorkspaceAgentMaterializedProcessImage> &&
+        !HasPublicDigest<WorkspaceAgentMaterializedProcessImage> &&
+        !HasPublicExecute<WorkspaceAgentMaterializedProcessImage> &&
+        !HasPublicLaunch<WorkspaceAgentMaterializedProcessImage>,
+    "RQ-CF-AGENT-026: native materialized images must remain opaque and move-only");
+static_assert(
+    !std::is_copy_constructible_v<WorkspaceAgentMaterializedProcessLaunch> &&
+        !std::is_copy_assignable_v<WorkspaceAgentMaterializedProcessLaunch> &&
+        std::is_nothrow_move_constructible_v<
+            WorkspaceAgentMaterializedProcessLaunch> &&
+        std::is_nothrow_move_assignable_v<
+            WorkspaceAgentMaterializedProcessLaunch> &&
+        !HasPublicPlan<WorkspaceAgentMaterializedProcessLaunch> &&
+        !HasPublicArguments<WorkspaceAgentMaterializedProcessLaunch> &&
+        !HasPublicEnvironment<WorkspaceAgentMaterializedProcessLaunch> &&
+        !HasPublicExecutableBytes<WorkspaceAgentMaterializedProcessLaunch> &&
+        !HasPublicNativeHandle<WorkspaceAgentMaterializedProcessLaunch> &&
+        !HasPublicPath<WorkspaceAgentMaterializedProcessLaunch> &&
+        !HasPublicDigest<WorkspaceAgentMaterializedProcessLaunch> &&
+        !HasPublicExecute<WorkspaceAgentMaterializedProcessLaunch> &&
+        !HasPublicLaunch<WorkspaceAgentMaterializedProcessLaunch>,
+    "RQ-CF-AGENT-026: materialized launches must remain opaque and move-only");
+static_assert(
+    std::is_nothrow_default_constructible_v<
+        WorkspaceAgentMaterializedProcessLaunchResult> &&
+        std::is_nothrow_move_constructible_v<
+            WorkspaceAgentMaterializedProcessLaunchResult>,
+    "RQ-CF-AGENT-026: materialization allocation failure must return without allocating");
 
 int failures = 0;
 std::filesystem::path running_test_executable;
@@ -684,6 +722,109 @@ void test_prepared_launch_candidate_binds_plan_pins_and_revocation() {
     expect(stop_finished.load() && stop_result.revoked &&
                !controller.snapshot().active,
            "RQ-CF-AGENT-025: discarding the candidate must release pins before allowing revocation to complete");
+}
+
+void test_prepared_candidate_materializes_only_retained_snapshot() {
+    WorkspaceAgentMaterializedProcessLaunch empty;
+    expect(!empty.valid() && empty.session_generation() == 0U,
+           "RQ-CF-AGENT-026: an empty materialized launch must carry no authority");
+
+    TempTree tree;
+    WorkspaceAgentSessionController controller(
+        tree.workspace, tree.configuration(), tree.parser_configuration());
+    const auto started = controller.start(activation_request(), audit_sink());
+    expect(started.activated,
+           "RQ-CF-AGENT-026: materialization fixture must activate exact generation authority");
+
+    TempTree other_tree;
+    WorkspaceAgentSessionController other_controller(
+        other_tree.workspace, other_tree.configuration(),
+        other_tree.parser_configuration());
+    const auto other_started =
+        other_controller.start(activation_request(), audit_sink());
+    auto cross_controller_candidate =
+        controller.prepare_process_launch_candidate(
+            invocation_request(started.session.generation));
+    expect(cross_controller_candidate.candidate.has_value(),
+           "RQ-CF-AGENT-026: cross-controller fixture must prepare source authority");
+    if (!cross_controller_candidate.candidate.has_value()) {
+        return;
+    }
+    auto cross_controller = other_controller.materialize_process_launch_candidate(
+        std::move(*cross_controller_candidate.candidate));
+    expect(other_started.activated && !cross_controller.materialized &&
+               !cross_controller.launch.has_value() &&
+               cross_controller.diagnostic_code ==
+                   "workspace_agent.process_image_candidate_unavailable" &&
+               std::filesystem::is_empty(
+                   other_tree.session_storage / "session-1" / "temp"),
+           "RQ-CF-AGENT-026: a prepared candidate must not transfer materialization authority between controllers");
+
+    auto prepared = controller.prepare_process_launch_candidate(
+        invocation_request(started.session.generation));
+    expect(prepared.prepared && prepared.candidate.has_value() &&
+               prepared.candidate->valid(),
+           "RQ-CF-AGENT-026: materialization requires one valid opaque prepared candidate");
+    if (!prepared.candidate.has_value()) {
+        return;
+    }
+
+#if !defined(_WIN32)
+    std::ofstream(tree.workspace / "bin" / "workspace-tool",
+                  std::ios::binary | std::ios::trunc)
+        << "changed after snapshot\n";
+#endif
+    auto materialized = controller.materialize_process_launch_candidate(
+        std::move(*prepared.candidate));
+    expect(materialized.materialized && materialized.launch.has_value() &&
+               materialized.launch->valid() &&
+               materialized.launch->session_generation() ==
+                   started.session.generation &&
+               materialized.diagnostic_code ==
+                   "workspace_agent.process_launch_materialized" &&
+               !prepared.candidate->valid(),
+           "RQ-CF-AGENT-026: one attempt must consume the candidate and bind the exact retained snapshot to a native image");
+    const auto temporary =
+        tree.session_storage / "session-1" / "temp";
+#if defined(_WIN32)
+    expect(std::filesystem::exists(
+               temporary / "copperfin-agent-image-1.exe"),
+           "RQ-CF-AGENT-026: Windows must retain one handle-protected image while authority is live");
+#else
+    expect(std::filesystem::is_empty(temporary),
+           "RQ-CF-AGENT-026: POSIX must unlink the image before exposing materialized authority");
+#endif
+
+    const auto still_denied =
+        controller.revalidate_serialized_process_invocation_for_launch({}, {});
+    expect(!still_denied.allowed &&
+               still_denied.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_pinning_unavailable",
+           "RQ-CF-AGENT-026: materialization must not silently weaken the invariant execution denial");
+
+    std::atomic<bool> stop_finished = false;
+    copperfin::security::WorkspaceAgentSessionStopResult stop_result;
+    std::thread stop_thread([&controller, &stop_finished, &stop_result] {
+        stop_result = controller.stop(audit_sink());
+        stop_finished.store(true);
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    expect(!stop_finished.load(),
+           "RQ-CF-AGENT-026: stop must wait while materialized launch authority retains the generation lease");
+    materialized.launch.reset();
+    stop_thread.join();
+    expect(stop_finished.load() && stop_result.revoked &&
+               !std::filesystem::exists(
+                   temporary / "copperfin-agent-image-1.exe"),
+           "RQ-CF-AGENT-026: image cleanup must precede lease release and completed revocation");
+
+    const auto cleaned = controller.cleanup_pending_session_layout(audit_sink());
+    expect(cleaned.cleaned &&
+               !std::filesystem::exists(
+                   tree.session_storage / "session-1"),
+           "RQ-CF-AGENT-026: controlled image lifetime must preserve identity-bound empty-layout cleanup");
+    expect(other_controller.stop(audit_sink()).revoked,
+           "RQ-CF-AGENT-026: cross-controller denial must leave the unrelated controller normally revocable");
 }
 
 void test_windows_serialization_requires_exact_parser_authority() {
@@ -1492,6 +1633,7 @@ int main(int argc, char** argv) {
 #endif
     test_fixed_non_inheriting_environment();
     test_prepared_launch_candidate_binds_plan_pins_and_revocation();
+    test_prepared_candidate_materializes_only_retained_snapshot();
     test_windows_serialization_requires_exact_parser_authority();
     test_secure_generation_layout_preparation();
     test_identity_bound_empty_layout_cleanup();

@@ -3,13 +3,16 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/platform/private_directory.h"
+#include "copperfin/platform/private_executable_image.h"
 
 #include <chrono>
 #include <cerrno>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
+#include <vector>
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -34,6 +37,8 @@ using copperfin::platform::create_private_directory;
 using copperfin::platform::create_private_directory_in_verified_parent;
 using copperfin::platform::remove_empty_private_directory_in_verified_parent;
 using copperfin::platform::verify_private_directory;
+using copperfin::platform::PrivateExecutableImageFailure;
+using copperfin::platform::materialize_private_executable_image_in_verified_parent;
 
 int failures = 0;
 
@@ -352,11 +357,87 @@ void test_invalid_and_wrong_kind_inputs() {
     }
 }
 
+void test_exact_private_executable_image_materialization() {
+    TempTree tree;
+    const auto private_root = tree.root / "image-root";
+    const auto created = create_private_directory(private_root);
+    expect(created.ok,
+           "RQ-CF-AGENT-026: the image fixture must create a private parent");
+    if (!created.ok) {
+        return;
+    }
+    const auto identity = directory_identity(private_root);
+#if defined(_WIN32)
+    const std::filesystem::path leaf = "copperfin-image-1.exe";
+#else
+    const std::filesystem::path leaf = "copperfin-image-1.bin";
+#endif
+    const std::vector<std::uint8_t> bytes{
+        0x43U, 0x6fU, 0x70U, 0x70U, 0x65U, 0x72U, 0x66U, 0x69U, 0x6eU};
+    auto materialized =
+        materialize_private_executable_image_in_verified_parent(
+            private_root, identity.storage_id, identity.file_id, leaf, bytes);
+    expect(materialized.materialized && materialized.image.has_value() &&
+               materialized.image->valid() &&
+               materialized.failure == PrivateExecutableImageFailure::none,
+           "RQ-CF-AGENT-026: exact bytes must become one owned executable image");
+#if defined(_WIN32)
+    std::ifstream retained(private_root / leaf, std::ios::binary);
+    const std::vector<std::uint8_t> retained_bytes{
+        std::istreambuf_iterator<char>(retained),
+        std::istreambuf_iterator<char>()};
+    expect(retained_bytes == bytes,
+           "RQ-CF-AGENT-026: the retained Windows image must contain only the supplied bytes");
+    const HANDLE denied_writer = ::CreateFileW(
+        (private_root / leaf).c_str(), GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    expect(denied_writer == INVALID_HANDLE_VALUE,
+           "RQ-CF-AGENT-026: a live Windows image must deny cooperating writers");
+    if (denied_writer != INVALID_HANDLE_VALUE) {
+        (void)::CloseHandle(denied_writer);
+    }
+    retained.close();
+#else
+    expect(!std::filesystem::exists(private_root / leaf),
+           "RQ-CF-AGENT-026: a POSIX image must leave no mutable pathname after creation");
+#endif
+    materialized.image.reset();
+    expect(!std::filesystem::exists(private_root / leaf),
+           "RQ-CF-AGENT-026: image destruction must remove the exact retained object");
+
+    const auto wrong_parent =
+        materialize_private_executable_image_in_verified_parent(
+            private_root, identity.storage_id, identity.file_id ^ 1U,
+            "wrong-parent-image", bytes);
+    expect(!wrong_parent.materialized && !wrong_parent.image.has_value() &&
+               wrong_parent.failure ==
+                   PrivateExecutableImageFailure::parent_identity_changed &&
+               !std::filesystem::exists(private_root / "wrong-parent-image"),
+           "RQ-CF-AGENT-026: parent replacement must fail before image creation");
+
+    const auto existing = private_root / "existing-image";
+    std::ofstream(existing, std::ios::binary) << "preserve";
+    const auto collision =
+        materialize_private_executable_image_in_verified_parent(
+            private_root, identity.storage_id, identity.file_id,
+            "existing-image", bytes);
+    std::ifstream preserved(existing, std::ios::binary);
+    const std::string preserved_text{
+        std::istreambuf_iterator<char>(preserved),
+        std::istreambuf_iterator<char>()};
+    expect(!collision.materialized && !collision.image.has_value() &&
+               collision.failure == PrivateExecutableImageFailure::already_exists &&
+               preserved_text == "preserve",
+           "RQ-CF-AGENT-026: an existing leaf must be preserved rather than adopted or overwritten");
+}
+
 }  // namespace
 
 int main() {
     test_creation_and_verification();
     test_invalid_and_wrong_kind_inputs();
+    test_exact_private_executable_image_materialization();
     if (failures != 0) {
         std::cerr << failures << " private-directory checks failed\n";
         return 1;
