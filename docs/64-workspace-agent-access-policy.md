@@ -666,10 +666,36 @@ This lease is deliberately short-lived and is intended to bracket only a future
 direct launch syscall. Holding it across user interaction, network access,
 unbounded preparation, or child lifetime could delay revocation and is outside
 the contract. It is not launch authority: `RQ-CF-AGENT-019` continues to deny
-invariantly because trusted-root, executable, and working-directory pins,
-synchronous executor consumption, sandbox, endpoint and descendant controls,
-and outcome audit remain absent. The controller must outlive every lease it
-issues.
+invariantly because pinned-byte authentication and synchronous same-object
+executor consumption, sandbox, endpoint and descendant controls, and outcome
+audit remain absent. The controller must outlive every lease it issues.
+
+## Retained process-target pin prerequisite
+
+Candidate `RQ-CF-AGENT-023` supplies the object-retention prerequisite adjacent
+to the revocation lease. Each successful process-target inspection carries a
+private one-attempt record of the exact paths and complete identities, bound to
+the exact non-copyable logical process-target boundary that issued it. Caller-
+constructed fields, editing, replay, and presentation to another boundary do
+not authorize pins.
+
+Acquisition opens the original configured workspace root, executable, and
+working directory and compares the opened identities with that private record.
+Windows retains non-inheriting handles without ordinary write/delete sharing.
+POSIX retains close-on-exec, no-follow descriptors; the original objects remain
+open even if their names are subsequently changed. The controller admits this
+operation only for the exact active registered process tool and rechecks the
+session/tool after opening. The returned move-only bundle exposes only whether
+it is valid: no path or native handle is public.
+
+This is object retention, not launch authority. POSIX still needs an executor
+that authenticates and executes the pinned executable object and enters the
+pinned working directory through those same descriptors or an equally
+race-free mechanism. Windows still needs pinned-byte authentication beside
+launch. Both platforms still need synchronous consumption with the separate
+revocation lease, sandbox and endpoint/descendant enforcement, and content-free
+outcome audit. Pins may outlive stop without retaining session authority, and
+the `RQ-CF-AGENT-019` promotion gate remains invariantly denied.
 
 ## Current implementation and remaining work
 

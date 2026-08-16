@@ -1,5 +1,32 @@
 # Agent Handoff
 
+## V1 workspace-agent retained process-target pins
+
+Candidate `RQ-CF-AGENT-023` adds a non-executing object-retention prerequisite
+for a future controlled launcher. Successful process-target inspection now
+carries a private one-attempt record bound to the exact non-copyable logical
+boundary and exact target values. Forged, edited, replayed, stale, and cross-
+boundary state fails closed. Acquisition opens and identity-checks the original
+trusted workspace root, executable, and working directory. Windows retains
+non-inheriting handles without ordinary write/delete sharing; POSIX retains
+close-on-exec, no-follow descriptors across name replacement. The move-only
+bundle exposes only validity. Controller acquisition requires exact active
+process-tool admission before opening and rechecks it afterward. Local
+warning-free GCC 15 Release workspace-agent/security execution passes `11/11`,
+fresh Clang 21 ASan/UBSan/leak execution passes `3/3`, fresh GCC 15
+ThreadSanitizer execution passes `3/3`, and the licensing, community,
+native-platform, Actions, isolation, supply-chain, and safety contracts pass
+`7/7`, including repeated 329.84-, 325.82-, and post-correction 326.48-second
+safety scans. Pre-publication review found and corrected allocation-failure leakage:
+each opened native object now remains under local RAII ownership until opaque
+bundle construction succeeds, and the corrected Release, ASan/UBSan/leak, and
+ThreadSanitizer focused sets each pass `3/3`. This does not
+authenticate bytes through the retained object, consume a serialized plan,
+acquire the separate revocation lease, sandbox, launch, manage endpoints/
+descendants, or audit outcomes; the promotion gate remains invariantly denied.
+Protected Windows/Ubuntu/macOS evidence, exact-head review, and qualified high-
+severity sign-off remain pending.
+
 ## V1 workspace-agent session-revocation lease prerequisite
 
 Candidate `RQ-CF-AGENT-022` adds a move-only, non-executing lease for the exact

@@ -29,7 +29,7 @@ inline constexpr std::size_t
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
 // RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
-// RQ-CF-AGENT-018 through RQ-CF-AGENT-022.
+// RQ-CF-AGENT-018 through RQ-CF-AGENT-023.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -269,6 +269,13 @@ struct WorkspaceAgentSessionRevocationLeaseResult {
     std::string diagnostic_code;
 };
 
+struct WorkspaceAgentProcessTargetPinPreflightResult {
+    bool pinned = false;
+    std::uint64_t session_generation = 0U;
+    std::optional<WorkspaceAgentProcessTargetPins> pins;
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -375,6 +382,15 @@ public:
     [[nodiscard]] WorkspaceAgentSessionRevocationLeaseResult
     acquire_process_launch_revocation_lease(
         std::uint64_t session_generation) const;
+
+    // Repeats exact-session process-target admission, then consumes a private
+    // one-attempt inspection authority to retain the original trusted root,
+    // executable, and working-directory objects. The opaque move-only result
+    // exposes no path or native handle. It neither acquires the separate
+    // revocation lease nor weakens the invariant launch-promotion denial.
+    [[nodiscard]] WorkspaceAgentProcessTargetPinPreflightResult
+    pin_process_target_request(
+        const WorkspaceAgentProcessTargetPreflightRequest& request) const;
 
 private:
     enum class Transition {
