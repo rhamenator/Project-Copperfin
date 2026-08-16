@@ -126,9 +126,27 @@ Current local evidence:
   cleanup authority by closing the parent too early; immediate RAII ownership,
   retained-parent cleanup retry, and machine-contract coverage correct both
   paths; and
-- git diff --check is required before publication.
+- exact signed/DCO head `5ecaa835ca54e957ee715a70cedfb0b539576ee0`
+  passed all eleven protected checks in runs `31935538404`, `31935539922`,
+  `31935539848`, `31935539856`, and `31935539940`, including Windows
+  x64/Win32 DECLARE, Windows environment paths, and Windows/Ubuntu/macOS
+  generated-launcher validation;
+- protected Windows validation exposed only a test-observer sharing mismatch:
+  the corrected native reader explicitly shares the retained handle's existing
+  read/write/delete access while the production handle continues to deny every
+  new writer, and both protected Windows workflows pass that correction;
+- exact-head thread audit found zero review threads; independent read review
+  found no remaining RAII or resource-lifetime defect at implementation head
+  `e3c8320e8`, while both later commits were test-only Windows share-contract
+  corrections; and
+- exact-head focused execution passes 6/6, the final-byte safety contract passes
+  1/1 in 338.97 seconds, and git diff --check passes.
 
-Final-byte safety validation is required after this evidence update. Protected
-Windows, Ubuntu, and macOS execution and exact-head review are also pending.
-Requirement status therefore remains gap. No qualified high-severity human
-sign-off is claimed.
+PR `#5042` merged into `v1-development` as
+`9675c6394b9c201f9f2fa42ac2328d4965d147a6`. Implementation evidence is
+complete. Evidence-only licensing, community, isolation, supply-chain, and
+safety contracts pass 5/5, including the 347.46-second safety scan.
+Requirement status remains `gap` only because no qualified high-
+severity human documentation sign-off is claimed. Direct execution, working-
+directory entry, sandboxing, endpoint/descendant control, and outcome audit
+remain separately scoped and are not claimed by this report.

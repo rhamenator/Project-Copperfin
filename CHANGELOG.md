@@ -1,3 +1,20 @@
+- 2026-08-16: Completed implementation evidence for candidate
+  `RQ-CF-AGENT-026` at exact signed/DCO head `5ecaa835c`. All eleven
+  protected checks passed in runs `31935538404`, `31935539922`,
+  `31935539848`, `31935539856`, and `31935539940`, including the corrected
+  Windows retained-image byte regression. Exact-head thread audit found zero
+  review threads, and independent read review found no remaining RAII or
+  resource-lifetime defect at the final implementation head before the two
+  test-only Windows share-contract corrections. PR `#5042` merged into
+  `v1-development` as `9675c6394`. Exact-head focused execution passes `6/6`
+  and the final-byte safety contract passes `1/1` in 338.97 seconds.
+  Evidence-only licensing, community, isolation, supply-chain, and safety
+  contracts pass `5/5`, including the 347.46-second safety scan.
+  Implementation evidence is complete; the requirement remains a `gap` only
+  for qualified high-severity documentation sign-off. Direct execution,
+  working-directory entry, sandboxing, endpoint/descendant controls, and
+  outcome audit remain separately scoped.
+
 - 2026-08-16: Added candidate RQ-CF-AGENT-026, a one-attempt,
   non-executing exact-snapshot materialization boundary. The trusted controller
   now consumes only its own opaque prepared candidate, reauthenticates the
