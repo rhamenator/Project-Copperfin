@@ -577,44 +577,6 @@ std::optional<std::filesystem::path> dos_volume_path_for_handle(
     }
 }
 
-std::optional<std::wstring> native_hard_disk_volume_root(
-    const std::wstring_view path) noexcept {
-    constexpr std::wstring_view prefix = L"\\Device\\HarddiskVolume";
-    if (path.rfind(prefix, 0U) != 0U) {
-        return std::nullopt;
-    }
-    std::size_t index = prefix.size();
-    const std::size_t digits_begin = index;
-    while (index < path.size() && path[index] >= L'0' && path[index] <= L'9') {
-        ++index;
-    }
-    return index != digits_begin && index < path.size() && path[index] == L'\\'
-        ? std::optional<std::wstring>(std::wstring(path.substr(0U, index)))
-        : std::nullopt;
-}
-
-std::optional<std::wstring> query_dos_device(
-    const std::wstring_view device) {
-    constexpr DWORD maximum_path_characters = 32'768U;
-    std::vector<wchar_t> buffer(512U);
-    for (;;) {
-        const DWORD written = ::QueryDosDeviceW(
-            std::wstring(device).c_str(), buffer.data(),
-            static_cast<DWORD>(buffer.size()));
-        if (written != 0U) {
-            return buffer.front() == L'\0'
-                ? std::nullopt
-                : std::optional<std::wstring>(std::wstring(buffer.data()));
-        }
-        if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER ||
-            buffer.size() >= maximum_path_characters) {
-            return std::nullopt;
-        }
-        buffer.resize(std::min<std::size_t>(
-            buffer.size() * 2U, maximum_path_characters));
-    }
-}
-
 bool mount_manager_lists_drive_root(
     const HANDLE handle,
     const std::wstring_view drive_root) noexcept {
@@ -678,25 +640,6 @@ const char* dos_volume_binding_diagnostic(
         if (path.size() < 7U || path.rfind(L"\\\\?\\", 0U) != 0U ||
             path[5U] != L':' || path[6U] != L'\\') {
             return "workspace_agent.process_working_directory_dos_path_invalid";
-        }
-        const auto native_path = final_path_for_handle(handle, VOLUME_NAME_NT);
-        if (!native_path.has_value()) {
-            return "workspace_agent.process_working_directory_native_path_unavailable";
-        }
-        const auto native_root = native_hard_disk_volume_root(*native_path);
-        if (!native_root.has_value()) {
-            return "workspace_agent.process_working_directory_native_volume_unsupported";
-        }
-        const std::wstring device{path[4U], L':'};
-        const auto mapping = query_dos_device(device);
-        if (!mapping.has_value()) {
-            return "workspace_agent.process_working_directory_dos_mapping_unavailable";
-        }
-        if (::CompareStringOrdinal(
-                mapping->c_str(), static_cast<int>(mapping->size()),
-                native_root->c_str(), static_cast<int>(native_root->size()),
-                TRUE) != CSTR_EQUAL) {
-            return "workspace_agent.process_working_directory_dos_mapping_mismatch";
         }
         const std::wstring drive_root{path[4U], L':', L'\\'};
         if (::GetDriveTypeW(drive_root.c_str()) != DRIVE_FIXED) {

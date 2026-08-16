@@ -34,7 +34,7 @@ use.
 | `DQ-workspace-agent-windows-execution-013`: any pre-start compatibility diagnostic child shall enter the same kill-on-close Job Object atomically at creation, remain suspended, never execute user code, and retain cleanup ownership even if explicit termination fails | `DV-workspace-agent-windows-execution-003`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-014`: after protected Windows proves the stable device-form application name unsupported, a diagnostic-only DOS application name shall be derived from the authenticated handle, identity-matched under the retained stable hierarchy, and used only by a never-resumed Job-owned probe that retains the stable working directory; it shall not become an execution fallback without post-creation image binding | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-015`: after protected Windows proves the DOS application name and stable working-directory combination is accepted at creation, production creation shall use that handle-derived DOS application name only while the stable hierarchy remains retained, place the suspended child into the kill-on-close Job Object atomically, compare its kernel-reported native image name with the native device name captured from the authenticated image handle, and terminate without resume on query or binding failure | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-016`: because protected Windows proves a stable volume-device current directory can create a child but is unusable by the resumed Win32 runtime, the launch current directory shall instead be an extended DOS path derived from the authenticated directory handle. It shall be admitted only for a fixed drive listed as a drive-root assignment for the handle's volume GUID by `GetVolumePathNamesForVolumeNameW`, whose `QueryDosDeviceW` target equals the handle's native hard-disk-volume root, whose authenticated handle reports the retained storage identity through `GetVolumeInformationByHandleW` without requiring fresh drive-root traversal authority, and whose DOS-path reopen under the retained stable hierarchy matches the exact authenticated directory before and after mapping validation. Network, mounted-folder-only, user-local DOS-device, `SUBST`, removable, redirected, identity-mismatched, or mapping-mismatched forms shall fail closed. | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-007`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-016`: because protected Windows proves a stable volume-device current directory can create a child but is unusable by the resumed Win32 runtime, the launch current directory shall instead be an extended DOS path derived from the authenticated directory handle. It shall be admitted only for a fixed drive listed as a drive-root assignment for the handle's volume GUID by `GetVolumePathNamesForVolumeNameW`, whose authenticated handle reports the retained storage identity through `GetVolumeInformationByHandleW` without requiring fresh drive-root traversal authority, and whose DOS-path reopen under the retained stable hierarchy matches the exact authenticated directory before and after mapping validation. Network, mounted-folder-only, `SUBST`, removable, redirected, or identity-mismatched forms shall fail closed. Protected Windows run `31967738991` proves `QueryDosDeviceW` is unavailable under the bounded restricted token, so that redundant query is not part of the admission contract. | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-007`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
   exercise one-attempt consumption, sandbox and platform denial, failed-intent
@@ -111,14 +111,12 @@ observer does not admit a writer, deleter, or renamer.
   handle-derived extended DOS path because Win32 current-directory operations
   do not work reliably from the stable device form. That DOS path is admitted
   only when the volume mount manager lists its fixed drive root for the
-  handle's volume GUID, the DOS device maps to the handle's native hard-disk
-  volume, its handle-reported volume serial matches the authenticated storage
-  identity, and a DOS-path reopen beneath the retained stable hierarchy matches
-  the exact directory.
+  handle's volume GUID, its handle-reported volume serial matches the
+  authenticated storage identity, and a DOS-path reopen beneath the retained
+  stable hierarchy matches the exact directory before and after validation.
   A non-administrator cannot redefine an existing boot-time drive name; an
   administrator remains outside this explicitly non-elevated execution
-  boundary. A user-local DOS device, `SUBST`, mapped-drive, mounted-folder-only
-  volume, leaf, or ancestor
+  boundary. A `SUBST`, mapped-drive, mounted-folder-only volume, leaf, or ancestor
   redirection therefore fails admission or cannot replace the retained object.
   Windows network shares do not expose an accepted local-volume device path and therefore fail
   closed at this boundary; the v1 executor supports local fixed-volume targets.
@@ -269,14 +267,14 @@ an unnecessary least-privilege incompatibility in the new binding: it reopened
 the drive root solely to repeat the volume-serial query even though the caller
 already retained the exact authenticated directory handle. The correction
 queries the serial through that retained handle with
-`GetVolumeInformationByHandleW`; native-device and mount-manager checks continue
+`GetVolumeInformationByHandleW`; the mount-manager and identity checks continue
 to bind the DOS drive, while least-privilege root traversal is no longer an
 unnecessary prerequisite. Exact-head protected runs `31966333205` and
 `31966333238` still denied every candidate at this same pre-execution boundary;
-all adjacent private-image and parser regressions passed. The binding now
-returns one of a closed set of content-free predicate diagnostics for invalid
-DOS shape, unavailable or unsupported native volume, unavailable or mismatched
-DOS mapping, non-fixed drive, absent mount-manager listing, or unavailable or
-mismatched volume identity. It emits no path or native-error content and changes
-no admission decision. A protected diagnostic run is required before changing
-the compatibility boundary.
+all adjacent private-image and parser regressions passed. The binding then
+returned a closed, content-free predicate diagnostic in protected run
+`31967738991`: `QueryDosDeviceW` is unavailable under the bounded restricted
+token. That redundant query is removed while the handle-derived DOS path,
+fixed-drive mount-manager listing, matching handle volume identity, retained
+hierarchy, and exact identity reopens remain mandatory. A corrected protected
+execution run is required.

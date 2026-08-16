@@ -88,17 +88,12 @@ foreach(token IN ITEMS
         "dos_volume_path_for_handle("
         "VOLUME_NAME_DOS"
         "dos_volume_binding_diagnostic("
-        "::QueryDosDeviceW("
         "::GetDriveTypeW("
         "DRIVE_FIXED"
         "mount_manager_lists_drive_root("
         "::GetVolumePathNamesForVolumeNameW("
         "::GetVolumeInformationByHandleW("
         "workspace_agent.process_working_directory_dos_path_invalid"
-        "workspace_agent.process_working_directory_native_path_unavailable"
-        "workspace_agent.process_working_directory_native_volume_unsupported"
-        "workspace_agent.process_working_directory_dos_mapping_unavailable"
-        "workspace_agent.process_working_directory_dos_mapping_mismatch"
         "workspace_agent.process_working_directory_drive_not_fixed"
         "workspace_agent.process_working_directory_mount_not_listed"
         "workspace_agent.process_working_directory_volume_identity_unavailable"
@@ -116,6 +111,8 @@ foreach(token IN ITEMS
 endforeach()
 forbid_text(${process_containment_source} "::GetVolumeInformationW("
     "root-path volume query that exceeds retained restricted-token authority")
+forbid_text(${process_containment_source} "::QueryDosDeviceW("
+    "DOS-device query unavailable to the bounded restricted token")
 foreach(token IN ITEMS
         "working-directory ancestor rename while retained"
         "complete working-directory hierarchy exclusions")

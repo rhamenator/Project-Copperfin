@@ -62,8 +62,7 @@
   empty output because the stable volume-device current directory was unusable
   by the resumed Win32 runtime. The stable path remains the retained hierarchy-
   locking authority; the child now receives a handle-derived extended DOS path
-  only after fixed-drive, mount-manager drive-root, `QueryDosDeviceW` native-
-  root, volume-serial, and
+  only after fixed-drive, mount-manager drive-root, volume-serial, and
   exact-directory reopen checks all bind it to that authority. Network,
   mounted-folder, `SUBST`, removable, and mismatched mappings fail closed.
   The first corrected Windows run then rejected every candidate before launch:
@@ -74,11 +73,12 @@
   mount-manager checks continue to bind the fixed DOS drive without broadening
   the token or weakening path admission.
   Both exact-head protected reruns still denied every candidate at the same
-  pre-execution binding boundary. The binding now reports a fixed, content-free
-  reason code for each path-shape, native-root, DOS mapping, fixed-drive,
-  mount-manager, and volume-identity predicate so protected evidence can
-  identify the incompatible Windows API without disclosing path data or
-  relaxing admission.
+  pre-execution binding boundary. A fixed content-free predicate diagnostic in
+  run `31967738991` then identified `QueryDosDeviceW` as unavailable under the
+  bounded restricted token. That redundant query is removed; the independently
+  handle-derived DOS path, fixed-drive mount-manager listing, handle-reported
+  volume identity, retained stable hierarchy, and exact identity reopens remain
+  mandatory.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,

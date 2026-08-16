@@ -36,12 +36,19 @@ redundant drive-root serial query with `GetVolumeInformationByHandleW` on the
 retained authenticated directory handle did not change that result: exact head
 `ad779b9ab` again failed only `test_workspace_agent_isolated_environment` in
 protected runs `31966333205` and `31966333238`, while all adjacent tests and
-the Windows DECLARE, GCC, Clang, Ubuntu, and macOS jobs passed. The current
-diagnostic correction preserves every admission predicate and reports a fixed
+the Windows DECLARE, GCC, Clang, Ubuntu, and macOS jobs passed. The diagnostic
+head preserved every admission predicate and reported a fixed
 content-free reason for the path-shape, native-root, DOS mapping, fixed-drive,
 mount-manager, or volume-identity predicate that denied preparation. Another
 protected run is required to select the compatibility correction from direct
 Windows evidence.
+
+Protected diagnostic run `31967738991` selected that correction directly:
+`QueryDosDeviceW` is unavailable under the bounded restricted token. The query
+was redundant with the handle-derived DOS path, fixed-drive mount-manager
+listing, matching handle volume identity, retained stable hierarchy, and exact
+DOS-path identity reopens before and after validation, all of which remain
+mandatory. A corrected protected rerun is required.
 
 ## V1 workspace-agent Windows launch-handle transition
 

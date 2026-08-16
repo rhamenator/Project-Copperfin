@@ -904,14 +904,15 @@ Windows evidence showed that passing that stable device path directly as the
 current directory can leave a resumed Win32 process unable to perform ordinary
 current-directory operations. The child therefore receives an extended DOS
 path derived from the same authenticated directory handle. It is admitted only
-when the drive is fixed, `QueryDosDeviceW` maps it to the handle's native hard-
-disk-volume root, `GetVolumePathNamesForVolumeNameW` lists that drive root for
-the handle's volume GUID, `GetVolumeInformationByHandleW` reports the retained
+when the drive is fixed, `GetVolumePathNamesForVolumeNameW` lists that drive
+root for the handle's volume GUID, `GetVolumeInformationByHandleW` reports the retained
 storage identity from the authenticated handle without fresh root traversal,
 and reopening the DOS path under the retained stable chain returns
 the exact directory identity before and after mapping validation. Network,
-mounted-folder-only, user-local DOS-device, `SUBST`, removable, and redirected
-forms fail closed.
+mounted-folder-only, `SUBST`, removable, and identity-mismatched forms fail
+closed. Protected Windows run `31967738991` proved `QueryDosDeviceW` unavailable
+under the bounded restricted token, so that redundant query is not an admission
+prerequisite.
 The stable name prefers a volume-GUID path and falls back only to a validated
 `GLOBALROOT\\Device\\HarddiskVolumeN` name when the local volume exposes no GUID.
 Network shares expose neither accepted local-volume form and are intentionally denied by
