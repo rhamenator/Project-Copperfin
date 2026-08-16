@@ -1,3 +1,16 @@
+- 2026-08-15: Completed implementation evidence for candidate
+  `RQ-CF-AGENT-024` at corrected exact signed/DCO head `9e9d6bf18`. All eleven
+  protected checks passed in runs `31925258049`, `31925258995`, `31925258996`,
+  `31925258994`, and `31925258979`; exact-head automated review found no major
+  issue after its P1 mutable-object race finding drove the immutable-snapshot
+  correction, the sole thread is resolved and outdated, and PR `#5038` merged
+  into `v1-development` as `c9a64c0e9`. Implementation evidence is complete;
+  evidence-only licensing/community/isolation/supply-chain/safety contracts pass
+  `5/5`, including the 344.06-second safety scan;
+  the requirement remains a `gap` only for qualified high-severity
+  documentation sign-off, while exact-snapshot execution and broader launch
+  readiness remain separately scoped.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-024`, bounded SHA-256
   authentication of a private immutable workspace-agent executable snapshot.
   Pin-authorizing inspection and acquisition each stream an identity-bracketed
@@ -18,8 +31,7 @@
   `11/11`; fresh Clang 21 ASan/UBSan/leak passes `3/3`; and fresh GCC 15
   ThreadSanitizer passes `2/2`. Licensing, community, native-platform,
   GitHub Actions, isolation, supply-chain, and safety contracts pass `7/7`,
-  including the corrected final-byte 326.93-second safety scan. Protected platform, review, and
-  merge evidence remain pending.
+  including the corrected final-byte 326.93-second safety scan.
 
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-023` at corrected exact signed/DCO head `f4fa82829`. The first

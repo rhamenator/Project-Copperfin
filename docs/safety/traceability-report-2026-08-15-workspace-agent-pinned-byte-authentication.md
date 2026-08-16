@@ -93,7 +93,20 @@ Current local evidence:
   final-byte 326.93-second safety scan; and
 - `git diff --check` passes.
 
-Protected Windows/Ubuntu/macOS, exact-head review, and merge evidence remain
-pending. Requirement status stays
-`gap`; no exact-snapshot execution or launch readiness is claimed, and no
-qualified high-severity human sign-off is claimed.
+Corrected exact signed/DCO head `9e9d6bf18` passed all eleven protected checks
+in runs `31925258049`, `31925258995`, `31925258996`, `31925258994`, and
+`31925258979`, including Windows x64 and Win32 ABI validation, Windows
+environment/process-path coverage, and generated-launcher coverage on Windows,
+Ubuntu, and macOS. Exact-head automated review found no major issue after its
+earlier P1 mutable-object race finding drove the immutable-snapshot correction;
+the sole review thread is answered, resolved, and outdated. PR `#5038` merged
+into `v1-development` as `c9a64c0e9`.
+
+The evidence-only update passes the licensing, community, isolation,
+supply-chain, and safety contracts `5/5`, including the 344.06-second safety
+scan.
+
+Implementation evidence is complete. Requirement status stays `gap` only for
+the current qualified high-severity documentation sign-off rule; no exact-
+snapshot execution or launch readiness is claimed, and no qualified human
+sign-off is claimed.

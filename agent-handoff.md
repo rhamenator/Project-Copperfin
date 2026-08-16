@@ -25,9 +25,14 @@ does
 not consume a serialized plan, enter the retained working directory, combine
 with the separate revocation lease, execute, sandbox, manage endpoints or
 descendants, or audit a tool outcome; the promotion gate remains invariantly
-denied. Protected Windows/Ubuntu/macOS,
-exact-head review, merge evidence, and qualified high-severity documentation
-sign-off remain pending.
+denied. Corrected exact signed/DCO head `9e9d6bf18` passed all eleven protected
+checks in runs `31925258049`, `31925258995`, `31925258996`, `31925258994`, and
+`31925258979`. Exact-head automated review found no major issue after the
+immutable-snapshot correction; the earlier P1 thread is resolved and outdated.
+PR `#5038` merged into `v1-development` as `c9a64c0e9`. Implementation evidence
+is complete. The evidence-only licensing, community, isolation, supply-chain,
+and safety contracts pass `5/5`, including the 344.06-second safety scan.
+Qualified high-severity documentation sign-off remains pending.
 
 ## V1 workspace-agent retained process-target pins
 
