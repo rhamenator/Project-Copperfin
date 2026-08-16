@@ -1105,7 +1105,8 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
 #if defined(_WIN32)
     const std::string expected_argv0 = copperfin::platform::path_to_utf8_string(
         std::filesystem::canonical(tree.workspace / "bin" / "workspace-tool"));
-    expect(executed.attempted && executed.intent_audit_committed &&
+    const bool execution_contract_holds =
+        executed.attempted && executed.intent_audit_committed &&
                executed.outcome_audit_committed && executed.operation_id == 2U &&
                executed.process.started && executed.process.completed() &&
                executed.process.process_tree_closed &&
@@ -1127,7 +1128,21 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
                audit.events[0].operation_id == audit.events[1].operation_id &&
                audit.events[1].outcome == "exited" &&
                std::filesystem::is_empty(
-                   tree.session_storage / "session-1" / "temp"),
+                   tree.session_storage / "session-1" / "temp");
+    if (!execution_contract_holds) {
+        std::cerr << "RQ-CF-AGENT-028 execution diagnostics: status="
+                  << copperfin::platform::bounded_process_status_name(
+                         executed.process.status)
+                  << " error=" << executed.process.error_code
+                  << " native_error=" << executed.process.native_error
+                  << " started=" << executed.process.started
+                  << " tree_closed=" << executed.process.process_tree_closed
+                  << " exit=" << executed.process.exit_code
+                  << " diagnostic=" << executed.diagnostic_code
+                  << " stdout=" << executed.process.standard_output
+                  << " stderr=" << executed.process.standard_error << '\n';
+    }
+    expect(execution_contract_holds,
            "RQ-CF-AGENT-028: warned non-elevated Windows execution must consume the exact image and fixed argv/environment/cwd under bounded process-tree ownership and paired audit");
 #else
     expect(!executed.attempted && executed.intent_audit_committed &&
@@ -1198,11 +1213,28 @@ void test_committed_execution_releases_revocation_lease_before_child_exit() {
         execution_finished.load(std::memory_order_acquire);
     execution_thread.join();
 
-    expect(running_was_observed && stopped.revoked &&
+    const bool revocation_contract_holds =
+        running_was_observed && stopped.revoked &&
                !finished_when_stop_returned && execution_result.attempted &&
                execution_result.process.completed() &&
                execution_result.process.exit_code == 29 &&
-               execution_result.outcome_audit_committed,
+               execution_result.outcome_audit_committed;
+    if (!revocation_contract_holds) {
+        std::cerr << "RQ-CF-AGENT-028 revocation diagnostics: observed="
+                  << running_was_observed << " stopped=" << stopped.revoked
+                  << " finished_at_stop=" << finished_when_stop_returned
+                  << " status="
+                  << copperfin::platform::bounded_process_status_name(
+                         execution_result.process.status)
+                  << " error=" << execution_result.process.error_code
+                  << " native_error=" << execution_result.process.native_error
+                  << " started=" << execution_result.process.started
+                  << " tree_closed="
+                  << execution_result.process.process_tree_closed
+                  << " exit=" << execution_result.process.exit_code
+                  << " diagnostic=" << execution_result.diagnostic_code << '\n';
+    }
+    expect(revocation_contract_holds,
            "RQ-CF-AGENT-028: job assignment must release the exact-generation revocation lease before the bounded child exits");
     expect(controller.cleanup_pending_session_layout(audit_sink()).cleaned,
            "RQ-CF-AGENT-028: image destruction after a revoked running invocation must permit normal layout cleanup");
