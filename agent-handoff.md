@@ -1,5 +1,36 @@
 # Agent Handoff
 
+## V1 workspace-agent Windows launch-handle transition
+
+Candidate `RQ-CF-AGENT-027` is implementation-evidence complete. On Windows,
+the platform closes the write-capable materialization handle, recovers the same
+object by file identifier as a read-only identity anchor, and admits an
+ordinary non-reparse pathname handle as final authority only after exact
+volume/file/creation/size identity, complete-byte, and parent-identity checks.
+The final handle has read/delete access with read-only sharing: it denies new
+writes, deletes, and renames, remains responsible for exact-object cleanup, and
+admits the `CreateProcessW` loader. A live writable mapping that outlives its
+minimal read/write source handle is rejected by the final open. Replacement
+objects are never adopted or deleted.
+
+Exact signed/DCO implementation head `0d8429628` passed all eleven protected
+checks in runs `31942740556`, `31942742371`, `31942742377`,
+`31942742383`, and `31942742393`. Both independent Windows workflows
+executed the corrected minimal-handle writable-mapping regression. Exact-head
+automated review found no major issue; three earlier P1 threads drove the
+pathname-binding, mapping, and fixture corrections and are resolved. Independent
+read review corroborated the final fixture and a full Linux Debug suite passed
+`385/385`. The exact committed-byte safety contract passed `1/1` in 330.16
+seconds, and PR `#5044` merged into `v1-development` as `77a2da2dd`.
+Evidence-only licensing, community, isolation, supply-chain, and safety
+contracts pass `5/5`, including the 325.80-second safety scan.
+
+Qualified high-severity documentation signoff remains pending, so the
+requirement retains `gap` status under project policy. This slice supplies no
+product execution authority and does not implement POSIX/macOS launch
+transition, working-directory entry, sandboxing, endpoint/descendant controls,
+outcome audit, provider/OAuth surfaces, diff, or undo.
+
 ## V1 workspace-agent exact-snapshot materialization
 
 Candidate RQ-CF-AGENT-026 is implementation-evidence complete. It consumes one
@@ -38,11 +69,11 @@ no remaining RAII or resource-lifetime defect at implementation head
 corrections validated by both protected Windows workflows. PR `#5042` merged
 as `9675c6394`. Evidence-only licensing, community, isolation, supply-chain,
 and safety contracts pass 5/5, including the 347.46-second safety scan.
-Qualified high-severity documentation sign-off remains pending. Do not claim
-execution readiness: Windows needs an explicit
-immutable-handle launch transition, and POSIX/macOS descriptor execution is not
-yet established. Sandbox, working-directory entry, endpoint/descendant policy,
-and outcome audit remain separate gaps.
+Qualified high-severity documentation sign-off remains pending. Windows
+immutable-handle launch transition is supplied separately by
+`RQ-CF-AGENT-027`; POSIX/macOS descriptor execution is not yet established.
+Sandbox, working-directory entry, endpoint/descendant policy, and outcome audit
+remain separate gaps.
 
 ## V1 workspace-agent prepared launch-candidate composition
 

@@ -96,6 +96,10 @@ Current direct evidence:
 - licensing, community, isolation, supply-chain, and safety contracts pass
   `6/6` after the pathname-binding and lifecycle correction, including the 333.46-second
   repository-wide safety scan;
+- after the minimal mapping fixture correction, focused execution passes
+  `5/5`, warning-as-error execution passes `4/4`, and policy/safety
+  execution passes `6/6`, including the 326.59-second safety scan;
+- the exact committed-byte safety contract passes `1/1` in 330.16 seconds;
 - Linux directly exercises the unchanged POSIX materialization behavior and
   the source contract; and
 - `git diff --check` passes.
@@ -105,10 +109,22 @@ correction because the retained `OpenFileById` handle did not preserve the
 required delete/share lifecycle on that hosted filesystem. The corrected trust
 model limits that handle to read-only identity anchoring and transfers
 authority only to an identity-equal ordinary path handle, reusing the
-previously verified Windows cleanup/share primitive. Replacement protected
-evidence is required.
+previously verified Windows cleanup/share primitive.
 
-Direct Windows compile and execution, protected cross-platform workflows,
-exact-head review, and qualified high-severity documentation sign-off remain
-pending. Requirement status is therefore `gap`; no Windows launch-readiness
-claim is made yet.
+At exact signed/DCO head `0d8429628`, all eleven protected checks passed in
+runs `31942740556`, `31942742371`, `31942742377`, `31942742383`, and
+`31942742393`. The generated-launcher and Windows-environment workflows both
+executed the corrected writable-mapping test using only
+`GENERIC_READ | GENERIC_WRITE` on its source handle and no delete access.
+Exact-head automated review found no major issue. Three earlier P1 findings
+drove the pathname-binding, writable-mapping, and fixture-isolation corrections;
+all three threads are resolved. Independent read review corroborated the final
+fixture and full Linux Debug execution passed `385/385`. PR `#5044` merged
+into `v1-development` as `77a2da2dd`.
+Evidence-only licensing, community, isolation, supply-chain, and safety
+contracts pass `5/5`, including the 325.80-second safety scan.
+
+Implementation evidence is complete. Qualified high-severity documentation
+sign-off remains pending, so requirement status remains `gap` under project
+policy. This is a platform launch-handle proof, not product execution authority
+or a claim of Windows launch readiness for the complete assistant.

@@ -503,7 +503,8 @@ live until the image is destroyed. POSIX retains an unlinked descriptor;
 Windows candidate `RQ-CF-AGENT-027` replaces the write-capable creation handle
 with an exact file-id read-only identity anchor, retains a linked-path
 read/delete handle only after identity equality, and directly
-tests the `CreateProcessW` loader open. Protected Windows evidence remains required, and
+tests the `CreateProcessW` loader open. Both protected Windows workflows now
+pass the exact-head pathname, mapping, sharing, loader, and cleanup regressions;
 the POSIX/macOS descriptor representation is not yet claimed directly
 launchable. An allow path remains unavailable until an executor consumes
 exactly that private image and plan through the remaining platform transition
