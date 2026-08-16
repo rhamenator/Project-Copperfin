@@ -1,3 +1,14 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-022`, a move-only non-executing
+  workspace-agent session-revocation lease for the exact active generation.
+  Stop enters its serialized transition but waits for outstanding leases before
+  revoking or auditing; inactive, stale, non-process-capable, and transitioning
+  acquisitions fail closed. The lease exposes no invocation, target, native handle, or process
+  authority, and the launch-promotion gate remains invariantly denied pending
+  retained filesystem pins, executor consumption, sandbox, endpoint/descendant
+  controls, and outcome audit. The controller must outlive each short-lived
+  lease. Explicit generation-owned counting and condition-variable signaling
+  support multiple same-thread leases without recursive mutex acquisition.
+
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-020` at exact signed/DCO head `4069ee487`. All eleven protected
   checks passed in runs `31909056203`, `31909057274`, `31909057284`,
