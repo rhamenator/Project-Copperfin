@@ -1,3 +1,27 @@
+- 2026-08-16: Added candidate `RQ-CF-AGENT-025`, an opaque non-executing
+  workspace-agent launch-candidate composition boundary. The trusted controller
+  now constructs the serialized plan internally, acquires authenticated target
+  pins and the exact-generation revocation lease, repeats the complete
+  serialization preflight, and requires the retained executable and working-
+  directory identities plus immutable snapshot authentication before returning
+  one move-only candidate. The candidate exposes only validity and generation;
+  no caller-provided plan, path, argument, environment, byte snapshot, digest,
+  native handle, or execution operation is accepted or exposed. Releasing the
+  candidate closes pins before releasing its lease, and stop cannot complete
+  while the candidate remains live. The existing promotion gate remains
+  invariantly denied because exact-snapshot execution, sandbox, endpoint and
+  descendant controls, and outcome audit remain separate prerequisites.
+  Warning-as-error GCC Release workspace-agent execution passes `8/8`, fifty
+  repeated candidate-lifecycle runs pass, and ASan/UBSan/leak plus
+  ThreadSanitizer each pass `3/3` without findings. Licensing, community,
+  native-platform, GitHub Actions, isolation, supply-chain, and safety contracts
+  pass `7/7`, including the 338.24-second safety scan. Initial exact-head review
+  found and drove correction of an exception boundary that covered only final
+  candidate allocation; the complete preparation sequence now converts every
+  exception to a default content-free denial under RAII cleanup. Corrected-head
+  rereview then found and drove removal of the pre-`try` diagnostic allocation,
+  so even failure to allocate diagnostic text cannot unwind or grant authority.
+
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-024` at corrected exact signed/DCO head `9e9d6bf18`. All eleven
   protected checks passed in runs `31925258049`, `31925258995`, `31925258996`,

@@ -493,10 +493,13 @@ directory objects behind opaque platform handles/descriptors. Candidate
 handles/descriptors under a fixed cap, binds the private digest across pin
 acquisition, retains the acquisition stream's exact bytes as an immutable
 private snapshot, and can reverify only that snapshot without exposing its
-bytes, digest, or handle. An allow path remains unavailable until an executor
-consumes exactly the authenticated snapshot and revocation lease synchronously
-through direct launch with the remaining sandbox, endpoint/descendant, and
-outcome-audit controls.
+bytes, digest, or handle. Candidate `RQ-CF-AGENT-025` now constructs the exact
+serialized plan inside the trusted controller and composes it with authenticated
+pins and the exact-generation lease behind one opaque move-only candidate after
+a complete final revalidation. An allow path remains unavailable until an
+executor consumes exactly that candidate's private snapshot and plan through
+direct launch with the remaining sandbox, endpoint/descendant, and outcome-
+audit controls.
 Candidate `RQ-CF-AGENT-020` now returns exact session/child identities from
 successful preparation and exposes a separate trusted-host primitive that
 removes only that exact empty layout. It is intentionally disconnected from
@@ -506,7 +509,7 @@ descriptor verification followed by name-based `unlinkat` also retains a
 documented same-authority leaf-name race.
 Broader model/
 provider policy, OAuth and credential adapters, trusted-host audit-backed
-lifecycle cleanup, synchronous exact-snapshot executor consumption, endpoint
+lifecycle cleanup, exact-snapshot materialization and execution, endpoint
 policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog
 surfaces remain open.

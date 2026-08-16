@@ -1,5 +1,36 @@
 # Agent Handoff
 
+## V1 workspace-agent prepared launch-candidate composition
+
+Candidate `RQ-CF-AGENT-025` adds a non-executing composition boundary between
+the existing point-in-time plan and a future executor. The trusted controller
+constructs the serialized invocation internally, acquires the authenticated
+target pins and exact-generation revocation lease, repeats the entire
+serialization preflight, then requires exact retained target identities and
+immutable-snapshot authentication. It returns one opaque move-only candidate
+that exposes only validity and generation. Callers cannot submit a retained
+plan or inspect paths, arguments, environment, bytes, digest, or native handles.
+Candidate destruction closes the retained target objects before releasing the
+lease, and stop waits until the candidate is discarded.
+
+Warning-as-error GCC Release workspace-agent execution passes `8/8`; fifty
+repeated candidate-lifecycle runs pass; and ASan/UBSan/leak plus
+ThreadSanitizer each pass `3/3` without findings. Licensing, community,
+native-platform, GitHub Actions, isolation, supply-chain, and safety contracts
+pass `7/7`, including the 338.24-second safety scan. This slice does not
+enter the working directory, materialize or execute the snapshot, apply a
+sandbox, enforce endpoints or descendants, audit an outcome, or make the
+promotion gate allow. Protected-platform, review,
+merge, and qualified high-severity documentation evidence remain pending.
+Initial exact-head review found that the exception boundary covered only final
+candidate allocation; the corrected implementation wraps the complete
+preflight, pin, lease, revalidation, authentication, and construction sequence
+and returns a content-free denial after any exception.
+Corrected-head rereview found that prebuilding its diagnostic string could
+itself allocate before the exception boundary. The final fallback is a
+nothrow-default-constructed and nothrow-moved empty denial; it may omit a
+diagnostic only when preparation cannot safely construct one.
+
 ## V1 workspace-agent retained executable byte authentication
 
 Candidate `RQ-CF-AGENT-024` adds the next non-executing launch prerequisite.
