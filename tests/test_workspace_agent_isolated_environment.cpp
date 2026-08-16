@@ -209,6 +209,30 @@ int failures = 0;
 std::filesystem::path running_test_executable;
 
 #if defined(_WIN32)
+enum class TestProcessElevation {
+    not_elevated,
+    elevated,
+    unavailable
+};
+
+TestProcessElevation test_process_elevation() noexcept {
+    HANDLE token = nullptr;
+    if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token) == FALSE) {
+        return TestProcessElevation::unavailable;
+    }
+    TOKEN_ELEVATION elevation{};
+    DWORD returned = 0U;
+    const BOOL queried = ::GetTokenInformation(
+        token, TokenElevation, &elevation, sizeof(elevation), &returned);
+    (void)::CloseHandle(token);
+    if (queried == FALSE || returned < sizeof(elevation)) {
+        return TestProcessElevation::unavailable;
+    }
+    return elevation.TokenIsElevated == 0U
+        ? TestProcessElevation::not_elevated
+        : TestProcessElevation::elevated;
+}
+
 int run_test_driver_with_lua_token() {
     HANDLE process_token = nullptr;
     HANDLE lua_token = nullptr;
@@ -2109,13 +2133,13 @@ int main(int argc, char** argv) {
         argc == 2 && argv[1] != nullptr &&
         std::string_view(argv[1]) ==
             "--workspace-agent-non-elevated-test-driver-v1";
-    const auto elevation = copperfin::platform::current_process_elevation();
+    const auto elevation = test_process_elevation();
     if (!non_elevated_driver &&
-        elevation == copperfin::platform::CurrentProcessElevation::elevated) {
+        elevation == TestProcessElevation::elevated) {
         return run_test_driver_with_lua_token();
     }
     if (non_elevated_driver &&
-        elevation != copperfin::platform::CurrentProcessElevation::not_elevated) {
+        elevation != TestProcessElevation::not_elevated) {
         std::cerr << "FAIL: restricted Windows test driver remained elevated\n";
         return EXIT_FAILURE;
     }
