@@ -21,8 +21,11 @@ the new contract, corrected before its direct 2/2 rerun. The first Windows
 matrix exposed the windows.h max macro, corrected with enforced NOMINMAX, and
 the first Ubuntu run exposed rapid device/inode reuse after child replacement.
 Directory authority now also requires immutable creation identity while
-allowing controlled modification-time changes; the focused set passes 6/6 and
-one hundred repeated lifecycle runs pass. Remaining work is protected Windows/
+allowing controlled modification-time changes. Exact-head audit additionally
+closed the check/use gap by carrying that creation identity into the lower
+native-parent bracket instead of reverting to storage/file identity alone; its
+direct mismatch regression passes. The focused set passes 6/6 and one hundred
+repeated lifecycle runs pass. Remaining work is protected Windows/
 Ubuntu/macOS checks, exact-head review, and retained final-byte evidence. Do
 not claim execution readiness: Windows needs an explicit
 immutable-handle launch transition, and POSIX/macOS descriptor execution is not

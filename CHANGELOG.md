@@ -16,8 +16,12 @@
   corrected before its direct 2/2 rerun. The first protected Ubuntu run then
   proved that a rapidly recreated directory can reuse the same device/inode;
   cleanup and materialization now also require immutable platform creation
-  identity while allowing legitimate modification-time changes. The corrected
-  focused set and one hundred repeated lifecycle runs pass locally. Portable
+  identity while allowing legitimate modification-time changes. A subsequent
+  exact-head audit found that the lower materialization primitive initially
+  bracketed creation with storage/file identity only; it now carries and
+  rechecks the same nonzero creation identity through the retained native
+  parent object, with direct mismatch coverage. The corrected focused set and
+  one hundred repeated lifecycle runs pass locally. Portable
   launch transition, sandbox, endpoint/
   descendant policy, outcome audit, protected-platform evidence, and qualified
   high-severity review remain open.

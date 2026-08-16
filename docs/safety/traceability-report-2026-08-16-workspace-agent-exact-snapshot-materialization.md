@@ -48,10 +48,13 @@ safety-critical deployment.
   issuing-controller marker and is consumed by value. Cross-controller and
   moved-from candidates fail closed without exposing their contents.
 - Parent or leaf substitution: creation is exclusive beneath the exact private
-  temp-directory identity. Existing leaves are preserved. POSIX uses
-  descriptor-relative no-follow creation and immediate unlink; Windows retains
-  the parent identity around exclusive creation and retains the exact image
-  handle without ordinary write/delete sharing.
+  temp-directory storage/file/creation identity. The creation identity is
+  carried into and rechecked through the lower primitive's retained native
+  parent object, closing replacement between receipt validation and leaf
+  creation. Existing leaves are preserved. POSIX uses descriptor-relative
+  no-follow creation and immediate unlink; Windows retains the parent identity
+  around exclusive creation and retains the exact image handle without
+  ordinary write/delete sharing.
 - Partial write, allocation, or verification failure: construction is inside a
   catch-all denial boundary. Native resources remain under local RAII, and no
   image authority is returned until exact size, shape, and byte reread pass.
@@ -110,7 +113,11 @@ Current local evidence:
 - the first protected Ubuntu run reproduced immediate inode reuse after child
   replacement; requiring nonzero matching platform creation identity corrects
   that gap, and the corrected focused set passes 6/6 plus one hundred repeated
-  isolated-environment lifecycle runs; and
+  isolated-environment lifecycle runs;
+- a subsequent exact-head audit found and corrected a check/use gap where the
+  environment verified creation identity but the lower native-parent bracket
+  accepted only storage/file identity; direct creation-identity mismatch
+  coverage and the materialization machine contract pass; and
 - git diff --check is required before publication.
 
 Final-byte safety validation is required after this evidence update. Protected

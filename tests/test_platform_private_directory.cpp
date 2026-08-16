@@ -18,6 +18,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
+#include <fcntl.h>
 #include <sys/stat.h>
 #if defined(__APPLE__)
 #include <membership.h>
@@ -78,6 +79,7 @@ public:
 struct TestDirectoryIdentity {
     std::uint64_t storage_id = 0U;
     std::uint64_t file_id = 0U;
+    std::uint64_t creation_ticks = 0U;
 };
 
 TestDirectoryIdentity directory_identity(const std::filesystem::path& path) {
@@ -101,15 +103,44 @@ TestDirectoryIdentity directory_identity(const std::filesystem::path& path) {
         .storage_id = information.dwVolumeSerialNumber,
         .file_id =
             (static_cast<std::uint64_t>(information.nFileIndexHigh) << 32U) |
-            information.nFileIndexLow};
+            information.nFileIndexLow,
+        .creation_ticks =
+            (static_cast<std::uint64_t>(
+                 information.ftCreationTime.dwHighDateTime) << 32U) |
+            information.ftCreationTime.dwLowDateTime};
 #else
     struct stat status{};
     if (::stat(path.c_str(), &status) != 0) {
         return {};
     }
+    std::uint64_t creation_ticks = 0U;
+#if defined(__APPLE__)
+    if (status.st_birthtimespec.tv_sec >= 0 &&
+        status.st_birthtimespec.tv_nsec >= 0 &&
+        status.st_birthtimespec.tv_nsec < 1'000'000'000L) {
+        creation_ticks =
+            static_cast<std::uint64_t>(status.st_birthtimespec.tv_sec) *
+                1'000'000'000ULL +
+            static_cast<std::uint64_t>(status.st_birthtimespec.tv_nsec);
+    }
+#elif defined(__linux__) && defined(STATX_BTIME)
+    struct statx extended_status {};
+    if (::statx(
+            AT_FDCWD, path.c_str(), AT_SYMLINK_NOFOLLOW, STATX_BTIME,
+            &extended_status) == 0 &&
+        (extended_status.stx_mask & STATX_BTIME) != 0U &&
+        extended_status.stx_btime.tv_sec >= 0 &&
+        extended_status.stx_btime.tv_nsec < 1'000'000'000U) {
+        creation_ticks =
+            static_cast<std::uint64_t>(extended_status.stx_btime.tv_sec) *
+                1'000'000'000ULL +
+            extended_status.stx_btime.tv_nsec;
+    }
+#endif
     return {
         .storage_id = static_cast<std::uint64_t>(status.st_dev),
-        .file_id = static_cast<std::uint64_t>(status.st_ino)};
+        .file_id = static_cast<std::uint64_t>(status.st_ino),
+        .creation_ticks = creation_ticks};
 #endif
 }
 
@@ -376,7 +407,8 @@ void test_exact_private_executable_image_materialization() {
         0x43U, 0x6fU, 0x70U, 0x70U, 0x65U, 0x72U, 0x66U, 0x69U, 0x6eU};
     auto materialized =
         materialize_private_executable_image_in_verified_parent(
-            private_root, identity.storage_id, identity.file_id, leaf, bytes);
+            private_root, identity.storage_id, identity.file_id,
+            identity.creation_ticks, leaf, bytes);
     expect(materialized.materialized && materialized.image.has_value() &&
                materialized.image->valid() &&
                materialized.failure == PrivateExecutableImageFailure::none,
@@ -409,19 +441,30 @@ void test_exact_private_executable_image_materialization() {
     const auto wrong_parent =
         materialize_private_executable_image_in_verified_parent(
             private_root, identity.storage_id, identity.file_id ^ 1U,
-            "wrong-parent-image", bytes);
+            identity.creation_ticks, "wrong-parent-image", bytes);
     expect(!wrong_parent.materialized && !wrong_parent.image.has_value() &&
                wrong_parent.failure ==
                    PrivateExecutableImageFailure::parent_identity_changed &&
                !std::filesystem::exists(private_root / "wrong-parent-image"),
            "RQ-CF-AGENT-026: parent replacement must fail before image creation");
 
+    const auto wrong_creation =
+        materialize_private_executable_image_in_verified_parent(
+            private_root, identity.storage_id, identity.file_id,
+            identity.creation_ticks ^ 1U, "wrong-creation-image", bytes);
+    expect(!wrong_creation.materialized && !wrong_creation.image.has_value() &&
+               wrong_creation.failure ==
+                   PrivateExecutableImageFailure::parent_identity_changed &&
+               !std::filesystem::exists(
+                   private_root / "wrong-creation-image"),
+           "RQ-CF-AGENT-026: parent creation-identity mismatch must fail before image creation");
+
     const auto existing = private_root / "existing-image";
     std::ofstream(existing, std::ios::binary) << "preserve";
     const auto collision =
         materialize_private_executable_image_in_verified_parent(
             private_root, identity.storage_id, identity.file_id,
-            "existing-image", bytes);
+            identity.creation_ticks, "existing-image", bytes);
     std::ifstream preserved(existing, std::ios::binary);
     const std::string preserved_text{
         std::istreambuf_iterator<char>(preserved),

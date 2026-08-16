@@ -60,6 +60,7 @@ private:
         const std::filesystem::path&,
         std::uint64_t,
         std::uint64_t,
+        std::uint64_t,
         const std::filesystem::path&,
         std::span<const std::uint8_t>) noexcept;
 };
@@ -72,14 +73,15 @@ struct PrivateExecutableImageMaterializationResult {
 };
 
 // Creates exactly one absent direct file beneath an already-private parent
-// whose storage/file identity must match. The supplied bytes are written once
-// and reread from the retained native object before success. Existing objects
-// are never adopted, repaired, overwritten, or removed.
+// whose storage/file/creation identity must match. The supplied bytes are
+// written once and reread from the retained native object before success.
+// Existing objects are never adopted, repaired, overwritten, or removed.
 [[nodiscard]] PrivateExecutableImageMaterializationResult
 materialize_private_executable_image_in_verified_parent(
     const std::filesystem::path& parent,
     std::uint64_t expected_parent_storage_id,
     std::uint64_t expected_parent_file_id,
+    std::uint64_t expected_parent_creation_ticks,
     const std::filesystem::path& leaf,
     std::span<const std::uint8_t> bytes) noexcept;
 

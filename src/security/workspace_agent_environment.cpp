@@ -160,12 +160,13 @@ bool captured_directory_matches(const CapturedDirectory& captured) {
         captured.canonical_path, captured.canonical_path);
     // Directory size, link count, and modification time are mutable namespace
     // metadata: creating a later session layout legitimately changes them on
-    // the storage root. Storage and file identity bind the directory object;
-    // the physical inspection and type check continue to reject redirection,
-    // replacement, and wrong-kind targets.
+    // the storage root. Stable creation identity closes rapid storage/file-ID
+    // reuse without treating those mutable fields as object identity.
     if (!current.allowed ||
         current.identity.storage_id != captured.identity.storage_id ||
-        current.identity.file_id != captured.identity.file_id) {
+        current.identity.file_id != captured.identity.file_id ||
+        captured.identity.creation_ticks == 0U ||
+        current.identity.creation_ticks != captured.identity.creation_ticks) {
         return false;
     }
     std::error_code error;
@@ -732,6 +733,7 @@ WorkspaceAgentIsolatedEnvironmentBoundary::materialize_process_image(
                     temporary,
                     temporary_identity.storage_id,
                     temporary_identity.file_id,
+                    temporary_identity.creation_ticks,
                     std::filesystem::path(leaf), snapshot);
         if (!materialized.materialized || !materialized.image.has_value() ||
             !materialized.image->valid()) {

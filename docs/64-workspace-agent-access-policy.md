@@ -770,9 +770,9 @@ descriptor. On Windows, it creates an absent direct leaf, denies write and
 delete sharing, writes, flushes, and rereads the exact bytes, and retains the
 exact handle; destruction requests deletion through that handle before closing
 it. Existing leaves are preserved rather than adopted or overwritten. Parent
-identity is checked through a retained native object around creation, and every
-exception or verification failure releases partial resources without returning
-authority.
+storage/file/creation identity is checked through a retained native object
+around creation, and every exception or verification failure releases partial
+resources without returning authority.
 
 The materialized image is destroyed before the prepared candidate, so its
 native object is removed before target pins close and the exact-generation

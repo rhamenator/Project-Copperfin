@@ -68,6 +68,7 @@ foreach(token IN ITEMS
         "class PrivateExecutableImage"
         "PrivateExecutableImage(const PrivateExecutableImage&) = delete"
         "materialize_private_executable_image_in_verified_parent"
+        "std::uint64_t expected_parent_creation_ticks"
         "std::span<const std::uint8_t>")
     require_text(${platform_header} "${token}" "opaque portable image contract")
 endforeach()
@@ -89,6 +90,8 @@ foreach(token IN ITEMS
         "::unlinkat("
         "::fchmod(image_descriptor, 0500)"
         "status.st_nlink == 0"
+        "expected_creation_ticks != 0U"
+        "AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW"
         "native_matches_bytes")
     require_text(${platform_source} "${token}" "exact private-image primitive")
 endforeach()
@@ -98,6 +101,9 @@ require_text(${platform_source}
 require_text(${platform_source}
     "parent_descriptor, expected_parent_storage_id"
     "POSIX parent identity bracketing")
+require_text(${platform_source}
+    "expected_parent_file_id, expected_parent_creation_ticks"
+    "stable parent creation-identity bracketing")
 
 foreach(token IN ITEMS
         "class WorkspaceAgentMaterializedProcessImage"
@@ -109,6 +115,7 @@ foreach(token IN ITEMS
         "receipt->boundary_authority != cleanup_authority_"
         "same_directory_object("
         "left.creation_ticks != 0U"
+        "temporary_identity.creation_ticks"
         "materialize_private_executable_image_in_verified_parent("
         "std::span<const std::uint8_t> snapshot")
     require_text(${environment_source} "${token}" "receipt-bound image materialization")
@@ -133,6 +140,7 @@ endforeach()
 foreach(token IN ITEMS
         "RQ-CF-AGENT-026"
         "PrivateExecutableImage"
+        "wrong-creation-image"
         "materialize_private_executable_image_in_verified_parent")
     require_text(${platform_test} "${token}" "platform materialization regression")
 endforeach()

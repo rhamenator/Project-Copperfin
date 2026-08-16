@@ -53,6 +53,7 @@ bool handle_identity_matches(
     const HANDLE handle,
     const std::uint64_t expected_storage_id,
     const std::uint64_t expected_file_id,
+    const std::uint64_t expected_creation_ticks,
     const bool directory) noexcept {
     BY_HANDLE_FILE_INFORMATION information{};
     return handle != nullptr && handle != INVALID_HANDLE_VALUE &&
@@ -62,7 +63,11 @@ bool handle_identity_matches(
         (information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0U &&
         information.dwVolumeSerialNumber == expected_storage_id &&
         ((static_cast<std::uint64_t>(information.nFileIndexHigh) << 32U) |
-         information.nFileIndexLow) == expected_file_id;
+         information.nFileIndexLow) == expected_file_id &&
+        expected_creation_ticks != 0U &&
+        ((static_cast<std::uint64_t>(
+              information.ftCreationTime.dwHighDateTime) << 32U) |
+         information.ftCreationTime.dwLowDateTime) == expected_creation_ticks;
 }
 
 bool exact_file_shape(
@@ -145,13 +150,42 @@ void delete_exact_file(const HANDLE handle) noexcept {
 bool descriptor_identity_matches(
     const int descriptor,
     const std::uint64_t expected_storage_id,
-    const std::uint64_t expected_file_id) noexcept {
+    const std::uint64_t expected_file_id,
+    const std::uint64_t expected_creation_ticks) noexcept {
     struct stat status{};
-    return descriptor >= 0 && ::fstat(descriptor, &status) == 0 &&
-        S_ISDIR(status.st_mode) &&
-        static_cast<std::uint64_t>(status.st_dev) == expected_storage_id &&
-        static_cast<std::uint64_t>(status.st_ino) == expected_file_id &&
-        status.st_uid == ::geteuid() && (status.st_mode & 07777) == 0700;
+    if (descriptor < 0 || ::fstat(descriptor, &status) != 0 ||
+        !S_ISDIR(status.st_mode) ||
+        static_cast<std::uint64_t>(status.st_dev) != expected_storage_id ||
+        static_cast<std::uint64_t>(status.st_ino) != expected_file_id ||
+        status.st_uid != ::geteuid() || (status.st_mode & 07777) != 0700 ||
+        expected_creation_ticks == 0U) {
+        return false;
+    }
+    std::uint64_t creation_ticks = 0U;
+#if defined(__APPLE__)
+    if (status.st_birthtimespec.tv_sec >= 0 &&
+        status.st_birthtimespec.tv_nsec >= 0 &&
+        status.st_birthtimespec.tv_nsec < 1'000'000'000L) {
+        creation_ticks =
+            static_cast<std::uint64_t>(status.st_birthtimespec.tv_sec) *
+                1'000'000'000ULL +
+            static_cast<std::uint64_t>(status.st_birthtimespec.tv_nsec);
+    }
+#elif defined(__linux__) && defined(STATX_BTIME) && defined(AT_EMPTY_PATH)
+    struct statx extended_status {};
+    if (::statx(
+            descriptor, "", AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW, STATX_BTIME,
+            &extended_status) == 0 &&
+        (extended_status.stx_mask & STATX_BTIME) != 0U &&
+        extended_status.stx_btime.tv_sec >= 0 &&
+        extended_status.stx_btime.tv_nsec < 1'000'000'000U) {
+        creation_ticks =
+            static_cast<std::uint64_t>(extended_status.stx_btime.tv_sec) *
+                1'000'000'000ULL +
+            extended_status.stx_btime.tv_nsec;
+    }
+#endif
+    return creation_ticks == expected_creation_ticks;
 }
 
 bool exact_file_shape(
@@ -282,6 +316,7 @@ materialize_private_executable_image_in_verified_parent(
     const std::filesystem::path& parent,
     const std::uint64_t expected_parent_storage_id,
     const std::uint64_t expected_parent_file_id,
+    const std::uint64_t expected_parent_creation_ticks,
     const std::filesystem::path& leaf,
     const std::span<const std::uint8_t> bytes) noexcept {
     PrivateExecutableImageMaterializationResult result;
@@ -301,7 +336,8 @@ materialize_private_executable_image_in_verified_parent(
             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
         if (!handle_identity_matches(
                 parent_handle, expected_parent_storage_id,
-                expected_parent_file_id, true) ||
+                expected_parent_file_id, expected_parent_creation_ticks,
+                true) ||
             !verify_private_directory(parent).ok) {
             if (parent_handle != nullptr && parent_handle != INVALID_HANDLE_VALUE) {
                 (void)::CloseHandle(parent_handle);
@@ -326,7 +362,8 @@ materialize_private_executable_image_in_verified_parent(
             return result;
         }
         const bool parent_stable = handle_identity_matches(
-            parent_handle, expected_parent_storage_id, expected_parent_file_id, true);
+            parent_handle, expected_parent_storage_id, expected_parent_file_id,
+            expected_parent_creation_ticks, true);
         (void)::CloseHandle(parent_handle);
         if (!parent_stable || !write_all(image_handle, bytes) ||
             !exact_file_shape(image_handle, bytes.size()) ||
@@ -345,7 +382,7 @@ materialize_private_executable_image_in_verified_parent(
             parent.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
         if (!descriptor_identity_matches(
                 parent_descriptor, expected_parent_storage_id,
-                expected_parent_file_id) ||
+                expected_parent_file_id, expected_parent_creation_ticks) ||
             !verify_private_directory(parent).ok) {
             if (parent_descriptor >= 0) {
                 (void)::close(parent_descriptor);
@@ -370,7 +407,8 @@ materialize_private_executable_image_in_verified_parent(
         const bool unlinked = ::unlinkat(
             parent_descriptor, leaf_name.c_str(), 0) == 0;
         const bool parent_stable = descriptor_identity_matches(
-            parent_descriptor, expected_parent_storage_id, expected_parent_file_id);
+            parent_descriptor, expected_parent_storage_id,
+            expected_parent_file_id, expected_parent_creation_ticks);
         (void)::close(parent_descriptor);
         if (!unlinked || !parent_stable ||
             ::fchmod(image_descriptor, 0500) != 0 ||
