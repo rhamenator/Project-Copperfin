@@ -19,8 +19,16 @@ hundred additional corrected focused session repetitions pass, fresh Clang 21
 ASan/UBSan/leak execution passes `3/3`, fresh GCC 15 ThreadSanitizer focused
 execution passes `1/1`, and the community/workflow/isolation/safety contracts
 pass `5/5`, including the corrected final-byte 330.80-second safety scan.
-Protected matrix,
-exact-head review, and high-severity sign-off evidence remain pending.
+Automated review found one real P2 in the initial shared-mutex design: multiple
+same-thread leases could recursively acquire a non-recursive mutex. Corrected
+signed/DCO head `7b12d9812` uses explicit counted leases, passed all eleven
+protected checks in runs `31916980542`, `31916981432`, `31916981399`,
+`31916981411`, and `31916981406`, and received a clean corrected-head automated
+review after the P2 thread was answered and resolved. PR `#5034` merged into
+`v1-development` as `67fbb1b69`. Implementation evidence is complete;
+the evidence-only licensing/community/isolation/supply-chain/safety contracts
+pass `5/5`, including the 324.44-second safety scan. High-severity
+documentation sign-off remains pending.
 
 ## V1 workspace-agent audited pending-layout cleanup
 
