@@ -416,7 +416,8 @@ void test_exact_private_executable_image_materialization() {
 #if defined(_WIN32)
     const HANDLE retained_reader = ::CreateFileW(
         (private_root / leaf).c_str(), GENERIC_READ,
-        FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
     LARGE_INTEGER retained_size{};
     std::vector<std::uint8_t> retained_bytes(bytes.size());
