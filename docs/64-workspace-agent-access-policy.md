@@ -778,9 +778,11 @@ The materialized image is destroyed before the prepared candidate, so its
 native object is removed before target pins close and the exact-generation
 lease releases. Stop therefore waits until the complete materialized launch
 authority is discarded. This slice corrects identity-bound empty-layout cleanup
-to compare stable storage/file identity rather than mutable directory
-timestamps, because controlled create/unlink operations legitimately update
-the directory's metadata.
+to compare stable storage/file/creation identity rather than mutable
+modification timestamps, because controlled create/unlink operations
+legitimately update the directory's metadata. Creation identity is required
+and fails closed where the target filesystem cannot supply it; this prevents
+rapid remove/recreate inode reuse from impersonating the original directory.
 
 This remains a non-executing prerequisite. Windows' retained non-write-shared
 handle is intentionally immutable but is not yet claimed compatible with a

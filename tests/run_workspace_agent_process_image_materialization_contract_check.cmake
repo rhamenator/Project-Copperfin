@@ -28,6 +28,8 @@ set(platform_header include/copperfin/platform/private_executable_image.h)
 set(platform_source src/platform/private_executable_image.cpp)
 set(environment_header include/copperfin/security/workspace_agent_environment.h)
 set(environment_source src/security/workspace_agent_environment.cpp)
+set(containment_header include/copperfin/security/physical_path_containment.h)
+set(containment_source src/security/physical_path_containment.cpp)
 set(session_header include/copperfin/security/workspace_agent_session.h)
 set(session_source src/security/workspace_agent_session.cpp)
 set(platform_test tests/test_platform_private_directory.cpp)
@@ -38,6 +40,8 @@ foreach(path IN ITEMS
         ${platform_source}
         ${environment_header}
         ${environment_source}
+        ${containment_header}
+        ${containment_source}
         ${session_header}
         ${session_source}
         ${platform_test}
@@ -45,6 +49,13 @@ foreach(path IN ITEMS
     if(NOT EXISTS "${SOURCE_DIR}/${path}")
         message(FATAL_ERROR "Process-image materialization input is missing: ${path}")
     endif()
+endforeach()
+
+require_text(${containment_header} "std::uint64_t creation_ticks = 0U"
+    "stable directory creation identity field")
+foreach(token IN ITEMS "ftCreationTime" "st_birthtimespec" "STATX_BTIME")
+    require_text(${containment_source} "${token}"
+        "cross-platform directory creation identity capture")
 endforeach()
 
 require_text(CMakeLists.txt "src/platform/private_executable_image.cpp"
@@ -97,6 +108,7 @@ endforeach()
 foreach(token IN ITEMS
         "receipt->boundary_authority != cleanup_authority_"
         "same_directory_object("
+        "left.creation_ticks != 0U"
         "materialize_private_executable_image_in_verified_parent("
         "std::span<const std::uint8_t> snapshot")
     require_text(${environment_source} "${token}" "receipt-bound image materialization")

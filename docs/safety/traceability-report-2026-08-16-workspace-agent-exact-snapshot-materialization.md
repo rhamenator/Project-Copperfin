@@ -60,9 +60,11 @@ safety-critical deployment.
   A live result therefore delays stop until every launch-adjacent resource is
   discarded.
 - Stable directory identity: legitimate controlled image creation changes
-  directory timestamps. Cleanup binds storage/file object identity and
-  separately revalidates every direct private child instead of treating mutable
-  timestamp metadata as object identity.
+  modification timestamps. Cleanup binds storage/file/creation identity and
+  separately revalidates every direct private child. A missing creation time
+  fails closed. This prevents rapid remove/recreate inode reuse from
+  impersonating the original directory without treating mutable modification
+  metadata as object identity.
 - Windows residual: retaining a handle that denies writers protects
   immutability but is not claimed compatible with a future CreateProcessW file
   open. A verified launch-transition primitive is still required.
@@ -104,7 +106,11 @@ Current local evidence:
   together at 2/2;
 - focused regressions prove cross-controller rejection, source-mutation
   isolation, POSIX path absence, stop blocking, image-before-lease cleanup,
-  existing-leaf preservation, and unchanged invariant launch denial; and
+  existing-leaf preservation, and unchanged invariant launch denial;
+- the first protected Ubuntu run reproduced immediate inode reuse after child
+  replacement; requiring nonzero matching platform creation identity corrects
+  that gap, and the corrected focused set passes 6/6 plus one hundred repeated
+  isolated-environment lifecycle runs; and
 - git diff --check is required before publication.
 
 Final-byte safety validation is required after this evidence update. Protected

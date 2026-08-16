@@ -13,7 +13,12 @@
   ThreadSanitizer at 2/2, and the broader workspace-agent set at 11/11 pass
   locally. The initial 339.49-second safety scan also passes; its only broader-
   sweep finding was missing isolation metadata for the new machine contract,
-  corrected before its direct 2/2 rerun. Portable launch transition, sandbox, endpoint/
+  corrected before its direct 2/2 rerun. The first protected Ubuntu run then
+  proved that a rapidly recreated directory can reuse the same device/inode;
+  cleanup and materialization now also require immutable platform creation
+  identity while allowing legitimate modification-time changes. The corrected
+  focused set and one hundred repeated lifecycle runs pass locally. Portable
+  launch transition, sandbox, endpoint/
   descendant policy, outcome audit, protected-platform evidence, and qualified
   high-severity review remain open.
 

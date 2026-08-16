@@ -181,7 +181,10 @@ bool captured_private_directory_matches(const CapturedDirectory& captured) {
 bool same_directory_object(
     const PhysicalPathIdentity& left,
     const PhysicalPathIdentity& right) noexcept {
-    return left.storage_id == right.storage_id && left.file_id == right.file_id;
+    return left.storage_id == right.storage_id &&
+        left.file_id == right.file_id &&
+        left.creation_ticks != 0U &&
+        left.creation_ticks == right.creation_ticks;
 }
 
 std::string_view configured_directory_identity_failure(

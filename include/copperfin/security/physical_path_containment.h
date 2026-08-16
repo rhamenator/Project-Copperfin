@@ -29,8 +29,17 @@ struct PhysicalPathIdentity {
     std::uint64_t file_size = 0U;
     std::uint64_t modified_ticks = 0U;
     std::uint64_t link_count = 0U;
+    // Stable object-creation time when the platform/filesystem supplies it.
+    // Directory authority that must survive legitimate child mutations may
+    // require this field in addition to storage/file identity.
+    std::uint64_t creation_ticks = 0U;
 
-    bool operator==(const PhysicalPathIdentity&) const = default;
+    bool operator==(const PhysicalPathIdentity& other) const noexcept {
+        return storage_id == other.storage_id && file_id == other.file_id &&
+            file_size == other.file_size &&
+            modified_ticks == other.modified_ticks &&
+            link_count == other.link_count;
+    }
 };
 
 struct PhysicalPathContainmentResult {

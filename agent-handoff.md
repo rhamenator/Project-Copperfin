@@ -17,9 +17,14 @@ Local GCC Release behavior and materialization/private-directory contracts pass
 ThreadSanitizer passes 2/2, the broader workspace-agent set passes 11/11, and
 focused workflow path-filter validation passes. The initial 339.49-second
 safety scan passes; the surrounding sweep found missing isolation metadata for
-the new contract, corrected before its direct 2/2 rerun. Remaining work for
-this slice is protected Windows/Ubuntu/macOS checks, exact-head review, and
-retained final-byte evidence. Do not claim execution readiness: Windows needs an explicit
+the new contract, corrected before its direct 2/2 rerun. The first Windows
+matrix exposed the windows.h max macro, corrected with enforced NOMINMAX, and
+the first Ubuntu run exposed rapid device/inode reuse after child replacement.
+Directory authority now also requires immutable creation identity while
+allowing controlled modification-time changes; the focused set passes 6/6 and
+one hundred repeated lifecycle runs pass. Remaining work is protected Windows/
+Ubuntu/macOS checks, exact-head review, and retained final-byte evidence. Do
+not claim execution readiness: Windows needs an explicit
 immutable-handle launch transition, and POSIX/macOS descriptor execution is not
 yet established. Sandbox, working-directory entry, endpoint/descendant policy,
 and outcome audit remain separate gaps.
