@@ -212,7 +212,7 @@ namespace {
 
 std::atomic<std::uint64_t> next_process_execution_operation_id{1U};
 
-std::string make_process_execution_instance_id() noexcept {
+std::string make_process_execution_attempt_namespace() noexcept {
     std::array<unsigned char, 16U> bytes{};
 #if defined(_WIN32)
     if (::BCryptGenRandom(
@@ -256,11 +256,6 @@ std::string make_process_execution_instance_id() noexcept {
     } catch (...) {
         return {};
     }
-}
-
-const std::string& process_execution_instance_id() noexcept {
-    static const std::string identifier = make_process_execution_instance_id();
-    return identifier;
 }
 
 std::uint64_t allocate_process_execution_operation_id() noexcept {
@@ -1432,8 +1427,12 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
         const std::uint64_t generation = launch.session_generation();
         const WorkspaceAgentAccessMode effective_mode =
             environment_plan.effective_mode;
-        const std::string& process_instance_id =
-            process_execution_instance_id();
+        // A fresh operating-system-random namespace for each attempt avoids
+        // inheriting a cached namespace and counter position across fork().
+        // The durable correlation key remains the schema-v2
+        // (process_instance_id, operation_id) pair for compatibility.
+        const std::string process_instance_id =
+            make_process_execution_attempt_namespace();
         if (process_instance_id.empty()) {
             unavailable.diagnostic_code =
                 "workspace_agent.process_execution_namespace_unavailable";

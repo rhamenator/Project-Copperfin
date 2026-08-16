@@ -38,14 +38,14 @@
   gaps. Private image and working-directory launch names now come from their
   authenticated handles as stable local-volume device paths; every renameable working-
   directory component remains held without delete sharing until process
-  creation commits. Process intent/outcome pairs now use a 128-bit operating-
-  system-random process-instance identifier plus one process-wide, nonwrapping
-  operation-ID allocator, giving distinct controllers, host processes, and
-  restarts sharing a durable sink collision-resistant correlation identities;
+  creation commits. Process intent/outcome pairs now use a fresh 128-bit
+  operating-system-random attempt namespace plus one process-wide, nonwrapping
+  operation-ID allocator. This gives controllers, host processes, restarts, and
+  post-fork children sharing a durable sink collision-resistant correlation identities;
   random-source failure denies execution before intent. Windows coverage
   directly attempts a working-directory ancestor rename while pins remain live,
-  and portable
-  coverage requires nonzero distinct cross-controller operation IDs.
+  and portable coverage requires valid distinct per-attempt namespaces plus
+  nonzero distinct cross-controller operation IDs.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. The fail-closed launcher now performs one suspended,

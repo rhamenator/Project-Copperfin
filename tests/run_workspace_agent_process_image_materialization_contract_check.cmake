@@ -68,15 +68,16 @@ foreach(path IN ITEMS
 endforeach()
 
 foreach(token IN ITEMS
-        "make_process_execution_instance_id()"
-        "process_execution_instance_id()"
+        "make_process_execution_attempt_namespace()"
         "BCRYPT_USE_SYSTEM_PREFERRED_RNG"
         "::getrandom("
         "::arc4random_buf("
         ".process_instance_id = process_instance_id")
     require_text(${session_source} "${token}"
-        "cross-process audit correlation namespace")
+        "cross-process and post-fork audit correlation namespace")
 endforeach()
+forbid_text(${session_source} "static const std::string identifier"
+    "fork-inherited cached process namespace")
 require_text(${audit_sink_source} "event.process_instance_id.size() == 32U"
     "strict process-instance identifier validation")
 
@@ -182,6 +183,8 @@ foreach(token IN ITEMS
         "polyglot.process.working_directory_path_unsupported"
         "polyglot.process.executable_path_unsupported"
         "CREATE_SUSPENDED"
+        "PROC_THREAD_ATTRIBUTE_JOB_LIST"
+        "::TerminateJobObject(job, 1U)"
         "::AssignProcessToJobObject("
         "launch_committed(launch_committed_context)"
         "current_process_elevation()"

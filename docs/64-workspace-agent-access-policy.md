@@ -867,13 +867,15 @@ different logon session. Only the fixed child ends enter the process attribute
 handle list; the parent ends are made non-inheritable before process creation.
 
 Before any attempt, the controller durably submits a content-free schema-v2
-intent with generation, a 128-bit operating-system-random process-instance
-identifier, and an operation identifier from one process-wide, nonwrapping
-allocator. The pair gives distinct controllers, host processes, and process
-restarts sharing a durable sink a collision-resistant correlation identity.
-Failure to obtain the process-instance identifier denies execution before
-intent. A failed intent audit consumes and destroys the one-attempt image and starts
-nothing. The Windows launcher uses the private image path only internally as
+intent with generation, a fresh 128-bit operating-system-random attempt
+namespace carried in the schema-v2 `process_instance_id` field, and an operation
+identifier from one process-wide, nonwrapping allocator. A fresh namespace for
+every attempt prevents a forked child from inheriting the parent's correlation
+identity and gives distinct controllers, host processes, and process restarts
+sharing a durable sink a collision-resistant correlation identity. Failure to
+obtain the attempt namespace denies execution before intent. A failed intent
+audit consumes and destroys the one-attempt image and starts nothing. The
+Windows launcher uses the private image path only internally as
 `lpApplicationName`, preserves the authenticated original executable spelling
 as `argv[0]`, passes the fixed double-NUL environment and a handle-derived
 stable local-volume device working-directory path, never invokes a shell or PATH search, and admits only the

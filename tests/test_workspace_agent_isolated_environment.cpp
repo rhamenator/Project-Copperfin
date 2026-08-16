@@ -1170,7 +1170,8 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
         executed.attempted && executed.intent_audit_committed &&
                executed.outcome_audit_committed && executed.operation_id != 0U &&
                executed.operation_id != first_controller_operation_id &&
-               executed.process_instance_id ==
+               valid_process_instance_id(executed.process_instance_id) &&
+               executed.process_instance_id !=
                    first_controller_process_instance_id &&
                executed.process.started && executed.process.completed() &&
                executed.process.process_tree_closed &&
@@ -1215,7 +1216,8 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
     expect(!executed.attempted && executed.intent_audit_committed &&
                executed.outcome_audit_committed && executed.operation_id != 0U &&
                executed.operation_id != first_controller_operation_id &&
-               executed.process_instance_id ==
+               valid_process_instance_id(executed.process_instance_id) &&
+               executed.process_instance_id !=
                    first_controller_process_instance_id &&
                !executed.process.started &&
                executed.diagnostic_code ==

@@ -683,19 +683,75 @@ BoundedProcessResult run_windows(
     std::string create_diagnostic = "polyglot.process.launch_failed";
     DWORD diagnostic_native_error = create_error;
     if (created == FALSE && create_error == ERROR_INVALID_PARAMETER) {
+        STARTUPINFOEXW diagnostic_startup = startup_info;
+        diagnostic_startup.lpAttributeList = nullptr;
+        SIZE_T diagnostic_attribute_bytes = 0U;
+        const BOOL diagnostic_attribute_sizing =
+            ::InitializeProcThreadAttributeList(
+                nullptr, 2U, 0U, &diagnostic_attribute_bytes);
+        const DWORD diagnostic_attribute_sizing_error = ::GetLastError();
+        std::vector<std::uint8_t> diagnostic_attribute_storage;
+        bool diagnostic_attributes_ready =
+            diagnostic_attribute_sizing == FALSE &&
+            diagnostic_attribute_sizing_error == ERROR_INSUFFICIENT_BUFFER &&
+            diagnostic_attribute_bytes != 0U;
+        if (diagnostic_attributes_ready) {
+            try {
+                diagnostic_attribute_storage.resize(diagnostic_attribute_bytes);
+            } catch (...) {
+                diagnostic_attributes_ready = false;
+                diagnostic_native_error = ERROR_NOT_ENOUGH_MEMORY;
+            }
+        } else {
+            diagnostic_native_error =
+                diagnostic_attribute_sizing_error == ERROR_SUCCESS
+                ? ERROR_INVALID_PARAMETER
+                : diagnostic_attribute_sizing_error;
+        }
+        HANDLE diagnostic_jobs[]{job};
+        bool diagnostic_attribute_list_initialized = false;
+        if (diagnostic_attributes_ready) {
+            diagnostic_startup.lpAttributeList =
+                reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(
+                    diagnostic_attribute_storage.data());
+            diagnostic_attribute_list_initialized =
+                ::InitializeProcThreadAttributeList(
+                    diagnostic_startup.lpAttributeList, 2U, 0U,
+                    &diagnostic_attribute_bytes) != FALSE;
+            diagnostic_attributes_ready = diagnostic_attribute_list_initialized;
+            if (diagnostic_attributes_ready) {
+                diagnostic_attributes_ready =
+                    ::UpdateProcThreadAttribute(
+                        diagnostic_startup.lpAttributeList, 0U,
+                        PROC_THREAD_ATTRIBUTE_HANDLE_LIST, inherited_handles,
+                        sizeof(inherited_handles), nullptr, nullptr) != FALSE &&
+                    ::UpdateProcThreadAttribute(
+                        diagnostic_startup.lpAttributeList, 0U,
+                        PROC_THREAD_ATTRIBUTE_JOB_LIST, diagnostic_jobs,
+                        sizeof(diagnostic_jobs), nullptr, nullptr) != FALSE;
+            }
+            if (!diagnostic_attributes_ready) {
+                diagnostic_native_error = ::GetLastError();
+            }
+        }
         PROCESS_INFORMATION diagnostic_process{};
-        const BOOL diagnostic_created = ::CreateProcessW(
-            executable.c_str(), diagnostic_command_line.data(), nullptr, nullptr,
-            TRUE,
-            CREATE_NO_WINDOW | CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
-                EXTENDED_STARTUPINFO_PRESENT,
-            environment_block.data(), nullptr, &startup_info.StartupInfo,
-            &diagnostic_process);
+        const BOOL diagnostic_created = diagnostic_attributes_ready
+            ? ::CreateProcessW(
+                  executable.c_str(), diagnostic_command_line.data(), nullptr,
+                  nullptr, TRUE,
+                  CREATE_NO_WINDOW | CREATE_SUSPENDED |
+                      CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT,
+                  environment_block.data(), nullptr,
+                  &diagnostic_startup.StartupInfo, &diagnostic_process)
+            : FALSE;
         if (diagnostic_created != FALSE) {
             create_diagnostic =
                 "polyglot.process.working_directory_path_unsupported";
-            const BOOL terminated =
-                ::TerminateProcess(diagnostic_process.hProcess, 1U);
+            // The diagnostic child entered the kill-on-close Job Object
+            // atomically at process creation and has never been resumed.
+            // Closing the job below therefore retains cleanup authority even
+            // if explicit tree termination fails.
+            const BOOL terminated = ::TerminateJobObject(job, 1U);
             const DWORD termination_error =
                 terminated == FALSE ? ::GetLastError() : ERROR_SUCCESS;
             const DWORD wait_result = terminated != FALSE
@@ -711,8 +767,15 @@ BoundedProcessResult run_windows(
                     : ERROR_TIMEOUT;
             }
         } else {
-            create_diagnostic = "polyglot.process.executable_path_unsupported";
-            diagnostic_native_error = ::GetLastError();
+            if (diagnostic_attributes_ready) {
+                create_diagnostic =
+                    "polyglot.process.executable_path_unsupported";
+                diagnostic_native_error = ::GetLastError();
+            }
+        }
+        if (diagnostic_attribute_list_initialized) {
+            ::DeleteProcThreadAttributeList(
+                diagnostic_startup.lpAttributeList);
         }
     }
     ::DeleteProcThreadAttributeList(startup_info.lpAttributeList);

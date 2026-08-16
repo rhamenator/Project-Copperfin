@@ -30,7 +30,8 @@ use.
 | `DQ-workspace-agent-windows-execution-009`: the private image launch name shall be derived from its authenticated handle as a stable local-volume device path (volume GUID preferred, validated `GLOBALROOT\\Device\\HarddiskVolumeN` fallback); every renameable component below that root through the private image parent shall remain held without delete sharing through process completion, and a final pathname reopen under that retained chain shall match the authenticated image identity before launch | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-010`: anonymous transport pipes shall use a protected current-logon and restricted-code DACL, remain creatable by a restricted non-elevated host, and expose only the fixed child endpoints through the explicit inheritance list | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-011`: the working directory shall be converted from its authenticated handle to the same accepted stable local-volume device form, and every renameable component beneath that explicitly parsed device root shall remain held without delete sharing until `CreateProcessW` has consumed the path | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-007` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-012`: each process intent/outcome pair shall use one 128-bit operating-system-random process-instance identifier plus a nonzero operation identifier from a process-wide, nonwrapping counter so records from controllers, processes, and restarts sharing a durable sink have collision-resistant correlation identities; random-source failure shall deny execution before intent | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-008` | `HZ-system-failure-01` |
+| `DQ-workspace-agent-windows-execution-012`: each process intent/outcome pair shall use one fresh 128-bit operating-system-random attempt namespace plus a nonzero operation identifier from a process-wide, nonwrapping counter so records from controllers, processes, restarts, and post-fork children sharing a durable sink have collision-resistant correlation identities; random-source failure shall deny execution before intent | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-008` | `HZ-system-failure-01` |
+| `DQ-workspace-agent-windows-execution-013`: any pre-start compatibility diagnostic child shall enter the same kill-on-close Job Object atomically at creation, remain suspended, never execute user code, and retain cleanup ownership even if explicit termination fails | `DV-workspace-agent-windows-execution-003`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
   exercise one-attempt consumption, sandbox and platform denial, failed-intent
@@ -129,11 +130,11 @@ observer does not admit a writer, deleter, or renamer.
   prompts, credentials, receipts, and native errors are excluded. Outcome-audit
   failure remains visible but cannot retroactively stop a completed attempt.
   Crash-recoverable intent reconciliation is not yet implemented.
-  Correlation uses a 128-bit identifier from the operating system's random
-  source for each host-process lifetime plus one process-wide nonwrapping
-  counter. Distinct controllers share the counter, while distinct processes and
-  restarts receive collision-resistant correlation namespaces. Random-source
-  failure denies execution before intent.
+  Correlation uses a fresh 128-bit namespace from the operating system's random
+  source for each attempt plus one process-wide nonwrapping counter. Distinct
+  controllers share the counter, while distinct processes, restarts, and
+  post-fork children receive collision-resistant correlation namespaces.
+  Random-source failure denies execution before intent.
 - Callback reentry: same-controller lifecycle changes from an audit or
   cancellation callback's own thread are not supported. They fail closed
   immediately, preventing either callback from waiting on its own retained
@@ -214,7 +215,10 @@ Windows, but `CreateProcessW` rejected the combined stable application and
 working-directory device paths with `ERROR_INVALID_PARAMETER`. A bounded
 diagnostic correction retries only that pre-start failure with the same stable
 application and inherited current directory, still suspended. It immediately
-terminates the never-resumed process and reports whether the unsupported
-parameter is the stable application path or `lpCurrentDirectory`; it never
-falls back to executing with a weaker pathname. A fresh protected result is
-required before choosing the final compatible design.
+places the diagnostic child into the kill-on-close Job Object atomically at
+creation, terminates the never-resumed process, and reports whether the
+unsupported parameter is the stable application path or `lpCurrentDirectory`;
+it never falls back to executing with a weaker pathname. Job ownership remains
+effective if explicit termination fails, so the diagnostic cannot be orphaned.
+A fresh protected result is required before choosing the final compatible
+design.
