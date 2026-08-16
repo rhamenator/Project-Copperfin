@@ -65,7 +65,7 @@ private:
     [[nodiscard]] const std::filesystem::path*
     windows_launch_target() const noexcept;
     [[nodiscard]] const std::filesystem::path*
-    windows_diagnostic_launch_target() const noexcept;
+    windows_native_launch_target() const noexcept;
 
     std::unique_ptr<Impl> impl_;
 

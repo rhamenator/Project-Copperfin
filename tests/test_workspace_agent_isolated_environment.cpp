@@ -32,6 +32,9 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
+#else
+#include <sys/wait.h>
+#include <unistd.h>
 #endif
 
 namespace {
@@ -505,6 +508,32 @@ WorkspaceAgentSessionAuditCommitResult capture_audit(
 WorkspaceAgentSessionAuditSink audit_sink(AuditCapture& capture) {
     return {.commit = capture_audit, .context = &capture};
 }
+
+#if !defined(_WIN32)
+struct ForkingIntentAudit {
+    pid_t original_process = 0;
+    pid_t child_process = -1;
+};
+
+WorkspaceAgentSessionAuditCommitResult capture_audit_with_intent_fork(
+    const WorkspaceAgentSessionAuditEvent& event,
+    void* context) {
+    auto* capture = static_cast<ForkingIntentAudit*>(context);
+    if (capture == nullptr) {
+        return {};
+    }
+    if (::getpid() == capture->original_process &&
+        capture->child_process < 0 &&
+        event.kind == copperfin::security::WorkspaceAgentSessionEventKind::
+            process_launch_intent) {
+        capture->child_process = ::fork();
+        if (capture->child_process < 0) {
+            return {};
+        }
+    }
+    return {.ok = true, .receipt = "isolated-environment-fork-receipt"};
+}
+#endif
 
 struct ReentrantStopAudit {
     WorkspaceAgentSessionController* controller = nullptr;
@@ -1351,6 +1380,55 @@ void test_process_intent_audit_reentrant_stop_is_denied() {
     expect(controller.stop(audit_sink()).revoked &&
                controller.cleanup_pending_session_layout(audit_sink()).cleaned,
            "RQ-CF-AGENT-028: denied reentrant stop must preserve a later explicit revocation and cleanup");
+}
+
+void test_process_intent_audit_forked_continuation_is_denied() {
+#if !defined(_WIN32)
+    TempTree tree;
+    WorkspaceAgentSessionController controller(
+        tree.workspace, tree.execution_configuration(),
+        tree.parser_configuration());
+    const auto started = controller.start(
+        unrestricted_activation_request(), audit_sink());
+    auto prepared = controller.prepare_process_launch_candidate(
+        execution_invocation_request(started.session.generation));
+    if (!prepared.candidate.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: forked-audit fixture must prepare one candidate");
+        return;
+    }
+    auto materialized = controller.materialize_process_launch_candidate(
+        std::move(*prepared.candidate));
+    if (!materialized.launch.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: forked-audit fixture must materialize one image");
+        return;
+    }
+
+    ForkingIntentAudit audit{.original_process = ::getpid()};
+    const auto executed = controller.execute_materialized_process_launch(
+        std::move(*materialized.launch), WorkspaceAgentProcessExecutionControls{},
+        {.commit = capture_audit_with_intent_fork, .context = &audit});
+    if (::getpid() != audit.original_process) {
+        const bool child_denied = executed.intent_audit_committed &&
+            !executed.attempted && !executed.outcome_audit_committed &&
+            executed.diagnostic_code ==
+                "workspace_agent.process_execution_process_changed_after_intent_audit";
+        ::_exit(child_denied ? EXIT_SUCCESS : EXIT_FAILURE);
+    }
+
+    int child_status = 0;
+    const bool child_reaped = audit.child_process > 0 &&
+        ::waitpid(audit.child_process, &child_status, 0) == audit.child_process;
+    expect(child_reaped && WIFEXITED(child_status) &&
+               WEXITSTATUS(child_status) == EXIT_SUCCESS &&
+               executed.intent_audit_committed &&
+               executed.outcome_audit_committed && !executed.attempted,
+           "RQ-CF-AGENT-028: a callback-side fork must not let the child continuation execute or duplicate the outcome correlation pair");
+    expect(controller.stop(audit_sink()).revoked &&
+               controller.cleanup_pending_session_layout(audit_sink()).cleaned,
+           "RQ-CF-AGENT-028: callback-side fork denial must preserve parent revocation and cleanup");
+#endif
 }
 
 void test_process_cancellation_reentrant_stop_is_denied() {
@@ -2304,6 +2382,7 @@ int main(int argc, char** argv) {
     test_materialized_execution_is_windows_unrestricted_and_audited();
     test_committed_execution_releases_revocation_lease_before_child_exit();
     test_process_intent_audit_reentrant_stop_is_denied();
+    test_process_intent_audit_forked_continuation_is_denied();
     test_process_cancellation_reentrant_stop_is_denied();
     test_process_intent_audit_allows_concurrent_stop_to_revoke();
     test_windows_serialization_requires_exact_parser_authority();

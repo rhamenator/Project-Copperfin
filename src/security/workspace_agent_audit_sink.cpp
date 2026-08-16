@@ -120,11 +120,12 @@ bool allowed_start_is_valid(const WorkspaceAgentSessionAuditEvent& event) {
 }
 
 bool process_launch_failure_diagnostic_is_valid(std::string_view diagnostic) {
-    static constexpr std::array<std::string_view, 17U> diagnostics{{
+    static constexpr std::array<std::string_view, 18U> diagnostics{{
         "polyglot.process.exit_query_failed",
         "polyglot.process.executable_path_unsupported",
         "polyglot.process.input_write_failed",
         "polyglot.process.input_writer_create_failed",
+        "polyglot.process.image_binding_failed",
         "polyglot.process.job_assign_failed",
         "polyglot.process.job_configure_failed",
         "polyglot.process.job_create_failed",

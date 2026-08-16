@@ -30,8 +30,10 @@
 #elif defined(__linux__)
 #include <cerrno>
 #include <sys/random.h>
+#include <unistd.h>
 #elif defined(__APPLE__)
 #include <stdlib.h>
+#include <unistd.h>
 #endif
 
 namespace copperfin::security {
@@ -211,6 +213,15 @@ static_assert(
 namespace {
 
 std::atomic<std::uint64_t> next_process_execution_operation_id{1U};
+
+std::uint64_t current_process_execution_identity() noexcept {
+#if defined(_WIN32)
+    return static_cast<std::uint64_t>(::GetCurrentProcessId());
+#else
+    const auto process_id = ::getpid();
+    return process_id > 0 ? static_cast<std::uint64_t>(process_id) : 0U;
+#endif
+}
 
 std::string make_process_execution_attempt_namespace() noexcept {
     std::array<unsigned char, 16U> bytes{};
@@ -1427,6 +1438,13 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
         const std::uint64_t generation = launch.session_generation();
         const WorkspaceAgentAccessMode effective_mode =
             environment_plan.effective_mode;
+        const std::uint64_t execution_process_identity =
+            current_process_execution_identity();
+        if (execution_process_identity == 0U) {
+            unavailable.diagnostic_code =
+                "workspace_agent.process_execution_namespace_unavailable";
+            return unavailable;
+        }
         // A fresh operating-system-random namespace for each attempt avoids
         // inheriting a cached namespace and counter position across fork().
         // The durable correlation key remains the schema-v2
@@ -1582,6 +1600,16 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
         if (!intent_audit.committed) {
             result.diagnostic_code =
                 "workspace_agent.process_execution_intent_audit_failed";
+            return result;
+        }
+        // An application-supplied synchronous sink can fork on POSIX and let
+        // both continuations return from the callback. Only the process that
+        // allocated this correlation pair may execute or submit its outcome;
+        // the forked continuation releases its private launch authority and
+        // stops before either action.
+        if (current_process_execution_identity() != execution_process_identity) {
+            result.diagnostic_code =
+                "workspace_agent.process_execution_process_changed_after_intent_audit";
             return result;
         }
 

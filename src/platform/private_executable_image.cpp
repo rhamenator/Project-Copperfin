@@ -639,12 +639,14 @@ public:
     Impl(
         HANDLE handle_value,
         std::filesystem::path stable_path_value,
-        std::filesystem::path diagnostic_path_value,
+        std::filesystem::path launch_path_value,
+        std::filesystem::path native_path_value,
         OwnedDirectoryChain directory_chain_value,
         std::size_t size_value) noexcept
         : handle(handle_value),
           stable_path(std::move(stable_path_value)),
-          diagnostic_path(std::move(diagnostic_path_value)),
+          launch_path(std::move(launch_path_value)),
+          native_path(std::move(native_path_value)),
           directory_chain(std::move(directory_chain_value)),
           size(size_value) {}
     ~Impl() {
@@ -662,7 +664,8 @@ public:
     }
     HANDLE handle = INVALID_HANDLE_VALUE;
     std::filesystem::path stable_path;
-    std::filesystem::path diagnostic_path;
+    std::filesystem::path launch_path;
+    std::filesystem::path native_path;
     OwnedDirectoryChain directory_chain;
 #else
     Impl(int descriptor_value, std::size_t size_value) noexcept
@@ -706,18 +709,18 @@ bool PrivateExecutableImage::matches_bytes(
 const std::filesystem::path*
 PrivateExecutableImage::windows_launch_target() const noexcept {
 #if defined(_WIN32)
-    return impl_ != nullptr && impl_->valid() ? &impl_->stable_path : nullptr;
+    return impl_ != nullptr && impl_->valid()
+        ? &impl_->launch_path
+        : nullptr;
 #else
     return nullptr;
 #endif
 }
 
 const std::filesystem::path*
-PrivateExecutableImage::windows_diagnostic_launch_target() const noexcept {
+PrivateExecutableImage::windows_native_launch_target() const noexcept {
 #if defined(_WIN32)
-    return impl_ != nullptr && impl_->valid()
-        ? &impl_->diagnostic_path
-        : nullptr;
+    return impl_ != nullptr && impl_->valid() ? &impl_->native_path : nullptr;
 #else
     return nullptr;
 #endif
@@ -795,7 +798,11 @@ materialize_private_executable_image_in_verified_parent(
             stable_volume_path_for_handle(image_handle.get());
         const auto dos_image_path =
             dos_volume_path_for_handle(image_handle.get());
-        if (!stable_image_path.has_value() || !dos_image_path.has_value()) {
+        const auto native_image_path =
+            final_path_for_handle(image_handle.get(), VOLUME_NAME_NT);
+        if (!stable_image_path.has_value() || !dos_image_path.has_value() ||
+            !native_image_path.has_value() ||
+            native_image_path->rfind(L"\\Device\\HarddiskVolume", 0U) != 0U) {
             result.failure =
                 PrivateExecutableImageFailure::launch_transition_failed;
             return result;
@@ -850,13 +857,13 @@ materialize_private_executable_image_in_verified_parent(
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
-        // CreateProcessW reopens the image by pathname. Use the handle-derived
-        // stable local-volume device path so drive-letter, SUBST, and mapped-
-        // drive names cannot be redirected. Retain a no-delete-share handle for every renameable
-        // directory below that root through the private parent, then repeat the
-        // leaf identity check. This prevents any
-        // ancestor name from being renamed or replaced between materialization
-        // and the loader's open of the authenticated leaf.
+        // Retain a no-delete-share handle for every renameable directory below
+        // the handle-derived stable local-volume root through the private
+        // parent, then repeat both stable- and DOS-name identity checks. The
+        // loader needs the DOS form, but bounded creation later verifies the
+        // suspended process's native image name against this same retained
+        // object before resume. Together these checks deny ancestor and DOS-
+        // namespace redirection rather than trusting either pathname alone.
         OwnedDirectoryChain directory_chain;
         if (!directory_chain.lock(stable_image_path->parent_path())) {
             result.failure =
@@ -866,12 +873,12 @@ materialize_private_executable_image_in_verified_parent(
         OwnedHandle final_path_check(open_path_for_exact_image(
             *stable_image_path, GENERIC_READ,
             FILE_SHARE_READ | FILE_SHARE_DELETE));
-        OwnedHandle diagnostic_path_check(open_path_for_exact_image(
+        OwnedHandle launch_path_check(open_path_for_exact_image(
             *dos_image_path, GENERIC_READ,
             FILE_SHARE_READ | FILE_SHARE_DELETE));
         if (!image_identity_matches(final_path_check.get(), image_identity) ||
             !image_identity_matches(
-                diagnostic_path_check.get(), image_identity) ||
+                launch_path_check.get(), image_identity) ||
             !image_identity_matches(launch_handle.get(), image_identity) ||
             !handle_identity_matches(
                 parent_handle.get(), expected_parent_storage_id,
@@ -881,18 +888,20 @@ materialize_private_executable_image_in_verified_parent(
                 PrivateExecutableImageFailure::launch_transition_failed;
             return result;
         }
-        diagnostic_path_check.reset();
+        launch_path_check.reset();
         final_path_check.reset();
         parent_handle.reset();
         // Finish every potentially throwing copy before the new-expression.
         // Allocation then precedes the no-throw handle/chain transfers, so an
         // exception cannot strand raw Windows authority outside RAII ownership.
         std::filesystem::path retained_image_path = *stable_image_path;
-        std::filesystem::path retained_diagnostic_path = *dos_image_path;
+        std::filesystem::path retained_launch_path = *dos_image_path;
+        std::filesystem::path retained_native_path = *native_image_path;
         auto impl = std::unique_ptr<PrivateExecutableImage::Impl>(
             new PrivateExecutableImage::Impl(
                 launch_handle.get(), std::move(retained_image_path),
-                std::move(retained_diagnostic_path),
+                std::move(retained_launch_path),
+                std::move(retained_native_path),
                 std::move(directory_chain), bytes.size()));
         (void)launch_handle.release();
 #else

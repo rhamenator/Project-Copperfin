@@ -283,6 +283,7 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
     std::uint64_t diagnostic_operation_id = 10U;
     for (const std::string diagnostic : {
              "polyglot.process.executable_path_unsupported",
+             "polyglot.process.image_binding_failed",
              "polyglot.process.working_directory_path_unsupported"}) {
         auto unsupported_intent = process_intent;
         auto unsupported_path = process_outcome;
@@ -292,7 +293,7 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
         unsupported_path.diagnostic_code = diagnostic;
         expect(sink.commit(unsupported_intent, sink.context).ok &&
                    sink.commit(unsupported_path, sink.context).ok,
-               "RQ-CF-AGENT-028: the durable sink must admit only fixed content-free device-path compatibility diagnostics");
+               "RQ-CF-AGENT-028: the durable sink must admit only fixed content-free path-compatibility and image-binding diagnostics");
     }
     const std::string before = read_bytes(file_sink.log_path());
 

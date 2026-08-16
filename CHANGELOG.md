@@ -41,27 +41,29 @@
   creation commits. Process intent/outcome pairs now use a fresh 128-bit
   operating-system-random attempt namespace plus one process-wide, nonwrapping
   operation-ID allocator. This gives controllers, host processes, restarts, and
-  post-fork children sharing a durable sink collision-resistant correlation identities;
-  random-source failure denies execution before intent. Windows coverage
+  later post-fork attempts sharing a durable sink collision-resistant
+  correlation identities. A process-identity check across the synchronous
+  intent callback prevents a callback-side fork from executing or submitting a
+  duplicate outcome; random-source or process-identity failure denies execution
+  before intent. Windows coverage
   directly attempts a working-directory ancestor rename while pins remain live,
   and portable coverage requires valid distinct per-attempt namespaces plus
   nonzero distinct cross-controller operation IDs.
   Protected Windows then proved that `CreateProcessW` rejects the authenticated
-  stable device-form application name with error 87. A diagnostic-only extended
-  DOS name is now derived from the same retained handle, identity-matched under
-  the locked stable hierarchy, and used with the still-stable working directory
-  only in a never-resumed, atomically Job-owned compatibility probe; it is not
-  an execution fallback.
+  stable device-form application name with error 87, while run `31961744412`
+  proved a handle-derived extended DOS application name remains compatible with
+  the stable working directory. Production creation now uses that DOS name only
+  under the retained stable hierarchy, gives the suspended child atomic
+  kill-on-close Job ownership, and compares its kernel-reported native image
+  name with the authenticated handle-derived native name before commitment or
+  resume. Query or mismatch fails closed without running user code.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
-  `CreateProcessW`. The fail-closed launcher now performs one suspended,
-  never-resumed diagnostic retry after that exact error to distinguish an
-  unsupported stable application name from an unsupported current-directory
-  form; it terminates the diagnostic process immediately and does not execute
-  through a weaker path.
+  `CreateProcessW`. That diagnostic-only transition is retained as evidence,
+  not as a production retry.
   The public
   promotion gate remains invariantly denied. Focused local Debug and warning-as-error GCC 15
-  Release execution pass `5/5`; fresh Clang 21 ASan/UBSan/leak passes `5/5`
+  Release execution pass `7/7`; fresh Clang 21 ASan/UBSan/leak passes `7/7`
   without findings; and licensing, community, release-license, isolation,
   supply-chain, and safety contracts pass `6/6`, including the corrected-head 328.63-second
   safety scan. Protected Windows and cross-platform denial evidence plus

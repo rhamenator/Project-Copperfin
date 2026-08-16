@@ -31,6 +31,7 @@
 #endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <psapi.h>
 #else
 #include <csignal>
 #include <fcntl.h>
@@ -489,24 +490,43 @@ void write_windows_input_pipe(
     (void)::CloseHandle(write_handle);
 }
 
+bool created_process_image_matches(
+    const HANDLE process,
+    const std::filesystem::path& expected_native_path) noexcept {
+    try {
+        const std::wstring& expected = expected_native_path.native();
+        if (process == nullptr || process == INVALID_HANDLE_VALUE ||
+            expected.empty() || expected.size() > 32768U ||
+            expected.rfind(L"\\Device\\HarddiskVolume", 0U) != 0U) {
+            return false;
+        }
+        std::vector<wchar_t> observed(32769U);
+        const DWORD written = ::K32GetProcessImageFileNameW(
+            process, observed.data(), static_cast<DWORD>(observed.size()));
+        return written != 0U && written < observed.size() &&
+            written == expected.size() &&
+            ::CompareStringOrdinal(
+                observed.data(), static_cast<int>(written), expected.data(),
+                static_cast<int>(expected.size()), TRUE) == CSTR_EQUAL;
+    } catch (...) {
+        return false;
+    }
+}
+
 BoundedProcessResult run_windows(
     const BoundedProcessRequest& request,
     const std::u16string* retained_command_line = nullptr,
     const std::u16string* retained_environment_block = nullptr,
     void (*launch_committed)(void*) noexcept = nullptr,
     void* launch_committed_context = nullptr,
-    const std::string* diagnostic_executable_path = nullptr) {
+    const std::filesystem::path* expected_native_image_path = nullptr) {
     BoundedProcessResult result;
     const auto started_at = Clock::now();
     int conversion_error = 0;
     const std::wstring executable = utf8_to_wide(request.executable_path, conversion_error);
-    const std::wstring diagnostic_executable = diagnostic_executable_path == nullptr
-        ? std::wstring{}
-        : utf8_to_wide(*diagnostic_executable_path, conversion_error);
     const std::wstring working_directory =
         utf8_to_wide(request.working_directory, conversion_error);
-    if (conversion_error != 0 || executable.empty() || working_directory.empty() ||
-        (diagnostic_executable_path != nullptr && diagnostic_executable.empty())) {
+    if (conversion_error != 0 || executable.empty() || working_directory.empty()) {
         result.status = BoundedProcessStatus::launch_failed;
         result.error_code = "polyglot.process.launch_failed";
         result.native_error = conversion_error == 0 ? ERROR_INVALID_PARAMETER : conversion_error;
@@ -532,7 +552,6 @@ BoundedProcessResult run_windows(
     }
     std::wstring command_line(
         command_line_units.begin(), command_line_units.end());
-    std::wstring diagnostic_command_line = command_line;
 
     std::u16string environment_block;
     if (retained_environment_block != nullptr) {
@@ -628,7 +647,7 @@ BoundedProcessResult run_windows(
     startup_info.StartupInfo.hStdError = stderr_write;
     SIZE_T attribute_bytes = 0U;
     const BOOL attribute_sizing =
-        ::InitializeProcThreadAttributeList(nullptr, 1U, 0U, &attribute_bytes);
+        ::InitializeProcThreadAttributeList(nullptr, 2U, 0U, &attribute_bytes);
     const DWORD attribute_sizing_error = ::GetLastError();
     if (attribute_sizing != FALSE ||
         attribute_sizing_error != ERROR_INSUFFICIENT_BUFFER || attribute_bytes == 0U) {
@@ -651,11 +670,15 @@ BoundedProcessResult run_windows(
     startup_info.lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(
         attribute_storage.data());
     HANDLE inherited_handles[]{stdin_read, stdout_write, stderr_write};
+    HANDLE inherited_jobs[]{job};
     if (::InitializeProcThreadAttributeList(
-            startup_info.lpAttributeList, 1U, 0U, &attribute_bytes) == FALSE ||
+            startup_info.lpAttributeList, 2U, 0U, &attribute_bytes) == FALSE ||
         ::UpdateProcThreadAttribute(
             startup_info.lpAttributeList, 0U, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-            inherited_handles, sizeof(inherited_handles), nullptr, nullptr) == FALSE) {
+            inherited_handles, sizeof(inherited_handles), nullptr, nullptr) == FALSE ||
+        ::UpdateProcThreadAttribute(
+            startup_info.lpAttributeList, 0U, PROC_THREAD_ATTRIBUTE_JOB_LIST,
+            inherited_jobs, sizeof(inherited_jobs), nullptr, nullptr) == FALSE) {
         result.status = BoundedProcessStatus::launch_failed;
         result.error_code = "polyglot.process.output_pipe_failed";
         result.native_error = static_cast<int>(::GetLastError());
@@ -685,114 +708,14 @@ BoundedProcessResult run_windows(
         &startup_info.StartupInfo,
         &process_info);
     const DWORD create_error = created == FALSE ? ::GetLastError() : ERROR_SUCCESS;
-    std::string create_diagnostic = "polyglot.process.launch_failed";
-    DWORD diagnostic_native_error = create_error;
-    if (created == FALSE && create_error == ERROR_INVALID_PARAMETER) {
-        STARTUPINFOEXW diagnostic_startup = startup_info;
-        diagnostic_startup.lpAttributeList = nullptr;
-        SIZE_T diagnostic_attribute_bytes = 0U;
-        const BOOL diagnostic_attribute_sizing =
-            ::InitializeProcThreadAttributeList(
-                nullptr, 2U, 0U, &diagnostic_attribute_bytes);
-        const DWORD diagnostic_attribute_sizing_error = ::GetLastError();
-        std::vector<std::uint8_t> diagnostic_attribute_storage;
-        bool diagnostic_attributes_ready =
-            diagnostic_attribute_sizing == FALSE &&
-            diagnostic_attribute_sizing_error == ERROR_INSUFFICIENT_BUFFER &&
-            diagnostic_attribute_bytes != 0U;
-        if (diagnostic_attributes_ready) {
-            try {
-                diagnostic_attribute_storage.resize(diagnostic_attribute_bytes);
-            } catch (...) {
-                diagnostic_attributes_ready = false;
-                diagnostic_native_error = ERROR_NOT_ENOUGH_MEMORY;
-            }
-        } else {
-            diagnostic_native_error =
-                diagnostic_attribute_sizing_error == ERROR_SUCCESS
-                ? ERROR_INVALID_PARAMETER
-                : diagnostic_attribute_sizing_error;
-        }
-        HANDLE diagnostic_jobs[]{job};
-        bool diagnostic_attribute_list_initialized = false;
-        if (diagnostic_attributes_ready) {
-            diagnostic_startup.lpAttributeList =
-                reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(
-                    diagnostic_attribute_storage.data());
-            diagnostic_attribute_list_initialized =
-                ::InitializeProcThreadAttributeList(
-                    diagnostic_startup.lpAttributeList, 2U, 0U,
-                    &diagnostic_attribute_bytes) != FALSE;
-            diagnostic_attributes_ready = diagnostic_attribute_list_initialized;
-            if (diagnostic_attributes_ready) {
-                diagnostic_attributes_ready =
-                    ::UpdateProcThreadAttribute(
-                        diagnostic_startup.lpAttributeList, 0U,
-                        PROC_THREAD_ATTRIBUTE_HANDLE_LIST, inherited_handles,
-                        sizeof(inherited_handles), nullptr, nullptr) != FALSE &&
-                    ::UpdateProcThreadAttribute(
-                        diagnostic_startup.lpAttributeList, 0U,
-                        PROC_THREAD_ATTRIBUTE_JOB_LIST, diagnostic_jobs,
-                        sizeof(diagnostic_jobs), nullptr, nullptr) != FALSE;
-            }
-            if (!diagnostic_attributes_ready) {
-                diagnostic_native_error = ::GetLastError();
-            }
-        }
-        PROCESS_INFORMATION diagnostic_process{};
-        const BOOL diagnostic_created =
-            diagnostic_attributes_ready && diagnostic_executable_path != nullptr
-            ? ::CreateProcessW(
-                  diagnostic_executable.c_str(), diagnostic_command_line.data(),
-                  nullptr, nullptr, TRUE,
-                  CREATE_NO_WINDOW | CREATE_SUSPENDED |
-                      CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT,
-                  environment_block.data(), working_directory.c_str(),
-                  &diagnostic_startup.StartupInfo, &diagnostic_process)
-            : FALSE;
-        if (diagnostic_created != FALSE) {
-            create_diagnostic =
-                "polyglot.process.executable_path_unsupported";
-            // The diagnostic child entered the kill-on-close Job Object
-            // atomically at process creation and has never been resumed.
-            // Closing the job below therefore retains cleanup authority even
-            // if explicit tree termination fails.
-            const BOOL terminated = ::TerminateJobObject(job, 1U);
-            const DWORD termination_error =
-                terminated == FALSE ? ::GetLastError() : ERROR_SUCCESS;
-            const DWORD wait_result = terminated != FALSE
-                ? ::WaitForSingleObject(diagnostic_process.hProcess, 5000U)
-                : WAIT_FAILED;
-            (void)::CloseHandle(diagnostic_process.hThread);
-            (void)::CloseHandle(diagnostic_process.hProcess);
-            if (terminated == FALSE || wait_result != WAIT_OBJECT_0) {
-                create_diagnostic =
-                    "polyglot.process.tree_termination_failed";
-                diagnostic_native_error = terminated == FALSE
-                    ? termination_error
-                    : ERROR_TIMEOUT;
-            }
-        } else {
-            if (diagnostic_attributes_ready &&
-                diagnostic_executable_path != nullptr) {
-                create_diagnostic =
-                    "polyglot.process.working_directory_path_unsupported";
-                diagnostic_native_error = ::GetLastError();
-            }
-        }
-        if (diagnostic_attribute_list_initialized) {
-            ::DeleteProcThreadAttributeList(
-                diagnostic_startup.lpAttributeList);
-        }
-    }
     ::DeleteProcThreadAttributeList(startup_info.lpAttributeList);
     (void)::CloseHandle(stdin_read);
     (void)::CloseHandle(stdout_write);
     (void)::CloseHandle(stderr_write);
     if (created == FALSE) {
         result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = std::move(create_diagnostic);
-        result.native_error = static_cast<int>(diagnostic_native_error);
+        result.error_code = "polyglot.process.launch_failed";
+        result.native_error = static_cast<int>(create_error);
         (void)::CloseHandle(job);
         (void)::CloseHandle(stdin_write);
         (void)::CloseHandle(stdout_read);
@@ -831,11 +754,12 @@ BoundedProcessResult run_windows(
             stderr_thread.join();
         }
     };
-    if (::AssignProcessToJobObject(job, process_info.hProcess) == FALSE) {
+    if (expected_native_image_path != nullptr &&
+        !created_process_image_matches(
+            process_info.hProcess, *expected_native_image_path)) {
         result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.job_assign_failed";
-        result.native_error = static_cast<int>(::GetLastError());
-        if (::TerminateProcess(process_info.hProcess, 1U) == FALSE) {
+        result.error_code = "polyglot.process.image_binding_failed";
+        if (::TerminateJobObject(job, 1U) == FALSE) {
             result.native_error = static_cast<int>(::GetLastError());
             result.error_code = "polyglot.process.tree_termination_failed";
         } else {
@@ -1627,11 +1551,12 @@ BoundedProcessResult run_bounded_windows_private_executable(
     try {
 #if defined(_WIN32)
         const auto* path = image.windows_launch_target();
-        const auto* diagnostic_path = image.windows_diagnostic_launch_target();
+        const auto* native_path = image.windows_native_launch_target();
         const auto& command_line = request.command_line;
         const auto& environment = request.environment_block;
-        if (path == nullptr || diagnostic_path == nullptr || !image.valid() ||
-            !path->is_absolute() || !diagnostic_path->is_absolute() ||
+        if (path == nullptr || native_path == nullptr ||
+            !image.valid() ||
+            !path->is_absolute() ||
             request.working_directory.empty() ||
             !request.working_directory.is_absolute() || command_line.empty() ||
             command_line.find(u'\0') != std::u16string::npos ||
@@ -1646,12 +1571,9 @@ BoundedProcessResult run_bounded_windows_private_executable(
         }
         BoundedProcessRequest transport = request.transport;
         transport.executable_path = path_to_utf8_string(*path);
-        const std::string diagnostic_executable_path_value =
-            path_to_utf8_string(*diagnostic_path);
         transport.working_directory =
             path_to_utf8_string(request.working_directory);
         if (transport.executable_path.empty() ||
-            diagnostic_executable_path_value.empty() ||
             transport.working_directory.empty()) {
             return invalid_request();
         }
@@ -1664,7 +1586,7 @@ BoundedProcessResult run_bounded_windows_private_executable(
         return run_windows(
             transport, &command_line, &environment,
             request.launch_committed, request.launch_committed_context,
-            &diagnostic_executable_path_value);
+            native_path);
 #else
         static_cast<void>(image);
         static_cast<void>(request);

@@ -870,10 +870,12 @@ Before any attempt, the controller durably submits a content-free schema-v2
 intent with generation, a fresh 128-bit operating-system-random attempt
 namespace carried in the schema-v2 `process_instance_id` field, and an operation
 identifier from one process-wide, nonwrapping allocator. A fresh namespace for
-every attempt prevents a forked child from inheriting the parent's correlation
-identity and gives distinct controllers, host processes, and process restarts
-sharing a durable sink a collision-resistant correlation identity. Failure to
-obtain the attempt namespace denies execution before intent. A failed intent
+every attempt gives distinct controllers, host processes, process restarts, and
+later post-fork attempts sharing a durable sink a collision-resistant
+correlation identity. The controller also records its process identity before
+the synchronous intent callback and, if that callback forks, stops the child
+continuation before execution or outcome submission. Failure to obtain the
+attempt namespace or process identity denies execution before intent. A failed intent
 audit consumes and destroys the one-attempt image and starts nothing. The
 Windows launcher uses the private image path only internally as
 `lpApplicationName`, preserves the authenticated original executable spelling
@@ -888,7 +890,15 @@ with the retained handle's own delete access. That observer proves
 the now-locked pathname still resolves to the authenticated image identity.
 Those locks remain owned through bounded process completion, so an ancestor
 rename or replacement cannot redirect `CreateProcessW` to different bytes.
-The retained target pins apply the same stable-volume naming and complete
+Because `CreateProcessW` does not accept that stable device form as
+`lpApplicationName`, the loader receives a handle-derived extended DOS name.
+The process enters the kill-on-close Job Object atomically at creation and
+remains suspended while the launcher queries the kernel-reported native image
+name and compares it, case-insensitively and in full, with the native device
+name captured from the retained authenticated image handle. A changed drive,
+`SUBST`, or mount mapping therefore produces an image-binding failure and the
+Job-owned child is terminated without resuming user code.
+The retained target pins apply stable-volume naming and complete
 hierarchy retention to the working directory until process creation commits,
 so leaf, ancestor, drive-letter, `SUBST`, and mapped-drive redirection fail
 closed rather than changing the child's current directory.
@@ -899,20 +909,18 @@ this v1 executor; unrestricted execution is limited to authenticated local-
 volume targets.
 Protected Windows execution at exact head `0023f74e9` directly proved that
 `CreateProcessW` rejects the authenticated stable device-form application name
-with `ERROR_INVALID_PARAMETER`. The private image therefore also retains a
-handle-derived extended DOS-form diagnostic name only after reopening that name
-and matching the same volume/file/creation/size identity under the already-
-retained stable hierarchy. A never-resumed, Job-owned compatibility probe uses
-that DOS application name with the still-stable working-directory name. Success
-proves the executable-name limitation while preserving the working-directory
-boundary; failure reports the working-directory compatibility gap. The DOS name
-is not yet an execution fallback and the probe never resumes user code.
+with `ERROR_INVALID_PARAMETER`. Protected run `31961744412` then created the
+never-resumed DOS-name probe with the same stable working directory, proving the
+working-directory form compatible. That bounded diagnostic evidence selected
+the final DOS-name/native-image-binding design above; the diagnostic retry is
+not part of the production execution path.
 The exact-digest
 `self_contained_launch_image_v1` admission contract requires system-only load-
 time dependencies: the private directory deliberately does not preserve the
-mutable source executable directory for adjacent-DLL lookup. It creates the process suspended, assigns it to a
-kill-on-close Job Object, then releases the plan, target pins, and generation
-lease before starting threads or resuming the child. Consequently stop may
+mutable source executable directory for adjacent-DLL lookup. It creates the
+process suspended and atomically Job-owned, verifies the loaded image binding,
+then releases the plan, target pins, and generation lease before starting
+threads or resuming the child. Consequently stop may
 revoke the session after launch commitment without waiting for a long-running
 child, while the private executable image remains owned until the complete
 bounded process tree closes.

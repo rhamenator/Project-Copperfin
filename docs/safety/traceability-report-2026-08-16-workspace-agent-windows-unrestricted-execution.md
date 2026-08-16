@@ -22,17 +22,18 @@ use.
 | `DQ-workspace-agent-windows-execution-001`: only one same-controller exact-generation materialized launch in explicitly warned unrestricted-local mode on a confirmed non-elevated Windows host may reach the private launcher | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-002`: caller controls shall contain only bounded transport and cancellation fields; the executable, arguments, environment, working directory, mode, flags, and native authority shall come only from the retained plan and private image | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-003`: a durable content-free intent shall precede any process attempt and a status-consistent correlated content-free outcome shall be submitted after image cleanup; failed intent audit shall start nothing | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-004`: the child shall start suspended, inherit only fixed standard handles, enter a kill-on-close Job Object before resume, obey bounded transport/time/cancellation controls, and leave no authorized descendant | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-005`: Job Object assignment shall commit launch and release the exact-generation lease so stop can revoke before a long-running child exits, while the private image remains owned until the process tree closes | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-004`: the child shall start suspended, inherit only fixed standard handles, enter a kill-on-close Job Object atomically at creation, obey bounded transport/time/cancellation controls, and leave no authorized descendant | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-005`: confirmed Job Object ownership and pre-resume image binding shall commit launch and release the exact-generation lease so stop can revoke before a long-running child exits, while the private image remains owned until the process tree closes | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-006`: workspace-sandbox, stale or cross-controller authority, invalid controls, elevated or unknown elevation, and non-Windows hosts shall consume the attempt and fail closed without execution; the public promotion gate shall remain denied | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-007`: admitted images shall attest launch-wide system-only dependency behavior; the private image shall not fall back to mutable source-adjacent or working-directory DLLs | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-004` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-008`: same-controller lifecycle reentry on a synchronous audit or cancellation callback's own thread shall fail closed without waiting on that stack's revocation lease; unrelated concurrent stop shall retain normal revocation semantics | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-005` | `HZ-system-failure-01` |
-| `DQ-workspace-agent-windows-execution-009`: the private image launch name shall be derived from its authenticated handle as a stable local-volume device path (volume GUID preferred, validated `GLOBALROOT\\Device\\HarddiskVolumeN` fallback); every renameable component below that root through the private image parent shall remain held without delete sharing through process completion, and a final pathname reopen under that retained chain shall match the authenticated image identity before launch | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-009`: the private image's stable identity path shall be derived from its authenticated handle as a local-volume device path (volume GUID preferred, validated `GLOBALROOT\\Device\\HarddiskVolumeN` fallback); every renameable component below that root through the private image parent shall remain held without delete sharing through process completion, and final stable- and DOS-path reopens under that retained chain shall match the authenticated image identity before creation | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-010`: anonymous transport pipes shall use a protected current-logon and restricted-code DACL, remain creatable by a restricted non-elevated host, and expose only the fixed child endpoints through the explicit inheritance list | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-011`: the working directory shall be converted from its authenticated handle to the same accepted stable local-volume device form, and every renameable component beneath that explicitly parsed device root shall remain held without delete sharing until `CreateProcessW` has consumed the path | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-007` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-012`: each process intent/outcome pair shall use one fresh 128-bit operating-system-random attempt namespace plus a nonzero operation identifier from a process-wide, nonwrapping counter so records from controllers, processes, restarts, and post-fork children sharing a durable sink have collision-resistant correlation identities; random-source failure shall deny execution before intent | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-008` | `HZ-system-failure-01` |
+| `DQ-workspace-agent-windows-execution-012`: each process intent/outcome pair shall use one fresh 128-bit operating-system-random attempt namespace plus a nonzero operation identifier from a process-wide, nonwrapping counter so records from controllers, processes, restarts, and later post-fork attempts sharing a durable sink have collision-resistant correlation identities; random-source or process-identity failure shall deny execution before intent, and a process-identity change across the synchronous intent callback shall deny the forked continuation before execution or outcome submission | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-008` | `HZ-system-failure-01` |
 | `DQ-workspace-agent-windows-execution-013`: any pre-start compatibility diagnostic child shall enter the same kill-on-close Job Object atomically at creation, remain suspended, never execute user code, and retain cleanup ownership even if explicit termination fails | `DV-workspace-agent-windows-execution-003`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-014`: after protected Windows proves the stable device-form application name unsupported, a diagnostic-only DOS application name shall be derived from the authenticated handle, identity-matched under the retained stable hierarchy, and used only by a never-resumed Job-owned probe that retains the stable working directory; it shall not become an execution fallback without post-creation image binding | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-015`: after protected Windows proves the DOS application name and stable working-directory combination compatible, production creation shall use that handle-derived DOS name only while the stable hierarchy remains retained, place the suspended child into the kill-on-close Job Object atomically, compare its kernel-reported native image name with the native device name captured from the authenticated image handle, and terminate without resume on query or binding failure | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
   exercise one-attempt consumption, sandbox and platform denial, failed-intent
@@ -133,9 +134,11 @@ observer does not admit a writer, deleter, or renamer.
   Crash-recoverable intent reconciliation is not yet implemented.
   Correlation uses a fresh 128-bit namespace from the operating system's random
   source for each attempt plus one process-wide nonwrapping counter. Distinct
-  controllers share the counter, while distinct processes, restarts, and
-  post-fork children receive collision-resistant correlation namespaces.
-  Random-source failure denies execution before intent.
+  controllers share the counter, while distinct processes, restarts, and later
+  post-fork attempts receive collision-resistant correlation namespaces. A
+  process-identity check across the synchronous intent callback prevents a
+  callback-side fork from executing or submitting a duplicate outcome.
+  Random-source or process-identity failure denies execution before intent.
 - Callback reentry: same-controller lifecycle changes from an audit or
   cancellation callback's own thread are not supported. They fail closed
   immediately, preventing either callback from waiting on its own retained
@@ -152,18 +155,19 @@ Potential Severity If Misused: high
 
 Current direct evidence:
 
-- local Debug focused behavior and contract execution passes `5/5` for bounded
-  process, workspace-agent session, isolated environment, durable audit sink,
-  and the exact-snapshot machine contract;
-- fresh GCC 15 Release with `-Werror` passes the same `5/5` without warnings;
+- local Debug focused behavior and contract execution passes `7/7` for bounded
+  process, workspace-agent session and containment, isolated environment,
+  durable audit sink, private image, and the exact-snapshot machine contract;
+- fresh GCC 15 Release with `-Werror` passes the same `7/7` without warnings;
 - fresh Clang 21 ASan/UBSan with leak detection passes target containment,
-  session, isolated environment, private image, and durable audit sink at `5/5`
+  session, isolated environment, private image, bounded process, durable audit
+  sink, and the machine contract at `7/7`
   without findings;
 - licensing, community, release-license, isolation, supply-chain, and safety
   contracts pass `6/6`, including the corrected-head 328.63-second repository-wide safety
   scan;
 - the extended exact-snapshot materialization machine contract passes and
-  verifies the private runner, suspended `CreateProcessW`, Job Object assignment,
+  verifies the private runner, suspended `CreateProcessW`, atomic Job Object ownership,
   launch-commit callback, controller-only consumption, sandbox denial, and
   revocation-lifecycle regression;
 - Linux directly exercises the non-Windows denial and content-free paired audit;
@@ -219,12 +223,19 @@ application and inherited current directory, still suspended. Exact protected
 head `0023f74e9` reported
 `polyglot.process.executable_path_unsupported`, native error `87`, proving the
 stable device-form application name is incompatible. The next bounded probe
-uses a handle-derived, identity-matched extended DOS application name with the
+used a handle-derived, identity-matched extended DOS application name with the
 same stable working directory, still suspended. It immediately
 places the diagnostic child into the kill-on-close Job Object atomically at
 creation, terminates the never-resumed process, and reports whether the
 unsupported parameter is the stable application path or `lpCurrentDirectory`;
 it never falls back to executing with a weaker pathname. Job ownership remains
 effective if explicit termination fails, so the diagnostic cannot be orphaned.
-A fresh protected result is required before choosing the final compatible
-design.
+Protected run `31961744412` again reported
+`polyglot.process.executable_path_unsupported` with native error `87`, which in
+that exact diagnostic head means the DOS application name plus retained stable
+working directory successfully created a suspended child. The final design
+therefore uses the handle-derived DOS application name, makes Job ownership
+atomic at creation, and compares the suspended child's kernel-reported native
+image name with the retained authenticated handle's native device name before
+launch commitment or resume. Query or comparison failure terminates the owned
+tree and reports the fixed content-free image-binding diagnostic.
