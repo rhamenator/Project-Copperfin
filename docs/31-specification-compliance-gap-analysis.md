@@ -500,10 +500,14 @@ a complete final revalidation. Candidate `RQ-CF-AGENT-026` consumes that
 candidate once, privately materializes only its retained snapshot beneath the
 exact receipted generation temp directory, and keeps the plan, pins, and lease
 live until the image is destroyed. POSIX retains an unlinked descriptor;
-Windows retains a non-write-shared handle-owned file. Neither representation is
-yet claimed directly launchable. An allow path remains unavailable until a
-portable executor consumes exactly that private image and plan through a
-verified platform launch transition with the remaining sandbox,
+Windows candidate `RQ-CF-AGENT-027` replaces the write-capable creation handle
+with an exact file-id read-only identity anchor, retains a linked-path
+read/delete handle only after identity equality, and directly
+tests the `CreateProcessW` loader open. Protected Windows evidence remains required, and
+the POSIX/macOS descriptor representation is not yet claimed directly
+launchable. An allow path remains unavailable until an executor consumes
+exactly that private image and plan through the remaining platform transition
+with the sandbox,
 endpoint/descendant, and outcome-audit controls.
 Candidate `RQ-CF-AGENT-020` now returns exact session/child identities from
 successful preparation and exposes a separate trusted-host primitive that

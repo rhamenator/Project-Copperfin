@@ -33,6 +33,7 @@ set(containment_source src/security/physical_path_containment.cpp)
 set(session_header include/copperfin/security/workspace_agent_session.h)
 set(session_source src/security/workspace_agent_session.cpp)
 set(platform_test tests/test_platform_private_directory.cpp)
+set(isolation_metadata tests/CopperfinTestIsolation.cmake)
 set(environment_test tests/test_workspace_agent_isolated_environment.cpp)
 
 foreach(path IN ITEMS
@@ -45,10 +46,18 @@ foreach(path IN ITEMS
         ${session_header}
         ${session_source}
         ${platform_test}
+        ${isolation_metadata}
         ${environment_test})
     if(NOT EXISTS "${SOURCE_DIR}/${path}")
         message(FATAL_ERROR "Process-image materialization input is missing: ${path}")
     endif()
+endforeach()
+foreach(token IN ITEMS
+        "copperfin_set_test_isolation(test_platform_private_directory"
+        "ENVIRONMENT child-scoped"
+        "CHILD_PROCESSES bounded")
+    require_text(${isolation_metadata} "${token}"
+        "Windows launch-transition test isolation metadata")
 endforeach()
 
 require_text(${containment_header} "std::uint64_t creation_ticks = 0U"
@@ -81,6 +90,10 @@ foreach(token IN ITEMS
         "::CreateFileW("
         "CREATE_NEW"
         "GENERIC_READ | GENERIC_WRITE | DELETE"
+        "::OpenFileById("
+        "FileIdType"
+        "GENERIC_READ | DELETE"
+        "PrivateExecutableImageFailure::launch_transition_failed"
         "FILE_SHARE_READ"
         "::SetFileInformationByHandle("
         "FileDispositionInfo"
@@ -96,7 +109,10 @@ foreach(token IN ITEMS
         "OwnedImageHandle image_handle("
         "OwnedDescriptor parent_descriptor("
         "OwnedLinkedImageDescriptor image_descriptor("
-        "image_handle.release()"
+        "image_handle.close_without_delete()"
+        "open_path_for_exact_image("
+        "image_identity_matches(path_handle.get(), image_identity)"
+        "launch_handle.release()"
         "image_descriptor.release()"
         "native_matches_bytes")
     require_text(${platform_source} "${token}" "exact private-image primitive")
@@ -145,6 +161,14 @@ endforeach()
 
 foreach(token IN ITEMS
         "RQ-CF-AGENT-026"
+        "RQ-CF-AGENT-027"
+        "CreateProcessW("
+        "CreateFileMappingW("
+        "image_path.c_str(), GENERIC_READ | GENERIC_WRITE,"
+        "PAGE_READWRITE"
+        "MapViewOfFile(mapping, FILE_MAP_WRITE"
+        "ERROR_SHARING_VIOLATION"
+        "--rq027-child"
         "PrivateExecutableImage"
         "wrong-creation-image"
         "materialize_private_executable_image_in_verified_parent")

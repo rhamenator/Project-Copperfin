@@ -135,14 +135,94 @@ bool native_matches_bytes(
     return exact;
 }
 
-void delete_exact_file(const HANDLE handle) noexcept {
+bool delete_exact_file(const HANDLE handle) noexcept {
     if (handle == nullptr || handle == INVALID_HANDLE_VALUE) {
-        return;
+        return false;
     }
     FILE_DISPOSITION_INFO disposition{.DeleteFile = TRUE};
-    (void)::SetFileInformationByHandle(
+    return ::SetFileInformationByHandle(
         handle, FileDispositionInfo, &disposition,
-        static_cast<DWORD>(sizeof(disposition)));
+        static_cast<DWORD>(sizeof(disposition))) != FALSE;
+}
+
+struct WindowsImageIdentity {
+    std::uint64_t storage_id = 0U;
+    std::uint64_t file_id = 0U;
+    std::uint64_t creation_ticks = 0U;
+    std::uint64_t size = 0U;
+};
+
+bool capture_image_identity(
+    const HANDLE handle,
+    WindowsImageIdentity& identity) noexcept {
+    BY_HANDLE_FILE_INFORMATION information{};
+    if (handle == nullptr || handle == INVALID_HANDLE_VALUE ||
+        ::GetFileInformationByHandle(handle, &information) == 0 ||
+        (information.dwFileAttributes &
+            (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) != 0U ||
+        information.nNumberOfLinks != 1U) {
+        return false;
+    }
+    identity.storage_id = information.dwVolumeSerialNumber;
+    identity.file_id =
+        (static_cast<std::uint64_t>(information.nFileIndexHigh) << 32U) |
+        information.nFileIndexLow;
+    identity.creation_ticks =
+        (static_cast<std::uint64_t>(
+             information.ftCreationTime.dwHighDateTime) << 32U) |
+        information.ftCreationTime.dwLowDateTime;
+    identity.size =
+        (static_cast<std::uint64_t>(information.nFileSizeHigh) << 32U) |
+        information.nFileSizeLow;
+    return identity.file_id != 0U && identity.creation_ticks != 0U;
+}
+
+bool image_identity_matches(
+    const HANDLE handle,
+    const WindowsImageIdentity& expected) noexcept {
+    WindowsImageIdentity observed;
+    return capture_image_identity(handle, observed) &&
+        observed.storage_id == expected.storage_id &&
+        observed.file_id == expected.file_id &&
+        observed.creation_ticks == expected.creation_ticks &&
+        observed.size == expected.size;
+}
+
+HANDLE open_path_for_exact_image(
+    const std::filesystem::path& path,
+    const DWORD desired_access,
+    const DWORD share_mode) noexcept {
+    return ::CreateFileW(
+        path.c_str(), desired_access, share_mode, nullptr, OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+}
+
+HANDLE reopen_image_by_id(
+    const HANDLE volume_file,
+    const WindowsImageIdentity& identity,
+    const DWORD desired_access,
+    const DWORD share_mode) noexcept {
+    FILE_ID_DESCRIPTOR descriptor{};
+    descriptor.dwSize = sizeof(descriptor);
+    descriptor.Type = FileIdType;
+    descriptor.FileId.QuadPart = static_cast<LONGLONG>(identity.file_id);
+    return ::OpenFileById(
+        volume_file, &descriptor, desired_access, share_mode, nullptr,
+        FILE_FLAG_OPEN_REPARSE_POINT);
+}
+
+bool cleanup_image_by_id(
+    const HANDLE volume_file,
+    const WindowsImageIdentity& identity) noexcept {
+    const HANDLE cleanup = reopen_image_by_id(
+        volume_file, identity, FILE_READ_ATTRIBUTES | DELETE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE);
+    const bool cleaned = image_identity_matches(cleanup, identity) &&
+        delete_exact_file(cleanup);
+    if (cleanup != nullptr && cleanup != INVALID_HANDLE_VALUE) {
+        (void)::CloseHandle(cleanup);
+    }
+    return cleaned;
 }
 
 class OwnedHandle {
@@ -176,7 +256,7 @@ public:
         HANDLE handle_value = INVALID_HANDLE_VALUE) noexcept
         : handle_(handle_value) {}
     ~OwnedImageHandle() {
-        delete_exact_file(handle_);
+        (void)delete_exact_file(handle_);
         if (handle_ != nullptr && handle_ != INVALID_HANDLE_VALUE) {
             (void)::CloseHandle(handle_);
         }
@@ -189,6 +269,12 @@ public:
         const HANDLE released = handle_;
         handle_ = INVALID_HANDLE_VALUE;
         return released;
+    }
+    void close_without_delete() noexcept {
+        if (handle_ != nullptr && handle_ != INVALID_HANDLE_VALUE) {
+            (void)::CloseHandle(handle_);
+        }
+        handle_ = INVALID_HANDLE_VALUE;
     }
 
 private:
@@ -372,7 +458,7 @@ public:
     Impl(HANDLE handle_value, std::size_t size_value) noexcept
         : handle(handle_value), size(size_value) {}
     ~Impl() {
-        delete_exact_file(handle);
+        (void)delete_exact_file(handle);
         if (handle != nullptr && handle != INVALID_HANDLE_VALUE) {
             (void)::CloseHandle(handle);
         }
@@ -478,7 +564,6 @@ materialize_private_executable_image_in_verified_parent(
             parent_handle.get(), expected_parent_storage_id,
             expected_parent_file_id,
             expected_parent_creation_ticks, true);
-        parent_handle.reset();
         if (!parent_stable || !write_all(image_handle.get(), bytes) ||
             !exact_file_shape(image_handle.get(), bytes.size()) ||
             !native_matches_bytes(image_handle.get(), bytes)) {
@@ -487,9 +572,66 @@ materialize_private_executable_image_in_verified_parent(
                 : PrivateExecutableImageFailure::parent_identity_changed;
             return result;
         }
+        WindowsImageIdentity image_identity;
+        if (!capture_image_identity(image_handle.get(), image_identity) ||
+            image_identity.size != bytes.size()) {
+            result.failure = PrivateExecutableImageFailure::verification_failed;
+            return result;
+        }
+
+        // CreateProcessW must not inherit the write-capable creation handle's
+        // sharing obligation. Close that handle and recover the exact file
+        // object through its volume-relative file id as a read-only identity
+        // anchor. A cooperating
+        // writer that wins the close/reopen interval either blocks this open
+        // or changes bytes that the final verification rejects. Acquire the
+        // final read/delete, delete-denying handle through the non-reparse leaf
+        // only while the identity anchor is live and require exact equality,
+        // so a rename/replacement winner cannot redirect a later loader open.
+        image_handle.close_without_delete();
+        OwnedHandle transition_handle(reopen_image_by_id(
+            parent_handle.get(), image_identity, GENERIC_READ,
+            FILE_SHARE_READ | FILE_SHARE_DELETE));
+        if (transition_handle.get() == INVALID_HANDLE_VALUE) {
+            result.failure = cleanup_image_by_id(
+                parent_handle.get(), image_identity)
+                ? PrivateExecutableImageFailure::launch_transition_failed
+                : PrivateExecutableImageFailure::cleanup_failed;
+            return result;
+        }
+        if (!image_identity_matches(transition_handle.get(), image_identity)) {
+            // A reused identifier must never make cleanup authority adopt a
+            // different object. Close it without deletion and fail closed.
+            result.failure =
+                PrivateExecutableImageFailure::launch_transition_failed;
+            return result;
+        }
+        OwnedHandle path_handle(open_path_for_exact_image(
+            image_path, GENERIC_READ | DELETE, FILE_SHARE_READ));
+        if (!image_identity_matches(path_handle.get(), image_identity)) {
+            path_handle.reset();
+            transition_handle.reset();
+            result.failure = cleanup_image_by_id(
+                parent_handle.get(), image_identity)
+                ? PrivateExecutableImageFailure::launch_transition_failed
+                : PrivateExecutableImageFailure::cleanup_failed;
+            return result;
+        }
+        OwnedImageHandle launch_handle(path_handle.release());
+        transition_handle.reset();
+        if (!exact_file_shape(launch_handle.get(), bytes.size()) ||
+            !native_matches_bytes(launch_handle.get(), bytes) ||
+            !handle_identity_matches(
+                parent_handle.get(), expected_parent_storage_id,
+                expected_parent_file_id, expected_parent_creation_ticks,
+                true)) {
+            result.failure = PrivateExecutableImageFailure::verification_failed;
+            return result;
+        }
+        parent_handle.reset();
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            image_handle.get(), bytes.size());
-        (void)image_handle.release();
+            launch_handle.get(), bytes.size());
+        (void)launch_handle.release();
 #else
         const std::string leaf_name = leaf.native();
         OwnedDescriptor parent_descriptor(::open(

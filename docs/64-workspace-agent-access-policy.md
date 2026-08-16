@@ -790,14 +790,58 @@ legitimately update the directory's metadata. Creation identity is required
 and fails closed where the target filesystem cannot supply it; this prevents
 rapid remove/recreate inode reuse from impersonating the original directory.
 
-This remains a non-executing prerequisite. Windows' retained non-write-shared
-handle is intentionally immutable but is not yet claimed compatible with a
-later `CreateProcessW` open; the executor needs an explicit launch transition.
-POSIX retains an unlinked descriptor, but portable descriptor execution,
-especially on macOS, is likewise unresolved. No working-directory entry,
-sandbox, endpoint/descendant policy, outcome audit, or process creation is
-performed, and the `RQ-CF-AGENT-019` promotion gate remains invariantly
-denied.
+This remains a non-executing prerequisite. `RQ-CF-AGENT-026` originally
+retained Windows' write-capable creation handle, which protected immutability
+but imposed a write-sharing obligation on any later loader open. The derived
+`RQ-CF-AGENT-027` transition below supersedes only that Windows same-handle
+detail. POSIX retains an unlinked descriptor, but portable descriptor
+execution, especially on macOS, remains unresolved. No working-directory
+entry, sandbox, endpoint/descendant policy, outcome audit, or product process
+creation is performed, and the `RQ-CF-AGENT-019` promotion gate remains
+invariantly denied.
+
+## Windows immutable launch-handle transition prerequisite
+
+Candidate `RQ-CF-AGENT-027` refines only the Windows handle-lifetime detail of
+`RQ-CF-AGENT-026`. After exact bytes have been written, flushed, reread, and
+bound to the newly created image's volume/file/creation identity, the platform
+boundary closes its write-capable creation handle. It then uses the still-live
+verified parent handle as the volume hint for `OpenFileById`, reopening that
+same file object as a read-only identity anchor with read/delete sharing. While
+that anchor remains live, a fresh non-reparse pathname open requests
+read/delete access and read-only sharing. It becomes the final retained handle
+only when it resolves to the exact anchored identity; pathname spelling alone
+never confers authority.
+
+The file-id anchor and final linked-path handle must retain the exact
+volume/file/creation identity and size, the final handle must contain the
+complete bytes, and the parent identity is checked again before success. A
+writer that remains live conflicts with the final sharing request; a writer
+that changes bytes and closes is detected by the complete reread. File-id reuse
+or a linked-path identity mismatch is closed without deletion so a different
+object is never adopted as cleanup authority. Unsupported file-id or final
+pathname reopen fails closed.
+Windows also treats a live writable file mapping as write access for sharing
+compatibility after the mapping's writer handle closes. The final path open
+omits write sharing and therefore must fail with a sharing violation while any
+such mapping remains live; the platform regression exercises that exact case
+from a minimal read/write source handle that never requests delete access.
+Failure cleanup reopens only the captured identity and is best effort because a
+hostile same-user handle can intentionally deny cleanup; no launch authority is
+returned in that case and the private layout remains visibly nonempty.
+
+The final handle has no write access and denies subsequent write, delete, or rename
+opens. A Windows regression materializes the running test executable, proves
+that observers need not share write access, proves cooperating write/delete/rename
+opens fail, and calls `CreateProcessW` on the exact linked image while the
+retained handle remains live. The child accepts only a fixed test-only argument
+and exits without exercising product authority.
+
+This is still not an executor. The opaque image exposes neither its file id,
+path, handle, nor a launch operation; the controller promotion gate remains
+denied. POSIX/macOS descriptor execution, working-directory entry, sandboxing,
+endpoint and descendant controls, process outcome audit, and actual tool
+execution remain separate requirements.
 
 ## Current implementation and remaining work
 
@@ -860,7 +904,9 @@ lease are unavailable. Candidate `RQ-CF-AGENT-025` now composes the internally
 constructed exact serialized plan, authenticated pins, and exact-generation
 lease into one opaque move-only non-executing candidate. Candidate
 `RQ-CF-AGENT-026` consumes that candidate once and retains an exact private
-native image without exposing it, but neither slice weakens that gate. The adjacent
+native image without exposing it. Candidate `RQ-CF-AGENT-027` transitions the
+Windows image to an exact read/delete launch-compatible handle without exposing
+or executing it, and none of these slices weakens that gate. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
@@ -871,7 +917,8 @@ private layout before audit-backed activation and fails closed without adopting
 existing state. None of these results is an executor or real sandbox.
 Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, exact-snapshot execution and its platform launch transition,
+semantics, exact-snapshot execution and the POSIX/macOS platform launch
+transition,
 automatic lifecycle cleanup, crash-recoverable receipts, partial-cleanup retry,
 endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.

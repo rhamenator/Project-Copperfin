@@ -335,8 +335,8 @@ function(copperfin_configure_native_test_isolation)
     copperfin_set_test_isolation(test_platform_private_directory
         PARALLEL_SAFE
         FILESYSTEM test-owned-unique
-        ENVIRONMENT none
-        CHILD_PROCESSES none
+        ENVIRONMENT child-scoped
+        CHILD_PROCESSES bounded
         NETWORK none
         RESOURCES none
         SAMPLES none
