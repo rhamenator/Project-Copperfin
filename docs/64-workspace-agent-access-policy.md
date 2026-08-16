@@ -924,6 +924,12 @@ other than exactly one prior suspension, and the synthetic copied-child fixture
 emits fixed entry or unrecognized-argument markers before other child work.
 These content-free signals distinguish invalid resume state, pre-entry failure,
 and command-line mismatch without changing production arguments or environment.
+Protected run `31973693772` returned the expected resume count but timed out
+before the copied full test runner reached its marker. The validation fixture
+therefore now uses a dedicated statically linked child matching the configured
+`self_contained_launch_image_v1` contract; its exact output-line comparisons
+accept Windows CRLF and LF transport framing. This changes no production launch
+path, authority, arguments, environment, or timeout behavior.
 The stable name prefers a volume-GUID path and falls back only to a validated
 `GLOBALROOT\\Device\\HarddiskVolumeN` name when the local volume exposes no GUID.
 Network shares expose neither accepted local-volume form and are intentionally denied by

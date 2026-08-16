@@ -96,6 +96,18 @@
   set at `7/7` and the licensing, community, release-license, isolation,
   supply-chain, and safety set at `6/6`, including the 323.10-second repository-
   wide safety scan.
+  Exact protected run `31973693772` then proved `ResumeThread` returned the
+  expected single suspension but the copied full test runner still timed out
+  before its entry marker. That runner was not a valid fixture for its declared
+  self-contained-image dependency contract. Windows coverage now materializes
+  a dedicated, statically linked child executable whose only non-system
+  behavior is the fixed argv/environment/cwd/exit contract, and accepts either
+  native Windows CRLF or LF capture framing without weakening the compared line
+  contents. This is test-only; the production executor and its authenticated
+  extended-DOS working-directory path remain unchanged. The corrected focused
+  set passes `7/7`; licensing, community, release-license, isolation,
+  supply-chain, and safety contracts pass `6/6`, including the 326.87-second
+  repository-wide safety scan.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,

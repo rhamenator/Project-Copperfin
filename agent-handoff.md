@@ -63,6 +63,10 @@ extended DOS working directory, requires `ResumeThread` to report exactly one
 prior suspension, and gives only the synthetic copied child fixed entry and
 unrecognized-argument markers so protected Windows can distinguish invalid
 resume state, pre-entry failure, and command-line mismatch. Corrected protected
+run `31973693772` proved the resume count is valid but the copied full test
+runner never reaches its marker. The corrected test now uses a dedicated
+statically linked child matching the declared self-contained-image contract and
+compares captured lines with either Windows CRLF or LF framing. Protected
 execution remains required. The diagnostic tree passes the focused behavior and
 machine-contract set at `7/7` and the licensing, community, release-license,
 isolation, supply-chain, and safety set at `6/6`, including the 323.10-second

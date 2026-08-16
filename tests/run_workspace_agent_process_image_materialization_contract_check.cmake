@@ -41,6 +41,7 @@ set(audit_sink_source src/security/workspace_agent_audit_sink.cpp)
 set(platform_test tests/test_platform_private_directory.cpp)
 set(isolation_metadata tests/CopperfinTestIsolation.cmake)
 set(environment_test tests/test_workspace_agent_isolated_environment.cpp)
+set(execution_fixture tests/workspace_agent_execution_fixture.cpp)
 set(process_containment_test tests/test_workspace_agent_process_containment.cpp)
 
 foreach(path IN ITEMS
@@ -230,8 +231,16 @@ endforeach()
 foreach(token IN ITEMS
         "workspace-agent-child-entry-v1"
         "workspace-agent-child-arguments-unrecognized-v1")
-    require_text(${environment_test} "${token}"
+    require_text(${execution_fixture} "${token}"
         "bounded Windows child-entry diagnostic fixture")
+endforeach()
+foreach(token IN ITEMS
+        "workspace_agent_execution_fixture"
+        "$<$<CONFIG:Debug>:/MTd>"
+        "$<$<NOT:$<CONFIG:Debug>>:/MT>"
+        "$<TARGET_FILE:workspace_agent_execution_fixture>")
+    require_text(tests/CMakeLists.txt "${token}"
+        "self-contained Windows execution fixture contract")
 endforeach()
 require_text(${platform_source}
     "parent_handle.get(), expected_parent_storage_id"

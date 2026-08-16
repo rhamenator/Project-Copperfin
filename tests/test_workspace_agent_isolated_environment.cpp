@@ -218,6 +218,9 @@ static_assert(
 
 int failures = 0;
 std::filesystem::path running_test_executable;
+#if defined(_WIN32)
+std::filesystem::path child_fixture_executable;
+#endif
 
 #if defined(_WIN32)
 enum class TestProcessElevation {
@@ -265,7 +268,8 @@ int run_test_driver_with_lua_token() {
     (void)::CloseHandle(process_token);
 
     std::wstring command_line = L"\"" + running_test_executable.native() +
-        L"\" --workspace-agent-non-elevated-test-driver-v1";
+        L"\" --workspace-agent-non-elevated-test-driver-v1 \"" +
+        child_fixture_executable.native() + L"\"";
     command_line.push_back(L'\0');
     STARTUPINFOW startup{};
     startup.cb = sizeof(startup);
@@ -320,9 +324,12 @@ bool output_working_directory_matches(
         return false;
     }
     const std::size_t value_beginning = beginning + prefix.size();
-    const std::size_t ending = output.find('\n', value_beginning);
+    std::size_t ending = output.find('\n', value_beginning);
     if (ending == std::string::npos || ending == value_beginning) {
         return false;
+    }
+    if (ending > value_beginning && output[ending - 1U] == '\r') {
+        --ending;
     }
     std::error_code equivalent_error;
     const bool equivalent = std::filesystem::equivalent(
@@ -330,6 +337,26 @@ bool output_working_directory_matches(
             output.substr(value_beginning, ending - value_beginning)),
         expected, equivalent_error);
     return equivalent && !equivalent_error;
+}
+
+bool contains_output_line(
+    const std::string_view output,
+    const std::string_view line) noexcept {
+    std::size_t offset = 0U;
+    while ((offset = output.find(line, offset)) != std::string_view::npos) {
+        const bool starts_line = offset == 0U || output[offset - 1U] == '\n';
+        const std::size_t ending = offset + line.size();
+        const bool ends_line =
+            ending < output.size() &&
+            (output[ending] == '\n' ||
+             (output[ending] == '\r' && ending + 1U < output.size() &&
+              output[ending + 1U] == '\n'));
+        if (starts_line && ends_line) {
+            return true;
+        }
+        ++offset;
+    }
+    return false;
 }
 #endif
 
@@ -396,7 +423,7 @@ public:
 #if defined(_WIN32)
         std::error_code copy_error;
         std::filesystem::copy_file(
-            running_test_executable,
+            child_fixture_executable,
             path,
             std::filesystem::copy_options::overwrite_existing,
             copy_error);
@@ -1205,19 +1232,23 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
                executed.process.started && executed.process.completed() &&
                executed.process.process_tree_closed &&
                executed.process.exit_code == 23 &&
-               executed.process.standard_output.find(
-                   "workspace-agent-child-v1\n") != std::string::npos &&
-               executed.process.standard_output.find(
-                   "argv0=" + expected_argv0 + "\n") != std::string::npos &&
-               executed.process.standard_output.find(
-                   "payload=literal-payload\n") != std::string::npos &&
+               contains_output_line(
+                   executed.process.standard_output,
+                   "workspace-agent-child-v1") &&
+               contains_output_line(
+                   executed.process.standard_output,
+                   "argv0=" + expected_argv0) &&
+               contains_output_line(
+                   executed.process.standard_output,
+                   "payload=literal-payload") &&
                output_working_directory_matches(
                    executed.process.standard_output,
                    std::filesystem::canonical(tree.workspace / "working")) &&
-               executed.process.standard_output.find("ambient=<unset>\n") !=
-                   std::string::npos &&
-               executed.process.standard_error.find(
-                   "workspace-agent-child-entry-v1\n") != std::string::npos &&
+               contains_output_line(
+                   executed.process.standard_output, "ambient=<unset>") &&
+               contains_output_line(
+                   executed.process.standard_error,
+                   "workspace-agent-child-entry-v1") &&
                executed.diagnostic_code == "polyglot.process.exited" &&
                audit.events.size() == 2U &&
                audit.events[0].operation_id == audit.events[1].operation_id &&
@@ -1322,8 +1353,9 @@ void test_committed_execution_releases_revocation_lease_before_child_exit() {
                !finished_when_stop_returned && execution_result.attempted &&
                execution_result.process.completed() &&
                execution_result.process.exit_code == 29 &&
-               execution_result.process.standard_error.find(
-                   "workspace-agent-child-entry-v1\n") != std::string::npos &&
+               contains_output_line(
+                   execution_result.process.standard_error,
+                   "workspace-agent-child-entry-v1") &&
                execution_result.outcome_audit_committed;
     if (!revocation_contract_holds) {
         std::cerr << "RQ-CF-AGENT-028 revocation diagnostics: observed="
@@ -2340,45 +2372,29 @@ void test_controller_retains_and_audits_explicit_layout_cleanup() {
 }  // namespace
 
 int main(int argc, char** argv) {
-    const bool copied_child_fixture = argc > 0 && argv[0] != nullptr &&
-        std::filesystem::path(argv[0]).filename() == "workspace-tool";
-    if (copied_child_fixture) {
-        std::cerr << "workspace-agent-child-entry-v1\n";
-        if (argc == 2 && argv[1] != nullptr &&
-            std::string_view(argv[1]) == "--workspace-agent-child-wait-v1") {
-            std::this_thread::sleep_for(std::chrono::seconds(2));
-            return 29;
-        }
-        if (argc == 3 && argv[1] != nullptr && argv[2] != nullptr &&
-            std::string_view(argv[1]) == "--workspace-agent-child-v1") {
-            const auto ambient =
-                copperfin::platform::read_environment_variable("GITHUB_TOKEN");
-            std::cout << "workspace-agent-child-v1\n"
-                      << "argv0=" << argv[0] << '\n'
-                      << "payload=" << argv[2] << '\n'
-                      << "cwd=" << copperfin::platform::path_to_utf8_string(
-                             std::filesystem::current_path()) << '\n'
-                      << "ambient="
-                      << (ambient.has_value() ? *ambient : "<unset>") << '\n';
-            return 23;
-        }
-        std::cerr << "workspace-agent-child-arguments-unrecognized-v1\n";
-        return 31;
-    }
     if (argc > 0 && argv[0] != nullptr) {
         std::error_code canonical_error;
         running_test_executable = std::filesystem::canonical(
             std::filesystem::path(argv[0]), canonical_error);
     }
 #if defined(_WIN32)
-    if (running_test_executable.empty()) {
-        std::cerr << "FAIL: Windows PE fixtures require the running test executable\n";
-        return EXIT_FAILURE;
-    }
     const bool non_elevated_driver =
-        argc == 2 && argv[1] != nullptr &&
+        argc == 3 && argv[1] != nullptr &&
         std::string_view(argv[1]) ==
             "--workspace-agent-non-elevated-test-driver-v1";
+    const int fixture_argument = non_elevated_driver ? 2 : 1;
+    if (argc <= fixture_argument || argv[fixture_argument] == nullptr) {
+        std::cerr << "FAIL: Windows execution fixture path is required\n";
+        return EXIT_FAILURE;
+    }
+    std::error_code fixture_error;
+    child_fixture_executable = std::filesystem::canonical(
+        std::filesystem::path(argv[fixture_argument]), fixture_error);
+    if (running_test_executable.empty() || fixture_error ||
+        child_fixture_executable.empty()) {
+        std::cerr << "FAIL: Windows PE fixtures require exact executable paths\n";
+        return EXIT_FAILURE;
+    }
     const auto elevation = test_process_elevation();
     if (!non_elevated_driver &&
         elevation == TestProcessElevation::elevated) {
