@@ -527,6 +527,7 @@ BoundedProcessResult run_windows(
     }
     std::wstring command_line(
         command_line_units.begin(), command_line_units.end());
+    std::wstring diagnostic_command_line = command_line;
 
     std::u16string environment_block;
     if (retained_environment_block != nullptr) {
@@ -679,14 +680,49 @@ BoundedProcessResult run_windows(
         &startup_info.StartupInfo,
         &process_info);
     const DWORD create_error = created == FALSE ? ::GetLastError() : ERROR_SUCCESS;
+    std::string create_diagnostic = "polyglot.process.launch_failed";
+    DWORD diagnostic_native_error = create_error;
+    if (created == FALSE && create_error == ERROR_INVALID_PARAMETER) {
+        PROCESS_INFORMATION diagnostic_process{};
+        const BOOL diagnostic_created = ::CreateProcessW(
+            executable.c_str(), diagnostic_command_line.data(), nullptr, nullptr,
+            TRUE,
+            CREATE_NO_WINDOW | CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
+                EXTENDED_STARTUPINFO_PRESENT,
+            environment_block.data(), nullptr, &startup_info.StartupInfo,
+            &diagnostic_process);
+        if (diagnostic_created != FALSE) {
+            create_diagnostic =
+                "polyglot.process.working_directory_path_unsupported";
+            const BOOL terminated =
+                ::TerminateProcess(diagnostic_process.hProcess, 1U);
+            const DWORD termination_error =
+                terminated == FALSE ? ::GetLastError() : ERROR_SUCCESS;
+            const DWORD wait_result = terminated != FALSE
+                ? ::WaitForSingleObject(diagnostic_process.hProcess, 5000U)
+                : WAIT_FAILED;
+            (void)::CloseHandle(diagnostic_process.hThread);
+            (void)::CloseHandle(diagnostic_process.hProcess);
+            if (terminated == FALSE || wait_result != WAIT_OBJECT_0) {
+                create_diagnostic =
+                    "polyglot.process.tree_termination_failed";
+                diagnostic_native_error = terminated == FALSE
+                    ? termination_error
+                    : ERROR_TIMEOUT;
+            }
+        } else {
+            create_diagnostic = "polyglot.process.executable_path_unsupported";
+            diagnostic_native_error = ::GetLastError();
+        }
+    }
     ::DeleteProcThreadAttributeList(startup_info.lpAttributeList);
     (void)::CloseHandle(stdin_read);
     (void)::CloseHandle(stdout_write);
     (void)::CloseHandle(stderr_write);
     if (created == FALSE) {
         result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.launch_failed";
-        result.native_error = static_cast<int>(create_error);
+        result.error_code = std::move(create_diagnostic);
+        result.native_error = static_cast<int>(diagnostic_native_error);
         (void)::CloseHandle(job);
         (void)::CloseHandle(stdin_write);
         (void)::CloseHandle(stdout_read);

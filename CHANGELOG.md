@@ -46,6 +46,13 @@
   directly attempts a working-directory ancestor rename while pins remain live,
   and portable
   coverage requires nonzero distinct cross-controller operation IDs.
+  Protected Windows evidence then proved the explicit local-device root parser
+  and image materialization but isolated `ERROR_INVALID_PARAMETER` at
+  `CreateProcessW`. The fail-closed launcher now performs one suspended,
+  never-resumed diagnostic retry after that exact error to distinguish an
+  unsupported stable application name from an unsupported current-directory
+  form; it terminates the diagnostic process immediately and does not execute
+  through a weaker path.
   The public
   promotion gate remains invariantly denied. Focused local Debug and warning-as-error GCC 15
   Release execution pass `5/5`; fresh Clang 21 ASan/UBSan/leak passes `5/5`

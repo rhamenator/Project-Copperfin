@@ -207,3 +207,14 @@ PE execution now uses the host Windows directory captured through the same
 trusted system-root boundary; fake-root tests remain separate. Product code and
 the no-parent-environment policy are unchanged. A fresh protected execution
 remains required.
+
+Exact head `42c7d514c` then made private-image materialization, explicit stable
+local-device root parsing, and the private-directory regressions pass on
+Windows, but `CreateProcessW` rejected the combined stable application and
+working-directory device paths with `ERROR_INVALID_PARAMETER`. A bounded
+diagnostic correction retries only that pre-start failure with the same stable
+application and inherited current directory, still suspended. It immediately
+terminates the never-resumed process and reports whether the unsupported
+parameter is the stable application path or `lpCurrentDirectory`; it never
+falls back to executing with a weaker pathname. A fresh protected result is
+required before choosing the final compatible design.

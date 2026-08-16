@@ -280,6 +280,20 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
                retained_lines[4][2] ==
                    serialize_workspace_agent_session_audit_event(process_outcome),
            "RQ-CF-AGENT-028: process audit records must retain the versioned content-free operation id contract");
+    std::uint64_t diagnostic_operation_id = 10U;
+    for (const std::string diagnostic : {
+             "polyglot.process.executable_path_unsupported",
+             "polyglot.process.working_directory_path_unsupported"}) {
+        auto unsupported_intent = process_intent;
+        auto unsupported_path = process_outcome;
+        unsupported_intent.operation_id = diagnostic_operation_id;
+        unsupported_path.operation_id = diagnostic_operation_id++;
+        unsupported_path.outcome = "launch-failed";
+        unsupported_path.diagnostic_code = diagnostic;
+        expect(sink.commit(unsupported_intent, sink.context).ok &&
+                   sink.commit(unsupported_path, sink.context).ok,
+               "RQ-CF-AGENT-028: the durable sink must admit only fixed content-free device-path compatibility diagnostics");
+    }
     const std::string before = read_bytes(file_sink.log_path());
 
     std::vector<WorkspaceAgentSessionAuditEvent> malformed;

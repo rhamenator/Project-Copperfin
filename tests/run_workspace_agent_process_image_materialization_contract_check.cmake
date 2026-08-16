@@ -179,6 +179,8 @@ foreach(token IN ITEMS
 endforeach()
 foreach(token IN ITEMS
         "::CreateProcessW("
+        "polyglot.process.working_directory_path_unsupported"
+        "polyglot.process.executable_path_unsupported"
         "CREATE_SUSPENDED"
         "::AssignProcessToJobObject("
         "launch_committed(launch_committed_context)"
