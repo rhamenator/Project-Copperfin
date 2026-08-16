@@ -11,6 +11,7 @@
 #include "copperfin/security/workspace_agent_tool_registry.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
@@ -21,6 +22,7 @@
 #include <string_view>
 #include <stdexcept>
 #include <type_traits>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -37,6 +39,7 @@ using copperfin::security::WorkspaceAgentProcessArgumentParserContract;
 using copperfin::security::WorkspaceAgentProcessParserDependencyContract;
 using copperfin::security::WorkspaceAgentProcessParserConfiguration;
 using copperfin::security::WorkspaceAgentProcessInvocationPreflightRequest;
+using copperfin::security::WorkspaceAgentPreparedProcessLaunch;
 using copperfin::security::WorkspaceAgentSerializedProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentSerializedProcessInvocationPreflightResult;
 using copperfin::security::WorkspaceAgentSessionAuditCommitResult;
@@ -66,6 +69,51 @@ concept HasPublicChildDirectoryIdentities = requires(T value) {
     value.child_directory_identities;
 };
 
+template <typename T>
+concept HasPublicPlan = requires(T value) {
+    value.plan;
+};
+
+template <typename T>
+concept HasPublicArguments = requires(T value) {
+    value.arguments;
+};
+
+template <typename T>
+concept HasPublicEnvironment = requires(T value) {
+    value.environment;
+};
+
+template <typename T>
+concept HasPublicExecutableBytes = requires(T value) {
+    value.executable_snapshot;
+};
+
+template <typename T>
+concept HasPublicNativeHandle = requires(T value) {
+    value.native_handle;
+};
+
+template <typename T>
+concept HasPublicPath = requires(T value) {
+    value.canonical_executable_path;
+};
+
+template <typename T>
+concept HasPublicDigest = requires(T value) {
+    value.executable_sha256;
+};
+
+template <typename T>
+concept HasPublicExecute = requires(T value) {
+    value.execute();
+};
+
+template <typename T>
+concept HasPublicLaunch = requires(T value) {
+    value.launch();
+};
+
 static_assert(
     !HasEnvironmentInput<WorkspaceAgentProcessInvocationPreflightRequest> &&
         !HasEnvironmentEntriesInput<WorkspaceAgentProcessInvocationPreflightRequest>,
@@ -84,6 +132,23 @@ static_assert(
         std::is_nothrow_move_assignable_v<
             WorkspaceAgentIsolatedEnvironmentBoundary>,
     "RQ-CF-AGENT-020: boundary authority must not be duplicated by copying");
+static_assert(
+    !std::is_copy_constructible_v<WorkspaceAgentPreparedProcessLaunch> &&
+        !std::is_copy_assignable_v<WorkspaceAgentPreparedProcessLaunch> &&
+        std::is_nothrow_move_constructible_v<
+            WorkspaceAgentPreparedProcessLaunch> &&
+        std::is_nothrow_move_assignable_v<
+            WorkspaceAgentPreparedProcessLaunch> &&
+        !HasPublicPlan<WorkspaceAgentPreparedProcessLaunch> &&
+        !HasPublicArguments<WorkspaceAgentPreparedProcessLaunch> &&
+        !HasPublicEnvironment<WorkspaceAgentPreparedProcessLaunch> &&
+        !HasPublicExecutableBytes<WorkspaceAgentPreparedProcessLaunch> &&
+        !HasPublicNativeHandle<WorkspaceAgentPreparedProcessLaunch> &&
+        !HasPublicPath<WorkspaceAgentPreparedProcessLaunch> &&
+        !HasPublicDigest<WorkspaceAgentPreparedProcessLaunch> &&
+        !HasPublicExecute<WorkspaceAgentPreparedProcessLaunch> &&
+        !HasPublicLaunch<WorkspaceAgentPreparedProcessLaunch>,
+    "RQ-CF-AGENT-025: prepared launch candidates must remain opaque and move-only");
 
 int failures = 0;
 std::filesystem::path running_test_executable;
@@ -536,6 +601,82 @@ void test_fixed_non_inheriting_environment() {
                altered.diagnostic_code ==
                    "workspace_agent.process_launch_revalidation_pinning_unavailable",
            "RQ-CF-AGENT-019: caller-held plan content must not affect the invariant denial contract");
+}
+
+void test_prepared_launch_candidate_binds_plan_pins_and_revocation() {
+    WorkspaceAgentPreparedProcessLaunch empty;
+    expect(!empty.valid() && empty.session_generation() == 0U,
+           "RQ-CF-AGENT-025: an empty prepared launch candidate must carry no authority");
+
+    TempTree tree;
+    WorkspaceAgentSessionController controller(
+        tree.workspace, tree.configuration(), tree.parser_configuration());
+    const auto inactive = controller.prepare_process_launch_candidate(
+        invocation_request(1U));
+    expect(!inactive.prepared && !inactive.candidate.has_value() &&
+               inactive.diagnostic_code == "workspace_agent.session_not_active",
+           "RQ-CF-AGENT-025: an inactive session must not prepare a launch candidate");
+
+    const auto started = controller.start(activation_request(), audit_sink());
+    expect(started.activated,
+           "RQ-CF-AGENT-025: prepared-candidate fixture must activate");
+    const auto stale = controller.prepare_process_launch_candidate(
+        invocation_request(started.session.generation + 1U));
+    expect(!stale.prepared && !stale.candidate.has_value() &&
+               stale.diagnostic_code == "workspace_agent.tool_stale_session",
+           "RQ-CF-AGENT-025: stale generation input must fail before candidate preparation");
+
+    auto prepared = controller.prepare_process_launch_candidate(
+        invocation_request(started.session.generation));
+    expect(prepared.prepared && prepared.candidate.has_value() &&
+               prepared.candidate->valid() &&
+               prepared.candidate->session_generation() ==
+                   started.session.generation &&
+               prepared.diagnostic_code ==
+                   "workspace_agent.process_launch_candidate_prepared",
+           "RQ-CF-AGENT-025: one opaque candidate must bind the exact plan, authenticated pins, and generation lease");
+
+    auto held = std::move(*prepared.candidate);
+    expect(held.valid() && !prepared.candidate->valid() &&
+               prepared.candidate->session_generation() == 0U,
+           "RQ-CF-AGENT-025: moving a candidate must transfer rather than duplicate its authority");
+    prepared.candidate.reset();
+    const auto still_denied =
+        controller.revalidate_serialized_process_invocation_for_launch({}, {});
+    expect(!still_denied.allowed &&
+               still_denied.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_pinning_unavailable",
+           "RQ-CF-AGENT-025: a prepared candidate must not weaken the invariant launch gate");
+
+    std::atomic<bool> stop_finished = false;
+    copperfin::security::WorkspaceAgentSessionStopResult stop_result;
+    std::thread stop_thread([&controller, &stop_finished, &stop_result] {
+        stop_result = controller.stop(audit_sink());
+        stop_finished.store(true);
+    });
+    bool stopping_observed = false;
+    const auto deadline =
+        std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (std::chrono::steady_clock::now() < deadline) {
+        const auto during_stop = controller.preflight_tool_request({
+            .session_generation = started.session.generation,
+            .tool_id = std::string(
+                copperfin::security::workspace_agent_tool_workspace_run_process)});
+        if (during_stop.diagnostic_code ==
+            "workspace_agent.session_transition_in_progress") {
+            stopping_observed = true;
+            break;
+        }
+        std::this_thread::yield();
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    expect(stopping_observed && !stop_finished.load(),
+           "RQ-CF-AGENT-025: stop must not revoke while a prepared candidate owns its exact-generation lease");
+    held = WorkspaceAgentPreparedProcessLaunch{};
+    stop_thread.join();
+    expect(stop_finished.load() && stop_result.revoked &&
+               !controller.snapshot().active,
+           "RQ-CF-AGENT-025: discarding the candidate must release pins before allowing revocation to complete");
 }
 
 void test_windows_serialization_requires_exact_parser_authority() {
@@ -1343,6 +1484,7 @@ int main(int argc, char** argv) {
     }
 #endif
     test_fixed_non_inheriting_environment();
+    test_prepared_launch_candidate_binds_plan_pins_and_revocation();
     test_windows_serialization_requires_exact_parser_authority();
     test_secure_generation_layout_preparation();
     test_identity_bound_empty_layout_cleanup();

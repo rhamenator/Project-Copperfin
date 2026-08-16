@@ -54,6 +54,10 @@ struct WorkspaceAgentProcessTargetPinAuthority final {
 
 class WorkspaceAgentProcessTargetPins::Impl {
 public:
+    [[nodiscard]] bool matches_target_identities(
+        const PhysicalPathIdentity& expected_executable_identity,
+        const PhysicalPathIdentity& expected_working_directory_identity) const
+        noexcept;
 #if defined(_WIN32)
     Impl(HANDLE workspace_root_value,
          HANDLE executable_value,
@@ -171,6 +175,13 @@ WorkspaceAgentProcessTargetPins::verify_executable_bytes() {
                 "workspace_agent.process_executable_authentication_unavailable"};
     }
     return impl_->verify_executable_bytes();
+}
+
+bool WorkspaceAgentProcessTargetPins::matches_target_identities(
+    const PhysicalPathIdentity& executable_identity,
+    const PhysicalPathIdentity& working_directory_identity) const noexcept {
+    return impl_ != nullptr && impl_->matches_target_identities(
+        executable_identity, working_directory_identity);
 }
 
 namespace {
@@ -650,6 +661,24 @@ WorkspaceAgentProcessTargetPins::Impl::verify_executable_bytes() {
         .diagnostic_code = matches
             ? "workspace_agent.process_executable_authentication_matched"
             : "workspace_agent.process_executable_authentication_changed"};
+}
+
+bool WorkspaceAgentProcessTargetPins::Impl::matches_target_identities(
+    const PhysicalPathIdentity& expected_executable_identity,
+    const PhysicalPathIdentity& expected_working_directory_identity) const
+    noexcept {
+    if (!valid()) {
+        return false;
+    }
+    PhysicalPathIdentity current_executable_identity{};
+    PhysicalPathIdentity current_working_directory_identity{};
+    return read_handle_identity(
+               executable, false, current_executable_identity) &&
+        read_handle_identity(
+            working_directory, true, current_working_directory_identity) &&
+        current_executable_identity == expected_executable_identity &&
+        current_working_directory_identity ==
+            expected_working_directory_identity;
 }
 
 WorkspaceAgentProcessTargetBoundary::WorkspaceAgentProcessTargetBoundary(

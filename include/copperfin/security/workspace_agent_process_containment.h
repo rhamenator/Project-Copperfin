@@ -19,6 +19,7 @@ namespace copperfin::security {
 
 struct WorkspaceAgentProcessTargetPinAuthority;
 struct WorkspaceAgentProcessTargetBoundaryAuthority;
+class WorkspaceAgentSessionController;
 
 inline constexpr std::uint64_t
     workspace_agent_process_max_executable_bytes = 256ULL * 1024ULL * 1024ULL;
@@ -72,9 +73,14 @@ private:
     class Impl;
     explicit WorkspaceAgentProcessTargetPins(std::unique_ptr<Impl> impl) noexcept;
 
+    [[nodiscard]] bool matches_target_identities(
+        const PhysicalPathIdentity& executable_identity,
+        const PhysicalPathIdentity& working_directory_identity) const noexcept;
+
     std::unique_ptr<Impl> impl_;
 
     friend class WorkspaceAgentProcessTargetBoundary;
+    friend class WorkspaceAgentSessionController;
 };
 
 struct WorkspaceAgentProcessTargetPinResult {

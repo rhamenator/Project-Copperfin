@@ -83,6 +83,55 @@ WorkspaceAgentSessionRevocationLease::session_generation() const noexcept {
     return valid() ? impl_->state->generation : 0U;
 }
 
+class WorkspaceAgentPreparedProcessLaunch::Impl {
+public:
+    Impl(
+        WorkspaceAgentSerializedProcessInvocationPreflightResult plan_value,
+        WorkspaceAgentProcessTargetPins pins_value,
+        WorkspaceAgentSessionRevocationLease lease_value) noexcept
+        : lease(std::move(lease_value)),
+          pins(std::move(pins_value)),
+          plan(std::move(plan_value)) {}
+
+    [[nodiscard]] bool valid() const noexcept {
+        return plan.allowed && plan.serialized_environment.allowed &&
+            plan.serialized_environment.environment_plan.allowed &&
+            pins.valid() && lease.valid() &&
+            lease.session_generation() ==
+                plan.serialized_environment.environment_plan.session_generation;
+    }
+
+    // Destruction is reverse declaration order: discard the plan, close the
+    // retained target objects, and only then release the revocation lease.
+    WorkspaceAgentSessionRevocationLease lease;
+    WorkspaceAgentProcessTargetPins pins;
+    WorkspaceAgentSerializedProcessInvocationPreflightResult plan;
+};
+
+WorkspaceAgentPreparedProcessLaunch::WorkspaceAgentPreparedProcessLaunch(
+    std::unique_ptr<Impl> impl) noexcept
+    : impl_(std::move(impl)) {}
+
+WorkspaceAgentPreparedProcessLaunch::WorkspaceAgentPreparedProcessLaunch() =
+    default;
+WorkspaceAgentPreparedProcessLaunch::~WorkspaceAgentPreparedProcessLaunch() = default;
+WorkspaceAgentPreparedProcessLaunch::WorkspaceAgentPreparedProcessLaunch(
+    WorkspaceAgentPreparedProcessLaunch&&) noexcept = default;
+WorkspaceAgentPreparedProcessLaunch&
+WorkspaceAgentPreparedProcessLaunch::operator=(
+    WorkspaceAgentPreparedProcessLaunch&&) noexcept = default;
+
+bool WorkspaceAgentPreparedProcessLaunch::valid() const noexcept {
+    return impl_ != nullptr && impl_->valid();
+}
+
+std::uint64_t
+WorkspaceAgentPreparedProcessLaunch::session_generation() const noexcept {
+    return valid()
+        ? impl_->plan.serialized_environment.environment_plan.session_generation
+        : 0U;
+}
+
 namespace {
 
 struct AuditOutcome {
@@ -248,6 +297,42 @@ std::string process_arguments_diagnostic(
         total_bytes += argument.size();
     }
     return {};
+}
+
+bool same_serialized_process_invocation(
+    const WorkspaceAgentSerializedProcessInvocationPreflightResult& left,
+    const WorkspaceAgentSerializedProcessInvocationPreflightResult& right) {
+    const auto& left_environment = left.serialized_environment;
+    const auto& right_environment = right.serialized_environment;
+    const auto& left_plan = left_environment.environment_plan;
+    const auto& right_plan = right_environment.environment_plan;
+    return left.allowed == right.allowed &&
+        left.diagnostic_code == right.diagnostic_code &&
+        left_environment.allowed == right_environment.allowed &&
+        left_environment.diagnostic_code == right_environment.diagnostic_code &&
+        left_plan.allowed == right_plan.allowed &&
+        left_plan.diagnostic_code == right_plan.diagnostic_code &&
+        left_plan.session_generation == right_plan.session_generation &&
+        left_plan.effective_mode == right_plan.effective_mode &&
+        left_plan.tool_id == right_plan.tool_id &&
+        left_plan.canonical_executable_path ==
+            right_plan.canonical_executable_path &&
+        left_plan.executable_identity == right_plan.executable_identity &&
+        left_plan.canonical_working_directory ==
+            right_plan.canonical_working_directory &&
+        left_plan.working_directory_identity ==
+            right_plan.working_directory_identity &&
+        left_plan.arguments == right_plan.arguments &&
+        left_plan.environment_policy == right_plan.environment_policy &&
+        left_plan.environment_platform == right_plan.environment_platform &&
+        left_plan.environment_entries == right_plan.environment_entries &&
+        left_environment.posix_environment ==
+            right_environment.posix_environment &&
+        left_environment.windows_environment_block ==
+            right_environment.windows_environment_block &&
+        left.posix_arguments == right.posix_arguments &&
+        left.windows_command_line == right.windows_command_line &&
+        left.argument_parser_contract == right.argument_parser_contract;
 }
 
 }  // namespace
@@ -913,6 +998,81 @@ WorkspaceAgentSessionController::pin_process_target_request(
     result.pins = std::move(pin_result.pins);
     result.diagnostic_code =
         "workspace_agent.process_target_pin_request_allowed";
+    return result;
+}
+
+WorkspaceAgentPreparedProcessLaunchResult
+WorkspaceAgentSessionController::prepare_process_launch_candidate(
+    const WorkspaceAgentProcessInvocationPreflightRequest& request) const {
+    WorkspaceAgentPreparedProcessLaunchResult result;
+    const auto preliminary =
+        preflight_serialized_process_invocation_request(request);
+    if (!preliminary.allowed) {
+        result.diagnostic_code = preliminary.diagnostic_code;
+        return result;
+    }
+
+    const WorkspaceAgentProcessTargetPreflightRequest target_request{
+        .schema_version = request.schema_version,
+        .session_generation = request.session_generation,
+        .tool_id = request.tool_id,
+        .executable_path = request.executable_path,
+        .working_directory = request.working_directory};
+    auto pinned = pin_process_target_request(target_request);
+    if (!pinned.pinned || !pinned.pins.has_value()) {
+        result.diagnostic_code = pinned.diagnostic_code;
+        return result;
+    }
+
+    auto leased = acquire_process_launch_revocation_lease(
+        preliminary.serialized_environment.environment_plan.session_generation);
+    if (!leased.acquired || !leased.lease.has_value()) {
+        result.diagnostic_code = leased.diagnostic_code;
+        return result;
+    }
+
+    const auto final = preflight_serialized_process_invocation_request(request);
+    if (!final.allowed ||
+        !same_serialized_process_invocation(preliminary, final)) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_candidate_stale_invocation";
+        return result;
+    }
+    const auto& final_plan = final.serialized_environment.environment_plan;
+    if (pinned.session_generation != final_plan.session_generation ||
+        leased.lease->session_generation() != final_plan.session_generation ||
+        !pinned.pins->matches_target_identities(
+            final_plan.executable_identity,
+            final_plan.working_directory_identity)) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_candidate_target_changed";
+        return result;
+    }
+    const auto authentication = pinned.pins->verify_executable_bytes();
+    if (!authentication.authenticated) {
+        result.diagnostic_code = authentication.diagnostic_code;
+        return result;
+    }
+
+    try {
+        auto impl = std::make_unique<WorkspaceAgentPreparedProcessLaunch::Impl>(
+            final,
+            std::move(*pinned.pins),
+            std::move(*leased.lease));
+        result.candidate.emplace(
+            WorkspaceAgentPreparedProcessLaunch(std::move(impl)));
+    } catch (...) {
+        result.diagnostic_code =
+            "workspace_agent.process_launch_candidate_unavailable";
+        return result;
+    }
+    result.prepared = result.candidate->valid();
+    result.diagnostic_code = result.prepared
+        ? "workspace_agent.process_launch_candidate_prepared"
+        : "workspace_agent.process_launch_candidate_unavailable";
+    if (!result.prepared) {
+        result.candidate.reset();
+    }
     return result;
 }
 

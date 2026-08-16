@@ -726,6 +726,33 @@ environment, enter the retained working directory, start a process, apply a
 sandbox or endpoint/descendant policy, or audit a tool outcome. The
 `RQ-CF-AGENT-019` promotion gate therefore remains invariantly denied.
 
+## Prepared launch-candidate composition prerequisite
+
+Candidate `RQ-CF-AGENT-025` combines the existing non-executing prerequisites
+without exposing them as caller-editable authority. The trusted controller
+constructs a complete serialized invocation from the request, acquires the
+exact target pins and generation lease, constructs the complete serialized
+invocation again, and requires both plans to match field for field. It then
+requires the retained executable and working-directory identities to match the
+final plan and reauthenticates the immutable executable snapshot.
+
+Success returns one opaque move-only candidate that privately owns the final
+plan, pins, and lease. Its public surface exposes only validity and generation;
+it exposes no path, argument, environment, bytes, digest, native handle, or
+execution operation. Callers cannot supply a purported admitted plan. Candidate
+destruction discards the plan, closes retained objects, and only then releases
+the lease, so stop cannot complete while a candidate is live. The issuing
+controller must outlive every candidate. Inactive, stale,
+non-process-capable, unconfigured, changed-target, authentication-failed, or
+allocation-failed preparation returns no candidate and releases every partial
+resource.
+
+This composition is not an executor or launch authority. It does not enter the
+retained working directory, materialize or execute the private snapshot, apply
+a sandbox, enforce endpoint or descendant policy, or audit an outcome. The
+`RQ-CF-AGENT-019` promotion gate remains invariantly denied until those
+remaining boundaries are implemented and verified.
+
 ## Current implementation and remaining work
 
 Candidate `RQ-CF-AGENT-021` retains every successful configured layout
@@ -783,7 +810,10 @@ trusted-host executable-identity binding before Windows C-runtime command-line
 serialization; POSIX retains native argv semantics. Candidate
 `RQ-CF-AGENT-019` exposes a fail-closed promotion gate that returns no plan or
 digest and cannot authorize launch while coherent target pins and a revocation
-lease are unavailable. The adjacent
+lease are unavailable. Candidate `RQ-CF-AGENT-025` now composes the internally
+constructed exact serialized plan, authenticated pins, and exact-generation
+lease into one opaque move-only non-executing candidate, but it does not weaken
+that gate. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
@@ -791,10 +821,10 @@ ambient variables, and the next boundary serializes that exact plan for POSIX
 or Windows without launching. When trusted environment configuration is
 supplied, process-capable session start prepares that exact generation's
 private layout before audit-backed activation and fails closed without adopting
-existing state. None of these results is an executor,
-authorization token, or real sandbox. Prospective
+existing state. None of these results is an executor or real sandbox.
+Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, synchronous same-object executor integration,
+semantics, exact-snapshot materialization and execution,
 automatic lifecycle cleanup, crash-recoverable receipts, partial-cleanup retry,
 endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.

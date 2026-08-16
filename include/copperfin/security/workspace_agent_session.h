@@ -29,7 +29,7 @@ inline constexpr std::size_t
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
 // RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
-// RQ-CF-AGENT-018 through RQ-CF-AGENT-024.
+// RQ-CF-AGENT-018 through RQ-CF-AGENT-025.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -276,6 +276,44 @@ struct WorkspaceAgentProcessTargetPinPreflightResult {
     std::string diagnostic_code;
 };
 
+// Opaque, move-only ownership of one exact serialized process plan, its
+// authenticated target pins, and its exact-generation revocation lease. This
+// is a launch prerequisite, not launch authority: it exposes no plan, path,
+// argument, environment, bytes, digest, native handle, or execution operation.
+// The trusted host must keep the issuing controller alive until the candidate
+// has been discarded.
+class WorkspaceAgentPreparedProcessLaunch {
+public:
+    WorkspaceAgentPreparedProcessLaunch();
+    ~WorkspaceAgentPreparedProcessLaunch();
+    WorkspaceAgentPreparedProcessLaunch(
+        WorkspaceAgentPreparedProcessLaunch&&) noexcept;
+    WorkspaceAgentPreparedProcessLaunch& operator=(
+        WorkspaceAgentPreparedProcessLaunch&&) noexcept;
+    WorkspaceAgentPreparedProcessLaunch(
+        const WorkspaceAgentPreparedProcessLaunch&) = delete;
+    WorkspaceAgentPreparedProcessLaunch& operator=(
+        const WorkspaceAgentPreparedProcessLaunch&) = delete;
+
+    [[nodiscard]] bool valid() const noexcept;
+    [[nodiscard]] std::uint64_t session_generation() const noexcept;
+
+private:
+    class Impl;
+    explicit WorkspaceAgentPreparedProcessLaunch(
+        std::unique_ptr<Impl> impl) noexcept;
+
+    std::unique_ptr<Impl> impl_;
+
+    friend class WorkspaceAgentSessionController;
+};
+
+struct WorkspaceAgentPreparedProcessLaunchResult {
+    bool prepared = false;
+    std::optional<WorkspaceAgentPreparedProcessLaunch> candidate;
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -395,6 +433,15 @@ public:
     [[nodiscard]] WorkspaceAgentProcessTargetPinPreflightResult
     pin_process_target_request(
         const WorkspaceAgentProcessTargetPreflightRequest& request) const;
+
+    // Builds one opaque candidate entirely inside the trusted controller. It
+    // brackets target pinning and exact-generation lease acquisition with
+    // complete serialized invocation preflights, then requires the retained
+    // target identities and immutable snapshot to match. It does not expose or
+    // execute the plan and does not weaken the invariant promotion gate.
+    [[nodiscard]] WorkspaceAgentPreparedProcessLaunchResult
+    prepare_process_launch_candidate(
+        const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
 
 private:
     enum class Transition {
