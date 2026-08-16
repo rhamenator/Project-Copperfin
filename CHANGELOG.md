@@ -6,9 +6,8 @@
   thread is resolved, and PR `#5034` merged into `v1-development` as
   `67fbb1b69`. Evidence-only licensing/community/isolation/supply-chain/safety
   contracts pass `5/5`, including the 324.44-second safety scan. The
-  requirement remains a `gap` for second-qualified-human
-  high-severity documentation sign-off and the separately scoped launch
-  controls.
+  requirement remains a `gap` only for second-qualified-human high-severity
+  documentation sign-off; launch-readiness controls remain separately scoped.
 
 - 2026-08-15: Added candidate `RQ-CF-AGENT-022`, a move-only non-executing
   workspace-agent session-revocation lease for the exact active generation.
