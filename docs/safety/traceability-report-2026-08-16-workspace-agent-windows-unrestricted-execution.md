@@ -322,10 +322,14 @@ failure occurs before the private image, Job Object, explicit pipe handle list,
 fixed environment, or production command path participates. The fixture's
 entry marker is emitted from its C++ body, however, so that result does not
 distinguish a restricted-token launch-baseline failure from CRT startup before
-`main`. The next test-only candidate adds a second `/MT` Win32 probe that calls
-only `ExitProcess(41)` and runs it through the same direct and suspended matrix
-while retaining the full fixture checks. It changes no production authority or
+`main`. Protected rerun `31978743045` at exact head `627bd6492` proved the bare
+`/MT` probe also times out in both direct and suspended forms. That rules out
+C++ fixture and CRT startup, but does not identify why the same restricted test
+driver can itself run. The next test-only candidate keeps the token, executable,
+working directory, and `CREATE_NO_WINDOW` flag unchanged while supplying only
+the driver-inherited standard handles; normal and suspended forms will select
+that remaining direct-launch boundary. It changes no production authority or
 acceptance rule; local focused execution/materialization and exact-source
 machine contracts pass `2/2`, and the corrected-tree native-isolation and
-safety-traceability contracts pass, the latter in 325.59 seconds. Protected
+safety-traceability contracts pass, the latter in 324.42 seconds. Protected
 evidence remains required.

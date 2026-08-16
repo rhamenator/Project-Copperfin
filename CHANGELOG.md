@@ -120,11 +120,15 @@
   transition, but not CRT initialization before that fixture's `main` body.
   The next test-only candidate adds a separate `/MT` Win32 probe that exits via
   `ExitProcess` without C++ streams, filesystem, environment, or argument
-  processing, while retaining the full fixture matrix. It will distinguish the
-  restricted-token process-launch baseline from richer C++ fixture startup.
+  processing, while retaining the full fixture matrix. Protected run
+  `31978743045` then proved that this bare probe also times out in both direct
+  and suspended forms, so C++ fixture and CRT startup are not the cause. The
+  next test-only matrix keeps the same token, image, working directory, and
+  `CREATE_NO_WINDOW` flag while adding only valid inherited standard handles;
+  it selects whether that direct-launch boundary is the remaining difference.
   Local focused execution/materialization and machine-contract checks pass
   `2/2`; native test-isolation and safety-traceability contracts pass, with the
-  latter completing its corrected-tree scan in 325.59 seconds.
+  latter completing its corrected-tree scan in 324.42 seconds.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,

@@ -516,7 +516,8 @@ struct WindowsFixtureProbeResult {
 WindowsFixtureProbeResult run_windows_fixture_probe(
     const std::filesystem::path& executable,
     const std::filesystem::path& working_directory,
-    const std::wstring_view arguments, const bool start_suspended) {
+    const std::wstring_view arguments, const bool start_suspended,
+    const DWORD timeout_milliseconds, const bool inherit_standard_handles) {
     WindowsFixtureProbeResult result;
     std::wstring command_line = L"\"" + executable.native() + L"\"";
     if (!arguments.empty()) {
@@ -525,9 +526,16 @@ WindowsFixtureProbeResult run_windows_fixture_probe(
     }
     STARTUPINFOW startup{};
     startup.cb = sizeof(startup);
+    if (inherit_standard_handles) {
+        startup.dwFlags = STARTF_USESTDHANDLES;
+        startup.hStdInput = ::GetStdHandle(STD_INPUT_HANDLE);
+        startup.hStdOutput = ::GetStdHandle(STD_OUTPUT_HANDLE);
+        startup.hStdError = ::GetStdHandle(STD_ERROR_HANDLE);
+    }
     PROCESS_INFORMATION process{};
     const BOOL created = ::CreateProcessW(
-        executable.c_str(), command_line.data(), nullptr, nullptr, FALSE,
+        executable.c_str(), command_line.data(), nullptr, nullptr,
+        inherit_standard_handles ? TRUE : FALSE,
         CREATE_NO_WINDOW | (start_suspended ? CREATE_SUSPENDED : 0U), nullptr,
         working_directory.c_str(), &startup, &process);
     if (created == FALSE) {
@@ -548,7 +556,8 @@ WindowsFixtureProbeResult run_windows_fixture_probe(
             return result;
         }
     }
-    result.wait_result = ::WaitForSingleObject(process.hProcess, 5000U);
+    result.wait_result = ::WaitForSingleObject(
+        process.hProcess, timeout_milliseconds);
     if (result.wait_result == WAIT_OBJECT_0) {
         if (::GetExitCodeProcess(process.hProcess, &result.exit_code) == FALSE) {
             result.error = ::GetLastError();
@@ -577,26 +586,41 @@ void test_windows_fixture_startup_transitions() {
         throw std::runtime_error("Windows PE probe copy failed");
     }
     const auto probe_normal = run_windows_fixture_probe(
-        probe, tree.workspace / "working", L"", false);
+        probe, tree.workspace / "working", L"", false, 1000U, false);
     const auto probe_suspended = run_windows_fixture_probe(
-        probe, tree.workspace / "working", L"", true);
+        probe, tree.workspace / "working", L"", true, 1000U, false);
+    const auto probe_standard_handles_normal = run_windows_fixture_probe(
+        probe, tree.workspace / "working", L"", false, 1000U, true);
+    const auto probe_standard_handles_suspended = run_windows_fixture_probe(
+        probe, tree.workspace / "working", L"", true, 1000U, true);
     const auto normal = run_windows_fixture_probe(
         fixture, tree.workspace / "working",
-        L"--workspace-agent-child-v1 literal-payload", false);
+        L"--workspace-agent-child-v1 literal-payload", false, 5000U, false);
     const auto suspended = run_windows_fixture_probe(
         fixture, tree.workspace / "working",
-        L"--workspace-agent-child-v1 literal-payload", true);
+        L"--workspace-agent-child-v1 literal-payload", true, 5000U, false);
     const bool probe_normal_ok = probe_normal.created &&
         probe_normal.wait_result == WAIT_OBJECT_0 && probe_normal.exit_code == 41U;
     const bool probe_suspended_ok = probe_suspended.created &&
         probe_suspended.resume_count == 1U &&
         probe_suspended.wait_result == WAIT_OBJECT_0 &&
         probe_suspended.exit_code == 41U;
+    const bool probe_standard_handles_normal_ok =
+        probe_standard_handles_normal.created &&
+        probe_standard_handles_normal.wait_result == WAIT_OBJECT_0 &&
+        probe_standard_handles_normal.exit_code == 41U;
+    const bool probe_standard_handles_suspended_ok =
+        probe_standard_handles_suspended.created &&
+        probe_standard_handles_suspended.resume_count == 1U &&
+        probe_standard_handles_suspended.wait_result == WAIT_OBJECT_0 &&
+        probe_standard_handles_suspended.exit_code == 41U;
     const bool normal_ok = normal.created && normal.wait_result == WAIT_OBJECT_0 &&
         normal.exit_code == 23U;
     const bool suspended_ok = suspended.created && suspended.resume_count == 1U &&
         suspended.wait_result == WAIT_OBJECT_0 && suspended.exit_code == 23U;
-    if (!probe_normal_ok || !probe_suspended_ok || !normal_ok || !suspended_ok) {
+    if (!probe_normal_ok || !probe_suspended_ok ||
+        !probe_standard_handles_normal_ok ||
+        !probe_standard_handles_suspended_ok || !normal_ok || !suspended_ok) {
         std::cerr << "RQ-CF-AGENT-028 fixture transition diagnostics: probe-normal="
                   << probe_normal.created << '/' << probe_normal.wait_result << '/'
                   << probe_normal.exit_code << '/' << probe_normal.error
@@ -604,6 +628,17 @@ void test_windows_fixture_startup_transitions() {
                   << probe_suspended.resume_count << '/'
                   << probe_suspended.wait_result << '/'
                   << probe_suspended.exit_code << '/' << probe_suspended.error
+                  << " probe-standard-handles-normal="
+                  << probe_standard_handles_normal.created << '/'
+                  << probe_standard_handles_normal.wait_result << '/'
+                  << probe_standard_handles_normal.exit_code << '/'
+                  << probe_standard_handles_normal.error
+                  << " probe-standard-handles-suspended="
+                  << probe_standard_handles_suspended.created << '/'
+                  << probe_standard_handles_suspended.resume_count << '/'
+                  << probe_standard_handles_suspended.wait_result << '/'
+                  << probe_standard_handles_suspended.exit_code << '/'
+                  << probe_standard_handles_suspended.error
                   << " normal="
                   << normal.created << '/' << normal.wait_result << '/'
                   << normal.exit_code << '/' << normal.error
@@ -615,6 +650,10 @@ void test_windows_fixture_startup_transitions() {
            "RQ-CF-AGENT-028: restricted Windows direct minimal probe must exit before C++ fixture startup or execution controls");
     expect(probe_suspended_ok,
            "RQ-CF-AGENT-028: restricted Windows suspended minimal probe must resume and exit before C++ fixture startup or execution controls");
+    expect(probe_standard_handles_normal_ok,
+           "RQ-CF-AGENT-028: restricted Windows direct minimal probe with inherited standard handles must exit before private-image or transport controls");
+    expect(probe_standard_handles_suspended_ok,
+           "RQ-CF-AGENT-028: restricted Windows suspended minimal probe with inherited standard handles must resume and exit before private-image or transport controls");
     expect(normal_ok,
            "RQ-CF-AGENT-028: restricted Windows direct fixture launch must reach its fixed exit before private-image or transport controls");
     expect(suspended_ok,

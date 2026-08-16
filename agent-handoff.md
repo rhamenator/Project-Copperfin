@@ -70,12 +70,13 @@ compares captured lines with either Windows CRLF or LF framing. Protected run
 `31977374102` then proved that both direct and suspended launches of that
 fixture time out before its C++-body marker, ruling out private-image, Job,
 pipe, fixed-environment, and resume controls but not CRT startup before `main`.
-The next test-only head adds a bare `/MT` Win32 `ExitProcess(41)` probe through
-the same matrix, while retaining the full fixture to select the true
-restricted-token boundary. Protected execution remains required. The latest
-local focused machine-contract set passes `2/2`; native isolation and the
-corrected-tree safety-traceability contract also pass, the latter in 325.59
-seconds.
+Protected rerun `31978743045` proved that bare probe also times out in normal
+and suspended forms, excluding C++ fixture and CRT startup. The next test-only
+head keeps token, image, working directory, and `CREATE_NO_WINDOW` fixed while
+adding only inherited standard handles to select the remaining direct-launch
+boundary. Protected execution remains required. The latest local focused
+machine-contract set passes `2/2`; native isolation and the corrected-tree
+safety-traceability contract also pass, the latter in 324.42 seconds.
 
 ## V1 workspace-agent Windows launch-handle transition
 

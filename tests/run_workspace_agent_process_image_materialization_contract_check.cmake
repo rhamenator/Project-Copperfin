@@ -250,6 +250,9 @@ foreach(token IN ITEMS
         "test_windows_fixture_startup_transitions("
         "CREATE_SUSPENDED"
         "probe-normal="
+        "probe-standard-handles-normal="
+        "inherit_standard_handles ? TRUE : FALSE"
+        "restricted Windows direct minimal probe with inherited standard handles"
         "restricted Windows direct minimal probe"
         "restricted Windows suspended fixture launch")
     require_text(${environment_test} "${token}"
