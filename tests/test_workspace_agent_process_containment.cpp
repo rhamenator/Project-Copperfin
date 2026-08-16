@@ -611,6 +611,7 @@ void test_boundary_retains_exact_process_target_objects() {
                replay.diagnostic_code ==
                    "workspace_agent.process_target_pin_authority_unavailable",
            "RQ-CF-AGENT-023: an inspection authority must not authorize a second pin bundle");
+    correct_boundary.pins.reset();
 
     auto move_source = WorkspaceAgentProcessTargetBoundary::create(tree.workspace);
     expect(move_source.has_value(),
