@@ -17,11 +17,17 @@ Warning-as-error GCC Release workspace-agent execution passes `8/8`; fifty
 repeated candidate-lifecycle runs pass; and ASan/UBSan/leak plus
 ThreadSanitizer each pass `3/3` without findings. Licensing, community,
 native-platform, GitHub Actions, isolation, supply-chain, and safety contracts
-pass `7/7`, including the 338.24-second safety scan. This slice does not
-enter the working directory, materialize or execute the snapshot, apply a
-sandbox, enforce endpoints or descendants, audit an outcome, or make the
-promotion gate allow. Protected-platform, review,
-merge, and qualified high-severity documentation evidence remain pending.
+pass `7/7`, including the 338.24-second safety scan. All eleven protected checks
+pass at corrected signed/DCO head `628cedc5b` in runs `31928959822`,
+`31928960751`, `31928960746`, `31928960739`, and `31928960735`. Exact-head
+automated review is clean after the two exception-boundary P2 corrections, both
+threads are resolved and outdated, and PR `#5040` merged as `c74e9632c`.
+Evidence-only licensing, community, isolation, supply-chain, and safety
+contracts pass `5/5`, including the 318.29-second safety scan. Implementation
+evidence is complete. This slice does not enter the working
+directory, materialize or execute the snapshot, apply a sandbox, enforce
+endpoints or descendants, audit an outcome, or make the promotion gate allow;
+qualified high-severity documentation evidence remains pending.
 Initial exact-head review found that the exception boundary covered only final
 candidate allocation; the corrected implementation wraps the complete
 preflight, pin, lease, revalidation, authentication, and construction sequence
