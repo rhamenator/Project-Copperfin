@@ -87,7 +87,10 @@ foreach(token IN ITEMS
         "VOLUME_NAME_NT"
         "dos_volume_path_for_handle("
         "VOLUME_NAME_DOS"
+        "win32_working_directory_path("
+        "std::filesystem::path(path.substr(4U))"
         "if (!dos_working_directory.has_value())"
+        "if (!win32_working_directory.has_value())"
         "dos_volume_binding_diagnostic("
         "::GetDriveTypeW("
         "DRIVE_FIXED"
@@ -106,6 +109,8 @@ foreach(token IN ITEMS
         "::DuplicateHandle("
         "read_handle_identity(handle, true, component_identity)"
         "working_directory_chain.release()"
+        "retained_working_directory ="
+        "*win32_working_directory"
         "execution_working_directory()")
     require_text(${process_containment_source} "${token}"
         "stable Windows working-directory binding and compatible launch authority")

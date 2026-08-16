@@ -900,19 +900,27 @@ name captured from the retained authenticated image handle. A changed drive,
 Job-owned child is terminated without resuming user code.
 The retained target pins apply stable-volume naming and complete hierarchy
 retention to the working directory until process creation commits. Protected
-Windows evidence showed that passing that stable device path directly as the
-current directory can leave a resumed Win32 process unable to perform ordinary
-current-directory operations. The child therefore receives an extended DOS
-path derived from the same authenticated directory handle. It is admitted only
+Windows evidence showed that passing either the stable device path or the
+handle-derived extended DOS path directly as the current directory can leave a
+resumed Win32 process unable to reach its entry point. The child therefore
+receives the ordinary absolute drive spelling derived solely by removing the
+validated `\\?\` prefix from that extended DOS path. It is admitted only
 when the drive is fixed, `GetVolumePathNamesForVolumeNameW` lists that drive
 root for the handle's volume GUID, `GetVolumeInformationByHandleW` reports the retained
 storage identity from the authenticated handle without fresh root traversal,
-and reopening the DOS path under the retained stable chain returns
+and reopening the exact ordinary consumer path under the retained stable chain returns
 the exact directory identity before and after mapping validation. Network,
 mounted-folder-only, `SUBST`, removable, and identity-mismatched forms fail
 closed. Protected Windows run `31967738991` proved `QueryDosDeviceW` unavailable
 under the bounded restricted token, so that redundant query is not an admission
 prerequisite.
+Exact-head protected runs `31969922414` and `31969922779` independently proved
+that the extended DOS current-directory spelling still created, bound, and
+resumed the intended image but left both the normal and waiting fixtures timed
+out before their entry points. The ordinary spelling correction changes no
+mapping authority: the extended handle-derived path, fixed-drive mount-manager
+listing, handle volume identity, retained hierarchy, and exact consumer-path
+identity reopen remain mandatory.
 The stable name prefers a volume-GUID path and falls back only to a validated
 `GLOBALROOT\\Device\\HarddiskVolumeN` name when the local volume exposes no GUID.
 Network shares expose neither accepted local-volume form and are intentionally denied by

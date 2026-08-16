@@ -50,7 +50,20 @@ listing, matching handle volume identity, retained stable hierarchy, and exact
 DOS-path identity reopens before and after validation, all of which remain
 mandatory. Review follow-up also makes the DOS-path-invalid diagnostic reachable
 when handle-based DOS derivation fails, without changing admission. A corrected
-protected rerun is required.
+protected rerun at exact head `02021c666` then reached process creation, native-
+image binding, Job commitment, and resume in both Windows workflows
+(`31969922414` and `31969922779`), but both the normal and waiting children
+timed out without reaching their entry points. Together with the earlier stable-
+device-path result, this proves that neither device-style spelling is a usable
+Win32 runtime current directory. The next correction retains the handle-derived
+extended DOS form for fixed-volume authentication and mapping validation,
+derives only its ordinary absolute drive spelling by removing the already-
+validated `\\?\` prefix, identity-reopens that exact consumer spelling under
+the retained hierarchy, and passes it to `CreateProcessW`. Corrected protected
+execution remains required. The corrected tree repeats the focused behavior and
+machine-contract set at `7/7` and the licensing, community, release-license,
+isolation, supply-chain, and safety set at `6/6`, including the 341.27-second
+repository-wide safety scan.
 
 ## V1 workspace-agent Windows launch-handle transition
 

@@ -82,6 +82,17 @@
   Review follow-up routes a failed or malformed handle-derived DOS-path result
   to its dedicated content-free diagnostic instead of the generic pin-identity
   code; admission remains unchanged.
+  Exact-head protected runs `31969922414` and `31969922779` then independently
+  reached process creation, native-image binding, Job commitment, and resume,
+  but both the normal and waiting children timed out without output. This proves
+  the handle-derived extended DOS spelling is also unsuitable as the resumed
+  runtime current directory. The extended path remains the authenticated fixed-
+  volume mapping authority; production derives only its ordinary absolute drive
+  spelling, identity-reopens that exact consumer path under the retained stable
+  hierarchy, and passes the verified ordinary form to `CreateProcessW`. The
+  corrected tree passes the focused behavior/machine-contract set at `7/7` and
+  the policy/isolation/supply-chain/safety set at `6/6`, including the 341.27-
+  second repository-wide safety scan.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,
