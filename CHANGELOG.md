@@ -6,8 +6,14 @@
   search, owns descendants with a kill-on-close Job Object, releases the
   generation lease after successful assignment, and destroys the private image
   before a correlated content-free outcome. Transport controls expose no path,
-  arguments, environment, mode, or native authority. The public promotion gate
-  remains invariantly denied. Focused local Debug and warning-as-error GCC 15
+  arguments, environment, mode, or native authority. Review follow-up makes the
+  exact-digest dependency attestation launch-wide, so application-local and
+  working-directory DLL dependencies remain denied until authenticated closure
+  exists, and rejects same-controller lifecycle reentry from synchronous audit
+  callbacks to prevent self-lease deadlock. Elevated hosted Windows validation
+  now reexecutes only the test driver with a bounded LUA restricted token so the
+  production non-elevation gate is exercised instead of bypassed. The public
+  promotion gate remains invariantly denied. Focused local Debug and warning-as-error GCC 15
   Release execution pass `5/5`; fresh Clang 21 ASan/UBSan/leak passes `3/3`
   without findings; and licensing, community, release-license, isolation,
   supply-chain, and safety contracts pass `6/6`, including the 327.99-second

@@ -195,6 +195,31 @@ static_assert(
         copperfin::platform::BoundedProcessResult>,
     "RQ-CF-AGENT-028: a completed private launch must reach outcome audit without allocating while transferring its result");
 
+class WorkspaceAgentAuditCallbackGuard {
+public:
+    explicit WorkspaceAgentAuditCallbackGuard(
+        const WorkspaceAgentSessionController* controller) noexcept
+        : controller_(controller) {
+        if (controller_ != nullptr) {
+            controller_->active_audit_callbacks_.fetch_add(
+                1U, std::memory_order_acq_rel);
+        }
+    }
+    ~WorkspaceAgentAuditCallbackGuard() {
+        if (controller_ != nullptr) {
+            controller_->active_audit_callbacks_.fetch_sub(
+                1U, std::memory_order_acq_rel);
+        }
+    }
+    WorkspaceAgentAuditCallbackGuard(
+        const WorkspaceAgentAuditCallbackGuard&) = delete;
+    WorkspaceAgentAuditCallbackGuard& operator=(
+        const WorkspaceAgentAuditCallbackGuard&) = delete;
+
+private:
+    const WorkspaceAgentSessionController* controller_ = nullptr;
+};
+
 namespace {
 
 struct AuditOutcome {
@@ -204,10 +229,12 @@ struct AuditOutcome {
 
 AuditOutcome commit_audit_event(
     const WorkspaceAgentSessionAuditEvent& event,
-    const WorkspaceAgentSessionAuditSink& sink) {
+    const WorkspaceAgentSessionAuditSink& sink,
+    const WorkspaceAgentSessionController* controller) {
     WorkspaceAgentSessionAuditCommitResult result;
     if (sink.commit != nullptr) {
         try {
+            const WorkspaceAgentAuditCallbackGuard audit_scope(controller);
             result = sink.commit(event, sink.context);
         } catch (...) {
             result = {};
@@ -536,7 +563,7 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
             .effective_mode = decision.effective_mode,
             .outcome = decision.allowed ? "allowed" : "denied",
             .diagnostic_code = decision.diagnostic_code};
-        const AuditOutcome audit = commit_audit_event(event, audit_sink);
+        const AuditOutcome audit = commit_audit_event(event, audit_sink, this);
 
         WorkspaceAgentSessionStartResult result;
         result.audit_committed = audit.committed;
@@ -614,7 +641,8 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
             .effective_mode = WorkspaceAgentAccessMode::advisory,
             .outcome = "pending",
             .diagnostic_code = "workspace_agent.session_layout_cleanup_intent"};
-        const AuditOutcome intent_audit = commit_audit_event(intent, audit_sink);
+        const AuditOutcome intent_audit =
+            commit_audit_event(intent, audit_sink, this);
         result.intent_audit_committed = intent_audit.committed;
         result.intent_audit_receipt = intent_audit.receipt;
         if (!intent_audit.committed) {
@@ -651,7 +679,8 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
             .diagnostic_code = cleanup.diagnostic_code.empty()
                 ? "workspace_agent.environment_session_layout_cleanup_failed"
                 : cleanup.diagnostic_code};
-        const AuditOutcome outcome_audit = commit_audit_event(outcome, audit_sink);
+        const AuditOutcome outcome_audit =
+            commit_audit_event(outcome, audit_sink, this);
         result.outcome_audit_committed = outcome_audit.committed;
         result.outcome_audit_receipt = outcome_audit.receipt;
         result.diagnostic_code = outcome_audit.committed
@@ -676,6 +705,14 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
 
 WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
     const WorkspaceAgentSessionAuditSink& audit_sink) {
+    if (active_audit_callbacks_.load(std::memory_order_acquire) != 0U) {
+        WorkspaceAgentSessionStopResult result;
+        result.diagnostic_code =
+            "workspace_agent.session_reentrant_audit_transition_denied";
+        std::lock_guard lock(mutex_);
+        result.session = active_session_;
+        return result;
+    }
     WorkspaceAgentSessionSnapshot revoked_session;
     std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState> revocation_state;
     {
@@ -720,7 +757,7 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
         .effective_mode = WorkspaceAgentAccessMode::advisory,
         .outcome = "revoked",
         .diagnostic_code = "workspace_agent.session_stopped"};
-    const AuditOutcome audit = commit_audit_event(event, audit_sink);
+    const AuditOutcome audit = commit_audit_event(event, audit_sink, this);
 
     WorkspaceAgentSessionStopResult result;
     result.revoked = true;
@@ -1402,7 +1439,8 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             .diagnostic_code = denial.empty()
                 ? "workspace_agent.process_execution_failed"
                 : denial};
-        AuditOutcome intent_audit = commit_audit_event(intent, audit_sink);
+        AuditOutcome intent_audit =
+            commit_audit_event(intent, audit_sink, this);
         result.intent_audit_committed = intent_audit.committed;
         result.intent_audit_receipt = std::move(intent_audit.receipt);
         if (!intent_audit.committed) {
@@ -1444,7 +1482,7 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
         // released before the durable outcome is submitted.
         launch = WorkspaceAgentMaterializedProcessLaunch{};
         AuditOutcome outcome_audit =
-            commit_audit_event(outcome_event, audit_sink);
+            commit_audit_event(outcome_event, audit_sink, this);
         result.outcome_audit_committed = outcome_audit.committed;
         result.outcome_audit_receipt = std::move(outcome_audit.receipt);
         if (outcome_audit.committed) {

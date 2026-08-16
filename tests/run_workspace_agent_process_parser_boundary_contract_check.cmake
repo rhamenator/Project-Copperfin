@@ -20,7 +20,7 @@ require_text(CMakeLists.txt "src/security/workspace_agent_process_parser.cpp")
 require_text(include/copperfin/security/workspace_agent_process_parser.h
     "WorkspaceAgentProcessArgumentParserContract")
 require_text(include/copperfin/security/workspace_agent_process_parser.h
-    "self_contained_parser_image_v1")
+    "self_contained_launch_image_v1")
 require_text(include/copperfin/security/workspace_agent_process_parser.h
     "Trusted product-host configuration only")
 require_text(include/copperfin/security/workspace_agent_process_parser.h

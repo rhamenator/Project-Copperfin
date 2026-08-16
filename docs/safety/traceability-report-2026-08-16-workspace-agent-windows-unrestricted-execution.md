@@ -25,6 +25,8 @@ use.
 | `DQ-workspace-agent-windows-execution-004`: the child shall start suspended, inherit only fixed standard handles, enter a kill-on-close Job Object before resume, obey bounded transport/time/cancellation controls, and leave no authorized descendant | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-005`: Job Object assignment shall commit launch and release the exact-generation lease so stop can revoke before a long-running child exits, while the private image remains owned until the process tree closes | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-006`: workspace-sandbox, stale or cross-controller authority, invalid controls, elevated or unknown elevation, and non-Windows hosts shall consume the attempt and fail closed without execution; the public promotion gate shall remain denied | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-007`: admitted images shall attest launch-wide system-only dependency behavior; the private image shall not fall back to mutable source-adjacent or working-directory DLLs | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-004` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-008`: same-controller lifecycle reentry from a synchronous audit callback shall fail closed without waiting on the callback stack's revocation lease | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-005` | `HZ-system-failure-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
   exercise one-attempt consumption, sandbox and platform denial, failed-intent
@@ -40,6 +42,12 @@ use.
   exercise fail-closed platform denial. Broader security, isolation, safety,
   exact-head review, and merge evidence are required before implementation
   evidence is complete.
+- `DV-workspace-agent-windows-execution-004`: parser/dependency configuration
+  contracts require the exact-digest `self_contained_launch_image_v1`
+  attestation and reject absent or unknown dependency contracts.
+- `DV-workspace-agent-windows-execution-005`: a synchronous intent-audit sink
+  attempts same-controller `stop()`; the call is denied without deadlock and a
+  later ordinary stop and cleanup succeed.
 
 ## Hazard, misuse, boundary, and rollback analysis
 
@@ -58,7 +66,10 @@ use.
   interpretation is added.
 - Mutable-source replacement: the launcher never reopens or executes the
   original tool source. The RQ-027 read-only identity-bound private image
-  remains live throughout process completion and cleanup.
+  remains live throughout process completion and cleanup. RQ-018's exact-
+  digest launch-wide dependency attestation rejects tools that need
+  application-local or working-directory DLLs until an authenticated
+  dependency-closure design exists.
 - Descendant escape and resource exhaustion: the process is created suspended
   and assigned to a kill-on-close Job Object before resume. Timeout,
   cancellation, output limits, transport failure, and ordinary completion all
@@ -73,6 +84,9 @@ use.
   prompts, credentials, receipts, and native errors are excluded. Outcome-audit
   failure remains visible but cannot retroactively stop a completed attempt.
   Crash-recoverable intent reconciliation is not yet implemented.
+- Audit-callback reentry: same-controller lifecycle changes are not a supported
+  callback operation. They fail closed immediately, preventing a callback from
+  waiting on the exact lease owned by its own process-intent stack.
 - Rollback: revert RQ-028's controller method, private bounded-process seam,
   schema-v2 process-audit validation, regressions, and this documentation
   together. RQ-025 through RQ-027 then remain safe non-executing prerequisites,
@@ -114,3 +128,13 @@ libraries but rejected the test-only child fixture because MSVC treats direct
 uses Copperfin's portable environment reader, preserving the same absent-secret
 assertion without weakening warnings. Focused local behavior and the machine
 contract pass `2/2`; a corrected protected Windows rerun remains required.
+
+Corrected-head generated-launcher run `31947228580` then compiled and passed the
+private-image, parser, session, and contract targets, but its elevated hosted
+runner could not satisfy RQ-028's deliberate non-elevated execution condition;
+both direct execution assertions failed. The Windows-only test driver now
+detects that validation-host condition and reexecutes itself once with a test-
+owned `LUA_TOKEN | DISABLE_MAX_PRIVILEGE` restricted token, with a bounded wait
+and explicit proof that the child is non-elevated. Product execution still
+refuses elevated or indeterminate hosts; no production privilege or policy was
+loosened. A fresh protected rerun is required.

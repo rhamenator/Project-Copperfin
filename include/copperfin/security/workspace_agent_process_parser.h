@@ -32,9 +32,10 @@ enum class WorkspaceAgentProcessArgumentParserContract : std::uint32_t {
 enum class WorkspaceAgentProcessParserDependencyContract : std::uint32_t {
     none = 0U,
     // Trusted product evidence for this exact image digest establishes that
-    // argument parsing does not depend on mutable non-system load-time images.
-    // General adjacent-DLL dependency closures are not supported by this slice.
-    self_contained_parser_image_v1 = 1U
+    // launch and argument parsing depend only on Windows-trusted system images,
+    // never an application-local or working-directory DLL. General adjacent-DLL
+    // dependency closures are not supported by this slice.
+    self_contained_launch_image_v1 = 1U
 };
 
 struct WorkspaceAgentWindowsProcessParserBinding {

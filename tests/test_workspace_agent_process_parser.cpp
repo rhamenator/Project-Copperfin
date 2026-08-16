@@ -64,7 +64,7 @@ public:
                 .expected_identity = trusted.identity,
                 .expected_sha256 = digest_for(trusted),
                 .dependency_contract = WorkspaceAgentProcessParserDependencyContract::
-                    self_contained_parser_image_v1,
+                    self_contained_launch_image_v1,
                 .contract = WorkspaceAgentProcessArgumentParserContract::
                     windows_c_runtime_argv_v1}}};
     }
@@ -230,7 +230,7 @@ void test_invalid_configuration_fails_closed() {
         WorkspaceAgentProcessParserDependencyContract::none;
     expect(!WorkspaceAgentProcessParserBoundary::create(
                 missing_dependency_contract).has_value(),
-           "RQ-CF-AGENT-018: parser authority must require exact-digest trusted product evidence of a self-contained parser image");
+           "RQ-CF-AGENT-018: parser authority must require exact-digest trusted product evidence of a self-contained launch image");
 
     auto unknown_dependency_contract = tree.configuration();
     unknown_dependency_contract.windows_bindings.front().dependency_contract =

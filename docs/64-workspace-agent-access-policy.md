@@ -603,11 +603,13 @@ construction. Provider, model, prompt, workspace, and tool-request input cannot
 create or select this authority.
 
 The same trusted product record must attest
-`self_contained_parser_image_v1` for that exact digest: argument parsing may not
-depend on mutable non-system load-time images. This slice intentionally rejects
-executables whose parser behavior depends on adjacent DLLs; a later dependency-
-closure contract must authenticate and launch-isolate every such image before
-those executables can receive parser authority. The attestation is a product
+`self_contained_launch_image_v1` for that exact digest: both process startup and
+argument parsing may depend only on Windows-trusted system images, never an
+application-local or working-directory DLL. The private exact-image directory
+therefore intentionally replaces the source executable's application directory
+instead of preserving mutable adjacent-DLL lookup. A later dependency-closure
+contract must authenticate and launch-isolate every required non-system image
+before such executables can receive authority. The attestation is a product
 configuration obligation established through review of the exact digest, not an
 inference from PE structure.
 
@@ -864,7 +866,10 @@ nothing. The Windows launcher uses the private image path only internally as
 `lpApplicationName`, preserves the authenticated original executable spelling
 as `argv[0]`, passes the fixed double-NUL environment and canonical working
 directory directly, never invokes a shell or PATH search, and admits only the
-three fixed standard handles. It creates the process suspended, assigns it to a
+three fixed standard handles. The exact-digest
+`self_contained_launch_image_v1` admission contract requires system-only load-
+time dependencies: the private directory deliberately does not preserve the
+mutable source executable directory for adjacent-DLL lookup. It creates the process suspended, assigns it to a
 kill-on-close Job Object, then releases the plan, target pins, and generation
 lease before starting threads or resuming the child. Consequently stop may
 revoke the session after launch commitment without waiting for a long-running
@@ -880,6 +885,13 @@ record. An outcome-audit failure remains visible after execution and does not
 rewrite the process result. This is explicitly dangerous current-user
 authority chosen after the versioned warning, not sandbox containment and not
 privilege elevation.
+
+Audit callbacks are synchronous persistence boundaries, not controller command
+hooks. A lifecycle transition reentered on the same controller from one of its
+audit callbacks is rejected with a stable diagnostic. In particular, a launch-
+intent callback cannot call `stop()` and wait on the exact revocation lease held
+by its own stack; the caller may issue `stop()` normally after the callback and
+execution operation return.
 
 The public `RQ-CF-AGENT-019` promotion gate remains invariantly denied. This
 slice does not connect provider or model output to native execution, implement

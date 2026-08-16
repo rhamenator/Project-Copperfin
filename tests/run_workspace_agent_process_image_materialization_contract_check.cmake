@@ -188,6 +188,7 @@ foreach(token IN ITEMS
         "workspace_agent.process_execution_elevated_host_denied"
         "WorkspaceAgentSessionEventKind::process_launch_intent"
         "WorkspaceAgentSessionEventKind::process_launch_outcome"
+        "workspace_agent.session_reentrant_audit_transition_denied"
         "release_launch_authority()"
         "run_bounded_windows_private_executable(")
     require_text(${session_source} "${token}" "controller-only one-attempt consumption")
@@ -216,6 +217,10 @@ foreach(token IN ITEMS
         "execute_materialized_process_launch("
         "process_execution_requires_unrestricted_local"
         "revocation lease before the bounded child exits"
+        "intent-audit callback must not wait on its own retained launch lease"
+        "--workspace-agent-non-elevated-test-driver-v1"
+        "CreateRestrictedToken("
+        "LUA_TOKEN | DISABLE_MAX_PRIVILEGE"
         "cross-controller"
         "materialization must not silently weaken the invariant execution denial")
     require_text(${environment_test} "${token}" "controller materialization regression")

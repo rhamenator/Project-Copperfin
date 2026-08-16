@@ -26,6 +26,12 @@
 #include <thread>
 #include <vector>
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
+
 namespace {
 
 using copperfin::security::WorkspaceAgentAccessMode;
@@ -200,6 +206,66 @@ static_assert(
 int failures = 0;
 std::filesystem::path running_test_executable;
 
+#if defined(_WIN32)
+int run_test_driver_with_lua_token() {
+    HANDLE process_token = nullptr;
+    HANDLE lua_token = nullptr;
+    if (::OpenProcessToken(
+            ::GetCurrentProcess(),
+            TOKEN_DUPLICATE | TOKEN_ASSIGN_PRIMARY | TOKEN_QUERY,
+            &process_token) == FALSE ||
+        ::CreateRestrictedToken(
+            process_token, LUA_TOKEN | DISABLE_MAX_PRIVILEGE, 0U, nullptr, 0U,
+            nullptr, 0U, nullptr, &lua_token) == FALSE) {
+        const DWORD error = ::GetLastError();
+        if (process_token != nullptr) {
+            (void)::CloseHandle(process_token);
+        }
+        std::cerr << "FAIL: unable to create non-elevated Windows test token: "
+                  << error << '\n';
+        return EXIT_FAILURE;
+    }
+    (void)::CloseHandle(process_token);
+
+    std::wstring command_line = L"\"" + running_test_executable.native() +
+        L"\" --workspace-agent-non-elevated-test-driver-v1";
+    command_line.push_back(L'\0');
+    STARTUPINFOW startup{};
+    startup.cb = sizeof(startup);
+    startup.dwFlags = STARTF_USESTDHANDLES;
+    startup.hStdInput = ::GetStdHandle(STD_INPUT_HANDLE);
+    startup.hStdOutput = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    startup.hStdError = ::GetStdHandle(STD_ERROR_HANDLE);
+    PROCESS_INFORMATION process{};
+    const BOOL created = ::CreateProcessAsUserW(
+        lua_token, running_test_executable.c_str(), command_line.data(), nullptr,
+        nullptr, TRUE, 0U, nullptr, nullptr, &startup, &process);
+    const DWORD create_error = created == FALSE ? ::GetLastError() : ERROR_SUCCESS;
+    (void)::CloseHandle(lua_token);
+    if (created == FALSE) {
+        std::cerr << "FAIL: unable to launch non-elevated Windows test driver: "
+                  << create_error << '\n';
+        return EXIT_FAILURE;
+    }
+    (void)::CloseHandle(process.hThread);
+    const DWORD wait = ::WaitForSingleObject(process.hProcess, 60'000U);
+    DWORD exit_code = EXIT_FAILURE;
+    if (wait != WAIT_OBJECT_0 ||
+        ::GetExitCodeProcess(process.hProcess, &exit_code) == FALSE) {
+        const DWORD wait_error = wait == WAIT_FAILED
+            ? ::GetLastError()
+            : ERROR_TIMEOUT;
+        (void)::TerminateProcess(process.hProcess, EXIT_FAILURE);
+        (void)::WaitForSingleObject(process.hProcess, 5000U);
+        std::cerr << "FAIL: non-elevated Windows test driver did not complete: "
+                  << wait_error << '\n';
+        exit_code = EXIT_FAILURE;
+    }
+    (void)::CloseHandle(process.hProcess);
+    return static_cast<int>(exit_code);
+}
+#endif
+
 void expect(bool condition, const std::string& message) {
     if (!condition) {
         std::cerr << "FAIL: " << message << '\n';
@@ -320,7 +386,7 @@ public:
                 .expected_identity = trusted.identity,
                 .expected_sha256 = digest.ok ? digest.hex_digest : std::string{},
                 .dependency_contract = WorkspaceAgentProcessParserDependencyContract::
-                    self_contained_parser_image_v1,
+                    self_contained_launch_image_v1,
                 .contract = WorkspaceAgentProcessArgumentParserContract::
                     windows_c_runtime_argv_v1}}};
     }
@@ -366,6 +432,30 @@ WorkspaceAgentSessionAuditCommitResult capture_audit(
 
 WorkspaceAgentSessionAuditSink audit_sink(AuditCapture& capture) {
     return {.commit = capture_audit, .context = &capture};
+}
+
+struct ReentrantStopAudit {
+    WorkspaceAgentSessionController* controller = nullptr;
+    bool stop_attempted = false;
+    copperfin::security::WorkspaceAgentSessionStopResult stop_result;
+    std::vector<WorkspaceAgentSessionAuditEvent> events;
+};
+
+WorkspaceAgentSessionAuditCommitResult capture_audit_with_reentrant_stop(
+    const WorkspaceAgentSessionAuditEvent& event,
+    void* context) {
+    auto* capture = static_cast<ReentrantStopAudit*>(context);
+    if (capture == nullptr || capture->controller == nullptr) {
+        return {};
+    }
+    capture->events.push_back(event);
+    if (!capture->stop_attempted &&
+        event.kind == copperfin::security::WorkspaceAgentSessionEventKind::
+            process_launch_intent) {
+        capture->stop_attempted = true;
+        capture->stop_result = capture->controller->stop(audit_sink());
+    }
+    return {.ok = true, .receipt = "isolated-environment-reentrant-receipt"};
 }
 
 WorkspaceAgentActivationRequest activation_request() {
@@ -1063,6 +1153,44 @@ void test_committed_execution_releases_revocation_lease_before_child_exit() {
     expect(controller.cleanup_pending_session_layout(audit_sink()).cleaned,
            "RQ-CF-AGENT-028: image destruction after a revoked running invocation must permit normal layout cleanup");
 #endif
+}
+
+void test_process_intent_audit_reentrant_stop_is_denied() {
+    TempTree tree;
+    WorkspaceAgentSessionController controller(
+        tree.workspace, tree.configuration(), tree.parser_configuration());
+    const auto started = controller.start(
+        unrestricted_activation_request(), audit_sink());
+    auto prepared = controller.prepare_process_launch_candidate(
+        execution_invocation_request(started.session.generation));
+    if (!prepared.candidate.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: reentrant-audit fixture must prepare one candidate");
+        return;
+    }
+    auto materialized = controller.materialize_process_launch_candidate(
+        std::move(*prepared.candidate));
+    if (!materialized.launch.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: reentrant-audit fixture must materialize one image");
+        return;
+    }
+
+    ReentrantStopAudit audit{};
+    audit.controller = &controller;
+    const auto executed = controller.execute_materialized_process_launch(
+        std::move(*materialized.launch), WorkspaceAgentProcessExecutionControls{},
+        {.commit = capture_audit_with_reentrant_stop, .context = &audit});
+    expect(audit.stop_attempted && !audit.stop_result.revoked &&
+               audit.stop_result.diagnostic_code ==
+                   "workspace_agent.session_reentrant_audit_transition_denied" &&
+               audit.stop_result.session.active && audit.events.size() == 2U &&
+               executed.intent_audit_committed &&
+               executed.outcome_audit_committed,
+           "RQ-CF-AGENT-028: an intent-audit callback must not wait on its own retained launch lease through reentrant stop");
+    expect(controller.stop(audit_sink()).revoked &&
+               controller.cleanup_pending_session_layout(audit_sink()).cleaned,
+           "RQ-CF-AGENT-028: denied reentrant stop must preserve a later explicit revocation and cleanup");
 }
 
 void test_windows_serialization_requires_exact_parser_authority() {
@@ -1886,12 +2014,27 @@ int main(int argc, char** argv) {
         std::cerr << "FAIL: Windows PE fixtures require the running test executable\n";
         return EXIT_FAILURE;
     }
+    const bool non_elevated_driver =
+        argc == 2 && argv[1] != nullptr &&
+        std::string_view(argv[1]) ==
+            "--workspace-agent-non-elevated-test-driver-v1";
+    const auto elevation = copperfin::platform::current_process_elevation();
+    if (!non_elevated_driver &&
+        elevation == copperfin::platform::CurrentProcessElevation::elevated) {
+        return run_test_driver_with_lua_token();
+    }
+    if (non_elevated_driver &&
+        elevation != copperfin::platform::CurrentProcessElevation::not_elevated) {
+        std::cerr << "FAIL: restricted Windows test driver remained elevated\n";
+        return EXIT_FAILURE;
+    }
 #endif
     test_fixed_non_inheriting_environment();
     test_prepared_launch_candidate_binds_plan_pins_and_revocation();
     test_prepared_candidate_materializes_only_retained_snapshot();
     test_materialized_execution_is_windows_unrestricted_and_audited();
     test_committed_execution_releases_revocation_lease_before_child_exit();
+    test_process_intent_audit_reentrant_stop_is_denied();
     test_windows_serialization_requires_exact_parser_authority();
     test_secure_generation_layout_preparation();
     test_identity_bound_empty_layout_cleanup();
