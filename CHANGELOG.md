@@ -1,3 +1,15 @@
+- 2026-08-15: Completed implementation evidence for candidate
+  `RQ-CF-AGENT-023` at corrected exact signed/DCO head `f4fa82829`. The first
+  protected Windows environment run exposed a test-only pin-lifetime defect;
+  releasing that completed proof bundle before the distinct rename phase made
+  the corrected Windows run green without changing product behavior. All
+  eleven corrected-head checks passed in runs `31921408867`, `31921409617`,
+  `31921409647`, `31921409664`, and `31921409722`; exact-head automated review
+  found no major issue, zero review threads exist, and PR `#5036` merged into
+  `v1-development` as `44e9eafea`. The requirement remains a `gap` only for
+  the current qualified high-severity documentation sign-off rule; broader
+  launch-readiness controls remain separately scoped.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-023`, an opaque move-only retained
   process-target pin bundle. Private one-attempt inspection provenance prevents
   field forgery, editing, replay, and cross-boundary use; acquisition opens and
