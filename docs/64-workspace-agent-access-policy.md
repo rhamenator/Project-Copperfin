@@ -887,11 +887,12 @@ authority chosen after the versioned warning, not sandbox containment and not
 privilege elevation.
 
 Audit callbacks are synchronous persistence boundaries, not controller command
-hooks. A lifecycle transition reentered on the same controller from one of its
-audit callbacks is rejected with a stable diagnostic. In particular, a launch-
+hooks. A lifecycle transition reentered on the same controller from the same
+callback thread is rejected with a stable diagnostic. In particular, a launch-
 intent callback cannot call `stop()` and wait on the exact revocation lease held
-by its own stack; the caller may issue `stop()` normally after the callback and
-execution operation return.
+by its own stack. An unrelated thread's ordinary `stop()` is not rejected; it
+waits for launch commitment and revokes normally. The callback caller may also
+issue `stop()` after the callback and execution operation return.
 
 The public `RQ-CF-AGENT-019` promotion gate remains invariantly denied. This
 slice does not connect provider or model output to native execution, implement

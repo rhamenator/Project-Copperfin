@@ -15,10 +15,12 @@
 #include <atomic>
 #include <cctype>
 #include <chrono>
+#include <condition_variable>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include <string>
 #include <string_view>
 #include <stdexcept>
@@ -456,6 +458,34 @@ WorkspaceAgentSessionAuditCommitResult capture_audit_with_reentrant_stop(
         capture->stop_result = capture->controller->stop(audit_sink());
     }
     return {.ok = true, .receipt = "isolated-environment-reentrant-receipt"};
+}
+
+struct SlowIntentAudit {
+    std::mutex mutex;
+    std::condition_variable changed;
+    bool intent_entered = false;
+    bool release_intent = false;
+    std::vector<WorkspaceAgentSessionAuditEvent> events;
+};
+
+WorkspaceAgentSessionAuditCommitResult capture_slow_intent_audit(
+    const WorkspaceAgentSessionAuditEvent& event,
+    void* context) {
+    auto* capture = static_cast<SlowIntentAudit*>(context);
+    if (capture == nullptr) {
+        return {};
+    }
+    std::unique_lock lock(capture->mutex);
+    capture->events.push_back(event);
+    if (event.kind == copperfin::security::WorkspaceAgentSessionEventKind::
+            process_launch_intent) {
+        capture->intent_entered = true;
+        capture->changed.notify_all();
+        capture->changed.wait(lock, [&capture] {
+            return capture->release_intent;
+        });
+    }
+    return {.ok = true, .receipt = "isolated-environment-slow-receipt"};
 }
 
 WorkspaceAgentActivationRequest activation_request() {
@@ -1191,6 +1221,67 @@ void test_process_intent_audit_reentrant_stop_is_denied() {
     expect(controller.stop(audit_sink()).revoked &&
                controller.cleanup_pending_session_layout(audit_sink()).cleaned,
            "RQ-CF-AGENT-028: denied reentrant stop must preserve a later explicit revocation and cleanup");
+}
+
+void test_process_intent_audit_allows_concurrent_stop_to_revoke() {
+    TempTree tree;
+    WorkspaceAgentSessionController controller(
+        tree.workspace, tree.configuration(), tree.parser_configuration());
+    const auto started = controller.start(
+        unrestricted_activation_request(), audit_sink());
+    auto prepared = controller.prepare_process_launch_candidate(
+        execution_invocation_request(started.session.generation));
+    if (!prepared.candidate.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: concurrent-stop fixture must prepare one candidate");
+        return;
+    }
+    auto materialized = controller.materialize_process_launch_candidate(
+        std::move(*prepared.candidate));
+    if (!materialized.launch.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: concurrent-stop fixture must materialize one image");
+        return;
+    }
+
+    SlowIntentAudit audit;
+    copperfin::security::WorkspaceAgentProcessExecutionResult execution_result;
+    std::thread execution_thread(
+        [&controller, &audit, &execution_result,
+         launch = std::move(*materialized.launch)]() mutable {
+            execution_result = controller.execute_materialized_process_launch(
+                std::move(launch), WorkspaceAgentProcessExecutionControls{},
+                {.commit = capture_slow_intent_audit, .context = &audit});
+        });
+    {
+        std::unique_lock lock(audit.mutex);
+        audit.changed.wait(lock, [&audit] { return audit.intent_entered; });
+    }
+
+    std::atomic_bool stop_finished{false};
+    copperfin::security::WorkspaceAgentSessionStopResult stop_result;
+    std::thread stop_thread([&controller, &stop_finished, &stop_result] {
+        stop_result = controller.stop(audit_sink());
+        stop_finished.store(true, std::memory_order_release);
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    const bool stopped_during_callback =
+        stop_finished.load(std::memory_order_acquire);
+    {
+        std::lock_guard lock(audit.mutex);
+        audit.release_intent = true;
+    }
+    audit.changed.notify_all();
+    execution_thread.join();
+    stop_thread.join();
+
+    expect(!stopped_during_callback && stop_result.revoked &&
+               stop_result.diagnostic_code == "workspace_agent.session_stopped" &&
+               execution_result.intent_audit_committed &&
+               execution_result.outcome_audit_committed,
+           "RQ-CF-AGENT-028: an unrelated thread's stop must wait through a slow intent audit and then revoke normally");
+    expect(controller.cleanup_pending_session_layout(audit_sink()).cleaned,
+           "RQ-CF-AGENT-028: concurrent stop after intent audit must preserve normal cleanup");
 }
 
 void test_windows_serialization_requires_exact_parser_authority() {
@@ -2035,6 +2126,7 @@ int main(int argc, char** argv) {
     test_materialized_execution_is_windows_unrestricted_and_audited();
     test_committed_execution_releases_revocation_lease_before_child_exit();
     test_process_intent_audit_reentrant_stop_is_denied();
+    test_process_intent_audit_allows_concurrent_stop_to_revoke();
     test_windows_serialization_requires_exact_parser_authority();
     test_secure_generation_layout_preparation();
     test_identity_bound_empty_layout_cleanup();

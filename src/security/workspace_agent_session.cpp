@@ -195,37 +195,53 @@ static_assert(
         copperfin::platform::BoundedProcessResult>,
     "RQ-CF-AGENT-028: a completed private launch must reach outcome audit without allocating while transferring its result");
 
-class WorkspaceAgentAuditCallbackGuard {
-public:
-    explicit WorkspaceAgentAuditCallbackGuard(
-        const WorkspaceAgentSessionController* controller) noexcept
-        : controller_(controller) {
-        if (controller_ != nullptr) {
-            controller_->active_audit_callbacks_.fetch_add(
-                1U, std::memory_order_acq_rel);
-        }
-    }
-    ~WorkspaceAgentAuditCallbackGuard() {
-        if (controller_ != nullptr) {
-            controller_->active_audit_callbacks_.fetch_sub(
-                1U, std::memory_order_acq_rel);
-        }
-    }
-    WorkspaceAgentAuditCallbackGuard(
-        const WorkspaceAgentAuditCallbackGuard&) = delete;
-    WorkspaceAgentAuditCallbackGuard& operator=(
-        const WorkspaceAgentAuditCallbackGuard&) = delete;
-
-private:
-    const WorkspaceAgentSessionController* controller_ = nullptr;
-};
-
 namespace {
 
 struct AuditOutcome {
     bool committed = false;
     std::string receipt;
 };
+
+class AuditCallbackScope;
+thread_local const AuditCallbackScope* active_audit_scope = nullptr;
+
+class AuditCallbackScope {
+public:
+    explicit AuditCallbackScope(
+        const WorkspaceAgentSessionController* controller) noexcept
+        : controller_(controller), previous_(active_audit_scope) {
+        active_audit_scope = this;
+    }
+    ~AuditCallbackScope() { active_audit_scope = previous_; }
+    AuditCallbackScope(const AuditCallbackScope&) = delete;
+    AuditCallbackScope& operator=(const AuditCallbackScope&) = delete;
+
+    [[nodiscard]] const WorkspaceAgentSessionController* controller()
+        const noexcept {
+        return controller_;
+    }
+    [[nodiscard]] const AuditCallbackScope* previous() const noexcept {
+        return previous_;
+    }
+
+private:
+    const WorkspaceAgentSessionController* controller_ = nullptr;
+    const AuditCallbackScope* previous_ = nullptr;
+};
+
+bool audit_callback_active_for(
+    const WorkspaceAgentSessionController* controller) noexcept {
+    if (controller == nullptr) {
+        return false;
+    }
+    for (const AuditCallbackScope* scope = active_audit_scope;
+         scope != nullptr; scope = scope->previous()) {
+        if (scope->controller() == controller) {
+            return true;
+        }
+    }
+    return false;
+}
 
 AuditOutcome commit_audit_event(
     const WorkspaceAgentSessionAuditEvent& event,
@@ -234,7 +250,7 @@ AuditOutcome commit_audit_event(
     WorkspaceAgentSessionAuditCommitResult result;
     if (sink.commit != nullptr) {
         try {
-            const WorkspaceAgentAuditCallbackGuard audit_scope(controller);
+            const AuditCallbackScope audit_scope(controller);
             result = sink.commit(event, sink.context);
         } catch (...) {
             result = {};
@@ -705,7 +721,7 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
 
 WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
     const WorkspaceAgentSessionAuditSink& audit_sink) {
-    if (active_audit_callbacks_.load(std::memory_order_acquire) != 0U) {
+    if (audit_callback_active_for(this)) {
         WorkspaceAgentSessionStopResult result;
         result.diagnostic_code =
             "workspace_agent.session_reentrant_audit_transition_denied";

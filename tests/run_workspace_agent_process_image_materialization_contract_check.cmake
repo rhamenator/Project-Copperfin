@@ -218,6 +218,7 @@ foreach(token IN ITEMS
         "process_execution_requires_unrestricted_local"
         "revocation lease before the bounded child exits"
         "intent-audit callback must not wait on its own retained launch lease"
+        "unrelated thread's stop must wait through a slow intent audit"
         "--workspace-agent-non-elevated-test-driver-v1"
         "CreateRestrictedToken("
         "LUA_TOKEN | DISABLE_MAX_PRIVILEGE"

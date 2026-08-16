@@ -12,7 +12,6 @@
 #include "copperfin/security/workspace_agent_target_containment.h"
 #include "copperfin/security/workspace_agent_tool_registry.h"
 
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -24,8 +23,6 @@
 #include <vector>
 
 namespace copperfin::security {
-
-class WorkspaceAgentAuditCallbackGuard;
 
 inline constexpr std::size_t
     workspace_agent_session_max_pending_layout_cleanups = 64U;
@@ -543,8 +540,6 @@ public:
         const WorkspaceAgentSessionAuditSink& audit_sink) const;
 
 private:
-    friend class WorkspaceAgentAuditCallbackGuard;
-
     enum class Transition {
         idle,
         starting,
@@ -553,7 +548,6 @@ private:
     };
 
     mutable std::mutex mutex_;
-    mutable std::atomic_uint32_t active_audit_callbacks_{0U};
     Transition transition_ = Transition::idle;
     std::uint64_t next_generation_ = 1U;
     WorkspaceAgentSessionSnapshot active_session_{};

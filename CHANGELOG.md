@@ -9,9 +9,10 @@
   arguments, environment, mode, or native authority. Review follow-up makes the
   exact-digest dependency attestation launch-wide, so application-local and
   working-directory DLL dependencies remain denied until authenticated closure
-  exists, and rejects same-controller lifecycle reentry from synchronous audit
-  callbacks to prevent self-lease deadlock. Elevated hosted Windows validation
-  now reexecutes only the test driver with a bounded LUA restricted token so the
+  exists, and rejects same-thread controller lifecycle reentry from synchronous
+  audit callbacks without denying ordinary concurrent revocation. Elevated
+  hosted Windows validation now reexecutes only the test driver with a bounded
+  LUA restricted token so the
   production non-elevation gate is exercised instead of bypassed. The public
   promotion gate remains invariantly denied. Focused local Debug and warning-as-error GCC 15
   Release execution pass `5/5`; fresh Clang 21 ASan/UBSan/leak passes `3/3`
