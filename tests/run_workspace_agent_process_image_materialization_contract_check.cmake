@@ -87,10 +87,7 @@ foreach(token IN ITEMS
         "VOLUME_NAME_NT"
         "dos_volume_path_for_handle("
         "VOLUME_NAME_DOS"
-        "win32_working_directory_path("
-        "std::filesystem::path(path.substr(4U))"
         "if (!dos_working_directory.has_value())"
-        "if (!win32_working_directory.has_value())"
         "dos_volume_binding_diagnostic("
         "::GetDriveTypeW("
         "DRIVE_FIXED"
@@ -109,8 +106,7 @@ foreach(token IN ITEMS
         "::DuplicateHandle("
         "read_handle_identity(handle, true, component_identity)"
         "working_directory_chain.release()"
-        "retained_working_directory ="
-        "*win32_working_directory"
+        "*dos_working_directory"
         "execution_working_directory()")
     require_text(${process_containment_source} "${token}"
         "stable Windows working-directory binding and compatible launch authority")
@@ -212,6 +208,8 @@ foreach(token IN ITEMS
         "::K32GetProcessImageFileNameW("
         "created_process_image_matches("
         "CREATE_SUSPENDED"
+        "const DWORD previous_suspend_count = ::ResumeThread(process_info.hThread)"
+        "polyglot.process.resume_state_invalid"
         "PROC_THREAD_ATTRIBUTE_JOB_LIST"
         "::TerminateJobObject(job, 1U)"
         "launch_committed(launch_committed_context)"
@@ -228,6 +226,12 @@ foreach(token IN ITEMS
         "PROC_THREAD_ATTRIBUTE_HANDLE_LIST")
     require_text(${bounded_process_source} "${token}"
         "bounded Windows exact-image launch contract")
+endforeach()
+foreach(token IN ITEMS
+        "workspace-agent-child-entry-v1"
+        "workspace-agent-child-arguments-unrecognized-v1")
+    require_text(${environment_test} "${token}"
+        "bounded Windows child-entry diagnostic fixture")
 endforeach()
 require_text(${platform_source}
     "parent_handle.get(), expected_parent_storage_id"

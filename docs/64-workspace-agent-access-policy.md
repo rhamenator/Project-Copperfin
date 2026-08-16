@@ -900,27 +900,30 @@ name captured from the retained authenticated image handle. A changed drive,
 Job-owned child is terminated without resuming user code.
 The retained target pins apply stable-volume naming and complete hierarchy
 retention to the working directory until process creation commits. Protected
-Windows evidence showed that passing either the stable device path or the
-handle-derived extended DOS path directly as the current directory can leave a
-resumed Win32 process unable to reach its entry point. The child therefore
-receives the ordinary absolute drive spelling derived solely by removing the
-validated `\\?\` prefix from that extended DOS path. It is admitted only
+Windows evidence showed that the stable device path, the handle-derived
+extended DOS path, and a separately identity-reopened ordinary DOS spelling all
+create, bind, and resume the intended image yet reproduce the same fixture
+timeout. Current-directory spelling is therefore not selected as the cause,
+and production retains the extended DOS form to preserve long-path behavior. It
+is admitted only
 when the drive is fixed, `GetVolumePathNamesForVolumeNameW` lists that drive
 root for the handle's volume GUID, `GetVolumeInformationByHandleW` reports the retained
 storage identity from the authenticated handle without fresh root traversal,
-and reopening the exact ordinary consumer path under the retained stable chain returns
+and reopening the exact extended DOS path under the retained stable chain returns
 the exact directory identity before and after mapping validation. Network,
 mounted-folder-only, `SUBST`, removable, and identity-mismatched forms fail
 closed. Protected Windows run `31967738991` proved `QueryDosDeviceW` unavailable
 under the bounded restricted token, so that redundant query is not an admission
 prerequisite.
 Exact-head protected runs `31969922414` and `31969922779` independently proved
-that the extended DOS current-directory spelling still created, bound, and
-resumed the intended image but left both the normal and waiting fixtures timed
-out before their entry points. The ordinary spelling correction changes no
-mapping authority: the extended handle-derived path, fixed-drive mount-manager
-listing, handle volume identity, retained hierarchy, and exact consumer-path
-identity reopen remain mandatory.
+that the extended DOS spelling reaches creation, native-image binding, Job
+commitment, and resume but leaves both fixtures timed out without output. Runs
+`31971595320` and `31971595343` reproduced the same result with the ordinary
+spelling. The bounded launcher now rejects any initial-thread resume result
+other than exactly one prior suspension, and the synthetic copied-child fixture
+emits fixed entry or unrecognized-argument markers before other child work.
+These content-free signals distinguish invalid resume state, pre-entry failure,
+and command-line mismatch without changing production arguments or environment.
 The stable name prefers a volume-GUID path and falls back only to a validated
 `GLOBALROOT\\Device\\HarddiskVolumeN` name when the local volume exposes no GUID.
 Network shares expose neither accepted local-volume form and are intentionally denied by

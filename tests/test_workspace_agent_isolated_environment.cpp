@@ -1216,6 +1216,8 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
                    std::filesystem::canonical(tree.workspace / "working")) &&
                executed.process.standard_output.find("ambient=<unset>\n") !=
                    std::string::npos &&
+               executed.process.standard_error.find(
+                   "workspace-agent-child-entry-v1\n") != std::string::npos &&
                executed.diagnostic_code == "polyglot.process.exited" &&
                audit.events.size() == 2U &&
                audit.events[0].operation_id == audit.events[1].operation_id &&
@@ -1320,6 +1322,8 @@ void test_committed_execution_releases_revocation_lease_before_child_exit() {
                !finished_when_stop_returned && execution_result.attempted &&
                execution_result.process.completed() &&
                execution_result.process.exit_code == 29 &&
+               execution_result.process.standard_error.find(
+                   "workspace-agent-child-entry-v1\n") != std::string::npos &&
                execution_result.outcome_audit_committed;
     if (!revocation_contract_holds) {
         std::cerr << "RQ-CF-AGENT-028 revocation diagnostics: observed="
@@ -1334,7 +1338,10 @@ void test_committed_execution_releases_revocation_lease_before_child_exit() {
                   << " tree_closed="
                   << execution_result.process.process_tree_closed
                   << " exit=" << execution_result.process.exit_code
-                  << " diagnostic=" << execution_result.diagnostic_code << '\n';
+                  << " diagnostic=" << execution_result.diagnostic_code
+                  << " stdout=" << execution_result.process.standard_output
+                  << " stderr=" << execution_result.process.standard_error
+                  << '\n';
     }
     expect(revocation_contract_holds,
            "RQ-CF-AGENT-028: job assignment must release the exact-generation revocation lease before the bounded child exits");
@@ -2333,23 +2340,30 @@ void test_controller_retains_and_audits_explicit_layout_cleanup() {
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc == 2 && argv[1] != nullptr &&
-        std::string_view(argv[1]) == "--workspace-agent-child-wait-v1") {
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        return 29;
-    }
-    if (argc == 3 && argv[1] != nullptr && argv[2] != nullptr &&
-        std::string_view(argv[1]) == "--workspace-agent-child-v1") {
-        const auto ambient =
-            copperfin::platform::read_environment_variable("GITHUB_TOKEN");
-        std::cout << "workspace-agent-child-v1\n"
-                  << "argv0=" << (argv[0] == nullptr ? "" : argv[0]) << '\n'
-                  << "payload=" << argv[2] << '\n'
-                  << "cwd=" << copperfin::platform::path_to_utf8_string(
-                         std::filesystem::current_path()) << '\n'
-                  << "ambient=" << (ambient.has_value() ? *ambient : "<unset>")
-                  << '\n';
-        return 23;
+    const bool copied_child_fixture = argc > 0 && argv[0] != nullptr &&
+        std::filesystem::path(argv[0]).filename() == "workspace-tool";
+    if (copied_child_fixture) {
+        std::cerr << "workspace-agent-child-entry-v1\n";
+        if (argc == 2 && argv[1] != nullptr &&
+            std::string_view(argv[1]) == "--workspace-agent-child-wait-v1") {
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            return 29;
+        }
+        if (argc == 3 && argv[1] != nullptr && argv[2] != nullptr &&
+            std::string_view(argv[1]) == "--workspace-agent-child-v1") {
+            const auto ambient =
+                copperfin::platform::read_environment_variable("GITHUB_TOKEN");
+            std::cout << "workspace-agent-child-v1\n"
+                      << "argv0=" << argv[0] << '\n'
+                      << "payload=" << argv[2] << '\n'
+                      << "cwd=" << copperfin::platform::path_to_utf8_string(
+                             std::filesystem::current_path()) << '\n'
+                      << "ambient="
+                      << (ambient.has_value() ? *ambient : "<unset>") << '\n';
+            return 23;
+        }
+        std::cerr << "workspace-agent-child-arguments-unrecognized-v1\n";
+        return 31;
     }
     if (argc > 0 && argv[0] != nullptr) {
         std::error_code canonical_error;

@@ -577,22 +577,6 @@ std::optional<std::filesystem::path> dos_volume_path_for_handle(
     }
 }
 
-std::optional<std::filesystem::path> win32_working_directory_path(
-    const std::filesystem::path& extended_dos_path) noexcept {
-    try {
-        const std::wstring& path = extended_dos_path.native();
-        if (path.size() < 7U || path.rfind(L"\\\\?\\", 0U) != 0U ||
-            !((path[4U] >= L'A' && path[4U] <= L'Z') ||
-              (path[4U] >= L'a' && path[4U] <= L'z')) ||
-            path[5U] != L':' || path[6U] != L'\\') {
-            return std::nullopt;
-        }
-        return std::filesystem::path(path.substr(4U));
-    } catch (...) {
-        return std::nullopt;
-    }
-}
-
 bool mount_manager_lists_drive_root(
     const HANDLE handle,
     const std::wstring_view drive_root) noexcept {
@@ -1302,13 +1286,6 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
             "workspace_agent.process_working_directory_dos_path_invalid";
         return result;
     }
-    const auto win32_working_directory =
-        win32_working_directory_path(*dos_working_directory);
-    if (!win32_working_directory.has_value()) {
-        result.diagnostic_code =
-            "workspace_agent.process_working_directory_dos_path_invalid";
-        return result;
-    }
     const char* binding_diagnostic = dos_volume_binding_diagnostic(
         *dos_working_directory, working_directory_handle.get(),
         working_directory_identity.storage_id);
@@ -1328,19 +1305,14 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
             "workspace_agent.process_target_pin_identity_changed";
         return result;
     }
-    // The extended DOS form remains the handle-derived mapping authority, but
-    // the Win32 runtime receives the ordinary absolute drive form. Reopen the
-    // exact consumer spelling under the retained hierarchy before publishing
-    // it to CreateProcessW.
-    ScopedPinHandle win32_working_directory_handle(
-        open_pin_handle(*win32_working_directory, true));
-    PhysicalPathIdentity win32_working_directory_identity{};
-    if (!win32_working_directory_handle.valid() ||
+    ScopedPinHandle dos_working_directory_handle(
+        open_pin_handle(*dos_working_directory, true));
+    PhysicalPathIdentity dos_working_directory_identity{};
+    if (!dos_working_directory_handle.valid() ||
         !read_handle_identity(
-            win32_working_directory_handle.get(), true,
-            win32_working_directory_identity) ||
-        win32_working_directory_identity !=
-            authority->working_directory_identity) {
+            dos_working_directory_handle.get(), true,
+            dos_working_directory_identity) ||
+        dos_working_directory_identity != authority->working_directory_identity) {
         result.diagnostic_code =
             "workspace_agent.process_target_pin_identity_changed";
         return result;
@@ -1359,7 +1331,7 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
     // Allocation then precedes the no-throw raw-handle transfer, so failure
     // leaves the scoped chain responsible for closing every acquired handle.
     std::filesystem::path retained_working_directory =
-        *win32_working_directory;
+        *dos_working_directory;
     std::string retained_executable_sha256 = authority->executable_sha256;
     auto impl = std::unique_ptr<WorkspaceAgentProcessTargetPins::Impl>(
         new WorkspaceAgentProcessTargetPins::Impl(

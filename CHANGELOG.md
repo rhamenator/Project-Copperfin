@@ -84,15 +84,18 @@
   code; admission remains unchanged.
   Exact-head protected runs `31969922414` and `31969922779` then independently
   reached process creation, native-image binding, Job commitment, and resume,
-  but both the normal and waiting children timed out without output. This proves
-  the handle-derived extended DOS spelling is also unsuitable as the resumed
-  runtime current directory. The extended path remains the authenticated fixed-
-  volume mapping authority; production derives only its ordinary absolute drive
-  spelling, identity-reopens that exact consumer path under the retained stable
-  hierarchy, and passes the verified ordinary form to `CreateProcessW`. The
-  corrected tree passes the focused behavior/machine-contract set at `7/7` and
-  the policy/isolation/supply-chain/safety set at `6/6`, including the 341.27-
-  second repository-wide safety scan.
+  but both child fixtures timed out without output. Exact-head ordinary-path
+  runs `31971595320` and `31971595343` reproduced the same result, disproving
+  current-directory spelling as the selected cause. Production therefore
+  restores the independently authenticated extended DOS form instead of
+  narrowing long-path compatibility. The next bounded discriminator requires
+  `ResumeThread` to report exactly one prior suspension and gives the synthetic
+  copied child fixed entry and unrecognized-argument markers; it exposes no
+  arguments or environment content and prevents accidental recursive test
+  execution. The diagnostic tree passes the focused behavior/machine-contract
+  set at `7/7` and the licensing, community, release-license, isolation,
+  supply-chain, and safety set at `6/6`, including the 323.10-second repository-
+  wide safety scan.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,

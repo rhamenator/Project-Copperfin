@@ -816,10 +816,17 @@ BoundedProcessResult run_windows(
         result.elapsed_ms = elapsed_milliseconds(started_at);
         return result;
     }
-    if (::ResumeThread(process_info.hThread) == static_cast<DWORD>(-1)) {
+    // CREATE_SUSPENDED owns exactly one suspension. Any different prior count
+    // means this boundary cannot prove that the initial thread became runnable.
+    const DWORD previous_suspend_count = ::ResumeThread(process_info.hThread);
+    if (previous_suspend_count != 1U) {
         result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.resume_failed";
-        result.native_error = static_cast<int>(::GetLastError());
+        result.error_code = previous_suspend_count == static_cast<DWORD>(-1)
+            ? "polyglot.process.resume_failed"
+            : "polyglot.process.resume_state_invalid";
+        result.native_error = previous_suspend_count == static_cast<DWORD>(-1)
+            ? static_cast<int>(::GetLastError())
+            : 0;
         if (::TerminateJobObject(job, 1U) == FALSE) {
             result.native_error = static_cast<int>(::GetLastError());
             result.error_code = "polyglot.process.tree_termination_failed";
