@@ -274,10 +274,13 @@ public:
         reset();
         try {
             std::filesystem::path current = directory.root_path();
-            if (current.empty() || !lock_one(current)) {
+            if (current.empty()) {
                 reset();
                 return false;
             }
+            // A drive or UNC share root cannot be renamed as a directory entry
+            // and Windows may refuse a delete-denying open on the volume root.
+            // Lock every actual directory entry below that stable root.
             for (const auto& component : directory.relative_path()) {
                 if (component.empty() || component == "." || component == "..") {
                     reset();
@@ -732,8 +735,8 @@ materialize_private_executable_image_in_verified_parent(
             return result;
         }
         // CreateProcessW reopens the image by pathname. Retain a no-delete-share
-        // handle for every directory from the volume root through the private
-        // parent, then repeat the leaf identity check. This prevents any
+        // handle for every renameable directory below the stable filesystem
+        // root through the private parent, then repeat the leaf identity check. This prevents any
         // ancestor name from being renamed or replaced between materialization
         // and the loader's open of the authenticated leaf.
         OwnedDirectoryChain directory_chain;

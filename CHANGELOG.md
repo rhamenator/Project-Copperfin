@@ -17,7 +17,8 @@
   exact-head review found that retaining only the authenticated file
   handle did not prevent an ancestor directory rename from redirecting the
   path reopened by `CreateProcessW`. The private image now retains no-delete-
-  share handles for the complete volume-root-to-parent chain, repeats the leaf
+  share handles for every renameable directory below the stable drive/UNC root
+  through the parent, repeats the leaf
   identity check after acquiring those locks, and directly regresses ancestor
   rename denial. Elevated
   hosted Windows validation now reexecutes only the test driver with a bounded

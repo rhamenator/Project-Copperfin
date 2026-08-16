@@ -867,8 +867,10 @@ nothing. The Windows launcher uses the private image path only internally as
 as `argv[0]`, passes the fixed double-NUL environment and canonical working
 directory directly, never invokes a shell or PATH search, and admits only the
 three fixed standard handles. Before exposing that internal launch path, the
-private image retains no-delete-share handles for every directory from the
-volume root through its private parent and reopens the leaf once more to prove
+private image retains no-delete-share handles for every renameable directory
+below the stable drive or UNC share root through its private parent (the
+intrinsically non-renameable root itself needs no handle) and reopens the leaf
+once more to prove
 the now-locked pathname still resolves to the authenticated image identity.
 Those locks remain owned through bounded process completion, so an ancestor
 rename or replacement cannot redirect `CreateProcessW` to different bytes.
