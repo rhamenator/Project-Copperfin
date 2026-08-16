@@ -494,14 +494,19 @@ BoundedProcessResult run_windows(
     const std::u16string* retained_command_line = nullptr,
     const std::u16string* retained_environment_block = nullptr,
     void (*launch_committed)(void*) noexcept = nullptr,
-    void* launch_committed_context = nullptr) {
+    void* launch_committed_context = nullptr,
+    const std::string* diagnostic_executable_path = nullptr) {
     BoundedProcessResult result;
     const auto started_at = Clock::now();
     int conversion_error = 0;
     const std::wstring executable = utf8_to_wide(request.executable_path, conversion_error);
+    const std::wstring diagnostic_executable = diagnostic_executable_path == nullptr
+        ? std::wstring{}
+        : utf8_to_wide(*diagnostic_executable_path, conversion_error);
     const std::wstring working_directory =
         utf8_to_wide(request.working_directory, conversion_error);
-    if (conversion_error != 0 || executable.empty() || working_directory.empty()) {
+    if (conversion_error != 0 || executable.empty() || working_directory.empty() ||
+        (diagnostic_executable_path != nullptr && diagnostic_executable.empty())) {
         result.status = BoundedProcessStatus::launch_failed;
         result.error_code = "polyglot.process.launch_failed";
         result.native_error = conversion_error == 0 ? ERROR_INVALID_PARAMETER : conversion_error;
@@ -735,18 +740,19 @@ BoundedProcessResult run_windows(
             }
         }
         PROCESS_INFORMATION diagnostic_process{};
-        const BOOL diagnostic_created = diagnostic_attributes_ready
+        const BOOL diagnostic_created =
+            diagnostic_attributes_ready && diagnostic_executable_path != nullptr
             ? ::CreateProcessW(
-                  executable.c_str(), diagnostic_command_line.data(), nullptr,
-                  nullptr, TRUE,
+                  diagnostic_executable.c_str(), diagnostic_command_line.data(),
+                  nullptr, nullptr, TRUE,
                   CREATE_NO_WINDOW | CREATE_SUSPENDED |
                       CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT,
-                  environment_block.data(), nullptr,
+                  environment_block.data(), working_directory.c_str(),
                   &diagnostic_startup.StartupInfo, &diagnostic_process)
             : FALSE;
         if (diagnostic_created != FALSE) {
             create_diagnostic =
-                "polyglot.process.working_directory_path_unsupported";
+                "polyglot.process.executable_path_unsupported";
             // The diagnostic child entered the kill-on-close Job Object
             // atomically at process creation and has never been resumed.
             // Closing the job below therefore retains cleanup authority even
@@ -767,9 +773,10 @@ BoundedProcessResult run_windows(
                     : ERROR_TIMEOUT;
             }
         } else {
-            if (diagnostic_attributes_ready) {
+            if (diagnostic_attributes_ready &&
+                diagnostic_executable_path != nullptr) {
                 create_diagnostic =
-                    "polyglot.process.executable_path_unsupported";
+                    "polyglot.process.working_directory_path_unsupported";
                 diagnostic_native_error = ::GetLastError();
             }
         }
@@ -1620,9 +1627,11 @@ BoundedProcessResult run_bounded_windows_private_executable(
     try {
 #if defined(_WIN32)
         const auto* path = image.windows_launch_target();
+        const auto* diagnostic_path = image.windows_diagnostic_launch_target();
         const auto& command_line = request.command_line;
         const auto& environment = request.environment_block;
-        if (path == nullptr || !image.valid() || !path->is_absolute() ||
+        if (path == nullptr || diagnostic_path == nullptr || !image.valid() ||
+            !path->is_absolute() || !diagnostic_path->is_absolute() ||
             request.working_directory.empty() ||
             !request.working_directory.is_absolute() || command_line.empty() ||
             command_line.find(u'\0') != std::u16string::npos ||
@@ -1637,9 +1646,12 @@ BoundedProcessResult run_bounded_windows_private_executable(
         }
         BoundedProcessRequest transport = request.transport;
         transport.executable_path = path_to_utf8_string(*path);
+        const std::string diagnostic_executable_path_value =
+            path_to_utf8_string(*diagnostic_path);
         transport.working_directory =
             path_to_utf8_string(request.working_directory);
         if (transport.executable_path.empty() ||
+            diagnostic_executable_path_value.empty() ||
             transport.working_directory.empty()) {
             return invalid_request();
         }
@@ -1651,7 +1663,8 @@ BoundedProcessResult run_bounded_windows_private_executable(
         }
         return run_windows(
             transport, &command_line, &environment,
-            request.launch_committed, request.launch_committed_context);
+            request.launch_committed, request.launch_committed_context,
+            &diagnostic_executable_path_value);
 #else
         static_cast<void>(image);
         static_cast<void>(request);

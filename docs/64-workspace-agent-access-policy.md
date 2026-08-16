@@ -897,6 +897,16 @@ The stable name prefers a volume-GUID path and falls back only to a validated
 Network shares expose neither accepted local-volume form and are intentionally denied by
 this v1 executor; unrestricted execution is limited to authenticated local-
 volume targets.
+Protected Windows execution at exact head `0023f74e9` directly proved that
+`CreateProcessW` rejects the authenticated stable device-form application name
+with `ERROR_INVALID_PARAMETER`. The private image therefore also retains a
+handle-derived extended DOS-form diagnostic name only after reopening that name
+and matching the same volume/file/creation/size identity under the already-
+retained stable hierarchy. A never-resumed, Job-owned compatibility probe uses
+that DOS application name with the still-stable working-directory name. Success
+proves the executable-name limitation while preserving the working-directory
+boundary; failure reports the working-directory compatibility gap. The DOS name
+is not yet an execution fallback and the probe never resumes user code.
 The exact-digest
 `self_contained_launch_image_v1` admission contract requires system-only load-
 time dependencies: the private directory deliberately does not preserve the

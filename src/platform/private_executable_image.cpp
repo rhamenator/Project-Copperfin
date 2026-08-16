@@ -140,6 +140,23 @@ std::optional<std::filesystem::path> stable_volume_path_for_handle(
     }
 }
 
+std::optional<std::filesystem::path> dos_volume_path_for_handle(
+    const HANDLE handle) noexcept {
+    try {
+        auto dos = final_path_for_handle(handle, VOLUME_NAME_DOS);
+        if (!dos.has_value() || dos->size() < 7U ||
+            dos->rfind(L"\\\\?\\", 0U) != 0U ||
+            !(((*dos)[4U] >= L'A' && (*dos)[4U] <= L'Z') ||
+              ((*dos)[4U] >= L'a' && (*dos)[4U] <= L'z')) ||
+            (*dos)[5U] != L':' || (*dos)[6U] != L'\\') {
+            return std::nullopt;
+        }
+        return std::filesystem::path(std::move(*dos));
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
 bool exact_file_shape(
     const HANDLE handle,
     const std::size_t expected_size) noexcept {
@@ -621,11 +638,13 @@ public:
 #if defined(_WIN32)
     Impl(
         HANDLE handle_value,
-        std::filesystem::path path_value,
+        std::filesystem::path stable_path_value,
+        std::filesystem::path diagnostic_path_value,
         OwnedDirectoryChain directory_chain_value,
         std::size_t size_value) noexcept
         : handle(handle_value),
-          path(std::move(path_value)),
+          stable_path(std::move(stable_path_value)),
+          diagnostic_path(std::move(diagnostic_path_value)),
           directory_chain(std::move(directory_chain_value)),
           size(size_value) {}
     ~Impl() {
@@ -642,7 +661,8 @@ public:
         return expected.size() == size && native_matches_bytes(handle, expected);
     }
     HANDLE handle = INVALID_HANDLE_VALUE;
-    std::filesystem::path path;
+    std::filesystem::path stable_path;
+    std::filesystem::path diagnostic_path;
     OwnedDirectoryChain directory_chain;
 #else
     Impl(int descriptor_value, std::size_t size_value) noexcept
@@ -686,7 +706,18 @@ bool PrivateExecutableImage::matches_bytes(
 const std::filesystem::path*
 PrivateExecutableImage::windows_launch_target() const noexcept {
 #if defined(_WIN32)
-    return impl_ != nullptr && impl_->valid() ? &impl_->path : nullptr;
+    return impl_ != nullptr && impl_->valid() ? &impl_->stable_path : nullptr;
+#else
+    return nullptr;
+#endif
+}
+
+const std::filesystem::path*
+PrivateExecutableImage::windows_diagnostic_launch_target() const noexcept {
+#if defined(_WIN32)
+    return impl_ != nullptr && impl_->valid()
+        ? &impl_->diagnostic_path
+        : nullptr;
 #else
     return nullptr;
 #endif
@@ -762,7 +793,9 @@ materialize_private_executable_image_in_verified_parent(
         }
         const auto stable_image_path =
             stable_volume_path_for_handle(image_handle.get());
-        if (!stable_image_path.has_value()) {
+        const auto dos_image_path =
+            dos_volume_path_for_handle(image_handle.get());
+        if (!stable_image_path.has_value() || !dos_image_path.has_value()) {
             result.failure =
                 PrivateExecutableImageFailure::launch_transition_failed;
             return result;
@@ -833,7 +866,12 @@ materialize_private_executable_image_in_verified_parent(
         OwnedHandle final_path_check(open_path_for_exact_image(
             *stable_image_path, GENERIC_READ,
             FILE_SHARE_READ | FILE_SHARE_DELETE));
+        OwnedHandle diagnostic_path_check(open_path_for_exact_image(
+            *dos_image_path, GENERIC_READ,
+            FILE_SHARE_READ | FILE_SHARE_DELETE));
         if (!image_identity_matches(final_path_check.get(), image_identity) ||
+            !image_identity_matches(
+                diagnostic_path_check.get(), image_identity) ||
             !image_identity_matches(launch_handle.get(), image_identity) ||
             !handle_identity_matches(
                 parent_handle.get(), expected_parent_storage_id,
@@ -843,15 +881,18 @@ materialize_private_executable_image_in_verified_parent(
                 PrivateExecutableImageFailure::launch_transition_failed;
             return result;
         }
+        diagnostic_path_check.reset();
         final_path_check.reset();
         parent_handle.reset();
         // Finish every potentially throwing copy before the new-expression.
         // Allocation then precedes the no-throw handle/chain transfers, so an
         // exception cannot strand raw Windows authority outside RAII ownership.
         std::filesystem::path retained_image_path = *stable_image_path;
+        std::filesystem::path retained_diagnostic_path = *dos_image_path;
         auto impl = std::unique_ptr<PrivateExecutableImage::Impl>(
             new PrivateExecutableImage::Impl(
                 launch_handle.get(), std::move(retained_image_path),
+                std::move(retained_diagnostic_path),
                 std::move(directory_chain), bytes.size()));
         (void)launch_handle.release();
 #else

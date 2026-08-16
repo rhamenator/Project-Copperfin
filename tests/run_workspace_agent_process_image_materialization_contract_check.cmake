@@ -136,6 +136,7 @@ endforeach()
 
 foreach(token IN ITEMS
         "#define NOMINMAX"
+        "VOLUME_NAME_DOS"
         "::CreateFileW("
         "CREATE_NEW"
         "GENERIC_READ | GENERIC_WRITE | DELETE"
@@ -164,6 +165,8 @@ foreach(token IN ITEMS
         "OwnedDirectoryChain directory_chain"
         "directory_chain.lock(stable_image_path->parent_path())"
         "image_identity_matches(final_path_check.get(), image_identity)"
+        "image_identity_matches("
+        "diagnostic_path_check.get(), image_identity)"
         "FILE_SHARE_READ | FILE_SHARE_DELETE"
         "launch_handle.release()"
         "image_descriptor.release()"
@@ -189,6 +192,9 @@ foreach(token IN ITEMS
         "launch_committed(launch_committed_context)"
         "current_process_elevation()"
         "image.windows_launch_target()"
+        "image.windows_diagnostic_launch_target()"
+        "diagnostic_executable.c_str()"
+        "environment_block.data(), working_directory.c_str()"
         "request.transport.executable_path.empty()"
         "class WindowsPipeSecurityAttributes"
         "SE_GROUP_LOGON_ID"

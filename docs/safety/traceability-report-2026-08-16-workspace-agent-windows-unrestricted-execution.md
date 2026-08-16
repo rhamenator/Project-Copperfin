@@ -32,6 +32,7 @@ use.
 | `DQ-workspace-agent-windows-execution-011`: the working directory shall be converted from its authenticated handle to the same accepted stable local-volume device form, and every renameable component beneath that explicitly parsed device root shall remain held without delete sharing until `CreateProcessW` has consumed the path | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-007` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-012`: each process intent/outcome pair shall use one fresh 128-bit operating-system-random attempt namespace plus a nonzero operation identifier from a process-wide, nonwrapping counter so records from controllers, processes, restarts, and post-fork children sharing a durable sink have collision-resistant correlation identities; random-source failure shall deny execution before intent | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-008` | `HZ-system-failure-01` |
 | `DQ-workspace-agent-windows-execution-013`: any pre-start compatibility diagnostic child shall enter the same kill-on-close Job Object atomically at creation, remain suspended, never execute user code, and retain cleanup ownership even if explicit termination fails | `DV-workspace-agent-windows-execution-003`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-014`: after protected Windows proves the stable device-form application name unsupported, a diagnostic-only DOS application name shall be derived from the authenticated handle, identity-matched under the retained stable hierarchy, and used only by a never-resumed Job-owned probe that retains the stable working directory; it shall not become an execution fallback without post-creation image binding | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
   exercise one-attempt consumption, sandbox and platform denial, failed-intent
@@ -213,8 +214,13 @@ Exact head `42c7d514c` then made private-image materialization, explicit stable
 local-device root parsing, and the private-directory regressions pass on
 Windows, but `CreateProcessW` rejected the combined stable application and
 working-directory device paths with `ERROR_INVALID_PARAMETER`. A bounded
-diagnostic correction retries only that pre-start failure with the same stable
-application and inherited current directory, still suspended. It immediately
+diagnostic correction retried only that pre-start failure with the same stable
+application and inherited current directory, still suspended. Exact protected
+head `0023f74e9` reported
+`polyglot.process.executable_path_unsupported`, native error `87`, proving the
+stable device-form application name is incompatible. The next bounded probe
+uses a handle-derived, identity-matched extended DOS application name with the
+same stable working directory, still suspended. It immediately
 places the diagnostic child into the kill-on-close Job Object atomically at
 creation, terminates the never-resumed process, and reports whether the
 unsupported parameter is the stable application path or `lpCurrentDirectory`;

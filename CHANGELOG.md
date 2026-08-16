@@ -46,6 +46,12 @@
   directly attempts a working-directory ancestor rename while pins remain live,
   and portable coverage requires valid distinct per-attempt namespaces plus
   nonzero distinct cross-controller operation IDs.
+  Protected Windows then proved that `CreateProcessW` rejects the authenticated
+  stable device-form application name with error 87. A diagnostic-only extended
+  DOS name is now derived from the same retained handle, identity-matched under
+  the locked stable hierarchy, and used with the still-stable working directory
+  only in a never-resumed, atomically Job-owned compatibility probe; it is not
+  an execution fallback.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. The fail-closed launcher now performs one suspended,
