@@ -79,6 +79,9 @@
   handle-derived DOS path, fixed-drive mount-manager listing, handle-reported
   volume identity, retained stable hierarchy, and exact identity reopens remain
   mandatory.
+  Review follow-up routes a failed or malformed handle-derived DOS-path result
+  to its dedicated content-free diagnostic instead of the generic pin-identity
+  code; admission remains unchanged.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,

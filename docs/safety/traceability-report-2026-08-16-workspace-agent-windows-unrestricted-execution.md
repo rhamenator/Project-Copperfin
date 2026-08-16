@@ -277,4 +277,6 @@ returned a closed, content-free predicate diagnostic in protected run
 token. That redundant query is removed while the handle-derived DOS path,
 fixed-drive mount-manager listing, matching handle volume identity, retained
 hierarchy, and exact identity reopens remain mandatory. A corrected protected
-execution run is required.
+execution run is required. Review follow-up makes failed handle-derived DOS-path
+derivation report its dedicated fixed diagnostic rather than the generic pin-
+identity code; no admission decision changes.

@@ -48,7 +48,9 @@ Protected diagnostic run `31967738991` selected that correction directly:
 was redundant with the handle-derived DOS path, fixed-drive mount-manager
 listing, matching handle volume identity, retained stable hierarchy, and exact
 DOS-path identity reopens before and after validation, all of which remain
-mandatory. A corrected protected rerun is required.
+mandatory. Review follow-up also makes the DOS-path-invalid diagnostic reachable
+when handle-based DOS derivation fails, without changing admission. A corrected
+protected rerun is required.
 
 ## V1 workspace-agent Windows launch-handle transition
 

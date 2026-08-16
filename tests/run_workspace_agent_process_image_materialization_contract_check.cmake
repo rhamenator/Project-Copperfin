@@ -87,6 +87,7 @@ foreach(token IN ITEMS
         "VOLUME_NAME_NT"
         "dos_volume_path_for_handle("
         "VOLUME_NAME_DOS"
+        "if (!dos_working_directory.has_value())"
         "dos_volume_binding_diagnostic("
         "::GetDriveTypeW("
         "DRIVE_FIXED"

@@ -1276,10 +1276,14 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
         stable_volume_path_for_handle(working_directory_handle.get());
     const auto dos_working_directory =
         dos_volume_path_for_handle(working_directory_handle.get());
-    if (!stable_working_directory.has_value() ||
-        !dos_working_directory.has_value()) {
+    if (!stable_working_directory.has_value()) {
         result.diagnostic_code =
             "workspace_agent.process_target_pin_identity_changed";
+        return result;
+    }
+    if (!dos_working_directory.has_value()) {
+        result.diagnostic_code =
+            "workspace_agent.process_working_directory_dos_path_invalid";
         return result;
     }
     const char* binding_diagnostic = dos_volume_binding_diagnostic(
