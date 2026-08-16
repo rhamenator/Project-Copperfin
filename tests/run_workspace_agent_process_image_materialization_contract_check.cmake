@@ -88,18 +88,24 @@ foreach(token IN ITEMS
         "O_EXCL"
         "O_NOFOLLOW"
         "::unlinkat("
-        "::fchmod(image_descriptor, 0500)"
+        "::fchmod(image_descriptor.get(), 0500)"
         "status.st_nlink == 0"
         "expected_creation_ticks != 0U"
         "AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW"
+        "OwnedHandle parent_handle("
+        "OwnedImageHandle image_handle("
+        "OwnedDescriptor parent_descriptor("
+        "OwnedLinkedImageDescriptor image_descriptor("
+        "image_handle.release()"
+        "image_descriptor.release()"
         "native_matches_bytes")
     require_text(${platform_source} "${token}" "exact private-image primitive")
 endforeach()
 require_text(${platform_source}
-    "parent_handle, expected_parent_storage_id"
+    "parent_handle.get(), expected_parent_storage_id"
     "Windows parent identity bracketing")
 require_text(${platform_source}
-    "parent_descriptor, expected_parent_storage_id"
+    "parent_descriptor.get(), expected_parent_storage_id"
     "POSIX parent identity bracketing")
 require_text(${platform_source}
     "expected_parent_file_id, expected_parent_creation_ticks"

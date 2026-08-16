@@ -774,6 +774,12 @@ storage/file/creation identity is checked through a retained native object
 around creation, and every exception or verification failure releases partial
 resources without returning authority.
 
+Native parent and image resources enter non-allocating RAII immediately after
+open or creation. POSIX retains the parent descriptor through successful unlink
+or a cleanup retry, and both platforms transfer image ownership only after the
+final private object allocation succeeds. Allocation failure therefore cannot
+leak a descriptor, handle, or newly created image authority.
+
 The materialized image is destroyed before the prepared candidate, so its
 native object is removed before target pins close and the exact-generation
 lease releases. Stop therefore waits until the complete materialized launch

@@ -24,8 +24,11 @@ Directory authority now also requires immutable creation identity while
 allowing controlled modification-time changes. Exact-head audit additionally
 closed the check/use gap by carrying that creation identity into the lower
 native-parent bracket instead of reverting to storage/file identity alone; its
-direct mismatch regression passes. The focused set passes 6/6 and one hundred
-repeated lifecycle runs pass. Remaining work is protected Windows/
+direct mismatch regression passes. A later exact-head audit moved every opened
+parent and newly created image under immediate non-allocating RAII, so final
+object-allocation failure cannot leak native authority and POSIX unlink failure
+retries while the parent descriptor remains valid. The focused set passes 6/6
+and one hundred repeated lifecycle runs pass. Remaining work is protected Windows/
 Ubuntu/macOS checks, exact-head review, and retained final-byte evidence. Do
 not claim execution readiness: Windows needs an explicit
 immutable-handle launch transition, and POSIX/macOS descriptor execution is not

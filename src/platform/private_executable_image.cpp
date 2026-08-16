@@ -145,7 +145,120 @@ void delete_exact_file(const HANDLE handle) noexcept {
         static_cast<DWORD>(sizeof(disposition)));
 }
 
+class OwnedHandle {
+public:
+    explicit OwnedHandle(HANDLE handle_value = INVALID_HANDLE_VALUE) noexcept
+        : handle_(handle_value) {}
+    ~OwnedHandle() { reset(); }
+    OwnedHandle(const OwnedHandle&) = delete;
+    OwnedHandle& operator=(const OwnedHandle&) = delete;
+
+    [[nodiscard]] HANDLE get() const noexcept { return handle_; }
+    [[nodiscard]] HANDLE release() noexcept {
+        const HANDLE released = handle_;
+        handle_ = INVALID_HANDLE_VALUE;
+        return released;
+    }
+    void reset() noexcept {
+        if (handle_ != nullptr && handle_ != INVALID_HANDLE_VALUE) {
+            (void)::CloseHandle(handle_);
+        }
+        handle_ = INVALID_HANDLE_VALUE;
+    }
+
+private:
+    HANDLE handle_ = INVALID_HANDLE_VALUE;
+};
+
+class OwnedImageHandle {
+public:
+    explicit OwnedImageHandle(
+        HANDLE handle_value = INVALID_HANDLE_VALUE) noexcept
+        : handle_(handle_value) {}
+    ~OwnedImageHandle() {
+        delete_exact_file(handle_);
+        if (handle_ != nullptr && handle_ != INVALID_HANDLE_VALUE) {
+            (void)::CloseHandle(handle_);
+        }
+    }
+    OwnedImageHandle(const OwnedImageHandle&) = delete;
+    OwnedImageHandle& operator=(const OwnedImageHandle&) = delete;
+
+    [[nodiscard]] HANDLE get() const noexcept { return handle_; }
+    [[nodiscard]] HANDLE release() noexcept {
+        const HANDLE released = handle_;
+        handle_ = INVALID_HANDLE_VALUE;
+        return released;
+    }
+
+private:
+    HANDLE handle_ = INVALID_HANDLE_VALUE;
+};
+
 #else
+
+class OwnedDescriptor {
+public:
+    explicit OwnedDescriptor(const int descriptor_value = -1) noexcept
+        : descriptor_(descriptor_value) {}
+    ~OwnedDescriptor() { reset(); }
+    OwnedDescriptor(const OwnedDescriptor&) = delete;
+    OwnedDescriptor& operator=(const OwnedDescriptor&) = delete;
+
+    [[nodiscard]] int get() const noexcept { return descriptor_; }
+    [[nodiscard]] int release() noexcept {
+        const int released = descriptor_;
+        descriptor_ = -1;
+        return released;
+    }
+    void reset() noexcept {
+        if (descriptor_ >= 0) {
+            (void)::close(descriptor_);
+        }
+        descriptor_ = -1;
+    }
+
+private:
+    int descriptor_ = -1;
+};
+
+class OwnedLinkedImageDescriptor {
+public:
+    OwnedLinkedImageDescriptor(
+        const int descriptor_value,
+        const int parent_descriptor,
+        const std::string* leaf_name) noexcept
+        : descriptor_(descriptor_value),
+          parent_descriptor_(parent_descriptor),
+          leaf_name_(leaf_name),
+          linked_(descriptor_value >= 0) {}
+    ~OwnedLinkedImageDescriptor() {
+        if (linked_ && parent_descriptor_ >= 0 && leaf_name_ != nullptr) {
+            (void)::unlinkat(parent_descriptor_, leaf_name_->c_str(), 0);
+        }
+        if (descriptor_ >= 0) {
+            (void)::close(descriptor_);
+        }
+    }
+    OwnedLinkedImageDescriptor(const OwnedLinkedImageDescriptor&) = delete;
+    OwnedLinkedImageDescriptor& operator=(
+        const OwnedLinkedImageDescriptor&) = delete;
+
+    [[nodiscard]] int get() const noexcept { return descriptor_; }
+    void mark_unlinked() noexcept { linked_ = false; }
+    [[nodiscard]] int release() noexcept {
+        linked_ = false;
+        const int released = descriptor_;
+        descriptor_ = -1;
+        return released;
+    }
+
+private:
+    int descriptor_ = -1;
+    int parent_descriptor_ = -1;
+    const std::string* leaf_name_ = nullptr;
+    bool linked_ = true;
+};
 
 bool descriptor_identity_matches(
     const int descriptor,
@@ -330,29 +443,29 @@ materialize_private_executable_image_in_verified_parent(
         }
 
 #if defined(_WIN32)
-        const HANDLE parent_handle = ::CreateFileW(
+        const std::filesystem::path image_path = parent / leaf;
+        OwnedHandle parent_handle(::CreateFileW(
             parent.c_str(), FILE_READ_ATTRIBUTES | READ_CONTROL,
             FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
         if (!handle_identity_matches(
-                parent_handle, expected_parent_storage_id,
+                parent_handle.get(), expected_parent_storage_id,
                 expected_parent_file_id, expected_parent_creation_ticks,
                 true) ||
             !verify_private_directory(parent).ok) {
-            if (parent_handle != nullptr && parent_handle != INVALID_HANDLE_VALUE) {
-                (void)::CloseHandle(parent_handle);
-            }
             result.failure = PrivateExecutableImageFailure::parent_identity_changed;
             return result;
         }
-        const HANDLE image_handle = ::CreateFileW(
-            (parent / leaf).c_str(), GENERIC_READ | GENERIC_WRITE | DELETE,
+        const HANDLE created_image_handle = ::CreateFileW(
+            image_path.c_str(), GENERIC_READ | GENERIC_WRITE | DELETE,
             FILE_SHARE_READ, nullptr, CREATE_NEW,
             FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
         const DWORD create_error =
-            image_handle == INVALID_HANDLE_VALUE ? ::GetLastError() : ERROR_SUCCESS;
-        if (image_handle == INVALID_HANDLE_VALUE) {
-            (void)::CloseHandle(parent_handle);
+            created_image_handle == INVALID_HANDLE_VALUE
+            ? ::GetLastError()
+            : ERROR_SUCCESS;
+        OwnedImageHandle image_handle(created_image_handle);
+        if (image_handle.get() == INVALID_HANDLE_VALUE) {
             result.failure =
                 create_error == ERROR_FILE_EXISTS || create_error == ERROR_ALREADY_EXISTS
                 ? PrivateExecutableImageFailure::already_exists
@@ -362,41 +475,40 @@ materialize_private_executable_image_in_verified_parent(
             return result;
         }
         const bool parent_stable = handle_identity_matches(
-            parent_handle, expected_parent_storage_id, expected_parent_file_id,
+            parent_handle.get(), expected_parent_storage_id,
+            expected_parent_file_id,
             expected_parent_creation_ticks, true);
-        (void)::CloseHandle(parent_handle);
-        if (!parent_stable || !write_all(image_handle, bytes) ||
-            !exact_file_shape(image_handle, bytes.size()) ||
-            !native_matches_bytes(image_handle, bytes)) {
-            delete_exact_file(image_handle);
-            (void)::CloseHandle(image_handle);
+        parent_handle.reset();
+        if (!parent_stable || !write_all(image_handle.get(), bytes) ||
+            !exact_file_shape(image_handle.get(), bytes.size()) ||
+            !native_matches_bytes(image_handle.get(), bytes)) {
             result.failure = parent_stable
                 ? PrivateExecutableImageFailure::verification_failed
                 : PrivateExecutableImageFailure::parent_identity_changed;
             return result;
         }
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            image_handle, bytes.size());
+            image_handle.get(), bytes.size());
+        (void)image_handle.release();
 #else
-        const int parent_descriptor = ::open(
-            parent.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        const std::string leaf_name = leaf.native();
+        OwnedDescriptor parent_descriptor(::open(
+            parent.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
         if (!descriptor_identity_matches(
-                parent_descriptor, expected_parent_storage_id,
+                parent_descriptor.get(), expected_parent_storage_id,
                 expected_parent_file_id, expected_parent_creation_ticks) ||
             !verify_private_directory(parent).ok) {
-            if (parent_descriptor >= 0) {
-                (void)::close(parent_descriptor);
-            }
             result.failure = PrivateExecutableImageFailure::parent_identity_changed;
             return result;
         }
-        const std::string leaf_name = leaf.native();
-        const int image_descriptor = ::openat(
-            parent_descriptor, leaf_name.c_str(),
+        const int created_image_descriptor = ::openat(
+            parent_descriptor.get(), leaf_name.c_str(),
             O_RDWR | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0000);
-        if (image_descriptor < 0) {
-            const int create_error = errno;
-            (void)::close(parent_descriptor);
+        const int create_error =
+            created_image_descriptor < 0 ? errno : 0;
+        OwnedLinkedImageDescriptor image_descriptor(
+            created_image_descriptor, parent_descriptor.get(), &leaf_name);
+        if (image_descriptor.get() < 0) {
             result.failure = create_error == EEXIST
                 ? PrivateExecutableImageFailure::already_exists
                 : create_error == EACCES || create_error == EPERM
@@ -405,26 +517,29 @@ materialize_private_executable_image_in_verified_parent(
             return result;
         }
         const bool unlinked = ::unlinkat(
-            parent_descriptor, leaf_name.c_str(), 0) == 0;
+            parent_descriptor.get(), leaf_name.c_str(), 0) == 0;
+        if (!unlinked) {
+            result.failure = PrivateExecutableImageFailure::cleanup_failed;
+            return result;
+        }
+        image_descriptor.mark_unlinked();
         const bool parent_stable = descriptor_identity_matches(
-            parent_descriptor, expected_parent_storage_id,
+            parent_descriptor.get(), expected_parent_storage_id,
             expected_parent_file_id, expected_parent_creation_ticks);
-        (void)::close(parent_descriptor);
-        if (!unlinked || !parent_stable ||
-            ::fchmod(image_descriptor, 0500) != 0 ||
-            !write_all(image_descriptor, bytes) ||
-            !exact_file_shape(image_descriptor, bytes.size()) ||
-            !native_matches_bytes(image_descriptor, bytes)) {
-            (void)::close(image_descriptor);
+        parent_descriptor.reset();
+        if (!parent_stable ||
+            ::fchmod(image_descriptor.get(), 0500) != 0 ||
+            !write_all(image_descriptor.get(), bytes) ||
+            !exact_file_shape(image_descriptor.get(), bytes.size()) ||
+            !native_matches_bytes(image_descriptor.get(), bytes)) {
             result.failure = !parent_stable
                 ? PrivateExecutableImageFailure::parent_identity_changed
-                : !unlinked
-                    ? PrivateExecutableImageFailure::cleanup_failed
-                    : PrivateExecutableImageFailure::verification_failed;
+                : PrivateExecutableImageFailure::verification_failed;
             return result;
         }
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            image_descriptor, bytes.size());
+            image_descriptor.get(), bytes.size());
+        (void)image_descriptor.release();
 #endif
         PrivateExecutableImage image(std::move(impl));
         if (!image.valid() || !image.matches_bytes(bytes)) {

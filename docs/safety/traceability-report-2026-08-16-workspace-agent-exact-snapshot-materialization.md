@@ -56,8 +56,11 @@ safety-critical deployment.
   around exclusive creation and retains the exact image handle without
   ordinary write/delete sharing.
 - Partial write, allocation, or verification failure: construction is inside a
-  catch-all denial boundary. Native resources remain under local RAII, and no
-  image authority is returned until exact size, shape, and byte reread pass.
+  catch-all denial boundary. Non-allocating local RAII owns each parent and
+  image native resource immediately after open/create, retries POSIX leaf
+  cleanup before releasing the parent descriptor, and transfers the image only
+  after final object allocation succeeds. No image authority is returned until
+  exact size, shape, and byte reread pass.
 - Revocation and cleanup ordering: the image is destroyed before its prepared
   candidate; that candidate closes pins before releasing the generation lease.
   A live result therefore delays stop until every launch-adjacent resource is
@@ -117,7 +120,12 @@ Current local evidence:
 - a subsequent exact-head audit found and corrected a check/use gap where the
   environment verified creation identity but the lower native-parent bracket
   accepted only storage/file identity; direct creation-identity mismatch
-  coverage and the materialization machine contract pass; and
+  coverage and the materialization machine contract pass;
+- a further exact-head audit found raw parent/image native resources could leak
+  if final object allocation threw, and a failed first POSIX unlink could lose
+  cleanup authority by closing the parent too early; immediate RAII ownership,
+  retained-parent cleanup retry, and machine-contract coverage correct both
+  paths; and
 - git diff --check is required before publication.
 
 Final-byte safety validation is required after this evidence update. Protected

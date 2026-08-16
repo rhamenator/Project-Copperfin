@@ -20,8 +20,12 @@
   exact-head audit found that the lower materialization primitive initially
   bracketed creation with storage/file identity only; it now carries and
   rechecks the same nonzero creation identity through the retained native
-  parent object, with direct mismatch coverage. The corrected focused set and
-  one hundred repeated lifecycle runs pass locally. Portable
+  parent object, with direct mismatch coverage. A further exact-head audit
+  found raw native resources between open/create and final object allocation;
+  non-allocating RAII now owns parent and image authority immediately, retries
+  POSIX cleanup while the parent descriptor remains live, and transfers the
+  image only after final allocation succeeds. The corrected focused set and one
+  hundred repeated lifecycle runs pass locally. Portable
   launch transition, sandbox, endpoint/
   descendant policy, outcome audit, protected-platform evidence, and qualified
   high-severity review remain open.
