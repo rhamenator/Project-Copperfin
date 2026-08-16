@@ -1,3 +1,19 @@
+- 2026-08-16: Added candidate `RQ-CF-AGENT-028`, a Windows-only warned
+  unrestricted exact-image executor. The controller consumes one opaque
+  materialized launch for its exact active generation, refuses sandbox mode and
+  elevated or indeterminate hosts, commits a content-free intent before any
+  attempt, launches only the retained authenticated plan without shell or PATH
+  search, owns descendants with a kill-on-close Job Object, releases the
+  generation lease after successful assignment, and destroys the private image
+  before a correlated content-free outcome. Transport controls expose no path,
+  arguments, environment, mode, or native authority. The public promotion gate
+  remains invariantly denied. Focused local Debug and warning-as-error GCC 15
+  Release execution pass `5/5`; fresh Clang 21 ASan/UBSan/leak passes `3/3`
+  without findings; and licensing, community, release-license, isolation,
+  supply-chain, and safety contracts pass `6/6`, including the 327.99-second
+  safety scan. Protected Windows and cross-platform denial evidence plus
+  exact-head review remain pending.
+
 - 2026-08-16: Completed implementation evidence for candidate
   `RQ-CF-AGENT-027` at exact signed/DCO head `0d8429628`. All eleven
   protected checks passed in runs `31942740556`, `31942742371`,

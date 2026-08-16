@@ -26,6 +26,9 @@ endfunction()
 
 set(platform_header include/copperfin/platform/private_executable_image.h)
 set(platform_source src/platform/private_executable_image.cpp)
+set(bounded_process_header include/copperfin/platform/bounded_process.h)
+set(bounded_process_private src/platform/bounded_process_private.h)
+set(bounded_process_source src/platform/bounded_process.cpp)
 set(environment_header include/copperfin/security/workspace_agent_environment.h)
 set(environment_source src/security/workspace_agent_environment.cpp)
 set(containment_header include/copperfin/security/physical_path_containment.h)
@@ -39,6 +42,9 @@ set(environment_test tests/test_workspace_agent_isolated_environment.cpp)
 foreach(path IN ITEMS
         ${platform_header}
         ${platform_source}
+        ${bounded_process_header}
+        ${bounded_process_private}
+        ${bounded_process_source}
         ${environment_header}
         ${environment_source}
         ${containment_header}
@@ -117,6 +123,25 @@ foreach(token IN ITEMS
         "native_matches_bytes")
     require_text(${platform_source} "${token}" "exact private-image primitive")
 endforeach()
+
+foreach(token IN ITEMS
+        "PrivateWindowsBoundedProcessRequest"
+        "run_bounded_windows_private_executable("
+        "CurrentProcessElevation")
+    require_text(${bounded_process_private} "${token}"
+        "private exact-image execution seam")
+endforeach()
+foreach(token IN ITEMS
+        "::CreateProcessW("
+        "CREATE_SUSPENDED"
+        "::AssignProcessToJobObject("
+        "launch_committed(launch_committed_context)"
+        "current_process_elevation()"
+        "image.windows_launch_target()"
+        "request.transport.executable_path.empty()")
+    require_text(${bounded_process_source} "${token}"
+        "bounded Windows exact-image launch contract")
+endforeach()
 require_text(${platform_source}
     "parent_handle.get(), expected_parent_storage_id"
     "Windows parent identity bracketing")
@@ -146,7 +171,10 @@ endforeach()
 foreach(token IN ITEMS
         "class WorkspaceAgentMaterializedProcessLaunch"
         "const WorkspaceAgentMaterializedProcessLaunch&) = delete"
-        "materialize_process_launch_candidate(")
+        "materialize_process_launch_candidate("
+        "execute_materialized_process_launch("
+        "workspace_agent_process_execution_max_timeout_ms"
+        "WorkspaceAgentProcessExecutionControls")
     require_text(${session_header} "${token}" "opaque controller materialization boundary")
 endforeach()
 foreach(token IN ITEMS
@@ -155,7 +183,13 @@ foreach(token IN ITEMS
         "Serialize the complete one-attempt materialization with stop/start."
         "candidate.impl_->pins.executable_snapshot_for_materialization()"
         "process_environment_boundary_->materialize_process_image("
-        "workspace_agent.process_launch_revalidation_pinning_unavailable")
+        "workspace_agent.process_launch_revalidation_pinning_unavailable"
+        "workspace_agent.process_execution_requires_unrestricted_local"
+        "workspace_agent.process_execution_elevated_host_denied"
+        "WorkspaceAgentSessionEventKind::process_launch_intent"
+        "WorkspaceAgentSessionEventKind::process_launch_outcome"
+        "release_launch_authority()"
+        "run_bounded_windows_private_executable(")
     require_text(${session_source} "${token}" "controller-only one-attempt consumption")
 endforeach()
 
@@ -176,8 +210,12 @@ foreach(token IN ITEMS
 endforeach()
 foreach(token IN ITEMS
         "RQ-CF-AGENT-026"
+        "RQ-CF-AGENT-028"
         "WorkspaceAgentMaterializedProcessLaunch"
         "materialize_process_launch_candidate("
+        "execute_materialized_process_launch("
+        "process_execution_requires_unrestricted_local"
+        "revocation lease before the bounded child exits"
         "cross-controller"
         "materialization must not silently weaken the invariant execution denial")
     require_text(${environment_test} "${token}" "controller materialization regression")

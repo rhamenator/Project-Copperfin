@@ -4,6 +4,8 @@
 
 #include "copperfin/security/workspace_agent_session.h"
 
+#include "../platform/bounded_process_private.h"
+
 #include "copperfin/platform/path.h"
 #include "copperfin/platform/process_arguments.h"
 #include "copperfin/platform/process_environment.h"
@@ -149,6 +151,10 @@ public:
             candidate.session_generation() == image.session_generation();
     }
 
+    void release_launch_authority() noexcept {
+        candidate = WorkspaceAgentPreparedProcessLaunch{};
+    }
+
     // Destruction is reverse declaration order: remove/close the materialized
     // image first, then discard the prepared candidate, whose own ordering
     // closes target pins before releasing the revocation lease.
@@ -184,6 +190,10 @@ static_assert(
         std::is_nothrow_move_constructible_v<
             WorkspaceAgentMaterializedProcessLaunchResult>,
     "RQ-CF-AGENT-026: materialization failure fallback must not allocate");
+static_assert(
+    std::is_nothrow_move_assignable_v<
+        copperfin::platform::BoundedProcessResult>,
+    "RQ-CF-AGENT-028: a completed private launch must reach outcome audit without allocating while transferring its result");
 
 namespace {
 
@@ -219,6 +229,10 @@ std::string event_kind_name(WorkspaceAgentSessionEventKind kind) {
             return "layout_cleanup_intent";
         case WorkspaceAgentSessionEventKind::layout_cleanup_outcome:
             return "layout_cleanup_outcome";
+        case WorkspaceAgentSessionEventKind::process_launch_intent:
+            return "process_launch_intent";
+        case WorkspaceAgentSessionEventKind::process_launch_outcome:
+            return "process_launch_outcome";
     }
     return "invalid";
 }
@@ -1245,6 +1259,206 @@ WorkspaceAgentSessionController::materialize_process_launch_candidate(
     }
 }
 
+WorkspaceAgentProcessExecutionResult
+WorkspaceAgentSessionController::execute_materialized_process_launch(
+    WorkspaceAgentMaterializedProcessLaunch launch,
+    const WorkspaceAgentProcessExecutionControls& controls,
+    const WorkspaceAgentSessionAuditSink& audit_sink) const {
+    WorkspaceAgentProcessExecutionResult unavailable;
+    try {
+        if (!launch.valid() || launch.impl_ == nullptr ||
+            !launch.impl_->candidate.valid() ||
+            launch.impl_->candidate.impl_ == nullptr ||
+            launch.impl_->candidate.impl_->controller_authority !=
+                process_launch_controller_authority_) {
+            unavailable.diagnostic_code =
+                "workspace_agent.process_execution_candidate_unavailable";
+            return unavailable;
+        }
+
+        const auto& plan = launch.impl_->candidate.impl_->plan;
+        const auto& environment_plan =
+            plan.serialized_environment.environment_plan;
+        const std::uint64_t generation = launch.session_generation();
+        const WorkspaceAgentAccessMode effective_mode =
+            environment_plan.effective_mode;
+        std::uint64_t operation_id = 0U;
+        {
+            std::lock_guard lock(mutex_);
+            if (transition_ != Transition::idle) {
+                unavailable.diagnostic_code =
+                    "workspace_agent.session_transition_in_progress";
+                return unavailable;
+            }
+            if (!active_session_.active || generation == 0U ||
+                active_session_.generation != generation ||
+                active_session_.effective_mode != effective_mode) {
+                unavailable.diagnostic_code =
+                    "workspace_agent.process_execution_stale_session";
+                return unavailable;
+            }
+            if (next_process_execution_attempt_ == 0U ||
+                next_process_execution_attempt_ ==
+                    std::numeric_limits<std::uint64_t>::max()) {
+                unavailable.diagnostic_code =
+                    "workspace_agent.process_execution_namespace_exhausted";
+                return unavailable;
+            }
+            operation_id = next_process_execution_attempt_++;
+        }
+
+        WorkspaceAgentProcessExecutionResult result;
+        result.session_generation = generation;
+        result.operation_id = operation_id;
+
+        const bool controls_valid = controls.schema_version == 1U &&
+            controls.timeout_ms != 0U &&
+            controls.timeout_ms <= workspace_agent_process_execution_max_timeout_ms &&
+            controls.poll_interval_ms != 0U &&
+            controls.poll_interval_ms <= controls.timeout_ms &&
+            controls.stdin_limit_bytes != 0U &&
+            controls.stdout_limit_bytes != 0U &&
+            controls.stderr_limit_bytes != 0U &&
+            controls.stdin_limit_bytes <=
+                workspace_agent_process_execution_max_transport_bytes &&
+            controls.stdout_limit_bytes <=
+                workspace_agent_process_execution_max_transport_bytes &&
+            controls.stderr_limit_bytes <=
+                workspace_agent_process_execution_max_transport_bytes &&
+            controls.standard_input.size() <= controls.stdin_limit_bytes;
+
+        std::string denial;
+        if (effective_mode != WorkspaceAgentAccessMode::unrestricted_local) {
+            denial = "workspace_agent.process_execution_requires_unrestricted_local";
+        } else if (!controls_valid) {
+            denial = "workspace_agent.process_execution_invalid_controls";
+        } else if (environment_plan.environment_platform !=
+                       WorkspaceAgentProcessEnvironmentPlatform::windows_v1 ||
+                   plan.argument_parser_contract !=
+                       WorkspaceAgentProcessArgumentParserContract::
+                           windows_c_runtime_argv_v1) {
+            denial = "workspace_agent.process_execution_platform_unavailable";
+        } else {
+            switch (copperfin::platform::current_process_elevation()) {
+                case copperfin::platform::CurrentProcessElevation::not_elevated:
+                    break;
+                case copperfin::platform::CurrentProcessElevation::elevated:
+                    denial =
+                        "workspace_agent.process_execution_elevated_host_denied";
+                    break;
+                case copperfin::platform::CurrentProcessElevation::unavailable:
+                    denial =
+                        "workspace_agent.process_execution_elevation_unavailable";
+                    break;
+                case copperfin::platform::CurrentProcessElevation::unsupported:
+                    denial =
+                        "workspace_agent.process_execution_platform_unavailable";
+                    break;
+            }
+        }
+
+        copperfin::platform::PrivateWindowsBoundedProcessRequest native_request;
+        if (denial.empty()) {
+            native_request.command_line = plan.windows_command_line;
+            native_request.environment_block =
+                plan.serialized_environment.windows_environment_block;
+            native_request.working_directory =
+                environment_plan.canonical_working_directory;
+            native_request.transport.standard_input = controls.standard_input;
+            native_request.transport.timeout_ms = controls.timeout_ms;
+            native_request.transport.poll_interval_ms = controls.poll_interval_ms;
+            native_request.transport.stdin_limit_bytes = controls.stdin_limit_bytes;
+            native_request.transport.stdout_limit_bytes = controls.stdout_limit_bytes;
+            native_request.transport.stderr_limit_bytes = controls.stderr_limit_bytes;
+            native_request.transport.cancellation_requested =
+                controls.cancellation_requested;
+            native_request.launch_committed = [](void* context) noexcept {
+                auto* retained = static_cast<WorkspaceAgentMaterializedProcessLaunch*>(
+                    context);
+                if (retained != nullptr && retained->impl_ != nullptr) {
+                    retained->impl_->release_launch_authority();
+                }
+            };
+            native_request.launch_committed_context = &launch;
+        }
+
+        const WorkspaceAgentSessionAuditEvent intent{
+            .schema_version = 2U,
+            .kind = WorkspaceAgentSessionEventKind::process_launch_intent,
+            .session_generation = generation,
+            .requested_mode = effective_mode,
+            .effective_mode = effective_mode,
+            .operation_id = operation_id,
+            .outcome = "pending",
+            .diagnostic_code = "workspace_agent.process_launch_intent"};
+        WorkspaceAgentSessionAuditEvent outcome_event{
+            .schema_version = 2U,
+            .kind = WorkspaceAgentSessionEventKind::process_launch_outcome,
+            .session_generation = generation,
+            .requested_mode = effective_mode,
+            .effective_mode = effective_mode,
+            .operation_id = operation_id,
+            .outcome = denial.empty() ? "launch-failed" : "denied",
+            .diagnostic_code = denial.empty()
+                ? "workspace_agent.process_execution_failed"
+                : denial};
+        AuditOutcome intent_audit = commit_audit_event(intent, audit_sink);
+        result.intent_audit_committed = intent_audit.committed;
+        result.intent_audit_receipt = std::move(intent_audit.receipt);
+        if (!intent_audit.committed) {
+            result.diagnostic_code =
+                "workspace_agent.process_execution_intent_audit_failed";
+            return result;
+        }
+
+        if (denial.empty()) {
+            result.attempted = true;
+            result.process =
+                copperfin::platform::run_bounded_windows_private_executable(
+                    launch.impl_->image.image_, native_request);
+            // Build the actual event separately so allocation failure leaves the
+            // prebuilt, content-free launch-failure event intact. Once intent is
+            // durable, an outcome submission must not be skipped by bookkeeping.
+            try {
+                WorkspaceAgentSessionAuditEvent actual_outcome{
+                    .schema_version = 2U,
+                    .kind = WorkspaceAgentSessionEventKind::process_launch_outcome,
+                    .session_generation = generation,
+                    .requested_mode = effective_mode,
+                    .effective_mode = effective_mode,
+                    .operation_id = operation_id,
+                    .outcome = copperfin::platform::bounded_process_status_name(
+                        result.process.status),
+                    .diagnostic_code = result.process.error_code};
+                outcome_event = std::move(actual_outcome);
+            } catch (...) {
+                // The stable fallback was fully allocated before the intent.
+            }
+        } else {
+            result.process.status =
+                copperfin::platform::BoundedProcessStatus::launch_failed;
+            result.process.error_code = std::move(denial);
+        }
+
+        // Ensure the exact image is removed and any uncommitted launch lease is
+        // released before the durable outcome is submitted.
+        launch = WorkspaceAgentMaterializedProcessLaunch{};
+        AuditOutcome outcome_audit =
+            commit_audit_event(outcome_event, audit_sink);
+        result.outcome_audit_committed = outcome_audit.committed;
+        result.outcome_audit_receipt = std::move(outcome_audit.receipt);
+        if (outcome_audit.committed) {
+            result.diagnostic_code = std::move(outcome_event.diagnostic_code);
+        } else {
+            result.diagnostic_code =
+                "workspace_agent.process_execution_outcome_audit_failed";
+        }
+        return result;
+    } catch (...) {
+        return unavailable;
+    }
+}
+
 WorkspaceAgentProcessEnvironmentPreflightResult
 WorkspaceAgentSessionController::preflight_process_environment_request(
     const WorkspaceAgentProcessInvocationPreflightRequest& request) const {
@@ -1561,7 +1775,11 @@ std::string serialize_workspace_agent_session_audit_event(
            << json_escape(workspace_agent_access_mode_name(event.requested_mode))
            << "\",\"effective_mode\":\""
            << json_escape(workspace_agent_access_mode_name(event.effective_mode))
-           << "\",\"outcome\":\"" << json_escape(event.outcome)
+           << "\"";
+    if (event.schema_version >= 2U) {
+        stream << ",\"operation_id\":" << event.operation_id;
+    }
+    stream << ",\"outcome\":\"" << json_escape(event.outcome)
            << "\",\"diagnostic_code\":\"" << json_escape(event.diagnostic_code)
            << "\"}";
     return stream.str();

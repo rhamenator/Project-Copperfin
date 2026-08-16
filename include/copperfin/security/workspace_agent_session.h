@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "copperfin/platform/bounded_process.h"
 #include "copperfin/security/workspace_agent_policy.h"
 #include "copperfin/security/workspace_agent_environment.h"
 #include "copperfin/security/workspace_agent_process_containment.h"
@@ -14,6 +15,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -29,13 +31,15 @@ inline constexpr std::size_t
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
 // RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
-// RQ-CF-AGENT-018 through RQ-CF-AGENT-026.
+// RQ-CF-AGENT-018 through RQ-CF-AGENT-028.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
     stop,
     layout_cleanup_intent,
-    layout_cleanup_outcome
+    layout_cleanup_outcome,
+    process_launch_intent,
+    process_launch_outcome
 };
 
 struct WorkspaceAgentSessionAuditEvent {
@@ -44,6 +48,9 @@ struct WorkspaceAgentSessionAuditEvent {
     std::uint64_t session_generation = 0U;
     WorkspaceAgentAccessMode requested_mode = WorkspaceAgentAccessMode::advisory;
     WorkspaceAgentAccessMode effective_mode = WorkspaceAgentAccessMode::advisory;
+    // Present only in schema version 2 process-launch records. It correlates one
+    // content-free intent/outcome pair without exposing a tool target or input.
+    std::uint64_t operation_id = 0U;
     std::string outcome;
     std::string diagnostic_code;
 };
@@ -351,6 +358,37 @@ struct WorkspaceAgentMaterializedProcessLaunchResult {
     std::string diagnostic_code;
 };
 
+inline constexpr std::uint32_t workspace_agent_process_execution_max_timeout_ms =
+    300'000U;
+inline constexpr std::uint32_t
+    workspace_agent_process_execution_max_transport_bytes = 1024U * 1024U;
+
+// Trusted-host controls for one already-prepared invocation. Provider/model
+// input cannot select a path, argument, environment entry, access mode, or
+// process-creation flag through this type.
+struct WorkspaceAgentProcessExecutionControls {
+    std::uint32_t schema_version = 1U;
+    std::string standard_input;
+    std::uint32_t timeout_ms = 5000U;
+    std::uint32_t poll_interval_ms = 10U;
+    std::uint32_t stdin_limit_bytes = 1024U * 1024U;
+    std::uint32_t stdout_limit_bytes = 1024U * 1024U;
+    std::uint32_t stderr_limit_bytes = 1024U * 1024U;
+    std::function<bool()> cancellation_requested;
+};
+
+struct WorkspaceAgentProcessExecutionResult {
+    bool attempted = false;
+    bool intent_audit_committed = false;
+    bool outcome_audit_committed = false;
+    std::uint64_t session_generation = 0U;
+    std::uint64_t operation_id = 0U;
+    std::string intent_audit_receipt;
+    std::string outcome_audit_receipt;
+    copperfin::platform::BoundedProcessResult process{};
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -489,6 +527,18 @@ public:
     materialize_process_launch_candidate(
         WorkspaceAgentPreparedProcessLaunch candidate) const;
 
+    // Consumes one exact materialized candidate. Version 1 executes only on
+    // Windows and only for an explicitly warned unrestricted-local session.
+    // Workspace-sandbox mode remains fail-closed until an OS sandbox exists.
+    // A durable content-free intent precedes CreateProcessW; an outcome is
+    // always submitted after an attempted launch. The fixed plan, private image,
+    // and isolated environment remain opaque to the caller.
+    [[nodiscard]] WorkspaceAgentProcessExecutionResult
+    execute_materialized_process_launch(
+        WorkspaceAgentMaterializedProcessLaunch launch,
+        const WorkspaceAgentProcessExecutionControls& controls,
+        const WorkspaceAgentSessionAuditSink& audit_sink) const;
+
 private:
     enum class Transition {
         idle,
@@ -515,6 +565,7 @@ private:
     std::shared_ptr<const std::uint8_t> process_launch_controller_authority_ =
         std::make_shared<const std::uint8_t>(0U);
     mutable std::uint64_t next_materialized_process_image_ = 1U;
+    mutable std::uint64_t next_process_execution_attempt_ = 1U;
 };
 
 [[nodiscard]] std::string serialize_workspace_agent_session_audit_event(

@@ -1,5 +1,33 @@
 # Agent Handoff
 
+## V1 workspace-agent Windows unrestricted exact-image execution
+
+Candidate `RQ-CF-AGENT-028` is implemented locally pending protected evidence.
+The controller consumes its opaque materialized launch only for the exact active
+generation in explicitly warned `unrestricted_local` mode on a confirmed
+non-elevated Windows host. It submits a content-free intent before invoking the
+private launcher, executes only the retained exact image with its retained
+command line, fixed environment, and working directory, owns the process tree
+with a kill-on-close Job Object, and submits a correlated content-free outcome
+after image cleanup. `workspace_sandbox`, elevation, unknown elevation,
+non-Windows hosts, invalid controls, stale state, and failed intent audit remain
+fail-closed. The public RQ-019 gate is unchanged and still denies every caller.
+
+Local Debug behavior and machine-contract execution passes `5/5`; fresh GCC 15
+Release with `-Werror` passes the same `5/5`, and fresh Clang 21
+ASan/UBSan/leak passes `3/3` without findings. Licensing, community,
+release-license, isolation, supply-chain, and safety contracts pass `6/6`,
+including the 327.99-second safety scan. Coverage includes
+sandbox and platform denial, failed-intent no-launch behavior, exact `argv[0]`,
+argument/environment/working-directory consumption, bounded tree ownership,
+outcome/diagnostic consistency, private-image cleanup, and a Windows-only
+concurrency regression requiring stop to finish after Job Object assignment
+while the bounded child is still running. Protected Windows execution,
+Ubuntu/macOS denial, exact-head review, and retained merge evidence are still
+required before implementation evidence can be called complete. POSIX/macOS
+execution, real workspace sandboxing, trusted provider/UI integration,
+endpoint policy, diff/undo, and crash-recoverable audit receipts remain gaps.
+
 ## V1 workspace-agent Windows launch-handle transition
 
 Candidate `RQ-CF-AGENT-027` is implementation-evidence complete. On Windows,

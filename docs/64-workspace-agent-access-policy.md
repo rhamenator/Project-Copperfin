@@ -843,6 +843,50 @@ denied. POSIX/macOS descriptor execution, working-directory entry, sandboxing,
 endpoint and descendant controls, process outcome audit, and actual tool
 execution remain separate requirements.
 
+## Windows warned-unrestricted exact-image execution
+
+Candidate `RQ-CF-AGENT-028` adds one deliberately narrow executor. The trusted
+controller consumes an opaque materialized launch by value only when it belongs
+to that controller's exact active generation, the admitted mode is
+`unrestricted_local`, the retained plan is the supported Windows form, and the
+host process is confirmed not elevated. `workspace_sandbox` still denies
+execution: workspace path containment is not an operating-system sandbox and
+must not be described as one. Unknown elevation, elevated execution, POSIX,
+and macOS fail closed. The caller supplies only bounded stdin, timeout,
+polling, output ceilings, and cancellation observation; it cannot replace the
+path, arguments, environment, working directory, access mode, handles, or
+process flags retained by the trusted plan.
+
+Before any attempt, the controller durably submits a content-free schema-v2
+intent with generation and a monotonically allocated operation identifier. A
+failed intent audit consumes and destroys the one-attempt image and starts
+nothing. The Windows launcher uses the private image path only internally as
+`lpApplicationName`, preserves the authenticated original executable spelling
+as `argv[0]`, passes the fixed double-NUL environment and canonical working
+directory directly, never invokes a shell or PATH search, and admits only the
+three fixed standard handles. It creates the process suspended, assigns it to a
+kill-on-close Job Object, then releases the plan, target pins, and generation
+lease before starting threads or resuming the child. Consequently stop may
+revoke the session after launch commitment without waiting for a long-running
+child, while the private executable image remains owned until the complete
+bounded process tree closes.
+
+Timeout, cancellation, transport failure, and output ceilings close the Job
+Object and leave no authorized descendant. Image cleanup occurs before the
+correlated content-free outcome is submitted. The durable sink admits only
+stable status/diagnostic pairs; paths, arguments, environment values, output,
+native errors, prompts, and credentials are never part of the process audit
+record. An outcome-audit failure remains visible after execution and does not
+rewrite the process result. This is explicitly dangerous current-user
+authority chosen after the versioned warning, not sandbox containment and not
+privilege elevation.
+
+The public `RQ-CF-AGENT-019` promotion gate remains invariantly denied. This
+slice does not connect provider or model output to native execution, implement
+the trusted activation UI, add endpoint policy, provide diff/undo, recover
+receipts after a crash, or establish POSIX/macOS execution. Those remain
+separate requirements.
+
 ## Current implementation and remaining work
 
 Candidate `RQ-CF-AGENT-021` retains every successful configured layout
@@ -906,7 +950,10 @@ lease into one opaque move-only non-executing candidate. Candidate
 `RQ-CF-AGENT-026` consumes that candidate once and retains an exact private
 native image without exposing it. Candidate `RQ-CF-AGENT-027` transitions the
 Windows image to an exact read/delete launch-compatible handle without exposing
-or executing it, and none of these slices weakens that gate. The adjacent
+it. Candidate `RQ-CF-AGENT-028` consumes that exact image only under warned,
+non-elevated unrestricted-local authority, applies bounded Job Object ownership
+and paired content-free audit, and still does not weaken the public promotion
+gate. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
@@ -914,14 +961,14 @@ ambient variables, and the next boundary serializes that exact plan for POSIX
 or Windows without launching. When trusted environment configuration is
 supplied, process-capable session start prepares that exact generation's
 private layout before audit-backed activation and fails closed without adopting
-existing state. None of these results is an executor or real sandbox.
+existing state. The Windows-only RQ-028 path is an executor but not a real
+sandbox.
 Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, exact-snapshot execution and the POSIX/macOS platform launch
-transition,
+semantics, POSIX/macOS exact-snapshot execution and platform launch transition,
 automatic lifecycle cleanup, crash-recoverable receipts, partial-cleanup retry,
-endpoint policy, process
-execution, and tool-outcome auditing remain unimplemented.
+endpoint policy, public process promotion, real workspace sandboxing, and
+general tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.

@@ -11,7 +11,8 @@
 
 namespace copperfin::security {
 
-// Governing requirements: RQ-CF-AGENT-001, RQ-CF-AGENT-005, and RQ-CF-AGENT-006.
+// Governing requirements: RQ-CF-AGENT-001, RQ-CF-AGENT-005,
+// RQ-CF-AGENT-006, RQ-CF-AGENT-021, and RQ-CF-AGENT-028.
 
 inline constexpr std::size_t workspace_agent_audit_min_log_bytes = 512U;
 inline constexpr std::size_t workspace_agent_audit_default_log_bytes = 4U * 1024U * 1024U;

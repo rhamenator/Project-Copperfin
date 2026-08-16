@@ -455,8 +455,11 @@ bool native_matches_bytes(
 class PrivateExecutableImage::Impl {
 public:
 #if defined(_WIN32)
-    Impl(HANDLE handle_value, std::size_t size_value) noexcept
-        : handle(handle_value), size(size_value) {}
+    Impl(
+        HANDLE handle_value,
+        std::filesystem::path path_value,
+        std::size_t size_value) noexcept
+        : handle(handle_value), path(std::move(path_value)), size(size_value) {}
     ~Impl() {
         (void)delete_exact_file(handle);
         if (handle != nullptr && handle != INVALID_HANDLE_VALUE) {
@@ -471,6 +474,7 @@ public:
         return expected.size() == size && native_matches_bytes(handle, expected);
     }
     HANDLE handle = INVALID_HANDLE_VALUE;
+    std::filesystem::path path;
 #else
     Impl(int descriptor_value, std::size_t size_value) noexcept
         : descriptor(descriptor_value), size(size_value) {}
@@ -508,6 +512,15 @@ bool PrivateExecutableImage::valid() const noexcept {
 bool PrivateExecutableImage::matches_bytes(
     const std::span<const std::uint8_t> expected) const noexcept {
     return impl_ != nullptr && impl_->matches(expected);
+}
+
+const std::filesystem::path*
+PrivateExecutableImage::windows_launch_target() const noexcept {
+#if defined(_WIN32)
+    return impl_ != nullptr && impl_->valid() ? &impl_->path : nullptr;
+#else
+    return nullptr;
+#endif
 }
 
 PrivateExecutableImageMaterializationResult
@@ -630,7 +643,7 @@ materialize_private_executable_image_in_verified_parent(
         }
         parent_handle.reset();
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            launch_handle.get(), bytes.size());
+            launch_handle.get(), image_path, bytes.size());
         (void)launch_handle.release();
 #else
         const std::string leaf_name = leaf.native();

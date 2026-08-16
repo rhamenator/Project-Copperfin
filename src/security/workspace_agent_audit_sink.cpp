@@ -7,6 +7,8 @@
 #include "copperfin/platform/path.h"
 #include "copperfin/security/audit_stream.h"
 
+#include <algorithm>
+#include <array>
 #include <limits>
 #include <string_view>
 #include <system_error>
@@ -17,6 +19,8 @@ namespace {
 
 constexpr std::string_view workspace_agent_session_audit_event_name =
     "workspace_agent.session.v1";
+constexpr std::string_view workspace_agent_process_audit_event_name =
+    "workspace_agent.process.v2";
 
 bool path_has_embedded_nul(const std::filesystem::path& path) {
     for (const auto& component : path) {
@@ -115,9 +119,82 @@ bool allowed_start_is_valid(const WorkspaceAgentSessionAuditEvent& event) {
     return false;
 }
 
+bool process_launch_failure_diagnostic_is_valid(std::string_view diagnostic) {
+    static constexpr std::array<std::string_view, 15U> diagnostics{{
+        "polyglot.process.exit_query_failed",
+        "polyglot.process.input_write_failed",
+        "polyglot.process.input_writer_create_failed",
+        "polyglot.process.job_assign_failed",
+        "polyglot.process.job_configure_failed",
+        "polyglot.process.job_create_failed",
+        "polyglot.process.launch_failed",
+        "polyglot.process.output_pipe_failed",
+        "polyglot.process.output_read_failed",
+        "polyglot.process.output_reader_create_failed",
+        "polyglot.process.resume_failed",
+        "polyglot.process.transport_pipe_failed",
+        "polyglot.process.tree_termination_failed",
+        "polyglot.process.wait_failed",
+        "workspace_agent.process_execution_failed"}};
+    return std::find(diagnostics.begin(), diagnostics.end(), diagnostic) !=
+        diagnostics.end();
+}
+
+bool process_denial_diagnostic_is_valid(std::string_view diagnostic) {
+    static constexpr std::array<std::string_view, 5U> diagnostics{{
+        "workspace_agent.process_execution_elevated_host_denied",
+        "workspace_agent.process_execution_elevation_unavailable",
+        "workspace_agent.process_execution_invalid_controls",
+        "workspace_agent.process_execution_platform_unavailable",
+        "workspace_agent.process_execution_requires_unrestricted_local"}};
+    return std::find(diagnostics.begin(), diagnostics.end(), diagnostic) !=
+        diagnostics.end();
+}
+
+bool process_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) {
+    if (event.schema_version != 2U || event.operation_id == 0U ||
+        event.requested_mode != event.effective_mode ||
+        (event.effective_mode != WorkspaceAgentAccessMode::workspace_sandbox &&
+         event.effective_mode != WorkspaceAgentAccessMode::unrestricted_local)) {
+        return false;
+    }
+    if (event.kind == WorkspaceAgentSessionEventKind::process_launch_intent) {
+        return event.outcome == "pending" &&
+            event.diagnostic_code == "workspace_agent.process_launch_intent";
+    }
+    if (event.outcome == "denied") {
+        return process_denial_diagnostic_is_valid(event.diagnostic_code);
+    }
+    if (event.outcome == "exited") {
+        return event.diagnostic_code == "polyglot.process.exited";
+    }
+    if (event.outcome == "cancelled") {
+        return event.diagnostic_code == "polyglot.process.cancelled";
+    }
+    if (event.outcome == "timed-out") {
+        return event.diagnostic_code == "polyglot.process.timeout";
+    }
+    if (event.outcome == "output-limit-exceeded") {
+        return event.diagnostic_code == "polyglot.process.stderr_limit_exceeded" ||
+            event.diagnostic_code == "polyglot.process.stdout_limit_exceeded";
+    }
+    if (event.outcome == "invalid-request") {
+        return event.diagnostic_code == "polyglot.process.invalid_request";
+    }
+    return event.outcome == "launch-failed" &&
+        process_launch_failure_diagnostic_is_valid(event.diagnostic_code);
+}
+
 bool session_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) {
-    if (event.schema_version != 1U || event.session_generation == 0U ||
+    if (event.session_generation == 0U ||
         event.session_generation == std::numeric_limits<std::uint64_t>::max()) {
+        return false;
+    }
+    if (event.kind == WorkspaceAgentSessionEventKind::process_launch_intent ||
+        event.kind == WorkspaceAgentSessionEventKind::process_launch_outcome) {
+        return process_audit_event_is_valid(event);
+    }
+    if (event.schema_version != 1U || event.operation_id != 0U) {
         return false;
     }
     switch (event.kind) {
@@ -159,6 +236,9 @@ bool session_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) 
                      "workspace_agent.environment_session_layout_cleanup_failed" ||
                  event.diagnostic_code ==
                      "workspace_agent.session_environment_boundary_unavailable");
+        case WorkspaceAgentSessionEventKind::process_launch_intent:
+        case WorkspaceAgentSessionEventKind::process_launch_outcome:
+            return false;
     }
     return false;
 }
@@ -233,7 +313,9 @@ WorkspaceAgentSessionAuditCommitResult WorkspaceAgentSessionAuditFileSink::commi
         append_bounded_immutable_audit_event_to_contained_file(
             platform::path_to_utf8_string(log_path_),
             platform::path_to_utf8_string(storage_root_),
-            std::string(workspace_agent_session_audit_event_name),
+            std::string(event.schema_version == 2U
+                    ? workspace_agent_process_audit_event_name
+                    : workspace_agent_session_audit_event_name),
             serialize_workspace_agent_session_audit_event(event),
             max_log_bytes_);
     if (!appended.ok || appended.entry_hash.empty()) {

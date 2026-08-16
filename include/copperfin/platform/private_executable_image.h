@@ -12,7 +12,10 @@
 
 namespace copperfin::platform {
 
-// Governing requirements: candidate RQ-CF-AGENT-026 and RQ-CF-AGENT-027.
+struct BoundedProcessResult;
+struct PrivateWindowsBoundedProcessRequest;
+
+// Governing requirements: candidate RQ-CF-AGENT-026 through RQ-CF-AGENT-028.
 
 enum class PrivateExecutableImageFailure : std::uint32_t {
     none = 0U,
@@ -56,6 +59,9 @@ private:
     [[nodiscard]] bool matches_bytes(
         std::span<const std::uint8_t> expected) const noexcept;
 
+    [[nodiscard]] const std::filesystem::path*
+    windows_launch_target() const noexcept;
+
     std::unique_ptr<Impl> impl_;
 
     friend struct PrivateExecutableImageMaterializationResult;
@@ -67,6 +73,9 @@ private:
         std::uint64_t,
         const std::filesystem::path&,
         std::span<const std::uint8_t>) noexcept;
+    friend BoundedProcessResult run_bounded_windows_private_executable(
+        const PrivateExecutableImage&,
+        const PrivateWindowsBoundedProcessRequest&) noexcept;
 };
 
 struct PrivateExecutableImageMaterializationResult {

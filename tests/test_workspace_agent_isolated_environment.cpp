@@ -44,6 +44,7 @@ using copperfin::security::WorkspaceAgentProcessParserConfiguration;
 using copperfin::security::WorkspaceAgentProcessInvocationPreflightRequest;
 using copperfin::security::WorkspaceAgentPreparedProcessLaunch;
 using copperfin::security::WorkspaceAgentPreparedProcessLaunchResult;
+using copperfin::security::WorkspaceAgentProcessExecutionControls;
 using copperfin::security::WorkspaceAgentSerializedProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentSerializedProcessInvocationPreflightResult;
 using copperfin::security::WorkspaceAgentSessionAuditCommitResult;
@@ -378,6 +379,19 @@ WorkspaceAgentActivationRequest activation_request() {
         .user_confirmed = false};
 }
 
+WorkspaceAgentActivationRequest unrestricted_activation_request() {
+    return {
+        .requested_mode = WorkspaceAgentAccessMode::unrestricted_local,
+        .feature_enabled = true,
+        .permission_granted = true,
+        .trusted_product_ui = true,
+        .audit_sink_available = true,
+        .warning_presented = true,
+        .warning_id =
+            copperfin::security::workspace_agent_unrestricted_warning_id,
+        .user_confirmed = true};
+}
+
 WorkspaceAgentProcessInvocationPreflightRequest invocation_request(
     std::uint64_t generation) {
     return {
@@ -388,6 +402,22 @@ WorkspaceAgentProcessInvocationPreflightRequest invocation_request(
         .working_directory = "working",
         .arguments = {"literal && not-shell", "value with spaces"}};
 }
+
+WorkspaceAgentProcessInvocationPreflightRequest execution_invocation_request(
+    std::uint64_t generation) {
+    auto request = invocation_request(generation);
+    request.arguments = {"--workspace-agent-child-v1", "literal-payload"};
+    return request;
+}
+
+#if defined(_WIN32)
+WorkspaceAgentProcessInvocationPreflightRequest waiting_execution_invocation_request(
+    std::uint64_t generation) {
+    auto request = invocation_request(generation);
+    request.arguments = {"--workspace-agent-child-wait-v1"};
+    return request;
+}
+#endif
 
 const std::string* find_entry(
     const std::vector<WorkspaceAgentEnvironmentEntry>& entries,
@@ -825,6 +855,213 @@ void test_prepared_candidate_materializes_only_retained_snapshot() {
            "RQ-CF-AGENT-026: controlled image lifetime must preserve identity-bound empty-layout cleanup");
     expect(other_controller.stop(audit_sink()).revoked,
            "RQ-CF-AGENT-026: cross-controller denial must leave the unrelated controller normally revocable");
+}
+
+void test_materialized_execution_is_windows_unrestricted_and_audited() {
+    {
+        TempTree tree;
+        WorkspaceAgentSessionController controller(
+            tree.workspace, tree.configuration(), tree.parser_configuration());
+        const auto started = controller.start(activation_request(), audit_sink());
+        auto prepared = controller.prepare_process_launch_candidate(
+            execution_invocation_request(started.session.generation));
+        if (!prepared.candidate.has_value()) {
+            expect(false,
+                   "RQ-CF-AGENT-028: sandbox-denial fixture must prepare one opaque candidate");
+            return;
+        }
+        auto materialized = controller.materialize_process_launch_candidate(
+            std::move(*prepared.candidate));
+        if (!materialized.launch.has_value()) {
+            expect(false,
+                   "RQ-CF-AGENT-028: sandbox-denial fixture must materialize one exact image");
+            return;
+        }
+        AuditCapture audit;
+        const auto denied = controller.execute_materialized_process_launch(
+            std::move(*materialized.launch), {}, audit_sink(audit));
+        expect(!denied.attempted && denied.intent_audit_committed &&
+                   denied.outcome_audit_committed && denied.operation_id == 1U &&
+                   denied.diagnostic_code ==
+                       "workspace_agent.process_execution_requires_unrestricted_local" &&
+                   audit.events.size() == 2U &&
+                   audit.events[0].schema_version == 2U &&
+                   audit.events[0].kind ==
+                       copperfin::security::WorkspaceAgentSessionEventKind::
+                           process_launch_intent &&
+                   audit.events[1].kind ==
+                       copperfin::security::WorkspaceAgentSessionEventKind::
+                           process_launch_outcome &&
+                   audit.events[0].operation_id == audit.events[1].operation_id &&
+                   audit.events[1].outcome == "denied" &&
+                   std::filesystem::is_empty(
+                       tree.session_storage / "session-1" / "temp"),
+               "RQ-CF-AGENT-028: workspace-sandbox mode must consume and audit the attempt without starting an unsandboxed process");
+        expect(controller.stop(audit_sink()).revoked &&
+                   controller.cleanup_pending_session_layout(audit_sink()).cleaned,
+               "RQ-CF-AGENT-028: sandbox denial must leave normal revocation and empty-layout cleanup available");
+    }
+
+    TempTree tree;
+    WorkspaceAgentSessionController controller(
+        tree.workspace, tree.configuration(), tree.parser_configuration());
+    const auto started = controller.start(
+        unrestricted_activation_request(), audit_sink());
+    expect(started.activated &&
+               started.session.effective_mode ==
+                   WorkspaceAgentAccessMode::unrestricted_local,
+           "RQ-CF-AGENT-028: execution fixture requires exact warned unrestricted-local authority");
+
+    auto unaudited_prepared = controller.prepare_process_launch_candidate(
+        execution_invocation_request(started.session.generation));
+    if (!unaudited_prepared.candidate.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: intent-audit fixture must prepare one candidate");
+        return;
+    }
+    auto unaudited_materialized = controller.materialize_process_launch_candidate(
+        std::move(*unaudited_prepared.candidate));
+    if (!unaudited_materialized.launch.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: intent-audit fixture must materialize one image");
+        return;
+    }
+    AuditCapture failing_intent;
+    failing_intent.fail_on_event = 1U;
+    const auto unaudited = controller.execute_materialized_process_launch(
+        std::move(*unaudited_materialized.launch), {}, audit_sink(failing_intent));
+    expect(!unaudited.attempted && !unaudited.intent_audit_committed &&
+               !unaudited.outcome_audit_committed &&
+               unaudited.diagnostic_code ==
+                   "workspace_agent.process_execution_intent_audit_failed" &&
+               failing_intent.events.size() == 1U &&
+               std::filesystem::is_empty(
+                   tree.session_storage / "session-1" / "temp"),
+           "RQ-CF-AGENT-028: failed durable intent must start no process and must discard the private image and lease");
+
+    auto prepared = controller.prepare_process_launch_candidate(
+        execution_invocation_request(started.session.generation));
+    if (!prepared.candidate.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: execution fixture must prepare one exact candidate");
+        return;
+    }
+    auto materialized = controller.materialize_process_launch_candidate(
+        std::move(*prepared.candidate));
+    if (!materialized.launch.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: execution fixture must materialize one exact image");
+        return;
+    }
+    AuditCapture audit;
+    const auto executed = controller.execute_materialized_process_launch(
+        std::move(*materialized.launch), WorkspaceAgentProcessExecutionControls{},
+        audit_sink(audit));
+#if defined(_WIN32)
+    const std::string expected_argv0 = copperfin::platform::path_to_utf8_string(
+        std::filesystem::canonical(tree.workspace / "bin" / "workspace-tool"));
+    expect(executed.attempted && executed.intent_audit_committed &&
+               executed.outcome_audit_committed && executed.operation_id == 2U &&
+               executed.process.started && executed.process.completed() &&
+               executed.process.process_tree_closed &&
+               executed.process.exit_code == 23 &&
+               executed.process.standard_output.find(
+                   "workspace-agent-child-v1\n") != std::string::npos &&
+               executed.process.standard_output.find(
+                   "argv0=" + expected_argv0 + "\n") != std::string::npos &&
+               executed.process.standard_output.find(
+                   "payload=literal-payload\n") != std::string::npos &&
+               executed.process.standard_output.find(
+                   "cwd=" + copperfin::platform::path_to_utf8_string(
+                       std::filesystem::canonical(tree.workspace / "working")) +
+                       "\n") != std::string::npos &&
+               executed.process.standard_output.find("ambient=<unset>\n") !=
+                   std::string::npos &&
+               executed.diagnostic_code == "polyglot.process.exited" &&
+               audit.events.size() == 2U &&
+               audit.events[0].operation_id == audit.events[1].operation_id &&
+               audit.events[1].outcome == "exited" &&
+               std::filesystem::is_empty(
+                   tree.session_storage / "session-1" / "temp"),
+           "RQ-CF-AGENT-028: warned non-elevated Windows execution must consume the exact image and fixed argv/environment/cwd under bounded process-tree ownership and paired audit");
+#else
+    expect(!executed.attempted && executed.intent_audit_committed &&
+               executed.outcome_audit_committed && executed.operation_id == 2U &&
+               !executed.process.started &&
+               executed.diagnostic_code ==
+                   "workspace_agent.process_execution_platform_unavailable" &&
+               audit.events.size() == 2U &&
+               audit.events[1].outcome == "denied" &&
+               std::filesystem::is_empty(
+                   tree.session_storage / "session-1" / "temp"),
+           "RQ-CF-AGENT-028: non-Windows hosts must consume and audit the exact attempt without exposing or executing the retained image");
+#endif
+    expect(controller.stop(audit_sink()).revoked &&
+               controller.cleanup_pending_session_layout(audit_sink()).cleaned,
+           "RQ-CF-AGENT-028: completed or platform-denied execution must preserve revocation and cleanup lifecycle");
+}
+
+void test_committed_execution_releases_revocation_lease_before_child_exit() {
+#if defined(_WIN32)
+    TempTree tree;
+    WorkspaceAgentSessionController controller(
+        tree.workspace, tree.configuration(), tree.parser_configuration());
+    const auto started = controller.start(
+        unrestricted_activation_request(), audit_sink());
+    auto prepared = controller.prepare_process_launch_candidate(
+        waiting_execution_invocation_request(started.session.generation));
+    if (!prepared.candidate.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: revocation-lifecycle fixture must prepare one candidate");
+        return;
+    }
+    auto materialized = controller.materialize_process_launch_candidate(
+        std::move(*prepared.candidate));
+    if (!materialized.launch.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: revocation-lifecycle fixture must materialize one image");
+        return;
+    }
+
+    std::atomic_bool process_poll_observed{false};
+    std::atomic_bool execution_finished{false};
+    WorkspaceAgentProcessExecutionControls controls;
+    controls.timeout_ms = 5000U;
+    controls.cancellation_requested = [&process_poll_observed] {
+        process_poll_observed.store(true, std::memory_order_release);
+        return false;
+    };
+    copperfin::security::WorkspaceAgentProcessExecutionResult execution_result;
+    std::thread execution_thread(
+        [&controller, &controls, &execution_result, &execution_finished,
+         launch = std::move(*materialized.launch)]() mutable {
+            execution_result = controller.execute_materialized_process_launch(
+                std::move(launch), controls, audit_sink());
+            execution_finished.store(true, std::memory_order_release);
+        });
+
+    const auto observation_deadline =
+        std::chrono::steady_clock::now() + std::chrono::seconds(2);
+    while (!process_poll_observed.load(std::memory_order_acquire) &&
+           std::chrono::steady_clock::now() < observation_deadline) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    const bool running_was_observed =
+        process_poll_observed.load(std::memory_order_acquire);
+    const auto stopped = controller.stop(audit_sink());
+    const bool finished_when_stop_returned =
+        execution_finished.load(std::memory_order_acquire);
+    execution_thread.join();
+
+    expect(running_was_observed && stopped.revoked &&
+               !finished_when_stop_returned && execution_result.attempted &&
+               execution_result.process.completed() &&
+               execution_result.process.exit_code == 29 &&
+               execution_result.outcome_audit_committed,
+           "RQ-CF-AGENT-028: job assignment must release the exact-generation revocation lease before the bounded child exits");
+    expect(controller.cleanup_pending_session_layout(audit_sink()).cleaned,
+           "RQ-CF-AGENT-028: image destruction after a revoked running invocation must permit normal layout cleanup");
+#endif
 }
 
 void test_windows_serialization_requires_exact_parser_authority() {
@@ -1620,6 +1857,23 @@ void test_controller_retains_and_audits_explicit_layout_cleanup() {
 }  // namespace
 
 int main(int argc, char** argv) {
+    if (argc == 2 && argv[1] != nullptr &&
+        std::string_view(argv[1]) == "--workspace-agent-child-wait-v1") {
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+        return 29;
+    }
+    if (argc == 3 && argv[1] != nullptr && argv[2] != nullptr &&
+        std::string_view(argv[1]) == "--workspace-agent-child-v1") {
+        const char* ambient = std::getenv("GITHUB_TOKEN");
+        std::cout << "workspace-agent-child-v1\n"
+                  << "argv0=" << (argv[0] == nullptr ? "" : argv[0]) << '\n'
+                  << "payload=" << argv[2] << '\n'
+                  << "cwd=" << copperfin::platform::path_to_utf8_string(
+                         std::filesystem::current_path()) << '\n'
+                  << "ambient=" << (ambient == nullptr ? "<unset>" : ambient)
+                  << '\n';
+        return 23;
+    }
     if (argc > 0 && argv[0] != nullptr) {
         std::error_code canonical_error;
         running_test_executable = std::filesystem::canonical(
@@ -1634,6 +1888,8 @@ int main(int argc, char** argv) {
     test_fixed_non_inheriting_environment();
     test_prepared_launch_candidate_binds_plan_pins_and_revocation();
     test_prepared_candidate_materializes_only_retained_snapshot();
+    test_materialized_execution_is_windows_unrestricted_and_audited();
+    test_committed_execution_releases_revocation_lease_before_child_exit();
     test_windows_serialization_requires_exact_parser_authority();
     test_secure_generation_layout_preparation();
     test_identity_bound_empty_layout_cleanup();

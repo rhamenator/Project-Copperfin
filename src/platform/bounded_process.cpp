@@ -4,6 +4,8 @@
 
 #include "copperfin/platform/bounded_process.h"
 
+#include "bounded_process_private.h"
+
 #include "copperfin/platform/path.h"
 #include "copperfin/platform/process_arguments.h"
 #include "copperfin/platform/process_environment.h"
@@ -39,8 +41,6 @@
 
 namespace copperfin::platform {
 namespace {
-
-constexpr std::uint32_t kMaximumTransportBytes = 16U * 1024U * 1024U;
 
 #if defined(_WIN32)
 constexpr DWORD kTerminationWaitMilliseconds = 5000U;
@@ -154,6 +154,17 @@ bool valid_environment(
         }
     }
     return true;
+}
+
+bool valid_transport_controls(const BoundedProcessRequest& request) noexcept {
+    return request.timeout_ms != 0U && request.poll_interval_ms != 0U &&
+        request.poll_interval_ms <= request.timeout_ms &&
+        request.stdin_limit_bytes != 0U && request.stdout_limit_bytes != 0U &&
+        request.stderr_limit_bytes != 0U &&
+        request.standard_input.size() <= request.stdin_limit_bytes &&
+        request.stdin_limit_bytes <= bounded_process_max_transport_bytes &&
+        request.stdout_limit_bytes <= bounded_process_max_transport_bytes &&
+        request.stderr_limit_bytes <= bounded_process_max_transport_bytes;
 }
 
 struct CapturedStreamState {
@@ -386,7 +397,12 @@ void write_windows_input_pipe(
     (void)::CloseHandle(write_handle);
 }
 
-BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
+BoundedProcessResult run_windows(
+    const BoundedProcessRequest& request,
+    const std::u16string* retained_command_line = nullptr,
+    const std::u16string* retained_environment_block = nullptr,
+    void (*launch_committed)(void*) noexcept = nullptr,
+    void* launch_committed_context = nullptr) {
     BoundedProcessResult result;
     const auto started_at = Clock::now();
     int conversion_error = 0;
@@ -400,30 +416,43 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         return result;
     }
 
-    auto serialized_arguments = serialize_process_arguments(
-        request.executable_path,
-        request.arguments,
-        ProcessArgumentTarget::windows_command_line_v1,
-        32767U);
-    if (!serialized_arguments.ok) {
-        result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.arguments_invalid";
-        result.native_error = ERROR_INVALID_PARAMETER;
-        return result;
+    std::u16string command_line_units;
+    if (retained_command_line != nullptr) {
+        command_line_units = *retained_command_line;
+    } else {
+        auto serialized_arguments = serialize_process_arguments(
+            request.executable_path,
+            request.arguments,
+            ProcessArgumentTarget::windows_command_line_v1,
+            32767U);
+        if (!serialized_arguments.ok) {
+            result.status = BoundedProcessStatus::launch_failed;
+            result.error_code = "polyglot.process.arguments_invalid";
+            result.native_error = ERROR_INVALID_PARAMETER;
+            return result;
+        }
+        command_line_units = std::move(serialized_arguments.windows_command_line);
     }
     std::wstring command_line(
-        serialized_arguments.windows_command_line.begin(),
-        serialized_arguments.windows_command_line.end());
+        command_line_units.begin(), command_line_units.end());
 
-    auto serialized_environment = serialize_process_environment(
-        request.environment,
-        ProcessEnvironmentTarget::windows_utf16_v1,
-        std::numeric_limits<std::size_t>::max());
-    if (!serialized_environment.ok) {
-        result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.environment_invalid";
-        result.native_error = ERROR_INVALID_PARAMETER;
-        return result;
+    std::u16string environment_block;
+    if (retained_environment_block != nullptr) {
+        environment_block = *retained_environment_block;
+    } else {
+        auto serialized_environment = serialize_process_environment(
+            request.environment,
+            ProcessEnvironmentTarget::windows_utf16_v1,
+            std::numeric_limits<std::size_t>::max());
+        if (!serialized_environment.ok) {
+            result.status = BoundedProcessStatus::launch_failed;
+            result.error_code = "polyglot.process.environment_invalid";
+            result.native_error = ERROR_INVALID_PARAMETER;
+            return result;
+        }
+        environment_block.assign(
+            serialized_environment.windows_block.begin(),
+            serialized_environment.windows_block.end());
     }
     static_assert(sizeof(char16_t) == sizeof(wchar_t));
 
@@ -548,7 +577,7 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         TRUE,
         CREATE_NO_WINDOW | CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
             EXTENDED_STARTUPINFO_PRESENT,
-        serialized_environment.windows_block.data(),
+        environment_block.data(),
         working_directory.c_str(),
         &startup_info.StartupInfo,
         &process_info);
@@ -618,6 +647,9 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         result.process_tree_closed = true;
         result.elapsed_ms = elapsed_milliseconds(started_at);
         return result;
+    }
+    if (launch_committed != nullptr) {
+        launch_committed(launch_committed_context);
     }
     try {
         stdout_thread = std::thread(
@@ -1329,14 +1361,7 @@ BoundedProcessResult run_bounded_process(const BoundedProcessRequest& request) {
         contains_nul(request.executable_path) ||
         contains_nul(request.working_directory) ||
         !valid_arguments(request.arguments) ||
-        request.timeout_ms == 0U || request.poll_interval_ms == 0U ||
-        request.poll_interval_ms > request.timeout_ms ||
-        request.stdin_limit_bytes == 0U ||
-        request.stdout_limit_bytes == 0U || request.stderr_limit_bytes == 0U ||
-        request.standard_input.size() > request.stdin_limit_bytes ||
-        request.stdin_limit_bytes > kMaximumTransportBytes ||
-        request.stdout_limit_bytes > kMaximumTransportBytes ||
-        request.stderr_limit_bytes > kMaximumTransportBytes ||
+        !valid_transport_controls(request) ||
         !valid_environment(request.environment)) {
         return invalid_request();
     }
@@ -1369,6 +1394,82 @@ BoundedProcessResult run_bounded_process(const BoundedProcessRequest& request) {
 #else
     return run_posix(request);
 #endif
+}
+
+CurrentProcessElevation current_process_elevation() noexcept {
+#if defined(_WIN32)
+    HANDLE token = nullptr;
+    if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token) == FALSE) {
+        return CurrentProcessElevation::unavailable;
+    }
+    TOKEN_ELEVATION elevation{};
+    DWORD returned = 0U;
+    const BOOL queried = ::GetTokenInformation(
+        token, TokenElevation, &elevation, sizeof(elevation), &returned);
+    (void)::CloseHandle(token);
+    if (queried == FALSE || returned < sizeof(elevation)) {
+        return CurrentProcessElevation::unavailable;
+    }
+    return elevation.TokenIsElevated == 0U
+        ? CurrentProcessElevation::not_elevated
+        : CurrentProcessElevation::elevated;
+#else
+    return CurrentProcessElevation::unsupported;
+#endif
+}
+
+BoundedProcessResult run_bounded_windows_private_executable(
+    const PrivateExecutableImage& image,
+    const PrivateWindowsBoundedProcessRequest& request) noexcept {
+    try {
+#if defined(_WIN32)
+        const auto* path = image.windows_launch_target();
+        const auto& command_line = request.command_line;
+        const auto& environment = request.environment_block;
+        if (path == nullptr || !image.valid() || !path->is_absolute() ||
+            request.working_directory.empty() ||
+            !request.working_directory.is_absolute() || command_line.empty() ||
+            command_line.find(u'\0') != std::u16string::npos ||
+            environment.size() < 2U || environment[environment.size() - 1U] != u'\0' ||
+            environment[environment.size() - 2U] != u'\0' ||
+            !request.transport.executable_path.empty() ||
+            !request.transport.working_directory.empty() ||
+            !request.transport.arguments.empty() ||
+            !request.transport.environment.empty() ||
+            !valid_transport_controls(request.transport)) {
+            return invalid_request();
+        }
+        BoundedProcessRequest transport = request.transport;
+        transport.executable_path = path_to_utf8_string(*path);
+        transport.working_directory =
+            path_to_utf8_string(request.working_directory);
+        if (transport.executable_path.empty() ||
+            transport.working_directory.empty()) {
+            return invalid_request();
+        }
+        if (cancellation_requested(transport)) {
+            BoundedProcessResult result;
+            result.status = BoundedProcessStatus::cancelled;
+            result.error_code = "polyglot.process.cancelled";
+            return result;
+        }
+        return run_windows(
+            transport, &command_line, &environment,
+            request.launch_committed, request.launch_committed_context);
+#else
+        static_cast<void>(image);
+        static_cast<void>(request);
+        BoundedProcessResult result;
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "workspace_agent.process_execution_platform_unavailable";
+        return result;
+#endif
+    } catch (...) {
+        BoundedProcessResult result;
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "workspace_agent.process_execution_failed";
+        return result;
+    }
 }
 
 const char* bounded_process_status_name(const BoundedProcessStatus status) noexcept {
