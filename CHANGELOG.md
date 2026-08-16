@@ -17,8 +17,8 @@
   exact-head review found that retaining only the authenticated file
   handle did not prevent an ancestor directory rename from redirecting the
   path reopened by `CreateProcessW`. The private image now retains no-delete-
-  share handles for every renameable directory below the stable drive/UNC root
-  through the parent, repeats the leaf
+  share handles for every renameable directory below the handle-derived stable
+  volume-GUID root through the parent, repeats the leaf
   identity check with a read-only observer whose delete sharing is compatible
   with the retained handle's own delete access after acquiring those locks,
   and directly regresses ancestor
@@ -34,11 +34,20 @@
   supplied its deliberately fake environment-contract `SystemRoot` to a real
   PE child; execution fixtures now authenticate and use the host Windows
   directory while fake-root mutation tests remain isolated.
+  Final thread-aware review identified three launch-correlation and pathname
+  gaps. Private image and working-directory launch names now come from their
+  authenticated handles as stable volume-GUID paths; every renameable working-
+  directory component remains held without delete sharing until process
+  creation commits. Process intent/outcome pairs now use one process-wide,
+  nonwrapping operation-ID allocator, preventing collisions when distinct
+  controllers share a durable sink. Windows coverage directly attempts a
+  working-directory ancestor rename while pins remain live, and portable
+  coverage requires nonzero distinct cross-controller operation IDs.
   The public
   promotion gate remains invariantly denied. Focused local Debug and warning-as-error GCC 15
   Release execution pass `5/5`; fresh Clang 21 ASan/UBSan/leak passes `3/3`
   without findings; and licensing, community, release-license, isolation,
-  supply-chain, and safety contracts pass `6/6`, including the 327.99-second
+  supply-chain, and safety contracts pass `6/6`, including the corrected-head 328.63-second
   safety scan. Protected Windows and cross-platform denial evidence plus
   exact-head review remain pending.
 

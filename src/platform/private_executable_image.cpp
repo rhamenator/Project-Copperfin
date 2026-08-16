@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -69,6 +70,36 @@ bool handle_identity_matches(
         ((static_cast<std::uint64_t>(
               information.ftCreationTime.dwHighDateTime) << 32U) |
          information.ftCreationTime.dwLowDateTime) == expected_creation_ticks;
+}
+
+std::optional<std::filesystem::path> stable_volume_path_for_handle(
+    const HANDLE handle) noexcept {
+    try {
+        const DWORD flags = FILE_NAME_NORMALIZED | VOLUME_NAME_GUID;
+        constexpr DWORD maximum_path_characters = 32'768U;
+        std::vector<wchar_t> buffer(512U);
+        for (;;) {
+            const DWORD written = ::GetFinalPathNameByHandleW(
+                handle, buffer.data(), static_cast<DWORD>(buffer.size()), flags);
+            if (written == 0U || written > maximum_path_characters) {
+                return std::nullopt;
+            }
+            if (written >= buffer.size()) {
+                buffer.resize(written);
+                continue;
+            }
+            std::filesystem::path result(
+                std::wstring(buffer.data(), static_cast<std::size_t>(written)));
+            constexpr std::wstring_view volume_prefix = L"\\\\?\\Volume{";
+            if (!result.is_absolute() ||
+                result.native().rfind(volume_prefix, 0U) != 0U) {
+                return std::nullopt;
+            }
+            return result;
+        }
+    } catch (...) {
+        return std::nullopt;
+    }
 }
 
 bool exact_file_shape(
@@ -278,8 +309,9 @@ public:
                 reset();
                 return false;
             }
-            // A drive or UNC share root cannot be renamed as a directory entry
-            // and Windows may refuse a delete-denying open on the volume root.
+            // The caller supplies a volume-GUID path. That root cannot be
+            // redirected like a drive-letter, SUBST, or mapped-drive name and
+            // Windows may refuse a delete-denying open on the volume root.
             // Lock every actual directory entry below that stable root.
             for (const auto& component : directory.relative_path()) {
                 if (component.empty() || component == "." || component == "..") {
@@ -684,6 +716,13 @@ materialize_private_executable_image_in_verified_parent(
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
+        const auto stable_image_path =
+            stable_volume_path_for_handle(image_handle.get());
+        if (!stable_image_path.has_value()) {
+            result.failure =
+                PrivateExecutableImageFailure::launch_transition_failed;
+            return result;
+        }
 
         // CreateProcessW must not inherit the write-capable creation handle's
         // sharing obligation. Close that handle and recover the exact file
@@ -713,7 +752,7 @@ materialize_private_executable_image_in_verified_parent(
             return result;
         }
         OwnedHandle path_handle(open_path_for_exact_image(
-            image_path, GENERIC_READ | DELETE, FILE_SHARE_READ));
+            *stable_image_path, GENERIC_READ | DELETE, FILE_SHARE_READ));
         if (!image_identity_matches(path_handle.get(), image_identity)) {
             path_handle.reset();
             transition_handle.reset();
@@ -734,19 +773,22 @@ materialize_private_executable_image_in_verified_parent(
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
-        // CreateProcessW reopens the image by pathname. Retain a no-delete-share
-        // handle for every renameable directory below the stable filesystem
-        // root through the private parent, then repeat the leaf identity check. This prevents any
+        // CreateProcessW reopens the image by pathname. Use the handle-derived
+        // volume-GUID path so drive-letter, SUBST, and mapped-drive names cannot
+        // be redirected. Retain a no-delete-share handle for every renameable
+        // directory below that root through the private parent, then repeat the
+        // leaf identity check. This prevents any
         // ancestor name from being renamed or replaced between materialization
         // and the loader's open of the authenticated leaf.
         OwnedDirectoryChain directory_chain;
-        if (!directory_chain.lock(parent)) {
+        if (!directory_chain.lock(stable_image_path->parent_path())) {
             result.failure =
                 PrivateExecutableImageFailure::launch_transition_failed;
             return result;
         }
         OwnedHandle final_path_check(open_path_for_exact_image(
-            image_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE));
+            *stable_image_path, GENERIC_READ,
+            FILE_SHARE_READ | FILE_SHARE_DELETE));
         if (!image_identity_matches(final_path_check.get(), image_identity) ||
             !image_identity_matches(launch_handle.get(), image_identity) ||
             !handle_identity_matches(
@@ -759,9 +801,14 @@ materialize_private_executable_image_in_verified_parent(
         }
         final_path_check.reset();
         parent_handle.reset();
-        auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            launch_handle.get(), image_path, std::move(directory_chain),
-            bytes.size());
+        // Finish every potentially throwing copy before the new-expression.
+        // Allocation then precedes the no-throw handle/chain transfers, so an
+        // exception cannot strand raw Windows authority outside RAII ownership.
+        std::filesystem::path retained_image_path = *stable_image_path;
+        auto impl = std::unique_ptr<PrivateExecutableImage::Impl>(
+            new PrivateExecutableImage::Impl(
+                launch_handle.get(), std::move(retained_image_path),
+                std::move(directory_chain), bytes.size()));
         (void)launch_handle.release();
 #else
         const std::string leaf_name = leaf.native();

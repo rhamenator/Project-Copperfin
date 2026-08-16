@@ -141,11 +141,12 @@ bool process_launch_failure_diagnostic_is_valid(std::string_view diagnostic) {
 }
 
 bool process_denial_diagnostic_is_valid(std::string_view diagnostic) {
-    static constexpr std::array<std::string_view, 5U> diagnostics{{
+    static constexpr std::array<std::string_view, 6U> diagnostics{{
         "workspace_agent.process_execution_elevated_host_denied",
         "workspace_agent.process_execution_elevation_unavailable",
         "workspace_agent.process_execution_invalid_controls",
         "workspace_agent.process_execution_platform_unavailable",
+        "workspace_agent.process_execution_working_directory_unavailable",
         "workspace_agent.process_execution_requires_unrestricted_local"}};
     return std::find(diagnostics.begin(), diagnostics.end(), diagnostic) !=
         diagnostics.end();

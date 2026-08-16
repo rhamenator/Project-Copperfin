@@ -33,11 +33,14 @@ set(environment_header include/copperfin/security/workspace_agent_environment.h)
 set(environment_source src/security/workspace_agent_environment.cpp)
 set(containment_header include/copperfin/security/physical_path_containment.h)
 set(containment_source src/security/physical_path_containment.cpp)
+set(process_containment_header include/copperfin/security/workspace_agent_process_containment.h)
+set(process_containment_source src/security/workspace_agent_process_containment.cpp)
 set(session_header include/copperfin/security/workspace_agent_session.h)
 set(session_source src/security/workspace_agent_session.cpp)
 set(platform_test tests/test_platform_private_directory.cpp)
 set(isolation_metadata tests/CopperfinTestIsolation.cmake)
 set(environment_test tests/test_workspace_agent_isolated_environment.cpp)
+set(process_containment_test tests/test_workspace_agent_process_containment.cpp)
 
 foreach(path IN ITEMS
         ${platform_header}
@@ -49,14 +52,33 @@ foreach(path IN ITEMS
         ${environment_source}
         ${containment_header}
         ${containment_source}
+        ${process_containment_header}
+        ${process_containment_source}
         ${session_header}
         ${session_source}
         ${platform_test}
         ${isolation_metadata}
-        ${environment_test})
+        ${environment_test}
+        ${process_containment_test})
     if(NOT EXISTS "${SOURCE_DIR}/${path}")
         message(FATAL_ERROR "Process-image materialization input is missing: ${path}")
     endif()
+endforeach()
+
+foreach(token IN ITEMS
+        "stable_volume_path_for_handle("
+        "VOLUME_NAME_GUID"
+        "class ScopedPinHandleChain"
+        "working_directory_chain.release()"
+        "execution_working_directory()")
+    require_text(${process_containment_source} "${token}"
+        "stable Windows working-directory launch authority")
+endforeach()
+foreach(token IN ITEMS
+        "working-directory ancestor rename while retained"
+        "complete working-directory hierarchy exclusions")
+    require_text(${process_containment_test} "${token}"
+        "working-directory hierarchy retention regression")
 endforeach()
 foreach(token IN ITEMS
         "copperfin_set_test_isolation(test_platform_private_directory"
@@ -119,7 +141,7 @@ foreach(token IN ITEMS
         "open_path_for_exact_image("
         "image_identity_matches(path_handle.get(), image_identity)"
         "OwnedDirectoryChain directory_chain"
-        "directory_chain.lock(parent)"
+        "directory_chain.lock(stable_image_path->parent_path())"
         "image_identity_matches(final_path_check.get(), image_identity)"
         "FILE_SHARE_READ | FILE_SHARE_DELETE"
         "launch_handle.release()"
@@ -195,6 +217,9 @@ foreach(token IN ITEMS
         "workspace_agent.process_launch_revalidation_pinning_unavailable"
         "workspace_agent.process_execution_requires_unrestricted_local"
         "workspace_agent.process_execution_elevated_host_denied"
+        "allocate_process_execution_operation_id()"
+        "execution_working_directory()"
+        "next_process_execution_operation_id"
         "WorkspaceAgentSessionEventKind::process_launch_intent"
         "WorkspaceAgentSessionEventKind::process_launch_outcome"
         "workspace_agent.session_reentrant_audit_transition_denied"
@@ -239,6 +264,8 @@ foreach(token IN ITEMS
         "execution_configuration()"
         "::GetWindowsDirectoryW("
         "cross-controller"
+        "first_controller_operation_id"
+        "output_working_directory_matches("
         "materialization must not silently weaken the invariant execution denial")
     require_text(${environment_test} "${token}" "controller materialization regression")
 endforeach()

@@ -867,21 +867,30 @@ different logon session. Only the fixed child ends enter the process attribute
 handle list; the parent ends are made non-inheritable before process creation.
 
 Before any attempt, the controller durably submits a content-free schema-v2
-intent with generation and a monotonically allocated operation identifier. A
+intent with generation and an operation identifier from one process-wide,
+nonwrapping allocator. Distinct controllers sharing a durable sink therefore
+cannot emit colliding correlation identifiers during the host process. A
 failed intent audit consumes and destroys the one-attempt image and starts
 nothing. The Windows launcher uses the private image path only internally as
 `lpApplicationName`, preserves the authenticated original executable spelling
-as `argv[0]`, passes the fixed double-NUL environment and canonical working
-directory directly, never invokes a shell or PATH search, and admits only the
+as `argv[0]`, passes the fixed double-NUL environment and a handle-derived
+volume-GUID working-directory path, never invokes a shell or PATH search, and admits only the
 three fixed standard handles. Before exposing that internal launch path, the
 private image retains no-delete-share handles for every renameable directory
-below the stable drive or UNC share root through its private parent (the
-intrinsically non-renameable root itself needs no handle) and reopens the leaf
+below its handle-derived stable volume-GUID root through its private parent
+(the intrinsically non-renameable root itself needs no handle) and reopens the leaf
 once more with a read-only observer that shares delete only for compatibility
 with the retained handle's own delete access. That observer proves
 the now-locked pathname still resolves to the authenticated image identity.
 Those locks remain owned through bounded process completion, so an ancestor
 rename or replacement cannot redirect `CreateProcessW` to different bytes.
+The retained target pins apply the same stable-volume naming and complete
+hierarchy retention to the working directory until process creation commits,
+so leaf, ancestor, drive-letter, `SUBST`, and mapped-drive redirection fail
+closed rather than changing the child's current directory.
+Network shares have no Windows volume-GUID path and are intentionally denied by
+this v1 executor; unrestricted execution is limited to authenticated local-
+volume targets.
 The exact-digest
 `self_contained_launch_image_v1` admission contract requires system-only load-
 time dependencies: the private directory deliberately does not preserve the

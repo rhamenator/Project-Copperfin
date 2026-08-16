@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <memory>
+#include <string_view>
 #include <system_error>
 #include <utility>
 
@@ -61,13 +62,16 @@ public:
 #if defined(_WIN32)
     Impl(HANDLE workspace_root_value,
          HANDLE executable_value,
-         HANDLE working_directory_value,
+         std::vector<HANDLE> working_directory_chain_value,
+         std::filesystem::path stable_working_directory_value,
          PhysicalPathIdentity executable_identity_value,
          std::string executable_sha256_value,
          std::vector<std::uint8_t> executable_snapshot_value) noexcept
         : workspace_root(workspace_root_value),
           executable(executable_value),
-          working_directory(working_directory_value),
+          working_directory_chain(std::move(working_directory_chain_value)),
+          stable_working_directory(
+              std::move(stable_working_directory_value)),
           executable_identity(executable_identity_value),
           executable_sha256(std::move(executable_sha256_value)),
           executable_snapshot(std::move(executable_snapshot_value)) {}
@@ -75,12 +79,18 @@ public:
     ~Impl() {
         close(workspace_root);
         close(executable);
-        close(working_directory);
+        for (auto iterator = working_directory_chain.rbegin();
+             iterator != working_directory_chain.rend(); ++iterator) {
+            close(*iterator);
+        }
     }
 
     [[nodiscard]] bool valid() const noexcept {
         return is_valid(workspace_root) && is_valid(executable) &&
-            is_valid(working_directory) && executable_sha256.size() == 64U &&
+            !working_directory_chain.empty() &&
+            is_valid(working_directory_chain.back()) &&
+            stable_working_directory.is_absolute() &&
+            executable_sha256.size() == 64U &&
             static_cast<std::uint64_t>(executable_snapshot.size()) ==
                 executable_identity.file_size;
     }
@@ -90,6 +100,11 @@ public:
 
     [[nodiscard]] const std::vector<std::uint8_t>& snapshot() const noexcept {
         return executable_snapshot;
+    }
+
+    [[nodiscard]] const std::filesystem::path& execution_working_directory()
+        const noexcept {
+        return stable_working_directory;
     }
 
 private:
@@ -105,7 +120,8 @@ private:
 
     HANDLE workspace_root = INVALID_HANDLE_VALUE;
     HANDLE executable = INVALID_HANDLE_VALUE;
-    HANDLE working_directory = INVALID_HANDLE_VALUE;
+    std::vector<HANDLE> working_directory_chain;
+    std::filesystem::path stable_working_directory;
     PhysicalPathIdentity executable_identity{};
     std::string executable_sha256;
     std::vector<std::uint8_t> executable_snapshot;
@@ -477,6 +493,36 @@ HANDLE open_pin_handle(
         nullptr);
 }
 
+std::optional<std::filesystem::path> stable_volume_path_for_handle(
+    const HANDLE handle) noexcept {
+    try {
+        const DWORD flags = FILE_NAME_NORMALIZED | VOLUME_NAME_GUID;
+        constexpr DWORD maximum_path_characters = 32'768U;
+        std::vector<wchar_t> buffer(512U);
+        for (;;) {
+            const DWORD written = ::GetFinalPathNameByHandleW(
+                handle, buffer.data(), static_cast<DWORD>(buffer.size()), flags);
+            if (written == 0U || written > maximum_path_characters) {
+                return std::nullopt;
+            }
+            if (written >= buffer.size()) {
+                buffer.resize(written);
+                continue;
+            }
+            std::filesystem::path result(
+                std::wstring(buffer.data(), static_cast<std::size_t>(written)));
+            constexpr std::wstring_view volume_prefix = L"\\\\?\\Volume{";
+            if (!result.is_absolute() ||
+                result.native().rfind(volume_prefix, 0U) != 0U) {
+                return std::nullopt;
+            }
+            return result;
+        }
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
 void close_pin_handle(HANDLE handle) noexcept {
     if (handle != nullptr && handle != INVALID_HANDLE_VALUE) {
         ::CloseHandle(handle);
@@ -567,6 +613,68 @@ public:
 private:
     NativeHandle handle_ = invalid();
 };
+
+#if defined(_WIN32)
+class ScopedPinHandleChain {
+public:
+    ScopedPinHandleChain() = default;
+    ~ScopedPinHandleChain() { reset(); }
+    ScopedPinHandleChain(const ScopedPinHandleChain&) = delete;
+    ScopedPinHandleChain& operator=(const ScopedPinHandleChain&) = delete;
+
+    [[nodiscard]] bool lock(
+        const std::filesystem::path& stable_directory) noexcept {
+        reset();
+        try {
+            std::filesystem::path current = stable_directory.root_path();
+            if (current.empty()) {
+                return false;
+            }
+            for (const auto& component : stable_directory.relative_path()) {
+                if (component.empty() || component == "." || component == "..") {
+                    reset();
+                    return false;
+                }
+                current /= component;
+                const HANDLE handle = open_pin_handle(current, true);
+                if (handle == nullptr || handle == INVALID_HANDLE_VALUE) {
+                    reset();
+                    return false;
+                }
+                try {
+                    handles_.push_back(handle);
+                } catch (...) {
+                    close_pin_handle(handle);
+                    throw;
+                }
+            }
+            return !handles_.empty();
+        } catch (...) {
+            reset();
+            return false;
+        }
+    }
+
+    [[nodiscard]] HANDLE back() const noexcept {
+        return handles_.empty() ? INVALID_HANDLE_VALUE : handles_.back();
+    }
+
+    [[nodiscard]] std::vector<HANDLE> release() noexcept {
+        return std::exchange(handles_, {});
+    }
+
+private:
+    void reset() noexcept {
+        for (auto iterator = handles_.rbegin(); iterator != handles_.rend();
+             ++iterator) {
+            close_pin_handle(*iterator);
+        }
+        handles_.clear();
+    }
+
+    std::vector<HANDLE> handles_;
+};
+#endif
 
 #if defined(_WIN32)
 std::intptr_t native_handle_value(const HANDLE handle) noexcept {
@@ -691,10 +799,24 @@ bool WorkspaceAgentProcessTargetPins::Impl::matches_target_identities(
     return read_handle_identity(
                executable, false, current_executable_identity) &&
         read_handle_identity(
-            working_directory, true, current_working_directory_identity) &&
+#if defined(_WIN32)
+            working_directory_chain.back(), true,
+#else
+            working_directory, true,
+#endif
+            current_working_directory_identity) &&
         current_executable_identity == expected_executable_identity &&
         current_working_directory_identity ==
             expected_working_directory_identity;
+}
+
+const std::filesystem::path*
+WorkspaceAgentProcessTargetPins::execution_working_directory() const noexcept {
+#if defined(_WIN32)
+    return valid() ? &impl_->execution_working_directory() : nullptr;
+#else
+    return nullptr;
+#endif
 }
 
 WorkspaceAgentProcessTargetBoundary::WorkspaceAgentProcessTargetBoundary(
@@ -979,6 +1101,38 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
         return result;
     }
 
+#if defined(_WIN32)
+    const auto stable_working_directory =
+        stable_volume_path_for_handle(working_directory_handle.get());
+    ScopedPinHandleChain working_directory_chain;
+    PhysicalPathIdentity chained_working_directory_identity{};
+    if (!stable_working_directory.has_value() ||
+        !working_directory_chain.lock(*stable_working_directory) ||
+        !read_handle_identity(
+            working_directory_chain.back(), true,
+            chained_working_directory_identity) ||
+        chained_working_directory_identity != authority->working_directory_identity) {
+        result.diagnostic_code =
+            "workspace_agent.process_target_pin_identity_changed";
+        return result;
+    }
+#endif
+
+#if defined(_WIN32)
+    // Finish every potentially throwing copy before the new-expression.
+    // Allocation then precedes the no-throw raw-handle transfer, so failure
+    // leaves the scoped chain responsible for closing every acquired handle.
+    std::filesystem::path retained_working_directory =
+        *stable_working_directory;
+    std::string retained_executable_sha256 = authority->executable_sha256;
+    auto impl = std::unique_ptr<WorkspaceAgentProcessTargetPins::Impl>(
+        new WorkspaceAgentProcessTargetPins::Impl(
+            root_handle.get(), executable_handle.get(),
+            working_directory_chain.release(),
+            std::move(retained_working_directory), executable_identity,
+            std::move(retained_executable_sha256),
+            std::move(authentication.bytes)));
+#else
     auto impl = std::make_unique<WorkspaceAgentProcessTargetPins::Impl>(
         root_handle.get(),
         executable_handle.get(),
@@ -986,10 +1140,13 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
         executable_identity,
         authority->executable_sha256,
         std::move(authentication.bytes));
+#endif
     result.pins.emplace(WorkspaceAgentProcessTargetPins(std::move(impl)));
     static_cast<void>(root_handle.release());
     static_cast<void>(executable_handle.release());
+#if !defined(_WIN32)
     static_cast<void>(working_directory_handle.release());
+#endif
     result.pinned = result.pins->valid();
     result.diagnostic_code = result.pinned
         ? "workspace_agent.process_target_pins_acquired"

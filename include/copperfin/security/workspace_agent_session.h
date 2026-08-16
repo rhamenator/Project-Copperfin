@@ -565,7 +565,6 @@ private:
     std::shared_ptr<const std::uint8_t> process_launch_controller_authority_ =
         std::make_shared<const std::uint8_t>(0U);
     mutable std::uint64_t next_materialized_process_image_ = 1U;
-    mutable std::uint64_t next_process_execution_attempt_ = 1U;
 };
 
 [[nodiscard]] std::string serialize_workspace_agent_session_audit_event(

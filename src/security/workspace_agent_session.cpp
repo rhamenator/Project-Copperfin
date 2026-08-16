@@ -11,6 +11,7 @@
 #include "copperfin/platform/process_environment.h"
 
 #include <algorithm>
+#include <atomic>
 #include <condition_variable>
 #include <iomanip>
 #include <limits>
@@ -196,6 +197,22 @@ static_assert(
     "RQ-CF-AGENT-028: a completed private launch must reach outcome audit without allocating while transferring its result");
 
 namespace {
+
+std::atomic<std::uint64_t> next_process_execution_operation_id{1U};
+
+std::uint64_t allocate_process_execution_operation_id() noexcept {
+    std::uint64_t current =
+        next_process_execution_operation_id.load(std::memory_order_relaxed);
+    while (current != 0U &&
+           current != std::numeric_limits<std::uint64_t>::max()) {
+        if (next_process_execution_operation_id.compare_exchange_weak(
+                current, current + 1U, std::memory_order_relaxed,
+                std::memory_order_relaxed)) {
+            return current;
+        }
+    }
+    return 0U;
+}
 
 struct AuditOutcome {
     bool committed = false;
@@ -1367,14 +1384,12 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
                     "workspace_agent.process_execution_stale_session";
                 return unavailable;
             }
-            if (next_process_execution_attempt_ == 0U ||
-                next_process_execution_attempt_ ==
-                    std::numeric_limits<std::uint64_t>::max()) {
+            operation_id = allocate_process_execution_operation_id();
+            if (operation_id == 0U) {
                 unavailable.diagnostic_code =
                     "workspace_agent.process_execution_namespace_exhausted";
                 return unavailable;
             }
-            operation_id = next_process_execution_attempt_++;
         }
 
         WorkspaceAgentProcessExecutionResult result;
@@ -1427,13 +1442,22 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             }
         }
 
+        const std::filesystem::path* stable_working_directory = nullptr;
+        if (denial.empty()) {
+            stable_working_directory = launch.impl_->candidate.impl_->pins
+                .execution_working_directory();
+            if (stable_working_directory == nullptr) {
+                denial =
+                    "workspace_agent.process_execution_working_directory_unavailable";
+            }
+        }
+
         copperfin::platform::PrivateWindowsBoundedProcessRequest native_request;
         if (denial.empty()) {
             native_request.command_line = plan.windows_command_line;
             native_request.environment_block =
                 plan.serialized_environment.windows_environment_block;
-            native_request.working_directory =
-                environment_plan.canonical_working_directory;
+            native_request.working_directory = *stable_working_directory;
             native_request.transport.standard_input = controls.standard_input;
             native_request.transport.timeout_ms = controls.timeout_ms;
             native_request.transport.poll_interval_ms = controls.poll_interval_ms;

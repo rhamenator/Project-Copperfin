@@ -299,6 +299,29 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+#if defined(_WIN32)
+bool output_working_directory_matches(
+    const std::string& output,
+    const std::filesystem::path& expected) {
+    constexpr std::string_view prefix = "cwd=";
+    const std::size_t beginning = output.find(prefix);
+    if (beginning == std::string::npos) {
+        return false;
+    }
+    const std::size_t value_beginning = beginning + prefix.size();
+    const std::size_t ending = output.find('\n', value_beginning);
+    if (ending == std::string::npos || ending == value_beginning) {
+        return false;
+    }
+    std::error_code equivalent_error;
+    const bool equivalent = std::filesystem::equivalent(
+        copperfin::platform::path_from_utf8_string(
+            output.substr(value_beginning, ending - value_beginning)),
+        expected, equivalent_error);
+    return equivalent && !equivalent_error;
+}
+#endif
+
 class TempTree {
 public:
     explicit TempTree(const bool create_initial_layout = false) {
@@ -1018,6 +1041,7 @@ void test_prepared_candidate_materializes_only_retained_snapshot() {
 }
 
 void test_materialized_execution_is_windows_unrestricted_and_audited() {
+    std::uint64_t first_controller_operation_id = 0U;
     {
         TempTree tree;
         WorkspaceAgentSessionController controller(
@@ -1041,7 +1065,7 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
         const auto denied = controller.execute_materialized_process_launch(
             std::move(*materialized.launch), {}, audit_sink(audit));
         expect(!denied.attempted && denied.intent_audit_committed &&
-                   denied.outcome_audit_committed && denied.operation_id == 1U &&
+                   denied.outcome_audit_committed && denied.operation_id != 0U &&
                    denied.diagnostic_code ==
                        "workspace_agent.process_execution_requires_unrestricted_local" &&
                    audit.events.size() == 2U &&
@@ -1057,6 +1081,7 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
                    std::filesystem::is_empty(
                        tree.session_storage / "session-1" / "temp"),
                "RQ-CF-AGENT-028: workspace-sandbox mode must consume and audit the attempt without starting an unsandboxed process");
+        first_controller_operation_id = denied.operation_id;
         expect(controller.stop(audit_sink()).revoked &&
                    controller.cleanup_pending_session_layout(audit_sink()).cleaned,
                "RQ-CF-AGENT-028: sandbox denial must leave normal revocation and empty-layout cleanup available");
@@ -1123,7 +1148,8 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
         std::filesystem::canonical(tree.workspace / "bin" / "workspace-tool"));
     const bool execution_contract_holds =
         executed.attempted && executed.intent_audit_committed &&
-               executed.outcome_audit_committed && executed.operation_id == 2U &&
+               executed.outcome_audit_committed && executed.operation_id != 0U &&
+               executed.operation_id != first_controller_operation_id &&
                executed.process.started && executed.process.completed() &&
                executed.process.process_tree_closed &&
                executed.process.exit_code == 23 &&
@@ -1133,10 +1159,9 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
                    "argv0=" + expected_argv0 + "\n") != std::string::npos &&
                executed.process.standard_output.find(
                    "payload=literal-payload\n") != std::string::npos &&
-               executed.process.standard_output.find(
-                   "cwd=" + copperfin::platform::path_to_utf8_string(
-                       std::filesystem::canonical(tree.workspace / "working")) +
-                       "\n") != std::string::npos &&
+               output_working_directory_matches(
+                   executed.process.standard_output,
+                   std::filesystem::canonical(tree.workspace / "working")) &&
                executed.process.standard_output.find("ambient=<unset>\n") !=
                    std::string::npos &&
                executed.diagnostic_code == "polyglot.process.exited" &&
@@ -1162,7 +1187,8 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
            "RQ-CF-AGENT-028: warned non-elevated Windows execution must consume the exact image and fixed argv/environment/cwd under bounded process-tree ownership and paired audit");
 #else
     expect(!executed.attempted && executed.intent_audit_committed &&
-               executed.outcome_audit_committed && executed.operation_id == 2U &&
+               executed.outcome_audit_committed && executed.operation_id != 0U &&
+               executed.operation_id != first_controller_operation_id &&
                !executed.process.started &&
                executed.diagnostic_code ==
                    "workspace_agent.process_execution_platform_unavailable" &&
