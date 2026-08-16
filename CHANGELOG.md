@@ -1,4 +1,23 @@
 - 2026-08-16: Completed implementation evidence for candidate
+  `RQ-CF-AGENT-027` at exact signed/DCO head `0d8429628`. All eleven
+  protected checks passed in runs `31942740556`, `31942742371`,
+  `31942742377`, `31942742383`, and `31942742393`, including two
+  independent Windows executions of the minimal-handle writable-mapping,
+  pathname-binding, exact-byte, loader, sharing-denial, and destruction
+  regressions. Exact-head automated review found no major issue; the three
+  earlier P1 threads drove corrections and are resolved. Independent read
+  review corroborated the final fixture and Linux Debug passed `385/385`.
+  The exact committed-byte safety contract passed `1/1` in 330.16 seconds.
+  PR `#5044` merged into `v1-development` as `77a2da2dd`.
+  Evidence-only licensing, community, isolation, supply-chain, and safety
+  contracts pass `5/5`, including the 325.80-second safety scan.
+  Implementation evidence is complete; the requirement remains a `gap` only
+  for qualified high-severity documentation signoff. Product execution,
+  POSIX/macOS launch transition, working-directory entry, sandboxing,
+  endpoint/descendant controls, outcome audit, provider/OAuth surfaces, diff,
+  and undo remain separately scoped.
+
+- 2026-08-16: Completed implementation evidence for candidate
   `RQ-CF-AGENT-026` at exact signed/DCO head `5ecaa835c`. All eleven
   protected checks passed in runs `31935538404`, `31935539922`,
   `31935539848`, `31935539856`, and `31935539940`, including the corrected

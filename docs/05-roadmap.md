@@ -1389,9 +1389,9 @@ an opaque private native image while retaining the plan, pins, and lease. A
 candidate Windows-only transition now replaces the image's write-capable
 creation handle with an exact file-id identity anchor and retains a matching
 linked-path read/delete handle that denies writers and admits the
-`CreateProcessW` loader; direct protected Windows evidence is
-still required. Product execution and the POSIX/macOS launch transition remain
-open.
+`CreateProcessW` loader. Both protected Windows workflows pass the exact-head
+transition, mapping, sharing, loader, and cleanup regressions. Product
+execution and the POSIX/macOS launch transition remain open.
 Its provider-independent persistent sink now validates exact lifecycle event
 tuples, commits content-free JSON to the contained bounded immutable audit
 chain, and returns the committed hash as the receipt without activating an
