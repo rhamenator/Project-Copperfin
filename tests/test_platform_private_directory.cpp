@@ -603,6 +603,20 @@ void test_exact_private_executable_image_materialization() {
     materialized.image.reset();
     expect(!std::filesystem::exists(private_root / leaf),
            "RQ-CF-AGENT-026: image destruction must remove the exact retained object");
+#if defined(_WIN32)
+    const BOOL released_ancestor_renamed = ::MoveFileExW(
+        image_ancestor.c_str(), renamed_ancestor.c_str(),
+        MOVEFILE_WRITE_THROUGH);
+    const BOOL released_ancestor_restored = released_ancestor_renamed != FALSE
+        ? ::MoveFileExW(
+              renamed_ancestor.c_str(), image_ancestor.c_str(),
+              MOVEFILE_WRITE_THROUGH)
+        : FALSE;
+    expect(released_ancestor_renamed != FALSE &&
+               released_ancestor_restored != FALSE &&
+               std::filesystem::exists(private_root),
+           "RQ-CF-AGENT-028: image destruction must release every retained ancestor-directory handle");
+#endif
 
     const auto wrong_parent =
         materialize_private_executable_image_in_verified_parent(

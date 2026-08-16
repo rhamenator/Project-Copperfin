@@ -208,6 +208,7 @@ foreach(token IN ITEMS
         "MapViewOfFile(mapping, FILE_MAP_WRITE"
         "ERROR_SHARING_VIOLATION"
         "ancestor-directory rename and replacement"
+        "image destruction must release every retained ancestor-directory handle"
         "--rq027-child"
         "PrivateExecutableImage"
         "wrong-creation-image"

@@ -52,8 +52,10 @@ use.
   an unrelated thread's stop waits and then revokes instead of being denied.
 - `DV-workspace-agent-windows-execution-006`: the Windows private-image
   regression attempts to rename and replace an image ancestor while the opaque
-  image remains live and requires denial; protected Windows execution then
-  proves `CreateProcessW` still launches the exact retained image.
+  image remains live and requires denial, then requires rename to succeed after
+  destruction proves every hierarchy handle was released; protected Windows
+  execution then proves `CreateProcessW` still launches the exact retained
+  image.
 
 ## Hazard, misuse, boundary, and rollback analysis
 
