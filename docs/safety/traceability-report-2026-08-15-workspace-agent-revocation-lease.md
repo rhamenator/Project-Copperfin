@@ -73,6 +73,16 @@ Current local evidence:
   and
 - `git diff --check` passed.
 
-Protected Windows/Ubuntu/macOS checks, exact-head review, and qualified
-high-severity sign-off remain pending. Requirement status remains `gap`; no
-execution or launch readiness is claimed.
+Automated review of the initial head found one real P2: acquiring two leases
+on one thread recursively locked a non-recursive `std::shared_mutex`. Corrected
+signed/DCO head `7b12d9812` uses explicit counted leases and passed all eleven
+protected checks in runs `31916980542`, `31916981432`, `31916981399`,
+`31916981411`, and `31916981406`. Corrected-head automated review found no
+major issue, the P2 thread is resolved, and PR `#5034` merged into
+`v1-development` as `67fbb1b69`.
+
+Implementation evidence is complete. Qualified high-severity documentation
+sign-off remains pending. The evidence-only licensing, community, isolation,
+supply-chain, and safety contracts pass `5/5`, including the 324.44-second
+safety scan. Requirement status remains `gap`; no execution or launch readiness
+is claimed.

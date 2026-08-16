@@ -1,3 +1,14 @@
+- 2026-08-15: Completed implementation evidence for candidate
+  `RQ-CF-AGENT-022` at exact signed/DCO head `7b12d9812`. All eleven protected
+  checks passed in runs `31916980542`, `31916981432`, `31916981399`,
+  `31916981411`, and `31916981406`; corrected-head automated review found no
+  major issue after one real P2 synchronization defect was corrected, its
+  thread is resolved, and PR `#5034` merged into `v1-development` as
+  `67fbb1b69`. Evidence-only licensing/community/isolation/supply-chain/safety
+  contracts pass `5/5`, including the 324.44-second safety scan. The
+  requirement remains a `gap` only for second-qualified-human high-severity
+  documentation sign-off; launch-readiness controls remain separately scoped.
+
 - 2026-08-15: Added candidate `RQ-CF-AGENT-022`, a move-only non-executing
   workspace-agent session-revocation lease for the exact active generation.
   Stop enters its serialized transition but waits for outstanding leases before
