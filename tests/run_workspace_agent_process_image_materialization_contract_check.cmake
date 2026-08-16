@@ -230,10 +230,14 @@ foreach(token IN ITEMS
 endforeach()
 foreach(token IN ITEMS
         "workspace-agent-child-entry-v1"
-        "workspace-agent-child-arguments-unrecognized-v1")
+        "workspace-agent-child-arguments-unrecognized-v1"
+        "::GetEnvironmentVariableW(L\"GITHUB_TOKEN\", nullptr, 0U)"
+        "ambient_unset ? \"<unset>\" : \"<set>\"")
     require_text(${execution_fixture} "${token}"
         "bounded Windows child-entry diagnostic fixture")
 endforeach()
+forbid_text(${execution_fixture} "std::getenv("
+    "credential-value environment lookup")
 foreach(token IN ITEMS
         "workspace_agent_execution_fixture"
         "$<$<CONFIG:Debug>:/MTd>"

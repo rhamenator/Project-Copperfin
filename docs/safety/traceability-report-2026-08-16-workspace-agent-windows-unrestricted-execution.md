@@ -310,4 +310,4 @@ working-directory, Job, resume, transport, audit, timeout, and cleanup
 boundaries are unchanged. Protected execution remains required.
 The corrected focused set passes `7/7`; licensing, community, release-license,
 isolation, supply-chain, and safety contracts pass `6/6`, including the
-326.87-second repository-wide safety scan.
+324.61-second repository-wide safety scan.

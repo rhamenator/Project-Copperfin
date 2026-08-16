@@ -106,7 +106,7 @@
   contents. This is test-only; the production executor and its authenticated
   extended-DOS working-directory path remain unchanged. The corrected focused
   set passes `7/7`; licensing, community, release-license, isolation,
-  supply-chain, and safety contracts pass `6/6`, including the 326.87-second
+  supply-chain, and safety contracts pass `6/6`, including the 324.61-second
   repository-wide safety scan.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
