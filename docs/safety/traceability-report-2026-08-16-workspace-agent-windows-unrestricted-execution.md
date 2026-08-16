@@ -107,3 +107,10 @@ identity, and qualified high-severity documentation sign-off remain pending.
 Requirement status therefore remains `gap`. This slice is not a real sandbox,
 does not connect provider/model output to execution, and does not make the
 public promotion gate available.
+
+Initial protected Windows environment run `31946401986` compiled the product
+libraries but rejected the test-only child fixture because MSVC treats direct
+`getenv` use as deprecated under that target's warning policy. The fixture now
+uses Copperfin's portable environment reader, preserving the same absent-secret
+assertion without weakening warnings. Focused local behavior and the machine
+contract pass `2/2`; a corrected protected Windows rerun remains required.

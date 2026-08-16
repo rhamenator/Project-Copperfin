@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+#include "copperfin/platform/environment.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/platform/private_directory.h"
 #include "copperfin/security/sha256.h"
@@ -1864,13 +1865,14 @@ int main(int argc, char** argv) {
     }
     if (argc == 3 && argv[1] != nullptr && argv[2] != nullptr &&
         std::string_view(argv[1]) == "--workspace-agent-child-v1") {
-        const char* ambient = std::getenv("GITHUB_TOKEN");
+        const auto ambient =
+            copperfin::platform::read_environment_variable("GITHUB_TOKEN");
         std::cout << "workspace-agent-child-v1\n"
                   << "argv0=" << (argv[0] == nullptr ? "" : argv[0]) << '\n'
                   << "payload=" << argv[2] << '\n'
                   << "cwd=" << copperfin::platform::path_to_utf8_string(
                          std::filesystem::current_path()) << '\n'
-                  << "ambient=" << (ambient == nullptr ? "<unset>" : ambient)
+                  << "ambient=" << (ambient.has_value() ? *ambient : "<unset>")
                   << '\n';
         return 23;
     }
