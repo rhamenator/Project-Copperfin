@@ -26,6 +26,11 @@
   hosted Windows validation now reexecutes only the test driver with a bounded
   LUA restricted token so the
   production non-elevation gate is exercised instead of bypassed. The public
+  Windows evidence then isolated `ERROR_ACCESS_DENIED` to anonymous transport-
+  pipe creation under that restricted token. Transport pipes now use an
+  explicit protected current-logon and restricted-code DACL, while only the
+  fixed child endpoints remain inheritable through the process handle list.
+  The public
   promotion gate remains invariantly denied. Focused local Debug and warning-as-error GCC 15
   Release execution pass `5/5`; fresh Clang 21 ASan/UBSan/leak passes `3/3`
   without findings; and licensing, community, release-license, isolation,

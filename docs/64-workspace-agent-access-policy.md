@@ -859,6 +859,13 @@ polling, output ceilings, and cancellation observation; it cannot replace the
 path, arguments, environment, working directory, access mode, handles, or
 process flags retained by the trusted plan.
 
+The three anonymous transport pipes use an explicit protected DACL containing
+the current logon SID and the Windows restricted-code SID. This is narrower
+than the caller token's ambient default DACL, remains usable when the trusted
+host itself runs with a restricted non-elevated token, and does not authorize a
+different logon session. Only the fixed child ends enter the process attribute
+handle list; the parent ends are made non-inheritable before process creation.
+
 Before any attempt, the controller durably submits a content-free schema-v2
 intent with generation and a monotonically allocated operation identifier. A
 failed intent audit consumes and destroys the one-attempt image and starts

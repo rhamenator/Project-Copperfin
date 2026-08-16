@@ -11,6 +11,7 @@
 #include "copperfin/platform/process_environment.h"
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cerrno>
@@ -44,6 +45,97 @@ namespace {
 
 #if defined(_WIN32)
 constexpr DWORD kTerminationWaitMilliseconds = 5000U;
+
+class WindowsPipeSecurityAttributes {
+public:
+    [[nodiscard]] bool initialize() noexcept {
+        HANDLE token = nullptr;
+        if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token) == FALSE) {
+            return false;
+        }
+        DWORD group_bytes = 0U;
+        (void)::GetTokenInformation(token, TokenGroups, nullptr, 0U, &group_bytes);
+        const DWORD sizing_error = ::GetLastError();
+        if (sizing_error != ERROR_INSUFFICIENT_BUFFER || group_bytes == 0U) {
+            (void)::CloseHandle(token);
+            ::SetLastError(sizing_error);
+            return false;
+        }
+        try {
+            token_groups_.resize(group_bytes);
+        } catch (...) {
+            (void)::CloseHandle(token);
+            ::SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return false;
+        }
+        if (::GetTokenInformation(
+                token, TokenGroups, token_groups_.data(), group_bytes,
+                &group_bytes) == FALSE) {
+            const DWORD error = ::GetLastError();
+            (void)::CloseHandle(token);
+            ::SetLastError(error);
+            return false;
+        }
+        (void)::CloseHandle(token);
+
+        const auto* groups = reinterpret_cast<const TOKEN_GROUPS*>(
+            token_groups_.data());
+        PSID logon_sid = nullptr;
+        for (DWORD index = 0U; index < groups->GroupCount; ++index) {
+            if ((groups->Groups[index].Attributes & SE_GROUP_LOGON_ID) ==
+                SE_GROUP_LOGON_ID) {
+                logon_sid = groups->Groups[index].Sid;
+                break;
+            }
+        }
+        if (logon_sid == nullptr || ::IsValidSid(logon_sid) == FALSE) {
+            ::SetLastError(ERROR_INVALID_SID);
+            return false;
+        }
+        DWORD restricted_sid_bytes = static_cast<DWORD>(restricted_sid_.size());
+        if (::CreateWellKnownSid(
+                WinRestrictedCodeSid, nullptr, restricted_sid_.data(),
+                &restricted_sid_bytes) == FALSE) {
+            return false;
+        }
+
+        const DWORD logon_sid_bytes = ::GetLengthSid(logon_sid);
+        const DWORD acl_bytes = static_cast<DWORD>(
+            sizeof(ACL) + 2U * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD)) +
+            logon_sid_bytes + restricted_sid_bytes);
+        try {
+            acl_.resize(acl_bytes);
+        } catch (...) {
+            ::SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return false;
+        }
+        auto* acl = reinterpret_cast<ACL*>(acl_.data());
+        if (::InitializeAcl(acl, acl_bytes, ACL_REVISION) == FALSE ||
+            ::AddAccessAllowedAce(
+                acl, ACL_REVISION, GENERIC_ALL, logon_sid) == FALSE ||
+            ::AddAccessAllowedAce(
+                acl, ACL_REVISION, GENERIC_ALL, restricted_sid_.data()) == FALSE ||
+            ::InitializeSecurityDescriptor(
+                &descriptor_, SECURITY_DESCRIPTOR_REVISION) == FALSE ||
+            ::SetSecurityDescriptorDacl(
+                &descriptor_, TRUE, acl, FALSE) == FALSE) {
+            return false;
+        }
+        attributes_.nLength = sizeof(attributes_);
+        attributes_.lpSecurityDescriptor = &descriptor_;
+        attributes_.bInheritHandle = TRUE;
+        return true;
+    }
+
+    [[nodiscard]] SECURITY_ATTRIBUTES* get() noexcept { return &attributes_; }
+
+private:
+    std::vector<std::uint8_t> token_groups_;
+    std::array<std::uint8_t, SECURITY_MAX_SID_SIZE> restricted_sid_{};
+    std::vector<std::uint8_t> acl_;
+    SECURITY_DESCRIPTOR descriptor_{};
+    SECURITY_ATTRIBUTES attributes_{};
+};
 
 void capture_windows_peak_memory(
     const HANDLE job,
@@ -287,11 +379,11 @@ bool wait_for_terminated_process(
     return false;
 }
 
-bool create_windows_capture_pipe(HANDLE& read_handle, HANDLE& write_handle) {
-    SECURITY_ATTRIBUTES attributes{};
-    attributes.nLength = sizeof(attributes);
-    attributes.bInheritHandle = TRUE;
-    if (::CreatePipe(&read_handle, &write_handle, &attributes, 0U) == FALSE) {
+bool create_windows_capture_pipe(
+    HANDLE& read_handle,
+    HANDLE& write_handle,
+    SECURITY_ATTRIBUTES* attributes) {
+    if (::CreatePipe(&read_handle, &write_handle, attributes, 0U) == FALSE) {
         return false;
     }
     if (::SetHandleInformation(read_handle, HANDLE_FLAG_INHERIT, 0U) == FALSE) {
@@ -306,11 +398,11 @@ bool create_windows_capture_pipe(HANDLE& read_handle, HANDLE& write_handle) {
     return true;
 }
 
-bool create_windows_input_pipe(HANDLE& read_handle, HANDLE& write_handle) {
-    SECURITY_ATTRIBUTES attributes{};
-    attributes.nLength = sizeof(attributes);
-    attributes.bInheritHandle = TRUE;
-    if (::CreatePipe(&read_handle, &write_handle, &attributes, 0U) == FALSE) {
+bool create_windows_input_pipe(
+    HANDLE& read_handle,
+    HANDLE& write_handle,
+    SECURITY_ATTRIBUTES* attributes) {
+    if (::CreatePipe(&read_handle, &write_handle, attributes, 0U) == FALSE) {
         return false;
     }
     if (::SetHandleInformation(write_handle, HANDLE_FLAG_INHERIT, 0U) == FALSE) {
@@ -462,9 +554,14 @@ BoundedProcessResult run_windows(
     HANDLE stderr_write = nullptr;
     HANDLE stdin_read = nullptr;
     HANDLE stdin_write = nullptr;
-    if (!create_windows_capture_pipe(stdout_read, stdout_write) ||
-        !create_windows_capture_pipe(stderr_read, stderr_write) ||
-        !create_windows_input_pipe(stdin_read, stdin_write)) {
+    WindowsPipeSecurityAttributes pipe_security;
+    if (!pipe_security.initialize() ||
+        !create_windows_capture_pipe(
+            stdout_read, stdout_write, pipe_security.get()) ||
+        !create_windows_capture_pipe(
+            stderr_read, stderr_write, pipe_security.get()) ||
+        !create_windows_input_pipe(
+            stdin_read, stdin_write, pipe_security.get())) {
         const int pipe_error = static_cast<int>(::GetLastError());
         if (stdout_read != nullptr) {
             (void)::CloseHandle(stdout_read);

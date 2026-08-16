@@ -28,6 +28,7 @@ use.
 | `DQ-workspace-agent-windows-execution-007`: admitted images shall attest launch-wide system-only dependency behavior; the private image shall not fall back to mutable source-adjacent or working-directory DLLs | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-004` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-008`: same-controller lifecycle reentry on a synchronous audit or cancellation callback's own thread shall fail closed without waiting on that stack's revocation lease; unrelated concurrent stop shall retain normal revocation semantics | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-005` | `HZ-system-failure-01` |
 | `DQ-workspace-agent-windows-execution-009`: every renameable Windows directory component below the stable drive or UNC share root through the private image parent shall remain held without delete sharing through process completion, and a final pathname reopen under that retained chain shall match the authenticated image identity before launch | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-010`: anonymous transport pipes shall use a protected current-logon and restricted-code DACL, remain creatable by a restricted non-elevated host, and expose only the fixed child endpoints through the explicit inheritance list | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
   exercise one-attempt consumption, sandbox and platform denial, failed-intent
@@ -93,6 +94,12 @@ observer does not admit a writer, deleter, or renamer.
   and assigned to a kill-on-close Job Object before resume. Timeout,
   cancellation, output limits, transport failure, and ordinary completion all
   close the owned tree. Transport and timeout limits are fixed and bounded.
+- Transport authority: each anonymous pipe receives an explicit protected DACL
+  for the current logon and Windows restricted-code identities rather than an
+  ambient token default. This permits the warned non-elevated boundary to work
+  under a restricted host without granting another logon session access. Only
+  the fixed child endpoints are inheritable and admitted to the process handle
+  list; every parent endpoint has inheritance removed before launch.
 - Revocation race: launch commitment occurs only after successful Job Object
   assignment. Releasing the plan, pins, and lease there lets stop finish while
   the child is still bounded, without destroying the private image until the
@@ -159,3 +166,10 @@ owned `LUA_TOKEN | DISABLE_MAX_PRIVILEGE` restricted token, with a bounded wait
 and explicit proof that the child is non-elevated. Product execution still
 refuses elevated or indeterminate hosts; no production privilege or policy was
 loosened. A fresh protected rerun is required.
+
+Later protected run `31953223676` proved private-image materialization,
+pathname locking, cleanup, and all parser/session contracts, then isolated the
+remaining execution failure to anonymous transport-pipe creation under the LUA
+test token (`ERROR_ACCESS_DENIED`). The pipe objects now use an explicit
+current-logon plus restricted-code DACL instead of the restricted token's
+ambient default DACL. A fresh protected execution remains required.

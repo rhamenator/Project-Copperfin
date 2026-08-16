@@ -142,7 +142,12 @@ foreach(token IN ITEMS
         "launch_committed(launch_committed_context)"
         "current_process_elevation()"
         "image.windows_launch_target()"
-        "request.transport.executable_path.empty()")
+        "request.transport.executable_path.empty()"
+        "class WindowsPipeSecurityAttributes"
+        "SE_GROUP_LOGON_ID"
+        "WinRestrictedCodeSid"
+        "::SetSecurityDescriptorDacl("
+        "PROC_THREAD_ATTRIBUTE_HANDLE_LIST")
     require_text(${bounded_process_source} "${token}"
         "bounded Windows exact-image launch contract")
 endforeach()
