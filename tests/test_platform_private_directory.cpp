@@ -494,7 +494,14 @@ void test_invalid_and_wrong_kind_inputs() {
 
 void test_exact_private_executable_image_materialization() {
     TempTree tree;
-    const auto private_root = tree.root / "image-root";
+    const auto image_ancestor = tree.root / "image-ancestor";
+    const auto ancestor_created = create_private_directory(image_ancestor);
+    expect(ancestor_created.ok,
+           "RQ-CF-AGENT-028: the image fixture must create a private ancestor");
+    if (!ancestor_created.ok) {
+        return;
+    }
+    const auto private_root = image_ancestor / "image-root";
     const auto created = create_private_directory(private_root);
     expect(created.ok,
            "RQ-CF-AGENT-026: the image fixture must create a private parent");
@@ -518,6 +525,14 @@ void test_exact_private_executable_image_materialization() {
                materialized.failure == PrivateExecutableImageFailure::none,
            "RQ-CF-AGENT-026: exact bytes must become one owned executable image");
 #if defined(_WIN32)
+    const auto renamed_ancestor = tree.root / "image-ancestor-replaced";
+    const BOOL ancestor_renamed = ::MoveFileExW(
+        image_ancestor.c_str(), renamed_ancestor.c_str(),
+        MOVEFILE_WRITE_THROUGH);
+    expect(ancestor_renamed == FALSE &&
+               std::filesystem::exists(image_ancestor) &&
+               !std::filesystem::exists(renamed_ancestor),
+           "RQ-CF-AGENT-028: a retained Windows image must deny ancestor-directory rename and replacement until launch completes");
     const HANDLE retained_reader = ::CreateFileW(
         (private_root / leaf).c_str(), GENERIC_READ,
         FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr,

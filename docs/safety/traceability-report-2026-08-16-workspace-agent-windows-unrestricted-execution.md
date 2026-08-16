@@ -27,6 +27,7 @@ use.
 | `DQ-workspace-agent-windows-execution-006`: workspace-sandbox, stale or cross-controller authority, invalid controls, elevated or unknown elevation, and non-Windows hosts shall consume the attempt and fail closed without execution; the public promotion gate shall remain denied | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-007`: admitted images shall attest launch-wide system-only dependency behavior; the private image shall not fall back to mutable source-adjacent or working-directory DLLs | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-004` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-008`: same-controller lifecycle reentry on a synchronous audit callback's own thread shall fail closed without waiting on that stack's revocation lease; unrelated concurrent stop shall retain normal revocation semantics | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-005` | `HZ-system-failure-01` |
+| `DQ-workspace-agent-windows-execution-009`: every Windows directory component from the volume root through the private image parent shall remain held without delete sharing through process completion, and a final pathname reopen under that retained chain shall match the authenticated image identity before launch | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
   exercise one-attempt consumption, sandbox and platform denial, failed-intent
@@ -49,6 +50,10 @@ use.
   attempts same-controller `stop()`; the call is denied without deadlock and a
   later ordinary stop and cleanup succeed. A distinct slow-intent fixture proves
   an unrelated thread's stop waits and then revokes instead of being denied.
+- `DV-workspace-agent-windows-execution-006`: the Windows private-image
+  regression attempts to rename and replace an image ancestor while the opaque
+  image remains live and requires denial; protected Windows execution then
+  proves `CreateProcessW` still launches the exact retained image.
 
 ## Hazard, misuse, boundary, and rollback analysis
 
@@ -67,7 +72,10 @@ use.
   interpretation is added.
 - Mutable-source replacement: the launcher never reopens or executes the
   original tool source. The RQ-027 read-only identity-bound private image
-  remains live throughout process completion and cleanup. RQ-018's exact-
+  remains live throughout process completion and cleanup. No-delete-share
+  handles retain the complete Windows directory chain through that lifetime,
+  and a final identity-matched pathname reopen after chain acquisition prevents
+  ancestor rename/replacement from redirecting the loader. RQ-018's exact-
   digest launch-wide dependency attestation rejects tools that need
   application-local or working-directory DLLs until an authenticated
   dependency-closure design exists.

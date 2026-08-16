@@ -866,7 +866,13 @@ nothing. The Windows launcher uses the private image path only internally as
 `lpApplicationName`, preserves the authenticated original executable spelling
 as `argv[0]`, passes the fixed double-NUL environment and canonical working
 directory directly, never invokes a shell or PATH search, and admits only the
-three fixed standard handles. The exact-digest
+three fixed standard handles. Before exposing that internal launch path, the
+private image retains no-delete-share handles for every directory from the
+volume root through its private parent and reopens the leaf once more to prove
+the now-locked pathname still resolves to the authenticated image identity.
+Those locks remain owned through bounded process completion, so an ancestor
+rename or replacement cannot redirect `CreateProcessW` to different bytes.
+The exact-digest
 `self_contained_launch_image_v1` admission contract requires system-only load-
 time dependencies: the private directory deliberately does not preserve the
 mutable source executable directory for adjacent-DLL lookup. It creates the process suspended, assigns it to a

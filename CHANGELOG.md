@@ -10,7 +10,13 @@
   exact-digest dependency attestation launch-wide, so application-local and
   working-directory DLL dependencies remain denied until authenticated closure
   exists, and rejects same-thread controller lifecycle reentry from synchronous
-  audit callbacks without denying ordinary concurrent revocation. Elevated
+  audit callbacks without denying ordinary concurrent revocation. A later
+  exact-head review found that retaining only the authenticated file
+  handle did not prevent an ancestor directory rename from redirecting the
+  path reopened by `CreateProcessW`. The private image now retains no-delete-
+  share handles for the complete volume-root-to-parent chain, repeats the leaf
+  identity check after acquiring those locks, and directly regresses ancestor
+  rename denial. Elevated
   hosted Windows validation now reexecutes only the test driver with a bounded
   LUA restricted token so the
   production non-elevation gate is exercised instead of bypassed. The public

@@ -10,6 +10,7 @@
 #include <array>
 #include <limits>
 #include <utility>
+#include <vector>
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -250,6 +251,90 @@ private:
     HANDLE handle_ = INVALID_HANDLE_VALUE;
 };
 
+class OwnedDirectoryChain {
+public:
+    OwnedDirectoryChain() = default;
+    ~OwnedDirectoryChain() { reset(); }
+    OwnedDirectoryChain(const OwnedDirectoryChain&) = delete;
+    OwnedDirectoryChain& operator=(const OwnedDirectoryChain&) = delete;
+    OwnedDirectoryChain(OwnedDirectoryChain&& other) noexcept
+        : handles_(std::move(other.handles_)) {
+        other.handles_.clear();
+    }
+    OwnedDirectoryChain& operator=(OwnedDirectoryChain&& other) noexcept {
+        if (this != &other) {
+            reset();
+            handles_ = std::move(other.handles_);
+            other.handles_.clear();
+        }
+        return *this;
+    }
+
+    [[nodiscard]] bool lock(const std::filesystem::path& directory) noexcept {
+        reset();
+        try {
+            std::filesystem::path current = directory.root_path();
+            if (current.empty() || !lock_one(current)) {
+                reset();
+                return false;
+            }
+            for (const auto& component : directory.relative_path()) {
+                if (component.empty() || component == "." || component == "..") {
+                    reset();
+                    return false;
+                }
+                current /= component;
+                if (!lock_one(current)) {
+                    reset();
+                    return false;
+                }
+            }
+            return !handles_.empty();
+        } catch (...) {
+            reset();
+            return false;
+        }
+    }
+
+private:
+    [[nodiscard]] bool lock_one(
+        const std::filesystem::path& directory) {
+        const HANDLE handle = ::CreateFileW(
+            directory.c_str(), FILE_READ_ATTRIBUTES,
+            FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+        if (handle == nullptr || handle == INVALID_HANDLE_VALUE) {
+            return false;
+        }
+        BY_HANDLE_FILE_INFORMATION information{};
+        if (::GetFileInformationByHandle(handle, &information) == 0 ||
+            (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
+            (information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+            (void)::CloseHandle(handle);
+            return false;
+        }
+        try {
+            handles_.push_back(handle);
+        } catch (...) {
+            (void)::CloseHandle(handle);
+            throw;
+        }
+        return true;
+    }
+
+    void reset() noexcept {
+        for (auto iterator = handles_.rbegin(); iterator != handles_.rend();
+             ++iterator) {
+            if (*iterator != nullptr && *iterator != INVALID_HANDLE_VALUE) {
+                (void)::CloseHandle(*iterator);
+            }
+        }
+        handles_.clear();
+    }
+
+    std::vector<HANDLE> handles_;
+};
+
 class OwnedImageHandle {
 public:
     explicit OwnedImageHandle(
@@ -458,8 +543,12 @@ public:
     Impl(
         HANDLE handle_value,
         std::filesystem::path path_value,
+        OwnedDirectoryChain directory_chain_value,
         std::size_t size_value) noexcept
-        : handle(handle_value), path(std::move(path_value)), size(size_value) {}
+        : handle(handle_value),
+          path(std::move(path_value)),
+          directory_chain(std::move(directory_chain_value)),
+          size(size_value) {}
     ~Impl() {
         (void)delete_exact_file(handle);
         if (handle != nullptr && handle != INVALID_HANDLE_VALUE) {
@@ -475,6 +564,7 @@ public:
     }
     HANDLE handle = INVALID_HANDLE_VALUE;
     std::filesystem::path path;
+    OwnedDirectoryChain directory_chain;
 #else
     Impl(int descriptor_value, std::size_t size_value) noexcept
         : descriptor(descriptor_value), size(size_value) {}
@@ -641,9 +731,34 @@ materialize_private_executable_image_in_verified_parent(
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
+        // CreateProcessW reopens the image by pathname. Retain a no-delete-share
+        // handle for every directory from the volume root through the private
+        // parent, then repeat the leaf identity check. This prevents any
+        // ancestor name from being renamed or replaced between materialization
+        // and the loader's open of the authenticated leaf.
+        OwnedDirectoryChain directory_chain;
+        if (!directory_chain.lock(parent)) {
+            result.failure =
+                PrivateExecutableImageFailure::launch_transition_failed;
+            return result;
+        }
+        OwnedHandle final_path_check(open_path_for_exact_image(
+            image_path, GENERIC_READ, FILE_SHARE_READ));
+        if (!image_identity_matches(final_path_check.get(), image_identity) ||
+            !image_identity_matches(launch_handle.get(), image_identity) ||
+            !handle_identity_matches(
+                parent_handle.get(), expected_parent_storage_id,
+                expected_parent_file_id, expected_parent_creation_ticks,
+                true)) {
+            result.failure =
+                PrivateExecutableImageFailure::launch_transition_failed;
+            return result;
+        }
+        final_path_check.reset();
         parent_handle.reset();
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            launch_handle.get(), image_path, bytes.size());
+            launch_handle.get(), image_path, std::move(directory_chain),
+            bytes.size());
         (void)launch_handle.release();
 #else
         const std::string leaf_name = leaf.native();
