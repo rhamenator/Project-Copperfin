@@ -1,5 +1,34 @@
 # Agent Handoff
 
+## V1 workspace-agent retained executable byte authentication
+
+Candidate `RQ-CF-AGENT-024` adds the next non-executing launch prerequisite.
+Pin-authorizing inspection streams the exact executable through an opened,
+identity-checked native object within a fixed 256 MiB cap and binds the complete
+SHA-256 digest privately. Acquisition opens the retained object, repeats the
+bounded identity-bracketed stream, requires the exact digest, and privately
+retains the exact bytes produced by that same successful stream. Ordinary
+repeated target preflight is explicitly no-authority and avoids hashing. The
+move-only bundle exposes no bytes, digest, path, or handle; its only new
+operation rehashes the immutable private snapshot and returns content-free
+match or changed state.
+
+Focused regression proves restored-metadata same-object byte changes fail,
+oversized sparse executables fail before streaming, and the POSIX private
+snapshot survives descriptor rename and later source-object writes. Valid pins
+can still verify after stop only as resource state. Warning-free GCC 15 Release
+workspace-agent/security passes `11/11`; fresh Clang 21 ASan/UBSan/leak passes
+`3/3`; fresh GCC 15 ThreadSanitizer passes `2/2`; and licensing, community,
+native-platform, GitHub Actions, isolation, supply-chain, and safety contracts
+pass `7/7`, including the corrected final-byte 326.93-second safety scan. This
+does
+not consume a serialized plan, enter the retained working directory, combine
+with the separate revocation lease, execute, sandbox, manage endpoints or
+descendants, or audit a tool outcome; the promotion gate remains invariantly
+denied. Protected Windows/Ubuntu/macOS,
+exact-head review, merge evidence, and qualified high-severity documentation
+sign-off remain pending.
+
 ## V1 workspace-agent retained process-target pins
 
 Candidate `RQ-CF-AGENT-023` adds a non-executing object-retention prerequisite
@@ -20,8 +49,8 @@ native-platform, Actions, isolation, supply-chain, and safety contracts pass
 safety scans. Pre-publication review found and corrected allocation-failure leakage:
 each opened native object now remains under local RAII ownership until opaque
 bundle construction succeeds, and the corrected Release, ASan/UBSan/leak, and
-ThreadSanitizer focused sets each pass `3/3`. This does not
-authenticate bytes through the retained object, consume a serialized plan,
+ThreadSanitizer focused sets each pass `3/3`. RQ-CF-AGENT-023 alone does not
+retain an authenticated immutable byte snapshot, consume a serialized plan,
 acquire the separate revocation lease, sandbox, launch, manage endpoints/
 descendants, or audit outcomes; the promotion gate remains invariantly denied.
 The first protected Windows environment run exposed a test-only pin-lifetime

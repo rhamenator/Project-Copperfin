@@ -697,6 +697,35 @@ revocation lease, sandbox and endpoint/descendant enforcement, and content-free
 outcome audit. Pins may outlive stop without retaining session authority, and
 the `RQ-CF-AGENT-019` promotion gate remains invariantly denied.
 
+## Retained executable byte-authentication prerequisite
+
+Candidate `RQ-CF-AGENT-024` privately binds a complete SHA-256 digest to an
+immutable private executable-byte snapshot. Pin-authorizing inspection streams
+the executable through a newly opened, identity-checked handle or descriptor,
+within a fixed 256 MiB cap. Pin acquisition opens the retained object, repeats
+the complete bounded stream, requires the same digest, retains the exact bytes
+from that same successful stream, and rechecks the exact physical identity
+before and after it. Ordinary point-in-time target
+preflight uses a distinct no-authority path so repeated plan construction does
+not repeatedly hash a large executable.
+
+The move-only pin bundle exposes neither bytes, digest, path, nor native handle.
+Its only new operation rehashes the immutable private snapshot and returns a
+stable content-free match or changed result. Later writes through another POSIX
+descriptor cannot change the snapshot or trick reverification by racing a
+multi-chunk filesystem read. A same-object byte mutation before acquisition
+fails even when file size, identity, link count, and modification timestamp are
+restored. Oversized, unreadable, changed-before-acquisition, moved-from, or
+otherwise invalid state fails closed without returning partial hash state.
+
+This is still not launch authority. A future executor must consume exactly the
+private snapshot while the separate exact-generation revocation lease is held;
+reopening or executing the mutable source path would violate this contract. The
+bundle does not consume serialized arguments or
+environment, enter the retained working directory, start a process, apply a
+sandbox or endpoint/descendant policy, or audit a tool outcome. The
+`RQ-CF-AGENT-019` promotion gate therefore remains invariantly denied.
+
 ## Current implementation and remaining work
 
 Candidate `RQ-CF-AGENT-021` retains every successful configured layout
@@ -765,7 +794,7 @@ private layout before audit-backed activation and fails closed without adopting
 existing state. None of these results is an executor,
 authorization token, or real sandbox. Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, launch-adjacent handle pinning and synchronous executor integration,
+semantics, synchronous same-object executor integration,
 automatic lifecycle cleanup, crash-recoverable receipts, partial-cleanup retry,
 endpoint policy, process
 execution, and tool-outcome auditing remain unimplemented.

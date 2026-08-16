@@ -6,6 +6,8 @@
 
 #include "copperfin/platform/windows_pe_image.h"
 
+#include "sha256_native.h"
+
 #include <atomic>
 #include <memory>
 #include <system_error>
@@ -30,11 +32,13 @@ struct WorkspaceAgentProcessTargetPinAuthority final {
             boundary_authority_value,
         std::filesystem::path executable_path_value,
         PhysicalPathIdentity executable_identity_value,
+        std::string executable_sha256_value,
         std::filesystem::path working_directory_value,
         PhysicalPathIdentity working_directory_identity_value)
         : boundary_authority(std::move(boundary_authority_value)),
           executable_path(std::move(executable_path_value)),
           executable_identity(executable_identity_value),
+          executable_sha256(std::move(executable_sha256_value)),
           working_directory(std::move(working_directory_value)),
           working_directory_identity(working_directory_identity_value) {}
 
@@ -42,6 +46,7 @@ struct WorkspaceAgentProcessTargetPinAuthority final {
         boundary_authority;
     std::filesystem::path executable_path;
     PhysicalPathIdentity executable_identity{};
+    std::string executable_sha256;
     std::filesystem::path working_directory;
     PhysicalPathIdentity working_directory_identity{};
     std::atomic<bool> consumed = false;
@@ -52,10 +57,16 @@ public:
 #if defined(_WIN32)
     Impl(HANDLE workspace_root_value,
          HANDLE executable_value,
-         HANDLE working_directory_value) noexcept
+         HANDLE working_directory_value,
+         PhysicalPathIdentity executable_identity_value,
+         std::string executable_sha256_value,
+         std::vector<std::uint8_t> executable_snapshot_value) noexcept
         : workspace_root(workspace_root_value),
           executable(executable_value),
-          working_directory(working_directory_value) {}
+          working_directory(working_directory_value),
+          executable_identity(executable_identity_value),
+          executable_sha256(std::move(executable_sha256_value)),
+          executable_snapshot(std::move(executable_snapshot_value)) {}
 
     ~Impl() {
         close(workspace_root);
@@ -65,8 +76,13 @@ public:
 
     [[nodiscard]] bool valid() const noexcept {
         return is_valid(workspace_root) && is_valid(executable) &&
-            is_valid(working_directory);
+            is_valid(working_directory) && executable_sha256.size() == 64U &&
+            static_cast<std::uint64_t>(executable_snapshot.size()) ==
+                executable_identity.file_size;
     }
+
+    [[nodiscard]] WorkspaceAgentProcessTargetAuthenticationResult
+    verify_executable_bytes();
 
 private:
     static bool is_valid(HANDLE value) noexcept {
@@ -82,13 +98,22 @@ private:
     HANDLE workspace_root = INVALID_HANDLE_VALUE;
     HANDLE executable = INVALID_HANDLE_VALUE;
     HANDLE working_directory = INVALID_HANDLE_VALUE;
+    PhysicalPathIdentity executable_identity{};
+    std::string executable_sha256;
+    std::vector<std::uint8_t> executable_snapshot;
 #else
     Impl(int workspace_root_value,
          int executable_value,
-         int working_directory_value) noexcept
+         int working_directory_value,
+         PhysicalPathIdentity executable_identity_value,
+         std::string executable_sha256_value,
+         std::vector<std::uint8_t> executable_snapshot_value) noexcept
         : workspace_root(workspace_root_value),
           executable(executable_value),
-          working_directory(working_directory_value) {}
+          working_directory(working_directory_value),
+          executable_identity(executable_identity_value),
+          executable_sha256(std::move(executable_sha256_value)),
+          executable_snapshot(std::move(executable_snapshot_value)) {}
 
     ~Impl() {
         close(workspace_root);
@@ -97,8 +122,14 @@ private:
     }
 
     [[nodiscard]] bool valid() const noexcept {
-        return workspace_root >= 0 && executable >= 0 && working_directory >= 0;
+        return workspace_root >= 0 && executable >= 0 && working_directory >= 0 &&
+            executable_sha256.size() == 64U &&
+            static_cast<std::uint64_t>(executable_snapshot.size()) ==
+                executable_identity.file_size;
     }
+
+    [[nodiscard]] WorkspaceAgentProcessTargetAuthenticationResult
+    verify_executable_bytes();
 
 private:
     static void close(int value) noexcept {
@@ -110,6 +141,9 @@ private:
     int workspace_root = -1;
     int executable = -1;
     int working_directory = -1;
+    PhysicalPathIdentity executable_identity{};
+    std::string executable_sha256;
+    std::vector<std::uint8_t> executable_snapshot;
 #endif
 };
 
@@ -117,6 +151,7 @@ WorkspaceAgentProcessTargetPins::WorkspaceAgentProcessTargetPins(
     std::unique_ptr<Impl> impl) noexcept
     : impl_(std::move(impl)) {}
 
+WorkspaceAgentProcessTargetPins::WorkspaceAgentProcessTargetPins() = default;
 WorkspaceAgentProcessTargetPins::~WorkspaceAgentProcessTargetPins() = default;
 WorkspaceAgentProcessTargetPins::WorkspaceAgentProcessTargetPins(
     WorkspaceAgentProcessTargetPins&&) noexcept = default;
@@ -125,6 +160,17 @@ WorkspaceAgentProcessTargetPins& WorkspaceAgentProcessTargetPins::operator=(
 
 bool WorkspaceAgentProcessTargetPins::valid() const noexcept {
     return impl_ != nullptr && impl_->valid();
+}
+
+WorkspaceAgentProcessTargetAuthenticationResult
+WorkspaceAgentProcessTargetPins::verify_executable_bytes() {
+    if (impl_ == nullptr) {
+        return {
+            .authenticated = false,
+            .diagnostic_code =
+                "workspace_agent.process_executable_authentication_unavailable"};
+    }
+    return impl_->verify_executable_bytes();
 }
 
 namespace {
@@ -495,6 +541,90 @@ private:
     NativeHandle handle_ = invalid();
 };
 
+#if defined(_WIN32)
+std::intptr_t native_handle_value(const HANDLE handle) noexcept {
+    return reinterpret_cast<std::intptr_t>(handle);
+}
+#else
+std::intptr_t native_handle_value(const int handle) noexcept {
+    return static_cast<std::intptr_t>(handle);
+}
+#endif
+
+struct ExecutableAuthenticationSnapshot {
+    bool authenticated = false;
+    std::string sha256;
+    std::string diagnostic_code;
+    std::vector<std::uint8_t> bytes;
+};
+
+ExecutableAuthenticationSnapshot authenticate_open_executable(
+    const ScopedPinHandle::NativeHandle handle,
+    const PhysicalPathIdentity& expected_identity,
+    const bool retain_snapshot) {
+    if (expected_identity.file_size >
+        workspace_agent_process_max_executable_bytes) {
+        return {
+            .authenticated = false,
+            .sha256 = {},
+            .diagnostic_code =
+                "workspace_agent.process_executable_authentication_size_limit",
+            .bytes = {}};
+    }
+    PhysicalPathIdentity before{};
+    if (!read_handle_identity(handle, false, before) ||
+        before != expected_identity) {
+        return {
+            .authenticated = false,
+            .sha256 = {},
+            .diagnostic_code =
+                "workspace_agent.process_executable_authentication_changed",
+            .bytes = {}};
+    }
+    auto snapshot = retain_snapshot
+        ? sha256_snapshot_for_native_file(
+              native_handle_value(handle),
+              workspace_agent_process_max_executable_bytes)
+        : NativeFileSha256SnapshotResult{
+              .digest = sha256_hex_for_native_file(
+                  native_handle_value(handle),
+                  workspace_agent_process_max_executable_bytes),
+              .bytes = {}};
+    PhysicalPathIdentity after{};
+    if (!snapshot.digest.ok || snapshot.digest.hex_digest.size() != 64U ||
+        !read_handle_identity(handle, false, after) ||
+        after != expected_identity) {
+        return {
+            .authenticated = false,
+            .sha256 = {},
+            .diagnostic_code =
+                "workspace_agent.process_executable_authentication_changed",
+            .bytes = {}};
+    }
+    return {
+        .authenticated = true,
+        .sha256 = std::move(snapshot.digest.hex_digest),
+        .diagnostic_code =
+            "workspace_agent.process_executable_authenticated",
+        .bytes = retain_snapshot ? std::move(snapshot.bytes)
+                                 : std::vector<std::uint8_t>{}};
+}
+
+ExecutableAuthenticationSnapshot authenticate_executable_path(
+    const std::filesystem::path& path,
+    const PhysicalPathIdentity& expected_identity) {
+    ScopedPinHandle handle(open_pin_handle(path, false));
+    if (!handle.valid()) {
+        return {
+            .authenticated = false,
+            .sha256 = {},
+            .diagnostic_code =
+                "workspace_agent.process_executable_authentication_unavailable",
+            .bytes = {}};
+    }
+    return authenticate_open_executable(handle.get(), expected_identity, false);
+}
+
 bool stable_directory_identity_matches(
     const PhysicalPathIdentity& actual,
     const std::uint64_t expected_storage_id,
@@ -504,6 +634,23 @@ bool stable_directory_identity_matches(
 }
 
 }  // namespace
+
+WorkspaceAgentProcessTargetAuthenticationResult
+WorkspaceAgentProcessTargetPins::Impl::verify_executable_bytes() {
+    if (!valid()) {
+        return {
+            .authenticated = false,
+            .diagnostic_code =
+                "workspace_agent.process_executable_authentication_unavailable"};
+    }
+    const auto current = sha256_hex_for_native_bytes(executable_snapshot);
+    const bool matches = current.ok && current.hex_digest == executable_sha256;
+    return {
+        .authenticated = matches,
+        .diagnostic_code = matches
+            ? "workspace_agent.process_executable_authentication_matched"
+            : "workspace_agent.process_executable_authentication_changed"};
+}
 
 WorkspaceAgentProcessTargetBoundary::WorkspaceAgentProcessTargetBoundary(
     std::filesystem::path canonical_workspace_root,
@@ -554,6 +701,27 @@ WorkspaceAgentProcessTargetInspection
 WorkspaceAgentProcessTargetBoundary::inspect_workspace_process(
     const std::filesystem::path& strict_relative_executable,
     const std::filesystem::path& strict_relative_working_directory) const {
+    return inspect_workspace_process_impl(
+        strict_relative_executable,
+        strict_relative_working_directory,
+        true);
+}
+
+WorkspaceAgentProcessTargetInspection
+WorkspaceAgentProcessTargetBoundary::preflight_workspace_process(
+    const std::filesystem::path& strict_relative_executable,
+    const std::filesystem::path& strict_relative_working_directory) const {
+    return inspect_workspace_process_impl(
+        strict_relative_executable,
+        strict_relative_working_directory,
+        false);
+}
+
+WorkspaceAgentProcessTargetInspection
+WorkspaceAgentProcessTargetBoundary::inspect_workspace_process_impl(
+    const std::filesystem::path& strict_relative_executable,
+    const std::filesystem::path& strict_relative_working_directory,
+    const bool authorize_pinning) const {
     if (!strict_relative_executable_path(strict_relative_executable)) {
         return denied("workspace_agent.process_invalid_relative_executable");
     }
@@ -573,6 +741,14 @@ WorkspaceAgentProcessTargetBoundary::inspect_workspace_process(
     if (!executable.has_value()) {
         return failure_result;
     }
+    ExecutableAuthenticationSnapshot authentication;
+    if (authorize_pinning) {
+        authentication = authenticate_executable_path(
+            executable->canonical_path, executable->identity);
+        if (!authentication.authenticated) {
+            return denied(authentication.diagnostic_code);
+        }
+    }
     const auto working_directory = inspect_working_directory(
         strict_relative_working_directory == "."
             ? canonical_workspace_root_
@@ -586,13 +762,16 @@ WorkspaceAgentProcessTargetBoundary::inspect_workspace_process(
         return denied("workspace_agent.process_workspace_root_identity_changed");
     }
     auto result = allowed(*executable, *working_directory);
-    result.pin_authority_ =
-        std::make_shared<WorkspaceAgentProcessTargetPinAuthority>(
-            pin_boundary_authority_,
-            result.canonical_executable_path,
-            result.executable_identity,
-            result.canonical_working_directory,
-            result.working_directory_identity);
+    if (authorize_pinning) {
+        result.pin_authority_ =
+            std::make_shared<WorkspaceAgentProcessTargetPinAuthority>(
+                pin_boundary_authority_,
+                result.canonical_executable_path,
+                result.executable_identity,
+                std::move(authentication.sha256),
+                result.canonical_working_directory,
+                result.working_directory_identity);
+    }
     return result;
 }
 
@@ -600,6 +779,27 @@ WorkspaceAgentProcessTargetInspection
 WorkspaceAgentProcessTargetBoundary::inspect_local_process(
     const std::filesystem::path& strict_absolute_executable,
     const std::filesystem::path& strict_absolute_working_directory) const {
+    return inspect_local_process_impl(
+        strict_absolute_executable,
+        strict_absolute_working_directory,
+        true);
+}
+
+WorkspaceAgentProcessTargetInspection
+WorkspaceAgentProcessTargetBoundary::preflight_local_process(
+    const std::filesystem::path& strict_absolute_executable,
+    const std::filesystem::path& strict_absolute_working_directory) const {
+    return inspect_local_process_impl(
+        strict_absolute_executable,
+        strict_absolute_working_directory,
+        false);
+}
+
+WorkspaceAgentProcessTargetInspection
+WorkspaceAgentProcessTargetBoundary::inspect_local_process_impl(
+    const std::filesystem::path& strict_absolute_executable,
+    const std::filesystem::path& strict_absolute_working_directory,
+    const bool authorize_pinning) const {
     if (!strict_absolute_executable_path(strict_absolute_executable)) {
         return denied("workspace_agent.process_invalid_absolute_executable");
     }
@@ -622,6 +822,14 @@ WorkspaceAgentProcessTargetBoundary::inspect_local_process(
     if (!executable.has_value()) {
         return failure_result;
     }
+    ExecutableAuthenticationSnapshot authentication;
+    if (authorize_pinning) {
+        authentication = authenticate_executable_path(
+            executable->canonical_path, executable->identity);
+        if (!authentication.authenticated) {
+            return denied(authentication.diagnostic_code);
+        }
+    }
     const auto working_directory = inspect_working_directory(
         strict_absolute_working_directory,
         strict_absolute_working_directory,
@@ -630,13 +838,16 @@ WorkspaceAgentProcessTargetBoundary::inspect_local_process(
         return failure_result;
     }
     auto result = allowed(*executable, *working_directory);
-    result.pin_authority_ =
-        std::make_shared<WorkspaceAgentProcessTargetPinAuthority>(
-            pin_boundary_authority_,
-            result.canonical_executable_path,
-            result.executable_identity,
-            result.canonical_working_directory,
-            result.working_directory_identity);
+    if (authorize_pinning) {
+        result.pin_authority_ =
+            std::make_shared<WorkspaceAgentProcessTargetPinAuthority>(
+                pin_boundary_authority_,
+                result.canonical_executable_path,
+                result.executable_identity,
+                std::move(authentication.sha256),
+                result.canonical_working_directory,
+                result.working_directory_identity);
+    }
     return result;
 }
 
@@ -695,6 +906,17 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
             "workspace_agent.process_target_pin_identity_changed";
         return result;
     }
+    auto authentication = authenticate_open_executable(
+        executable_handle.get(), executable_identity, true);
+    if (!authentication.authenticated) {
+        result.diagnostic_code = authentication.diagnostic_code;
+        return result;
+    }
+    if (authentication.sha256 != authority->executable_sha256) {
+        result.diagnostic_code =
+            "workspace_agent.process_executable_authentication_changed";
+        return result;
+    }
 
     ScopedPinHandle working_directory_handle(
         open_pin_handle(authority->working_directory, true));
@@ -715,7 +937,10 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
     auto impl = std::make_unique<WorkspaceAgentProcessTargetPins::Impl>(
         root_handle.get(),
         executable_handle.get(),
-        working_directory_handle.get());
+        working_directory_handle.get(),
+        executable_identity,
+        authority->executable_sha256,
+        std::move(authentication.bytes));
     result.pins.emplace(WorkspaceAgentProcessTargetPins(std::move(impl)));
     static_cast<void>(root_handle.release());
     static_cast<void>(executable_handle.release());

@@ -29,7 +29,7 @@ inline constexpr std::size_t
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
 // RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
-// RQ-CF-AGENT-018 through RQ-CF-AGENT-023.
+// RQ-CF-AGENT-018 through RQ-CF-AGENT-024.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -385,9 +385,13 @@ public:
 
     // Repeats exact-session process-target admission, then consumes a private
     // one-attempt inspection authority to retain the original trusted root,
-    // executable, and working-directory objects. The opaque move-only result
-    // exposes no path or native handle. It neither acquires the separate
-    // revocation lease nor weakens the invariant launch-promotion denial.
+    // executable, and working-directory objects. Pin-intent inspection and
+    // acquisition stream the executable within a fixed cap and bind the
+    // complete digest and the acquisition stream's exact bytes privately;
+    // callers can reverify only that immutable snapshot. The opaque move-only
+    // result exposes no bytes, path, digest, or native handle. It
+    // neither acquires the separate revocation lease nor weakens the invariant
+    // launch-promotion denial.
     [[nodiscard]] WorkspaceAgentProcessTargetPinPreflightResult
     pin_process_target_request(
         const WorkspaceAgentProcessTargetPreflightRequest& request) const;

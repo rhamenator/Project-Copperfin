@@ -1,3 +1,26 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-024`, bounded SHA-256
+  authentication of a private immutable workspace-agent executable snapshot.
+  Pin-authorizing inspection and acquisition each stream an identity-bracketed
+  native handle/descriptor within 256 MiB and require the private digest to
+  match; ordinary repeated preflight remains no-authority and avoids hashing.
+  Acquisition privately retains the exact bytes from its successful digest
+  stream. The move-only bundle exposes no bytes, digest, path, or handle and can
+  only reverify that immutable snapshot with content-free results. Regression
+  coverage proves a
+  same-object byte edit is denied even after restoring the complete public
+  identity tuple, a sparse over-cap executable fails before streaming, POSIX
+  snapshot survives retained-descriptor rename and is unaffected by later
+  source-object writes, and post-stop verification carries no session
+  authority. This still
+  does not consume a serialized plan or revocation lease, execute, sandbox,
+  enforce endpoints/descendants, audit an outcome, or weaken the invariant
+  launch denial. Warning-free GCC 15 Release workspace-agent/security passes
+  `11/11`; fresh Clang 21 ASan/UBSan/leak passes `3/3`; and fresh GCC 15
+  ThreadSanitizer passes `2/2`. Licensing, community, native-platform,
+  GitHub Actions, isolation, supply-chain, and safety contracts pass `7/7`,
+  including the corrected final-byte 326.93-second safety scan. Protected platform, review, and
+  merge evidence remain pending.
+
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-023` at corrected exact signed/DCO head `f4fa82829`. The first
   protected Windows environment run exposed a test-only pin-lifetime defect;
