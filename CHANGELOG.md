@@ -113,6 +113,18 @@
   candidate adds a restricted-token direct-versus-suspended launch matrix ahead
   of private-image, Job, and transport controls; it selects the first
   incompatible transition without changing production behavior.
+  Protected run `31977374102` selects the direct-launch boundary: both the
+  normal and suspended statically linked fixture launches return successfully
+  but time out before their observable marker. This rules out the private
+  image, Job Object, explicit pipe list, fixed environment, and suspension
+  transition, but not CRT initialization before that fixture's `main` body.
+  The next test-only candidate adds a separate `/MT` Win32 probe that exits via
+  `ExitProcess` without C++ streams, filesystem, environment, or argument
+  processing, while retaining the full fixture matrix. It will distinguish the
+  restricted-token process-launch baseline from richer C++ fixture startup.
+  Local focused execution/materialization and machine-contract checks pass
+  `2/2`; native test-isolation and safety-traceability contracts pass, with the
+  latter completing its corrected-tree scan in 325.59 seconds.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,

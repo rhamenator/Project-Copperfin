@@ -66,11 +66,16 @@ resume state, pre-entry failure, and command-line mismatch. Corrected protected
 run `31973693772` proved the resume count is valid but the copied full test
 runner never reaches its marker. The corrected test now uses a dedicated
 statically linked child matching the declared self-contained-image contract and
-compares captured lines with either Windows CRLF or LF framing. Protected
-execution remains required. The diagnostic tree passes the focused behavior and
-machine-contract set at `7/7` and the licensing, community, release-license,
-isolation, supply-chain, and safety set at `6/6`, including the 323.10-second
-repository-wide safety scan.
+compares captured lines with either Windows CRLF or LF framing. Protected run
+`31977374102` then proved that both direct and suspended launches of that
+fixture time out before its C++-body marker, ruling out private-image, Job,
+pipe, fixed-environment, and resume controls but not CRT startup before `main`.
+The next test-only head adds a bare `/MT` Win32 `ExitProcess(41)` probe through
+the same matrix, while retaining the full fixture to select the true
+restricted-token boundary. Protected execution remains required. The latest
+local focused machine-contract set passes `2/2`; native isolation and the
+corrected-tree safety-traceability contract also pass, the latter in 325.59
+seconds.
 
 ## V1 workspace-agent Windows launch-handle transition
 

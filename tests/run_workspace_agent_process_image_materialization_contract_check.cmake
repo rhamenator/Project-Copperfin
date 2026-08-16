@@ -42,6 +42,7 @@ set(platform_test tests/test_platform_private_directory.cpp)
 set(isolation_metadata tests/CopperfinTestIsolation.cmake)
 set(environment_test tests/test_workspace_agent_isolated_environment.cpp)
 set(execution_fixture tests/workspace_agent_execution_fixture.cpp)
+set(execution_probe tests/workspace_agent_execution_probe.cpp)
 set(process_containment_test tests/test_workspace_agent_process_containment.cpp)
 
 foreach(path IN ITEMS
@@ -62,6 +63,8 @@ foreach(path IN ITEMS
         ${platform_test}
         ${isolation_metadata}
         ${environment_test}
+        ${execution_fixture}
+        ${execution_probe}
         ${process_containment_test})
     if(NOT EXISTS "${SOURCE_DIR}/${path}")
         message(FATAL_ERROR "Process-image materialization input is missing: ${path}")
@@ -237,9 +240,17 @@ foreach(token IN ITEMS
         "bounded Windows child-entry diagnostic fixture")
 endforeach()
 foreach(token IN ITEMS
+        "ExitProcess(41U)"
+        "restricted-token process-launch baseline")
+    require_text(${execution_probe} "${token}"
+        "minimal Windows restricted-token launch probe")
+endforeach()
+foreach(token IN ITEMS
         "run_windows_fixture_probe("
         "test_windows_fixture_startup_transitions("
         "CREATE_SUSPENDED"
+        "probe-normal="
+        "restricted Windows direct minimal probe"
         "restricted Windows suspended fixture launch")
     require_text(${environment_test} "${token}"
         "Windows startup transition diagnostic matrix")
@@ -248,9 +259,11 @@ forbid_text(${execution_fixture} "std::getenv("
     "credential-value environment lookup")
 foreach(token IN ITEMS
         "workspace_agent_execution_fixture"
+        "workspace_agent_execution_probe"
         "$<$<CONFIG:Debug>:/MTd>"
         "$<$<NOT:$<CONFIG:Debug>>:/MT>"
-        "$<TARGET_FILE:workspace_agent_execution_fixture>")
+        "$<TARGET_FILE:workspace_agent_execution_fixture>"
+        "$<TARGET_FILE:workspace_agent_execution_probe>")
     require_text(tests/CMakeLists.txt "${token}"
         "self-contained Windows execution fixture contract")
 endforeach()

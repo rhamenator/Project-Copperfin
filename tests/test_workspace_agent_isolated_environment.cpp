@@ -220,6 +220,7 @@ int failures = 0;
 std::filesystem::path running_test_executable;
 #if defined(_WIN32)
 std::filesystem::path child_fixture_executable;
+std::filesystem::path child_probe_executable;
 #endif
 
 #if defined(_WIN32)
@@ -269,7 +270,8 @@ int run_test_driver_with_lua_token() {
 
     std::wstring command_line = L"\"" + running_test_executable.native() +
         L"\" --workspace-agent-non-elevated-test-driver-v1 \"" +
-        child_fixture_executable.native() + L"\"";
+        child_fixture_executable.native() + L"\" \"" +
+        child_probe_executable.native() + L"\"";
     command_line.push_back(L'\0');
     STARTUPINFOW startup{};
     startup.cb = sizeof(startup);
@@ -514,10 +516,13 @@ struct WindowsFixtureProbeResult {
 WindowsFixtureProbeResult run_windows_fixture_probe(
     const std::filesystem::path& executable,
     const std::filesystem::path& working_directory,
-    const bool start_suspended) {
+    const std::wstring_view arguments, const bool start_suspended) {
     WindowsFixtureProbeResult result;
-    std::wstring command_line = L"\"" + executable.native() +
-        L"\" --workspace-agent-child-v1 literal-payload";
+    std::wstring command_line = L"\"" + executable.native() + L"\"";
+    if (!arguments.empty()) {
+        command_line += L" ";
+        command_line += arguments;
+    }
     STARTUPINFOW startup{};
     startup.cb = sizeof(startup);
     PROCESS_INFORMATION process{};
@@ -563,22 +568,53 @@ WindowsFixtureProbeResult run_windows_fixture_probe(
 void test_windows_fixture_startup_transitions() {
     TempTree tree;
     const auto fixture = tree.workspace / "bin" / "workspace-tool";
+    const auto probe = tree.workspace / "bin" / "workspace-probe";
+    std::error_code copy_error;
+    std::filesystem::copy_file(
+        child_probe_executable, probe,
+        std::filesystem::copy_options::overwrite_existing, copy_error);
+    if (copy_error) {
+        throw std::runtime_error("Windows PE probe copy failed");
+    }
+    const auto probe_normal = run_windows_fixture_probe(
+        probe, tree.workspace / "working", L"", false);
+    const auto probe_suspended = run_windows_fixture_probe(
+        probe, tree.workspace / "working", L"", true);
     const auto normal = run_windows_fixture_probe(
-        fixture, tree.workspace / "working", false);
+        fixture, tree.workspace / "working",
+        L"--workspace-agent-child-v1 literal-payload", false);
     const auto suspended = run_windows_fixture_probe(
-        fixture, tree.workspace / "working", true);
+        fixture, tree.workspace / "working",
+        L"--workspace-agent-child-v1 literal-payload", true);
+    const bool probe_normal_ok = probe_normal.created &&
+        probe_normal.wait_result == WAIT_OBJECT_0 && probe_normal.exit_code == 41U;
+    const bool probe_suspended_ok = probe_suspended.created &&
+        probe_suspended.resume_count == 1U &&
+        probe_suspended.wait_result == WAIT_OBJECT_0 &&
+        probe_suspended.exit_code == 41U;
     const bool normal_ok = normal.created && normal.wait_result == WAIT_OBJECT_0 &&
         normal.exit_code == 23U;
     const bool suspended_ok = suspended.created && suspended.resume_count == 1U &&
         suspended.wait_result == WAIT_OBJECT_0 && suspended.exit_code == 23U;
-    if (!normal_ok || !suspended_ok) {
-        std::cerr << "RQ-CF-AGENT-028 fixture transition diagnostics: normal="
+    if (!probe_normal_ok || !probe_suspended_ok || !normal_ok || !suspended_ok) {
+        std::cerr << "RQ-CF-AGENT-028 fixture transition diagnostics: probe-normal="
+                  << probe_normal.created << '/' << probe_normal.wait_result << '/'
+                  << probe_normal.exit_code << '/' << probe_normal.error
+                  << " probe-suspended=" << probe_suspended.created << '/'
+                  << probe_suspended.resume_count << '/'
+                  << probe_suspended.wait_result << '/'
+                  << probe_suspended.exit_code << '/' << probe_suspended.error
+                  << " normal="
                   << normal.created << '/' << normal.wait_result << '/'
                   << normal.exit_code << '/' << normal.error
                   << " suspended=" << suspended.created << '/'
                   << suspended.resume_count << '/' << suspended.wait_result << '/'
                   << suspended.exit_code << '/' << suspended.error << '\n';
     }
+    expect(probe_normal_ok,
+           "RQ-CF-AGENT-028: restricted Windows direct minimal probe must exit before C++ fixture startup or execution controls");
+    expect(probe_suspended_ok,
+           "RQ-CF-AGENT-028: restricted Windows suspended minimal probe must resume and exit before C++ fixture startup or execution controls");
     expect(normal_ok,
            "RQ-CF-AGENT-028: restricted Windows direct fixture launch must reach its fixed exit before private-image or transport controls");
     expect(suspended_ok,
@@ -2463,19 +2499,25 @@ int main(int argc, char** argv) {
     }
 #if defined(_WIN32)
     const bool non_elevated_driver =
-        argc == 3 && argv[1] != nullptr &&
+        argc == 4 && argv[1] != nullptr &&
         std::string_view(argv[1]) ==
             "--workspace-agent-non-elevated-test-driver-v1";
     const int fixture_argument = non_elevated_driver ? 2 : 1;
-    if (argc <= fixture_argument || argv[fixture_argument] == nullptr) {
-        std::cerr << "FAIL: Windows execution fixture path is required\n";
+    const int probe_argument = fixture_argument + 1;
+    if (argc <= probe_argument || argv[fixture_argument] == nullptr ||
+        argv[probe_argument] == nullptr) {
+        std::cerr << "FAIL: Windows execution fixture and probe paths are required\n";
         return EXIT_FAILURE;
     }
     std::error_code fixture_error;
     child_fixture_executable = std::filesystem::canonical(
         std::filesystem::path(argv[fixture_argument]), fixture_error);
+    std::error_code probe_error;
+    child_probe_executable = std::filesystem::canonical(
+        std::filesystem::path(argv[probe_argument]), probe_error);
     if (running_test_executable.empty() || fixture_error ||
-        child_fixture_executable.empty()) {
+        probe_error || child_fixture_executable.empty() ||
+        child_probe_executable.empty()) {
         std::cerr << "FAIL: Windows PE fixtures require exact executable paths\n";
         return EXIT_FAILURE;
     }

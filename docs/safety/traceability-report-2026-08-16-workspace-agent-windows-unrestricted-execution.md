@@ -311,3 +311,21 @@ boundaries are unchanged. Protected execution remains required.
 The corrected focused set passes `7/7`; licensing, community, release-license,
 isolation, supply-chain, and safety contracts pass `6/6`, including the
 324.61-second repository-wide safety scan.
+
+Protected Windows environment run `31977374102` at exact head `4e3eae4f0`
+passed every adjacent private-image, session, parser, and materialization
+regression, then selected the first failing transition in the new matrix. Both
+a direct launch and a `CREATE_SUSPENDED` plus exact-one-count `ResumeThread`
+launch of the dedicated static fixture were created successfully but timed out
+after five seconds (`WAIT_TIMEOUT`, active exit code, `ERROR_TIMEOUT`). The
+failure occurs before the private image, Job Object, explicit pipe handle list,
+fixed environment, or production command path participates. The fixture's
+entry marker is emitted from its C++ body, however, so that result does not
+distinguish a restricted-token launch-baseline failure from CRT startup before
+`main`. The next test-only candidate adds a second `/MT` Win32 probe that calls
+only `ExitProcess(41)` and runs it through the same direct and suspended matrix
+while retaining the full fixture checks. It changes no production authority or
+acceptance rule; local focused execution/materialization and exact-source
+machine contracts pass `2/2`, and the corrected-tree native-isolation and
+safety-traceability contracts pass, the latter in 325.59 seconds. Protected
+evidence remains required.

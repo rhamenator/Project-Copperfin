@@ -5189,6 +5189,15 @@ if(WIN32)
     add_executable(workspace_agent_execution_fixture
         workspace_agent_execution_fixture.cpp
     )
+
+    add_executable(workspace_agent_execution_probe
+        workspace_agent_execution_probe.cpp
+    )
+    target_compile_options(workspace_agent_execution_probe PRIVATE
+        /W4 /permissive-
+        $<$<CONFIG:Debug>:/MTd>
+        $<$<NOT:$<CONFIG:Debug>>:/MT>
+    )
     target_compile_options(workspace_agent_execution_fixture PRIVATE
         /W4 /permissive-
         $<$<CONFIG:Debug>:/MTd>
@@ -5207,12 +5216,14 @@ if(WIN32)
     add_dependencies(
         test_workspace_agent_isolated_environment
         workspace_agent_execution_fixture
+        workspace_agent_execution_probe
     )
     add_test(
         NAME test_workspace_agent_isolated_environment
         COMMAND
             $<TARGET_FILE:test_workspace_agent_isolated_environment>
             $<TARGET_FILE:workspace_agent_execution_fixture>
+            $<TARGET_FILE:workspace_agent_execution_probe>
     )
 else()
     copperfin_add_test(test_workspace_agent_isolated_environment cf_security
