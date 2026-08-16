@@ -12,7 +12,7 @@
 
 namespace copperfin::platform {
 
-// Governing requirement: candidate RQ-CF-AGENT-026.
+// Governing requirements: candidate RQ-CF-AGENT-026 and RQ-CF-AGENT-027.
 
 enum class PrivateExecutableImageFailure : std::uint32_t {
     none = 0U,
@@ -24,16 +24,20 @@ enum class PrivateExecutableImageFailure : std::uint32_t {
     creation_failed,
     write_failed,
     verification_failed,
+    launch_transition_failed,
     cleanup_failed
 };
 
 struct PrivateExecutableImageMaterializationResult;
 
 // Move-only ownership of an exact executable byte image. POSIX implementations
-// unlink the image before writing and retain only its descriptor. Windows keeps
-// the exact newly-created file open without write or delete sharing and deletes
-// that handle-owned object during destruction. No path or native handle is
-// exposed by this portability seam.
+// unlink the image before writing and retain only its descriptor. Windows
+// replaces its write-capable creation handle with a read-only file-id identity
+// anchor, then admits a linked-path read/delete handle only when its identity
+// matches exactly. That final handle denies write, delete, and rename sharing
+// and deletes the
+// handle-owned object during destruction. No path or native handle is exposed
+// by this portability seam.
 class PrivateExecutableImage {
 public:
     PrivateExecutableImage();

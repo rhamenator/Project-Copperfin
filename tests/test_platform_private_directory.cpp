@@ -5,6 +5,7 @@
 #include "copperfin/platform/private_directory.h"
 #include "copperfin/platform/private_executable_image.h"
 
+#include <array>
 #include <chrono>
 #include <cerrno>
 #include <filesystem>
@@ -143,6 +144,109 @@ TestDirectoryIdentity directory_identity(const std::filesystem::path& path) {
         .creation_ticks = creation_ticks};
 #endif
 }
+
+#if defined(_WIN32)
+std::vector<std::uint8_t> current_executable_bytes() {
+    std::array<wchar_t, 32768U> module_path{};
+    const DWORD length = ::GetModuleFileNameW(
+        nullptr, module_path.data(), static_cast<DWORD>(module_path.size()));
+    if (length == 0U || length >= module_path.size()) {
+        return {};
+    }
+    std::ifstream input(
+        std::filesystem::path(
+            std::wstring(module_path.data(), static_cast<std::size_t>(length))),
+        std::ios::binary | std::ios::ate);
+    const std::streamoff size = input.tellg();
+    constexpr std::streamoff maximum_fixture_bytes = 64LL * 1024LL * 1024LL;
+    if (!input || size <= 0 || size > maximum_fixture_bytes) {
+        return {};
+    }
+    std::vector<std::uint8_t> bytes(static_cast<std::size_t>(size));
+    input.seekg(0, std::ios::beg);
+    input.read(
+        reinterpret_cast<char*>(bytes.data()),
+        static_cast<std::streamsize>(bytes.size()));
+    return input && input.gcount() == static_cast<std::streamsize>(bytes.size())
+        ? bytes
+        : std::vector<std::uint8_t>{};
+}
+
+bool launch_transitioned_test_image(const std::filesystem::path& image_path) {
+    std::wstring command_line =
+        L"\"" + image_path.native() + L"\" --rq027-child";
+    STARTUPINFOW startup{};
+    startup.cb = sizeof(startup);
+    PROCESS_INFORMATION process{};
+    const BOOL created = ::CreateProcessW(
+        image_path.c_str(), command_line.data(), nullptr, nullptr, FALSE,
+        CREATE_NO_WINDOW, nullptr, nullptr, &startup, &process);
+    if (created == FALSE) {
+        return false;
+    }
+    const DWORD wait = ::WaitForSingleObject(process.hProcess, 10000U);
+    DWORD exit_code = STILL_ACTIVE;
+    const bool completed = wait == WAIT_OBJECT_0 &&
+        ::GetExitCodeProcess(process.hProcess, &exit_code) != FALSE &&
+        exit_code == 0U;
+    if (wait != WAIT_OBJECT_0) {
+        (void)::TerminateProcess(process.hProcess, 1U);
+        (void)::WaitForSingleObject(process.hProcess, 5000U);
+    }
+    (void)::CloseHandle(process.hThread);
+    (void)::CloseHandle(process.hProcess);
+    return completed;
+}
+
+void test_writable_mapping_blocks_launch_transition() {
+    TempTree tree;
+    const auto image_path = tree.root / "mapped-transition-image.exe";
+    const HANDLE writer = ::CreateFileW(
+        image_path.c_str(), GENERIC_READ | GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        CREATE_NEW, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr);
+    std::uint8_t initial = 0x41U;
+    DWORD written = 0U;
+    const bool initialized = writer != INVALID_HANDLE_VALUE &&
+        ::WriteFile(writer, &initial, 1U, &written, nullptr) != FALSE &&
+        written == 1U && ::FlushFileBuffers(writer) != FALSE;
+    const HANDLE mapping = initialized
+        ? ::CreateFileMappingW(writer, nullptr, PAGE_READWRITE, 0U, 1U, nullptr)
+        : nullptr;
+    auto* view = mapping != nullptr
+        ? static_cast<std::uint8_t*>(
+              ::MapViewOfFile(mapping, FILE_MAP_WRITE, 0U, 0U, 1U))
+        : nullptr;
+    if (writer != INVALID_HANDLE_VALUE) {
+        (void)::CloseHandle(writer);
+    }
+    if (view != nullptr) {
+        view[0] = 0x42U;
+        (void)::FlushViewOfFile(view, 1U);
+    }
+    ::SetLastError(ERROR_SUCCESS);
+    const HANDLE denied_transition = ::CreateFileW(
+        image_path.c_str(), GENERIC_READ | DELETE, FILE_SHARE_READ, nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+    const DWORD transition_error = ::GetLastError();
+    expect(initialized && mapping != nullptr && view != nullptr &&
+               denied_transition == INVALID_HANDLE_VALUE &&
+               transition_error == ERROR_SHARING_VIOLATION,
+           "RQ-CF-AGENT-027: a live writable mapping created without delete access must block the final read-only-sharing transition after its writer handle closes");
+    if (denied_transition != INVALID_HANDLE_VALUE) {
+        (void)::CloseHandle(denied_transition);
+    }
+    if (view != nullptr) {
+        (void)::UnmapViewOfFile(view);
+    }
+    if (mapping != nullptr) {
+        (void)::CloseHandle(mapping);
+    }
+    (void)::DeleteFileW(image_path.c_str());
+}
+#endif
 
 void test_creation_and_verification() {
     TempTree tree;
@@ -416,7 +520,7 @@ void test_exact_private_executable_image_materialization() {
 #if defined(_WIN32)
     const HANDLE retained_reader = ::CreateFileW(
         (private_root / leaf).c_str(), GENERIC_READ,
-        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr,
         OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
     LARGE_INTEGER retained_size{};
@@ -432,7 +536,7 @@ void test_exact_private_executable_image_materialization() {
             nullptr) != FALSE &&
         retained_read == retained_bytes.size() && retained_bytes == bytes;
     expect(retained_exact,
-           "RQ-CF-AGENT-026: the retained Windows image must contain only the supplied bytes");
+           "RQ-CF-AGENT-027: the transitioned Windows image must be readable without sharing write access");
     if (retained_reader != INVALID_HANDLE_VALUE) {
         (void)::CloseHandle(retained_reader);
     }
@@ -441,10 +545,42 @@ void test_exact_private_executable_image_materialization() {
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     expect(denied_writer == INVALID_HANDLE_VALUE,
-           "RQ-CF-AGENT-026: a live Windows image must deny cooperating writers");
+           "RQ-CF-AGENT-027: a transitioned Windows image must deny cooperating writers");
     if (denied_writer != INVALID_HANDLE_VALUE) {
         (void)::CloseHandle(denied_writer);
     }
+    const HANDLE denied_deleter = ::CreateFileW(
+        (private_root / leaf).c_str(), DELETE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    expect(denied_deleter == INVALID_HANDLE_VALUE,
+           "RQ-CF-AGENT-027: a transitioned Windows image must deny cooperating deletion");
+    if (denied_deleter != INVALID_HANDLE_VALUE) {
+        (void)::CloseHandle(denied_deleter);
+    }
+    const auto renamed_leaf = private_root / "copperfin-image-renamed.exe";
+    const BOOL renamed = ::MoveFileExW(
+        (private_root / leaf).c_str(), renamed_leaf.c_str(),
+        MOVEFILE_WRITE_THROUGH);
+    expect(renamed == FALSE &&
+               std::filesystem::exists(private_root / leaf) &&
+               !std::filesystem::exists(renamed_leaf),
+           "RQ-CF-AGENT-027: a transitioned Windows image must retain its verified pathname binding");
+
+    const auto executable_bytes = current_executable_bytes();
+    const std::filesystem::path launch_leaf =
+        "copperfin-image-launch-transition.exe";
+    auto launch_materialized =
+        materialize_private_executable_image_in_verified_parent(
+            private_root, identity.storage_id, identity.file_id,
+            identity.creation_ticks, launch_leaf, executable_bytes);
+    expect(!executable_bytes.empty() && launch_materialized.materialized &&
+               launch_materialized.image.has_value() &&
+               launch_transitioned_test_image(private_root / launch_leaf),
+           "RQ-CF-AGENT-027: CreateProcessW must launch the exact transitioned test image while its write-denying handle remains live");
+    launch_materialized.image.reset();
+    expect(!std::filesystem::exists(private_root / launch_leaf),
+           "RQ-CF-AGENT-027: transitioned launch-image destruction must remove the exact object");
 #else
     expect(!std::filesystem::exists(private_root / leaf),
            "RQ-CF-AGENT-026: a POSIX image must leave no mutable pathname after creation");
@@ -492,7 +628,16 @@ void test_exact_private_executable_image_materialization() {
 
 }  // namespace
 
-int main() {
+int main(const int argc, const char* const* argv) {
+#if defined(_WIN32)
+    if (argc == 2 && std::string(argv[1]) == "--rq027-child") {
+        return 0;
+    }
+    test_writable_mapping_blocks_launch_transition();
+#else
+    (void)argc;
+    (void)argv;
+#endif
     test_creation_and_verification();
     test_invalid_and_wrong_kind_inputs();
     test_exact_private_executable_image_materialization();

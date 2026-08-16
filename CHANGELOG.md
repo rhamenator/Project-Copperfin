@@ -8653,3 +8653,29 @@ passes `1/1`.
   corrected full lifecycle at `2c38492c1`; the downloaded JSON digest matches
   the retained NSIS executable. `RQ-CF-REL-002` is defined.
 - 2026-08-15: Candidate v1 `RQ-CF-AGENT-021` retains successful workspace-agent private-layout preparation receipts FIFO in the native session controller, including after failed start audit, and adds an explicit cleanup operation that is denied while authority is active, serializes with session transitions, requires a durable content-free intent record before mutation, and emits a separate `cleaned` or `retained` outcome. Failed intent audit attempts no mutation, failed cleanup preserves occupied or changed content and retains the receipt for retry, successful cleanup consumes it, and later session generations cannot overwrite older receipts. A fixed sixty-four-receipt cap denies another process-capable start before layout creation. Automatic stop/destructor cleanup, crash-recoverable receipts, partial-removal retry, and owned nonempty-content disposition remain explicit gaps.
+- 2026-08-16: Added candidate `RQ-CF-AGENT-027`, a non-executing Windows
+  launch-handle transition for the exact private image produced by
+  `RQ-CF-AGENT-026`. After write/flush/reread verification, the platform closes
+  the write-capable creation handle, reopens the same object by file id as a
+  read-only identity anchor, and retains a linked-path read/delete handle with
+  read-only sharing only after exact volume/file/creation/size identity
+  equality. It then rechecks bytes and parent identity. Identity mismatch never acquires
+  deletion authority over the observed object. The Windows regression proves
+  readers no longer need to share write access, cooperating
+  write/delete/rename opens remain denied, and `CreateProcessW` can launch the exact test image while its
+  retained handle is live. Warning-as-error GCC Release behavior/contracts pass
+  `4/4`, focused Release passes `7/7`, fresh Clang ASan/UBSan/leak passes `3/3`,
+  and licensing/community/isolation/supply-chain/safety contracts pass `6/6`,
+  including the corrected 333.46-second safety scan. Direct protected Windows evidence
+  remains pending.
+  Protected Windows run `31939430334` showed that retaining the
+  `OpenFileById` handle itself did not preserve the required delete/share
+  lifecycle on the hosted filesystem. That handle is now only the read-only
+  identity anchor; the identity-equal ordinary path handle owns the final
+  lifecycle contract.
+  The Windows regression also creates a live writable mapping from a minimal
+  read/write handle with no delete access, closes its writer handle, mutates
+  through the mapped view, and proves the final open
+  that omits write sharing fails with `ERROR_SHARING_VIOLATION`.
+  Actual controller execution, POSIX/macOS launch transition, working-directory
+  entry, sandbox, endpoint/descendant controls, and outcome audit remain closed.
