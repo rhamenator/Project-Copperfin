@@ -1004,76 +1004,80 @@ WorkspaceAgentSessionController::pin_process_target_request(
 WorkspaceAgentPreparedProcessLaunchResult
 WorkspaceAgentSessionController::prepare_process_launch_candidate(
     const WorkspaceAgentProcessInvocationPreflightRequest& request) const {
-    WorkspaceAgentPreparedProcessLaunchResult result;
-    const auto preliminary =
-        preflight_serialized_process_invocation_request(request);
-    if (!preliminary.allowed) {
-        result.diagnostic_code = preliminary.diagnostic_code;
-        return result;
-    }
-
-    const WorkspaceAgentProcessTargetPreflightRequest target_request{
-        .schema_version = request.schema_version,
-        .session_generation = request.session_generation,
-        .tool_id = request.tool_id,
-        .executable_path = request.executable_path,
-        .working_directory = request.working_directory};
-    auto pinned = pin_process_target_request(target_request);
-    if (!pinned.pinned || !pinned.pins.has_value()) {
-        result.diagnostic_code = pinned.diagnostic_code;
-        return result;
-    }
-
-    auto leased = acquire_process_launch_revocation_lease(
-        preliminary.serialized_environment.environment_plan.session_generation);
-    if (!leased.acquired || !leased.lease.has_value()) {
-        result.diagnostic_code = leased.diagnostic_code;
-        return result;
-    }
-
-    const auto final = preflight_serialized_process_invocation_request(request);
-    if (!final.allowed ||
-        !same_serialized_process_invocation(preliminary, final)) {
-        result.diagnostic_code =
-            "workspace_agent.process_launch_candidate_stale_invocation";
-        return result;
-    }
-    const auto& final_plan = final.serialized_environment.environment_plan;
-    if (pinned.session_generation != final_plan.session_generation ||
-        leased.lease->session_generation() != final_plan.session_generation ||
-        !pinned.pins->matches_target_identities(
-            final_plan.executable_identity,
-            final_plan.working_directory_identity)) {
-        result.diagnostic_code =
-            "workspace_agent.process_launch_candidate_target_changed";
-        return result;
-    }
-    const auto authentication = pinned.pins->verify_executable_bytes();
-    if (!authentication.authenticated) {
-        result.diagnostic_code = authentication.diagnostic_code;
-        return result;
-    }
-
+    WorkspaceAgentPreparedProcessLaunchResult unavailable;
+    unavailable.diagnostic_code =
+        "workspace_agent.process_launch_candidate_unavailable";
     try {
+        WorkspaceAgentPreparedProcessLaunchResult result;
+        const auto preliminary =
+            preflight_serialized_process_invocation_request(request);
+        if (!preliminary.allowed) {
+            result.diagnostic_code = preliminary.diagnostic_code;
+            return result;
+        }
+
+        const WorkspaceAgentProcessTargetPreflightRequest target_request{
+            .schema_version = request.schema_version,
+            .session_generation = request.session_generation,
+            .tool_id = request.tool_id,
+            .executable_path = request.executable_path,
+            .working_directory = request.working_directory};
+        auto pinned = pin_process_target_request(target_request);
+        if (!pinned.pinned || !pinned.pins.has_value()) {
+            result.diagnostic_code = pinned.diagnostic_code;
+            return result;
+        }
+
+        auto leased = acquire_process_launch_revocation_lease(
+            preliminary.serialized_environment.environment_plan
+                .session_generation);
+        if (!leased.acquired || !leased.lease.has_value()) {
+            result.diagnostic_code = leased.diagnostic_code;
+            return result;
+        }
+
+        const auto final =
+            preflight_serialized_process_invocation_request(request);
+        if (!final.allowed ||
+            !same_serialized_process_invocation(preliminary, final)) {
+            result.diagnostic_code =
+                "workspace_agent.process_launch_candidate_stale_invocation";
+            return result;
+        }
+        const auto& final_plan = final.serialized_environment.environment_plan;
+        if (pinned.session_generation != final_plan.session_generation ||
+            leased.lease->session_generation() !=
+                final_plan.session_generation ||
+            !pinned.pins->matches_target_identities(
+                final_plan.executable_identity,
+                final_plan.working_directory_identity)) {
+            result.diagnostic_code =
+                "workspace_agent.process_launch_candidate_target_changed";
+            return result;
+        }
+        const auto authentication = pinned.pins->verify_executable_bytes();
+        if (!authentication.authenticated) {
+            result.diagnostic_code = authentication.diagnostic_code;
+            return result;
+        }
+
         auto impl = std::make_unique<WorkspaceAgentPreparedProcessLaunch::Impl>(
             final,
             std::move(*pinned.pins),
             std::move(*leased.lease));
         result.candidate.emplace(
             WorkspaceAgentPreparedProcessLaunch(std::move(impl)));
-    } catch (...) {
-        result.diagnostic_code =
-            "workspace_agent.process_launch_candidate_unavailable";
+        result.prepared = result.candidate->valid();
+        result.diagnostic_code = result.prepared
+            ? "workspace_agent.process_launch_candidate_prepared"
+            : "workspace_agent.process_launch_candidate_unavailable";
+        if (!result.prepared) {
+            result.candidate.reset();
+        }
         return result;
+    } catch (...) {
+        return unavailable;
     }
-    result.prepared = result.candidate->valid();
-    result.diagnostic_code = result.prepared
-        ? "workspace_agent.process_launch_candidate_prepared"
-        : "workspace_agent.process_launch_candidate_unavailable";
-    if (!result.prepared) {
-        result.candidate.reset();
-    }
-    return result;
 }
 
 WorkspaceAgentProcessEnvironmentPreflightResult

@@ -22,6 +22,10 @@ enter the working directory, materialize or execute the snapshot, apply a
 sandbox, enforce endpoints or descendants, audit an outcome, or make the
 promotion gate allow. Protected-platform, review,
 merge, and qualified high-severity documentation evidence remain pending.
+Initial exact-head review found that the exception boundary covered only final
+candidate allocation; the corrected implementation wraps the complete
+preflight, pin, lease, revalidation, authentication, and construction sequence
+and returns the prebuilt content-free unavailable denial after any exception.
 
 ## V1 workspace-agent retained executable byte authentication
 

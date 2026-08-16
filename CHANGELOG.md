@@ -15,7 +15,10 @@
   repeated candidate-lifecycle runs pass, and ASan/UBSan/leak plus
   ThreadSanitizer each pass `3/3` without findings. Licensing, community,
   native-platform, GitHub Actions, isolation, supply-chain, and safety contracts
-  pass `7/7`, including the 338.24-second safety scan.
+  pass `7/7`, including the 338.24-second safety scan. Initial exact-head review
+  found and drove correction of an exception boundary that covered only final
+  candidate allocation; the complete preparation sequence now converts every
+  exception to the same content-free unavailable denial under RAII cleanup.
 
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-024` at corrected exact signed/DCO head `9e9d6bf18`. All eleven

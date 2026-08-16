@@ -48,8 +48,10 @@ critical deployment.
   snapshot is reauthenticated after that match; no mutable path is reopened as
   authority.
 - Partial construction and allocation failure: pins and the lease remain under
-  move-only local RAII ownership until candidate construction succeeds. Any
-  exception returns a content-free unavailable result and releases both.
+  move-only local RAII ownership until candidate construction succeeds. The
+  complete preflight, pin, lease, revalidation, authentication, and construction
+  sequence is inside one exception boundary; any exception returns a prebuilt
+  content-free unavailable result and releases every partial resource.
 - Lifetime ordering: the candidate declares the lease before pins and plan, so
   reverse member destruction discards the plan, closes pins, and releases the
   lease last.
@@ -82,6 +84,10 @@ Current local evidence:
 - repository licensing, community, native-platform, GitHub Actions, isolation,
   supply-chain, and safety contracts pass `7/7`, including the 338.24-second
   safety scan;
+- initial exact-head review found that only final candidate construction was
+  exception-contained; the corrected complete preparation boundary passes the
+  focused Release and fifty-run lifecycle sets plus ASan/UBSan/leak and
+  ThreadSanitizer `3/3` each without findings;
 - the new regression proves empty, inactive, stale, successful, moved-from,
   stop-blocking, orderly-release, and unchanged-launch-denial behavior; and
 - `git diff --check` passes.
