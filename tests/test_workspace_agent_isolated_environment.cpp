@@ -395,6 +395,21 @@ public:
         return result;
     }
 
+    WorkspaceAgentIsolatedEnvironmentConfiguration execution_configuration() const {
+        auto result = configuration();
+#if defined(_WIN32)
+        std::array<wchar_t, MAX_PATH + 1U> system_root{};
+        const UINT length = ::GetWindowsDirectoryW(
+            system_root.data(), static_cast<UINT>(system_root.size()));
+        if (length == 0U || length >= system_root.size()) {
+            throw std::runtime_error("Windows execution root discovery failed");
+        }
+        result.trusted_windows_system_root =
+            std::filesystem::path(std::wstring_view(system_root.data(), length));
+#endif
+        return result;
+    }
+
     WorkspaceAgentProcessParserConfiguration parser_configuration() const {
         const auto trusted =
             copperfin::security::inspect_physical_path_containment(
@@ -1049,7 +1064,8 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
 
     TempTree tree;
     WorkspaceAgentSessionController controller(
-        tree.workspace, tree.configuration(), tree.parser_configuration());
+        tree.workspace, tree.execution_configuration(),
+        tree.parser_configuration());
     const auto started = controller.start(
         unrestricted_activation_request(), audit_sink());
     expect(started.activated &&
@@ -1165,7 +1181,8 @@ void test_committed_execution_releases_revocation_lease_before_child_exit() {
 #if defined(_WIN32)
     TempTree tree;
     WorkspaceAgentSessionController controller(
-        tree.workspace, tree.configuration(), tree.parser_configuration());
+        tree.workspace, tree.execution_configuration(),
+        tree.parser_configuration());
     const auto started = controller.start(
         unrestricted_activation_request(), audit_sink());
     auto prepared = controller.prepare_process_launch_candidate(
@@ -1244,7 +1261,8 @@ void test_committed_execution_releases_revocation_lease_before_child_exit() {
 void test_process_intent_audit_reentrant_stop_is_denied() {
     TempTree tree;
     WorkspaceAgentSessionController controller(
-        tree.workspace, tree.configuration(), tree.parser_configuration());
+        tree.workspace, tree.execution_configuration(),
+        tree.parser_configuration());
     const auto started = controller.start(
         unrestricted_activation_request(), audit_sink());
     auto prepared = controller.prepare_process_launch_candidate(
@@ -1329,7 +1347,8 @@ void test_process_cancellation_reentrant_stop_is_denied() {
 void test_process_intent_audit_allows_concurrent_stop_to_revoke() {
     TempTree tree;
     WorkspaceAgentSessionController controller(
-        tree.workspace, tree.configuration(), tree.parser_configuration());
+        tree.workspace, tree.execution_configuration(),
+        tree.parser_configuration());
     const auto started = controller.start(
         unrestricted_activation_request(), audit_sink());
     auto prepared = controller.prepare_process_launch_candidate(

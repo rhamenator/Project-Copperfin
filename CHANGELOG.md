@@ -29,7 +29,11 @@
   Windows evidence then isolated `ERROR_ACCESS_DENIED` to anonymous transport-
   pipe creation under that restricted token. Transport pipes now use an
   explicit protected current-logon and restricted-code DACL, while only the
-  fixed child endpoints remain inheritable through the process handle list.
+  fixed child endpoints remain inheritable through the process handle list. A
+  follow-up Windows run proved process creation but exposed that the test had
+  supplied its deliberately fake environment-contract `SystemRoot` to a real
+  PE child; execution fixtures now authenticate and use the host Windows
+  directory while fake-root mutation tests remain isolated.
   The public
   promotion gate remains invariantly denied. Focused local Debug and warning-as-error GCC 15
   Release execution pass `5/5`; fresh Clang 21 ASan/UBSan/leak passes `3/3`

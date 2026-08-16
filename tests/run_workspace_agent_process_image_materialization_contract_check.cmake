@@ -236,6 +236,8 @@ foreach(token IN ITEMS
         "--workspace-agent-non-elevated-test-driver-v1"
         "CreateRestrictedToken("
         "LUA_TOKEN | DISABLE_MAX_PRIVILEGE"
+        "execution_configuration()"
+        "::GetWindowsDirectoryW("
         "cross-controller"
         "materialization must not silently weaken the invariant execution denial")
     require_text(${environment_test} "${token}" "controller materialization regression")

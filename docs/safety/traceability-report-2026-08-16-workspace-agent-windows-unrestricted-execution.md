@@ -173,3 +173,12 @@ remaining execution failure to anonymous transport-pipe creation under the LUA
 test token (`ERROR_ACCESS_DENIED`). The pipe objects now use an explicit
 current-logon plus restricted-code DACL instead of the restricted token's
 ambient default DACL. A fresh protected execution remains required.
+
+Corrected pipe head run `31954380866` then proved that both private children
+start under the restricted token, but they timed out before reaching the test
+entry point. The execution fixture had retained a deliberately fake Windows
+system root used by environment-construction and identity-mutation tests. Real
+PE execution now uses the host Windows directory captured through the same
+trusted system-root boundary; fake-root tests remain separate. Product code and
+the no-parent-environment policy are unchanged. A fresh protected execution
+remains required.
