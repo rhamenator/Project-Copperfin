@@ -6,7 +6,8 @@
   authority, and the launch-promotion gate remains invariantly denied pending
   retained filesystem pins, executor consumption, sandbox, endpoint/descendant
   controls, and outcome audit. The controller must outlive each short-lived
-  lease.
+  lease. Explicit generation-owned counting and condition-variable signaling
+  support multiple same-thread leases without recursive mutex acquisition.
 
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-020` at exact signed/DCO head `4069ee487`. All eleven protected

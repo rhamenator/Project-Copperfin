@@ -8,11 +8,11 @@
 #include "copperfin/platform/process_arguments.h"
 #include "copperfin/platform/process_environment.h"
 
+#include <condition_variable>
 #include <iomanip>
 #include <limits>
 #include <locale>
 #include <memory>
-#include <shared_mutex>
 #include <sstream>
 #include <string_view>
 #include <utility>
@@ -24,20 +24,43 @@ struct WorkspaceAgentSessionRevocationLeaseState {
         const std::uint64_t generation_value)
         : generation(generation_value) {}
 
-    std::shared_mutex mutex;
+    std::mutex mutex;
+    std::condition_variable released;
     std::uint64_t generation = 0U;
     bool active = true;
+    std::size_t outstanding_leases = 0U;
 };
 
 class WorkspaceAgentSessionRevocationLease::Impl {
 public:
-    Impl(
-        std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState> state_value,
-        std::shared_lock<std::shared_mutex> lock_value)
-        : state(std::move(state_value)), lock(std::move(lock_value)) {}
+    explicit Impl(
+        std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState> state_value)
+        : state(std::move(state_value)) {}
+
+    ~Impl() {
+        if (!owns_lease || state == nullptr) {
+            return;
+        }
+        std::lock_guard lock(state->mutex);
+        --state->outstanding_leases;
+        owns_lease = false;
+        if (state->outstanding_leases == 0U) {
+            state->released.notify_all();
+        }
+    }
+
+    [[nodiscard]] bool acquire() {
+        std::lock_guard lock(state->mutex);
+        if (!state->active) {
+            return false;
+        }
+        ++state->outstanding_leases;
+        owns_lease = true;
+        return true;
+    }
 
     std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState> state;
-    std::shared_lock<std::shared_mutex> lock;
+    bool owns_lease = false;
 };
 
 WorkspaceAgentSessionRevocationLease::WorkspaceAgentSessionRevocationLease(
@@ -52,8 +75,7 @@ WorkspaceAgentSessionRevocationLease::operator=(
     WorkspaceAgentSessionRevocationLease&&) noexcept = default;
 
 bool WorkspaceAgentSessionRevocationLease::valid() const noexcept {
-    return impl_ != nullptr && impl_->lock.owns_lock() && impl_->state != nullptr &&
-        impl_->state->active;
+    return impl_ != nullptr && impl_->owns_lease && impl_->state != nullptr;
 }
 
 std::uint64_t
@@ -528,6 +550,9 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
     // boundary. The lease release path never takes the controller mutex.
     if (revocation_state != nullptr) {
         std::unique_lock revocation_lock(revocation_state->mutex);
+        revocation_state->released.wait(revocation_lock, [&revocation_state] {
+            return revocation_state->outstanding_leases == 0U;
+        });
         revocation_state->active = false;
     }
     {
@@ -1107,15 +1132,15 @@ WorkspaceAgentSessionController::acquire_process_launch_revocation_lease(
         return result;
     }
 
-    std::shared_lock revocation_lock(state->mutex);
-    if (!state->active || state->generation != session_generation) {
+    auto lease_impl =
+        std::make_unique<WorkspaceAgentSessionRevocationLease::Impl>(state);
+    if (state->generation != session_generation || !lease_impl->acquire()) {
         result.diagnostic_code =
             "workspace_agent.process_launch_lease_stale_session";
         return result;
     }
     result.lease.emplace(WorkspaceAgentSessionRevocationLease(
-        std::make_unique<WorkspaceAgentSessionRevocationLease::Impl>(
-            state, std::move(revocation_lock))));
+        std::move(lease_impl)));
     result.acquired = true;
     result.diagnostic_code =
         "workspace_agent.process_launch_revocation_lease_acquired";

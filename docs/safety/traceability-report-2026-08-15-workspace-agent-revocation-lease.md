@@ -34,9 +34,13 @@ safety-critical deployment.
 
 ## Hazard, misuse, boundary, and rollback analysis
 
-- Revocation race: the lease holds shared generation state while stop requires
-  exclusive access before it clears authority. Stop cannot report revocation
-  during the future narrow launch boundary.
+- Revocation race: each lease increments an explicit generation-owned count
+  under a mutex; releasing it decrements and signals a condition variable.
+  Stop prevents new acquisition through the controller transition, waits for
+  the count to reach zero, and only then clears authority. This avoids
+  recursively acquiring a non-recursive shared mutex when one executor thread
+  owns more than one lease. Stop cannot report revocation during the future
+  narrow launch boundary.
 - Denial of service: a leaked or overlong lease delays stop. Product code must
   retain it only around a direct launch syscall, never user interaction,
   network activity, unbounded preparation, or child lifetime.
@@ -58,11 +62,14 @@ Potential Severity If Misused: high
 Current local evidence:
 
 - warning-free GCC 15 Release workspace-agent/security selection passed
-  `13/13`, including fifty additional consecutive focused session executions;
+  `13/13`, including one hundred additional consecutive focused session
+  executions after the counted-lease correction;
 - fresh Clang 21 ASan/UBSan with leak detection passed `3/3`;
+- fresh GCC 15 ThreadSanitizer focused execution passed `1/1` after the
+  counted-lease correction;
 - repository community, native-platform workflow, GitHub Actions, isolation,
-  and safety contracts passed `5/5`, including the final-byte 337.41-second
-  safety scan;
+  and safety contracts passed `5/5`, including the corrected final-byte
+  330.80-second safety scan;
   and
 - `git diff --check` passed.
 

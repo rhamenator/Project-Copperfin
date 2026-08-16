@@ -5,6 +5,8 @@
 Candidate `RQ-CF-AGENT-022` adds a move-only, non-executing lease for the exact
 active session generation. While held, stop enters `stopping` but waits before
 revoking or committing its audit outcome; releasing the lease lets stop finish.
+Generation-owned counter/condition-variable synchronization permits multiple
+same-thread leases without recursively locking `std::shared_mutex`.
 Inactive, stale, non-process-capable, and transitioning acquisition fails
 closed. The lease exposes
 only validity and generation and is not launch authority: the existing
@@ -12,10 +14,12 @@ promotion gate remains invariantly denied, with trusted-root/executable/
 working-directory pins, executor consumption, sandbox, endpoint/descendant
 control, and outcome audit still absent. The controller must outlive its leases,
 which must bracket only the eventual direct launch syscall. The warning-free
-local GCC 15 Release workspace-agent/security selection passes `13/13`, fifty
-additional focused session repetitions pass, fresh Clang 21 ASan/UBSan/leak
-execution passes `3/3`, and the community/workflow/isolation/safety contracts
-pass `5/5`, including the final-byte 337.41-second safety scan. Protected matrix,
+local GCC 15 Release workspace-agent/security selection passes `13/13`, one
+hundred additional corrected focused session repetitions pass, fresh Clang 21
+ASan/UBSan/leak execution passes `3/3`, fresh GCC 15 ThreadSanitizer focused
+execution passes `1/1`, and the community/workflow/isolation/safety contracts
+pass `5/5`, including the corrected final-byte 330.80-second safety scan.
+Protected matrix,
 exact-head review, and high-severity sign-off evidence remain pending.
 
 ## V1 workspace-agent audited pending-layout cleanup
