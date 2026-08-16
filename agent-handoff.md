@@ -2,7 +2,7 @@
 
 ## V1 workspace-agent exact-snapshot materialization
 
-Candidate RQ-CF-AGENT-026 is the current implementation slice. It consumes one
+Candidate RQ-CF-AGENT-026 is implementation-evidence complete. It consumes one
 issuing-controller-bound opaque RQ-CF-AGENT-025 candidate and materializes only
 its immutable retained snapshot as a private native image beneath the exact
 receipted generation temp directory. POSIX immediately unlinks and retains a
@@ -27,10 +27,19 @@ native-parent bracket instead of reverting to storage/file identity alone; its
 direct mismatch regression passes. A later exact-head audit moved every opened
 parent and newly created image under immediate non-allocating RAII, so final
 object-allocation failure cannot leak native authority and POSIX unlink failure
-retries while the parent descriptor remains valid. The focused set passes 6/6
-and one hundred repeated lifecycle runs pass. Remaining work is protected Windows/
-Ubuntu/macOS checks, exact-head review, and retained final-byte evidence. Do
-not claim execution readiness: Windows needs an explicit
+retries while the parent descriptor remains valid. The exact-head focused set
+passes 6/6 and the final-byte safety contract passes 1/1 in 338.97 seconds. All
+eleven protected checks pass at exact signed/DCO head `5ecaa835c` in runs
+`31935538404`, `31935539922`, `31935539848`, `31935539856`, and
+`31935539940`, including the corrected Windows native byte observer.
+Exact-head thread audit found zero review threads; independent read review found
+no remaining RAII or resource-lifetime defect at implementation head
+`e3c8320e8`, and the later changes were test-only Windows share-contract
+corrections validated by both protected Windows workflows. PR `#5042` merged
+as `9675c6394`. Evidence-only licensing, community, isolation, supply-chain,
+and safety contracts pass 5/5, including the 347.46-second safety scan.
+Qualified high-severity documentation sign-off remains pending. Do not claim
+execution readiness: Windows needs an explicit
 immutable-handle launch transition, and POSIX/macOS descriptor execution is not
 yet established. Sandbox, working-directory entry, endpoint/descendant policy,
 and outcome audit remain separate gaps.
