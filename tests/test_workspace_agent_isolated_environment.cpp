@@ -40,6 +40,7 @@ using copperfin::security::WorkspaceAgentProcessParserDependencyContract;
 using copperfin::security::WorkspaceAgentProcessParserConfiguration;
 using copperfin::security::WorkspaceAgentProcessInvocationPreflightRequest;
 using copperfin::security::WorkspaceAgentPreparedProcessLaunch;
+using copperfin::security::WorkspaceAgentPreparedProcessLaunchResult;
 using copperfin::security::WorkspaceAgentSerializedProcessEnvironmentPreflightResult;
 using copperfin::security::WorkspaceAgentSerializedProcessInvocationPreflightResult;
 using copperfin::security::WorkspaceAgentSessionAuditCommitResult;
@@ -149,6 +150,12 @@ static_assert(
         !HasPublicExecute<WorkspaceAgentPreparedProcessLaunch> &&
         !HasPublicLaunch<WorkspaceAgentPreparedProcessLaunch>,
     "RQ-CF-AGENT-025: prepared launch candidates must remain opaque and move-only");
+static_assert(
+    std::is_nothrow_default_constructible_v<
+        WorkspaceAgentPreparedProcessLaunchResult> &&
+        std::is_nothrow_move_constructible_v<
+            WorkspaceAgentPreparedProcessLaunchResult>,
+    "RQ-CF-AGENT-025: the allocation-failure denial must require no diagnostic allocation");
 
 int failures = 0;
 std::filesystem::path running_test_executable;

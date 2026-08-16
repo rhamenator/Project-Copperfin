@@ -18,7 +18,9 @@
   pass `7/7`, including the 338.24-second safety scan. Initial exact-head review
   found and drove correction of an exception boundary that covered only final
   candidate allocation; the complete preparation sequence now converts every
-  exception to the same content-free unavailable denial under RAII cleanup.
+  exception to a default content-free denial under RAII cleanup. Corrected-head
+  rereview then found and drove removal of the pre-`try` diagnostic allocation,
+  so even failure to allocate diagnostic text cannot unwind or grant authority.
 
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-024` at corrected exact signed/DCO head `9e9d6bf18`. All eleven

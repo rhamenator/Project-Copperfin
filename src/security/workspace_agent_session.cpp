@@ -1005,8 +1005,6 @@ WorkspaceAgentPreparedProcessLaunchResult
 WorkspaceAgentSessionController::prepare_process_launch_candidate(
     const WorkspaceAgentProcessInvocationPreflightRequest& request) const {
     WorkspaceAgentPreparedProcessLaunchResult unavailable;
-    unavailable.diagnostic_code =
-        "workspace_agent.process_launch_candidate_unavailable";
     try {
         WorkspaceAgentPreparedProcessLaunchResult result;
         const auto preliminary =

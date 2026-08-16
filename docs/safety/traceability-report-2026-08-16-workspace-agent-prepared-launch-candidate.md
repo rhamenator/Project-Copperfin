@@ -50,8 +50,10 @@ critical deployment.
 - Partial construction and allocation failure: pins and the lease remain under
   move-only local RAII ownership until candidate construction succeeds. The
   complete preflight, pin, lease, revalidation, authentication, and construction
-  sequence is inside one exception boundary; any exception returns a prebuilt
-  content-free unavailable result and releases every partial resource.
+  sequence is inside one exception boundary; any exception returns a default,
+  non-allocating content-free denial and releases every partial resource. If
+  diagnostic allocation itself fails, the denial code remains empty rather
+  than unwinding or granting authority.
 - Lifetime ordering: the candidate declares the lease before pins and plan, so
   reverse member destruction discards the plan, closes pins, and releases the
   lease last.
@@ -88,6 +90,9 @@ Current local evidence:
   exception-contained; the corrected complete preparation boundary passes the
   focused Release and fifty-run lifecycle sets plus ASan/UBSan/leak and
   ThreadSanitizer `3/3` each without findings;
+- corrected-head rereview found and drove removal of the fallback's own pre-
+  boundary diagnostic allocation; compile-time contracts require the empty
+  denial to remain nothrow-default-constructible and nothrow-movable;
 - the new regression proves empty, inactive, stale, successful, moved-from,
   stop-blocking, orderly-release, and unchanged-launch-denial behavior; and
 - `git diff --check` passes.

@@ -25,7 +25,11 @@ merge, and qualified high-severity documentation evidence remain pending.
 Initial exact-head review found that the exception boundary covered only final
 candidate allocation; the corrected implementation wraps the complete
 preflight, pin, lease, revalidation, authentication, and construction sequence
-and returns the prebuilt content-free unavailable denial after any exception.
+and returns a content-free denial after any exception.
+Corrected-head rereview found that prebuilding its diagnostic string could
+itself allocate before the exception boundary. The final fallback is a
+nothrow-default-constructed and nothrow-moved empty denial; it may omit a
+diagnostic only when preparation cannot safely construct one.
 
 ## V1 workspace-agent retained executable byte authentication
 
