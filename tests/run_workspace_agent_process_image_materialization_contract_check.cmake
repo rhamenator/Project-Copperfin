@@ -93,7 +93,7 @@ foreach(token IN ITEMS
         "DRIVE_FIXED"
         "mount_manager_lists_drive_root("
         "::GetVolumePathNamesForVolumeNameW("
-        "::GetVolumeInformationW("
+        "::GetVolumeInformationByHandleW("
         "\\\\?\\\\GLOBALROOT"
         "stable_volume_root_length("
         "class ScopedPinHandleChain"
@@ -104,6 +104,8 @@ foreach(token IN ITEMS
     require_text(${process_containment_source} "${token}"
         "stable Windows working-directory binding and compatible launch authority")
 endforeach()
+forbid_text(${process_containment_source} "::GetVolumeInformationW("
+    "root-path volume query that exceeds retained restricted-token authority")
 foreach(token IN ITEMS
         "working-directory ancestor rename while retained"
         "complete working-directory hierarchy exclusions")

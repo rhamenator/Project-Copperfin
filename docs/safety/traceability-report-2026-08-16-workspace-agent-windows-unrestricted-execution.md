@@ -34,7 +34,7 @@ use.
 | `DQ-workspace-agent-windows-execution-013`: any pre-start compatibility diagnostic child shall enter the same kill-on-close Job Object atomically at creation, remain suspended, never execute user code, and retain cleanup ownership even if explicit termination fails | `DV-workspace-agent-windows-execution-003`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-014`: after protected Windows proves the stable device-form application name unsupported, a diagnostic-only DOS application name shall be derived from the authenticated handle, identity-matched under the retained stable hierarchy, and used only by a never-resumed Job-owned probe that retains the stable working directory; it shall not become an execution fallback without post-creation image binding | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-015`: after protected Windows proves the DOS application name and stable working-directory combination is accepted at creation, production creation shall use that handle-derived DOS application name only while the stable hierarchy remains retained, place the suspended child into the kill-on-close Job Object atomically, compare its kernel-reported native image name with the native device name captured from the authenticated image handle, and terminate without resume on query or binding failure | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-016`: because protected Windows proves a stable volume-device current directory can create a child but is unusable by the resumed Win32 runtime, the launch current directory shall instead be an extended DOS path derived from the authenticated directory handle. It shall be admitted only for a fixed drive listed as a drive-root assignment for the handle's volume GUID by `GetVolumePathNamesForVolumeNameW`, whose `QueryDosDeviceW` target equals the handle's native hard-disk-volume root, whose volume serial equals the authenticated storage identity, and whose DOS-path reopen under the retained stable hierarchy matches the exact authenticated directory before and after mapping validation. Network, mounted-folder-only, user-local DOS-device, `SUBST`, removable, redirected, identity-mismatched, or mapping-mismatched forms shall fail closed. | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-007`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-016`: because protected Windows proves a stable volume-device current directory can create a child but is unusable by the resumed Win32 runtime, the launch current directory shall instead be an extended DOS path derived from the authenticated directory handle. It shall be admitted only for a fixed drive listed as a drive-root assignment for the handle's volume GUID by `GetVolumePathNamesForVolumeNameW`, whose `QueryDosDeviceW` target equals the handle's native hard-disk-volume root, whose authenticated handle reports the retained storage identity through `GetVolumeInformationByHandleW` without requiring fresh drive-root traversal authority, and whose DOS-path reopen under the retained stable hierarchy matches the exact authenticated directory before and after mapping validation. Network, mounted-folder-only, user-local DOS-device, `SUBST`, removable, redirected, identity-mismatched, or mapping-mismatched forms shall fail closed. | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-007`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
   exercise one-attempt consumption, sandbox and platform denial, failed-intent
@@ -112,8 +112,9 @@ observer does not admit a writer, deleter, or renamer.
   do not work reliably from the stable device form. That DOS path is admitted
   only when the volume mount manager lists its fixed drive root for the
   handle's volume GUID, the DOS device maps to the handle's native hard-disk
-  volume, its volume serial matches the authenticated storage identity, and a DOS-path
-  reopen beneath the retained stable hierarchy matches the exact directory.
+  volume, its handle-reported volume serial matches the authenticated storage
+  identity, and a DOS-path reopen beneath the retained stable hierarchy matches
+  the exact directory.
   A non-administrator cannot redefine an existing boot-time drive name; an
   administrator remains outside this explicitly non-elevated execution
   boundary. A user-local DOS device, `SUBST`, mapped-drive, mounted-folder-only
@@ -259,3 +260,15 @@ The correction retains that device path only as hierarchy-locking authority and
 passes a separately handle-derived fixed-drive DOS path after native-device,
 mount-manager, volume-serial, and exact-directory binding checks. A corrected protected
 Windows run remains required.
+
+Corrected DOS-working-directory head `8cddbd441` then passed every adjacent
+private-image and parser regression but both protected Windows workflows failed
+before process creation because every candidate reported
+`workspace_agent.process_target_pin_identity_changed`. Inspection identified
+an unnecessary least-privilege incompatibility in the new binding: it reopened
+the drive root solely to repeat the volume-serial query even though the caller
+already retained the exact authenticated directory handle. The correction
+queries the serial through that retained handle with
+`GetVolumeInformationByHandleW`; native-device and mount-manager checks continue
+to bind the DOS drive, while least-privilege root traversal is no longer an
+unnecessary prerequisite. Corrected protected execution remains required.

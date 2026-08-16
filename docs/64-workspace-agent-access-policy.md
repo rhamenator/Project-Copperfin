@@ -906,8 +906,9 @@ current-directory operations. The child therefore receives an extended DOS
 path derived from the same authenticated directory handle. It is admitted only
 when the drive is fixed, `QueryDosDeviceW` maps it to the handle's native hard-
 disk-volume root, `GetVolumePathNamesForVolumeNameW` lists that drive root for
-the handle's volume GUID, the root volume serial matches the authenticated storage
-identity, and reopening the DOS path under the retained stable chain returns
+the handle's volume GUID, `GetVolumeInformationByHandleW` reports the retained
+storage identity from the authenticated handle without fresh root traversal,
+and reopening the DOS path under the retained stable chain returns
 the exact directory identity before and after mapping validation. Network,
 mounted-folder-only, user-local DOS-device, `SUBST`, removable, and redirected
 forms fail closed.

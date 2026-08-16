@@ -30,6 +30,15 @@ required before implementation evidence can be called complete. POSIX/macOS
 execution, real workspace sandboxing, trusted provider/UI integration,
 endpoint policy, diff/undo, and crash-recoverable audit receipts remain gaps.
 
+Exact head `8cddbd441` passed adjacent Windows private-image and parser tests
+but both protected workflows rejected target-pin preparation. Inspection found
+that the binding unnecessarily required unrelated drive-root traversal solely
+for a repeated volume-serial query despite already retaining the authenticated
+working-directory handle. The current correction uses
+`GetVolumeInformationByHandleW` on that retained handle while preserving the
+native-device, fixed-drive, mount-manager, serial, retained-hierarchy, and
+exact-directory checks. A protected rerun remains required.
+
 ## V1 workspace-agent Windows launch-handle transition
 
 Candidate `RQ-CF-AGENT-027` is implementation-evidence complete. On Windows,

@@ -694,9 +694,15 @@ bool dos_volume_binding_matches_handle(
                 TRUE) == CSTR_EQUAL &&
             ::GetDriveTypeW(drive_root.c_str()) == DRIVE_FIXED &&
             mount_manager_lists_drive_root(handle, drive_root) &&
-            ::GetVolumeInformationW(
-                drive_root.c_str(), nullptr, 0U, &volume_serial, nullptr,
-                nullptr, nullptr, 0U) != FALSE &&
+            // Read the serial through the already-authenticated directory
+            // handle. A restricted token can retain that exact authority while
+            // lacking independent traversal access to the volume root; opening
+            // the drive root again would add no mapping proof beyond the mount-
+            // manager and native-device checks above and would reject that
+            // valid least-privilege case.
+            ::GetVolumeInformationByHandleW(
+                handle, nullptr, 0U, &volume_serial, nullptr, nullptr, nullptr,
+                0U) != FALSE &&
             volume_serial == expected_storage_id;
     } catch (...) {
         return false;

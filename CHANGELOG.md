@@ -66,6 +66,13 @@
   root, volume-serial, and
   exact-directory reopen checks all bind it to that authority. Network,
   mounted-folder, `SUBST`, removable, and mismatched mappings fail closed.
+  The first corrected Windows run then rejected every candidate before launch:
+  the binding unnecessarily required extra drive-root traversal solely to
+  repeat the volume-serial query despite already retaining the authenticated
+  directory handle. Serial validation now uses
+  `GetVolumeInformationByHandleW` on that retained handle; native-device and
+  mount-manager checks continue to bind the fixed DOS drive without broadening
+  the token or weakening path admission.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,
