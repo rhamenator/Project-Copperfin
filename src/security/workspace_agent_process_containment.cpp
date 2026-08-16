@@ -88,6 +88,10 @@ public:
     [[nodiscard]] WorkspaceAgentProcessTargetAuthenticationResult
     verify_executable_bytes();
 
+    [[nodiscard]] const std::vector<std::uint8_t>& snapshot() const noexcept {
+        return executable_snapshot;
+    }
+
 private:
     static bool is_valid(HANDLE value) noexcept {
         return value != nullptr && value != INVALID_HANDLE_VALUE;
@@ -134,6 +138,10 @@ private:
 
     [[nodiscard]] WorkspaceAgentProcessTargetAuthenticationResult
     verify_executable_bytes();
+
+    [[nodiscard]] const std::vector<std::uint8_t>& snapshot() const noexcept {
+        return executable_snapshot;
+    }
 
 private:
     static void close(int value) noexcept {
@@ -182,6 +190,14 @@ bool WorkspaceAgentProcessTargetPins::matches_target_identities(
     const PhysicalPathIdentity& working_directory_identity) const noexcept {
     return impl_ != nullptr && impl_->matches_target_identities(
         executable_identity, working_directory_identity);
+}
+
+const std::vector<std::uint8_t>*
+WorkspaceAgentProcessTargetPins::executable_snapshot_for_materialization()
+    const noexcept {
+    return impl_ != nullptr && impl_->valid()
+        ? &impl_->snapshot()
+        : nullptr;
 }
 
 namespace {

@@ -29,7 +29,7 @@ inline constexpr std::size_t
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
 // RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
-// RQ-CF-AGENT-018 through RQ-CF-AGENT-025.
+// RQ-CF-AGENT-018 through RQ-CF-AGENT-026.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -314,6 +314,43 @@ struct WorkspaceAgentPreparedProcessLaunchResult {
     std::string diagnostic_code;
 };
 
+// Opaque, move-only ownership of a one-attempt prepared candidate and the
+// native executable image materialized from exactly its retained immutable
+// snapshot. It still exposes no plan, path, argument, environment, bytes,
+// digest, native handle, or execution operation. Destruction removes the image
+// before releasing the candidate's pins and exact-generation revocation lease.
+class WorkspaceAgentMaterializedProcessLaunch {
+public:
+    WorkspaceAgentMaterializedProcessLaunch();
+    ~WorkspaceAgentMaterializedProcessLaunch();
+    WorkspaceAgentMaterializedProcessLaunch(
+        WorkspaceAgentMaterializedProcessLaunch&&) noexcept;
+    WorkspaceAgentMaterializedProcessLaunch& operator=(
+        WorkspaceAgentMaterializedProcessLaunch&&) noexcept;
+    WorkspaceAgentMaterializedProcessLaunch(
+        const WorkspaceAgentMaterializedProcessLaunch&) = delete;
+    WorkspaceAgentMaterializedProcessLaunch& operator=(
+        const WorkspaceAgentMaterializedProcessLaunch&) = delete;
+
+    [[nodiscard]] bool valid() const noexcept;
+    [[nodiscard]] std::uint64_t session_generation() const noexcept;
+
+private:
+    class Impl;
+    explicit WorkspaceAgentMaterializedProcessLaunch(
+        std::unique_ptr<Impl> impl) noexcept;
+
+    std::unique_ptr<Impl> impl_;
+
+    friend class WorkspaceAgentSessionController;
+};
+
+struct WorkspaceAgentMaterializedProcessLaunchResult {
+    bool materialized = false;
+    std::optional<WorkspaceAgentMaterializedProcessLaunch> launch;
+    std::string diagnostic_code;
+};
+
 class WorkspaceAgentSessionController {
 public:
     WorkspaceAgentSessionController() = default;
@@ -443,6 +480,15 @@ public:
     prepare_process_launch_candidate(
         const WorkspaceAgentProcessInvocationPreflightRequest& request) const;
 
+    // Consumes one opaque prepared candidate even on denial. The exact retained
+    // snapshot becomes a private native executable image inside the candidate
+    // generation's identity-bound temporary directory while the existing pins
+    // and revocation lease remain held. This performs no process creation,
+    // sandbox or endpoint operation, provider callback, or outcome audit.
+    [[nodiscard]] WorkspaceAgentMaterializedProcessLaunchResult
+    materialize_process_launch_candidate(
+        WorkspaceAgentPreparedProcessLaunch candidate) const;
+
 private:
     enum class Transition {
         idle,
@@ -466,6 +512,9 @@ private:
     std::optional<WorkspaceAgentProcessParserBoundary>
         process_parser_boundary_;
     bool process_environment_configuration_supplied_ = false;
+    std::shared_ptr<const std::uint8_t> process_launch_controller_authority_ =
+        std::make_shared<const std::uint8_t>(0U);
+    mutable std::uint64_t next_materialized_process_image_ = 1U;
 };
 
 [[nodiscard]] std::string serialize_workspace_agent_session_audit_event(

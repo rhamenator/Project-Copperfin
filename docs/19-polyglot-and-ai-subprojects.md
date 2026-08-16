@@ -820,11 +820,15 @@ process targets, direct arguments, fixed non-inheriting logical and native
 environments, and private generation layout preparation without executing a
 tool. Candidate `RQ-CF-AGENT-017` also requires a conservative structural and
 native-host-compatible PE process image on Windows while leaving POSIX target
-behavior unchanged. It is not yet connected to product activation UI or an
-executor. Model/provider adapters, OAuth clients, Windows child-parser
-authority, launch-adjacent pinning, identity-aware layout cleanup, the mutable
-executor and sandbox, endpoint enforcement, outcome audit, and the user-facing
-assistant/dialog surfaces remain unimplemented.
+behavior unchanged. The later launch-adjacent boundaries now retain exact
+targets and immutable executable bytes, compose the exact plan with a
+revocation lease, and consume that opaque candidate once into a private native
+image. POSIX retains an unlinked image descriptor; Windows retains an exact
+non-write-shared handle-owned image. No process is launched, and neither native
+representation is yet claimed directly executable by the future portable
+executor. Model/provider adapters, OAuth clients, the platform launch
+transition, mutable executor and sandbox, endpoint enforcement, outcome audit,
+and the user-facing assistant/dialog surfaces remain unimplemented.
 
 ## Why This Matters
 

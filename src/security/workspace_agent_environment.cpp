@@ -160,12 +160,13 @@ bool captured_directory_matches(const CapturedDirectory& captured) {
         captured.canonical_path, captured.canonical_path);
     // Directory size, link count, and modification time are mutable namespace
     // metadata: creating a later session layout legitimately changes them on
-    // the storage root. Storage and file identity bind the directory object;
-    // the physical inspection and type check continue to reject redirection,
-    // replacement, and wrong-kind targets.
+    // the storage root. Stable creation identity closes rapid storage/file-ID
+    // reuse without treating those mutable fields as object identity.
     if (!current.allowed ||
         current.identity.storage_id != captured.identity.storage_id ||
-        current.identity.file_id != captured.identity.file_id) {
+        current.identity.file_id != captured.identity.file_id ||
+        captured.identity.creation_ticks == 0U ||
+        current.identity.creation_ticks != captured.identity.creation_ticks) {
         return false;
     }
     std::error_code error;
@@ -176,6 +177,15 @@ bool captured_private_directory_matches(const CapturedDirectory& captured) {
     return captured_directory_matches(captured) &&
         copperfin::platform::verify_private_directory(
             captured.canonical_path).ok;
+}
+
+bool same_directory_object(
+    const PhysicalPathIdentity& left,
+    const PhysicalPathIdentity& right) noexcept {
+    return left.storage_id == right.storage_id &&
+        left.file_id == right.file_id &&
+        left.creation_ticks != 0U &&
+        left.creation_ticks == right.creation_ticks;
 }
 
 std::string_view configured_directory_identity_failure(
@@ -346,6 +356,30 @@ workspace_agent_process_environment_host_platform() noexcept {
 #else
     return WorkspaceAgentProcessEnvironmentPlatform::posix_v1;
 #endif
+}
+
+WorkspaceAgentMaterializedProcessImage::WorkspaceAgentMaterializedProcessImage(
+    const std::uint64_t session_generation,
+    copperfin::platform::PrivateExecutableImage image) noexcept
+    : session_generation_(session_generation), image_(std::move(image)) {}
+
+WorkspaceAgentMaterializedProcessImage::WorkspaceAgentMaterializedProcessImage() =
+    default;
+WorkspaceAgentMaterializedProcessImage::~WorkspaceAgentMaterializedProcessImage() =
+    default;
+WorkspaceAgentMaterializedProcessImage::WorkspaceAgentMaterializedProcessImage(
+    WorkspaceAgentMaterializedProcessImage&&) noexcept = default;
+WorkspaceAgentMaterializedProcessImage&
+WorkspaceAgentMaterializedProcessImage::operator=(
+    WorkspaceAgentMaterializedProcessImage&&) noexcept = default;
+
+bool WorkspaceAgentMaterializedProcessImage::valid() const noexcept {
+    return session_generation_ != 0U && image_.valid();
+}
+
+std::uint64_t
+WorkspaceAgentMaterializedProcessImage::session_generation() const noexcept {
+    return valid() ? session_generation_ : 0U;
 }
 
 WorkspaceAgentIsolatedEnvironmentBoundary::WorkspaceAgentIsolatedEnvironmentBoundary(
@@ -578,7 +612,9 @@ WorkspaceAgentIsolatedEnvironmentBoundary::cleanup_empty_session_layout(
     const auto captured_session = capture_contained_directory(
         session_root, session_storage_root_);
     if (!captured_session.has_value() ||
-        captured_session->identity != receipt->session_directory_identity) {
+        !same_directory_object(
+            captured_session->identity,
+            receipt->session_directory_identity)) {
         result.diagnostic_code =
             "workspace_agent.environment_session_layout_cleanup_identity_changed";
         return result;
@@ -589,8 +625,9 @@ WorkspaceAgentIsolatedEnvironmentBoundary::cleanup_empty_session_layout(
             session_root / session_layout_child_names[index],
             session_storage_root_);
         if (!captured_child.has_value() ||
-            captured_child->identity !=
-                receipt->child_directory_identities[index]) {
+            !same_directory_object(
+                captured_child->identity,
+                receipt->child_directory_identities[index])) {
             result.diagnostic_code =
                 "workspace_agent.environment_session_layout_cleanup_identity_changed";
             return result;
@@ -635,6 +672,100 @@ WorkspaceAgentIsolatedEnvironmentBoundary::cleanup_empty_session_layout(
     result.diagnostic_code =
         "workspace_agent.environment_session_layout_cleaned";
     return result;
+}
+
+WorkspaceAgentProcessImageMaterializationResult
+WorkspaceAgentIsolatedEnvironmentBoundary::materialize_process_image(
+    const WorkspaceAgentSessionLayoutPreparationResult& preparation,
+    const std::uint64_t image_ordinal,
+    const std::span<const std::uint8_t> snapshot) const {
+    WorkspaceAgentProcessImageMaterializationResult result;
+    try {
+        const auto receipt = preparation.cleanup_receipt_;
+        if (!preparation.prepared || preparation.session_generation == 0U ||
+            image_ordinal == 0U || snapshot.empty() || !receipt ||
+            receipt->session_generation != preparation.session_generation ||
+            receipt->boundary_authority != cleanup_authority_) {
+            result.diagnostic_code =
+                "workspace_agent.process_image_invalid_authority";
+            return result;
+        }
+        if (!captured_private_directory_matches(session_storage_root_)) {
+            result.diagnostic_code =
+                "workspace_agent.environment_storage_root_identity_changed";
+            return result;
+        }
+        const std::string session_name =
+            session_directory_name(preparation.session_generation);
+        std::array<char, std::numeric_limits<std::uint64_t>::digits10 + 2U>
+            ordinal_digits{};
+        const auto converted = std::to_chars(
+            ordinal_digits.data(),
+            ordinal_digits.data() + ordinal_digits.size(), image_ordinal);
+        if (session_name.empty() || converted.ec != std::errc{}) {
+            result.diagnostic_code =
+                "workspace_agent.process_image_invalid_authority";
+            return result;
+        }
+        const std::filesystem::path session_root =
+            session_storage_root_.canonical_path / session_name;
+        const std::filesystem::path temporary = session_root / "temp";
+        const auto& temporary_identity = receipt->child_directory_identities[1U];
+        const auto captured_temporary = capture_contained_directory(
+            temporary, session_storage_root_);
+        if (!captured_temporary.has_value() ||
+            !same_directory_object(
+                captured_temporary->identity, temporary_identity)) {
+            result.diagnostic_code =
+                "workspace_agent.process_image_parent_identity_changed";
+            return result;
+        }
+        std::string leaf = "copperfin-agent-image-";
+        leaf.append(ordinal_digits.data(), converted.ptr);
+#if defined(_WIN32)
+        leaf += ".exe";
+#else
+        leaf += ".bin";
+#endif
+        auto materialized =
+            copperfin::platform::
+                materialize_private_executable_image_in_verified_parent(
+                    temporary,
+                    temporary_identity.storage_id,
+                    temporary_identity.file_id,
+                    temporary_identity.creation_ticks,
+                    std::filesystem::path(leaf), snapshot);
+        if (!materialized.materialized || !materialized.image.has_value() ||
+            !materialized.image->valid()) {
+            result.diagnostic_code =
+                materialized.failure ==
+                        copperfin::platform::
+                            PrivateExecutableImageFailure::already_exists
+                    ? "workspace_agent.process_image_name_collision"
+                    : materialized.failure ==
+                              copperfin::platform::
+                                  PrivateExecutableImageFailure::
+                                      parent_identity_changed
+                        ? "workspace_agent.process_image_parent_identity_changed"
+                        : "workspace_agent.process_image_materialization_failed";
+            return result;
+        }
+        WorkspaceAgentMaterializedProcessImage image(
+            preparation.session_generation, std::move(*materialized.image));
+        if (!image.valid()) {
+            result.diagnostic_code =
+                "workspace_agent.process_image_materialization_failed";
+            return result;
+        }
+        result.image.emplace(std::move(image));
+        result.materialized = true;
+        result.session_generation = preparation.session_generation;
+        result.diagnostic_code =
+            "workspace_agent.process_image_materialized";
+        return result;
+    } catch (...) {
+        return result;
+    }
 }
 
 WorkspaceAgentIsolatedEnvironmentConstruction

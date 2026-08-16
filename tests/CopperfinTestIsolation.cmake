@@ -364,6 +364,17 @@ function(copperfin_configure_native_test_isolation)
         PLATFORM portable
         AUDIT complete
     )
+    copperfin_set_test_isolation(test_workspace_agent_process_image_materialization_contract
+        PARALLEL_SAFE
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        RESOURCES none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
     copperfin_set_test_isolation(test_platform_environment_boundary_contract
         PARALLEL_SAFE
         FILESYSTEM read-only

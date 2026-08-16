@@ -496,10 +496,15 @@ private snapshot, and can reverify only that snapshot without exposing its
 bytes, digest, or handle. Candidate `RQ-CF-AGENT-025` now constructs the exact
 serialized plan inside the trusted controller and composes it with authenticated
 pins and the exact-generation lease behind one opaque move-only candidate after
-a complete final revalidation. An allow path remains unavailable until an
-executor consumes exactly that candidate's private snapshot and plan through
-direct launch with the remaining sandbox, endpoint/descendant, and outcome-
-audit controls.
+a complete final revalidation. Candidate `RQ-CF-AGENT-026` consumes that
+candidate once, privately materializes only its retained snapshot beneath the
+exact receipted generation temp directory, and keeps the plan, pins, and lease
+live until the image is destroyed. POSIX retains an unlinked descriptor;
+Windows retains a non-write-shared handle-owned file. Neither representation is
+yet claimed directly launchable. An allow path remains unavailable until a
+portable executor consumes exactly that private image and plan through a
+verified platform launch transition with the remaining sandbox,
+endpoint/descendant, and outcome-audit controls.
 Candidate `RQ-CF-AGENT-020` now returns exact session/child identities from
 successful preparation and exposes a separate trusted-host primitive that
 removes only that exact empty layout. It is intentionally disconnected from
@@ -509,7 +514,7 @@ descriptor verification followed by name-based `unlinkat` also retains a
 documented same-authority leaf-name race.
 Broader model/
 provider policy, OAuth and credential adapters, trusted-host audit-backed
-lifecycle cleanup, exact-snapshot materialization and execution, endpoint
+lifecycle cleanup, exact-snapshot execution and platform launch transition, endpoint
 policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog
 surfaces remain open.

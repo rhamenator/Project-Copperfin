@@ -169,7 +169,10 @@ std::optional<PhysicalPathIdentity> read_direct_identity(
         .modified_ticks =
             (static_cast<std::uint64_t>(information.ftLastWriteTime.dwHighDateTime) << 32U) |
             information.ftLastWriteTime.dwLowDateTime,
-        .link_count = information.nNumberOfLinks
+        .link_count = information.nNumberOfLinks,
+        .creation_ticks =
+            (static_cast<std::uint64_t>(information.ftCreationTime.dwHighDateTime) << 32U) |
+            information.ftCreationTime.dwLowDateTime
     };
 #else
     struct stat status{};
@@ -180,17 +183,37 @@ std::optional<PhysicalPathIdentity> read_direct_identity(
     const std::uint64_t modified_ticks =
         static_cast<std::uint64_t>(status.st_mtimespec.tv_sec) * 1'000'000'000ULL +
         static_cast<std::uint64_t>(status.st_mtimespec.tv_nsec);
+    const std::uint64_t creation_ticks =
+        static_cast<std::uint64_t>(status.st_birthtimespec.tv_sec) *
+            1'000'000'000ULL +
+        static_cast<std::uint64_t>(status.st_birthtimespec.tv_nsec);
 #else
     const std::uint64_t modified_ticks =
         static_cast<std::uint64_t>(status.st_mtim.tv_sec) * 1'000'000'000ULL +
         static_cast<std::uint64_t>(status.st_mtim.tv_nsec);
+    std::uint64_t creation_ticks = 0U;
+#if defined(__linux__) && defined(STATX_BTIME)
+    struct statx extended_status {};
+    if (::statx(
+            AT_FDCWD, path.c_str(), AT_SYMLINK_NOFOLLOW, STATX_BTIME,
+            &extended_status) == 0 &&
+        (extended_status.stx_mask & STATX_BTIME) != 0U &&
+        extended_status.stx_btime.tv_sec >= 0 &&
+        extended_status.stx_btime.tv_nsec < 1'000'000'000U) {
+        creation_ticks =
+            static_cast<std::uint64_t>(extended_status.stx_btime.tv_sec) *
+                1'000'000'000ULL +
+            extended_status.stx_btime.tv_nsec;
+    }
+#endif
 #endif
     return PhysicalPathIdentity{
         .storage_id = static_cast<std::uint64_t>(status.st_dev),
         .file_id = static_cast<std::uint64_t>(status.st_ino),
         .file_size = static_cast<std::uint64_t>(status.st_size),
         .modified_ticks = modified_ticks,
-        .link_count = static_cast<std::uint64_t>(status.st_nlink)
+        .link_count = static_cast<std::uint64_t>(status.st_nlink),
+        .creation_ticks = creation_ticks
     };
 #endif
 }

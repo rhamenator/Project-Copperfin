@@ -3,18 +3,22 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/platform/private_directory.h"
+#include "copperfin/platform/private_executable_image.h"
 
 #include <chrono>
 #include <cerrno>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
+#include <vector>
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
+#include <fcntl.h>
 #include <sys/stat.h>
 #if defined(__APPLE__)
 #include <membership.h>
@@ -34,6 +38,8 @@ using copperfin::platform::create_private_directory;
 using copperfin::platform::create_private_directory_in_verified_parent;
 using copperfin::platform::remove_empty_private_directory_in_verified_parent;
 using copperfin::platform::verify_private_directory;
+using copperfin::platform::PrivateExecutableImageFailure;
+using copperfin::platform::materialize_private_executable_image_in_verified_parent;
 
 int failures = 0;
 
@@ -73,6 +79,7 @@ public:
 struct TestDirectoryIdentity {
     std::uint64_t storage_id = 0U;
     std::uint64_t file_id = 0U;
+    std::uint64_t creation_ticks = 0U;
 };
 
 TestDirectoryIdentity directory_identity(const std::filesystem::path& path) {
@@ -96,15 +103,44 @@ TestDirectoryIdentity directory_identity(const std::filesystem::path& path) {
         .storage_id = information.dwVolumeSerialNumber,
         .file_id =
             (static_cast<std::uint64_t>(information.nFileIndexHigh) << 32U) |
-            information.nFileIndexLow};
+            information.nFileIndexLow,
+        .creation_ticks =
+            (static_cast<std::uint64_t>(
+                 information.ftCreationTime.dwHighDateTime) << 32U) |
+            information.ftCreationTime.dwLowDateTime};
 #else
     struct stat status{};
     if (::stat(path.c_str(), &status) != 0) {
         return {};
     }
+    std::uint64_t creation_ticks = 0U;
+#if defined(__APPLE__)
+    if (status.st_birthtimespec.tv_sec >= 0 &&
+        status.st_birthtimespec.tv_nsec >= 0 &&
+        status.st_birthtimespec.tv_nsec < 1'000'000'000L) {
+        creation_ticks =
+            static_cast<std::uint64_t>(status.st_birthtimespec.tv_sec) *
+                1'000'000'000ULL +
+            static_cast<std::uint64_t>(status.st_birthtimespec.tv_nsec);
+    }
+#elif defined(__linux__) && defined(STATX_BTIME)
+    struct statx extended_status {};
+    if (::statx(
+            AT_FDCWD, path.c_str(), AT_SYMLINK_NOFOLLOW, STATX_BTIME,
+            &extended_status) == 0 &&
+        (extended_status.stx_mask & STATX_BTIME) != 0U &&
+        extended_status.stx_btime.tv_sec >= 0 &&
+        extended_status.stx_btime.tv_nsec < 1'000'000'000U) {
+        creation_ticks =
+            static_cast<std::uint64_t>(extended_status.stx_btime.tv_sec) *
+                1'000'000'000ULL +
+            extended_status.stx_btime.tv_nsec;
+    }
+#endif
     return {
         .storage_id = static_cast<std::uint64_t>(status.st_dev),
-        .file_id = static_cast<std::uint64_t>(status.st_ino)};
+        .file_id = static_cast<std::uint64_t>(status.st_ino),
+        .creation_ticks = creation_ticks};
 #endif
 }
 
@@ -352,11 +388,114 @@ void test_invalid_and_wrong_kind_inputs() {
     }
 }
 
+void test_exact_private_executable_image_materialization() {
+    TempTree tree;
+    const auto private_root = tree.root / "image-root";
+    const auto created = create_private_directory(private_root);
+    expect(created.ok,
+           "RQ-CF-AGENT-026: the image fixture must create a private parent");
+    if (!created.ok) {
+        return;
+    }
+    const auto identity = directory_identity(private_root);
+#if defined(_WIN32)
+    const std::filesystem::path leaf = "copperfin-image-1.exe";
+#else
+    const std::filesystem::path leaf = "copperfin-image-1.bin";
+#endif
+    const std::vector<std::uint8_t> bytes{
+        0x43U, 0x6fU, 0x70U, 0x70U, 0x65U, 0x72U, 0x66U, 0x69U, 0x6eU};
+    auto materialized =
+        materialize_private_executable_image_in_verified_parent(
+            private_root, identity.storage_id, identity.file_id,
+            identity.creation_ticks, leaf, bytes);
+    expect(materialized.materialized && materialized.image.has_value() &&
+               materialized.image->valid() &&
+               materialized.failure == PrivateExecutableImageFailure::none,
+           "RQ-CF-AGENT-026: exact bytes must become one owned executable image");
+#if defined(_WIN32)
+    const HANDLE retained_reader = ::CreateFileW(
+        (private_root / leaf).c_str(), GENERIC_READ,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+    LARGE_INTEGER retained_size{};
+    std::vector<std::uint8_t> retained_bytes(bytes.size());
+    DWORD retained_read = 0U;
+    const bool retained_exact =
+        retained_reader != INVALID_HANDLE_VALUE &&
+        ::GetFileSizeEx(retained_reader, &retained_size) != FALSE &&
+        retained_size.QuadPart == static_cast<LONGLONG>(bytes.size()) &&
+        ::ReadFile(
+            retained_reader, retained_bytes.data(),
+            static_cast<DWORD>(retained_bytes.size()), &retained_read,
+            nullptr) != FALSE &&
+        retained_read == retained_bytes.size() && retained_bytes == bytes;
+    expect(retained_exact,
+           "RQ-CF-AGENT-026: the retained Windows image must contain only the supplied bytes");
+    if (retained_reader != INVALID_HANDLE_VALUE) {
+        (void)::CloseHandle(retained_reader);
+    }
+    const HANDLE denied_writer = ::CreateFileW(
+        (private_root / leaf).c_str(), GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    expect(denied_writer == INVALID_HANDLE_VALUE,
+           "RQ-CF-AGENT-026: a live Windows image must deny cooperating writers");
+    if (denied_writer != INVALID_HANDLE_VALUE) {
+        (void)::CloseHandle(denied_writer);
+    }
+#else
+    expect(!std::filesystem::exists(private_root / leaf),
+           "RQ-CF-AGENT-026: a POSIX image must leave no mutable pathname after creation");
+#endif
+    materialized.image.reset();
+    expect(!std::filesystem::exists(private_root / leaf),
+           "RQ-CF-AGENT-026: image destruction must remove the exact retained object");
+
+    const auto wrong_parent =
+        materialize_private_executable_image_in_verified_parent(
+            private_root, identity.storage_id, identity.file_id ^ 1U,
+            identity.creation_ticks, "wrong-parent-image", bytes);
+    expect(!wrong_parent.materialized && !wrong_parent.image.has_value() &&
+               wrong_parent.failure ==
+                   PrivateExecutableImageFailure::parent_identity_changed &&
+               !std::filesystem::exists(private_root / "wrong-parent-image"),
+           "RQ-CF-AGENT-026: parent replacement must fail before image creation");
+
+    const auto wrong_creation =
+        materialize_private_executable_image_in_verified_parent(
+            private_root, identity.storage_id, identity.file_id,
+            identity.creation_ticks ^ 1U, "wrong-creation-image", bytes);
+    expect(!wrong_creation.materialized && !wrong_creation.image.has_value() &&
+               wrong_creation.failure ==
+                   PrivateExecutableImageFailure::parent_identity_changed &&
+               !std::filesystem::exists(
+                   private_root / "wrong-creation-image"),
+           "RQ-CF-AGENT-026: parent creation-identity mismatch must fail before image creation");
+
+    const auto existing = private_root / "existing-image";
+    std::ofstream(existing, std::ios::binary) << "preserve";
+    const auto collision =
+        materialize_private_executable_image_in_verified_parent(
+            private_root, identity.storage_id, identity.file_id,
+            identity.creation_ticks, "existing-image", bytes);
+    std::ifstream preserved(existing, std::ios::binary);
+    const std::string preserved_text{
+        std::istreambuf_iterator<char>(preserved),
+        std::istreambuf_iterator<char>()};
+    expect(!collision.materialized && !collision.image.has_value() &&
+               collision.failure == PrivateExecutableImageFailure::already_exists &&
+               preserved_text == "preserve",
+           "RQ-CF-AGENT-026: an existing leaf must be preserved rather than adopted or overwritten");
+}
+
 }  // namespace
 
 int main() {
     test_creation_and_verification();
     test_invalid_and_wrong_kind_inputs();
+    test_exact_private_executable_image_materialization();
     if (failures != 0) {
         std::cerr << failures << " private-directory checks failed\n";
         return 1;

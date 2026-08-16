@@ -1,3 +1,35 @@
+- 2026-08-16: Added candidate RQ-CF-AGENT-026, a one-attempt,
+  non-executing exact-snapshot materialization boundary. The trusted controller
+  now consumes only its own opaque prepared candidate, reauthenticates the
+  retained immutable executable snapshot, and creates one private native image
+  beneath the exact receipted generation temp directory while retaining the
+  serialized plan, target pins, and revocation lease. POSIX unlinks the image
+  before success and retains its descriptor; Windows retains the exclusive
+  handle-owned file and removes it during destruction. The move-only result
+  exposes no path, bytes, digest, native handle, plan, or execution operation.
+  Cross-controller, changed-parent, existing-leaf, verification, and allocation
+  failures remain fail closed. Focused GCC Release behavior and machine
+  contracts, fifty repeated lifecycle runs, ASan/UBSan/leak at 3/3,
+  ThreadSanitizer at 2/2, and the broader workspace-agent set at 11/11 pass
+  locally. The initial 339.49-second safety scan also passes; its only broader-
+  sweep finding was missing isolation metadata for the new machine contract,
+  corrected before its direct 2/2 rerun. The first protected Ubuntu run then
+  proved that a rapidly recreated directory can reuse the same device/inode;
+  cleanup and materialization now also require immutable platform creation
+  identity while allowing legitimate modification-time changes. A subsequent
+  exact-head audit found that the lower materialization primitive initially
+  bracketed creation with storage/file identity only; it now carries and
+  rechecks the same nonzero creation identity through the retained native
+  parent object, with direct mismatch coverage. A further exact-head audit
+  found raw native resources between open/create and final object allocation;
+  non-allocating RAII now owns parent and image authority immediately, retries
+  POSIX cleanup while the parent descriptor remains live, and transfers the
+  image only after final allocation succeeds. The corrected focused set and one
+  hundred repeated lifecycle runs pass locally. Portable
+  launch transition, sandbox, endpoint/
+  descendant policy, outcome audit, protected-platform evidence, and qualified
+  high-severity review remain open.
+
 - 2026-08-16: Completed implementation evidence for candidate
   `RQ-CF-AGENT-025` at corrected exact signed/DCO head `628cedc5b`. Initial
   review found that only final candidate construction was exception-contained;

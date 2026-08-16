@@ -11,6 +11,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace copperfin::security {
 
@@ -76,6 +77,9 @@ private:
     [[nodiscard]] bool matches_target_identities(
         const PhysicalPathIdentity& executable_identity,
         const PhysicalPathIdentity& working_directory_identity) const noexcept;
+
+    [[nodiscard]] const std::vector<std::uint8_t>*
+    executable_snapshot_for_materialization() const noexcept;
 
     std::unique_ptr<Impl> impl_;
 

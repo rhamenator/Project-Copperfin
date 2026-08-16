@@ -4958,6 +4958,13 @@ add_test(
 )
 
 add_test(
+    NAME test_workspace_agent_process_image_materialization_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_workspace_agent_process_image_materialization_contract_check.cmake
+)
+
+add_test(
     NAME test_platform_file_stream_boundary_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
