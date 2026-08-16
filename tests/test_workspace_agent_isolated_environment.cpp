@@ -1247,6 +1247,53 @@ void test_process_intent_audit_reentrant_stop_is_denied() {
            "RQ-CF-AGENT-028: denied reentrant stop must preserve a later explicit revocation and cleanup");
 }
 
+void test_process_cancellation_reentrant_stop_is_denied() {
+#if defined(_WIN32)
+    TempTree tree;
+    WorkspaceAgentSessionController controller(
+        tree.workspace, tree.configuration(), tree.parser_configuration());
+    const auto started = controller.start(
+        unrestricted_activation_request(), audit_sink());
+    auto prepared = controller.prepare_process_launch_candidate(
+        execution_invocation_request(started.session.generation));
+    if (!prepared.candidate.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: reentrant-cancellation fixture must prepare one candidate");
+        return;
+    }
+    auto materialized = controller.materialize_process_launch_candidate(
+        std::move(*prepared.candidate));
+    if (!materialized.launch.has_value()) {
+        expect(false,
+               "RQ-CF-AGENT-028: reentrant-cancellation fixture must materialize one image");
+        return;
+    }
+
+    bool stop_attempted = false;
+    copperfin::security::WorkspaceAgentSessionStopResult stop_result;
+    WorkspaceAgentProcessExecutionControls controls;
+    controls.cancellation_requested = [&] {
+        stop_attempted = true;
+        stop_result = controller.stop(audit_sink());
+        return true;
+    };
+    const auto executed = controller.execute_materialized_process_launch(
+        std::move(*materialized.launch), controls, audit_sink());
+    expect(stop_attempted && !stop_result.revoked &&
+               stop_result.diagnostic_code ==
+                   "workspace_agent.session_reentrant_cancellation_transition_denied" &&
+               stop_result.session.active && executed.attempted &&
+               executed.process.status ==
+                   copperfin::platform::BoundedProcessStatus::cancelled &&
+               executed.intent_audit_committed &&
+               executed.outcome_audit_committed,
+           "RQ-CF-AGENT-028: a cancellation callback must not wait on its own retained launch lease through reentrant stop");
+    expect(controller.stop(audit_sink()).revoked &&
+               controller.cleanup_pending_session_layout(audit_sink()).cleaned,
+           "RQ-CF-AGENT-028: denied cancellation reentry must preserve later revocation and cleanup");
+#endif
+}
+
 void test_process_intent_audit_allows_concurrent_stop_to_revoke() {
     TempTree tree;
     WorkspaceAgentSessionController controller(
@@ -2150,6 +2197,7 @@ int main(int argc, char** argv) {
     test_materialized_execution_is_windows_unrestricted_and_audited();
     test_committed_execution_releases_revocation_lease_before_child_exit();
     test_process_intent_audit_reentrant_stop_is_denied();
+    test_process_cancellation_reentrant_stop_is_denied();
     test_process_intent_audit_allows_concurrent_stop_to_revoke();
     test_windows_serialization_requires_exact_parser_authority();
     test_secure_generation_layout_preparation();

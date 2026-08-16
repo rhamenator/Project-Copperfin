@@ -11,6 +11,9 @@
   working-directory DLL dependencies remain denied until authenticated closure
   exists, and rejects same-thread controller lifecycle reentry from synchronous
   audit callbacks without denying ordinary concurrent revocation. A later
+  review applies the same thread-local denial to cancellation callbacks, so a
+  pre-commit cancellation poll cannot synchronously stop the controller and
+  wait on its own retained launch lease. Another
   exact-head review found that retaining only the authenticated file
   handle did not prevent an ancestor directory rename from redirecting the
   path reopened by `CreateProcessW`. The private image now retains no-delete-

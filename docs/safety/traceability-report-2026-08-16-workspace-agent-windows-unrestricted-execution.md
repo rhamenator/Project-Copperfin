@@ -26,7 +26,7 @@ use.
 | `DQ-workspace-agent-windows-execution-005`: Job Object assignment shall commit launch and release the exact-generation lease so stop can revoke before a long-running child exits, while the private image remains owned until the process tree closes | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-006`: workspace-sandbox, stale or cross-controller authority, invalid controls, elevated or unknown elevation, and non-Windows hosts shall consume the attempt and fail closed without execution; the public promotion gate shall remain denied | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-007`: admitted images shall attest launch-wide system-only dependency behavior; the private image shall not fall back to mutable source-adjacent or working-directory DLLs | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-004` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-008`: same-controller lifecycle reentry on a synchronous audit callback's own thread shall fail closed without waiting on that stack's revocation lease; unrelated concurrent stop shall retain normal revocation semantics | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-005` | `HZ-system-failure-01` |
+| `DQ-workspace-agent-windows-execution-008`: same-controller lifecycle reentry on a synchronous audit or cancellation callback's own thread shall fail closed without waiting on that stack's revocation lease; unrelated concurrent stop shall retain normal revocation semantics | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-005` | `HZ-system-failure-01` |
 | `DQ-workspace-agent-windows-execution-009`: every Windows directory component from the volume root through the private image parent shall remain held without delete sharing through process completion, and a final pathname reopen under that retained chain shall match the authenticated image identity before launch | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
@@ -48,8 +48,10 @@ use.
   attestation and reject absent or unknown dependency contracts.
 - `DV-workspace-agent-windows-execution-005`: a synchronous intent-audit sink
   attempts same-controller `stop()`; the call is denied without deadlock and a
-  later ordinary stop and cleanup succeed. A distinct slow-intent fixture proves
-  an unrelated thread's stop waits and then revokes instead of being denied.
+  later ordinary stop and cleanup succeed. A cancellation callback performs the
+  same reentrant stop attempt before process creation and must receive its own
+  stable denial without deadlock. A distinct slow-intent fixture proves an
+  unrelated thread's stop waits and then revokes instead of being denied.
 - `DV-workspace-agent-windows-execution-006`: the Windows private-image
   regression attempts to rename and replace an image ancestor while the opaque
   image remains live and requires denial, then requires rename to succeed after
@@ -95,10 +97,11 @@ use.
   prompts, credentials, receipts, and native errors are excluded. Outcome-audit
   failure remains visible but cannot retroactively stop a completed attempt.
   Crash-recoverable intent reconciliation is not yet implemented.
-- Audit-callback reentry: same-controller lifecycle changes on the callback's
-  own thread are not supported. They fail closed immediately, preventing that
-  callback from waiting on its own process-intent lease. Thread-local tracking
-  preserves ordinary concurrent stop, which waits and then revokes normally.
+- Callback reentry: same-controller lifecycle changes from an audit or
+  cancellation callback's own thread are not supported. They fail closed
+  immediately, preventing either callback from waiting on its own retained
+  launch lease. Thread-local tracking preserves ordinary concurrent stop,
+  which waits and then revokes normally.
 - Rollback: revert RQ-028's controller method, private bounded-process seam,
   schema-v2 process-audit validation, regressions, and this documentation
   together. RQ-025 through RQ-027 then remain safe non-executing prerequisites,

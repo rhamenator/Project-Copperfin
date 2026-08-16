@@ -202,45 +202,58 @@ struct AuditOutcome {
     std::string receipt;
 };
 
-class AuditCallbackScope;
-thread_local const AuditCallbackScope* active_audit_scope = nullptr;
+enum class ControllerCallbackKind : std::uint32_t {
+    audit,
+    cancellation
+};
 
-class AuditCallbackScope {
+class ControllerCallbackScope;
+thread_local const ControllerCallbackScope* active_controller_callback_scope =
+    nullptr;
+
+class ControllerCallbackScope {
 public:
-    explicit AuditCallbackScope(
-        const WorkspaceAgentSessionController* controller) noexcept
-        : controller_(controller), previous_(active_audit_scope) {
-        active_audit_scope = this;
+    ControllerCallbackScope(
+        const WorkspaceAgentSessionController* controller,
+        const ControllerCallbackKind kind) noexcept
+        : controller_(controller),
+          kind_(kind),
+          previous_(active_controller_callback_scope) {
+        active_controller_callback_scope = this;
     }
-    ~AuditCallbackScope() { active_audit_scope = previous_; }
-    AuditCallbackScope(const AuditCallbackScope&) = delete;
-    AuditCallbackScope& operator=(const AuditCallbackScope&) = delete;
+    ~ControllerCallbackScope() {
+        active_controller_callback_scope = previous_;
+    }
+    ControllerCallbackScope(const ControllerCallbackScope&) = delete;
+    ControllerCallbackScope& operator=(const ControllerCallbackScope&) = delete;
 
     [[nodiscard]] const WorkspaceAgentSessionController* controller()
         const noexcept {
         return controller_;
     }
-    [[nodiscard]] const AuditCallbackScope* previous() const noexcept {
+    [[nodiscard]] ControllerCallbackKind kind() const noexcept { return kind_; }
+    [[nodiscard]] const ControllerCallbackScope* previous() const noexcept {
         return previous_;
     }
 
 private:
     const WorkspaceAgentSessionController* controller_ = nullptr;
-    const AuditCallbackScope* previous_ = nullptr;
+    ControllerCallbackKind kind_ = ControllerCallbackKind::audit;
+    const ControllerCallbackScope* previous_ = nullptr;
 };
 
-bool audit_callback_active_for(
+std::optional<ControllerCallbackKind> controller_callback_active_for(
     const WorkspaceAgentSessionController* controller) noexcept {
     if (controller == nullptr) {
-        return false;
+        return std::nullopt;
     }
-    for (const AuditCallbackScope* scope = active_audit_scope;
+    for (const ControllerCallbackScope* scope = active_controller_callback_scope;
          scope != nullptr; scope = scope->previous()) {
         if (scope->controller() == controller) {
-            return true;
+            return scope->kind();
         }
     }
-    return false;
+    return std::nullopt;
 }
 
 AuditOutcome commit_audit_event(
@@ -250,7 +263,8 @@ AuditOutcome commit_audit_event(
     WorkspaceAgentSessionAuditCommitResult result;
     if (sink.commit != nullptr) {
         try {
-            const AuditCallbackScope audit_scope(controller);
+            const ControllerCallbackScope audit_scope(
+                controller, ControllerCallbackKind::audit);
             result = sink.commit(event, sink.context);
         } catch (...) {
             result = {};
@@ -721,10 +735,13 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
 
 WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
     const WorkspaceAgentSessionAuditSink& audit_sink) {
-    if (audit_callback_active_for(this)) {
+    const auto active_callback = controller_callback_active_for(this);
+    if (active_callback.has_value()) {
         WorkspaceAgentSessionStopResult result;
         result.diagnostic_code =
-            "workspace_agent.session_reentrant_audit_transition_denied";
+            *active_callback == ControllerCallbackKind::cancellation
+            ? "workspace_agent.session_reentrant_cancellation_transition_denied"
+            : "workspace_agent.session_reentrant_audit_transition_denied";
         std::lock_guard lock(mutex_);
         result.session = active_session_;
         return result;
@@ -1423,8 +1440,15 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             native_request.transport.stdin_limit_bytes = controls.stdin_limit_bytes;
             native_request.transport.stdout_limit_bytes = controls.stdout_limit_bytes;
             native_request.transport.stderr_limit_bytes = controls.stderr_limit_bytes;
-            native_request.transport.cancellation_requested =
-                controls.cancellation_requested;
+            if (controls.cancellation_requested) {
+                native_request.transport.cancellation_requested =
+                    [controller = this,
+                     callback = controls.cancellation_requested]() {
+                        const ControllerCallbackScope cancellation_scope(
+                            controller, ControllerCallbackKind::cancellation);
+                        return callback();
+                    };
+            }
             native_request.launch_committed = [](void* context) noexcept {
                 auto* retained = static_cast<WorkspaceAgentMaterializedProcessLaunch*>(
                     context);

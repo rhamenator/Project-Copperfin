@@ -192,6 +192,7 @@ foreach(token IN ITEMS
         "WorkspaceAgentSessionEventKind::process_launch_intent"
         "WorkspaceAgentSessionEventKind::process_launch_outcome"
         "workspace_agent.session_reentrant_audit_transition_denied"
+        "workspace_agent.session_reentrant_cancellation_transition_denied"
         "release_launch_authority()"
         "run_bounded_windows_private_executable(")
     require_text(${session_source} "${token}" "controller-only one-attempt consumption")
@@ -224,6 +225,7 @@ foreach(token IN ITEMS
         "process_execution_requires_unrestricted_local"
         "revocation lease before the bounded child exits"
         "intent-audit callback must not wait on its own retained launch lease"
+        "cancellation callback must not wait on its own retained launch lease"
         "unrelated thread's stop must wait through a slow intent audit"
         "--workspace-agent-non-elevated-test-driver-v1"
         "CreateRestrictedToken("
