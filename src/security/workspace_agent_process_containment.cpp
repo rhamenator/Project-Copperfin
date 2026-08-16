@@ -623,12 +623,31 @@ public:
     ScopedPinHandleChain& operator=(const ScopedPinHandleChain&) = delete;
 
     [[nodiscard]] bool lock(
-        const std::filesystem::path& stable_directory) noexcept {
+        const std::filesystem::path& stable_directory,
+        const HANDLE exact_directory_handle) noexcept {
         reset();
         try {
             std::filesystem::path current = stable_directory.root_path();
             if (current.empty()) {
                 return false;
+            }
+            if (stable_directory.relative_path().empty()) {
+                HANDLE duplicate = INVALID_HANDLE_VALUE;
+                if (exact_directory_handle == nullptr ||
+                    exact_directory_handle == INVALID_HANDLE_VALUE ||
+                    ::DuplicateHandle(
+                        ::GetCurrentProcess(), exact_directory_handle,
+                        ::GetCurrentProcess(), &duplicate, 0U, FALSE,
+                        DUPLICATE_SAME_ACCESS) == FALSE) {
+                    return false;
+                }
+                try {
+                    handles_.push_back(duplicate);
+                } catch (...) {
+                    close_pin_handle(duplicate);
+                    throw;
+                }
+                return true;
             }
             for (const auto& component : stable_directory.relative_path()) {
                 if (component.empty() || component == "." || component == "..") {
@@ -637,7 +656,10 @@ public:
                 }
                 current /= component;
                 const HANDLE handle = open_pin_handle(current, true);
-                if (handle == nullptr || handle == INVALID_HANDLE_VALUE) {
+                PhysicalPathIdentity component_identity{};
+                if (handle == nullptr || handle == INVALID_HANDLE_VALUE ||
+                    !read_handle_identity(handle, true, component_identity)) {
+                    close_pin_handle(handle);
                     reset();
                     return false;
                 }
@@ -1107,7 +1129,8 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
     ScopedPinHandleChain working_directory_chain;
     PhysicalPathIdentity chained_working_directory_identity{};
     if (!stable_working_directory.has_value() ||
-        !working_directory_chain.lock(*stable_working_directory) ||
+        !working_directory_chain.lock(
+            *stable_working_directory, working_directory_handle.get()) ||
         !read_handle_identity(
             working_directory_chain.back(), true,
             chained_working_directory_identity) ||

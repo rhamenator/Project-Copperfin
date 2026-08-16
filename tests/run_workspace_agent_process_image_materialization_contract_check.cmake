@@ -69,6 +69,8 @@ foreach(token IN ITEMS
         "stable_volume_path_for_handle("
         "VOLUME_NAME_GUID"
         "class ScopedPinHandleChain"
+        "::DuplicateHandle("
+        "read_handle_identity(handle, true, component_identity)"
         "working_directory_chain.release()"
         "execution_working_directory()")
     require_text(${process_containment_source} "${token}"
