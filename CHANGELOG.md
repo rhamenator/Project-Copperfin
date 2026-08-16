@@ -108,6 +108,11 @@
   set passes `7/7`; licensing, community, release-license, isolation,
   supply-chain, and safety contracts pass `6/6`, including the 324.61-second
   repository-wide safety scan.
+  Later protected evidence still timed out before that static fixture entered,
+  so it falsified dependency startup as the cause. The next test-only Windows
+  candidate adds a restricted-token direct-versus-suspended launch matrix ahead
+  of private-image, Job, and transport controls; it selects the first
+  incompatible transition without changing production behavior.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,

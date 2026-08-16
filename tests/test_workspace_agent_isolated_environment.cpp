@@ -502,6 +502,90 @@ public:
     std::filesystem::path outside;
 };
 
+#if defined(_WIN32)
+struct WindowsFixtureProbeResult {
+    bool created = false;
+    DWORD resume_count = static_cast<DWORD>(-1);
+    DWORD wait_result = WAIT_FAILED;
+    DWORD exit_code = STILL_ACTIVE;
+    DWORD error = ERROR_SUCCESS;
+};
+
+WindowsFixtureProbeResult run_windows_fixture_probe(
+    const std::filesystem::path& executable,
+    const std::filesystem::path& working_directory,
+    const bool start_suspended) {
+    WindowsFixtureProbeResult result;
+    std::wstring command_line = L"\"" + executable.native() +
+        L"\" --workspace-agent-child-v1 literal-payload";
+    STARTUPINFOW startup{};
+    startup.cb = sizeof(startup);
+    PROCESS_INFORMATION process{};
+    const BOOL created = ::CreateProcessW(
+        executable.c_str(), command_line.data(), nullptr, nullptr, FALSE,
+        CREATE_NO_WINDOW | (start_suspended ? CREATE_SUSPENDED : 0U), nullptr,
+        working_directory.c_str(), &startup, &process);
+    if (created == FALSE) {
+        result.error = ::GetLastError();
+        return result;
+    }
+    result.created = true;
+    if (start_suspended) {
+        result.resume_count = ::ResumeThread(process.hThread);
+        if (result.resume_count != 1U) {
+            result.error = result.resume_count == static_cast<DWORD>(-1)
+                ? ::GetLastError()
+                : ERROR_INVALID_STATE;
+            (void)::TerminateProcess(process.hProcess, 1U);
+            (void)::WaitForSingleObject(process.hProcess, 5000U);
+            (void)::CloseHandle(process.hThread);
+            (void)::CloseHandle(process.hProcess);
+            return result;
+        }
+    }
+    result.wait_result = ::WaitForSingleObject(process.hProcess, 5000U);
+    if (result.wait_result == WAIT_OBJECT_0) {
+        if (::GetExitCodeProcess(process.hProcess, &result.exit_code) == FALSE) {
+            result.error = ::GetLastError();
+        }
+    } else {
+        result.error = result.wait_result == WAIT_FAILED
+            ? ::GetLastError()
+            : ERROR_TIMEOUT;
+        (void)::TerminateProcess(process.hProcess, 1U);
+        (void)::WaitForSingleObject(process.hProcess, 5000U);
+    }
+    (void)::CloseHandle(process.hThread);
+    (void)::CloseHandle(process.hProcess);
+    return result;
+}
+
+void test_windows_fixture_startup_transitions() {
+    TempTree tree;
+    const auto fixture = tree.workspace / "bin" / "workspace-tool";
+    const auto normal = run_windows_fixture_probe(
+        fixture, tree.workspace / "working", false);
+    const auto suspended = run_windows_fixture_probe(
+        fixture, tree.workspace / "working", true);
+    const bool normal_ok = normal.created && normal.wait_result == WAIT_OBJECT_0 &&
+        normal.exit_code == 23U;
+    const bool suspended_ok = suspended.created && suspended.resume_count == 1U &&
+        suspended.wait_result == WAIT_OBJECT_0 && suspended.exit_code == 23U;
+    if (!normal_ok || !suspended_ok) {
+        std::cerr << "RQ-CF-AGENT-028 fixture transition diagnostics: normal="
+                  << normal.created << '/' << normal.wait_result << '/'
+                  << normal.exit_code << '/' << normal.error
+                  << " suspended=" << suspended.created << '/'
+                  << suspended.resume_count << '/' << suspended.wait_result << '/'
+                  << suspended.exit_code << '/' << suspended.error << '\n';
+    }
+    expect(normal_ok,
+           "RQ-CF-AGENT-028: restricted Windows direct fixture launch must reach its fixed exit before private-image or transport controls");
+    expect(suspended_ok,
+           "RQ-CF-AGENT-028: restricted Windows suspended fixture launch must resume and exit before private-image, Job, or transport controls");
+}
+#endif
+
 WorkspaceAgentSessionAuditCommitResult commit_audit(
     const WorkspaceAgentSessionAuditEvent&,
     void*) {
@@ -2405,6 +2489,9 @@ int main(int argc, char** argv) {
         std::cerr << "FAIL: restricted Windows test driver remained elevated\n";
         return EXIT_FAILURE;
     }
+#endif
+#if defined(_WIN32)
+    test_windows_fixture_startup_transitions();
 #endif
     test_fixed_non_inheriting_environment();
     test_prepared_launch_candidate_binds_plan_pins_and_revocation();

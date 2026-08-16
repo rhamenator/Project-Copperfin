@@ -236,6 +236,14 @@ foreach(token IN ITEMS
     require_text(${execution_fixture} "${token}"
         "bounded Windows child-entry diagnostic fixture")
 endforeach()
+foreach(token IN ITEMS
+        "run_windows_fixture_probe("
+        "test_windows_fixture_startup_transitions("
+        "CREATE_SUSPENDED"
+        "restricted Windows suspended fixture launch")
+    require_text(${environment_test} "${token}"
+        "Windows startup transition diagnostic matrix")
+endforeach()
 forbid_text(${execution_fixture} "std::getenv("
     "credential-value environment lookup")
 foreach(token IN ITEMS
