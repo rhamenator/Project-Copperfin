@@ -485,8 +485,12 @@ provides an explicit fail-closed promotion gate: every submitted point-in-time
 plan is denied without inspection or reflection, and no plan, digest, or
 authority is returned. Review showed that sequential rechecks cannot coherently
 bind the trusted root, executable, working directory, and revocation state.
-An allow path therefore remains unavailable until those targets are pinned and
-a revocation lease is retained through launch.
+Candidate `RQ-CF-AGENT-022` supplies the separate exact-generation revocation
+lease. Candidate `RQ-CF-AGENT-023` now consumes private one-attempt inspection
+provenance to retain the original trusted root, executable, and working-
+directory objects behind opaque platform handles/descriptors. An allow path
+remains unavailable until an executor authenticates and consumes those pinned
+objects and the revocation lease synchronously through direct launch.
 Candidate `RQ-CF-AGENT-020` now returns exact session/child identities from
 successful preparation and exposes a separate trusted-host primitive that
 removes only that exact empty layout. It is intentionally disconnected from
@@ -496,8 +500,8 @@ descriptor verification followed by name-based `unlinkat` also retains a
 documented same-authority leaf-name race.
 Broader model/
 provider policy, OAuth and credential adapters, trusted-host audit-backed
-lifecycle cleanup, launch-adjacent handle pinning and synchronous executor
-consumption, endpoint
+lifecycle cleanup, pinned-byte authentication and synchronous same-object
+executor consumption, endpoint
 policy, a mutable
 executor and real sandbox, outcome audit, and user-facing assistant/dialog
 surfaces remain open.

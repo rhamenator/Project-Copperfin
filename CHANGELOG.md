@@ -1,3 +1,21 @@
+- 2026-08-15: Added candidate `RQ-CF-AGENT-023`, an opaque move-only retained
+  process-target pin bundle. Private one-attempt inspection provenance prevents
+  field forgery, editing, replay, and cross-boundary use; acquisition opens and
+  identity-checks the original trusted workspace root, executable, and working
+  directory. Windows retains non-inheriting handles without ordinary write/
+  delete sharing, while POSIX retains close-on-exec no-follow descriptors
+  across name replacement. Exact active process-tool admission is rechecked
+  after opening. The bundle exposes no path or native handle and does not
+  authenticate pinned bytes, consume a serialized plan, acquire the separate
+  revocation lease, sandbox, launch, or weaken the invariant promotion denial.
+  Local warning-free workspace-agent/security `11/11`, fresh Clang 21
+  ASan/UBSan/leak `3/3`, fresh GCC 15 ThreadSanitizer `3/3`, and repository
+  contract `7/7` validation pass, including repeated 329.84-, 325.82-, and
+  post-correction 326.48-second safety scans. Pre-publication review also found
+  and corrected allocation-failure
+  leakage by retaining every newly opened native object in local RAII ownership
+  until the opaque bundle has been constructed.
+
 - 2026-08-15: Completed implementation evidence for candidate
   `RQ-CF-AGENT-022` at exact signed/DCO head `7b12d9812`. All eleven protected
   checks passed in runs `31916980542`, `31916981432`, `31916981399`,

@@ -12,12 +12,15 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <type_traits>
 
 namespace {
 
 using copperfin::security::WorkspaceAgentAccessMode;
 using copperfin::security::WorkspaceAgentActivationRequest;
 using copperfin::security::WorkspaceAgentProcessTargetBoundary;
+using copperfin::security::WorkspaceAgentProcessTargetInspection;
+using copperfin::security::WorkspaceAgentProcessTargetPins;
 using copperfin::security::WorkspaceAgentProcessTargetPreflightRequest;
 using copperfin::security::WorkspaceAgentSessionAuditCommitResult;
 using copperfin::security::WorkspaceAgentSessionAuditEvent;
@@ -52,6 +55,16 @@ concept HasSearchPath = requires(T value) {
     value.search_path;
 };
 
+template <typename T>
+concept HasNativeHandle = requires(T value) {
+    value.native_handle;
+};
+
+template <typename T>
+concept HasPinnedPath = requires(T value) {
+    value.canonical_path;
+};
+
 static_assert(
     !HasCommandText<WorkspaceAgentProcessTargetPreflightRequest> &&
         !HasArguments<WorkspaceAgentProcessTargetPreflightRequest> &&
@@ -59,6 +72,23 @@ static_assert(
         !HasCallerSelectedRoot<WorkspaceAgentProcessTargetPreflightRequest> &&
         !HasSearchPath<WorkspaceAgentProcessTargetPreflightRequest>,
     "RQ-CF-AGENT-010: target preflight must not expose commands, arguments, environment, root, or search-path authority");
+
+static_assert(
+    !std::is_copy_constructible_v<WorkspaceAgentProcessTargetPins> &&
+        !std::is_copy_assignable_v<WorkspaceAgentProcessTargetPins> &&
+        std::is_nothrow_move_constructible_v<WorkspaceAgentProcessTargetPins> &&
+        std::is_nothrow_move_assignable_v<WorkspaceAgentProcessTargetPins> &&
+        !HasNativeHandle<WorkspaceAgentProcessTargetPins> &&
+        !HasPinnedPath<WorkspaceAgentProcessTargetPins>,
+    "RQ-CF-AGENT-023: target pins must be move-only and expose no native handle or path");
+
+static_assert(
+    !std::is_copy_constructible_v<WorkspaceAgentProcessTargetBoundary> &&
+        !std::is_copy_assignable_v<WorkspaceAgentProcessTargetBoundary> &&
+        std::is_nothrow_move_constructible_v<
+            WorkspaceAgentProcessTargetBoundary> &&
+        std::is_nothrow_move_assignable_v<WorkspaceAgentProcessTargetBoundary>,
+    "RQ-CF-AGENT-023: moving a target boundary must transfer rather than duplicate its logical authority");
 
 void expect(bool condition, const std::string& message) {
     if (!condition) {
@@ -543,6 +573,172 @@ void test_workspace_root_replacement_fails_closed() {
            "RQ-CF-AGENT-010: replacement of the configured workspace identity must fail closed");
 }
 
+void test_boundary_retains_exact_process_target_objects() {
+    TempTree tree;
+    auto boundary = WorkspaceAgentProcessTargetBoundary::create(tree.workspace);
+    auto other_boundary = WorkspaceAgentProcessTargetBoundary::create(tree.workspace);
+    expect(boundary.has_value() && other_boundary.has_value(),
+           "RQ-CF-AGENT-023: pin fixtures must configure independent trusted boundaries");
+    if (!boundary.has_value() || !other_boundary.has_value()) {
+        return;
+    }
+
+    WorkspaceAgentProcessTargetInspection forged;
+    forged.allowed = true;
+    forged.canonical_executable_path = tree.workspace / "bin/workspace-tool";
+    forged.canonical_working_directory = tree.workspace;
+    const auto forged_pin = boundary->pin_process_targets(forged);
+    expect(!forged_pin.pinned && !forged_pin.pins.has_value() &&
+               forged_pin.diagnostic_code ==
+                   "workspace_agent.process_target_pin_authority_unavailable",
+           "RQ-CF-AGENT-023: caller-constructed inspection fields must not authorize pins");
+
+    auto cross_boundary_inspection = boundary->inspect_workspace_process(
+        "bin/workspace-tool", ".");
+    const auto cross_boundary = other_boundary->pin_process_targets(
+        cross_boundary_inspection);
+    expect(!cross_boundary.pinned &&
+               cross_boundary.diagnostic_code ==
+                   "workspace_agent.process_target_pin_authority_unavailable",
+           "RQ-CF-AGENT-023: an inspection from another logical boundary must fail closed");
+    auto correct_boundary = boundary->pin_process_targets(
+        cross_boundary_inspection);
+    expect(correct_boundary.pinned && correct_boundary.pins.has_value() &&
+               correct_boundary.pins->valid(),
+           "RQ-CF-AGENT-023: a cross-boundary denial must not consume the issuing boundary's one-attempt authority");
+    const auto replay = boundary->pin_process_targets(cross_boundary_inspection);
+    expect(!replay.pinned &&
+               replay.diagnostic_code ==
+                   "workspace_agent.process_target_pin_authority_unavailable",
+           "RQ-CF-AGENT-023: an inspection authority must not authorize a second pin bundle");
+
+    auto move_source = WorkspaceAgentProcessTargetBoundary::create(tree.workspace);
+    expect(move_source.has_value(),
+           "RQ-CF-AGENT-023: move-authority fixture must configure a boundary");
+    if (move_source.has_value()) {
+        auto move_inspection = move_source->inspect_workspace_process(
+            "bin/workspace-tool", ".");
+        WorkspaceAgentProcessTargetBoundary move_destination(
+            std::move(*move_source));
+        const auto moved_from = move_source->pin_process_targets(move_inspection);
+        auto moved_to = move_destination.pin_process_targets(move_inspection);
+        expect(!moved_from.pinned && moved_to.pinned &&
+                   moved_to.pins.has_value() && moved_to.pins->valid(),
+               "RQ-CF-AGENT-023: moving a boundary must transfer its exact logical authority and invalidate the source");
+    }
+
+    auto edited = boundary->inspect_workspace_process(
+        "bin/workspace-tool", ".");
+    auto edited_copy = edited;
+    edited.canonical_working_directory = tree.workspace / "nested";
+    const auto edited_denial = boundary->pin_process_targets(edited);
+    const auto edited_replay = boundary->pin_process_targets(edited_copy);
+    expect(!edited_denial.pinned && !edited_replay.pinned,
+           "RQ-CF-AGENT-023: editing public inspection fields must fail and consume the one-attempt authority");
+
+    auto stale = boundary->inspect_workspace_process(
+        "bin/workspace-tool", "nested");
+    const auto original_executable = tree.workspace / "bin/workspace-tool";
+    const auto moved_executable = tree.workspace / "bin/workspace-tool-old";
+    std::filesystem::rename(original_executable, moved_executable);
+    TempTree::write_executable(original_executable);
+    const auto stale_pin = boundary->pin_process_targets(stale);
+    expect(!stale_pin.pinned && !stale_pin.pins.has_value() &&
+               stale_pin.diagnostic_code ==
+                   "workspace_agent.process_target_pin_identity_changed",
+           "RQ-CF-AGENT-023: path replacement after inspection must not pin a different executable");
+    std::filesystem::remove(original_executable);
+    std::filesystem::rename(moved_executable, original_executable);
+
+    auto retained = boundary->inspect_workspace_process(
+        "bin/workspace-tool", "nested");
+    auto retained_pin = boundary->pin_process_targets(retained);
+    expect(retained_pin.pinned && retained_pin.pins.has_value() &&
+               retained_pin.pins->valid(),
+           "RQ-CF-AGENT-023: exact root, executable, and working directory objects must be retained opaquely");
+    std::error_code rename_error;
+    std::filesystem::rename(
+        original_executable, moved_executable, rename_error);
+#if defined(_WIN32)
+    expect(rename_error && retained_pin.pins->valid(),
+           "RQ-CF-AGENT-023: Windows pins must deny executable replacement while retained");
+    retained_pin.pins.reset();
+    rename_error.clear();
+    std::filesystem::rename(
+        original_executable, moved_executable, rename_error);
+    expect(!rename_error,
+           "RQ-CF-AGENT-023: releasing Windows pins must release replacement exclusion");
+#else
+    expect(!rename_error && retained_pin.pins->valid(),
+           "RQ-CF-AGENT-023: POSIX pins must retain the exact opened executable object across name replacement");
+#endif
+}
+
+void test_session_bound_process_target_pin_preflight() {
+    TempTree tree;
+    WorkspaceAgentSessionController inactive(tree.workspace);
+    const auto inactive_pin = inactive.pin_process_target_request(
+        process_request(
+            1U,
+            std::string(
+                copperfin::security::workspace_agent_tool_workspace_run_process),
+            "bin/workspace-tool",
+            "."));
+    expect(!inactive_pin.pinned &&
+               inactive_pin.diagnostic_code ==
+                   "workspace_agent.session_not_active",
+           "RQ-CF-AGENT-023: inactive sessions must fail before target pinning");
+
+    WorkspaceAgentSessionController controller(tree.workspace);
+    const auto started = controller.start(
+        request_for(WorkspaceAgentAccessMode::workspace_sandbox), audit_sink());
+    expect(started.activated,
+           "RQ-CF-AGENT-023: target-pin fixture session must activate");
+    const auto file_tool = controller.pin_process_target_request(
+        process_request(
+            started.session.generation,
+            std::string(copperfin::security::workspace_agent_tool_workspace_inspect),
+            "bin/workspace-tool",
+            "."));
+    expect(!file_tool.pinned &&
+               file_tool.diagnostic_code ==
+                   "workspace_agent.target_not_process_tool",
+           "RQ-CF-AGENT-023: a file tool must not enter target pinning");
+    const auto stale = controller.pin_process_target_request(
+        process_request(
+            started.session.generation + 1U,
+            std::string(
+                copperfin::security::workspace_agent_tool_workspace_run_process),
+            "bin/workspace-tool",
+            "."));
+    expect(!stale.pinned &&
+               stale.diagnostic_code == "workspace_agent.tool_stale_session",
+           "RQ-CF-AGENT-023: stale generations must fail before target pinning");
+
+    auto pinned = controller.pin_process_target_request(
+        process_request(
+            started.session.generation,
+            std::string(
+                copperfin::security::workspace_agent_tool_workspace_run_process),
+            "bin/workspace-tool",
+            "nested"));
+    expect(pinned.pinned && pinned.pins.has_value() &&
+               pinned.pins->valid() &&
+               pinned.session_generation == started.session.generation &&
+               pinned.diagnostic_code ==
+                   "workspace_agent.process_target_pin_request_allowed",
+           "RQ-CF-AGENT-023: exact active process authority must admit opaque target pins");
+    const auto still_denied =
+        controller.revalidate_serialized_process_invocation_for_launch({}, {});
+    expect(!still_denied.allowed &&
+               still_denied.diagnostic_code ==
+                   "workspace_agent.process_launch_revalidation_pinning_unavailable",
+           "RQ-CF-AGENT-023: target pins alone must not weaken the launch gate");
+    const auto stopped = controller.stop(audit_sink());
+    expect(stopped.revoked && pinned.pins->valid(),
+           "RQ-CF-AGENT-023: pins are resource retention only and must not substitute for the separate revocation lease");
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -561,6 +757,8 @@ int main(int argc, char** argv) {
     test_boundary_rejects_process_target_indirection_and_aliasing();
     test_session_bound_process_target_preflight();
     test_workspace_root_replacement_fails_closed();
+    test_boundary_retains_exact_process_target_objects();
+    test_session_bound_process_target_pin_preflight();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

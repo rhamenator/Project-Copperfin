@@ -842,6 +842,80 @@ WorkspaceAgentSessionController::preflight_process_invocation_request(
     return result;
 }
 
+WorkspaceAgentProcessTargetPinPreflightResult
+WorkspaceAgentSessionController::pin_process_target_request(
+    const WorkspaceAgentProcessTargetPreflightRequest& request) const {
+    WorkspaceAgentProcessTargetPinPreflightResult result;
+    const WorkspaceAgentToolPreflightRequest tool_request{
+        .schema_version = request.schema_version,
+        .session_generation = request.session_generation,
+        .tool_id = request.tool_id};
+    const auto preliminary = preflight_tool_request(tool_request);
+    if (!preliminary.allowed) {
+        result.diagnostic_code = preliminary.diagnostic_code;
+        return result;
+    }
+    if (!process_target_boundary_.has_value()) {
+        result.diagnostic_code =
+            "workspace_agent.process_workspace_root_not_configured";
+        return result;
+    }
+
+    const WorkspaceAgentToolDefinition* definition =
+        find_workspace_agent_product_tool(preliminary.tool_id);
+    if (definition == nullptr) {
+        result.diagnostic_code = "workspace_agent.tool_not_registered";
+        return result;
+    }
+
+    WorkspaceAgentProcessTargetInspection inspection;
+    switch (definition->target_kind) {
+        case WorkspaceAgentToolTargetKind::workspace_process:
+            inspection = process_target_boundary_->inspect_workspace_process(
+                request.executable_path, request.working_directory);
+            break;
+        case WorkspaceAgentToolTargetKind::local_process:
+            inspection = process_target_boundary_->inspect_local_process(
+                request.executable_path, request.working_directory);
+            break;
+        case WorkspaceAgentToolTargetKind::workspace_file:
+        case WorkspaceAgentToolTargetKind::local_file:
+        case WorkspaceAgentToolTargetKind::network_endpoint:
+            result.diagnostic_code = "workspace_agent.target_not_process_tool";
+            return result;
+    }
+    if (!inspection.allowed) {
+        result.diagnostic_code = inspection.diagnostic_code;
+        return result;
+    }
+
+    auto pin_result = process_target_boundary_->pin_process_targets(inspection);
+    if (!pin_result.pinned || !pin_result.pins.has_value()) {
+        result.diagnostic_code = pin_result.diagnostic_code;
+        return result;
+    }
+
+    // Resource acquisition can race with stop. Recheck exact session/tool
+    // admission afterward and release every pin on any mismatch. The returned
+    // bundle remains non-executing and is not session or launch authority.
+    const auto final_preflight = preflight_tool_request(tool_request);
+    if (!final_preflight.allowed ||
+        final_preflight.session_generation != preliminary.session_generation ||
+        final_preflight.tool_id != preliminary.tool_id) {
+        result.diagnostic_code = final_preflight.allowed
+            ? "workspace_agent.tool_stale_session"
+            : final_preflight.diagnostic_code;
+        return result;
+    }
+
+    result.pinned = true;
+    result.session_generation = final_preflight.session_generation;
+    result.pins = std::move(pin_result.pins);
+    result.diagnostic_code =
+        "workspace_agent.process_target_pin_request_allowed";
+    return result;
+}
+
 WorkspaceAgentProcessEnvironmentPreflightResult
 WorkspaceAgentSessionController::preflight_process_environment_request(
     const WorkspaceAgentProcessInvocationPreflightRequest& request) const {
