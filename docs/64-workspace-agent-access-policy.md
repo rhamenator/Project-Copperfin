@@ -879,8 +879,8 @@ attempt namespace or process identity denies execution before intent. A failed i
 audit consumes and destroys the one-attempt image and starts nothing. The
 Windows launcher uses the private image path only internally as
 `lpApplicationName`, preserves the authenticated original executable spelling
-as `argv[0]`, passes the fixed double-NUL environment and a handle-derived
-stable local-volume device working-directory path, never invokes a shell or PATH search, and admits only the
+as `argv[0]`, passes the fixed double-NUL environment and a handle-derived,
+fixed-volume extended DOS working-directory path, never invokes a shell or PATH search, and admits only the
 three fixed standard handles. Before exposing that internal launch path, the
 private image retains no-delete-share handles for every renameable directory
 below its handle-derived stable local-volume device root through its private parent
@@ -898,10 +898,19 @@ name and compares it, case-insensitively and in full, with the native device
 name captured from the retained authenticated image handle. A changed drive,
 `SUBST`, or mount mapping therefore produces an image-binding failure and the
 Job-owned child is terminated without resuming user code.
-The retained target pins apply stable-volume naming and complete
-hierarchy retention to the working directory until process creation commits,
-so leaf, ancestor, drive-letter, `SUBST`, and mapped-drive redirection fail
-closed rather than changing the child's current directory.
+The retained target pins apply stable-volume naming and complete hierarchy
+retention to the working directory until process creation commits. Protected
+Windows evidence showed that passing that stable device path directly as the
+current directory can leave a resumed Win32 process unable to perform ordinary
+current-directory operations. The child therefore receives an extended DOS
+path derived from the same authenticated directory handle. It is admitted only
+when the drive is fixed, `QueryDosDeviceW` maps it to the handle's native hard-
+disk-volume root, `GetVolumePathNamesForVolumeNameW` lists that drive root for
+the handle's volume GUID, the root volume serial matches the authenticated storage
+identity, and reopening the DOS path under the retained stable chain returns
+the exact directory identity before and after mapping validation. Network,
+mounted-folder-only, user-local DOS-device, `SUBST`, removable, and redirected
+forms fail closed.
 The stable name prefers a volume-GUID path and falls back only to a validated
 `GLOBALROOT\\Device\\HarddiskVolumeN` name when the local volume exposes no GUID.
 Network shares expose neither accepted local-volume form and are intentionally denied by
@@ -910,10 +919,12 @@ volume targets.
 Protected Windows execution at exact head `0023f74e9` directly proved that
 `CreateProcessW` rejects the authenticated stable device-form application name
 with `ERROR_INVALID_PARAMETER`. Protected run `31961744412` then created the
-never-resumed DOS-name probe with the same stable working directory, proving the
-working-directory form compatible. That bounded diagnostic evidence selected
-the final DOS-name/native-image-binding design above; the diagnostic retry is
-not part of the production execution path.
+never-resumed DOS-name probe with the same stable working directory, proving
+only that `CreateProcessW` accepted that combination. Exact production runs
+`31962919560` and `31962919574` subsequently proved the resumed runtime could
+not use that current-directory form, selecting the separately bound DOS
+working-directory design above. The diagnostic retry is not part of the
+production execution path.
 The exact-digest
 `self_contained_launch_image_v1` admission contract requires system-only load-
 time dependencies: the private directory deliberately does not preserve the

@@ -51,12 +51,21 @@
   nonzero distinct cross-controller operation IDs.
   Protected Windows then proved that `CreateProcessW` rejects the authenticated
   stable device-form application name with error 87, while run `31961744412`
-  proved a handle-derived extended DOS application name remains compatible with
-  the stable working directory. Production creation now uses that DOS name only
+  proved a handle-derived extended DOS application name is accepted at creation
+  with the stable working directory. Production creation now uses that DOS name only
   under the retained stable hierarchy, gives the suspended child atomic
   kill-on-close Job ownership, and compares its kernel-reported native image
   name with the authenticated handle-derived native name before commitment or
   resume. Query or mismatch fails closed without running user code.
+  Exact protected runs `31962919560` and `31962919574` then proved image
+  creation, native image binding, and resume, but both children timed out with
+  empty output because the stable volume-device current directory was unusable
+  by the resumed Win32 runtime. The stable path remains the retained hierarchy-
+  locking authority; the child now receives a handle-derived extended DOS path
+  only after fixed-drive, mount-manager drive-root, `QueryDosDeviceW` native-
+  root, volume-serial, and
+  exact-directory reopen checks all bind it to that authority. Network,
+  mounted-folder, `SUBST`, removable, and mismatched mappings fail closed.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,
@@ -65,7 +74,7 @@
   promotion gate remains invariantly denied. Focused local Debug and warning-as-error GCC 15
   Release execution pass `7/7`; fresh Clang 21 ASan/UBSan/leak passes `7/7`
   without findings; and licensing, community, release-license, isolation,
-  supply-chain, and safety contracts pass `6/6`, including the corrected-head 328.63-second
+  supply-chain, and safety contracts pass `6/6`, including the corrected-tree repository-wide
   safety scan. Protected Windows and cross-platform denial evidence plus
   exact-head review remain pending.
 

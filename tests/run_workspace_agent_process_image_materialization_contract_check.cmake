@@ -85,6 +85,15 @@ foreach(token IN ITEMS
         "stable_volume_path_for_handle("
         "VOLUME_NAME_GUID"
         "VOLUME_NAME_NT"
+        "dos_volume_path_for_handle("
+        "VOLUME_NAME_DOS"
+        "dos_volume_binding_matches_handle("
+        "::QueryDosDeviceW("
+        "::GetDriveTypeW("
+        "DRIVE_FIXED"
+        "mount_manager_lists_drive_root("
+        "::GetVolumePathNamesForVolumeNameW("
+        "::GetVolumeInformationW("
         "\\\\?\\\\GLOBALROOT"
         "stable_volume_root_length("
         "class ScopedPinHandleChain"
@@ -93,7 +102,7 @@ foreach(token IN ITEMS
         "working_directory_chain.release()"
         "execution_working_directory()")
     require_text(${process_containment_source} "${token}"
-        "stable Windows working-directory launch authority")
+        "stable Windows working-directory binding and compatible launch authority")
 endforeach()
 foreach(token IN ITEMS
         "working-directory ancestor rename while retained"

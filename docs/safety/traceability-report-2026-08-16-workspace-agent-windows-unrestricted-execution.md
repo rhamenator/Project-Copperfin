@@ -29,11 +29,12 @@ use.
 | `DQ-workspace-agent-windows-execution-008`: same-controller lifecycle reentry on a synchronous audit or cancellation callback's own thread shall fail closed without waiting on that stack's revocation lease; unrelated concurrent stop shall retain normal revocation semantics | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-005` | `HZ-system-failure-01` |
 | `DQ-workspace-agent-windows-execution-009`: the private image's stable identity path shall be derived from its authenticated handle as a local-volume device path (volume GUID preferred, validated `GLOBALROOT\\Device\\HarddiskVolumeN` fallback); every renameable component below that root through the private image parent shall remain held without delete sharing through process completion, and final stable- and DOS-path reopens under that retained chain shall match the authenticated image identity before creation | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-010`: anonymous transport pipes shall use a protected current-logon and restricted-code DACL, remain creatable by a restricted non-elevated host, and expose only the fixed child endpoints through the explicit inheritance list | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-011`: the working directory shall be converted from its authenticated handle to the same accepted stable local-volume device form, and every renameable component beneath that explicitly parsed device root shall remain held without delete sharing until `CreateProcessW` has consumed the path | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-007` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-011`: the working directory shall be converted from its authenticated handle to an explicitly parsed stable local-volume device form, and every renameable component beneath that device root shall remain held without delete sharing until `CreateProcessW` has consumed the launch path | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-007` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-012`: each process intent/outcome pair shall use one fresh 128-bit operating-system-random attempt namespace plus a nonzero operation identifier from a process-wide, nonwrapping counter so records from controllers, processes, restarts, and later post-fork attempts sharing a durable sink have collision-resistant correlation identities; random-source or process-identity failure shall deny execution before intent, and a process-identity change across the synchronous intent callback shall deny the forked continuation before execution or outcome submission | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-008` | `HZ-system-failure-01` |
 | `DQ-workspace-agent-windows-execution-013`: any pre-start compatibility diagnostic child shall enter the same kill-on-close Job Object atomically at creation, remain suspended, never execute user code, and retain cleanup ownership even if explicit termination fails | `DV-workspace-agent-windows-execution-003`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-014`: after protected Windows proves the stable device-form application name unsupported, a diagnostic-only DOS application name shall be derived from the authenticated handle, identity-matched under the retained stable hierarchy, and used only by a never-resumed Job-owned probe that retains the stable working directory; it shall not become an execution fallback without post-creation image binding | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-015`: after protected Windows proves the DOS application name and stable working-directory combination compatible, production creation shall use that handle-derived DOS name only while the stable hierarchy remains retained, place the suspended child into the kill-on-close Job Object atomically, compare its kernel-reported native image name with the native device name captured from the authenticated image handle, and terminate without resume on query or binding failure | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-015`: after protected Windows proves the DOS application name and stable working-directory combination is accepted at creation, production creation shall use that handle-derived DOS application name only while the stable hierarchy remains retained, place the suspended child into the kill-on-close Job Object atomically, compare its kernel-reported native image name with the native device name captured from the authenticated image handle, and terminate without resume on query or binding failure | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-016`: because protected Windows proves a stable volume-device current directory can create a child but is unusable by the resumed Win32 runtime, the launch current directory shall instead be an extended DOS path derived from the authenticated directory handle. It shall be admitted only for a fixed drive listed as a drive-root assignment for the handle's volume GUID by `GetVolumePathNamesForVolumeNameW`, whose `QueryDosDeviceW` target equals the handle's native hard-disk-volume root, whose volume serial equals the authenticated storage identity, and whose DOS-path reopen under the retained stable hierarchy matches the exact authenticated directory before and after mapping validation. Network, mounted-folder-only, user-local DOS-device, `SUBST`, removable, redirected, identity-mismatched, or mapping-mismatched forms shall fail closed. | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-007`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
   exercise one-attempt consumption, sandbox and platform denial, failed-intent
@@ -106,9 +107,18 @@ observer does not admit a writer, deleter, or renamer.
   dependency-closure design exists.
 - Working-directory redirection: the target pins derive a stable local-volume device path from
   the authenticated directory handle and retain every renameable component of
-  that path until process creation commits. A drive-letter, `SUBST`, mapped-
-  drive, leaf, or ancestor redirection therefore cannot substitute the child's
-  current directory between admission and `CreateProcessW`.
+  that path until process creation commits. The child receives a separately
+  handle-derived extended DOS path because Win32 current-directory operations
+  do not work reliably from the stable device form. That DOS path is admitted
+  only when the volume mount manager lists its fixed drive root for the
+  handle's volume GUID, the DOS device maps to the handle's native hard-disk
+  volume, its volume serial matches the authenticated storage identity, and a DOS-path
+  reopen beneath the retained stable hierarchy matches the exact directory.
+  A non-administrator cannot redefine an existing boot-time drive name; an
+  administrator remains outside this explicitly non-elevated execution
+  boundary. A user-local DOS device, `SUBST`, mapped-drive, mounted-folder-only
+  volume, leaf, or ancestor
+  redirection therefore fails admission or cannot replace the retained object.
   Windows network shares do not expose an accepted local-volume device path and therefore fail
   closed at this boundary; the v1 executor supports local fixed-volume targets.
 - Descendant escape and resource exhaustion: the process is created suspended
@@ -164,7 +174,7 @@ Current direct evidence:
   sink, and the machine contract at `7/7`
   without findings;
 - licensing, community, release-license, isolation, supply-chain, and safety
-  contracts pass `6/6`, including the corrected-head 328.63-second repository-wide safety
+  contracts pass `6/6`, including the corrected-tree repository-wide safety
   scan;
 - the extended exact-snapshot materialization machine contract passes and
   verifies the private runner, suspended `CreateProcessW`, atomic Job Object ownership,
@@ -239,3 +249,13 @@ atomic at creation, and compares the suspended child's kernel-reported native
 image name with the retained authenticated handle's native device name before
 launch commitment or resume. Query or comparison failure terminates the owned
 tree and reports the fixed content-free image-binding diagnostic.
+
+Exact production head `3028e1591` passed image creation, native image binding,
+and resume in both protected Windows workflows, but the child produced no
+output and timed out in runs `31962919560` and `31962919574`. The paired normal
+and waiting-child failures show that the stable volume-device current directory
+was accepted by `CreateProcessW` but was unusable by the resumed Win32 runtime.
+The correction retains that device path only as hierarchy-locking authority and
+passes a separately handle-derived fixed-drive DOS path after native-device,
+mount-manager, volume-serial, and exact-directory binding checks. A corrected protected
+Windows run remains required.

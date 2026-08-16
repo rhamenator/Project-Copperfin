@@ -8,6 +8,7 @@
 
 #include "sha256_native.h"
 
+#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <string_view>
@@ -63,15 +64,15 @@ public:
     Impl(HANDLE workspace_root_value,
          HANDLE executable_value,
          std::vector<HANDLE> working_directory_chain_value,
-         std::filesystem::path stable_working_directory_value,
+         std::filesystem::path execution_working_directory_value,
          PhysicalPathIdentity executable_identity_value,
          std::string executable_sha256_value,
          std::vector<std::uint8_t> executable_snapshot_value) noexcept
         : workspace_root(workspace_root_value),
           executable(executable_value),
           working_directory_chain(std::move(working_directory_chain_value)),
-          stable_working_directory(
-              std::move(stable_working_directory_value)),
+          execution_working_directory_value(
+              std::move(execution_working_directory_value)),
           executable_identity(executable_identity_value),
           executable_sha256(std::move(executable_sha256_value)),
           executable_snapshot(std::move(executable_snapshot_value)) {}
@@ -89,7 +90,7 @@ public:
         return is_valid(workspace_root) && is_valid(executable) &&
             !working_directory_chain.empty() &&
             is_valid(working_directory_chain.back()) &&
-            stable_working_directory.is_absolute() &&
+            execution_working_directory_value.is_absolute() &&
             executable_sha256.size() == 64U &&
             static_cast<std::uint64_t>(executable_snapshot.size()) ==
                 executable_identity.file_size;
@@ -104,7 +105,7 @@ public:
 
     [[nodiscard]] const std::filesystem::path& execution_working_directory()
         const noexcept {
-        return stable_working_directory;
+        return execution_working_directory_value;
     }
 
 private:
@@ -121,7 +122,7 @@ private:
     HANDLE workspace_root = INVALID_HANDLE_VALUE;
     HANDLE executable = INVALID_HANDLE_VALUE;
     std::vector<HANDLE> working_directory_chain;
-    std::filesystem::path stable_working_directory;
+    std::filesystem::path execution_working_directory_value;
     PhysicalPathIdentity executable_identity{};
     std::string executable_sha256;
     std::vector<std::uint8_t> executable_snapshot;
@@ -556,6 +557,149 @@ std::optional<std::filesystem::path> stable_volume_path_for_handle(
             : std::nullopt;
     } catch (...) {
         return std::nullopt;
+    }
+}
+
+std::optional<std::filesystem::path> dos_volume_path_for_handle(
+    const HANDLE handle) noexcept {
+    try {
+        auto dos = final_path_for_handle(handle, VOLUME_NAME_DOS);
+        if (!dos.has_value() || dos->size() < 7U ||
+            dos->rfind(L"\\\\?\\", 0U) != 0U ||
+            !(((*dos)[4U] >= L'A' && (*dos)[4U] <= L'Z') ||
+              ((*dos)[4U] >= L'a' && (*dos)[4U] <= L'z')) ||
+            (*dos)[5U] != L':' || (*dos)[6U] != L'\\') {
+            return std::nullopt;
+        }
+        return std::filesystem::path(std::move(*dos));
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
+std::optional<std::wstring> native_hard_disk_volume_root(
+    const std::wstring_view path) noexcept {
+    constexpr std::wstring_view prefix = L"\\Device\\HarddiskVolume";
+    if (path.rfind(prefix, 0U) != 0U) {
+        return std::nullopt;
+    }
+    std::size_t index = prefix.size();
+    const std::size_t digits_begin = index;
+    while (index < path.size() && path[index] >= L'0' && path[index] <= L'9') {
+        ++index;
+    }
+    return index != digits_begin && index < path.size() && path[index] == L'\\'
+        ? std::optional<std::wstring>(std::wstring(path.substr(0U, index)))
+        : std::nullopt;
+}
+
+std::optional<std::wstring> query_dos_device(
+    const std::wstring_view device) {
+    constexpr DWORD maximum_path_characters = 32'768U;
+    std::vector<wchar_t> buffer(512U);
+    for (;;) {
+        const DWORD written = ::QueryDosDeviceW(
+            std::wstring(device).c_str(), buffer.data(),
+            static_cast<DWORD>(buffer.size()));
+        if (written != 0U) {
+            return buffer.front() == L'\0'
+                ? std::nullopt
+                : std::optional<std::wstring>(std::wstring(buffer.data()));
+        }
+        if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER ||
+            buffer.size() >= maximum_path_characters) {
+            return std::nullopt;
+        }
+        buffer.resize(std::min<std::size_t>(
+            buffer.size() * 2U, maximum_path_characters));
+    }
+}
+
+bool mount_manager_lists_drive_root(
+    const HANDLE handle,
+    const std::wstring_view drive_root) noexcept {
+    try {
+        const auto guid_path = final_path_for_handle(handle, VOLUME_NAME_GUID);
+        const auto guid_root_length = guid_path.has_value()
+            ? stable_volume_root_length(*guid_path)
+            : std::nullopt;
+        if (!guid_root_length.has_value()) {
+            return false;
+        }
+        const std::wstring guid_root =
+            guid_path->substr(0U, *guid_root_length);
+        constexpr DWORD maximum_path_characters = 32'768U;
+        std::vector<wchar_t> paths(512U);
+        DWORD required = 0U;
+        for (;;) {
+            if (::GetVolumePathNamesForVolumeNameW(
+                    guid_root.c_str(), paths.data(),
+                    static_cast<DWORD>(paths.size()), &required) != FALSE) {
+                break;
+            }
+            if (::GetLastError() != ERROR_MORE_DATA ||
+                required <= paths.size() ||
+                required > maximum_path_characters) {
+                return false;
+            }
+            paths.resize(required);
+        }
+        const std::size_t used = std::min<std::size_t>(required, paths.size());
+        std::size_t begin = 0U;
+        while (begin < used && paths[begin] != L'\0') {
+            std::size_t end = begin;
+            while (end < used && paths[end] != L'\0') {
+                ++end;
+            }
+            if (end == used) {
+                return false;
+            }
+            if (end - begin == drive_root.size() &&
+                ::CompareStringOrdinal(
+                    paths.data() + begin, static_cast<int>(end - begin),
+                    drive_root.data(), static_cast<int>(drive_root.size()),
+                    TRUE) == CSTR_EQUAL) {
+                return true;
+            }
+            begin = end + 1U;
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+bool dos_volume_binding_matches_handle(
+    const std::filesystem::path& dos_path,
+    const HANDLE handle,
+    const std::uint64_t expected_storage_id) noexcept {
+    try {
+        const std::wstring& path = dos_path.native();
+        if (path.size() < 7U || path.rfind(L"\\\\?\\", 0U) != 0U ||
+            path[5U] != L':' || path[6U] != L'\\') {
+            return false;
+        }
+        const auto native_path = final_path_for_handle(handle, VOLUME_NAME_NT);
+        const auto native_root = native_path.has_value()
+            ? native_hard_disk_volume_root(*native_path)
+            : std::nullopt;
+        const std::wstring device{path[4U], L':'};
+        const auto mapping = query_dos_device(device);
+        const std::wstring drive_root{path[4U], L':', L'\\'};
+        DWORD volume_serial = 0U;
+        return native_root.has_value() && mapping.has_value() &&
+            ::CompareStringOrdinal(
+                mapping->c_str(), static_cast<int>(mapping->size()),
+                native_root->c_str(), static_cast<int>(native_root->size()),
+                TRUE) == CSTR_EQUAL &&
+            ::GetDriveTypeW(drive_root.c_str()) == DRIVE_FIXED &&
+            mount_manager_lists_drive_root(handle, drive_root) &&
+            ::GetVolumeInformationW(
+                drive_root.c_str(), nullptr, 0U, &volume_serial, nullptr,
+                nullptr, nullptr, 0U) != FALSE &&
+            volume_serial == expected_storage_id;
+    } catch (...) {
+        return false;
     }
 }
 
@@ -1168,15 +1312,36 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
 #if defined(_WIN32)
     const auto stable_working_directory =
         stable_volume_path_for_handle(working_directory_handle.get());
+    const auto dos_working_directory =
+        dos_volume_path_for_handle(working_directory_handle.get());
     ScopedPinHandleChain working_directory_chain;
     PhysicalPathIdentity chained_working_directory_identity{};
     if (!stable_working_directory.has_value() ||
+        !dos_working_directory.has_value() ||
+        !dos_volume_binding_matches_handle(
+            *dos_working_directory, working_directory_handle.get(),
+            working_directory_identity.storage_id) ||
         !working_directory_chain.lock(
             *stable_working_directory, working_directory_handle.get()) ||
         !read_handle_identity(
             working_directory_chain.back(), true,
             chained_working_directory_identity) ||
         chained_working_directory_identity != authority->working_directory_identity) {
+        result.diagnostic_code =
+            "workspace_agent.process_target_pin_identity_changed";
+        return result;
+    }
+    ScopedPinHandle dos_working_directory_handle(
+        open_pin_handle(*dos_working_directory, true));
+    PhysicalPathIdentity dos_working_directory_identity{};
+    if (!dos_working_directory_handle.valid() ||
+        !read_handle_identity(
+            dos_working_directory_handle.get(), true,
+            dos_working_directory_identity) ||
+        dos_working_directory_identity != authority->working_directory_identity ||
+        !dos_volume_binding_matches_handle(
+            *dos_working_directory, working_directory_handle.get(),
+            working_directory_identity.storage_id)) {
         result.diagnostic_code =
             "workspace_agent.process_target_pin_identity_changed";
         return result;
@@ -1188,7 +1353,7 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
     // Allocation then precedes the no-throw raw-handle transfer, so failure
     // leaves the scoped chain responsible for closing every acquired handle.
     std::filesystem::path retained_working_directory =
-        *stable_working_directory;
+        *dos_working_directory;
     std::string retained_executable_sha256 = authority->executable_sha256;
     auto impl = std::unique_ptr<WorkspaceAgentProcessTargetPins::Impl>(
         new WorkspaceAgentProcessTargetPins::Impl(
