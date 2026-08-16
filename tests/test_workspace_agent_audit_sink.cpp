@@ -251,6 +251,7 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
         .session_generation = 7U,
         .requested_mode = WorkspaceAgentAccessMode::unrestricted_local,
         .effective_mode = WorkspaceAgentAccessMode::unrestricted_local,
+        .process_instance_id = "0123456789abcdef0123456789abcdef",
         .operation_id = 9U,
         .outcome = "pending",
         .diagnostic_code = "workspace_agent.process_launch_intent"};
@@ -261,6 +262,7 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
         .session_generation = 7U,
         .requested_mode = WorkspaceAgentAccessMode::unrestricted_local,
         .effective_mode = WorkspaceAgentAccessMode::unrestricted_local,
+        .process_instance_id = "0123456789abcdef0123456789abcdef",
         .operation_id = 9U,
         .outcome = "exited",
         .diagnostic_code = "polyglot.process.exited"};
@@ -310,6 +312,17 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
     auto missing_operation = process_intent;
     missing_operation.operation_id = 0U;
     malformed.push_back(missing_operation);
+    auto missing_process_instance = process_intent;
+    missing_process_instance.process_instance_id.clear();
+    malformed.push_back(missing_process_instance);
+    auto zero_process_instance = process_intent;
+    zero_process_instance.process_instance_id =
+        "00000000000000000000000000000000";
+    malformed.push_back(zero_process_instance);
+    auto injected_process_instance = process_intent;
+    injected_process_instance.process_instance_id =
+        "0123456789abcdef/path-or-secret";
+    malformed.push_back(injected_process_instance);
     auto injected_process_diagnostic = process_outcome;
     injected_process_diagnostic.diagnostic_code =
         "polyglot.process.exited/secret/path/token";

@@ -37,6 +37,7 @@ set(process_containment_header include/copperfin/security/workspace_agent_proces
 set(process_containment_source src/security/workspace_agent_process_containment.cpp)
 set(session_header include/copperfin/security/workspace_agent_session.h)
 set(session_source src/security/workspace_agent_session.cpp)
+set(audit_sink_source src/security/workspace_agent_audit_sink.cpp)
 set(platform_test tests/test_platform_private_directory.cpp)
 set(isolation_metadata tests/CopperfinTestIsolation.cmake)
 set(environment_test tests/test_workspace_agent_isolated_environment.cpp)
@@ -56,6 +57,7 @@ foreach(path IN ITEMS
         ${process_containment_source}
         ${session_header}
         ${session_source}
+        ${audit_sink_source}
         ${platform_test}
         ${isolation_metadata}
         ${environment_test}
@@ -66,8 +68,24 @@ foreach(path IN ITEMS
 endforeach()
 
 foreach(token IN ITEMS
+        "make_process_execution_instance_id()"
+        "process_execution_instance_id()"
+        "BCRYPT_USE_SYSTEM_PREFERRED_RNG"
+        "::getrandom("
+        "::arc4random_buf("
+        ".process_instance_id = process_instance_id")
+    require_text(${session_source} "${token}"
+        "cross-process audit correlation namespace")
+endforeach()
+require_text(${audit_sink_source} "event.process_instance_id.size() == 32U"
+    "strict process-instance identifier validation")
+
+foreach(token IN ITEMS
         "stable_volume_path_for_handle("
         "VOLUME_NAME_GUID"
+        "VOLUME_NAME_NT"
+        "\\\\?\\\\GLOBALROOT"
+        "stable_volume_root_length("
         "class ScopedPinHandleChain"
         "::DuplicateHandle("
         "read_handle_identity(handle, true, component_identity)"

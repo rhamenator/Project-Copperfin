@@ -72,31 +72,69 @@ bool handle_identity_matches(
          information.ftCreationTime.dwLowDateTime) == expected_creation_ticks;
 }
 
+std::optional<std::size_t> stable_volume_root_length(
+    const std::wstring_view path) noexcept {
+    constexpr std::wstring_view guid_prefix = L"\\\\?\\Volume{";
+    if (path.rfind(guid_prefix, 0U) == 0U) {
+        const std::size_t close = path.find(L"}\\", guid_prefix.size());
+        if (close != std::wstring_view::npos && close > guid_prefix.size()) {
+            return close + 2U;
+        }
+        return std::nullopt;
+    }
+    constexpr std::wstring_view device_prefix =
+        L"\\\\?\\GLOBALROOT\\Device\\HarddiskVolume";
+    if (path.rfind(device_prefix, 0U) != 0U) {
+        return std::nullopt;
+    }
+    std::size_t index = device_prefix.size();
+    const std::size_t digits_begin = index;
+    while (index < path.size() && path[index] >= L'0' && path[index] <= L'9') {
+        ++index;
+    }
+    if (index == digits_begin || index >= path.size() || path[index] != L'\\') {
+        return std::nullopt;
+    }
+    return index + 1U;
+}
+
+std::optional<std::wstring> final_path_for_handle(
+    const HANDLE handle,
+    const DWORD volume_name) {
+    const DWORD flags = FILE_NAME_NORMALIZED | volume_name;
+    constexpr DWORD maximum_path_characters = 32'768U;
+    std::vector<wchar_t> buffer(512U);
+    for (;;) {
+        const DWORD written = ::GetFinalPathNameByHandleW(
+            handle, buffer.data(), static_cast<DWORD>(buffer.size()), flags);
+        if (written == 0U || written > maximum_path_characters) {
+            return std::nullopt;
+        }
+        if (written >= buffer.size()) {
+            buffer.resize(static_cast<std::size_t>(written) + 1U);
+            continue;
+        }
+        return std::wstring(buffer.data(), static_cast<std::size_t>(written));
+    }
+}
+
 std::optional<std::filesystem::path> stable_volume_path_for_handle(
     const HANDLE handle) noexcept {
     try {
-        const DWORD flags = FILE_NAME_NORMALIZED | VOLUME_NAME_GUID;
-        constexpr DWORD maximum_path_characters = 32'768U;
-        std::vector<wchar_t> buffer(512U);
-        for (;;) {
-            const DWORD written = ::GetFinalPathNameByHandleW(
-                handle, buffer.data(), static_cast<DWORD>(buffer.size()), flags);
-            if (written == 0U || written > maximum_path_characters) {
-                return std::nullopt;
-            }
-            if (written >= buffer.size()) {
-                buffer.resize(written);
-                continue;
-            }
-            std::filesystem::path result(
-                std::wstring(buffer.data(), static_cast<std::size_t>(written)));
-            constexpr std::wstring_view volume_prefix = L"\\\\?\\Volume{";
-            if (!result.is_absolute() ||
-                result.native().rfind(volume_prefix, 0U) != 0U) {
-                return std::nullopt;
-            }
-            return result;
+        if (auto guid = final_path_for_handle(handle, VOLUME_NAME_GUID);
+            guid.has_value() && stable_volume_root_length(*guid).has_value()) {
+            return std::filesystem::path(std::move(*guid));
         }
+        auto native = final_path_for_handle(handle, VOLUME_NAME_NT);
+        if (!native.has_value() ||
+            native->rfind(L"\\Device\\HarddiskVolume", 0U) != 0U) {
+            return std::nullopt;
+        }
+        std::wstring global = L"\\\\?\\GLOBALROOT" + *native;
+        if (!stable_volume_root_length(global).has_value()) {
+            return std::nullopt;
+        }
+        return std::filesystem::path(std::move(global));
     } catch (...) {
         return std::nullopt;
     }
@@ -304,16 +342,22 @@ public:
     [[nodiscard]] bool lock(const std::filesystem::path& directory) noexcept {
         reset();
         try {
-            std::filesystem::path current = directory.root_path();
-            if (current.empty()) {
+            const auto root_length =
+                stable_volume_root_length(directory.native());
+            if (!root_length.has_value() || *root_length > directory.native().size()) {
                 reset();
                 return false;
             }
-            // The caller supplies a volume-GUID path. That root cannot be
-            // redirected like a drive-letter, SUBST, or mapped-drive name and
+            std::filesystem::path current(
+                directory.native().substr(0U, *root_length));
+            const std::filesystem::path relative(
+                directory.native().substr(*root_length));
+            // The caller supplies a validated local-volume device path. Its
+            // GUID or GLOBALROOT root cannot be redirected like a drive-letter,
+            // SUBST, or mapped-drive name, and
             // Windows may refuse a delete-denying open on the volume root.
             // Lock every actual directory entry below that stable root.
-            for (const auto& component : directory.relative_path()) {
+            for (const auto& component : relative) {
                 if (component.empty() || component == "." || component == "..") {
                     reset();
                     return false;
@@ -774,8 +818,8 @@ materialize_private_executable_image_in_verified_parent(
             return result;
         }
         // CreateProcessW reopens the image by pathname. Use the handle-derived
-        // volume-GUID path so drive-letter, SUBST, and mapped-drive names cannot
-        // be redirected. Retain a no-delete-share handle for every renameable
+        // stable local-volume device path so drive-letter, SUBST, and mapped-
+        // drive names cannot be redirected. Retain a no-delete-share handle for every renameable
         // directory below that root through the private parent, then repeat the
         // leaf identity check. This prevents any
         // ancestor name from being renamed or replaced between materialization

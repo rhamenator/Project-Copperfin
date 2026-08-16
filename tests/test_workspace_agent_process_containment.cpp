@@ -635,6 +635,9 @@ void test_boundary_retains_exact_process_target_objects() {
     expect(correct_boundary.pinned && correct_boundary.pins.has_value() &&
                correct_boundary.pins->valid(),
            "RQ-CF-AGENT-023: a cross-boundary denial must not consume the issuing boundary's one-attempt authority");
+    if (!correct_boundary.pins.has_value()) {
+        return;
+    }
     const auto replay = boundary->pin_process_targets(cross_boundary_inspection);
     expect(!replay.pinned &&
                replay.diagnostic_code ==

@@ -50,6 +50,9 @@ struct WorkspaceAgentSessionAuditEvent {
     WorkspaceAgentAccessMode effective_mode = WorkspaceAgentAccessMode::advisory;
     // Present only in schema version 2 process-launch records. It correlates one
     // content-free intent/outcome pair without exposing a tool target or input.
+    // The process-instance identifier prevents counter reuse in another host
+    // process or after restart from making that pair ambiguous.
+    std::string process_instance_id{};
     std::uint64_t operation_id = 0U;
     std::string outcome;
     std::string diagnostic_code;
@@ -382,6 +385,7 @@ struct WorkspaceAgentProcessExecutionResult {
     bool intent_audit_committed = false;
     bool outcome_audit_committed = false;
     std::uint64_t session_generation = 0U;
+    std::string process_instance_id{};
     std::uint64_t operation_id = 0U;
     std::string intent_audit_receipt;
     std::string outcome_audit_receipt;

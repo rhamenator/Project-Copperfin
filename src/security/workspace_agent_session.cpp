@@ -11,6 +11,7 @@
 #include "copperfin/platform/process_environment.h"
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <condition_variable>
 #include <iomanip>
@@ -21,6 +22,17 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+
+#if defined(_WIN32)
+#define NOMINMAX
+#include <windows.h>
+#include <bcrypt.h>
+#elif defined(__linux__)
+#include <cerrno>
+#include <sys/random.h>
+#elif defined(__APPLE__)
+#include <stdlib.h>
+#endif
 
 namespace copperfin::security {
 
@@ -199,6 +211,57 @@ static_assert(
 namespace {
 
 std::atomic<std::uint64_t> next_process_execution_operation_id{1U};
+
+std::string make_process_execution_instance_id() noexcept {
+    std::array<unsigned char, 16U> bytes{};
+#if defined(_WIN32)
+    if (::BCryptGenRandom(
+            nullptr, bytes.data(), static_cast<ULONG>(bytes.size()),
+            BCRYPT_USE_SYSTEM_PREFERRED_RNG) < 0) {
+        return {};
+    }
+#elif defined(__linux__)
+    std::size_t offset = 0U;
+    while (offset < bytes.size()) {
+        const ssize_t count =
+            ::getrandom(bytes.data() + offset, bytes.size() - offset, 0);
+        if (count < 0 && errno == EINTR) {
+            continue;
+        }
+        if (count <= 0) {
+            return {};
+        }
+        offset += static_cast<std::size_t>(count);
+    }
+#elif defined(__APPLE__)
+    ::arc4random_buf(bytes.data(), bytes.size());
+#else
+    return {};
+#endif
+    bool any_nonzero = false;
+    for (const unsigned char value : bytes) {
+        any_nonzero = any_nonzero || value != 0U;
+    }
+    if (!any_nonzero) {
+        return {};
+    }
+    try {
+        static constexpr char hex[] = "0123456789abcdef";
+        std::string result(bytes.size() * 2U, '0');
+        for (std::size_t index = 0U; index < bytes.size(); ++index) {
+            result[index * 2U] = hex[(bytes[index] >> 4U) & 0x0fU];
+            result[index * 2U + 1U] = hex[bytes[index] & 0x0fU];
+        }
+        return result;
+    } catch (...) {
+        return {};
+    }
+}
+
+const std::string& process_execution_instance_id() noexcept {
+    static const std::string identifier = make_process_execution_instance_id();
+    return identifier;
+}
 
 std::uint64_t allocate_process_execution_operation_id() noexcept {
     std::uint64_t current =
@@ -1369,6 +1432,13 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
         const std::uint64_t generation = launch.session_generation();
         const WorkspaceAgentAccessMode effective_mode =
             environment_plan.effective_mode;
+        const std::string& process_instance_id =
+            process_execution_instance_id();
+        if (process_instance_id.empty()) {
+            unavailable.diagnostic_code =
+                "workspace_agent.process_execution_namespace_unavailable";
+            return unavailable;
+        }
         std::uint64_t operation_id = 0U;
         {
             std::lock_guard lock(mutex_);
@@ -1394,6 +1464,7 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
 
         WorkspaceAgentProcessExecutionResult result;
         result.session_generation = generation;
+        result.process_instance_id = process_instance_id;
         result.operation_id = operation_id;
 
         const bool controls_valid = controls.schema_version == 1U &&
@@ -1489,6 +1560,7 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             .session_generation = generation,
             .requested_mode = effective_mode,
             .effective_mode = effective_mode,
+            .process_instance_id = process_instance_id,
             .operation_id = operation_id,
             .outcome = "pending",
             .diagnostic_code = "workspace_agent.process_launch_intent"};
@@ -1498,6 +1570,7 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             .session_generation = generation,
             .requested_mode = effective_mode,
             .effective_mode = effective_mode,
+            .process_instance_id = process_instance_id,
             .operation_id = operation_id,
             .outcome = denial.empty() ? "launch-failed" : "denied",
             .diagnostic_code = denial.empty()
@@ -1528,6 +1601,7 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
                     .session_generation = generation,
                     .requested_mode = effective_mode,
                     .effective_mode = effective_mode,
+                    .process_instance_id = process_instance_id,
                     .operation_id = operation_id,
                     .outcome = copperfin::platform::bounded_process_status_name(
                         result.process.status),
@@ -1879,7 +1953,9 @@ std::string serialize_workspace_agent_session_audit_event(
            << json_escape(workspace_agent_access_mode_name(event.effective_mode))
            << "\"";
     if (event.schema_version >= 2U) {
-        stream << ",\"operation_id\":" << event.operation_id;
+        stream << ",\"process_instance_id\":\""
+               << json_escape(event.process_instance_id)
+               << "\",\"operation_id\":" << event.operation_id;
     }
     stream << ",\"outcome\":\"" << json_escape(event.outcome)
            << "\",\"diagnostic_code\":\"" << json_escape(event.diagnostic_code)

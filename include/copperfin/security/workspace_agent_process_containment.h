@@ -47,7 +47,7 @@ struct WorkspaceAgentProcessTargetAuthenticationResult {
 // Move-only ownership of the exact workspace root, executable, and working
 // directory objects opened by the process-target boundary plus an immutable
 // private executable-byte snapshot. On Windows it privately retains the full
-// working-directory hierarchy beneath a handle-derived volume-GUID root for
+// working-directory hierarchy beneath a handle-derived local-volume device root for
 // launch. It exposes no bytes, native handle, path, or launch operation.
 // Snapshot authentication does not authorize process creation.
 class WorkspaceAgentProcessTargetPins {

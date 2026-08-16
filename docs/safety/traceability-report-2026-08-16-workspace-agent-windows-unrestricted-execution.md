@@ -27,10 +27,10 @@ use.
 | `DQ-workspace-agent-windows-execution-006`: workspace-sandbox, stale or cross-controller authority, invalid controls, elevated or unknown elevation, and non-Windows hosts shall consume the attempt and fail closed without execution; the public promotion gate shall remain denied | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-007`: admitted images shall attest launch-wide system-only dependency behavior; the private image shall not fall back to mutable source-adjacent or working-directory DLLs | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-004` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-008`: same-controller lifecycle reentry on a synchronous audit or cancellation callback's own thread shall fail closed without waiting on that stack's revocation lease; unrelated concurrent stop shall retain normal revocation semantics | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-005` | `HZ-system-failure-01` |
-| `DQ-workspace-agent-windows-execution-009`: the private image launch name shall be derived from its authenticated handle as a stable volume-GUID path; every renameable component below that root through the private image parent shall remain held without delete sharing through process completion, and a final pathname reopen under that retained chain shall match the authenticated image identity before launch | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-009`: the private image launch name shall be derived from its authenticated handle as a stable local-volume device path (volume GUID preferred, validated `GLOBALROOT\\Device\\HarddiskVolumeN` fallback); every renameable component below that root through the private image parent shall remain held without delete sharing through process completion, and a final pathname reopen under that retained chain shall match the authenticated image identity before launch | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
 | `DQ-workspace-agent-windows-execution-010`: anonymous transport pipes shall use a protected current-logon and restricted-code DACL, remain creatable by a restricted non-elevated host, and expose only the fixed child endpoints through the explicit inheritance list | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-011`: the working directory shall be converted from its authenticated handle to a stable volume-GUID path, and every renameable component beneath that root shall remain held without delete sharing until `CreateProcessW` has consumed the path | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-007` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
-| `DQ-workspace-agent-windows-execution-012`: each process intent/outcome pair shall use one nonzero operation identifier from a process-wide, nonwrapping namespace so records from controllers sharing a durable sink cannot collide | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-008` | `HZ-system-failure-01` |
+| `DQ-workspace-agent-windows-execution-011`: the working directory shall be converted from its authenticated handle to the same accepted stable local-volume device form, and every renameable component beneath that explicitly parsed device root shall remain held without delete sharing until `CreateProcessW` has consumed the path | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-007` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-012`: each process intent/outcome pair shall use one 128-bit operating-system-random process-instance identifier plus a nonzero operation identifier from a process-wide, nonwrapping counter so records from controllers, processes, and restarts sharing a durable sink have collision-resistant correlation identities; random-source failure shall deny execution before intent | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-008` | `HZ-system-failure-01` |
 
 - `DV-workspace-agent-windows-execution-001`: focused controller regressions
   exercise one-attempt consumption, sandbox and platform denial, failed-intent
@@ -38,7 +38,8 @@ use.
   exit, cleanup, and revocation lifecycle.
 - `DV-workspace-agent-windows-execution-002`: durable audit-sink regressions
   admit only schema-v2 content-free intent/outcome records and reject zero
-  operation identifiers, injected diagnostics, mode mismatches, and
+  missing, malformed, or injected process-instance identifiers, zero operation
+  identifiers, injected diagnostics, mode mismatches, and
   status/diagnostic mismatches. The machine contract preserves the private
   exact-image seam and invariant public boundary.
 - `DV-workspace-agent-windows-execution-003`: protected Windows must execute the
@@ -94,18 +95,18 @@ observer does not admit a writer, deleter, or renamer.
   original tool source. The RQ-027 read-only identity-bound private image
   remains live throughout process completion and cleanup. No-delete-share
   handles retain the complete renameable Windows directory chain below a
-  handle-derived volume-GUID root through that lifetime,
+  handle-derived stable local-volume device root through that lifetime,
   and a final identity-matched pathname reopen after chain acquisition prevents
   ancestor rename/replacement from redirecting the loader. RQ-018's exact-
   digest launch-wide dependency attestation rejects tools that need
   application-local or working-directory DLLs until an authenticated
   dependency-closure design exists.
-- Working-directory redirection: the target pins derive a volume-GUID path from
+- Working-directory redirection: the target pins derive a stable local-volume device path from
   the authenticated directory handle and retain every renameable component of
   that path until process creation commits. A drive-letter, `SUBST`, mapped-
   drive, leaf, or ancestor redirection therefore cannot substitute the child's
   current directory between admission and `CreateProcessW`.
-  Windows network shares do not expose volume-GUID paths and therefore fail
+  Windows network shares do not expose an accepted local-volume device path and therefore fail
   closed at this boundary; the v1 executor supports local fixed-volume targets.
 - Descendant escape and resource exhaustion: the process is created suspended
   and assigned to a kill-on-close Job Object before resume. Timeout,
@@ -122,14 +123,17 @@ observer does not admit a writer, deleter, or renamer.
   the child is still bounded, without destroying the private image until the
   owned tree closes.
 - Audit loss or disclosure: failed intent audit starts nothing. Process audit
-  records contain only schema, kind, generation, mode, operation identifier,
+  records contain only schema, kind, generation, mode, process-instance and
+  operation identifiers,
   stable outcome, and stable diagnostic. Output, paths, arguments, environment,
   prompts, credentials, receipts, and native errors are excluded. Outcome-audit
   failure remains visible but cannot retroactively stop a completed attempt.
   Crash-recoverable intent reconciliation is not yet implemented.
-  Operation identifiers come from one process-wide nonwrapping allocator, so
-  controllers writing to the same sink cannot produce the same correlation
-  identifier during one host process lifetime.
+  Correlation uses a 128-bit identifier from the operating system's random
+  source for each host-process lifetime plus one process-wide nonwrapping
+  counter. Distinct controllers share the counter, while distinct processes and
+  restarts receive collision-resistant correlation namespaces. Random-source
+  failure denies execution before intent.
 - Callback reentry: same-controller lifecycle changes from an audit or
   cancellation callback's own thread are not supported. They fail closed
   immediately, preventing either callback from waiting on its own retained
@@ -150,8 +154,9 @@ Current direct evidence:
   process, workspace-agent session, isolated environment, durable audit sink,
   and the exact-snapshot machine contract;
 - fresh GCC 15 Release with `-Werror` passes the same `5/5` without warnings;
-- fresh Clang 21 ASan/UBSan with leak detection passes session, isolated
-  environment, and durable audit sink at `3/3` without findings;
+- fresh Clang 21 ASan/UBSan with leak detection passes target containment,
+  session, isolated environment, private image, and durable audit sink at `5/5`
+  without findings;
 - licensing, community, release-license, isolation, supply-chain, and safety
   contracts pass `6/6`, including the corrected-head 328.63-second repository-wide safety
   scan;

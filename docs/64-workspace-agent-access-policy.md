@@ -867,17 +867,19 @@ different logon session. Only the fixed child ends enter the process attribute
 handle list; the parent ends are made non-inheritable before process creation.
 
 Before any attempt, the controller durably submits a content-free schema-v2
-intent with generation and an operation identifier from one process-wide,
-nonwrapping allocator. Distinct controllers sharing a durable sink therefore
-cannot emit colliding correlation identifiers during the host process. A
-failed intent audit consumes and destroys the one-attempt image and starts
+intent with generation, a 128-bit operating-system-random process-instance
+identifier, and an operation identifier from one process-wide, nonwrapping
+allocator. The pair gives distinct controllers, host processes, and process
+restarts sharing a durable sink a collision-resistant correlation identity.
+Failure to obtain the process-instance identifier denies execution before
+intent. A failed intent audit consumes and destroys the one-attempt image and starts
 nothing. The Windows launcher uses the private image path only internally as
 `lpApplicationName`, preserves the authenticated original executable spelling
 as `argv[0]`, passes the fixed double-NUL environment and a handle-derived
-volume-GUID working-directory path, never invokes a shell or PATH search, and admits only the
+stable local-volume device working-directory path, never invokes a shell or PATH search, and admits only the
 three fixed standard handles. Before exposing that internal launch path, the
 private image retains no-delete-share handles for every renameable directory
-below its handle-derived stable volume-GUID root through its private parent
+below its handle-derived stable local-volume device root through its private parent
 (the intrinsically non-renameable root itself needs no handle) and reopens the leaf
 once more with a read-only observer that shares delete only for compatibility
 with the retained handle's own delete access. That observer proves
@@ -888,7 +890,9 @@ The retained target pins apply the same stable-volume naming and complete
 hierarchy retention to the working directory until process creation commits,
 so leaf, ancestor, drive-letter, `SUBST`, and mapped-drive redirection fail
 closed rather than changing the child's current directory.
-Network shares have no Windows volume-GUID path and are intentionally denied by
+The stable name prefers a volume-GUID path and falls back only to a validated
+`GLOBALROOT\\Device\\HarddiskVolumeN` name when the local volume exposes no GUID.
+Network shares expose neither accepted local-volume form and are intentionally denied by
 this v1 executor; unrestricted execution is limited to authenticated local-
 volume targets.
 The exact-digest

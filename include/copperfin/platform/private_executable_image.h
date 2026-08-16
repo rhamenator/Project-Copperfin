@@ -39,7 +39,7 @@ struct PrivateExecutableImageMaterializationResult;
 // anchor, then admits a linked-path read/delete handle only when its identity
 // matches exactly. That final handle denies write, delete, and rename sharing;
 // no-delete-share handles retain every renameable Windows directory below a
-// handle-derived stable volume-GUID root through the image parent, and a final
+// handle-derived stable local-volume device root through the image parent, and a final
 // reopen through that stable path must still match the exact image identity.
 // Destruction deletes the handle-owned object before releasing
 // the directory chain. No path or native handle is exposed by this portability

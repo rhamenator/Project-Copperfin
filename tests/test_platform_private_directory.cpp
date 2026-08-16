@@ -524,6 +524,11 @@ void test_exact_private_executable_image_materialization() {
                materialized.image->valid() &&
                materialized.failure == PrivateExecutableImageFailure::none,
            "RQ-CF-AGENT-026: exact bytes must become one owned executable image");
+    if (!materialized.materialized || !materialized.image.has_value()) {
+        std::cerr << "RQ-CF-AGENT-026 materialization failure="
+                  << static_cast<std::uint32_t>(materialized.failure) << '\n';
+        return;
+    }
 #if defined(_WIN32)
     const auto renamed_ancestor = tree.root / "image-ancestor-replaced";
     const BOOL ancestor_renamed = ::MoveFileExW(
@@ -593,6 +598,11 @@ void test_exact_private_executable_image_materialization() {
                launch_materialized.image.has_value() &&
                launch_transitioned_test_image(private_root / launch_leaf),
            "RQ-CF-AGENT-027: CreateProcessW must launch the exact transitioned test image while its write-denying handle remains live");
+    if (!launch_materialized.materialized) {
+        std::cerr << "RQ-CF-AGENT-027 launch materialization failure="
+                  << static_cast<std::uint32_t>(launch_materialized.failure)
+                  << '\n';
+    }
     launch_materialized.image.reset();
     expect(!std::filesystem::exists(private_root / launch_leaf),
            "RQ-CF-AGENT-027: transitioned launch-image destruction must remove the exact object");
