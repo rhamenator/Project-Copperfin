@@ -1,3 +1,18 @@
+- 2026-08-16: Completed implementation evidence for candidate
+  `RQ-CF-AGENT-025` at corrected exact signed/DCO head `628cedc5b`. Initial
+  review found that only final candidate construction was exception-contained;
+  corrected-head rereview then found that prebuilding the fallback diagnostic
+  could itself allocate before the new boundary. Both defects were corrected,
+  both threads are resolved and outdated, and final exact-head automated review
+  found no major issue. All eleven protected checks passed in runs
+  `31928959822`, `31928960751`, `31928960746`, `31928960739`, and
+  `31928960735`; PR `#5040` merged into `v1-development` as `c74e9632c`.
+  Evidence-only licensing, community, isolation, supply-chain, and safety
+  contracts pass `5/5`, including the 318.29-second safety scan.
+  Implementation evidence is complete; the requirement remains a `gap` only
+  for qualified high-severity documentation sign-off, while exact-snapshot
+  execution and broader launch readiness remain separately scoped.
+
 - 2026-08-16: Added candidate `RQ-CF-AGENT-025`, an opaque non-executing
   workspace-agent launch-candidate composition boundary. The trusted controller
   now constructs the serialized plan internally, acquires authenticated target

@@ -97,8 +97,16 @@ Current local evidence:
   stop-blocking, orderly-release, and unchanged-launch-denial behavior; and
 - `git diff --check` passes.
 
-Protected Windows/Ubuntu/macOS, exact-head review, and merge evidence remain
-pending. Requirement status
-stays `gap`; no exact-snapshot execution, sandbox, endpoint/descendant, or
-outcome-audit readiness is claimed, and no qualified high-severity human sign-
-off is claimed.
+Corrected exact signed/DCO head
+`628cedc5b0de6f789dadebdce6b1c8749e824cec` passed all eleven protected checks
+in runs `31928959822`, `31928960751`, `31928960746`, `31928960739`, and
+`31928960735`, including Windows x64/Win32 DECLARE, Windows environment paths,
+and Windows/Ubuntu/macOS generated-launcher validation. Exact-head automated
+review found no major issue after both P2 corrections; both threads are
+resolved and outdated. PR `#5040` merged into `v1-development` as
+`c74e9632c6756f1d5d4d471ba1babccf7c0a7433`. Implementation evidence is
+complete. Evidence-only licensing, community, isolation, supply-chain, and
+safety contracts pass `5/5`, including the 318.29-second safety scan.
+Requirement status stays `gap`; no exact-snapshot execution, sandbox, endpoint/
+descendant, or outcome-audit readiness is claimed, and no qualified high-
+severity human sign-off is claimed.
