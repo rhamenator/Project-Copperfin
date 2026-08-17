@@ -415,6 +415,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::function<std::optional<RuntimeProgramStackFrame>(long long)>& program_stack_frame_callback,
     const std::string& error_handler,
     const std::string& shutdown_handler,
+    const std::function<std::string(const std::string&)>& key_assignment_lookup_callback,
     const std::function<int(const std::string&)>& aerror_callback,
     const std::function<PrgValue(const std::string&)>& eval_expression_callback,
     const std::function<std::string(const std::string&)>& set_callback,

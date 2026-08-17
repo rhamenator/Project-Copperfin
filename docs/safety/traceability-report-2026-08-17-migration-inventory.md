@@ -32,7 +32,9 @@ Focused Debug build and CTest pass `1/1` through `test_project_inventory`.
 The regression proves deterministic ordering, case-insensitive recognized
 suffix classification, JSON escaping, absolute-root omission, rejection of a
 relative root, non-UTF-8 POSIX-name denial, and file/directory symbolic-link
-reporting without traversal.
+reporting without traversal. Its machine-readable CTest isolation record is
+complete: portable, parallel-safe, test-owned filesystem only, and no
+environment, child-process, network, or sample dependency.
 
 Dependency discovery, metadata graphs, compatibility risks, migration-mode
 selection, database mapping, editable workspace mapping, all other specified

@@ -50,6 +50,7 @@
         const std::function<std::optional<RuntimeProgramStackFrame>(long long)>& program_stack_frame_callback,
         const std::string& error_handler,
         const std::string& shutdown_handler,
+        const std::function<std::string(const std::string&)>& key_assignment_lookup_callback,
         const std::function<int(const std::string&)>& aerror_callback,
         const std::function<PrgValue(const std::string&)>& eval_expression_callback,
         const std::function<std::string(const std::string&)>& set_callback,
@@ -91,6 +92,7 @@
                 std::function<std::optional<RuntimeProgramStackFrame>(long long)> program_stack_frame_callback,
                 const std::string &error_handler,
                 const std::string &shutdown_handler,
+                std::function<std::string(const std::string &)> key_assignment_lookup_callback,
                 bool exact_string_compare,
                 int current_work_area,
                 std::function<int()> next_free_work_area_callback,
@@ -266,7 +268,8 @@
                   program_stack_depth_(program_stack_depth),
                   program_stack_frame_callback_(std::move(program_stack_frame_callback)),
                   error_handler_(error_handler),
-                shutdown_handler_(shutdown_handler),
+                  shutdown_handler_(shutdown_handler),
+                  key_assignment_lookup_callback_(std::move(key_assignment_lookup_callback)),
                   exact_string_compare_(exact_string_compare)
             {
             }
@@ -1894,6 +1897,7 @@
                                                           program_stack_frame_callback_,
                                                           error_handler_,
                                                           shutdown_handler_,
+                                                          key_assignment_lookup_callback_,
                                                           aerror_callback_,
                                                           eval_expression_callback_,
                                                           set_callback_,
@@ -3614,6 +3618,7 @@
             std::function<std::optional<RuntimeProgramStackFrame>(long long)> program_stack_frame_callback_;
             const std::string &error_handler_;
             const std::string &shutdown_handler_;
+            std::function<std::string(const std::string &)> key_assignment_lookup_callback_;
             bool exact_string_compare_ = false;
             bool suppress_evaluation_ = false;
             std::size_t position_ = 0;
