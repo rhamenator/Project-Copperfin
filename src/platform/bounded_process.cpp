@@ -701,7 +701,7 @@ BoundedProcessResult run_windows(
         nullptr,
         nullptr,
         TRUE,
-        CREATE_NO_WINDOW | CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
+        CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
             EXTENDED_STARTUPINFO_PRESENT,
         environment_block.data(),
         working_directory.c_str(),

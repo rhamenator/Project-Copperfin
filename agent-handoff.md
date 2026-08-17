@@ -82,11 +82,14 @@ condition. Protected Windows run `31983455527` at exact head `62000e669` then
 proved that removing only `CREATE_NO_WINDOW` lets normal and suspended
 `CreateProcessAsUserW` probes exit with code `41`, whereas every matched
 flag-bearing probe retains the timeout signature. That selects the flag for
-the as-user form but not yet the production direct `CreateProcessW` API. The
-next test-only head removes only that flag from direct normal/suspended probes;
-production window behavior remains unchanged. The latest local focused
-machine-contract set passes `2/2`; native isolation and the corrected-tree
-safety-traceability contract also pass on the corrected tree.
+the as-user form but not yet the production direct `CreateProcessW` API.
+Protected run `31984855100` at `d763dcd53` proves the direct normal and
+suspended flag-free probes also exit cleanly; its only failures are the product
+execution and dependent revocation fixtures, which still carry the flag. The
+next production correction removes only `CREATE_NO_WINDOW` and retains every
+other trusted launch control. The latest local focused machine-contract set
+passes `2/2`; native isolation and the corrected-tree safety-traceability
+contract also pass on the corrected tree.
 
 ## V1 workspace-agent Windows launch-handle transition
 

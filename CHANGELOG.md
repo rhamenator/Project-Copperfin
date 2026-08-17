@@ -8828,8 +8828,12 @@ passes `1/1`.
   suspended flag-bearing probes created then timed out, while otherwise matched
   flag-free probes exited with code `41`. The test now retains those observed
   flag-bearing controls as a regression signature and adds the direct
-  `CreateProcessW` flag-free discriminator used by production. No production
-  window behavior changes until that direct evidence is retained.
+  `CreateProcessW` flag-free discriminator used by production. Protected run
+  `31984855100` then proved both direct flag-free forms exit cleanly while the
+  actual executor still timed out, selecting its remaining
+  `CREATE_NO_WINDOW` flag. Production now omits only that flag; suspended
+  creation, Unicode environment, extended startup attributes, Job ownership,
+  explicit handles, image binding, and bounded transport remain unchanged.
 - 2026-08-16: Added candidate `RQ-CF-AGENT-027`, a non-executing Windows
   launch-handle transition for the exact private image produced by
   `RQ-CF-AGENT-026`. After write/flush/reread verification, the platform closes

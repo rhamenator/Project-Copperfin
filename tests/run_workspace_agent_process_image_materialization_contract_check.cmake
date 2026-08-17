@@ -231,6 +231,8 @@ foreach(token IN ITEMS
     require_text(${bounded_process_source} "${token}"
         "bounded Windows exact-image launch contract")
 endforeach()
+forbid_text(${bounded_process_source} "CREATE_NO_WINDOW"
+    "restricted-token-compatible Windows exact-image launch flags")
 foreach(token IN ITEMS
         "workspace-agent-child-entry-v1"
         "workspace-agent-child-arguments-unrecognized-v1"

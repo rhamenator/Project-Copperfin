@@ -340,7 +340,13 @@ directory, and inherited standard handles while removing only
 `62000e669` then showed both normal and suspended `CreateProcessAsUserW` probe
 forms exit cleanly with code `41` when the flag is omitted, while every matched
 form retaining the flag continues to create and time out. This selects the
-flag for that API but does not yet prove the production `CreateProcessW` form;
-the next test-only candidate keeps the current token, image, working directory,
-standard handles, and normal/suspended forms while removing only that flag from
-direct `CreateProcessW`. Production authority and behavior remain unchanged.
+flag for that API. Protected Windows run `31984855100` at exact head
+`d763dcd53` then proved the same normal and suspended direct `CreateProcessW`
+probe forms exit cleanly without the flag; the separate product execution and
+revocation fixtures alone remained timed out, because production still carried
+the flag. This is direct evidence for removing only `CREATE_NO_WINDOW` from
+the production creation flags. It preserves suspended creation, the fixed
+Unicode environment, extended startup attributes, atomic Job assignment,
+explicit inherited-handle list, pre-resume image binding, bounded transport,
+and cleanup. Protected confirmation of the production correction remains
+required.
