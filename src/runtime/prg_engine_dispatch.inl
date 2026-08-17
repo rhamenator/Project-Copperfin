@@ -5829,6 +5829,15 @@
                                   .detail = escape_handler.empty() ? "action=cleared" : "action=assigned",
                                   .location = statement.location});
                 return {};
+            case StatementKind::on_page:
+                page_handler = statement.expression;
+                page_handler_line_expression = statement.secondary_expression;
+                events.push_back({.category = "runtime.on_page",
+                                  .detail = page_handler.empty()
+                                      ? "action=cleared"
+                                      : "action=assigned;line=" + page_handler_line_expression,
+                                  .location = statement.location});
+                return {};
             case StatementKind::on_key_command:
             {
                 DataSessionState &session_state = current_session_state();

@@ -8926,3 +8926,9 @@ passes `1/1`.
   be requested through a safe runtime boundary. Native key capture, form/UI
   routing, mid-statement interruption, `RETRY` replay, and report-print
   `ON PAGE` behavior remain explicit compatibility gaps.
+- 2026-08-17: Recovered the VFP9 `ON PAGE` configuration/query boundary.
+  `ON PAGE AT LINE <nLineNumber> <command>` retains its command for
+  `ON('PAGE')`, and bare `ON PAGE` clears it. This deliberately does not claim
+  `_PLINENO` accounting, `EJECT PAGE`, pagination, or page-handler dispatch;
+  those require a real report/label page-emission model. A portable regression
+  locks down assignment, query, clearing, and non-dispatch.

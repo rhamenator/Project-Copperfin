@@ -2966,6 +2966,14 @@ Program parse_program_impl(
         } else if (upper == "ON ESCAPE" || starts_with_insensitive(line, "ON ESCAPE ")) {
             statement.kind = StatementKind::on_escape;
             statement.expression = upper == "ON ESCAPE" ? std::string{} : trim_copy(line.substr(10U));
+        } else if (upper == "ON PAGE" || starts_with_insensitive(line, "ON PAGE ")) {
+            statement.kind = StatementKind::on_page;
+            const std::string body = upper == "ON PAGE" ? std::string{} : trim_copy(line.substr(7U));
+            if (starts_with_insensitive(body, "AT LINE ")) {
+                const std::string assignment = trim_copy(body.substr(8U));
+                statement.secondary_expression = take_first_token(assignment);
+                statement.expression = trim_copy(assignment.substr(statement.secondary_expression.size()));
+            }
         } else if (upper == "ON ERROR" || starts_with_insensitive(line, "ON ERROR ")) {
             statement.kind = StatementKind::on_error;
             statement.expression = upper == "ON ERROR" ? std::string{} : trim_copy(line.substr(9U));
