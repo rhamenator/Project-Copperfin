@@ -12,9 +12,12 @@ failure. The operation cannot inspect local files or mutate, delete, rename,
 execute, activate a provider/UI, enforce endpoints, or supply diff/undo.
 Focused Debug CTest passed `3/3` (`test_workspace_agent_target_containment`,
 `test_workspace_agent_audit_sink`, and `test_workspace_agent_session`).
-Warning-clean/sanitizer, protected Windows/Ubuntu/macOS, review, merge, real
-sandbox, trusted activation, mutation, recovery, and diff/undo evidence remain
-required before the requirement can advance beyond `candidate`.
+Signed/DCO implementation head `03b48f290` passed every protected check: the
+Windows, Ubuntu, and macOS generated-launcher matrix, both Windows DECLARE
+matrices, Windows environment/path validation, GCC and Clang executable-path
+checks, DCO, and Socket project/pull-request checks. PR `#5048` merged as
+`9dedee8de`. The boundary remains `candidate`: it is not a real sandbox and
+does not implement trusted activation, mutation, recovery, diff, or undo.
 
 ## V1 workspace-agent Windows unrestricted exact-image execution
 
