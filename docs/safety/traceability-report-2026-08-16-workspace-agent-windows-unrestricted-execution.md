@@ -349,5 +349,7 @@ the private exact-image executor. The shared public bounded runner retains its
 existing no-console behavior. The private executor preserves suspended
 creation, the fixed Unicode environment, extended startup attributes, atomic
 Job assignment, explicit inherited-handle list, pre-resume image binding, bounded transport,
-and cleanup. Protected confirmation of the production correction remains
-required.
+and cleanup. Exact signed/DCO head `8080412de` passed the complete protected
+Windows, Ubuntu, and macOS generated-launcher matrix `31986901503`, including
+the corrected Windows product execution and revocation fixtures. Independent
+protected Windows environment/path validation `31986901535` also passed.

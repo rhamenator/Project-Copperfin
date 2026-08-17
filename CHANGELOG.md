@@ -8835,7 +8835,10 @@ passes `1/1`.
   that flag; the public bounded runner retains its prior no-console behavior.
   Suspended creation, Unicode environment, extended startup attributes, Job
   ownership, explicit handles, image binding, and bounded transport remain
-  unchanged.
+  unchanged. Exact signed/DCO head `8080412de` passed the full generated-
+  launcher matrix on Windows, Ubuntu, and macOS in protected run `31986901503`,
+  including the corrected Windows execution and revocation fixtures; protected
+  Windows environment/path validation `31986901535` also passed.
 - 2026-08-16: Added candidate `RQ-CF-AGENT-027`, a non-executing Windows
   launch-handle transition for the exact private image produced by
   `RQ-CF-AGENT-026`. After write/flush/reread verification, the platform closes
