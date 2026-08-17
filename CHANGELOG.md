@@ -8952,3 +8952,16 @@ passes `1/1`.
   and original image, including the applicable pessimistic lock. `GETNEXTMODIFIED()`
   and `TABLEUPDATE()` therefore traverse and clear it rather than leaving an
   orphaned state entry. The focused buffering regression covers this lifecycle.
+
+- 2026-08-17: Recovered VFP9 `OLDVAL()` for retained local buffered records.
+  The runtime now evaluates the supplied character expression against the
+  pre-mutation record through the ordinary PRG expression evaluator, preserving
+  its value type and supporting alias/work-area selection. Focused regression
+  coverage verifies original field/expression results plus invalidation after
+  `TABLEREVERT()` and `TABLEUPDATE()`. Remote-cursor, validation-rule without
+  buffering, and unmodified/appended-record behavior remain explicit gaps.
+
+- 2026-08-17: Corrected `OLDVAL()` nested-expression lifetime handling. The
+  original-record override now owns a stable copy while an expression runs, so
+  nested `TABLEREVERT()` or `TABLEUPDATE()` cannot leave a dangling field-read
+  pointer. The focused buffering regression covers both side-effect paths.

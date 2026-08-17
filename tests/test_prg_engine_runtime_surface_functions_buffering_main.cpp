@@ -7,6 +7,7 @@ int main()
     using namespace copperfin::test_support;
     test_getfldstate_tracks_buffered_mutation_state();
     test_setfldstate_assigns_buffered_mutation_state();
+    test_oldval_evaluates_buffered_original_record();
     test_local_optimistic_table_buffering();
     test_local_optimistic_table_buffering_append_lifecycle();
     test_local_optimistic_table_buffering_delete_recall();
