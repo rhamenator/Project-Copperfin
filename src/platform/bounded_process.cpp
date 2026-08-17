@@ -519,7 +519,8 @@ BoundedProcessResult run_windows(
     const std::u16string* retained_environment_block = nullptr,
     void (*launch_committed)(void*) noexcept = nullptr,
     void* launch_committed_context = nullptr,
-    const std::filesystem::path* expected_native_image_path = nullptr) {
+    const std::filesystem::path* expected_native_image_path = nullptr,
+    const bool suppress_console_window = true) {
     BoundedProcessResult result;
     const auto started_at = Clock::now();
     int conversion_error = 0;
@@ -701,7 +702,8 @@ BoundedProcessResult run_windows(
         nullptr,
         nullptr,
         TRUE,
-        CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
+        (suppress_console_window ? CREATE_NO_WINDOW : 0U) |
+            CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
             EXTENDED_STARTUPINFO_PRESENT,
         environment_block.data(),
         working_directory.c_str(),
@@ -1524,7 +1526,7 @@ BoundedProcessResult run_bounded_process(const BoundedProcessRequest& request) {
         return result;
     }
 #if defined(_WIN32)
-    return run_windows(request);
+    return run_windows(request, nullptr, nullptr, nullptr, nullptr, nullptr, true);
 #else
     return run_posix(request);
 #endif
@@ -1593,7 +1595,7 @@ BoundedProcessResult run_bounded_windows_private_executable(
         return run_windows(
             transport, &command_line, &environment,
             request.launch_committed, request.launch_committed_context,
-            native_path);
+            native_path, false);
 #else
         static_cast<void>(image);
         static_cast<void>(request);

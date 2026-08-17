@@ -30,6 +30,14 @@ required before implementation evidence can be called complete. POSIX/macOS
 execution, real workspace sandboxing, trusted provider/UI integration,
 endpoint policy, diff/undo, and crash-recoverable audit receipts remain gaps.
 
+The direct Windows transition matrix selected `CREATE_NO_WINDOW` as incompatible
+with the restricted exact-image executor. Its correction is intentionally
+private: `run_bounded_windows_private_executable()` passes the no-console
+selection as false, while the public `run_bounded_process()` path retains its
+prior no-console selection. The source contract requires both call-site choices
+and the conditional flag construction. Protected confirmation of this exact
+correction remains required.
+
 Exact head `8cddbd441` passed adjacent Windows private-image and parser tests
 but both protected workflows rejected target-pin preparation. Replacing its
 redundant drive-root serial query with `GetVolumeInformationByHandleW` on the

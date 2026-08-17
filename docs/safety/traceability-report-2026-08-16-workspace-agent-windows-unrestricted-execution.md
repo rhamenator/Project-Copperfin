@@ -344,9 +344,10 @@ flag for that API. Protected Windows run `31984855100` at exact head
 `d763dcd53` then proved the same normal and suspended direct `CreateProcessW`
 probe forms exit cleanly without the flag; the separate product execution and
 revocation fixtures alone remained timed out, because production still carried
-the flag. This is direct evidence for removing only `CREATE_NO_WINDOW` from
-the production creation flags. It preserves suspended creation, the fixed
-Unicode environment, extended startup attributes, atomic Job assignment,
-explicit inherited-handle list, pre-resume image binding, bounded transport,
+the flag. This is direct evidence for omitting `CREATE_NO_WINDOW` only from
+the private exact-image executor. The shared public bounded runner retains its
+existing no-console behavior. The private executor preserves suspended
+creation, the fixed Unicode environment, extended startup attributes, atomic
+Job assignment, explicit inherited-handle list, pre-resume image binding, bounded transport,
 and cleanup. Protected confirmation of the production correction remains
 required.

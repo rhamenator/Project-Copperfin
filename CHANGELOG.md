@@ -8831,9 +8831,11 @@ passes `1/1`.
   `CreateProcessW` flag-free discriminator used by production. Protected run
   `31984855100` then proved both direct flag-free forms exit cleanly while the
   actual executor still timed out, selecting its remaining
-  `CREATE_NO_WINDOW` flag. Production now omits only that flag; suspended
-  creation, Unicode environment, extended startup attributes, Job ownership,
-  explicit handles, image binding, and bounded transport remain unchanged.
+  `CREATE_NO_WINDOW` flag. The private exact-image executor now omits only
+  that flag; the public bounded runner retains its prior no-console behavior.
+  Suspended creation, Unicode environment, extended startup attributes, Job
+  ownership, explicit handles, image binding, and bounded transport remain
+  unchanged.
 - 2026-08-16: Added candidate `RQ-CF-AGENT-027`, a non-executing Windows
   launch-handle transition for the exact private image produced by
   `RQ-CF-AGENT-026`. After write/flush/reread verification, the platform closes

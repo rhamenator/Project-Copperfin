@@ -231,8 +231,13 @@ foreach(token IN ITEMS
     require_text(${bounded_process_source} "${token}"
         "bounded Windows exact-image launch contract")
 endforeach()
-forbid_text(${bounded_process_source} "CREATE_NO_WINDOW"
-    "restricted-token-compatible Windows exact-image launch flags")
+foreach(token IN ITEMS
+        "(suppress_console_window ? CREATE_NO_WINDOW : 0U)"
+        "return run_windows(request, nullptr, nullptr, nullptr, nullptr, nullptr, true);"
+        "native_path, false);")
+    require_text(${bounded_process_source} "${token}"
+        "Windows console-isolation and restricted exact-image launch split")
+endforeach()
 foreach(token IN ITEMS
         "workspace-agent-child-entry-v1"
         "workspace-agent-child-arguments-unrecognized-v1"
