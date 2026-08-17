@@ -185,12 +185,18 @@ Current direct evidence:
   and
 - `git diff --check` passes before publication.
 
-Protected Windows execution, protected Ubuntu/macOS denial, warning-as-error and
-sanitizer evidence, exact-head automated review, thread resolution, merge
-identity, and qualified high-severity documentation sign-off remain pending.
-Requirement status therefore remains `gap`. This slice is not a real sandbox,
-does not connect provider/model output to execution, and does not make the
-public promotion gate available.
+Protected Windows execution and protected Ubuntu/macOS denial now pass at
+signed/DCO implementation head `8080412de` in generated-launcher run
+`31986901503`. Evidence-only signed/DCO head `00847a95a` passed all eleven
+protected checks in runs `31988148829`, `31988150453`, `31988150500`,
+`31988150539`, and `31988150660`; its private Windows execution/revocation
+fixture, Windows environment/path validation, and the Ubuntu/macOS denial
+paths all passed. Read-only review found the private `CREATE_NO_WINDOW` scope
+correction sound, and PR `#5046` merged as `3f66eeae8`. Warning-as-error and
+sanitizer evidence remain retained above. Requirement status remains `gap`
+because qualified high-severity documentation sign-off is not claimed and the
+explicitly excluded sandbox, provider/model, and public-promotion surfaces
+remain unavailable.
 
 Initial protected Windows environment run `31946401986` compiled the product
 libraries but rejected the test-only child fixture because MSVC treats direct
