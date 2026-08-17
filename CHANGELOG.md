@@ -1,3 +1,13 @@
+- 2026-08-16: Added candidate `RQ-CF-AGENT-029`, a portable bounded
+  `workspace.inspect.v1` execution boundary. It accepts only a fixed product
+  tool, exact active session generation, strict relative workspace target, and
+  fixed 4 MiB cap; captures owned bytes only through identity-bracketed
+  physical containment; repeats admission after capture; and clears bytes if
+  the outcome audit cannot be persisted. Version-3 audit records correlate
+  content-free intent/outcome pairs without paths, filenames, bytes, prompts,
+  or credentials. This is read-only and does not grant mutation, local-file,
+  process, endpoint, provider, or UI authority.
+
 - 2026-08-16: Added candidate `RQ-CF-AGENT-028`, a Windows-only warned
   unrestricted exact-image executor. The controller consumes one opaque
   materialized launch for its exact active generation, refuses sandbox mode and

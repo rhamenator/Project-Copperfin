@@ -72,7 +72,8 @@ foreach(path IN ITEMS
 endforeach()
 
 foreach(token IN ITEMS
-        "make_process_execution_attempt_namespace()"
+        "make_workspace_agent_operation_namespace()"
+        "allocate_workspace_agent_operation_id()"
         "BCRYPT_USE_SYSTEM_PREFERRED_RNG"
         "::getrandom("
         "::arc4random_buf("
@@ -328,9 +329,9 @@ foreach(token IN ITEMS
         "workspace_agent.process_launch_revalidation_pinning_unavailable"
         "workspace_agent.process_execution_requires_unrestricted_local"
         "workspace_agent.process_execution_elevated_host_denied"
-        "allocate_process_execution_operation_id()"
+        "allocate_workspace_agent_operation_id()"
         "execution_working_directory()"
-        "next_process_execution_operation_id"
+        "next_workspace_agent_operation_id"
         "WorkspaceAgentSessionEventKind::process_launch_intent"
         "WorkspaceAgentSessionEventKind::process_launch_outcome"
         "workspace_agent.session_reentrant_audit_transition_denied"

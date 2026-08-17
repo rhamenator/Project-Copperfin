@@ -194,4 +194,41 @@ WorkspaceAgentFileTargetBoundary::inspect_local_file(
     return inspect_existing_regular_file(strict_absolute_target, parent);
 }
 
+WorkspaceAgentFileTargetSnapshot
+WorkspaceAgentFileTargetBoundary::snapshot_workspace_file(
+    const WorkspaceAgentFileTargetInspection& expected,
+    const std::uint64_t maximum_bytes) const {
+    if (!expected.allowed || expected.canonical_path.empty() ||
+        !workspace_root_identity_matches()) {
+        return {false, {}, {}, "workspace_agent.target_root_identity_changed"};
+    }
+    const PhysicalPathContainmentResult expected_containment{
+        .allowed = true,
+        .canonical_path = expected.canonical_path,
+        .identity = expected.identity,
+        .failure = PhysicalPathContainmentFailure::none};
+    const auto snapshot = read_physically_contained_file_snapshot(
+        expected_containment, canonical_workspace_root_, maximum_bytes);
+    if (!snapshot.ok) {
+        switch (snapshot.failure) {
+            case PhysicalPathContainmentFailure::size_limit_exceeded:
+                return {false, {}, {}, "workspace_agent.file_read_size_limit_exceeded"};
+            case PhysicalPathContainmentFailure::identity_changed:
+                return {false, {}, {}, "workspace_agent.file_read_identity_changed"};
+            case PhysicalPathContainmentFailure::read_failed:
+                return {false, {}, {}, "workspace_agent.file_read_failed"};
+            default:
+                return {false, {}, {}, "workspace_agent.file_read_target_unavailable"};
+        }
+    }
+    if (!workspace_root_identity_matches()) {
+        return {false, {}, {}, "workspace_agent.target_root_identity_changed"};
+    }
+    return {
+        .captured = true,
+        .bytes = snapshot.bytes,
+        .identity = snapshot.containment.identity,
+        .diagnostic_code = "workspace_agent.file_read_captured"};
+}
+
 }  // namespace copperfin::security

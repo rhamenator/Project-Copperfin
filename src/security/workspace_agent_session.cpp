@@ -212,7 +212,7 @@ static_assert(
 
 namespace {
 
-std::atomic<std::uint64_t> next_process_execution_operation_id{1U};
+std::atomic<std::uint64_t> next_workspace_agent_operation_id{1U};
 
 std::uint64_t current_process_execution_identity() noexcept {
 #if defined(_WIN32)
@@ -223,7 +223,7 @@ std::uint64_t current_process_execution_identity() noexcept {
 #endif
 }
 
-std::string make_process_execution_attempt_namespace() noexcept {
+std::string make_workspace_agent_operation_namespace() noexcept {
     std::array<unsigned char, 16U> bytes{};
 #if defined(_WIN32)
     if (::BCryptGenRandom(
@@ -269,12 +269,12 @@ std::string make_process_execution_attempt_namespace() noexcept {
     }
 }
 
-std::uint64_t allocate_process_execution_operation_id() noexcept {
+std::uint64_t allocate_workspace_agent_operation_id() noexcept {
     std::uint64_t current =
-        next_process_execution_operation_id.load(std::memory_order_relaxed);
+        next_workspace_agent_operation_id.load(std::memory_order_relaxed);
     while (current != 0U &&
            current != std::numeric_limits<std::uint64_t>::max()) {
-        if (next_process_execution_operation_id.compare_exchange_weak(
+        if (next_workspace_agent_operation_id.compare_exchange_weak(
                 current, current + 1U, std::memory_order_relaxed,
                 std::memory_order_relaxed)) {
             return current;
@@ -376,6 +376,10 @@ std::string event_kind_name(WorkspaceAgentSessionEventKind kind) {
             return "process_launch_intent";
         case WorkspaceAgentSessionEventKind::process_launch_outcome:
             return "process_launch_outcome";
+        case WorkspaceAgentSessionEventKind::workspace_file_read_intent:
+            return "workspace_file_read_intent";
+        case WorkspaceAgentSessionEventKind::workspace_file_read_outcome:
+            return "workspace_file_read_outcome";
     }
     return "invalid";
 }
@@ -1018,6 +1022,138 @@ WorkspaceAgentSessionController::preflight_file_target_request(
     return result;
 }
 
+WorkspaceAgentWorkspaceFileReadResult
+WorkspaceAgentSessionController::read_workspace_file_snapshot(
+    const WorkspaceAgentWorkspaceFileReadRequest& request,
+    const WorkspaceAgentSessionAuditSink& audit_sink) const {
+    WorkspaceAgentWorkspaceFileReadResult unavailable;
+    try {
+        if (request.schema_version != 1U) {
+            unavailable.diagnostic_code = "workspace_agent.file_read_invalid_schema";
+            return unavailable;
+        }
+        const WorkspaceAgentFileTargetPreflightRequest target_request{
+            .schema_version = 1U,
+            .session_generation = request.session_generation,
+            .tool_id = std::string(workspace_agent_tool_workspace_inspect),
+            .target_path = request.target_path};
+        const auto preliminary = preflight_file_target_request(target_request);
+        if (!preliminary.allowed) {
+            unavailable.diagnostic_code = preliminary.diagnostic_code;
+            return unavailable;
+        }
+        if (preliminary.tool_id != workspace_agent_tool_workspace_inspect ||
+            !file_target_boundary_.has_value()) {
+            unavailable.diagnostic_code = "workspace_agent.file_read_unavailable";
+            return unavailable;
+        }
+
+        const std::uint64_t execution_process_identity =
+            current_process_execution_identity();
+        const std::string operation_instance_id =
+            make_workspace_agent_operation_namespace();
+        if (execution_process_identity == 0U || operation_instance_id.empty()) {
+            unavailable.diagnostic_code = "workspace_agent.file_read_namespace_unavailable";
+            return unavailable;
+        }
+        std::uint64_t operation_id = 0U;
+        {
+            std::lock_guard lock(mutex_);
+            if (transition_ != Transition::idle || !active_session_.active ||
+                preliminary.session_generation == 0U ||
+                active_session_.generation != preliminary.session_generation ||
+                active_session_.effective_mode != preliminary.effective_mode) {
+                unavailable.diagnostic_code = "workspace_agent.file_read_stale_session";
+                return unavailable;
+            }
+            operation_id = allocate_workspace_agent_operation_id();
+            if (operation_id == 0U) {
+                unavailable.diagnostic_code = "workspace_agent.file_read_namespace_exhausted";
+                return unavailable;
+            }
+        }
+
+        WorkspaceAgentWorkspaceFileReadResult result;
+        result.session_generation = preliminary.session_generation;
+        result.operation_instance_id = operation_instance_id;
+        result.operation_id = operation_id;
+        const WorkspaceAgentSessionAuditEvent intent{
+            .schema_version = 3U,
+            .kind = WorkspaceAgentSessionEventKind::workspace_file_read_intent,
+            .session_generation = preliminary.session_generation,
+            .requested_mode = preliminary.effective_mode,
+            .effective_mode = preliminary.effective_mode,
+            .operation_id = operation_id,
+            .operation_instance_id = operation_instance_id,
+            .outcome = "pending",
+            .diagnostic_code = "workspace_agent.file_read_intent"};
+        WorkspaceAgentSessionAuditEvent outcome{
+            .schema_version = 3U,
+            .kind = WorkspaceAgentSessionEventKind::workspace_file_read_outcome,
+            .session_generation = preliminary.session_generation,
+            .requested_mode = preliminary.effective_mode,
+            .effective_mode = preliminary.effective_mode,
+            .operation_id = operation_id,
+            .operation_instance_id = operation_instance_id,
+            .outcome = "failed",
+            .diagnostic_code = "workspace_agent.file_read_failed"};
+        const AuditOutcome intent_audit = commit_audit_event(intent, audit_sink, this);
+        result.intent_audit_committed = intent_audit.committed;
+        result.intent_audit_receipt = intent_audit.receipt;
+        if (!intent_audit.committed) {
+            result.diagnostic_code = "workspace_agent.file_read_intent_audit_failed";
+            return result;
+        }
+        if (current_process_execution_identity() != execution_process_identity) {
+            result.diagnostic_code =
+                "workspace_agent.file_read_process_changed_after_intent_audit";
+            return result;
+        }
+
+        result.attempted = true;
+        const WorkspaceAgentFileTargetInspection expected{
+            .allowed = true,
+            .canonical_path = preliminary.canonical_path,
+            .identity = preliminary.identity,
+            .diagnostic_code = "workspace_agent.target_request_allowed"};
+        const auto snapshot = file_target_boundary_->snapshot_workspace_file(
+            expected, workspace_agent_workspace_file_read_max_bytes);
+        if (snapshot.captured) {
+            const auto final_preflight = preflight_file_target_request(target_request);
+            if (final_preflight.allowed &&
+                final_preflight.session_generation == preliminary.session_generation &&
+                final_preflight.tool_id == preliminary.tool_id &&
+                final_preflight.canonical_path == preliminary.canonical_path &&
+                final_preflight.identity == preliminary.identity &&
+                snapshot.identity == preliminary.identity) {
+                result.bytes = snapshot.bytes;
+                result.diagnostic_code = "workspace_agent.file_read_captured";
+                outcome.outcome = "captured";
+                outcome.diagnostic_code = result.diagnostic_code;
+            } else {
+                result.diagnostic_code = "workspace_agent.file_read_identity_changed";
+                outcome.diagnostic_code = result.diagnostic_code;
+            }
+        } else {
+            result.diagnostic_code = snapshot.diagnostic_code.empty()
+                ? "workspace_agent.file_read_failed"
+                : snapshot.diagnostic_code;
+            outcome.diagnostic_code = result.diagnostic_code;
+        }
+        const AuditOutcome outcome_audit = commit_audit_event(outcome, audit_sink, this);
+        result.outcome_audit_committed = outcome_audit.committed;
+        result.outcome_audit_receipt = outcome_audit.receipt;
+        if (!outcome_audit.committed) {
+            result.bytes.clear();
+            result.diagnostic_code = "workspace_agent.file_read_outcome_audit_failed";
+        }
+        return result;
+    } catch (...) {
+        unavailable.diagnostic_code = "workspace_agent.file_read_unavailable";
+        return unavailable;
+    }
+}
+
 WorkspaceAgentProcessTargetPreflightResult
 WorkspaceAgentSessionController::preflight_process_target_request(
     const WorkspaceAgentProcessTargetPreflightRequest& request) const {
@@ -1450,7 +1586,7 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
         // The durable correlation key remains the schema-v2
         // (process_instance_id, operation_id) pair for compatibility.
         const std::string process_instance_id =
-            make_process_execution_attempt_namespace();
+            make_workspace_agent_operation_namespace();
         if (process_instance_id.empty()) {
             unavailable.diagnostic_code =
                 "workspace_agent.process_execution_namespace_unavailable";
@@ -1471,7 +1607,7 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
                     "workspace_agent.process_execution_stale_session";
                 return unavailable;
             }
-            operation_id = allocate_process_execution_operation_id();
+            operation_id = allocate_workspace_agent_operation_id();
             if (operation_id == 0U) {
                 unavailable.diagnostic_code =
                     "workspace_agent.process_execution_namespace_exhausted";
@@ -1979,10 +2115,15 @@ std::string serialize_workspace_agent_session_audit_event(
            << "\",\"effective_mode\":\""
            << json_escape(workspace_agent_access_mode_name(event.effective_mode))
            << "\"";
-    if (event.schema_version >= 2U) {
+    if (event.schema_version == 2U) {
         stream << ",\"process_instance_id\":\""
                << json_escape(event.process_instance_id)
                << "\",\"operation_id\":" << event.operation_id;
+    }
+    if (event.schema_version >= 3U) {
+        stream << ",\"operation_id\":" << event.operation_id
+               << ",\"operation_instance_id\":\""
+               << json_escape(event.operation_instance_id) << "\"";
     }
     stream << ",\"outcome\":\"" << json_escape(event.outcome)
            << "\",\"diagnostic_code\":\"" << json_escape(event.diagnostic_code)

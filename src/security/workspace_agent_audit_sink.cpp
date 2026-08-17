@@ -21,6 +21,8 @@ constexpr std::string_view workspace_agent_session_audit_event_name =
     "workspace_agent.session.v1";
 constexpr std::string_view workspace_agent_process_audit_event_name =
     "workspace_agent.process.v2";
+constexpr std::string_view workspace_agent_file_read_audit_event_name =
+    "workspace_agent.file_read.v3";
 
 bool path_has_embedded_nul(const std::filesystem::path& path) {
     for (const auto& component : path) {
@@ -167,6 +169,7 @@ bool process_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) 
             event.process_instance_id.begin(), event.process_instance_id.end(),
             [](const char value) { return value != '0'; });
     if (event.schema_version != 2U || !instance_id_valid ||
+        !event.operation_instance_id.empty() ||
         event.operation_id == 0U ||
         event.requested_mode != event.effective_mode ||
         (event.effective_mode != WorkspaceAgentAccessMode::workspace_sandbox &&
@@ -200,6 +203,45 @@ bool process_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) 
         process_launch_failure_diagnostic_is_valid(event.diagnostic_code);
 }
 
+bool operation_instance_id_is_valid(const std::string_view value) {
+    return value.size() == 32U &&
+        std::all_of(value.begin(), value.end(), [](const unsigned char character) {
+            return (character >= '0' && character <= '9') ||
+                (character >= 'a' && character <= 'f');
+        }) &&
+        std::any_of(value.begin(), value.end(), [](const char character) {
+            return character != '0';
+        });
+}
+
+bool workspace_file_read_audit_event_is_valid(
+    const WorkspaceAgentSessionAuditEvent& event) {
+    if (event.schema_version != 3U || !event.process_instance_id.empty() ||
+        !operation_instance_id_is_valid(event.operation_instance_id) ||
+        event.operation_id == 0U ||
+        event.requested_mode != event.effective_mode ||
+        (event.effective_mode != WorkspaceAgentAccessMode::workspace_sandbox &&
+         event.effective_mode != WorkspaceAgentAccessMode::unrestricted_local)) {
+        return false;
+    }
+    if (event.kind == WorkspaceAgentSessionEventKind::workspace_file_read_intent) {
+        return event.outcome == "pending" &&
+            event.diagnostic_code == "workspace_agent.file_read_intent";
+    }
+    if (event.kind != WorkspaceAgentSessionEventKind::workspace_file_read_outcome) {
+        return false;
+    }
+    if (event.outcome == "captured") {
+        return event.diagnostic_code == "workspace_agent.file_read_captured";
+    }
+    return event.outcome == "failed" &&
+        (event.diagnostic_code == "workspace_agent.file_read_failed" ||
+         event.diagnostic_code == "workspace_agent.file_read_identity_changed" ||
+         event.diagnostic_code == "workspace_agent.file_read_size_limit_exceeded" ||
+         event.diagnostic_code == "workspace_agent.file_read_target_unavailable" ||
+         event.diagnostic_code == "workspace_agent.target_root_identity_changed");
+}
+
 bool session_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) {
     if (event.session_generation == 0U ||
         event.session_generation == std::numeric_limits<std::uint64_t>::max()) {
@@ -209,7 +251,12 @@ bool session_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) 
         event.kind == WorkspaceAgentSessionEventKind::process_launch_outcome) {
         return process_audit_event_is_valid(event);
     }
+    if (event.kind == WorkspaceAgentSessionEventKind::workspace_file_read_intent ||
+        event.kind == WorkspaceAgentSessionEventKind::workspace_file_read_outcome) {
+        return workspace_file_read_audit_event_is_valid(event);
+    }
     if (event.schema_version != 1U || !event.process_instance_id.empty() ||
+        !event.operation_instance_id.empty() ||
         event.operation_id != 0U) {
         return false;
     }
@@ -254,6 +301,8 @@ bool session_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) 
                      "workspace_agent.session_environment_boundary_unavailable");
         case WorkspaceAgentSessionEventKind::process_launch_intent:
         case WorkspaceAgentSessionEventKind::process_launch_outcome:
+        case WorkspaceAgentSessionEventKind::workspace_file_read_intent:
+        case WorkspaceAgentSessionEventKind::workspace_file_read_outcome:
             return false;
     }
     return false;
@@ -329,9 +378,11 @@ WorkspaceAgentSessionAuditCommitResult WorkspaceAgentSessionAuditFileSink::commi
         append_bounded_immutable_audit_event_to_contained_file(
             platform::path_to_utf8_string(log_path_),
             platform::path_to_utf8_string(storage_root_),
-            std::string(event.schema_version == 2U
+        std::string(event.schema_version == 2U
                     ? workspace_agent_process_audit_event_name
-                    : workspace_agent_session_audit_event_name),
+                    : event.schema_version == 3U
+                        ? workspace_agent_file_read_audit_event_name
+                        : workspace_agent_session_audit_event_name),
             serialize_workspace_agent_session_audit_event(event),
             max_log_bytes_);
     if (!appended.ok || appended.entry_hash.empty()) {

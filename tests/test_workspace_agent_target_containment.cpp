@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -23,6 +24,7 @@ using copperfin::security::WorkspaceAgentSessionAuditCommitResult;
 using copperfin::security::WorkspaceAgentSessionAuditEvent;
 using copperfin::security::WorkspaceAgentSessionAuditSink;
 using copperfin::security::WorkspaceAgentSessionController;
+using copperfin::security::WorkspaceAgentWorkspaceFileReadRequest;
 
 int failures = 0;
 
@@ -74,6 +76,30 @@ WorkspaceAgentSessionAuditCommitResult commit_audit(
 
 WorkspaceAgentSessionAuditSink audit_sink() {
     return {.commit = commit_audit};
+}
+
+struct AuditRecorder {
+    std::vector<WorkspaceAgentSessionAuditEvent> events;
+    bool reject_next = false;
+};
+
+WorkspaceAgentSessionAuditCommitResult record_audit(
+    const WorkspaceAgentSessionAuditEvent& event,
+    void* context) {
+    auto* recorder = static_cast<AuditRecorder*>(context);
+    if (recorder == nullptr) {
+        return {};
+    }
+    recorder->events.push_back(event);
+    if (recorder->reject_next) {
+        recorder->reject_next = false;
+        return {};
+    }
+    return {.ok = true, .receipt = "workspace-file-read-receipt"};
+}
+
+WorkspaceAgentSessionAuditSink recorder_sink(AuditRecorder& recorder) {
+    return {.commit = record_audit, .context = &recorder};
 }
 
 WorkspaceAgentActivationRequest request_for(WorkspaceAgentAccessMode mode) {
@@ -320,12 +346,95 @@ void test_workspace_root_replacement_fails_closed() {
            "RQ-CF-AGENT-009: replacement of the configured workspace identity must fail closed");
 }
 
+void test_session_bound_workspace_file_read() {
+    TempTree tree;
+    AuditRecorder recorder;
+    WorkspaceAgentSessionController controller(tree.workspace);
+    const auto started = controller.start(
+        request_for(WorkspaceAgentAccessMode::workspace_sandbox),
+        recorder_sink(recorder));
+    expect(started.activated,
+           "RQ-CF-AGENT-029: workspace file-read fixture must activate a sandbox session");
+    recorder.events.clear();
+
+    const WorkspaceAgentWorkspaceFileReadRequest request{
+        .session_generation = started.session.generation,
+        .target_path = "inside.prg"};
+    const auto captured = controller.read_workspace_file_snapshot(
+        request, recorder_sink(recorder));
+    expect(captured.attempted && captured.intent_audit_committed &&
+               captured.outcome_audit_committed &&
+               captured.bytes == "? 'inside'\n" &&
+               captured.diagnostic_code == "workspace_agent.file_read_captured" &&
+               captured.operation_id != 0U &&
+               captured.operation_instance_id.size() == 32U,
+           "RQ-CF-AGENT-029: an admitted workspace.inspect request must return only a bounded owned byte snapshot");
+    expect(recorder.events.size() == 2U &&
+               recorder.events[0].schema_version == 3U &&
+               recorder.events[0].kind ==
+                   copperfin::security::WorkspaceAgentSessionEventKind::workspace_file_read_intent &&
+               recorder.events[1].kind ==
+                   copperfin::security::WorkspaceAgentSessionEventKind::workspace_file_read_outcome &&
+               recorder.events[0].operation_instance_id == captured.operation_instance_id &&
+               recorder.events[1].operation_instance_id == captured.operation_instance_id &&
+               recorder.events[0].operation_id == captured.operation_id &&
+               recorder.events[1].operation_id == captured.operation_id &&
+               copperfin::security::serialize_workspace_agent_session_audit_event(
+                   recorder.events[0]).find("inside.prg") == std::string::npos,
+           "RQ-CF-AGENT-029: paired file-read audit records must be schema-v3 and content-free");
+
+    auto malformed = request;
+    malformed.schema_version = 2U;
+    const auto malformed_result = controller.read_workspace_file_snapshot(
+        malformed, recorder_sink(recorder));
+    expect(!malformed_result.attempted && malformed_result.bytes.empty() &&
+               malformed_result.diagnostic_code == "workspace_agent.file_read_invalid_schema",
+           "RQ-CF-AGENT-029: malformed file-read requests must fail before audit or file access");
+
+    recorder.events.clear();
+    recorder.reject_next = false;
+    const auto preflight_denied = controller.read_workspace_file_snapshot(
+        {.session_generation = started.session.generation,
+         .target_path = "../outside/outside.prg"},
+        recorder_sink(recorder));
+    expect(!preflight_denied.attempted && preflight_denied.bytes.empty() &&
+               recorder.events.empty(),
+           "RQ-CF-AGENT-029: invalid workspace paths must fail before a file-read intent is recorded");
+
+    recorder.events.clear();
+    recorder.reject_next = false;
+    // The first callback is the intent; reject the corresponding outcome.
+    struct OutcomeRejectingRecorder {
+        AuditRecorder* recorder = nullptr;
+        std::size_t calls = 0U;
+    } outcome_rejecting{.recorder = &recorder};
+    const WorkspaceAgentSessionAuditSink outcome_sink{
+        .commit = [](const WorkspaceAgentSessionAuditEvent& event, void* context) {
+            auto* state = static_cast<OutcomeRejectingRecorder*>(context);
+            state->recorder->events.push_back(event);
+            ++state->calls;
+            return state->calls == 1U
+                ? WorkspaceAgentSessionAuditCommitResult{.ok = true, .receipt = "intent"}
+                : WorkspaceAgentSessionAuditCommitResult{};
+        },
+        .context = &outcome_rejecting};
+    const auto unaudited_outcome = controller.read_workspace_file_snapshot(
+        request, outcome_sink);
+    expect(unaudited_outcome.attempted && unaudited_outcome.intent_audit_committed &&
+               !unaudited_outcome.outcome_audit_committed &&
+               unaudited_outcome.bytes.empty() &&
+               unaudited_outcome.diagnostic_code ==
+                   "workspace_agent.file_read_outcome_audit_failed",
+           "RQ-CF-AGENT-029: a failed outcome audit must not release captured file bytes");
+}
+
 }  // namespace
 
 int main() {
     test_boundary_rejects_aliases_and_indirection();
     test_session_bound_file_target_preflight();
     test_workspace_root_replacement_fails_closed();
+    test_session_bound_workspace_file_read();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

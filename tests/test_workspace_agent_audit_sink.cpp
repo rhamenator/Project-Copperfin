@@ -269,8 +269,33 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
     expect(sink.commit(process_intent, sink.context).ok &&
                sink.commit(process_outcome, sink.context).ok,
            "RQ-CF-AGENT-028: the durable sink must admit exact correlated process intent and outcome records");
+    const WorkspaceAgentSessionAuditEvent file_read_intent{
+        .schema_version = 3U,
+        .kind = copperfin::security::WorkspaceAgentSessionEventKind::
+            workspace_file_read_intent,
+        .session_generation = 7U,
+        .requested_mode = WorkspaceAgentAccessMode::workspace_sandbox,
+        .effective_mode = WorkspaceAgentAccessMode::workspace_sandbox,
+        .operation_id = 10U,
+        .operation_instance_id = "fedcba98765432100123456789abcdef",
+        .outcome = "pending",
+        .diagnostic_code = "workspace_agent.file_read_intent"};
+    const WorkspaceAgentSessionAuditEvent file_read_outcome{
+        .schema_version = 3U,
+        .kind = copperfin::security::WorkspaceAgentSessionEventKind::
+            workspace_file_read_outcome,
+        .session_generation = 7U,
+        .requested_mode = WorkspaceAgentAccessMode::workspace_sandbox,
+        .effective_mode = WorkspaceAgentAccessMode::workspace_sandbox,
+        .operation_id = 10U,
+        .operation_instance_id = "fedcba98765432100123456789abcdef",
+        .outcome = "captured",
+        .diagnostic_code = "workspace_agent.file_read_captured"};
+    expect(sink.commit(file_read_intent, sink.context).ok &&
+               sink.commit(file_read_outcome, sink.context).ok,
+           "RQ-CF-AGENT-029: the durable sink must admit exact content-free workspace file-read records");
     const auto retained_lines = audit_lines(file_sink.log_path());
-    expect(retained_lines.size() == 5U &&
+    expect(retained_lines.size() == 7U &&
                retained_lines[3].size() == 5U &&
                retained_lines[3][1] == "workspace_agent.process.v2" &&
                retained_lines[4].size() == 5U &&
@@ -280,6 +305,15 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
                retained_lines[4][2] ==
                    serialize_workspace_agent_session_audit_event(process_outcome),
            "RQ-CF-AGENT-028: process audit records must retain the versioned content-free operation id contract");
+    expect(retained_lines[5].size() == 5U &&
+               retained_lines[5][1] == "workspace_agent.file_read.v3" &&
+               retained_lines[6].size() == 5U &&
+               retained_lines[6][1] == "workspace_agent.file_read.v3" &&
+               retained_lines[5][2] ==
+                   serialize_workspace_agent_session_audit_event(file_read_intent) &&
+               retained_lines[6][2] ==
+                   serialize_workspace_agent_session_audit_event(file_read_outcome),
+           "RQ-CF-AGENT-029: file-read records must retain only their versioned content-free correlation contract");
     std::uint64_t diagnostic_operation_id = 10U;
     for (const std::string diagnostic : {
              "polyglot.process.executable_path_unsupported",
@@ -352,6 +386,17 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
     launch_failure_as_denial.outcome = "denied";
     launch_failure_as_denial.diagnostic_code = "polyglot.process.launch_failed";
     malformed.push_back(launch_failure_as_denial);
+    auto missing_file_read_namespace = file_read_intent;
+    missing_file_read_namespace.operation_instance_id.clear();
+    malformed.push_back(missing_file_read_namespace);
+    auto injected_file_read_namespace = file_read_outcome;
+    injected_file_read_namespace.operation_instance_id =
+        "fedcba9876543210/path-or-secret";
+    malformed.push_back(injected_file_read_namespace);
+    auto file_read_path_injection = file_read_outcome;
+    file_read_path_injection.diagnostic_code =
+        "workspace_agent.file_read_captured/path-or-secret";
+    malformed.push_back(file_read_path_injection);
 
     for (const auto& event : malformed) {
         const auto result = sink.commit(event, sink.context);
