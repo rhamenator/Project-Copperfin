@@ -8938,3 +8938,17 @@ passes `1/1`.
   restored-value, delete/recall, revert, and EOF-null behavior now have a
   dedicated portable regression. `SETFLDSTATE()`, `OLDVAL()`, remote cursors,
   and validation/default-field semantics remain separate work.
+
+- 2026-08-17: Recovered VFP9 `SETFLDSTATE()` for local buffered cursors.
+  Named, numbered, and deletion-state assignments now return a logical result,
+  surface through `GETFLDSTATE()`, and control whether an existing buffered
+  field or deletion reaches `TABLEUPDATE`; the focused regression covers
+  persistence and suppression. Appended materialization, remote cursors,
+  `OLDVAL()`, validation/default effects, triggers, rules, and conflict handling
+  remain separate work.
+
+- 2026-08-17: Corrected local `SETFLDSTATE()` modified-state handling: a first
+  state-`2` or state-`4` assignment now materializes the current buffered record
+  and original image, including the applicable pessimistic lock. `GETNEXTMODIFIED()`
+  and `TABLEUPDATE()` therefore traverse and clear it rather than leaving an
+  orphaned state entry. The focused buffering regression covers this lifecycle.

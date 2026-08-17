@@ -1805,8 +1805,29 @@
                 return false;
             }
 
-            for (const auto &field : buffered->second.values)
+            const bool appended = cursor.buffered_appended_records.contains(recno);
+            const auto field_states = cursor.buffered_field_states.find(recno);
+            const auto field_requires_update = [&](std::size_t field_index) -> bool
             {
+                if (appended)
+                {
+                    return true;
+                }
+                if (field_states == cursor.buffered_field_states.end())
+                {
+                    return false;
+                }
+                const auto state = field_states->second.find(field_index);
+                return state != field_states->second.end() &&
+                    (state->second == 2 || state->second == 4);
+            };
+            for (std::size_t field_index = 0U; field_index < buffered->second.values.size(); ++field_index)
+            {
+                if (!field_requires_update(field_index))
+                {
+                    continue;
+                }
+                const auto &field = buffered->second.values[field_index];
                 const auto result = vfp::replace_record_field_value(
                     cursor.source_path,
                     recno - 1U,
@@ -1820,16 +1841,23 @@
                 cursor.record_count = result.record_count;
             }
 
-            const auto deleted_result = vfp::set_record_deleted_flag(
-                cursor.source_path,
-                recno - 1U,
-                buffered->second.deleted);
-            if (!deleted_result.ok)
+            const auto deletion_state = cursor.buffered_deletion_states.find(recno);
+            const bool deletion_requires_update = appended ||
+                (deletion_state != cursor.buffered_deletion_states.end() &&
+                 (deletion_state->second == 2 || deletion_state->second == 4));
+            if (deletion_requires_update)
             {
-                last_error_message = deleted_result.error;
-                return false;
+                const auto deleted_result = vfp::set_record_deleted_flag(
+                    cursor.source_path,
+                    recno - 1U,
+                    buffered->second.deleted);
+                if (!deleted_result.ok)
+                {
+                    last_error_message = deleted_result.error;
+                    return false;
+                }
+                cursor.record_count = deleted_result.record_count;
             }
-            cursor.record_count = deleted_result.record_count;
             cursor.buffered_records.erase(buffered);
             cursor.buffered_original_records.erase(recno);
             cursor.buffered_field_states.erase(recno);
@@ -1848,7 +1876,8 @@
         {
             if (function != "cursorsetprop" && function != "cursorgetprop" &&
                 function != "tableupdate" && function != "tablerevert" &&
-                function != "getnextmodified" && function != "getfldstate")
+                function != "getnextmodified" && function != "getfldstate" &&
+                function != "setfldstate")
             {
                 return std::nullopt;
             }
@@ -2009,6 +2038,149 @@
                     std::distance(record->values.begin(), field)))));
             }
 
+            if (function == "setfldstate")
+            {
+                if (arguments.size() < 2U)
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.TooFewArguments"),
+                        1229);
+                }
+                CursorState *cursor = arguments.size() >= 3U
+                    ? cursor_for_argument(2U)
+                    : resolve_cursor_target({});
+                if (cursor == nullptr)
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.AliasNotFound"),
+                        13);
+                }
+                if (!require_local_cursor(cursor, "SETFLDSTATE"))
+                {
+                    return make_boolean_value(false);
+                }
+                if (cursor->buffering_mode < 2 || cursor->buffering_mode > 5 ||
+                    cursor->recno == 0U || cursor->eof)
+                {
+                    return make_boolean_value(false);
+                }
+
+                const double requested_state = value_as_number(arguments[1U]);
+                if (!std::isfinite(requested_state) ||
+                    requested_state != std::trunc(requested_state) ||
+                    requested_state < 1.0 || requested_state > 4.0)
+                {
+                    return make_boolean_value(false);
+                }
+                const int state = static_cast<int>(requested_state);
+                const auto record = current_record(*cursor);
+                if (!record.has_value())
+                {
+                    return make_boolean_value(false);
+                }
+
+                const auto materialize_modified_record = [&]() -> bool
+                {
+                    if (state != 2 && state != 4)
+                    {
+                        return true;
+                    }
+                    if (cursor->buffered_records.contains(cursor->recno))
+                    {
+                        return true;
+                    }
+
+                    bool acquired_buffer_lock = false;
+                    if ((cursor->buffering_mode == 2 || cursor->buffering_mode == 4) &&
+                        !cursor->buffered_record_locks.contains(cursor->recno))
+                    {
+                        bool new_lock = false;
+                        if (!acquire_record_lock(
+                                *cursor, cursor->recno, "SETFLDSTATE", false, new_lock))
+                        {
+                            return false;
+                        }
+                        if (new_lock)
+                        {
+                            cursor->buffered_record_locks.insert(cursor->recno);
+                            acquired_buffer_lock = true;
+                        }
+                    }
+
+                    const auto table_result = parse_cursor_table(*cursor, cursor->recno);
+                    if (!table_result.ok || cursor->recno > table_result.table.records.size())
+                    {
+                        if (acquired_buffer_lock)
+                        {
+                            cursor->buffered_record_locks.erase(cursor->recno);
+                            unlock_cursor_record_lock(*cursor, cursor->recno);
+                        }
+                        last_error_message = table_result.error.empty()
+                            ? runtime_text(
+                                  "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord",
+                                  {{"command", "SETFLDSTATE"}})
+                            : table_result.error;
+                        return false;
+                    }
+                    const vfp::DbfRecord original = table_result.table.records[cursor->recno - 1U];
+                    cursor->buffered_records.emplace(cursor->recno, original);
+                    cursor->buffered_original_records.emplace(cursor->recno, original);
+                    return true;
+                };
+
+                const bool numeric_argument = arguments[0].kind == PrgValueKind::number ||
+                    arguments[0].kind == PrgValueKind::int64 ||
+                    arguments[0].kind == PrgValueKind::uint64 ||
+                    arguments[0].kind == PrgValueKind::currency;
+                const double requested_field = numeric_argument ? value_as_number(arguments[0]) : 0.0;
+                const bool is_integral = numeric_argument && std::isfinite(requested_field) &&
+                    requested_field == std::trunc(requested_field);
+                if (is_integral && requested_field == 0.0)
+                {
+                    if (!materialize_modified_record())
+                    {
+                        return make_boolean_value(false);
+                    }
+                    cursor->buffered_deletion_states[cursor->recno] = state;
+                    return make_boolean_value(true);
+                }
+                if (is_integral && requested_field > 0.0 &&
+                    requested_field <= static_cast<double>(record->values.size()))
+                {
+                    if (!materialize_modified_record())
+                    {
+                        return make_boolean_value(false);
+                    }
+                    cursor->buffered_field_states[cursor->recno][
+                        static_cast<std::size_t>(requested_field - 1.0)] = state;
+                    return make_boolean_value(true);
+                }
+                if (numeric_argument)
+                {
+                    return make_boolean_value(false);
+                }
+
+                const std::string field_name = collapse_identifier(value_as_string(arguments[0]));
+                const auto field = std::find_if(
+                    record->values.begin(),
+                    record->values.end(),
+                    [&](const vfp::DbfRecordValue &candidate)
+                    {
+                        return collapse_identifier(candidate.field_name) == field_name;
+                    });
+                if (field == record->values.end())
+                {
+                    return make_boolean_value(false);
+                }
+                if (!materialize_modified_record())
+                {
+                    return make_boolean_value(false);
+                }
+                cursor->buffered_field_states[cursor->recno][static_cast<std::size_t>(
+                    std::distance(record->values.begin(), field))] = state;
+                return make_boolean_value(true);
+            }
+
             if (function == "cursorgetprop")
             {
                 if (arguments.empty() ||
@@ -2141,8 +2313,9 @@
             }
             for (const auto &[recno, record] : cursor->buffered_records)
             {
+                const bool appended = cursor->buffered_appended_records.contains(recno);
                 std::size_t persisted_recno = recno;
-                if (cursor->buffered_appended_records.contains(recno))
+                if (appended)
                 {
                     const int buffering_mode = cursor->buffering_mode;
                     cursor->buffering_mode = 1;
@@ -2154,8 +2327,28 @@
                     }
                     persisted_recno = cursor->record_count;
                 }
-                for (const auto &field : record.values)
+                const auto field_states = cursor->buffered_field_states.find(recno);
+                const auto field_requires_update = [&](std::size_t field_index) -> bool
                 {
+                    if (appended)
+                    {
+                        return true;
+                    }
+                    if (field_states == cursor->buffered_field_states.end())
+                    {
+                        return false;
+                    }
+                    const auto state = field_states->second.find(field_index);
+                    return state != field_states->second.end() &&
+                        (state->second == 2 || state->second == 4);
+                };
+                for (std::size_t field_index = 0U; field_index < record.values.size(); ++field_index)
+                {
+                    if (!field_requires_update(field_index))
+                    {
+                        continue;
+                    }
+                    const auto &field = record.values[field_index];
                     const auto result = vfp::replace_record_field_value(
                         cursor->source_path,
                         persisted_recno - 1U,
@@ -2168,18 +2361,25 @@
                     }
                     cursor->record_count = result.record_count;
                 }
-                const auto deleted_result = vfp::set_record_deleted_flag(
-                    cursor->source_path,
-                    persisted_recno - 1U,
-                    record.deleted);
-                if (!deleted_result.ok)
+                const auto deletion_state = cursor->buffered_deletion_states.find(recno);
+                const bool deletion_requires_update = appended ||
+                    (deletion_state != cursor->buffered_deletion_states.end() &&
+                     (deletion_state->second == 2 || deletion_state->second == 4));
+                if (deletion_requires_update)
                 {
-                    last_error_message = deleted_result.error;
-                    return make_boolean_value(false);
+                    const auto deleted_result = vfp::set_record_deleted_flag(
+                        cursor->source_path,
+                        persisted_recno - 1U,
+                        record.deleted);
+                    if (!deleted_result.ok)
+                    {
+                        last_error_message = deleted_result.error;
+                        return make_boolean_value(false);
+                    }
+                    cursor->record_count = deleted_result.record_count;
                 }
-                cursor->record_count = deleted_result.record_count;
                 if (cursor->buffering_mode == 4 &&
-                    !cursor->buffered_appended_records.contains(recno) &&
+                    !appended &&
                     cursor->buffered_record_locks.erase(recno) != 0U)
                 {
                     unlock_cursor_record_lock(*cursor, recno);

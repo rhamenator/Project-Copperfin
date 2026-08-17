@@ -7,6 +7,96 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_setfldstate_assigns_buffered_mutation_state()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_setfldstate";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "setfldstate.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U},
+             {.name = "AMOUNT", .type = 'N', .length = 12U, .decimal_count = 2U}},
+            {{"Before", "1.00"}});
+        expect(create_result.ok, "SETFLDSTATE fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "=CURSORSETPROP('Buffering', 5, 'people')\n"
+            "lStateOnly = SETFLDSTATE('NAME', 2, 'people')\n"
+            "nStateOnlyNext = GETNEXTMODIFIED(0, 'people')\n"
+            "lStateOnlyCommitted = TABLEUPDATE(.T., .T., 'people')\n"
+            "nStateOnlyAfterCommit = GETNEXTMODIFIED(0, 'people')\n"
+            "REPLACE NAME WITH 'Suppressed' IN people\n"
+            "REPLACE AMOUNT WITH 2 IN people\n"
+            "lByName = SETFLDSTATE('NAME', 1, 'people')\n"
+            "lByNumber = SETFLDSTATE(2, 2, 'people')\n"
+            "lDeletion = SETFLDSTATE(0, 1, 'people')\n"
+            "cAssigned = GETFLDSTATE(-1, 'people')\n"
+            "lCommitted = TABLEUPDATE(.T., .T., 'people')\n"
+            "cPersistedName = people.NAME\n"
+            "nPersistedAmount = people.AMOUNT\n"
+            "lWorkArea = SETFLDSTATE(1, 2, 1)\n"
+            "nWorkArea = GETFLDSTATE(1, 1)\n"
+            "DELETE IN people\n"
+            "lDeletionSuppressed = SETFLDSTATE(0, 1, 'people')\n"
+            "lDeletionCommitted = TABLEUPDATE(.T., .T., 'people')\n"
+            "lStillActive = NOT DELETED('people')\n"
+            "=CURSORSETPROP('Buffering', 3, 'people')\n"
+            "REPLACE AMOUNT WITH 3 IN people\n"
+            "lRowSuppressed = SETFLDSTATE('AMOUNT', 1, 'people')\n"
+            "lRowCommitted = TABLEUPDATE(.T., .T., 'people')\n"
+            "nRowPersistedAmount = people.AMOUNT\n"
+            "lInvalidState = SETFLDSTATE('NAME', 5, 'people')\n"
+            "lMissingField = SETFLDSTATE('MISSING', 2, 'people')\n"
+            "lInvalidNumber = SETFLDSTATE(3, 2, 'people')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("SETFLDSTATE regression should complete: ") + state.message);
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("lbyname") == "true", "SETFLDSTATE should accept a named field");
+        expect(value_for("lstateonly") == "true" && value_for("nstateonlynext") == "1" &&
+                   value_for("lstateonlycommitted") == "true" &&
+                   value_for("nstateonlyaftercommit") == "0",
+               "a first modified SETFLDSTATE assignment should materialize and clear its buffered record");
+        expect(value_for("lbynumber") == "true", "SETFLDSTATE should accept a one-based field number");
+        expect(value_for("ldeletion") == "true", "SETFLDSTATE field zero should assign deletion state");
+        expect(value_for("cassigned") == "112",
+               "SETFLDSTATE assignments should be visible through GETFLDSTATE aggregate state");
+        expect(value_for("lcommitted") == "true", "TABLEUPDATE should accept SETFLDSTATE-controlled records");
+        expect(value_for("cpersistedname") == "Before",
+               "state 1 should suppress an existing buffered field write (actual=" +
+                   value_for("cpersistedname") + ")");
+        expect(value_for("npersistedamount") == "2", "state 2 should retain an existing buffered field write");
+        expect(value_for("lworkarea") == "true" && value_for("nworkarea") == "2",
+               "SETFLDSTATE should resolve an explicit numeric work area");
+        expect(value_for("ldeletionsuppressed") == "true" && value_for("ldeletioncommitted") == "true" &&
+                   value_for("lstillactive") == "true",
+               "state 1 should suppress an existing buffered deletion write (actual=" +
+                   value_for("ldeletionsuppressed") + "," + value_for("ldeletioncommitted") + "," +
+                   value_for("lstillactive") + ")");
+        expect(value_for("lrowsuppressed") == "true" && value_for("lrowcommitted") == "true" &&
+                   value_for("nrowpersistedamount") == "2",
+               "state 1 should suppress a row-buffered field write");
+        expect(value_for("linvalidstate") == "false", "SETFLDSTATE should reject state values outside 1 through 4");
+        expect(value_for("lmissingfield") == "false", "SETFLDSTATE should reject unknown field names");
+        expect(value_for("linvalidnumber") == "false", "SETFLDSTATE should reject out-of-range field numbers");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_getfldstate_tracks_buffered_mutation_state()
     {
         namespace fs = std::filesystem;
