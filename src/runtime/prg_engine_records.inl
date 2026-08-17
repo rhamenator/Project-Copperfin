@@ -1878,7 +1878,8 @@
             if (function != "cursorsetprop" && function != "cursorgetprop" &&
                 function != "tableupdate" && function != "tablerevert" &&
                 function != "getnextmodified" && function != "getfldstate" &&
-                function != "setfldstate" && function != "oldval")
+                function != "setfldstate" && function != "oldval" &&
+                function != "curval")
             {
                 return std::nullopt;
             }
@@ -2214,6 +2215,49 @@
 
                 const vfp::DbfRecord original_record = original->second;
                 record_evaluation_overrides.emplace_back(cursor, &original_record);
+                try
+                {
+                    const PrgValue result = evaluate_expression(
+                        value_as_string(arguments[0U]), frame, cursor);
+                    record_evaluation_overrides.pop_back();
+                    return result;
+                }
+                catch (...)
+                {
+                    record_evaluation_overrides.pop_back();
+                    throw;
+                }
+            }
+
+            if (function == "curval")
+            {
+                if (arguments.empty())
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.TooFewArguments"),
+                        1229);
+                }
+                CursorState *cursor = arguments.size() >= 2U
+                    ? cursor_for_argument(1U)
+                    : resolve_cursor_target({});
+                if (cursor == nullptr)
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.AliasNotFound"),
+                        13);
+                }
+                if (!require_local_cursor(cursor, "CURVAL") || cursor->recno == 0U || cursor->eof)
+                {
+                    return make_empty_value();
+                }
+
+                const auto table_result = parse_cursor_table(*cursor, cursor->recno);
+                if (!table_result.ok || cursor->recno > table_result.table.records.size())
+                {
+                    return make_empty_value();
+                }
+                const vfp::DbfRecord &on_disk_record = table_result.table.records[cursor->recno - 1U];
+                record_evaluation_overrides.emplace_back(cursor, &on_disk_record);
                 try
                 {
                     const PrgValue result = evaluate_expression(
