@@ -127,6 +127,16 @@ file(READ
     generated_launcher_workflow)
 string(REPLACE "\r\n" "\n" generated_launcher_workflow
     "${generated_launcher_workflow}")
+set(generated_launcher_pull_request_trigger [=[  pull_request:
+    branches: [main, v1-development]
+  workflow_dispatch:]=])
+string(FIND "${generated_launcher_workflow}"
+    "${generated_launcher_pull_request_trigger}"
+    generated_launcher_pull_request_trigger_index)
+if(generated_launcher_pull_request_trigger_index EQUAL -1)
+    message(FATAL_ERROR
+        "Generated-launcher validation must run for every pull request to a protected branch")
+endif()
 foreach(required_text IN ITEMS
         "branches: [main, v1-development]"
         "samples/polyglot-dotnet-candidate/**"

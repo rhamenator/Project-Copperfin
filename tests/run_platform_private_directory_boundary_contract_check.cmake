@@ -219,8 +219,12 @@ foreach(path IN ITEMS
         "tests/test_platform_private_directory.cpp"
         "tests/test_workspace_agent_isolated_environment.cpp"
         "tests/run_platform_private_directory_boundary_contract_check.cmake")
-    require_text_count("${workflow_text}" "${path}" 2
-        "push and pull-request private-layout path-filter coverage")
+    require_text_count("${workflow_text}" "${path}" 1
+        "direct-push private-layout path-filter coverage")
 endforeach()
+require_text("${workflow_text}" [=[  pull_request:
+    branches: [main, v1-development]
+  workflow_dispatch:]=]
+    "unconditional protected-branch pull-request private-layout coverage")
 
 message(STATUS "Portable private-directory boundary contract passed")
