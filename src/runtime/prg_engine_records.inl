@@ -2213,7 +2213,8 @@
                     return make_empty_value();
                 }
 
-                record_evaluation_overrides.emplace_back(cursor, &original->second);
+                const vfp::DbfRecord original_record = original->second;
+                record_evaluation_overrides.emplace_back(cursor, &original_record);
                 try
                 {
                     const PrgValue result = evaluate_expression(
