@@ -1,5 +1,17 @@
 # Agent Handoff
 
+## V1 ON PAGE configuration boundary
+
+`RQ-CF-PRG-004` recovers the installed VFP9 `ON PAGE` configuration surface:
+the runtime retains `ON PAGE AT LINE <nLineNumber> <command>`, exposes the
+exact command through `ON('PAGE')`, and clears it with bare `ON PAGE`. This is
+intentionally configuration only. The VFP9 trigger is `_PLINENO` exceeding the
+configured line or `EJECT PAGE`; Copperfin has no page-line accounting,
+`EJECT PAGE`, report/label pagination, or handler dispatch yet. The portable
+focused target `test_prg_engine_on_page` covers assignment, query, clear, and
+non-dispatch. A later report-pagination slice must consume the retained line
+expression rather than invent output-row page semantics.
+
 ## V1 ON ESCAPE runtime parity
 
 `RQ-CF-PRG-003` recovers the installed VFP9 `ON ESCAPE`, `SET ESCAPE`, and

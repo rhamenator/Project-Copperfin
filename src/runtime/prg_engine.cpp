@@ -1084,6 +1084,8 @@ namespace copperfin::runtime
         std::vector<FaultMetadataSnapshot> error_metadata_stack;
         std::string error_handler;
         std::string escape_handler;
+        std::string page_handler;
+        std::string page_handler_line_expression;
         std::string shutdown_handler;
         EscapeActionRoutine escape_action_routine;
         std::string udfparms_mode = "VALUE";
@@ -1462,6 +1464,7 @@ namespace copperfin::runtime
             },
             error_handler,
             escape_handler,
+            page_handler,
             shutdown_handler,
             [this](const std::string &key_label)
             {
