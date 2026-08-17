@@ -33,6 +33,10 @@ namespace copperfin::runtime_surface_tests
             "cOriginalName = OLDVAL('NAME', 'people')\n"
             "nOriginalAmount = OLDVAL('AMOUNT', 1)\n"
             "cOriginalExpression = OLDVAL('people.NAME + '' value''', 'people')\n"
+            "REPLACE NAME WITH 'Nested reverted' IN people\n"
+            "lNestedRevertOriginal = OLDVAL(\"TABLEREVERT(.T., 'people') AND people.NAME = 'Before'\", 'people')\n"
+            "REPLACE NAME WITH 'Nested committed' IN people\n"
+            "lNestedUpdateOriginal = OLDVAL(\"TABLEUPDATE(.T., .T., 'people') AND people.NAME = 'Before'\", 'people')\n"
             "=TABLEREVERT(.T., 'people')\n"
             "cAfterRevert = OLDVAL('NAME', 'people')\n"
             "REPLACE NAME WITH 'Committed' IN people\n"
@@ -55,6 +59,10 @@ namespace copperfin::runtime_surface_tests
                "OLDVAL should preserve the original field data type through an explicit work area");
         expect(value_for("coriginalexpression") == "Before value",
                "OLDVAL should evaluate a documented field expression against the original record");
+        expect(value_for("lnestedrevertoriginal") == "true",
+               "OLDVAL should retain its original-record override through a nested TABLEREVERT");
+        expect(value_for("lnestedupdateoriginal") == "true",
+               "OLDVAL should retain its original-record override through a nested TABLEUPDATE");
         expect(value_for("cafterrevert").empty(),
                "OLDVAL should no longer expose an original record after TABLEREVERT");
         expect(value_for("caftercommit").empty(),
