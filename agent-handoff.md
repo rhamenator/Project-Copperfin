@@ -28,9 +28,11 @@ remain separate.
 `RQ-CF-PRG-007` recovers the local buffered `OLDVAL()` expression surface. With
 a retained pre-mutation record, `OLDVAL(cExpression [, cTableAlias |
 nWorkArea])` evaluates its character expression against that original record and
-preserves the result type. It is no longer available after `TABLEREVERT()` or
+preserves the result type. The evaluator owns that original image for the full
+nested expression, so nested `TABLEREVERT()` or `TABLEUPDATE()` cannot invalidate
+an in-progress field read. It is no longer available after `TABLEREVERT()` or
 `TABLEUPDATE()`. The focused portable buffering regression covers field and
-expression values, explicit work-area lookup, revert, and commit. Remote
+expression values, explicit work-area lookup, nested revert/update, revert, and commit. Remote
 cursors, validation-rule use without buffering, and unmodified/appended-record
 semantics remain separate.
 

@@ -8960,3 +8960,8 @@ passes `1/1`.
   coverage verifies original field/expression results plus invalidation after
   `TABLEREVERT()` and `TABLEUPDATE()`. Remote-cursor, validation-rule without
   buffering, and unmodified/appended-record behavior remain explicit gaps.
+
+- 2026-08-17: Corrected `OLDVAL()` nested-expression lifetime handling. The
+  original-record override now owns a stable copy while an expression runs, so
+  nested `TABLEREVERT()` or `TABLEUPDATE()` cannot leave a dangling field-read
+  pointer. The focused buffering regression covers both side-effect paths.
