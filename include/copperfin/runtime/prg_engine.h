@@ -312,6 +312,9 @@ public:
     // session. This is a headless runtime seam; native keyboard capture and
     // form-local KeyPress routing remain host/UI responsibilities.
     [[nodiscard]] bool dispatch_key_label(const std::string& key_label);
+    // Delivers an Escape request to an active READ EVENTS session.  ON ESCAPE
+    // has priority over an ON KEY LABEL ESC assignment when SET ESCAPE is ON.
+    [[nodiscard]] bool dispatch_escape();
     [[nodiscard]] bool dispatch_popup_bar_selection(
         const std::string& popup_name,
         std::int64_t bar_number);
@@ -324,6 +327,9 @@ public:
     [[nodiscard]] std::string command_undo_label() const;
     [[nodiscard]] RuntimeWatchResult evaluate_watch_expression(const std::string& expression);
     void request_cancel();
+    // Thread-safe host request.  The runtime consumes it at its next safe PRG
+    // statement boundary; it never interrupts native code mid-statement.
+    void request_escape();
 
     [[nodiscard]] RuntimePauseState run(DebugResumeAction action);
     [[nodiscard]] const RuntimePauseState& state() const noexcept;

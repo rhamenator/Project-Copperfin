@@ -5601,6 +5601,11 @@ copperfin_add_test(test_prg_engine_on_function cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_on_escape cf_xbase_runtime
+    test_prg_engine_on_escape.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_arrays cf_xbase_runtime
     test_prg_engine_arrays.cpp
     prg_engine_test_support.cpp

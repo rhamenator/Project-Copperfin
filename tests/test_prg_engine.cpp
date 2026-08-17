@@ -1816,7 +1816,7 @@ void test_set_state_variables_talk_safety_escape() {
         expect(copperfin::runtime::format_value(safety_before->second) == "OFF", "SET('SAFETY') should default to OFF");
     }
     if (escape_before != state.globals.end()) {
-        expect(copperfin::runtime::format_value(escape_before->second) == "OFF", "SET('ESCAPE') should default to OFF");
+        expect(copperfin::runtime::format_value(escape_before->second) == "ON", "SET('ESCAPE') should default to ON");
     }
     if (talk_after_one != state.globals.end()) {
         expect(copperfin::runtime::format_value(talk_after_one->second) == "ON", "SET('TALK') should report ON after SET TALK TO 1");
@@ -1843,7 +1843,7 @@ void test_set_state_variables_talk_safety_escape() {
         expect(copperfin::runtime::format_value(safety_session2->second) == "OFF", "SET('SAFETY') in a fresh session should be OFF");
     }
     if (escape_session2 != state.globals.end()) {
-        expect(copperfin::runtime::format_value(escape_session2->second) == "OFF", "SET('ESCAPE') in a fresh session should be OFF");
+        expect(copperfin::runtime::format_value(escape_session2->second) == "ON", "SET('ESCAPE') in a fresh session should be ON");
     }
     if (talk_restored != state.globals.end()) {
         expect(copperfin::runtime::format_value(talk_restored->second) == "OFF", "restoring session 1 should restore SET('TALK') to its prior OFF state");
@@ -1852,7 +1852,7 @@ void test_set_state_variables_talk_safety_escape() {
         expect(copperfin::runtime::format_value(safety_restored->second) == "OFF", "restoring session 1 should restore SET('SAFETY') to its prior OFF state");
     }
     if (escape_restored != state.globals.end()) {
-        expect(copperfin::runtime::format_value(escape_restored->second) == "OFF", "restoring session 1 should restore SET('ESCAPE') to its prior OFF state");
+        expect(copperfin::runtime::format_value(escape_restored->second) == "OFF", "restoring session 1 should restore its prior SET('ESCAPE') OFF state");
     }
 
     fs::remove_all(temp_root, ignored);
