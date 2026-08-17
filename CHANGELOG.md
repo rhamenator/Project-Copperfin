@@ -1,3 +1,10 @@
+- 2026-08-17: Added `RQ-CF-MIGRATION-001`, the portable read-only
+  `cf_migration` project-inventory foundation. It inventories regular files
+  below an absolute non-symbolic-link root in deterministic order, classifies known VFP
+  suffixes, serializes versioned JSON without the absolute root, and reports
+  without following symbolic links. It neither reads asset contents nor
+  parses, executes, uploads, or modifies project files.
+
 - 2026-08-16: Added candidate `RQ-CF-AGENT-029`, a portable bounded
   `workspace.inspect.v1` execution boundary. It accepts only a fixed product
   tool, exact active session generation, strict relative workspace target, and

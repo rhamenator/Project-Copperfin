@@ -225,13 +225,14 @@ Execution), five migration modes (Preserve, Wrap, Refactor, Replace, Retarget), 
 `type-mapping-report.csv`, `asset-roundtrip-report.md`,
 `execution-compatibility-report.md`).
 
-**What it will take:** per `docs/28-repository-ontology.md` §6, there is no
-`copperfin-migrator` code at all yet — none of the 9 named output files have a
-generator. The Data/Metadata/Runtime layers are substantially seeded by
-`cf_vfp_assets`/`cf_design_model`/`cf_xbase_runtime`, but the migration *pipeline*
-that would inventory a legacy project and emit these 9 specific artifacts does not
-exist as a distinct deliverable. This is one of the widest gaps in the whole
-review — a fully specified tool contract with zero implementing code.
+**What it will take:** `cf_migration` now provides only the first, read-only
+inventory foundation for `inventory.json`: deterministic project-relative asset
+classification beneath an absolute non-symbolic-link root, with symbolic links reported but
+never followed. The other eight named outputs, dependency discovery, metadata
+graph, compatibility risks, migration-mode suggestions, database planning, and
+editable workspace mappings remain absent. The Data/Metadata/Runtime layers are
+substantially seeded by `cf_vfp_assets`/`cf_design_model`/`cf_xbase_runtime`, but
+the full migration pipeline remains one of the widest gaps in the review.
 
 ## Language & Data Fidelity
 
@@ -595,7 +596,7 @@ excluded from the compliance map above:
 | Doc | Subject | Status | Single biggest blocker |
 | --- | --- | --- | --- |
 | 01 | Product Charter | Partial | Empty exception registry makes the Compatibility Fidelity Rule unfalsifiable |
-| 03 | Compatibility And Migration | Scaffold-only (migrator) | Zero code toward the 9-file migration tool output contract |
+| 03 | Compatibility And Migration | Partial seed (migrator) | Only read-only `inventory.json` foundation exists; eight outputs and import analysis remain |
 | 04 | Security Model | Scaffold (aspirational) | No enterprise identity/Shield product surface distinct from `cf_security` |
 | 11 | .NET Bridge Spec | Partial (Windows DECLARE plus portable policy/adapter/route executor) | None of the four named native `cf_dotnet_*` modules exist |
 | 12 | VFP Asset Editing And Execution | Partial | xAsset execution is first-pass, bounded by language-surface coverage |

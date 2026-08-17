@@ -194,3 +194,17 @@ Use when:
 - `type-mapping-report.csv`
 - `asset-roundtrip-report.md`
 - `execution-compatibility-report.md`
+
+## Current Inventory Foundation
+
+Candidate `RQ-CF-MIGRATION-001` implements the first, read-only portion of
+the import pipeline: a trusted caller can inventory one absolute project root
+that is not itself a symbolic link into deterministic, project-relative entries
+classified by asset suffix.
+The versioned `inventory.json` serialization contains no absolute root. It
+does not follow symbolic links; it reports their project-relative names as
+skipped rather than reading through them. A name that cannot be represented as
+UTF-8 is omitted and marks the inventory incomplete rather than producing
+invalid JSON. This foundation does not yet provide
+the other eight first-tool outputs, dependency discovery, asset parsing, risk
+scores, migration-mode suggestions, database planning, or source mutation.

@@ -1039,6 +1039,15 @@ documents require versus what the code currently delivers, see
 
 ## v1 Roadmap
 
+Current migration evidence includes `RQ-CF-MIGRATION-001`: the new
+portable `cf_migration` foundation builds a deterministic, read-only inventory
+of a caller-selected absolute project root that is not itself a symbolic link.
+It classifies recognized VFP asset
+suffixes, omits the absolute root from its schema-version-1 JSON serialization,
+and reports rather than follows symbolic links. Dependency analysis, the other
+eight specified migration outputs, risk scoring, target planning, and any
+source mutation remain separate work.
+
 After MVP implementation completion and release evidence review, continue in
 this order. Three of these six items already have a real, historical
 lane-letter identity assigned when their root issues were opened — see

@@ -13,6 +13,8 @@ endfunction()
 
 copperfin_add_test(test_mcp_host "cf_mcp_host;cf_platform_support"
     test_mcp_host.cpp)
+copperfin_add_test(test_project_inventory "cf_migration"
+    test_project_inventory.cpp)
 add_test(
     NAME test_mcp_host_stdio
     COMMAND ${CMAKE_COMMAND}
