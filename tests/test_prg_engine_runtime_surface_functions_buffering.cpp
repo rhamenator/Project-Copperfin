@@ -43,6 +43,11 @@ namespace copperfin::runtime_surface_tests
             "lDeletionSuppressed = SETFLDSTATE(0, 1, 'people')\n"
             "lDeletionCommitted = TABLEUPDATE(.T., .T., 'people')\n"
             "lStillActive = NOT DELETED('people')\n"
+            "=CURSORSETPROP('Buffering', 3, 'people')\n"
+            "REPLACE AMOUNT WITH 3 IN people\n"
+            "lRowSuppressed = SETFLDSTATE('AMOUNT', 1, 'people')\n"
+            "lRowCommitted = TABLEUPDATE(.T., .T., 'people')\n"
+            "nRowPersistedAmount = people.AMOUNT\n"
             "lInvalidState = SETFLDSTATE('NAME', 5, 'people')\n"
             "lMissingField = SETFLDSTATE('MISSING', 2, 'people')\n"
             "lInvalidNumber = SETFLDSTATE(3, 2, 'people')\n"
@@ -74,6 +79,9 @@ namespace copperfin::runtime_surface_tests
                "state 1 should suppress an existing buffered deletion write (actual=" +
                    value_for("ldeletionsuppressed") + "," + value_for("ldeletioncommitted") + "," +
                    value_for("lstillactive") + ")");
+        expect(value_for("lrowsuppressed") == "true" && value_for("lrowcommitted") == "true" &&
+                   value_for("nrowpersistedamount") == "2",
+               "state 1 should suppress a row-buffered field write");
         expect(value_for("linvalidstate") == "false", "SETFLDSTATE should reject state values outside 1 through 4");
         expect(value_for("lmissingfield") == "false", "SETFLDSTATE should reject unknown field names");
         expect(value_for("linvalidnumber") == "false", "SETFLDSTATE should reject out-of-range field numbers");
