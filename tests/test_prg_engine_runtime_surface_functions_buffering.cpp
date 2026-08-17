@@ -52,6 +52,42 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_curval_uses_verified_post_commit_session_image()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_curval_verified";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "curval_verified.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Before"}});
+        expect(create_result.ok, "strict CURVAL fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "=CURSORSETPROP('Buffering', 5, 'people')\n"
+            "REPLACE NAME WITH 'Committed' IN people\n"
+            "=TABLEUPDATE(.T., .T., 'people')\n"
+            "cCommittedName = CURVAL('NAME', 'people')\n"
+            "RETURN\n");
+        auto options = make_runtime_session_options(program_path.string(), temp_root.string());
+        options.require_verified_file_byte_overrides = true;
+        options.verified_file_byte_overrides.emplace(table_path.string(), read_text(table_path));
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            std::move(options));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("strict CURVAL regression should complete: ") + state.message);
+        const auto found = state.globals.find("ccommittedname");
+        expect(found != state.globals.end() && copperfin::runtime::format_value(found->second) == "Committed",
+               "strict CURVAL should expose the session-owned committed value rather than stale admitted bytes");
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_oldval_evaluates_buffered_original_record()
     {
         namespace fs = std::filesystem;

@@ -1858,6 +1858,14 @@
                 }
                 cursor.record_count = deleted_result.record_count;
             }
+            record_verified_buffered_commit(
+                cursor,
+                recno,
+                recno,
+                buffered->second,
+                appended,
+                field_states == cursor.buffered_field_states.end() ? nullptr : &field_states->second,
+                deletion_requires_update);
             cursor.buffered_records.erase(buffered);
             cursor.buffered_original_records.erase(recno);
             cursor.buffered_field_states.erase(recno);
@@ -1868,6 +1876,55 @@
                 unlock_cursor_record_lock(cursor, recno);
             }
             return true;
+        }
+
+        void record_verified_buffered_commit(
+            CursorState &cursor,
+            std::size_t buffered_recno,
+            std::size_t persisted_recno,
+            const vfp::DbfRecord &buffered_record,
+            bool appended,
+            const std::map<std::size_t, int> *field_states,
+            bool deletion_requires_update)
+        {
+            if (!options.require_verified_file_byte_overrides || persisted_recno == 0U)
+            {
+                return;
+            }
+
+            if (appended)
+            {
+                cursor.verified_committed_records[persisted_recno] = buffered_record;
+                return;
+            }
+
+            const auto original = cursor.buffered_original_records.find(buffered_recno);
+            if (original == cursor.buffered_original_records.end())
+            {
+                return;
+            }
+            vfp::DbfRecord &committed = cursor.verified_committed_records[persisted_recno];
+            if (committed.values.empty())
+            {
+                committed = original->second;
+            }
+            if (field_states != nullptr)
+            {
+                for (const auto &[field_index, state] : *field_states)
+                {
+                    if ((state != 2 && state != 4) ||
+                        field_index >= buffered_record.values.size() ||
+                        field_index >= committed.values.size())
+                    {
+                        continue;
+                    }
+                    committed.values[field_index] = buffered_record.values[field_index];
+                }
+            }
+            if (deletion_requires_update)
+            {
+                committed.deleted = buffered_record.deleted;
+            }
         }
 
         std::optional<PrgValue> cursor_buffering_function(
@@ -2475,6 +2532,14 @@
                 {
                     unlock_cursor_record_lock(*cursor, recno);
                 }
+                record_verified_buffered_commit(
+                    *cursor,
+                    recno,
+                    persisted_recno,
+                    record,
+                    appended,
+                    field_states == cursor->buffered_field_states.end() ? nullptr : &field_states->second,
+                    deletion_requires_update);
             }
             cursor->buffered_records.clear();
             cursor->buffered_original_records.clear();

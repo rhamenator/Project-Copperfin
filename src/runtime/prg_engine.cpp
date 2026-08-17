@@ -701,6 +701,11 @@ namespace copperfin::runtime
             int buffering_mode = 1;
             std::map<std::size_t, vfp::DbfRecord> buffered_records;
             std::map<std::size_t, vfp::DbfRecord> buffered_original_records;
+            // Strict verified-byte sessions keep post-commit local records in
+            // session-owned memory.  Disk is mutable after package admission,
+            // so later cursor reads must not reopen it to observe this session's
+            // own successful writes.
+            std::map<std::size_t, vfp::DbfRecord> verified_committed_records;
             // VFP buffering records mutation state independently of a value comparison:
             // restoring an original value does not make the field unmodified again.
             std::map<std::size_t, std::map<std::size_t, int>> buffered_field_states;

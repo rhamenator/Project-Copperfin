@@ -41,6 +41,9 @@ surface. `CURVAL(cExpression [, cTableAlias | nWorkArea])` evaluates its
 character expression against the current persisted DBF record, rather than the
 pending buffer, and preserves the ordinary expression result type. Thus an
 optimistic buffered edit remains invisible to `CURVAL()` until `TABLEUPDATE()`.
+In strict verified-byte sessions, a successful `TABLEUPDATE()` updates a
+session-owned committed record image; later `CURVAL()` evaluation does not
+reread mutable source bytes or retain the superseded admitted DBF image.
 The focused portable buffering regression covers character, numeric, expression,
 work-area, and post-commit behavior. Remote cursors, views and refresh timing,
 EOF/error compatibility, and non-local data sources remain separate.

@@ -16,6 +16,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_listbox_moveitem_dispatches_onmoveitem_and_honors_veto();
     void test_expression_runtime_surface_extensions();
     void test_curval_evaluates_on_disk_record();
+    void test_curval_uses_verified_post_commit_session_image();
     void test_getfldstate_tracks_buffered_mutation_state();
     void test_setfldstate_assigns_buffered_mutation_state();
     void test_oldval_evaluates_buffered_original_record();

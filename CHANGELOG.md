@@ -8973,3 +8973,8 @@ passes `1/1`.
   regression covers character, numeric, expression, work-area, and post-commit
   behavior. Remote cursors, views/refresh, EOF/error parity, locking, and
   non-local sources remain explicit gaps.
+
+- 2026-08-17: Corrected strict verified-byte `CURVAL()` post-commit reads. A
+  successful `TABLEUPDATE()` now updates a session-owned committed record image,
+  so the runtime neither reopens mutable DBF bytes nor reports stale admitted
+  bytes when evaluating the new committed value.
