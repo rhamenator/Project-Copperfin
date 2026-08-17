@@ -111,6 +111,17 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    copperfin_set_test_isolation(test_project_inventory
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
     copperfin_set_test_isolation(test_mcp_host
         PARALLEL_SAFE
         FILESYSTEM none
@@ -1539,6 +1550,8 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_locale_code_page
             test_prg_engine_parser_classes
             test_prg_engine_path_functions
+            test_prg_engine_on_function
+            test_prg_engine_on_key_label
             test_prg_engine_runtime_surface_functions
             test_prg_engine_runtime_surface_itemid_selectors
             test_prg_engine_runtime_surface_procedure_classes

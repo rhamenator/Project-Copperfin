@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## V1 `ON()` event-assignment introspection
+
+`RQ-CF-PRG-002` recovers the installed VFP9 `ON()` function only over the
+already-supported `ON ERROR` and static session-scoped `ON KEY [LABEL]` state.
+`ON('ERROR')` returns the current error clause; `ON('KEY', cKeyLabel)` returns
+the exact static key command or an empty string, case-insensitively and in the
+current data session. The dedicated Linux GCC 15.2 Release CTest passes `1/1`
+(`test_prg_engine_on_function`), including empty/missing results, exact clause
+readback, data-session isolation, restoration, and clearing. VFP9 also lists
+`ESCAPE` and `PAGE` for `ON()`, but Copperfin does not implement those
+assignment commands; their current unassigned empty result is not a claim of
+their event behavior. The existing `ON('SHUTDOWN')` result remains a
+Copperfin extension, not VFP9 `ON()` evidence. No keyboard capture, dispatch,
+form/UI, thread, file, process, or network authority was added.
+
 ## V1 headless ON KEY LABEL runtime parity
 
 `RQ-CF-PRG-001` recovers static session-scoped `ON KEY [LABEL]` behavior from
@@ -23,6 +38,9 @@ root, reports without following file or directory symbolic links, and fails
 closed for a non-UTF-8 POSIX name. Focused Debug build and CTest pass `1/1`
 (`test_project_inventory`), covering ordering, classification, escaping, root
 privacy, invalid roots, and symlink boundaries.
+Its machine-readable CTest isolation record is complete: portable,
+parallel-safe, test-owned filesystem only, and no environment, child-process,
+network, or sample dependency.
 It does not parse asset contents, resolve dependencies, assess risk, select a
 migration mode, write source files, or produce the other eight migration
 outputs. Three-platform validation and release evidence remain required.

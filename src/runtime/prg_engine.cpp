@@ -1449,6 +1449,12 @@ namespace copperfin::runtime
             },
             error_handler,
             shutdown_handler,
+            [this](const std::string &key_label)
+            {
+                const std::string normalized_key_label = uppercase_copy(trim_copy(key_label));
+                const auto found = current_session_state().key_assignments.find(normalized_key_label);
+                return found == current_session_state().key_assignments.end() ? std::string{} : found->second;
+            },
             is_set_enabled("exact"),
             preferred_cursor == nullptr ? current_selected_work_area() : preferred_cursor->work_area,
             [this]()

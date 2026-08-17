@@ -566,6 +566,12 @@
         if (topic == "ERROR") {
             return make_string_value(error_handler);
         }
+        if (topic == "KEY") {
+            if (arguments.size() < 2U || !key_assignment_lookup_callback) {
+                return make_string_value({});
+            }
+            return make_string_value(key_assignment_lookup_callback(value_as_string(arguments[1])));
+        }
         if (topic == "SHUTDOWN") {
             return make_string_value(shutdown_handler);
         }

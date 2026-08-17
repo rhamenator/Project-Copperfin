@@ -1,3 +1,11 @@
+- 2026-08-17: Recovered the VFP9 `ON()` event-assignment introspection contract
+  for the already-supported `ERROR` and static session-scoped `KEY` lanes.
+  `ON('KEY', cKeyLabel)` now returns the exact static key command or an empty
+  string without dispatching or changing it; lookup is case-insensitive and
+  isolated by data session. `ESCAPE` and `PAGE` assignment commands remain
+  unimplemented compatibility gaps, and this adds no input capture, UI, or
+  host-event behavior.
+
 - 2026-08-17: Recovered the static headless `ON KEY [LABEL]` runtime contract
   from the installed VFP9 help. Per-key and whole-set restoration,
   `PUSH KEY [CLEAR]`/`POP KEY` snapshots, `POP KEY ALL`, and dispatch at an
