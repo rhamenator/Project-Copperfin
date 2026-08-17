@@ -478,6 +478,93 @@ void test_seek_related_index_functions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_key_and_tagcount_functions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_key_tagcount";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    const fs::path idx_path = temp_root / "people.idx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+    write_synthetic_idx(idx_path, "SUBSTR(NAME,1,3)");
+
+    const fs::path main_path = temp_root / "key_tagcount.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "nTagCountAll = TAGCOUNT('People')\n"
+        "cKey1 = KEY(1, 'People')\n"
+        "cKey2 = KEY(2, 'People')\n"
+        "cKeyMissing = KEY(99, 'People')\n"
+        "nTagCountMissingFile = TAGCOUNT('nosuchfile.cdx', 'People')\n"
+        "nTagCountCdxOnly = TAGCOUNT('" + cdx_path.string() + "', 'People')\n"
+        "cKeyCdxOnly = KEY('" + cdx_path.string() + "', 1, 'People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "KEY()/TAGCOUNT() script should complete");
+
+    const auto tag_count_all = state.globals.find("ntagcountall");
+    const auto key1 = state.globals.find("ckey1");
+    const auto key2 = state.globals.find("ckey2");
+    const auto key_missing = state.globals.find("ckeymissing");
+    const auto tag_count_missing_file = state.globals.find("ntagcountmissingfile");
+    const auto tag_count_cdx_only = state.globals.find("ntagcountcdxonly");
+    const auto key_cdx_only = state.globals.find("ckeycdxonly");
+
+    expect(tag_count_all != state.globals.end(), "TAGCOUNT('People') should be captured");
+    expect(key1 != state.globals.end(), "KEY(1, 'People') should be captured");
+    expect(key2 != state.globals.end(), "KEY(2, 'People') should be captured");
+    expect(key_missing != state.globals.end(), "KEY(99, 'People') should be captured");
+    expect(tag_count_missing_file != state.globals.end(), "TAGCOUNT(missingFile, 'People') should be captured");
+    expect(tag_count_cdx_only != state.globals.end(), "TAGCOUNT(cdxPath, 'People') should be captured");
+    expect(key_cdx_only != state.globals.end(), "KEY(cdxPath, 1, 'People') should be captured");
+
+    if (tag_count_all != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(tag_count_all->second) == "2",
+            "TAGCOUNT('People') should count both the structural CDX tag and the companion IDX file");
+    }
+    if (key1 != state.globals.end() && key2 != state.globals.end()) {
+        const std::vector<std::string> keys{
+            copperfin::runtime::format_value(key1->second),
+            copperfin::runtime::format_value(key2->second)};
+        expect(
+            std::find(keys.begin(), keys.end(), "UPPER(NAME)") != keys.end() &&
+                std::find(keys.begin(), keys.end(), "SUBSTR(NAME,1,3)") != keys.end(),
+            "KEY(1)/KEY(2) should expose both open index key expressions, order-independent of companion discovery");
+    }
+    if (key_missing != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(key_missing->second).empty(),
+            "KEY() should return the empty string when nIndexNumber exceeds the open index count");
+    }
+    if (tag_count_missing_file != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(tag_count_missing_file->second) == "0",
+            "TAGCOUNT() should return zero for a CDXFileName that isn't open");
+    }
+    if (tag_count_cdx_only != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(tag_count_cdx_only->second) == "1",
+            "TAGCOUNT(CDXFileName) should count only tags from the named compound index file");
+    }
+    if (key_cdx_only != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(key_cdx_only->second) == "UPPER(NAME)",
+            "KEY(CDXFileName, nIndexNumber) should resolve the key expression from the named compound index file");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_seek_function_accepts_direction_suffix_in_order_designator() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_direction_suffix";

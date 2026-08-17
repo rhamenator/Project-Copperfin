@@ -1,5 +1,26 @@
 # Agent Handoff
 
+## V1 KEY / TAGCOUNT index-tag introspection
+
+`RQ-CF-PRG-009` recovers the mounted VFP9 `KEY()` and `TAGCOUNT()` functions,
+which read from the same `CursorState::OrderState` list that the existing
+`TAG()`/`ORDER()` implementation already walks. `KEY([CDXFileName ,] nIndexNumber
+[, nWorkArea | cTableAlias])` returns the raw, un-uppercased key expression for
+a 1-based ordinal, optionally scoped to a named compound index file; an
+out-of-range or omitted index number returns the empty string.
+`TAGCOUNT([CDXFileName [, nWorkArea | cTableAlias]])` returns the open tag/file
+count, similarly scopable, and zero for an unopened `CDXFileName`. This
+deliberately does not include `DESCENDING()`, KEY()/TAGCOUNT()'s sibling in the
+VFP9 help "See Also" chain: the binary CDX/IDX tag parser
+(`src/vfp/cdx_header.cpp`) never reads the tag's own creation-time `DESCENDING`
+bit (`CursorState::OrderState.descending` is hardcoded `false` at load time and
+only ever set by an explicit runtime `SET ORDER TO ... DESCENDING` override),
+and there is no real VFP9 environment available here to recover the bit's exact
+file offset from observed output rather than guessing it. `TAGNO()` and remote
+cursors remain separate. The focused portable regression
+`test_key_and_tagcount_functions` covers whole-alias and per-file-scoped counts
+and lookups plus the missing-file/out-of-range empty/zero contracts.
+
 ## V1 GETFLDSTATE / SETFLDSTATE / OLDVAL buffered-record state
 
 `RQ-CF-PRG-005` recovers the mounted VFP9 `GETFLDSTATE()` contract for local

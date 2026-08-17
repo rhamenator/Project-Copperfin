@@ -1144,23 +1144,8 @@
             std::size_t resolved_index = tag_number == 0U ? 0U : tag_number - 1U;
             if (!trim_copy(index_file_name).empty())
             {
-                const std::string normalized_target_path = normalize_path(unquote_string(index_file_name));
-                const std::string normalized_target_name =
-                    collapse_identifier(copperfin::platform::path_to_utf8_string(
-                        copperfin::platform::path_from_utf8_string(
-                            normalized_target_path.empty() ? index_file_name : normalized_target_path).filename()));
-                std::vector<const CursorState::OrderState *> matching_orders;
-                for (const CursorState::OrderState &order : cursor->orders)
-                {
-                    const std::string normalized_order_path = normalize_path(order.index_path);
-                    if ((!normalized_target_path.empty() && normalized_order_path == normalized_target_path) ||
-                        collapse_identifier(copperfin::platform::path_to_utf8_string(
-                            copperfin::platform::path_from_utf8_string(normalized_order_path).filename())) ==
-                            normalized_target_name)
-                    {
-                        matching_orders.push_back(&order);
-                    }
-                }
+                const std::vector<const CursorState::OrderState *> matching_orders =
+                    matching_orders_for_index_file(*cursor, index_file_name);
                 if (resolved_index < matching_orders.size())
                 {
                     return uppercase_copy(matching_orders[resolved_index]->name);
@@ -1174,4 +1159,72 @@
             }
 
             return uppercase_copy(cursor->orders[resolved_index].name);
+        }
+
+        std::vector<const CursorState::OrderState *> matching_orders_for_index_file(
+            const CursorState &cursor,
+            const std::string &index_file_name) const
+        {
+            std::vector<const CursorState::OrderState *> matching_orders;
+            const std::string normalized_target_path = normalize_path(unquote_string(index_file_name));
+            const std::string normalized_target_name =
+                collapse_identifier(copperfin::platform::path_to_utf8_string(
+                    copperfin::platform::path_from_utf8_string(
+                        normalized_target_path.empty() ? index_file_name : normalized_target_path).filename()));
+            for (const CursorState::OrderState &order : cursor.orders)
+            {
+                const std::string normalized_order_path = normalize_path(order.index_path);
+                if ((!normalized_target_path.empty() && normalized_order_path == normalized_target_path) ||
+                    collapse_identifier(copperfin::platform::path_to_utf8_string(
+                        copperfin::platform::path_from_utf8_string(normalized_order_path).filename())) ==
+                        normalized_target_name)
+                {
+                    matching_orders.push_back(&order);
+                }
+            }
+            return matching_orders;
+        }
+
+        std::string key_function_value(const std::string &index_file_name, std::size_t index_number, const std::string &designator) const
+        {
+            const CursorState *cursor = resolve_cursor_target(designator);
+            if (cursor == nullptr || cursor->orders.empty() || index_number == 0U)
+            {
+                return {};
+            }
+
+            const std::size_t resolved_index = index_number - 1U;
+            if (!trim_copy(index_file_name).empty())
+            {
+                const std::vector<const CursorState::OrderState *> matching_orders =
+                    matching_orders_for_index_file(*cursor, index_file_name);
+                if (resolved_index < matching_orders.size())
+                {
+                    return matching_orders[resolved_index]->expression;
+                }
+                return {};
+            }
+
+            if (resolved_index >= cursor->orders.size())
+            {
+                return {};
+            }
+
+            return cursor->orders[resolved_index].expression;
+        }
+
+        std::size_t tag_count_function_value(const std::string &index_file_name, const std::string &designator) const
+        {
+            const CursorState *cursor = resolve_cursor_target(designator);
+            if (cursor == nullptr)
+            {
+                return 0U;
+            }
+
+            if (trim_copy(index_file_name).empty())
+            {
+                return cursor->orders.size();
+            }
+
+            return matching_orders_for_index_file(*cursor, index_file_name).size();
         }
