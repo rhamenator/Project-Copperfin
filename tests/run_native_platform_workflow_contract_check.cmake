@@ -464,7 +464,7 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     "cross-platform private SQLite API boundary tests")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/run_platform_file_version_boundary_contract_check.cmake"
-    2
+    1
     "cross-platform file-version boundary path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_platform_file_version_boundary_contract"
@@ -472,7 +472,7 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     "cross-platform file-version boundary tests")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/run_platform_code_page_boundary_contract_check.cmake"
-    2
+    1
     "cross-platform code-page boundary path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_platform_code_page_boundary_contract"
@@ -484,11 +484,11 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     "cross-platform code-page behavior build and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/run_platform_disk_space_boundary_contract_check.cmake"
-    2
+    1
     "cross-platform disk-space boundary path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/test_platform_disk_space.cpp"
-    2
+    1
     "cross-platform disk-space behavior path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_platform_disk_space_boundary_contract"
@@ -496,15 +496,15 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     "cross-platform disk-space boundary tests")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_platform_disk_space"
-    8
-    "cross-platform disk-space behavior path, build, and test entries")
+    7
+    "cross-platform disk-space behavior push-path, build, and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/run_platform_exclusive_file_boundary_contract_check.cmake"
-    2
+    1
     "cross-platform exclusive-file boundary path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/test_platform_exclusive_file.cpp"
-    2
+    1
     "cross-platform exclusive-file behavior path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_platform_exclusive_file_boundary_contract"
@@ -512,19 +512,19 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     "cross-platform exclusive-file boundary tests")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_platform_exclusive_file"
-    8
-    "cross-platform exclusive-file behavior path, build, and test entries")
+    7
+    "cross-platform exclusive-file behavior push-path, build, and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_prg_engine_verified_dbf_security"
-    6
-    "cross-platform verified-snapshot consumer path, build, and test entries")
+    5
+    "cross-platform verified-snapshot consumer push-path, build, and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/run_platform_file_stream_boundary_contract_check.cmake"
-    2
+    1
     "cross-platform file-stream boundary path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/test_platform_file_stream.cpp"
-    2
+    1
     "cross-platform file-stream behavior path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_platform_file_stream_boundary_contract"
@@ -532,15 +532,15 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     "cross-platform file-stream boundary tests")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_platform_file_stream"
-    8
-    "cross-platform file-stream behavior path, build, and test entries")
+    7
+    "cross-platform file-stream behavior push-path, build, and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/run_platform_font_directories_boundary_contract_check.cmake"
-    2
+    1
     "cross-platform font-directory boundary path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/test_platform_font_directories.cpp"
-    2
+    1
     "cross-platform font-directory behavior path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_platform_font_directories_boundary_contract"
@@ -548,12 +548,12 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     "cross-platform font-directory boundary tests")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_platform_font_directories"
-    8
-    "cross-platform font-directory behavior path, build, and test entries")
+    7
+    "cross-platform font-directory behavior push-path, build, and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_prg_engine_file_io_functions"
-    6
-    "cross-platform PRG file-I/O consumer path, build, and test entries")
+    5
+    "cross-platform PRG file-I/O consumer push-path, build, and test entries")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "test_portable_clr_host_boundary_contract"
     2
@@ -564,11 +564,11 @@ require_text_count(".github/workflows/generated-launcher-validation.yml"
     "cross-platform native DECLARE loader boundary tests")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "apps/copperfin_runtime_host/**"
-    2
+    1
     "runtime-host path triggers")
 require_text_count(".github/workflows/generated-launcher-validation.yml"
     "tests/test_runtime_host_sqlite_federation.cpp"
-    2
+    1
     "runtime-host SQLite test path triggers")
 require_text(".github/workflows/build-installers.yml"
     "Build standalone Studio shell"
