@@ -1,4 +1,11 @@
-# Pull Request
+# Pull Request — Requirements Recovery / Traceability
+
+> Use this template for work tied to the DO-178-style requirements-recovery
+> effort (`RQ-*`/`VR-*` traceability, `DQ-*`/`DV-*`/`HZ-*` documentation
+> safety cases) or otherwise safety-relevant changes. For most ordinary
+> contributions — bug fixes, features, small docs/code changes — use the
+> **General Contribution** template instead; it's shorter and doesn't require
+> traceability IDs you likely don't have.
 
 ## Summary
 

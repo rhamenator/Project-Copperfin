@@ -97,6 +97,14 @@ appropriate `Co-authored-by` trailer and preserve each person's sign-off.
 6. Address review feedback without rewriting another contributor's work or
    attribution.
 
+Project Copperfin currently uses a solo-maintainer development model. The
+maintainer may self-review and merge development pull requests after required
+automated gates pass; that evidence must not be described as independent
+verification. Independent human review is a completed-project or first-stable-
+release readiness activity under
+[`docs/RELEASE-READINESS-REVIEW.md`](docs/RELEASE-READINESS-REVIEW.md). A
+documented safety or security risk may require earlier human review.
+
 Maintainers may ask for smaller scope, additional evidence, provenance
 clarification, or independent review before merging. Submission does not
 guarantee acceptance.

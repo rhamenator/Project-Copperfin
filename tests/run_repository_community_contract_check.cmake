@@ -40,7 +40,10 @@ foreach(required_path IN ITEMS
         GOVERNANCE.md
         SECURITY.md
         .github/CODEOWNERS
-        .github/pull_request_template.md
+        .github/PULL_REQUEST_TEMPLATE/general_contribution.md
+        .github/PULL_REQUEST_TEMPLATE/requirements_recovery.md
+        .github/DISCUSSION_TEMPLATE/ideas.yml
+        .github/DISCUSSION_TEMPLATE/q-a.yml
         .github/ISSUE_TEMPLATE/config.yml)
     require_community_file("${required_path}")
 endforeach()
