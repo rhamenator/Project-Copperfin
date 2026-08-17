@@ -566,6 +566,9 @@
         if (topic == "ERROR") {
             return make_string_value(error_handler);
         }
+        if (topic == "ESCAPE") {
+            return make_string_value(escape_handler);
+        }
         if (topic == "KEY") {
             if (arguments.size() < 2U || !key_assignment_lookup_callback) {
                 return make_string_value({});

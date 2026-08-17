@@ -5822,6 +5822,13 @@
             case StatementKind::on_error:
                 error_handler = statement.expression;
                 return {};
+            case StatementKind::on_escape:
+                escape_handler = statement.expression;
+                escape_action_routine = {};
+                events.push_back({.category = "runtime.on_escape",
+                                  .detail = escape_handler.empty() ? "action=cleared" : "action=assigned",
+                                  .location = statement.location});
+                return {};
             case StatementKind::on_key_command:
             {
                 DataSessionState &session_state = current_session_state();

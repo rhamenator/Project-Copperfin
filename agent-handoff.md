@@ -1,5 +1,17 @@
 # Agent Handoff
 
+## V1 ON ESCAPE runtime parity
+
+`RQ-CF-PRG-003` recovers the installed VFP9 `ON ESCAPE`, `SET ESCAPE`, and
+`ON()` contract for the iterative headless runtime. `SET ESCAPE` defaults to
+ON; an `ON ESCAPE [command]` assignment is queryable as `ON('ESCAPE')` and,
+when enabled, has priority over `ON KEY LABEL ESC`. `dispatch_escape()` and the
+thread-safe `request_escape()` seam execute only at safe runtime boundaries and
+return to `READ EVENTS`. The focused Linux GCC Release regression covers
+assignment/query, ESC priority, the disabled gate, and the host request seam.
+This is not native keyboard capture, form `KeyPress`, mid-statement
+interruption, `RETRY` replay, or report-print `ON PAGE` compatibility.
+
 ## V1 `ON()` event-assignment introspection
 
 `RQ-CF-PRG-002` recovers the installed VFP9 `ON()` function only over the

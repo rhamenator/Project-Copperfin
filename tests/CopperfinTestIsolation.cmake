@@ -1551,6 +1551,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_parser_classes
             test_prg_engine_path_functions
             test_prg_engine_on_function
+            test_prg_engine_on_escape
             test_prg_engine_on_key_label
             test_prg_engine_runtime_surface_functions
             test_prg_engine_runtime_surface_itemid_selectors

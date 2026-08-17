@@ -49,6 +49,7 @@
         std::size_t program_stack_depth,
         const std::function<std::optional<RuntimeProgramStackFrame>(long long)>& program_stack_frame_callback,
         const std::string& error_handler,
+        const std::string& escape_handler,
         const std::string& shutdown_handler,
         const std::function<std::string(const std::string&)>& key_assignment_lookup_callback,
         const std::function<int(const std::string&)>& aerror_callback,
@@ -91,6 +92,7 @@
                 std::size_t program_stack_depth,
                 std::function<std::optional<RuntimeProgramStackFrame>(long long)> program_stack_frame_callback,
                 const std::string &error_handler,
+                const std::string &escape_handler,
                 const std::string &shutdown_handler,
                 std::function<std::string(const std::string &)> key_assignment_lookup_callback,
                 bool exact_string_compare,
@@ -268,6 +270,7 @@
                   program_stack_depth_(program_stack_depth),
                   program_stack_frame_callback_(std::move(program_stack_frame_callback)),
                   error_handler_(error_handler),
+                  escape_handler_(escape_handler),
                   shutdown_handler_(shutdown_handler),
                   key_assignment_lookup_callback_(std::move(key_assignment_lookup_callback)),
                   exact_string_compare_(exact_string_compare)
@@ -1896,6 +1899,7 @@
                                                           program_stack_depth_,
                                                           program_stack_frame_callback_,
                                                           error_handler_,
+                                                          escape_handler_,
                                                           shutdown_handler_,
                                                           key_assignment_lookup_callback_,
                                                           aerror_callback_,
@@ -3617,6 +3621,7 @@
             std::size_t program_stack_depth_ = 0;
             std::function<std::optional<RuntimeProgramStackFrame>(long long)> program_stack_frame_callback_;
             const std::string &error_handler_;
+            const std::string &escape_handler_;
             const std::string &shutdown_handler_;
             std::function<std::string(const std::string &)> key_assignment_lookup_callback_;
             bool exact_string_compare_ = false;

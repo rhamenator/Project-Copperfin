@@ -8905,3 +8905,9 @@ passes `1/1`.
   that omits write sharing fails with `ERROR_SHARING_VIOLATION`.
   Actual controller execution, POSIX/macOS launch transition, working-directory
   entry, sandbox, endpoint/descendant controls, and outcome audit remain closed.
+- 2026-08-17: Recovered the VFP9 static headless `ON ESCAPE` lane. `SET ESCAPE`
+  now defaults to ON; `ON ESCAPE [command]` is queryable through
+  `ON('ESCAPE')`, takes priority over `ON KEY LABEL ESC` when enabled, and can
+  be requested through a safe runtime boundary. Native key capture, form/UI
+  routing, mid-statement interruption, `RETRY` replay, and report-print
+  `ON PAGE` behavior remain explicit compatibility gaps.

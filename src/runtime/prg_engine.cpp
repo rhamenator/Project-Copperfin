@@ -817,6 +817,13 @@ namespace copperfin::runtime
             std::string current_database_path;
         };
 
+        struct EscapeActionRoutine
+        {
+            std::string action_text;
+            std::string source_path;
+            std::string routine_name;
+        };
+
         struct TransactionJournalFileEntry
         {
             std::string original_path;
@@ -961,6 +968,7 @@ namespace copperfin::runtime
             scheduler_yield_statement_interval = std::max<std::size_t>(1U, options.scheduler_yield_statement_interval);
             scheduler_yield_sleep_ms = options.scheduler_yield_sleep_ms;
             task_cancel_requested = std::make_shared<std::atomic<bool>>(false);
+            task_escape_requested = std::make_shared<std::atomic<bool>>(false);
             runtime_instance_id = runtime_instance_counter.fetch_add(1ULL, std::memory_order_relaxed);
             concurrency_state = std::make_shared<RuntimeConcurrencyState>();
             runtime_temp_directory = choose_runtime_temp_directory(options);
@@ -1075,7 +1083,9 @@ namespace copperfin::runtime
         AErrorCompatibilitySnapshot last_error_compatibility;
         std::vector<FaultMetadataSnapshot> error_metadata_stack;
         std::string error_handler;
+        std::string escape_handler;
         std::string shutdown_handler;
+        EscapeActionRoutine escape_action_routine;
         std::string udfparms_mode = "VALUE";
         std::size_t expression_evaluation_depth = 0U;
         bool resumable_expression_dispatch_active = false;
@@ -1156,6 +1166,7 @@ namespace copperfin::runtime
         std::size_t scheduler_yield_statement_interval = 4096;
         std::size_t scheduler_yield_sleep_ms = 1;
         std::shared_ptr<std::atomic<bool>> task_cancel_requested;
+        std::shared_ptr<std::atomic<bool>> task_escape_requested;
         std::vector<std::string> critical_section_stack;
         std::map<std::string, std::size_t> critical_section_depth_by_name;
         std::map<std::string, std::shared_ptr<std::recursive_mutex>> critical_section_mutexes_by_name;
@@ -1192,6 +1203,8 @@ namespace copperfin::runtime
 #undef COPPERFIN_PRG_ENGINE_IMPL_CONTEXT
         bool dispatch_event_handler(const std::string &routine_name);
         bool dispatch_key_label(const std::string &key_label);
+        bool dispatch_escape();
+        bool start_escape_handler();
         bool dispatch_popup_bar_selection(const std::string &popup_name, std::int64_t bar_number);
         void assign_native_window_metadata(RuntimeOleObjectState &runtime_object);
         [[nodiscard]] std::optional<std::intptr_t> hwnd_from_whandle(std::intptr_t whandle) const;
@@ -1448,6 +1461,7 @@ namespace copperfin::runtime
                     stack_frame.procedure_context};
             },
             error_handler,
+            escape_handler,
             shutdown_handler,
             [this](const std::string &key_label)
             {
@@ -2447,6 +2461,10 @@ namespace copperfin::runtime
                 if (found == current_set_state().end())
                 {
                     if (normalized_name == "century")
+                    {
+                        return std::string("ON");
+                    }
+                    if (normalized_name == "escape")
                     {
                         return std::string("ON");
                     }
@@ -11179,6 +11197,10 @@ namespace copperfin::runtime
         {
             return false;
         }
+        if ((normalized_key == "ESC" || normalized_key == "ESCAPE") && dispatch_escape())
+        {
+            return true;
+        }
 
         DataSessionState &session_state = current_session_state();
         const auto assignment = session_state.key_assignments.find(normalized_key);
@@ -11237,6 +11259,60 @@ namespace copperfin::runtime
                           .location = {}});
         push_routine_frame(source_program.path, *action_routine);
         return true;
+    }
+
+    bool PrgRuntimeSession::Impl::start_escape_handler()
+    {
+        if (stack.empty() || !is_set_enabled_or_default("escape", true) || escape_handler.empty() ||
+            escape_handler.find('&') != std::string::npos || !can_push_frame())
+        {
+            return false;
+        }
+
+        Program &source_program = load_program(stack.back().file_path);
+        const Routine *action_routine = nullptr;
+        if (escape_action_routine.action_text == escape_handler &&
+            escape_action_routine.source_path == source_program.path)
+        {
+            const auto cached = source_program.routines.find(normalize_identifier(escape_action_routine.routine_name));
+            if (cached != source_program.routines.end())
+            {
+                action_routine = &cached->second;
+            }
+        }
+        if (action_routine == nullptr)
+        {
+            const std::string action_routine_name = "__copperfin_escape_action_" +
+                std::to_string(runtime_instance_id) + "_" + std::to_string(++next_popup_action_id);
+            const Program action_program = parse_program_source(
+                source_program.path,
+                "PROCEDURE " + action_routine_name + "\n" + escape_handler + "\nRETURN\nENDPROC\n");
+            const auto found = action_program.routines.find(normalize_identifier(action_routine_name));
+            if (found == action_program.routines.end())
+            {
+                return false;
+            }
+            auto [inserted, created] = source_program.routines.emplace(normalize_identifier(action_routine_name), found->second);
+            if (!created)
+            {
+                return false;
+            }
+            escape_action_routine = {escape_handler, source_program.path, action_routine_name};
+            action_routine = &inserted->second;
+        }
+
+        const bool was_waiting_for_events = waiting_for_events;
+        waiting_for_events = false;
+        event_dispatch_return_depth = stack.size();
+        restore_event_loop_after_dispatch = was_waiting_for_events;
+        events.push_back({.category = "runtime.escape", .detail = "handler=dispatched", .location = {}});
+        push_routine_frame(source_program.path, *action_routine);
+        return true;
+    }
+
+    bool PrgRuntimeSession::Impl::dispatch_escape()
+    {
+        return waiting_for_events && start_escape_handler();
     }
 
     bool PrgRuntimeSession::Impl::dispatch_popup_bar_selection(
@@ -12351,6 +12427,11 @@ namespace copperfin::runtime
                 runtime_text("Runtime.Prg.Session.Message.StoppedOnEntry"));
         }
 
+        if (waiting_for_events && task_escape_requested != nullptr &&
+            task_escape_requested->exchange(false, std::memory_order_relaxed))
+        {
+            (void)start_escape_handler();
+        }
         if (waiting_for_events)
         {
             return finalize_pause_state(
@@ -12365,7 +12446,7 @@ namespace copperfin::runtime
             while (true)
             {
                 const Statement *pending_statement = current_statement();
-                const bool pending_statement_handles_cancellation =
+        const bool pending_statement_handles_cancellation =
                     pending_statement != nullptr && pending_statement->kind == StatementKind::sleep_command;
                 if (task_cancel_requested != nullptr &&
                     task_cancel_requested->load(std::memory_order_relaxed) &&
@@ -12380,6 +12461,15 @@ namespace copperfin::runtime
                         return finalize_pause_state(DebugPauseReason::error, last_error_message);
                     }
                     return finalize_pause_state(DebugPauseReason::error, last_error_message);
+                }
+                if (task_escape_requested != nullptr &&
+                    task_escape_requested->exchange(false, std::memory_order_relaxed))
+                {
+                    (void)start_escape_handler();
+                    if (!stack.empty() && !waiting_for_events)
+                    {
+                        continue;
+                    }
                 }
                 while (!stack.empty() &&
                        !stack.back().expression_routine_return_pending &&
@@ -12851,6 +12941,11 @@ namespace copperfin::runtime
         return impl_->dispatch_key_label(key_label);
     }
 
+    bool PrgRuntimeSession::dispatch_escape()
+    {
+        return impl_->dispatch_escape();
+    }
+
     bool PrgRuntimeSession::dispatch_popup_bar_selection(
         const std::string &popup_name,
         std::int64_t bar_number)
@@ -12887,6 +12982,14 @@ namespace copperfin::runtime
         if (impl_ != nullptr && impl_->task_cancel_requested != nullptr)
         {
             impl_->task_cancel_requested->store(true, std::memory_order_relaxed);
+        }
+    }
+
+    void PrgRuntimeSession::request_escape()
+    {
+        if (impl_ != nullptr && impl_->task_escape_requested != nullptr)
+        {
+            impl_->task_escape_requested->store(true, std::memory_order_relaxed);
         }
     }
 

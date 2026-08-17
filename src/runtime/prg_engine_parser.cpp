@@ -2963,6 +2963,9 @@ Program parse_program_impl(
                 statement.identifier = uppercase_copy(take_first_token(body));
                 statement.expression = trim_copy(body.substr(statement.identifier.size()));
             }
+        } else if (upper == "ON ESCAPE" || starts_with_insensitive(line, "ON ESCAPE ")) {
+            statement.kind = StatementKind::on_escape;
+            statement.expression = upper == "ON ESCAPE" ? std::string{} : trim_copy(line.substr(10U));
         } else if (upper == "ON ERROR" || starts_with_insensitive(line, "ON ERROR ")) {
             statement.kind = StatementKind::on_error;
             statement.expression = upper == "ON ERROR" ? std::string{} : trim_copy(line.substr(9U));
