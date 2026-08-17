@@ -8960,3 +8960,11 @@ passes `1/1`.
   coverage verifies original field/expression results plus invalidation after
   `TABLEREVERT()` and `TABLEUPDATE()`. Remote-cursor, validation-rule without
   buffering, and unmodified/appended-record behavior remain explicit gaps.
+
+- 2026-08-17: Recovered VFP9 `CURVAL()` for local persisted DBF records. The
+  runtime evaluates the supplied character expression against the current disk
+  record rather than a pending optimistic buffer, preserving the expression
+  type; the buffered value becomes visible after `TABLEUPDATE()`. The focused
+  regression covers character, numeric, expression, work-area, and post-commit
+  behavior. Remote cursors, views/refresh, EOF/error parity, locking, and
+  non-local sources remain explicit gaps.

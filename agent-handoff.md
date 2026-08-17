@@ -1,6 +1,6 @@
 # Agent Handoff
 
-## V1 GETFLDSTATE / SETFLDSTATE / OLDVAL buffered-record state
+## V1 GETFLDSTATE / SETFLDSTATE / OLDVAL / CURVAL buffered-record state
 
 `RQ-CF-PRG-005` recovers the mounted VFP9 `GETFLDSTATE()` contract for local
 row- and table-buffered cursors. The runtime supports field names and 1-based
@@ -33,6 +33,15 @@ preserves the result type. It is no longer available after `TABLEREVERT()` or
 expression values, explicit work-area lookup, revert, and commit. Remote
 cursors, validation-rule use without buffering, and unmodified/appended-record
 semantics remain separate.
+
+`RQ-CF-PRG-008` recovers the paired local `CURVAL()` disk-image expression
+surface. `CURVAL(cExpression [, cTableAlias | nWorkArea])` evaluates its
+character expression against the current persisted DBF record, rather than the
+pending buffer, and preserves the ordinary expression result type. Thus an
+optimistic buffered edit remains invisible to `CURVAL()` until `TABLEUPDATE()`.
+The focused portable buffering regression covers character, numeric, expression,
+work-area, and post-commit behavior. Remote cursors, views and refresh timing,
+EOF/error compatibility, and non-local data sources remain separate.
 
 ## V1 ON PAGE configuration boundary
 
