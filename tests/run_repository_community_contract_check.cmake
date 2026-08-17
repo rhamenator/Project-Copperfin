@@ -40,6 +40,7 @@ foreach(required_path IN ITEMS
         GOVERNANCE.md
         SECURITY.md
         .github/CODEOWNERS
+        .github/pull_request_template.md
         .github/PULL_REQUEST_TEMPLATE/general_contribution.md
         .github/PULL_REQUEST_TEMPLATE/requirements_recovery.md
         .github/DISCUSSION_TEMPLATE/ideas.yml
@@ -71,6 +72,9 @@ forbid_community_text("docs/28-repository-ontology.md" "standing-but-deferred")
 require_community_file(".github/workflows/contributor-signoff.yml")
 require_community_file("scripts/check-contributor-signoffs.py")
 require_community_text(".github/CODEOWNERS" "* @rhamenator")
+require_community_text(".github/pull_request_template.md" "Contribution Licensing And Provenance")
+require_community_text(".github/pull_request_template.md" "Signed-off-by")
+require_community_text(".github/pull_request_template.md" "User-visible strings are localized")
 foreach(pull_request_template IN ITEMS
         .github/PULL_REQUEST_TEMPLATE/general_contribution.md
         .github/PULL_REQUEST_TEMPLATE/requirements_recovery.md)

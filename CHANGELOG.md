@@ -1,3 +1,11 @@
+- 2026-08-17: Split contributor pull-request guidance into discoverable
+  General Contribution and Requirements Recovery / Traceability templates,
+  while retaining `.github/pull_request_template.md` as the normal GitHub
+  default. Added idea and question discussion forms plus durable
+  release-readiness human-review guidance. The community-health contract now
+  verifies all template routes and their licensing, DCO, localization, and
+  traceability prompts.
+
 - 2026-08-17: Recovered the VFP9 `ON()` event-assignment introspection contract
   for the already-supported `ERROR` and static session-scoped `KEY` lanes.
   `ON('KEY', cKeyLabel)` now returns the exact static key command or an empty
