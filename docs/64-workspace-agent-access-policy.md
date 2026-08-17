@@ -603,11 +603,13 @@ construction. Provider, model, prompt, workspace, and tool-request input cannot
 create or select this authority.
 
 The same trusted product record must attest
-`self_contained_parser_image_v1` for that exact digest: argument parsing may not
-depend on mutable non-system load-time images. This slice intentionally rejects
-executables whose parser behavior depends on adjacent DLLs; a later dependency-
-closure contract must authenticate and launch-isolate every such image before
-those executables can receive parser authority. The attestation is a product
+`self_contained_launch_image_v1` for that exact digest: both process startup and
+argument parsing may depend only on Windows-trusted system images, never an
+application-local or working-directory DLL. The private exact-image directory
+therefore intentionally replaces the source executable's application directory
+instead of preserving mutable adjacent-DLL lookup. A later dependency-closure
+contract must authenticate and launch-isolate every required non-system image
+before such executables can receive authority. The attestation is a product
 configuration obligation established through review of the exact digest, not an
 inference from PE structure.
 
@@ -843,6 +845,141 @@ denied. POSIX/macOS descriptor execution, working-directory entry, sandboxing,
 endpoint and descendant controls, process outcome audit, and actual tool
 execution remain separate requirements.
 
+## Windows warned-unrestricted exact-image execution
+
+Candidate `RQ-CF-AGENT-028` adds one deliberately narrow executor. The trusted
+controller consumes an opaque materialized launch by value only when it belongs
+to that controller's exact active generation, the admitted mode is
+`unrestricted_local`, the retained plan is the supported Windows form, and the
+host process is confirmed not elevated. `workspace_sandbox` still denies
+execution: workspace path containment is not an operating-system sandbox and
+must not be described as one. Unknown elevation, elevated execution, POSIX,
+and macOS fail closed. The caller supplies only bounded stdin, timeout,
+polling, output ceilings, and cancellation observation; it cannot replace the
+path, arguments, environment, working directory, access mode, handles, or
+process flags retained by the trusted plan.
+
+The three anonymous transport pipes use an explicit protected DACL containing
+the current logon SID and the Windows restricted-code SID. This is narrower
+than the caller token's ambient default DACL, remains usable when the trusted
+host itself runs with a restricted non-elevated token, and does not authorize a
+different logon session. Only the fixed child ends enter the process attribute
+handle list; the parent ends are made non-inheritable before process creation.
+
+Before any attempt, the controller durably submits a content-free schema-v2
+intent with generation, a fresh 128-bit operating-system-random attempt
+namespace carried in the schema-v2 `process_instance_id` field, and an operation
+identifier from one process-wide, nonwrapping allocator. A fresh namespace for
+every attempt gives distinct controllers, host processes, process restarts, and
+later post-fork attempts sharing a durable sink a collision-resistant
+correlation identity. The controller also records its process identity before
+the synchronous intent callback and, if that callback forks, stops the child
+continuation before execution or outcome submission. Failure to obtain the
+attempt namespace or process identity denies execution before intent. A failed intent
+audit consumes and destroys the one-attempt image and starts nothing. The
+Windows launcher uses the private image path only internally as
+`lpApplicationName`, preserves the authenticated original executable spelling
+as `argv[0]`, passes the fixed double-NUL environment and a handle-derived,
+fixed-volume extended DOS working-directory path, never invokes a shell or PATH search, and admits only the
+three fixed standard handles. Before exposing that internal launch path, the
+private image retains no-delete-share handles for every renameable directory
+below its handle-derived stable local-volume device root through its private parent
+(the intrinsically non-renameable root itself needs no handle) and reopens the leaf
+once more with a read-only observer that shares delete only for compatibility
+with the retained handle's own delete access. That observer proves
+the now-locked pathname still resolves to the authenticated image identity.
+Those locks remain owned through bounded process completion, so an ancestor
+rename or replacement cannot redirect `CreateProcessW` to different bytes.
+Because `CreateProcessW` does not accept that stable device form as
+`lpApplicationName`, the loader receives a handle-derived extended DOS name.
+The process enters the kill-on-close Job Object atomically at creation and
+remains suspended while the launcher queries the kernel-reported native image
+name and compares it, case-insensitively and in full, with the native device
+name captured from the retained authenticated image handle. A changed drive,
+`SUBST`, or mount mapping therefore produces an image-binding failure and the
+Job-owned child is terminated without resuming user code.
+The retained target pins apply stable-volume naming and complete hierarchy
+retention to the working directory until process creation commits. Protected
+Windows evidence showed that the stable device path, the handle-derived
+extended DOS path, and a separately identity-reopened ordinary DOS spelling all
+create, bind, and resume the intended image yet reproduce the same fixture
+timeout. Current-directory spelling is therefore not selected as the cause,
+and production retains the extended DOS form to preserve long-path behavior. It
+is admitted only
+when the drive is fixed, `GetVolumePathNamesForVolumeNameW` lists that drive
+root for the handle's volume GUID, `GetVolumeInformationByHandleW` reports the retained
+storage identity from the authenticated handle without fresh root traversal,
+and reopening the exact extended DOS path under the retained stable chain returns
+the exact directory identity before and after mapping validation. Network,
+mounted-folder-only, `SUBST`, removable, and identity-mismatched forms fail
+closed. Protected Windows run `31967738991` proved `QueryDosDeviceW` unavailable
+under the bounded restricted token, so that redundant query is not an admission
+prerequisite.
+Exact-head protected runs `31969922414` and `31969922779` independently proved
+that the extended DOS spelling reaches creation, native-image binding, Job
+commitment, and resume but leaves both fixtures timed out without output. Runs
+`31971595320` and `31971595343` reproduced the same result with the ordinary
+spelling. The bounded launcher now rejects any initial-thread resume result
+other than exactly one prior suspension, and the synthetic copied-child fixture
+emits fixed entry or unrecognized-argument markers before other child work.
+These content-free signals distinguish invalid resume state, pre-entry failure,
+and command-line mismatch without changing production arguments or environment.
+Protected run `31973693772` returned the expected resume count but timed out
+before the copied full test runner reached its marker. The validation fixture
+therefore now uses a dedicated statically linked child matching the configured
+`self_contained_launch_image_v1` contract; its exact output-line comparisons
+accept Windows CRLF and LF transport framing. This changes no production launch
+path, authority, arguments, environment, or timeout behavior.
+The stable name prefers a volume-GUID path and falls back only to a validated
+`GLOBALROOT\\Device\\HarddiskVolumeN` name when the local volume exposes no GUID.
+Network shares expose neither accepted local-volume form and are intentionally denied by
+this v1 executor; unrestricted execution is limited to authenticated local-
+volume targets.
+Protected Windows execution at exact head `0023f74e9` directly proved that
+`CreateProcessW` rejects the authenticated stable device-form application name
+with `ERROR_INVALID_PARAMETER`. Protected run `31961744412` then created the
+never-resumed DOS-name probe with the same stable working directory, proving
+only that `CreateProcessW` accepted that combination. Exact production runs
+`31962919560` and `31962919574` subsequently proved the resumed runtime could
+not use that current-directory form, selecting the separately bound DOS
+working-directory design above. The diagnostic retry is not part of the
+production execution path.
+The exact-digest
+`self_contained_launch_image_v1` admission contract requires system-only load-
+time dependencies: the private directory deliberately does not preserve the
+mutable source executable directory for adjacent-DLL lookup. It creates the
+process suspended and atomically Job-owned, verifies the loaded image binding,
+then releases the plan, target pins, and generation lease before starting
+threads or resuming the child. Consequently stop may
+revoke the session after launch commitment without waiting for a long-running
+child, while the private executable image remains owned until the complete
+bounded process tree closes.
+
+Timeout, cancellation, transport failure, and output ceilings close the Job
+Object and leave no authorized descendant. Image cleanup occurs before the
+correlated content-free outcome is submitted. The durable sink admits only
+stable status/diagnostic pairs; paths, arguments, environment values, output,
+native errors, prompts, and credentials are never part of the process audit
+record. An outcome-audit failure remains visible after execution and does not
+rewrite the process result. This is explicitly dangerous current-user
+authority chosen after the versioned warning, not sandbox containment and not
+privilege elevation.
+
+Audit callbacks are synchronous persistence boundaries, not controller command
+hooks. A lifecycle transition reentered on the same controller from the same
+thread as an audit callback fails closed without waiting on the callback's own
+lease. Cancellation callbacks have the same restriction: they report only a
+cancellation decision and cannot synchronously stop their controller while its
+pre-commit lease remains held. Calls from unrelated threads retain normal
+revocation semantics, and either callback caller may issue `stop()` after its
+callback and the execution operation return.
+
+The public `RQ-CF-AGENT-019` promotion gate remains invariantly denied. This
+slice does not connect provider or model output to native execution, implement
+the trusted activation UI, add endpoint policy, provide diff/undo, recover
+receipts after a crash, or establish POSIX/macOS execution. Those remain
+separate requirements.
+
 ## Current implementation and remaining work
 
 Candidate `RQ-CF-AGENT-021` retains every successful configured layout
@@ -906,7 +1043,10 @@ lease into one opaque move-only non-executing candidate. Candidate
 `RQ-CF-AGENT-026` consumes that candidate once and retains an exact private
 native image without exposing it. Candidate `RQ-CF-AGENT-027` transitions the
 Windows image to an exact read/delete launch-compatible handle without exposing
-or executing it, and none of these slices weakens that gate. The adjacent
+it. Candidate `RQ-CF-AGENT-028` consumes that exact image only under warned,
+non-elevated unrestricted-local authority, applies bounded Job Object ownership
+and paired content-free audit, and still does not weaken the public promotion
+gate. The adjacent
 invocation-shape preflight adds a bounded direct argument vector and mandatory
 non-inheriting environment-policy selector. The adjacent trusted-host boundary
 constructs the fixed-key, generation-owned logical environment without reading
@@ -914,14 +1054,14 @@ ambient variables, and the next boundary serializes that exact plan for POSIX
 or Windows without launching. When trusted environment configuration is
 supplied, process-capable session start prepares that exact generation's
 private layout before audit-backed activation and fails closed without adopting
-existing state. None of these results is an executor or real sandbox.
+existing state. The Windows-only RQ-028 path is an executor but not a real
+sandbox.
 Prospective
 file creation, descriptor/handle-pinned reads and writes, delete/rename
-semantics, exact-snapshot execution and the POSIX/macOS platform launch
-transition,
+semantics, POSIX/macOS exact-snapshot execution and platform launch transition,
 automatic lifecycle cleanup, crash-recoverable receipts, partial-cleanup retry,
-endpoint policy, process
-execution, and tool-outcome auditing remain unimplemented.
+endpoint policy, public process promotion, real workspace sandboxing, and
+general tool-outcome auditing remain unimplemented.
 Weakening the warning-identity comparison to admit a stale nonempty warning
 causes the dedicated regression to fail at that exact assertion; restoration
 returns the policy test to green.

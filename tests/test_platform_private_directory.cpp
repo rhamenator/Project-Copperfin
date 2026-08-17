@@ -494,7 +494,14 @@ void test_invalid_and_wrong_kind_inputs() {
 
 void test_exact_private_executable_image_materialization() {
     TempTree tree;
-    const auto private_root = tree.root / "image-root";
+    const auto image_ancestor = tree.root / "image-ancestor";
+    const auto ancestor_created = create_private_directory(image_ancestor);
+    expect(ancestor_created.ok,
+           "RQ-CF-AGENT-028: the image fixture must create a private ancestor");
+    if (!ancestor_created.ok) {
+        return;
+    }
+    const auto private_root = image_ancestor / "image-root";
     const auto created = create_private_directory(private_root);
     expect(created.ok,
            "RQ-CF-AGENT-026: the image fixture must create a private parent");
@@ -517,7 +524,20 @@ void test_exact_private_executable_image_materialization() {
                materialized.image->valid() &&
                materialized.failure == PrivateExecutableImageFailure::none,
            "RQ-CF-AGENT-026: exact bytes must become one owned executable image");
+    if (!materialized.materialized || !materialized.image.has_value()) {
+        std::cerr << "RQ-CF-AGENT-026 materialization failure="
+                  << static_cast<std::uint32_t>(materialized.failure) << '\n';
+        return;
+    }
 #if defined(_WIN32)
+    const auto renamed_ancestor = tree.root / "image-ancestor-replaced";
+    const BOOL ancestor_renamed = ::MoveFileExW(
+        image_ancestor.c_str(), renamed_ancestor.c_str(),
+        MOVEFILE_WRITE_THROUGH);
+    expect(ancestor_renamed == FALSE &&
+               std::filesystem::exists(image_ancestor) &&
+               !std::filesystem::exists(renamed_ancestor),
+           "RQ-CF-AGENT-028: a retained Windows image must deny ancestor-directory rename and replacement until launch completes");
     const HANDLE retained_reader = ::CreateFileW(
         (private_root / leaf).c_str(), GENERIC_READ,
         FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr,
@@ -578,6 +598,11 @@ void test_exact_private_executable_image_materialization() {
                launch_materialized.image.has_value() &&
                launch_transitioned_test_image(private_root / launch_leaf),
            "RQ-CF-AGENT-027: CreateProcessW must launch the exact transitioned test image while its write-denying handle remains live");
+    if (!launch_materialized.materialized) {
+        std::cerr << "RQ-CF-AGENT-027 launch materialization failure="
+                  << static_cast<std::uint32_t>(launch_materialized.failure)
+                  << '\n';
+    }
     launch_materialized.image.reset();
     expect(!std::filesystem::exists(private_root / launch_leaf),
            "RQ-CF-AGENT-027: transitioned launch-image destruction must remove the exact object");
@@ -588,6 +613,20 @@ void test_exact_private_executable_image_materialization() {
     materialized.image.reset();
     expect(!std::filesystem::exists(private_root / leaf),
            "RQ-CF-AGENT-026: image destruction must remove the exact retained object");
+#if defined(_WIN32)
+    const BOOL released_ancestor_renamed = ::MoveFileExW(
+        image_ancestor.c_str(), renamed_ancestor.c_str(),
+        MOVEFILE_WRITE_THROUGH);
+    const BOOL released_ancestor_restored = released_ancestor_renamed != FALSE
+        ? ::MoveFileExW(
+              renamed_ancestor.c_str(), image_ancestor.c_str(),
+              MOVEFILE_WRITE_THROUGH)
+        : FALSE;
+    expect(released_ancestor_renamed != FALSE &&
+               released_ancestor_restored != FALSE &&
+               std::filesystem::exists(private_root),
+           "RQ-CF-AGENT-028: image destruction must release every retained ancestor-directory handle");
+#endif
 
     const auto wrong_parent =
         materialize_private_executable_image_in_verified_parent(

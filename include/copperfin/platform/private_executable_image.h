@@ -12,7 +12,10 @@
 
 namespace copperfin::platform {
 
-// Governing requirements: candidate RQ-CF-AGENT-026 and RQ-CF-AGENT-027.
+struct BoundedProcessResult;
+struct PrivateWindowsBoundedProcessRequest;
+
+// Governing requirements: candidate RQ-CF-AGENT-026 through RQ-CF-AGENT-028.
 
 enum class PrivateExecutableImageFailure : std::uint32_t {
     none = 0U,
@@ -34,10 +37,13 @@ struct PrivateExecutableImageMaterializationResult;
 // unlink the image before writing and retain only its descriptor. Windows
 // replaces its write-capable creation handle with a read-only file-id identity
 // anchor, then admits a linked-path read/delete handle only when its identity
-// matches exactly. That final handle denies write, delete, and rename sharing
-// and deletes the
-// handle-owned object during destruction. No path or native handle is exposed
-// by this portability seam.
+// matches exactly. That final handle denies write, delete, and rename sharing;
+// no-delete-share handles retain every renameable Windows directory below a
+// handle-derived stable local-volume device root through the image parent, and a final
+// reopen through that stable path must still match the exact image identity.
+// Destruction deletes the handle-owned object before releasing
+// the directory chain. No path or native handle is exposed by this portability
+// seam.
 class PrivateExecutableImage {
 public:
     PrivateExecutableImage();
@@ -56,6 +62,11 @@ private:
     [[nodiscard]] bool matches_bytes(
         std::span<const std::uint8_t> expected) const noexcept;
 
+    [[nodiscard]] const std::filesystem::path*
+    windows_launch_target() const noexcept;
+    [[nodiscard]] const std::filesystem::path*
+    windows_native_launch_target() const noexcept;
+
     std::unique_ptr<Impl> impl_;
 
     friend struct PrivateExecutableImageMaterializationResult;
@@ -67,6 +78,9 @@ private:
         std::uint64_t,
         const std::filesystem::path&,
         std::span<const std::uint8_t>) noexcept;
+    friend BoundedProcessResult run_bounded_windows_private_executable(
+        const PrivateExecutableImage&,
+        const PrivateWindowsBoundedProcessRequest&) noexcept;
 };
 
 struct PrivateExecutableImageMaterializationResult {

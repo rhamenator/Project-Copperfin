@@ -129,6 +129,7 @@ public:
         outside = root / "outside";
         std::filesystem::create_directories(workspace / "bin");
         std::filesystem::create_directories(workspace / "nested");
+        std::filesystem::create_directories(workspace / "nested" / "inner");
         std::filesystem::create_directories(outside / "bin");
         std::filesystem::create_directories(outside / "working");
         write_executable(workspace / "bin" / "workspace-tool");
@@ -634,6 +635,9 @@ void test_boundary_retains_exact_process_target_objects() {
     expect(correct_boundary.pinned && correct_boundary.pins.has_value() &&
                correct_boundary.pins->valid(),
            "RQ-CF-AGENT-023: a cross-boundary denial must not consume the issuing boundary's one-attempt authority");
+    if (!correct_boundary.pins.has_value()) {
+        return;
+    }
     const auto replay = boundary->pin_process_targets(cross_boundary_inspection);
     expect(!replay.pinned &&
                replay.diagnostic_code ==
@@ -729,7 +733,7 @@ void test_boundary_retains_exact_process_target_objects() {
     std::filesystem::rename(moved_executable, original_executable);
 
     auto retained = boundary->inspect_workspace_process(
-        "bin/workspace-tool", "nested");
+        "bin/workspace-tool", "nested/inner");
     auto retained_pin = boundary->pin_process_targets(retained);
     expect(retained_pin.pinned && retained_pin.pins.has_value() &&
                retained_pin.pins->valid(),
@@ -744,14 +748,23 @@ void test_boundary_retains_exact_process_target_objects() {
     std::filesystem::rename(
         original_executable, moved_executable, rename_error);
 #if defined(_WIN32)
-    expect(rename_error && retained_pin.pins->valid(),
-           "RQ-CF-AGENT-023: Windows pins must deny executable replacement while retained");
+    std::error_code working_ancestor_rename_error;
+    std::filesystem::rename(
+        tree.workspace / "nested", tree.workspace / "nested-old",
+        working_ancestor_rename_error);
+    expect(rename_error && working_ancestor_rename_error &&
+               retained_pin.pins->valid(),
+           "RQ-CF-AGENT-028: Windows pins must deny executable replacement and working-directory ancestor rename while retained");
     retained_pin.pins.reset();
     rename_error.clear();
+    working_ancestor_rename_error.clear();
     std::filesystem::rename(
         original_executable, moved_executable, rename_error);
-    expect(!rename_error,
-           "RQ-CF-AGENT-023: releasing Windows pins must release replacement exclusion");
+    std::filesystem::rename(
+        tree.workspace / "nested", tree.workspace / "nested-old",
+        working_ancestor_rename_error);
+    expect(!rename_error && !working_ancestor_rename_error,
+           "RQ-CF-AGENT-028: releasing Windows pins must release executable and complete working-directory hierarchy exclusions");
 #else
     expect(!rename_error && retained_pin.pins->valid(),
            "RQ-CF-AGENT-023: POSIX pins must retain the exact opened executable object across name replacement");

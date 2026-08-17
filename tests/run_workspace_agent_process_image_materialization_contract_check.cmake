@@ -26,31 +26,104 @@ endfunction()
 
 set(platform_header include/copperfin/platform/private_executable_image.h)
 set(platform_source src/platform/private_executable_image.cpp)
+set(bounded_process_header include/copperfin/platform/bounded_process.h)
+set(bounded_process_private src/platform/bounded_process_private.h)
+set(bounded_process_source src/platform/bounded_process.cpp)
 set(environment_header include/copperfin/security/workspace_agent_environment.h)
 set(environment_source src/security/workspace_agent_environment.cpp)
 set(containment_header include/copperfin/security/physical_path_containment.h)
 set(containment_source src/security/physical_path_containment.cpp)
+set(process_containment_header include/copperfin/security/workspace_agent_process_containment.h)
+set(process_containment_source src/security/workspace_agent_process_containment.cpp)
 set(session_header include/copperfin/security/workspace_agent_session.h)
 set(session_source src/security/workspace_agent_session.cpp)
+set(audit_sink_source src/security/workspace_agent_audit_sink.cpp)
 set(platform_test tests/test_platform_private_directory.cpp)
 set(isolation_metadata tests/CopperfinTestIsolation.cmake)
 set(environment_test tests/test_workspace_agent_isolated_environment.cpp)
+set(execution_fixture tests/workspace_agent_execution_fixture.cpp)
+set(execution_probe tests/workspace_agent_execution_probe.cpp)
+set(process_containment_test tests/test_workspace_agent_process_containment.cpp)
 
 foreach(path IN ITEMS
         ${platform_header}
         ${platform_source}
+        ${bounded_process_header}
+        ${bounded_process_private}
+        ${bounded_process_source}
         ${environment_header}
         ${environment_source}
         ${containment_header}
         ${containment_source}
+        ${process_containment_header}
+        ${process_containment_source}
         ${session_header}
         ${session_source}
+        ${audit_sink_source}
         ${platform_test}
         ${isolation_metadata}
-        ${environment_test})
+        ${environment_test}
+        ${execution_fixture}
+        ${execution_probe}
+        ${process_containment_test})
     if(NOT EXISTS "${SOURCE_DIR}/${path}")
         message(FATAL_ERROR "Process-image materialization input is missing: ${path}")
     endif()
+endforeach()
+
+foreach(token IN ITEMS
+        "make_process_execution_attempt_namespace()"
+        "BCRYPT_USE_SYSTEM_PREFERRED_RNG"
+        "::getrandom("
+        "::arc4random_buf("
+        ".process_instance_id = process_instance_id")
+    require_text(${session_source} "${token}"
+        "cross-process and post-fork audit correlation namespace")
+endforeach()
+forbid_text(${session_source} "static const std::string identifier"
+    "fork-inherited cached process namespace")
+require_text(${audit_sink_source} "event.process_instance_id.size() == 32U"
+    "strict process-instance identifier validation")
+
+foreach(token IN ITEMS
+        "stable_volume_path_for_handle("
+        "VOLUME_NAME_GUID"
+        "VOLUME_NAME_NT"
+        "dos_volume_path_for_handle("
+        "VOLUME_NAME_DOS"
+        "if (!dos_working_directory.has_value())"
+        "dos_volume_binding_diagnostic("
+        "::GetDriveTypeW("
+        "DRIVE_FIXED"
+        "mount_manager_lists_drive_root("
+        "::GetVolumePathNamesForVolumeNameW("
+        "::GetVolumeInformationByHandleW("
+        "workspace_agent.process_working_directory_dos_path_invalid"
+        "workspace_agent.process_working_directory_drive_not_fixed"
+        "workspace_agent.process_working_directory_mount_not_listed"
+        "workspace_agent.process_working_directory_volume_identity_unavailable"
+        "workspace_agent.process_working_directory_volume_identity_mismatch"
+        "workspace_agent.process_working_directory_binding_unavailable"
+        "\\\\?\\\\GLOBALROOT"
+        "stable_volume_root_length("
+        "class ScopedPinHandleChain"
+        "::DuplicateHandle("
+        "read_handle_identity(handle, true, component_identity)"
+        "working_directory_chain.release()"
+        "*dos_working_directory"
+        "execution_working_directory()")
+    require_text(${process_containment_source} "${token}"
+        "stable Windows working-directory binding and compatible launch authority")
+endforeach()
+forbid_text(${process_containment_source} "::GetVolumeInformationW("
+    "root-path volume query that exceeds retained restricted-token authority")
+forbid_text(${process_containment_source} "::QueryDosDeviceW("
+    "DOS-device query unavailable to the bounded restricted token")
+foreach(token IN ITEMS
+        "working-directory ancestor rename while retained"
+        "complete working-directory hierarchy exclusions")
+    require_text(${process_containment_test} "${token}"
+        "working-directory hierarchy retention regression")
 endforeach()
 foreach(token IN ITEMS
         "copperfin_set_test_isolation(test_platform_private_directory"
@@ -87,6 +160,8 @@ endforeach()
 
 foreach(token IN ITEMS
         "#define NOMINMAX"
+        "VOLUME_NAME_DOS"
+        "VOLUME_NAME_NT"
         "::CreateFileW("
         "CREATE_NEW"
         "GENERIC_READ | GENERIC_WRITE | DELETE"
@@ -112,10 +187,102 @@ foreach(token IN ITEMS
         "image_handle.close_without_delete()"
         "open_path_for_exact_image("
         "image_identity_matches(path_handle.get(), image_identity)"
+        "OwnedDirectoryChain directory_chain"
+        "directory_chain.lock(stable_image_path->parent_path())"
+        "image_identity_matches(final_path_check.get(), image_identity)"
+        "image_identity_matches("
+        "launch_path_check.get(), image_identity)"
+        "FILE_SHARE_READ | FILE_SHARE_DELETE"
         "launch_handle.release()"
         "image_descriptor.release()"
         "native_matches_bytes")
     require_text(${platform_source} "${token}" "exact private-image primitive")
+endforeach()
+
+foreach(token IN ITEMS
+        "PrivateWindowsBoundedProcessRequest"
+        "run_bounded_windows_private_executable("
+        "CurrentProcessElevation")
+    require_text(${bounded_process_private} "${token}"
+        "private exact-image execution seam")
+endforeach()
+foreach(token IN ITEMS
+        "::CreateProcessW("
+        "polyglot.process.image_binding_failed"
+        "::K32GetProcessImageFileNameW("
+        "created_process_image_matches("
+        "CREATE_SUSPENDED"
+        "const DWORD previous_suspend_count = ::ResumeThread(process_info.hThread)"
+        "polyglot.process.resume_state_invalid"
+        "PROC_THREAD_ATTRIBUTE_JOB_LIST"
+        "::TerminateJobObject(job, 1U)"
+        "launch_committed(launch_committed_context)"
+        "current_process_elevation()"
+        "image.windows_launch_target()"
+        "image.windows_native_launch_target()"
+        "environment_block.data()"
+        "working_directory.c_str()"
+        "request.transport.executable_path.empty()"
+        "class WindowsPipeSecurityAttributes"
+        "SE_GROUP_LOGON_ID"
+        "WinRestrictedCodeSid"
+        "::SetSecurityDescriptorDacl("
+        "PROC_THREAD_ATTRIBUTE_HANDLE_LIST")
+    require_text(${bounded_process_source} "${token}"
+        "bounded Windows exact-image launch contract")
+endforeach()
+foreach(token IN ITEMS
+        "(suppress_console_window ? CREATE_NO_WINDOW : 0U)"
+        "return run_windows(request, nullptr, nullptr, nullptr, nullptr, nullptr, true);"
+        "native_path, false);")
+    require_text(${bounded_process_source} "${token}"
+        "Windows console-isolation and restricted exact-image launch split")
+endforeach()
+foreach(token IN ITEMS
+        "workspace-agent-child-entry-v1"
+        "workspace-agent-child-arguments-unrecognized-v1"
+        "::GetEnvironmentVariableW(L\"GITHUB_TOKEN\", nullptr, 0U)"
+        "ambient_unset ? \"<unset>\" : \"<set>\"")
+    require_text(${execution_fixture} "${token}"
+        "bounded Windows child-entry diagnostic fixture")
+endforeach()
+foreach(token IN ITEMS
+        "ExitProcess(41U)"
+        "restricted-token process-launch baseline")
+    require_text(${execution_probe} "${token}"
+        "minimal Windows restricted-token launch probe")
+endforeach()
+foreach(token IN ITEMS
+        "run_windows_fixture_probe("
+        "test_windows_fixture_startup_transitions("
+        "CREATE_SUSPENDED"
+        "probe-normal="
+        "probe-standard-handles-normal="
+        "probe-as-user-normal="
+        "probe-without-no-window-normal="
+        "probe-as-user-without-no-window-normal="
+        "inherit_standard_handles ? TRUE : FALSE"
+        "::CreateProcessAsUserW("
+        "use_create_no_window ? CREATE_NO_WINDOW : 0U"
+        "CREATE_NO_WINDOW controls must retain their documented timeout signature"
+        "restricted Windows direct minimal probe without CREATE_NO_WINDOW must exit"
+        "probe_standard_handles_normal_blocked"
+        "restricted Windows direct minimal probe"
+        "suspended_blocked")
+    require_text(${environment_test} "${token}"
+        "Windows startup transition diagnostic matrix")
+endforeach()
+forbid_text(${execution_fixture} "std::getenv("
+    "credential-value environment lookup")
+foreach(token IN ITEMS
+        "workspace_agent_execution_fixture"
+        "workspace_agent_execution_probe"
+        "$<$<CONFIG:Debug>:/MTd>"
+        "$<$<NOT:$<CONFIG:Debug>>:/MT>"
+        "$<TARGET_FILE:workspace_agent_execution_fixture>"
+        "$<TARGET_FILE:workspace_agent_execution_probe>")
+    require_text(tests/CMakeLists.txt "${token}"
+        "self-contained Windows execution fixture contract")
 endforeach()
 require_text(${platform_source}
     "parent_handle.get(), expected_parent_storage_id"
@@ -146,7 +313,10 @@ endforeach()
 foreach(token IN ITEMS
         "class WorkspaceAgentMaterializedProcessLaunch"
         "const WorkspaceAgentMaterializedProcessLaunch&) = delete"
-        "materialize_process_launch_candidate(")
+        "materialize_process_launch_candidate("
+        "execute_materialized_process_launch("
+        "workspace_agent_process_execution_max_timeout_ms"
+        "WorkspaceAgentProcessExecutionControls")
     require_text(${session_header} "${token}" "opaque controller materialization boundary")
 endforeach()
 foreach(token IN ITEMS
@@ -155,19 +325,35 @@ foreach(token IN ITEMS
         "Serialize the complete one-attempt materialization with stop/start."
         "candidate.impl_->pins.executable_snapshot_for_materialization()"
         "process_environment_boundary_->materialize_process_image("
-        "workspace_agent.process_launch_revalidation_pinning_unavailable")
+        "workspace_agent.process_launch_revalidation_pinning_unavailable"
+        "workspace_agent.process_execution_requires_unrestricted_local"
+        "workspace_agent.process_execution_elevated_host_denied"
+        "allocate_process_execution_operation_id()"
+        "execution_working_directory()"
+        "next_process_execution_operation_id"
+        "WorkspaceAgentSessionEventKind::process_launch_intent"
+        "WorkspaceAgentSessionEventKind::process_launch_outcome"
+        "workspace_agent.session_reentrant_audit_transition_denied"
+        "workspace_agent.session_reentrant_cancellation_transition_denied"
+        "workspace_agent.process_execution_process_changed_after_intent_audit"
+        "current_process_execution_identity()"
+        "release_launch_authority()"
+        "run_bounded_windows_private_executable(")
     require_text(${session_source} "${token}" "controller-only one-attempt consumption")
 endforeach()
 
 foreach(token IN ITEMS
         "RQ-CF-AGENT-026"
         "RQ-CF-AGENT-027"
+        "RQ-CF-AGENT-028"
         "CreateProcessW("
         "CreateFileMappingW("
         "image_path.c_str(), GENERIC_READ | GENERIC_WRITE,"
         "PAGE_READWRITE"
         "MapViewOfFile(mapping, FILE_MAP_WRITE"
         "ERROR_SHARING_VIOLATION"
+        "ancestor-directory rename and replacement"
+        "image destruction must release every retained ancestor-directory handle"
         "--rq027-child"
         "PrivateExecutableImage"
         "wrong-creation-image"
@@ -176,9 +362,24 @@ foreach(token IN ITEMS
 endforeach()
 foreach(token IN ITEMS
         "RQ-CF-AGENT-026"
+        "RQ-CF-AGENT-028"
         "WorkspaceAgentMaterializedProcessLaunch"
         "materialize_process_launch_candidate("
+        "execute_materialized_process_launch("
+        "process_execution_requires_unrestricted_local"
+        "revocation lease before the bounded child exits"
+        "intent-audit callback must not wait on its own retained launch lease"
+        "callback-side fork must not let the child continuation execute"
+        "cancellation callback must not wait on its own retained launch lease"
+        "unrelated thread's stop must wait through a slow intent audit"
+        "--workspace-agent-non-elevated-test-driver-v1"
+        "CreateRestrictedToken("
+        "LUA_TOKEN | DISABLE_MAX_PRIVILEGE"
+        "execution_configuration()"
+        "::GetWindowsDirectoryW("
         "cross-controller"
+        "first_controller_operation_id"
+        "output_working_directory_matches("
         "materialization must not silently weaken the invariant execution denial")
     require_text(${environment_test} "${token}" "controller materialization regression")
 endforeach()

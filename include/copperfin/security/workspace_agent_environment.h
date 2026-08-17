@@ -159,6 +159,7 @@ private:
     copperfin::platform::PrivateExecutableImage image_;
 
     friend class WorkspaceAgentIsolatedEnvironmentBoundary;
+    friend class WorkspaceAgentSessionController;
 };
 
 struct WorkspaceAgentProcessImageMaterializationResult {

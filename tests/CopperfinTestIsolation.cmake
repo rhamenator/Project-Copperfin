@@ -1456,7 +1456,7 @@ function(copperfin_configure_native_test_isolation)
         PARALLEL_SAFE
         FILESYSTEM test-owned-unique
         ENVIRONMENT none
-        CHILD_PROCESSES none
+        CHILD_PROCESSES bounded
         NETWORK none
         SAMPLES none
         PLATFORM portable

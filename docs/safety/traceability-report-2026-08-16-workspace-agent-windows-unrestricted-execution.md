@@ -1,0 +1,355 @@
+# Workspace-Agent Windows Unrestricted Execution Traceability Report
+
+Date: 2026-08-16
+
+Scope: candidate v1 `RQ-CF-AGENT-028` Windows-only, warned-unrestricted,
+exact-image bounded execution
+
+Allowed requirement source: explicit repository-owner product policy for a
+useful Windows-first built-in assistant under H3/I2; derived from
+`RQ-CF-AGENT-001`, `RQ-CF-AGENT-019`, `RQ-CF-AGENT-025` through
+`RQ-CF-AGENT-027`, `HZ-system-failure-01`, and `HZ-data-corruption-01`.
+
+This report applies Copperfin's DO-178C-inspired general-purpose quality
+baseline. It claims neither formal compliance nor certification, sandbox
+containment, general assistant readiness, nor suitability for a safety-critical
+use.
+
+## DQ/DV/HZ mapping
+
+| Derived requirement | Verification requirement | Hazard link |
+| --- | --- | --- |
+| `DQ-workspace-agent-windows-execution-001`: only one same-controller exact-generation materialized launch in explicitly warned unrestricted-local mode on a confirmed non-elevated Windows host may reach the private launcher | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-002`: caller controls shall contain only bounded transport and cancellation fields; the executable, arguments, environment, working directory, mode, flags, and native authority shall come only from the retained plan and private image | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-003`: a durable content-free intent shall precede any process attempt and a status-consistent correlated content-free outcome shall be submitted after image cleanup; failed intent audit shall start nothing | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-004`: the child shall start suspended, inherit only fixed standard handles, enter a kill-on-close Job Object atomically at creation, obey bounded transport/time/cancellation controls, and leave no authorized descendant | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-005`: confirmed Job Object ownership and pre-resume image binding shall commit launch and release the exact-generation lease so stop can revoke before a long-running child exits, while the private image remains owned until the process tree closes | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-006`: workspace-sandbox, stale or cross-controller authority, invalid controls, elevated or unknown elevation, and non-Windows hosts shall consume the attempt and fail closed without execution; the public promotion gate shall remain denied | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-007`: admitted images shall attest launch-wide system-only dependency behavior; the private image shall not fall back to mutable source-adjacent or working-directory DLLs | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-004` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-008`: same-controller lifecycle reentry on a synchronous audit or cancellation callback's own thread shall fail closed without waiting on that stack's revocation lease; unrelated concurrent stop shall retain normal revocation semantics | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-005` | `HZ-system-failure-01` |
+| `DQ-workspace-agent-windows-execution-009`: the private image's stable identity path shall be derived from its authenticated handle as a local-volume device path (volume GUID preferred, validated `GLOBALROOT\\Device\\HarddiskVolumeN` fallback); every renameable component below that root through the private image parent shall remain held without delete sharing through process completion, and final stable- and DOS-path reopens under that retained chain shall match the authenticated image identity before creation | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-010`: anonymous transport pipes shall use a protected current-logon and restricted-code DACL, remain creatable by a restricted non-elevated host, and expose only the fixed child endpoints through the explicit inheritance list | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-011`: the working directory shall be converted from its authenticated handle to an explicitly parsed stable local-volume device form, and every renameable component beneath that device root shall remain held without delete sharing until `CreateProcessW` has consumed the launch path | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-007` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-012`: each process intent/outcome pair shall use one fresh 128-bit operating-system-random attempt namespace plus a nonzero operation identifier from a process-wide, nonwrapping counter so records from controllers, processes, restarts, and later post-fork attempts sharing a durable sink have collision-resistant correlation identities; random-source or process-identity failure shall deny execution before intent, and a process-identity change across the synchronous intent callback shall deny the forked continuation before execution or outcome submission | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-002`; `DV-workspace-agent-windows-execution-008` | `HZ-system-failure-01` |
+| `DQ-workspace-agent-windows-execution-013`: any pre-start compatibility diagnostic child shall enter the same kill-on-close Job Object atomically at creation, remain suspended, never execute user code, and retain cleanup ownership even if explicit termination fails | `DV-workspace-agent-windows-execution-003`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-014`: after protected Windows proves the stable device-form application name unsupported, a diagnostic-only DOS application name shall be derived from the authenticated handle, identity-matched under the retained stable hierarchy, and used only by a never-resumed Job-owned probe that retains the stable working directory; it shall not become an execution fallback without post-creation image binding | `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-015`: after protected Windows proves the DOS application name and stable working-directory combination is accepted at creation, production creation shall use that handle-derived DOS application name only while the stable hierarchy remains retained, place the suspended child into the kill-on-close Job Object atomically, compare its kernel-reported native image name with the native device name captured from the authenticated image handle, and terminate without resume on query or binding failure | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-006`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-016`: the launch current directory shall remain the extended DOS path derived from the authenticated directory handle. It shall be admitted only for a fixed drive listed as a drive-root assignment for the handle's volume GUID by `GetVolumePathNamesForVolumeNameW`, whose authenticated handle reports the retained storage identity through `GetVolumeInformationByHandleW` without requiring fresh drive-root traversal authority, and whose exact extended-path reopen under the retained stable hierarchy matches the authenticated directory before and after mapping validation. Network, mounted-folder-only, `SUBST`, removable, redirected, or identity-mismatched forms shall fail closed. Protected Windows run `31967738991` proves `QueryDosDeviceW` is unavailable under the bounded restricted token, so that redundant query is not part of the admission contract. Runs `31969922414` and `31969922779` prove the extended DOS spelling reaches creation, native-image binding, Job commitment, and resume but leaves both child fixtures timed out without output; ordinary-path runs `31971595320` and `31971595343` reproduce the same result, so spelling is not selected as the cause and long-path support shall not be narrowed on that evidence. | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-007`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-017`: resuming the atomically Job-owned initial thread shall succeed only when `ResumeThread` reports exactly one prior suspension; failure or any other prior count shall terminate the owned tree with a fixed content-free diagnostic. The validation child shall emit a fixed entry marker before filesystem or environment work and shall return a fixed unrecognized-argument marker instead of entering unrelated test behavior. | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; exact-source machine contract | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-workspace-agent-windows-execution-018`: protected execution coverage for the configured `self_contained_launch_image_v1` dependency contract shall materialize a dedicated statically linked child rather than recopying the dependency-heavy test driver. Exact line assertions shall accept native Windows CRLF or LF transport framing while preserving every compared content byte. | `DV-workspace-agent-windows-execution-001`; `DV-workspace-agent-windows-execution-003`; `DV-workspace-agent-windows-execution-004` | `HZ-system-failure-01`; `HZ-data-corruption-01` |
+
+- `DV-workspace-agent-windows-execution-001`: focused controller regressions
+  exercise one-attempt consumption, sandbox and platform denial, failed-intent
+  no-launch behavior, exact command/environment/working-directory use, output,
+  exit, cleanup, and revocation lifecycle.
+- `DV-workspace-agent-windows-execution-002`: durable audit-sink regressions
+  admit only schema-v2 content-free intent/outcome records and reject zero
+  missing, malformed, or injected process-instance identifiers, zero operation
+  identifiers, injected diagnostics, mode mismatches, and
+  status/diagnostic mismatches. The machine contract preserves the private
+  exact-image seam and invariant public boundary.
+- `DV-workspace-agent-windows-execution-003`: protected Windows must execute the
+  exact image and the long-running-child lease regression; Ubuntu and macOS must
+  exercise fail-closed platform denial. Broader security, isolation, safety,
+  exact-head review, and merge evidence are required before implementation
+  evidence is complete.
+- `DV-workspace-agent-windows-execution-004`: parser/dependency configuration
+  contracts require the exact-digest `self_contained_launch_image_v1`
+  attestation and reject absent or unknown dependency contracts.
+- `DV-workspace-agent-windows-execution-005`: a synchronous intent-audit sink
+  attempts same-controller `stop()`; the call is denied without deadlock and a
+  later ordinary stop and cleanup succeed. A cancellation callback performs the
+  same reentrant stop attempt before process creation and must receive its own
+  stable denial without deadlock. A distinct slow-intent fixture proves an
+  unrelated thread's stop waits and then revokes instead of being denied.
+- `DV-workspace-agent-windows-execution-006`: the Windows private-image
+  regression attempts to rename and replace an image ancestor while the opaque
+  image remains live and requires denial, then requires rename to succeed after
+  destruction proves every hierarchy handle was released; protected Windows
+  execution then proves `CreateProcessW` still launches the exact retained
+  image.
+- `DV-workspace-agent-windows-execution-007`: Windows target-pin coverage
+  attempts to rename an ancestor of the authenticated working directory while
+  the opaque pins remain live and requires denial, then requires the rename to
+  succeed after release. Hosted execution proves the handle-derived working
+  path remains acceptable to `CreateProcessW`.
+- `DV-workspace-agent-windows-execution-008`: controller execution coverage
+  requires nonzero paired identifiers and proves attempts from distinct
+  controller instances receive different identifiers.
+
+The final path observer requests only read access and shares delete solely so
+it can coexist with the already-authenticated retained handle's own delete
+access. The retained handle still omits write and delete sharing, so the
+observer does not admit a writer, deleter, or renamer.
+
+## Hazard, misuse, boundary, and rollback analysis
+
+- Unrestricted authority: this mode is intentionally dangerous. The child has
+  the current user's operating-system access and is not confined to the
+  workspace. The exact versioned warning and explicit consent remain mandatory.
+  The implementation never requests elevation and refuses an elevated or
+  indeterminate host token.
+- False sandbox claim: `workspace_sandbox` cannot execute because path
+  containment is not an operating-system sandbox. Denial is explicit and
+  covered rather than silently falling through to unrestricted execution.
+- Command substitution: the executor accepts no executable path, arguments,
+  environment entries, working directory, mode, or flags. It consumes the
+  authenticated retained plan and supplies the private exact image internally
+  as `lpApplicationName`; no shell, PATH search, globbing, or response-file
+  interpretation is added.
+- Mutable-source and path-root replacement: the launcher never reopens or executes the
+  original tool source. The RQ-027 read-only identity-bound private image
+  remains live throughout process completion and cleanup. No-delete-share
+  handles retain the complete renameable Windows directory chain below a
+  handle-derived stable local-volume device root through that lifetime,
+  and a final identity-matched pathname reopen after chain acquisition prevents
+  ancestor rename/replacement from redirecting the loader. RQ-018's exact-
+  digest launch-wide dependency attestation rejects tools that need
+  application-local or working-directory DLLs until an authenticated
+  dependency-closure design exists.
+- Working-directory redirection: the target pins derive a stable local-volume device path from
+  the authenticated directory handle and retain every renameable component of
+  that path until process creation commits. The child receives a separately
+  handle-derived extended DOS path because Win32 current-directory operations
+  do not work reliably from the stable device form. That DOS path is admitted
+  only when the volume mount manager lists its fixed drive root for the
+  handle's volume GUID, its handle-reported volume serial matches the
+  authenticated storage identity, and a DOS-path reopen beneath the retained
+  stable hierarchy matches the exact directory before and after validation.
+  A non-administrator cannot redefine an existing boot-time drive name; an
+  administrator remains outside this explicitly non-elevated execution
+  boundary. A `SUBST`, mapped-drive, mounted-folder-only volume, leaf, or ancestor
+  redirection therefore fails admission or cannot replace the retained object.
+  Windows network shares do not expose an accepted local-volume device path and therefore fail
+  closed at this boundary; the v1 executor supports local fixed-volume targets.
+- Descendant escape and resource exhaustion: the process is created suspended
+  and assigned to a kill-on-close Job Object before resume. Timeout,
+  cancellation, output limits, transport failure, and ordinary completion all
+  close the owned tree. Transport and timeout limits are fixed and bounded.
+- Transport authority: each anonymous pipe receives an explicit protected DACL
+  for the current logon and Windows restricted-code identities rather than an
+  ambient token default. This permits the warned non-elevated boundary to work
+  under a restricted host without granting another logon session access. Only
+  the fixed child endpoints are inheritable and admitted to the process handle
+  list; every parent endpoint has inheritance removed before launch.
+- Revocation race: launch commitment occurs only after successful Job Object
+  assignment. Releasing the plan, pins, and lease there lets stop finish while
+  the child is still bounded, without destroying the private image until the
+  owned tree closes.
+- Audit loss or disclosure: failed intent audit starts nothing. Process audit
+  records contain only schema, kind, generation, mode, process-instance and
+  operation identifiers,
+  stable outcome, and stable diagnostic. Output, paths, arguments, environment,
+  prompts, credentials, receipts, and native errors are excluded. Outcome-audit
+  failure remains visible but cannot retroactively stop a completed attempt.
+  Crash-recoverable intent reconciliation is not yet implemented.
+  Correlation uses a fresh 128-bit namespace from the operating system's random
+  source for each attempt plus one process-wide nonwrapping counter. Distinct
+  controllers share the counter, while distinct processes, restarts, and later
+  post-fork attempts receive collision-resistant correlation namespaces. A
+  process-identity check across the synchronous intent callback prevents a
+  callback-side fork from executing or submitting a duplicate outcome.
+  Random-source or process-identity failure denies execution before intent.
+- Callback reentry: same-controller lifecycle changes from an audit or
+  cancellation callback's own thread are not supported. They fail closed
+  immediately, preventing either callback from waiting on its own retained
+  launch lease. Thread-local tracking preserves ordinary concurrent stop,
+  which waits and then revokes normally.
+- Rollback: revert RQ-028's controller method, private bounded-process seam,
+  schema-v2 process-audit validation, regressions, and this documentation
+  together. RQ-025 through RQ-027 then remain safe non-executing prerequisites,
+  and RQ-019 continues to deny public promotion.
+
+Potential Severity If Misused: high
+
+## Verification
+
+Current direct evidence:
+
+- local Debug focused behavior and contract execution passes `7/7` for bounded
+  process, workspace-agent session and containment, isolated environment,
+  durable audit sink, private image, and the exact-snapshot machine contract;
+- fresh GCC 15 Release with `-Werror` passes the same `7/7` without warnings;
+- fresh Clang 21 ASan/UBSan with leak detection passes target containment,
+  session, isolated environment, private image, bounded process, durable audit
+  sink, and the machine contract at `7/7`
+  without findings;
+- licensing, community, release-license, isolation, supply-chain, and safety
+  contracts pass `6/6`, including the corrected-tree repository-wide safety
+  scan;
+- the extended exact-snapshot materialization machine contract passes and
+  verifies the private runner, suspended `CreateProcessW`, atomic Job Object ownership,
+  launch-commit callback, controller-only consumption, sandbox denial, and
+  revocation-lifecycle regression;
+- Linux directly exercises the non-Windows denial and content-free paired audit;
+  and
+- `git diff --check` passes before publication.
+
+Protected Windows execution, protected Ubuntu/macOS denial, warning-as-error and
+sanitizer evidence, exact-head automated review, thread resolution, merge
+identity, and qualified high-severity documentation sign-off remain pending.
+Requirement status therefore remains `gap`. This slice is not a real sandbox,
+does not connect provider/model output to execution, and does not make the
+public promotion gate available.
+
+Initial protected Windows environment run `31946401986` compiled the product
+libraries but rejected the test-only child fixture because MSVC treats direct
+`getenv` use as deprecated under that target's warning policy. The fixture now
+uses Copperfin's portable environment reader, preserving the same absent-secret
+assertion without weakening warnings. Focused local behavior and the machine
+contract pass `2/2`; a corrected protected Windows rerun remains required.
+
+Corrected-head generated-launcher run `31947228580` then compiled and passed the
+private-image, parser, session, and contract targets, but its elevated hosted
+runner could not satisfy RQ-028's deliberate non-elevated execution condition;
+both direct execution assertions failed. The Windows-only test driver now
+detects that validation-host condition and reexecutes itself once with a test-
+owned `LUA_TOKEN | DISABLE_MAX_PRIVILEGE` restricted token, with a bounded wait
+and explicit proof that the child is non-elevated. Product execution still
+refuses elevated or indeterminate hosts; no production privilege or policy was
+loosened. A fresh protected rerun is required.
+
+Later protected run `31953223676` proved private-image materialization,
+pathname locking, cleanup, and all parser/session contracts, then isolated the
+remaining execution failure to anonymous transport-pipe creation under the LUA
+test token (`ERROR_ACCESS_DENIED`). The pipe objects now use an explicit
+current-logon plus restricted-code DACL instead of the restricted token's
+ambient default DACL. A fresh protected execution remains required.
+
+Corrected pipe head run `31954380866` then proved that both private children
+start under the restricted token, but they timed out before reaching the test
+entry point. The execution fixture had retained a deliberately fake Windows
+system root used by environment-construction and identity-mutation tests. Real
+PE execution now uses the host Windows directory captured through the same
+trusted system-root boundary; fake-root tests remain separate. Product code and
+the no-parent-environment policy are unchanged. A fresh protected execution
+remains required.
+
+Exact head `42c7d514c` then made private-image materialization, explicit stable
+local-device root parsing, and the private-directory regressions pass on
+Windows, but `CreateProcessW` rejected the combined stable application and
+working-directory device paths with `ERROR_INVALID_PARAMETER`. A bounded
+diagnostic correction retried only that pre-start failure with the same stable
+application and inherited current directory, still suspended. Exact protected
+head `0023f74e9` reported
+`polyglot.process.executable_path_unsupported`, native error `87`, proving the
+stable device-form application name is incompatible. The next bounded probe
+used a handle-derived, identity-matched extended DOS application name with the
+same stable working directory, still suspended. It immediately
+places the diagnostic child into the kill-on-close Job Object atomically at
+creation, terminates the never-resumed process, and reports whether the
+unsupported parameter is the stable application path or `lpCurrentDirectory`;
+it never falls back to executing with a weaker pathname. Job ownership remains
+effective if explicit termination fails, so the diagnostic cannot be orphaned.
+Protected run `31961744412` again reported
+`polyglot.process.executable_path_unsupported` with native error `87`, which in
+that exact diagnostic head means the DOS application name plus retained stable
+working directory successfully created a suspended child. The final design
+therefore uses the handle-derived DOS application name, makes Job ownership
+atomic at creation, and compares the suspended child's kernel-reported native
+image name with the retained authenticated handle's native device name before
+launch commitment or resume. Query or comparison failure terminates the owned
+tree and reports the fixed content-free image-binding diagnostic.
+
+Exact production head `3028e1591` passed image creation, native image binding,
+and resume in both protected Windows workflows, but the child produced no
+output and timed out in runs `31962919560` and `31962919574`. The paired normal
+and waiting-child failures show that the stable volume-device current directory
+was accepted by `CreateProcessW` but was unusable by the resumed Win32 runtime.
+The correction retains that device path only as hierarchy-locking authority and
+passes a separately handle-derived fixed-drive DOS path after native-device,
+mount-manager, volume-serial, and exact-directory binding checks. A corrected protected
+Windows run remains required.
+
+Corrected DOS-working-directory head `8cddbd441` then passed every adjacent
+private-image and parser regression but both protected Windows workflows failed
+before process creation because every candidate reported
+`workspace_agent.process_target_pin_identity_changed`. Inspection identified
+an unnecessary least-privilege incompatibility in the new binding: it reopened
+the drive root solely to repeat the volume-serial query even though the caller
+already retained the exact authenticated directory handle. The correction
+queries the serial through that retained handle with
+`GetVolumeInformationByHandleW`; the mount-manager and identity checks continue
+to bind the DOS drive, while least-privilege root traversal is no longer an
+unnecessary prerequisite. Exact-head protected runs `31966333205` and
+`31966333238` still denied every candidate at this same pre-execution boundary;
+all adjacent private-image and parser regressions passed. The binding then
+returned a closed, content-free predicate diagnostic in protected run
+`31967738991`: `QueryDosDeviceW` is unavailable under the bounded restricted
+token. That redundant query is removed while the handle-derived DOS path,
+fixed-drive mount-manager listing, matching handle volume identity, retained
+hierarchy, and exact identity reopens remain mandatory. A corrected protected
+execution run is required. Review follow-up makes failed handle-derived DOS-path
+derivation report its dedicated fixed diagnostic rather than the generic pin-
+identity code; no admission decision changes.
+
+Exact-head protected runs `31969922414` and `31969922779` then independently
+passed every adjacent private-image, parser, and platform regression but timed
+out both resumed execution fixtures without output. Each result records
+`started=1`, native error zero, and a closed Job-owned tree, proving process
+creation, image binding, launch commitment, and an apparently successful resume.
+Exact-head ordinary-path runs `31971595320` and `31971595343` reproduced the
+same normal and waiting-child timeouts with empty output. That falsifies the
+working-directory-spelling hypothesis, so the candidate restores the extended
+DOS form and its long-path behavior. The next bounded discriminator requires an
+exact prior suspend count of one and gives the synthetic copied child fixed
+entry and unrecognized-argument markers before other child work. Focused local
+behavior and machine contracts pass `7/7`; licensing, community, release-
+license, isolation, supply-chain, and safety contracts pass `6/6`, including
+the 323.10-second repository-wide safety scan. Corrected protected Windows
+evidence remains required.
+
+Protected run `31973693772` at exact head `3381fea99` returned no resume-state
+diagnostic and timed out before the copied full test runner's entry marker. This
+proves the initial thread consumed its exact single suspension while the
+dependency-heavy runner remained unsuitable for the configured self-contained
+image contract. The next candidate replaces only that test fixture with a
+dedicated statically linked child and makes exact output-line checks tolerant of
+Windows CRLF versus LF framing. The authenticated production image,
+working-directory, Job, resume, transport, audit, timeout, and cleanup
+boundaries are unchanged. Protected execution remains required.
+The corrected focused set passes `7/7`; licensing, community, release-license,
+isolation, supply-chain, and safety contracts pass `6/6`, including the
+324.61-second repository-wide safety scan.
+
+Protected Windows environment run `31977374102` at exact head `4e3eae4f0`
+passed every adjacent private-image, session, parser, and materialization
+regression, then selected the first failing transition in the new matrix. Both
+a direct launch and a `CREATE_SUSPENDED` plus exact-one-count `ResumeThread`
+launch of the dedicated static fixture were created successfully but timed out
+after five seconds (`WAIT_TIMEOUT`, active exit code, `ERROR_TIMEOUT`). The
+failure occurs before the private image, Job Object, explicit pipe handle list,
+fixed environment, or production command path participates. The fixture's
+entry marker is emitted from its C++ body, however, so that result does not
+distinguish a restricted-token launch-baseline failure from CRT startup before
+`main`. Protected rerun `31978743045` at exact head `627bd6492` proved the bare
+`/MT` probe also times out in both direct and suspended forms. That rules out
+C++ fixture and CRT startup, but does not identify why the same restricted test
+driver can itself run. The next test-only candidate keeps the token, executable,
+working directory, and `CREATE_NO_WINDOW` flag unchanged while supplying only
+the driver-inherited standard handles; protected rerun `31980043792` also
+reproduced both timeouts, so those handles are not the missing condition. The
+next test-only candidate duplicates the running restricted primary token and
+uses `CreateProcessAsUserW` with the same image, working directory,
+`CREATE_NO_WINDOW`, and standard handles in normal and suspended forms. The two
+independent protected Windows workflows `31981334951` and `31981334996` proved
+that this API also creates but times out in every form, so API selection is not
+the boundary. The next diagnostic preserves that API, token, image, working
+directory, and inherited standard handles while removing only
+`CREATE_NO_WINDOW`. Protected Windows run `31983455527` at exact head
+`62000e669` then showed both normal and suspended `CreateProcessAsUserW` probe
+forms exit cleanly with code `41` when the flag is omitted, while every matched
+form retaining the flag continues to create and time out. This selects the
+flag for that API. Protected Windows run `31984855100` at exact head
+`d763dcd53` then proved the same normal and suspended direct `CreateProcessW`
+probe forms exit cleanly without the flag; the separate product execution and
+revocation fixtures alone remained timed out, because production still carried
+the flag. This is direct evidence for omitting `CREATE_NO_WINDOW` only from
+the private exact-image executor. The shared public bounded runner retains its
+existing no-console behavior. The private executor preserves suspended
+creation, the fixed Unicode environment, extended startup attributes, atomic
+Job assignment, explicit inherited-handle list, pre-resume image binding, bounded transport,
+and cleanup. Exact signed/DCO head `8080412de` passed the complete protected
+Windows, Ubuntu, and macOS generated-launcher matrix `31986901503`, including
+the corrected Windows product execution and revocation fixtures. Independent
+protected Windows environment/path validation `31986901535` also passed.

@@ -103,6 +103,7 @@ function(copperfin_apply_windows_stack_reserve TARGET_NAME)
 endfunction()
 
 add_library(cf_platform_support
+    src/platform/bounded_process.cpp
     src/platform/code_page.cpp
     src/platform/disk_space.cpp
     src/platform/environment.cpp
@@ -266,7 +267,6 @@ endif()
 target_link_libraries(cf_package_trust PRIVATE cf_licensing)
 
 add_library(cf_platform_profile
-    src/platform/bounded_process.cpp
     src/platform/printer.cpp
     src/platform/polyglot_benchmark.cpp
     src/platform/database_model.cpp

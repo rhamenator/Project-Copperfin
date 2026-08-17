@@ -4,11 +4,15 @@
 
 #include "copperfin/security/workspace_agent_session.h"
 
+#include "../platform/bounded_process_private.h"
+
 #include "copperfin/platform/path.h"
 #include "copperfin/platform/process_arguments.h"
 #include "copperfin/platform/process_environment.h"
 
 #include <algorithm>
+#include <array>
+#include <atomic>
 #include <condition_variable>
 #include <iomanip>
 #include <limits>
@@ -18,6 +22,19 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+
+#if defined(_WIN32)
+#define NOMINMAX
+#include <windows.h>
+#include <bcrypt.h>
+#elif defined(__linux__)
+#include <cerrno>
+#include <sys/random.h>
+#include <unistd.h>
+#elif defined(__APPLE__)
+#include <stdlib.h>
+#include <unistd.h>
+#endif
 
 namespace copperfin::security {
 
@@ -149,6 +166,10 @@ public:
             candidate.session_generation() == image.session_generation();
     }
 
+    void release_launch_authority() noexcept {
+        candidate = WorkspaceAgentPreparedProcessLaunch{};
+    }
+
     // Destruction is reverse declaration order: remove/close the materialized
     // image first, then discard the prepared candidate, whose own ordering
     // closes target pins before releasing the revocation lease.
@@ -184,20 +205,152 @@ static_assert(
         std::is_nothrow_move_constructible_v<
             WorkspaceAgentMaterializedProcessLaunchResult>,
     "RQ-CF-AGENT-026: materialization failure fallback must not allocate");
+static_assert(
+    std::is_nothrow_move_assignable_v<
+        copperfin::platform::BoundedProcessResult>,
+    "RQ-CF-AGENT-028: a completed private launch must reach outcome audit without allocating while transferring its result");
 
 namespace {
+
+std::atomic<std::uint64_t> next_process_execution_operation_id{1U};
+
+std::uint64_t current_process_execution_identity() noexcept {
+#if defined(_WIN32)
+    return static_cast<std::uint64_t>(::GetCurrentProcessId());
+#else
+    const auto process_id = ::getpid();
+    return process_id > 0 ? static_cast<std::uint64_t>(process_id) : 0U;
+#endif
+}
+
+std::string make_process_execution_attempt_namespace() noexcept {
+    std::array<unsigned char, 16U> bytes{};
+#if defined(_WIN32)
+    if (::BCryptGenRandom(
+            nullptr, bytes.data(), static_cast<ULONG>(bytes.size()),
+            BCRYPT_USE_SYSTEM_PREFERRED_RNG) < 0) {
+        return {};
+    }
+#elif defined(__linux__)
+    std::size_t offset = 0U;
+    while (offset < bytes.size()) {
+        const ssize_t count =
+            ::getrandom(bytes.data() + offset, bytes.size() - offset, 0);
+        if (count < 0 && errno == EINTR) {
+            continue;
+        }
+        if (count <= 0) {
+            return {};
+        }
+        offset += static_cast<std::size_t>(count);
+    }
+#elif defined(__APPLE__)
+    ::arc4random_buf(bytes.data(), bytes.size());
+#else
+    return {};
+#endif
+    bool any_nonzero = false;
+    for (const unsigned char value : bytes) {
+        any_nonzero = any_nonzero || value != 0U;
+    }
+    if (!any_nonzero) {
+        return {};
+    }
+    try {
+        static constexpr char hex[] = "0123456789abcdef";
+        std::string result(bytes.size() * 2U, '0');
+        for (std::size_t index = 0U; index < bytes.size(); ++index) {
+            result[index * 2U] = hex[(bytes[index] >> 4U) & 0x0fU];
+            result[index * 2U + 1U] = hex[bytes[index] & 0x0fU];
+        }
+        return result;
+    } catch (...) {
+        return {};
+    }
+}
+
+std::uint64_t allocate_process_execution_operation_id() noexcept {
+    std::uint64_t current =
+        next_process_execution_operation_id.load(std::memory_order_relaxed);
+    while (current != 0U &&
+           current != std::numeric_limits<std::uint64_t>::max()) {
+        if (next_process_execution_operation_id.compare_exchange_weak(
+                current, current + 1U, std::memory_order_relaxed,
+                std::memory_order_relaxed)) {
+            return current;
+        }
+    }
+    return 0U;
+}
 
 struct AuditOutcome {
     bool committed = false;
     std::string receipt;
 };
 
+enum class ControllerCallbackKind : std::uint32_t {
+    audit,
+    cancellation
+};
+
+class ControllerCallbackScope;
+thread_local const ControllerCallbackScope* active_controller_callback_scope =
+    nullptr;
+
+class ControllerCallbackScope {
+public:
+    ControllerCallbackScope(
+        const WorkspaceAgentSessionController* controller,
+        const ControllerCallbackKind kind) noexcept
+        : controller_(controller),
+          kind_(kind),
+          previous_(active_controller_callback_scope) {
+        active_controller_callback_scope = this;
+    }
+    ~ControllerCallbackScope() {
+        active_controller_callback_scope = previous_;
+    }
+    ControllerCallbackScope(const ControllerCallbackScope&) = delete;
+    ControllerCallbackScope& operator=(const ControllerCallbackScope&) = delete;
+
+    [[nodiscard]] const WorkspaceAgentSessionController* controller()
+        const noexcept {
+        return controller_;
+    }
+    [[nodiscard]] ControllerCallbackKind kind() const noexcept { return kind_; }
+    [[nodiscard]] const ControllerCallbackScope* previous() const noexcept {
+        return previous_;
+    }
+
+private:
+    const WorkspaceAgentSessionController* controller_ = nullptr;
+    ControllerCallbackKind kind_ = ControllerCallbackKind::audit;
+    const ControllerCallbackScope* previous_ = nullptr;
+};
+
+std::optional<ControllerCallbackKind> controller_callback_active_for(
+    const WorkspaceAgentSessionController* controller) noexcept {
+    if (controller == nullptr) {
+        return std::nullopt;
+    }
+    for (const ControllerCallbackScope* scope = active_controller_callback_scope;
+         scope != nullptr; scope = scope->previous()) {
+        if (scope->controller() == controller) {
+            return scope->kind();
+        }
+    }
+    return std::nullopt;
+}
+
 AuditOutcome commit_audit_event(
     const WorkspaceAgentSessionAuditEvent& event,
-    const WorkspaceAgentSessionAuditSink& sink) {
+    const WorkspaceAgentSessionAuditSink& sink,
+    const WorkspaceAgentSessionController* controller) {
     WorkspaceAgentSessionAuditCommitResult result;
     if (sink.commit != nullptr) {
         try {
+            const ControllerCallbackScope audit_scope(
+                controller, ControllerCallbackKind::audit);
             result = sink.commit(event, sink.context);
         } catch (...) {
             result = {};
@@ -219,6 +372,10 @@ std::string event_kind_name(WorkspaceAgentSessionEventKind kind) {
             return "layout_cleanup_intent";
         case WorkspaceAgentSessionEventKind::layout_cleanup_outcome:
             return "layout_cleanup_outcome";
+        case WorkspaceAgentSessionEventKind::process_launch_intent:
+            return "process_launch_intent";
+        case WorkspaceAgentSessionEventKind::process_launch_outcome:
+            return "process_launch_outcome";
     }
     return "invalid";
 }
@@ -522,7 +679,7 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
             .effective_mode = decision.effective_mode,
             .outcome = decision.allowed ? "allowed" : "denied",
             .diagnostic_code = decision.diagnostic_code};
-        const AuditOutcome audit = commit_audit_event(event, audit_sink);
+        const AuditOutcome audit = commit_audit_event(event, audit_sink, this);
 
         WorkspaceAgentSessionStartResult result;
         result.audit_committed = audit.committed;
@@ -600,7 +757,8 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
             .effective_mode = WorkspaceAgentAccessMode::advisory,
             .outcome = "pending",
             .diagnostic_code = "workspace_agent.session_layout_cleanup_intent"};
-        const AuditOutcome intent_audit = commit_audit_event(intent, audit_sink);
+        const AuditOutcome intent_audit =
+            commit_audit_event(intent, audit_sink, this);
         result.intent_audit_committed = intent_audit.committed;
         result.intent_audit_receipt = intent_audit.receipt;
         if (!intent_audit.committed) {
@@ -637,7 +795,8 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
             .diagnostic_code = cleanup.diagnostic_code.empty()
                 ? "workspace_agent.environment_session_layout_cleanup_failed"
                 : cleanup.diagnostic_code};
-        const AuditOutcome outcome_audit = commit_audit_event(outcome, audit_sink);
+        const AuditOutcome outcome_audit =
+            commit_audit_event(outcome, audit_sink, this);
         result.outcome_audit_committed = outcome_audit.committed;
         result.outcome_audit_receipt = outcome_audit.receipt;
         result.diagnostic_code = outcome_audit.committed
@@ -662,6 +821,17 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
 
 WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
     const WorkspaceAgentSessionAuditSink& audit_sink) {
+    const auto active_callback = controller_callback_active_for(this);
+    if (active_callback.has_value()) {
+        WorkspaceAgentSessionStopResult result;
+        result.diagnostic_code =
+            *active_callback == ControllerCallbackKind::cancellation
+            ? "workspace_agent.session_reentrant_cancellation_transition_denied"
+            : "workspace_agent.session_reentrant_audit_transition_denied";
+        std::lock_guard lock(mutex_);
+        result.session = active_session_;
+        return result;
+    }
     WorkspaceAgentSessionSnapshot revoked_session;
     std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState> revocation_state;
     {
@@ -706,7 +876,7 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
         .effective_mode = WorkspaceAgentAccessMode::advisory,
         .outcome = "revoked",
         .diagnostic_code = "workspace_agent.session_stopped"};
-    const AuditOutcome audit = commit_audit_event(event, audit_sink);
+    const AuditOutcome audit = commit_audit_event(event, audit_sink, this);
 
     WorkspaceAgentSessionStopResult result;
     result.revoked = true;
@@ -1245,6 +1415,253 @@ WorkspaceAgentSessionController::materialize_process_launch_candidate(
     }
 }
 
+WorkspaceAgentProcessExecutionResult
+WorkspaceAgentSessionController::execute_materialized_process_launch(
+    WorkspaceAgentMaterializedProcessLaunch launch,
+    const WorkspaceAgentProcessExecutionControls& controls,
+    const WorkspaceAgentSessionAuditSink& audit_sink) const {
+    WorkspaceAgentProcessExecutionResult unavailable;
+    try {
+        if (!launch.valid() || launch.impl_ == nullptr ||
+            !launch.impl_->candidate.valid() ||
+            launch.impl_->candidate.impl_ == nullptr ||
+            launch.impl_->candidate.impl_->controller_authority !=
+                process_launch_controller_authority_) {
+            unavailable.diagnostic_code =
+                "workspace_agent.process_execution_candidate_unavailable";
+            return unavailable;
+        }
+
+        const auto& plan = launch.impl_->candidate.impl_->plan;
+        const auto& environment_plan =
+            plan.serialized_environment.environment_plan;
+        const std::uint64_t generation = launch.session_generation();
+        const WorkspaceAgentAccessMode effective_mode =
+            environment_plan.effective_mode;
+        const std::uint64_t execution_process_identity =
+            current_process_execution_identity();
+        if (execution_process_identity == 0U) {
+            unavailable.diagnostic_code =
+                "workspace_agent.process_execution_namespace_unavailable";
+            return unavailable;
+        }
+        // A fresh operating-system-random namespace for each attempt avoids
+        // inheriting a cached namespace and counter position across fork().
+        // The durable correlation key remains the schema-v2
+        // (process_instance_id, operation_id) pair for compatibility.
+        const std::string process_instance_id =
+            make_process_execution_attempt_namespace();
+        if (process_instance_id.empty()) {
+            unavailable.diagnostic_code =
+                "workspace_agent.process_execution_namespace_unavailable";
+            return unavailable;
+        }
+        std::uint64_t operation_id = 0U;
+        {
+            std::lock_guard lock(mutex_);
+            if (transition_ != Transition::idle) {
+                unavailable.diagnostic_code =
+                    "workspace_agent.session_transition_in_progress";
+                return unavailable;
+            }
+            if (!active_session_.active || generation == 0U ||
+                active_session_.generation != generation ||
+                active_session_.effective_mode != effective_mode) {
+                unavailable.diagnostic_code =
+                    "workspace_agent.process_execution_stale_session";
+                return unavailable;
+            }
+            operation_id = allocate_process_execution_operation_id();
+            if (operation_id == 0U) {
+                unavailable.diagnostic_code =
+                    "workspace_agent.process_execution_namespace_exhausted";
+                return unavailable;
+            }
+        }
+
+        WorkspaceAgentProcessExecutionResult result;
+        result.session_generation = generation;
+        result.process_instance_id = process_instance_id;
+        result.operation_id = operation_id;
+
+        const bool controls_valid = controls.schema_version == 1U &&
+            controls.timeout_ms != 0U &&
+            controls.timeout_ms <= workspace_agent_process_execution_max_timeout_ms &&
+            controls.poll_interval_ms != 0U &&
+            controls.poll_interval_ms <= controls.timeout_ms &&
+            controls.stdin_limit_bytes != 0U &&
+            controls.stdout_limit_bytes != 0U &&
+            controls.stderr_limit_bytes != 0U &&
+            controls.stdin_limit_bytes <=
+                workspace_agent_process_execution_max_transport_bytes &&
+            controls.stdout_limit_bytes <=
+                workspace_agent_process_execution_max_transport_bytes &&
+            controls.stderr_limit_bytes <=
+                workspace_agent_process_execution_max_transport_bytes &&
+            controls.standard_input.size() <= controls.stdin_limit_bytes;
+
+        std::string denial;
+        if (effective_mode != WorkspaceAgentAccessMode::unrestricted_local) {
+            denial = "workspace_agent.process_execution_requires_unrestricted_local";
+        } else if (!controls_valid) {
+            denial = "workspace_agent.process_execution_invalid_controls";
+        } else if (environment_plan.environment_platform !=
+                       WorkspaceAgentProcessEnvironmentPlatform::windows_v1 ||
+                   plan.argument_parser_contract !=
+                       WorkspaceAgentProcessArgumentParserContract::
+                           windows_c_runtime_argv_v1) {
+            denial = "workspace_agent.process_execution_platform_unavailable";
+        } else {
+            switch (copperfin::platform::current_process_elevation()) {
+                case copperfin::platform::CurrentProcessElevation::not_elevated:
+                    break;
+                case copperfin::platform::CurrentProcessElevation::elevated:
+                    denial =
+                        "workspace_agent.process_execution_elevated_host_denied";
+                    break;
+                case copperfin::platform::CurrentProcessElevation::unavailable:
+                    denial =
+                        "workspace_agent.process_execution_elevation_unavailable";
+                    break;
+                case copperfin::platform::CurrentProcessElevation::unsupported:
+                    denial =
+                        "workspace_agent.process_execution_platform_unavailable";
+                    break;
+            }
+        }
+
+        const std::filesystem::path* stable_working_directory = nullptr;
+        if (denial.empty()) {
+            stable_working_directory = launch.impl_->candidate.impl_->pins
+                .execution_working_directory();
+            if (stable_working_directory == nullptr) {
+                denial =
+                    "workspace_agent.process_execution_working_directory_unavailable";
+            }
+        }
+
+        copperfin::platform::PrivateWindowsBoundedProcessRequest native_request;
+        if (denial.empty()) {
+            native_request.command_line = plan.windows_command_line;
+            native_request.environment_block =
+                plan.serialized_environment.windows_environment_block;
+            native_request.working_directory = *stable_working_directory;
+            native_request.transport.standard_input = controls.standard_input;
+            native_request.transport.timeout_ms = controls.timeout_ms;
+            native_request.transport.poll_interval_ms = controls.poll_interval_ms;
+            native_request.transport.stdin_limit_bytes = controls.stdin_limit_bytes;
+            native_request.transport.stdout_limit_bytes = controls.stdout_limit_bytes;
+            native_request.transport.stderr_limit_bytes = controls.stderr_limit_bytes;
+            if (controls.cancellation_requested) {
+                native_request.transport.cancellation_requested =
+                    [controller = this,
+                     callback = &controls.cancellation_requested]() {
+                        const ControllerCallbackScope cancellation_scope(
+                            controller, ControllerCallbackKind::cancellation);
+                        return (*callback)();
+                    };
+            }
+            native_request.launch_committed = [](void* context) noexcept {
+                auto* retained = static_cast<WorkspaceAgentMaterializedProcessLaunch*>(
+                    context);
+                if (retained != nullptr && retained->impl_ != nullptr) {
+                    retained->impl_->release_launch_authority();
+                }
+            };
+            native_request.launch_committed_context = &launch;
+        }
+
+        const WorkspaceAgentSessionAuditEvent intent{
+            .schema_version = 2U,
+            .kind = WorkspaceAgentSessionEventKind::process_launch_intent,
+            .session_generation = generation,
+            .requested_mode = effective_mode,
+            .effective_mode = effective_mode,
+            .process_instance_id = process_instance_id,
+            .operation_id = operation_id,
+            .outcome = "pending",
+            .diagnostic_code = "workspace_agent.process_launch_intent"};
+        WorkspaceAgentSessionAuditEvent outcome_event{
+            .schema_version = 2U,
+            .kind = WorkspaceAgentSessionEventKind::process_launch_outcome,
+            .session_generation = generation,
+            .requested_mode = effective_mode,
+            .effective_mode = effective_mode,
+            .process_instance_id = process_instance_id,
+            .operation_id = operation_id,
+            .outcome = denial.empty() ? "launch-failed" : "denied",
+            .diagnostic_code = denial.empty()
+                ? "workspace_agent.process_execution_failed"
+                : denial};
+        AuditOutcome intent_audit =
+            commit_audit_event(intent, audit_sink, this);
+        result.intent_audit_committed = intent_audit.committed;
+        result.intent_audit_receipt = std::move(intent_audit.receipt);
+        if (!intent_audit.committed) {
+            result.diagnostic_code =
+                "workspace_agent.process_execution_intent_audit_failed";
+            return result;
+        }
+        // An application-supplied synchronous sink can fork on POSIX and let
+        // both continuations return from the callback. Only the process that
+        // allocated this correlation pair may execute or submit its outcome;
+        // the forked continuation releases its private launch authority and
+        // stops before either action.
+        if (current_process_execution_identity() != execution_process_identity) {
+            result.diagnostic_code =
+                "workspace_agent.process_execution_process_changed_after_intent_audit";
+            return result;
+        }
+
+        if (denial.empty()) {
+            result.attempted = true;
+            result.process =
+                copperfin::platform::run_bounded_windows_private_executable(
+                    launch.impl_->image.image_, native_request);
+            // Build the actual event separately so allocation failure leaves the
+            // prebuilt, content-free launch-failure event intact. Once intent is
+            // durable, an outcome submission must not be skipped by bookkeeping.
+            try {
+                WorkspaceAgentSessionAuditEvent actual_outcome{
+                    .schema_version = 2U,
+                    .kind = WorkspaceAgentSessionEventKind::process_launch_outcome,
+                    .session_generation = generation,
+                    .requested_mode = effective_mode,
+                    .effective_mode = effective_mode,
+                    .process_instance_id = process_instance_id,
+                    .operation_id = operation_id,
+                    .outcome = copperfin::platform::bounded_process_status_name(
+                        result.process.status),
+                    .diagnostic_code = result.process.error_code};
+                outcome_event = std::move(actual_outcome);
+            } catch (...) {
+                // The stable fallback was fully allocated before the intent.
+            }
+        } else {
+            result.process.status =
+                copperfin::platform::BoundedProcessStatus::launch_failed;
+            result.process.error_code = std::move(denial);
+        }
+
+        // Ensure the exact image is removed and any uncommitted launch lease is
+        // released before the durable outcome is submitted.
+        launch = WorkspaceAgentMaterializedProcessLaunch{};
+        AuditOutcome outcome_audit =
+            commit_audit_event(outcome_event, audit_sink, this);
+        result.outcome_audit_committed = outcome_audit.committed;
+        result.outcome_audit_receipt = std::move(outcome_audit.receipt);
+        if (outcome_audit.committed) {
+            result.diagnostic_code = std::move(outcome_event.diagnostic_code);
+        } else {
+            result.diagnostic_code =
+                "workspace_agent.process_execution_outcome_audit_failed";
+        }
+        return result;
+    } catch (...) {
+        return unavailable;
+    }
+}
+
 WorkspaceAgentProcessEnvironmentPreflightResult
 WorkspaceAgentSessionController::preflight_process_environment_request(
     const WorkspaceAgentProcessInvocationPreflightRequest& request) const {
@@ -1561,7 +1978,13 @@ std::string serialize_workspace_agent_session_audit_event(
            << json_escape(workspace_agent_access_mode_name(event.requested_mode))
            << "\",\"effective_mode\":\""
            << json_escape(workspace_agent_access_mode_name(event.effective_mode))
-           << "\",\"outcome\":\"" << json_escape(event.outcome)
+           << "\"";
+    if (event.schema_version >= 2U) {
+        stream << ",\"process_instance_id\":\""
+               << json_escape(event.process_instance_id)
+               << "\",\"operation_id\":" << event.operation_id;
+    }
+    stream << ",\"outcome\":\"" << json_escape(event.outcome)
            << "\",\"diagnostic_code\":\"" << json_escape(event.diagnostic_code)
            << "\"}";
     return stream.str();

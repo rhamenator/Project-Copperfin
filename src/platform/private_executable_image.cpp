@@ -9,7 +9,9 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -68,6 +70,91 @@ bool handle_identity_matches(
         ((static_cast<std::uint64_t>(
               information.ftCreationTime.dwHighDateTime) << 32U) |
          information.ftCreationTime.dwLowDateTime) == expected_creation_ticks;
+}
+
+std::optional<std::size_t> stable_volume_root_length(
+    const std::wstring_view path) noexcept {
+    constexpr std::wstring_view guid_prefix = L"\\\\?\\Volume{";
+    if (path.rfind(guid_prefix, 0U) == 0U) {
+        const std::size_t close = path.find(L"}\\", guid_prefix.size());
+        if (close != std::wstring_view::npos && close > guid_prefix.size()) {
+            return close + 2U;
+        }
+        return std::nullopt;
+    }
+    constexpr std::wstring_view device_prefix =
+        L"\\\\?\\GLOBALROOT\\Device\\HarddiskVolume";
+    if (path.rfind(device_prefix, 0U) != 0U) {
+        return std::nullopt;
+    }
+    std::size_t index = device_prefix.size();
+    const std::size_t digits_begin = index;
+    while (index < path.size() && path[index] >= L'0' && path[index] <= L'9') {
+        ++index;
+    }
+    if (index == digits_begin || index >= path.size() || path[index] != L'\\') {
+        return std::nullopt;
+    }
+    return index + 1U;
+}
+
+std::optional<std::wstring> final_path_for_handle(
+    const HANDLE handle,
+    const DWORD volume_name) {
+    const DWORD flags = FILE_NAME_NORMALIZED | volume_name;
+    constexpr DWORD maximum_path_characters = 32'768U;
+    std::vector<wchar_t> buffer(512U);
+    for (;;) {
+        const DWORD written = ::GetFinalPathNameByHandleW(
+            handle, buffer.data(), static_cast<DWORD>(buffer.size()), flags);
+        if (written == 0U || written > maximum_path_characters) {
+            return std::nullopt;
+        }
+        if (written >= buffer.size()) {
+            buffer.resize(static_cast<std::size_t>(written) + 1U);
+            continue;
+        }
+        return std::wstring(buffer.data(), static_cast<std::size_t>(written));
+    }
+}
+
+std::optional<std::filesystem::path> stable_volume_path_for_handle(
+    const HANDLE handle) noexcept {
+    try {
+        if (auto guid = final_path_for_handle(handle, VOLUME_NAME_GUID);
+            guid.has_value() && stable_volume_root_length(*guid).has_value()) {
+            return std::filesystem::path(std::move(*guid));
+        }
+        auto native = final_path_for_handle(handle, VOLUME_NAME_NT);
+        if (!native.has_value() ||
+            native->rfind(L"\\Device\\HarddiskVolume", 0U) != 0U) {
+            return std::nullopt;
+        }
+        std::wstring global = L"\\\\?\\GLOBALROOT" + *native;
+        if (!stable_volume_root_length(global).has_value()) {
+            return std::nullopt;
+        }
+        return std::filesystem::path(std::move(global));
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
+std::optional<std::filesystem::path> dos_volume_path_for_handle(
+    const HANDLE handle) noexcept {
+    try {
+        auto dos = final_path_for_handle(handle, VOLUME_NAME_DOS);
+        if (!dos.has_value() || dos->size() < 7U ||
+            dos->rfind(L"\\\\?\\", 0U) != 0U ||
+            !(((*dos)[4U] >= L'A' && (*dos)[4U] <= L'Z') ||
+              ((*dos)[4U] >= L'a' && (*dos)[4U] <= L'z')) ||
+            (*dos)[5U] != L':' || (*dos)[6U] != L'\\') {
+            return std::nullopt;
+        }
+        return std::filesystem::path(std::move(*dos));
+    } catch (...) {
+        return std::nullopt;
+    }
 }
 
 bool exact_file_shape(
@@ -248,6 +335,100 @@ public:
 
 private:
     HANDLE handle_ = INVALID_HANDLE_VALUE;
+};
+
+class OwnedDirectoryChain {
+public:
+    OwnedDirectoryChain() = default;
+    ~OwnedDirectoryChain() { reset(); }
+    OwnedDirectoryChain(const OwnedDirectoryChain&) = delete;
+    OwnedDirectoryChain& operator=(const OwnedDirectoryChain&) = delete;
+    OwnedDirectoryChain(OwnedDirectoryChain&& other) noexcept
+        : handles_(std::move(other.handles_)) {
+        other.handles_.clear();
+    }
+    OwnedDirectoryChain& operator=(OwnedDirectoryChain&& other) noexcept {
+        if (this != &other) {
+            reset();
+            handles_ = std::move(other.handles_);
+            other.handles_.clear();
+        }
+        return *this;
+    }
+
+    [[nodiscard]] bool lock(const std::filesystem::path& directory) noexcept {
+        reset();
+        try {
+            const auto root_length =
+                stable_volume_root_length(directory.native());
+            if (!root_length.has_value() || *root_length > directory.native().size()) {
+                reset();
+                return false;
+            }
+            std::filesystem::path current(
+                directory.native().substr(0U, *root_length));
+            const std::filesystem::path relative(
+                directory.native().substr(*root_length));
+            // The caller supplies a validated local-volume device path. Its
+            // GUID or GLOBALROOT root cannot be redirected like a drive-letter,
+            // SUBST, or mapped-drive name, and
+            // Windows may refuse a delete-denying open on the volume root.
+            // Lock every actual directory entry below that stable root.
+            for (const auto& component : relative) {
+                if (component.empty() || component == "." || component == "..") {
+                    reset();
+                    return false;
+                }
+                current /= component;
+                if (!lock_one(current)) {
+                    reset();
+                    return false;
+                }
+            }
+            return !handles_.empty();
+        } catch (...) {
+            reset();
+            return false;
+        }
+    }
+
+private:
+    [[nodiscard]] bool lock_one(
+        const std::filesystem::path& directory) {
+        const HANDLE handle = ::CreateFileW(
+            directory.c_str(), FILE_READ_ATTRIBUTES,
+            FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+        if (handle == nullptr || handle == INVALID_HANDLE_VALUE) {
+            return false;
+        }
+        BY_HANDLE_FILE_INFORMATION information{};
+        if (::GetFileInformationByHandle(handle, &information) == 0 ||
+            (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
+            (information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+            (void)::CloseHandle(handle);
+            return false;
+        }
+        try {
+            handles_.push_back(handle);
+        } catch (...) {
+            (void)::CloseHandle(handle);
+            throw;
+        }
+        return true;
+    }
+
+    void reset() noexcept {
+        for (auto iterator = handles_.rbegin(); iterator != handles_.rend();
+             ++iterator) {
+            if (*iterator != nullptr && *iterator != INVALID_HANDLE_VALUE) {
+                (void)::CloseHandle(*iterator);
+            }
+        }
+        handles_.clear();
+    }
+
+    std::vector<HANDLE> handles_;
 };
 
 class OwnedImageHandle {
@@ -455,8 +636,19 @@ bool native_matches_bytes(
 class PrivateExecutableImage::Impl {
 public:
 #if defined(_WIN32)
-    Impl(HANDLE handle_value, std::size_t size_value) noexcept
-        : handle(handle_value), size(size_value) {}
+    Impl(
+        HANDLE handle_value,
+        std::filesystem::path stable_path_value,
+        std::filesystem::path launch_path_value,
+        std::filesystem::path native_path_value,
+        OwnedDirectoryChain directory_chain_value,
+        std::size_t size_value) noexcept
+        : handle(handle_value),
+          stable_path(std::move(stable_path_value)),
+          launch_path(std::move(launch_path_value)),
+          native_path(std::move(native_path_value)),
+          directory_chain(std::move(directory_chain_value)),
+          size(size_value) {}
     ~Impl() {
         (void)delete_exact_file(handle);
         if (handle != nullptr && handle != INVALID_HANDLE_VALUE) {
@@ -471,6 +663,10 @@ public:
         return expected.size() == size && native_matches_bytes(handle, expected);
     }
     HANDLE handle = INVALID_HANDLE_VALUE;
+    std::filesystem::path stable_path;
+    std::filesystem::path launch_path;
+    std::filesystem::path native_path;
+    OwnedDirectoryChain directory_chain;
 #else
     Impl(int descriptor_value, std::size_t size_value) noexcept
         : descriptor(descriptor_value), size(size_value) {}
@@ -508,6 +704,26 @@ bool PrivateExecutableImage::valid() const noexcept {
 bool PrivateExecutableImage::matches_bytes(
     const std::span<const std::uint8_t> expected) const noexcept {
     return impl_ != nullptr && impl_->matches(expected);
+}
+
+const std::filesystem::path*
+PrivateExecutableImage::windows_launch_target() const noexcept {
+#if defined(_WIN32)
+    return impl_ != nullptr && impl_->valid()
+        ? &impl_->launch_path
+        : nullptr;
+#else
+    return nullptr;
+#endif
+}
+
+const std::filesystem::path*
+PrivateExecutableImage::windows_native_launch_target() const noexcept {
+#if defined(_WIN32)
+    return impl_ != nullptr && impl_->valid() ? &impl_->native_path : nullptr;
+#else
+    return nullptr;
+#endif
 }
 
 PrivateExecutableImageMaterializationResult
@@ -578,6 +794,19 @@ materialize_private_executable_image_in_verified_parent(
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
+        const auto stable_image_path =
+            stable_volume_path_for_handle(image_handle.get());
+        const auto dos_image_path =
+            dos_volume_path_for_handle(image_handle.get());
+        const auto native_image_path =
+            final_path_for_handle(image_handle.get(), VOLUME_NAME_NT);
+        if (!stable_image_path.has_value() || !dos_image_path.has_value() ||
+            !native_image_path.has_value() ||
+            native_image_path->rfind(L"\\Device\\HarddiskVolume", 0U) != 0U) {
+            result.failure =
+                PrivateExecutableImageFailure::launch_transition_failed;
+            return result;
+        }
 
         // CreateProcessW must not inherit the write-capable creation handle's
         // sharing obligation. Close that handle and recover the exact file
@@ -607,7 +836,7 @@ materialize_private_executable_image_in_verified_parent(
             return result;
         }
         OwnedHandle path_handle(open_path_for_exact_image(
-            image_path, GENERIC_READ | DELETE, FILE_SHARE_READ));
+            *stable_image_path, GENERIC_READ | DELETE, FILE_SHARE_READ));
         if (!image_identity_matches(path_handle.get(), image_identity)) {
             path_handle.reset();
             transition_handle.reset();
@@ -628,9 +857,52 @@ materialize_private_executable_image_in_verified_parent(
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
+        // Retain a no-delete-share handle for every renameable directory below
+        // the handle-derived stable local-volume root through the private
+        // parent, then repeat both stable- and DOS-name identity checks. The
+        // loader needs the DOS form, but bounded creation later verifies the
+        // suspended process's native image name against this same retained
+        // object before resume. Together these checks deny ancestor and DOS-
+        // namespace redirection rather than trusting either pathname alone.
+        OwnedDirectoryChain directory_chain;
+        if (!directory_chain.lock(stable_image_path->parent_path())) {
+            result.failure =
+                PrivateExecutableImageFailure::launch_transition_failed;
+            return result;
+        }
+        OwnedHandle final_path_check(open_path_for_exact_image(
+            *stable_image_path, GENERIC_READ,
+            FILE_SHARE_READ | FILE_SHARE_DELETE));
+        OwnedHandle launch_path_check(open_path_for_exact_image(
+            *dos_image_path, GENERIC_READ,
+            FILE_SHARE_READ | FILE_SHARE_DELETE));
+        if (!image_identity_matches(final_path_check.get(), image_identity) ||
+            !image_identity_matches(
+                launch_path_check.get(), image_identity) ||
+            !image_identity_matches(launch_handle.get(), image_identity) ||
+            !handle_identity_matches(
+                parent_handle.get(), expected_parent_storage_id,
+                expected_parent_file_id, expected_parent_creation_ticks,
+                true)) {
+            result.failure =
+                PrivateExecutableImageFailure::launch_transition_failed;
+            return result;
+        }
+        launch_path_check.reset();
+        final_path_check.reset();
         parent_handle.reset();
-        auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            launch_handle.get(), bytes.size());
+        // Finish every potentially throwing copy before the new-expression.
+        // Allocation then precedes the no-throw handle/chain transfers, so an
+        // exception cannot strand raw Windows authority outside RAII ownership.
+        std::filesystem::path retained_image_path = *stable_image_path;
+        std::filesystem::path retained_launch_path = *dos_image_path;
+        std::filesystem::path retained_native_path = *native_image_path;
+        auto impl = std::unique_ptr<PrivateExecutableImage::Impl>(
+            new PrivateExecutableImage::Impl(
+                launch_handle.get(), std::move(retained_image_path),
+                std::move(retained_launch_path),
+                std::move(retained_native_path),
+                std::move(directory_chain), bytes.size()));
         (void)launch_handle.release();
 #else
         const std::string leaf_name = leaf.native();

@@ -4,11 +4,14 @@
 
 #include "copperfin/platform/bounded_process.h"
 
+#include "bounded_process_private.h"
+
 #include "copperfin/platform/path.h"
 #include "copperfin/platform/process_arguments.h"
 #include "copperfin/platform/process_environment.h"
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cerrno>
@@ -28,6 +31,7 @@
 #endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <psapi.h>
 #else
 #include <csignal>
 #include <fcntl.h>
@@ -40,10 +44,99 @@
 namespace copperfin::platform {
 namespace {
 
-constexpr std::uint32_t kMaximumTransportBytes = 16U * 1024U * 1024U;
-
 #if defined(_WIN32)
 constexpr DWORD kTerminationWaitMilliseconds = 5000U;
+
+class WindowsPipeSecurityAttributes {
+public:
+    [[nodiscard]] bool initialize() noexcept {
+        HANDLE token = nullptr;
+        if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token) == FALSE) {
+            return false;
+        }
+        DWORD group_bytes = 0U;
+        (void)::GetTokenInformation(token, TokenGroups, nullptr, 0U, &group_bytes);
+        const DWORD sizing_error = ::GetLastError();
+        if (sizing_error != ERROR_INSUFFICIENT_BUFFER || group_bytes == 0U) {
+            (void)::CloseHandle(token);
+            ::SetLastError(sizing_error);
+            return false;
+        }
+        try {
+            token_groups_.resize(group_bytes);
+        } catch (...) {
+            (void)::CloseHandle(token);
+            ::SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return false;
+        }
+        if (::GetTokenInformation(
+                token, TokenGroups, token_groups_.data(), group_bytes,
+                &group_bytes) == FALSE) {
+            const DWORD error = ::GetLastError();
+            (void)::CloseHandle(token);
+            ::SetLastError(error);
+            return false;
+        }
+        (void)::CloseHandle(token);
+
+        const auto* groups = reinterpret_cast<const TOKEN_GROUPS*>(
+            token_groups_.data());
+        PSID logon_sid = nullptr;
+        for (DWORD index = 0U; index < groups->GroupCount; ++index) {
+            if ((groups->Groups[index].Attributes & SE_GROUP_LOGON_ID) ==
+                SE_GROUP_LOGON_ID) {
+                logon_sid = groups->Groups[index].Sid;
+                break;
+            }
+        }
+        if (logon_sid == nullptr || ::IsValidSid(logon_sid) == FALSE) {
+            ::SetLastError(ERROR_INVALID_SID);
+            return false;
+        }
+        DWORD restricted_sid_bytes = static_cast<DWORD>(restricted_sid_.size());
+        if (::CreateWellKnownSid(
+                WinRestrictedCodeSid, nullptr, restricted_sid_.data(),
+                &restricted_sid_bytes) == FALSE) {
+            return false;
+        }
+
+        const DWORD logon_sid_bytes = ::GetLengthSid(logon_sid);
+        const DWORD acl_bytes = static_cast<DWORD>(
+            sizeof(ACL) + 2U * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD)) +
+            logon_sid_bytes + restricted_sid_bytes);
+        try {
+            acl_.resize(acl_bytes);
+        } catch (...) {
+            ::SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return false;
+        }
+        auto* acl = reinterpret_cast<ACL*>(acl_.data());
+        if (::InitializeAcl(acl, acl_bytes, ACL_REVISION) == FALSE ||
+            ::AddAccessAllowedAce(
+                acl, ACL_REVISION, GENERIC_ALL, logon_sid) == FALSE ||
+            ::AddAccessAllowedAce(
+                acl, ACL_REVISION, GENERIC_ALL, restricted_sid_.data()) == FALSE ||
+            ::InitializeSecurityDescriptor(
+                &descriptor_, SECURITY_DESCRIPTOR_REVISION) == FALSE ||
+            ::SetSecurityDescriptorDacl(
+                &descriptor_, TRUE, acl, FALSE) == FALSE) {
+            return false;
+        }
+        attributes_.nLength = sizeof(attributes_);
+        attributes_.lpSecurityDescriptor = &descriptor_;
+        attributes_.bInheritHandle = TRUE;
+        return true;
+    }
+
+    [[nodiscard]] SECURITY_ATTRIBUTES* get() noexcept { return &attributes_; }
+
+private:
+    std::vector<std::uint8_t> token_groups_;
+    std::array<std::uint8_t, SECURITY_MAX_SID_SIZE> restricted_sid_{};
+    std::vector<std::uint8_t> acl_;
+    SECURITY_DESCRIPTOR descriptor_{};
+    SECURITY_ATTRIBUTES attributes_{};
+};
 
 void capture_windows_peak_memory(
     const HANDLE job,
@@ -154,6 +247,17 @@ bool valid_environment(
         }
     }
     return true;
+}
+
+bool valid_transport_controls(const BoundedProcessRequest& request) noexcept {
+    return request.timeout_ms != 0U && request.poll_interval_ms != 0U &&
+        request.poll_interval_ms <= request.timeout_ms &&
+        request.stdin_limit_bytes != 0U && request.stdout_limit_bytes != 0U &&
+        request.stderr_limit_bytes != 0U &&
+        request.standard_input.size() <= request.stdin_limit_bytes &&
+        request.stdin_limit_bytes <= bounded_process_max_transport_bytes &&
+        request.stdout_limit_bytes <= bounded_process_max_transport_bytes &&
+        request.stderr_limit_bytes <= bounded_process_max_transport_bytes;
 }
 
 struct CapturedStreamState {
@@ -276,11 +380,11 @@ bool wait_for_terminated_process(
     return false;
 }
 
-bool create_windows_capture_pipe(HANDLE& read_handle, HANDLE& write_handle) {
-    SECURITY_ATTRIBUTES attributes{};
-    attributes.nLength = sizeof(attributes);
-    attributes.bInheritHandle = TRUE;
-    if (::CreatePipe(&read_handle, &write_handle, &attributes, 0U) == FALSE) {
+bool create_windows_capture_pipe(
+    HANDLE& read_handle,
+    HANDLE& write_handle,
+    SECURITY_ATTRIBUTES* attributes) {
+    if (::CreatePipe(&read_handle, &write_handle, attributes, 0U) == FALSE) {
         return false;
     }
     if (::SetHandleInformation(read_handle, HANDLE_FLAG_INHERIT, 0U) == FALSE) {
@@ -295,11 +399,11 @@ bool create_windows_capture_pipe(HANDLE& read_handle, HANDLE& write_handle) {
     return true;
 }
 
-bool create_windows_input_pipe(HANDLE& read_handle, HANDLE& write_handle) {
-    SECURITY_ATTRIBUTES attributes{};
-    attributes.nLength = sizeof(attributes);
-    attributes.bInheritHandle = TRUE;
-    if (::CreatePipe(&read_handle, &write_handle, &attributes, 0U) == FALSE) {
+bool create_windows_input_pipe(
+    HANDLE& read_handle,
+    HANDLE& write_handle,
+    SECURITY_ATTRIBUTES* attributes) {
+    if (::CreatePipe(&read_handle, &write_handle, attributes, 0U) == FALSE) {
         return false;
     }
     if (::SetHandleInformation(write_handle, HANDLE_FLAG_INHERIT, 0U) == FALSE) {
@@ -386,7 +490,37 @@ void write_windows_input_pipe(
     (void)::CloseHandle(write_handle);
 }
 
-BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
+bool created_process_image_matches(
+    const HANDLE process,
+    const std::filesystem::path& expected_native_path) noexcept {
+    try {
+        const std::wstring& expected = expected_native_path.native();
+        if (process == nullptr || process == INVALID_HANDLE_VALUE ||
+            expected.empty() || expected.size() > 32768U ||
+            expected.rfind(L"\\Device\\HarddiskVolume", 0U) != 0U) {
+            return false;
+        }
+        std::vector<wchar_t> observed(32769U);
+        const DWORD written = ::K32GetProcessImageFileNameW(
+            process, observed.data(), static_cast<DWORD>(observed.size()));
+        return written != 0U && written < observed.size() &&
+            written == expected.size() &&
+            ::CompareStringOrdinal(
+                observed.data(), static_cast<int>(written), expected.data(),
+                static_cast<int>(expected.size()), TRUE) == CSTR_EQUAL;
+    } catch (...) {
+        return false;
+    }
+}
+
+BoundedProcessResult run_windows(
+    const BoundedProcessRequest& request,
+    const std::u16string* retained_command_line = nullptr,
+    const std::u16string* retained_environment_block = nullptr,
+    void (*launch_committed)(void*) noexcept = nullptr,
+    void* launch_committed_context = nullptr,
+    const std::filesystem::path* expected_native_image_path = nullptr,
+    const bool suppress_console_window = true) {
     BoundedProcessResult result;
     const auto started_at = Clock::now();
     int conversion_error = 0;
@@ -400,30 +534,43 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         return result;
     }
 
-    auto serialized_arguments = serialize_process_arguments(
-        request.executable_path,
-        request.arguments,
-        ProcessArgumentTarget::windows_command_line_v1,
-        32767U);
-    if (!serialized_arguments.ok) {
-        result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.arguments_invalid";
-        result.native_error = ERROR_INVALID_PARAMETER;
-        return result;
+    std::u16string command_line_units;
+    if (retained_command_line != nullptr) {
+        command_line_units = *retained_command_line;
+    } else {
+        auto serialized_arguments = serialize_process_arguments(
+            request.executable_path,
+            request.arguments,
+            ProcessArgumentTarget::windows_command_line_v1,
+            32767U);
+        if (!serialized_arguments.ok) {
+            result.status = BoundedProcessStatus::launch_failed;
+            result.error_code = "polyglot.process.arguments_invalid";
+            result.native_error = ERROR_INVALID_PARAMETER;
+            return result;
+        }
+        command_line_units = std::move(serialized_arguments.windows_command_line);
     }
     std::wstring command_line(
-        serialized_arguments.windows_command_line.begin(),
-        serialized_arguments.windows_command_line.end());
+        command_line_units.begin(), command_line_units.end());
 
-    auto serialized_environment = serialize_process_environment(
-        request.environment,
-        ProcessEnvironmentTarget::windows_utf16_v1,
-        std::numeric_limits<std::size_t>::max());
-    if (!serialized_environment.ok) {
-        result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.environment_invalid";
-        result.native_error = ERROR_INVALID_PARAMETER;
-        return result;
+    std::u16string environment_block;
+    if (retained_environment_block != nullptr) {
+        environment_block = *retained_environment_block;
+    } else {
+        auto serialized_environment = serialize_process_environment(
+            request.environment,
+            ProcessEnvironmentTarget::windows_utf16_v1,
+            std::numeric_limits<std::size_t>::max());
+        if (!serialized_environment.ok) {
+            result.status = BoundedProcessStatus::launch_failed;
+            result.error_code = "polyglot.process.environment_invalid";
+            result.native_error = ERROR_INVALID_PARAMETER;
+            return result;
+        }
+        environment_block.assign(
+            serialized_environment.windows_block.begin(),
+            serialized_environment.windows_block.end());
     }
     static_assert(sizeof(char16_t) == sizeof(wchar_t));
 
@@ -433,9 +580,14 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
     HANDLE stderr_write = nullptr;
     HANDLE stdin_read = nullptr;
     HANDLE stdin_write = nullptr;
-    if (!create_windows_capture_pipe(stdout_read, stdout_write) ||
-        !create_windows_capture_pipe(stderr_read, stderr_write) ||
-        !create_windows_input_pipe(stdin_read, stdin_write)) {
+    WindowsPipeSecurityAttributes pipe_security;
+    if (!pipe_security.initialize() ||
+        !create_windows_capture_pipe(
+            stdout_read, stdout_write, pipe_security.get()) ||
+        !create_windows_capture_pipe(
+            stderr_read, stderr_write, pipe_security.get()) ||
+        !create_windows_input_pipe(
+            stdin_read, stdin_write, pipe_security.get())) {
         const int pipe_error = static_cast<int>(::GetLastError());
         if (stdout_read != nullptr) {
             (void)::CloseHandle(stdout_read);
@@ -496,7 +648,7 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
     startup_info.StartupInfo.hStdError = stderr_write;
     SIZE_T attribute_bytes = 0U;
     const BOOL attribute_sizing =
-        ::InitializeProcThreadAttributeList(nullptr, 1U, 0U, &attribute_bytes);
+        ::InitializeProcThreadAttributeList(nullptr, 2U, 0U, &attribute_bytes);
     const DWORD attribute_sizing_error = ::GetLastError();
     if (attribute_sizing != FALSE ||
         attribute_sizing_error != ERROR_INSUFFICIENT_BUFFER || attribute_bytes == 0U) {
@@ -519,11 +671,15 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
     startup_info.lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(
         attribute_storage.data());
     HANDLE inherited_handles[]{stdin_read, stdout_write, stderr_write};
+    HANDLE inherited_jobs[]{job};
     if (::InitializeProcThreadAttributeList(
-            startup_info.lpAttributeList, 1U, 0U, &attribute_bytes) == FALSE ||
+            startup_info.lpAttributeList, 2U, 0U, &attribute_bytes) == FALSE ||
         ::UpdateProcThreadAttribute(
             startup_info.lpAttributeList, 0U, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-            inherited_handles, sizeof(inherited_handles), nullptr, nullptr) == FALSE) {
+            inherited_handles, sizeof(inherited_handles), nullptr, nullptr) == FALSE ||
+        ::UpdateProcThreadAttribute(
+            startup_info.lpAttributeList, 0U, PROC_THREAD_ATTRIBUTE_JOB_LIST,
+            inherited_jobs, sizeof(inherited_jobs), nullptr, nullptr) == FALSE) {
         result.status = BoundedProcessStatus::launch_failed;
         result.error_code = "polyglot.process.output_pipe_failed";
         result.native_error = static_cast<int>(::GetLastError());
@@ -546,9 +702,10 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         nullptr,
         nullptr,
         TRUE,
-        CREATE_NO_WINDOW | CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
+        (suppress_console_window ? CREATE_NO_WINDOW : 0U) |
+            CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
             EXTENDED_STARTUPINFO_PRESENT,
-        serialized_environment.windows_block.data(),
+        environment_block.data(),
         working_directory.c_str(),
         &startup_info.StartupInfo,
         &process_info);
@@ -599,11 +756,12 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
             stderr_thread.join();
         }
     };
-    if (::AssignProcessToJobObject(job, process_info.hProcess) == FALSE) {
+    if (expected_native_image_path != nullptr &&
+        !created_process_image_matches(
+            process_info.hProcess, *expected_native_image_path)) {
         result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.job_assign_failed";
-        result.native_error = static_cast<int>(::GetLastError());
-        if (::TerminateProcess(process_info.hProcess, 1U) == FALSE) {
+        result.error_code = "polyglot.process.image_binding_failed";
+        if (::TerminateJobObject(job, 1U) == FALSE) {
             result.native_error = static_cast<int>(::GetLastError());
             result.error_code = "polyglot.process.tree_termination_failed";
         } else {
@@ -618,6 +776,9 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         result.process_tree_closed = true;
         result.elapsed_ms = elapsed_milliseconds(started_at);
         return result;
+    }
+    if (launch_committed != nullptr) {
+        launch_committed(launch_committed_context);
     }
     try {
         stdout_thread = std::thread(
@@ -657,10 +818,17 @@ BoundedProcessResult run_windows(const BoundedProcessRequest& request) {
         result.elapsed_ms = elapsed_milliseconds(started_at);
         return result;
     }
-    if (::ResumeThread(process_info.hThread) == static_cast<DWORD>(-1)) {
+    // CREATE_SUSPENDED owns exactly one suspension. Any different prior count
+    // means this boundary cannot prove that the initial thread became runnable.
+    const DWORD previous_suspend_count = ::ResumeThread(process_info.hThread);
+    if (previous_suspend_count != 1U) {
         result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.resume_failed";
-        result.native_error = static_cast<int>(::GetLastError());
+        result.error_code = previous_suspend_count == static_cast<DWORD>(-1)
+            ? "polyglot.process.resume_failed"
+            : "polyglot.process.resume_state_invalid";
+        result.native_error = previous_suspend_count == static_cast<DWORD>(-1)
+            ? static_cast<int>(::GetLastError())
+            : 0;
         if (::TerminateJobObject(job, 1U) == FALSE) {
             result.native_error = static_cast<int>(::GetLastError());
             result.error_code = "polyglot.process.tree_termination_failed";
@@ -1329,14 +1497,7 @@ BoundedProcessResult run_bounded_process(const BoundedProcessRequest& request) {
         contains_nul(request.executable_path) ||
         contains_nul(request.working_directory) ||
         !valid_arguments(request.arguments) ||
-        request.timeout_ms == 0U || request.poll_interval_ms == 0U ||
-        request.poll_interval_ms > request.timeout_ms ||
-        request.stdin_limit_bytes == 0U ||
-        request.stdout_limit_bytes == 0U || request.stderr_limit_bytes == 0U ||
-        request.standard_input.size() > request.stdin_limit_bytes ||
-        request.stdin_limit_bytes > kMaximumTransportBytes ||
-        request.stdout_limit_bytes > kMaximumTransportBytes ||
-        request.stderr_limit_bytes > kMaximumTransportBytes ||
+        !valid_transport_controls(request) ||
         !valid_environment(request.environment)) {
         return invalid_request();
     }
@@ -1365,10 +1526,90 @@ BoundedProcessResult run_bounded_process(const BoundedProcessRequest& request) {
         return result;
     }
 #if defined(_WIN32)
-    return run_windows(request);
+    return run_windows(request, nullptr, nullptr, nullptr, nullptr, nullptr, true);
 #else
     return run_posix(request);
 #endif
+}
+
+CurrentProcessElevation current_process_elevation() noexcept {
+#if defined(_WIN32)
+    HANDLE token = nullptr;
+    if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token) == FALSE) {
+        return CurrentProcessElevation::unavailable;
+    }
+    TOKEN_ELEVATION elevation{};
+    DWORD returned = 0U;
+    const BOOL queried = ::GetTokenInformation(
+        token, TokenElevation, &elevation, sizeof(elevation), &returned);
+    (void)::CloseHandle(token);
+    if (queried == FALSE || returned < sizeof(elevation)) {
+        return CurrentProcessElevation::unavailable;
+    }
+    return elevation.TokenIsElevated == 0U
+        ? CurrentProcessElevation::not_elevated
+        : CurrentProcessElevation::elevated;
+#else
+    return CurrentProcessElevation::unsupported;
+#endif
+}
+
+BoundedProcessResult run_bounded_windows_private_executable(
+    const PrivateExecutableImage& image,
+    const PrivateWindowsBoundedProcessRequest& request) noexcept {
+    try {
+#if defined(_WIN32)
+        const auto* path = image.windows_launch_target();
+        const auto* native_path = image.windows_native_launch_target();
+        const auto& command_line = request.command_line;
+        const auto& environment = request.environment_block;
+        if (path == nullptr || native_path == nullptr ||
+            !image.valid() ||
+            !path->is_absolute() ||
+            request.working_directory.empty() ||
+            !request.working_directory.is_absolute() || command_line.empty() ||
+            command_line.find(u'\0') != std::u16string::npos ||
+            environment.size() < 2U || environment[environment.size() - 1U] != u'\0' ||
+            environment[environment.size() - 2U] != u'\0' ||
+            !request.transport.executable_path.empty() ||
+            !request.transport.working_directory.empty() ||
+            !request.transport.arguments.empty() ||
+            !request.transport.environment.empty() ||
+            !valid_transport_controls(request.transport)) {
+            return invalid_request();
+        }
+        BoundedProcessRequest transport = request.transport;
+        transport.executable_path = path_to_utf8_string(*path);
+        transport.working_directory =
+            path_to_utf8_string(request.working_directory);
+        if (transport.executable_path.empty() ||
+            transport.working_directory.empty()) {
+            return invalid_request();
+        }
+        if (cancellation_requested(transport)) {
+            BoundedProcessResult result;
+            result.status = BoundedProcessStatus::cancelled;
+            result.error_code = "polyglot.process.cancelled";
+            return result;
+        }
+        return run_windows(
+            transport, &command_line, &environment,
+            request.launch_committed, request.launch_committed_context,
+            native_path, false);
+#else
+        static_cast<void>(image);
+        static_cast<void>(request);
+        BoundedProcessResult result;
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "workspace_agent.process_execution_platform_unavailable";
+        return result;
+#endif
+    } catch (...) {
+        BoundedProcessResult result;
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "workspace_agent.process_execution_failed";
+        return result;
+    }
 }
 
 const char* bounded_process_status_name(const BoundedProcessStatus status) noexcept {

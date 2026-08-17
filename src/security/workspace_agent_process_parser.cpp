@@ -32,7 +32,7 @@ bool supported_contract(
 bool supported_dependency_contract(
     const WorkspaceAgentProcessParserDependencyContract contract) noexcept {
     return contract == WorkspaceAgentProcessParserDependencyContract::
-        self_contained_parser_image_v1;
+        self_contained_launch_image_v1;
 }
 
 bool valid_sha256(const std::string_view digest) noexcept {

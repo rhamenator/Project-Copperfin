@@ -1,5 +1,106 @@
 # Agent Handoff
 
+## V1 workspace-agent Windows unrestricted exact-image execution
+
+Candidate `RQ-CF-AGENT-028` is implemented locally pending protected evidence.
+The controller consumes its opaque materialized launch only for the exact active
+generation in explicitly warned `unrestricted_local` mode on a confirmed
+non-elevated Windows host. It submits a content-free intent before invoking the
+private launcher, creates the retained exact image suspended and atomically
+inside a kill-on-close Job Object using its retained command line, fixed
+environment, and a compatible DOS working directory bound to its authenticated
+handle and retained stable hierarchy, verifies the kernel-reported native image
+binding before resume, and submits a correlated content-free outcome
+after image cleanup. `workspace_sandbox`, elevation, unknown elevation,
+non-Windows hosts, invalid controls, stale state, and failed intent audit remain
+fail-closed. The public RQ-019 gate is unchanged and still denies every caller.
+
+Local Debug behavior and machine-contract execution passes `7/7`; fresh GCC 15
+Release with `-Werror` passes the same `7/7`, and fresh Clang 21
+ASan/UBSan/leak passes `7/7` without findings. Licensing, community,
+release-license, isolation, supply-chain, and safety contracts pass `6/6`,
+including the corrected-tree repository-wide safety scan. Coverage includes
+sandbox and platform denial, failed-intent no-launch behavior, exact `argv[0]`,
+argument/environment/working-directory consumption, bounded tree ownership,
+outcome/diagnostic consistency, private-image cleanup, and a Windows-only
+concurrency regression requiring stop to finish after launch commitment
+while the bounded child is still running. Protected Windows execution,
+Ubuntu/macOS denial, exact-head review, and retained merge evidence are still
+required before implementation evidence can be called complete. POSIX/macOS
+execution, real workspace sandboxing, trusted provider/UI integration,
+endpoint policy, diff/undo, and crash-recoverable audit receipts remain gaps.
+
+The direct Windows transition matrix selected `CREATE_NO_WINDOW` as incompatible
+with the restricted exact-image executor. Its correction is intentionally
+private: `run_bounded_windows_private_executable()` passes the no-console
+selection as false, while the public `run_bounded_process()` path retains its
+prior no-console selection. The source contract requires both call-site choices
+and the conditional flag construction. Exact signed/DCO head `8080412de` passed
+the protected Windows, Ubuntu, and macOS generated-launcher matrix in
+`31986901503`, including Windows execution/revocation, and passed the separate
+protected Windows environment/path validation in `31986901535`.
+
+Exact head `8cddbd441` passed adjacent Windows private-image and parser tests
+but both protected workflows rejected target-pin preparation. Replacing its
+redundant drive-root serial query with `GetVolumeInformationByHandleW` on the
+retained authenticated directory handle did not change that result: exact head
+`ad779b9ab` again failed only `test_workspace_agent_isolated_environment` in
+protected runs `31966333205` and `31966333238`, while all adjacent tests and
+the Windows DECLARE, GCC, Clang, Ubuntu, and macOS jobs passed. The diagnostic
+head preserved every admission predicate and reported a fixed
+content-free reason for the path-shape, native-root, DOS mapping, fixed-drive,
+mount-manager, or volume-identity predicate that denied preparation. Another
+protected run is required to select the compatibility correction from direct
+Windows evidence.
+
+Protected diagnostic run `31967738991` selected that correction directly:
+`QueryDosDeviceW` is unavailable under the bounded restricted token. The query
+was redundant with the handle-derived DOS path, fixed-drive mount-manager
+listing, matching handle volume identity, retained stable hierarchy, and exact
+DOS-path identity reopens before and after validation, all of which remain
+mandatory. Review follow-up also makes the DOS-path-invalid diagnostic reachable
+when handle-based DOS derivation fails, without changing admission. A corrected
+protected rerun at exact head `02021c666` then reached process creation, native-
+image binding, Job commitment, and resume in both Windows workflows
+(`31969922414` and `31969922779`), but both the normal and waiting children
+timed out without output or exit. Together with the earlier stable-
+device-path result, this established a post-resume failure but did not identify
+the current-directory spelling as its cause. Exact-head ordinary-path runs
+`31971595320` and `31971595343` reproduced the same normal and waiting-child
+timeouts with empty output, disproving that correction and making its long-path
+narrowing unjustified. The current diagnostic candidate restores the verified
+extended DOS working directory, requires `ResumeThread` to report exactly one
+prior suspension, and gives only the synthetic copied child fixed entry and
+unrecognized-argument markers so protected Windows can distinguish invalid
+resume state, pre-entry failure, and command-line mismatch. Corrected protected
+run `31973693772` proved the resume count is valid but the copied full test
+runner never reaches its marker. The corrected test now uses a dedicated
+statically linked child matching the declared self-contained-image contract and
+compares captured lines with either Windows CRLF or LF framing. Protected run
+`31977374102` then proved that both direct and suspended launches of that
+fixture time out before its C++-body marker, ruling out private-image, Job,
+pipe, fixed-environment, and resume controls but not CRT startup before `main`.
+Protected rerun `31978743045` proved that bare probe also times out in normal
+and suspended forms, excluding C++ fixture and CRT startup. The next test-only
+head keeps token, image, working directory, and `CREATE_NO_WINDOW` fixed while
+adding only inherited standard handles to select the remaining direct-launch
+boundary. Protected rerun `31980043792` reproduced both timeouts. The two
+independent protected runs `31981334951` and `31981334996` then proved that
+duplicated-token `CreateProcessAsUserW` also creates but times out in both
+normal and suspended forms, so the child-creation API is not the missing
+condition. Protected Windows run `31983455527` at exact head `62000e669` then
+proved that removing only `CREATE_NO_WINDOW` lets normal and suspended
+`CreateProcessAsUserW` probes exit with code `41`, whereas every matched
+flag-bearing probe retains the timeout signature. That selects the flag for
+the as-user form but not yet the production direct `CreateProcessW` API.
+Protected run `31984855100` at `d763dcd53` proves the direct normal and
+suspended flag-free probes also exit cleanly; its only failures are the product
+execution and dependent revocation fixtures, which still carry the flag. The
+next production correction removes only `CREATE_NO_WINDOW` and retains every
+other trusted launch control. The latest local focused machine-contract set
+passes `2/2`; native isolation and the corrected-tree safety-traceability
+contract also pass on the corrected tree.
+
 ## V1 workspace-agent Windows launch-handle transition
 
 Candidate `RQ-CF-AGENT-027` is implementation-evidence complete. On Windows,

@@ -13,6 +13,9 @@
 
 namespace copperfin::platform {
 
+inline constexpr std::uint32_t bounded_process_max_transport_bytes =
+    16U * 1024U * 1024U;
+
 enum class BoundedProcessStatus {
     exited,
     cancelled,

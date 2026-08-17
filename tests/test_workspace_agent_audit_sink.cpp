@@ -244,6 +244,57 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
     expect(sink.commit(cleanup_intent, sink.context).ok &&
                sink.commit(cleanup_outcome, sink.context).ok,
            "RQ-CF-AGENT-021: the durable sink must admit exact cleanup intent and outcome records");
+    const WorkspaceAgentSessionAuditEvent process_intent{
+        .schema_version = 2U,
+        .kind = copperfin::security::WorkspaceAgentSessionEventKind::
+            process_launch_intent,
+        .session_generation = 7U,
+        .requested_mode = WorkspaceAgentAccessMode::unrestricted_local,
+        .effective_mode = WorkspaceAgentAccessMode::unrestricted_local,
+        .process_instance_id = "0123456789abcdef0123456789abcdef",
+        .operation_id = 9U,
+        .outcome = "pending",
+        .diagnostic_code = "workspace_agent.process_launch_intent"};
+    const WorkspaceAgentSessionAuditEvent process_outcome{
+        .schema_version = 2U,
+        .kind = copperfin::security::WorkspaceAgentSessionEventKind::
+            process_launch_outcome,
+        .session_generation = 7U,
+        .requested_mode = WorkspaceAgentAccessMode::unrestricted_local,
+        .effective_mode = WorkspaceAgentAccessMode::unrestricted_local,
+        .process_instance_id = "0123456789abcdef0123456789abcdef",
+        .operation_id = 9U,
+        .outcome = "exited",
+        .diagnostic_code = "polyglot.process.exited"};
+    expect(sink.commit(process_intent, sink.context).ok &&
+               sink.commit(process_outcome, sink.context).ok,
+           "RQ-CF-AGENT-028: the durable sink must admit exact correlated process intent and outcome records");
+    const auto retained_lines = audit_lines(file_sink.log_path());
+    expect(retained_lines.size() == 5U &&
+               retained_lines[3].size() == 5U &&
+               retained_lines[3][1] == "workspace_agent.process.v2" &&
+               retained_lines[4].size() == 5U &&
+               retained_lines[4][1] == "workspace_agent.process.v2" &&
+               retained_lines[3][2] ==
+                   serialize_workspace_agent_session_audit_event(process_intent) &&
+               retained_lines[4][2] ==
+                   serialize_workspace_agent_session_audit_event(process_outcome),
+           "RQ-CF-AGENT-028: process audit records must retain the versioned content-free operation id contract");
+    std::uint64_t diagnostic_operation_id = 10U;
+    for (const std::string diagnostic : {
+             "polyglot.process.executable_path_unsupported",
+             "polyglot.process.image_binding_failed",
+             "polyglot.process.working_directory_path_unsupported"}) {
+        auto unsupported_intent = process_intent;
+        auto unsupported_path = process_outcome;
+        unsupported_intent.operation_id = diagnostic_operation_id;
+        unsupported_path.operation_id = diagnostic_operation_id++;
+        unsupported_path.outcome = "launch-failed";
+        unsupported_path.diagnostic_code = diagnostic;
+        expect(sink.commit(unsupported_intent, sink.context).ok &&
+                   sink.commit(unsupported_path, sink.context).ok,
+               "RQ-CF-AGENT-028: the durable sink must admit only fixed content-free path-compatibility and image-binding diagnostics");
+    }
     const std::string before = read_bytes(file_sink.log_path());
 
     std::vector<WorkspaceAgentSessionAuditEvent> malformed;
@@ -273,6 +324,34 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
     auto invalid_kind = valid;
     invalid_kind.kind = static_cast<copperfin::security::WorkspaceAgentSessionEventKind>(99);
     malformed.push_back(invalid_kind);
+    auto missing_operation = process_intent;
+    missing_operation.operation_id = 0U;
+    malformed.push_back(missing_operation);
+    auto missing_process_instance = process_intent;
+    missing_process_instance.process_instance_id.clear();
+    malformed.push_back(missing_process_instance);
+    auto zero_process_instance = process_intent;
+    zero_process_instance.process_instance_id =
+        "00000000000000000000000000000000";
+    malformed.push_back(zero_process_instance);
+    auto injected_process_instance = process_intent;
+    injected_process_instance.process_instance_id =
+        "0123456789abcdef/path-or-secret";
+    malformed.push_back(injected_process_instance);
+    auto injected_process_diagnostic = process_outcome;
+    injected_process_diagnostic.diagnostic_code =
+        "polyglot.process.exited/secret/path/token";
+    malformed.push_back(injected_process_diagnostic);
+    auto mismatched_process_mode = process_outcome;
+    mismatched_process_mode.effective_mode = WorkspaceAgentAccessMode::workspace_sandbox;
+    malformed.push_back(mismatched_process_mode);
+    auto mismatched_process_outcome = process_outcome;
+    mismatched_process_outcome.outcome = "timed-out";
+    malformed.push_back(mismatched_process_outcome);
+    auto launch_failure_as_denial = process_outcome;
+    launch_failure_as_denial.outcome = "denied";
+    launch_failure_as_denial.diagnostic_code = "polyglot.process.launch_failed";
+    malformed.push_back(launch_failure_as_denial);
 
     for (const auto& event : malformed) {
         const auto result = sink.commit(event, sink.context);
