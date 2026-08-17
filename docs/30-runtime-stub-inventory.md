@@ -17,6 +17,11 @@ future implementation slices an explicit ownership boundary.
 | Unsupported optimizer/query shapes | `include/copperfin/runtime/index_seek_optimizer.h`, `include/copperfin/runtime/rushmore_planning.h` | Records an explicit unsupported/fallback reason and uses the documented fallback | Deliberate semantic boundary | Expand only with a behavior source and regression fixture |
 | SQLite federation connector when the platform dependency is absent | `src/platform/sqlite_federation_connector_unavailable.cpp` | Reports stable `federation.sqlite.connector_unavailable`; validation/release configurations fail during CMake configure instead of admitting this adapter | Build-capability fallback | Keep ordinary source builds portable; `#30` provider execution and every release lane must require the real connector |
 
+`ON KEY [LABEL]`, `PUSH KEY`, and `POP KEY` are not stub entries: their
+headless static-assignment and snapshot semantics are implemented in the PRG
+runtime. Native input capture, key buffering, and form-local keyboard/UI
+semantics are separate compatibility boundaries, not silent fallback behavior.
+
 ## Maintenance Rules
 
 - A new stub, placeholder, unavailable callback, or deterministic no-op gets an

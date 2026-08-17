@@ -2953,6 +2953,16 @@ Program parse_program_impl(
         } else if (starts_with_insensitive(line, "SET ")) {
             statement.kind = StatementKind::set_command;
             statement.expression = trim_copy(line.substr(4U));
+        } else if (upper == "ON KEY" || starts_with_insensitive(line, "ON KEY ")) {
+            statement.kind = StatementKind::on_key_command;
+            std::string body = upper == "ON KEY" ? std::string{} : trim_copy(line.substr(6U));
+            if (starts_with_insensitive(body, "LABEL ")) {
+                body = trim_copy(body.substr(6U));
+            }
+            if (!body.empty()) {
+                statement.identifier = uppercase_copy(take_first_token(body));
+                statement.expression = trim_copy(body.substr(statement.identifier.size()));
+            }
         } else if (upper == "ON ERROR" || starts_with_insensitive(line, "ON ERROR ")) {
             statement.kind = StatementKind::on_error;
             statement.expression = upper == "ON ERROR" ? std::string{} : trim_copy(line.substr(9U));
