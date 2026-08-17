@@ -252,15 +252,16 @@ foreach(token IN ITEMS
         "probe-normal="
         "probe-standard-handles-normal="
         "probe-as-user-normal="
+        "probe-without-no-window-normal="
         "probe-as-user-without-no-window-normal="
         "inherit_standard_handles ? TRUE : FALSE"
         "::CreateProcessAsUserW("
         "use_create_no_window ? CREATE_NO_WINDOW : 0U"
-        "restricted Windows direct minimal probe with its duplicated primary token"
-        "restricted Windows direct minimal probe without CREATE_NO_WINDOW"
-        "restricted Windows direct minimal probe with inherited standard handles"
+        "CREATE_NO_WINDOW controls must retain their documented timeout signature"
+        "restricted Windows direct minimal probe without CREATE_NO_WINDOW must exit"
+        "probe_standard_handles_normal_blocked"
         "restricted Windows direct minimal probe"
-        "restricted Windows suspended fixture launch")
+        "suspended_blocked")
     require_text(${environment_test} "${token}"
         "Windows startup transition diagnostic matrix")
 endforeach()

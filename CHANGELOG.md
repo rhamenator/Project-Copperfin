@@ -8822,6 +8822,14 @@ passes `1/1`.
   corrected full lifecycle at `2c38492c1`; the downloaded JSON digest matches
   the retained NSIS executable. `RQ-CF-REL-002` is defined.
 - 2026-08-15: Candidate v1 `RQ-CF-AGENT-021` retains successful workspace-agent private-layout preparation receipts FIFO in the native session controller, including after failed start audit, and adds an explicit cleanup operation that is denied while authority is active, serializes with session transitions, requires a durable content-free intent record before mutation, and emits a separate `cleaned` or `retained` outcome. Failed intent audit attempts no mutation, failed cleanup preserves occupied or changed content and retains the receipt for retry, successful cleanup consumes it, and later session generations cannot overwrite older receipts. A fixed sixty-four-receipt cap denies another process-capable start before layout creation. Automatic stop/destructor cleanup, crash-recoverable receipts, partial-removal retry, and owned nonempty-content disposition remain explicit gaps.
+- 2026-08-17: Protected Windows evidence for candidate `RQ-CF-AGENT-028`
+  isolated the restricted-token launch hang to `CREATE_NO_WINDOW` in the
+  duplicated-primary-token `CreateProcessAsUserW` diagnostic: normal and
+  suspended flag-bearing probes created then timed out, while otherwise matched
+  flag-free probes exited with code `41`. The test now retains those observed
+  flag-bearing controls as a regression signature and adds the direct
+  `CreateProcessW` flag-free discriminator used by production. No production
+  window behavior changes until that direct evidence is retained.
 - 2026-08-16: Added candidate `RQ-CF-AGENT-027`, a non-executing Windows
   launch-handle transition for the exact private image produced by
   `RQ-CF-AGENT-026`. After write/flush/reread verification, the platform closes

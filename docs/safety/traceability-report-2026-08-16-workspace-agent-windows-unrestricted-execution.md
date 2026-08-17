@@ -336,8 +336,11 @@ independent protected Windows workflows `31981334951` and `31981334996` proved
 that this API also creates but times out in every form, so API selection is not
 the boundary. The next diagnostic preserves that API, token, image, working
 directory, and inherited standard handles while removing only
-`CREATE_NO_WINDOW`; it changes no production authority or
-acceptance rule; local focused execution/materialization and exact-source
-machine contracts pass `2/2`, and the corrected-tree native-isolation and
-safety-traceability contracts pass on the corrected tree. Protected
-evidence remains required.
+`CREATE_NO_WINDOW`. Protected Windows run `31983455527` at exact head
+`62000e669` then showed both normal and suspended `CreateProcessAsUserW` probe
+forms exit cleanly with code `41` when the flag is omitted, while every matched
+form retaining the flag continues to create and time out. This selects the
+flag for that API but does not yet prove the production `CreateProcessW` form;
+the next test-only candidate keeps the current token, image, working directory,
+standard handles, and normal/suspended forms while removing only that flag from
+direct `CreateProcessW`. Production authority and behavior remain unchanged.

@@ -78,12 +78,15 @@ boundary. Protected rerun `31980043792` reproduced both timeouts. The two
 independent protected runs `31981334951` and `31981334996` then proved that
 duplicated-token `CreateProcessAsUserW` also creates but times out in both
 normal and suspended forms, so the child-creation API is not the missing
-condition. The next test-only head keeps that API, token, image, working
-directory, and inherited standard handles fixed while removing only
-`CREATE_NO_WINDOW`; it does not alter production window-suppression behavior.
-Protected execution remains required. The latest local focused machine-contract
-set passes `2/2`; native isolation and the corrected-tree safety-traceability
-contract also pass on the corrected tree.
+condition. Protected Windows run `31983455527` at exact head `62000e669` then
+proved that removing only `CREATE_NO_WINDOW` lets normal and suspended
+`CreateProcessAsUserW` probes exit with code `41`, whereas every matched
+flag-bearing probe retains the timeout signature. That selects the flag for
+the as-user form but not yet the production direct `CreateProcessW` API. The
+next test-only head removes only that flag from direct normal/suspended probes;
+production window behavior remains unchanged. The latest local focused
+machine-contract set passes `2/2`; native isolation and the corrected-tree
+safety-traceability contract also pass on the corrected tree.
 
 ## V1 workspace-agent Windows launch-handle transition
 
