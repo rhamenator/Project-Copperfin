@@ -8946,3 +8946,9 @@ passes `1/1`.
   persistence and suppression. Appended materialization, remote cursors,
   `OLDVAL()`, validation/default effects, triggers, rules, and conflict handling
   remain separate work.
+
+- 2026-08-17: Corrected local `SETFLDSTATE()` modified-state handling: a first
+  state-`2` or state-`4` assignment now materializes the current buffered record
+  and original image, including the applicable pessimistic lock. `GETNEXTMODIFIED()`
+  and `TABLEUPDATE()` therefore traverse and clear it rather than leaving an
+  orphaned state entry. The focused buffering regression covers this lifecycle.

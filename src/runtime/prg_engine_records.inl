@@ -2079,6 +2079,55 @@
                     return make_boolean_value(false);
                 }
 
+                const auto materialize_modified_record = [&]() -> bool
+                {
+                    if (state != 2 && state != 4)
+                    {
+                        return true;
+                    }
+                    if (cursor->buffered_records.contains(cursor->recno))
+                    {
+                        return true;
+                    }
+
+                    bool acquired_buffer_lock = false;
+                    if ((cursor->buffering_mode == 2 || cursor->buffering_mode == 4) &&
+                        !cursor->buffered_record_locks.contains(cursor->recno))
+                    {
+                        bool new_lock = false;
+                        if (!acquire_record_lock(
+                                *cursor, cursor->recno, "SETFLDSTATE", false, new_lock))
+                        {
+                            return false;
+                        }
+                        if (new_lock)
+                        {
+                            cursor->buffered_record_locks.insert(cursor->recno);
+                            acquired_buffer_lock = true;
+                        }
+                    }
+
+                    const auto table_result = parse_cursor_table(*cursor, cursor->recno);
+                    if (!table_result.ok || cursor->recno > table_result.table.records.size())
+                    {
+                        if (acquired_buffer_lock)
+                        {
+                            cursor->buffered_record_locks.erase(cursor->recno);
+                            unlock_cursor_record_lock(*cursor, cursor->recno);
+                        }
+                        last_error_message = table_result.error.empty()
+                            ? runtime_text(
+                                  "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord",
+                                  {{"command", "SETFLDSTATE"}})
+                            : table_result.error;
+                        return false;
+                    }
+                    const vfp::DbfRecord original = table_result.table.records[cursor->recno - 1U];
+                    cursor->buffered_records.emplace(cursor->recno, original);
+                    cursor->buffered_original_records.emplace(cursor->recno, original);
+                    return true;
+                };
+
                 const bool numeric_argument = arguments[0].kind == PrgValueKind::number ||
                     arguments[0].kind == PrgValueKind::int64 ||
                     arguments[0].kind == PrgValueKind::uint64 ||
@@ -2088,12 +2137,20 @@
                     requested_field == std::trunc(requested_field);
                 if (is_integral && requested_field == 0.0)
                 {
+                    if (!materialize_modified_record())
+                    {
+                        return make_boolean_value(false);
+                    }
                     cursor->buffered_deletion_states[cursor->recno] = state;
                     return make_boolean_value(true);
                 }
                 if (is_integral && requested_field > 0.0 &&
                     requested_field <= static_cast<double>(record->values.size()))
                 {
+                    if (!materialize_modified_record())
+                    {
+                        return make_boolean_value(false);
+                    }
                     cursor->buffered_field_states[cursor->recno][
                         static_cast<std::size_t>(requested_field - 1.0)] = state;
                     return make_boolean_value(true);
@@ -2112,6 +2169,10 @@
                         return collapse_identifier(candidate.field_name) == field_name;
                     });
                 if (field == record->values.end())
+                {
+                    return make_boolean_value(false);
+                }
+                if (!materialize_modified_record())
                 {
                     return make_boolean_value(false);
                 }

@@ -28,6 +28,10 @@ namespace copperfin::runtime_surface_tests
             program_path,
             "USE '" + table_path.string() + "' ALIAS people\n"
             "=CURSORSETPROP('Buffering', 5, 'people')\n"
+            "lStateOnly = SETFLDSTATE('NAME', 2, 'people')\n"
+            "nStateOnlyNext = GETNEXTMODIFIED(0, 'people')\n"
+            "lStateOnlyCommitted = TABLEUPDATE(.T., .T., 'people')\n"
+            "nStateOnlyAfterCommit = GETNEXTMODIFIED(0, 'people')\n"
             "REPLACE NAME WITH 'Suppressed' IN people\n"
             "REPLACE AMOUNT WITH 2 IN people\n"
             "lByName = SETFLDSTATE('NAME', 1, 'people')\n"
@@ -63,6 +67,10 @@ namespace copperfin::runtime_surface_tests
             return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
         };
         expect(value_for("lbyname") == "true", "SETFLDSTATE should accept a named field");
+        expect(value_for("lstateonly") == "true" && value_for("nstateonlynext") == "1" &&
+                   value_for("lstateonlycommitted") == "true" &&
+                   value_for("nstateonlyaftercommit") == "0",
+               "a first modified SETFLDSTATE assignment should materialize and clear its buffered record");
         expect(value_for("lbynumber") == "true", "SETFLDSTATE should accept a one-based field number");
         expect(value_for("ldeletion") == "true", "SETFLDSTATE field zero should assign deletion state");
         expect(value_for("cassigned") == "112",

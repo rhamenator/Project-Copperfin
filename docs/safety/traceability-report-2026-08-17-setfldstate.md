@@ -14,7 +14,9 @@ record deletion state, and assign exactly state `1`, `2`, `3`, or `4`. The
 assignment shall be observable through `GETFLDSTATE()`. For an existing record,
 states `1` and `3` shall suppress that field/deletion's `TABLEUPDATE` write and
 states `2` and `4` shall allow it. Appended records must still be fully
-materialized.
+materialized. A first `2` or `4` assignment on an existing record shall also
+materialize the buffered/original record so normal modified-record traversal and
+`TABLEUPDATE()` consume and clear the assignment.
 
 ## Hazard, Misuse, And Rollback
 
@@ -34,10 +36,10 @@ returns to its previous GETFLDSTATE-only boundary.
 `DV-prg-setfldstate-001` is the portable CTest target
 `test_prg_engine_runtime_surface_functions_buffering`. It proves named,
 numbered, deletion, and explicit-work-area assignment; state readback; invalid
-state/field rejection; persisted state-`2` data; and state-`1` field/deletion
-suppression. Its machine-readable isolation is portable, serial, test-owned
-filesystem only, with no environment, child-process, network, or sample
-dependency.
+state/field rejection; first-assignment modified-record traversal and clearing;
+persisted state-`2` data; and state-`1` field/deletion suppression. Its
+machine-readable isolation is portable, serial, test-owned filesystem only,
+with no environment, child-process, network, or sample dependency.
 
 This is development-assurance evidence only; it is not a claim of formal
 DO-178C compliance, certification, safety-critical suitability, complete VFP

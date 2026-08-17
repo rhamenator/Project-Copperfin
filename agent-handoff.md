@@ -17,10 +17,13 @@ trigger, or rule behavior.
 named or 1-based field selector (or `0` for deletion) accepts states `1` through
 `4` in the selected or explicit alias/work-area cursor, returns logical success,
 and controls whether an existing buffered field/deletion is written by
-`TABLEUPDATE`. Appended records remain fully materialized. The same portable
-regression covers successful assignment, invalid selectors, state readback, and
-field/deletion write suppression. Remote cursors, `OLDVAL()`, validation/default
-effects, triggers, rules, and conflict-resolution behavior remain separate.
+`TABLEUPDATE`. A first state-`2`/`4` assignment now materializes the current
+record so `GETNEXTMODIFIED()` and `TABLEUPDATE()` consume it; appended records
+remain fully materialized. The same portable regression covers successful
+assignment, modified-record traversal/clearing, invalid selectors, state
+readback, and field/deletion write suppression. Remote cursors, `OLDVAL()`,
+validation/default effects, triggers, rules, and conflict-resolution behavior
+remain separate.
 
 ## V1 ON PAGE configuration boundary
 
