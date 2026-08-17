@@ -401,6 +401,16 @@ else()
     target_compile_options(cf_vfp_assets PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+add_library(cf_migration
+    src/migration/project_inventory.cpp
+)
+target_include_directories(cf_migration PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if(MSVC)
+    target_compile_options(cf_migration PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_migration PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 add_library(cf_mcp_host
     src/platform/mcp_host.cpp
 )

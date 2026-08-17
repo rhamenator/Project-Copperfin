@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 migration inventory foundation
+
+`RQ-CF-MIGRATION-001` supplies the first read-only implementation of
+the migration contract: `cf_migration` inventories only a caller-selected
+absolute project root that is not itself a symbolic link into deterministic project-relative asset entries
+and schema-version-1 JSON. It classifies known VFP suffixes, omits the absolute
+root, reports without following file or directory symbolic links, and fails
+closed for a non-UTF-8 POSIX name. Focused Debug build and CTest pass `1/1`
+(`test_project_inventory`), covering ordering, classification, escaping, root
+privacy, invalid roots, and symlink boundaries.
+It does not parse asset contents, resolve dependencies, assess risk, select a
+migration mode, write source files, or produce the other eight migration
+outputs. Three-platform validation and release evidence remain required.
+
 ## V1 workspace-agent bounded workspace-file inspection
 
 Candidate `RQ-CF-AGENT-029` adds one actual read-only
