@@ -2,7 +2,7 @@
 
 ## V1 workspace-agent Windows unrestricted exact-image execution
 
-Candidate `RQ-CF-AGENT-028` is implemented locally pending protected evidence.
+Candidate `RQ-CF-AGENT-028` has implementation evidence complete.
 The controller consumes its opaque materialized launch only for the exact active
 generation in explicitly warned `unrestricted_local` mode on a confirmed
 non-elevated Windows host. It submits a content-free intent before invoking the
@@ -24,11 +24,15 @@ sandbox and platform denial, failed-intent no-launch behavior, exact `argv[0]`,
 argument/environment/working-directory consumption, bounded tree ownership,
 outcome/diagnostic consistency, private-image cleanup, and a Windows-only
 concurrency regression requiring stop to finish after launch commitment
-while the bounded child is still running. Protected Windows execution,
-Ubuntu/macOS denial, exact-head review, and retained merge evidence are still
-required before implementation evidence can be called complete. POSIX/macOS
-execution, real workspace sandboxing, trusted provider/UI integration,
-endpoint policy, diff/undo, and crash-recoverable audit receipts remain gaps.
+while the bounded child is still running. Exact signed/DCO implementation head
+`8080412de` passed the protected generated-launcher matrix on Windows, Ubuntu,
+and macOS in `31986901503`, including the Windows execution/revocation
+fixtures; the evidence-only exact head `00847a95a` passed all eleven protected
+checks in `31988148829`, `31988150453`, `31988150500`, `31988150539`, and
+`31988150660`. Read-only review corroborated the scoped correction, and PR
+`#5046` merged as `3f66eeae8`. POSIX/macOS execution, real workspace
+sandboxing, trusted provider/UI integration, endpoint policy, diff/undo, and
+crash-recoverable audit receipts remain gaps.
 
 The direct Windows transition matrix selected `CREATE_NO_WINDOW` as incompatible
 with the restricted exact-image executor. Its correction is intentionally
