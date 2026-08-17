@@ -308,6 +308,10 @@ public:
     void clear_breakpoints();
     [[nodiscard]] std::vector<RuntimeBreakpoint> list_breakpoints() const;
     [[nodiscard]] bool dispatch_event_handler(const std::string& routine_name);
+    // Delivers one host-normalized VFP key label to an active READ EVENTS
+    // session. This is a headless runtime seam; native keyboard capture and
+    // form-local KeyPress routing remain host/UI responsibilities.
+    [[nodiscard]] bool dispatch_key_label(const std::string& key_label);
     [[nodiscard]] bool dispatch_popup_bar_selection(
         const std::string& popup_name,
         std::int64_t bar_number);

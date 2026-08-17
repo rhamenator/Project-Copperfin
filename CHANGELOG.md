@@ -1,3 +1,10 @@
+- 2026-08-17: Recovered the static headless `ON KEY [LABEL]` runtime contract
+  from the installed VFP9 help. Per-key and whole-set restoration,
+  `PUSH KEY [CLEAR]`/`POP KEY` snapshots, `POP KEY ALL`, and dispatch at an
+  active `READ EVENTS` wait state now have a dedicated portable regression.
+  This adds no native keyboard capture, buffering, form `KeyPress`, mouse or
+  system-menu behavior, macro-action support, or hosted UI claim.
+
 - 2026-08-17: Added `RQ-CF-MIGRATION-001`, the portable read-only
   `cf_migration` project-inventory foundation. It inventories regular files
   below an absolute non-symbolic-link root in deterministic order, classifies known VFP

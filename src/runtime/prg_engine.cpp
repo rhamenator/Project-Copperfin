@@ -784,6 +784,13 @@ namespace copperfin::runtime
                 std::string routine_name;
             };
 
+            struct KeyActionRoutine
+            {
+                std::string action_text;
+                std::string source_path;
+                std::string routine_name;
+            };
+
             int selected_work_area = 1;
             int next_work_area = 1;
             std::map<int, std::string> aliases;
@@ -792,6 +799,9 @@ namespace copperfin::runtime
             std::set<int> table_locks;
             std::map<int, std::set<std::size_t>> record_locks;
             std::vector<std::string> key_stack;
+            std::vector<std::map<std::string, std::string>> key_assignment_stack;
+            std::map<std::string, std::string> key_assignments;
+            std::map<std::string, KeyActionRoutine> key_action_routines;
             std::vector<std::string> menu_stack;
             std::vector<std::string> popup_stack;
             std::set<std::string> defined_menus;
@@ -1181,6 +1191,7 @@ namespace copperfin::runtime
 #include "prg_engine_flow.inl"
 #undef COPPERFIN_PRG_ENGINE_IMPL_CONTEXT
         bool dispatch_event_handler(const std::string &routine_name);
+        bool dispatch_key_label(const std::string &key_label);
         bool dispatch_popup_bar_selection(const std::string &popup_name, std::int64_t bar_number);
         void assign_native_window_metadata(RuntimeOleObjectState &runtime_object);
         [[nodiscard]] std::optional<std::intptr_t> hwnd_from_whandle(std::intptr_t whandle) const;
@@ -11150,6 +11161,78 @@ namespace copperfin::runtime
         return false;
     }
 
+    bool PrgRuntimeSession::Impl::dispatch_key_label(const std::string &key_label)
+    {
+        if (!waiting_for_events || stack.empty())
+        {
+            return false;
+        }
+
+        const std::string normalized_key = uppercase_copy(trim_copy(key_label));
+        if (normalized_key.empty())
+        {
+            return false;
+        }
+
+        DataSessionState &session_state = current_session_state();
+        const auto assignment = session_state.key_assignments.find(normalized_key);
+        if (assignment == session_state.key_assignments.end() || assignment->second.empty() ||
+            assignment->second.find('&') != std::string::npos || !can_push_frame())
+        {
+            return false;
+        }
+
+        Program &source_program = load_program(stack.back().file_path);
+        auto &cached_action = session_state.key_action_routines[normalized_key];
+        const Routine *action_routine = nullptr;
+        if (cached_action.action_text == assignment->second &&
+            cached_action.source_path == source_program.path)
+        {
+            const auto cached_routine = source_program.routines.find(
+                normalize_identifier(cached_action.routine_name));
+            if (cached_routine != source_program.routines.end())
+            {
+                action_routine = &cached_routine->second;
+            }
+        }
+
+        if (action_routine == nullptr)
+        {
+            const std::string action_routine_name =
+                "__copperfin_key_action_" + std::to_string(runtime_instance_id) + "_" +
+                std::to_string(++next_popup_action_id);
+            const Program action_program = parse_program_source(
+                source_program.path,
+                "PROCEDURE " + action_routine_name + "\n" + assignment->second +
+                    "\nRETURN\nENDPROC\n");
+            const auto action_found = action_program.routines.find(
+                normalize_identifier(action_routine_name));
+            if (action_found == action_program.routines.end())
+            {
+                return false;
+            }
+            auto [inserted_routine, inserted] = source_program.routines.emplace(
+                normalize_identifier(action_routine_name), action_found->second);
+            if (!inserted)
+            {
+                return false;
+            }
+            cached_action.action_text = assignment->second;
+            cached_action.source_path = source_program.path;
+            cached_action.routine_name = action_routine_name;
+            action_routine = &inserted_routine->second;
+        }
+
+        waiting_for_events = false;
+        event_dispatch_return_depth = stack.size();
+        restore_event_loop_after_dispatch = true;
+        events.push_back({.category = "runtime.key_label",
+                          .detail = "key=" + normalized_key,
+                          .location = {}});
+        push_routine_frame(source_program.path, *action_routine);
+        return true;
+    }
+
     bool PrgRuntimeSession::Impl::dispatch_popup_bar_selection(
         const std::string &popup_name,
         std::int64_t bar_number)
@@ -12755,6 +12838,11 @@ namespace copperfin::runtime
     bool PrgRuntimeSession::dispatch_event_handler(const std::string &routine_name)
     {
         return impl_->dispatch_event_handler(routine_name);
+    }
+
+    bool PrgRuntimeSession::dispatch_key_label(const std::string &key_label)
+    {
+        return impl_->dispatch_key_label(key_label);
     }
 
     bool PrgRuntimeSession::dispatch_popup_bar_selection(

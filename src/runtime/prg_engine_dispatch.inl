@@ -3049,7 +3049,13 @@
                 {
                     marker = trim_copy(statement.identifier);
                 }
+                session_state.key_assignment_stack.push_back(session_state.key_assignments);
                 session_state.key_stack.push_back(marker);
+                if (normalize_identifier(marker) == "clear")
+                {
+                    session_state.key_assignments.clear();
+                    session_state.key_action_routines.clear();
+                }
                 events.push_back({.category = "runtime.push_key",
                                   .detail = format_stack_event_detail(session_state.key_stack.size(), marker, false),
                                   .location = statement.location});
@@ -3065,6 +3071,17 @@
                 {
                     marker = session_state.key_stack.back();
                     session_state.key_stack.pop_back();
+                    session_state.key_assignments = std::move(session_state.key_assignment_stack.back());
+                    session_state.key_assignment_stack.pop_back();
+                    session_state.key_action_routines.clear();
+                }
+                if (normalize_identifier(requested_marker) == "all")
+                {
+                    session_state.key_stack.clear();
+                    session_state.key_assignment_stack.clear();
+                    session_state.key_assignments.clear();
+                    session_state.key_action_routines.clear();
+                    marker = "ALL";
                 }
                 events.push_back({.category = "runtime.pop_key",
                                   .detail = format_stack_event_detail(session_state.key_stack.size(), marker, empty),
@@ -5805,6 +5822,36 @@
             case StatementKind::on_error:
                 error_handler = statement.expression;
                 return {};
+            case StatementKind::on_key_command:
+            {
+                DataSessionState &session_state = current_session_state();
+                const std::string key_label = uppercase_copy(trim_copy(statement.identifier));
+                const std::string action = trim_copy(statement.expression);
+                if (key_label.empty())
+                {
+                    session_state.key_assignments.clear();
+                    session_state.key_action_routines.clear();
+                    events.push_back({.category = "runtime.on_key_label",
+                                      .detail = "scope=all action=cleared",
+                                      .location = statement.location});
+                    return {};
+                }
+                if (action.empty())
+                {
+                    session_state.key_assignments.erase(key_label);
+                    session_state.key_action_routines.erase(key_label);
+                    events.push_back({.category = "runtime.on_key_label",
+                                      .detail = "key=" + key_label + " action=cleared",
+                                      .location = statement.location});
+                    return {};
+                }
+                session_state.key_assignments[key_label] = action;
+                session_state.key_action_routines.erase(key_label);
+                events.push_back({.category = "runtime.on_key_label",
+                                  .detail = "key=" + key_label + " action=assigned",
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::on_shutdown:
                 shutdown_handler = statement.expression;
                 return {};

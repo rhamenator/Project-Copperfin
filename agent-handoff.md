@@ -1,5 +1,18 @@
 # Agent Handoff
 
+## V1 headless ON KEY LABEL runtime parity
+
+`RQ-CF-PRG-001` recovers static session-scoped `ON KEY [LABEL]` behavior from
+the installed VFP9 `ON KEY LABEL`, `PUSH KEY`, and `POP KEY` help topics.
+The iterative runtime now supports per-key replacement/restoration, `ON KEY`
+whole-set clear, LIFO `PUSH KEY [CLEAR]`/`POP KEY` snapshots, `POP KEY ALL`,
+and a case-insensitive `dispatch_key_label()` hook only during `READ EVENTS`.
+The dedicated Linux GCC 15.2 Release CTest passes `1/1`
+(`test_prg_engine_on_key_label`). Macro-backed actions, actual host key capture
+or buffering, form-local `KeyPress`, mouse/system-menu behavior, and hosted UI
+remain explicit compatibility gaps; no Windows or macOS behavioral evidence is
+claimed yet.
+
 ## V1 migration inventory foundation
 
 `RQ-CF-MIGRATION-001` supplies the first read-only implementation of
