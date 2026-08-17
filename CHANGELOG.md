@@ -127,11 +127,15 @@
   run `31980043792`, so those handles are not the missing condition. The next
   test-only matrix duplicates the running restricted primary token and invokes
   `CreateProcessAsUserW` with the same image, working directory, creation flag,
-  and inherited standard handles; it determines whether the remaining boundary
-  is the API used to create a child under that token.
+  and inherited standard handles. Both protected Windows workflows
+  (`31981334951` and `31981334996`) proved that this API also creates but times
+  out in normal and suspended forms, so API selection is not the cause. The
+  next test-only matrix preserves that API, token, image, working directory,
+  and inherited standard handles while removing only `CREATE_NO_WINDOW`; it
+  does not change production behavior.
   Local focused execution/materialization and machine-contract checks pass
   `2/2`; native test-isolation and safety-traceability contracts pass, with the
-  latter completing its corrected-tree scan in 343.99 seconds.
+  latter passes on the corrected tree.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,

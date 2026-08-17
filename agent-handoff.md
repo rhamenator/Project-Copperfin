@@ -74,12 +74,16 @@ Protected rerun `31978743045` proved that bare probe also times out in normal
 and suspended forms, excluding C++ fixture and CRT startup. The next test-only
 head keeps token, image, working directory, and `CREATE_NO_WINDOW` fixed while
 adding only inherited standard handles to select the remaining direct-launch
-boundary. Protected rerun `31980043792` reproduced both timeouts, so the next
-test-only head duplicates the running restricted primary token and uses
-`CreateProcessAsUserW` with otherwise identical inputs to isolate the API
-boundary. Protected execution remains required. The latest local focused
-machine-contract set passes `2/2`; native isolation and the corrected-tree
-safety-traceability contract also pass, the latter in 343.99 seconds.
+boundary. Protected rerun `31980043792` reproduced both timeouts. The two
+independent protected runs `31981334951` and `31981334996` then proved that
+duplicated-token `CreateProcessAsUserW` also creates but times out in both
+normal and suspended forms, so the child-creation API is not the missing
+condition. The next test-only head keeps that API, token, image, working
+directory, and inherited standard handles fixed while removing only
+`CREATE_NO_WINDOW`; it does not alter production window-suppression behavior.
+Protected execution remains required. The latest local focused machine-contract
+set passes `2/2`; native isolation and the corrected-tree safety-traceability
+contract also pass on the corrected tree.
 
 ## V1 workspace-agent Windows launch-handle transition
 

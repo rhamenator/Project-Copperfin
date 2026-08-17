@@ -518,7 +518,8 @@ WindowsFixtureProbeResult run_windows_fixture_probe(
     const std::filesystem::path& working_directory,
     const std::wstring_view arguments, const bool start_suspended,
     const DWORD timeout_milliseconds, const bool inherit_standard_handles,
-    const bool use_current_token_as_user = false) {
+    const bool use_current_token_as_user = false,
+    const bool use_create_no_window = true) {
     WindowsFixtureProbeResult result;
     std::wstring command_line = L"\"" + executable.native() + L"\"";
     if (!arguments.empty()) {
@@ -551,7 +552,8 @@ WindowsFixtureProbeResult run_windows_fixture_probe(
             created = ::CreateProcessAsUserW(
                 primary_token, executable.c_str(), command_line.data(), nullptr,
                 nullptr, inherit_standard_handles ? TRUE : FALSE,
-                CREATE_NO_WINDOW | (start_suspended ? CREATE_SUSPENDED : 0U),
+                (use_create_no_window ? CREATE_NO_WINDOW : 0U) |
+                    (start_suspended ? CREATE_SUSPENDED : 0U),
                 nullptr, working_directory.c_str(), &startup, &process);
             if (created == FALSE) {
                 result.error = ::GetLastError();
@@ -567,7 +569,8 @@ WindowsFixtureProbeResult run_windows_fixture_probe(
         created = ::CreateProcessW(
             executable.c_str(), command_line.data(), nullptr, nullptr,
             inherit_standard_handles ? TRUE : FALSE,
-            CREATE_NO_WINDOW | (start_suspended ? CREATE_SUSPENDED : 0U),
+            (use_create_no_window ? CREATE_NO_WINDOW : 0U) |
+                (start_suspended ? CREATE_SUSPENDED : 0U),
             nullptr, working_directory.c_str(), &startup, &process);
         if (created == FALSE) {
             result.error = ::GetLastError();
@@ -631,6 +634,13 @@ void test_windows_fixture_startup_transitions() {
         probe, tree.workspace / "working", L"", false, 1000U, true, true);
     const auto probe_as_user_suspended = run_windows_fixture_probe(
         probe, tree.workspace / "working", L"", true, 1000U, true, true);
+    const auto probe_as_user_without_no_window_normal = run_windows_fixture_probe(
+        probe, tree.workspace / "working", L"", false, 1000U, true, true,
+        false);
+    const auto probe_as_user_without_no_window_suspended =
+        run_windows_fixture_probe(
+            probe, tree.workspace / "working", L"", true, 1000U, true, true,
+            false);
     const auto normal = run_windows_fixture_probe(
         fixture, tree.workspace / "working",
         L"--workspace-agent-child-v1 literal-payload", false, 5000U, false);
@@ -659,6 +669,15 @@ void test_windows_fixture_startup_transitions() {
         probe_as_user_suspended.resume_count == 1U &&
         probe_as_user_suspended.wait_result == WAIT_OBJECT_0 &&
         probe_as_user_suspended.exit_code == 41U;
+    const bool probe_as_user_without_no_window_normal_ok =
+        probe_as_user_without_no_window_normal.created &&
+        probe_as_user_without_no_window_normal.wait_result == WAIT_OBJECT_0 &&
+        probe_as_user_without_no_window_normal.exit_code == 41U;
+    const bool probe_as_user_without_no_window_suspended_ok =
+        probe_as_user_without_no_window_suspended.created &&
+        probe_as_user_without_no_window_suspended.resume_count == 1U &&
+        probe_as_user_without_no_window_suspended.wait_result == WAIT_OBJECT_0 &&
+        probe_as_user_without_no_window_suspended.exit_code == 41U;
     const bool normal_ok = normal.created && normal.wait_result == WAIT_OBJECT_0 &&
         normal.exit_code == 23U;
     const bool suspended_ok = suspended.created && suspended.resume_count == 1U &&
@@ -666,7 +685,10 @@ void test_windows_fixture_startup_transitions() {
     if (!probe_normal_ok || !probe_suspended_ok ||
         !probe_standard_handles_normal_ok ||
         !probe_standard_handles_suspended_ok || !probe_as_user_normal_ok ||
-        !probe_as_user_suspended_ok || !normal_ok || !suspended_ok) {
+        !probe_as_user_suspended_ok ||
+        !probe_as_user_without_no_window_normal_ok ||
+        !probe_as_user_without_no_window_suspended_ok || !normal_ok ||
+        !suspended_ok) {
         std::cerr << "RQ-CF-AGENT-028 fixture transition diagnostics: probe-normal="
                   << probe_normal.created << '/' << probe_normal.wait_result << '/'
                   << probe_normal.exit_code << '/' << probe_normal.error
@@ -695,6 +717,17 @@ void test_windows_fixture_startup_transitions() {
                   << probe_as_user_suspended.wait_result << '/'
                   << probe_as_user_suspended.exit_code << '/'
                   << probe_as_user_suspended.error
+                  << " probe-as-user-without-no-window-normal="
+                  << probe_as_user_without_no_window_normal.created << '/'
+                  << probe_as_user_without_no_window_normal.wait_result << '/'
+                  << probe_as_user_without_no_window_normal.exit_code << '/'
+                  << probe_as_user_without_no_window_normal.error
+                  << " probe-as-user-without-no-window-suspended="
+                  << probe_as_user_without_no_window_suspended.created << '/'
+                  << probe_as_user_without_no_window_suspended.resume_count << '/'
+                  << probe_as_user_without_no_window_suspended.wait_result << '/'
+                  << probe_as_user_without_no_window_suspended.exit_code << '/'
+                  << probe_as_user_without_no_window_suspended.error
                   << " normal="
                   << normal.created << '/' << normal.wait_result << '/'
                   << normal.exit_code << '/' << normal.error
@@ -714,6 +747,10 @@ void test_windows_fixture_startup_transitions() {
            "RQ-CF-AGENT-028: restricted Windows direct minimal probe with its duplicated primary token must exit before private-image or transport controls");
     expect(probe_as_user_suspended_ok,
            "RQ-CF-AGENT-028: restricted Windows suspended minimal probe with its duplicated primary token must resume and exit before private-image or transport controls");
+    expect(probe_as_user_without_no_window_normal_ok,
+           "RQ-CF-AGENT-028: restricted Windows direct minimal probe without CREATE_NO_WINDOW must exit before private-image or transport controls");
+    expect(probe_as_user_without_no_window_suspended_ok,
+           "RQ-CF-AGENT-028: restricted Windows suspended minimal probe without CREATE_NO_WINDOW must resume and exit before private-image or transport controls");
     expect(normal_ok,
            "RQ-CF-AGENT-028: restricted Windows direct fixture launch must reach its fixed exit before private-image or transport controls");
     expect(suspended_ok,

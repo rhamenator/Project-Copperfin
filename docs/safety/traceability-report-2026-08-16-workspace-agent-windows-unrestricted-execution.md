@@ -331,10 +331,13 @@ the driver-inherited standard handles; protected rerun `31980043792` also
 reproduced both timeouts, so those handles are not the missing condition. The
 next test-only candidate duplicates the running restricted primary token and
 uses `CreateProcessAsUserW` with the same image, working directory,
-`CREATE_NO_WINDOW`, and standard handles in normal and suspended forms. It will
-select whether the remaining boundary is the creation API under that token. It
-changes no production authority or
+`CREATE_NO_WINDOW`, and standard handles in normal and suspended forms. The two
+independent protected Windows workflows `31981334951` and `31981334996` proved
+that this API also creates but times out in every form, so API selection is not
+the boundary. The next diagnostic preserves that API, token, image, working
+directory, and inherited standard handles while removing only
+`CREATE_NO_WINDOW`; it changes no production authority or
 acceptance rule; local focused execution/materialization and exact-source
 machine contracts pass `2/2`, and the corrected-tree native-isolation and
-safety-traceability contracts pass, the latter in 343.99 seconds. Protected
+safety-traceability contracts pass on the corrected tree. Protected
 evidence remains required.
