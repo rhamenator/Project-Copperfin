@@ -1589,6 +1589,14 @@ namespace copperfin::runtime
             {
                 return tag_function_value(index_file_name, tag_number, expression_cursor_designator(designator));
             },
+            [this, expression_cursor_designator](const std::string &index_file_name, std::size_t index_number, const std::string &designator)
+            {
+                return key_function_value(index_file_name, index_number, expression_cursor_designator(designator));
+            },
+            [this, expression_cursor_designator](const std::string &index_file_name, const std::string &designator)
+            {
+                return tag_count_function_value(index_file_name, expression_cursor_designator(designator));
+            },
             [this, &frame, resolve_mutable_expression_cursor](const std::string &search_key, bool move_pointer, const std::string &designator, const std::string &order_designator)
             {
                 CursorState *cursor = resolve_mutable_expression_cursor(designator);

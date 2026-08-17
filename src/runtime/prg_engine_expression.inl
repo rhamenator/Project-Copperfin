@@ -123,6 +123,8 @@
                 std::function<PrgValue(const std::string &, const std::vector<std::string> &)> aggregate_callback,
                 std::function<std::string(const std::string &, bool)> order_callback,
                 std::function<std::string(const std::string &, std::size_t, const std::string &)> tag_callback,
+                std::function<std::string(const std::string &, std::size_t, const std::string &)> key_callback,
+                std::function<std::size_t(const std::string &, const std::string &)> tag_count_callback,
                 std::function<bool(const std::string &, bool, const std::string &, const std::string &)> seek_callback,
                 std::function<bool(const std::string &, bool, const std::string &, const std::string &)> indexseek_callback,
                 std::function<std::string()> foxtoolver_callback,
@@ -204,6 +206,8 @@
                   aggregate_callback_(std::move(aggregate_callback)),
                   order_callback_(std::move(order_callback)),
                   tag_callback_(std::move(tag_callback)),
+                  key_callback_(std::move(key_callback)),
+                  tag_count_callback_(std::move(tag_count_callback)),
                   seek_callback_(std::move(seek_callback)),
                   indexseek_callback_(std::move(indexseek_callback)),
                   foxtoolver_callback_(std::move(foxtoolver_callback)),
@@ -1286,6 +1290,62 @@
                     }
 
                     return make_string_value(tag_callback_(index_file_name, tag_number, designator));
+                }
+                if (function == "key")
+                {
+                    const std::string first = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+                    std::optional<std::size_t> index_number;
+                    std::string designator;
+                    std::string index_file_name;
+
+                    if (!first.empty() && is_index_file_path(first))
+                    {
+                        index_file_name = first;
+                        if (arguments.size() >= 2U)
+                        {
+                            index_number = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])));
+                        }
+                        if (arguments.size() >= 3U)
+                        {
+                            designator = value_as_string(arguments[2]);
+                        }
+                    }
+                    else if (!arguments.empty())
+                    {
+                        index_number = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[0])));
+                        if (arguments.size() >= 2U)
+                        {
+                            designator = value_as_string(arguments[1]);
+                        }
+                    }
+
+                    if (!index_number.has_value())
+                    {
+                        return make_string_value(std::string{});
+                    }
+
+                    return make_string_value(key_callback_(index_file_name, *index_number, designator));
+                }
+                if (function == "tagcount")
+                {
+                    const std::string first = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+                    std::string index_file_name;
+                    std::string designator;
+
+                    if (!first.empty() && is_index_file_path(first))
+                    {
+                        index_file_name = first;
+                        if (arguments.size() >= 2U)
+                        {
+                            designator = value_as_string(arguments[1]);
+                        }
+                    }
+                    else if (!first.empty())
+                    {
+                        designator = first;
+                    }
+
+                    return make_number_value(static_cast<double>(tag_count_callback_(index_file_name, designator)));
                 }
                 if (function == "seek" && !arguments.empty())
                 {
@@ -3555,6 +3615,8 @@
             std::function<PrgValue(const std::string &, const std::vector<std::string> &)> aggregate_callback_;
             std::function<std::string(const std::string &, bool)> order_callback_;
             std::function<std::string(const std::string &, std::size_t, const std::string &)> tag_callback_;
+            std::function<std::string(const std::string &, std::size_t, const std::string &)> key_callback_;
+            std::function<std::size_t(const std::string &, const std::string &)> tag_count_callback_;
             std::function<bool(const std::string &, bool, const std::string &, const std::string &)> seek_callback_;
             std::function<bool(const std::string &, bool, const std::string &, const std::string &)> indexseek_callback_;
             std::function<std::string()> foxtoolver_callback_;
