@@ -8931,4 +8931,5 @@ passes `1/1`.
   `ON('PAGE')`, and bare `ON PAGE` clears it. This deliberately does not claim
   `_PLINENO` accounting, `EJECT PAGE`, pagination, or page-handler dispatch;
   those require a real report/label page-emission model. A portable regression
-  locks down assignment, query, clearing, and non-dispatch.
+  locks down parenthesized compound line expressions, assignment, query,
+  clearing, and non-dispatch.

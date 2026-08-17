@@ -32,8 +32,9 @@ and changelog entries together. Existing report output behavior is unchanged.
 ## Verification
 
 `DV-prg-on-page-001` is the dedicated portable CTest target
-`test_prg_engine_on_page`. It verifies valid assignment, exact readback, bare
-clear, and that configuration alone leaves the handler body unexecuted. Its
+`test_prg_engine_on_page`. It verifies parenthesized compound line-expression
+capture, exact command readback, bare clear, and that configuration alone
+leaves the handler body unexecuted. Its
 machine-readable isolation is portable, parallel-safe, test-owned filesystem
 only, and has no environment, child-process, network, or sample dependency.
 

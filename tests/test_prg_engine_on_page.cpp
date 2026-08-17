@@ -33,7 +33,7 @@ void test_on_page_assignment_query_and_clear_without_report_dispatch()
     write_text(program_path,
         "PUBLIC cTrace, cAssigned, cCleared\n"
         "cTrace = ''\n"
-        "ON PAGE AT LINE 37 cTrace = cTrace + 'P'\n"
+        "ON PAGE AT LINE (20 + 20) DO pagehead\n"
         "cAssigned = ON('PAGE')\n"
         "ON PAGE\n"
         "cCleared = ON('PAGE')\n"
@@ -51,12 +51,12 @@ void test_on_page_assignment_query_and_clear_without_report_dispatch()
         expect(found != state.globals.end() && format_value(found->second) == expected,
                name + " should retain the expected ON PAGE state");
     };
-    expect_global("cassigned", "cTrace = cTrace + 'P'");
+    expect_global("cassigned", "DO pagehead");
     expect_global("ccleared", "");
     expect_global("ctrace", "");
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
     {
-        return event.category == "runtime.on_page" && event.detail == "action=assigned;line=37";
+        return event.category == "runtime.on_page" && event.detail == "action=assigned;line=(20 + 20)";
     }), "ON PAGE should preserve its configured line expression without dispatching its command");
 
     fs::remove_all(temp_root, ignored);
