@@ -15,6 +15,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_listbox_moveitem_preserves_row_identity_and_state();
     void test_native_listbox_moveitem_dispatches_onmoveitem_and_honors_veto();
     void test_expression_runtime_surface_extensions();
+    void test_getfldstate_tracks_buffered_mutation_state();
     void test_program_reports_active_name_and_stack_depth();
     void test_indexed_program_and_sys16_stack_introspection();
     void test_sys16_preserves_procedure_context();

@@ -701,6 +701,10 @@ namespace copperfin::runtime
             int buffering_mode = 1;
             std::map<std::size_t, vfp::DbfRecord> buffered_records;
             std::map<std::size_t, vfp::DbfRecord> buffered_original_records;
+            // VFP buffering records mutation state independently of a value comparison:
+            // restoring an original value does not make the field unmodified again.
+            std::map<std::size_t, std::map<std::size_t, int>> buffered_field_states;
+            std::map<std::size_t, int> buffered_deletion_states;
             std::set<std::size_t> buffered_record_locks;
             std::set<std::size_t> buffered_appended_records;
             std::vector<vfp::DbfRecord> remote_records;

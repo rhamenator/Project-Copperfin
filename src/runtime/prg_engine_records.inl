@@ -1432,6 +1432,10 @@
                         field->display_value = assignment.serialized_value;
                     }
                     field->is_null = false;
+                    const std::size_t field_index = static_cast<std::size_t>(
+                        std::distance(buffered->second.values.begin(), field));
+                    cursor.buffered_field_states[cursor.recno][field_index] =
+                        cursor.buffered_appended_records.contains(cursor.recno) ? 4 : 2;
                 }
                 synchronize_relations_for_parent(cursor, frame);
                 return true;
@@ -1828,6 +1832,8 @@
             cursor.record_count = deleted_result.record_count;
             cursor.buffered_records.erase(buffered);
             cursor.buffered_original_records.erase(recno);
+            cursor.buffered_field_states.erase(recno);
+            cursor.buffered_deletion_states.erase(recno);
             if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 4) &&
                 cursor.buffered_record_locks.erase(recno) != 0U)
             {
@@ -1842,7 +1848,7 @@
         {
             if (function != "cursorsetprop" && function != "cursorgetprop" &&
                 function != "tableupdate" && function != "tablerevert" &&
-                function != "getnextmodified")
+                function != "getnextmodified" && function != "getfldstate")
             {
                 return std::nullopt;
             }
@@ -1897,6 +1903,110 @@
                 return next == cursor->buffered_records.end()
                     ? make_number_value(0.0)
                     : make_number_value(static_cast<double>(next->first));
+            }
+
+            if (function == "getfldstate")
+            {
+                if (arguments.empty())
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.TooFewArguments"),
+                        1229);
+                }
+                CursorState *cursor = arguments.size() >= 2U
+                    ? cursor_for_argument(1U)
+                    : resolve_cursor_target({});
+                if (cursor == nullptr)
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.AliasNotFound"),
+                        13);
+                }
+                if (!require_local_cursor(cursor, "GETFLDSTATE"))
+                {
+                    return make_empty_value();
+                }
+                if (cursor->buffering_mode < 2 || cursor->buffering_mode > 5)
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.TableBufferingNotEnabled"),
+                        1596);
+                }
+                if (cursor->recno == 0U || cursor->eof)
+                {
+                    return make_null_value();
+                }
+
+                const auto record = current_record(*cursor);
+                if (!record.has_value())
+                {
+                    return make_null_value();
+                }
+                const bool appended = cursor->buffered_appended_records.contains(cursor->recno);
+                const int unchanged_state = appended ? 3 : 1;
+                const auto field_state = [&](std::size_t field_index) -> int
+                {
+                    const auto record_states = cursor->buffered_field_states.find(cursor->recno);
+                    if (record_states == cursor->buffered_field_states.end())
+                    {
+                        return unchanged_state;
+                    }
+                    const auto state = record_states->second.find(field_index);
+                    return state == record_states->second.end() ? unchanged_state : state->second;
+                };
+                const auto deletion_state = [&]() -> int
+                {
+                    const auto state = cursor->buffered_deletion_states.find(cursor->recno);
+                    return state == cursor->buffered_deletion_states.end() ? unchanged_state : state->second;
+                };
+
+                const bool numeric_argument = arguments[0].kind == PrgValueKind::number ||
+                    arguments[0].kind == PrgValueKind::int64 ||
+                    arguments[0].kind == PrgValueKind::uint64 ||
+                    arguments[0].kind == PrgValueKind::currency;
+                const double requested = numeric_argument ? value_as_number(arguments[0]) : 0.0;
+                const bool is_integral = numeric_argument && std::isfinite(requested) &&
+                    requested == std::trunc(requested);
+                if (is_integral && requested == -1.0)
+                {
+                    std::string states;
+                    states.reserve(record->values.size() + 1U);
+                    states += static_cast<char>('0' + deletion_state());
+                    for (std::size_t index = 0U; index < record->values.size(); ++index)
+                    {
+                        states += static_cast<char>('0' + field_state(index));
+                    }
+                    return make_string_value(states);
+                }
+                if (is_integral && requested == 0.0)
+                {
+                    return make_number_value(static_cast<double>(deletion_state()));
+                }
+                if (is_integral && requested > 0.0 &&
+                    requested <= static_cast<double>(record->values.size()))
+                {
+                    return make_number_value(static_cast<double>(
+                        field_state(static_cast<std::size_t>(requested - 1.0))));
+                }
+                if (numeric_argument)
+                {
+                    return make_empty_value();
+                }
+
+                const std::string field_name = collapse_identifier(value_as_string(arguments[0]));
+                const auto field = std::find_if(
+                    record->values.begin(),
+                    record->values.end(),
+                    [&](const vfp::DbfRecordValue &candidate)
+                    {
+                        return collapse_identifier(candidate.field_name) == field_name;
+                    });
+                if (field == record->values.end())
+                {
+                    return make_empty_value();
+                }
+                return make_number_value(static_cast<double>(field_state(static_cast<std::size_t>(
+                    std::distance(record->values.begin(), field)))));
             }
 
             if (function == "cursorgetprop")
@@ -1971,6 +2081,8 @@
                     {
                         cursor->buffered_records.erase(cursor->recno);
                         cursor->buffered_original_records.erase(cursor->recno);
+                        cursor->buffered_field_states.erase(cursor->recno);
+                        cursor->buffered_deletion_states.erase(cursor->recno);
                         if (cursor->buffered_record_locks.erase(cursor->recno) != 0U)
                         {
                             unlock_cursor_record_lock(*cursor, cursor->recno);
@@ -1990,6 +2102,8 @@
                     cursor->record_count >= appended_count ? cursor->record_count - appended_count : 0U;
                 cursor->buffered_records.clear();
                 cursor->buffered_original_records.clear();
+                cursor->buffered_field_states.clear();
+                cursor->buffered_deletion_states.clear();
                 cursor->buffered_appended_records.clear();
                 cursor->record_count = persisted_record_count;
                 move_cursor_to(
@@ -2073,6 +2187,8 @@
             }
             cursor->buffered_records.clear();
             cursor->buffered_original_records.clear();
+            cursor->buffered_field_states.clear();
+            cursor->buffered_deletion_states.clear();
             cursor->buffered_appended_records.clear();
             return make_boolean_value(true);
         }
@@ -2441,6 +2557,8 @@
                         cursor.buffered_original_records.emplace(recno, buffered->second);
                     }
                     buffered->second.deleted = deleted;
+                    cursor.buffered_deletion_states[recno] =
+                        cursor.buffered_appended_records.contains(recno) ? 4 : 2;
                 }
                 return true;
             }

@@ -1,5 +1,18 @@
 # Agent Handoff
 
+## V1 GETFLDSTATE buffered-record introspection
+
+`RQ-CF-PRG-005` recovers the mounted VFP9 `GETFLDSTATE()` contract for local
+row- and table-buffered cursors. The runtime supports field names and 1-based
+numbers, `0` deletion state, `-1` aggregate deletion-plus-field state, selected
+or explicit alias/work-area targeting, `1`/`2` existing-row states,
+`3`/`4` appended-row states, and `.NULL.` at EOF. Mutation state is retained
+independently from present field bytes, so restoring a value or recalling a
+deleted row remains changed until update or revert. The portable
+`test_prg_engine_runtime_surface_functions_buffering` regression covers those
+paths. This adds no `SETFLDSTATE()`, `OLDVAL()`, remote cursor, default or
+validation-field, trigger, or rule behavior.
+
 ## V1 ON PAGE configuration boundary
 
 `RQ-CF-PRG-004` recovers the installed VFP9 `ON PAGE` configuration surface:
