@@ -8933,3 +8933,8 @@ passes `1/1`.
   those require a real report/label page-emission model. A portable regression
   locks down parenthesized compound line expressions, assignment, query,
   clearing, and non-dispatch.
+- 2026-08-17: Recovered VFP9 `GETFLDSTATE()` for Copperfin local buffered
+  cursors. Field-name/number, deletion (`0`), aggregate (`-1`), appended-row,
+  restored-value, delete/recall, revert, and EOF-null behavior now have a
+  dedicated portable regression. `SETFLDSTATE()`, `OLDVAL()`, remote cursors,
+  and validation/default-field semantics remain separate work.

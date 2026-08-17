@@ -7,6 +7,85 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_getfldstate_tracks_buffered_mutation_state()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_getfldstate";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "getfldstate.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {
+                {.name = "NAME", .type = 'C', .length = 24U},
+                {.name = "AMOUNT", .type = 'N', .length = 12U, .decimal_count = 2U}
+            },
+            {{"Before", "1.00"}});
+        expect(create_result.ok, "GETFLDSTATE fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "=CURSORSETPROP('Buffering', 5, 'people')\n"
+            "cInitial = GETFLDSTATE(-1, 'people')\n"
+            "nWorkAreaName = GETFLDSTATE(1, 1)\n"
+            "REPLACE NAME WITH 'Buffered' IN people\n"
+            "nNameByNumber = GETFLDSTATE(1, 'people')\n"
+            "nAmountByName = GETFLDSTATE('AMOUNT', 'people')\n"
+            "cChanged = GETFLDSTATE(-1, 'people')\n"
+            "REPLACE NAME WITH 'Before' IN people\n"
+            "nRestoredName = GETFLDSTATE('NAME', 'people')\n"
+            "DELETE IN people\n"
+            "RECALL IN people\n"
+            "nRecalledDeletion = GETFLDSTATE(0, 'people')\n"
+            "cRecalled = GETFLDSTATE(-1, 'people')\n"
+            "=TABLEREVERT(.T., 'people')\n"
+            "nRevertedName = GETFLDSTATE('NAME', 'people')\n"
+            "APPEND BLANK IN people\n"
+            "cAppended = GETFLDSTATE(-1, 'people')\n"
+            "REPLACE NAME WITH 'Appended' IN people\n"
+            "cAppendedChanged = GETFLDSTATE(-1, 'people')\n"
+            "GO 99 IN people\n"
+            "lEofNull = ISNULL(GETFLDSTATE(1, 'people'))\n"
+            "=TABLEREVERT(.T., 'people')\n"
+            "=CURSORSETPROP('Buffering', 3, 'people')\n"
+            "GO 1 IN people\n"
+            "REPLACE AMOUNT WITH 2 IN people\n"
+            "nRowBufferedAmount = GETFLDSTATE('AMOUNT', 'people')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("GETFLDSTATE regression should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("cinitial") == "111", "unchanged buffered record should expose deletion plus field state 1");
+        expect(value_for("nworkareaname") == "1", "numeric work-area target should resolve the local cursor");
+        expect(value_for("nnamebynumber") == "2", "field-number lookup should report the changed field");
+        expect(value_for("namountbyname") == "1", "field-name lookup should preserve unchanged-field state");
+        expect(value_for("cchanged") == "121", "aggregate state should preserve field ordering");
+        expect(value_for("nrestoredname") == "2", "restoring a value must not clear buffered mutation state");
+        expect(value_for("nrecalleddeletion") == "2", "recalling a deleted row must retain deletion mutation state");
+        expect(value_for("crecalled") == "221", "aggregate state should retain recall mutation state");
+        expect(value_for("nrevertedname") == "1", "TABLEREVERT should clear buffered field mutation state");
+        expect(value_for("cappended") == "333", "appended rows should expose unmodified appended state");
+        expect(value_for("cappendedchanged") == "343", "appended changed fields should expose state 4");
+        expect(value_for("leofnull") == "true", "GETFLDSTATE should return .NULL. at EOF");
+        expect(value_for("nrowbufferedamount") == "2", "row buffering should expose changed field state");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_local_optimistic_table_buffering()
     {
         namespace fs = std::filesystem;
