@@ -2855,9 +2855,9 @@ namespace copperfin::runtime
                 }
                 return verified->second;
             },
-            [this](const std::string &function, const std::vector<PrgValue> &arguments)
+            [this, &frame](const std::string &function, const std::vector<PrgValue> &arguments)
             {
-                return cursor_buffering_function(function, arguments);
+                return cursor_buffering_function(function, arguments, frame);
             },
             [this](const std::string &function, const std::vector<PrgValue> &arguments)
             {

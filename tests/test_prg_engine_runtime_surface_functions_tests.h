@@ -17,6 +17,7 @@ namespace copperfin::runtime_surface_tests
     void test_expression_runtime_surface_extensions();
     void test_getfldstate_tracks_buffered_mutation_state();
     void test_setfldstate_assigns_buffered_mutation_state();
+    void test_oldval_evaluates_buffered_original_record();
     void test_program_reports_active_name_and_stack_depth();
     void test_indexed_program_and_sys16_stack_introspection();
     void test_sys16_preserves_procedure_context();

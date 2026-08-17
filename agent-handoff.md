@@ -1,6 +1,6 @@
 # Agent Handoff
 
-## V1 GETFLDSTATE / SETFLDSTATE buffered-record state
+## V1 GETFLDSTATE / SETFLDSTATE / OLDVAL buffered-record state
 
 `RQ-CF-PRG-005` recovers the mounted VFP9 `GETFLDSTATE()` contract for local
 row- and table-buffered cursors. The runtime supports field names and 1-based
@@ -10,8 +10,8 @@ or explicit alias/work-area targeting, `1`/`2` existing-row states,
 independently from present field bytes, so restoring a value or recalling a
 deleted row remains changed until update or revert. The portable
 `test_prg_engine_runtime_surface_functions_buffering` regression covers those
-paths. This adds no `OLDVAL()`, remote cursor, default or validation-field,
-trigger, or rule behavior.
+paths. This adds no remote cursor, default or validation-field, trigger, or rule
+behavior.
 
 `RQ-CF-PRG-006` adds the paired local `SETFLDSTATE()` assignment surface. A
 named or 1-based field selector (or `0` for deletion) accepts states `1` through
@@ -24,6 +24,15 @@ assignment, modified-record traversal/clearing, invalid selectors, state
 readback, and field/deletion write suppression. Remote cursors, `OLDVAL()`,
 validation/default effects, triggers, rules, and conflict-resolution behavior
 remain separate.
+
+`RQ-CF-PRG-007` recovers the local buffered `OLDVAL()` expression surface. With
+a retained pre-mutation record, `OLDVAL(cExpression [, cTableAlias |
+nWorkArea])` evaluates its character expression against that original record and
+preserves the result type. It is no longer available after `TABLEREVERT()` or
+`TABLEUPDATE()`. The focused portable buffering regression covers field and
+expression values, explicit work-area lookup, revert, and commit. Remote
+cursors, validation-rule use without buffering, and unmodified/appended-record
+semantics remain separate.
 
 ## V1 ON PAGE configuration boundary
 

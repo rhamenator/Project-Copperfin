@@ -1872,12 +1872,13 @@
 
         std::optional<PrgValue> cursor_buffering_function(
             const std::string &function,
-            const std::vector<PrgValue> &arguments)
+            const std::vector<PrgValue> &arguments,
+            const Frame &frame)
         {
             if (function != "cursorsetprop" && function != "cursorgetprop" &&
                 function != "tableupdate" && function != "tablerevert" &&
                 function != "getnextmodified" && function != "getfldstate" &&
-                function != "setfldstate")
+                function != "setfldstate" && function != "oldval")
             {
                 return std::nullopt;
             }
@@ -2179,6 +2180,51 @@
                 cursor->buffered_field_states[cursor->recno][static_cast<std::size_t>(
                     std::distance(record->values.begin(), field))] = state;
                 return make_boolean_value(true);
+            }
+
+            if (function == "oldval")
+            {
+                if (arguments.empty())
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.TooFewArguments"),
+                        1229);
+                }
+                CursorState *cursor = arguments.size() >= 2U
+                    ? cursor_for_argument(1U)
+                    : resolve_cursor_target({});
+                if (cursor == nullptr)
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.AliasNotFound"),
+                        13);
+                }
+                if (!require_local_cursor(cursor, "OLDVAL") ||
+                    cursor->buffering_mode < 2 || cursor->buffering_mode > 5 ||
+                    cursor->recno == 0U || cursor->eof)
+                {
+                    return make_empty_value();
+                }
+
+                const auto original = cursor->buffered_original_records.find(cursor->recno);
+                if (original == cursor->buffered_original_records.end())
+                {
+                    return make_empty_value();
+                }
+
+                record_evaluation_overrides.emplace_back(cursor, &original->second);
+                try
+                {
+                    const PrgValue result = evaluate_expression(
+                        value_as_string(arguments[0U]), frame, cursor);
+                    record_evaluation_overrides.pop_back();
+                    return result;
+                }
+                catch (...)
+                {
+                    record_evaluation_overrides.pop_back();
+                    throw;
+                }
             }
 
             if (function == "cursorgetprop")

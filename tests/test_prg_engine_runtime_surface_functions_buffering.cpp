@@ -7,6 +7,62 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_oldval_evaluates_buffered_original_record()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_oldval";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "oldval.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U},
+             {.name = "AMOUNT", .type = 'N', .length = 12U, .decimal_count = 2U}},
+            {{"Before", "1.00"}});
+        expect(create_result.ok, "OLDVAL fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "=CURSORSETPROP('Buffering', 5, 'people')\n"
+            "REPLACE NAME WITH 'After' IN people\n"
+            "REPLACE AMOUNT WITH 2 IN people\n"
+            "cOriginalName = OLDVAL('NAME', 'people')\n"
+            "nOriginalAmount = OLDVAL('AMOUNT', 1)\n"
+            "cOriginalExpression = OLDVAL('people.NAME + '' value''', 'people')\n"
+            "=TABLEREVERT(.T., 'people')\n"
+            "cAfterRevert = OLDVAL('NAME', 'people')\n"
+            "REPLACE NAME WITH 'Committed' IN people\n"
+            "=TABLEUPDATE(.T., .T., 'people')\n"
+            "cAfterCommit = OLDVAL('NAME', 'people')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("OLDVAL regression should complete: ") + state.message);
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("coriginalname") == "Before",
+               "OLDVAL should expose the original buffered character field value");
+        expect(value_for("noriginalamount") == "1",
+               "OLDVAL should preserve the original field data type through an explicit work area");
+        expect(value_for("coriginalexpression") == "Before value",
+               "OLDVAL should evaluate a documented field expression against the original record");
+        expect(value_for("cafterrevert").empty(),
+               "OLDVAL should no longer expose an original record after TABLEREVERT");
+        expect(value_for("caftercommit").empty(),
+               "OLDVAL should no longer expose an original record after TABLEUPDATE");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_setfldstate_assigns_buffered_mutation_state()
     {
         namespace fs = std::filesystem;
