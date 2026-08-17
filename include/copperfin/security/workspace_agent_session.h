@@ -31,7 +31,7 @@ inline constexpr std::size_t
 // RQ-CF-AGENT-007, RQ-CF-AGENT-009, RQ-CF-AGENT-010, and
 // RQ-CF-AGENT-011, RQ-CF-AGENT-012, RQ-CF-AGENT-013,
 // RQ-CF-AGENT-014, RQ-CF-AGENT-015, RQ-CF-AGENT-016, and candidate
-// RQ-CF-AGENT-018 through RQ-CF-AGENT-028.
+// RQ-CF-AGENT-018 through RQ-CF-AGENT-029.
 
 enum class WorkspaceAgentSessionEventKind {
     start,
@@ -39,7 +39,9 @@ enum class WorkspaceAgentSessionEventKind {
     layout_cleanup_intent,
     layout_cleanup_outcome,
     process_launch_intent,
-    process_launch_outcome
+    process_launch_outcome,
+    workspace_file_read_intent,
+    workspace_file_read_outcome
 };
 
 struct WorkspaceAgentSessionAuditEvent {
@@ -55,6 +57,11 @@ struct WorkspaceAgentSessionAuditEvent {
     // or in a post-fork child from making that pair ambiguous.
     std::string process_instance_id{};
     std::uint64_t operation_id = 0U;
+    // Present only in schema version 3 workspace-file-read records.  Like the
+    // schema-v2 process pair, this fresh random namespace and nonzero counter
+    // pair correlate content-free intent/outcome records without carrying a
+    // pathname, file bytes, prompt, or tool payload.
+    std::string operation_instance_id{};
     std::string outcome;
     std::string diagnostic_code;
 };
@@ -139,6 +146,31 @@ struct WorkspaceAgentFileTargetPreflightResult {
     std::string tool_id;
     std::filesystem::path canonical_path;
     PhysicalPathIdentity identity{};
+    std::string diagnostic_code;
+};
+
+inline constexpr std::uint64_t workspace_agent_workspace_file_read_max_bytes =
+    4ULL * 1024ULL * 1024ULL;
+
+// The product fixes the tool identity to workspace.inspect.v1.  A provider,
+// prompt, or workspace file cannot widen this request to local inspection,
+// mutation, deletion, process execution, or a caller-selected byte limit.
+struct WorkspaceAgentWorkspaceFileReadRequest {
+    std::uint32_t schema_version = 1U;
+    std::uint64_t session_generation = 0U;
+    std::filesystem::path target_path;
+};
+
+struct WorkspaceAgentWorkspaceFileReadResult {
+    bool attempted = false;
+    bool intent_audit_committed = false;
+    bool outcome_audit_committed = false;
+    std::uint64_t session_generation = 0U;
+    std::string operation_instance_id;
+    std::uint64_t operation_id = 0U;
+    std::string intent_audit_receipt;
+    std::string outcome_audit_receipt;
+    std::string bytes;
     std::string diagnostic_code;
 };
 
@@ -438,6 +470,16 @@ public:
     [[nodiscard]] WorkspaceAgentFileTargetPreflightResult
     preflight_file_target_request(
         const WorkspaceAgentFileTargetPreflightRequest& request) const;
+
+    // Captures a bounded owned snapshot only for the fixed workspace.inspect.v1
+    // tool.  It brackets the capture with exact session/target revalidation
+    // and content-free durable intent/outcome events.  It is read-only and
+    // deliberately does not provide any edit, delete, diff, undo, local-file,
+    // process, endpoint, provider, or UI authority.
+    [[nodiscard]] WorkspaceAgentWorkspaceFileReadResult
+    read_workspace_file_snapshot(
+        const WorkspaceAgentWorkspaceFileReadRequest& request,
+        const WorkspaceAgentSessionAuditSink& audit_sink) const;
 
     // Process-target inspection is a point-in-time, non-executing preflight.
     // It performs no PATH search, command parsing, environment construction, or

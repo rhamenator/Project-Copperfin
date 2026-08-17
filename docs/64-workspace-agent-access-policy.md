@@ -245,6 +245,34 @@ executor must repeat session, registry, target, identity, operation, and
 outcome-audit checks while holding an OS-backed handle beside each side
 effect.
 
+## Bounded workspace-file inspection
+
+`workspace.inspect.v1` now has one narrow, portable execution boundary. The
+trusted controller accepts only schema-version-1, exact-active-generation,
+strict-relative workspace targets and fixes the product tool identity itself;
+callers cannot select local inspection, mutation, deletion, a byte limit, a
+process, an endpoint, or a mode. It repeats the existing session-bound
+file-target preflight, then records a content-free schema-v3 intent with a
+fresh operating-system-random operation namespace and nonzero process-wide
+counter before reading any file bytes.
+
+The product-owned boundary captures at most 4 MiB through the existing
+physical-containment snapshot primitive. That primitive opens the direct
+regular file, checks the admitted identity before and after reading, rejects
+reparse/symlink indirection, replacement, size change, link-count change, and
+root replacement, and returns an owned byte copy only when final containment
+and identity match. The controller repeats exact session and target admission
+after capture. Any stale session, target change, read failure, oversized file,
+failed intent audit, or failed outcome audit returns no bytes.
+
+The paired `workspace_agent.file_read.v3` records retain only generation,
+effective mode, random namespace, counter, fixed outcome, and fixed
+diagnostic. They never contain paths, filenames, file content, prompts,
+credentials, provider tokens, or workspace content. This is read-only: edits,
+delete/rename, local-file inspection, diff/undo, real sandbox enforcement,
+provider/OAuth integration, trusted activation UI, endpoints, and process
+authority remain separate boundaries.
+
 ## Process and working-directory target containment preflight
 
 The non-executing process boundary binds one explicit executable and working

@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## V1 workspace-agent bounded workspace-file inspection
+
+Candidate `RQ-CF-AGENT-029` adds one actual read-only
+`workspace.inspect.v1` execution boundary. The caller supplies only a
+schema-version-1 active generation and strict relative workspace path; the
+controller fixes the tool identity and 4 MiB cap, records content-free
+schema-v3 intent/outcome pairs, captures an owned identity-bracketed snapshot,
+repeats target/session admission, and exposes no bytes after outcome-audit
+failure. The operation cannot inspect local files or mutate, delete, rename,
+execute, activate a provider/UI, enforce endpoints, or supply diff/undo.
+Focused Debug CTest passed `3/3` (`test_workspace_agent_target_containment`,
+`test_workspace_agent_audit_sink`, and `test_workspace_agent_session`).
+Warning-clean/sanitizer, protected Windows/Ubuntu/macOS, review, merge, real
+sandbox, trusted activation, mutation, recovery, and diff/undo evidence remain
+required before the requirement can advance beyond `candidate`.
+
 ## V1 workspace-agent Windows unrestricted exact-image execution
 
 Candidate `RQ-CF-AGENT-028` has implementation evidence complete.
