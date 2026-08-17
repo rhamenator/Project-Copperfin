@@ -123,12 +123,15 @@
   processing, while retaining the full fixture matrix. Protected run
   `31978743045` then proved that this bare probe also times out in both direct
   and suspended forms, so C++ fixture and CRT startup are not the cause. The
-  next test-only matrix keeps the same token, image, working directory, and
-  `CREATE_NO_WINDOW` flag while adding only valid inherited standard handles;
-  it selects whether that direct-launch boundary is the remaining difference.
+  inherited-standard-handle matrix then reproduced both timeouts in protected
+  run `31980043792`, so those handles are not the missing condition. The next
+  test-only matrix duplicates the running restricted primary token and invokes
+  `CreateProcessAsUserW` with the same image, working directory, creation flag,
+  and inherited standard handles; it determines whether the remaining boundary
+  is the API used to create a child under that token.
   Local focused execution/materialization and machine-contract checks pass
   `2/2`; native test-isolation and safety-traceability contracts pass, with the
-  latter completing its corrected-tree scan in 324.42 seconds.
+  latter completing its corrected-tree scan in 343.99 seconds.
   Protected Windows evidence then proved the explicit local-device root parser
   and image materialization but isolated `ERROR_INVALID_PARAMETER` at
   `CreateProcessW`. That diagnostic-only transition is retained as evidence,

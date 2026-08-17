@@ -327,9 +327,14 @@ distinguish a restricted-token launch-baseline failure from CRT startup before
 C++ fixture and CRT startup, but does not identify why the same restricted test
 driver can itself run. The next test-only candidate keeps the token, executable,
 working directory, and `CREATE_NO_WINDOW` flag unchanged while supplying only
-the driver-inherited standard handles; normal and suspended forms will select
-that remaining direct-launch boundary. It changes no production authority or
+the driver-inherited standard handles; protected rerun `31980043792` also
+reproduced both timeouts, so those handles are not the missing condition. The
+next test-only candidate duplicates the running restricted primary token and
+uses `CreateProcessAsUserW` with the same image, working directory,
+`CREATE_NO_WINDOW`, and standard handles in normal and suspended forms. It will
+select whether the remaining boundary is the creation API under that token. It
+changes no production authority or
 acceptance rule; local focused execution/materialization and exact-source
 machine contracts pass `2/2`, and the corrected-tree native-isolation and
-safety-traceability contracts pass, the latter in 324.42 seconds. Protected
+safety-traceability contracts pass, the latter in 343.99 seconds. Protected
 evidence remains required.

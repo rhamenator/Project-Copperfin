@@ -251,7 +251,10 @@ foreach(token IN ITEMS
         "CREATE_SUSPENDED"
         "probe-normal="
         "probe-standard-handles-normal="
+        "probe-as-user-normal="
         "inherit_standard_handles ? TRUE : FALSE"
+        "::CreateProcessAsUserW("
+        "restricted Windows direct minimal probe with its duplicated primary token"
         "restricted Windows direct minimal probe with inherited standard handles"
         "restricted Windows direct minimal probe"
         "restricted Windows suspended fixture launch")
