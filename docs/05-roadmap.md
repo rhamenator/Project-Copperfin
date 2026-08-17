@@ -1148,10 +1148,13 @@ standalone Studio shell, and FoxPro language-service layer."
 
 Current I2 evidence includes candidate `RQ-CF-AGENT-029`: a product-fixed,
 bounded, read-only `workspace.inspect.v1` byte-snapshot boundary with paired
-content-free durable audit records. It does not make the workspace sandbox
-real or authorize edits, local files, process launches, endpoints, provider
-authentication, trusted activation UI, diff, or undo; those remain separate
-v1 acceptance work.
+content-free durable audit records. Signed/DCO head `03b48f290` passed the
+protected Windows, Ubuntu, and macOS generated-launcher matrix, both Windows
+DECLARE matrices, Windows environment/path validation, GCC/Clang executable
+path checks, DCO, and Socket checks before PR `#5048` merged as `9dedee8de`.
+It does not make the workspace sandbox real or authorize edits, local files,
+process launches, endpoints, provider authentication, trusted activation UI,
+diff, or undo; those remain separate v1 acceptance work.
 
 Current G1 evidence includes #4874 at product/test head `e70c89e87`: editor
 project-symbol discovery follows the unquoted `#INCLUDE` form used by the real

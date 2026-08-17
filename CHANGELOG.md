@@ -8,6 +8,14 @@
   or credentials. This is read-only and does not grant mutation, local-file,
   process, endpoint, provider, or UI authority.
 
+- 2026-08-16: Retained merged evidence for candidate `RQ-CF-AGENT-029`.
+  Signed/DCO head `03b48f290` passed the protected Windows, Ubuntu, and macOS
+  generated-launcher matrix, both Windows DECLARE matrices, Windows
+  environment/path validation, GCC/Clang executable-path checks, DCO, and
+  Socket checks before PR `#5048` merged as `9dedee8de`. This remains a
+  read-only candidate; it adds no sandbox, mutation, recovery, diff/undo,
+  provider/UI, or trusted-activation authority.
+
 - 2026-08-16: Added candidate `RQ-CF-AGENT-028`, a Windows-only warned
   unrestricted exact-image executor. The controller consumes one opaque
   materialized launch for its exact active generation, refuses sandbox mode and

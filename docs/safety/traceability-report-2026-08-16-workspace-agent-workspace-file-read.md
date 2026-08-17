@@ -49,6 +49,12 @@ Focused Debug CTest passed:
 - `test_workspace_agent_session` remains green with the expanded audit event
   enum and serialization contract.
 
-The requirement remains `candidate` until exact-head warning-clean/sanitizer,
-protected Windows/Ubuntu/macOS validation, review, and merge evidence are
-retained. No completion or safety-critical suitability claim is made.
+Signed/DCO implementation head `03b48f290` passed the protected Windows,
+Ubuntu, and macOS generated-launcher matrix (`31991133616`), Windows Win32 and
+x64 DECLARE validation (`31991133659`), Windows environment/path validation
+(`31991133647`), GCC/Clang executable-path checks (`31991133687`), DCO
+(`31991132483`), and both Socket checks. PR `#5048` merged as `9dedee8de`.
+The requirement remains `candidate`: the retained evidence does not make the
+workspace sandbox real or add mutation, recovery, diff, undo, provider/UI, or
+trusted-activation authority. No completion or safety-critical suitability
+claim is made.
