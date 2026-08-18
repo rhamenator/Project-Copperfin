@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 FDATE()/FTIME() SET PATH fix (post-review, before merge)
+
+Automated PR review on #5068 (P2) caught that `FDATE()`/`FTIME()` used the
+write-target-oriented `resolve_file_path` (default directory only, no
+`SET PATH` fallback) even though both help pages explicitly document "the
+default directory and in any directories or folders specified with
+`SET PATH`" -- a real gap in behavior I had already (incorrectly) claimed
+was implemented in this same requirement's traceability text. Fixed with a
+new `resolve_existing_file_probe_path`/`parse_set_path_search_entries` pair
+in `prg_engine_file_io_functions.cpp`, scoped specifically to read-only
+existence probes (not shared with `resolve_file_path`, since letting
+`SET PATH` influence *where a new file gets created* for FOPEN/FCREATE
+would be a different, riskier, and undocumented-for-those-functions change).
+New coverage in `test_fdate_ftime_runtime_functions`: a file only
+discoverable via `SET PATH` returns blank/empty before `SET PATH` is set and
+a real Date/time after. Full ctest 390/390 after the fix.
+
 ## V1 FDATE()/FTIME() file modification stamps
 
 `RQ-CF-PRG-014` recovers the mounted VFP9 `FDATE(cFileName [, nType])` and

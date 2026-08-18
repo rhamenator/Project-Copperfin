@@ -159,6 +159,11 @@ void test_fdate_ftime_runtime_functions()
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    // Only discoverable through SET PATH -- not in the default directory.
+    const fs::path path_probe_dir = temp_root / "path_probe";
+    fs::create_directories(path_probe_dir);
+    write_text(path_probe_dir / "path_only.txt", "found-via-set-path");
+
     const fs::path main_path = temp_root / "fdate_ftime_functions.prg";
     write_text(
         main_path,
@@ -177,6 +182,15 @@ void test_fdate_ftime_runtime_functions()
         "cMissingTime = FTIME('does-not-exist-xyz.txt')\n"
         "lMissingDateEmpty = EMPTY(dMissingDate)\n"
         "lMissingTimeEmpty = EMPTY(cMissingTime)\n"
+        "dPathOnlyBefore = FDATE('path_only.txt')\n"
+        "cPathOnlyTimeBefore = FTIME('path_only.txt')\n"
+        "SET PATH TO '" + path_probe_dir.string() + "'\n"
+        "dPathOnlyAfter = FDATE('path_only.txt')\n"
+        "cPathOnlyTimeAfter = FTIME('path_only.txt')\n"
+        "lPathOnlyBeforeEmpty = EMPTY(dPathOnlyBefore)\n"
+        "lPathOnlyTimeBeforeEmpty = EMPTY(cPathOnlyTimeBefore)\n"
+        "lPathOnlyAfterMatchesToday = (dPathOnlyAfter == DATE())\n"
+        "nPathOnlyTimeAfterLength = LEN(cPathOnlyTimeAfter)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -205,6 +219,10 @@ void test_fdate_ftime_runtime_functions()
     check("ctimecolontwo", ":");
     check("lmissingdateempty", "true");
     check("lmissingtimeempty", "true");
+    check("lpathonlybeforeempty", "true");
+    check("lpathonlytimebeforeempty", "true");
+    check("lpathonlyaftermatchestoday", "true");
+    check("npathonlytimeafterlength", "8");
 
     fs::remove_all(temp_root, ignored);
 }

@@ -86,6 +86,66 @@ std::filesystem::path resolve_file_path(const std::string& raw_path, const std::
     return path.lexically_normal();
 }
 
+std::vector<std::filesystem::path> parse_set_path_search_entries(
+    const std::string& set_path_value, const std::string& default_directory) {
+    std::string value = trim_copy(set_path_value);
+    if (starts_with_insensitive(value, "TO ")) {
+        value = trim_copy(value.substr(3U));
+    }
+    value = unquote_string(value);
+
+    std::vector<std::filesystem::path> entries;
+    std::size_t token_start = 0U;
+    while (token_start <= value.size()) {
+        const std::size_t separator = value.find(';', token_start);
+        std::string token = separator == std::string::npos
+            ? value.substr(token_start)
+            : value.substr(token_start, separator - token_start);
+        token = unquote_string(token);
+        if (!token.empty()) {
+            entries.push_back(resolve_file_path(token, default_directory));
+        }
+        if (separator == std::string::npos) {
+            break;
+        }
+        token_start = separator + 1U;
+    }
+    return entries;
+}
+
+// FDATE()/FTIME() only ever probe an existing file (never create or write one),
+// so unlike resolve_file_path -- shared by every FOPEN/FCREATE/FREAD/FWRITE/etc.
+// call, where searching SET PATH would risk changing where a new file gets
+// created -- this additionally falls back to SET PATH when the default-directory
+// candidate doesn't exist, matching both functions' documented "default
+// directory, then any directories or folders specified with SET PATH" contract.
+std::filesystem::path resolve_existing_file_probe_path(
+    const std::string& raw_path,
+    const std::string& default_directory,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const std::filesystem::path default_candidate = resolve_file_path(raw_path, default_directory);
+    std::error_code ignored;
+    if (std::filesystem::exists(default_candidate, ignored)) {
+        return default_candidate;
+    }
+
+    const std::string unquoted = unquote_string(raw_path);
+    if (unquoted.empty() || is_windows_drive_absolute_path(unquoted) || is_unc_path(unquoted)) {
+        return default_candidate;
+    }
+    const std::filesystem::path relative_path = copperfin::platform::path_from_utf8_string(
+        normalize_relative_path_separators(unquoted));
+
+    for (const auto& entry : parse_set_path_search_entries(set_callback ? set_callback("PATH") : std::string{}, default_directory)) {
+        const std::filesystem::path candidate = (entry / relative_path).lexically_normal();
+        ignored.clear();
+        if (std::filesystem::exists(candidate, ignored)) {
+            return candidate;
+        }
+    }
+    return default_candidate;
+}
+
 OpenFileHandle* resolve_open_handle(int handle) {
     auto& handles = open_file_handles();
     const auto found = handles.find(handle);
@@ -209,7 +269,8 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "fdate" && !arguments.empty()) {
-        const std::filesystem::path path = resolve_file_path(value_as_string(arguments[0]), default_directory);
+        const std::filesystem::path path = resolve_existing_file_probe_path(
+            value_as_string(arguments[0]), default_directory, set_callback);
         std::tm local_tm{};
         if (!file_last_write_local_time(path, local_tm)) {
             return make_date_value(std::string{});
@@ -230,7 +291,8 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "ftime" && !arguments.empty()) {
-        const std::filesystem::path path = resolve_file_path(value_as_string(arguments[0]), default_directory);
+        const std::filesystem::path path = resolve_existing_file_probe_path(
+            value_as_string(arguments[0]), default_directory, set_callback);
         std::tm local_tm{};
         if (!file_last_write_local_time(path, local_tm)) {
             return make_string_value(std::string{});
