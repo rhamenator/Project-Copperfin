@@ -1,3 +1,11 @@
+- 2026-08-17: Recovered the VFP9 `KEY()` and `TAGCOUNT()` index-tag
+  introspection functions, reusing the existing `TAG()`/`ORDER()` ordinal
+  index-tag list. `KEY()` returns a tag's raw key expression by 1-based
+  ordinal, optionally scoped to a named compound index file; `TAGCOUNT()`
+  returns the open tag/file count, similarly scopable. `DESCENDING()`
+  remains an explicit gap pending real per-tag `DESCENDING`-bit evidence
+  from a VFP9-produced CDX/IDX file, which is not available here.
+
 - 2026-08-17: Split contributor pull-request guidance into discoverable
   General Contribution and Requirements Recovery / Traceability templates,
   while retaining `.github/pull_request_template.md` as the normal GitHub
