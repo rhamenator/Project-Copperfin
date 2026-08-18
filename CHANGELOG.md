@@ -1,3 +1,11 @@
+- 2026-08-18: Recovered the VFP9 `LUPDATE([nWorkArea | cTableAlias])` function,
+  returning a table's DBF header last-update date for the selected, aliased,
+  or numbered work area. Returns a blank Date for a valid work area with no
+  table open, and raises VFP error 13 for an unresolvable alias. Discovered a
+  separate, deferred gap while implementing this: no DBF write path in this
+  codebase currently stamps a real last-update date into the header, so
+  `LUPDATE()` only reflects reality for tables dated by some other means.
+
 - 2026-08-18: Fixed the shared `KEY()`/`TAG()`/`ORDER()`/`TAGCOUNT()` ordinal
   enumeration order when a table has both a companion `.idx` file and a `.cdx`
   index open together: single-entry `.idx` files now enumerate before

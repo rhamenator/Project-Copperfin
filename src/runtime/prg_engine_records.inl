@@ -1936,7 +1936,7 @@
                 function != "tableupdate" && function != "tablerevert" &&
                 function != "getnextmodified" && function != "getfldstate" &&
                 function != "setfldstate" && function != "oldval" &&
-                function != "curval")
+                function != "curval" && function != "lupdate")
             {
                 return std::nullopt;
             }
@@ -2327,6 +2327,50 @@
                     record_evaluation_overrides.pop_back();
                     throw;
                 }
+            }
+
+            if (function == "lupdate")
+            {
+                const std::string raw_designator = arguments.empty() ? std::string{} : value_as_string(arguments[0U]);
+                const std::string trimmed_designator = trim_copy(raw_designator);
+                const bool numeric_designator = !trimmed_designator.empty() &&
+                    std::all_of(
+                        trimmed_designator.begin(),
+                        trimmed_designator.end(),
+                        [](unsigned char ch) { return std::isdigit(ch) != 0; });
+
+                CursorState *cursor = resolve_cursor_target(raw_designator);
+                if (cursor == nullptr)
+                {
+                    if (trimmed_designator.empty() || numeric_designator)
+                    {
+                        // No table open in the given (valid) work area: blank date, not an error.
+                        return make_date_value(std::string{});
+                    }
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.AliasNotFound"),
+                        13);
+                }
+                if (!require_local_cursor(cursor, "LUPDATE"))
+                {
+                    return make_date_value(std::string{});
+                }
+
+                const auto table_result = parse_cursor_table(*cursor, 0U);
+                if (!table_result.ok)
+                {
+                    return make_date_value(std::string{});
+                }
+                const vfp::DbfHeader &header = table_result.table.header;
+                if (header.last_update_year == 0U && header.last_update_month == 0U &&
+                    header.last_update_day == 0U)
+                {
+                    return make_date_value(std::string{});
+                }
+                const int year = 1900 + static_cast<int>(header.last_update_year);
+                const int month = static_cast<int>(header.last_update_month);
+                const int day = static_cast<int>(header.last_update_day);
+                return make_date_value(format_runtime_date_string(year, month, day), year, month, day);
             }
 
             if (function == "cursorgetprop")

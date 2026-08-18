@@ -38,6 +38,11 @@ void write_synthetic_idx_with_for(
     const std::string& expression,
     const std::string& for_expression);
 void mark_simple_dbf_record_deleted(const std::filesystem::path& path, std::size_t recno);
+void write_dbf_last_update_bytes(
+    const std::filesystem::path& path,
+    std::uint8_t years_since_1900,
+    std::uint8_t month,
+    std::uint8_t day);
 void write_synthetic_ndx(
     const std::filesystem::path& path,
     const std::string& expression,
