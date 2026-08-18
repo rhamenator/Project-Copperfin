@@ -21,6 +21,20 @@ cursors remain separate. The focused portable regression
 `test_key_and_tagcount_functions` covers whole-alias and per-file-scoped counts
 and lookups plus the missing-file/out-of-range empty/zero contracts.
 
+Adversarial self-review of this slice (Codex unavailable) found a real,
+pre-existing `RQ-CF-PRG-010` gap it does not fix: `companion_index_paths_for`
+(`src/vfp/asset_inspector.cpp`) appends `.cdx` companion candidates before
+`.idx` candidates for a table, so when a table has both a same-stem `.idx` and
+a `.cdx` open together, `cursor->orders` lists the CDX tag before the IDX file
+— the reverse of the documented `KEY()`/`TAG()` ordinal contract (IDX files
+first, then structural CDX tags, then other CDX tags). This predates this
+slice: it silently affects the already-shipped `TAG()`/`ORDER()` too whenever
+both companion types are open at once, and no prior test exercised that
+combination. The new regression works around it with an order-independent
+assertion instead of hiding it; fixing the candidate order is a plausible
+follow-up but touches shipped `TAG()`/`ORDER()` ordinal behavior broadly and
+needs its own dedicated regression sweep, not a same-slice fix.
+
 ## V1 GETFLDSTATE / SETFLDSTATE / OLDVAL buffered-record state
 
 `RQ-CF-PRG-005` recovers the mounted VFP9 `GETFLDSTATE()` contract for local
