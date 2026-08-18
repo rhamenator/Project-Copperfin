@@ -48,6 +48,22 @@ The focused portable buffering regression covers character, numeric, expression,
 work-area, and post-commit behavior. Remote cursors, views and refresh timing,
 EOF/error compatibility, and non-local data sources remain separate.
 
+Adversarial self-review of `RQ-CF-PRG-008` (Codex unavailable) found and
+regression-proved a real gap, recorded as `RQ-CF-PRG-011`:
+`record_verified_buffered_commit` writes the post-commit record only into the
+committing `CursorState`'s own `verified_committed_records` map, never into
+the shared session-scoped `options.verified_file_byte_overrides` admission map
+that `materialize_verified_file_snapshot` reads for every cursor. So in a
+verified/sandboxed session, closing and reopening the same table (`USE IN
+<alias>` then `USE` again) loses visibility into an earlier `TABLEUPDATE()`
+commit and `CURVAL()` falls back to the original pre-commit admitted bytes.
+`test_curval_verified_commit_overlay_does_not_survive_cursor_reopen`
+reproduces this directly and documents the current (incorrect) behavior so it
+fails loudly once fixed. Scoped to verified-mode sessions only; the default
+execution path always re-reads the real file and is unaffected. Left unfixed
+here pending a decision on the right home for the fix and its blast radius
+across every `parse_table_path` consumer, not just `CURVAL()`.
+
 ## V1 ON PAGE configuration boundary
 
 `RQ-CF-PRG-004` recovers the installed VFP9 `ON PAGE` configuration surface:

@@ -8978,3 +8978,12 @@ passes `1/1`.
   successful `TABLEUPDATE()` now updates a session-owned committed record image,
   so the runtime neither reopens mutable DBF bytes nor reports stale admitted
   bytes when evaluating the new committed value.
+
+- 2026-08-17: Adversarial self-review of strict verified-byte `CURVAL()`
+  found and regression-proved a follow-on gap (`RQ-CF-PRG-011`): the
+  post-commit record image lives only on the committing cursor, so closing
+  and reopening the same table in a verified session loses visibility into
+  an earlier `TABLEUPDATE()` and `CURVAL()` falls back to the original
+  pre-commit admitted bytes. Documented and regression-covered rather than
+  fixed in this slice; the default (non-verified) execution path is
+  unaffected.
