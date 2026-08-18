@@ -1878,36 +1878,6 @@
             return true;
         }
 
-        void refresh_verified_file_byte_override_from_disk(const std::string &table_path)
-        {
-            // RQ-CF-PRG-011: the per-cursor verified_committed_records overlay only
-            // covers the committing cursor, so a fresh CursorState (from a reopen, or a
-            // second concurrently open cursor on the same table) has no path to an
-            // earlier commit unless the shared admission map itself is refreshed. The
-            // disk write for this commit has already happened by the time this runs, so
-            // just mirror those fresh bytes into the existing admitted entry.
-            const auto existing = find_verified_file_byte_override(
-                copperfin::platform::path_from_utf8_string(table_path));
-            if (existing == options.verified_file_byte_overrides.end())
-            {
-                return;
-            }
-            const std::string existing_key = existing->first;
-
-            std::ifstream input(copperfin::platform::path_from_utf8_string(table_path), std::ios::binary);
-            if (!input)
-            {
-                return;
-            }
-            std::ostringstream bytes;
-            bytes << input.rdbuf();
-            if (!input.good() && !input.eof())
-            {
-                return;
-            }
-            options.verified_file_byte_overrides[existing_key] = bytes.str();
-        }
-
         void record_verified_buffered_commit(
             CursorState &cursor,
             std::size_t buffered_recno,
@@ -1925,7 +1895,6 @@
             if (appended)
             {
                 cursor.verified_committed_records[persisted_recno] = buffered_record;
-                refresh_verified_file_byte_override_from_disk(cursor.source_path);
                 return;
             }
 
@@ -1956,7 +1925,6 @@
             {
                 committed.deleted = buffered_record.deleted;
             }
-            refresh_verified_file_byte_override_from_disk(cursor.source_path);
         }
 
         std::optional<PrgValue> cursor_buffering_function(

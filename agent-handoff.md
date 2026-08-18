@@ -1,29 +1,44 @@
 # Agent Handoff
 
-## V1 verified-session CURVAL() commit visibility fix
+## V1 RQ-CF-PRG-011 fix attempt reverted — needs three coordinated pieces
 
-`RQ-CF-PRG-011` is now fixed. `record_verified_buffered_commit`
-(`src/runtime/prg_engine_records.inl`) previously updated only the committing
-`CursorState`'s own `verified_committed_records` overlay after a `TABLEUPDATE()`
-commit in a `require_verified_file_byte_overrides` (verified/sandboxed) session,
-so a fresh `CursorState` — from closing and reopening the same table, or from a
-second cursor already open on it — had no path to that commit and `CURVAL()`
-fell back to the original pre-commit admitted bytes. The fix adds
-`refresh_verified_file_byte_override_from_disk`, called after every commit,
-which re-reads the table's just-written on-disk bytes (the disk write for this
-exact commit already happened earlier in the same call) and stores them back
-into the existing admitted `options.verified_file_byte_overrides` entry —
-mirroring the one other write site (XML-datasource cursor creation). Every
-cursor's `parse_table_path`/`materialize_verified_file_snapshot` read now sees
-the update, not just the committing cursor's private overlay.
-`test_curval_verified_commit_overlay_survives_cursor_reopen` (renamed from the
-gap-documenting `..._does_not_survive_cursor_reopen`) now asserts the correct
-behavior, and the new `test_curval_verified_commit_overlay_is_visible_to_a_second_concurrent_cursor`
-proves a second `USE ... AGAIN` cursor sees another cursor's commit too. This
-re-reads the whole table and stores a full copy on every verified-mode commit;
-acceptable for this narrow, already-bounded sandboxed-execution mode, not
-suited to high-frequency bulk commits against large tables. Full local `ctest`
-suite passes with no regression.
+A first fix attempt for `RQ-CF-PRG-011` (verified-session `CURVAL()` commit
+visibility, see `docs/32-recovered-requirements-traceability.md`) was built,
+tested (390/390 locally), opened as PR `#5064`, and CI-green — but automated
+PR review correctly rejected it before merge, and it has been fully reverted
+rather than partially landed. The attempt re-read the whole live on-disk file
+into the shared `options.verified_file_byte_overrides` admission map after
+every commit; review found this **defeats the point of verified sessions**:
+it launders any live-disk content beyond the one authorized field write into
+the trust boundary those sessions exist to ignore (P1), has no interaction
+with the transaction/rollback journal so a `TABLEUPDATE()` inside `BEGIN
+TRANSACTION` + `ROLLBACK` leaves the admission map permanently wrong (P1),
+and never refreshes the separate admission entry for a memo field's `.fpt`
+sidecar (P2). None of this was caught by the attempt's own tests.
+
+A correct fix needs three coordinated pieces, researched but not implemented:
+
+1. A new **buffer-based** mutation API in `src/vfp/dbf_table.cpp`/`.h` (the
+   existing `write_field_bytes`/`write_memo_field_bytes` are internal-linkage,
+   and their `RawFieldDescriptor` input type is private and independently
+   duplicated in three other files today) that patches *only* the known
+   mutation onto a copy of the *current admitted bytes*, not the live file,
+   stopping short of the disk-write step the file-based functions do.
+2. Extending `TransactionJournalState`/`ensure_transaction_backup_for_table`
+   (`src/runtime/prg_engine_session_transaction_recovery.inl`) to snapshot the
+   relevant admission-map entry in memory the first time a table is touched
+   inside a transaction, and restore it in `replay_transaction_journal_state`
+   before cursors are re-parsed on rollback — today that journal only ever
+   backs up live-disk files and has zero interaction with the admission map.
+3. Resolving and patching the memo sidecar's *own* admission entry (keyed by
+   `copperfin::vfp::resolve_vfp_memo_sidecar_path(table_path)`, the same
+   resolver `materialize_verified_file_snapshot` already calls) alongside the
+   primary table entry for memo-pointer-typed field commits.
+
+`test_curval_verified_commit_overlay_does_not_survive_cursor_reopen` still
+documents the original, narrower gap on purpose. Not a regression — this
+codebase is exactly as capable as before the investigation, just with a much
+more precise problem statement for whoever picks this up next.
 
 ## V1 index-tag ordinal enumeration order fix
 
@@ -126,9 +141,21 @@ The focused portable buffering regression covers character, numeric, expression,
 work-area, and post-commit behavior. Remote cursors, views and refresh timing,
 EOF/error compatibility, and non-local data sources remain separate.
 
-Adversarial self-review of `RQ-CF-PRG-008` (Codex unavailable) found a real
-gap in verified-session commit visibility, recorded and now fixed as
-`RQ-CF-PRG-011`; see the section above.
+Adversarial self-review of `RQ-CF-PRG-008` (Codex unavailable) found and
+regression-proved a real gap, recorded as `RQ-CF-PRG-011`:
+`record_verified_buffered_commit` writes the post-commit record only into the
+committing `CursorState`'s own `verified_committed_records` map, never into
+the shared session-scoped `options.verified_file_byte_overrides` admission map
+that `materialize_verified_file_snapshot` reads for every cursor. So in a
+verified/sandboxed session, closing and reopening the same table (`USE IN
+<alias>` then `USE` again) loses visibility into an earlier `TABLEUPDATE()`
+commit and `CURVAL()` falls back to the original pre-commit admitted bytes.
+`test_curval_verified_commit_overlay_does_not_survive_cursor_reopen`
+reproduces this directly and documents the current (incorrect) behavior so it
+fails loudly once fixed. Scoped to verified-mode sessions only; the default
+execution path always re-reads the real file and is unaffected. Left unfixed
+here pending a decision on the right home for the fix and its blast radius
+across every `parse_table_path` consumer, not just `CURVAL()`.
 
 ## V1 ON PAGE configuration boundary
 

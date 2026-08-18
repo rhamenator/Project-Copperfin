@@ -1,9 +1,13 @@
-- 2026-08-18: Fixed strict verified-session `CURVAL()` commit visibility:
-  closing and reopening the same table, or a second cursor already open on
-  it, now sees an earlier `TABLEUPDATE()` commit instead of falling back to
-  the original pre-commit admitted bytes. The commit path now refreshes the
-  shared admission map from the freshly written on-disk bytes instead of
-  only updating the committing cursor's own private overlay.
+- 2026-08-18: Reverted a first attempt at fixing strict verified-session
+  `CURVAL()` commit visibility after cursor reopen (`RQ-CF-PRG-011`).
+  Automated PR review correctly rejected the approach (re-reading the whole
+  live on-disk file into the trusted admission map after every commit)
+  before merge: it could launder untrusted live-disk content into the
+  verified-session trust boundary, had no interaction with transaction
+  rollback, and didn't refresh memo-field sidecar admission entries. Fully
+  reverted rather than partially landed; the correct fix's requirements are
+  now documented in detail in `docs/32-recovered-requirements-traceability.md`
+  and `agent-handoff.md` for whoever picks it up next.
 
 - 2026-08-18: Fixed the shared `KEY()`/`TAG()`/`ORDER()`/`TAGCOUNT()` ordinal
   enumeration order when a table has both a companion `.idx` file and a `.cdx`
