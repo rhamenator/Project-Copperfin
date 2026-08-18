@@ -25,6 +25,7 @@ void test_seek_command_accepts_tag_override_without_set_order();
 void test_seek_command_accepts_descending_tag_override_without_set_order();
 void test_seek_related_index_functions();
 void test_key_and_tagcount_functions();
+void test_key_and_tag_ordinal_order_across_companion_naming_styles();
 void test_seek_function_accepts_direction_suffix_in_order_designator();
 void test_local_table_temporary_order_expression_parity();
 void test_order_and_tag_preserve_index_file_identity();

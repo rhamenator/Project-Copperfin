@@ -600,6 +600,75 @@ void test_key_and_tagcount_functions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_key_and_tag_ordinal_order_across_companion_naming_styles() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_key_tag_naming_styles";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    // Deliberately mix companion_index_paths_for()'s two naming styles: the CDX uses
+    // the "path + .cdx" style (people.dbf.cdx) while the IDX uses the ordinary
+    // extension-replacing style (people.idx). RQ-CF-PRG-010 requires every open IDX
+    // file to precede every CDX tag regardless of which naming style each one uses.
+    const fs::path cdx_path = temp_root / "people.dbf.cdx";
+    const fs::path idx_path = temp_root / "people.idx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+    write_synthetic_idx(idx_path, "SUBSTR(NAME,1,3)");
+
+    const fs::path main_path = temp_root / "key_tag_naming_styles.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "cTag1 = TAG(1, 'People')\n"
+        "cTag2 = TAG(2, 'People')\n"
+        "cKey1 = KEY(1, 'People')\n"
+        "cKey2 = KEY(2, 'People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "cross-naming-style KEY()/TAG() script should complete");
+
+    const auto tag1 = state.globals.find("ctag1");
+    const auto tag2 = state.globals.find("ctag2");
+    const auto key1 = state.globals.find("ckey1");
+    const auto key2 = state.globals.find("ckey2");
+
+    expect(tag1 != state.globals.end(), "TAG(1, 'People') should be captured");
+    expect(tag2 != state.globals.end(), "TAG(2, 'People') should be captured");
+    expect(key1 != state.globals.end(), "KEY(1, 'People') should be captured");
+    expect(key2 != state.globals.end(), "KEY(2, 'People') should be captured");
+
+    if (tag1 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(tag1->second) == "PEOPLE",
+            "TAG(1) should resolve the extension-replacing-style IDX file first even though the "
+            "path-appending-style CDX was probed earlier by companion_index_paths_for()");
+    }
+    if (tag2 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(tag2->second) == "NAME",
+            "TAG(2) should resolve the path-appending-style CDX tag second");
+    }
+    if (key1 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(key1->second) == "SUBSTR(NAME,1,3)",
+            "KEY(1) should resolve the IDX file's key expression first regardless of companion naming style");
+    }
+    if (key2 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(key2->second) == "UPPER(NAME)",
+            "KEY(2) should resolve the CDX tag's key expression second regardless of companion naming style");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_seek_function_accepts_direction_suffix_in_order_designator() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_direction_suffix";

@@ -8,8 +8,12 @@ before `.idx` candidates for a table, so when a table had both a same-stem
 `.idx` and a `.cdx` open together, the shared `KEY()`/`TAG()`/`ORDER()`/
 `TAGCOUNT()` ordinal numbering listed the CDX tag before the IDX file — the
 reverse of the documented VFP9 order (single-entry `.idx` files first, then
-structural/compound `.cdx` tags). The fix swaps only the `.idx`/`.cdx` relative
-order within each of the function's two naming-style probe groups; `.ndx`/
+structural/compound `.cdx` tags). The fix lists all open `.idx` candidates,
+across both of the function's naming-style probe groups (`path.ext + ".ext"`
+and extension-replacing), before any `.cdx` candidate from either style;
+automated review on the first pass of this fix correctly caught that it only
+swapped the two extensions within each naming-style group, which still put a
+path-appending-style CDX before an extension-replacing-style IDX. `.ndx`/
 `.mdx` keep their prior relative position since neither the requirement nor
 this fix claims real VFP9 evidence for where they belong in that sequence.
 This predated `RQ-CF-PRG-009` and silently affected the already-shipped
@@ -18,9 +22,11 @@ both companion types open on one table at once, which is why it went
 unnoticed until adversarial self-review of `RQ-CF-PRG-009` found it (Codex
 unavailable this week). `test_key_and_tagcount_functions` now asserts exact
 `TAG(1)`/`TAG(2)`/`KEY(1)`/`KEY(2)` ordinal positions instead of the prior
-order-independent workaround. Full local `ctest` suite passes with no
-regression; a repo-wide search confirmed no other test depended on the old,
-incorrect order.
+order-independent workaround, and the new
+`test_key_and_tag_ordinal_order_across_companion_naming_styles` proves the
+order holds even when the two companions use different naming styles. Full
+local `ctest` suite passes with no regression; a repo-wide search confirmed
+no other test depended on the old, incorrect order.
 
 ## V1 KEY / TAGCOUNT index-tag introspection
 

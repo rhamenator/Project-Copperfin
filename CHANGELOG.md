@@ -5,7 +5,12 @@
   reverse. This predated and silently affected the already-shipped
   `TAG()`/`ORDER()`, not just the newly-added `KEY()`/`TAGCOUNT()`; no prior
   test exercised both companion types on one table, which is why it went
-  unnoticed until adversarial self-review found it.
+  unnoticed until adversarial self-review found it. Automated PR review then
+  caught that the first pass of this fix only reordered the two extensions
+  within each internal companion-naming-style group, so a `.cdx` using one
+  naming style could still precede a `.idx` using the other; the corrected
+  fix orders every `.idx` candidate before every `.cdx` candidate regardless
+  of naming style, with regression coverage for the mixed-style case.
 
 - 2026-08-17: Recovered the VFP9 `KEY()` and `TAGCOUNT()` index-tag
   introspection functions, reusing the existing `TAG()`/`ORDER()` ordinal
