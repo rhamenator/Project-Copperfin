@@ -500,6 +500,8 @@ void test_key_and_tagcount_functions() {
         "cKey1 = KEY(1, 'People')\n"
         "cKey2 = KEY(2, 'People')\n"
         "cKeyMissing = KEY(99, 'People')\n"
+        "cKeyZero = KEY(0, 'People')\n"
+        "cKeyNegative = KEY(-1, 'People')\n"
         "nTagCountMissingFile = TAGCOUNT('nosuchfile.cdx', 'People')\n"
         "nTagCountCdxOnly = TAGCOUNT('" + cdx_path.string() + "', 'People')\n"
         "cKeyCdxOnly = KEY('" + cdx_path.string() + "', 1, 'People')\n"
@@ -515,6 +517,8 @@ void test_key_and_tagcount_functions() {
     const auto key1 = state.globals.find("ckey1");
     const auto key2 = state.globals.find("ckey2");
     const auto key_missing = state.globals.find("ckeymissing");
+    const auto key_zero = state.globals.find("ckeyzero");
+    const auto key_negative = state.globals.find("ckeynegative");
     const auto tag_count_missing_file = state.globals.find("ntagcountmissingfile");
     const auto tag_count_cdx_only = state.globals.find("ntagcountcdxonly");
     const auto key_cdx_only = state.globals.find("ckeycdxonly");
@@ -523,6 +527,8 @@ void test_key_and_tagcount_functions() {
     expect(key1 != state.globals.end(), "KEY(1, 'People') should be captured");
     expect(key2 != state.globals.end(), "KEY(2, 'People') should be captured");
     expect(key_missing != state.globals.end(), "KEY(99, 'People') should be captured");
+    expect(key_zero != state.globals.end(), "KEY(0, 'People') should be captured");
+    expect(key_negative != state.globals.end(), "KEY(-1, 'People') should be captured");
     expect(tag_count_missing_file != state.globals.end(), "TAGCOUNT(missingFile, 'People') should be captured");
     expect(tag_count_cdx_only != state.globals.end(), "TAGCOUNT(cdxPath, 'People') should be captured");
     expect(key_cdx_only != state.globals.end(), "KEY(cdxPath, 1, 'People') should be captured");
@@ -545,6 +551,16 @@ void test_key_and_tagcount_functions() {
         expect(
             copperfin::runtime::format_value(key_missing->second).empty(),
             "KEY() should return the empty string when nIndexNumber exceeds the open index count");
+    }
+    if (key_zero != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(key_zero->second).empty(),
+            "KEY(0, ...) should return the empty string rather than clamping up to the first tag");
+    }
+    if (key_negative != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(key_negative->second).empty(),
+            "KEY(-1, ...) should return the empty string rather than clamping up to the first tag");
     }
     if (tag_count_missing_file != state.globals.end()) {
         expect(

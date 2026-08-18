@@ -1294,6 +1294,14 @@
                 if (function == "key")
                 {
                     const std::string first = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+                    const auto to_positive_index = [](double value) -> std::optional<std::size_t>
+                    {
+                        if (!(value >= 1.0))
+                        {
+                            return std::nullopt;
+                        }
+                        return static_cast<std::size_t>(value);
+                    };
                     std::optional<std::size_t> index_number;
                     std::string designator;
                     std::string index_file_name;
@@ -1303,7 +1311,7 @@
                         index_file_name = first;
                         if (arguments.size() >= 2U)
                         {
-                            index_number = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])));
+                            index_number = to_positive_index(value_as_number(arguments[1]));
                         }
                         if (arguments.size() >= 3U)
                         {
@@ -1312,7 +1320,7 @@
                     }
                     else if (!arguments.empty())
                     {
-                        index_number = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[0])));
+                        index_number = to_positive_index(value_as_number(arguments[0]));
                         if (arguments.size() >= 2U)
                         {
                             designator = value_as_string(arguments[1]);
