@@ -471,12 +471,17 @@ std::vector<std::string> companion_index_paths_for(const std::filesystem::path& 
 
     switch (family) {
         case AssetFamily::table:
-            append_if_missing(candidates, path_text + ".cdx");
+            // Single-entry .idx candidates precede .cdx candidates within each naming
+            // style to match the documented KEY()/TAG()/ORDER()/TAGCOUNT() ordinal
+            // enumeration order (single-entry index files first, then compound-index
+            // tags); .ndx/.mdx keep their prior relative position pending real VFP9
+            // evidence for where they belong in that ordinal sequence.
             append_if_missing(candidates, path_text + ".idx");
+            append_if_missing(candidates, path_text + ".cdx");
             append_if_missing(candidates, path_text + ".ndx");
             append_if_missing(candidates, path_text + ".mdx");
-            append_if_missing(candidates, with_extension(".cdx"));
             append_if_missing(candidates, with_extension(".idx"));
+            append_if_missing(candidates, with_extension(".cdx"));
             append_if_missing(candidates, with_extension(".ndx"));
             append_if_missing(candidates, with_extension(".mdx"));
             return candidates;

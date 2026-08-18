@@ -497,6 +497,8 @@ void test_key_and_tagcount_functions() {
         main_path,
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
         "nTagCountAll = TAGCOUNT('People')\n"
+        "cTag1 = TAG(1, 'People')\n"
+        "cTag2 = TAG(2, 'People')\n"
         "cKey1 = KEY(1, 'People')\n"
         "cKey2 = KEY(2, 'People')\n"
         "cKeyMissing = KEY(99, 'People')\n"
@@ -514,6 +516,8 @@ void test_key_and_tagcount_functions() {
     expect(state.completed, "KEY()/TAGCOUNT() script should complete");
 
     const auto tag_count_all = state.globals.find("ntagcountall");
+    const auto tag1 = state.globals.find("ctag1");
+    const auto tag2 = state.globals.find("ctag2");
     const auto key1 = state.globals.find("ckey1");
     const auto key2 = state.globals.find("ckey2");
     const auto key_missing = state.globals.find("ckeymissing");
@@ -524,6 +528,8 @@ void test_key_and_tagcount_functions() {
     const auto key_cdx_only = state.globals.find("ckeycdxonly");
 
     expect(tag_count_all != state.globals.end(), "TAGCOUNT('People') should be captured");
+    expect(tag1 != state.globals.end(), "TAG(1, 'People') should be captured");
+    expect(tag2 != state.globals.end(), "TAG(2, 'People') should be captured");
     expect(key1 != state.globals.end(), "KEY(1, 'People') should be captured");
     expect(key2 != state.globals.end(), "KEY(2, 'People') should be captured");
     expect(key_missing != state.globals.end(), "KEY(99, 'People') should be captured");
@@ -538,14 +544,27 @@ void test_key_and_tagcount_functions() {
             copperfin::runtime::format_value(tag_count_all->second) == "2",
             "TAGCOUNT('People') should count both the structural CDX tag and the companion IDX file");
     }
-    if (key1 != state.globals.end() && key2 != state.globals.end()) {
-        const std::vector<std::string> keys{
-            copperfin::runtime::format_value(key1->second),
-            copperfin::runtime::format_value(key2->second)};
+    if (tag1 != state.globals.end()) {
         expect(
-            std::find(keys.begin(), keys.end(), "UPPER(NAME)") != keys.end() &&
-                std::find(keys.begin(), keys.end(), "SUBSTR(NAME,1,3)") != keys.end(),
-            "KEY(1)/KEY(2) should expose both open index key expressions, order-independent of companion discovery");
+            copperfin::runtime::format_value(tag1->second) == "PEOPLE",
+            "TAG(1) should resolve the single-entry IDX file first, per RQ-CF-PRG-010's documented VFP9 "
+            "ordinal order (open IDX files before structural CDX tags)");
+    }
+    if (tag2 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(tag2->second) == "NAME",
+            "TAG(2) should resolve the structural CDX tag second");
+    }
+    if (key1 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(key1->second) == "SUBSTR(NAME,1,3)",
+            "KEY(1) should resolve the single-entry IDX file's key expression first, per RQ-CF-PRG-010's "
+            "documented VFP9 ordinal order (open IDX files before structural CDX tags)");
+    }
+    if (key2 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(key2->second) == "UPPER(NAME)",
+            "KEY(2) should resolve the structural CDX tag's key expression second");
     }
     if (key_missing != state.globals.end()) {
         expect(
