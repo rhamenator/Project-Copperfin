@@ -1,6 +1,7 @@
 /build/
 /build2/
 /build_baseline/
+/build-*/
 /artifacts/
 /.vs/
 /.vscode/
@@ -11,6 +12,8 @@
 /tests/vsix/**/obj/
 /tools/**/bin/
 /tools/**/obj/
+/samples/**/bin/
+/samples/**/obj/
 /.tmp/
 *.user
 *.suo
