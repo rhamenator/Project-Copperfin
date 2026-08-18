@@ -88,7 +88,7 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
-    void test_curval_verified_commit_overlay_does_not_survive_cursor_reopen()
+    void test_curval_verified_commit_overlay_survives_cursor_reopen()
     {
         namespace fs = std::filesystem;
         const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_curval_verified_reopen";
@@ -128,15 +128,54 @@ namespace copperfin::runtime_surface_tests
         };
         expect(value_for("cfirstread") == "Committed",
                "strict CURVAL should observe its own cursor's committed value before reopen");
-        // KNOWN GAP (RQ-CF-PRG-011): the verified_committed_records overlay lives on
-        // CursorState, not the shared verified_file_byte_overrides admission map, so a
-        // reopened cursor loses visibility into the earlier commit and falls back to the
-        // original admitted snapshot. This assertion documents the current (incorrect)
-        // behavior so the regression fails loudly once a fix lands, rather than silently
-        // passing on the bug.
-        expect(value_for("creopenedread") == "Before",
-               "documents RQ-CF-PRG-011: a reopened cursor in a verified session currently "
-               "re-reads the stale admitted snapshot instead of the prior commit");
+        // RQ-CF-PRG-011: record_verified_buffered_commit() now refreshes the shared
+        // options.verified_file_byte_overrides admission entry from the freshly
+        // committed on-disk bytes, so a fresh CursorState from a reopen sees the prior
+        // commit instead of falling back to the original admitted snapshot.
+        expect(value_for("creopenedread") == "Committed",
+               "strict CURVAL should observe the prior commit after the same table is closed and reopened");
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_curval_verified_commit_overlay_is_visible_to_a_second_concurrent_cursor()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_curval_verified_second_cursor";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "curval_verified_second_cursor.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Before"}});
+        expect(create_result.ok, "strict CURVAL second-cursor fixture should be writable");
+
+        // RQ-CF-PRG-011: two cursors on the same table, each with its own CursorState
+        // and therefore its own verified_committed_records overlay. A commit on the
+        // first cursor should be visible to the second cursor's CURVAL() too, since
+        // both read through the same refreshed options.verified_file_byte_overrides
+        // admission entry rather than a cursor-private overlay.
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people1\n"
+            "USE '" + table_path.string() + "' AGAIN ALIAS people2\n"
+            "=CURSORSETPROP('Buffering', 5, 'people1')\n"
+            "REPLACE NAME WITH 'Committed' IN people1\n"
+            "=TABLEUPDATE(.T., .T., 'people1')\n"
+            "cSecondCursorRead = CURVAL('NAME', 'people2')\n"
+            "RETURN\n");
+        auto options = make_runtime_session_options(program_path.string(), temp_root.string());
+        options.require_verified_file_byte_overrides = true;
+        options.verified_file_byte_overrides.emplace(table_path.string(), read_text(table_path));
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            std::move(options));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("strict CURVAL second-cursor regression should complete: ") + state.message);
+        const auto found = state.globals.find("csecondcursorread");
+        expect(found != state.globals.end() && copperfin::runtime::format_value(found->second) == "Committed",
+               "strict CURVAL on a second concurrently open cursor should observe another cursor's commit");
         fs::remove_all(temp_root, ignored);
     }
 

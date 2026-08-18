@@ -1,3 +1,10 @@
+- 2026-08-18: Fixed strict verified-session `CURVAL()` commit visibility:
+  closing and reopening the same table, or a second cursor already open on
+  it, now sees an earlier `TABLEUPDATE()` commit instead of falling back to
+  the original pre-commit admitted bytes. The commit path now refreshes the
+  shared admission map from the freshly written on-disk bytes instead of
+  only updating the committing cursor's own private overlay.
+
 - 2026-08-18: Fixed the shared `KEY()`/`TAG()`/`ORDER()`/`TAGCOUNT()` ordinal
   enumeration order when a table has both a companion `.idx` file and a `.cdx`
   index open together: single-entry `.idx` files now enumerate before
