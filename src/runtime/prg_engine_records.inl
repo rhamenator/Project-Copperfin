@@ -1936,7 +1936,7 @@
                 function != "tableupdate" && function != "tablerevert" &&
                 function != "getnextmodified" && function != "getfldstate" &&
                 function != "setfldstate" && function != "oldval" &&
-                function != "curval")
+                function != "curval" && function != "lupdate")
             {
                 return std::nullopt;
             }
@@ -2327,6 +2327,86 @@
                     record_evaluation_overrides.pop_back();
                     throw;
                 }
+            }
+
+            if (function == "lupdate")
+            {
+                const bool argument_omitted = arguments.empty();
+                const auto is_numeric_kind = [](PrgValueKind kind)
+                {
+                    return kind == PrgValueKind::number || kind == PrgValueKind::int64 ||
+                        kind == PrgValueKind::uint64 || kind == PrgValueKind::currency;
+                };
+                // nWorkArea is silently permissive (blank date if empty); cTableAlias is
+                // strict (error 13 if unresolved). Branch on the argument's own PrgValue
+                // kind rather than its rendered text, so a quoted numeric-looking alias
+                // like LUPDATE('1') is correctly treated as an (unresolved) alias.
+                const bool numeric_designator = !argument_omitted && is_numeric_kind(arguments[0U].kind);
+
+                CursorState *cursor = nullptr;
+                if (argument_omitted)
+                {
+                    cursor = resolve_cursor_target({});
+                }
+                else if (numeric_designator)
+                {
+                    // Convert the numeric value directly rather than round-tripping through
+                    // value_as_string(): a Currency argument like work area 1 renders as
+                    // "1.0000", which a plain integer parse would reject.
+                    const double numeric_value = value_as_number(arguments[0U]);
+                    if (std::isfinite(numeric_value) &&
+                        numeric_value == std::trunc(numeric_value) &&
+                        numeric_value >= static_cast<double>(std::numeric_limits<int>::min()) &&
+                        numeric_value <= static_cast<double>(std::numeric_limits<int>::max()))
+                    {
+                        cursor = find_cursor_by_area(static_cast<int>(numeric_value));
+                    }
+                }
+                else
+                {
+                    // cTableAlias is strictly an alias, not a source path: unlike the
+                    // general resolve_cursor_target() fallback, do not also match an open
+                    // cursor's underlying file path here.
+                    cursor = find_cursor_by_alias(trim_copy(value_as_string(arguments[0U])));
+                }
+                if (cursor == nullptr)
+                {
+                    if (argument_omitted || numeric_designator)
+                    {
+                        // No table open in the given (valid) work area: blank date, not an error.
+                        return make_date_value(std::string{});
+                    }
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.AliasNotFound"),
+                        13);
+                }
+                if (!require_local_cursor(cursor, "LUPDATE"))
+                {
+                    return make_date_value(std::string{});
+                }
+
+                const auto header_result = parse_cursor_table_header(*cursor);
+                if (!header_result.ok)
+                {
+                    return make_date_value(std::string{});
+                }
+                const vfp::DbfHeader &header = header_result.header;
+                if (header.last_update_year == 0U && header.last_update_month == 0U &&
+                    header.last_update_day == 0U)
+                {
+                    return make_date_value(std::string{});
+                }
+                const int year = 1900 + static_cast<int>(header.last_update_year);
+                const int month = static_cast<int>(header.last_update_month);
+                const int day = static_cast<int>(header.last_update_day);
+                const auto &set_state = current_set_state();
+                const auto session_set_callback = [&set_state](const std::string &option_name) -> std::string
+                {
+                    const auto found = set_state.find(normalize_identifier(option_name));
+                    return found == set_state.end() ? std::string{} : found->second;
+                };
+                return make_date_value(
+                    format_runtime_date_for_set(year, month, day, session_set_callback), year, month, day);
             }
 
             if (function == "cursorgetprop")

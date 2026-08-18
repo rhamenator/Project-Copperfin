@@ -88,6 +88,203 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_lupdate_reads_table_header_date_and_designator_variants()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_lupdate";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path blank_table_path = temp_root / "fresh.dbf";
+        const fs::path program_path = temp_root / "lupdate.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Alpha"}});
+        expect(create_result.ok, "LUPDATE dated fixture should be writable");
+        // create_dbf_table_file() always zeroes the header's last-update bytes (a
+        // separate, deferred gap: no DBF write path in this codebase stamps a real
+        // last-update date today). Patch them directly to exercise the real-date path.
+        write_dbf_last_update_bytes(table_path, 124U, 3U, 15U); // 1900 + 124 = 2024-03-15
+
+        const auto create_blank_result = copperfin::vfp::create_dbf_table_file(
+            blank_table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Beta"}});
+        expect(create_blank_result.ok, "LUPDATE blank fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people IN 1\n"
+            "USE '" + blank_table_path.string() + "' ALIAS fresh IN 2\n"
+            "SELECT people\n"
+            "dSelected = LUPDATE()\n"
+            "dByAlias = LUPDATE('fresh')\n"
+            "dByWorkArea = LUPDATE(1)\n"
+            "dEmptyWorkArea = LUPDATE(9)\n"
+            "PUBLIC nErrorCount, nErrorCode1, nErrorCode2\n"
+            "nErrorCount = 0\n"
+            "nErrorCode1 = 0\n"
+            "nErrorCode2 = 0\n"
+            "ON ERROR DO HandleLupdateError\n"
+            "dBadAlias = LUPDATE('NoSuchAlias')\n"
+            "dQuotedNumericAlias = LUPDATE('1')\n"
+            "ON ERROR\n"
+            "RETURN\n"
+            "PROCEDURE HandleLupdateError\n"
+            "nErrorCount = nErrorCount + 1\n"
+            "IF nErrorCount = 1\n"
+            "    nErrorCode1 = ERROR()\n"
+            "ELSE\n"
+            "    nErrorCode2 = ERROR()\n"
+            "ENDIF\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("LUPDATE regression should complete: ") + state.message);
+
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+
+        expect(value_for("dselected") == "03/15/2024",
+               "LUPDATE() with no arguments should return the selected work area's table header date");
+        expect(value_for("dbyalias").empty(),
+               "LUPDATE('fresh') should return a blank date for a table whose header was never dated");
+        expect(value_for("dbyworkarea") == "03/15/2024",
+               "LUPDATE(nWorkArea) should return the given work area's table header date");
+        expect(value_for("demptyworkarea").empty(),
+               "LUPDATE(nWorkArea) should return a blank date when no table is open in that valid work area");
+        expect(value_for("nerrorcount") == "2",
+               "LUPDATE(cTableAlias) with an alias that isn't open should raise a runtime error rather than returning blank");
+        expect(value_for("nerrorcode1") == "13",
+               "LUPDATE() with an unresolvable alias should raise VFP error 13 (alias not found)");
+        expect(value_for("nerrorcode2") == "13",
+               "LUPDATE('1'), a quoted character alias that looks numeric, should raise error 13 like any other "
+               "unresolved alias rather than being misread as work area 1");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_lupdate_respects_set_date_format()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_lupdate_set_date";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "lupdate_set_date.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Alpha"}});
+        expect(create_result.ok, "LUPDATE SET DATE fixture should be writable");
+        write_dbf_last_update_bytes(table_path, 124U, 3U, 15U); // 1900 + 124 = 2024-03-15
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "dDefaultOrder = LUPDATE()\n"
+            "SET DATE TO DMY\n"
+            "dDmyOrder = LUPDATE()\n"
+            "SET CENTURY OFF\n"
+            "dDmyNoCentury = LUPDATE()\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("LUPDATE SET DATE regression should complete: ") + state.message);
+
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+
+        expect(value_for("ddefaultorder") == "03/15/2024",
+               "LUPDATE() should render MDY by default, matching the other date-producing functions");
+        expect(value_for("ddmyorder") == "15/03/2024",
+               "LUPDATE() should honor SET DATE TO DMY rather than always rendering MDY");
+        expect(value_for("ddmynocentury") == "15/03/24",
+               "LUPDATE() should honor SET CENTURY OFF in combination with the active date order");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_lupdate_designator_edge_cases()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_lupdate_designator_edge_cases";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "lupdate_designator_edge_cases.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U},
+             {.name = "AREACUR", .type = 'Y', .length = 8U}},
+            {{"Alpha", "1.0000"}});
+        expect(create_result.ok, "LUPDATE designator-edge-case fixture should be writable");
+        write_dbf_last_update_bytes(table_path, 124U, 3U, 15U); // 1900 + 124 = 2024-03-15
+
+        // AREACUR holds the Currency value 1: value_as_string() would render it as
+        // "1.0000", which a naive integer-text parse rejects even though it names the
+        // open work area 1. cSourcePathAlias uses the table's own on-disk path, which
+        // is not an open alias and must be rejected by the strict cTableAlias contract
+        // rather than falling back to path-based cursor resolution.
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people IN 1\n"
+            "dByCurrencyWorkArea = LUPDATE(people.AREACUR)\n"
+            "PUBLIC nErrorCount, nErrorCode\n"
+            "nErrorCount = 0\n"
+            "nErrorCode = 0\n"
+            "ON ERROR DO HandleLupdateDesignatorError\n"
+            "dBySourcePath = LUPDATE('" + table_path.string() + "')\n"
+            "ON ERROR\n"
+            "RETURN\n"
+            "PROCEDURE HandleLupdateDesignatorError\n"
+            "nErrorCount = nErrorCount + 1\n"
+            "nErrorCode = ERROR()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("LUPDATE designator-edge-case regression should complete: ") + state.message);
+
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+
+        expect(value_for("dbycurrencyworkarea") == "03/15/2024",
+               "LUPDATE(nWorkArea) should resolve a Currency-typed work-area value by its numeric value, "
+               "not by round-tripping through its rendered text");
+        expect(value_for("nerrorcount") == "1",
+               "LUPDATE() given the table's own on-disk source path should raise an error rather than "
+               "silently resolving it as if it were an open alias");
+        expect(value_for("nerrorcode") == "13",
+               "LUPDATE(sourcePath) should raise VFP error 13 (alias not found), matching the strict "
+               "cTableAlias contract");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_curval_verified_commit_overlay_does_not_survive_cursor_reopen()
     {
         namespace fs = std::filesystem;

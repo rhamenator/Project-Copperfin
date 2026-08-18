@@ -1,5 +1,29 @@
 # Agent Handoff
 
+## V1 LUPDATE() table header date
+
+`RQ-CF-PRG-012` recovers the mounted VFP9 `LUPDATE([nWorkArea | cTableAlias])`
+function, reusing `DbfHeader`'s already-shipped `last_update_year`/`month`/`day`
+parsing (previously only consumed internally by the MCP host's JSON reporting).
+It returns the table's header date for the selected, aliased, or numbered work
+area; a blank Date for a valid work area with no table open; and raises VFP
+error 13 for an alias that doesn't resolve to any open cursor — matching the
+documented contract precisely (`nWorkArea` is silently permissive, `cTableAlias`
+is strict). The focused regression
+`test_lupdate_reads_table_header_date_and_designator_variants` covers all four
+outcomes.
+
+Discovered while grounding this: no DBF write path in this codebase
+(`create_dbf_table_file`, `replace_record_field_value`,
+`set_record_deleted_flag`, and other mutators in `src/vfp/dbf_table.cpp`) ever
+stamps a real last-update date into the header — it's always left zeroed. This
+predates `LUPDATE()` and had no prior consumer; it's a natural next slice
+(touches every DBF mutation path, not just creation) but out of scope here.
+The new regression exercises the real-date path by patching header bytes
+directly in the test fixture (`write_dbf_last_update_bytes`, a new small
+`tests/prg_engine_test_support.cpp` helper), same pattern as
+`mark_simple_dbf_record_deleted`.
+
 ## V1 index-tag ordinal enumeration order fix
 
 `RQ-CF-PRG-010` is now fixed. `companion_index_paths_for`

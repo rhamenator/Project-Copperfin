@@ -226,6 +226,18 @@ void mark_simple_dbf_record_deleted(const std::filesystem::path& path, std::size
     file.write(&deleted, 1);
 }
 
+void write_dbf_last_update_bytes(
+    const std::filesystem::path& path,
+    std::uint8_t years_since_1900,
+    std::uint8_t month,
+    std::uint8_t day) {
+    std::fstream file(path, std::ios::binary | std::ios::in | std::ios::out);
+    file.seekp(1, std::ios::beg);
+    file.put(static_cast<char>(years_since_1900));
+    file.put(static_cast<char>(month));
+    file.put(static_cast<char>(day));
+}
+
 void write_synthetic_ndx(
     const std::filesystem::path& path,
     const std::string& expression,
