@@ -221,6 +221,70 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_lupdate_designator_edge_cases()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_lupdate_designator_edge_cases";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "lupdate_designator_edge_cases.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U},
+             {.name = "AREACUR", .type = 'Y', .length = 8U}},
+            {{"Alpha", "1.0000"}});
+        expect(create_result.ok, "LUPDATE designator-edge-case fixture should be writable");
+        write_dbf_last_update_bytes(table_path, 124U, 3U, 15U); // 1900 + 124 = 2024-03-15
+
+        // AREACUR holds the Currency value 1: value_as_string() would render it as
+        // "1.0000", which a naive integer-text parse rejects even though it names the
+        // open work area 1. cSourcePathAlias uses the table's own on-disk path, which
+        // is not an open alias and must be rejected by the strict cTableAlias contract
+        // rather than falling back to path-based cursor resolution.
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people IN 1\n"
+            "dByCurrencyWorkArea = LUPDATE(people.AREACUR)\n"
+            "PUBLIC nErrorCount, nErrorCode\n"
+            "nErrorCount = 0\n"
+            "nErrorCode = 0\n"
+            "ON ERROR DO HandleLupdateDesignatorError\n"
+            "dBySourcePath = LUPDATE('" + table_path.string() + "')\n"
+            "ON ERROR\n"
+            "RETURN\n"
+            "PROCEDURE HandleLupdateDesignatorError\n"
+            "nErrorCount = nErrorCount + 1\n"
+            "nErrorCode = ERROR()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("LUPDATE designator-edge-case regression should complete: ") + state.message);
+
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+
+        expect(value_for("dbycurrencyworkarea") == "03/15/2024",
+               "LUPDATE(nWorkArea) should resolve a Currency-typed work-area value by its numeric value, "
+               "not by round-tripping through its rendered text");
+        expect(value_for("nerrorcount") == "1",
+               "LUPDATE() given the table's own on-disk source path should raise an error rather than "
+               "silently resolving it as if it were an open alias");
+        expect(value_for("nerrorcode") == "13",
+               "LUPDATE(sourcePath) should raise VFP error 13 (alias not found), matching the strict "
+               "cTableAlias contract");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_curval_verified_commit_overlay_does_not_survive_cursor_reopen()
     {
         namespace fs = std::filesystem;

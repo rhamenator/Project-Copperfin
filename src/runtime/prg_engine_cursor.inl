@@ -439,6 +439,49 @@
             return result;
         }
 
+        vfp::DbfParseResult parse_table_header_path(const std::string &table_path)
+        {
+            // Header-only twin of parse_table_path(): avoids reading every record's
+            // bytes for callers (e.g. LUPDATE()) that only need the 32-byte header,
+            // while still going through the same verified-snapshot materialization
+            // for require_verified_file_byte_overrides sessions.
+            if (!options.require_verified_file_byte_overrides || table_path.empty())
+            {
+                return vfp::parse_dbf_header_from_file(table_path);
+            }
+
+            const auto logical_table_path = copperfin::platform::path_from_utf8_string(table_path);
+            std::filesystem::path snapshot_root;
+            const auto verified_table_path = materialize_verified_file_snapshot(
+                logical_table_path,
+                snapshot_root,
+                "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                false,
+                true);
+            if (!verified_table_path.has_value())
+            {
+                return {.ok = false, .error = last_error_message};
+            }
+
+            const auto result = vfp::parse_dbf_header_from_file(
+                copperfin::platform::path_to_utf8_string(*verified_table_path));
+            if (!snapshot_root.empty())
+            {
+                std::error_code snapshot_error;
+                std::filesystem::remove_all(snapshot_root, snapshot_error);
+            }
+            return result;
+        }
+
+        vfp::DbfParseResult parse_cursor_table_header(const CursorState &cursor)
+        {
+            if (cursor.source_path.empty())
+            {
+                return vfp::parse_dbf_header_from_file(cursor.source_path);
+            }
+            return parse_table_header_path(cursor.source_path);
+        }
+
         vfp::DbfTableParseResult parse_cursor_table(
             const CursorState &cursor,
             std::size_t max_records) const

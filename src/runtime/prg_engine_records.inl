@@ -2350,18 +2350,24 @@
                 }
                 else if (numeric_designator)
                 {
-                    const auto parsed_area = copperfin::platform::try_parse_invariant_integer<int>(
-                        trim_copy(value_as_string(arguments[0U])));
-                    cursor = parsed_area.has_value() ? find_cursor_by_area(*parsed_area) : nullptr;
+                    // Convert the numeric value directly rather than round-tripping through
+                    // value_as_string(): a Currency argument like work area 1 renders as
+                    // "1.0000", which a plain integer parse would reject.
+                    const double numeric_value = value_as_number(arguments[0U]);
+                    if (std::isfinite(numeric_value) &&
+                        numeric_value == std::trunc(numeric_value) &&
+                        numeric_value >= static_cast<double>(std::numeric_limits<int>::min()) &&
+                        numeric_value <= static_cast<double>(std::numeric_limits<int>::max()))
+                    {
+                        cursor = find_cursor_by_area(static_cast<int>(numeric_value));
+                    }
                 }
                 else
                 {
-                    const std::string normalized_alias = trim_copy(value_as_string(arguments[0U]));
-                    cursor = find_cursor_by_alias(normalized_alias);
-                    if (cursor == nullptr)
-                    {
-                        cursor = find_cursor_by_source_path(normalized_alias);
-                    }
+                    // cTableAlias is strictly an alias, not a source path: unlike the
+                    // general resolve_cursor_target() fallback, do not also match an open
+                    // cursor's underlying file path here.
+                    cursor = find_cursor_by_alias(trim_copy(value_as_string(arguments[0U])));
                 }
                 if (cursor == nullptr)
                 {
@@ -2379,12 +2385,12 @@
                     return make_date_value(std::string{});
                 }
 
-                const auto table_result = parse_cursor_table(*cursor, 0U);
-                if (!table_result.ok)
+                const auto header_result = parse_cursor_table_header(*cursor);
+                if (!header_result.ok)
                 {
                     return make_date_value(std::string{});
                 }
-                const vfp::DbfHeader &header = table_result.table.header;
+                const vfp::DbfHeader &header = header_result.header;
                 if (header.last_update_year == 0U && header.last_update_month == 0U &&
                     header.last_update_day == 0U)
                 {
