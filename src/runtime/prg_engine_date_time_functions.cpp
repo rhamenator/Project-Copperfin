@@ -169,39 +169,6 @@ std::string format_runtime_time_for_set(
     return stream.str();
 }
 
-std::string format_runtime_date_for_set(
-    int year,
-    int month,
-    int day,
-    const std::function<std::string(const std::string&)>& set_callback) {
-    const std::string order = normalize_date_order(set_callback);
-    const bool century = is_century_enabled(set_callback);
-    const std::string mark = date_mark(set_callback);
-
-    std::ostringstream stream;
-    stream.imbue(std::locale::classic());
-    stream << std::setfill('0');
-    const auto write_year = [&]() {
-        if (century) {
-            stream << std::setw(4) << year;
-        } else {
-            stream << std::setw(2) << (std::abs(year) % 100);
-        }
-    };
-
-    if (order == "DMY") {
-        stream << std::setw(2) << day << mark << std::setw(2) << month << mark;
-        write_year();
-    } else if (order == "YMD") {
-        write_year();
-        stream << mark << std::setw(2) << month << mark << std::setw(2) << day;
-    } else {
-        stream << std::setw(2) << month << mark << std::setw(2) << day << mark;
-        write_year();
-    }
-    return stream.str();
-}
-
 std::string format_runtime_datetime_for_set(
     int year,
     int month,
@@ -513,6 +480,39 @@ std::optional<std::int64_t> date_time_ordering_key(
 }
 
 }  // namespace
+
+std::string format_runtime_date_for_set(
+    int year,
+    int month,
+    int day,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const std::string order = normalize_date_order(set_callback);
+    const bool century = is_century_enabled(set_callback);
+    const std::string mark = date_mark(set_callback);
+
+    std::ostringstream stream;
+    stream.imbue(std::locale::classic());
+    stream << std::setfill('0');
+    const auto write_year = [&]() {
+        if (century) {
+            stream << std::setw(4) << year;
+        } else {
+            stream << std::setw(2) << (std::abs(year) % 100);
+        }
+    };
+
+    if (order == "DMY") {
+        stream << std::setw(2) << day << mark << std::setw(2) << month << mark;
+        write_year();
+    } else if (order == "YMD") {
+        write_year();
+        stream << mark << std::setw(2) << month << mark << std::setw(2) << day;
+    } else {
+        stream << std::setw(2) << month << mark << std::setw(2) << day << mark;
+        write_year();
+    }
+    return stream.str();
+}
 
 std::optional<int> compare_date_time_values(
     const PrgValue& left,

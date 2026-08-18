@@ -124,18 +124,22 @@ namespace copperfin::runtime_surface_tests
             "dByAlias = LUPDATE('fresh')\n"
             "dByWorkArea = LUPDATE(1)\n"
             "dEmptyWorkArea = LUPDATE(9)\n"
-            "PUBLIC nErrorCount, nErrorCode, cErrorMessage\n"
+            "PUBLIC nErrorCount, nErrorCode1, nErrorCode2\n"
             "nErrorCount = 0\n"
-            "nErrorCode = 0\n"
-            "cErrorMessage = ''\n"
+            "nErrorCode1 = 0\n"
+            "nErrorCode2 = 0\n"
             "ON ERROR DO HandleLupdateError\n"
             "dBadAlias = LUPDATE('NoSuchAlias')\n"
+            "dQuotedNumericAlias = LUPDATE('1')\n"
             "ON ERROR\n"
             "RETURN\n"
             "PROCEDURE HandleLupdateError\n"
-            "nErrorCode = ERROR()\n"
             "nErrorCount = nErrorCount + 1\n"
-            "cErrorMessage = MESSAGE()\n"
+            "IF nErrorCount = 1\n"
+            "    nErrorCode1 = ERROR()\n"
+            "ELSE\n"
+            "    nErrorCode2 = ERROR()\n"
+            "ENDIF\n"
             "RETURN\n"
             "ENDPROC\n");
 
@@ -158,10 +162,61 @@ namespace copperfin::runtime_surface_tests
                "LUPDATE(nWorkArea) should return the given work area's table header date");
         expect(value_for("demptyworkarea").empty(),
                "LUPDATE(nWorkArea) should return a blank date when no table is open in that valid work area");
-        expect(value_for("nerrorcount") == "1",
+        expect(value_for("nerrorcount") == "2",
                "LUPDATE(cTableAlias) with an alias that isn't open should raise a runtime error rather than returning blank");
-        expect(value_for("nerrorcode") == "13",
+        expect(value_for("nerrorcode1") == "13",
                "LUPDATE() with an unresolvable alias should raise VFP error 13 (alias not found)");
+        expect(value_for("nerrorcode2") == "13",
+               "LUPDATE('1'), a quoted character alias that looks numeric, should raise error 13 like any other "
+               "unresolved alias rather than being misread as work area 1");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_lupdate_respects_set_date_format()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_lupdate_set_date";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "lupdate_set_date.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Alpha"}});
+        expect(create_result.ok, "LUPDATE SET DATE fixture should be writable");
+        write_dbf_last_update_bytes(table_path, 124U, 3U, 15U); // 1900 + 124 = 2024-03-15
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "dDefaultOrder = LUPDATE()\n"
+            "SET DATE TO DMY\n"
+            "dDmyOrder = LUPDATE()\n"
+            "SET CENTURY OFF\n"
+            "dDmyNoCentury = LUPDATE()\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("LUPDATE SET DATE regression should complete: ") + state.message);
+
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+
+        expect(value_for("ddefaultorder") == "03/15/2024",
+               "LUPDATE() should render MDY by default, matching the other date-producing functions");
+        expect(value_for("ddmyorder") == "15/03/2024",
+               "LUPDATE() should honor SET DATE TO DMY rather than always rendering MDY");
+        expect(value_for("ddmynocentury") == "15/03/24",
+               "LUPDATE() should honor SET CENTURY OFF in combination with the active date order");
 
         fs::remove_all(temp_root, ignored);
     }

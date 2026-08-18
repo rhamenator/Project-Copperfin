@@ -8,6 +8,7 @@ int main()
     test_curval_evaluates_on_disk_record();
     test_curval_uses_verified_post_commit_session_image();
     test_lupdate_reads_table_header_date_and_designator_variants();
+    test_lupdate_respects_set_date_format();
     test_curval_verified_commit_overlay_does_not_survive_cursor_reopen();
     test_getfldstate_tracks_buffered_mutation_state();
     test_setfldstate_assigns_buffered_mutation_state();

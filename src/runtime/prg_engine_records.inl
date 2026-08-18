@@ -2331,18 +2331,41 @@
 
             if (function == "lupdate")
             {
-                const std::string raw_designator = arguments.empty() ? std::string{} : value_as_string(arguments[0U]);
-                const std::string trimmed_designator = trim_copy(raw_designator);
-                const bool numeric_designator = !trimmed_designator.empty() &&
-                    std::all_of(
-                        trimmed_designator.begin(),
-                        trimmed_designator.end(),
-                        [](unsigned char ch) { return std::isdigit(ch) != 0; });
+                const bool argument_omitted = arguments.empty();
+                const auto is_numeric_kind = [](PrgValueKind kind)
+                {
+                    return kind == PrgValueKind::number || kind == PrgValueKind::int64 ||
+                        kind == PrgValueKind::uint64 || kind == PrgValueKind::currency;
+                };
+                // nWorkArea is silently permissive (blank date if empty); cTableAlias is
+                // strict (error 13 if unresolved). Branch on the argument's own PrgValue
+                // kind rather than its rendered text, so a quoted numeric-looking alias
+                // like LUPDATE('1') is correctly treated as an (unresolved) alias.
+                const bool numeric_designator = !argument_omitted && is_numeric_kind(arguments[0U].kind);
 
-                CursorState *cursor = resolve_cursor_target(raw_designator);
+                CursorState *cursor = nullptr;
+                if (argument_omitted)
+                {
+                    cursor = resolve_cursor_target({});
+                }
+                else if (numeric_designator)
+                {
+                    const auto parsed_area = copperfin::platform::try_parse_invariant_integer<int>(
+                        trim_copy(value_as_string(arguments[0U])));
+                    cursor = parsed_area.has_value() ? find_cursor_by_area(*parsed_area) : nullptr;
+                }
+                else
+                {
+                    const std::string normalized_alias = trim_copy(value_as_string(arguments[0U]));
+                    cursor = find_cursor_by_alias(normalized_alias);
+                    if (cursor == nullptr)
+                    {
+                        cursor = find_cursor_by_source_path(normalized_alias);
+                    }
+                }
                 if (cursor == nullptr)
                 {
-                    if (trimmed_designator.empty() || numeric_designator)
+                    if (argument_omitted || numeric_designator)
                     {
                         // No table open in the given (valid) work area: blank date, not an error.
                         return make_date_value(std::string{});
@@ -2370,7 +2393,14 @@
                 const int year = 1900 + static_cast<int>(header.last_update_year);
                 const int month = static_cast<int>(header.last_update_month);
                 const int day = static_cast<int>(header.last_update_day);
-                return make_date_value(format_runtime_date_string(year, month, day), year, month, day);
+                const auto &set_state = current_set_state();
+                const auto session_set_callback = [&set_state](const std::string &option_name) -> std::string
+                {
+                    const auto found = set_state.find(normalize_identifier(option_name));
+                    return found == set_state.end() ? std::string{} : found->second;
+                };
+                return make_date_value(
+                    format_runtime_date_for_set(year, month, day, session_set_callback), year, month, day);
             }
 
             if (function == "cursorgetprop")
