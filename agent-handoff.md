@@ -1,5 +1,33 @@
 # Agent Handoff
 
+## V1 index-tag ordinal enumeration order fix
+
+`RQ-CF-PRG-010` is now fixed. `companion_index_paths_for`
+(`src/vfp/asset_inspector.cpp`) previously listed `.cdx` companion candidates
+before `.idx` candidates for a table, so when a table had both a same-stem
+`.idx` and a `.cdx` open together, the shared `KEY()`/`TAG()`/`ORDER()`/
+`TAGCOUNT()` ordinal numbering listed the CDX tag before the IDX file — the
+reverse of the documented VFP9 order (single-entry `.idx` files first, then
+structural/compound `.cdx` tags). The fix lists all open `.idx` candidates,
+across both of the function's naming-style probe groups (`path.ext + ".ext"`
+and extension-replacing), before any `.cdx` candidate from either style;
+automated review on the first pass of this fix correctly caught that it only
+swapped the two extensions within each naming-style group, which still put a
+path-appending-style CDX before an extension-replacing-style IDX. `.ndx`/
+`.mdx` keep their prior relative position since neither the requirement nor
+this fix claims real VFP9 evidence for where they belong in that sequence.
+This predated `RQ-CF-PRG-009` and silently affected the already-shipped
+`TAG()`/`ORDER()` too, not just `KEY()`/`TAGCOUNT()`; no prior test exercised
+both companion types open on one table at once, which is why it went
+unnoticed until adversarial self-review of `RQ-CF-PRG-009` found it (Codex
+unavailable this week). `test_key_and_tagcount_functions` now asserts exact
+`TAG(1)`/`TAG(2)`/`KEY(1)`/`KEY(2)` ordinal positions instead of the prior
+order-independent workaround, and the new
+`test_key_and_tag_ordinal_order_across_companion_naming_styles` proves the
+order holds even when the two companions use different naming styles. Full
+local `ctest` suite passes with no regression; a repo-wide search confirmed
+no other test depended on the old, incorrect order.
+
 ## V1 KEY / TAGCOUNT index-tag introspection
 
 `RQ-CF-PRG-009` recovers the mounted VFP9 `KEY()` and `TAGCOUNT()` functions,
@@ -22,18 +50,8 @@ cursors remain separate. The focused portable regression
 and lookups plus the missing-file/out-of-range empty/zero contracts.
 
 Adversarial self-review of this slice (Codex unavailable) found a real,
-pre-existing `RQ-CF-PRG-010` gap it does not fix: `companion_index_paths_for`
-(`src/vfp/asset_inspector.cpp`) appends `.cdx` companion candidates before
-`.idx` candidates for a table, so when a table has both a same-stem `.idx` and
-a `.cdx` open together, `cursor->orders` lists the CDX tag before the IDX file
-— the reverse of the documented `KEY()`/`TAG()` ordinal contract (IDX files
-first, then structural CDX tags, then other CDX tags). This predates this
-slice: it silently affects the already-shipped `TAG()`/`ORDER()` too whenever
-both companion types are open at once, and no prior test exercised that
-combination. The new regression works around it with an order-independent
-assertion instead of hiding it; fixing the candidate order is a plausible
-follow-up but touches shipped `TAG()`/`ORDER()` ordinal behavior broadly and
-needs its own dedicated regression sweep, not a same-slice fix.
+pre-existing `RQ-CF-PRG-010` gap in the shared ordinal enumeration order; see
+the section above — it is now fixed and no longer an open gap.
 
 ## V1 GETFLDSTATE / SETFLDSTATE / OLDVAL / CURVAL buffered-record state
 
