@@ -1,6 +1,6 @@
 # Agent Handoff
 
-## V1 GETFLDSTATE / SETFLDSTATE / OLDVAL buffered-record state
+## V1 GETFLDSTATE / SETFLDSTATE / OLDVAL / CURVAL buffered-record state
 
 `RQ-CF-PRG-005` recovers the mounted VFP9 `GETFLDSTATE()` contract for local
 row- and table-buffered cursors. The runtime supports field names and 1-based
@@ -35,6 +35,34 @@ an in-progress field read. It is no longer available after `TABLEREVERT()` or
 expression values, explicit work-area lookup, nested revert/update, revert, and commit. Remote
 cursors, validation-rule use without buffering, and unmodified/appended-record
 semantics remain separate.
+
+`RQ-CF-PRG-008` recovers the paired local `CURVAL()` disk-image expression
+surface. `CURVAL(cExpression [, cTableAlias | nWorkArea])` evaluates its
+character expression against the current persisted DBF record, rather than the
+pending buffer, and preserves the ordinary expression result type. Thus an
+optimistic buffered edit remains invisible to `CURVAL()` until `TABLEUPDATE()`.
+In strict verified-byte sessions, a successful `TABLEUPDATE()` updates a
+session-owned committed record image; later `CURVAL()` evaluation does not
+reread mutable source bytes or retain the superseded admitted DBF image.
+The focused portable buffering regression covers character, numeric, expression,
+work-area, and post-commit behavior. Remote cursors, views and refresh timing,
+EOF/error compatibility, and non-local data sources remain separate.
+
+Adversarial self-review of `RQ-CF-PRG-008` (Codex unavailable) found and
+regression-proved a real gap, recorded as `RQ-CF-PRG-011`:
+`record_verified_buffered_commit` writes the post-commit record only into the
+committing `CursorState`'s own `verified_committed_records` map, never into
+the shared session-scoped `options.verified_file_byte_overrides` admission map
+that `materialize_verified_file_snapshot` reads for every cursor. So in a
+verified/sandboxed session, closing and reopening the same table (`USE IN
+<alias>` then `USE` again) loses visibility into an earlier `TABLEUPDATE()`
+commit and `CURVAL()` falls back to the original pre-commit admitted bytes.
+`test_curval_verified_commit_overlay_does_not_survive_cursor_reopen`
+reproduces this directly and documents the current (incorrect) behavior so it
+fails loudly once fixed. Scoped to verified-mode sessions only; the default
+execution path always re-reads the real file and is unaffected. Left unfixed
+here pending a decision on the right home for the fix and its blast radius
+across every `parse_table_path` consumer, not just `CURVAL()`.
 
 ## V1 ON PAGE configuration boundary
 

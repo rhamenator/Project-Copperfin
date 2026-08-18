@@ -5,6 +5,9 @@ int main()
 {
     using namespace copperfin::runtime_surface_tests;
     using namespace copperfin::test_support;
+    test_curval_evaluates_on_disk_record();
+    test_curval_uses_verified_post_commit_session_image();
+    test_curval_verified_commit_overlay_does_not_survive_cursor_reopen();
     test_getfldstate_tracks_buffered_mutation_state();
     test_setfldstate_assigns_buffered_mutation_state();
     test_oldval_evaluates_buffered_original_record();

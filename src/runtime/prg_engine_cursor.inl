@@ -450,7 +450,29 @@
 
             // Const cursor readers still need the session-owned snapshot and diagnostic state.
             auto *mutable_impl = const_cast<Impl *>(this);
-            return mutable_impl->parse_table_path(cursor.source_path, max_records);
+            auto result = mutable_impl->parse_table_path(cursor.source_path, max_records);
+            if (!options.require_verified_file_byte_overrides || !result.ok)
+            {
+                return result;
+            }
+
+            for (const auto &[recno, committed_record] : cursor.verified_committed_records)
+            {
+                if (recno == 0U)
+                {
+                    continue;
+                }
+                if (recno <= result.table.records.size())
+                {
+                    result.table.records[recno - 1U] = committed_record;
+                    continue;
+                }
+                if (recno == result.table.records.size() + 1U)
+                {
+                    result.table.records.push_back(committed_record);
+                }
+            }
+            return result;
         }
 
         std::vector<CursorState::OrderState> load_cursor_orders(const std::string &table_path) const
