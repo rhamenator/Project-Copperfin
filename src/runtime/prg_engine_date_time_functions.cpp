@@ -169,20 +169,6 @@ std::string format_runtime_time_for_set(
     return stream.str();
 }
 
-std::string format_runtime_datetime_for_set(
-    int year,
-    int month,
-    int day,
-    int hour,
-    int minute,
-    int second,
-    const std::function<std::string(const std::string&)>& set_callback) {
-    std::ostringstream stream;
-    stream << format_runtime_date_for_set(year, month, day, set_callback)
-           << ' ' << format_runtime_time_for_set(hour, minute, second, set_callback);
-    return stream.str();
-}
-
 bool parse_runtime_time_for_set(
     const std::string& raw,
     int& hour,
@@ -511,6 +497,20 @@ std::string format_runtime_date_for_set(
         stream << std::setw(2) << month << mark << std::setw(2) << day << mark;
         write_year();
     }
+    return stream.str();
+}
+
+std::string format_runtime_datetime_for_set(
+    int year,
+    int month,
+    int day,
+    int hour,
+    int minute,
+    int second,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    std::ostringstream stream;
+    stream << format_runtime_date_for_set(year, month, day, set_callback)
+           << ' ' << format_runtime_time_for_set(hour, minute, second, set_callback);
     return stream.str();
 }
 

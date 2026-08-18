@@ -1,3 +1,12 @@
+- 2026-08-18: Recovered the VFP9 `FDATE(cFileName [, nType])` and
+  `FTIME(cFileName)` functions, returning a file's operating-system
+  last-modification Date/DateTime and time. `FDATE()` respects the session's
+  `SET DATE`/`MARK`/`CENTURY` like every other Date/DateTime-returning
+  function; `FTIME()` returns a fixed 24-hour `HH:MM:SS` string, since the
+  VFP9 help documents no `SET HOURS`/`SET SECONDS` interaction for it (unlike
+  `TIME()`). Both return the empty value of their documented return type for
+  a file that doesn't exist, matching `LUPDATE()`'s established convention.
+
 - 2026-08-18: Recovered the VFP9 `LUPDATE([nWorkArea | cTableAlias])` function,
   returning a table's DBF header last-update date for the selected, aliased,
   or numbered work area. Returns a blank Date for a valid work area with no

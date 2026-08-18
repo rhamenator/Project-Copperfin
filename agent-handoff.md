@@ -1,5 +1,53 @@
 # Agent Handoff
 
+## V1 FDATE()/FTIME() file modification stamps
+
+`RQ-CF-PRG-014` recovers the mounted VFP9 `FDATE(cFileName [, nType])` and
+`FTIME(cFileName)` functions — the file-timestamp pair of the low-level
+file-I/O family (`LUPDATE()`, `RQ-CF-PRG-012`, covers table-header dates;
+these cover arbitrary OS file mtimes). `FDATE()` returns a Date by default
+(`nType` omitted or `0`) or a DateTime when `nType` is `1`; `FTIME()` always
+returns a fixed 24-hour `HH:MM:SS` Character string. Both return the
+documented return type's empty value (blank Date / empty string) for a file
+that doesn't exist or can't be statted, rather than raising an error —
+mirroring `LUPDATE()`'s established convention for "no data available"
+outcomes, since neither help page states missing-file behavior explicitly.
+
+Implementation: `src/runtime/prg_engine_file_io_functions.cpp` gained a new
+`file_last_write_local_time()` helper that calls `std::filesystem::last_write_time`
+with an `std::error_code` (no throw on a missing file) and converts the
+`file_clock` timestamp to a local `std::tm` via the portable
+`file_time_type::clock::now()`/`system_clock::now()` offset idiom (avoids
+relying on `std::chrono::clock_cast<file_clock>` support, which isn't
+consistently implemented across libstdc++ versions) reusing the existing
+`local_time_from_time_t()` helper. `FDATE()`'s Date/DateTime rendering goes
+through `format_runtime_date_for_set()`/`format_runtime_datetime_for_set()`
+so it respects the session's `SET DATE`/`MARK`/`CENTURY` — the same
+type-level rendering rule every other Date/DateTime-returning function in
+this codebase already follows. This required moving
+`format_runtime_datetime_for_set` out of its anonymous namespace in
+`prg_engine_date_time_functions.cpp` into `copperfin::runtime` proper and
+declaring it in the header, the same treatment `format_runtime_date_for_set`
+got for `LUPDATE()` — `prg_engine_file_io_functions.cpp` is a different
+translation unit and can't see anonymous-namespace (internal-linkage)
+symbols from another `.cpp`. `evaluate_file_io_function()` gained a new
+trailing `set_callback` parameter (threaded from its one caller in
+`prg_engine_runtime_surface_functions.cpp`) to reach the session's `SET`
+state for that rendering.
+
+Deliberately does *not* make `FTIME()` respect `SET HOURS`/`SET SECONDS`
+the way `TIME()` does — the mounted help states no such interaction for
+`FTIME()` specifically, and inventing an undocumented parity with `TIME()`
+would violate this project's grounding discipline. Recorded as a scoped
+interpretation in `RQ-CF-PRG-014`'s traceability row, not a verified fact.
+
+New regression `test_fdate_ftime_runtime_functions` in
+`tests/test_prg_engine_file_io_functions.cpp` creates a file via
+`STRTOFILE()` and checks `FDATE()`/`FDATE(...,1)`/`FTIME()` against
+`DATE()`/`TTOD()` and a fixed-length/colon-position shape check (can't
+assert an exact wall-clock value), plus `EMPTY()` on both functions for a
+nonexistent file.
+
 ## V1 LUPDATE() table header date
 
 `RQ-CF-PRG-012` recovers the mounted VFP9 `LUPDATE([nWorkArea | cTableAlias])`

@@ -151,6 +151,64 @@ void test_file_io_runtime_functions()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_fdate_ftime_runtime_functions()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_fdate_ftime_functions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "fdate_ftime_functions.prg";
+    write_text(
+        main_path,
+        "nCreated = STRTOFILE('data', 'created.txt')\n"
+        "dFileDate = FDATE('created.txt')\n"
+        "dFileDateDefault = FDATE('created.txt', 0)\n"
+        "tFileDateTime = FDATE('created.txt', 1)\n"
+        "cFileTime = FTIME('created.txt')\n"
+        "lDateMatchesToday = (dFileDate == DATE())\n"
+        "lDateDefaultMatchesToday = (dFileDateDefault == DATE())\n"
+        "lDateTimeDateMatchesToday = (TTOD(tFileDateTime) == DATE())\n"
+        "nTimeLength = LEN(cFileTime)\n"
+        "cTimeColonOne = SUBSTR(cFileTime, 3, 1)\n"
+        "cTimeColonTwo = SUBSTR(cFileTime, 6, 1)\n"
+        "dMissingDate = FDATE('does-not-exist-xyz.txt')\n"
+        "cMissingTime = FTIME('does-not-exist-xyz.txt')\n"
+        "lMissingDateEmpty = EMPTY(dMissingDate)\n"
+        "lMissingTimeEmpty = EMPTY(cMissingTime)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FDATE/FTIME function script should complete: " + state.message);
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end())
+        {
+            expect(false, name + " variable not found");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("ldatematchestoday", "true");
+    check("ldatedefaultmatchestoday", "true");
+    check("ldatetimedatematchestoday", "true");
+    check("ntimelength", "8");
+    check("ctimecolonone", ":");
+    check("ctimecolontwo", ":");
+    check("lmissingdateempty", "true");
+    check("lmissingtimeempty", "true");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_unicode_paths_survive_prg_file_io_and_includes()
 {
     namespace fs = std::filesystem;
@@ -216,6 +274,7 @@ void test_unicode_paths_survive_prg_file_io_and_includes()
 int main()
 {
     test_file_io_runtime_functions();
+    test_fdate_ftime_runtime_functions();
     test_unicode_paths_survive_prg_file_io_and_includes();
 
     if (test_failures() != 0)
