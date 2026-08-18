@@ -8973,3 +8973,25 @@ passes `1/1`.
   original-record override now owns a stable copy while an expression runs, so
   nested `TABLEREVERT()` or `TABLEUPDATE()` cannot leave a dangling field-read
   pointer. The focused buffering regression covers both side-effect paths.
+
+- 2026-08-17: Recovered VFP9 `CURVAL()` for local persisted DBF records. The
+  runtime evaluates the supplied character expression against the current disk
+  record rather than a pending optimistic buffer, preserving the expression
+  type; the buffered value becomes visible after `TABLEUPDATE()`. The focused
+  regression covers character, numeric, expression, work-area, and post-commit
+  behavior. Remote cursors, views/refresh, EOF/error parity, locking, and
+  non-local sources remain explicit gaps.
+
+- 2026-08-17: Corrected strict verified-byte `CURVAL()` post-commit reads. A
+  successful `TABLEUPDATE()` now updates a session-owned committed record image,
+  so the runtime neither reopens mutable DBF bytes nor reports stale admitted
+  bytes when evaluating the new committed value.
+
+- 2026-08-17: Adversarial self-review of strict verified-byte `CURVAL()`
+  found and regression-proved a follow-on gap (`RQ-CF-PRG-011`): the
+  post-commit record image lives only on the committing cursor, so closing
+  and reopening the same table in a verified session loses visibility into
+  an earlier `TABLEUPDATE()` and `CURVAL()` falls back to the original
+  pre-commit admitted bytes. Documented and regression-covered rather than
+  fixed in this slice; the default (non-verified) execution path is
+  unaffected.

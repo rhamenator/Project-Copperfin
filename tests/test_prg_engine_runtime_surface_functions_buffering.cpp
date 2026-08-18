@@ -7,6 +7,139 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_curval_evaluates_on_disk_record()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_curval";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "curval.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U},
+             {.name = "AMOUNT", .type = 'N', .length = 12U, .decimal_count = 2U}},
+            {{"Before", "1.00"}});
+        expect(create_result.ok, "CURVAL fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "=CURSORSETPROP('Buffering', 5, 'people')\n"
+            "REPLACE NAME WITH 'Buffered' IN people\n"
+            "REPLACE AMOUNT WITH 2 IN people\n"
+            "cDiskName = CURVAL('NAME', 'people')\n"
+            "nDiskAmount = CURVAL('AMOUNT', 1)\n"
+            "cDiskExpression = CURVAL('people.NAME + '' value''', 'people')\n"
+            "=TABLEUPDATE(.T., .T., 'people')\n"
+            "cCommittedName = CURVAL('NAME', 'people')\n"
+            "RETURN\n");
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("CURVAL regression should complete: ") + state.message);
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("cdiskname") == "Before" && value_for("ndiskamount") == "1" &&
+                   value_for("cdiskexpression") == "Before value",
+               "CURVAL should evaluate against on-disk rather than buffered values");
+        expect(value_for("ccommittedname") == "Buffered",
+               "CURVAL should observe the committed on-disk value after TABLEUPDATE");
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_curval_uses_verified_post_commit_session_image()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_curval_verified";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "curval_verified.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Before"}});
+        expect(create_result.ok, "strict CURVAL fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "=CURSORSETPROP('Buffering', 5, 'people')\n"
+            "REPLACE NAME WITH 'Committed' IN people\n"
+            "=TABLEUPDATE(.T., .T., 'people')\n"
+            "cCommittedName = CURVAL('NAME', 'people')\n"
+            "RETURN\n");
+        auto options = make_runtime_session_options(program_path.string(), temp_root.string());
+        options.require_verified_file_byte_overrides = true;
+        options.verified_file_byte_overrides.emplace(table_path.string(), read_text(table_path));
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            std::move(options));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("strict CURVAL regression should complete: ") + state.message);
+        const auto found = state.globals.find("ccommittedname");
+        expect(found != state.globals.end() && copperfin::runtime::format_value(found->second) == "Committed",
+               "strict CURVAL should expose the session-owned committed value rather than stale admitted bytes");
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_curval_verified_commit_overlay_does_not_survive_cursor_reopen()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_curval_verified_reopen";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "curval_verified_reopen.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Before"}});
+        expect(create_result.ok, "strict CURVAL reopen fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "=CURSORSETPROP('Buffering', 5, 'people')\n"
+            "REPLACE NAME WITH 'Committed' IN people\n"
+            "=TABLEUPDATE(.T., .T., 'people')\n"
+            "cFirstRead = CURVAL('NAME', 'people')\n"
+            "USE IN people\n"
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "cReopenedRead = CURVAL('NAME', 'people')\n"
+            "RETURN\n");
+        auto options = make_runtime_session_options(program_path.string(), temp_root.string());
+        options.require_verified_file_byte_overrides = true;
+        options.verified_file_byte_overrides.emplace(table_path.string(), read_text(table_path));
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            std::move(options));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, std::string("strict CURVAL reopen regression should complete: ") + state.message);
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("cfirstread") == "Committed",
+               "strict CURVAL should observe its own cursor's committed value before reopen");
+        // KNOWN GAP (RQ-CF-PRG-011): the verified_committed_records overlay lives on
+        // CursorState, not the shared verified_file_byte_overrides admission map, so a
+        // reopened cursor loses visibility into the earlier commit and falls back to the
+        // original admitted snapshot. This assertion documents the current (incorrect)
+        // behavior so the regression fails loudly once a fix lands, rather than silently
+        // passing on the bug.
+        expect(value_for("creopenedread") == "Before",
+               "documents RQ-CF-PRG-011: a reopened cursor in a verified session currently "
+               "re-reads the stale admitted snapshot instead of the prior commit");
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_oldval_evaluates_buffered_original_record()
     {
         namespace fs = std::filesystem;
