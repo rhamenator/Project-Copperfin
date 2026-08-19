@@ -35,6 +35,10 @@ struct OpenFileHandle {
     std::size_t verified_position = 0U;
     bool verified_read = false;
     bool verified_eof = false;
+    // Set when FCREATE() was given a nonzero nFileAttribute: VFP9 help documents
+    // that such a file "cannot be written to with FPUTS()/FWRITE() until the
+    // file is closed and opened again," even though it was created read/write.
+    bool write_blocked = false;
 };
 
 std::unordered_map<int, OpenFileHandle>& open_file_handles() {
@@ -352,6 +356,34 @@ std::optional<PrgValue> evaluate_file_io_function(
         return make_number_value(static_cast<double>(handle));
     }
 
+    if (function == "fcreate" && !arguments.empty()) {
+        const std::filesystem::path path = resolve_file_path(value_as_string(arguments[0]), default_directory);
+        const int attribute = arguments.size() >= 2U
+            ? static_cast<int>(std::llround(value_as_number(arguments[1])))
+            : 0;
+
+        // FCREATE() always creates (overwriting any existing file) and opens for
+        // read/write, mirroring FOPEN()'s existing non-verified write path; write
+        // modes already bypass verified-byte sandboxing the same way FOPEN()'s do.
+        std::FILE* opened = copperfin::platform::open_file_stream(path, "wb+");
+        if (opened == nullptr) {
+            set_file_error_from_errno();
+            return make_number_value(-1.0);
+        }
+
+        const int handle = next_file_handle_id()++;
+        open_file_handles()[handle] = OpenFileHandle{
+            .file = opened,
+            .path = path,
+            .verified_bytes = {},
+            .verified_position = 0U,
+            .verified_read = false,
+            .verified_eof = false,
+            .write_blocked = attribute != 0};
+        clear_file_error();
+        return make_number_value(static_cast<double>(handle));
+    }
+
     if (function == "fclose" && !arguments.empty()) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
@@ -418,7 +450,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "fwrite" && arguments.size() >= 2U) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (!is_open_handle(opened) || opened->verified_read) {
+        if (!is_open_handle(opened) || opened->verified_read || opened->write_blocked) {
             last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
@@ -496,7 +528,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "fputs" && arguments.size() >= 2U) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (!is_open_handle(opened) || opened->verified_read) {
+        if (!is_open_handle(opened) || opened->verified_read || opened->write_blocked) {
             last_file_error_code() = 6;
             return make_number_value(-1.0);
         }

@@ -65,6 +65,28 @@ New regression `test_fdate_ftime_runtime_functions` in
 assert an exact wall-clock value), plus `EMPTY()` on both functions for a
 nonexistent file.
 
+## V1 FCREATE() low-level file creation
+
+`RQ-CF-PRG-013` recovers the mounted VFP9 `FCREATE(cFileName [, nFileAttribute])`
+function, the one missing member of an otherwise-complete low-level file-I/O
+family already shipped in `src/runtime/prg_engine_file_io_functions.cpp`
+(`FOPEN`/`FCLOSE`/`FREAD`/`FWRITE`/`FGETS`/`FPUTS`/`FSEEK`/`FTELL`/`FEOF`/
+`FFLUSH`/`FCHSIZE`/`STRTOFILE`/`FILETOSTR`). It creates (overwriting any
+existing file without warning) and opens for read/write, mirroring `FOPEN()`'s
+existing non-verified write path exactly — write-capable opens already bypass
+`require_verified_file_byte_overrides` sandboxing the same way `FOPEN()`'s do,
+so this adds no new verified-mode boundary. The documented nuance that a
+nonzero `nFileAttribute` blocks `FWRITE()`/`FPUTS()` on that handle until
+closed and reopened is implemented via a new `OpenFileHandle::write_blocked`
+flag, checked by both write functions; `FOPEN()` reopening the same path
+naturally clears it since new handles default to `false`. The DOS-style
+read-only/hidden/system attribute bits themselves are accepted but not
+persisted as real OS-level attributes — no POSIX equivalent for hidden/system,
+and only the write-blocking behavior was directly evidenced as testable.
+`test_fcreate_runtime_function` covers default-attribute create+write, silent
+overwrite, the write-blocked contract on both write functions, restored
+writability after reopen, and a missing-parent-directory failure.
+
 ## V1 LUPDATE() table header date
 
 `RQ-CF-PRG-012` recovers the mounted VFP9 `LUPDATE([nWorkArea | cTableAlias])`

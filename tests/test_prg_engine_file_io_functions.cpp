@@ -227,6 +227,105 @@ void test_fdate_ftime_runtime_functions()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_fcreate_runtime_function()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_fcreate_functions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Pre-existing content that FCREATE() must overwrite without warning.
+    const fs::path existing_path = temp_root / "existing.txt";
+    write_text(existing_path, "stale content that should be discarded");
+
+    const fs::path main_path = temp_root / "fcreate_functions.prg";
+    write_text(
+        main_path,
+        "hDefault = FCREATE('created.txt')\n"
+        "nDefaultWrite = FWRITE(hDefault, 'default-attribute')\n"
+        "nCloseDefault = FCLOSE(hDefault)\n"
+        "cDefaultContent = FILETOSTR('created.txt')\n"
+        "hOverwrite = FCREATE('existing.txt')\n"
+        "nOverwriteWrite = FWRITE(hOverwrite, 'fresh')\n"
+        "nCloseOverwrite = FCLOSE(hOverwrite)\n"
+        "cOverwriteContent = FILETOSTR('existing.txt')\n"
+        "hAttributed = FCREATE('attributed.txt', 1)\n"
+        "nBlockedWrite = FWRITE(hAttributed, 'should not land')\n"
+        "nBlockedError = FERROR()\n"
+        "nBlockedPut = FPUTS(hAttributed, 'still blocked')\n"
+        "nCloseAttributed = FCLOSE(hAttributed)\n"
+        "cAttributedAfterFirstClose = FILETOSTR('attributed.txt')\n"
+        "hReopened = FOPEN('attributed.txt', 12)\n"
+        "nReopenedWrite = FWRITE(hReopened, 'now writable')\n"
+        "nCloseReopened = FCLOSE(hReopened)\n"
+        "cAttributedAfterReopen = FILETOSTR('attributed.txt')\n"
+        "hMissingDir = FCREATE('missing-dir/nested.txt')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FCREATE() function script should complete: " + state.message);
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end())
+        {
+            expect(false, name + " variable should be present for FCREATE() test");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " should equal '" + expected + "' for FCREATE() test");
+    };
+    // File handle numbers come from a process-wide counter shared with earlier
+    // tests in this executable, so only their positivity (a valid handle) is
+    // meaningful here, not a specific value.
+    const auto check_valid_handle = [&](const std::string &name)
+    {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end())
+        {
+            expect(false, name + " variable should be present for FCREATE() test");
+            return;
+        }
+        double handle_value = -1.0;
+        try
+        {
+            handle_value = std::stod(copperfin::runtime::format_value(it->second));
+        }
+        catch (...)
+        {
+        }
+        expect(handle_value > 0.0,
+               name + " should be a valid (positive) file handle for FCREATE() test");
+    };
+
+    check_valid_handle("hdefault");
+    check("ndefaultwrite", "17");
+    check("nclosedefault", "0");
+    check("cdefaultcontent", "default-attribute");
+    check_valid_handle("hoverwrite");
+    check("noverwritewrite", "5");
+    check("ncloseoverwrite", "0");
+    check("coverwritecontent", "fresh");
+    check_valid_handle("hattributed");
+    check("nblockedwrite", "-1");
+    check("nblockederror", "6");
+    check("nblockedput", "-1");
+    check("ncloseattributed", "0");
+    check("cattributedafterfirstclose", std::string{});
+    check_valid_handle("hreopened");
+    check("nreopenedwrite", "12");
+    check("nclosereopened", "0");
+    check("cattributedafterreopen", "now writable");
+    check("hmissingdir", "-1");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_unicode_paths_survive_prg_file_io_and_includes()
 {
     namespace fs = std::filesystem;
@@ -293,6 +392,7 @@ int main()
 {
     test_file_io_runtime_functions();
     test_fdate_ftime_runtime_functions();
+    test_fcreate_runtime_function();
     test_unicode_paths_survive_prg_file_io_and_includes();
 
     if (test_failures() != 0)

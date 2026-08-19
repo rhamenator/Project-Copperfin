@@ -6,6 +6,16 @@
   VFP9 help documents no `SET HOURS`/`SET SECONDS` interaction for it (unlike
   `TIME()`). Both return the empty value of their documented return type for
   a file that doesn't exist, matching `LUPDATE()`'s established convention.
+  Both also search `SET PATH` when the file isn't in the default directory,
+  matching their documented contract.
+
+- 2026-08-18: Recovered the VFP9 `FCREATE(cFileName [, nFileAttribute])`
+  function: creates (overwriting any existing file) and opens a file for
+  read/write, mirroring the existing `FOPEN()` write path. A nonzero
+  `nFileAttribute` now correctly blocks `FWRITE()`/`FPUTS()` on that handle
+  until it's closed and reopened, matching the documented contract; the
+  DOS-style attribute bits themselves are accepted but not persisted as real
+  OS-level file attributes.
 
 - 2026-08-18: Recovered the VFP9 `LUPDATE([nWorkArea | cTableAlias])` function,
   returning a table's DBF header last-update date for the selected, aliased,
