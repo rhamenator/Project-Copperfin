@@ -15,6 +15,8 @@
   Verified admissions are now restored only after their matching physical
   journal replay succeeds; failed replay retains both the current admission and
   recovery journal rather than publishing bytes that no longer match the DBF.
+  Replay now fails closed when an expected journal backup is absent or when it
+  cannot remove a file created after journal capture.
 
 - 2026-08-20: Recovered the VFP9 `DIRECTORY(cDirectoryName [, nFlags])`
   function, returning whether the named path is an existing directory.

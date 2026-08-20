@@ -504,6 +504,74 @@ namespace copperfin::runtime_surface_tests
 #endif
     }
 
+    void test_curval_verified_missing_command_undo_backup_keeps_admission_bytes()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_curval_verified_undo_missing_backup";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "curval_verified_undo_missing_backup.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        expect(copperfin::vfp::create_dbf_table_file(
+                   table_path.string(), {{.name = "NAME", .type = 'C', .length = 24U}}, {{"Before"}}).ok,
+               "strict CURVAL missing-undo-backup fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "=CURSORSETPROP('Buffering', 5, 'people')\n"
+            "REPLACE NAME WITH 'Committed' IN people\n"
+            "=TABLEUPDATE(.T., .T., 'people')\n"
+            "PUBLIC nUndoErrors\n"
+            "nUndoErrors = 0\n"
+            "ON ERROR DO HandleUndoError\n"
+            "UNDO\n"
+            "ON ERROR\n"
+            "cAfterMissingBackupUndo = CURVAL('NAME', 'people')\n"
+            "RETURN\n"
+            "PROCEDURE HandleUndoError\n"
+            "nUndoErrors = nUndoErrors + 1\n"
+            "RETURN\n");
+        auto options = make_runtime_session_options(program_path.string(), temp_root.string());
+        options.require_verified_file_byte_overrides = true;
+        options.verified_file_byte_overrides.emplace(table_path.string(), read_text(table_path));
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            std::move(options));
+        session.add_breakpoint({.file_path = program_path.string(), .line = 8U});
+        const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(paused.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+               "missing-command-undo-backup regression should pause before UNDO");
+
+        fs::path backup_path;
+        for (fs::recursive_directory_iterator iterator(temp_root / "command_undo", ignored), end;
+             !ignored && iterator != end;
+             iterator.increment(ignored))
+        {
+            if (iterator->is_regular_file(ignored) && iterator->path().filename().string().starts_with("backup_"))
+            {
+                backup_path = iterator->path();
+                break;
+            }
+        }
+        expect(!backup_path.empty(), "missing-command-undo-backup regression should locate the staged backup");
+        if (!backup_path.empty())
+        {
+            fs::remove(backup_path, ignored);
+        }
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("strict CURVAL missing-command-undo-backup regression should complete: ") + state.message);
+        const auto after = state.globals.find("caftermissingbackupundo");
+        const auto errors = state.globals.find("nundoerrors");
+        expect(errors != state.globals.end() && copperfin::runtime::format_value(errors->second) == "1",
+               "a missing undo backup must drive the UNDO error handler exactly once");
+        expect(after != state.globals.end() && copperfin::runtime::format_value(after->second) == "Committed",
+               "a missing undo backup must retain the current verified admission instead of publishing pre-command bytes");
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_curval_verified_force_commit_merges_other_alias_admission()
     {
         namespace fs = std::filesystem;

@@ -15,6 +15,7 @@ int main()
     test_curval_verified_rollback_preserves_case_distinct_posix_admissions();
     test_curval_verified_command_undo_restores_admission_bytes();
     test_curval_verified_failed_command_undo_keeps_admission_bytes();
+    test_curval_verified_missing_command_undo_backup_keeps_admission_bytes();
     test_curval_verified_force_commit_merges_other_alias_admission();
     test_curval_verified_rollback_deduplicates_windows_case_aliases();
     test_getfldstate_tracks_buffered_mutation_state();

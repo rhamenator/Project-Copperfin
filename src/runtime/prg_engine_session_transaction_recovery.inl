@@ -33,31 +33,57 @@
         bool replay_transaction_journal_state(const TransactionJournalState &state)
         {
             bool ok = true;
-            std::error_code ignored;
             for (const auto &[_, entry] : state.tracked_files)
             {
                 const std::filesystem::path original = copperfin::platform::path_from_utf8_string(entry.original_path);
                 if (entry.existed_at_start)
                 {
-                    if (!entry.backup_path.empty())
+                    if (entry.backup_path.empty())
                     {
-                        const std::filesystem::path backup = copperfin::platform::path_from_utf8_string(entry.backup_path);
-                        if (std::filesystem::exists(backup, ignored))
-                        {
-                            std::error_code copy_error;
-                            std::filesystem::create_directories(original.parent_path(), copy_error);
-                            copy_error.clear();
-                            std::filesystem::copy_file(backup, original, std::filesystem::copy_options::overwrite_existing, copy_error);
-                            if (copy_error)
-                            {
-                                ok = false;
-                            }
-                        }
+                        ok = false;
+                        continue;
+                    }
+
+                    const std::filesystem::path backup = copperfin::platform::path_from_utf8_string(entry.backup_path);
+                    std::error_code backup_exists_error;
+                    if (!std::filesystem::exists(backup, backup_exists_error) || backup_exists_error)
+                    {
+                        ok = false;
+                        continue;
+                    }
+
+                    std::error_code copy_error;
+                    if (!original.parent_path().empty())
+                    {
+                        std::filesystem::create_directories(original.parent_path(), copy_error);
+                    }
+                    if (!copy_error)
+                    {
+                        std::filesystem::copy_file(
+                            backup, original, std::filesystem::copy_options::overwrite_existing, copy_error);
+                    }
+                    if (copy_error)
+                    {
+                        ok = false;
                     }
                 }
-                else if (std::filesystem::exists(original, ignored))
+                else
                 {
-                    std::filesystem::remove(original, ignored);
+                    std::error_code exists_error;
+                    const bool original_exists = std::filesystem::exists(original, exists_error);
+                    if (exists_error)
+                    {
+                        ok = false;
+                        continue;
+                    }
+                    if (original_exists)
+                    {
+                        std::error_code remove_error;
+                        if (!std::filesystem::remove(original, remove_error) || remove_error)
+                        {
+                            ok = false;
+                        }
+                    }
                 }
             }
 
@@ -67,6 +93,7 @@
             // journal remains the recovery authority for a later attempt.
             if (ok)
             {
+                std::error_code ignored;
                 std::filesystem::remove_all(state.root_path, ignored);
             }
             return ok;

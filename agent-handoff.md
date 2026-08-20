@@ -279,6 +279,11 @@ rather than a later intermediate snapshot.
 Journal replay must now succeed before its matching verified admission snapshot
 is published; a failed replay retains the current admission and recoverable
 journal rather than exposing bytes that no longer match the physical DBF/FPT.
+An absent expected backup, a backup probe failure, or failure to remove a file
+that did not exist at journal capture is a replay failure; none may publish a
+stale admission. `test_curval_verified_missing_command_undo_backup_keeps_admission_bytes`
+removes a staged command-undo backup at a debugger boundary and proves that
+`UNDO` reports the failure while verified `CURVAL()` retains the committed view.
 `test_curval_verified_rollback_preserves_case_distinct_posix_admissions`
 additionally proves that rollback for one POSIX table does not erase a
 case-distinct table's verified admission, while

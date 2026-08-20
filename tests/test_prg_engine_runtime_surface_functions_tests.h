@@ -25,6 +25,7 @@ namespace copperfin::runtime_surface_tests
     void test_curval_verified_rollback_preserves_case_distinct_posix_admissions();
     void test_curval_verified_command_undo_restores_admission_bytes();
     void test_curval_verified_failed_command_undo_keeps_admission_bytes();
+    void test_curval_verified_missing_command_undo_backup_keeps_admission_bytes();
     void test_curval_verified_force_commit_merges_other_alias_admission();
     void test_curval_verified_rollback_deduplicates_windows_case_aliases();
     void test_getfldstate_tracks_buffered_mutation_state();
