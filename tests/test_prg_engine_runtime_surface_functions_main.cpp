@@ -12,6 +12,7 @@ int main()
     test_singular_lparameter_binds_object_method_text_for_concatenation();
     test_array_element_native_property_expression_access();
     test_filesize_expression_function();
+    test_directory_expression_function();
     test_recsize_reclength_expression_functions();
     test_environment_and_sys_introspection_functions();
     test_sys2014_returns_minimum_runtime_path();
