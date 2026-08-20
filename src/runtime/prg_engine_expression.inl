@@ -123,6 +123,7 @@
                 std::function<PrgValue(const std::string &, const std::vector<std::string> &)> aggregate_callback,
                 std::function<std::string(const std::string &, bool)> order_callback,
                 std::function<std::string(const std::string &, std::size_t, const std::string &)> tag_callback,
+                std::function<std::size_t(const std::string &, const std::string &, const std::string &)> tagno_callback,
                 std::function<std::string(const std::string &, std::size_t, const std::string &)> key_callback,
                 std::function<std::size_t(const std::string &, const std::string &)> tag_count_callback,
                 std::function<bool(const std::string &, bool, const std::string &, const std::string &)> seek_callback,
@@ -206,6 +207,7 @@
                   aggregate_callback_(std::move(aggregate_callback)),
                   order_callback_(std::move(order_callback)),
                   tag_callback_(std::move(tag_callback)),
+                  tagno_callback_(std::move(tagno_callback)),
                   key_callback_(std::move(key_callback)),
                   tag_count_callback_(std::move(tag_count_callback)),
                   seek_callback_(std::move(seek_callback)),
@@ -1290,6 +1292,13 @@
                     }
 
                     return make_string_value(tag_callback_(index_file_name, tag_number, designator));
+                }
+                if (function == "tagno")
+                {
+                    const std::string index_name = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+                    const std::string index_file_name = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+                    const std::string designator = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
+                    return make_number_value(static_cast<double>(tagno_callback_(index_name, index_file_name, designator)));
                 }
                 if (function == "key")
                 {
@@ -3623,6 +3632,7 @@
             std::function<PrgValue(const std::string &, const std::vector<std::string> &)> aggregate_callback_;
             std::function<std::string(const std::string &, bool)> order_callback_;
             std::function<std::string(const std::string &, std::size_t, const std::string &)> tag_callback_;
+            std::function<std::size_t(const std::string &, const std::string &, const std::string &)> tagno_callback_;
             std::function<std::string(const std::string &, std::size_t, const std::string &)> key_callback_;
             std::function<std::size_t(const std::string &, const std::string &)> tag_count_callback_;
             std::function<bool(const std::string &, bool, const std::string &, const std::string &)> seek_callback_;

@@ -1185,6 +1185,60 @@
             return matching_orders;
         }
 
+        std::size_t tagno_function_value(
+            const std::string &index_name,
+            const std::string &index_file_name,
+            const std::string &designator) const
+        {
+            const CursorState *cursor = resolve_cursor_target(designator);
+            if (cursor == nullptr)
+            {
+                return 0U;
+            }
+
+            if (trim_copy(index_name).empty())
+            {
+                if (cursor->active_order_name.empty() || cursor->active_order_path.empty())
+                {
+                    return 0U;
+                }
+                for (std::size_t index = 0; index < cursor->orders.size(); ++index)
+                {
+                    const CursorState::OrderState &order = cursor->orders[index];
+                    if (collapse_identifier(order.name) == collapse_identifier(cursor->active_order_name) &&
+                        normalize_path(order.index_path) == normalize_path(cursor->active_order_path))
+                    {
+                        return index + 1U;
+                    }
+                }
+                return 0U;
+            }
+
+            const std::string normalized_name = collapse_identifier(unquote_string(index_name));
+            const std::string normalized_index_path = normalize_path(unquote_string(index_file_name));
+            const std::string normalized_index_file_name = collapse_identifier(copperfin::platform::path_to_utf8_string(
+                copperfin::platform::path_from_utf8_string(normalized_index_path.empty() ? index_file_name : normalized_index_path).filename()));
+            for (std::size_t index = 0; index < cursor->orders.size(); ++index)
+            {
+                const CursorState::OrderState &candidate = cursor->orders[index];
+                const std::string candidate_path = normalize_path(candidate.index_path);
+                if (!trim_copy(index_file_name).empty() &&
+                    candidate_path != normalized_index_path &&
+                    collapse_identifier(copperfin::platform::path_to_utf8_string(
+                        copperfin::platform::path_from_utf8_string(candidate_path).filename())) != normalized_index_file_name)
+                {
+                    continue;
+                }
+                const std::string order_file_name = collapse_identifier(copperfin::platform::path_to_utf8_string(
+                    copperfin::platform::path_from_utf8_string(candidate.index_path).filename()));
+                if (collapse_identifier(candidate.name) == normalized_name || order_file_name == normalized_name)
+                {
+                    return index + 1U;
+                }
+            }
+            return 0U;
+        }
+
         std::string key_function_value(const std::string &index_file_name, std::size_t index_number, const std::string &designator) const
         {
             const CursorState *cursor = resolve_cursor_target(designator);

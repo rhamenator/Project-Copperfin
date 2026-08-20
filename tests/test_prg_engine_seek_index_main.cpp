@@ -25,6 +25,7 @@ int main()
     test_seek_command_accepts_descending_tag_override_without_set_order();
     test_seek_related_index_functions();
     test_key_and_tagcount_functions();
+    test_tagno_function();
     test_key_and_tag_ordinal_order_across_companion_naming_styles();
     test_seek_function_accepts_direction_suffix_in_order_designator();
     test_local_table_temporary_order_expression_parity();

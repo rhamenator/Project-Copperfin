@@ -600,6 +600,63 @@ void test_key_and_tagcount_functions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_tagno_function() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_tagno";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    const fs::path idx_path = temp_root / "people.idx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+    write_synthetic_idx(idx_path, "SUBSTR(NAME,1,3)");
+
+    const fs::path main_path = temp_root / "tagno.prg";
+    write_text(main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "nNatural = TAGNO()\n"
+        "SET ORDER TO UPPER(NAME)\n"
+        "nTemporary = TAGNO()\n"
+        "SET ORDER TO TAG NAME\n"
+        "nActive = TAGNO()\n"
+        "nTag = TAGNO('NAME')\n"
+        "nCdxTag = TAGNO('NAME', '" + cdx_path.string() + "')\n"
+        "nIdx = TAGNO('" + idx_path.filename().string() + "')\n"
+        "nAlias = TAGNO('NAME', '" + cdx_path.string() + "', 'People')\n"
+        "nMissing = TAGNO('MISSING')\n"
+        "SET ORDER TO 0\n"
+        "nCleared = TAGNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TAGNO() script should complete");
+    const auto expect_number = [&](const char *name, const char *expected)
+    {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), std::string{"TAGNO() fixture should define "} + name);
+        if (found != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                std::string{"TAGNO() "} + name + " should be " + expected);
+        }
+    };
+    expect_number("nnatural", "0");
+    expect_number("ntemporary", "0");
+    expect_number("nactive", "2");
+    expect_number("ntag", "2");
+    expect_number("ncdxtag", "2");
+    expect_number("nidx", "1");
+    expect_number("nalias", "2");
+    expect_number("nmissing", "0");
+    expect_number("ncleared", "0");
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_key_and_tag_ordinal_order_across_companion_naming_styles() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_key_tag_naming_styles";
