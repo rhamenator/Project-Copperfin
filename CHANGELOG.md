@@ -1,3 +1,10 @@
+- 2026-08-20: Defined the required follow-up for the verified-session
+  `CURVAL()` reopen integrity gap (`RQ-CF-PRG-011`). A rejected, unmerged
+  whole-file admission refresh could have admitted unrelated mutable bytes,
+  failed to restore admission state on transaction rollback, and omitted memo
+  sidecars. The future correction must instead patch owned admitted bytes,
+  journal admission state, and keep memo sidecars aligned.
+
 - 2026-08-18: Recovered the VFP9 `FDATE(cFileName [, nType])` and
   `FTIME(cFileName)` functions, returning a file's operating-system
   last-modification Date/DateTime and time. `FDATE()` respects the session's

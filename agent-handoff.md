@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 RQ-CF-PRG-011 remains a defined verified-session integrity gap
+
+Do not revive the earlier whole-file admission-map refresh for a
+verified-session `CURVAL()` commit/reopen gap. It would admit mutable bytes
+unrelated to the authorized commit, does not restore admission state on
+transaction rollback, and leaves memo-sidecar admission stale. The durable
+follow-up is a buffer-only mutation of the current admitted bytes, coupled to
+transaction admission snapshots and matching memo-sidecar admission updates.
+The existing reopen regression intentionally remains a gap witness. This
+documentation slice changes no runtime behavior.
+
 ## V1 FDATE()/FTIME() SET PATH fix (post-review, before merge)
 
 Automated PR review on #5068 (P2) caught that `FDATE()`/`FTIME()` used the
