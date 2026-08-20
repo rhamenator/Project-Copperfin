@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 FILE() Hidden/System visibility flags
+
+`RQ-CF-PRG-016` closes the directly evidenced `FILE(cFileName [, nFlags])`
+gap recorded by the preceding `DIRECTORY()` slice. The mounted VFP9 help says
+that `FILE()` searches the default directory and then `SET PATH`, rejects
+Hidden/System files when `nFlags` is omitted or `0`, and accepts them when it
+is `1`. The existing `FILE()` resolver and file-versus-directory behavior are
+unchanged; only the documented visibility gate is now applied after the
+resolved candidate is proven to be an existing non-directory file.
+
+The shared `copperfin::platform::path_is_hidden_or_system()` seam uses actual
+Windows `FILE_ATTRIBUTE_HIDDEN` / `FILE_ATTRIBUTE_SYSTEM` bits and the
+established leading-dot convention on POSIX, where those Windows attributes do
+not exist. The focused runtime-surface regression creates a real Windows Hidden
+fixture through `SetFileAttributesW` under Windows and uses the POSIX
+leading-dot fixture elsewhere. It proves omitted/`0` return `.F.` and `1`
+returns `.T.` without changing the existing default-directory or `SET PATH`
+coverage. Protected Windows CI remains the required direct evidence for the
+Windows attribute branch.
+
 ## V1 DIRECTORY() existence probe
 
 `RQ-CF-PRG-015` recovers the mounted VFP9 `DIRECTORY(cDirectoryName [, nFlags])`
@@ -25,12 +45,9 @@ via the same leading-dot filename convention `ADIR()`'s existing
 match, not verified equivalence to real VFP9/Windows behavior, recorded as
 such in the traceability row.
 
-Also noticed while grounding this: `FILE()`'s own `nFlags` parameter is
-documented with the identical Hidden/System semantics but the existing
-`"file"` dispatch block ignores it entirely (always behaves as `nFlags=1`).
-Pre-existing gap, not touched here — out of scope for a `DIRECTORY()` slice
-and would need its own regression sweep against `FILE()`'s already-shipped
-behavior.
+The previously recorded `FILE()` `nFlags` gap is now closed by
+`RQ-CF-PRG-016` above. `ADIR()`'s separately implemented `H` flag still has
+its own compatibility gap and needs an independently evidenced slice.
 
 New regression `test_directory_expression_function` in
 `tests/test_prg_engine_runtime_surface_functions_expressions_01.cpp`

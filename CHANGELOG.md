@@ -25,6 +25,13 @@
   rewrites, raw-preserving Visual Asset structural edits, and direct Visual
   Asset field edits are covered; no-op edits leave the file untouched.
 
+- 2026-08-20: Recovered the VFP9 `FILE(cFileName [, nFlags])` Hidden/System
+  visibility contract. `FILE()` retains its existing default-directory then
+  `SET PATH` search and file-versus-directory behavior, while omitted or zero
+  `nFlags` now reject existing Hidden/System files and `nFlags=1` accepts them.
+  Windows reads the real Hidden/System attributes; POSIX retains the established
+  leading-dot approximation for Hidden files.
+
 - 2026-08-20: Recovered the VFP9 `DIRECTORY(cDirectoryName [, nFlags])`
   function, returning whether the named path is an existing directory.
   Resolves only relative to the default directory — unlike `FILE()`/

@@ -5,6 +5,13 @@
 #include <locale>
 #include <set>
 
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+
 namespace copperfin::runtime_surface_tests
 {
     namespace
@@ -417,6 +424,15 @@ namespace copperfin::runtime_surface_tests
         const fs::path test_file_path = temp_root / "testfile.txt";
         const std::string test_content = "Hello, World! This is a test file.";
         write_text(test_file_path, test_content);
+        const fs::path hidden_file_path = temp_root / ".hidden_file.txt";
+        write_text(hidden_file_path, "hidden file");
+#if defined(_WIN32)
+        const DWORD hidden_file_attributes = ::GetFileAttributesW(hidden_file_path.c_str());
+        expect(hidden_file_attributes != INVALID_FILE_ATTRIBUTES &&
+                   ::SetFileAttributesW(
+                       hidden_file_path.c_str(), hidden_file_attributes | FILE_ATTRIBUTE_HIDDEN) != 0,
+               "FILE() hidden-attribute fixture should be marked Hidden on Windows");
+#endif
 
         // Create a file only discoverable via SET PATH
         const fs::path path_probe_dir = temp_root / "path_probe";
@@ -457,6 +473,9 @@ namespace copperfin::runtime_surface_tests
             "lAbsoluteDirectory = FILE('" + absolute_directory.string() + "')\n"
             "lAbsoluteFile = FILE('" + test_file_path.string() + "')\n"
             "lEmptyFile = FILE('')\n"
+            "lHiddenFileDefault = FILE('.hidden_file.txt')\n"
+            "lHiddenFileZero = FILE('.hidden_file.txt', 0)\n"
+            "lHiddenFileWithFlags = FILE('.hidden_file.txt', 1)\n"
             "lPathFileBefore = FILE('path_only.txt')\n"
             "SET PATH TO '" + path_probe_dir.string() + "'\n"
             "lPathFileAfter = FILE('path_only.txt')\n"
@@ -504,6 +523,9 @@ namespace copperfin::runtime_surface_tests
         check("labsolutedirectory", "false");
         check("labsolutefile", "true");
         check("lemptyfile", "false");
+        check("lhiddenfiledefault", "false");
+        check("lhiddenfilezero", "false");
+        check("lhiddenfilewithflags", "true");
 
         // SET PATH resolution should make path-only file discoverable
         check("lpathfilebefore", "false");

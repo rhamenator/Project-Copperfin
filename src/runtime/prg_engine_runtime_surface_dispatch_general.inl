@@ -8,8 +8,13 @@
             resolve_runtime_file_probe_path(
                 value_as_string(arguments[0]), default_directory, set_callback, true);
         const std::filesystem::file_status status = std::filesystem::status(path, ignored);
+        if (ignored || !std::filesystem::exists(status) || std::filesystem::is_directory(status)) {
+            return make_boolean_value(false);
+        }
+        const bool include_hidden_or_system = arguments.size() >= 2U &&
+            static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1;
         return make_boolean_value(
-            !ignored && std::filesystem::exists(status) && !std::filesystem::is_directory(status));
+            include_hidden_or_system || !copperfin::platform::path_is_hidden_or_system(path));
     }
     if (function == "directory" && !arguments.empty()) {
         // Unlike FILE(), the mounted help documents DIRECTORY() as searching
