@@ -231,6 +231,16 @@
 #endif
         }
 
+        bool verified_file_paths_equal(const std::string &left, const std::string &right) const
+        {
+#if defined(_WIN32)
+            return paths_equal_insensitive(left, right);
+#else
+            return copperfin::platform::path_from_utf8_string(left).lexically_normal() ==
+                copperfin::platform::path_from_utf8_string(right).lexically_normal();
+#endif
+        }
+
         RuntimeDatabaseState *find_open_database_by_path(
             DataSessionState &session,
             const std::string &path)

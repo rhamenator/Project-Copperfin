@@ -1821,6 +1821,21 @@
                 return state != field_states->second.end() &&
                     (state->second == 2 || state->second == 4);
             };
+            const auto deletion_state = cursor.buffered_deletion_states.find(recno);
+            const bool deletion_requires_update = appended ||
+                (deletion_state != cursor.buffered_deletion_states.end() &&
+                 (deletion_state->second == 2 || deletion_state->second == 4));
+            const auto admission_patch = stage_verified_buffered_commit_admission_patch(
+                cursor,
+                recno,
+                buffered->second,
+                appended,
+                field_states == cursor.buffered_field_states.end() ? nullptr : &field_states->second,
+                deletion_requires_update);
+            if (!admission_patch.has_value())
+            {
+                return false;
+            }
             for (std::size_t field_index = 0U; field_index < buffered->second.values.size(); ++field_index)
             {
                 if (!field_requires_update(field_index))
@@ -1841,10 +1856,6 @@
                 cursor.record_count = result.record_count;
             }
 
-            const auto deletion_state = cursor.buffered_deletion_states.find(recno);
-            const bool deletion_requires_update = appended ||
-                (deletion_state != cursor.buffered_deletion_states.end() &&
-                 (deletion_state->second == 2 || deletion_state->second == 4));
             if (deletion_requires_update)
             {
                 const auto deleted_result = vfp::set_record_deleted_flag(
@@ -1860,12 +1871,7 @@
             }
             record_verified_buffered_commit(
                 cursor,
-                recno,
-                recno,
-                buffered->second,
-                appended,
-                field_states == cursor.buffered_field_states.end() ? nullptr : &field_states->second,
-                deletion_requires_update);
+                *admission_patch);
             cursor.buffered_records.erase(buffered);
             cursor.buffered_original_records.erase(recno);
             cursor.buffered_field_states.erase(recno);
@@ -1878,53 +1884,206 @@
             return true;
         }
 
-        void record_verified_buffered_commit(
-            CursorState &cursor,
-            std::size_t buffered_recno,
+        struct VerifiedBufferedCommitAdmissionPatch
+        {
+            std::string table_key;
+            std::string table_bytes;
+            std::optional<std::pair<std::string, std::string>> memo_sidecar;
+        };
+
+        std::optional<VerifiedBufferedCommitAdmissionPatch> stage_verified_buffered_commit_admission_patch(
+            const CursorState &cursor,
             std::size_t persisted_recno,
             const vfp::DbfRecord &buffered_record,
             bool appended,
             const std::map<std::size_t, int> *field_states,
             bool deletion_requires_update)
         {
-            if (!options.require_verified_file_byte_overrides || persisted_recno == 0U)
+            if (!options.require_verified_file_byte_overrides)
             {
-                return;
+                return VerifiedBufferedCommitAdmissionPatch{};
             }
 
+            const std::filesystem::path source_path =
+                copperfin::platform::path_from_utf8_string(cursor.source_path);
+            const auto admitted_table = find_verified_file_byte_override(source_path);
+            if (admitted_table == options.verified_file_byte_overrides.end() ||
+                admitted_table->second.empty())
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                    {{"path", cursor.source_path}});
+                return std::nullopt;
+            }
+
+            const auto field_requires_update = [&](std::size_t field_index)
+            {
+                if (appended)
+                {
+                    return true;
+                }
+                if (field_states == nullptr)
+                {
+                    return false;
+                }
+                const auto state = field_states->find(field_index);
+                return state != field_states->end() && (state->second == 2 || state->second == 4);
+            };
+            bool patches_memo = false;
+            for (std::size_t field_index = 0U; field_index < buffered_record.values.size(); ++field_index)
+            {
+                const char field_type = buffered_record.values[field_index].field_type;
+                if (field_requires_update(field_index) &&
+                    (field_type == 'M' || field_type == 'G' || field_type == 'P'))
+                {
+                    patches_memo = true;
+                    break;
+                }
+            }
+
+            std::filesystem::path snapshot_root;
+            const auto staged_table_path = materialize_verified_file_snapshot(
+                source_path,
+                snapshot_root,
+                "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                patches_memo,
+                true);
+            if (!staged_table_path.has_value())
+            {
+                return std::nullopt;
+            }
+
+            const auto remove_snapshot = [&]()
+            {
+                std::error_code ignored;
+                if (!snapshot_root.empty())
+                {
+                    std::filesystem::remove_all(snapshot_root, ignored);
+                }
+            };
+            const auto fail = [&](const std::string &error) -> std::optional<VerifiedBufferedCommitAdmissionPatch>
+            {
+                last_error_message = error;
+                remove_snapshot();
+                return std::nullopt;
+            };
+
+            std::size_t staged_record_index = persisted_recno == 0U ? 0U : persisted_recno - 1U;
             if (appended)
             {
-                cursor.verified_committed_records[persisted_recno] = buffered_record;
-                return;
+                const auto append_result = vfp::append_blank_record_to_file(
+                    copperfin::platform::path_to_utf8_string(*staged_table_path));
+                if (!append_result.ok || append_result.record_count == 0U)
+                {
+                    return fail(append_result.error);
+                }
+                staged_record_index = append_result.record_count - 1U;
             }
 
-            const auto original = cursor.buffered_original_records.find(buffered_recno);
-            if (original == cursor.buffered_original_records.end())
+            for (std::size_t field_index = 0U; field_index < buffered_record.values.size(); ++field_index)
             {
-                return;
-            }
-            vfp::DbfRecord &committed = cursor.verified_committed_records[persisted_recno];
-            if (committed.values.empty())
-            {
-                committed = original->second;
-            }
-            if (field_states != nullptr)
-            {
-                for (const auto &[field_index, state] : *field_states)
+                if (!field_requires_update(field_index))
                 {
-                    if ((state != 2 && state != 4) ||
-                        field_index >= buffered_record.values.size() ||
-                        field_index >= committed.values.size())
-                    {
-                        continue;
-                    }
-                    committed.values[field_index] = buffered_record.values[field_index];
+                    continue;
+                }
+                const auto &field = buffered_record.values[field_index];
+                const auto replacement = vfp::replace_record_field_value(
+                    copperfin::platform::path_to_utf8_string(*staged_table_path),
+                    staged_record_index,
+                    field.field_name,
+                    field.display_value);
+                if (!replacement.ok)
+                {
+                    return fail(replacement.error);
                 }
             }
             if (deletion_requires_update)
             {
-                committed.deleted = buffered_record.deleted;
+                const auto deletion = vfp::set_record_deleted_flag(
+                    copperfin::platform::path_to_utf8_string(*staged_table_path),
+                    staged_record_index,
+                    buffered_record.deleted);
+                if (!deletion.ok)
+                {
+                    return fail(deletion.error);
+                }
             }
+
+            const auto read_owned_file = [](const std::filesystem::path &path) -> std::optional<std::string>
+            {
+                std::ifstream input(path, std::ios::binary);
+                if (!input)
+                {
+                    return std::nullopt;
+                }
+                std::ostringstream bytes;
+                bytes << input.rdbuf();
+                return (!input.good() && !input.eof()) ? std::nullopt : std::optional<std::string>{bytes.str()};
+            };
+
+            const auto table_bytes = read_owned_file(*staged_table_path);
+            if (!table_bytes.has_value() || table_bytes->empty())
+            {
+                return fail(runtime_text(
+                    "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                    {{"path", cursor.source_path}}));
+            }
+
+            VerifiedBufferedCommitAdmissionPatch patch{
+                .table_key = admitted_table->first,
+                .table_bytes = *table_bytes,
+                .memo_sidecar = std::nullopt};
+            if (patches_memo)
+            {
+                const auto sidecar_resolution = copperfin::vfp::resolve_vfp_memo_sidecar_path(source_path);
+                const std::filesystem::path sidecar_path = sidecar_resolution.requested_path;
+                bool ambiguous = false;
+                const auto resolved_sidecar = resolve_verified_file_byte_override_path(
+                    sidecar_path, ambiguous, true);
+                const auto admitted_sidecar = resolved_sidecar.has_value()
+                    ? find_verified_file_byte_override(*resolved_sidecar)
+                    : options.verified_file_byte_overrides.end();
+                const auto staged_sidecar = snapshot_root / sidecar_path.filename();
+                const auto sidecar_bytes = read_owned_file(staged_sidecar);
+                if (sidecar_resolution.ambiguous || ambiguous ||
+                    admitted_sidecar == options.verified_file_byte_overrides.end() ||
+                    !sidecar_bytes.has_value() || sidecar_bytes->empty())
+                {
+                    return fail(runtime_text(
+                        "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                        {{"path", copperfin::platform::path_to_utf8_string(sidecar_path)}}));
+                }
+                patch.memo_sidecar = std::make_pair(admitted_sidecar->first, *sidecar_bytes);
+            }
+            remove_snapshot();
+            return patch;
+        }
+
+        void record_verified_buffered_commit(
+            CursorState &cursor,
+            const VerifiedBufferedCommitAdmissionPatch &admission_patch)
+        {
+            if (!options.require_verified_file_byte_overrides)
+            {
+                return;
+            }
+
+            // The prepared patch comes only from a private copy of admitted
+            // bytes; never refresh this trust boundary by rereading the mutable
+            // live DBF/FPT after commit.
+            options.verified_file_byte_overrides[admission_patch.table_key] = admission_patch.table_bytes;
+            if (admission_patch.memo_sidecar.has_value())
+            {
+                options.verified_file_byte_overrides[admission_patch.memo_sidecar->first] =
+                    admission_patch.memo_sidecar->second;
+            }
+
+            // The shared admission image is already the complete, owned
+            // post-commit record view.  Retire every cursor-local overlay
+            // rather than rebuilding one from a buffered original: another
+            // alias may have committed an independent field since that
+            // original was captured.
+            clear_verified_committed_record_overlays_for_table(cursor.source_path);
         }
 
         std::optional<PrgValue> cursor_buffering_function(
@@ -2543,6 +2702,22 @@
             {
                 const bool appended = cursor->buffered_appended_records.contains(recno);
                 std::size_t persisted_recno = recno;
+                const auto field_states = cursor->buffered_field_states.find(recno);
+                const auto deletion_state = cursor->buffered_deletion_states.find(recno);
+                const bool deletion_requires_update = appended ||
+                    (deletion_state != cursor->buffered_deletion_states.end() &&
+                     (deletion_state->second == 2 || deletion_state->second == 4));
+                const auto admission_patch = stage_verified_buffered_commit_admission_patch(
+                    *cursor,
+                    persisted_recno,
+                    record,
+                    appended,
+                    field_states == cursor->buffered_field_states.end() ? nullptr : &field_states->second,
+                    deletion_requires_update);
+                if (!admission_patch.has_value())
+                {
+                    return make_boolean_value(false);
+                }
                 if (appended)
                 {
                     const int buffering_mode = cursor->buffering_mode;
@@ -2555,7 +2730,6 @@
                     }
                     persisted_recno = cursor->record_count;
                 }
-                const auto field_states = cursor->buffered_field_states.find(recno);
                 const auto field_requires_update = [&](std::size_t field_index) -> bool
                 {
                     if (appended)
@@ -2589,10 +2763,6 @@
                     }
                     cursor->record_count = result.record_count;
                 }
-                const auto deletion_state = cursor->buffered_deletion_states.find(recno);
-                const bool deletion_requires_update = appended ||
-                    (deletion_state != cursor->buffered_deletion_states.end() &&
-                     (deletion_state->second == 2 || deletion_state->second == 4));
                 if (deletion_requires_update)
                 {
                     const auto deleted_result = vfp::set_record_deleted_flag(
@@ -2614,12 +2784,7 @@
                 }
                 record_verified_buffered_commit(
                     *cursor,
-                    recno,
-                    persisted_recno,
-                    record,
-                    appended,
-                    field_states == cursor->buffered_field_states.end() ? nullptr : &field_states->second,
-                    deletion_requires_update);
+                    *admission_patch);
             }
             cursor->buffered_records.clear();
             cursor->buffered_original_records.clear();

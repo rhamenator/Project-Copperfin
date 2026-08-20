@@ -33,35 +33,69 @@
         bool replay_transaction_journal_state(const TransactionJournalState &state)
         {
             bool ok = true;
-            std::error_code ignored;
             for (const auto &[_, entry] : state.tracked_files)
             {
                 const std::filesystem::path original = copperfin::platform::path_from_utf8_string(entry.original_path);
                 if (entry.existed_at_start)
                 {
-                    if (!entry.backup_path.empty())
+                    if (entry.backup_path.empty())
                     {
-                        const std::filesystem::path backup = copperfin::platform::path_from_utf8_string(entry.backup_path);
-                        if (std::filesystem::exists(backup, ignored))
+                        ok = false;
+                        continue;
+                    }
+
+                    const std::filesystem::path backup = copperfin::platform::path_from_utf8_string(entry.backup_path);
+                    std::error_code backup_exists_error;
+                    if (!std::filesystem::exists(backup, backup_exists_error) || backup_exists_error)
+                    {
+                        ok = false;
+                        continue;
+                    }
+
+                    std::error_code copy_error;
+                    if (!original.parent_path().empty())
+                    {
+                        std::filesystem::create_directories(original.parent_path(), copy_error);
+                    }
+                    if (!copy_error)
+                    {
+                        std::filesystem::copy_file(
+                            backup, original, std::filesystem::copy_options::overwrite_existing, copy_error);
+                    }
+                    if (copy_error)
+                    {
+                        ok = false;
+                    }
+                }
+                else
+                {
+                    std::error_code exists_error;
+                    const bool original_exists = std::filesystem::exists(original, exists_error);
+                    if (exists_error)
+                    {
+                        ok = false;
+                        continue;
+                    }
+                    if (original_exists)
+                    {
+                        std::error_code remove_error;
+                        if (!std::filesystem::remove(original, remove_error) || remove_error)
                         {
-                            std::error_code copy_error;
-                            std::filesystem::create_directories(original.parent_path(), copy_error);
-                            copy_error.clear();
-                            std::filesystem::copy_file(backup, original, std::filesystem::copy_options::overwrite_existing, copy_error);
-                            if (copy_error)
-                            {
-                                ok = false;
-                            }
+                            ok = false;
                         }
                     }
                 }
-                else if (std::filesystem::exists(original, ignored))
-                {
-                    std::filesystem::remove(original, ignored);
-                }
             }
 
-            std::filesystem::remove_all(state.root_path, ignored);
+            // Preserve the journal and backups when replay fails.  A caller
+            // must not publish its matching verified-byte admission snapshot
+            // until this physical restoration succeeds, and a retained
+            // journal remains the recovery authority for a later attempt.
+            if (ok)
+            {
+                std::error_code ignored;
+                std::filesystem::remove_all(state.root_path, ignored);
+            }
             return ok;
         }
 
@@ -294,6 +328,7 @@
             }
 
             TransactionJournalState &journal = current_transaction_journal();
+            snapshot_verified_file_byte_overrides_for_table(journal, table_path);
             std::error_code ignored;
             for (const auto &path : transaction_companion_paths(table_path))
             {
@@ -351,6 +386,11 @@
                     closed_areas.push_back(area);
                     continue;
                 }
+
+                // A transaction replay restores the journaled admission view;
+                // cursor-private overlays must not reapply the rolled-back
+                // commit over that restored view.
+                cursor.verified_committed_records.clear();
 
                 const auto table_result = parse_cursor_table(cursor, std::max<std::size_t>(cursor.record_count, 1U));
                 if (!table_result.ok)
@@ -417,6 +457,9 @@
                 return false;
             }
 
+            // Publish the owned admission only after the matching physical
+            // DBF/FPT rollback succeeds, before the cursor reparse below.
+            restore_verified_file_byte_overrides(found->second);
             transaction_journal_by_session.erase(found);
             refresh_local_cursors_after_transaction_replay();
             return true;

@@ -840,6 +840,16 @@ namespace copperfin::runtime
             bool existed_at_start = false;
         };
 
+        struct VerifiedFileByteOverrideSnapshot
+        {
+            // The normalized logical path is the lookup identity.  When an
+            // admission entry exists, preserve its original key spelling too:
+            // the verified-byte map intentionally keeps the package-facing key
+            // rather than normalizing it at insertion time.
+            std::string logical_path;
+            std::optional<std::pair<std::string, std::string>> admitted_entry;
+        };
+
         struct TransactionJournalState
         {
             int level = 0;
@@ -847,6 +857,7 @@ namespace copperfin::runtime
             std::filesystem::path journal_path;
             std::string command_label;
             std::map<std::string, TransactionJournalFileEntry> tracked_files;
+            std::map<std::string, VerifiedFileByteOverrideSnapshot> verified_byte_overrides;
         };
 
         struct AsyncTaskState
