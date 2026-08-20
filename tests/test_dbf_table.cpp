@@ -134,6 +134,28 @@ bool write_binary_file(const std::filesystem::path& path, const std::vector<std:
     return static_cast<bool>(output);
 }
 
+void clear_dbf_last_update_date(const std::filesystem::path& path) {
+    std::vector<std::uint8_t> bytes = read_binary_file(path);
+    expect(bytes.size() >= 4U, "DBF date-stamping fixture should contain a complete header");
+    if (bytes.size() >= 4U) {
+        bytes[1U] = 0U;
+        bytes[2U] = 0U;
+        bytes[3U] = 0U;
+        expect(write_binary_file(path, bytes), "DBF date-stamping fixture should be writable");
+    }
+}
+
+void expect_dbf_last_update_date(const std::filesystem::path& path, const std::string& label) {
+    const auto result = copperfin::vfp::parse_dbf_header_from_file(path.string());
+    expect(result.ok, label + " should leave a readable DBF header");
+    if (result.ok) {
+        expect(result.header.last_update_year != 0U &&
+                   result.header.last_update_month >= 1U && result.header.last_update_month <= 12U &&
+                   result.header.last_update_day >= 1U && result.header.last_update_day <= 31U,
+               label + " should stamp a valid DBF last-update header date");
+    }
+}
+
 std::uint16_t read_be_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
     return static_cast<std::uint16_t>(
         (static_cast<std::uint16_t>(bytes[offset]) << 8U) |
@@ -362,6 +384,12 @@ void test_create_dbf_table_file_round_trips() {
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
     expect(parse_result.ok, "created DBF tables should round-trip through the parser");
+    expect(parse_result.ok && parse_result.table.header.last_update_year != 0U &&
+               parse_result.table.header.last_update_month >= 1U &&
+               parse_result.table.header.last_update_month <= 12U &&
+               parse_result.table.header.last_update_day >= 1U &&
+               parse_result.table.header.last_update_day <= 31U,
+           "created DBF tables should stamp a valid last-update header date for LUPDATE()");
     expect(parse_result.table.fields.size() == 3U, "created DBF tables should persist field descriptors");
     expect(parse_result.table.records.size() == 2U, "created DBF tables should persist record rows");
     if (parse_result.table.records.size() == 2U) {
@@ -370,6 +398,60 @@ void test_create_dbf_table_file_round_trips() {
         expect(parse_result.table.records[1].values[0].display_value == "WEST", "later created rows should persist");
         expect(parse_result.table.records[1].values[2].display_value == "4", "created numeric fields should round-trip");
     }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_dbf_mutations_stamp_last_update_date() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_update_date_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "updates.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U}
+    };
+    expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, {{"ALPHA"}, {"BRAVO"}}).ok,
+           "DBF date-stamping fixture should be created");
+
+    clear_dbf_last_update_date(table_path);
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NAME", "OMEGA").ok,
+           "record replacement should succeed for DBF date-stamping coverage");
+    expect_dbf_last_update_date(table_path, "record replacement");
+
+    clear_dbf_last_update_date(table_path);
+    expect(copperfin::vfp::append_blank_record_to_file(table_path.string()).ok,
+           "append should succeed for DBF date-stamping coverage");
+    expect_dbf_last_update_date(table_path, "record append");
+
+    clear_dbf_last_update_date(table_path);
+    expect(copperfin::vfp::set_record_deleted_flag(table_path.string(), 1U, true).ok,
+           "delete flag update should succeed for DBF date-stamping coverage");
+    expect_dbf_last_update_date(table_path, "delete flag update");
+
+    clear_dbf_last_update_date(table_path);
+    expect(copperfin::vfp::truncate_dbf_table_file(table_path.string(), 2U).ok,
+           "truncate should succeed for DBF date-stamping coverage");
+    expect_dbf_last_update_date(table_path, "truncate");
+
+    clear_dbf_last_update_date(table_path);
+    expect(copperfin::vfp::pack_dbf_table_file(table_path.string()).ok,
+           "pack should succeed for DBF date-stamping coverage");
+    expect_dbf_last_update_date(table_path, "pack");
+
+    clear_dbf_last_update_date(table_path);
+    expect(copperfin::vfp::add_dbf_table_field(
+               table_path.string(), {.name = "STATUS", .type = 'C', .length = 1U}).ok,
+           "schema rewrite should succeed for DBF date-stamping coverage");
+    expect_dbf_last_update_date(table_path, "schema rewrite");
+
+    clear_dbf_last_update_date(table_path);
+    expect(copperfin::vfp::zap_dbf_table_file(table_path.string()).ok,
+           "zap should succeed for DBF date-stamping coverage");
+    expect_dbf_last_update_date(table_path, "zap");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -3040,6 +3122,7 @@ int main(int argc, char* argv[]) {
     test_parse_dbf_table_with_memo_sidecar();
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
+    test_dbf_mutations_stamp_last_update_date();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_string_fields_store_literal_null_text();
     test_character_fields_stop_at_nul_padding();

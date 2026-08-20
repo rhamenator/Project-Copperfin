@@ -83,6 +83,10 @@ DbfWriteResult pack_dbf_table_file(const std::string& path);
 DbfWriteResult pack_dbf_memo_file(const std::string& path);
 DbfWriteResult zap_dbf_table_file(const std::string& path);
 
+// Updates the three DBF header last-update bytes using the local calendar date.
+// Returns false when the supplied buffer is too short or local time is unavailable.
+bool stamp_dbf_last_update_date(std::vector<std::uint8_t>& bytes);
+
 // Returns the raw bytes of a memo block from a .fpt or .dct sidecar file.
 // block_number is the 4-byte LE integer stored in an 'M'-type DBF field.
 // Returns an empty vector on failure and also for valid zero-length memo payloads.

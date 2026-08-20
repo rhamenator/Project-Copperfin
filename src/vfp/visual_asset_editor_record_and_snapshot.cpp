@@ -6,6 +6,7 @@
 
 #include "dbf_table_raw_mutation.h"
 #include "copperfin/platform/invariant_numeric.h"
+#include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/dbf_text_encoding.h"
 
 #include <locale>
@@ -837,7 +838,7 @@ VisualAssetEditResult replace_non_memo_field_value(
             return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.DirectFieldUpdateUnsupported")};
     }
 
-    if (!write_binary_file(table_path, table_bytes)) {
+    if (!stamp_dbf_last_update_date(table_bytes) || !write_binary_file(table_path, table_bytes)) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed")};
     }
 

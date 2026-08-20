@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <ctime>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -29,7 +30,6 @@
 #include <unordered_map>
 
 namespace copperfin::vfp {
-
 namespace {
 
 std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
@@ -1806,7 +1806,7 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
     const std::vector<std::uint8_t> original_memo_bytes = has_memo_fields ? read_binary_file(memo_path) : std::vector<std::uint8_t>{};
     const bool had_memo_file = has_memo_fields && !original_memo_bytes.empty();
 
-    if (!write_binary_file(path, bytes)) {
+    if (!stamp_dbf_last_update_date(bytes) || !write_binary_file(path, bytes)) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = records.size()};
     }
     if (has_memo_fields && !write_binary_file(memo_path, memo_bytes)) {
@@ -2182,6 +2182,34 @@ DbfWriteResult write_memo_field_bytes_preserving_prefix(
 
 }  // namespace
 
+bool stamp_dbf_last_update_date(std::vector<std::uint8_t>& bytes) {
+    if (bytes.size() < 4U) {
+        return false;
+    }
+
+    const std::time_t now = std::time(nullptr);
+    std::tm local_time{};
+#if defined(_WIN32)
+    if (localtime_s(&local_time, &now) != 0) {
+        return false;
+    }
+#else
+    if (localtime_r(&now, &local_time) == nullptr) {
+        return false;
+    }
+#endif
+    if (local_time.tm_year < 0 || local_time.tm_year > 255 ||
+        local_time.tm_mon < 0 || local_time.tm_mon > 11 ||
+        local_time.tm_mday < 1 || local_time.tm_mday > 31) {
+        return false;
+    }
+
+    bytes[1U] = static_cast<std::uint8_t>(local_time.tm_year);
+    bytes[2U] = static_cast<std::uint8_t>(local_time.tm_mon + 1);
+    bytes[3U] = static_cast<std::uint8_t>(local_time.tm_mday);
+    return true;
+}
+
 DbfRawRecordMutationResult stage_dbf_raw_record_appends(
     const std::string& path,
     const std::vector<DbfRawRecordAppend>& appends) {
@@ -2190,6 +2218,7 @@ DbfRawRecordMutationResult stage_dbf_raw_record_appends(
     if (!load_raw_dbf_mutation_state(path, state, failure)) {
         return failure;
     }
+    const std::vector<std::uint8_t> original_table_bytes = state.table_bytes;
 
     if (appends.size() >
         std::numeric_limits<std::uint32_t>::max() - state.header.record_count) {
@@ -2281,6 +2310,13 @@ DbfRawRecordMutationResult stage_dbf_raw_record_appends(
         }
     }
 
+    if (state.table_bytes != original_table_bytes &&
+        !stamp_dbf_last_update_date(state.table_bytes)) {
+        return failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"),
+            state.header.record_count);
+    }
+
     return {
         .ok = true,
         .error = {},
@@ -2300,6 +2336,7 @@ DbfRawRecordMutationResult stage_dbf_raw_record_reorder(
     if (!load_raw_dbf_mutation_state(path, state, failure)) {
         return failure;
     }
+    const std::vector<std::uint8_t> original_table_bytes = state.table_bytes;
     if (record_order.size() != state.header.record_count) {
         return failed_raw_record_mutation(
             dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"),
@@ -2330,6 +2367,13 @@ DbfRawRecordMutationResult stage_dbf_raw_record_reorder(
             original_record_bytes.begin() + static_cast<std::ptrdiff_t>(source_offset),
             state.header.record_length,
             state.table_bytes.begin() + static_cast<std::ptrdiff_t>(destination_offset));
+    }
+
+    if (state.table_bytes != original_table_bytes &&
+        !stamp_dbf_last_update_date(state.table_bytes)) {
+        return failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"),
+            state.header.record_count);
     }
 
     return {
@@ -2529,7 +2573,7 @@ DbfWriteResult append_blank_record_to_file(const std::string& path) {
     if (!result.ok) {
         return result;
     }
-    if (!write_binary_file(path, bytes)) {
+    if (!stamp_dbf_last_update_date(bytes) || !write_binary_file(path, bytes)) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header_result.header.record_count};
     }
     return result;
@@ -2662,7 +2706,7 @@ static DbfWriteResult replace_record_field_value_impl(
     if (!result.ok) {
         return result;
     }
-    if (!write_binary_file(path, bytes)) {
+    if (!stamp_dbf_last_update_date(bytes) || !write_binary_file(path, bytes)) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header_result.header.record_count};
     }
     if (is_memo_pointer_field(field->type) && !write_binary_file(memo_path, memo_bytes)) {
@@ -2734,7 +2778,7 @@ DbfWriteResult set_record_deleted_flag(
     }
 
     bytes[record_offset] = deleted ? 0x2AU : 0x20U;
-    if (!write_binary_file(path, bytes)) {
+    if (!stamp_dbf_last_update_date(bytes) || !write_binary_file(path, bytes)) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header_result.header.record_count};
     }
 
@@ -2776,7 +2820,7 @@ DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t reco
     bytes.resize(new_size);
     bytes.back() = 0x1AU;
     write_le_u32(bytes, 4U, static_cast<std::uint32_t>(record_count));
-    if (!write_binary_file(path, bytes)) {
+    if (!stamp_dbf_last_update_date(bytes) || !write_binary_file(path, bytes)) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header.record_count};
     }
 
@@ -2829,7 +2873,7 @@ DbfWriteResult pack_dbf_table_file(const std::string& path) {
 
     packed.push_back(0x1AU);
     write_le_u32(packed, 4U, kept_count);
-    if (!write_binary_file(path, packed)) {
+    if (!stamp_dbf_last_update_date(packed) || !write_binary_file(path, packed)) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = original_record_count};
     }
 
@@ -2906,7 +2950,7 @@ DbfWriteResult zap_dbf_table_file(const std::string& path) {
         bytes.begin() + static_cast<std::ptrdiff_t>(header_result.header.header_length));
     truncated.push_back(0x1AU);
     write_le_u32(truncated, 4U, 0U);
-    if (!write_binary_file(path, truncated)) {
+    if (!stamp_dbf_last_update_date(truncated) || !write_binary_file(path, truncated)) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header_result.header.record_count};
     }
 

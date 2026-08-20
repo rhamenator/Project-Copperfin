@@ -1270,6 +1270,18 @@ void test_update_visual_object_property_skips_noop_writes() {
     const fs::path direct_table_path = temp_dir / "noop_direct.scx";
     const fs::path direct_memo_path = temp_dir / "noop_direct.sct";
     write_synthetic_named_direct_asset(direct_table_path, direct_memo_path);
+    auto direct_table_without_date = read_file_bytes(direct_table_path);
+    if (direct_table_without_date.size() >= 4U) {
+        direct_table_without_date[1U] = 0U;
+        direct_table_without_date[2U] = 0U;
+        direct_table_without_date[3U] = 0U;
+    }
+    {
+        std::ofstream output(direct_table_path, std::ios::binary);
+        output.write(
+            reinterpret_cast<const char*>(direct_table_without_date.data()),
+            static_cast<std::streamsize>(direct_table_without_date.size()));
+    }
     const auto direct_table_before = read_file_bytes(direct_table_path);
     const auto direct_memo_before = read_file_bytes(direct_memo_path);
     const auto direct_update_result = copperfin::vfp::update_visual_object_property({
@@ -1287,6 +1299,25 @@ void test_update_visual_object_property_skips_noop_writes() {
         "#733: unchanged direct-field property edits should not rewrite the memo bytes");
     expect(!copperfin::vfp::query_visual_object_undo(direct_table_path.string()).available,
         "#733: unchanged direct-field property edits should not create undo history");
+
+    const auto direct_changed_update_result = copperfin::vfp::update_visual_object_property({
+        .path = direct_table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS",
+        .property_value = "223.000"
+    });
+    expect(direct_changed_update_result.ok,
+        "#5073: changed direct-field property edits should succeed");
+    const auto direct_table_after = read_file_bytes(direct_table_path);
+    expect(
+        direct_table_after.size() >= 4U && direct_table_after[1U] != 0U &&
+            direct_table_after[2U] >= 1U && direct_table_after[2U] <= 12U &&
+            direct_table_after[3U] >= 1U && direct_table_after[3U] <= 31U,
+        "#5073: changed direct-field property edits should stamp the DBF last-update date");
+    expect(read_file_bytes(direct_memo_path) == direct_memo_before,
+        "#5073: direct-field date stamping should not rewrite the memo bytes");
 
     fs::remove_all(temp_dir, ignored);
 }
