@@ -173,7 +173,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 record_runtime_warning(runtime_text(
                     "Runtime.Prg.RuntimeSurface.Warning.FileToStrVerifiedBytesUnavailable",
                     {{"path", copperfin::platform::path_to_utf8_string(path)}}));
-            })) {
+            },
+            set_callback)) {
         return file_io_result;
     }
 

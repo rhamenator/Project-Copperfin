@@ -7,16 +7,21 @@
 
 #include "copperfin/platform/file_stream.h"
 #include "copperfin/platform/path.h"
+#include "prg_engine_date_time_functions.h"
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
 #include <cerrno>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <limits>
+#include <sstream>
 #include <unordered_map>
 
 namespace copperfin::runtime {
@@ -83,6 +88,66 @@ std::filesystem::path resolve_file_path(const std::string& raw_path, const std::
         path = copperfin::platform::path_from_utf8_string(default_directory) / path;
     }
     return path.lexically_normal();
+}
+
+std::vector<std::filesystem::path> parse_set_path_search_entries(
+    const std::string& set_path_value, const std::string& default_directory) {
+    std::string value = trim_copy(set_path_value);
+    if (starts_with_insensitive(value, "TO ")) {
+        value = trim_copy(value.substr(3U));
+    }
+    value = unquote_string(value);
+
+    std::vector<std::filesystem::path> entries;
+    std::size_t token_start = 0U;
+    while (token_start <= value.size()) {
+        const std::size_t separator = value.find(';', token_start);
+        std::string token = separator == std::string::npos
+            ? value.substr(token_start)
+            : value.substr(token_start, separator - token_start);
+        token = unquote_string(token);
+        if (!token.empty()) {
+            entries.push_back(resolve_file_path(token, default_directory));
+        }
+        if (separator == std::string::npos) {
+            break;
+        }
+        token_start = separator + 1U;
+    }
+    return entries;
+}
+
+// FDATE()/FTIME() only ever probe an existing file (never create or write one),
+// so unlike resolve_file_path -- shared by every FOPEN/FCREATE/FREAD/FWRITE/etc.
+// call, where searching SET PATH would risk changing where a new file gets
+// created -- this additionally falls back to SET PATH when the default-directory
+// candidate doesn't exist, matching both functions' documented "default
+// directory, then any directories or folders specified with SET PATH" contract.
+std::filesystem::path resolve_existing_file_probe_path(
+    const std::string& raw_path,
+    const std::string& default_directory,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const std::filesystem::path default_candidate = resolve_file_path(raw_path, default_directory);
+    std::error_code ignored;
+    if (std::filesystem::exists(default_candidate, ignored)) {
+        return default_candidate;
+    }
+
+    const std::string unquoted = unquote_string(raw_path);
+    if (unquoted.empty() || is_windows_drive_absolute_path(unquoted) || is_unc_path(unquoted)) {
+        return default_candidate;
+    }
+    const std::filesystem::path relative_path = copperfin::platform::path_from_utf8_string(
+        normalize_relative_path_separators(unquoted));
+
+    for (const auto& entry : parse_set_path_search_entries(set_callback ? set_callback("PATH") : std::string{}, default_directory)) {
+        const std::filesystem::path candidate = (entry / relative_path).lexically_normal();
+        ignored.clear();
+        if (std::filesystem::exists(candidate, ignored)) {
+            return candidate;
+        }
+    }
+    return default_candidate;
 }
 
 OpenFileHandle* resolve_open_handle(int handle) {
@@ -181,6 +246,18 @@ std::string trim_newline(std::string value) {
     return value;
 }
 
+bool file_last_write_local_time(const std::filesystem::path& path, std::tm& local_tm) {
+    std::error_code ec;
+    const auto write_time = std::filesystem::last_write_time(path, ec);
+    if (ec) {
+        return false;
+    }
+    const auto system_time = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+        write_time - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
+    local_tm = local_time_from_time_t(std::chrono::system_clock::to_time_t(system_time));
+    return true;
+}
+
 }  // namespace
 
 std::optional<PrgValue> evaluate_file_io_function(
@@ -189,9 +266,48 @@ std::optional<PrgValue> evaluate_file_io_function(
     const std::string& default_directory,
     bool require_verified_file_byte_overrides,
     const std::function<std::optional<std::string>(const std::filesystem::path&)>& read_verified_file_callback,
-    const std::function<void(const std::filesystem::path&)>& verified_file_unavailable_callback) {
+    const std::function<void(const std::filesystem::path&)>& verified_file_unavailable_callback,
+    const std::function<std::string(const std::string&)>& set_callback) {
     if (function == "ferror" && arguments.empty()) {
         return make_number_value(static_cast<double>(last_file_error_code()));
+    }
+
+    if (function == "fdate" && !arguments.empty()) {
+        const std::filesystem::path path = resolve_existing_file_probe_path(
+            value_as_string(arguments[0]), default_directory, set_callback);
+        std::tm local_tm{};
+        if (!file_last_write_local_time(path, local_tm)) {
+            return make_date_value(std::string{});
+        }
+        const int year = local_tm.tm_year + 1900;
+        const int month = local_tm.tm_mon + 1;
+        const int day = local_tm.tm_mday;
+
+        const bool datetime_requested = arguments.size() >= 2U &&
+            static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1;
+        if (datetime_requested) {
+            return make_datetime_value(
+                format_runtime_datetime_for_set(
+                    year, month, day, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, set_callback),
+                year, month, day, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec);
+        }
+        return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
+    }
+
+    if (function == "ftime" && !arguments.empty()) {
+        const std::filesystem::path path = resolve_existing_file_probe_path(
+            value_as_string(arguments[0]), default_directory, set_callback);
+        std::tm local_tm{};
+        if (!file_last_write_local_time(path, local_tm)) {
+            return make_string_value(std::string{});
+        }
+        std::ostringstream stream;
+        stream.imbue(std::locale::classic());
+        stream << std::setfill('0')
+               << std::setw(2) << local_tm.tm_hour << ':'
+               << std::setw(2) << local_tm.tm_min << ':'
+               << std::setw(2) << local_tm.tm_sec;
+        return make_string_value(stream.str());
     }
 
     if (function == "fopen" && !arguments.empty()) {

@@ -24,6 +24,15 @@ std::string format_runtime_date_for_set(
     int day,
     const std::function<std::string(const std::string&)>& set_callback);
 
+std::string format_runtime_datetime_for_set(
+    int year,
+    int month,
+    int day,
+    int hour,
+    int minute,
+    int second,
+    const std::function<std::string(const std::string&)>& set_callback);
+
 std::optional<PrgValue> evaluate_date_time_additive(
     const PrgValue& left,
     const PrgValue& right,

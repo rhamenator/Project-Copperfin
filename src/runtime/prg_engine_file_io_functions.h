@@ -20,7 +20,8 @@ std::optional<PrgValue> evaluate_file_io_function(
     const std::string& default_directory,
     bool require_verified_file_byte_overrides,
     const std::function<std::optional<std::string>(const std::filesystem::path&)>& read_verified_file_callback,
-    const std::function<void(const std::filesystem::path&)>& verified_file_unavailable_callback);
+    const std::function<void(const std::filesystem::path&)>& verified_file_unavailable_callback,
+    const std::function<std::string(const std::string&)>& set_callback);
 
 void close_all_file_io_handles();
 
