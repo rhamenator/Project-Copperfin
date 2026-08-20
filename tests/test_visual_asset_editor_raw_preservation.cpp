@@ -191,7 +191,7 @@ bool header_matches_except_record_count(
         return false;
     }
     for (std::size_t index = 0U; index < header_length; ++index) {
-        if (index >= 4U && index < 8U) {
+        if ((index >= 1U && index < 4U) || (index >= 4U && index < 8U)) {
             continue;
         }
         if (original[index] != actual[index]) {
@@ -199,6 +199,12 @@ bool header_matches_except_record_count(
         }
     }
     return true;
+}
+
+bool header_has_valid_last_update_date(const std::vector<std::uint8_t>& bytes) {
+    return bytes.size() >= 4U && bytes[1U] != 0U &&
+           bytes[2U] >= 1U && bytes[2U] <= 12U &&
+           bytes[3U] >= 1U && bytes[3U] <= 31U;
 }
 
 bool tail_matches(
@@ -227,7 +233,9 @@ void expect_reordered_table(
     const std::size_t actual_tail_offset = fixture.header_length + (fixture.record_length * record_count);
     expect(actual.size() == fixture.table_bytes.size(), label + " should preserve full table size");
     expect(header_matches_except_record_count(fixture.table_bytes, actual, fixture.header_length),
-           label + " should preserve header metadata and code-page/table flags");
+           label + " should preserve header metadata and code-page/table flags except the update date");
+    expect(header_has_valid_last_update_date(actual),
+           label + " should stamp a valid DBF last-update header date");
     if (actual.size() >= actual_tail_offset + 1U) {
         for (std::size_t output_index = 0U; output_index < expected_order.size(); ++output_index) {
             expect(
@@ -256,7 +264,9 @@ void expect_appended_table(
             fixture.table_bytes,
             actual,
             fixture.header_length),
-        label + " should preserve header metadata except record count");
+        label + " should preserve header metadata except record count and update date");
+    expect(header_has_valid_last_update_date(actual),
+           label + " should stamp a valid DBF last-update header date");
     if (actual.size() < fixture.header_length + (final_record_count * fixture.record_length)) {
         return;
     }
@@ -346,7 +356,9 @@ void test_one_extension_duplicate(const std::filesystem::path& temp_dir, const s
     expect(actual.size() == original_table.size() + fixture.record_length,
            label + " duplicate should append exactly one record span");
     expect(header_matches_except_record_count(original_table, actual, fixture.header_length),
-           label + " duplicate should preserve header metadata except record count");
+           label + " duplicate should preserve header metadata except record count and update date");
+    expect(header_has_valid_last_update_date(actual),
+           label + " duplicate should stamp a valid DBF last-update header date");
     if (actual.size() >= fixture.header_length + (4U * fixture.record_length)) {
         for (std::size_t index = 0U; index < 3U; ++index) {
             expect(
@@ -391,7 +403,9 @@ void test_one_extension_create(const std::filesystem::path& temp_dir, const std:
     expect(actual.size() == original_table.size() + fixture.record_length,
            label + " create should append one record without changing record width");
     expect(header_matches_except_record_count(original_table, actual, fixture.header_length),
-           label + " create should preserve header metadata except record count");
+           label + " create should preserve header metadata except record count and update date");
+    expect(header_has_valid_last_update_date(actual),
+           label + " create should stamp a valid DBF last-update header date");
     if (actual.size() >= fixture.header_length + (4U * fixture.record_length)) {
         for (std::size_t index = 0U; index < 3U; ++index) {
             expect(

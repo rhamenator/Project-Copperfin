@@ -18,6 +18,13 @@
   Replay now fails closed when an expected journal backup is absent or when it
   cannot remove a file created after journal capture.
 
+- 2026-08-20: DBF creates and successful mutations now stamp the standard
+  three-byte local last-update date in the header, so `LUPDATE()` reflects
+  Copperfin-originated table changes as well as pre-existing VFP tables.
+  Record replacement, append, deletion/recall, truncate, pack, zap, schema
+  rewrites, raw-preserving Visual Asset structural edits, and direct Visual
+  Asset field edits are covered; no-op edits leave the file untouched.
+
 - 2026-08-20: Recovered the VFP9 `DIRECTORY(cDirectoryName [, nFlags])`
   function, returning whether the named path is an existing directory.
   Resolves only relative to the default directory — unlike `FILE()`/

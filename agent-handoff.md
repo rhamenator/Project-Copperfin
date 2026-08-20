@@ -140,16 +140,15 @@ is strict). The focused regression
 `test_lupdate_reads_table_header_date_and_designator_variants` covers all four
 outcomes.
 
-Discovered while grounding this: no DBF write path in this codebase
-(`create_dbf_table_file`, `replace_record_field_value`,
-`set_record_deleted_flag`, and other mutators in `src/vfp/dbf_table.cpp`) ever
-stamps a real last-update date into the header — it's always left zeroed. This
-predates `LUPDATE()` and had no prior consumer; it's a natural next slice
-(touches every DBF mutation path, not just creation) but out of scope here.
-The new regression exercises the real-date path by patching header bytes
-directly in the test fixture (`write_dbf_last_update_bytes`, a new small
-`tests/prg_engine_test_support.cpp` helper), same pattern as
-`mark_simple_dbf_record_deleted`.
+The follow-up write-path gap is closed: `src/vfp/dbf_table.cpp` stamps the
+three-byte local DBF last-update date immediately before each successful table
+write, including creation, record mutation, truncate/pack/zap, schema rewrites,
+raw-preserving Visual Asset staging, and direct non-memo Visual Asset field
+edits. Failed writes leave disk bytes intact, and a raw no-op edit remains a
+no-op rather than refreshing metadata. Focused `test_dbf_table` and
+`test_visual_asset_editor` regressions clear the date between operations and
+prove every covered write route restores a valid date while preserving
+unrelated raw asset bytes.
 
 ## V1 index-tag ordinal enumeration order fix
 
