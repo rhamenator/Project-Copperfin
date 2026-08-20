@@ -772,6 +772,10 @@
                 {
                     name = uppercase_copy(std::move(name));
                 }
+                else if (display_flag == 2)
+                {
+                    name = copperfin::platform::path_dos_8dot3_filename(entry.path());
+                }
                 values.push_back(make_string_value(std::move(name)));
                 values.push_back(make_number_value(is_directory ? 0.0 : static_cast<double>(entry.file_size(ignored))));
                 values.push_back(make_string_value(format_file_time_part(last_write, true)));

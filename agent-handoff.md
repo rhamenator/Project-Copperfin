@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 ADIR() DOS 8.3 display mode
+
+The mounted VFP9 `ADIR()` help explicitly defines `nFlag=2` as a DOS 8.3
+display mode. `RQ-CF-PRG-017` now routes that mode through
+`copperfin::platform::path_dos_8dot3_filename()`: Windows asks the operating
+system for the existing entry's short-path spelling through `GetShortPathNameW`
+and displays only its filename; when Windows has no generated short alias, its
+reported spelling is retained. POSIX/macOS lack a DOS short-name facility, so
+they retain the original filename as a documented portability fallback rather
+than inventing an alias algorithm. The focused regression compares `ADIR()`'s
+`nFlag=2` result with that platform seam for a long fixture filename. Protected
+Windows CI is required evidence for the native short-name branch. Only the
+separately documented `V` volume-label behavior remains unimplemented.
+
 ## V1 ADIR() visibility and display-case recovery
 
 `RQ-CF-PRG-017` recovers the mounted VFP9 `ADIR()` behavior for the directly
@@ -8,10 +22,9 @@ file-name case, and the no-match target-array preservation rule. The shared
 platform seam now distinguishes Hidden from System: Windows reads each actual
 attribute bit, while POSIX retains the established leading-dot approximation
 for Hidden and has no System equivalent. The regression covers a real Windows
-Hidden fixture, D/H inclusion and returned attributes, both display modes, and
-the unchanged-existing-array contract. Volume labels (`V`) and DOS 8.3 display
-mode (`nFlag=2`) remain separately documented VFP9 behavior and are not claimed
-by this slice.
+Hidden fixture, D/H inclusion and returned attributes, all three documented
+display modes, and the unchanged-existing-array contract. Volume labels (`V`)
+remain separately documented VFP9 behavior and are not claimed by this slice.
 
 ## V1 FILE() Hidden/System visibility flags
 

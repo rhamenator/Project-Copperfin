@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/platform/printer.h"
 #include "prg_engine_test_support.h"
 #include "test_environment_support.h"
@@ -681,6 +682,7 @@ void test_array_metadata_and_text_functions() {
     write_text(temp_root / "alpha.txt", "abc");
     write_text(temp_root / "beta.bin", "not matched");
     const fs::path mixed_case = temp_root / "MixedCase.txt";
+    const fs::path dos_display_file = temp_root / "ADir Dos Eight Three Display Filename.txt";
     const fs::path hidden_file = temp_root /
 #if defined(_WIN32)
         "hidden_attribute.txt";
@@ -688,11 +690,30 @@ void test_array_metadata_and_text_functions() {
         ".hidden_attribute.txt";
 #endif
     write_text(mixed_case, "mixed case");
+    write_text(dos_display_file, "dos display");
     write_text(hidden_file, "hidden");
     fs::create_directory(temp_root / "adir_directory");
+    std::string expected_dos_display_name =
+        copperfin::platform::path_to_utf8_string(dos_display_file.filename());
 #if defined(_WIN32)
     expect(::SetFileAttributesW(hidden_file.c_str(), FILE_ATTRIBUTE_HIDDEN) != 0,
            "ADIR Windows fixture should receive the Hidden attribute");
+    std::wstring short_path(260U, L'\0');
+    for (;;) {
+        const DWORD length = ::GetShortPathNameW(
+            dos_display_file.c_str(), short_path.data(), static_cast<DWORD>(short_path.size()));
+        expect(length != 0U, "ADIR Windows DOS fixture should resolve through GetShortPathNameW");
+        if (length == 0U) {
+            break;
+        }
+        if (length < short_path.size()) {
+            short_path.resize(length);
+            expected_dos_display_name = copperfin::platform::path_to_utf8_string(
+                fs::path(short_path).filename());
+            break;
+        }
+        short_path.assign(static_cast<std::size_t>(length) + 1U, L'\0');
+    }
 #endif
 
     const fs::path main_path = temp_root / "array_metadata.prg";
@@ -714,6 +735,8 @@ void test_array_metadata_and_text_functions() {
         "cUpperName = aUpper[1,1]\n"
         "nOriginalCount = ADIR(aOriginal, '" + mixed_case.string() + "', '', 1)\n"
         "cOriginalName = aOriginal[1,1]\n"
+        "nDosCount = ADIR(aDos, '" + dos_display_file.string() + "', '', 2)\n"
+        "cDosName = aDos[1,1]\n"
         "nHiddenDefault = ADIR(aHiddenDefault, '" + hidden_file.string() + "')\n"
         "nHiddenIncluded = ADIR(aHidden, '" + hidden_file.string() + "', 'H', 1)\n"
         "cHiddenAttr = aHidden[1,5]\n"
@@ -755,6 +778,8 @@ void test_array_metadata_and_text_functions() {
     const auto file_attr = state.globals.find("cfileattr");
     const auto upper_name = state.globals.find("cuppername");
     const auto original_name = state.globals.find("coriginalname");
+    const auto dos_count = state.globals.find("ndoscount");
+    const auto dos_name = state.globals.find("cdosname");
     const auto hidden_default = state.globals.find("nhiddendefault");
     const auto hidden_included = state.globals.find("nhiddenincluded");
     const auto hidden_attr = state.globals.find("chiddenattr");
@@ -785,6 +810,8 @@ void test_array_metadata_and_text_functions() {
     expect(file_name != state.globals.end(), "ADIR should populate file name");
     expect(file_size != state.globals.end(), "ADIR should populate file size");
     expect(file_attr != state.globals.end(), "ADIR should populate attribute column");
+    expect(dos_count != state.globals.end(), "ADIR nFlag=2 should return a count");
+    expect(dos_name != state.globals.end(), "ADIR nFlag=2 should populate a file name");
     expect(field_count != state.globals.end(), "AFIELDS should return a field count");
     expect(field_cols != state.globals.end(), "AFIELDS should expose its metadata column count");
     expect(field_one_name != state.globals.end(), "AFIELDS should populate first field name");
@@ -836,6 +863,16 @@ void test_array_metadata_and_text_functions() {
     if (original_name != state.globals.end()) {
         expect(copperfin::runtime::format_value(original_name->second) == "MixedCase.txt",
                "ADIR nFlag=1 should retain the original file-name case");
+    }
+    if (dos_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(dos_count->second) == "1",
+               "ADIR nFlag=2 should match the requested file");
+    }
+    if (dos_name != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(dos_name->second) ==
+                expected_dos_display_name,
+            "ADIR nFlag=2 should display the Windows DOS 8.3 filename spelling");
     }
     if (hidden_default != state.globals.end()) {
         expect(copperfin::runtime::format_value(hidden_default->second) == "0",
