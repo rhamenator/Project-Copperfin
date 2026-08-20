@@ -1,5 +1,45 @@
 # Agent Handoff
 
+## V1 DIRECTORY() existence probe
+
+`RQ-CF-PRG-015` recovers the mounted VFP9 `DIRECTORY(cDirectoryName [, nFlags])`
+function — the last item on the low-level-file-I/O-family candidate list
+(after `LUPDATE()`, `FCREATE()`, `FDATE()`/`FTIME()`). Returns `.T.` if the
+resolved path is an existing directory, `.F.` for a missing path or an
+existing *file*. Unlike `FILE()`/`FILESIZE()`, the help documents no `SET
+PATH` fallback for `DIRECTORY()` — only "relative to the Visual FoxPro
+default directory" — so this deliberately uses the plain
+`filesystem_probe_path` resolver (already shared with `SYS(2014)` in the
+same translation unit) instead of `resolve_runtime_file_probe_path`, which
+*does* search `SET PATH` and would have been the wrong (undocumented)
+choice here. Caught this distinction by reading both help pages side by
+side before implementing, having just been burned by the opposite mistake
+on `FDATE()`/`FTIME()` (RQ-CF-PRG-014, see below) where I *should* have
+searched `SET PATH` and initially didn't.
+
+`nFlags` gates Hidden/System visibility per the documented table (default
+`0` hides Hidden/System directories, `1` shows them regardless). POSIX has
+no System attribute and no first-class Hidden bit, so Hidden is approximated
+via the same leading-dot filename convention `ADIR()`'s existing
+`file_attributes_for_adir` already uses for its `H` flag — a convention
+match, not verified equivalence to real VFP9/Windows behavior, recorded as
+such in the traceability row.
+
+Also noticed while grounding this: `FILE()`'s own `nFlags` parameter is
+documented with the identical Hidden/System semantics but the existing
+`"file"` dispatch block ignores it entirely (always behaves as `nFlags=1`).
+Pre-existing gap, not touched here — out of scope for a `DIRECTORY()` slice
+and would need its own regression sweep against `FILE()`'s already-shipped
+behavior.
+
+New regression `test_directory_expression_function` in
+`tests/test_prg_engine_runtime_surface_functions_expressions_01.cpp`
+(registered in `test_prg_engine_runtime_surface_functions_main.cpp`) covers:
+plain/nested/absolute directories, a missing path, an existing file (should
+reject), the hidden-directory default/explicit-0/1 cases, and proof that
+`SET PATH` is never consulted (a directory only inside a `SET PATH`
+directory stays `.F.` even after `SET PATH` is configured).
+
 ## V1 FDATE()/FTIME() SET PATH fix (post-review, before merge)
 
 Automated PR review on #5068 (P2) caught that `FDATE()`/`FTIME()` used the
