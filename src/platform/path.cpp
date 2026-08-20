@@ -207,6 +207,30 @@ std::string path_dos_8dot3_filename(const std::filesystem::path& value) {
 #endif
 }
 
+std::optional<std::string> path_volume_label(const std::filesystem::path& value) {
+#if defined(_WIN32)
+    const std::filesystem::path normalized = value.lexically_normal();
+    std::wstring volume_root(32768U, L'\0');
+    if (::GetVolumePathNameW(
+            normalized.c_str(), volume_root.data(), static_cast<DWORD>(volume_root.size())) == 0) {
+        return std::nullopt;
+    }
+    volume_root.resize(std::wcslen(volume_root.c_str()));
+
+    std::wstring label(MAX_PATH + 1U, L'\0');
+    if (::GetVolumeInformationW(
+            volume_root.c_str(), label.data(), static_cast<DWORD>(label.size()), nullptr, nullptr,
+            nullptr, nullptr, 0U) == 0) {
+        return std::nullopt;
+    }
+    label.resize(std::wcslen(label.c_str()));
+    return path_to_utf8_string(std::filesystem::path(label));
+#else
+    static_cast<void>(value);
+    return std::nullopt;
+#endif
+}
+
 bool path_equal_case_insensitive(
     const std::filesystem::path& left,
     const std::filesystem::path& right) {

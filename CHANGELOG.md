@@ -1,7 +1,11 @@
+- 2026-08-20: `ADIR(..., 'V')` now returns only the Windows current-drive
+  volume label in the first array element, overriding any `D`/`H`/`S` filters
+  or file skeleton. Hosts without a Windows drive-volume label facility retain
+  the existing no-match behavior and do not manufacture a label.
+
 - 2026-08-20: `ADIR(..., nFlag=2)` now displays the DOS 8.3 filename spelling
   supplied by Windows for each matched entry. Hosts without a DOS short-name
-  facility retain the original filename spelling; the remaining `V` volume-label
-  attribute behavior remains explicitly unimplemented.
+  facility retain the original filename spelling.
 
 - 2026-08-20: `ADIR()` now observes its documented D/H/S inclusion filters,
   reports Hidden/System attributes through the shared platform seam, returns

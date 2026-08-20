@@ -724,6 +724,21 @@
             const bool include_hidden = requested_attributes.find('H') != std::string::npos;
             const bool include_system = requested_attributes.find('S') != std::string::npos;
 
+            // VFP9 documents V as a volume-label request for the current drive.
+            // It takes precedence over D/H/S and leaves only the first array
+            // element, so do not enumerate the skeleton's directory at all.
+            if (requested_attributes.find('V') != std::string::npos)
+            {
+                const auto volume_label = copperfin::platform::path_volume_label(
+                    copperfin::platform::path_from_utf8_string(current_default_directory()));
+                if (!volume_label.has_value())
+                {
+                    return make_number_value(0.0);
+                }
+                assign_array(target_name, {make_string_value(*volume_label)}, 1U);
+                return make_number_value(1.0);
+            }
+
             std::vector<fs::directory_entry> entries;
             std::error_code ignored;
             if (fs::exists(directory, ignored))
