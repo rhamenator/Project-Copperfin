@@ -680,6 +680,20 @@ void test_array_metadata_and_text_functions() {
     write_people_dbf(temp_root / "people.dbf", {{"Alice", 41}});
     write_text(temp_root / "alpha.txt", "abc");
     write_text(temp_root / "beta.bin", "not matched");
+    const fs::path mixed_case = temp_root / "MixedCase.txt";
+    const fs::path hidden_file = temp_root /
+#if defined(_WIN32)
+        "hidden_attribute.txt";
+#else
+        ".hidden_attribute.txt";
+#endif
+    write_text(mixed_case, "mixed case");
+    write_text(hidden_file, "hidden");
+    fs::create_directory(temp_root / "adir_directory");
+#if defined(_WIN32)
+    expect(::SetFileAttributesW(hidden_file.c_str(), FILE_ATTRIBUTE_HIDDEN) != 0,
+           "ADIR Windows fixture should receive the Hidden attribute");
+#endif
 
     const fs::path main_path = temp_root / "array_metadata.prg";
     write_text(
@@ -692,10 +706,25 @@ void test_array_metadata_and_text_functions() {
         "nLineCount = ALINES(aLines, ' red ' + CHR(13) + CHR(10) + 'blue', 1)\n"
         "cLineOne = aLines[1]\n"
         "cLineTwo = aLines[2]\n"
-        "nFileCount = ADIR(aFiles, '" + (temp_root / "*.txt").string() + "')\n"
+        "nFileCount = ADIR(aFiles, '" + (temp_root / "alpha.txt").string() + "')\n"
         "cFileName = aFiles[1,1]\n"
         "nFileSize = aFiles[1,2]\n"
         "cFileAttr = aFiles[1,5]\n"
+        "nUpperCount = ADIR(aUpper, '" + mixed_case.string() + "')\n"
+        "cUpperName = aUpper[1,1]\n"
+        "nOriginalCount = ADIR(aOriginal, '" + mixed_case.string() + "', '', 1)\n"
+        "cOriginalName = aOriginal[1,1]\n"
+        "nHiddenDefault = ADIR(aHiddenDefault, '" + hidden_file.string() + "')\n"
+        "nHiddenIncluded = ADIR(aHidden, '" + hidden_file.string() + "', 'H', 1)\n"
+        "cHiddenAttr = aHidden[1,5]\n"
+        "nDirectoryDefault = ADIR(aDirectoryDefault, '" + (temp_root / "adir_directory").string() + "')\n"
+        "nDirectoryIncluded = ADIR(aDirectory, '" + (temp_root / "adir_directory").string() + "', 'D', 1)\n"
+        "cDirectoryAttr = aDirectory[1,5]\n"
+        "DIMENSION aUnchanged[1]\n"
+        "aUnchanged[1] = 'retained'\n"
+        "nNoMatch = ADIR(aUnchanged, '" + (temp_root / "missing-*.txt").string() + "')\n"
+        "nUnchangedRows = ALEN(aUnchanged, 1)\n"
+        "cUnchanged = aUnchanged[1]\n"
         "nFieldCount = AFIELDS(aFields)\n"
         "nFieldCols = ALEN(aFields, 2)\n"
         "cFieldOneName = aFields[1,1]\n"
@@ -724,6 +753,17 @@ void test_array_metadata_and_text_functions() {
     const auto file_name = state.globals.find("cfilename");
     const auto file_size = state.globals.find("nfilesize");
     const auto file_attr = state.globals.find("cfileattr");
+    const auto upper_name = state.globals.find("cuppername");
+    const auto original_name = state.globals.find("coriginalname");
+    const auto hidden_default = state.globals.find("nhiddendefault");
+    const auto hidden_included = state.globals.find("nhiddenincluded");
+    const auto hidden_attr = state.globals.find("chiddenattr");
+    const auto directory_default = state.globals.find("ndirectorydefault");
+    const auto directory_included = state.globals.find("ndirectoryincluded");
+    const auto directory_attr = state.globals.find("cdirectoryattr");
+    const auto no_match = state.globals.find("nnomatch");
+    const auto unchanged_rows = state.globals.find("nunchangedrows");
+    const auto unchanged = state.globals.find("cunchanged");
     const auto field_count = state.globals.find("nfieldcount");
     const auto field_cols = state.globals.find("nfieldcols");
     const auto field_one_name = state.globals.find("cfieldonename");
@@ -780,7 +820,7 @@ void test_array_metadata_and_text_functions() {
         expect(copperfin::runtime::format_value(file_count->second) == "1", "ADIR should match only the txt file");
     }
     if (file_name != state.globals.end()) {
-        expect(copperfin::runtime::format_value(file_name->second) == "alpha.txt", "ADIR should return the matched file name");
+        expect(copperfin::runtime::format_value(file_name->second) == "ALPHA.TXT", "ADIR default nFlag should uppercase the matched file name");
     }
     if (file_size != state.globals.end()) {
         expect(copperfin::runtime::format_value(file_size->second) == "3", "ADIR should return the file size");
@@ -788,6 +828,50 @@ void test_array_metadata_and_text_functions() {
     if (file_attr != state.globals.end()) {
         expect(copperfin::runtime::format_value(file_attr->second).find("D") == std::string::npos,
             "ADIR should not mark normal files as directories");
+    }
+    if (upper_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(upper_name->second) == "MIXEDCASE.TXT",
+               "ADIR default nFlag should return uppercase file names");
+    }
+    if (original_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(original_name->second) == "MixedCase.txt",
+               "ADIR nFlag=1 should retain the original file-name case");
+    }
+    if (hidden_default != state.globals.end()) {
+        expect(copperfin::runtime::format_value(hidden_default->second) == "0",
+               "ADIR should exclude Hidden files unless H is requested");
+    }
+    if (hidden_included != state.globals.end()) {
+        expect(copperfin::runtime::format_value(hidden_included->second) == "1",
+               "ADIR H filter should include a Hidden file");
+    }
+    if (hidden_attr != state.globals.end()) {
+        expect(copperfin::runtime::format_value(hidden_attr->second).find('H') != std::string::npos,
+               "ADIR should report the Hidden attribute for a returned Hidden file");
+    }
+    if (directory_default != state.globals.end()) {
+        expect(copperfin::runtime::format_value(directory_default->second) == "0",
+               "ADIR should exclude directories unless D is requested");
+    }
+    if (directory_included != state.globals.end()) {
+        expect(copperfin::runtime::format_value(directory_included->second) == "1",
+               "ADIR D filter should include a directory");
+    }
+    if (directory_attr != state.globals.end()) {
+        expect(copperfin::runtime::format_value(directory_attr->second).find('D') != std::string::npos,
+               "ADIR should report the Directory attribute for a returned directory");
+    }
+    if (no_match != state.globals.end()) {
+        expect(copperfin::runtime::format_value(no_match->second) == "0",
+               "ADIR should return zero when no files match");
+    }
+    if (unchanged_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(unchanged_rows->second) == "1",
+               "ADIR with no matches should leave an existing target array unchanged");
+    }
+    if (unchanged != state.globals.end()) {
+        expect(copperfin::runtime::format_value(unchanged->second) == "retained",
+               "ADIR with no matches should preserve existing target-array values");
     }
     if (field_count != state.globals.end()) {
         expect(copperfin::runtime::format_value(field_count->second) == "2", "AFIELDS should report two fields");

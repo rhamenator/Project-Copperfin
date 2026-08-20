@@ -1,5 +1,18 @@
 # Agent Handoff
 
+## V1 ADIR() visibility and display-case recovery
+
+`RQ-CF-PRG-017` recovers the mounted VFP9 `ADIR()` behavior for the directly
+evidenced D/H/S attribute filters, default uppercase versus `nFlag=1` original
+file-name case, and the no-match target-array preservation rule. The shared
+platform seam now distinguishes Hidden from System: Windows reads each actual
+attribute bit, while POSIX retains the established leading-dot approximation
+for Hidden and has no System equivalent. The regression covers a real Windows
+Hidden fixture, D/H inclusion and returned attributes, both display modes, and
+the unchanged-existing-array contract. Volume labels (`V`) and DOS 8.3 display
+mode (`nFlag=2`) remain separately documented VFP9 behavior and are not claimed
+by this slice.
+
 ## V1 FILE() Hidden/System visibility flags
 
 `RQ-CF-PRG-016` closes the directly evidenced `FILE(cFileName [, nFlags])`

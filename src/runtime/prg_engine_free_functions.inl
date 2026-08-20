@@ -331,10 +331,13 @@
             {
                 attributes += "D";
             }
-            const auto name = copperfin::platform::path_to_utf8_string(entry.path().filename());
-            if (!name.empty() && name.front() == '.')
+            if (copperfin::platform::path_is_hidden(entry.path()))
             {
                 attributes += "H";
+            }
+            if (copperfin::platform::path_is_system(entry.path()))
+            {
+                attributes += "S";
             }
             if ((entry.status(ignored).permissions() & std::filesystem::perms::owner_write) == std::filesystem::perms::none)
             {

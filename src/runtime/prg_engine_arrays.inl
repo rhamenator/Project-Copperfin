@@ -79,7 +79,10 @@
             {
                 const std::string skeleton = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{"*.*"};
                 const std::string attributes = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
-                return populate_directory_array(array_name, skeleton, attributes);
+                const int display_flag = arguments.size() >= 4U
+                    ? static_cast<int>(std::llround(value_as_number(arguments[3])))
+                    : 0;
+                return populate_directory_array(array_name, skeleton, attributes, display_flag);
             }
 
             if (normalized_function == "afields")

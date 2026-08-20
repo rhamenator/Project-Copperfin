@@ -149,14 +149,14 @@ bool path_component_equal_for_platform(
 #endif
 }
 
-bool path_is_hidden_or_system(const std::filesystem::path& value) {
+bool path_is_hidden(const std::filesystem::path& value) {
     const std::filesystem::path normalized = value.lexically_normal();
 #if defined(_WIN32)
     const DWORD attributes = ::GetFileAttributesW(normalized.c_str());
     if (attributes == INVALID_FILE_ATTRIBUTES) {
         return false;
     }
-    return (attributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) != 0;
+    return (attributes & FILE_ATTRIBUTE_HIDDEN) != 0;
 #else
     // path::filename() is empty when the path has a trailing directory
     // separator (e.g. "foo/bar/"), so fall back to the parent's filename to
@@ -169,6 +169,21 @@ bool path_is_hidden_or_system(const std::filesystem::path& value) {
     const std::string name = path_to_utf8_string(component);
     return !name.empty() && name.front() == '.';
 #endif
+}
+
+bool path_is_system(const std::filesystem::path& value) {
+#if defined(_WIN32)
+    const std::filesystem::path normalized = value.lexically_normal();
+    const DWORD attributes = ::GetFileAttributesW(normalized.c_str());
+    return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_SYSTEM) != 0;
+#else
+    static_cast<void>(value);
+    return false;
+#endif
+}
+
+bool path_is_hidden_or_system(const std::filesystem::path& value) {
+    return path_is_hidden(value) || path_is_system(value);
 }
 
 bool path_equal_case_insensitive(
