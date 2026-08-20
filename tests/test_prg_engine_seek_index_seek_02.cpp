@@ -625,6 +625,7 @@ void test_tagno_function() {
         "nTag = TAGNO('NAME')\n"
         "nCdxTag = TAGNO('NAME', '" + cdx_path.string() + "')\n"
         "nIdx = TAGNO('" + idx_path.filename().string() + "')\n"
+        "nIdxPath = TAGNO('" + idx_path.string() + "')\n"
         "nAlias = TAGNO('NAME', '" + cdx_path.string() + "', 'People')\n"
         "nMissing = TAGNO('MISSING')\n"
         "SET ORDER TO 0\n"
@@ -651,6 +652,7 @@ void test_tagno_function() {
     expect_number("ntag", "2");
     expect_number("ncdxtag", "2");
     expect_number("nidx", "1");
+    expect_number("nidxpath", "1");
     expect_number("nalias", "2");
     expect_number("nmissing", "0");
     expect_number("ncleared", "0");

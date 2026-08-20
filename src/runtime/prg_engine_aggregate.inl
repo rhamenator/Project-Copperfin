@@ -1214,7 +1214,9 @@
                 return 0U;
             }
 
-            const std::string normalized_name = collapse_identifier(unquote_string(index_name));
+            const std::string unquoted_index_name = unquote_string(index_name);
+            const std::string normalized_name = collapse_identifier(unquoted_index_name);
+            const std::string normalized_name_path = normalize_path(unquoted_index_name);
             const std::string normalized_index_path = normalize_path(unquote_string(index_file_name));
             const std::string normalized_index_file_name = collapse_identifier(copperfin::platform::path_to_utf8_string(
                 copperfin::platform::path_from_utf8_string(normalized_index_path.empty() ? index_file_name : normalized_index_path).filename()));
@@ -1231,7 +1233,9 @@
                 }
                 const std::string order_file_name = collapse_identifier(copperfin::platform::path_to_utf8_string(
                     copperfin::platform::path_from_utf8_string(candidate.index_path).filename()));
-                if (collapse_identifier(candidate.name) == normalized_name || order_file_name == normalized_name)
+                if (collapse_identifier(candidate.name) == normalized_name ||
+                    order_file_name == normalized_name ||
+                    candidate_path == normalized_name_path)
                 {
                     return index + 1U;
                 }
