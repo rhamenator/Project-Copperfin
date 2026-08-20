@@ -288,6 +288,11 @@
             }
 
             TransactionJournalState &journal = current_command_undo_journal();
+            // Command undo restores the physical DBF/FPT files later.  Keep
+            // the matching owned admission image with that journal so a
+            // verified-byte session never continues to expose superseded
+            // post-commit bytes after UNDO.
+            snapshot_verified_file_byte_overrides_for_table(journal, table_path);
             std::error_code ignored;
             for (const auto &path : transaction_companion_paths(table_path))
             {
@@ -340,9 +345,13 @@
             command_undo_journal_by_session.erase(found);
             if (!state.tracked_files.empty() && !replay_transaction_journal_state(state))
             {
+                // Keep both the physical journal and its paired admission
+                // snapshot available for a later recovery attempt.
+                command_undo_journal_by_session.emplace(current_data_session, std::move(state));
                 last_error_message = command_undo_journal_replay_message();
                 return;
             }
+            restore_verified_file_byte_overrides(state);
             std::error_code ignored;
             if (!state.tracked_files.empty())
             {
@@ -380,21 +389,21 @@
                 return false;
             }
 
-            TransactionJournalState state = std::move(found->second.back());
-            found->second.pop_back();
-            if (found->second.empty())
-            {
-                command_undo_stack_by_session.erase(found);
-            }
-
+            TransactionJournalState &state = found->second.back();
             if (!replay_transaction_journal_state(state))
             {
                 last_error_message = command_undo_journal_replay_message();
                 return false;
             }
+            // The journal has restored the durable bytes; publish its paired
+            // admission snapshot before refreshing any cursor materialization.
+            restore_verified_file_byte_overrides(state);
             refresh_local_cursors_after_transaction_replay();
-            std::error_code ignored;
-            std::filesystem::remove_all(state.root_path, ignored);
+            found->second.pop_back();
+            if (found->second.empty())
+            {
+                command_undo_stack_by_session.erase(found);
+            }
             return true;
         }
 
@@ -409,16 +418,15 @@
 
             while (!found->second.empty())
             {
-                TransactionJournalState state = std::move(found->second.back());
-                found->second.pop_back();
+                TransactionJournalState &state = found->second.back();
                 if (!replay_transaction_journal_state(state))
                 {
                     last_error_message = command_undo_journal_replay_message();
                     return false;
                 }
+                restore_verified_file_byte_overrides(state);
                 refresh_local_cursors_after_transaction_replay();
-                std::error_code ignored;
-                std::filesystem::remove_all(state.root_path, ignored);
+                found->second.pop_back();
             }
             command_undo_stack_by_session.erase(found);
             return true;

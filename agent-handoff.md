@@ -252,21 +252,40 @@ The focused portable buffering regression covers character, numeric, expression,
 work-area, and post-commit behavior. Remote cursors, views and refresh timing,
 EOF/error compatibility, and non-local data sources remain separate.
 
-Adversarial self-review of `RQ-CF-PRG-008` (Codex unavailable) found and
-regression-proved a real gap, recorded as `RQ-CF-PRG-011`:
-`record_verified_buffered_commit` writes the post-commit record only into the
-committing `CursorState`'s own `verified_committed_records` map, never into
-the shared session-scoped `options.verified_file_byte_overrides` admission map
-that `materialize_verified_file_snapshot` reads for every cursor. So in a
-verified/sandboxed session, closing and reopening the same table (`USE IN
-<alias>` then `USE` again) loses visibility into an earlier `TABLEUPDATE()`
-commit and `CURVAL()` falls back to the original pre-commit admitted bytes.
-`test_curval_verified_commit_overlay_does_not_survive_cursor_reopen`
-reproduces this directly and documents the current (incorrect) behavior so it
-fails loudly once fixed. Scoped to verified-mode sessions only; the default
-execution path always re-reads the real file and is unaffected. Left unfixed
-here pending a decision on the right home for the fix and its blast radius
-across every `parse_table_path` consumer, not just `CURVAL()`.
+`RQ-CF-PRG-011` closes the verified-session `CURVAL()` commit/reopen integrity
+gap found during review of `RQ-CF-PRG-008`. A successful buffered
+`TABLEUPDATE()` applies its known DBF mutation to a private materialization of
+the current admitted bytes, then updates the session admission entry from that
+owned copy; it never rereads the mutable live DBF as authority. Memo-field
+updates likewise patch the resolved admitted `.fpt` sidecar. Consequently a
+reopened cursor and a concurrently open alias observe the authorized commit.
+
+For a transaction or command `UNDO`, the pre-commit DBF/FPT admission entries
+are journaled and restored before replay reparses any cursor; the reparse also
+clears cursor-local committed-record overlays so the originating alias cannot
+retain rolled-back data. Because the admission map is runtime-wide, every data
+session retires matching cursor-local overlays after a later authorized commit
+or admission restoration. `test_curval_verified_commit_overlay_survives_cursor_reopen`
+and `test_curval_verified_admission_patch_tracks_second_cursor_memo_and_rollback`
+cover reopen, memo-sidecar, separate-data-session later-commit overlay
+retirement, originating-alias, and rollback visibility.
+The post-commit view is parsed directly from the complete shared admission
+entry rather than reconstructed from a cursor's buffered original, so
+`test_curval_verified_force_commit_merges_other_alias_admission` proves a
+force commit preserves a distinct field already admitted by another alias.
+Windows case-variant aliases are likewise deduplicated when a transaction first
+captures admission state, so rollback restores only the original owned bytes
+rather than a later intermediate snapshot.
+Journal replay must now succeed before its matching verified admission snapshot
+is published; a failed replay retains the current admission and recoverable
+journal rather than exposing bytes that no longer match the physical DBF/FPT.
+`test_curval_verified_rollback_preserves_case_distinct_posix_admissions`
+additionally proves that rollback for one POSIX table does not erase a
+case-distinct table's verified admission, while
+`test_curval_verified_command_undo_restores_admission_bytes` proves `UNDO`
+restores the owned pre-commit admission before `CURVAL()` reads it. This remains scoped to
+`require_verified_file_byte_overrides`; ordinary sessions continue to read
+their local table files normally.
 
 ## V1 ON PAGE configuration boundary
 

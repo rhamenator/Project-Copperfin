@@ -61,7 +61,14 @@
                 }
             }
 
-            std::filesystem::remove_all(state.root_path, ignored);
+            // Preserve the journal and backups when replay fails.  A caller
+            // must not publish its matching verified-byte admission snapshot
+            // until this physical restoration succeeds, and a retained
+            // journal remains the recovery authority for a later attempt.
+            if (ok)
+            {
+                std::filesystem::remove_all(state.root_path, ignored);
+            }
             return ok;
         }
 
@@ -294,6 +301,7 @@
             }
 
             TransactionJournalState &journal = current_transaction_journal();
+            snapshot_verified_file_byte_overrides_for_table(journal, table_path);
             std::error_code ignored;
             for (const auto &path : transaction_companion_paths(table_path))
             {
@@ -351,6 +359,11 @@
                     closed_areas.push_back(area);
                     continue;
                 }
+
+                // A transaction replay restores the journaled admission view;
+                // cursor-private overlays must not reapply the rolled-back
+                // commit over that restored view.
+                cursor.verified_committed_records.clear();
 
                 const auto table_result = parse_cursor_table(cursor, std::max<std::size_t>(cursor.record_count, 1U));
                 if (!table_result.ok)
@@ -417,6 +430,9 @@
                 return false;
             }
 
+            // Publish the owned admission only after the matching physical
+            // DBF/FPT rollback succeeds, before the cursor reparse below.
+            restore_verified_file_byte_overrides(found->second);
             transaction_journal_by_session.erase(found);
             refresh_local_cursors_after_transaction_replay();
             return true;

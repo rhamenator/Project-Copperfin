@@ -1,3 +1,21 @@
+- 2026-08-20: Recovered verified-session `CURVAL()` commit visibility across
+  cursor reopen and concurrently open aliases (`RQ-CF-PRG-011`). `TABLEUPDATE()`
+  now applies its authorized DBF and memo-field mutation only to a private copy
+  of the already admitted bytes; it never promotes a mutable live-file reread
+  into the verified trust boundary. Transaction rollback restores the matching
+  DBF/FPT admission snapshot and clears stale cursor-local commit overlays
+  before reparsing. Later commits from another alias, including one in a
+  separate data session, retire earlier overlays; command `UNDO` restores its
+  matching admission snapshot; and POSIX rollback preserves case-distinct
+  admission entries. The post-commit cursor view is reparsed from that complete
+  shared admission image rather than rebuilt from a cursor's stale buffered
+  original, so a forced commit cannot mask a field already admitted by another
+  alias. Windows case-variant aliases now share one pre-transaction admission
+  snapshot, preventing rollback from restoring an intermediate admission.
+  Verified admissions are now restored only after their matching physical
+  journal replay succeeds; failed replay retains both the current admission and
+  recovery journal rather than publishing bytes that no longer match the DBF.
+
 - 2026-08-20: Recovered the VFP9 `DIRECTORY(cDirectoryName [, nFlags])`
   function, returning whether the named path is an existing directory.
   Resolves only relative to the default directory — unlike `FILE()`/

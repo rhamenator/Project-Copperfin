@@ -8,6 +8,103 @@
             return copperfin::platform::write_new_durable_file(path, bytes);
         }
 
+        void snapshot_verified_file_byte_overrides_for_table(
+            TransactionJournalState &journal,
+            const std::string &table_path)
+        {
+            if (!options.require_verified_file_byte_overrides)
+            {
+                return;
+            }
+
+            for (const auto &path : transaction_companion_paths(table_path))
+            {
+                const std::string logical_path = normalize_path(
+                    copperfin::platform::path_to_utf8_string(path));
+                // A Windows alias can name this same table with different
+                // casing.  Journal keys retain the first spelling for
+                // diagnostics, but must use the verified file identity for
+                // deduplication: a second snapshot would capture an
+                // intermediate admission and could overwrite the original
+                // state during rollback.
+                const bool already_snapshotted = std::any_of(
+                    journal.verified_byte_overrides.begin(),
+                    journal.verified_byte_overrides.end(),
+                    [&](const auto &entry)
+                    {
+                        return verified_file_paths_equal(entry.second.logical_path, logical_path);
+                    });
+                if (already_snapshotted)
+                {
+                    continue;
+                }
+
+                VerifiedFileByteOverrideSnapshot snapshot;
+                snapshot.logical_path = logical_path;
+                const auto admitted = find_verified_file_byte_override(path);
+                if (admitted != options.verified_file_byte_overrides.end())
+                {
+                    snapshot.admitted_entry = std::make_pair(admitted->first, admitted->second);
+                }
+                journal.verified_byte_overrides.emplace(logical_path, std::move(snapshot));
+            }
+        }
+
+        void clear_verified_committed_record_overlays_for_table(const std::string &table_path)
+        {
+            if (!options.require_verified_file_byte_overrides)
+            {
+                return;
+            }
+
+            // The admitted-byte map is runtime-wide, whereas cursors are
+            // partitioned by data session.  A new admission therefore has to
+            // retire any private materialization in every session, not merely
+            // the session that performed the write.
+            for (auto &[_, session] : data_sessions)
+            {
+                for (auto &[__, cursor] : session.cursors)
+                {
+                    if (!cursor.remote && !cursor.source_path.empty() &&
+                        verified_file_paths_equal(cursor.source_path, table_path))
+                    {
+                        cursor.verified_committed_records.clear();
+                    }
+                }
+            }
+        }
+
+        void restore_verified_file_byte_overrides(const TransactionJournalState &journal)
+        {
+            if (!options.require_verified_file_byte_overrides)
+            {
+                return;
+            }
+
+            for (const auto &[_, snapshot] : journal.verified_byte_overrides)
+            {
+                for (auto entry = options.verified_file_byte_overrides.begin();
+                     entry != options.verified_file_byte_overrides.end();)
+                {
+                    if (verified_file_paths_equal(entry->first, snapshot.logical_path))
+                    {
+                        entry = options.verified_file_byte_overrides.erase(entry);
+                    }
+                    else
+                    {
+                        ++entry;
+                    }
+                }
+                if (snapshot.admitted_entry.has_value())
+                {
+                    options.verified_file_byte_overrides.emplace(
+                        snapshot.admitted_entry->first,
+                        snapshot.admitted_entry->second);
+                }
+                clear_verified_committed_record_overlays_for_table(snapshot.logical_path);
+            }
+        }
+
         std::optional<std::filesystem::path> resolve_verified_file_byte_override_path(
             const std::filesystem::path &file_path,
             bool &ambiguous,
