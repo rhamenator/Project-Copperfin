@@ -28,12 +28,7 @@
         if (show_hidden_or_system) {
             return make_boolean_value(true);
         }
-        // No POSIX equivalent for a System attribute; Hidden follows the same
-        // leading-dot convention ADIR()'s file_attributes_for_adir already
-        // uses for its "H" attribute flag.
-        const std::string name = copperfin::platform::path_to_utf8_string(path.filename());
-        const bool hidden = !name.empty() && name.front() == '.';
-        return make_boolean_value(!hidden);
+        return make_boolean_value(!copperfin::platform::path_is_hidden_or_system(path));
     }
     if (function == "sys") {
         const auto format_sys16_frame = [](const std::string& routine_name,

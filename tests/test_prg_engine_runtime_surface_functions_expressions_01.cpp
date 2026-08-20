@@ -553,6 +553,7 @@ namespace copperfin::runtime_surface_tests
             "lHiddenDirDefault = DIRECTORY('.hidden_dir')\n"
             "lHiddenDirDefaultExplicit = DIRECTORY('.hidden_dir', 0)\n"
             "lHiddenDirShown = DIRECTORY('.hidden_dir', 1)\n"
+            "lHiddenDirTrailingSlash = DIRECTORY('.hidden_dir/')\n"
             "lPathOnlyDirBefore = DIRECTORY('path_only_dir')\n"
             "SET PATH TO '" + path_probe_dir.string() + "'\n"
             "lPathOnlyDirAfter = DIRECTORY('path_only_dir')\n"
@@ -584,6 +585,7 @@ namespace copperfin::runtime_surface_tests
         check("lhiddendirdefault", "false");
         check("lhiddendirdefaultexplicit", "false");
         check("lhiddendirshown", "true");
+        check("lhiddendirtrailingslash", "false");
         check("lpathonlydirbefore", "false");
         check("lpathonlydirafter", "false");
 
