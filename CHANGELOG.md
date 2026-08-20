@@ -1,3 +1,11 @@
+- 2026-08-20: Recovered the VFP9 `DIRECTORY(cDirectoryName [, nFlags])`
+  function, returning whether the named path is an existing directory.
+  Resolves only relative to the default directory — unlike `FILE()`/
+  `FILESIZE()`, it does not search `SET PATH`, matching its documented
+  contract. `nFlags` gates Hidden/System directory visibility; Hidden is
+  approximated via the leading-dot filename convention already used by
+  `ADIR()`, since POSIX has no native Hidden/System attribute bits.
+
 - 2026-08-18: Recovered the VFP9 `FDATE(cFileName [, nType])` and
   `FTIME(cFileName)` functions, returning a file's operating-system
   last-modification Date/DateTime and time. `FDATE()` respects the session's

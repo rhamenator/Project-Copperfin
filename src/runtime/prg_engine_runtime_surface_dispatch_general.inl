@@ -11,6 +11,30 @@
         return make_boolean_value(
             !ignored && std::filesystem::exists(status) && !std::filesystem::is_directory(status));
     }
+    if (function == "directory" && !arguments.empty()) {
+        // Unlike FILE(), the mounted help documents DIRECTORY() as searching
+        // only relative to the default directory -- no SET PATH fallback --
+        // so this deliberately uses filesystem_probe_path, not
+        // resolve_runtime_file_probe_path.
+        const std::filesystem::path path =
+            filesystem_probe_path(value_as_string(arguments[0]), default_directory);
+        std::error_code ignored;
+        const std::filesystem::file_status status = std::filesystem::status(path, ignored);
+        if (ignored || !std::filesystem::exists(status) || !std::filesystem::is_directory(status)) {
+            return make_boolean_value(false);
+        }
+        const bool show_hidden_or_system = arguments.size() >= 2U &&
+            static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1;
+        if (show_hidden_or_system) {
+            return make_boolean_value(true);
+        }
+        // No POSIX equivalent for a System attribute; Hidden follows the same
+        // leading-dot convention ADIR()'s file_attributes_for_adir already
+        // uses for its "H" attribute flag.
+        const std::string name = copperfin::platform::path_to_utf8_string(path.filename());
+        const bool hidden = !name.empty() && name.front() == '.';
+        return make_boolean_value(!hidden);
+    }
     if (function == "sys") {
         const auto format_sys16_frame = [](const std::string& routine_name,
                                            const std::string& file_path,

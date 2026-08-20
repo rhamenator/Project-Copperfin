@@ -519,6 +519,77 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_directory_expression_function()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_directory";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path plain_dir = temp_root / "plain_dir";
+        fs::create_directories(plain_dir);
+        const fs::path nested_dir = temp_root / "nested" / "child_dir";
+        fs::create_directories(nested_dir);
+        const fs::path hidden_dir = temp_root / ".hidden_dir";
+        fs::create_directories(hidden_dir);
+        const fs::path plain_file = temp_root / "plain_file.txt";
+        write_text(plain_file, "not a directory");
+
+        // Only discoverable via SET PATH -- DIRECTORY() must NOT search it,
+        // unlike FILE()/FILESIZE(), per the mounted VFP9 help.
+        const fs::path path_probe_dir = temp_root / "path_probe";
+        const fs::path path_only_dir = path_probe_dir / "path_only_dir";
+        fs::create_directories(path_only_dir);
+
+        const fs::path main_path = temp_root / "directory_test.prg";
+        write_text(
+            main_path,
+            "lPlainDir = DIRECTORY('plain_dir')\n"
+            "lNestedDir = DIRECTORY('nested/child_dir')\n"
+            "lAbsoluteDir = DIRECTORY('" + plain_dir.string() + "')\n"
+            "lMissingDir = DIRECTORY('does-not-exist-xyz')\n"
+            "lPlainFileAsDir = DIRECTORY('plain_file.txt')\n"
+            "lHiddenDirDefault = DIRECTORY('.hidden_dir')\n"
+            "lHiddenDirDefaultExplicit = DIRECTORY('.hidden_dir', 0)\n"
+            "lHiddenDirShown = DIRECTORY('.hidden_dir', 1)\n"
+            "lPathOnlyDirBefore = DIRECTORY('path_only_dir')\n"
+            "SET PATH TO '" + path_probe_dir.string() + "'\n"
+            "lPathOnlyDirAfter = DIRECTORY('path_only_dir')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "DIRECTORY() test script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplaindir", "true");
+        check("lnesteddir", "true");
+        check("labsolutedir", "true");
+        check("lmissingdir", "false");
+        check("lplainfileasdir", "false");
+        check("lhiddendirdefault", "false");
+        check("lhiddendirdefaultexplicit", "false");
+        check("lhiddendirshown", "true");
+        check("lpathonlydirbefore", "false");
+        check("lpathonlydirafter", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_recsize_reclength_expression_functions()
     {
         // Simple test to validate RECSIZE/RECLENGTH functionality
