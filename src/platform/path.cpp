@@ -186,6 +186,27 @@ bool path_is_hidden_or_system(const std::filesystem::path& value) {
     return path_is_hidden(value) || path_is_system(value);
 }
 
+std::string path_dos_8dot3_filename(const std::filesystem::path& value) {
+#if defined(_WIN32)
+    const std::filesystem::path normalized = value.lexically_normal();
+    std::wstring buffer(260U, L'\0');
+    for (;;) {
+        const DWORD length = ::GetShortPathNameW(
+            normalized.c_str(), buffer.data(), static_cast<DWORD>(buffer.size()));
+        if (length == 0U) {
+            return path_to_utf8_string(normalized.filename());
+        }
+        if (length < buffer.size()) {
+            buffer.resize(length);
+            return path_to_utf8_string(std::filesystem::path(buffer).filename());
+        }
+        buffer.assign(static_cast<std::size_t>(length) + 1U, L'\0');
+    }
+#else
+    return path_to_utf8_string(value.filename());
+#endif
+}
+
 bool path_equal_case_insensitive(
     const std::filesystem::path& left,
     const std::filesystem::path& right) {

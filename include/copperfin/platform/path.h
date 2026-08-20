@@ -35,4 +35,9 @@ bool path_is_system(const std::filesystem::path& value);
 // System visibility, such as FILE() and DIRECTORY().
 bool path_is_hidden_or_system(const std::filesystem::path& value);
 
+// Returns the filename spelling supplied by Windows' DOS 8.3 short-name
+// facility for an existing entry. Hosts without that Windows facility retain
+// the entry's original filename spelling.
+std::string path_dos_8dot3_filename(const std::filesystem::path& value);
+
 }  // namespace copperfin::platform

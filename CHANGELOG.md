@@ -1,3 +1,8 @@
+- 2026-08-20: `ADIR(..., nFlag=2)` now displays the DOS 8.3 filename spelling
+  supplied by Windows for each matched entry. Hosts without a DOS short-name
+  facility retain the original filename spelling; the remaining `V` volume-label
+  attribute behavior remains explicitly unimplemented.
+
 - 2026-08-20: `ADIR()` now observes its documented D/H/S inclusion filters,
   reports Hidden/System attributes through the shared platform seam, returns
   uppercase file names by default and original case with `nFlag=1`, and leaves
