@@ -696,7 +696,8 @@
         PrgValue populate_directory_array(
             const std::string &target_name,
             const std::string &skeleton,
-            const std::string &attribute_filter)
+            const std::string &attribute_filter,
+            int display_flag)
         {
             if (trim_copy(target_name).empty())
             {
@@ -718,7 +719,10 @@
             const std::string pattern = copperfin::platform::path_to_utf8_string(pattern_path.filename()).empty()
                 ? "*.*"
                 : copperfin::platform::path_to_utf8_string(pattern_path.filename());
-            const bool include_directories = normalize_identifier(attribute_filter).find('d') != std::string::npos;
+            const std::string requested_attributes = uppercase_copy(attribute_filter);
+            const bool include_directories = requested_attributes.find('D') != std::string::npos;
+            const bool include_hidden = requested_attributes.find('H') != std::string::npos;
+            const bool include_system = requested_attributes.find('S') != std::string::npos;
 
             std::vector<fs::directory_entry> entries;
             std::error_code ignored;
@@ -728,6 +732,14 @@
                 {
                     const bool is_directory = entry.is_directory(ignored);
                     if (is_directory && !include_directories)
+                    {
+                        continue;
+                    }
+                    if (copperfin::platform::path_is_hidden(entry.path()) && !include_hidden)
+                    {
+                        continue;
+                    }
+                    if (copperfin::platform::path_is_system(entry.path()) && !include_system)
                     {
                         continue;
                     }
@@ -744,13 +756,23 @@
                                lowercase_copy(copperfin::platform::path_to_utf8_string(right.path().filename())); });
 
             std::vector<PrgValue> values;
+            if (entries.empty())
+            {
+                // VFP9 leaves a pre-existing target array unchanged when no
+                // matching entry is found, and does not create a new array.
+                return make_number_value(0.0);
+            }
             values.reserve(entries.size() * 5U);
             for (const auto &entry : entries)
             {
                 const auto last_write = entry.last_write_time(ignored);
                 const bool is_directory = entry.is_directory(ignored);
-                values.push_back(make_string_value(
-                    copperfin::platform::path_to_utf8_string(entry.path().filename())));
+                std::string name = copperfin::platform::path_to_utf8_string(entry.path().filename());
+                if (display_flag == 0)
+                {
+                    name = uppercase_copy(std::move(name));
+                }
+                values.push_back(make_string_value(std::move(name)));
                 values.push_back(make_number_value(is_directory ? 0.0 : static_cast<double>(entry.file_size(ignored))));
                 values.push_back(make_string_value(format_file_time_part(last_write, true)));
                 values.push_back(make_string_value(format_file_time_part(last_write, false)));

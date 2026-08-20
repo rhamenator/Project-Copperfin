@@ -1,3 +1,10 @@
+- 2026-08-20: `ADIR()` now observes its documented D/H/S inclusion filters,
+  reports Hidden/System attributes through the shared platform seam, returns
+  uppercase file names by default and original case with `nFlag=1`, and leaves
+  an existing target array unchanged when no entry matches. Windows reads real
+  Hidden/System file attributes; POSIX retains the established leading-dot
+  Hidden approximation.
+
 - 2026-08-20: Recovered verified-session `CURVAL()` commit visibility across
   cursor reopen and concurrently open aliases (`RQ-CF-PRG-011`). `TABLEUPDATE()`
   now applies its authorized DBF and memo-field mutation only to a private copy
