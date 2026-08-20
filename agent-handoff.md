@@ -1,5 +1,18 @@
 # Agent Handoff
 
+## V1 ADIR() volume-label attribute
+
+`RQ-CF-PRG-017` now recovers the mounted VFP9 `ADIR(..., 'V')` rule: `V`
+returns only the volume name of the current drive, even when combined with
+`D`, `H`, or `S`; the result is a one-item array and no skeleton enumeration
+occurs. The platform seam resolves the active default directory's Windows
+volume root and label through `GetVolumePathNameW`/`GetVolumeInformationW`.
+The focused regression independently obtains that label through the operating-
+system contract and verifies the `VDHS` precedence. POSIX/macOS do not have the
+VFP drive-volume concept, so they intentionally report no label and retain the
+documented no-match preservation rule rather than inventing a portable name.
+Protected Windows validation is required for the native branch.
+
 ## V1 ADIR() DOS 8.3 display mode
 
 The mounted VFP9 `ADIR()` help explicitly defines `nFlag=2` as a DOS 8.3
@@ -11,8 +24,7 @@ reported spelling is retained. POSIX/macOS lack a DOS short-name facility, so
 they retain the original filename as a documented portability fallback rather
 than inventing an alias algorithm. The focused regression compares `ADIR()`'s
 `nFlag=2` result with that platform seam for a long fixture filename. Protected
-Windows CI is required evidence for the native short-name branch. Only the
-separately documented `V` volume-label behavior remains unimplemented.
+Windows CI is required evidence for the native short-name branch.
 
 ## V1 ADIR() visibility and display-case recovery
 
@@ -23,8 +35,8 @@ platform seam now distinguishes Hidden from System: Windows reads each actual
 attribute bit, while POSIX retains the established leading-dot approximation
 for Hidden and has no System equivalent. The regression covers a real Windows
 Hidden fixture, D/H inclusion and returned attributes, all three documented
-display modes, and the unchanged-existing-array contract. Volume labels (`V`)
-remain separately documented VFP9 behavior and are not claimed by this slice.
+display modes, the current-drive volume-label precedence, and the
+unchanged-existing-array contract.
 
 ## V1 FILE() Hidden/System visibility flags
 

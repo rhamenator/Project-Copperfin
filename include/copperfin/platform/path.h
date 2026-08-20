@@ -5,6 +5,7 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -39,5 +40,10 @@ bool path_is_hidden_or_system(const std::filesystem::path& value);
 // facility for an existing entry. Hosts without that Windows facility retain
 // the entry's original filename spelling.
 std::string path_dos_8dot3_filename(const std::filesystem::path& value);
+
+// Returns the volume label for the volume containing an existing path. VFP9
+// ADIR(..., "V") is a Windows drive-volume operation; hosts without that
+// facility report no label rather than manufacturing one.
+std::optional<std::string> path_volume_label(const std::filesystem::path& value);
 
 }  // namespace copperfin::platform

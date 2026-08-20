@@ -695,6 +695,8 @@ void test_array_metadata_and_text_functions() {
     fs::create_directory(temp_root / "adir_directory");
     std::string expected_dos_display_name =
         copperfin::platform::path_to_utf8_string(dos_display_file.filename());
+    std::string expected_volume_label;
+    bool has_expected_volume_label = false;
 #if defined(_WIN32)
     expect(::SetFileAttributesW(hidden_file.c_str(), FILE_ATTRIBUTE_HIDDEN) != 0,
            "ADIR Windows fixture should receive the Hidden attribute");
@@ -714,6 +716,19 @@ void test_array_metadata_and_text_functions() {
         }
         short_path.assign(static_cast<std::size_t>(length) + 1U, L'\0');
     }
+    std::wstring volume_root(32768U, L'\0');
+    expect(::GetVolumePathNameW(
+               temp_root.c_str(), volume_root.data(), static_cast<DWORD>(volume_root.size())) != 0,
+           "ADIR Windows volume fixture should resolve its volume root");
+    volume_root.resize(std::wcslen(volume_root.c_str()));
+    std::wstring volume_label(MAX_PATH + 1U, L'\0');
+    expect(::GetVolumeInformationW(
+               volume_root.c_str(), volume_label.data(), static_cast<DWORD>(volume_label.size()),
+               nullptr, nullptr, nullptr, nullptr, 0U) != 0,
+           "ADIR Windows volume fixture should resolve its volume label");
+    volume_label.resize(std::wcslen(volume_label.c_str()));
+    expected_volume_label = copperfin::platform::path_to_utf8_string(fs::path(volume_label));
+    has_expected_volume_label = true;
 #endif
 
     const fs::path main_path = temp_root / "array_metadata.prg";
@@ -743,6 +758,20 @@ void test_array_metadata_and_text_functions() {
         "nDirectoryDefault = ADIR(aDirectoryDefault, '" + (temp_root / "adir_directory").string() + "')\n"
         "nDirectoryIncluded = ADIR(aDirectory, '" + (temp_root / "adir_directory").string() + "', 'D', 1)\n"
         "cDirectoryAttr = aDirectory[1,5]\n"
+        "nVolumeCount = ADIR(aVolume, 'definitely-no-match-*.tmp', 'V')\n"
+        "nVolumeCombinedCount = ADIR(aVolumeCombined, 'definitely-no-match-*.tmp', 'VDHS')\n"
+        "cVolumeName = ''\n"
+        "cVolumeCombinedName = ''\n"
+        "IF nVolumeCount > 0\n"
+        "  cVolumeName = aVolume[1]\n"
+        "ENDIF\n"
+        "IF nVolumeCombinedCount > 0\n"
+        "  cVolumeCombinedName = aVolumeCombined[1]\n"
+        "ENDIF\n"
+        "DIMENSION aVolumeUnchanged[1]\n"
+        "aVolumeUnchanged[1] = 'retained'\n"
+        "nVolumeUnchangedCount = ADIR(aVolumeUnchanged, '', 'V')\n"
+        "cVolumeUnchanged = aVolumeUnchanged[1]\n"
         "DIMENSION aUnchanged[1]\n"
         "aUnchanged[1] = 'retained'\n"
         "nNoMatch = ADIR(aUnchanged, '" + (temp_root / "missing-*.txt").string() + "')\n"
@@ -786,6 +815,12 @@ void test_array_metadata_and_text_functions() {
     const auto directory_default = state.globals.find("ndirectorydefault");
     const auto directory_included = state.globals.find("ndirectoryincluded");
     const auto directory_attr = state.globals.find("cdirectoryattr");
+    const auto volume_count = state.globals.find("nvolumecount");
+    const auto volume_combined_count = state.globals.find("nvolumecombinedcount");
+    const auto volume_name = state.globals.find("cvolumename");
+    const auto volume_combined_name = state.globals.find("cvolumecombinedname");
+    const auto volume_unchanged_count = state.globals.find("nvolumeunchangedcount");
+    const auto volume_unchanged = state.globals.find("cvolumeunchanged");
     const auto no_match = state.globals.find("nnomatch");
     const auto unchanged_rows = state.globals.find("nunchangedrows");
     const auto unchanged = state.globals.find("cunchanged");
@@ -812,6 +847,12 @@ void test_array_metadata_and_text_functions() {
     expect(file_attr != state.globals.end(), "ADIR should populate attribute column");
     expect(dos_count != state.globals.end(), "ADIR nFlag=2 should return a count");
     expect(dos_name != state.globals.end(), "ADIR nFlag=2 should populate a file name");
+    expect(volume_count != state.globals.end(), "ADIR V should return a count");
+    expect(volume_combined_count != state.globals.end(), "ADIR V with D/H/S should return a count");
+    expect(volume_name != state.globals.end(), "ADIR V should populate the volume name");
+    expect(volume_combined_name != state.globals.end(), "ADIR V with D/H/S should populate the volume name");
+    expect(volume_unchanged_count != state.globals.end(), "ADIR V fallback should return a count");
+    expect(volume_unchanged != state.globals.end(), "ADIR V fallback should preserve an existing array");
     expect(field_count != state.globals.end(), "AFIELDS should return a field count");
     expect(field_cols != state.globals.end(), "AFIELDS should expose its metadata column count");
     expect(field_one_name != state.globals.end(), "AFIELDS should populate first field name");
@@ -897,6 +938,33 @@ void test_array_metadata_and_text_functions() {
     if (directory_attr != state.globals.end()) {
         expect(copperfin::runtime::format_value(directory_attr->second).find('D') != std::string::npos,
                "ADIR should report the Directory attribute for a returned directory");
+    }
+    if (volume_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(volume_count->second) ==
+                   (has_expected_volume_label ? "1" : "0"),
+               "ADIR V should return only the Windows current-drive volume label");
+    }
+    if (volume_combined_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(volume_combined_count->second) ==
+                   (has_expected_volume_label ? "1" : "0"),
+               "ADIR V should take precedence over D/H/S results");
+    }
+    if (has_expected_volume_label && volume_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(volume_name->second) == expected_volume_label,
+               "ADIR V should return the current drive's Windows volume label");
+    }
+    if (has_expected_volume_label && volume_combined_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(volume_combined_name->second) == expected_volume_label,
+               "ADIR V with D/H/S should retain only the current drive's volume label");
+    }
+    if (volume_unchanged_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(volume_unchanged_count->second) ==
+                   (has_expected_volume_label ? "1" : "0"),
+               "ADIR V should preserve the no-result return contract when no volume facility exists");
+    }
+    if (!has_expected_volume_label && volume_unchanged != state.globals.end()) {
+        expect(copperfin::runtime::format_value(volume_unchanged->second) == "retained",
+               "ADIR V without a volume-label facility should leave an existing target array unchanged");
     }
     if (no_match != state.globals.end()) {
         expect(copperfin::runtime::format_value(no_match->second) == "0",
