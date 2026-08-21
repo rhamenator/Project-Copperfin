@@ -257,7 +257,7 @@
                 const std::string predicate_parameter_name = normalize_memory_variable_identifier(predicate_block.parameter);
                 std::map<std::string, std::optional<PrgValue>> saved_globals;
                 std::map<std::string, std::optional<PrgValue>> saved_locals;
-                auto snapshot_predicate_binding = [&](Frame &frame, const std::string &name)
+                auto snapshot_predicate_binding = [&](Frame &predicate_frame, const std::string &name)
                 {
                     if (name.empty() || saved_globals.contains(name))
                     {
@@ -271,7 +271,7 @@
                     {
                         saved_globals[name] = std::nullopt;
                     }
-                    if (const auto local = frame.locals.find(name); local != frame.locals.end())
+                    if (const auto local = predicate_frame.locals.find(name); local != predicate_frame.locals.end())
                     {
                         saved_locals[name] = local->second;
                     }
@@ -282,12 +282,12 @@
                 };
                 if (predicate_search && !stack.empty())
                 {
-                    Frame &frame = stack.back();
+                    Frame &predicate_frame = stack.back();
                     for (const std::string &name : predicate_metadata_names)
                     {
-                        snapshot_predicate_binding(frame, name);
+                        snapshot_predicate_binding(predicate_frame, name);
                     }
-                    snapshot_predicate_binding(frame, predicate_parameter_name);
+                    snapshot_predicate_binding(predicate_frame, predicate_parameter_name);
                 }
                 auto restore_predicate_bindings = [&]()
                 {
@@ -295,7 +295,7 @@
                     {
                         return;
                     }
-                    Frame &frame = stack.back();
+                    Frame &predicate_frame = stack.back();
                     for (const auto &[name, value] : saved_globals)
                     {
                         if (value)
@@ -311,11 +311,11 @@
                     {
                         if (value)
                         {
-                            frame.locals[name] = *value;
+                            predicate_frame.locals[name] = *value;
                         }
                         else
                         {
-                            frame.locals.erase(name);
+                            predicate_frame.locals.erase(name);
                         }
                     }
                 };
@@ -330,18 +330,18 @@
                     {
                         return false;
                     }
-                    Frame &frame = stack.back();
+                    Frame &predicate_frame = stack.back();
                     const std::size_t row = array_columns > 0U ? (linear_index / array_columns) + 1U : linear_index + 1U;
                     const std::size_t column = array_columns > 0U ? (linear_index % array_columns) + 1U : 1U;
-                    assign_variable(frame, "_ASCANVALUE", value);
-                    assign_variable(frame, "_ASCANINDEX", make_number_value(static_cast<double>(linear_index + 1U)));
-                    assign_variable(frame, "_ASCANROW", make_number_value(static_cast<double>(row)));
-                    assign_variable(frame, "_ASCANCOLUMN", make_number_value(static_cast<double>(column)));
+                    assign_variable(predicate_frame, "_ASCANVALUE", value);
+                    assign_variable(predicate_frame, "_ASCANINDEX", make_number_value(static_cast<double>(linear_index + 1U)));
+                    assign_variable(predicate_frame, "_ASCANROW", make_number_value(static_cast<double>(row)));
+                    assign_variable(predicate_frame, "_ASCANCOLUMN", make_number_value(static_cast<double>(column)));
                     if (!predicate_block.parameter.empty())
                     {
-                        assign_variable(frame, predicate_block.parameter, value);
+                        assign_variable(predicate_frame, predicate_block.parameter, value);
                     }
-                    return value_as_bool(evaluate_expression(predicate_block.expression, frame));
+                    return value_as_bool(evaluate_expression(predicate_block.expression, predicate_frame));
                 };
                 const std::size_t start = raw_start <= 0.0
                                               ? 1U

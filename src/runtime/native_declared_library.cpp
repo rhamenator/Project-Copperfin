@@ -102,6 +102,9 @@ namespace copperfin::runtime
             bool allow_ansi_fallback,
             NativeDeclaredLibraryLoadResult &result)
         {
+#if defined(_WIN64)
+            (void)parameter_types;
+#endif
             const std::array<std::string, 2U> export_names{function_name, function_name + "A"};
             const std::size_t export_name_count = allow_ansi_fallback ? export_names.size() : 1U;
             for (std::size_t export_index = 0U; export_index < export_name_count; ++export_index)
