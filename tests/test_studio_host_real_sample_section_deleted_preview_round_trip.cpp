@@ -394,8 +394,12 @@ void exercise_real_sample_section_deleted_preview_round_trip(
         sample,
         false,
         "#3642: restored real sample section read");
-    expect(read_binary(copied_primary) == original_primary_bytes,
-           "#3642: real sample section restore should rewind primary asset bytes");
+    const std::string restored_primary_bytes = read_binary(copied_primary);
+    expect(copperfin::test_support::dbf_bytes_match_except_last_update_date(
+               original_primary_bytes, restored_primary_bytes),
+           "#3642: real sample section restore should rewind every primary asset byte except the DBF update date");
+    expect(copperfin::test_support::dbf_last_update_date_matches_local_calendar(restored_primary_bytes),
+           "#3642: real sample section restore should stamp the DBF update date");
     expect(read_binary(copied_sidecar) == original_sidecar_bytes,
            "#3642: real sample section restore should rewind sidecar bytes");
 
