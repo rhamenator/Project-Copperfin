@@ -1642,6 +1642,81 @@ void test_copy_to_type_json_and_append_from_type_json_round_trip() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_export_database_type_json_writes_catalog_snapshot() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_export_database_json";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    const fs::path dbc_path = temp_root / "northwind.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> catalog_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .length = 16U},
+        {.name = "OBJECTNAME", .type = 'C', .length = 64U},
+        {.name = "PARENTNAME", .type = 'C', .length = 64U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+    };
+    const auto catalog_create = copperfin::vfp::create_dbf_table_file(
+        dbc_path.string(),
+        catalog_fields,
+        {{"DATABASE", "Northwind", "", ""}, {"TABLE", "People", "Northwind", ""}});
+    expect(catalog_create.ok, "EXPORT DATABASE fixture should create the DBC catalog");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NAME", .type = 'C', .length = 32U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        (temp_root / "People.dbf").string(), table_fields, {{"Alice"}});
+    expect(table_create.ok, "EXPORT DATABASE fixture should create the catalog table");
+
+    const fs::path main_path = temp_root / "export_database_json.prg";
+    write_text(
+        main_path,
+        "EXPORT DATABASE 'northwind.dbc' TO 'snapshot' TYPE JSON\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "EXPORT DATABASE TYPE JSON script should complete: " + state.message);
+
+    const fs::path output_path = temp_root / "snapshot.json";
+    expect(fs::exists(output_path), "EXPORT DATABASE TYPE JSON should append the JSON extension and create its output");
+    if (fs::exists(output_path)) {
+        const std::string snapshot = read_text(output_path);
+        expect(snapshot.find("\"name\": \"Northwind\"") != std::string::npos,
+               "EXPORT DATABASE TYPE JSON should preserve the catalog database name");
+        expect(snapshot.find("\"Alice\"") != std::string::npos,
+               "EXPORT DATABASE TYPE JSON should include local catalog table rows");
+    }
+    const bool has_event = std::any_of(state.events.begin(), state.events.end(),
+        [&](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "runtime.export_database_json" && event.detail == output_path.string();
+        });
+    expect(has_event, "EXPORT DATABASE TYPE JSON should emit its explicit runtime event");
+
+    const fs::path expression_path = temp_root / "export_database_expression.prg";
+    write_text(
+        expression_path,
+        "cSource = 'northwind.dbc'\n"
+        "EXPORT DATABASE cSource TO 'not-created.json' TYPE JSON\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession expression_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(expression_path.string(), temp_root.string(), false));
+    const auto expression_state = expression_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!expression_state.completed,
+           "EXPORT DATABASE TYPE JSON should reject an expression source in its quoted-path-only first slice");
+    expect(expression_state.message ==
+               "EXPORT DATABASE requires a DBC source, a JSON destination, and TYPE JSON",
+           "EXPORT DATABASE TYPE JSON should report the localized quoted-path-only syntax diagnostic");
+    expect(!fs::exists(temp_root / "not-created.json"),
+           "EXPORT DATABASE TYPE JSON should reject an expression operand before creating output");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_array_fills_2d_runtime_array() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_array";

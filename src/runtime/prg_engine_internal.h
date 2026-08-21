@@ -110,6 +110,7 @@ enum class StatementKind {
     create_cursor_command,
     create_table_command,
     alter_table_command,
+    export_database_command,
     copy_to_command,
     append_from_command,
     save_memvars_command,

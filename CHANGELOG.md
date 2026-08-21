@@ -5,6 +5,22 @@
   not introduce a provider, database execution, or a general LINQ translation
   claim.
 
+- 2026-08-21: Private evaluation RC6 passed its exact-tag GitHub assembly at
+  `v0.1.0-rc.6` / `1208ebbd7babf65fcb8f46ada0b1316289328a6e`. Native
+  Windows/macOS/Linux, security/SBOM, installers, Windows VSIX lifecycle, and
+  Linux managed UI evidence passed; the downloaded bundle's SHA-256 manifest
+  verified. It remains a private evaluation candidate with its recorded
+  signing, linguistic-review, installed-VFP9, and `NOT_RUN` limits.
+
+- 2026-08-21: Wishlist #140 now has a first PRG-facing, owner-policy
+  modernization slice: `EXPORT DATABASE <quoted-dbc-path> TO
+  <quoted-output-path> TYPE JSON` writes the existing DBC catalog/table
+  snapshot to the requested JSON path and emits `runtime.export_database_json`
+  after a successful close. Its package-debug IR now retains the stable
+  `export_database_command` opcode rather than degrading to `no_op`. This is
+  not Visual FoxPro compatibility and deliberately excludes imports, SQL/Access
+  adapters, provider connections, expression operands, and reconstruction.
+
 - 2026-08-21: Established the standalone Studio extension boundary: it will
   not load arbitrary VSIX packages or Copperfin's own Visual Studio extension.
   Any future standalone extensibility must use a distinct host-owned,

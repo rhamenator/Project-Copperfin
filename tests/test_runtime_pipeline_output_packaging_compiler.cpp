@@ -122,6 +122,7 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "ON KEY LABEL F1 DO key_handler\n"
                "ON ESCAPE DO escape_handler\n"
                "ON PAGE AT LINE 42 DO page_handler\n"
+               "EXPORT DATABASE 'catalog.dbc' TO 'catalog.json' TYPE JSON\n"
                "RETURN\n"
                "PROCEDURE worker\n"
                "WAIT WINDOW 'ir\x1f" "control'\n"
@@ -198,6 +199,8 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "ir manifest should map ON ESCAPE statements to a stable opcode");
         expect(ir_manifest.find("\"opcode\": \"on_page\"") != std::string::npos,
                "ir manifest should map ON PAGE statements to a stable opcode");
+        expect(ir_manifest.find("\"opcode\": \"export_database_command\"") != std::string::npos,
+               "ir manifest should map EXPORT DATABASE statements to a stable opcode");
         expect(ir_manifest.find("\"opcode\": \"wait_command\"") != std::string::npos,
                "ir manifest should map WAIT WINDOW statements to a stable opcode");
         expect(ir_manifest.find("\"text\": \"WAIT WINDOW 'ir\\u001fcontrol'\"") != std::string::npos,

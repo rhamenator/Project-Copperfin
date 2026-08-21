@@ -1,5 +1,27 @@
 # Agent Handoff
 
+## V1 RC6 exact-tag private-evaluation evidence
+
+Immutable tag `v0.1.0-rc.6` at `1208ebbd7babf65fcb8f46ada0b1316289328a6e`
+passed exact-tag assembly run `32509539202`: native Windows/macOS/Linux,
+security/SBOM, Windows/macOS/Linux installer construction, Windows NSIS
+lifecycle, Windows VSIX lifecycle, Linux managed UI smoke, and bundle assembly
+all passed. Evaluation bundle artifact `9458296015` was downloaded and every
+`SHA256SUMS.txt` entry verified. It remains private evaluation, not an official
+release: its manifest retains Windows launcher trust `NOT_RUN`, unsupported
+Authenticode/macOS notarization/Linux package signing/VSIX signing, no
+Spanish/Portuguese linguistic review, no real-installed-VFP9 claim, and the
+explicitly unperformed installer and VSIX lifecycle operations.
+
+## V1 DBC JSON package-debug opcode fidelity
+
+The owner-policy `EXPORT DATABASE ... TYPE JSON` modernization command now
+retains `export_database_command` in the package debug IR rather than falling
+through to `no_op`. This closes the manifest mapping gap found by the complete
+local build. Focused `test_runtime_pipeline`, `test_prg_engine_data_io`, and
+`test_vfp_assets` pass; the command remains a Copperfin-only export extension,
+not VFP9 compatibility.
+
 ## V1 standalone extension decision
 
 Standalone Studio does not load arbitrary VSIX packages or Copperfin's own
@@ -7018,3 +7040,19 @@ JSON recognizer and the rebased exact-head rereview found no major issue.
 `RQ-CF-AGENT-003` is defined; mutable activation, provider authentication,
 sessions, audit commits, executor, sandbox, stop/diff/undo, and trusted UI
 remain separate implementation gaps.
+
+# 2026-08-21 DBC JSON runtime-export handoff
+
+Draft PR #5097 introduces the owner-policy modernization command `EXPORT
+DATABASE <quoted-dbc-path> TO <quoted-output-path> TYPE JSON` under wishlist
+#140. It is deliberately not a Visual FoxPro compatibility claim. The runtime
+uses the existing DBC catalog/table JSON exporter, resolves relative UTF-8
+paths from `SET DEFAULT`, appends `.json` only when no output extension was
+given, creates the requested output directory, and emits
+`runtime.export_database_json` only after a successful close. Source and
+destination must be quoted paths in this first slice; expression operands,
+imports, SQL/Access/provider adapters, and reconstruction remain excluded.
+Focused `test_prg_engine_data_io` and `test_vfp_assets` pass locally. Preserve
+the four locale diagnostics, `RQ-CF-MODERNIZATION-001`, and the explicit
+`HZ-data-corruption-01` limitations; exact-head protected validation remains
+required before merge.
