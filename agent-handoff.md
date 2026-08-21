@@ -6,7 +6,18 @@ The next bounded #2564 structural slice owns the cursor/SQL locale-diagnostic
 fixtures in `test_prg_engine_control_flow_localized_errors.cpp`, while keeping
 the same `test_prg_engine_control_flow` executable and invocation order. It
 changes no runtime code, requirements, user-facing contract, RC tag, or
-artifact. Focused CTest evidence is pending.
+artifact. PR #5100 merged at `8c6501d9593c8dc6e3faed23ad8d476b7f8e35b4`
+after all protected checks passed.
+
+## V1 ON ERROR dispatch test-module refactor
+
+The next bounded #2564 structural slice moves the cohesive ordinary and
+`WITH`-argument `ON ERROR DO` dispatch regressions into
+`test_prg_engine_control_flow_on_error_dispatch.cpp`. The aggregate
+`test_prg_engine_control_flow` executable, invocation order, declarations,
+assertions, and runtime behavior remain unchanged. A fresh Release
+configure/build and focused CTest pass `1/1`; the slice is rebased after the
+localized-error merge, and next action is protected-check completion.
 
 ## V1 control-flow test-module refactor
 
