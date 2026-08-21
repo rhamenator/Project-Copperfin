@@ -2,6 +2,14 @@
   workspace-agent authority tokens, removing MSVC's spurious unsigned
   conversion warnings without changing authority semantics or public policy.
 
+- 2026-08-21: Closed an RC4-hosted Windows containment gap in the migration
+  inventory: Windows reparse points, including directory junctions that are
+  not consistently exposed as `std::filesystem` symlinks, are now reported as
+  skipped indirect entries and are never descended into. The correction also
+  makes Windows-native regressions use a real PE fixture for non-executing
+  workspace-agent preflight, a source-encoding-independent UTF-16 argument
+  expectation, and an actual Hidden directory attribute for `DIRECTORY()`.
+
 - 2026-08-21: Removed confirmed Windows/MSVC unused-parameter and
   local-shadowing diagnostics from runtime implementation seams without
   changing runtime behavior, public contracts, or user-visible output.

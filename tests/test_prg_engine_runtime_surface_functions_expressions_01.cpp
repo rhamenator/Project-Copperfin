@@ -555,6 +555,13 @@ namespace copperfin::runtime_surface_tests
         fs::create_directories(nested_dir);
         const fs::path hidden_dir = temp_root / ".hidden_dir";
         fs::create_directories(hidden_dir);
+#if defined(_WIN32)
+        const DWORD hidden_dir_attributes = ::GetFileAttributesW(hidden_dir.c_str());
+        expect(hidden_dir_attributes != INVALID_FILE_ATTRIBUTES &&
+                   ::SetFileAttributesW(
+                       hidden_dir.c_str(), hidden_dir_attributes | FILE_ATTRIBUTE_HIDDEN) != 0,
+               "DIRECTORY() hidden-attribute fixture should be marked Hidden on Windows");
+#endif
         const fs::path plain_file = temp_root / "plain_file.txt";
         write_text(plain_file, "not a directory");
 
