@@ -9,7 +9,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 
 namespace {
@@ -27,25 +26,6 @@ void write_file(const std::filesystem::path& path, const std::string& bytes) {
     output << bytes;
 }
 
-std::string describe_inventory(const copperfin::migration::ProjectInventoryResult& inventory) {
-    std::ostringstream output;
-    output << "entries=" << inventory.entries.size() << " [";
-    for (std::size_t index = 0U; index < inventory.entries.size(); ++index) {
-        if (index != 0U) {
-            output << ", ";
-        }
-        output << inventory.entries[index].relative_path;
-    }
-    output << "]; skipped=" << inventory.skipped_symlinks.size() << " [";
-    for (std::size_t index = 0U; index < inventory.skipped_symlinks.size(); ++index) {
-        if (index != 0U) {
-            output << ", ";
-        }
-        output << inventory.skipped_symlinks[index];
-    }
-    output << "]";
-    return output.str();
-}
 }  // namespace
 
 int main() {
@@ -57,7 +37,11 @@ int main() {
     write_file(root / "zebra.PRG", "RETURN\n");
     write_file(root / "nested" / "invoice.FRX", "report");
     write_file(root / "nested" / "notes.txt", "text");
+#if !defined(_WIN32)
+    // Windows forbids double quotes in path components. The serializer's
+    // escaping contract is covered below with an explicit in-memory entry.
     write_file(root / "quote\".dbf", "dbf");
+#endif
 
     const fs::path outside = root.parent_path() / "copperfin_project_inventory_outside.prg";
     write_file(outside, "outside");
@@ -73,20 +57,28 @@ int main() {
     const auto inventory = copperfin::migration::build_project_inventory(fs::absolute(root));
     expect(inventory.complete && inventory.diagnostic_code == "migration.inventory.complete",
            "an accessible direct project root should produce a complete inventory");
-    expect(inventory.entries.size() == 4U,
-           "only direct regular files should be inventoried (" + describe_inventory(inventory) + ")");
-    if (inventory.entries.size() == 4U) {
+    constexpr std::size_t expected_direct_files =
+#if defined(_WIN32)
+        3U;
+#else
+        4U;
+#endif
+    expect(inventory.entries.size() == expected_direct_files,
+           "only direct regular files should be inventoried");
+    if (inventory.entries.size() == expected_direct_files) {
         expect(inventory.entries[0].relative_path == "nested/invoice.FRX" &&
                    inventory.entries[0].asset_kind == "report",
                "entries should be path-sorted and classify report assets case-insensitively");
         expect(inventory.entries[1].relative_path == "nested/notes.txt" &&
                    inventory.entries[1].asset_kind == "other",
                "unknown extensions should remain explicit inventory entries");
+#if !defined(_WIN32)
         expect(inventory.entries[2].relative_path == "quote\".dbf" &&
                    inventory.entries[2].asset_kind == "table",
                "inventory should retain project-relative names without parsing contents");
-        expect(inventory.entries[3].relative_path == "zebra.PRG" &&
-                   inventory.entries[3].asset_kind == "prg",
+#endif
+        expect(inventory.entries.back().relative_path == "zebra.PRG" &&
+                   inventory.entries.back().asset_kind == "prg",
                "PRG classification should be case-insensitive");
     }
     if (!symlink_error) {
@@ -105,10 +97,15 @@ int main() {
 
     const std::string serialized = copperfin::migration::serialize_project_inventory_json(inventory);
     expect(serialized.find("\"schemaVersion\": 1") != std::string::npos &&
-               serialized.find("\"quote\\\".dbf\"") != std::string::npos &&
                serialized.find(fs::absolute(root).generic_string()) == std::string::npos,
-           "inventory JSON should be versioned, escaped, deterministic, and omit the absolute root (" +
-               describe_inventory(inventory) + ")");
+           "inventory JSON should be versioned, deterministic, and omit the absolute root");
+    copperfin::migration::ProjectInventoryResult escaping_probe;
+    escaping_probe.complete = true;
+    escaping_probe.diagnostic_code = "migration.inventory.complete";
+    escaping_probe.entries.push_back({"quote\".dbf", "table", 3U});
+    const std::string escaped = copperfin::migration::serialize_project_inventory_json(escaping_probe);
+    expect(escaped.find("\"quote\\\".dbf\"") != std::string::npos,
+           "inventory JSON must escape portable entry names independently of host filename rules");
 
     const auto relative = copperfin::migration::build_project_inventory("relative");
     expect(!relative.complete && relative.entries.empty() &&
