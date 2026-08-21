@@ -1,5 +1,17 @@
 # Agent Handoff
 
+## V1 macOS portable-test fixture correction
+
+RC3 macOS native validation identified two fixture assumptions, not product
+behavior defects. `WorkspaceAgentSessionAuditFileSink` intentionally exposes a
+canonical contained audit-log path; the regression now derives its expected
+path with `filesystem::canonical`, so macOS `/var` to `/private/var`
+canonicalization remains covered. APFS does not retain the test's raw invalid
+UTF-8 filename byte through `std::filesystem`, so that fail-closed inventory
+regression remains active only where the fixture is representable. Linux still
+proves rejection of the raw invalid name. No product or machine contract
+changed; a sequential RC is required after the correction merges.
+
 ## V1 runtime-surface buffering fixture correction
 
 The `test_prg_engine_runtime_surface_functions_buffering` regression now

@@ -1,3 +1,11 @@
+- 2026-08-21: Corrected two portable native-test fixtures exposed by RC3
+  macOS validation. The workspace-agent audit sink test now expects the
+  documented canonical contained path, including macOS `/var` to `/private/var`
+  canonicalization. The project-inventory invalid-name regression remains
+  fail-closed where a raw invalid UTF-8 name is representable, and no longer
+  assumes APFS will retain that raw byte sequence. Product behavior and
+  machine-readable contracts are unchanged.
+
 - 2026-08-21: Clarified the private RC evaluation guide's Windows launcher
   trust boundary. The separately successful protected signer/registry
   validation is now identified precisely, while the guide makes explicit that
