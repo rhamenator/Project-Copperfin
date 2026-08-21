@@ -1,3 +1,8 @@
+- 2026-08-20: `TAGNO()` now returns the physical ordinal of an open IDX/CDX
+  order, including an explicitly named tag/index and a selected alias; it
+  returns zero for natural order, a temporary order, or an absent tag/index.
+  The established IDX-before-CDX ordinal model is preserved.
+
 - 2026-08-20: `ADIR(..., 'V')` now returns only the Windows current-drive
   volume label in the first array element, overriding any `D`/`H`/`S` filters
   or file skeleton. Hosts without a Windows drive-volume label facility retain

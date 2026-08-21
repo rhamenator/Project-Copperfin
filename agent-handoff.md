@@ -1,5 +1,15 @@
 # Agent Handoff
 
+## V1 TAGNO() index-order position
+
+`RQ-CF-PRG-009` now recovers the mounted VFP9 `TAGNO()` query over the existing
+physical IDX/CDX order list. With no arguments it returns the active physical
+order's 1-based position or zero for natural/temporary order. An explicit tag
+or open IDX file returns its global position, with an optional CDX filename and
+alias/work-area designator selecting the target order. Missing cursor, file, or
+tag returns zero. This is read-only local-cursor behavior; the still-unrecovered
+creation-time `DESCENDING()` bit remains separate binary-parser work.
+
 ## V1 ADIR() volume-label attribute
 
 `RQ-CF-PRG-017` now recovers the mounted VFP9 `ADIR(..., 'V')` rule: `V`
