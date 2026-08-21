@@ -1,3 +1,8 @@
+- 2026-08-21: Continued #2564 test-module refactoring by moving the cursor/SQL
+  locale-diagnostic fixtures into `test_prg_engine_control_flow_localized_errors.cpp`.
+  The existing executable, invocation order, assertions, and runtime behavior
+  remain unchanged.
+
 - 2026-08-21: Began the #2564 test-module refactor by moving the owned
   caught-runtime-fault/RETRY fixture into
   `test_prg_engine_control_flow_fault_recovery.cpp` while preserving its
