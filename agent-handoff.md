@@ -1,5 +1,13 @@
 # Agent Handoff
 
+## V1 asset-probe warning hygiene
+
+The read-only CDX/index-probe boundary explicitly initializes every result
+aggregate field and omits an unused CDX helper. This is build-quality only:
+preserve parsed bytes, result layouts, localized diagnostics, and
+machine-readable inspection output. A fresh Release build of `test_vfp_assets`
+has no diagnostics from these translation units and the executable passes.
+
 ## V1 AERROR SQL/OLE metadata test module
 
 The next bounded #2564 structural slice owns the focused SQL/OLE `AERROR()`

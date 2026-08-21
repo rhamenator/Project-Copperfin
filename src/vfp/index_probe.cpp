@@ -310,7 +310,7 @@ IndexParseResult parse_cdx_family_probe(
     IndexKind kind) {
     const CdxParseResult cdx_result = parse_cdx_header(bytes, file_size);
     if (!cdx_result.ok) {
-        return {.ok = false, .error = cdx_result.error};
+        return {.ok = false, .probe = {}, .error = cdx_result.error};
     }
 
     IndexProbe probe;
@@ -361,12 +361,16 @@ IndexParseResult parse_cdx_family_probe(
     }
     probe.multi_tag = true;
     probe.production_candidate = (kind == IndexKind::cdx);
-    return {.ok = true, .probe = probe};
+    return {.ok = true, .probe = probe, .error = {}};
 }
 
 IndexParseResult parse_fox_idx_probe(const std::vector<std::uint8_t>& bytes, std::uint64_t file_size) {
     if (bytes.size() < 512U) {
-        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall")};
+        return {
+            .ok = false,
+            .probe = {},
+            .error = index_probe_text("Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall")
+        };
     }
 
     IndexProbe probe;
@@ -406,12 +410,16 @@ IndexParseResult parse_fox_idx_probe(const std::vector<std::uint8_t>& bytes, std
         };
     }
 
-    return {.ok = true, .probe = probe};
+    return {.ok = true, .probe = probe, .error = {}};
 }
 
 IndexParseResult parse_dbase_ndx_probe(const std::vector<std::uint8_t>& bytes, std::uint64_t file_size) {
     if (bytes.size() < 512U) {
-        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.DbaseNdxHeaderTooSmall")};
+        return {
+            .ok = false,
+            .probe = {},
+            .error = index_probe_text("Vfp.IndexProbe.Error.DbaseNdxHeaderTooSmall")
+        };
     }
 
     const std::uint32_t root_block = read_le_u32(bytes, 0U);
@@ -457,12 +465,16 @@ IndexParseResult parse_dbase_ndx_probe(const std::vector<std::uint8_t>& bytes, s
         };
     }
 
-    return {.ok = true, .probe = probe};
+    return {.ok = true, .probe = probe, .error = {}};
 }
 
 IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, std::uint64_t file_size) {
     if (bytes.size() < 512U) {
-        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.DbaseMdxProbeTooSmall")};
+        return {
+            .ok = false,
+            .probe = {},
+            .error = index_probe_text("Vfp.IndexProbe.Error.DbaseMdxProbeTooSmall")
+        };
     }
 
     IndexProbe probe;
@@ -600,7 +612,7 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
     probe.normalization_hint = probe.tags.front().normalization_hint;
     probe.collation_hint = probe.tags.front().collation_hint;
 
-    return {.ok = true, .probe = probe};
+    return {.ok = true, .probe = probe, .error = {}};
 }
 
 }  // namespace
@@ -676,28 +688,48 @@ IndexParseResult parse_index_probe(
         case IndexKind::mdx:
             return parse_dbase_mdx_probe(bytes, file_size);
         case IndexKind::unknown:
-            return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.UnknownExtension")};
+            return {
+                .ok = false,
+                .probe = {},
+                .error = index_probe_text("Vfp.IndexProbe.Error.UnknownExtension")
+            };
     }
-    return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.UnsupportedType")};
+    return {
+        .ok = false,
+        .probe = {},
+        .error = index_probe_text("Vfp.IndexProbe.Error.UnsupportedType")
+    };
 }
 
 IndexParseResult parse_index_probe_from_file(const std::string& path) {
     const IndexKind kind = index_kind_from_path(path);
     if (kind == IndexKind::unknown) {
-        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.PathExtensionUnknown")};
+        return {
+            .ok = false,
+            .probe = {},
+            .error = index_probe_text("Vfp.IndexProbe.Error.PathExtensionUnknown")
+        };
     }
 
     const std::filesystem::path native_path = copperfin::platform::path_from_utf8_string(path);
     std::ifstream input(native_path, std::ios::binary);
     if (!input) {
-        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.OpenFileFailed")};
+        return {
+            .ok = false,
+            .probe = {},
+            .error = index_probe_text("Vfp.IndexProbe.Error.OpenFileFailed")
+        };
     }
 
     std::error_code file_size_error;
     const std::uint64_t file_size = static_cast<std::uint64_t>(
         std::filesystem::file_size(native_path, file_size_error));
     if (file_size_error) {
-        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.OpenFileFailed")};
+        return {
+            .ok = false,
+            .probe = {},
+            .error = index_probe_text("Vfp.IndexProbe.Error.OpenFileFailed")
+        };
     }
     std::size_t probe_size = 512U;
     if (kind == IndexKind::cdx || kind == IndexKind::dcx || kind == IndexKind::mdx) {
@@ -707,7 +739,11 @@ IndexParseResult parse_index_probe_from_file(const std::string& path) {
     input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 
     if (input.gcount() <= 0) {
-        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.ReadHeaderFailed")};
+        return {
+            .ok = false,
+            .probe = {},
+            .error = index_probe_text("Vfp.IndexProbe.Error.ReadHeaderFailed")
+        };
     }
 
     bytes.resize(static_cast<std::size_t>(input.gcount()));
