@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 runtime-surface buffering fixture correction
+
+The `test_prg_engine_runtime_surface_functions_buffering` regression now
+models both current contracts accurately: `create_dbf_table_file()` stamps a
+new DBF header date under `RQ-CF-PRG-012`, so the `LUPDATE()` empty-date case
+explicitly zeroes only its disposable fixture header; and command-undo journal
+files reside below the configured `runtime-temp/command_undo` directory.
+The test still proves that a missing journal backup invokes the VFP error path
+once and retains the current verified admission. No product behavior, release
+artifact, or recovery policy changed.
+
 ## V1 current low-level file-attribute limitations
 
 The historical `RQ-CF-PRG-015` `DIRECTORY()` row no longer reports the later

@@ -1,3 +1,10 @@
+- 2026-08-21: Corrected the runtime-surface buffering regression fixtures after
+  DBF creation began stamping the standard last-update date and command-undo
+  journals moved beneath the configured runtime temporary directory. The
+  `LUPDATE()` blank-date path now uses an explicitly undated DBF header, while
+  the missing-backup case deletes the actual staged journal copy. This is
+  test-only and preserves the shipped DBF stamp and fail-closed UNDO behavior.
+
 - 2026-08-21: Corrected the historical limitation text on the recovered
   `DIRECTORY()` and `FILE()` requirements. It now accurately points to the
   later completed `FILE()` and `ADIR()` visibility/attribute requirements
