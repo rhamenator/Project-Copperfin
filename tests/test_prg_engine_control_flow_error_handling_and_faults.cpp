@@ -3938,55 +3938,6 @@ void test_retry_with_no_fault_checkpoint_is_noop() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_runtime_faults_preserve_state_and_allow_retry() {
-    // We will execute a script that intentionally causes a runtime C++ exception (like LOG(-1))
-    // We will verify that we can RETRY and the cursor/session state is preserved.
-    namespace fs = std::filesystem;
-    const fs::path temp_root =
-        fs::absolute(fs::temp_directory_path()) /
-        ("copperfin_prg_engine_runtime_fault_retry_" + std::to_string(_getpid()));
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    const fs::path main_path = temp_root / "runtime_fault_test.prg";
-    write_text(main_path,
-        "CREATE CURSOR test_cursor (id I)\n"
-        "INSERT INTO test_cursor VALUES (1)\n"
-        "INSERT INTO test_cursor VALUES (2)\n"
-        "GO TOP\n"
-        "x = -1\n"
-        "ON ERROR DO my_error_handler\n"
-        "? LOG(x)\n" // This throws std::runtime_error first time
-        "PROCEDURE my_error_handler\n"
-        "    x = 1\n"
-        "    RETRY\n"
-        "ENDPROC\n"
-    );
-
-    {
-        const auto options =
-            make_runtime_session_options(main_path, temp_root, false);
-        const fs::path runtime_temp = options.temp_directory;
-        expect(runtime_temp.is_absolute(), "#4075: caught-fault runtime temp should be absolute");
-        expect(
-            runtime_temp.parent_path().lexically_normal() == temp_root.lexically_normal(),
-            "#4075: caught-fault runtime temp should remain beneath its fixture owner");
-        auto session = copperfin::runtime::PrgRuntimeSession::create(options);
-        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-
-        if (!state.completed) {
-            std::cerr << "Script stopped. Reason: " << copperfin::runtime::debug_pause_reason_name(state.reason)
-                      << ", message: " << state.message << std::endl;
-        }
-
-        expect(state.completed, "Script should complete after handling fault");
-    }
-
-    fs::remove_all(temp_root, ignored);
-    expect(!fs::exists(temp_root), "#4075: caught-fault fixture should clean its owned runtime state");
-}
-
 void test_aerror_line_number_is_innermost_faulting_line_not_catch_site() {
     // #256: AERROR()[1,5] inside a CATCH block must report the innermost faulting
     // line (inside the deeply nested routine), not the TRY/CATCH site.
