@@ -5642,6 +5642,7 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     test_prg_engine_runtime_surface_functions_events_03.cpp
     test_prg_engine_runtime_surface_functions_expressions_01.cpp
     test_prg_engine_runtime_surface_functions_sys16.cpp
+    test_prg_engine_runtime_surface_functions_filesystem_sys.cpp
     test_prg_engine_runtime_surface_functions_sys2012.cpp
     test_prg_engine_runtime_surface_functions_sys2030.cpp
     test_prg_engine_runtime_surface_functions_sys2021.cpp
