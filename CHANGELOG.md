@@ -1,3 +1,7 @@
+- 2026-08-21: Removed confirmed Windows/MSVC unused-parameter and
+  local-shadowing diagnostics from runtime implementation seams without
+  changing runtime behavior, public contracts, or user-visible output.
+
 - 2026-08-21: Corrected two portable native-test fixtures exposed by RC3
   macOS validation. The workspace-agent audit sink test now expects the
   documented canonical contained path, including macOS `/var` to `/private/var`

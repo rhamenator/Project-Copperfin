@@ -114,6 +114,7 @@
 #if !defined(_WIN32)
             const bool use_exact_path = exact_paths_on_posix;
 #else
+            (void)exact_paths_on_posix;
             const bool use_exact_path = false;
 #endif
             const std::string normalized_path = copperfin::platform::path_to_utf8_string(

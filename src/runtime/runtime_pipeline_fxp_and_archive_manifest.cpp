@@ -28,6 +28,9 @@ std::string staged_content_relative_path(
 std::map<std::string, StagedContentFile> collect_staged_content_files(
     const RuntimePackagePlan& plan,
     std::string* error = nullptr) {
+#if defined(_WIN32)
+    (void)error;
+#endif
     std::map<std::string, StagedContentFile> files;
     const std::filesystem::path content_root =
         copperfin::platform::path_from_utf8_string(plan.content_root);

@@ -1580,8 +1580,8 @@
 
             if (!output_path.parent_path().empty())
             {
-                std::error_code ignored;
-                std::filesystem::create_directories(output_path.parent_path(), ignored);
+                std::error_code create_output_directory_error;
+                std::filesystem::create_directories(output_path.parent_path(), create_output_directory_error);
             }
 
             std::ofstream output(output_path, std::ios::binary);

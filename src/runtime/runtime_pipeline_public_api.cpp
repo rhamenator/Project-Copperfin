@@ -274,6 +274,7 @@ public:
         const std::filesystem::path& lock_identity_path,
         const std::string& identity) {
 #if defined(_WIN32)
+        (void)lock_identity_path;
         const std::wstring mutex_name = L"Local\\CopperfinPackageRoot-" +
             std::wstring(identity.begin(), identity.end());
         mutex_handle_ = static_cast<void*>(::CreateMutexW(nullptr, FALSE, mutex_name.c_str()));
@@ -2253,24 +2254,24 @@ RuntimePackagePlan create_runtime_package_plan(
         if (root_value.empty()) {
             continue;
         }
-        const std::filesystem::path root = normalize_existing_path_spelling(
+        const std::filesystem::path external_root = normalize_existing_path_spelling(
             copperfin::platform::path_from_utf8_string(root_value).lexically_normal());
         std::error_code root_error;
-        if (!std::filesystem::is_directory(root, root_error) || root_error) {
+        if (!std::filesystem::is_directory(external_root, root_error) || root_error) {
             plan.warnings.push_back(runtime_text(
                 "Runtime.Package.Warning.ExternalIncludeRootUnavailable",
                 {{"path", root_value}}));
             continue;
         }
-        admitted_external_roots.push_back(root);
+        admitted_external_roots.push_back(external_root);
     }
     const auto external_relative_path = [&](const std::filesystem::path& source_path)
         -> std::optional<std::filesystem::path> {
         const std::filesystem::path normalized_source =
             normalize_existing_path_spelling(source_path);
-        for (const auto& root : admitted_external_roots) {
+        for (const auto& admitted_root : admitted_external_roots) {
             const std::filesystem::path normalized_root =
-                normalize_existing_path_spelling(root);
+                normalize_existing_path_spelling(admitted_root);
             const auto relative = normalized_source.lexically_relative(normalized_root);
             bool contained = !relative.empty() && !relative.is_absolute();
             for (const auto& component : relative) {
@@ -2281,7 +2282,7 @@ RuntimePackagePlan create_runtime_package_plan(
             }
             if (contained) {
                 const std::string root_name = sanitize_file_name(
-                    copperfin::platform::path_to_utf8_string(root.filename()));
+                    copperfin::platform::path_to_utf8_string(admitted_root.filename()));
                 return std::filesystem::path("external") / root_name / relative;
             }
         }

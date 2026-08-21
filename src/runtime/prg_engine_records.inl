@@ -2722,9 +2722,9 @@
                 {
                     const int buffering_mode = cursor->buffering_mode;
                     cursor->buffering_mode = 1;
-                    const bool appended = append_blank_record(*cursor);
+                    const bool append_succeeded = append_blank_record(*cursor);
                     cursor->buffering_mode = buffering_mode;
-                    if (!appended)
+                    if (!append_succeeded)
                     {
                         return make_boolean_value(false);
                     }
