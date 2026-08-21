@@ -769,6 +769,32 @@ Not every language needs first-class embedding.
 
 The important thing is a stable, signed, well-audited extension model.
 
+### Standalone Studio Extension Decision
+
+The standalone Studio does not load Visual Studio extensions, VSIX packages,
+or the Copperfin Visual Studio extension. A VSIX depends on the Visual Studio
+shell, MEF composition, service lifetimes, command routing, and package
+lifecycle; treating one as a generic Studio plugin would create an unaudited
+host-compatibility and trust boundary. In particular, loading Copperfin's own
+VSIX into Copperfin Studio is prohibited: it would make the standalone host
+recursively host a product integration designed for a different shell.
+
+If Studio gains extensions, it shall use a distinct, host-owned native plugin
+model. The future model must be versioned and fail closed: the host must admit
+an explicitly supported manifest and ABI, authenticate the publisher against
+an approved trust registry, bind an explicit capability set, and record
+lifecycle/audit outcomes. A missing, malformed, untrusted, revoked, or
+unsupported plugin must not load. Plugins receive no ambient access to project
+files, credentials, process execution, network access, or runtime mutation;
+any such authority requires a separately designed, policy-controlled boundary.
+
+This is a product decision and scope boundary, not an implemented plugin API.
+Arbitrary third-party VSIX compatibility, VSIX discovery, VSIX installation,
+MEF emulation, and general managed-code loading remain unsupported. A future
+native-plugin implementation requires its own requirement recovery, trust and
+sandbox design, user-visible consent model where applicable, lifecycle
+verification, and Windows/macOS/Linux evidence before it can be exposed.
+
 ## MCP And AI Story
 
 Copperfin now has a first dedicated, provider-independent MCP host surface:
