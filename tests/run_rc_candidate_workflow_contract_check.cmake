@@ -81,6 +81,22 @@ require_manifest_schema_text("\"schema_version\": { \"const\": 3 }" "schema-v3 i
 require_manifest_schema_text("\"windows_installed_cli_smoke\"" "Windows installer lifecycle evidence")
 require_manifest_schema_text("\"windows_supported_prg_open_and_command\"" "Windows VSIX lifecycle evidence")
 
+set(rc_guide_path "${SOURCE_DIR}/docs/35-rc1-evaluation-guide.md")
+file(READ "${rc_guide_path}" rc_guide)
+string(REPLACE "\r\n" "\n" rc_guide "${rc_guide}")
+string(REPLACE "\n" " " rc_guide_normalized "${rc_guide}")
+foreach(required_guide_text IN ITEMS
+        "31630819119"
+        "signing.windows_launcher_release_trust"
+        "does **not** authenticate the contents of this RC bundle"
+        "evidence from a different run must not be inferred into the bundle")
+    string(FIND "${rc_guide_normalized}" "${required_guide_text}" guide_text_offset)
+    if(guide_text_offset EQUAL -1)
+        message(FATAL_ERROR
+            "RC evaluation guide lacks current launcher-trust scope wording: ${required_guide_text}")
+    endif()
+endforeach()
+
 foreach(traceability_file IN ITEMS
         scripts/assemble-rc-candidate.py
         docs/contracts/rc-validation-manifest-v3.schema.json

@@ -1,3 +1,11 @@
+- 2026-08-21: Clarified the private RC evaluation guide's Windows launcher
+  trust boundary. The separately successful protected signer/registry
+  validation is now identified precisely, while the guide makes explicit that
+  a candidate whose own manifest records
+  `signing.windows_launcher_release_trust` as `NOT_RUN` remains unsigned
+  evaluation output. The RC workflow contract prevents that exact-evidence
+  distinction from being silently removed.
+
 - 2026-08-21: Corrected the runtime-surface buffering regression fixtures after
   DBF creation began stamping the standard last-update date and command-undo
   journals moved beneath the configured runtime temporary directory. The

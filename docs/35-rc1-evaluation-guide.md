@@ -74,13 +74,26 @@ other restricted material to Project Copperfin or to a public issue.
 
 ## Signing And Review Limits
 
-This evaluation workflow does not claim completion of the protected Windows
-launcher release-trust approval. Unless that separate protected process has
-been completed and directly evidenced, treat generated Windows launchers as
-evaluation output rather than approved release-trusted inventory. The Windows
-installer also does not claim Authenticode signing. Project Copperfin does not
-currently support Apple platform signing/notarization or Linux distribution
-package signing.
+The protected Windows launcher-trust procedure has separately passed in
+workflow run `31630819119` at commit
+`111fb67d09df1413221beeebce9b684f47097053`. That run proved the approved
+signer/registry procedure and its fail-closed launcher-guard cases; its
+non-secret evidence is recorded in
+`docs/safety/launcher-trust-validation-2026-08-12.md`.
+
+That separate procedure does **not** authenticate the contents of this RC
+bundle. The private RC-candidate workflow intentionally receives no signing
+secret, and its exact-candidate
+`signing.windows_launcher_release_trust` manifest field is therefore
+`NOT_RUN`. Treat generated Windows launchers in any bundle carrying that value
+as evaluation output, not as approved release-trusted inventory. A future
+candidate may claim that inventory boundary only when its own exact-tagged
+workflow performs and records the enforced signing validation; evidence from a
+different run must not be inferred into the bundle.
+
+The Windows installer also does not claim Authenticode signing. Project
+Copperfin does not currently support Apple platform signing/notarization or
+Linux distribution package signing.
 
 English is the authoritative reviewed documentation and UI source for the RC.
 Shipped non-English and pseudo-localized catalogs remain subject to the
