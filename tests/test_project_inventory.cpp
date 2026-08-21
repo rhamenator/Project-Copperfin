@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 namespace {
@@ -24,6 +25,26 @@ void expect(const bool condition, const std::string& message) {
 void write_file(const std::filesystem::path& path, const std::string& bytes) {
     std::ofstream output(path, std::ios::binary);
     output << bytes;
+}
+
+std::string describe_inventory(const copperfin::migration::ProjectInventoryResult& inventory) {
+    std::ostringstream output;
+    output << "entries=" << inventory.entries.size() << " [";
+    for (std::size_t index = 0U; index < inventory.entries.size(); ++index) {
+        if (index != 0U) {
+            output << ", ";
+        }
+        output << inventory.entries[index].relative_path;
+    }
+    output << "]; skipped=" << inventory.skipped_symlinks.size() << " [";
+    for (std::size_t index = 0U; index < inventory.skipped_symlinks.size(); ++index) {
+        if (index != 0U) {
+            output << ", ";
+        }
+        output << inventory.skipped_symlinks[index];
+    }
+    output << "]";
+    return output.str();
 }
 }  // namespace
 
@@ -52,7 +73,8 @@ int main() {
     const auto inventory = copperfin::migration::build_project_inventory(fs::absolute(root));
     expect(inventory.complete && inventory.diagnostic_code == "migration.inventory.complete",
            "an accessible direct project root should produce a complete inventory");
-    expect(inventory.entries.size() == 4U, "only direct regular files should be inventoried");
+    expect(inventory.entries.size() == 4U,
+           "only direct regular files should be inventoried (" + describe_inventory(inventory) + ")");
     if (inventory.entries.size() == 4U) {
         expect(inventory.entries[0].relative_path == "nested/invoice.FRX" &&
                    inventory.entries[0].asset_kind == "report",
@@ -85,7 +107,8 @@ int main() {
     expect(serialized.find("\"schemaVersion\": 1") != std::string::npos &&
                serialized.find("\"quote\\\".dbf\"") != std::string::npos &&
                serialized.find(fs::absolute(root).generic_string()) == std::string::npos,
-           "inventory JSON should be versioned, escaped, deterministic, and omit the absolute root");
+           "inventory JSON should be versioned, escaped, deterministic, and omit the absolute root (" +
+               describe_inventory(inventory) + ")");
 
     const auto relative = copperfin::migration::build_project_inventory("relative");
     expect(!relative.complete && relative.entries.empty() &&
