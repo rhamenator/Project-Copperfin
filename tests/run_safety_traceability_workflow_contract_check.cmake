@@ -25,6 +25,8 @@ file(READ "${workflow_path}" workflow)
 string(REPLACE "\r\n" "\n" workflow "${workflow}")
 file(READ "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1" validator_source)
 string(REPLACE "\r\n" "\n" validator_source "${validator_source}")
+file(READ "${SOURCE_DIR}/docs/32-recovered-requirements-traceability.md" requirements_traceability)
+string(REPLACE "\r\n" "\n" requirements_traceability "${requirements_traceability}")
 set(ENV{GITHUB_REPOSITORY_OWNER} "rhamenator")
 
 function(require_text expected_text description)
@@ -60,6 +62,33 @@ function(require_validator_text expected_text description)
         message(FATAL_ERROR "Safety validator is missing ${description}")
     endif()
 endfunction()
+
+function(require_requirements_traceability_text expected_text description)
+    string(FIND "${requirements_traceability}" "${expected_text}" match_index)
+    if(match_index EQUAL -1)
+        message(FATAL_ERROR "Requirements traceability is missing ${description}")
+    endif()
+endfunction()
+
+function(forbid_requirements_traceability_text forbidden_text description)
+    string(FIND "${requirements_traceability}" "${forbidden_text}" match_index)
+    if(NOT match_index EQUAL -1)
+        message(FATAL_ERROR "Requirements traceability contains stale ${description}")
+    endif()
+endfunction()
+
+require_requirements_traceability_text(
+    "The later `RQ-CF-PRG-016` and `RQ-CF-PRG-017` rows recover those completed behaviors"
+    "the current DIRECTORY/FILE/ADIR recovery boundary")
+require_requirements_traceability_text(
+    "`ADIR()` visibility, display, and volume-label behavior is separately recovered by `RQ-CF-PRG-017`"
+    "the current FILE/ADIR recovery boundary")
+forbid_requirements_traceability_text(
+    "is accepted but currently ignored by the existing `\"file\"` dispatch block"
+    "FILE visibility-gap wording")
+forbid_requirements_traceability_text(
+    "`ADIR()` remains a separate pre-existing attribute-flag gap"
+    "ADIR visibility-gap wording")
 
 function(assert_probe_is_environment_data probe)
     set(environment_binding "ISSUE_NUMBERS: ${probe}")

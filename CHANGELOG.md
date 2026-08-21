@@ -1,3 +1,8 @@
+- 2026-08-21: Corrected the historical limitation text on the recovered
+  `DIRECTORY()` and `FILE()` requirements. It now accurately points to the
+  later completed `FILE()` and `ADIR()` visibility/attribute requirements
+  instead of presenting those shipped surfaces as current gaps.
+
 - 2026-08-21: Corrected active RC-evidence traceability to the schema-v3
   manifest used by the producer. The workflow contract now fails if the v3
   identity or its Windows installer/VSIX lifecycle fields disappear; historical
