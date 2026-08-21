@@ -389,7 +389,7 @@ WorkspaceAgentIsolatedEnvironmentBoundary::WorkspaceAgentIsolatedEnvironmentBoun
     : session_storage_root_(std::move(session_storage_root)),
       executable_directories_(std::move(executable_directories)),
       windows_system_root_(std::move(windows_system_root)),
-      cleanup_authority_(std::make_shared<const std::uint8_t>(0U)) {}
+      cleanup_authority_(std::make_shared<const std::uint8_t>(std::uint8_t{0U})) {}
 
 std::optional<WorkspaceAgentIsolatedEnvironmentBoundary>
 WorkspaceAgentIsolatedEnvironmentBoundary::create(

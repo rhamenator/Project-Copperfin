@@ -1,3 +1,7 @@
+- 2026-08-21: Made the fixed byte type explicit when creating private
+  workspace-agent authority tokens, removing MSVC's spurious unsigned
+  conversion warnings without changing authority semantics or public policy.
+
 - 2026-08-21: Removed confirmed Windows/MSVC unused-parameter and
   local-shadowing diagnostics from runtime implementation seams without
   changing runtime behavior, public contracts, or user-visible output.
