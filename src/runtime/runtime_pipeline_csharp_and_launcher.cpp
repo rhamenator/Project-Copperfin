@@ -252,6 +252,240 @@ void append_generated_csharp_localization_helpers(std::ostringstream& stream) {
     stream << "    }\n\n";
 }
 
+struct LinqProjectionDescriptor {
+    std::string expression;
+    std::string alias;
+};
+
+struct LinqQueryDescriptor {
+    std::string source_sql;
+    std::vector<LinqProjectionDescriptor> projections;
+    std::string filter;
+    std::string grouping;
+    std::vector<std::string> aggregates;
+};
+
+std::size_t find_linq_top_level_keyword(
+    const std::string& upper_sql,
+    const std::size_t start,
+    const std::string_view keyword) {
+    bool in_single_quote = false;
+    bool in_double_quote = false;
+    std::size_t depth = 0U;
+    for (std::size_t index = start; index < upper_sql.size(); ++index) {
+        const char ch = upper_sql[index];
+        if (in_single_quote) {
+            if (ch == '\'' && index + 1U < upper_sql.size() && upper_sql[index + 1U] == '\'') {
+                ++index;
+            } else if (ch == '\'') {
+                in_single_quote = false;
+            }
+            continue;
+        }
+        if (in_double_quote) {
+            if (ch == '"') {
+                in_double_quote = false;
+            }
+            continue;
+        }
+        if (ch == '\'') {
+            in_single_quote = true;
+            continue;
+        }
+        if (ch == '"') {
+            in_double_quote = true;
+            continue;
+        }
+        if (ch == '(') {
+            ++depth;
+            continue;
+        }
+        if (ch == ')') {
+            if (depth > 0U) {
+                --depth;
+            }
+            continue;
+        }
+        if (depth != 0U || index + keyword.size() > upper_sql.size() ||
+            upper_sql.compare(index, keyword.size(), keyword) != 0) {
+            continue;
+        }
+        const bool before = index == 0U || !std::isalnum(static_cast<unsigned char>(upper_sql[index - 1U]));
+        const std::size_t end = index + keyword.size();
+        const bool after = end == upper_sql.size() || !std::isalnum(static_cast<unsigned char>(upper_sql[end]));
+        if (before && after) {
+            return index;
+        }
+    }
+    return std::string::npos;
+}
+
+std::vector<std::string> split_linq_top_level_csv(const std::string& text) {
+    std::vector<std::string> fields;
+    bool in_single_quote = false;
+    bool in_double_quote = false;
+    std::size_t depth = 0U;
+    std::size_t start = 0U;
+    for (std::size_t index = 0U; index <= text.size(); ++index) {
+        const bool at_end = index == text.size();
+        const char ch = at_end ? ',' : text[index];
+        if (!at_end && in_single_quote) {
+            if (ch == '\'' && index + 1U < text.size() && text[index + 1U] == '\'') {
+                ++index;
+            } else if (ch == '\'') {
+                in_single_quote = false;
+            }
+            continue;
+        }
+        if (!at_end && in_double_quote) {
+            if (ch == '"') {
+                in_double_quote = false;
+            }
+            continue;
+        }
+        if (!at_end && ch == '\'') {
+            in_single_quote = true;
+            continue;
+        }
+        if (!at_end && ch == '"') {
+            in_double_quote = true;
+            continue;
+        }
+        if (!at_end && ch == '(') {
+            ++depth;
+            continue;
+        }
+        if (!at_end && ch == ')') {
+            if (depth > 0U) {
+                --depth;
+            }
+            continue;
+        }
+        if ((at_end || ch == ',') && depth == 0U) {
+            const std::string field = trim_copy(text.substr(start, index - start));
+            if (!field.empty()) {
+                fields.push_back(field);
+            }
+            start = index + 1U;
+        }
+    }
+    return fields;
+}
+
+LinqQueryDescriptor describe_linq_query(const Statement& statement) {
+    LinqQueryDescriptor descriptor;
+    descriptor.source_sql = "SELECT " + trim_copy(statement.expression);
+    const std::string upper_sql = lowercase_copy(descriptor.source_sql);
+    const std::size_t from = find_linq_top_level_keyword(upper_sql, 0U, "from");
+    const std::size_t projection_end = from == std::string::npos ? descriptor.source_sql.size() : from;
+    if (projection_end > 6U) {
+        for (const std::string& raw_projection : split_linq_top_level_csv(
+                 trim_copy(descriptor.source_sql.substr(6U, projection_end - 6U)))) {
+            LinqProjectionDescriptor projection{.expression = raw_projection, .alias = {}};
+            const std::string upper_projection = lowercase_copy(raw_projection);
+            const std::size_t as = find_linq_top_level_keyword(upper_projection, 0U, "as");
+            if (as != std::string::npos) {
+                projection.expression = trim_copy(raw_projection.substr(0U, as));
+                projection.alias = trim_copy(raw_projection.substr(as + 2U));
+            }
+            if (projection.expression.empty()) {
+                projection.expression = raw_projection;
+            }
+            descriptor.projections.push_back(std::move(projection));
+        }
+    }
+
+    const auto clause_end = [&](const std::size_t start) {
+        std::size_t end = descriptor.source_sql.size();
+        for (const std::string_view keyword : {"group by", "having", "order by", "into", "union"}) {
+            const std::size_t candidate = find_linq_top_level_keyword(upper_sql, start, keyword);
+            if (candidate != std::string::npos) {
+                end = std::min(end, candidate);
+            }
+        }
+        return end;
+    };
+    const std::size_t where = find_linq_top_level_keyword(upper_sql, 0U, "where");
+    if (where != std::string::npos) {
+        descriptor.filter = trim_copy(descriptor.source_sql.substr(where + 5U, clause_end(where + 5U) - (where + 5U)));
+    }
+    const std::size_t group_by = find_linq_top_level_keyword(upper_sql, 0U, "group by");
+    if (group_by != std::string::npos) {
+        descriptor.grouping = trim_copy(descriptor.source_sql.substr(group_by + 8U, clause_end(group_by + 8U) - (group_by + 8U)));
+    }
+    for (const auto& projection : descriptor.projections) {
+        const std::string upper_projection = lowercase_copy(projection.expression);
+        for (const std::string_view aggregate : {"count(", "sum(", "avg(", "min(", "max("}) {
+            if (upper_projection.find(aggregate) != std::string::npos) {
+                descriptor.aggregates.push_back(projection.expression);
+                break;
+            }
+        }
+    }
+    return descriptor;
+}
+
+void append_linq_query_catalog_helpers(std::ostringstream& stream) {
+    stream << "    public sealed class LinqProjectionDescriptor\n";
+    stream << "    {\n";
+    stream << "        public LinqProjectionDescriptor(string expression, string alias) { Expression = expression; Alias = alias; }\n";
+    stream << "        public string Expression { get; }\n";
+    stream << "        public string Alias { get; }\n";
+    stream << "    }\n\n";
+    stream << "    public sealed class LinqQueryDescriptor\n";
+    stream << "    {\n";
+    stream << "        public LinqQueryDescriptor(string sourceSql, IReadOnlyList<LinqProjectionDescriptor> projections, string filter, string grouping, IReadOnlyList<string> aggregates)\n";
+    stream << "        { SourceSql = sourceSql; Projections = projections; Filter = filter; Grouping = grouping; Aggregates = aggregates; }\n";
+    stream << "        public string SourceSql { get; }\n";
+    stream << "        public IReadOnlyList<LinqProjectionDescriptor> Projections { get; }\n";
+    stream << "        public string Filter { get; }\n";
+    stream << "        public string Grouping { get; }\n";
+    stream << "        public IReadOnlyList<string> Aggregates { get; }\n";
+    stream << "    }\n\n";
+    stream << "    public static class LinqQueryCatalog\n";
+    stream << "    {\n";
+    stream << "        private static readonly List<LinqQueryDescriptor> RecordedQueries = new();\n";
+    stream << "        public static IReadOnlyList<LinqQueryDescriptor> Queries => RecordedQueries;\n";
+    stream << "        public static IQueryable<LinqQueryDescriptor> AsQueryable() => RecordedQueries.AsQueryable();\n";
+    stream << "        public static LinqQueryDescriptor Record(LinqQueryDescriptor query) { RecordedQueries.Add(query); return query; }\n";
+    stream << "    }\n\n";
+}
+
+std::string transpile_linq_query_to_csharp(const Statement& statement) {
+    const LinqQueryDescriptor descriptor = describe_linq_query(statement);
+    std::ostringstream stream;
+    stream << "LinqQueryCatalog.Record(new LinqQueryDescriptor(\"" << json_escape(descriptor.source_sql) << "\", ";
+    if (descriptor.projections.empty()) {
+        stream << "Array.Empty<LinqProjectionDescriptor>()";
+    } else {
+        stream << "new[] {";
+        for (std::size_t index = 0U; index < descriptor.projections.size(); ++index) {
+            if (index != 0U) {
+                stream << ", ";
+            }
+            const auto& projection = descriptor.projections[index];
+            stream << "new LinqProjectionDescriptor(\"" << json_escape(projection.expression) << "\", \""
+                   << json_escape(projection.alias) << "\")";
+        }
+        stream << "}";
+    }
+    stream << ", \"" << json_escape(descriptor.filter) << "\", \"" << json_escape(descriptor.grouping) << "\", ";
+    if (descriptor.aggregates.empty()) {
+        stream << "Array.Empty<string>()";
+    } else {
+        stream << "new[] {";
+        for (std::size_t index = 0U; index < descriptor.aggregates.size(); ++index) {
+            if (index != 0U) {
+                stream << ", ";
+            }
+            stream << "\"" << json_escape(descriptor.aggregates[index]) << "\"";
+        }
+        stream << "}";
+    }
+    stream << "));\n";
+    return stream.str();
+}
+
 std::string transpile_statement_to_csharp(
     const Statement& statement,
     const std::map<std::string, std::string>& routine_name_map) {
@@ -280,6 +514,8 @@ std::string transpile_statement_to_csharp(
             break;
         case StatementKind::return_statement:
             return "return;\n";
+        case StatementKind::select_command:
+            return transpile_linq_query_to_csharp(statement);
         default:
             break;
     }
@@ -376,9 +612,11 @@ std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     stream << "using System;\n";
     stream << "using System.Collections.Generic;\n\n";
+    stream << "using System.Linq;\n\n";
     stream << "namespace Copperfin.Generated\n";
     stream << "{\n";
     append_generated_csharp_localization_helpers(stream);
+    append_linq_query_catalog_helpers(stream);
     stream << "    public static class TranspiledProgram\n";
     stream << "    {\n";
 

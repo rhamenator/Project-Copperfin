@@ -32,7 +32,7 @@ Current maturity:
   regression admits its exact hash, invokes it through the production runtime
   host, and consumes its result from ordinary PRG. Copperfin does not discover
   or install a runtime for this path.
-- Generated C# transpilation output is currently an emitted artifact, not code executed by the runtime host.
+- Generated C# transpilation output is currently an emitted artifact, not code executed by the runtime host. For parsed `SELECT` statements it now emits a `LinqQueryDescriptor` into a queryable in-memory catalog: the descriptor retains the exact FoxPro SQL, ordered projection expressions and explicit `AS` aliases, plus the top-level `WHERE`, `GROUP BY`, and recognized aggregate projection structure. This is a compiler artifact seam for inspection and future managed lowering, not a database provider, query executor, semantic equivalence claim, or permission to run generated code.
 - macOS and Linux builds do not compile or host the Windows .NET Framework `DECLARE` path; their native runtime and packaging paths remain guarded from that Windows-only implementation. The separate Native AOT leaf-candidate path is cross-platform and out of process. Broader CLR hosting, managed wrappers, object lifetime, callbacks, and generated strongly typed bindings remain v1 work.
 
 ## Why This Matters

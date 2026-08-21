@@ -233,6 +233,7 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
     write_text(project_dir / "main.prg",
                "LOCAL nValue\n"
                "nValue = 1\n"
+               "SELECT id, name AS customer_name, COUNT(*) AS total FROM customer WHERE active = .T. GROUP BY id, name\n"
                "DO worker\n"
                "READ EVENTS\n"
                "RETURN\n"
@@ -295,6 +296,19 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
                "csharp transpilation should map LOCAL declarations to dynamic locals");
         expect(transpiled.find("nValue = 1;") != std::string::npos,
                "csharp transpilation should preserve simple assignments");
+        expect(transpiled.find("using System.Linq;") != std::string::npos,
+               "#57: C# transpilation should expose the LINQ query catalog surface");
+        expect(transpiled.find("public sealed class LinqQueryDescriptor") != std::string::npos &&
+                   transpiled.find("public static IQueryable<LinqQueryDescriptor> AsQueryable()") != std::string::npos,
+               "#57: C# transpilation should emit a queryable descriptor catalog without binding a database provider");
+        expect(transpiled.find("LinqQueryCatalog.Record(new LinqQueryDescriptor(\"SELECT id, name AS customer_name, COUNT(*) AS total FROM customer WHERE active = .T. GROUP BY id, name\"") != std::string::npos,
+               "#57: C# transpilation should preserve the complete FoxPro SELECT source text");
+        expect(transpiled.find("new LinqProjectionDescriptor(\"id\", \"\")") != std::string::npos &&
+                   transpiled.find("new LinqProjectionDescriptor(\"name\", \"customer_name\")") != std::string::npos &&
+                   transpiled.find("new LinqProjectionDescriptor(\"COUNT(*)\", \"total\")") != std::string::npos,
+               "#57: C# transpilation should preserve projection expressions and explicit aliases structurally");
+        expect(transpiled.find("\"active = .T.\", \"id, name\", new[] {\"COUNT(*)\"}") != std::string::npos,
+               "#57: C# transpilation should preserve filter, grouping, and aggregate structure without executing the query");
         expect(transpiled.find("Worker();") != std::string::npos,
                "csharp transpilation should map DO worker to a routine call");
         expect(transpiled.find("public static void worker()") != std::string::npos ||
