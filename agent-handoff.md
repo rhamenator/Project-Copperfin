@@ -1,5 +1,13 @@
 # Agent Handoff
 
+## V1 localized control-flow test module
+
+The next bounded #2564 structural slice owns the cursor/SQL locale-diagnostic
+fixtures in `test_prg_engine_control_flow_localized_errors.cpp`, while keeping
+the same `test_prg_engine_control_flow` executable and invocation order. It
+changes no runtime code, requirements, user-facing contract, RC tag, or
+artifact. Focused CTest evidence is pending.
+
 ## V1 control-flow test-module refactor
 
 The first bounded #2564 structural slice separates the owned caught-runtime-
