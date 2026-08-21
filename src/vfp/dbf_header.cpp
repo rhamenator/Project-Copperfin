@@ -96,6 +96,50 @@ bool DbfHeader::has_memo_file() const {
     return version == 0x83U || version == 0x8BU || version == 0xF5U;
 }
 
+DbfFormatFamily DbfHeader::format_family() const {
+    // dBASE Level 7 stores version 4 in the low three bits; higher bits
+    // describe memo and SQL-table flags and do not change the file family.
+    if ((version & 0x07U) == 0x04U) {
+        return DbfFormatFamily::dbase;
+    }
+
+    switch (version) {
+        case 0x02U:
+            return DbfFormatFamily::foxbase;
+        case 0x03U:
+        case 0x43U:
+        case 0x63U:
+        case 0x83U:
+        case 0x8BU:
+        case 0xCBU:
+            return DbfFormatFamily::dbase;
+        case 0xF5U:
+            return DbfFormatFamily::foxpro;
+        case 0x30U:
+        case 0x31U:
+        case 0x32U:
+            return DbfFormatFamily::visual_foxpro;
+        default:
+            return DbfFormatFamily::unknown;
+    }
+}
+
+const char* dbf_format_family_name(DbfFormatFamily family) {
+    switch (family) {
+        case DbfFormatFamily::unknown:
+            return "unknown";
+        case DbfFormatFamily::foxbase:
+            return "foxbase";
+        case DbfFormatFamily::foxpro:
+            return "foxpro";
+        case DbfFormatFamily::dbase:
+            return "dbase";
+        case DbfFormatFamily::visual_foxpro:
+            return "visual_foxpro";
+    }
+    return "unknown";
+}
+
 std::string DbfHeader::version_description() const {
     return version_description(dbf_header_catalog());
 }

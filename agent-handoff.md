@@ -9,6 +9,17 @@ invocation order. It changes no runtime code, requirements, user-facing
 contract, RC tag, or artifact. A fresh Release configure/build and focused
 CTest pass `1/1`; next action is protected-check completion before merging.
 
+## V1 legacy DBF inspection classification
+
+Owner-policy wishlist #1076 now has one narrow read-only inspection slice:
+`copperfin_inspect` emits stable machine field `header.format_family` from the
+parsed DBF version byte, separate from localized human `header.version_description`.
+The five possible values are `foxbase`, `foxpro`, `dbase`, `visual_foxpro`, and
+`unknown`. It is explicitly format identification only: no historical runtime
+execution, write fidelity, binary output, or VFP9-support expansion is claimed.
+Fresh Release targeted `test_localization`, `test_vfp_assets`, and
+`test_dbf_header_robustness` pass 3/3; next action is protected-check completion.
+
 ## V1 RC6 exact-tag private-evaluation evidence
 
 Immutable tag `v0.1.0-rc.6` at `1208ebbd7babf65fcb8f46ada0b1316289328a6e`

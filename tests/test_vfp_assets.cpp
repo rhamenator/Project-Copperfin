@@ -307,8 +307,31 @@ void test_parse_dbf_header() {
     expect(result.header.record_length == 64U, "record_length should be parsed");
     expect(result.header.has_structural_cdx(), "structural CDX flag should be detected");
     expect(result.header.has_database_container(), "database container flag should be detected");
+    expect(result.header.format_family() == copperfin::vfp::DbfFormatFamily::visual_foxpro,
+           "VFP version byte should classify as the visual_foxpro inspection family");
+    expect(std::string(copperfin::vfp::dbf_format_family_name(result.header.format_family())) == "visual_foxpro",
+           "VFP inspection family should use the stable machine-readable name");
     expect(result.header.version_description() == "Visual FoxPro", "version description should match Visual FoxPro");
     expect(result.header.last_update_iso8601() == "2026-04-07", "last update date should be formatted as ISO 8601");
+
+    copperfin::vfp::DbfHeader dbase_header;
+    dbase_header.version = 0x8BU;
+    expect(dbase_header.format_family() == copperfin::vfp::DbfFormatFamily::dbase,
+           "dBASE memo version byte should classify as the dbase inspection family");
+    dbase_header.version = 0x04U;
+    expect(dbase_header.format_family() == copperfin::vfp::DbfFormatFamily::dbase,
+           "dBASE Level 7 version byte should classify as the dbase inspection family");
+    dbase_header.version = 0x0CU;
+    expect(dbase_header.format_family() == copperfin::vfp::DbfFormatFamily::dbase,
+           "dBASE Level 7 memo-flag version byte should retain the dbase inspection family");
+    copperfin::vfp::DbfHeader foxbase_header;
+    foxbase_header.version = 0x02U;
+    expect(foxbase_header.format_family() == copperfin::vfp::DbfFormatFamily::foxbase,
+           "FoxBase version byte should classify as the foxbase inspection family");
+    copperfin::vfp::DbfHeader unknown_header;
+    unknown_header.version = 0x7FU;
+    expect(unknown_header.format_family() == copperfin::vfp::DbfFormatFamily::unknown,
+           "unrecognized version bytes should remain explicitly unknown");
 }
 
 void test_parse_dbf_header_rejects_short_input() {
