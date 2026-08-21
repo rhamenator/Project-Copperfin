@@ -1,5 +1,17 @@
 # Agent Handoff
 
+## V1 RC manifest schema-v3 traceability correction
+
+The active private-evaluation RC producer emits
+`rc-validation-manifest-v3.schema.json`, not the retained historical v2
+schema. `RQ-CF-REL-001` and its safety report now point to v3, while stable
+DQ/DV identifier names retain their original v2 evidence-level naming. The RC
+workflow contract directly asserts v3 identity plus the Windows installer and
+VSIX lifecycle fields; assembler self-test and Draft 2020-12 schema validation
+pass. No RC tag or artifact changed, and the requirement remains a release
+evidence `gap` pending exact-candidate hosted execution and the separately
+required reviews.
+
 ## V1 scoped native GCC coverage baseline
 
 `COPPERFIN_ENABLE_GNU_COVERAGE=ON` is an opt-in GNU-only, local-assurance

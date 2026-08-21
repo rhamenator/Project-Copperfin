@@ -1,3 +1,9 @@
+- 2026-08-21: Corrected active RC-evidence traceability to the schema-v3
+  manifest used by the producer. The workflow contract now fails if the v3
+  identity or its Windows installer/VSIX lifecycle fields disappear; historical
+  RC1/RC2 artifacts remain immutable and their schema-v1 evidence is not
+  reinterpreted.
+
 - 2026-08-20: Established a reproducible, opt-in GCC coverage measurement
   baseline for the DBF and Visual Asset integrity surface. The bounded
   13-test run passed; source-level line and branch results plus explicit

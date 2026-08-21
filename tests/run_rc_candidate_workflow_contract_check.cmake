@@ -16,6 +16,12 @@ if(NOT EXISTS "${workflow_path}")
 endif()
 file(READ "${workflow_path}" workflow)
 
+set(manifest_schema_path "${SOURCE_DIR}/docs/contracts/rc-validation-manifest-v3.schema.json")
+if(NOT EXISTS "${manifest_schema_path}")
+    message(FATAL_ERROR "Active RC validation manifest schema is missing")
+endif()
+file(READ "${manifest_schema_path}" manifest_schema)
+
 function(require_text expected description)
     string(FIND "${workflow}" "${expected}" offset)
     if(offset EQUAL -1)
@@ -33,6 +39,13 @@ function(require_text_count expected expected_count description)
     if(NOT actual_count EQUAL expected_count)
         message(FATAL_ERROR
             "RC candidate workflow must contain ${expected_count} ${description}; found ${actual_count}")
+    endif()
+endfunction()
+
+function(require_manifest_schema_text expected description)
+    string(FIND "${manifest_schema}" "${expected}" offset)
+    if(offset EQUAL -1)
+        message(FATAL_ERROR "Active RC validation manifest schema is missing ${description}: ${expected}")
     endif()
 endfunction()
 
@@ -64,10 +77,13 @@ require_text_count("uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8
     5 "immutable download-artifact pins")
 require_text_count("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1"
     1 "authoritative RC bundle upload")
+require_manifest_schema_text("\"schema_version\": { \"const\": 3 }" "schema-v3 identity")
+require_manifest_schema_text("\"windows_installed_cli_smoke\"" "Windows installer lifecycle evidence")
+require_manifest_schema_text("\"windows_supported_prg_open_and_command\"" "Windows VSIX lifecycle evidence")
 
 foreach(traceability_file IN ITEMS
         scripts/assemble-rc-candidate.py
-        docs/contracts/rc-validation-manifest-v2.schema.json
+        docs/contracts/rc-validation-manifest-v3.schema.json
         docs/35-rc1-evaluation-guide.md
         tests/run_rc_candidate_workflow_contract_check.cmake)
     file(READ "${SOURCE_DIR}/${traceability_file}" traceability_contents)
