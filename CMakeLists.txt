@@ -46,6 +46,9 @@ option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)
 option(COPPERFIN_BUILD_ROBUSTNESS_TESTS
     "Build optional bounded parser robustness tests (not a release gate)"
     OFF)
+option(COPPERFIN_ENABLE_GNU_COVERAGE
+    "Instrument native targets with GCC coverage data (local assurance evidence only)"
+    OFF)
 option(COPPERFIN_REQUIRE_SQLITE_CONNECTOR
     "Fail configuration when the read-only SQLite federation connector is unavailable"
     OFF)
@@ -60,6 +63,19 @@ option(COPPERFIN_ENABLE_PRODUCT_LICENSING
 option(COPPERFIN_ENFORCE_LAUNCHER_TRUST
     "Require signed app.cftrust metadata in the Windows generated-launcher guard"
     OFF)
+
+# Coverage instrumentation is deliberately opt-in and GCC-only. It is useful
+# for local assurance evidence but is not a shipping, package, or release
+# configuration; mixing compiler-specific coverage flags into those builds
+# would change their provenance and validation contract.
+if(COPPERFIN_ENABLE_GNU_COVERAGE)
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(FATAL_ERROR
+            "COPPERFIN_ENABLE_GNU_COVERAGE requires the GNU C++ compiler")
+    endif()
+    add_compile_options(-fprofile-arcs -ftest-coverage -O0)
+    add_link_options(-fprofile-arcs -ftest-coverage)
+endif()
 set(COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER
     "${CMAKE_CURRENT_SOURCE_DIR}/include/copperfin/package/launcher_trust_registry_empty.h"
     CACHE FILEPATH

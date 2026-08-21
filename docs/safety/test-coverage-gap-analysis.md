@@ -301,9 +301,56 @@ This section was refreshed against the current main tree on 2026-07-21. The orig
 
 The focused evidence above does not replace the required cross-platform validation matrix or the safety traceability workflow. Before a release tag, run `scripts/validate-safety-traceability.ps1` or the Safety Traceability Gate workflow against the intended release issue set and archive its report.
 
+### GCC measurement baseline (2026-08-20)
+
+An opt-in, local-only GCC coverage configuration now provides a reproducible
+measurement baseline for the highest-risk DBF and Visual Asset write/undo
+surface. It is intentionally separate from shipping, installer, package, and
+release configurations: configure a Debug build with
+`-DCOPPERFIN_ENABLE_GNU_COVERAGE=ON` and a GNU C++ compiler. The option applies
+GCC profile and test-coverage instrumentation only; it is not a release
+provenance claim.
+
+The recorded run used GCC 15.2.0 and passed all 13 selected tests:
+`test_dbf_table`, `test_visual_asset_editor`, and the 11
+`test_studio_host_real_sample_*_round_trip` delete/restore and undo scenarios.
+That scope exercises DBF parsing and persistence, Visual Asset snapshot/undo,
+and real VFP9 FRX/LBX restore behavior relevant to `HZ-data-corruption-01` and
+`RQ-CF-PRG-012`. The conditionally unavailable object-distribute sample is
+handled by its established test condition; this result is not a claim that the
+sample was present on every host.
+
+`gcov -b -c` reported the following source-file results. Percentages exclude
+standard-library/header output and are intentionally not combined into a
+misleading project-wide aggregate.
+
+| Source | Lines executed | Branches executed | Branches taken at least once |
+| --- | --- | --- | --- |
+| `src/vfp/dbf_table.cpp` | 81.56% (1,903 lines) | 77.26% (3,008) | 47.54% (3,008) |
+| `src/vfp/visual_asset_editor_record_and_snapshot.cpp` | 87.44% (597 lines) | 78.67% (1,416) | 48.31% (1,416) |
+| `src/vfp/visual_asset_editor_undo.cpp` | 87.83% (304 lines) | 91.33% (496) | 53.83% (496) |
+
+Reproduce this bounded evidence with a fresh Debug build directory, then run:
+
+```sh
+cmake -S . -B build-coverage -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+  -DCOPPERFIN_BUILD_TESTS=ON -DCOPPERFIN_ENABLE_GNU_COVERAGE=ON
+cmake --build build-coverage
+ctest --test-dir build-coverage --output-on-failure -R \
+  '^(test_dbf_table|test_visual_asset_editor|test_studio_host_real_sample_(settings_delete_restore|object_nudge|object_align|object_distribute|object_resize|object_snap|object_delete_restore|object_deleted_preview|section_delete_restore|section_deleted_preview|grouping_deleted_preview)_round_trip)$'
+gcov -b -c build-coverage/CMakeFiles/copperfin_vfp.dir/src/vfp/dbf_table.cpp.gcda
+```
+
+This is a scoped statement/branch measurement, not an MC/DC analysis, target
+threshold, project-wide coverage result, certification assertion, or evidence
+that every CTest completed under instrumentation. In particular, a prior
+serial instrumented full-suite attempt exceeded the ordinary timeout for the
+child-process-heavy `test_studio_host_json`; that broad run was not used for
+this baseline and remains a separate test-infrastructure concern.
+
 Remaining checklist:
 
 - [x] GAP-01 through GAP-09 have current focused evidence references
-- [ ] Coverage measurement baseline established (GCOV or equivalent)
+- [x] Scoped GCC coverage measurement baseline established for DBF and Visual Asset integrity paths
 - [x] This document refreshed to reflect current focused evidence
 - [ ] Hazard register reviewed for any new hazards introduced by runtime additions since this refresh
