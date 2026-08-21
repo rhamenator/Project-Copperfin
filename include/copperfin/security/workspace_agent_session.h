@@ -610,7 +610,7 @@ private:
         process_parser_boundary_;
     bool process_environment_configuration_supplied_ = false;
     std::shared_ptr<const std::uint8_t> process_launch_controller_authority_ =
-        std::make_shared<const std::uint8_t>(0U);
+        std::make_shared<const std::uint8_t>(std::uint8_t{0U});
     mutable std::uint64_t next_materialized_process_image_ = 1U;
 };
 
