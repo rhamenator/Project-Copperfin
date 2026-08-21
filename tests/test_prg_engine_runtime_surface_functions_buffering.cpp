@@ -104,9 +104,8 @@ namespace copperfin::runtime_surface_tests
             {{.name = "NAME", .type = 'C', .length = 24U}},
             {{"Alpha"}});
         expect(create_result.ok, "LUPDATE dated fixture should be writable");
-        // create_dbf_table_file() always zeroes the header's last-update bytes (a
-        // separate, deferred gap: no DBF write path in this codebase stamps a real
-        // last-update date today). Patch them directly to exercise the real-date path.
+        // Force a specific, deterministic date rather than relying on
+        // create_dbf_table_file()'s now-stamped creation-time date (today).
         write_dbf_last_update_bytes(table_path, 124U, 3U, 15U); // 1900 + 124 = 2024-03-15
 
         const auto create_blank_result = copperfin::vfp::create_dbf_table_file(
@@ -114,6 +113,10 @@ namespace copperfin::runtime_surface_tests
             {{.name = "NAME", .type = 'C', .length = 24U}},
             {{"Beta"}});
         expect(create_blank_result.ok, "LUPDATE blank fixture should be writable");
+        // create_dbf_table_file() now stamps today's date on creation
+        // (RQ-CF-PRG-012); force a genuinely undated header to keep
+        // exercising LUPDATE()'s blank-date fallback path.
+        write_dbf_last_update_bytes(blank_table_path, 0U, 0U, 0U);
 
         write_text(
             program_path,
@@ -544,7 +547,10 @@ namespace copperfin::runtime_surface_tests
                "missing-command-undo-backup regression should pause before UNDO");
 
         fs::path backup_path;
-        for (fs::recursive_directory_iterator iterator(temp_root / "command_undo", ignored), end;
+        // make_runtime_session_options() sets options.temp_directory to
+        // working_directory / "runtime-temp"; command-undo backups land
+        // under that runtime temp root, not directly under temp_root.
+        for (fs::recursive_directory_iterator iterator(temp_root / "runtime-temp" / "command_undo", ignored), end;
              !ignored && iterator != end;
              iterator.increment(ignored))
         {
