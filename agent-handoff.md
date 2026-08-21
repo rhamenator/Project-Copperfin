@@ -1,5 +1,13 @@
 # Agent Handoff
 
+## V1 package/debug IR event-opcode fidelity
+
+The package debug sidecar now classifies parsed `ON KEY LABEL`, `ON ESCAPE`,
+and `ON PAGE` statements as `on_key_command`, `on_escape`, and `on_page`.
+Those runtime behaviors were already recovered; this correction prevents their
+machine-readable AST/IR provenance from silently degrading to `no_op`.
+Focused Debug CTest `test_runtime_pipeline` covers all three opcodes.
+
 ## V1 TAGNO() index-order position
 
 `RQ-CF-PRG-009` now recovers the mounted VFP9 `TAGNO()` query over the existing

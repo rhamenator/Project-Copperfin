@@ -122,6 +122,9 @@ Current package layout:
 - `app.cfdebug`
   - source/debug-facing manifest
   - points at original source assets for IDE/debug workflows
+  - identifies the generated AST/IR sidecars, whose invariant opcodes must
+    classify every parsed statement kind without silently degrading a supported
+    command to `no_op`
 - `content/`
   - staged `PRG`, `SCX`, `VCX`, `FRX`, `LBX`, `MNX`, and related project assets
   - now also stages memo/index sidecars needed for packaged runtime fidelity, such as `SCT`, `VCT`, `FRT`, `LBT`, `MNT`, `PJT`, `FPT`, and structural index companions when present

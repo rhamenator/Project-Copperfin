@@ -154,6 +154,12 @@ const char* statement_kind_name(const StatementKind kind) {
             return "set_memowidth";
         case StatementKind::on_error:
             return "on_error";
+        case StatementKind::on_key_command:
+            return "on_key_command";
+        case StatementKind::on_escape:
+            return "on_escape";
+        case StatementKind::on_page:
+            return "on_page";
         case StatementKind::on_shutdown:
             return "on_shutdown";
         case StatementKind::with_statement:

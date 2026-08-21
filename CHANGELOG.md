@@ -1,3 +1,8 @@
+- 2026-08-20: Package/debug IR manifests now preserve the stable
+  `on_key_command`, `on_escape`, and `on_page` opcodes for the corresponding
+  parsed VFP event statements, rather than silently representing them as
+  `no_op`.
+
 - 2026-08-20: `TAGNO()` now returns the physical ordinal of an open IDX/CDX
   order, including an explicitly named tag/index and a selected alias; it
   returns zero for natural order, a temporary order, or an absent tag/index.
