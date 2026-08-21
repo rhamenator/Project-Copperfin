@@ -949,7 +949,11 @@ int main() {
         .executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
             builder_executor_called = true;
             return copperfin::studio::StudioBuilderDispatchExecutionObservation{
-                .launched = true
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
             };
         }
     });
@@ -978,7 +982,13 @@ int main() {
         .admit_execution = true,
         .executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
             builder_executor_called = true;
-            return copperfin::studio::StudioBuilderDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
         }
     });
     expect(!builder_executor_called &&
@@ -995,7 +1005,13 @@ int main() {
         .admit_execution = true,
         .executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
             builder_executor_called = true;
-            return copperfin::studio::StudioBuilderDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
         }
     });
     expect(!builder_executor_called &&
