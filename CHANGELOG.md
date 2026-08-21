@@ -1,3 +1,10 @@
+- 2026-08-21: Generated C# transpilation now preserves parsed FoxPro `SELECT`
+  statements as queryable `LinqQueryDescriptor` catalog entries with exact SQL,
+  ordered projections/explicit aliases, filter, grouping, and recognized
+  aggregate structure. This is a non-executing compiler-artifact seam; it does
+  not introduce a provider, database execution, or a general LINQ translation
+  claim.
+
 - 2026-08-21: Established the standalone Studio extension boundary: it will
   not load arbitrary VSIX packages or Copperfin's own Visual Studio extension.
   Any future standalone extensibility must use a distinct host-owned,
