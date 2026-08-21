@@ -689,10 +689,11 @@ namespace copperfin::runtime_surface_tests
         std::error_code ignored;
         fs::remove_all(temp_root, ignored);
         fs::create_directories(temp_root);
-        expect(copperfin::vfp::create_dbf_table_file(
-                   upper_path.string(), {{.name = "NAME", .type = 'C', .length = 24U}}, {{"Upper"}}).ok &&
-                   copperfin::vfp::create_dbf_table_file(
-                       lower_path.string(), {{.name = "NAME", .type = 'C', .length = 24U}}, {{"Lower"}}).ok,
+        const auto upper_create_result = copperfin::vfp::create_dbf_table_file(
+            upper_path.string(), {{.name = "NAME", .type = 'C', .length = 24U}}, {{"Upper"}});
+        const auto lower_create_result = copperfin::vfp::create_dbf_table_file(
+            lower_path.string(), {{.name = "NAME", .type = 'C', .length = 24U}}, {{"Lower"}});
+        expect(upper_create_result.ok && lower_create_result.ok,
                "case-distinct strict CURVAL fixtures should be writable on POSIX");
 
         write_text(
