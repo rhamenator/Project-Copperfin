@@ -119,6 +119,9 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "nValue = 1\n"
                "DO worker\n"
                "DEFINE MENU MainMenu\n"
+               "ON KEY LABEL F1 DO key_handler\n"
+               "ON ESCAPE DO escape_handler\n"
+               "ON PAGE AT LINE 42 DO page_handler\n"
                "RETURN\n"
                "PROCEDURE worker\n"
                "WAIT WINDOW 'ir\x1f" "control'\n"
@@ -189,6 +192,12 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "ir manifest should map DO statements to a stable opcode");
         expect(ir_manifest.find("\"opcode\": \"define_menu_command\"") != std::string::npos,
                "ir manifest should map DEFINE MENU statements to a stable opcode");
+        expect(ir_manifest.find("\"opcode\": \"on_key_command\"") != std::string::npos,
+               "ir manifest should map ON KEY statements to a stable opcode");
+        expect(ir_manifest.find("\"opcode\": \"on_escape\"") != std::string::npos,
+               "ir manifest should map ON ESCAPE statements to a stable opcode");
+        expect(ir_manifest.find("\"opcode\": \"on_page\"") != std::string::npos,
+               "ir manifest should map ON PAGE statements to a stable opcode");
         expect(ir_manifest.find("\"opcode\": \"wait_command\"") != std::string::npos,
                "ir manifest should map WAIT WINDOW statements to a stable opcode");
         expect(ir_manifest.find("\"text\": \"WAIT WINDOW 'ir\\u001fcontrol'\"") != std::string::npos,
