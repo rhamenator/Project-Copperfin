@@ -1,5 +1,14 @@
 # Agent Handoff
 
+## V1 AERROR SQL/OLE metadata test module
+
+The next bounded #2564 structural slice owns the focused SQL/OLE `AERROR()`
+metadata fixture in `test_prg_engine_control_flow_aerror_sql_ole_metadata.cpp`,
+while keeping the same `test_prg_engine_control_flow` executable and invocation
+order. It changes no runtime code, requirements, user-facing contract, RC tag,
+or artifact. A fresh Release configure/build and focused CTest must pass before
+protected validation.
+
 ## V1 AERROR runtime-metadata test module
 
 The next bounded #2564 structural slice owns the focused `AERROR()`
