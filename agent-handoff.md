@@ -1,5 +1,15 @@
 # Agent Handoff
 
+## V1 current low-level file-attribute limitations
+
+The historical `RQ-CF-PRG-015` `DIRECTORY()` row no longer reports the later
+shipped `FILE()` and `ADIR()` visibility/attribute work as current gaps.
+`RQ-CF-PRG-016` likewise points to the separately recovered `ADIR()` surface.
+The safety workflow contract asserts these cross-row references and rejects the
+obsolete wording. This is traceability-only: it changes no runtime behavior or
+release artifact, and `DESCENDING()` creation-time index metadata remains the
+separate unrecovered parser gap.
+
 ## V1 RC manifest schema-v3 traceability correction
 
 The active private-evaluation RC producer emits
