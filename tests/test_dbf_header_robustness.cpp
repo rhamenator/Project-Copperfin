@@ -137,6 +137,7 @@ void test_single_byte_field_exhaustive_sweep() {
             // value in a field it reads, including version-dependent
             // catalog lookups and the code-page table.
             (void)result.header.version_description();
+            (void)result.header.format_family();
             (void)result.header.has_database_container();
             (void)result.header.has_production_index();
             (void)result.header.has_structural_cdx();

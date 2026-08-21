@@ -16,6 +16,16 @@ struct LocalizedCatalog;
 
 namespace copperfin::vfp {
 
+// Stable inspection classification derived only from the DBF version byte.
+// It identifies a file-format family; it does not assert runtime compatibility.
+enum class DbfFormatFamily {
+    unknown,
+    foxbase,
+    foxpro,
+    dbase,
+    visual_foxpro
+};
+
 struct DbfHeader {
     std::uint8_t version = 0;
     std::uint8_t last_update_year = 0;
@@ -32,10 +42,13 @@ struct DbfHeader {
     [[nodiscard]] bool has_production_index() const;
     [[nodiscard]] bool has_structural_cdx() const;
     [[nodiscard]] bool has_memo_file() const;
+    [[nodiscard]] DbfFormatFamily format_family() const;
     [[nodiscard]] std::string version_description() const;
     [[nodiscard]] std::string version_description(const localization::LocalizedCatalog& catalog) const;
     [[nodiscard]] std::string last_update_iso8601() const;
 };
+
+[[nodiscard]] const char* dbf_format_family_name(DbfFormatFamily family);
 
 struct DbfParseResult {
     bool ok = false;

@@ -4,6 +4,12 @@
   existing control-flow executable, invocation order, assertions, and
   behavior. This is a test-structure-only change.
 
+- 2026-08-21: The read-only asset inspector now emits stable,
+  locale-invariant DBF `header.format_family` classification (`foxbase`,
+  `foxpro`, `dbase`, `visual_foxpro`, or `unknown`) beside its localized human
+  version description. This is file-format identification only; it does not
+  claim historical-runtime execution, write fidelity, or legacy binary output.
+
 - 2026-08-21: Generated C# transpilation now preserves parsed FoxPro `SELECT`
   statements as queryable `LinqQueryDescriptor` catalog entries with exact SQL,
   ordered projections/explicit aliases, filter, grouping, and recognized

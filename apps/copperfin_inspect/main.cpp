@@ -139,6 +139,7 @@ void print_inspection(
     const copperfin::localization::LocalizedCatalog& catalog,
     const copperfin::vfp::AssetInspectionResult& result) {
     using copperfin::vfp::asset_family_name;
+    using copperfin::vfp::dbf_format_family_name;
     using copperfin::vfp::index_kind_name;
 
     std::cout << "path: " << result.path << "\n";
@@ -156,6 +157,7 @@ void print_inspection(
     } else {
         const auto& header = result.header;
         std::cout << "header.version: 0x" << std::hex << static_cast<unsigned int>(header.version) << std::dec << "\n";
+        std::cout << "header.format_family: " << dbf_format_family_name(header.format_family()) << "\n";
         std::cout << "header.version_description: " << header.version_description(catalog) << "\n";
         std::cout << "header.last_update: " << header.last_update_iso8601() << "\n";
         std::cout << "header.record_count: " << header.record_count << "\n";

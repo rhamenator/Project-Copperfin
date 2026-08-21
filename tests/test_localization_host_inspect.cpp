@@ -129,6 +129,9 @@ void test_inspect_explicit_locale_routes_dbf_version_display(const std::string& 
             output.find("header.version_description: " + locale_case.second) != std::string::npos,
             "#4733: explicit " + locale_case.first + " should localize DBF version display");
         expect(
+            output.find("header.format_family: visual_foxpro") != std::string::npos,
+            "#1076: DBF family classification should remain a stable machine contract across locales");
+        expect(
             output.find("header.version_description: English VFP") == std::string::npos,
             "#4733: explicit " + locale_case.first + " should not use the environment/default DBF catalog");
     }

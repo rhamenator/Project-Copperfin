@@ -7,6 +7,12 @@ Copperfin should support migration in layers instead of promising all-or-nothing
 Version target:
 
 - Version 1 is tested against Visual FoxPro 9 as the sole binary-compatibility target. VFP 6, VFP 7, and VFP 8 asset compatibility is best-effort and untested through the shared DBF/FPT/CDX/DBC readers, not a differentiated compile-time or runtime target. Earlier Fox Software, dBASE, and Clipper-family assets may be tracked as wishlist interpretation/inspection targets, but producing binaries for those products is outside the Version 1 compatibility contract.
+- The read-only inspector exposes a stable DBF `header.format_family` value
+  (`foxbase`, `foxpro`, `dbase`, `visual_foxpro`, or `unknown`) derived only
+  from the documented version byte. dBASE Level 7 flag combinations remain
+  `dbase` because their low version bits remain Level 7. It is format
+  identification, not a claim that Copperfin can execute, write, or fully
+  preserve assets from that family.
 
 ### Layer 1: Data Compatibility
 
