@@ -1,3 +1,9 @@
+- 2026-08-21: Established the standalone Studio extension boundary: it will
+  not load arbitrary VSIX packages or Copperfin's own Visual Studio extension.
+  Any future standalone extensibility must use a distinct host-owned,
+  versioned, fail-closed native plugin model with explicit publisher trust,
+  capabilities, lifecycle audit, and separately designed authority boundaries.
+
 - 2026-08-21: Made the fixed byte type explicit when creating private
   workspace-agent authority tokens, removing MSVC's spurious unsigned
   conversion warnings without changing authority semantics or public policy.

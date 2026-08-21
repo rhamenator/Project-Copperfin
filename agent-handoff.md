@@ -1,5 +1,14 @@
 # Agent Handoff
 
+## V1 standalone extension decision
+
+Standalone Studio does not load arbitrary VSIX packages or Copperfin's own
+Visual Studio extension. A future plugin surface is a separate host-owned,
+versioned native model that must fail closed on unsupported manifests, ABI,
+publisher trust, or capability requests and must not gain ambient authority.
+This closes the documented standalone-extension decision only; it does not
+implement plugins or complete the broader IDE umbrella.
+
 ## V1 RC4 Windows-native correction
 
 Immutable RC4's exact-tag Windows native suite exposed one containment defect
