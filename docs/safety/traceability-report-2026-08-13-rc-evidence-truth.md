@@ -17,7 +17,7 @@ for a safety-critical deployment.
 
 Reverse traceability is carried by
 `scripts/assemble-rc-candidate.py`,
-`docs/contracts/rc-validation-manifest-v2.schema.json`,
+`docs/contracts/rc-validation-manifest-v3.schema.json`,
 `.github/workflows/rc-candidate-assembly.yml`,
 `docs/35-rc1-evaluation-guide.md`, and the `RQ-CF-REL-001` matrix row.
 The focused `tests/run_rc_candidate_workflow_contract_check.cmake` check also
@@ -33,10 +33,12 @@ disablement, uninstall, or residue checks had run. The producer workflows in
 fact build packages, verify selected staged/static contracts, and upload the
 artifacts; they do not execute those lifecycle operations.
 
-Schema v2 replaces the ambiguous fields with separate build/static-check and
-lifecycle fields. Lifecycle fields are fixed at `NOT_RUN` until a future
-workflow ingests actual target-platform evidence. Signing, qualified
-linguistic review, and real installed-VFP9 evidence are likewise separate.
+Schema v2 first replaced the ambiguous fields with separate build/static-check
+and lifecycle fields. The active schema v3 retains that evidence-level
+separation and adds the bounded Windows installer and VSIX lifecycle fields.
+Unperformed operations remain `NOT_RUN`; signing, qualified linguistic review,
+and real installed-VFP9 evidence remain separate. Historical v1/v2 candidate
+artifacts are retained as historical evidence and are not reinterpreted.
 The likely effect of misuse is an unjustified release or evaluation decision,
 so the potential severity is **high**.
 
@@ -57,12 +59,12 @@ so the potential severity is **high**.
 At the current local implementation state:
 
 - `python3 scripts/assemble-rc-candidate.py --self-test` passes and validates
-  the generated manifest against the exact bundled schema. It also proves the
-  exact schema-v2 field mapping, absence of the old ambiguous keys, bundle
-  layout, byte identity of the bundled schema, rejection of missing governing
-  fields, and rejection of a malformed workflow URL without optional format
-  assertions.
-- `python3 -m json.tool docs/contracts/rc-validation-manifest-v2.schema.json`
+  the generated schema-v3 manifest against the exact bundled schema. It also
+  proves the separate Windows installer/VSIX lifecycle mapping, absence of the
+  old ambiguous keys, bundle layout, byte identity of the bundled schema,
+  rejection of missing governing fields, and rejection of a malformed workflow
+  URL without optional format assertions.
+- `python3 -m json.tool docs/contracts/rc-validation-manifest-v3.schema.json`
   passes.
 - `jsonschema.Draft202012Validator.check_schema(...)` accepts the schema.
 - `cmake -DSOURCE_DIR="$PWD" -P
@@ -74,8 +76,8 @@ therefore `RQ-CF-REL-001` remains `gap` rather than `defined`.
 
 ## Rollback And Field Notification
 
-Before a new RC tag, rollback is a normal revert of the schema-v2 producer and
-guide. After a candidate uses schema v2, do not rewrite its tag or artifact;
+Before a new RC tag, rollback is a normal revert of the schema-v3 producer and
+guide. After a candidate uses schema v3, do not rewrite its tag or artifact;
 withdraw the affected candidate from evaluation, disclose the incorrect field
 or schema, correct the producer with regression coverage, and create the next
 sequential immutable RC. Never delete user projects, settings, or evidence to
