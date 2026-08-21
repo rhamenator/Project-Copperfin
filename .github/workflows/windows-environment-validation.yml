@@ -16,6 +16,8 @@ on:
       - "resources/locales/**"
       - "src/**"
       - "tests/**"
+  # v1-development requires this context on every pull request. Preserve the
+  # focused inventory while the catch-all prevents docs-only PR deadlocks.
   pull_request:
     paths:
       - ".github/workflows/windows-environment-validation.yml"
@@ -29,6 +31,7 @@ on:
       - "resources/locales/**"
       - "src/**"
       - "tests/**"
+      - "**"
 
 permissions:
   contents: read
