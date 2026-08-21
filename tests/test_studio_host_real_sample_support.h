@@ -8,6 +8,7 @@
 
 #include <charconv>
 #include <cctype>
+#include <ctime>
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -60,6 +61,47 @@ inline std::string normalize_json_line_endings(std::string json) {
         ++position;
     }
     return json;
+}
+
+// A successful DBF mutation, including an undo, stamps bytes 1..3 with the
+// local last-update date. Undo fidelity therefore means every other primary
+// asset byte returns to its prior value; memo sidecars still rewind exactly.
+inline bool dbf_bytes_match_except_last_update_date(
+    std::string_view original,
+    std::string_view actual) {
+    if (original.size() != actual.size() || original.size() < 4U) {
+        return false;
+    }
+    for (std::size_t index = 0U; index < original.size(); ++index) {
+        if (index >= 1U && index < 4U) {
+            continue;
+        }
+        if (original[index] != actual[index]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+inline bool dbf_last_update_date_matches_local_calendar(std::string_view bytes) {
+    if (bytes.size() < 4U) {
+        return false;
+    }
+
+    const std::time_t now = std::time(nullptr);
+    std::tm local_time{};
+#if defined(_WIN32)
+    if (localtime_s(&local_time, &now) != 0) {
+        return false;
+    }
+#else
+    if (localtime_r(&now, &local_time) == nullptr) {
+        return false;
+    }
+#endif
+    return static_cast<unsigned char>(bytes[1U]) == static_cast<unsigned char>(local_time.tm_year) &&
+           static_cast<unsigned char>(bytes[2U]) == static_cast<unsigned char>(local_time.tm_mon + 1) &&
+           static_cast<unsigned char>(bytes[3U]) == static_cast<unsigned char>(local_time.tm_mday);
 }
 
 inline std::filesystem::path find_vfp9_reports_root() {

@@ -223,6 +223,13 @@ no-op rather than refreshing metadata. Focused `test_dbf_table` and
 prove every covered write route restores a valid date while preserving
 unrelated raw asset bytes.
 
+The real VFP9 FRX/LBX undo regressions make the same distinction: settings,
+object, section, grouping, geometry, and deleted-state undo restores every
+prior primary byte other than the mandatory three-byte last-update date, stamps
+that date from the local calendar, and preserves memo sidecars exactly. Pure
+read/no-op cases remain byte-for-byte exact, so the date exception cannot mask
+an unintended write.
+
 ## V1 index-tag ordinal enumeration order fix
 
 `RQ-CF-PRG-010` is now fixed. `companion_index_paths_for`

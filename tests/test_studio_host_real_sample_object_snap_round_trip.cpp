@@ -433,8 +433,12 @@ void exercise_real_sample_object_snap_round_trip(
     });
     expect(restored_vpos.ok && restored_vpos.exists && restored_vpos.value == sample.original_vpos,
            "#3657: real sample object snap undo should restore the VPOS field");
-    expect(read_binary(copied_primary) == original_primary_bytes,
-           "#3657: real sample object snap undo should restore the primary asset bytes");
+    const std::string restored_primary_bytes = read_binary(copied_primary);
+    expect(copperfin::test_support::dbf_bytes_match_except_last_update_date(
+               original_primary_bytes, restored_primary_bytes),
+           "#3657: real sample object snap undo should restore every primary asset byte except the DBF update date");
+    expect(copperfin::test_support::dbf_last_update_date_matches_local_calendar(restored_primary_bytes),
+           "#3657: real sample object snap undo should stamp the DBF update date");
     expect(read_binary(copied_sidecar) == original_sidecar_bytes,
            "#3657: real sample object snap undo should preserve restored sidecar bytes");
 

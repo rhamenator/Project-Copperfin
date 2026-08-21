@@ -44,6 +44,13 @@
   Replay now fails closed when an expected journal backup is absent or when it
   cannot remove a file created after journal capture.
 
+- 2026-08-20: Real VFP9 report/label undo assertions now distinguish payload
+  fidelity from the mandatory DBF last-update stamp. Successful undo restores
+  every original primary-asset byte except header bytes 1–3, which must carry
+  the current local calendar date; sidecar bytes remain exact. This restores
+  coverage for settings, object, section, grouping, geometry, and deleted-state
+  undo paths without weakening no-op byte-preservation checks.
+
 - 2026-08-20: DBF creates and successful mutations now stamp the standard
   three-byte local last-update date in the header, so `LUPDATE()` reflects
   Copperfin-originated table changes as well as pre-existing VFP tables.
