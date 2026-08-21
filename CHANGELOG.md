@@ -4,6 +4,11 @@
   layouts, localized messages, or machine-readable output.
 
 - 2026-08-21: Continued #2564 test-module refactoring by moving the focused
+  indexed `PROGRAM()` / `SYS(16)` stack-introspection and procedure-context
+  fixtures into `test_prg_engine_runtime_surface_functions_sys16.cpp`. The
+  executable, invocation order, assertions, and runtime behavior are unchanged.
+
+- 2026-08-21: Continued #2564 test-module refactoring by moving the focused
   SQL/OLE `AERROR()` metadata fixture into
   `test_prg_engine_control_flow_aerror_sql_ole_metadata.cpp`. The existing
   executable, invocation order, assertions, and runtime behavior remain

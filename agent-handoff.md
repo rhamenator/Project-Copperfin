@@ -8,6 +8,16 @@ preserve parsed bytes, result layouts, localized diagnostics, and
 machine-readable inspection output. A fresh Release build of `test_vfp_assets`
 has no diagnostics from these translation units and the executable passes.
 
+## V1 SYS(16) runtime-surface test module
+
+The next bounded #2564 structural slice owns the indexed `PROGRAM()` / `SYS(16)`
+stack-introspection and procedure-context fixtures in
+`test_prg_engine_runtime_surface_functions_sys16.cpp`, while retaining the same
+`test_prg_engine_runtime_surface_functions` executable and invocation order.
+It changes no runtime code, requirements, user-facing contract, RC tag, or
+artifact. A fresh Release configure/build and focused CTest must pass before
+protected validation.
+
 ## V1 AERROR SQL/OLE metadata test module
 
 The next bounded #2564 structural slice owns the focused SQL/OLE `AERROR()`
