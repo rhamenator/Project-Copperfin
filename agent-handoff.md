@@ -1,5 +1,15 @@
 # Agent Handoff
 
+## V1 AERROR runtime-metadata test module
+
+The next bounded #2564 structural slice owns the focused `AERROR()`
+runtime-metadata fixture in
+`test_prg_engine_control_flow_aerror_runtime_metadata.cpp`, while keeping the
+same `test_prg_engine_control_flow` executable and invocation order. It changes
+no runtime code, requirements, user-facing contract, RC tag, or artifact.
+A fresh Release configure/build and focused CTest pass `1/1`; next action is
+to rebase onto the preceding #2564 module merge before protected validation.
+
 ## V1 localized control-flow test module
 
 The next bounded #2564 structural slice owns the cursor/SQL locale-diagnostic
