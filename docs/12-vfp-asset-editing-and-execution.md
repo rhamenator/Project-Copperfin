@@ -184,6 +184,25 @@ For supported asset types, Copperfin should:
 
 Use the native asset-inspector API to export a database container (`.dbc`) into a single JSON snapshot.
 
+Copperfin also provides an explicit modernization command for a PRG workflow:
+
+```foxpro
+EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE JSON
+```
+
+The command resolves relative source and destination paths from the current default
+directory, adds `.json` when the destination has no extension, and emits the
+`runtime.export_database_json` event on success. It deliberately accepts only the
+literal `TYPE JSON` form in this first slice; the source and destination are quoted
+path operands, not expressions. It reads the existing DBC/DBF data before opening
+the requested output path, creates a missing output directory, and reports a
+localized runtime failure if inspection or output writing fails.
+
+This is a Copperfin modernization extension authorized by the owner-policy
+wishlist in #140, not a claimed Visual FoxPro 9 command. It does not implement
+`IMPORT DATABASE`, SQL or Access adapters, provider connections, schema mutation,
+or round-trip reconstruction.
+
 Minimal C++ call:
 
 ```cpp

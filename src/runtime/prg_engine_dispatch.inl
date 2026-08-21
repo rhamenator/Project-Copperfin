@@ -8006,6 +8006,90 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::export_database_command:
+            {
+                const std::string source_operand = trim_copy(statement.expression);
+                const std::string destination_operand = trim_copy(statement.secondary_expression);
+                const auto is_quoted_path_operand = [](const std::string& operand)
+                {
+                    return operand.size() >= 2U &&
+                        (operand.front() == '\'' || operand.front() == '"') &&
+                        operand.back() == operand.front();
+                };
+                const std::string source_raw = unquote_string(source_operand);
+                const std::string destination_raw = unquote_string(destination_operand);
+                const std::string export_type = normalize_identifier(
+                    unquote_string(trim_copy(statement.tertiary_expression)));
+                if (!is_quoted_path_operand(source_operand) ||
+                    !is_quoted_path_operand(destination_operand) ||
+                    source_raw.empty() || destination_raw.empty() || export_type != "json")
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonSyntax");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                namespace fs = std::filesystem;
+                fs::path source_path = copperfin::platform::path_from_utf8_string(source_raw);
+                fs::path destination_path = copperfin::platform::path_from_utf8_string(destination_raw);
+                if (source_path.is_relative())
+                {
+                    source_path = copperfin::platform::path_from_utf8_string(current_default_directory()) / source_path;
+                }
+                if (destination_path.is_relative())
+                {
+                    destination_path = copperfin::platform::path_from_utf8_string(current_default_directory()) / destination_path;
+                }
+                source_path = source_path.lexically_normal();
+                destination_path = destination_path.lexically_normal();
+                if (destination_path.extension().empty())
+                {
+                    destination_path += ".json";
+                }
+
+                const auto export_result = vfp::export_database_as_json(
+                    copperfin::platform::path_to_utf8_string(source_path));
+                if (!export_result.ok)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonFailed",
+                        {{"errorMessage", export_result.error}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                std::error_code directory_error;
+                if (!destination_path.parent_path().empty())
+                {
+                    fs::create_directories(destination_path.parent_path(), directory_error);
+                }
+                std::ofstream output(destination_path, std::ios::binary | std::ios::trunc);
+                if (!output.good())
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonOpenOutputFailed");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                output << export_result.json;
+                output.close();
+                if (!output.good())
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonWriteOutputFailed");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                events.push_back({.category = "runtime.export_database_json",
+                                  .detail = copperfin::platform::path_to_utf8_string(destination_path),
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::append_from_command:
             {
                 // APPEND FROM ARRAY <array> [FIELDS <list>]
