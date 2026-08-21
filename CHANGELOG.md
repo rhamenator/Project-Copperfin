@@ -1,3 +1,9 @@
+- 2026-08-21: Began the #2564 test-module refactor by moving the owned
+  caught-runtime-fault/RETRY fixture into
+  `test_prg_engine_control_flow_fault_recovery.cpp` while preserving its
+  existing control-flow executable, invocation order, assertions, and
+  behavior. This is a test-structure-only change.
+
 - 2026-08-21: Generated C# transpilation now preserves parsed FoxPro `SELECT`
   statements as queryable `LinqQueryDescriptor` catalog entries with exact SQL,
   ordered projections/explicit aliases, filter, grouping, and recognized

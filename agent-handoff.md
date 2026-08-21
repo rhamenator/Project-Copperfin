@@ -1,5 +1,14 @@
 # Agent Handoff
 
+## V1 control-flow test-module refactor
+
+The first bounded #2564 structural slice separates the owned caught-runtime-
+fault/`RETRY` fixture into `test_prg_engine_control_flow_fault_recovery.cpp`
+while retaining the existing `test_prg_engine_control_flow` executable and
+invocation order. It changes no runtime code, requirements, user-facing
+contract, RC tag, or artifact. A fresh Release configure/build and focused
+CTest pass `1/1`; next action is protected-check completion before merging.
+
 ## V1 RC6 exact-tag private-evaluation evidence
 
 Immutable tag `v0.1.0-rc.6` at `1208ebbd7babf65fcb8f46ada0b1316289328a6e`
