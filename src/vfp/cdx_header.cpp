@@ -158,10 +158,6 @@ std::string collapse_identifier(const std::string& value) {
     return normalized;
 }
 
-std::vector<PrintableRun> collect_printable_runs(const std::vector<std::uint8_t>& bytes) {
-    return collect_printable_runs(bytes, 0U, bytes.size());
-}
-
 std::vector<PrintableRun> collect_printable_runs(
     const std::vector<std::uint8_t>& bytes,
     std::size_t start,
@@ -462,6 +458,8 @@ std::vector<CdxTagDescriptor> collect_directory_leaf_tags(
 
             tags.push_back({
                 .name_hint = chunk,
+                .key_expression_hint = {},
+                .for_expression_hint = {},
                 .tag_page_offset_hint = looks_like_tag_page_offset(
                     read_le_u32(bytes, page_hint_offset),
                     page_size,
@@ -469,6 +467,8 @@ std::vector<CdxTagDescriptor> collect_directory_leaf_tags(
                     ? read_le_u32(bytes, page_hint_offset)
                     : 0U,
                 .name_offset_hint = static_cast<std::uint32_t>(name_offset),
+                .key_expression_offset_hint = 0U,
+                .for_expression_offset_hint = 0U,
                 .inferred_name = false
             });
         }
@@ -762,7 +762,12 @@ bool CdxHeader::looks_like_cdx() const {
 
 CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uint64_t file_size) {
     if (bytes.size() < 16U) {
-        return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.ShortProbe")};
+        return {
+            .ok = false,
+            .header = {},
+            .tags = {},
+            .error = cdx_header_text("Vfp.CdxHeader.Error.ShortProbe")
+        };
     }
 
     CdxHeader header;
@@ -778,10 +783,20 @@ CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uin
     header.key_pool_length_hint = header.raw_words[7];
 
     if (!header.looks_like_cdx()) {
-        return {.ok = false, .header = header, .error = cdx_header_text("Vfp.CdxHeader.Error.InvalidValues")};
+        return {
+            .ok = false,
+            .header = header,
+            .tags = {},
+            .error = cdx_header_text("Vfp.CdxHeader.Error.InvalidValues")
+        };
     }
 
-    CdxParseResult result{.ok = true, .header = header};
+    CdxParseResult result{
+        .ok = true,
+        .header = header,
+        .tags = {},
+        .error = {}
+    };
     if (bytes.size() > 16U) {
         result.tags = extract_tag_descriptors(bytes, header.page_size, header.key_length_hint);
     }
@@ -792,17 +807,32 @@ CdxParseResult parse_cdx_header_from_file(const std::string& path) {
     const std::filesystem::path native_path = copperfin::platform::path_from_utf8_string(path);
     std::ifstream input(native_path, std::ios::binary);
     if (!input) {
-        return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.OpenFileFailed")};
+        return {
+            .ok = false,
+            .header = {},
+            .tags = {},
+            .error = cdx_header_text("Vfp.CdxHeader.Error.OpenFileFailed")
+        };
     }
 
     std::error_code file_size_error;
     const std::uint64_t file_size = static_cast<std::uint64_t>(
         std::filesystem::file_size(native_path, file_size_error));
     if (file_size_error) {
-        return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.ReadProbeFailed")};
+        return {
+            .ok = false,
+            .header = {},
+            .tags = {},
+            .error = cdx_header_text("Vfp.CdxHeader.Error.ReadProbeFailed")
+        };
     }
     if (file_size < 16U) {
-        return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.ReadProbeFailed")};
+        return {
+            .ok = false,
+            .header = {},
+            .tags = {},
+            .error = cdx_header_text("Vfp.CdxHeader.Error.ReadProbeFailed")
+        };
     }
 
     std::vector<std::uint8_t> bytes(static_cast<std::size_t>(file_size), 0U);

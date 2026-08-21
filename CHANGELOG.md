@@ -1,3 +1,8 @@
+- 2026-08-21: Explicitly initialized the read-only CDX/index-probe result
+  aggregates and removed an unused CDX helper, eliminating current GCC/MSVC
+  diagnostic noise without changing legacy asset interpretation, public result
+  layouts, localized messages, or machine-readable output.
+
 - 2026-08-21: Continued #2564 test-module refactoring by moving the focused
   SQL/OLE `AERROR()` metadata fixture into
   `test_prg_engine_control_flow_aerror_sql_ole_metadata.cpp`. The existing
