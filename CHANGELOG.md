@@ -1,3 +1,9 @@
+- 2026-08-20: Established a reproducible, opt-in GCC coverage measurement
+  baseline for the DBF and Visual Asset integrity surface. The bounded
+  13-test run passed; source-level line and branch results plus explicit
+  non-release, non-MC/DC, and non-project-wide limits are retained in
+  `docs/safety/test-coverage-gap-analysis.md`.
+
 - 2026-08-20: Package/debug IR manifests now preserve the stable
   `on_key_command`, `on_escape`, and `on_page` opcodes for the corresponding
   parsed VFP event statements, rather than silently representing them as

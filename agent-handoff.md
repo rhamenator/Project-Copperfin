@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 scoped native GCC coverage baseline
+
+`COPPERFIN_ENABLE_GNU_COVERAGE=ON` is an opt-in GNU-only, local-assurance
+configuration. It must not be used to build shipping packages, installers, or
+release artifacts. The initial direct measurement exercised 13 DBF and Visual
+Asset write/undo tests under GCC 15.2.0, all passing. It records source-file
+line and branch results for `dbf_table.cpp`,
+`visual_asset_editor_record_and_snapshot.cpp`, and
+`visual_asset_editor_undo.cpp`; the full reproduction command, exact metrics,
+and clear exclusions (no aggregate, threshold, MC/DC, or certification claim)
+are in `docs/safety/test-coverage-gap-analysis.md`. A serial full-suite run
+under instrumentation is not yet evidence because `test_studio_host_json`
+exceeded its ordinary timeout.
+
 ## V1 package/debug IR event-opcode fidelity
 
 The package debug sidecar now classifies parsed `ON KEY LABEL`, `ON ESCAPE`,
