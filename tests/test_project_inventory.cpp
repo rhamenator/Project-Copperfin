@@ -92,7 +92,11 @@ int main() {
                relative.diagnostic_code == "migration.inventory.invalid_root",
            "relative project roots must fail before filesystem traversal");
 
-#if !defined(_WIN32)
+#if !defined(_WIN32) && !defined(__APPLE__)
+    // APFS normalizes the fixture's raw invalid byte before std::filesystem
+    // exposes the directory entry. Linux preserves it, so retain the
+    // fail-closed regression there rather than asserting an invalid-name
+    // precondition that macOS cannot provide.
     const fs::path non_utf8_root = fs::temp_directory_path() / "copperfin_project_inventory_non_utf8";
     fs::remove_all(non_utf8_root, ignored);
     fs::create_directories(non_utf8_root);

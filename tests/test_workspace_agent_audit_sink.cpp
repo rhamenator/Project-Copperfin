@@ -124,7 +124,10 @@ void test_persistent_lifecycle_is_content_free_and_verifiable() {
     WorkspaceAgentSessionAuditFileSink file_sink(root.path(), "agent/session.log");
     expect(file_sink.ready() && file_sink.session_sink().commit != nullptr,
            "RQ-CF-AGENT-006: a contained persistent sink configuration should be ready");
-    expect(file_sink.log_path() == root.path() / "agent/session.log",
+    std::error_code canonical_root_error;
+    const fs::path canonical_root = fs::canonical(root.path(), canonical_root_error);
+    expect(!canonical_root_error &&
+               file_sink.log_path() == canonical_root / "agent/session.log",
            "RQ-CF-AGENT-006: the sink should expose only its normalized contained log path");
 
     WorkspaceAgentSessionController controller;
