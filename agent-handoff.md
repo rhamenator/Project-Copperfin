@@ -1,5 +1,23 @@
 # Agent Handoff
 
+## V1 RC4 Windows-native correction
+
+Immutable RC4's exact-tag Windows native suite exposed one containment defect
+and three platform-fixture defects. `RQ-CF-MIGRATION-001` now recognizes every
+Windows reparse point as an indirect entry in addition to ordinary
+`std::filesystem` symbolic links, records it in the existing
+`skippedSymlinks` wire field, and disables pending recursive descent. This
+keeps directory junctions from escaping an otherwise trusted project root.
+
+The remaining failures preserve their established contracts: the process
+invocation preflight regression copies its own valid test PE on Windows because
+the product correctly rejects a text file as a launch candidate; the Windows
+argument serializer expected value uses `U+96EA` explicitly rather than a
+compiler-source-encoding-dependent literal; and the `DIRECTORY()` regression
+sets the real Windows Hidden attribute rather than treating a leading dot as
+Hidden. RC4 remains failed and immutable. A green merge and exact-head hosted
+Windows validation are required before creating the next sequential candidate.
+
 ## V1 macOS portable-test fixture correction
 
 RC3 macOS native validation identified two fixture assumptions, not product

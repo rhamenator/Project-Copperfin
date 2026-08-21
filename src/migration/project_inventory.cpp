@@ -11,6 +11,13 @@
 #include <system_error>
 #include <utility>
 
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+
 namespace copperfin::migration {
 namespace {
 
@@ -116,6 +123,35 @@ void append_json_string(std::string& output, const std::string_view value) {
     output.push_back('"');
 }
 
+enum class IndirectEntryStatus {
+    direct,
+    indirect,
+    unavailable
+};
+
+IndirectEntryStatus inspect_indirect_entry(
+    const std::filesystem::directory_entry& entry,
+    const std::filesystem::file_status status) {
+    if (std::filesystem::is_symlink(status)) {
+        return IndirectEntryStatus::indirect;
+    }
+#if defined(_WIN32)
+    // Windows directory junctions are reparse points but are not consistently
+    // surfaced as symlinks by std::filesystem.  Treat every reparse point as
+    // indirect so the inventory cannot descend through it outside its root.
+    const DWORD attributes = ::GetFileAttributesW(entry.path().c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+        return IndirectEntryStatus::unavailable;
+    }
+    return (attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U
+        ? IndirectEntryStatus::indirect
+        : IndirectEntryStatus::direct;
+#else
+    (void)entry;
+    return IndirectEntryStatus::direct;
+#endif
+}
+
 }  // namespace
 
 ProjectInventoryResult build_project_inventory(
@@ -169,7 +205,11 @@ ProjectInventoryResult build_project_inventory(
             }
             continue;
         }
-        if (std::filesystem::is_symlink(status)) {
+        const auto indirect_status = inspect_indirect_entry(entry, status);
+        if (indirect_status == IndirectEntryStatus::unavailable) {
+            complete = false;
+            iterator.disable_recursion_pending();
+        } else if (indirect_status == IndirectEntryStatus::indirect) {
             result.skipped_symlinks.push_back(relative_path);
             iterator.disable_recursion_pending();
         } else if (std::filesystem::is_regular_file(status)) {

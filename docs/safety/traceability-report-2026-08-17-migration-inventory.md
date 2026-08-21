@@ -11,10 +11,12 @@ for an absolute project root that is not itself a symbolic link.
 
 The inventory accepts no relative root and no root symbolic link. It enumerates
 regular-file metadata only, classifies a fixed set of VFP suffixes, and returns
-project-relative entries in lexical order. Symbolic links are reported but not
-followed. Its schema-version-1 JSON serializer omits the caller's absolute
-root. It does not read asset bytes, parse assets, execute code, call a network
-service, create an output file, or mutate a project.
+project-relative entries in lexical order. Symbolic links and Windows reparse
+points (including directory junctions) are reported through the existing
+`skippedSymlinks` field but are never followed. Its schema-version-1 JSON
+serializer omits the caller's absolute root. It does not read asset bytes,
+parse assets, execute code, call a network service, create an output file, or
+mutate a project.
 
 `HZ-system-failure-01` and `HZ-data-corruption-01` apply. The containment and
 no-mutation constraints prevent this foundation from treating a discovered tree
@@ -32,9 +34,12 @@ Focused Debug build and CTest pass `1/1` through `test_project_inventory`.
 The regression proves deterministic ordering, case-insensitive recognized
 suffix classification, JSON escaping, absolute-root omission, rejection of a
 relative root, non-UTF-8 POSIX-name denial, and file/directory symbolic-link
-reporting without traversal. Its machine-readable CTest isolation record is
-complete: portable, parallel-safe, test-owned filesystem only, and no
-environment, child-process, network, or sample dependency.
+reporting without traversal. The same directory-link fixture exercises Windows
+reparse-point rejection on protected Windows validation, where the standard
+library may otherwise identify a junction as a directory. Its machine-readable
+CTest isolation record is complete: portable, parallel-safe, test-owned
+filesystem only, and no environment, child-process, network, or sample
+dependency.
 
 Dependency discovery, metadata graphs, compatibility risks, migration-mode
 selection, database mapping, editable workspace mapping, all other specified

@@ -58,8 +58,11 @@ void test_windows_quoting_utf8_and_caps() {
         {"", "plain", R"(one"two)", R"(trail\\)", "\xe9\x9b\xaa"},
         ProcessArgumentTarget::windows_command_line_v1,
         32767U);
-    const std::u16string expected =
-        uR"("C:\Program Files\Copperfin\tool.exe" "" "plain" "one\"two" "trail\\\\" "雪")";
+    // Use an explicit universal character name: MSVC's source-character-set
+    // setting must not change this UTF-16 wire-contract expectation.
+    const std::u16string expected = std::u16string{
+        uR"("C:\Program Files\Copperfin\tool.exe" "" "plain" "one\"two" "trail\\\\" ")"} +
+        u"\u96ea" + uR"(")";
     expect(
         result.ok && result.posix_arguments.empty() &&
             result.windows_command_line == expected,

@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -52,6 +53,7 @@ static_assert(
     "RQ-CF-AGENT-011: invocation preflight accepts only direct arguments, never a command, environment, or PATH search");
 
 int failures = 0;
+std::filesystem::path running_test_executable;
 
 void expect(bool condition, const std::string& message) {
     if (!condition) {
@@ -84,6 +86,20 @@ public:
     }
 
     static void write_executable(const std::filesystem::path& path) {
+#if defined(_WIN32)
+        // Process admission intentionally requires a launch-compatible PE on
+        // Windows.  Copy the test executable so this non-executing preflight
+        // fixture exercises that real boundary instead of bypassing it.
+        std::error_code copy_error;
+        std::filesystem::copy_file(
+            running_test_executable,
+            path,
+            std::filesystem::copy_options::overwrite_existing,
+            copy_error);
+        if (copy_error) {
+            throw std::runtime_error("Windows PE fixture copy failed");
+        }
+#else
         std::ofstream stream(path, std::ios::binary | std::ios::trunc);
         stream << "must not execute\n";
         stream.close();
@@ -95,6 +111,7 @@ public:
                 std::filesystem::perms::others_exec,
             std::filesystem::perm_options::add,
             permission_error);
+#endif
     }
 
     std::filesystem::path root;
@@ -368,7 +385,18 @@ void test_session_tool_and_local_target_binding() {
 
 }  // namespace
 
-int main() {
+int main(int argc, char** argv) {
+    if (argc > 0 && argv[0] != nullptr) {
+        std::error_code canonical_error;
+        running_test_executable = std::filesystem::canonical(
+            std::filesystem::path(argv[0]), canonical_error);
+    }
+#if defined(_WIN32)
+    if (running_test_executable.empty()) {
+        std::cerr << "FAIL: Windows PE fixtures require the running test executable\n";
+        return EXIT_FAILURE;
+    }
+#endif
     test_bounded_direct_arguments_and_isolated_environment();
     test_session_tool_and_local_target_binding();
 
