@@ -1,4 +1,10 @@
 - 2026-08-22: Continued #2564 test-module refactoring by moving the focused
+  bare-`THROW` default-exception regression into
+  `test_prg_engine_control_flow_bare_throw_default.cpp`. The existing
+  `test_prg_engine_control_flow` executable, invocation order, assertions, and
+  runtime behavior remain unchanged.
+
+- 2026-08-22: Continued #2564 test-module refactoring by moving the focused
   `RETRY`/`RESUME` control-flow regressions into
   `test_prg_engine_control_flow_retry_resume.cpp`. The existing
   `test_prg_engine_control_flow` executable, invocation order, assertions, and
