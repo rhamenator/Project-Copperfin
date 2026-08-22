@@ -790,6 +790,7 @@ add_executable(test_studio_host_json
     test_studio_host_json_appearance_window_and_display.cpp
     test_studio_host_json_appearance_ole_and_drag.cpp
     test_studio_host_json_setters_data.cpp
+    test_studio_host_json_setters_data_selection.cpp
     test_studio_host_json_geometry_preview_helpers.cpp
     test_studio_host_json_objects_dhf_shared_fixtures.cpp
     test_studio_host_json_report_settings_shared_fixtures.cpp
