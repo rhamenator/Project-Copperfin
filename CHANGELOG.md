@@ -1,3 +1,9 @@
+- 2026-08-21: Continued #2564 test-module refactoring by moving the focused
+  filesystem and `SYS()` probe fixtures into
+  `test_prg_engine_runtime_surface_functions_filesystem_sys.cpp`. The existing
+  executable, invocation order, assertions, and runtime behavior remain
+  unchanged.
+
 - 2026-08-21: Explicitly initialized the read-only CDX/index-probe result
   aggregates and removed an unused CDX helper, eliminating current GCC/MSVC
   diagnostic noise without changing legacy asset interpretation, public result

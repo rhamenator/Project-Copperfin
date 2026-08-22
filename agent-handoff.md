@@ -1,5 +1,15 @@
 # Agent Handoff
 
+## V1 filesystem and SYS probe test module
+
+The next bounded #2564 structural slice owns the existing filesystem and
+`SYS()` probe fixtures in
+`test_prg_engine_runtime_surface_functions_filesystem_sys.cpp`, while keeping
+the same `test_prg_engine_runtime_surface_functions` executable and invocation
+order. It changes no runtime code, requirements, user-facing contract, RC tag,
+or artifact. A fresh Release configure/build and focused CTest must pass before
+protected validation.
+
 ## V1 asset-probe warning hygiene
 
 The read-only CDX/index-probe boundary explicitly initializes every result
