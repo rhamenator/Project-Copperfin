@@ -5539,6 +5539,7 @@ copperfin_add_test(test_prg_engine_control_flow cf_xbase_runtime
     test_prg_engine_control_flow_recovery_state.cpp
     test_prg_engine_control_flow_normalized_diagnostics.cpp
     test_prg_engine_control_flow_retry_resume.cpp
+    test_prg_engine_control_flow_bare_throw_default.cpp
     test_prg_engine_control_flow_localized_errors.cpp
     test_prg_engine_control_flow_fault_recovery.cpp
     test_prg_engine_control_flow_runtime_guardrails_and_lifecycle.cpp
