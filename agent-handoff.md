@@ -1,5 +1,15 @@
 # Agent Handoff
 
+## V1 control-flow recovery-state test module
+
+The bounded #2564 structural slice moves the existing ON ERROR/RESUME
+recovery-state, continued cursor-state, and paused stack-frame metadata
+fixtures into `test_prg_engine_control_flow_recovery_state.cpp`, while keeping
+the same `test_prg_engine_control_flow` executable and invocation order. It
+changes no runtime code, requirement, user-facing contract, RC tag, or
+artifact. The moved test bodies are byte-identical; a fresh Release build and
+focused CTest pass 1/1.
+
 ## V1 localized control-flow fault test module
 
 The bounded #2564 structural slice moves the existing localized runtime-fault

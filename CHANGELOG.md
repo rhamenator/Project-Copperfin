@@ -1,4 +1,11 @@
 - 2026-08-22: Continued #2564 test-module refactoring by moving the focused
+  ON ERROR/RESUME recovery-state, continued cursor-state, and paused
+  stack-frame metadata regressions into
+  `test_prg_engine_control_flow_recovery_state.cpp`. The existing
+  `test_prg_engine_control_flow` executable, invocation order, assertions, and
+  runtime behavior remain unchanged.
+
+- 2026-08-22: Continued #2564 test-module refactoring by moving the focused
   localized runtime-fault regressions into
   `test_prg_engine_control_flow_localized_faults.cpp`. The existing
   `test_prg_engine_control_flow` executable, invocation order, assertions, and
