@@ -1686,6 +1686,8 @@ void test_export_database_type_json_writes_catalog_snapshot() {
     expect(fs::exists(output_path), "EXPORT DATABASE TYPE JSON should append the JSON extension and create its output");
     if (fs::exists(output_path)) {
         const std::string snapshot = read_text(output_path);
+        expect(snapshot.find("\"schema_version\": 1,") != std::string::npos,
+               "EXPORT DATABASE TYPE JSON should write the version-1 interchange envelope");
         expect(snapshot.find("\"name\": \"Northwind\"") != std::string::npos,
                "EXPORT DATABASE TYPE JSON should preserve the catalog database name");
         expect(snapshot.find("\"Alice\"") != std::string::npos,
