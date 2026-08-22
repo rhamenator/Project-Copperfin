@@ -5534,6 +5534,7 @@ copperfin_add_test(test_prg_engine_control_flow cf_xbase_runtime
     test_prg_engine_control_flow_on_error_dispatch.cpp
     test_prg_engine_control_flow_aerror_runtime_metadata.cpp
     test_prg_engine_control_flow_aerror_sql_ole_metadata.cpp
+    test_prg_engine_control_flow_aerror_innermost_line.cpp
     test_prg_engine_control_flow_error_handling_and_faults.cpp
     test_prg_engine_control_flow_catch_predicate_fallthrough.cpp
     test_prg_engine_control_flow_throw_exception_chain.cpp
