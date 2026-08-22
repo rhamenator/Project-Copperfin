@@ -1,5 +1,13 @@
 # Agent Handoff
 
+## V1 localized control-flow fault test module
+
+The bounded #2564 structural slice moves the existing localized runtime-fault
+fixtures into `test_prg_engine_control_flow_localized_faults.cpp`, while
+keeping the same `test_prg_engine_control_flow` executable and invocation
+order. It changes no runtime code, requirement, user-facing contract, RC tag,
+or artifact. A fresh Release build and focused CTest pass 1/1.
+
 ## V1 Studio data-selection test module
 
 The bounded #2564 structural slice moves the cohesive row-source type,
