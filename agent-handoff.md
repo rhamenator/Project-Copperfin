@@ -1,5 +1,17 @@
 # Agent Handoff
 
+## V1 Studio data-selection test module
+
+The bounded #2564 structural slice moves the cohesive row-source type,
+bound-column, column-count, list-index, left-column, and display-value
+selector regressions to
+`test_studio_host_json_setters_data_selection.cpp`, while keeping the existing
+`test_studio_host_json` executable and invocation order. It changes no runtime
+code, requirement, user-facing contract, RC tag, or artifact. A fresh Release
+build and all six extracted exact-test invocations pass. The aggregate target
+still has unrelated pre-existing pseudo-localization failures, which are not
+caused by this extraction and require a separately scoped localization slice.
+
 ## V1 filesystem and SYS probe test module
 
 The next bounded #2564 structural slice owns the existing filesystem and

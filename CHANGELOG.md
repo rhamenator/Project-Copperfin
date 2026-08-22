@@ -1,3 +1,10 @@
+- 2026-08-22: Continued #2564 test-module refactoring by moving the cohesive
+  row-source type, bound-column, column-count, list-index, left-column, and
+  display-value Studio-host selector regressions into
+  `test_studio_host_json_setters_data_selection.cpp`. The existing
+  `test_studio_host_json` executable, invocation order, assertions, and Studio
+  behavior remain unchanged.
+
 - 2026-08-21: Continued #2564 test-module refactoring by moving the focused
   filesystem and `SYS()` probe fixtures into
   `test_prg_engine_runtime_surface_functions_filesystem_sys.cpp`. The existing
