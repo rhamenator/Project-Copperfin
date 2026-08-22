@@ -1553,6 +1553,10 @@ DatabaseExportResult export_database_as_json(
     std::ostringstream json;
     json.imbue(std::locale::classic());
     json << "{\n";
+    // Version the owner-policy interchange envelope before it is ever used
+    // as a reconstruction input. Consumers must select their parser by this
+    // value rather than infer a contract from optional catalog/table content.
+    json << "  \"schema_version\": 1,\n";
 
     // -- database metadata block
     std::string db_name = copperfin::platform::path_to_utf8_string(dbc_fs_path.stem());

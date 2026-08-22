@@ -203,6 +203,13 @@ wishlist in #140, not a claimed Visual FoxPro 9 command. It does not implement
 `IMPORT DATABASE`, SQL or Access adapters, provider connections, schema mutation,
 or round-trip reconstruction.
 
+The snapshot is a versioned machine contract. Every document begins with the
+integer `schema_version: 1`; consumers must reject a missing or unsupported
+version rather than infer compatibility from optional catalog or table content.
+Version 1 preserves the existing `database`, `catalog`, and `tables` members.
+It is an export interchange baseline only: no current Copperfin component treats
+it as authority to create, replace, or modify a database file.
+
 Minimal C++ call:
 
 ```cpp
@@ -217,6 +224,7 @@ Example JSON shape:
 
 ```json
 {
+	"schema_version": 1,
 	"database": {
 		"path": "/data/northwind.dbc",
 		"name": "northwind"

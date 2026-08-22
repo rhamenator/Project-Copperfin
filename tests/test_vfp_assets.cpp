@@ -2162,6 +2162,8 @@ void test_export_database_as_json_produces_catalog_json() {
     expect(result.error.empty(),
            "#3988: successful database exports should leave the error result empty");
     if (result.ok) {
+        expect(result.json.find("\"schema_version\": 1,") != std::string::npos,
+               "export JSON should identify the version-1 interchange envelope");
         expect(result.json.find("\"northwind\"") != std::string::npos,
                "export JSON should include the database name");
         expect(result.json.find("\"catalog\"") != std::string::npos,

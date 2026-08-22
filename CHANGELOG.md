@@ -1,3 +1,10 @@
+- 2026-08-22: Wishlist #140 database JSON export now begins with the stable
+  integer `schema_version: 1` interchange envelope. Existing `database`,
+  `catalog`, and `tables` payload members are preserved. This makes future
+  consumers reject missing or unsupported versions instead of inferring a
+  reconstruction contract from optional content; it still does not implement
+  database import, file mutation, SQL/provider adapters, or round-trip rebuild.
+
 - 2026-08-22: Continued #2564 test-module refactoring by moving the focused
   `THROW oException` chaining and `Exception.UserValue` reference regression
   into `test_prg_engine_control_flow_throw_exception_chain.cpp`, and the
