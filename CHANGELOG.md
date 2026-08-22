@@ -22,6 +22,15 @@
   reconstruction contract from optional content; it still does not implement
   database import, file mutation, SQL/provider adapters, or round-trip rebuild.
 
+- 2026-08-22: Private evaluation RC7 passed its exact-tag GitHub assembly at
+  `v0.1.0-rc.7` / `9bd0658d2556e6d572aabf0691d36e69eda7fbfd`. Native
+  Windows/macOS/Linux, security/SBOM, installers, Windows VSIX lifecycle, and
+  Linux managed UI evidence passed; evaluation bundle `9482413735` was
+  downloaded and every contained SHA-256 manifest entry verified. It remains
+  a private evaluation candidate with launcher release trust, signing,
+  linguistic-review, real-installed-VFP9, and explicitly unperformed
+  installer/VSIX-lifecycle limits retained truthfully in its manifest.
+
 - 2026-08-22: Continued #2564 test-module refactoring by moving the focused
   `THROW oException` chaining and `Exception.UserValue` reference regression
   into `test_prg_engine_control_flow_throw_exception_chain.cpp`, and the
