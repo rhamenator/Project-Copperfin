@@ -1,4 +1,10 @@
 - 2026-08-22: Continued #2564 test-module refactoring by moving the focused
+  `AERROR()`/normalized runtime-diagnostic regressions into
+  `test_prg_engine_control_flow_normalized_diagnostics.cpp`. The existing
+  `test_prg_engine_control_flow` executable, invocation order, assertions, and
+  runtime behavior remain unchanged.
+
+- 2026-08-22: Continued #2564 test-module refactoring by moving the focused
   ON ERROR/RESUME recovery-state, continued cursor-state, and paused
   stack-frame metadata regressions into
   `test_prg_engine_control_flow_recovery_state.cpp`. The existing
