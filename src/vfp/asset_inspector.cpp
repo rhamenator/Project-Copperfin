@@ -4,6 +4,7 @@
 
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/sidecar_path.h"
@@ -1469,6 +1470,54 @@ std::string json_escape_str(const std::string& s) {
     return out;
 }
 
+std::string json_pointer_token(std::string_view token) {
+    std::string encoded;
+    encoded.reserve(token.size());
+    for (const char character : token) {
+        if (character == '~') {
+            encoded += "~0";
+        } else if (character == '/') {
+            encoded += "~1";
+        } else {
+            encoded.push_back(character);
+        }
+    }
+    return encoded;
+}
+
+bool parse_decimal_in_range(
+    const std::string_view text,
+    const std::size_t minimum,
+    const std::size_t maximum,
+    std::size_t& value) {
+    if (text.empty()) {
+        return false;
+    }
+    std::size_t parsed = 0U;
+    for (const unsigned char character : text) {
+        if (character < static_cast<unsigned char>('0') ||
+            character > static_cast<unsigned char>('9')) {
+            return false;
+        }
+        const std::size_t digit = static_cast<std::size_t>(character - static_cast<unsigned char>('0'));
+        if (digit > maximum || parsed > (maximum - digit) / 10U) {
+            return false;
+        }
+        parsed = parsed * 10U + digit;
+    }
+    if (parsed < minimum || parsed > maximum) {
+        return false;
+    }
+    value = parsed;
+    return true;
+}
+
+bool is_single_printable_ascii_character(const std::string& value) {
+    return value.size() == 1U &&
+           static_cast<unsigned char>(value.front()) >= 0x20U &&
+           static_cast<unsigned char>(value.front()) <= 0x7EU;
+}
+
 }  // namespace (extended)
 
 DatabaseExportResult export_database_as_json(
@@ -1737,6 +1786,136 @@ DatabaseExportResult export_database_as_json(
     json << "}\n";
 
     return {.ok = true, .error = {}, .json = json.str()};
+}
+
+DatabaseJsonImportPlanResult build_database_json_import_plan(const std::string_view document) {
+    using copperfin::platform::JsonSelectionError;
+    using copperfin::platform::JsonValueKind;
+    using copperfin::platform::parse_json_document;
+
+    constexpr std::size_t maximum_fields_per_table = 255U;
+    const auto failure = [](std::string code) {
+        return DatabaseJsonImportPlanResult{
+            .ok = false,
+            .error_code = std::move(code),
+            .plan = {}};
+    };
+    const auto parsed_document = parse_json_document(document);
+    if (!parsed_document.ok()) {
+        return failure("database_json_import.invalid_document");
+    }
+    const auto required_value = [&](const std::string_view pointer) {
+        return parsed_document.document.select(pointer);
+    };
+
+    const auto root = required_value({});
+    if (!root.ok() || root.kind != JsonValueKind::object) {
+        return failure("database_json_import.invalid_document");
+    }
+    const auto root_members = parsed_document.document.object_member_names();
+    if (!root_members.ok()) {
+        return failure("database_json_import.invalid_document");
+    }
+    const std::set<std::string> required_root_members{
+        "schema_version", "database", "catalog", "tables"};
+    if (root_members.names.size() != required_root_members.size() ||
+        !std::all_of(root_members.names.begin(), root_members.names.end(),
+            [&](const std::string& name) { return required_root_members.contains(name); })) {
+        return failure("database_json_import.invalid_document");
+    }
+
+    const auto schema_version = required_value("/schema_version");
+    if (!schema_version.ok() || schema_version.kind != JsonValueKind::number ||
+        schema_version.raw_json != "1") {
+        return failure("database_json_import.unsupported_schema_version");
+    }
+
+    const auto database = required_value("/database");
+    const auto database_name = required_value("/database/name");
+    const auto database_path = required_value("/database/path");
+    if (!database.ok() || database.kind != JsonValueKind::object ||
+        !database_name.ok() || database_name.kind != JsonValueKind::string ||
+        database_name.decoded_string.empty() ||
+        !database_path.ok() || database_path.kind != JsonValueKind::string) {
+        return failure("database_json_import.invalid_database");
+    }
+
+    const auto catalog = required_value("/catalog");
+    if (!catalog.ok() || catalog.kind != JsonValueKind::array) {
+        return failure("database_json_import.invalid_catalog");
+    }
+    const auto tables = required_value("/tables");
+    if (!tables.ok() || tables.kind != JsonValueKind::object) {
+        return failure("database_json_import.invalid_tables");
+    }
+    const auto table_members = parsed_document.document.object_member_names("/tables");
+    if (!table_members.ok()) {
+        return failure("database_json_import.invalid_tables");
+    }
+
+    DatabaseJsonImportPlan plan;
+    plan.database_name = database_name.decoded_string;
+    plan.catalog_json = catalog.raw_json;
+    std::vector<std::string> table_names = table_members.names;
+    std::sort(table_names.begin(), table_names.end());
+    std::set<std::string> casefolded_table_names;
+    for (const std::string& table_name : table_names) {
+        if (table_name.empty() || !casefolded_table_names.insert(lowercase_copy(table_name)).second) {
+            return failure("database_json_import.duplicate_table_name");
+        }
+    }
+    for (const std::string& table_name : table_names) {
+        const std::string table_pointer = "/tables/" + json_pointer_token(table_name);
+        const auto table = required_value(table_pointer);
+        const auto fields = required_value(table_pointer + "/fields");
+        const auto records = required_value(table_pointer + "/records");
+        if (!table.ok() || table.kind != JsonValueKind::object ||
+            !fields.ok() || fields.kind != JsonValueKind::array ||
+            !records.ok() || records.kind != JsonValueKind::array) {
+            return failure("database_json_import.invalid_table");
+        }
+
+        DatabaseJsonImportTablePlan table_plan;
+        table_plan.name = table_name;
+        table_plan.records_json = records.raw_json;
+        std::set<std::string> casefolded_field_names;
+        for (std::size_t index = 0U; index <= maximum_fields_per_table; ++index) {
+            const std::string field_pointer = table_pointer + "/fields/" + std::to_string(index);
+            const auto field = required_value(field_pointer);
+            if (field.error == JsonSelectionError::value_not_found) {
+                break;
+            }
+            if (!field.ok() || field.kind != JsonValueKind::object || index == maximum_fields_per_table) {
+                return failure("database_json_import.invalid_field");
+            }
+            const auto field_name = required_value(field_pointer + "/name");
+            const auto field_type = required_value(field_pointer + "/type");
+            const auto field_length = required_value(field_pointer + "/length");
+            const auto field_decimals = required_value(field_pointer + "/decimals");
+            std::size_t length = 0U;
+            std::size_t decimals = 0U;
+            if (!field_name.ok() || field_name.kind != JsonValueKind::string ||
+                field_name.decoded_string.empty() ||
+                !casefolded_field_names.insert(lowercase_copy(field_name.decoded_string)).second ||
+                !field_type.ok() || field_type.kind != JsonValueKind::string ||
+                !is_single_printable_ascii_character(field_type.decoded_string) ||
+                !field_length.ok() || field_length.kind != JsonValueKind::number ||
+                !parse_decimal_in_range(field_length.raw_json, 1U, 255U, length) ||
+                !field_decimals.ok() || field_decimals.kind != JsonValueKind::number ||
+                !parse_decimal_in_range(field_decimals.raw_json, 0U, length, decimals)) {
+                return failure("database_json_import.invalid_field");
+            }
+            table_plan.fields.push_back({
+                .name = field_name.decoded_string,
+                .type = field_type.decoded_string.front(),
+                .offset = 0U,
+                .length = static_cast<std::uint8_t>(length),
+                .decimal_count = static_cast<std::uint8_t>(decimals)});
+        }
+        plan.tables.push_back(std::move(table_plan));
+    }
+
+    return {.ok = true, .error_code = {}, .plan = std::move(plan)};
 }
 
 }  // namespace copperfin::vfp

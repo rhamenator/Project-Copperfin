@@ -69,6 +69,7 @@ void test_json_escape_string_is_locale_invariant() {
 void test_bounded_json_selection_contract() {
     using copperfin::platform::JsonSelectionError;
     using copperfin::platform::JsonValueKind;
+    using copperfin::platform::parse_json_document;
     using copperfin::platform::select_json_value;
 
     const std::string document =
@@ -142,6 +143,19 @@ void test_bounded_json_selection_contract() {
     const std::string invalid_utf8{static_cast<char>(0xC0), static_cast<char>(0xAF)};
     expect(select_json_value(invalid_utf8).error == JsonSelectionError::invalid_utf8,
            "the bounded parser should reject malformed UTF-8 before parsing");
+
+    const auto parsed = parse_json_document(document);
+    expect(parsed.ok(),
+           "a bounded JSON document should parse once before repeated selections");
+    if (parsed.ok()) {
+        const auto parsed_text = parsed.document.select("/status");
+        const auto parsed_members = parsed.document.object_member_names("/items/1");
+        expect(parsed_text.ok() && parsed_text.decoded_string == "ready\nnow",
+               "a parsed JSON document should preserve selected decoded strings");
+        expect(parsed_members.ok() && parsed_members.names.size() == 1U &&
+                   parsed_members.names.front() == "a/b",
+               "a parsed JSON document should expose object members without reparsing source bytes");
+    }
 }
 
 void test_default_security_profile() {

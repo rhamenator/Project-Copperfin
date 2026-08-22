@@ -1445,6 +1445,50 @@ void test_export_database_as_json_resolves_unicode_catalog_table_path() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_database_json_import_plan_admits_exporter_unreadable_table_marker() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir =
+        fs::temp_directory_path() / "copperfin_dbc_unreadable_table_export_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        dbc_path.string(),
+        dbc_fields,
+        {{"DATABASE", "UnreadableRuntime", "", ""},
+         {"TABLE", "Unreadable", "UnreadableRuntime", ""}});
+    expect(dbc_create.ok, "unreadable table export test: DBC fixture should be created");
+
+    {
+        std::ofstream unreadable_table(temp_dir / "Unreadable.dbf", std::ios::binary);
+        unreadable_table << "not a DBF";
+    }
+
+    const auto exported = copperfin::vfp::export_database_as_json(dbc_path.string());
+    expect(exported.ok,
+           "unreadable table export test: exporter should preserve an unreadable cataloged table");
+    if (exported.ok) {
+        expect(exported.json.find("\"Unreadable\": {\"fields\":[], \"records\":[]}") != std::string::npos,
+               "unreadable table export test: exporter should emit its documented empty-field marker");
+        const auto plan = copperfin::vfp::build_database_json_import_plan(exported.json);
+        expect(plan.ok && plan.plan.tables.size() == 1U &&
+                   plan.plan.tables.front().name == "Unreadable" &&
+                   plan.plan.tables.front().fields.empty() &&
+                   plan.plan.tables.front().records_json == "[]",
+               "database JSON planning should admit the exporter\'s unreadable-table marker without reconstruction");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_parse_real_vfp_cdx_when_available() {
     const std::filesystem::path sample_path =
         "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Tastrade\\Data\\customer.cdx";
@@ -2186,6 +2230,9 @@ void test_export_database_as_json_produces_catalog_json() {
         expect(result.json.find("\"tables\": {\n  }") == std::string::npos ||
                result.json.find("\"records\"") == std::string::npos,
                "export JSON tables block should be empty when no table DBFs are present");
+        const auto plan = copperfin::vfp::build_database_json_import_plan(result.json);
+        expect(plan.ok && plan.plan.database_name == "northwind" && plan.plan.tables.empty(),
+               "database JSON import planning should admit the exporter\'s version-1 catalog-only snapshot");
     }
 
     fs::remove_all(temp_dir, ignored);
@@ -2327,6 +2374,74 @@ void test_export_database_as_json_prefers_catalog_name_and_casefolded_assets() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_build_database_json_import_plan_validates_without_mutation() {
+    const std::string document = R"JSON({
+  "schema_version": 1,
+  "database": {"path": "/source/Northwind.dbc", "name": "Northwind"},
+  "catalog": [{"record_index": 1}],
+  "tables": {
+    "Orders": {
+      "fields": [{"name": "ORDERID", "type": "N", "length": 8, "decimals": 0}],
+      "records": [{"ORDERID": 7}]
+    },
+    "Customers": {
+      "fields": [{"name": "NAME", "type": "C", "length": 40, "decimals": 0}],
+      "records": [{"NAME": "Acme"}]
+    }
+  }
+})JSON";
+
+    const auto result = copperfin::vfp::build_database_json_import_plan(document);
+    expect(result.ok, "database JSON import planning should accept a version-1 export envelope");
+    expect(result.error_code.empty(), "successful database JSON planning should not retain an error code");
+    if (result.ok) {
+        expect(result.plan.database_name == "Northwind",
+               "database JSON planning should retain the database name without using its source path");
+        expect(result.plan.catalog_json == "[{\"record_index\": 1}]",
+               "database JSON planning should retain the catalog only as inert JSON");
+        expect(result.plan.tables.size() == 2U && result.plan.tables[0].name == "Customers" &&
+                   result.plan.tables[1].name == "Orders",
+               "database JSON planning should sort table plans deterministically");
+        expect(result.plan.tables[0].fields.size() == 1U &&
+                   result.plan.tables[0].fields[0].name == "NAME" &&
+                   result.plan.tables[0].records_json == "[{\"NAME\": \"Acme\"}]",
+               "database JSON planning should retain table schema and records without writing a database");
+    }
+
+    const auto unsupported_schema = copperfin::vfp::build_database_json_import_plan(
+        R"({"schema_version":2,"database":{"path":"x","name":"n"},"catalog":[],"tables":{}})");
+    expect(!unsupported_schema.ok &&
+               unsupported_schema.error_code == "database_json_import.unsupported_schema_version",
+           "database JSON planning should reject unsupported schema versions before any reconstruction step");
+
+    const auto colliding_tables = copperfin::vfp::build_database_json_import_plan(
+        R"({"schema_version":1,"database":{"path":"x","name":"n"},"catalog":[],"tables":{"People":{"fields":[],"records":[]},"people":{"fields":[],"records":[]}}})");
+    expect(!colliding_tables.ok &&
+               colliding_tables.error_code == "database_json_import.duplicate_table_name",
+           "database JSON planning should reject cross-platform case-folded table-name collisions");
+
+    const auto empty_table_schema = copperfin::vfp::build_database_json_import_plan(
+        R"({"schema_version":1,"database":{"path":"x","name":"n"},"catalog":[],"tables":{"People":{"fields":[],"records":[]}}})");
+    expect(empty_table_schema.ok && empty_table_schema.plan.tables.size() == 1U &&
+               empty_table_schema.plan.tables[0].fields.empty(),
+           "database JSON planning should retain the exporter\'s empty-table schema marker without reconstruction");
+
+    const auto invalid_field = copperfin::vfp::build_database_json_import_plan(
+        R"({"schema_version":1,"database":{"path":"x","name":"n"},"catalog":[],"tables":{"People":{"fields":[{"name":"ID","type":"N","length":0,"decimals":0}],"records":[]}}})");
+    expect(!invalid_field.ok && invalid_field.error_code == "database_json_import.invalid_field",
+           "database JSON planning should reject a field that cannot be represented by a DBF descriptor");
+
+    const std::string overflow_decimal_document =
+        R"({"schema_version":1,"database":{"path":"x","name":"n"},"catalog":[],"tables":{"People":{"fields":[{"name":"ID","type":"N","length":1,"decimals":)" +
+        std::string(1024U, '9') +
+        R"(}],"records":[]}}})";
+    const auto overflow_decimal =
+        copperfin::vfp::build_database_json_import_plan(overflow_decimal_document);
+    expect(!overflow_decimal.ok &&
+               overflow_decimal.error_code == "database_json_import.invalid_field",
+           "database JSON planning should reject out-of-range decimal text without integer wraparound");
+}
+
 void test_read_memo_block_raw_returns_correct_bytes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_memo_raw_tests";
@@ -2401,6 +2516,7 @@ int main() {
     test_inspect_database_container_extracts_first_pass_catalog_metadata();
     test_inspect_asset_resolves_explicit_unicode_memo_sidecar();
     test_export_database_as_json_resolves_unicode_catalog_table_path();
+    test_database_json_import_plan_admits_exporter_unreadable_table_marker();
     test_parse_real_vfp_cdx_when_available();
     test_parse_additional_real_vfp_cdx_samples_when_available();
     test_parse_real_vfp_dcx_samples_when_available();
@@ -2413,6 +2529,7 @@ int main() {
     test_export_database_as_json_errors_leave_json_empty();
     test_export_database_as_json_decodes_properties_blob();
     test_export_database_as_json_prefers_catalog_name_and_casefolded_assets();
+    test_build_database_json_import_plan_validates_without_mutation();
     test_read_memo_block_raw_returns_correct_bytes();
 
     if (failures != 0) {

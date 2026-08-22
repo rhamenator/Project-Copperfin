@@ -1,3 +1,13 @@
+- 2026-08-22: Wishlist #140 now also has a bounded native JSON import-planning
+  primitive. It accepts only the version-1 DBC export envelope, validates and
+  deterministically models database/table field metadata, and retains catalog
+  and row payloads as inert JSON. It parses a bounded document once, rejects
+  malformed schemas, integer-wraparound field values, and cross-platform name
+  collisions, and retains the exporter\'s empty-field marker as an inert
+  no-schema table plan. It opens no target path and creates, overwrites, or
+  mutates no database asset; `IMPORT DATABASE`, reconstruction, transactions,
+  and rollback remain future work.
+
 - 2026-08-22: Wishlist #140 database JSON export now begins with the stable
   integer `schema_version: 1` interchange envelope. Existing `database`,
   `catalog`, and `tables` payload members are preserved. This makes future
