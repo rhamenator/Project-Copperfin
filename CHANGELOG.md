@@ -1,4 +1,10 @@
 - 2026-08-22: Continued #2564 test-module refactoring by moving the focused
+  `THROW oException` chaining and `Exception.UserValue` reference regression
+  into `test_prg_engine_control_flow_throw_exception_chain.cpp`. The existing
+  `test_prg_engine_control_flow` executable, invocation order, assertions, and
+  runtime behavior remain unchanged.
+
+- 2026-08-22: Continued #2564 test-module refactoring by moving the focused
   bare-`THROW` active-exception rethrow regression into
   `test_prg_engine_control_flow_bare_throw_rethrow.cpp`. The existing
   `test_prg_engine_control_flow` executable, invocation order, assertions, and
