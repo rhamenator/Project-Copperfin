@@ -2200,6 +2200,7 @@ add_test(
 add_executable(test_studio_host_report_height_top_preview_bounds
     test_studio_host_report_height_top_preview_bounds.cpp
     test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_geometry_preview_object_tops.cpp
     test_studio_host_json_shared_test_helpers.cpp
     test_studio_host_json_report_shared_fixtures.cpp
 )
