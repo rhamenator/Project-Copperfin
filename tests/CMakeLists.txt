@@ -968,6 +968,7 @@ add_executable(test_studio_host_detail_header_footer_section_geometry
     test_studio_host_detail_header_footer_section_geometry.cpp
     test_studio_host_json_sections_dhf_shared_fixtures.cpp
     test_studio_host_json_sections_dhf_expressions_and_exposure.cpp
+    test_studio_host_json_sections_dhf_heights.cpp
     test_studio_host_json_shared_test_helpers.cpp
 )
 target_link_libraries(test_studio_host_detail_header_footer_section_geometry PRIVATE cf_vfp_assets)

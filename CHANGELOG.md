@@ -1,3 +1,8 @@
+- 2026-08-23: Continued #2564 test-module refactoring by moving paired
+  detail-header/footer section-height regressions into
+  `test_studio_host_json_sections_dhf_heights.cpp`. Existing section targets,
+  invocation order, assertions, and Studio behavior remain unchanged.
+
 - 2026-08-23: Completed this detail-header/footer #2564 test-module family by
   moving the paired report/label stable-selection resize regressions into
   `test_studio_host_json_objects_dhf_resize.cpp` and retiring the now-empty

@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 Studio detail-header/footer section-height test module
+
+The bounded #2564 structural slice moves the four paired report/label
+detail-header/footer stable-selection `HEIGHT` update and clear regressions
+into `test_studio_host_json_sections_dhf_heights.cpp`. The test bodies are
+byte-identical to their former source range. Existing executables, fixture
+ownership, declarations, invocation order, assertions, and Studio behavior
+remain unchanged. The extracted module is compiled only by the geometry runner
+that invokes these four tests. A fresh Debug build and the three
+affected portable CTests (`test_studio_host_detail_header_footer_section_geometry`,
+`test_studio_host_detail_header_footer_section_expressions`, and
+`test_studio_host_detail_header_footer_section_preview_bounds`) pass 3/3.
+Protected cross-platform validation remains required before merge.
+
 ## V1 Studio detail layout-action test modules
 
 The bounded #2564 structural slices moved the report/label detail-header/footer
