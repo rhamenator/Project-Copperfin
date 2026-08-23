@@ -1,3 +1,9 @@
+- 2026-08-23: Added repository steering-continuity guidance: new owner
+  direction is additive unless it explicitly and unambiguously replaces or
+  cancels the applicable active objective or slice. An uncancelled in-progress
+  slice must retain recoverable state or a canonical handoff record before a
+  direction change; intentional deferrals require their re-entry condition.
+
 - 2026-08-22: Wishlist #140 now also has a bounded native JSON import-planning
   primitive. It accepts only the version-1 DBC export envelope, validates and
   deterministically models database/table field metadata, and retains catalog

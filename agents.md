@@ -158,11 +158,31 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
 ## Handoff Rules
 
 - `agent-handoff.md` is the canonical continuation brief and should stay compact.
-- Update `agent-handoff.md` only when a shipped slice changes the last shipped slice, selected workstream, or next action.
+- Update `agent-handoff.md` only when a shipped slice changes the last shipped slice, selected workstream, or next action, except for the explicit in-progress continuity record required by Steering Continuity below.
 - Update `CHANGELOG.md` whenever a turn ships lasting repo changes or materially updates tracked documentation.
 - Do not create extra prompt files unless explicitly requested.
 - If a temporary planning note is created, fold any lasting guidance back into tracked docs and delete the throwaway note.
 - Before cutting or approving a release tag, run `scripts/validate-safety-traceability.ps1` or the Safety Traceability Gate workflow against the intended release issue set and archive the report artifact.
+
+## Steering Continuity
+
+- In this section, the **active objective** is the currently selected admitted
+  workstream and the **active slice** is its current prompt-sized execution
+  unit. Treat a contemporaneous repository-owner steering prompt as additive
+  to both unless it explicitly and unambiguously replaces or cancels the
+  applicable objective or slice.
+- Before changing direction, retain an uncancelled active slice's exact state,
+  remaining validation, and next concrete action in the canonical handoff when
+  it is not already recoverable from the branch, pull request, and retained
+  evidence. This is the permitted in-progress exception to Handoff Rules.
+- Complete the active slice, or record an explicit, evidence-based deferral
+  and its re-entry condition, before selecting unrelated work. Do not silently
+  abandon a started slice because a later prompt adds a new priority.
+- At each subsequent work-selection point, consider uncompleted work retained
+  by prior steering alongside the roadmap and live evidence. Report any work
+  intentionally deferred; a steering prompt that does not explicitly and
+  unambiguously replace or cancel the applicable work is never evidence that
+  earlier work is complete, cancelled, or no longer required.
 
 ## Live Agent Channel
 
