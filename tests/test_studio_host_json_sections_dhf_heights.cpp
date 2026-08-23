@@ -4,7 +4,6 @@
 
 #include "test_studio_host_json_support.h"
 
-
 namespace cf_test_studio_host_json {
 #if !defined(COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_ONLY_EXPRESSIONS)
 void test_studio_host_json_updates_detail_header_footer_section_heights_by_stable_selection(
