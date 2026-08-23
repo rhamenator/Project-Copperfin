@@ -46,6 +46,19 @@ source with lifecycle/fault verification (`#5164`). Do not treat native
 connected-COM evidence; no remote activation, network discovery, registry
 probing, or third-party COM server belongs in this lane.
 
+## V1 DBF raw memo-payload preservation test module
+
+The bounded #5154/#2564 structural slice moves the empty-decoding memo payload
+and `PACK MEMO` raw-byte preservation regressions into
+`test_dbf_table_raw_memo_payloads.cpp`. Its binary-fixture writers remain
+private to the new module; the minimal shared header continues to expose only
+the existing failure reporter and module declarations. The existing
+`test_dbf_table` executable, invocation order, fixture bytes, assertions, and
+DBF behavior remain unchanged. Corrupt-sidecar/additive-replacement and
+schema-rewrite preservation regressions remain separate #5155/#5156 slices.
+A fresh Debug build and focused `test_dbf_table` CTest must pass before
+protected cross-platform validation.
+
 ## V1 basic DBF memo lifecycle test module
 
 The bounded #5152/#2564 structural slice moves the basic M-field and G/P-field
