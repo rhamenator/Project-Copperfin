@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 report layout-object LEFT preview-bounds test module
+
+The bounded #2564 structural slice moves the report/label layout-object LEFT
+preview-bounds update/clear regressions into
+`test_studio_host_json_geometry_preview_object_lefts.cpp`. Existing runner
+membership, declarations, invocation order, fixtures, assertions, and Studio
+behavior remain unchanged. The extracted module is compiled only by the
+existing width/LEFT preview runner. The moved bodies match the former source
+range byte-for-byte; a focused Debug build and CTest must pass before protected
+validation.
+
 ## V1 Studio detail-header/footer section-top test module
 
 The bounded #2564 structural slice moves the four paired report/label
