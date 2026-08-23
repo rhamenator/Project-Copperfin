@@ -5,10 +5,13 @@
 #pragma once
 
 #include "copperfin/vfp/dbf_header.h"
+#include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/index_probe.h"
 
+#include <cstddef>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace copperfin::vfp {
@@ -131,5 +134,35 @@ struct DatabaseExportResult {
 [[nodiscard]] DatabaseExportResult export_database_as_json(
     const std::string& dbc_path,
     std::size_t max_rows_per_table = 0U);
+
+// ---- Whole-database JSON import planning ----
+
+// A validated, in-memory description of a version-1 export snapshot. The
+// catalog and record payloads remain JSON because this planning boundary has no
+// authority to create, replace, or modify database files.
+struct DatabaseJsonImportTablePlan {
+    std::string name;
+    std::vector<DbfFieldDescriptor> fields;
+    std::string records_json;
+};
+
+struct DatabaseJsonImportPlan {
+    std::string database_name;
+    std::string catalog_json;
+    std::vector<DatabaseJsonImportTablePlan> tables;
+};
+
+struct DatabaseJsonImportPlanResult {
+    bool ok = false;
+    std::string error_code;
+    DatabaseJsonImportPlan plan;
+};
+
+// Validates and models the schema-version-1 export envelope in memory. The
+// source document is bounded and never interpreted as a path, command, or
+// provider connection. This is a planning primitive only; it does not expose
+// IMPORT DATABASE syntax or perform database reconstruction.
+[[nodiscard]] DatabaseJsonImportPlanResult build_database_json_import_plan(
+    std::string_view document);
 
 }  // namespace copperfin::vfp

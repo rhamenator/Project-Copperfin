@@ -52,6 +52,10 @@ struct DbfWriteResult {
     std::size_t record_count = 0;
 };
 
+// Returns whether a type and width can be admitted by the ordinary DBF writer.
+// This excludes the writer's internal raw-byte preservation override.
+[[nodiscard]] bool is_dbf_table_field_storage_layout_writable(char type, std::uint8_t length);
+
 DbfTableParseResult parse_dbf_table_from_file(
     const std::string& path,
     std::size_t max_records = 10U,

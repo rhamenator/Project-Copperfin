@@ -148,6 +148,20 @@ local build. Focused `test_runtime_pipeline`, `test_prg_engine_data_io`, and
 `test_vfp_assets` pass; the command remains a Copperfin-only export extension,
 not VFP9 compatibility.
 
+## V1 DBC JSON import planning boundary
+
+The owner-policy #140 modernization lane now has a bounded native
+`build_database_json_import_plan()` primitive. It accepts only the version-1
+export envelope, deterministically models database/table fields, keeps catalog
+and record payloads inert, parses the bounded document once, rejects malformed
+schema, integer-wraparound field values, and case-folded table or field
+collisions, and preserves the exporter\'s empty-field marker as an inert
+no-schema table plan. It cannot open output paths or create, replace, overwrite,
+or mutate a DBC/DBF/memo/index asset; no PRG `IMPORT DATABASE`, provider,
+reconstruction, transaction, rollback, or recovery behavior exists. Focused
+Release `test_vfp_assets` and `test_platform_models` pass `2/2`; next action
+is protected-check completion after the schema-envelope parent lands.
+
 ## V1 standalone extension decision
 
 Standalone Studio does not load arbitrary VSIX packages or Copperfin's own

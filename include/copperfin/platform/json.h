@@ -6,6 +6,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -61,6 +62,46 @@ struct JsonObjectMembersResult final {
         return error == JsonSelectionError::none;
     }
 };
+
+struct JsonDocumentState;
+struct JsonDocumentParseResult;
+
+// An immutable, bounded JSON document parsed once for repeated selections.
+// It owns its source bytes and exposes copies of selected values only.
+class JsonDocument final {
+public:
+    JsonDocument() = default;
+
+    [[nodiscard]] JsonSelectionResult select(
+        std::string_view json_pointer = {}) const;
+    [[nodiscard]] JsonObjectMembersResult object_member_names(
+        std::string_view json_pointer = {}) const;
+
+private:
+    friend JsonDocumentParseResult parse_json_document(
+        std::string_view document,
+        const JsonDocumentLimits& limits);
+    explicit JsonDocument(std::shared_ptr<const JsonDocumentState> state)
+        : state_(std::move(state)) {}
+
+    std::shared_ptr<const JsonDocumentState> state_;
+};
+
+struct JsonDocumentParseResult final {
+    JsonSelectionError error = JsonSelectionError::none;
+    JsonDocument document;
+
+    [[nodiscard]] bool ok() const noexcept {
+        return error == JsonSelectionError::none;
+    }
+};
+
+// Parses and validates a bounded UTF-8 JSON document once. Callers that need
+// several selections should retain the resulting JsonDocument instead of
+// repeatedly reparsing the same untrusted input.
+[[nodiscard]] JsonDocumentParseResult parse_json_document(
+    std::string_view document,
+    const JsonDocumentLimits& limits = {});
 
 [[nodiscard]] JsonSelectionResult select_json_value(
     std::string_view document,

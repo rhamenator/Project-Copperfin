@@ -509,14 +509,77 @@ JsonSelectionResult error_result(const JsonSelectionError error) {
     return result;
 }
 
+const JsonNode* select_node(
+    const JsonNode& root,
+    const std::string_view json_pointer,
+    JsonSelectionError& error) {
+    const JsonNode* selected = &root;
+    if (json_pointer.empty()) {
+        error = JsonSelectionError::none;
+        return selected;
+    }
+    if (json_pointer.front() != '/') {
+        error = JsonSelectionError::invalid_pointer;
+        return nullptr;
+    }
+    std::size_t token_start = 1U;
+    while (true) {
+        const std::size_t separator = json_pointer.find('/', token_start);
+        const std::string_view encoded = json_pointer.substr(
+            token_start,
+            separator == std::string_view::npos
+                ? std::string_view::npos
+                : separator - token_start);
+        std::string token;
+        if (!decode_pointer_token(encoded, token)) {
+            error = JsonSelectionError::invalid_pointer;
+            return nullptr;
+        }
+        if (selected->kind == JsonValueKind::object) {
+            const auto match = std::find_if(
+                selected->object_keys.begin(),
+                selected->object_keys.end(),
+                [&](const std::string& key) { return key == token; });
+            if (match == selected->object_keys.end()) {
+                error = JsonSelectionError::value_not_found;
+                return nullptr;
+            }
+            const auto index = static_cast<std::size_t>(
+                std::distance(selected->object_keys.begin(), match));
+            selected = &selected->object_values[index];
+        } else if (selected->kind == JsonValueKind::array) {
+            std::size_t index = 0U;
+            if (!parse_array_index(token, index) ||
+                index >= selected->array_values.size()) {
+                error = JsonSelectionError::value_not_found;
+                return nullptr;
+            }
+            selected = &selected->array_values[index];
+        } else {
+            error = JsonSelectionError::value_not_found;
+            return nullptr;
+        }
+        if (separator == std::string_view::npos) {
+            break;
+        }
+        token_start = separator + 1U;
+    }
+    error = JsonSelectionError::none;
+    return selected;
+}
+
 }  // namespace
 
-JsonSelectionResult select_json_value(
+struct JsonDocumentState final {
+    std::string source;
+    JsonNode root;
+};
+
+JsonDocumentParseResult parse_json_document(
     const std::string_view document,
-    const std::string_view json_pointer,
     const JsonDocumentLimits& limits) {
     if (document.empty()) {
-        return error_result(JsonSelectionError::document_required);
+        return {.error = JsonSelectionError::document_required, .document = {}};
     }
     if (limits.max_document_bytes == 0U ||
         limits.max_document_bytes > hard_max_document_bytes ||
@@ -524,107 +587,84 @@ JsonSelectionResult select_json_value(
         limits.max_nesting_depth > hard_max_nesting_depth ||
         limits.max_value_count == 0U ||
         limits.max_value_count > hard_max_value_count) {
-        return error_result(JsonSelectionError::invalid_limits);
+        return {.error = JsonSelectionError::invalid_limits, .document = {}};
     }
     if (document.size() > limits.max_document_bytes) {
-        return error_result(JsonSelectionError::document_too_large);
+        return {.error = JsonSelectionError::document_too_large, .document = {}};
     }
     if (!is_valid_utf8(document)) {
-        return error_result(JsonSelectionError::invalid_utf8);
+        return {.error = JsonSelectionError::invalid_utf8, .document = {}};
     }
 
-    JsonNode root;
+    auto state = std::make_shared<JsonDocumentState>();
+    state->source.assign(document);
     JsonDocumentParser parser(
-        document,
+        state->source,
         limits.max_nesting_depth,
         limits.max_value_count);
-    if (!parser.parse(root)) {
-        if (parser.value_count_exceeded()) {
-            return error_result(JsonSelectionError::value_count_exceeded);
-        }
-        return error_result(JsonSelectionError::invalid_json);
+    if (!parser.parse(state->root)) {
+        return {
+            .error = parser.value_count_exceeded()
+                ? JsonSelectionError::value_count_exceeded
+                : JsonSelectionError::invalid_json,
+            .document = {}};
     }
+    return {.error = JsonSelectionError::none, .document = JsonDocument{std::move(state)}};
+}
 
-    const JsonNode* selected = &root;
-    if (!json_pointer.empty()) {
-        if (json_pointer.front() != '/') {
-            return error_result(JsonSelectionError::invalid_pointer);
-        }
-        std::size_t token_start = 1U;
-        while (true) {
-            const std::size_t separator = json_pointer.find('/', token_start);
-            const std::string_view encoded = json_pointer.substr(
-                token_start,
-                separator == std::string_view::npos
-                    ? std::string_view::npos
-                    : separator - token_start);
-            std::string token;
-            if (!decode_pointer_token(encoded, token)) {
-                return error_result(JsonSelectionError::invalid_pointer);
-            }
-            if (selected->kind == JsonValueKind::object) {
-                const auto match = std::find_if(
-                    selected->object_keys.begin(),
-                    selected->object_keys.end(),
-                    [&](const std::string& key) { return key == token; });
-                if (match == selected->object_keys.end()) {
-                    return error_result(JsonSelectionError::value_not_found);
-                }
-                const auto index = static_cast<std::size_t>(
-                    std::distance(selected->object_keys.begin(), match));
-                selected = &selected->object_values[index];
-            } else if (selected->kind == JsonValueKind::array) {
-                std::size_t index = 0U;
-                if (!parse_array_index(token, index) ||
-                    index >= selected->array_values.size()) {
-                    return error_result(JsonSelectionError::value_not_found);
-                }
-                selected = &selected->array_values[index];
-            } else {
-                return error_result(JsonSelectionError::value_not_found);
-            }
-            if (separator == std::string_view::npos) {
-                break;
-            }
-            token_start = separator + 1U;
-        }
+JsonSelectionResult JsonDocument::select(const std::string_view json_pointer) const {
+    if (!state_) {
+        return error_result(JsonSelectionError::document_required);
     }
-
+    JsonSelectionError error = JsonSelectionError::none;
+    const JsonNode* selected = select_node(state_->root, json_pointer, error);
+    if (selected == nullptr) {
+        return error_result(error);
+    }
     JsonSelectionResult result;
     result.kind = selected->kind;
-    result.raw_json.assign(document.substr(
+    result.raw_json.assign(state_->source.substr(
         selected->start,
         selected->end - selected->start));
     result.decoded_string = selected->decoded_string;
     return result;
 }
 
+JsonObjectMembersResult JsonDocument::object_member_names(
+    const std::string_view json_pointer) const {
+    if (!state_) {
+        return {.error = JsonSelectionError::document_required, .names = {}};
+    }
+    JsonSelectionError error = JsonSelectionError::none;
+    const JsonNode* selected = select_node(state_->root, json_pointer, error);
+    if (selected == nullptr || selected->kind != JsonValueKind::object) {
+        return {
+            .error = selected == nullptr ? error : JsonSelectionError::value_not_found,
+            .names = {}};
+    }
+    return {.error = JsonSelectionError::none, .names = selected->object_keys};
+}
+
+JsonSelectionResult select_json_value(
+    const std::string_view document,
+    const std::string_view json_pointer,
+    const JsonDocumentLimits& limits) {
+    const JsonDocumentParseResult parsed = parse_json_document(document, limits);
+    if (!parsed.ok()) {
+        return error_result(parsed.error);
+    }
+    return parsed.document.select(json_pointer);
+}
+
 JsonObjectMembersResult select_json_object_member_names(
     const std::string_view document,
     const std::string_view json_pointer,
     const JsonDocumentLimits& limits) {
-    const JsonSelectionResult selection =
-        select_json_value(document, json_pointer, limits);
-    if (!selection.ok()) {
-        return {.error = selection.error, .names = {}};
+    const JsonDocumentParseResult parsed = parse_json_document(document, limits);
+    if (!parsed.ok()) {
+        return {.error = parsed.error, .names = {}};
     }
-    if (selection.kind != JsonValueKind::object) {
-        return {.error = JsonSelectionError::value_not_found, .names = {}};
-    }
-
-    JsonNode root;
-    JsonDocumentParser parser(
-        selection.raw_json,
-        limits.max_nesting_depth,
-        limits.max_value_count);
-    if (!parser.parse(root) || root.kind != JsonValueKind::object) {
-        return {
-            .error = parser.value_count_exceeded()
-                ? JsonSelectionError::value_count_exceeded
-                : JsonSelectionError::invalid_json,
-            .names = {}};
-    }
-    return {.error = JsonSelectionError::none, .names = std::move(root.object_keys)};
+    return parsed.document.object_member_names(json_pointer);
 }
 
 std::string_view json_value_kind_name(const JsonValueKind kind) noexcept {
