@@ -38,6 +38,7 @@ namespace copperfin::runtime_surface_tests
     void test_array_element_native_property_expression_access();
     void test_local_optimistic_table_buffering();
     void test_local_optimistic_table_buffering_append_lifecycle();
+    void test_table_buffer_appends_use_negative_recno_identity();
     void test_local_optimistic_table_buffering_delete_recall();
     void test_local_pessimistic_table_buffering();
     void test_local_optimistic_buffer_conflicts();

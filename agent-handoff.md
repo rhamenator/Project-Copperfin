@@ -1,5 +1,15 @@
 # Agent Handoff
 
+## V1 table-buffer negative RECNO identity
+
+The bounded #5125 runtime slice recovers the installed VFP9 table-buffer
+append identity rule: pending local mode-4/mode-5 appends expose sequential
+negative `RECNO()` values and `GO -n` returns to the matching pending row.
+Copperfin deliberately retains positive internal positions for DBF mutation,
+locking, verified-byte admission, commit, and rollback. The focused Release
+`test_prg_engine_runtime_surface_functions` CTest passes `1/1`; next action is
+to commit, open a v1-only PR, and obtain protected cross-platform validation.
+
 ## V1 normalized control-flow diagnostics test module
 
 The bounded #2564 structural slice moves the existing `AERROR()`/normalized

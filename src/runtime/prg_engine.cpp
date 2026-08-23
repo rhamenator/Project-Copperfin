@@ -1544,10 +1544,28 @@ namespace copperfin::runtime
                 const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? 0U : cursor->record_length;
             },
-            [resolve_expression_cursor](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator) -> long long
             {
                 const CursorState *cursor = resolve_expression_cursor(designator);
-                return cursor == nullptr ? 0U : cursor->recno;
+                if (cursor == nullptr)
+                {
+                    return 0;
+                }
+
+                if ((cursor->buffering_mode == 4 || cursor->buffering_mode == 5) &&
+                    cursor->buffered_appended_records.contains(cursor->recno))
+                {
+                    const std::size_t appended_count = cursor->buffered_appended_records.size();
+                    const std::size_t persisted_count = cursor->record_count >= appended_count
+                        ? cursor->record_count - appended_count
+                        : 0U;
+                    if (cursor->recno > persisted_count)
+                    {
+                        return -static_cast<long long>(cursor->recno - persisted_count);
+                    }
+                }
+
+                return static_cast<long long>(cursor->recno);
             },
             [resolve_expression_cursor](const std::string &designator)
             {

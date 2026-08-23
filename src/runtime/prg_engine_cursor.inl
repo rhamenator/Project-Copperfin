@@ -1332,6 +1332,30 @@
                     return false;
                 }
             }
+
+            // VFP table buffers expose pending appended rows through negative
+            // RECNO() values. Copperfin keeps their internal DBF-oriented
+            // positions positive so mutation, admission, and rollback paths
+            // never treat a public negative identity as a physical record
+            // index. Translate the public identity only at navigation.
+            if (target_recno < 0 && (cursor.buffering_mode == 4 || cursor.buffering_mode == 5) &&
+                target_recno != std::numeric_limits<long long>::min())
+            {
+                const std::size_t appended_count = cursor.buffered_appended_records.size();
+                const std::size_t requested_append = static_cast<std::size_t>(-target_recno);
+                const std::size_t persisted_count = cursor.record_count >= appended_count
+                    ? cursor.record_count - appended_count
+                    : 0U;
+                if (requested_append >= 1U && requested_append <= appended_count &&
+                    requested_append <= std::numeric_limits<std::size_t>::max() - persisted_count)
+                {
+                    const std::size_t internal_recno = persisted_count + requested_append;
+                    if (cursor.buffered_appended_records.contains(internal_recno))
+                    {
+                        target_recno = static_cast<long long>(internal_recno);
+                    }
+                }
+            }
             if (cursor.record_count == 0U)
             {
                 cursor.recno = 1U;
