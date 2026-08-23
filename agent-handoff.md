@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 Studio detail-header/footer section-top test module
+
+The bounded #2564 structural slice moves the four paired report/label
+detail-header/footer stable-selection `TOP` update and clear regressions into
+`test_studio_host_json_sections_dhf_tops.cpp`. The test bodies are
+byte-identical to their former source range. Existing executables, fixture
+ownership, declarations, invocation order, assertions, and Studio behavior
+remain unchanged. The extracted module is compiled only by the geometry runner
+that invokes these four tests. A fresh Debug build and focused geometry CTest
+must pass before protected cross-platform validation.
+
 ## V1 Studio detail-header/footer section-height test module
 
 The bounded #2564 structural slice moves the four paired report/label

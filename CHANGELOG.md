@@ -1,4 +1,9 @@
 - 2026-08-23: Continued #2564 test-module refactoring by moving paired
+  detail-header/footer section-top regressions into
+  `test_studio_host_json_sections_dhf_tops.cpp`. The existing geometry
+  runner, invocation order, assertions, and Studio behavior remain unchanged.
+
+- 2026-08-23: Continued #2564 test-module refactoring by moving paired
   detail-header/footer section-height regressions into
   `test_studio_host_json_sections_dhf_heights.cpp`. Existing section targets,
   invocation order, assertions, and Studio behavior remain unchanged.
