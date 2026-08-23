@@ -5532,6 +5532,7 @@ copperfin_add_test(test_prg_engine_control_flow cf_xbase_runtime
     test_prg_engine_select_query_commands.cpp
     test_prg_engine_control_flow_concurrency_and_critical_sections.cpp
     test_prg_engine_control_flow_yield_event.cpp
+    test_prg_engine_control_flow_yield_critical_policy.cpp
     test_prg_engine_control_flow_event_loop.cpp
     test_prg_engine_control_flow_error_handler_commands.cpp
     test_prg_engine_control_flow_bare_null.cpp
