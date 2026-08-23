@@ -219,6 +219,11 @@ copperfin_add_test_support_object(
     "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_settings_page_layout_fields.cpp"
     cf_vfp_assets
 )
+target_sources(
+    cf_studio_host_json_settings_page_layout_helpers
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_settings_bottom_margin.cpp"
+)
 target_compile_definitions(
     cf_studio_host_json_settings_page_layout_helpers
     PRIVATE COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
