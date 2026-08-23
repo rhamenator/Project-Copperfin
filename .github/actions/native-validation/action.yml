@@ -68,6 +68,20 @@ runs:
         -BuildJobs ([int]'${{ inputs.build_jobs }}')
         -SampleResources
 
+    - name: Build Windows Debug mixed-mode DECLARE fixture
+      if: ${{ inputs.platform == 'windows' }}
+      shell: pwsh
+      run: >-
+        & ./scripts/measure-windows-validation.ps1
+        -Mode Run
+        -MetricsDirectory '${{ inputs.metrics_directory }}'
+        -Name 'Build Windows Debug mixed-mode DECLARE fixture'
+        -Category native-compile
+        -FilePath cmake
+        -CommandArguments @('--build', 'build', '--config', 'Debug', '--target', 'copperfin_mixed_mode_declared_dll_fixture', '--parallel', '2')
+        -BuildJobs 2
+        -SampleResources
+
     - name: Run native test suite
       if: ${{ inputs.platform != 'windows' }}
       shell: bash

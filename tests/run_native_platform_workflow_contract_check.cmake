@@ -819,6 +819,12 @@ require_text("${shared_action}"
     [=[-CommandArguments @('--build', 'build', '--config', 'Release', '--parallel', '${{ inputs.build_jobs }}')]=]
     "bounded Windows build command")
 require_text("${shared_action}"
+    "-Name 'Build Windows Debug mixed-mode DECLARE fixture'"
+    "measured Windows Debug mixed-mode fixture build")
+require_text("${shared_action}"
+    [=[-CommandArguments @('--build', 'build', '--config', 'Debug', '--target', 'copperfin_mixed_mode_declared_dll_fixture', '--parallel', '2')]=]
+    "bounded Windows Debug mixed-mode fixture build command")
+require_text("${shared_action}"
     "-Name 'Run native test suite'"
     "measured Windows CTest phase")
 require_text("${shared_action}"
@@ -849,7 +855,7 @@ require_regex_count("${shared_action}" "\n[ \t]+run:[ \t]*ctest "
 require_text_count("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}]=]
     3 "non-Windows platform conditions")
 require_text_count("${shared_action}" [=[if: ${{ inputs.platform == 'windows' }}]=]
-    4 "Windows platform conditions")
+    5 "Windows platform conditions")
 
 forbid_text("${shared_action}" "upload-artifact" "artifact upload")
 forbid_regex("${shared_action}" "ctest[^\n]*[ \t]-R([ \t=]|\n|$)" "CTest -R filtering")

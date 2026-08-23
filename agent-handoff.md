@@ -8,6 +8,15 @@ dependence on a mutable runner-image Python default after a Windows-only Python
 sidecar failure; the source/protocol behavior stays unchanged. The next action
 is to inspect the hosted Windows result on the exact workflow head.
 
+## Windows Debug mixed-mode fixture and agent-channel protocol
+
+The Windows mixed-mode DECLARE fixture now explicitly adds `/RTC-` in Debug
+configuration, preventing MSVC `D8016` from combining `/RTC1` with `/clr`.
+The live agent channel now uses immutable UUID-addressed message files through
+`scripts/agent_channel.py`; `log.jsonl` is historic only and local cursors are
+ignored by Git. Focused contract tests cover both guarantees. The next action
+is to obtain the hosted Windows Debug confirmation for the fixture change.
+
 ## V1 report layout-object LEFT preview-bounds test module
 
 The bounded #2564 structural slice moves the report/label layout-object LEFT

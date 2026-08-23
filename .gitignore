@@ -34,6 +34,7 @@
 # Local unattended agent-channel monitor state — never shared, never committed.
 /.agent-channel/.claude-monitor.local.log
 /.agent-channel/.stop-claude-monitor
+/.agent-channel/cursors/
 
 # Personal Claude Code permission overrides — not shared repo policy.
 /.claude/settings.local.json

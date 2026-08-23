@@ -411,6 +411,13 @@ add_test(
 )
 
 add_test(
+    NAME test_agent_channel_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_agent_channel_contract_check.cmake
+)
+
+add_test(
     NAME test_windows_installer_lifecycle_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
@@ -5382,6 +5389,7 @@ if(WIN32)
         target_compile_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE
             /guard:cf-
             /clr
+            "$<$<CONFIG:Debug>:/RTC->"
         )
         target_link_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE /GUARD:NO)
     endif()

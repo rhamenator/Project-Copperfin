@@ -654,6 +654,7 @@ function(copperfin_configure_native_test_isolation)
             test_native_platform_workflow_contract
             test_windows_installer_lifecycle_contract
             test_windows_msvc_cache_workflow_contract
+            test_agent_channel_contract
             test_native_test_isolation_contract
             test_launcher_trust_provisioning_contract
             test_package_launcher_inventory_trust
