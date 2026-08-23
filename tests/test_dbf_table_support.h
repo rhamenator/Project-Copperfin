@@ -17,5 +17,7 @@ void test_general_and_picture_memo_fields_round_trip();
 void test_memo_payload_that_decodes_empty_stays_empty();
 void test_pack_memo_preserves_payloads_that_decode_empty();
 void test_pack_memo_preserves_binary_picture_payloads();
+void test_pack_memo_fails_when_referenced_payload_cannot_be_recovered();
+void test_additive_memo_replace_preserves_raw_payload_and_fails_closed();
 
 }  // namespace copperfin::test_dbf_table

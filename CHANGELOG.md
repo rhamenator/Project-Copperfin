@@ -9446,8 +9446,9 @@ passes `1/1`.
   rendered status and issue links remain in their defined table columns; its
    existing hazard constraints now remain with the verification boundary.
 
-- 2026-08-23: Continued #2564 test-module refactoring by moving the DBF
-  empty-decoding raw memo-payload and binary picture `PACK MEMO` preservation
-  regressions into `test_dbf_table_raw_memo_payloads.cpp`. The existing
+- 2026-08-23: Continued #2564 test-module refactoring by moving DBF
+  corrupt-sidecar `PACK MEMO` and additive-replacement fail-closed integrity
+  regressions into `test_dbf_table_memo_integrity.cpp`, following the prior
+  raw-payload preservation extraction. The existing
   `test_dbf_table` executable, invocation order, byte-level assertions, and
    DBF behavior remain unchanged.
