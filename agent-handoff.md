@@ -25,6 +25,21 @@ affected portable CTests (`test_studio_host_detail_header_footer_section_geometr
 `test_studio_host_detail_header_footer_section_preview_bounds`) pass 3/3.
 Protected cross-platform validation remains required before merge.
 
+## V1 report layout-object TOP preview-bounds test module
+
+The bounded #2564 structural slice moves the report/label layout-object TOP
+preview-bounds update/clear regressions into
+test_studio_host_json_geometry_preview_object_tops.cpp. Existing runner
+membership, declarations, invocation order, fixtures, assertions, and Studio
+behavior remain unchanged. The extracted module remains under the existing
+height/top preview runner's compile guard. A focused build and CTest must pass
+before protected validation.
+
+Evidence: the extracted bodies match the v1-development source byte-for-byte;
+the focused Debug build and
+`test_studio_host_report_height_top_preview_bounds` CTest passed 1/1 on
+2026-08-23.
+
 ## V1 Studio detail layout-action test modules
 
 The bounded #2564 structural slices moved the report/label detail-header/footer
