@@ -992,6 +992,12 @@ void test_studio_host_json_clears_report_layout_object_width_preview_bounds_by_s
     }
 }
 
+#endif
+
+#if !defined(COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_SKIP_HOST_SMOKE) && \
+    !defined(COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_ONLY) && \
+    !defined(COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_PREVIEW_BOUNDS_ONLY)
+
 
 void test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_record_selection(
     const std::string& studio_host_path) {
