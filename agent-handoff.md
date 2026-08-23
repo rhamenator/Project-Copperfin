@@ -1,17 +1,19 @@
 # Agent Handoff
 
-## V1 Studio detail distribution test module
+## V1 Studio detail alignment test module
 
-The bounded #2564 structural slice moved the four focused report/label
-detail-header/footer stable-selection distribution regressions into
-`test_studio_host_json_objects_dhf_distribution.cpp`, retaining the existing
-layout-actions executable, fixtures, declarations, invocation order, and Studio
-behavior. PR #5137 merged as `c86edbad58f02f8f056033b3983503c46e0476f9`
-after independent review and DCO, Socket, GCC/Clang, Windows Win32/x64 DECLARE,
-Windows environment and generated-launcher, and GitHub-hosted macOS/Ubuntu
-validation passed. The next #2564 candidate is the paired live/deleted
-detail-header/footer nudge regression group; preserve the existing focused
-layout-actions executable and its report/label coverage.
+The bounded #2564 structural slices moved the report/label detail-header/footer
+stable-selection distribution, nudge, snap, and alignment regressions into
+their cohesive `test_studio_host_json_objects_dhf_{distribution,nudge,snap,align}.cpp`
+modules,
+retaining the existing layout-actions executable, fixtures, declarations,
+invocation order, and Studio behavior. PR #5139 merged as
+`c7875b3e004522fcede215d7468af5e81242cac2` after independent review and DCO,
+Socket, GCC/Clang, Windows Win32/x64 DECLARE, Windows environment and
+generated-launcher, and GitHub-hosted macOS/Ubuntu validation passed. The next
+#2564 candidate is the paired live/deleted detail-header/footer resize
+regression group; preserve the existing focused layout-actions executable and
+its report/label coverage.
 
 ## V1 table-buffer negative RECNO identity
 

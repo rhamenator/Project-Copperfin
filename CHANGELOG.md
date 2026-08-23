@@ -1,4 +1,10 @@
 - 2026-08-23: Continued #2564 test-module refactoring by moving the paired
+  report/label detail-header/footer stable-selection alignment regressions into
+  `test_studio_host_json_objects_dhf_align.cpp`. The existing layout-actions
+  executable, invocation order, assertions, and Studio behavior remain
+  unchanged.
+
+- 2026-08-23: Continued #2564 test-module refactoring by moving the paired
   report/label detail-header/footer stable-selection snap regressions into
   `test_studio_host_json_objects_dhf_snap.cpp`. The existing layout-actions
   executable, invocation order, assertions, and Studio behavior remain
