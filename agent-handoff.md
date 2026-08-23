@@ -1,19 +1,17 @@
 # Agent Handoff
 
-## V1 Studio bottom-margin test module
+## V1 Studio detail distribution test module
 
 The bounded #2564 structural slice moved the four focused report/label
-stable-selection bottom-margin regressions into
-`test_studio_host_json_settings_bottom_margin.cpp`, retaining the existing
-report-page-setup executable, fixtures, declarations, invocation order, and
-Studio behavior. PR #5135 merged as `97cb833f1249b97bfff1b350f653d63d2e9c8d59`
-after the exact rebased head `92a0a61e8eeaace18aa5808df0ee2b5af7753bee`
-passed DCO, Socket, GCC/Clang, Windows Win32/x64 DECLARE, Windows environment
-and generated-launcher, and GitHub-hosted macOS/Ubuntu validation. An initial
-Windows parser crash was not reproduced: the exact-head environment-path rerun
-passed. The next #2564 candidate is the cohesive detail-header/footer object
-distribution regression group; preserve the existing focused layout-actions
-executable and its report/label, live/deleted coverage.
+detail-header/footer stable-selection distribution regressions into
+`test_studio_host_json_objects_dhf_distribution.cpp`, retaining the existing
+layout-actions executable, fixtures, declarations, invocation order, and Studio
+behavior. PR #5137 merged as `c86edbad58f02f8f056033b3983503c46e0476f9`
+after independent review and DCO, Socket, GCC/Clang, Windows Win32/x64 DECLARE,
+Windows environment and generated-launcher, and GitHub-hosted macOS/Ubuntu
+validation passed. The next #2564 candidate is the paired live/deleted
+detail-header/footer nudge regression group; preserve the existing focused
+layout-actions executable and its report/label coverage.
 
 ## V1 table-buffer negative RECNO identity
 
