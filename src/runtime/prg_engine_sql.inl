@@ -1384,7 +1384,9 @@
             const std::string &prog_id,
             const std::string &source,
             const std::vector<PrgValue> &constructor_arguments = {},
-            const std::vector<std::optional<std::string>> &constructor_argument_references = {})
+            const std::vector<std::optional<std::string>> &constructor_argument_references = {},
+            const std::string &activation_computer_name = {},
+            const std::string &requested_interface_id = {})
         {
             const std::string normalized_source = normalize_identifier(source);
             if (normalized_source == "createobject" || normalized_source == "newobject")
@@ -1490,10 +1492,18 @@
                     {{"className", prog_id}, {"classLibraryPath", source}}));
             }
 
-            return register_ole_object(prog_id, source);
+            return register_ole_object(
+                prog_id,
+                source,
+                activation_computer_name,
+                requested_interface_id);
         }
 
-        int register_ole_object(const std::string &prog_id, const std::string &source)
+        int register_ole_object(
+            const std::string &prog_id,
+            const std::string &source,
+            const std::string &activation_computer_name = {},
+            const std::string &requested_interface_id = {})
         {
             const std::string normalized_prog_id = normalize_identifier(prog_id);
             const bool getobject_attach = source == "getobject" || source.rfind("getobject:", 0U) == 0U;
@@ -1522,6 +1532,8 @@
                 .handle = handle,
                 .prog_id = prog_id,
                 .source = getobject_attach ? (attach_source.empty() ? source : attach_source) : source,
+                .activation_computer_name = activation_computer_name,
+                .requested_interface_id = requested_interface_id,
                 .last_action = getobject_attach ? "getobject" : source,
                 .action_count = 1};
 

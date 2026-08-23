@@ -29,6 +29,7 @@ int main()
     test_cursor_xml_invalid_input_runtime_surface_functions();
     test_cursor_xml_numeric_metadata_fails_closed();
     test_cursor_xml_cardinality_mismatch_preserves_destinations();
+    test_createobjectex_preserves_com_only_activation_metadata();
     test_newobject_getpem_setpem_compobj_functions();
     test_external_prg_setproject_method_invocation();
     test_typed_local_newobject_method_invocation_uses_local_storage();

@@ -1754,9 +1754,18 @@ namespace copperfin::runtime
                 const std::string &prog_id,
                 const std::string &source,
                 const std::vector<PrgValue> &constructor_arguments,
-                const std::vector<std::optional<std::string>> &constructor_argument_references)
+                const std::vector<std::optional<std::string>> &constructor_argument_references,
+                const std::string &activation_computer_name,
+                const std::string &requested_interface_id)
             {
-                return register_ole_object(frame, prog_id, source, constructor_arguments, constructor_argument_references);
+                return register_ole_object(
+                    frame,
+                    prog_id,
+                    source,
+                    constructor_arguments,
+                    constructor_argument_references,
+                    activation_computer_name,
+                    requested_interface_id);
             },
             [this, &frame](
                 const std::string &base_name,
