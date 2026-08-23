@@ -5,6 +5,7 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
+#if !defined(COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS)
 #if !defined(COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_ONLY) && \
     !defined(COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_ONLY) && \
     !defined(COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_PREVIEW_BOUNDS_SKIP_HOST_SMOKE)
@@ -627,6 +628,7 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 #endif
 
 }  // namespace cf_test_studio_host_json
