@@ -2431,6 +2431,16 @@ void test_build_database_json_import_plan_validates_without_mutation() {
     expect(!invalid_field.ok && invalid_field.error_code == "database_json_import.invalid_field",
            "database JSON planning should reject a field that cannot be represented by a DBF descriptor");
 
+    const auto unsupported_storage = copperfin::vfp::build_database_json_import_plan(
+        R"({"schema_version":1,"database":{"path":"x","name":"n"},"catalog":[],"tables":{"People":{"fields":[{"name":"ID","type":"!","length":1,"decimals":0}],"records":[]}}})");
+    expect(!unsupported_storage.ok && unsupported_storage.error_code == "database_json_import.invalid_field",
+           "database JSON planning should reject field storage types unsupported by the DBF writer");
+
+    const auto invalid_fixed_width = copperfin::vfp::build_database_json_import_plan(
+        R"({"schema_version":1,"database":{"path":"x","name":"n"},"catalog":[],"tables":{"People":{"fields":[{"name":"ID","type":"B","length":1,"decimals":0}],"records":[]}}})");
+    expect(!invalid_fixed_width.ok && invalid_fixed_width.error_code == "database_json_import.invalid_field",
+           "database JSON planning should reject field widths the DBF writer cannot create");
+
     const std::string overflow_decimal_document =
         R"({"schema_version":1,"database":{"path":"x","name":"n"},"catalog":[],"tables":{"People":{"fields":[{"name":"ID","type":"N","length":1,"decimals":)" +
         std::string(1024U, '9') +

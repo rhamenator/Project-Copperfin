@@ -2,7 +2,8 @@
   primitive. It accepts only the version-1 DBC export envelope, validates and
   deterministically models database/table field metadata, and retains catalog
   and row payloads as inert JSON. It parses a bounded document once, rejects
-  malformed schemas, integer-wraparound field values, and cross-platform name
+  malformed schemas, integer-wraparound field values, DBF-writer-incompatible
+  field layouts, and cross-platform name
   collisions, and retains the exporter\'s empty-field marker as an inert
   no-schema table plan. It opens no target path and creates, overwrites, or
   mutates no database asset; `IMPORT DATABASE`, reconstruction, transactions,

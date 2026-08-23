@@ -1905,12 +1905,16 @@ DatabaseJsonImportPlanResult build_database_json_import_plan(const std::string_v
                 !parse_decimal_in_range(field_decimals.raw_json, 0U, length, decimals)) {
                 return failure("database_json_import.invalid_field");
             }
-            table_plan.fields.push_back({
+            const DbfFieldDescriptor descriptor{
                 .name = field_name.decoded_string,
                 .type = field_type.decoded_string.front(),
                 .offset = 0U,
                 .length = static_cast<std::uint8_t>(length),
-                .decimal_count = static_cast<std::uint8_t>(decimals)});
+                .decimal_count = static_cast<std::uint8_t>(decimals)};
+            if (!is_dbf_table_field_storage_layout_writable(descriptor.type, descriptor.length)) {
+                return failure("database_json_import.invalid_field");
+            }
+            table_plan.fields.push_back(descriptor);
         }
         plan.tables.push_back(std::move(table_plan));
     }

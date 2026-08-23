@@ -213,7 +213,8 @@ it as authority to create, replace, or modify a database file.
 The native `build_database_json_import_plan()` API is the bounded first import
 planning step. It admits only the exact version-1 envelope, validates the
 database/catalog/table/field structure within the existing JSON parser limits,
-rejects case-folded table and field-name collisions, retains catalog and row
+rejects case-folded table and field-name collisions and field descriptors the
+ordinary DBF writer cannot admit, retains catalog and row
 payloads as inert JSON, and returns a deterministic in-memory table plan. It
 parses the bounded source once for those repeated selections, rejects
 out-of-range field numbers without integer wraparound, and preserves the

@@ -1255,6 +1255,28 @@ DecodedDbfValue decode_value(
 
 }  // namespace
 
+bool is_dbf_table_field_storage_layout_writable(char type, std::uint8_t length) {
+    if (!supports_table_field_storage(type)) {
+        return false;
+    }
+    if (is_memo_pointer_field(type)) {
+        return length >= 4U;
+    }
+    if (type == 'V' || type == 'Q') {
+        return length >= 2U;
+    }
+    if (type == 'B') {
+        return length == 8U;
+    }
+    if (type == 'I') {
+        return length == 4U;
+    }
+    if (type == 'Y' || type == 'T') {
+        return length == 8U;
+    }
+    return true;
+}
+
 std::vector<std::uint8_t> read_memo_block_raw(const std::string& sidecar_path, std::uint32_t block_number) {
     if (sidecar_path.empty() || block_number == 0U) {
         return {};
@@ -1640,27 +1662,34 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
             overrides != nullptr && overrides->preserved_raw_fields != nullptr &&
             field_index < overrides->preserved_raw_fields->size() &&
             (*overrides->preserved_raw_fields)[field_index];
-        if (!supports_table_field_storage(field.type) && !preserves_opaque_field) {
-            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateUnsupportedFieldType")};
-        }
-        if (is_memo_pointer_field(field.type)) {
-            if (field.length < 4U) {
+        const bool writable_storage_layout =
+            is_dbf_table_field_storage_layout_writable(field.type, field.length);
+        if (!writable_storage_layout &&
+            !(preserves_opaque_field && !supports_table_field_storage(field.type))) {
+            if (!supports_table_field_storage(field.type)) {
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateUnsupportedFieldType")};
+            }
+            if (is_memo_pointer_field(field.type)) {
                 return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.MemoFieldWidthTooSmall")};
             }
-            has_memo_fields = true;
-        } else if ((field.type == 'V' || field.type == 'Q') && field.length < 2U) {
-            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.VqFieldWidthTooSmall")};
-        } else if (field.type == 'B' && field.length != 8U) {
-            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DoubleFieldWidthInvalid")};
-        } else if (field.type == 'I' && field.length != 4U) {
-            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.IntegerFieldWidthInvalid")};
-        } else if ((field.type == 'Y' || field.type == 'T') && field.length != 8U) {
+            if (field.type == 'V' || field.type == 'Q') {
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.VqFieldWidthTooSmall")};
+            }
+            if (field.type == 'B') {
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DoubleFieldWidthInvalid")};
+            }
+            if (field.type == 'I') {
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.IntegerFieldWidthInvalid")};
+            }
             return {
                 .ok = false,
                 .error = dbf_table_text(
                     "Vfp.DbfTable.Error.EightByteFieldWidthInvalid",
                     {{"fieldType", std::string(1U, field.type)}})
             };
+        }
+        if (is_memo_pointer_field(field.type)) {
+            has_memo_fields = true;
         }
 
         raw_fields.push_back({
