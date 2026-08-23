@@ -2,6 +2,70 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_createobjectex_preserves_com_only_activation_metadata()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_createobjectex_runtime_surface";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "createobjectex_runtime_surface.prg";
+        write_text(
+            main_path,
+            "oLocal = CREATEOBJECTEX('Scripting.Dictionary', '', '')\n"
+            "oRemote = CREATEOBJECTE('Scripting.Dictionary', 'server-a', '{000208D5-0000-0000-C000-000000000046}')\n"
+            "oNative = CREATEOBJECTEX('NativeOnly', 'server-b')\n"
+            "RETURN\n"
+            "DEFINE CLASS NativeOnly AS Custom\n"
+            "    Caption = 'must-not-materialize'\n"
+            "ENDDEFINE\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("CREATEOBJECTEX runtime-surface script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        expect(state.ole_objects.size() == 3U,
+               "CREATEOBJECTEX calls should register virtual COM object references");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &local = state.ole_objects[0];
+            const auto &remote = state.ole_objects[1];
+            const auto &native_named = state.ole_objects[2];
+            expect(local.prog_id == "Scripting.Dictionary" &&
+                       local.source == "createobjectex" &&
+                       local.activation_computer_name.empty() &&
+                       local.requested_interface_id.empty(),
+                   "CREATEOBJECTEX local activation should preserve empty remote and IID metadata");
+            expect(remote.prog_id == "Scripting.Dictionary" &&
+                       remote.source == "createobjectex" &&
+                       remote.activation_computer_name == "server-a" &&
+                       remote.requested_interface_id == "{000208D5-0000-0000-C000-000000000046}",
+                   "CREATEOBJECTEX abbreviation should preserve remote target and requested IID metadata");
+            expect(native_named.prog_id == "NativeOnly" &&
+                       native_named.source == "createobjectex" &&
+                       native_named.activation_computer_name == "server-b" &&
+                       native_named.base_class_name.empty() &&
+                       native_named.class_hierarchy.empty(),
+                   "CREATEOBJECTEX must not materialize an in-scope native PRG class");
+        }
+
+        const auto createobjectex_events = std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "ole.createobjectex";
+            });
+        expect(createobjectex_events == 3,
+               "CREATEOBJECTEX calls should record deterministic virtual-COM activation events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_cursor_xml_numeric_metadata_fails_closed()
     {
         namespace fs = std::filesystem;

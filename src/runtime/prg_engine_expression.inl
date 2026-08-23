@@ -147,7 +147,13 @@
                 std::function<int(int, const std::string &, const std::string &, const std::string &)> sql_columns_callback,
                 std::function<PrgValue(int, const std::string &)> sql_get_prop_callback,
                 std::function<int(int, const std::string &, const PrgValue &)> sql_set_prop_callback,
-                std::function<int(const std::string &, const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> register_ole_callback,
+                std::function<int(
+                    const std::string &,
+                    const std::string &,
+                    const std::vector<PrgValue> &,
+                    const std::vector<std::optional<std::string>> &,
+                    const std::string &,
+                    const std::string &)> register_ole_callback,
                 std::function<PrgValue(const std::string &, const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> ole_invoke_callback,
                 std::function<PrgValue(const std::string &)> ole_property_callback,
                 std::function<PrgValue(const std::string &)> eval_expression_callback,
@@ -1407,6 +1413,27 @@
                     }
                     return callfn_callback_(handle, call_arguments);
                 }
+                if ((function == "createobjectex" || function == "createobjecte") && arguments.size() >= 2U)
+                {
+                    const std::string prog_id = value_as_string(arguments[0]);
+                    const std::string computer_name = value_as_string(arguments[1]);
+                    const std::string interface_id = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
+                    const int handle = register_ole_callback_(
+                        prog_id,
+                        "createobjectex",
+                        {},
+                        {},
+                        computer_name,
+                        interface_id);
+                    if (handle == 0)
+                    {
+                        return make_null_value();
+                    }
+                    record_event_callback_(
+                        "ole.createobjectex",
+                        prog_id + "@" + computer_name + ":" + interface_id);
+                    return make_string_value("object:" + prog_id + "#" + std::to_string(handle));
+                }
                 if ((function == "createobject" || function == "createobj") && !arguments.empty())
                 {
                     const std::string prog_id = value_as_string(arguments[0]);
@@ -1422,7 +1449,13 @@
                     {
                         create_argument_references.push_back(argument_references[index]);
                     }
-                    const int handle = register_ole_callback_(prog_id, "createobject", create_arguments, create_argument_references);
+                    const int handle = register_ole_callback_(
+                        prog_id,
+                        "createobject",
+                        create_arguments,
+                        create_argument_references,
+                        {},
+                        {});
                     if (handle == 0)
                     {
                         return make_null_value();
@@ -1501,7 +1534,13 @@
                     {
                         source += "@" + server;
                     }
-                    const int handle = register_ole_callback_(class_name, source, constructor_arguments, constructor_argument_references);
+                    const int handle = register_ole_callback_(
+                        class_name,
+                        source,
+                        constructor_arguments,
+                        constructor_argument_references,
+                        {},
+                        {});
                     std::string detail = class_name;
                     if (!library.empty())
                     {
@@ -1526,7 +1565,7 @@
                     const std::string class_name = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
                     const std::string resolved_prog_id = trim_copy(class_name).empty() ? source : class_name;
                     const std::string source_tag = trim_copy(source).empty() ? "getobject" : "getobject:" + source;
-                    const int handle = register_ole_callback_(resolved_prog_id, source_tag, {}, {});
+                    const int handle = register_ole_callback_(resolved_prog_id, source_tag, {}, {}, {}, {});
                     record_event_callback_(
                         "ole.getobject",
                         trim_copy(class_name).empty() ? source : source + " -> " + class_name);
@@ -3656,7 +3695,13 @@
             std::function<int(int, const std::string &, const std::string &, const std::string &)> sql_columns_callback_;
             std::function<PrgValue(int, const std::string &)> sql_get_prop_callback_;
             std::function<int(int, const std::string &, const PrgValue &)> sql_set_prop_callback_;
-            std::function<int(const std::string &, const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> register_ole_callback_;
+            std::function<int(
+                const std::string &,
+                const std::string &,
+                const std::vector<PrgValue> &,
+                const std::vector<std::optional<std::string>> &,
+                const std::string &,
+                const std::string &)> register_ole_callback_;
             std::function<PrgValue(const std::string &, const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> ole_invoke_callback_;
             std::function<PrgValue(const std::string &)> ole_property_callback_;
             std::function<PrgValue(const std::string &)> eval_expression_callback_;

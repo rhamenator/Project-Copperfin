@@ -63,6 +63,7 @@ namespace copperfin::runtime_surface_tests
     void test_cursor_xml_invalid_input_runtime_surface_functions();
     void test_cursor_xml_numeric_metadata_fails_closed();
     void test_cursor_xml_cardinality_mismatch_preserves_destinations();
+    void test_createobjectex_preserves_com_only_activation_metadata();
     void test_newobject_getpem_setpem_compobj_functions();
     void test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     void test_native_prg_class_dimension_properties_are_per_instance_arrays();

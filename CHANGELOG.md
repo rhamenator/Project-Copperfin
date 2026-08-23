@@ -13,6 +13,11 @@
   test_studio_host_json_geometry_preview_object_tops.cpp. The existing
   runner, invocation order, assertions, and Studio behavior remain unchanged.
 
+- 2026-08-23: Recovered the VFP9 `CREATEOBJECTEX()` expression surface from
+  mounted shipped help. Copperfin now preserves its COM-only class/ProgID,
+  remote-computer, and optional-IID inputs in opaque virtual-COM provenance,
+  without network, registry, platform-COM, or native-PRG-class activation.
+
 - 2026-08-23: Completed this detail-header/footer #2564 test-module family by
   moving the paired report/label stable-selection resize regressions into
   `test_studio_host_json_objects_dhf_resize.cpp` and retiring the now-empty

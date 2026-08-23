@@ -150,6 +150,8 @@ struct RuntimeOleObjectState {
     int handle = 0;
     std::string prog_id{};
     std::string source{};
+    std::string activation_computer_name{};
+    std::string requested_interface_id{};
     std::string last_action{};
     int action_count = 0;
     bool hidden_runtime_surface = false;

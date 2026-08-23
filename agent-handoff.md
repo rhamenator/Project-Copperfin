@@ -40,6 +40,19 @@ the focused Debug build and
 `test_studio_host_report_height_top_preview_bounds` CTest passed 1/1 on
 2026-08-23.
 
+## V1 CREATEOBJECTEX runtime surface
+
+The #5145 native-runtime slice recovers VFP9 `CREATEOBJECTEX()` from mounted
+shipped help. The full spelling and documented 13-character abbreviation create
+an opaque virtual-COM reference whose structured provenance retains the
+requested class/ProgID, computer name, and optional IID. It deliberately never
+materializes a native PRG class and performs no remote activation, networking,
+registry lookup, or platform COM call. `LLR-VFP-COM-001` records the permitted
+help evidence, implementation/test mapping, and the explicit limitation. A
+fresh Debug `test_prg_engine_runtime_surface_functions` CTest passes 1/1;
+protected Windows/macOS/Linux validation remains required before release
+evidence.
+
 ## V1 Studio detail layout-action test modules
 
 The bounded #2564 structural slices moved the report/label detail-header/footer
