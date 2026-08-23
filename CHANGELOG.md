@@ -42,6 +42,11 @@
   memo and G/P create/replace/append lifecycle regressions into
   `test_dbf_table_memo_lifecycle.cpp`. The existing `test_dbf_table`
    executable, invocation order, assertions, and DBF behavior remain unchanged.
+- 2026-08-23: Continued #2564 test-module refactoring by moving detail-header/
+  footer section deleted-state and delete/restore preview-bounds regressions
+  into `test_studio_host_json_geometry_preview_section_lifecycle.cpp`. The
+  existing runner, invocation order, assertions, and Studio behavior remain
+ unchanged.
 
 - 2026-08-23: Continued #2564 test-module refactoring by moving report/label
   layout-object LEFT preview-bounds regressions into
