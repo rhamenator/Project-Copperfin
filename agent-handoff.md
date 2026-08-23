@@ -7,8 +7,11 @@ append identity rule: pending local mode-4/mode-5 appends expose sequential
 negative `RECNO()` values and `GO -n` returns to the matching pending row.
 Copperfin deliberately retains positive internal positions for DBF mutation,
 locking, verified-byte admission, commit, and rollback. The focused Release
-`test_prg_engine_runtime_surface_functions` CTest passes `1/1`; next action is
-to commit, open a v1-only PR, and obtain protected cross-platform validation.
+`test_prg_engine_runtime_surface_functions_buffering` CTest and companion
+`test_dbf_table` / `test_prg_engine_verified_dbf_security` CTests pass `3/3`.
+The buffering regression deterministically fails the second append after the
+first materializes and proves `GO -1`/`GO -2` retain their stable public
+identities. The v1-only PR is awaiting protected cross-platform validation.
 
 ## V1 normalized control-flow diagnostics test module
 

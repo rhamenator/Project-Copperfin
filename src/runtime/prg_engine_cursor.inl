@@ -1338,23 +1338,30 @@
             // positions positive so mutation, admission, and rollback paths
             // never treat a public negative identity as a physical record
             // index. Translate the public identity only at navigation.
+            bool pending_append_target = false;
             if (target_recno < 0 && (cursor.buffering_mode == 4 || cursor.buffering_mode == 5) &&
                 target_recno != std::numeric_limits<long long>::min())
             {
-                const std::size_t appended_count = cursor.buffered_appended_records.size();
                 const std::size_t requested_append = static_cast<std::size_t>(-target_recno);
-                const std::size_t persisted_count = cursor.record_count >= appended_count
-                    ? cursor.record_count - appended_count
-                    : 0U;
-                if (requested_append >= 1U && requested_append <= appended_count &&
-                    requested_append <= std::numeric_limits<std::size_t>::max() - persisted_count)
+                if (requested_append >= 1U &&
+                    requested_append <= cursor.buffered_appended_records.size())
                 {
-                    const std::size_t internal_recno = persisted_count + requested_append;
-                    if (cursor.buffered_appended_records.contains(internal_recno))
-                    {
-                        target_recno = static_cast<long long>(internal_recno);
-                    }
+                    auto appended_record = cursor.buffered_appended_records.begin();
+                    std::advance(appended_record, static_cast<std::ptrdiff_t>(requested_append - 1U));
+                    target_recno = static_cast<long long>(*appended_record);
+                    pending_append_target = true;
                 }
+            }
+            if (pending_append_target)
+            {
+                // A later append can remain pending beyond the physical
+                // count after TABLEUPDATE() materialized an earlier append
+                // and then failed.  Its public negative navigation must not
+                // be converted to EOF merely because that count is stale.
+                cursor.recno = static_cast<std::size_t>(target_recno);
+                cursor.bof = false;
+                cursor.eof = false;
+                return true;
             }
             if (cursor.record_count == 0U)
             {

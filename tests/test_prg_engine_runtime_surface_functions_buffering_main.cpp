@@ -24,6 +24,7 @@ int main()
     test_local_optimistic_table_buffering();
     test_local_optimistic_table_buffering_append_lifecycle();
     test_table_buffer_appends_use_negative_recno_identity();
+    test_table_buffer_append_identity_survives_partial_update_failure();
     test_local_optimistic_table_buffering_delete_recall();
     test_local_pessimistic_table_buffering();
     test_local_optimistic_buffer_conflicts();

@@ -1555,14 +1555,15 @@ namespace copperfin::runtime
                 if ((cursor->buffering_mode == 4 || cursor->buffering_mode == 5) &&
                     cursor->buffered_appended_records.contains(cursor->recno))
                 {
-                    const std::size_t appended_count = cursor->buffered_appended_records.size();
-                    const std::size_t persisted_count = cursor->record_count >= appended_count
-                        ? cursor->record_count - appended_count
-                        : 0U;
-                    if (cursor->recno > persisted_count)
-                    {
-                        return -static_cast<long long>(cursor->recno - persisted_count);
-                    }
+                    // The physical count can advance when TABLEUPDATE() has
+                    // committed an earlier append before a later append
+                    // fails.  A public pending-record identity is instead
+                    // the stable ordinal of its internal record number in
+                    // this ordered pending set.
+                    const auto appended_record = cursor->buffered_appended_records.find(cursor->recno);
+                    const auto ordinal = static_cast<long long>(
+                        std::distance(cursor->buffered_appended_records.begin(), appended_record) + 1);
+                    return -ordinal;
                 }
 
                 return static_cast<long long>(cursor->recno);

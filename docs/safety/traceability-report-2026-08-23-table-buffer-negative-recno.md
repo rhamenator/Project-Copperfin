@@ -12,6 +12,12 @@ and Delete Records in Table Buffers).
 4 and 5 shall have sequential public negative `RECNO()` identities, and
 `GO -n` shall select the corresponding pending append.
 
+`DQ-prg-table-buffer-recno-004`: the negative identity and navigation target
+of a pending append shall remain its stable append ordinal if an earlier
+append has reached the physical table before a later `TABLEUPDATE()` write or
+verified-byte-admission operation fails.  The mutable physical record count
+shall not be used to reconstruct that public ordinal.
+
 `DQ-prg-table-buffer-recno-002`: a public negative identity shall never be
 used as a DBF physical record index. Commit, locking, verified-byte admission,
 rollback, and staged mutation shall continue to use Copperfin-owned positive
@@ -40,8 +46,11 @@ prior documented boundary.
 `test_prg_engine_runtime_surface_functions_buffering`. It covers two pending
 appends, negative identity sequencing, `GO -1`/`GO -2` round trips, commit to
 positive physical rows, and full revert in both pessimistic and optimistic
-table-buffer modes. It uses test-owned local files only; no network,
-subprocess, environment, or sample dependency is introduced.
+table-buffer modes. It additionally uses the existing test-only staged-write
+fault seam to fail the second append after the first has materialized, proving
+that both negative identities and navigation stay stable across the partial
+batch. It uses test-owned local files only; no network, subprocess, or sample
+dependency is introduced.
 
 This is development-assurance evidence, not a claim of formal DO-178C
 compliance, certification, complete VFP buffering parity, or remote-cursor

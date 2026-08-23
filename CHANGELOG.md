@@ -3,7 +3,10 @@
   support `GO -n` navigation. Copperfin retains internal positive DBF-oriented
   positions for mutation, locking, verified-byte admission, commit, and
   rollback; `TABLEUPDATE()` materializes ordinary positive records and
-  `TABLEREVERT(.T.)` removes pending rows. This is local table buffering only.
+  `TABLEREVERT(.T.)` removes pending rows. A deterministic staged-write
+  regression also proves that the append ordinals and negative navigation stay
+  stable when the first row materializes before a later append fails. This is
+  local table buffering only.
 
 - 2026-08-23: Added repository steering-continuity guidance: new owner
   direction is additive unless it explicitly and unambiguously replaces or
