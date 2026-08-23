@@ -126,6 +126,22 @@ execution, write fidelity, binary output, or VFP9-support expansion is claimed.
 Fresh Release targeted `test_localization`, `test_vfp_assets`, and
 `test_dbf_header_robustness` pass 3/3; next action is protected-check completion.
 
+## V1 RC7 exact-tag private-evaluation evidence
+
+Immutable signed tag `v0.1.0-rc.7` at `9bd0658d2556e6d572aabf0691d36e69eda7fbfd`
+passed exact-tag assembly run `32596258752`. Native Windows/macOS/Linux,
+security/SBOM, Windows/macOS/Linux installer construction, Windows NSIS
+lifecycle, Windows VSIX lifecycle, Linux managed UI smoke, and bundle assembly
+all passed. Evaluation bundle artifact `9482413735` was downloaded locally and
+every `SHA256SUMS.txt` entry verified against its contained payload. It remains
+private evaluation, not an official release: its manifest retains Windows
+launcher release trust `NOT_RUN`; unsupported Authenticode, macOS Developer ID
+and notarization, Linux package-repository signing, and VSIX signing; Spanish
+and Portuguese linguistic review `NOT_RUN`; real-installed-VFP9 samples
+`NOT_RUN`; Linux/macOS installer lifecycle `NOT_RUN`; Windows prior-version
+upgrade `NOT_RUN`; and VSIX disablement, same-version reinstall, and
+prior-version upgrade `NOT_RUN`.
+
 ## V1 RC6 exact-tag private-evaluation evidence
 
 Immutable tag `v0.1.0-rc.6` at `1208ebbd7babf65fcb8f46ada0b1316289328a6e`
