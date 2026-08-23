@@ -3,6 +3,11 @@
   `test_studio_host_json_geometry_preview_object_lefts.cpp`. The existing
   runner, invocation order, assertions, and Studio behavior remain unchanged.
 
+- 2026-08-23: Continued #2564 test-module refactoring by moving visual-object
+  action-lifecycle regressions into
+  `test_studio_host_json_object_actions.cpp`. The existing focused runner,
+  invocation order, assertions, and Studio behavior remain unchanged.
+
 - 2026-08-23: Continued #2564 test-module refactoring by moving paired
   detail-header/footer section-top regressions into
   `test_studio_host_json_sections_dhf_tops.cpp`. The existing geometry

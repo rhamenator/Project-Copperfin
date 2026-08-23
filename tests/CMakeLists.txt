@@ -899,6 +899,7 @@ add_test(
 add_executable(test_studio_host_object_action_lifecycle
     test_studio_host_object_action_lifecycle.cpp
     test_studio_host_json_object_lifecycle.cpp
+    test_studio_host_json_object_actions.cpp
     test_studio_host_json_shared_test_helpers.cpp
 )
 target_link_libraries(test_studio_host_object_action_lifecycle PRIVATE cf_vfp_assets)
