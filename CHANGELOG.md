@@ -1,3 +1,9 @@
+- 2026-08-23: Continued #2564 test-module refactoring by moving the four
+  focused report/label stable-selection bottom-margin regressions into
+  `test_studio_host_json_settings_bottom_margin.cpp`. The existing
+  report-page-setup executable, invocation order, assertions, and Studio
+  behavior remain unchanged.
+
 - 2026-08-23: Recovered VFP9 table-buffer append identity semantics: pending
   local mode-4/mode-5 rows now expose sequential negative `RECNO()` values and
   support `GO -n` navigation. Copperfin retains internal positive DBF-oriented
