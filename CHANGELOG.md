@@ -1,4 +1,10 @@
 - 2026-08-23: Continued #2564 test-module refactoring by moving the four
+  focused report/label detail-header/footer stable-selection distribution
+  regressions into `test_studio_host_json_objects_dhf_distribution.cpp`. The
+  existing layout-actions executable, invocation order, assertions, and Studio
+  behavior remain unchanged.
+
+- 2026-08-23: Continued #2564 test-module refactoring by moving the four
   focused report/label stable-selection bottom-margin regressions into
   `test_studio_host_json_settings_bottom_margin.cpp`. The existing
   report-page-setup executable, invocation order, assertions, and Studio
