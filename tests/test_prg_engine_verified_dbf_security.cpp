@@ -950,8 +950,8 @@ void test_buffered_append_blank_reads_verified_dbf_rows()
            "strict buffered APPEND BLANK should enable table buffering");
     expect(global_text(state, "nrows") == "3",
            "strict buffered APPEND BLANK should count the verified persisted rows plus the pending row");
-    expect(global_text(state, "nrecord") == "3",
-           "strict buffered APPEND BLANK should assign the pending row after the verified rows");
+    expect(global_text(state, "nrecord") == "-1",
+           "strict table-buffered APPEND BLANK should expose the pending row through its negative RECNO identity");
     fs::remove_all(root, ignored);
 }
 

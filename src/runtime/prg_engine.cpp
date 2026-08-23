@@ -1544,10 +1544,29 @@ namespace copperfin::runtime
                 const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? 0U : cursor->record_length;
             },
-            [resolve_expression_cursor](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator) -> long long
             {
                 const CursorState *cursor = resolve_expression_cursor(designator);
-                return cursor == nullptr ? 0U : cursor->recno;
+                if (cursor == nullptr)
+                {
+                    return 0;
+                }
+
+                if ((cursor->buffering_mode == 4 || cursor->buffering_mode == 5) &&
+                    cursor->buffered_appended_records.contains(cursor->recno))
+                {
+                    // The physical count can advance when TABLEUPDATE() has
+                    // committed an earlier append before a later append
+                    // fails.  A public pending-record identity is instead
+                    // the stable ordinal of its internal record number in
+                    // this ordered pending set.
+                    const auto appended_record = cursor->buffered_appended_records.find(cursor->recno);
+                    const auto ordinal = static_cast<long long>(
+                        std::distance(cursor->buffered_appended_records.begin(), appended_record) + 1);
+                    return -ordinal;
+                }
+
+                return static_cast<long long>(cursor->recno);
             },
             [resolve_expression_cursor](const std::string &designator)
             {

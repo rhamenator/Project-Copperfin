@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cctype>
 #include <ctime>
 #include <cstdlib>
@@ -225,7 +226,28 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
         if (marker->empty() || *stage_filter != stage) {
             return false;
         }
-        return path.find(*marker) != std::string::npos;
+        if (path.find(*marker) == std::string::npos) {
+            return false;
+        }
+
+        // The existing test-only fault seam normally fails every matching
+        // write.  A positive ordinal limits it to one matching write, making
+        // partial multi-write mutation paths reproducible without changing
+        // any production write behavior.
+        const auto match_number =
+            platform::read_environment_variable("COPPERFIN_TEST_FAIL_WRITE_MATCH_NUMBER");
+        if (!match_number || match_number->empty()) {
+            return true;
+        }
+        char *end = nullptr;
+        const unsigned long long requested_match = std::strtoull(match_number->c_str(), &end, 10);
+        if (end == match_number->c_str() || *end != '\0' || requested_match == 0U ||
+            requested_match > std::numeric_limits<std::size_t>::max()) {
+            return false;
+        }
+        static std::atomic<std::size_t> matching_write_count{0U};
+        const std::size_t actual_match = matching_write_count.fetch_add(1U) + 1U;
+        return actual_match == static_cast<std::size_t>(requested_match);
     };
 
     const std::filesystem::path target_path = platform::path_from_utf8_string(path);

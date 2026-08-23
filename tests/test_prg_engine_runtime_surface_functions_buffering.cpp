@@ -1122,6 +1122,149 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_table_buffer_appends_use_negative_recno_identity()
+    {
+        namespace fs = std::filesystem;
+        const auto exercise_mode = [](int buffering_mode, const std::string &mode_name)
+        {
+            const fs::path temp_root = fs::temp_directory_path() /
+                ("copperfin_runtime_surface_negative_table_buffer_recno_" + mode_name);
+            const fs::path table_path = temp_root / "people.dbf";
+            const fs::path program_path = temp_root / "negative_recno.prg";
+            std::error_code ignored;
+            fs::remove_all(temp_root, ignored);
+            fs::create_directories(temp_root);
+
+            const auto create_result = copperfin::vfp::create_dbf_table_file(
+                table_path.string(),
+                {{.name = "NAME", .type = 'C', .length = 24U}},
+                {{"PersistedOne"}, {"PersistedTwo"}});
+            expect(create_result.ok, mode_name + " negative-RECNO fixture should be writable");
+
+            write_text(
+                program_path,
+                "USE '" + table_path.string() + "' ALIAS people\n"
+                "=CURSORSETPROP('Buffering', " + std::to_string(buffering_mode) + ", 'people')\n"
+                "APPEND BLANK\n"
+                "REPLACE NAME WITH 'PendingOne' IN people\n"
+                "nFirstPending = RECNO('people')\n"
+                "APPEND BLANK\n"
+                "REPLACE NAME WITH 'PendingTwo' IN people\n"
+                "nSecondPending = RECNO('people')\n"
+                "GO -1 IN people\n"
+                "cFirstPending = people.NAME\n"
+                "nFirstAfterGo = RECNO('people')\n"
+                "GO -2 IN people\n"
+                "cSecondPending = people.NAME\n"
+                "nSecondAfterGo = RECNO('people')\n"
+                "nPendingCount = RECCOUNT('people')\n"
+                "lUpdate = TABLEUPDATE(.T., .T., 'people')\n"
+                "nCommittedRec = RECNO('people')\n"
+                "nCommittedCount = RECCOUNT('people')\n"
+                "APPEND BLANK\n"
+                "nRevertPending = RECNO('people')\n"
+                "=TABLEREVERT(.T., 'people')\n"
+                "nAfterRevertCount = RECCOUNT('people')\n"
+                "RETURN\n");
+
+            copperfin::runtime::PrgRuntimeSession session =
+                copperfin::runtime::PrgRuntimeSession::create(
+                    make_runtime_session_options(program_path.string(), temp_root.string()));
+            const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.completed, mode_name + " negative-RECNO regression should complete: " + state.message);
+            const auto value_for = [&](const std::string &name) -> std::string
+            {
+                const auto found = state.globals.find(name);
+                return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+            };
+            expect(value_for("nfirstpending") == "-1", mode_name + " first pending append should expose RECNO() -1");
+            expect(value_for("nsecondpending") == "-2", mode_name + " second pending append should expose RECNO() -2");
+            expect(value_for("cfirstpending") == "PendingOne" && value_for("nfirstaftergo") == "-1",
+                   mode_name + " GO -1 should select the first pending append");
+            expect(value_for("csecondpending") == "PendingTwo" && value_for("nsecondaftergo") == "-2",
+                   mode_name + " GO -2 should select the second pending append");
+            expect(value_for("npendingcount") == "4", mode_name + " pending appends should remain visible to RECCOUNT()");
+            expect(value_for("lupdate") == "true" && value_for("ncommittedrec") == "4" &&
+                       value_for("ncommittedcount") == "4",
+                   mode_name + " TABLEUPDATE should materialize positive physical record numbers");
+            expect(value_for("nrevertpending") == "-1" && value_for("nafterrevertcount") == "4",
+                   mode_name + " TABLEREVERT(.T.) should remove a pending negative-RECNO append");
+
+            const auto persisted = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 4U);
+            expect(persisted.ok && persisted.table.records.size() == 4U &&
+                       persisted.table.records[2].values[0].display_value == "PendingOne" &&
+                       persisted.table.records[3].values[0].display_value == "PendingTwo",
+                   mode_name + " update should persist both selected pending rows without the reverted append");
+            fs::remove_all(temp_root, ignored);
+        };
+
+        exercise_mode(4, "pessimistic");
+        exercise_mode(5, "optimistic");
+    }
+
+    void test_table_buffer_append_identity_survives_partial_update_failure()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+            "copperfin_runtime_surface_negative_table_buffer_recno_partial_update";
+        const fs::path table_path = temp_root / "partial_update.dbf";
+        const fs::path program_path = temp_root / "partial_update.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Persisted"}});
+        expect(create_result.ok, "partial-update negative-RECNO fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "=CURSORSETPROP('Buffering', 5, 'people')\n"
+            "APPEND BLANK\n"
+            "REPLACE NAME WITH 'PendingOne' IN people\n"
+            "APPEND BLANK\n"
+            "REPLACE NAME WITH 'PendingTwo' IN people\n"
+            "lUpdate = TABLEUPDATE(.T., .T., 'people')\n"
+            "GO -1 IN people\n"
+            "cFirstPending = people.NAME\n"
+            "nFirstPending = RECNO('people')\n"
+            "GO -2 IN people\n"
+            "cSecondPending = people.NAME\n"
+            "nSecondPending = RECNO('people')\n"
+            "RETURN\n");
+
+        // The first append writes its blank row and value (matches 1 and 2).
+        // Failing the second append's blank-row promotion (match 3) leaves a
+        // deliberately partially materialized table-buffer batch.
+        const ScopedEnvironmentValue fail_path(
+            "COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", table_path.filename().string());
+        const ScopedEnvironmentValue fail_stage("COPPERFIN_TEST_FAIL_WRITE_STAGE", "before-promote");
+        const ScopedEnvironmentValue fail_match("COPPERFIN_TEST_FAIL_WRITE_MATCH_NUMBER", "3");
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "partial-update negative-RECNO regression should complete: " + state.message);
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("lupdate") == "false", "injected second append write failure should fail TABLEUPDATE");
+        expect(value_for("cfirstpending") == "PendingOne" && value_for("nfirstpending") == "-1",
+               "the first pending append must retain its -1 identity after partial materialization");
+        expect(value_for("csecondpending") == "PendingTwo" && value_for("nsecondpending") == "-2",
+               "GO -2 must still select the unmaterialized second pending append after partial failure");
+
+        const auto persisted = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 3U);
+        expect(persisted.ok && persisted.table.records.size() == 2U &&
+                   persisted.table.records[1].values[0].display_value == "PendingOne",
+               "only the first append should be physically materialized before the injected failure");
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_local_optimistic_table_buffering_delete_recall()
     {
         namespace fs = std::filesystem;

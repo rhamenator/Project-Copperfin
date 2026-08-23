@@ -1,3 +1,13 @@
+- 2026-08-23: Recovered VFP9 table-buffer append identity semantics: pending
+  local mode-4/mode-5 rows now expose sequential negative `RECNO()` values and
+  support `GO -n` navigation. Copperfin retains internal positive DBF-oriented
+  positions for mutation, locking, verified-byte admission, commit, and
+  rollback; `TABLEUPDATE()` materializes ordinary positive records and
+  `TABLEREVERT(.T.)` removes pending rows. A deterministic staged-write
+  regression also proves that the append ordinals and negative navigation stay
+  stable when the first row materializes before a later append fails. This is
+  local table buffering only.
+
 - 2026-08-23: Added repository steering-continuity guidance: new owner
   direction is additive unless it explicitly and unambiguously replaces or
   cancels the applicable active objective or slice. An uncancelled in-progress

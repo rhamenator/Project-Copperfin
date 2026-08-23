@@ -109,7 +109,7 @@
                 std::function<std::size_t(const std::string &, std::size_t, const std::string &)> field_size_callback,
                 std::function<std::size_t(const std::string &)> record_count_callback,
                 std::function<std::size_t(const std::string &)> record_length_callback,
-                std::function<std::size_t(const std::string &)> recno_callback,
+                std::function<long long(const std::string &)> recno_callback,
                 std::function<bool(const std::string &)> found_callback,
                 std::function<bool(const std::string &)> eof_callback,
                 std::function<bool(const std::string &)> bof_callback,
@@ -3618,7 +3618,7 @@
             std::function<std::size_t(const std::string &, std::size_t, const std::string &)> field_size_callback_;
             std::function<std::size_t(const std::string &)> record_count_callback_;
             std::function<std::size_t(const std::string &)> record_length_callback_;
-            std::function<std::size_t(const std::string &)> recno_callback_;
+            std::function<long long(const std::string &)> recno_callback_;
             std::function<bool(const std::string &)> found_callback_;
             std::function<bool(const std::string &)> eof_callback_;
             std::function<bool(const std::string &)> bof_callback_;
