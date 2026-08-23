@@ -71,8 +71,8 @@ probing, or third-party COM server belongs in this lane.
 The bounded #5155/#2564 structural slice moves the corrupt-sidecar `PACK MEMO`
 and additive-replacement integrity regressions into
 `test_dbf_table_memo_integrity.cpp`. Its binary-fixture writers and file
-helpers remain private to the new module; the minimal shared header exposes
-only the existing failure reporter and module declarations. The existing
+helpers are consolidated into `test_dbf_table_support.cpp`; the shared header
+declares only support needed by the existing DBF-table test modules. The existing
 `test_dbf_table` executable, invocation order, fixture bytes, assertions, and
 DBF behavior remain unchanged. It follows the already-merged raw-payload
 preservation extraction; schema-rewrite preservation remains the separate
