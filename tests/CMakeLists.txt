@@ -1072,11 +1072,11 @@ add_test(
 add_executable(test_studio_host_detail_header_footer_object_layout_actions
     test_studio_host_detail_header_footer_object_layout_actions.cpp
     test_studio_host_json_objects_dhf_shared_fixtures.cpp
-    test_studio_host_json_objects_dhf_layout_actions.cpp
     test_studio_host_json_objects_dhf_align.cpp
     test_studio_host_json_objects_dhf_distribution.cpp
     test_studio_host_json_objects_dhf_nudge.cpp
     test_studio_host_json_objects_dhf_snap.cpp
+    test_studio_host_json_objects_dhf_resize.cpp
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
     test_studio_host_json_shared_test_helpers.cpp
 )

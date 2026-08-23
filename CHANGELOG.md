@@ -1,3 +1,9 @@
+- 2026-08-23: Completed this detail-header/footer #2564 test-module family by
+  moving the paired report/label stable-selection resize regressions into
+  `test_studio_host_json_objects_dhf_resize.cpp` and retiring the now-empty
+  layout-actions source. The existing executable, invocation order, assertions,
+  and Studio behavior remain unchanged.
+
 - 2026-08-23: Continued #2564 test-module refactoring by moving the paired
   report/label detail-header/footer stable-selection alignment regressions into
   `test_studio_host_json_objects_dhf_align.cpp`. The existing layout-actions
