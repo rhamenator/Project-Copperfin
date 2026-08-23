@@ -46,6 +46,19 @@ source with lifecycle/fault verification (`#5164`). Do not treat native
 connected-COM evidence; no remote activation, network discovery, registry
 probing, or third-party COM server belongs in this lane.
 
+## V1 basic DBF memo lifecycle test module
+
+The bounded #5152/#2564 structural slice moves the basic M-field and G/P-field
+create/replace/append lifecycle regressions into
+`test_dbf_table_memo_lifecycle.cpp`. A minimal shared header owns only the
+existing failure reporter and the two declarations; the existing
+`test_dbf_table` executable, fixture ownership, invocation order, assertions,
+and DBF behavior remain unchanged. The raw-byte fixture, PACK MEMO,
+fail-closed, additive-replacement, and schema-rewrite memo regressions remain
+separate #5151 follow-up slices. The moved bodies match the former source range
+byte-for-byte. A fresh Debug build and focused `test_dbf_table` CTest pass 1/1;
+protected cross-platform validation remains required before merge.
+
 ## V1 report layout-object LEFT preview-bounds test module
 
 The bounded #2564 structural slice moves the report/label layout-object LEFT
