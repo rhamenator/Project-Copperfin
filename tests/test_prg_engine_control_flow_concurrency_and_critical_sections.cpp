@@ -963,10 +963,6 @@ void test_critical_section_blocking_policy_rejects_sleep_inside_section() {
     fs::remove_all(temp_root, ignored);
 }
 
-
-
-
-
 void test_critical_sections_release_on_task_fault_without_deadlock() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_critical_fault_release";
@@ -1052,14 +1048,6 @@ void test_critical_sections_release_on_task_fault_without_deadlock() {
 
     fs::remove_all(temp_root, ignored);
 }
-
-
-
-
-
-
-
-
 
 void test_yield_preserves_fault_metadata_when_followed_by_error() {
     namespace fs = std::filesystem;
