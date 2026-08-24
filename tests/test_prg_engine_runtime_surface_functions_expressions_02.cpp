@@ -156,6 +156,7 @@ namespace copperfin::runtime_surface_tests
             "oSource = CREATEOBJECT('AdmittedSource')\n"
             "oRejected = CREATEOBJECT('RejectedSource')\n"
             "oBadInterface = CREATEOBJECT('BadInterfaceSource')\n"
+            "oRevoked = CREATEOBJECT('RevokedSource')\n"
             "oHandler = CREATEOBJECT('Handler')\n"
             "oMissing = CREATEOBJECT('MissingHandler')\n"
             "lFirst = EVENTHANDLER(oSource, oHandler)\n"
@@ -165,12 +166,16 @@ namespace copperfin::runtime_surface_tests
             "lRejectedInterface = EVENTHANDLER(oBadInterface, oHandler)\n"
             "lUnbind = EVENTHANDLER(oSource, oHandler, .T.)\n"
             "lUnbindAgain = EVENTHANDLER(oSource, oHandler, .T.)\n"
+            "lRevokedBind = EVENTHANDLER(oRevoked, oHandler)\n"
+            "lRevokedUnbind = EVENTHANDLER(oRevoked, oHandler, .T.)\n"
             "RETURN\n"
             "DEFINE CLASS AdmittedSource AS Custom\n"
             "ENDDEFINE\n"
             "DEFINE CLASS RejectedSource AS Custom\n"
             "ENDDEFINE\n"
             "DEFINE CLASS BadInterfaceSource AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS RevokedSource AS Custom\n"
             "ENDDEFINE\n"
             "DEFINE CLASS Handler AS Custom\n"
             "    PROCEDURE OnChanged\n"
@@ -179,9 +184,10 @@ namespace copperfin::runtime_surface_tests
             "DEFINE CLASS MissingHandler AS Custom\n"
             "ENDDEFINE\n");
 
+        int revoked_source_admission_calls = 0;
         auto options = make_runtime_session_options(main_path.string(), temp_root.string());
         options.com_event_source_admission_callback =
-            [](const copperfin::runtime::RuntimeOleObjectState &source)
+            [&revoked_source_admission_calls](const copperfin::runtime::RuntimeOleObjectState &source)
             -> std::optional<copperfin::runtime::RuntimeComEventSourceAdmission>
         {
             if (source.prog_id == "AdmittedSource")
@@ -204,6 +210,17 @@ namespace copperfin::runtime_surface_tests
                     .source_identity = "test-owned-local-source-without-interface",
                     .handler_interface_id = " ",
                     .required_handler_methods = {"OnChanged"}};
+            }
+            if (source.prog_id == "RevokedSource")
+            {
+                ++revoked_source_admission_calls;
+                if (revoked_source_admission_calls == 1)
+                {
+                    return copperfin::runtime::RuntimeComEventSourceAdmission{
+                        .source_identity = "test-revoked-local-source",
+                        .handler_interface_id = "ITestEvents",
+                        .required_handler_methods = {"OnChanged"}};
+                }
             }
             return std::nullopt;
         };
@@ -233,6 +250,10 @@ namespace copperfin::runtime_surface_tests
         check("lrejectedinterface", "false");
         check("lunbind", "true");
         check("lunbindagain", "false");
+        check("lrevokedbind", "true");
+        check("lrevokedunbind", "true");
+        expect(revoked_source_admission_calls == 1,
+               "EVENTHANDLER unbind should not require refreshed host admission");
 
         fs::remove_all(temp_root, ignored);
     }

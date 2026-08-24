@@ -7949,7 +7949,7 @@ namespace copperfin::runtime
     {
         // LLR-VFP-COM-002 / HZ-runtime-crash-01: absence of an explicit,
         // host-owned local admission capability is a side-effect-free failure.
-        if (arguments.size() < 2U || !options.com_event_source_admission_callback)
+        if (arguments.size() < 2U)
         {
             return make_boolean_value(false);
         }
@@ -7957,6 +7957,31 @@ namespace copperfin::runtime
         auto source_object = resolve_ole_object(arguments[0]);
         auto handler_object = resolve_ole_object(arguments[1]);
         if (!source_object.has_value() || !handler_object.has_value())
+        {
+            return make_boolean_value(false);
+        }
+        const bool unbind = arguments.size() >= 3U && value_as_bool(arguments[2]);
+        if (unbind)
+        {
+            // Unbinding must remain available after a host revokes admission
+            // (for example during fault rollback). The source/handler pair is
+            // the runtime-owned binding key; no refreshed host metadata is
+            // needed to remove stale state.
+            const auto previous_size = com_eventhandler_bindings.size();
+            com_eventhandler_bindings.erase(
+                std::remove_if(
+                    com_eventhandler_bindings.begin(),
+                    com_eventhandler_bindings.end(),
+                    [source_handle = (*source_object)->handle, handler_handle = (*handler_object)->handle](
+                        const ComEventHandlerBinding &binding)
+                    {
+                        return binding.source_handle == source_handle &&
+                               binding.handler_handle == handler_handle;
+                    }),
+                com_eventhandler_bindings.end());
+            return make_boolean_value(com_eventhandler_bindings.size() != previous_size);
+        }
+        if (!options.com_event_source_admission_callback)
         {
             return make_boolean_value(false);
         }
@@ -7994,7 +8019,6 @@ namespace copperfin::runtime
             return make_boolean_value(false);
         }
 
-        const bool unbind = arguments.size() >= 3U && value_as_bool(arguments[2]);
         const auto matches = [&](const ComEventHandlerBinding &binding)
         {
             return binding.source_handle == (*source_object)->handle &&
@@ -8002,15 +8026,6 @@ namespace copperfin::runtime
                    binding.source_identity == admission->source_identity &&
                    binding.handler_interface_id == admission->handler_interface_id;
         };
-        if (unbind)
-        {
-            const auto previous_size = com_eventhandler_bindings.size();
-            com_eventhandler_bindings.erase(
-                std::remove_if(com_eventhandler_bindings.begin(), com_eventhandler_bindings.end(), matches),
-                com_eventhandler_bindings.end());
-            return make_boolean_value(com_eventhandler_bindings.size() != previous_size);
-        }
-
         if (std::find_if(com_eventhandler_bindings.begin(), com_eventhandler_bindings.end(), matches) ==
             com_eventhandler_bindings.end())
         {
@@ -10419,6 +10434,16 @@ namespace copperfin::runtime
                            (!binding.target_is_routine && discarded_handles.contains(binding.target_handle));
                 }),
             native_event_bindings.end());
+        com_eventhandler_bindings.erase(
+            std::remove_if(
+                com_eventhandler_bindings.begin(),
+                com_eventhandler_bindings.end(),
+                [&discarded_handles](const ComEventHandlerBinding &binding)
+                {
+                    return discarded_handles.contains(binding.source_handle) ||
+                           discarded_handles.contains(binding.handler_handle);
+                }),
+            com_eventhandler_bindings.end());
         window_message_bindings.erase(
             std::remove_if(
                 window_message_bindings.begin(),

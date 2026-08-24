@@ -41,6 +41,10 @@ point dispatch, or external callback. The focused runtime-surface test passes
 on a fresh Linux Debug build; owned Windows dispatch and fault evidence remain
 with `#5164`.
 
+Explicit unbind uses the existing runtime source/handler record rather than a
+fresh admission callback, so host revocation cannot leave stale state. Both
+normal release and failed native-object construction purge the same registry.
+
 ## V1 visual-asset BOTMARGIN memo test module
 
 The bounded #2564 structural slice moves the paired FRX/LBX `BOTMARGIN` memo
