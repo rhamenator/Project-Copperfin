@@ -1,5 +1,14 @@
 # Agent Handoff
 
+## Windows Python sidecar environment
+
+The Python sidecar fixture has an intentionally complete, non-inherited child
+environment. Hosted Python 3.13 on Windows needs an explicit `SystemRoot` to
+start and locate its standard-library resources. The fixture obtains that one
+value through `GetWindowsDirectoryW`; it does not inherit `PATH`,
+`PYTHONHOME`, or arbitrary runner variables. The regression stays portable:
+POSIX retains an empty child environment.
+
 ## Generated-launcher Python sidecar validation environment
 
 The generated-launcher validation workflow now uses a SHA-pinned setup action
