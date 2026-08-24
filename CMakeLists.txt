@@ -601,6 +601,7 @@ target_link_libraries(cf_xbase_runtime
 if(WIN32)
     target_link_libraries(cf_platform_profile PRIVATE winspool)
     target_sources(cf_xbase_runtime PRIVATE
+        src/runtime/windows_com_event_adapter.cpp
         src/runtime/managed_declared_call.cpp
         src/runtime/managed_pe_image.cpp
         src/runtime/native_declared_call.cpp

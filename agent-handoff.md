@@ -1,5 +1,29 @@
 # Agent Handoff
 
+## V1 owned-COM adapter rejection correction
+
+The Windows `IDispatch` sink must return a failing HRESULT—not `S_FALSE`—for
+an unknown dispatch ID, a stopped subscription, or an unavailable delivery
+sink. `S_FALSE` is still successful according to `SUCCEEDED()`, so a source
+could otherwise report a rejected callback as delivered. The focused
+owned-source test exercises that negative case. The Windows environment
+workflow's PE-image contract assertion now includes the adapter test in its
+protected target sequence.
+
+## V1 Windows owned EVENTHANDLER adapter and fixture
+
+Issue #5185 adds a Windows-only, host-private `IConnectionPoint` adapter. It
+owns the COM source reference, connection point, cookie, and `IDispatch` sink;
+only declared zero-argument dispatch IDs become the already bounded method
+tokens from #5189. The package-free in-process fixture proves native callback
+delivery to the iterative PRG handler, rejects unavailable interfaces, empty
+dispatch contracts, and unknown dispatch IDs, and proves direct and PRG-level
+explicit unbind plus source/handler-release and contained-fault unadvise.
+Portable regressions remain the coverage for admission and duplicate/multiple
+binding rules. It does not activate, discover, probe, or contact a third-party
+or remote COM server. Issue #5190 requires the focused Windows workflow
+evidence before this becomes a recovered-complete claim.
+
 ## V1 controlled EVENTHANDLER token delivery
 
 Issue #5188 connects an optional host-owned admitted-source subscription to
