@@ -27,6 +27,25 @@ The live agent channel now uses immutable UUID-addressed message files through
 ignored by Git. Focused contract tests cover both guarantees. The next action
 is to obtain the hosted Windows Debug confirmation for the fixture change.
 
+## V1 EVENTHANDLER traceability rendering correction
+
+The `LLR-VFP-COM-002` row now retains its hazard constraints in the
+verification column so the rendered eight-column traceability matrix preserves
+the `gap` status and links to `#5150`, `#5162`, `#5163`, and `#5164`.
+
+## V1 EVENTHANDLER COM-event requirements recovery
+
+Mounted shipped VFP9 help establishes `EVENTHANDLER(oCOMObject, oVFPObject
+[, lUnbind])`, matching implemented-interface admission, logical result,
+explicit unbind, multiple bindings, and automatic cleanup when either object
+is released. `LLR-VFP-COM-002` records the requirement as a gap, not an
+implementation claim. Follow-on work is split into runtime fail-closed
+admission/lifetime behavior (`#5163`) and an owned local Windows COM-event
+source with lifecycle/fault verification (`#5164`). Do not treat native
+`BINDEVENT()`/`RAISEEVENT()` or virtual `CREATEOBJECTEX()` provenance as
+connected-COM evidence; no remote activation, network discovery, registry
+probing, or third-party COM server belongs in this lane.
+
 ## V1 report layout-object LEFT preview-bounds test module
 
 The bounded #2564 structural slice moves the report/label layout-object LEFT

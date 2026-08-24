@@ -10,7 +10,12 @@
 - 2026-08-23: Made the Windows Debug mixed-mode DECLARE fixture explicitly
   disable incompatible MSVC runtime checks while retaining `/clr`, and replaced
   the race-prone shared agent-channel sequence protocol with immutable,
-  UUID-addressed message files and local-only cursor state.
+   UUID-addressed message files and local-only cursor state.
+
+- 2026-08-24: Recovered the VFP9 `EVENTHANDLER()` COM-event lifecycle contract
+  from mounted shipped help and recorded its fail-closed local-admission,
+  lifetime, fault-containment, and owned-Windows-verification boundaries. No
+   COM-event runtime behavior is implemented or claimed yet.
 
 - 2026-08-23: Continued #2564 test-module refactoring by moving report/label
   layout-object LEFT preview-bounds regressions into
@@ -9421,3 +9426,6 @@ passes `1/1`.
   pre-commit admitted bytes. Documented and regression-covered rather than
   fixed in this slice; the default (non-verified) execution path is
   unaffected.
+- 2026-08-24: Corrected the recovered `EVENTHANDLER()` traceability row so its
+  rendered status and issue links remain in their defined table columns; its
+  existing hazard constraints now remain with the verification boundary.
