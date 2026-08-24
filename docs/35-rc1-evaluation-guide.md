@@ -9,7 +9,9 @@ this guide. `RQ-CF-REL-002`, `DQ-windows-installer-lifecycle-scope`,
 the direct Windows installer lifecycle evidence and its fail-closed boundaries.
 `RQ-CF-REL-003`, `DQ-windows-vsix-lifecycle-scope`, and
 `DV-windows-vsix-lifecycle-contract` govern the corresponding Windows VSIX
-lifecycle boundary.
+lifecycle boundary. `RQ-CF-REL-004`, `DQ-rc-launcher-trust-exception`, and
+`DV-rc-launcher-trust-exception-contract` govern the explicit unsigned private
+RC launcher-trust exception.
 
 Each Project Copperfin `v0.1.0-rc.N` candidate is a private-evaluation release
 candidate. It is not an official Project Copperfin release and is not
@@ -85,10 +87,13 @@ That separate procedure does **not** authenticate the contents of this RC
 bundle. The private RC-candidate workflow intentionally receives no signing
 secret, and its exact-candidate
 `signing.windows_launcher_release_trust` manifest field is therefore
-`NOT_RUN`. Treat generated Windows launchers in any bundle carrying that value
-as evaluation output, not as approved release-trusted inventory. A future
-candidate may claim that inventory boundary only when its own exact-tagged
-workflow performs and records the enforced signing validation; evidence from a
+`RC_TEST_EXCEPTION`. This is the explicit owner-test exception for an
+`official_release: false` private RC bundle: the signer is deliberately absent,
+and the status cannot satisfy the Release 1.0 launcher-trust gate. Treat
+generated Windows launchers in any bundle carrying that value as evaluation
+output, not as approved release-trusted inventory. A final release may claim
+that inventory boundary only when its own exact release workflow performs and
+records enforced signing validation with an approved registry; evidence from a
 different run must not be inferred into the bundle.
 
 The Windows installer also does not claim Authenticode signing. Project

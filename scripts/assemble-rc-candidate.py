@@ -10,7 +10,9 @@ DV-rc-evidence-v2-assembly-self-test; DV-rc-evidence-v2-schema-validation;
 RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
 DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
 HZ-data-corruption-01; HZ-doc-command-01; RQ-CF-REL-003;
-DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract.
+DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract;
+RQ-CF-REL-004; DQ-rc-launcher-trust-exception;
+DV-rc-launcher-trust-exception-contract.
 """
 
 from __future__ import annotations
@@ -581,7 +583,7 @@ def assemble(args: argparse.Namespace) -> Path:
             "security_and_sbom": "PASS",
         },
         "signing": {
-            "windows_launcher_release_trust": "NOT_RUN",
+            "windows_launcher_release_trust": "RC_TEST_EXCEPTION",
             "windows_authenticode": "UNSUPPORTED_AND_DISCLOSED",
             "visual_studio_vsix": "UNSUPPORTED_AND_DISCLOSED",
             "macos_developer_id_and_notarization": "UNSUPPORTED_AND_DISCLOSED",
@@ -837,7 +839,7 @@ def self_test() -> None:
             "security_and_sbom": "PASS",
         }
         expected_signing = {
-            "windows_launcher_release_trust": "NOT_RUN",
+            "windows_launcher_release_trust": "RC_TEST_EXCEPTION",
             "windows_authenticode": "UNSUPPORTED_AND_DISCLOSED",
             "visual_studio_vsix": "UNSUPPORTED_AND_DISCLOSED",
             "macos_developer_id_and_notarization": "UNSUPPORTED_AND_DISCLOSED",

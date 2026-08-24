@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 # Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation;
-# DV-rc-evidence-v2-workflow-contract; HZ-system-failure-01; HZ-doc-command-01.
+# DV-rc-evidence-v2-workflow-contract; RQ-CF-REL-004;
+# DQ-rc-launcher-trust-exception; DV-rc-launcher-trust-exception-contract;
+# HZ-system-failure-01; HZ-doc-command-01.
 
 cmake_minimum_required(VERSION 3.20)
 
@@ -80,6 +82,9 @@ require_text_count("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a8
 require_manifest_schema_text("\"schema_version\": { \"const\": 3 }" "schema-v3 identity")
 require_manifest_schema_text("\"windows_installed_cli_smoke\"" "Windows installer lifecycle evidence")
 require_manifest_schema_text("\"windows_supported_prg_open_and_command\"" "Windows VSIX lifecycle evidence")
+require_manifest_schema_text("\"windows_launcher_release_trust\": { \"const\": \"RC_TEST_EXCEPTION\" }"
+    "explicit non-release Windows launcher-trust exception")
+require_manifest_schema_text("\"RC_TEST_EXCEPTION\"" "closed RC exception status vocabulary")
 
 set(rc_guide_path "${SOURCE_DIR}/docs/35-rc1-evaluation-guide.md")
 file(READ "${rc_guide_path}" rc_guide)
@@ -88,7 +93,9 @@ string(REPLACE "\n" " " rc_guide_normalized "${rc_guide}")
 foreach(required_guide_text IN ITEMS
         "31630819119"
         "signing.windows_launcher_release_trust"
+        "RC_TEST_EXCEPTION"
         "does **not** authenticate the contents of this RC bundle"
+        "cannot satisfy the Release 1.0 launcher-trust gate"
         "evidence from a different run must not be inferred into the bundle")
     string(FIND "${rc_guide_normalized}" "${required_guide_text}" guide_text_offset)
     if(guide_text_offset EQUAL -1)
@@ -106,6 +113,9 @@ foreach(traceability_file IN ITEMS
     foreach(traceability_id IN ITEMS
             RQ-CF-REL-001
             DQ-rc-evidence-v2-scope-separation
+            RQ-CF-REL-004
+            DQ-rc-launcher-trust-exception
+            DV-rc-launcher-trust-exception-contract
             HZ-system-failure-01
             HZ-doc-command-01)
         string(FIND "${traceability_contents}" "${traceability_id}" traceability_offset)
