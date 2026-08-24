@@ -2233,6 +2233,7 @@ add_test(
 add_executable(test_studio_host_detail_header_footer_section_preview_bounds
     test_studio_host_detail_header_footer_section_preview_bounds.cpp
     test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_geometry_preview_section_lifecycle.cpp
     test_studio_host_json_objects_dhf_shared_fixtures.cpp
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
     test_studio_host_json_sections_dhf_shared_fixtures.cpp

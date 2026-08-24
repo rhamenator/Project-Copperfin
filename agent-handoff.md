@@ -114,6 +114,16 @@ fail-closed, additive-replacement, and schema-rewrite memo regressions remain
 separate #5151 follow-up slices. The moved bodies match the former source range
 byte-for-byte. A fresh Debug build and focused `test_dbf_table` CTest pass 1/1;
 protected cross-platform validation remains required before merge.
+## V1 detail-header/footer section preview-lifecycle test module
+
+The bounded #2564 structural slice moves the deleted-state and delete/restore
+detail-header/footer section preview-bounds regressions into
+`test_studio_host_json_geometry_preview_section_lifecycle.cpp`. Existing runner
+membership, declarations, invocation order, fixtures, assertions, and Studio
+behavior remain unchanged. The extracted guarded range is byte-identical to the
+former source range and is compiled only by the existing detail-header/footer
+section preview runner. A focused Debug build and CTest must pass before
+ protected validation.
 
 ## V1 report layout-object LEFT preview-bounds test module
 
