@@ -1,5 +1,13 @@
 # Agent Handoff
 
+## V1 visual-asset property comment-line test module
+
+The bounded #2564 structural slice moves the report-settings comment-line
+preservation regression into `test_visual_asset_editor_property_comment_lines.cpp`.
+The existing `test_visual_asset_editor` executable retains the same fixture
+bytes, assertions, invocation order, and visual-asset behavior. A fresh Debug
+build and focused CTest must pass before protected cross-platform validation.
+
 ## V1 visual-asset blank-property test module
 
 The bounded #2564 structural slice moves the blank-property-value preservation
