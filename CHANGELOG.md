@@ -1,3 +1,9 @@
+- 2026-08-24: Continued #2564 test-module refactoring by moving the report-settings
+  comment-line preservation regression into
+  `test_visual_asset_editor_property_comment_lines.cpp`. The existing
+  `test_visual_asset_editor` executable, fixture bytes, assertions, invocation
+  order, and visual-asset behavior remain unchanged.
+
 - 2026-08-24: Continued #2564 test-module refactoring by moving the visual
   asset blank-property-value preservation regression into
   `test_visual_asset_editor_property_blank_value.cpp`. The existing
