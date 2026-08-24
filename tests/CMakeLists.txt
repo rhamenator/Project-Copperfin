@@ -5389,7 +5389,6 @@ if(WIN32)
         target_compile_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE
             /guard:cf-
             /clr
-            "$<$<CONFIG:Debug>:/RTC->"
         )
         target_link_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE /GUARD:NO)
     endif()

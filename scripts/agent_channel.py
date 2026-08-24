@@ -11,9 +11,11 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 from pathlib import Path
 import re
 import sys
+import time
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -30,6 +32,10 @@ def cursor_path(root: Path, agent: str) -> Path:
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", agent):
         raise ValueError(f"invalid agent name: {agent!r}")
     return root / ".agent-channel" / "cursors" / f"{agent}.json"
+
+
+def cursor_lock_path(root: Path, agent: str) -> Path:
+    return cursor_path(root, agent).with_suffix(".lock")
 
 
 def parse_recipients(value: str) -> List[str]:
@@ -88,7 +94,7 @@ def read_cursor(root: Path, agent: str) -> List[str]:
         cursor = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
         raise ValueError(f"invalid agent-channel cursor: {path}") from error
-    if set(cursor) != {"schema_version", "processed_message_ids"} or cursor["schema_version"] != 1:
+    if not isinstance(cursor, dict) or set(cursor) != {"schema_version", "processed_message_ids"} or cursor["schema_version"] != 1:
         raise ValueError(f"invalid agent-channel cursor schema: {path}")
     identifiers = cursor["processed_message_ids"]
     if not isinstance(identifiers, list) or any(not isinstance(identifier, str) for identifier in identifiers):
@@ -103,6 +109,37 @@ def write_cursor(root: Path, agent: str, identifiers: List[str]) -> None:
     temporary_path = path.with_suffix(".tmp")
     temporary_path.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
     temporary_path.replace(path)
+
+
+def acquire_cursor_lock(root: Path, agent: str) -> Path:
+    path = cursor_lock_path(root, agent)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    for _ in range(100):
+        try:
+            descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+        except FileExistsError:
+            try:
+                if time.time() - path.stat().st_mtime > 30:
+                    path.unlink()
+                    continue
+            except FileNotFoundError:
+                continue
+            time.sleep(0.05)
+            continue
+        with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+            json.dump({"pid": os.getpid()}, output)
+            output.write("\n")
+        return path
+    raise OSError(f"timed out waiting for agent-channel cursor lock: {path}")
+
+
+def record_processed(root: Path, agent: str, delivered: List[str]) -> None:
+    lock = acquire_cursor_lock(root, agent)
+    try:
+        known = read_cursor(root, agent)
+        write_cursor(root, agent, known + [identifier for identifier in delivered if identifier not in known])
+    finally:
+        lock.unlink(missing_ok=True)
 
 
 def command_post(arguments: argparse.Namespace) -> int:
@@ -122,9 +159,15 @@ def command_post(arguments: argparse.Namespace) -> int:
         "text": arguments.text,
     }
     path = destination / f"{message_id}.json"
-    with path.open("x", encoding="utf-8") as output:
-        json.dump(message, output, ensure_ascii=False, sort_keys=True)
-        output.write("\n")
+    validate_message(path, message)
+    temporary_path = destination / f".{message_id}.{uuid.uuid4().hex}.tmp"
+    try:
+        with temporary_path.open("x", encoding="utf-8") as output:
+            json.dump(message, output, ensure_ascii=False, sort_keys=True)
+            output.write("\n")
+        os.link(temporary_path, path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
     print(path.relative_to(root))
     return 0
 
@@ -139,8 +182,7 @@ def command_read(arguments: argparse.Namespace) -> int:
             print(json.dumps(message, ensure_ascii=False, sort_keys=True))
             delivered.append(message["message_id"])
     if arguments.mark_read and delivered:
-        known = read_cursor(root, arguments.agent)
-        write_cursor(root, arguments.agent, known + [identifier for identifier in delivered if identifier not in known])
+        record_processed(root, arguments.agent, delivered)
     return 0
 
 

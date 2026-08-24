@@ -111,10 +111,14 @@ require_text("CMakeLists.txt"
     "target-scoped MSVC large-object and unwind-semantics enforcement")
 require_text("CMakeLists.txt" "COPPERFIN_MANAGED_CPP"
     "native-only explicit /EHsc generator expression")
+require_text("CMakeLists.txt" "CMAKE_CXX_FLAGS_DEBUG"
+    "managed-C++ exclusion of the Debug runtime-check default")
+require_text("CMakeLists.txt" "COPPERFIN_MANAGED_CPP>>>>:/RTC1>"
+    "native-only Debug runtime-check generator expression")
 require_text("tests/CMakeLists.txt" "COPPERFIN_MANAGED_CPP TRUE"
     "managed C++ exception-mode exclusion")
-require_text("tests/CMakeLists.txt" "$<$<CONFIG:Debug>:/RTC->"
-    "managed C++ Debug runtime-check exclusion")
+forbid_text("tests/CMakeLists.txt" "/RTC-"
+    "ineffective managed-C++ Debug runtime-check negation")
 forbid_text("tests/CMakeLists.txt" "/EHa"
     "redundant /EH option on the /clr target")
 require_text("${workflow}" "build-sccache-cold" "separate cold build tree")

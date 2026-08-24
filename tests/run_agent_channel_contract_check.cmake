@@ -22,10 +22,18 @@ require_text(".agent-channel/README.md" "not commit cursor state"
     "local cursor policy")
 require_text("scripts/agent_channel.py" "uuid.uuid4()"
     "unique message identity generator")
-require_text("scripts/agent_channel.py" [=[path.open("x", encoding="utf-8")]=]
-    "exclusive message-file creation")
+require_text("scripts/agent_channel.py" "validate_message(path, message)"
+    "post-time message validation")
+require_text("scripts/agent_channel.py" "os.link(temporary_path, path)"
+    "atomic immutable message publication")
 require_text("scripts/agent_channel.py" "def validate_message"
     "strict message schema validation")
+require_text("scripts/agent_channel.py" "not isinstance(cursor, dict)"
+    "clean invalid-cursor rejection")
+require_text("scripts/agent_channel.py" "def record_processed"
+    "cursor update serialization")
+require_text("scripts/agent_channel.py" "def acquire_cursor_lock"
+    "per-agent cursor lock")
 require_text("scripts/agent_channel.py" "commands.add_parser(\"cursor\""
     "managed cursor command")
 require_text("scripts/agent_channel.py" "--only-unread"

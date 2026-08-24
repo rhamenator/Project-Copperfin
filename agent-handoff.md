@@ -10,8 +10,9 @@ is to inspect the hosted Windows result on the exact workflow head.
 
 ## Windows Debug mixed-mode fixture and agent-channel protocol
 
-The Windows mixed-mode DECLARE fixture now explicitly adds `/RTC-` in Debug
-configuration, preventing MSVC `D8016` from combining `/RTC1` with `/clr`.
+The Windows mixed-mode DECLARE fixture excludes `/RTC1` at source: CMake moves
+its Debug default into a native-only target expression, so managed `/clr`
+targets never receive the incompatible option and cannot hit MSVC `D8016`.
 The live agent channel now uses immutable UUID-addressed message files through
 `scripts/agent_channel.py`; `log.jsonl` is historic only and local cursors are
 ignored by Git. Focused contract tests cover both guarantees. The next action
