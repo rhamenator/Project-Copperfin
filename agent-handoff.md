@@ -36,6 +36,17 @@ The live agent channel now uses immutable UUID-addressed message files through
 ignored by Git. Focused contract tests cover both guarantees. The next action
 is to obtain the hosted Windows Debug confirmation for the fixture change.
 
+## V1 EVENTHANDLER portable fail-closed surface
+
+`EVENTHANDLER()` now parses and returns logical `.F.` for all current inputs,
+including native objects and virtual local/remote `CREATEOBJECTEX()` provenance.
+This is deliberately not a COM binding implementation: no external activation,
+network discovery, registry probing, subscription state, or native-event
+mutation occurs. The focused runtime-surface regression also proves existing
+`BINDEVENT()` / `RAISEEVENT()` dispatch remains unchanged. Keep valid binding,
+registry lifetime/fault cleanup, and owned Windows-source evidence with
+`#5168`/`#5164`; `LLR-VFP-COM-002` remains a gap.
+
 ## V1 EVENTHANDLER traceability rendering correction
 
 The `LLR-VFP-COM-002` row now retains its hazard constraints in the

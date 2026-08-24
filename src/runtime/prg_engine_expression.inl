@@ -180,6 +180,7 @@
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_bar_skip_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_bar_mark_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> bindevent_callback,
+                std::function<PrgValue(const std::vector<PrgValue> &)> eventhandler_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> raiseevent_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback,
@@ -264,6 +265,7 @@
                   popup_bar_skip_callback_(std::move(popup_bar_skip_callback)),
                   popup_bar_mark_callback_(std::move(popup_bar_mark_callback)),
                   bindevent_callback_(std::move(bindevent_callback)),
+                  eventhandler_callback_(std::move(eventhandler_callback)),
                   raiseevent_callback_(std::move(raiseevent_callback)),
                   unbindevents_callback_(std::move(unbindevents_callback)),
                   aevents_callback_(std::move(aevents_callback)),
@@ -1139,6 +1141,12 @@
                     return bindevent_callback_
                         ? bindevent_callback_(arguments, argument_references)
                         : make_number_value(0.0);
+                }
+                if (function == "eventhandler")
+                {
+                    return eventhandler_callback_
+                        ? eventhandler_callback_(arguments)
+                        : make_boolean_value(false);
                 }
                 if (function == "raiseevent")
                 {
@@ -3728,6 +3736,7 @@
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_bar_skip_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_bar_mark_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> bindevent_callback_;
+            std::function<PrgValue(const std::vector<PrgValue> &)> eventhandler_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> raiseevent_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback_;

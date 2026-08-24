@@ -1270,6 +1270,7 @@ namespace copperfin::runtime
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
+        PrgValue eventhandler_com_event();
         PrgValue raise_native_event(
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
@@ -3270,6 +3271,10 @@ namespace copperfin::runtime
                 const std::vector<std::optional<std::string>> &argument_references) -> PrgValue
             {
                 return bind_native_event(frame, arguments, argument_references);
+            },
+            [this](const std::vector<PrgValue> &) -> PrgValue
+            {
+                return eventhandler_com_event();
             },
             [this, &frame](
                 const std::vector<PrgValue> &arguments,
@@ -7927,6 +7932,16 @@ namespace copperfin::runtime
                           .detail = (*source_object)->prog_id + "." + event_name + " -> " + binding.delegate_name,
                           .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
         return make_number_value(binding_count);
+    }
+
+    PrgValue PrgRuntimeSession::Impl::eventhandler_com_event()
+    {
+        // LLR-VFP-COM-002 requires a logical failure for every source that is
+        // not an admitted local, connected COM event source. Copperfin has no
+        // such source boundary yet; this portable surface must therefore be
+        // recognized but fail closed without activation, discovery, probing,
+        // binding-state mutation, or an attempted fallback to native events.
+        return make_boolean_value(false);
     }
 
     PrgValue PrgRuntimeSession::Impl::raise_native_event(

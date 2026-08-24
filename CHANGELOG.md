@@ -18,6 +18,11 @@
   the race-prone shared agent-channel sequence protocol with immutable,
    UUID-addressed message files and local-only cursor state.
 
+- 2026-08-24: Added the portable `EVENTHANDLER()` expression surface as a
+  fail-closed logical boundary. It recognizes the documented call but rejects
+  every current source without COM activation, discovery, registry probing, or
+   native-event mutation; successful COM-event binding remains unimplemented.
+
 - 2026-08-24: Recovered the VFP9 `EVENTHANDLER()` COM-event lifecycle contract
   from mounted shipped help and recorded its fail-closed local-admission,
   lifetime, fault-containment, and owned-Windows-verification boundaries. No
