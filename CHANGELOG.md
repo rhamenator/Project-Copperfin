@@ -1,3 +1,8 @@
+- 2026-08-24: Added the internal bounded external-event token queue required
+  by the Windows `EVENTHANDLER()` COM adapter. Host callbacks can now hand off
+  only normalized event tokens for later runtime-thread consumption; this does
+  not add COM dispatch or a PRG-visible interface.
+
 - 2026-08-24: Continued #2564 source-modularity work by extracting the
   platform-specific native-wrapper configure/build process runner into
   `runtime_pipeline_native_wrapper_process.cpp`. Wrapper command-line,

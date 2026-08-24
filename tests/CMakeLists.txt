@@ -4893,6 +4893,10 @@ copperfin_add_test(test_bounded_process cf_platform_profile
     test_bounded_process.cpp
 )
 
+copperfin_add_test(test_runtime_external_event_queue cf_xbase_runtime
+    test_runtime_external_event_queue.cpp
+)
+
 copperfin_add_test(test_polyglot_parity_comparator cf_platform_profile
     test_polyglot_parity_comparator.cpp
 )
