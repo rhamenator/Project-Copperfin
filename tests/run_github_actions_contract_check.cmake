@@ -167,6 +167,8 @@ foreach(required_text IN ITEMS
         "tests/test_prg_engine_file_io_functions.cpp"
         "tests/test_prg_engine_verified_dbf_security.cpp"
         "r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6"
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405"
+        "python-version: \"3.13\""
         "r-version: \"4.6.1\""
         "rtools-version: \"none\""
         "use-public-rspm: \"false\""

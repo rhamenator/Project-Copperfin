@@ -1,5 +1,13 @@
 # Agent Handoff
 
+## Generated-launcher Python sidecar validation environment
+
+The generated-launcher validation workflow now uses a SHA-pinned setup action
+to provision Python 3.13 on Windows, Linux, and macOS. This removes
+dependence on a mutable runner-image Python default after a Windows-only Python
+sidecar failure; the source/protocol behavior stays unchanged. The next action
+is to inspect the hosted Windows result on the exact workflow head.
+
 ## V1 report layout-object LEFT preview-bounds test module
 
 The bounded #2564 structural slice moves the report/label layout-object LEFT

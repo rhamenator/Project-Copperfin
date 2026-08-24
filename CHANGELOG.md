@@ -1,3 +1,7 @@
+- 2026-08-23: Provision an explicit Python 3.13 interpreter for generated-launcher
+  sidecar validation on Windows, Linux, and macOS instead of relying on each
+  hosted runner image's mutable default interpreter.
+
 - 2026-08-23: Continued #2564 test-module refactoring by moving report/label
   layout-object LEFT preview-bounds regressions into
   `test_studio_host_json_geometry_preview_object_lefts.cpp`. The existing
