@@ -66,6 +66,82 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_eventhandler_recognizes_and_fails_closed_without_admitted_com_source()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_eventhandler_fail_closed";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "eventhandler_fail_closed.prg";
+        write_text(
+            main_path,
+            "nHandlerCalls = 0\n"
+            "oNative = CREATEOBJECT('NativeSource')\n"
+            "oHandler = CREATEOBJECT('Handler')\n"
+            "oVirtual = CREATEOBJECTEX('Scripting.Dictionary', '', '')\n"
+            "oRemote = CREATEOBJECTEX('Scripting.Dictionary', 'server-a', '')\n"
+            "lMissing = EVENTHANDLER()\n"
+            "lNative = EVENTHANDLER(oNative, oHandler)\n"
+            "lVirtual = EVENTHANDLER(oVirtual, oHandler)\n"
+            "lRemote = EVENTHANDLER(oRemote, oHandler)\n"
+            "lUnbind = EVENTHANDLER(oVirtual, oHandler, .T.)\n"
+            "nNativeBind = BINDEVENT(oNative, 'Ping', oHandler, 'HandlePing')\n"
+            "lNativeRaised = RAISEEVENT(oNative, 'Ping')\n"
+            "RETURN\n"
+            "DEFINE CLASS NativeSource AS Custom\n"
+            "    PROCEDURE Ping\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS Handler AS Custom\n"
+            "    PROCEDURE HandlePing\n"
+            "        nHandlerCalls = nHandlerCalls + 1\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("EVENTHANDLER fail-closed script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            if (found == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        };
+
+        check("lmissing", "false");
+        check("lnative", "false");
+        check("lvirtual", "false");
+        check("lremote", "false");
+        check("lunbind", "false");
+        check("nnativebind", "1");
+        check("lnativeraised", "true");
+        check("nhandlercalls", "1");
+
+        const auto eventhandler_events = std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category.find("eventhandler") != std::string::npos;
+            });
+        expect(eventhandler_events == 0,
+               "rejected EVENTHANDLER calls must not mutate event state or record external activity");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_cursor_xml_numeric_metadata_fails_closed()
     {
         namespace fs = std::filesystem;

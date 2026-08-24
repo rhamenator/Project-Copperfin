@@ -39,6 +39,8 @@ native events, or arbitrary COM activation.
 
 ## Current disposition
 
-`DV-CF-EVENTHANDLER-001` is satisfied by this recovery record. `DV-CF-EVENTHANDLER-002` remains pending the runtime and owned-fixture children;
-`LLR-VFP-COM-002` is therefore a `gap`, not release evidence for a shipped
-COM-event feature.
+`DV-CF-EVENTHANDLER-001` is satisfied by this recovery record. The portable
+reject-only portion of `DV-CF-EVENTHANDLER-002` is covered by #5169; valid
+binding, subscription lifetime/fault cleanup, and the owned Windows fixture
+remain pending #5168/#5164. `LLR-VFP-COM-002` is therefore still a `gap`, not
+release evidence for a shipped COM-event feature.
