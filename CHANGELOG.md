@@ -1,3 +1,9 @@
+- 2026-08-24: Continued #2564 source-modularity work by extracting library
+  export discovery and API-manifest metadata generation from the generated
+  native-wrapper emitter into `runtime_pipeline_library_export_metadata.cpp`.
+  The runtime-package target, public helper contracts, generated output, and
+  existing focused regressions remain unchanged.
+
 - 2026-08-24: Made out-of-tree locale staging remove its generated locale tree
   before copying. A deleted or renamed source catalog can no longer remain
   accidentally discoverable from an earlier configure.

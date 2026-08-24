@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 library-export metadata module
+
+The bounded #2564 source-modularity slice extracts library-export discovery,
+parameter metadata, source-provenance encoding, and module-definition emission
+into `runtime_pipeline_library_export_metadata.cpp`. The generated native
+wrapper emitter remains in
+`runtime_pipeline_library_export_manifest.cpp`; the existing
+`test_runtime_pipeline` target continues to cover both units' package
+manifests. Fresh Linux Debug build plus focused CTest pass 1/1 in 73.25
+seconds. Protected cross-platform validation remains required before merge.
+
 ## V1 out-of-tree locale staging cleanup
 
 The developer-build locale staging rule now removes only its generated
