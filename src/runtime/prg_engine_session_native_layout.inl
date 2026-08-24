@@ -530,6 +530,15 @@
                                    binding.target_handle == handle;
                         }),
                     native_event_bindings.end());
+                com_eventhandler_bindings.erase(
+                    std::remove_if(
+                        com_eventhandler_bindings.begin(),
+                        com_eventhandler_bindings.end(),
+                        [handle](const ComEventHandlerBinding &binding)
+                        {
+                            return binding.source_handle == handle || binding.handler_handle == handle;
+                        }),
+                    com_eventhandler_bindings.end());
                 window_message_bindings.erase(
                     std::remove_if(
                         window_message_bindings.begin(),

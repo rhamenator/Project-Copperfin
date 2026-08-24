@@ -9507,3 +9507,8 @@ passes `1/1`.
   the explicit `RC_TEST_EXCEPTION` status rather than an ambiguous not-run
   value. The status is valid only for private `official_release: false`
    evaluation bundles and cannot satisfy the Release 1.0 launcher-trust gate.
+- 2026-08-24: Added the fail-closed host capability boundary for the portable
+  `EVENTHANDLER()` registry. A host must explicitly admit a local source and
+  interface identity with required handler methods; duplicate bind/unbind and
+  source/handler release cleanup are deterministic, while COM activation and
+  platform callback dispatch remain unimplemented.

@@ -178,6 +178,15 @@ struct RuntimeOleObjectState {
     std::vector<std::string> events{};
 };
 
+// Host-owned admission metadata for a locally connected COM event source. The
+// runtime never discovers, activates, or infers this identity from a PRG
+// object; a host must explicitly supply it for a source it owns.
+struct RuntimeComEventSourceAdmission {
+    std::string source_identity{};
+    std::string handler_interface_id{};
+    std::vector<std::string> required_handler_methods{};
+};
+
 struct RuntimePauseState {
     bool paused = false;
     bool completed = false;
@@ -292,6 +301,11 @@ struct RuntimeSessionOptions {
     // Optional host-owned printer enumeration seam. Null uses the platform
     // implementation; tests and embedded hosts may supply deterministic names.
     std::function<std::vector<std::string>()> printer_enumeration_callback;
+    // Optional host-owned EVENTHANDLER admission seam. A null callback, empty
+    // identity, interface identity, or incomplete handler-method contract fails closed. The
+    // callback must not perform activation, registry probing, or network I/O.
+    std::function<std::optional<RuntimeComEventSourceAdmission>(
+        const RuntimeOleObjectState&)> com_event_source_admission_callback;
     // Called when QUIT executes. Return true to allow quit; false to cancel it
     // (e.g. show a dialog asking the user to confirm). Null means always quit.
     std::function<bool()> quit_confirm_callback;

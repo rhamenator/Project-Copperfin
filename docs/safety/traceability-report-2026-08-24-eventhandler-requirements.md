@@ -2,9 +2,9 @@
 
 ## Scope and evidence
 
-This is a requirements and assurance slice only. It does not implement COM
+This record covers the portable capability boundary. It does not implement COM
 activation, invoke a server, change native `BINDEVENT()` / `RAISEEVENT()`
-semantics, or claim an implementation exists.
+semantics, or claim platform COM-event dispatch exists.
 
 The compatibility source is mounted VFP9 `dv_foxhelp.chm` (10,870,662 bytes;
 SHA-256 `abaa86e7623bb00e8bd9323cf2d8e162013598e35d9492557a3ddd1c2cf13e79`),
@@ -18,7 +18,7 @@ bindings, and automatic unbind when either object is released.
 | Documentation requirement | Verification disposition | Controlled hazards |
 | --- | --- | --- |
 | `DQ-CF-EVENTHANDLER-001`: recover and distinguish the VFP9 contract from native events and virtual COM provenance. | `DV-CF-EVENTHANDLER-001`: traceability review of `LLR-VFP-COM-002`, source identity, and child boundaries. | `HZ-runtime-crash-01`; `HZ-system-failure-01` |
-| `DQ-CF-EVENTHANDLER-002`: require fail-closed local admission, lifetime cleanup, and no external/remote discovery. | `DV-CF-EVENTHANDLER-002`: later runtime and owned-Windows fixture coverage of admission, unbind, releases, duplicates, and faults. | `HZ-runtime-crash-01`; `HZ-system-failure-01` |
+| `DQ-CF-EVENTHANDLER-002`: require fail-closed local admission, lifetime cleanup, and no external/remote discovery. | `DV-CF-EVENTHANDLER-002`: portable coverage of admission, interface/method validation, unbind, duplicates, and release cleanup; later owned-Windows fixture coverage of dispatch and faults. | `HZ-runtime-crash-01`; `HZ-system-failure-01` |
 
 ## Hazard, misuse, boundary, and rollback analysis
 
@@ -39,8 +39,9 @@ native events, or arbitrary COM activation.
 
 ## Current disposition
 
-`DV-CF-EVENTHANDLER-001` is satisfied by this recovery record. The portable
-reject-only portion of `DV-CF-EVENTHANDLER-002` is covered by #5169; valid
-binding, subscription lifetime/fault cleanup, and the owned Windows fixture
-remain pending #5168/#5164. `LLR-VFP-COM-002` is therefore still a `gap`, not
-release evidence for a shipped COM-event feature.
+`DV-CF-EVENTHANDLER-001` is satisfied by this recovery record. #5178 provides
+the portable fail-closed host capability boundary, deterministic bind/unbind
+registry, and source/handler release cleanup; it does not produce platform COM
+callbacks. Owned Windows connection-point dispatch, handler-fault containment,
+and fixture evidence remain pending #5164. `LLR-VFP-COM-002` is therefore
+still a `gap`, not release evidence for a shipped COM-event feature.

@@ -142,6 +142,101 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_eventhandler_binds_only_host_admitted_local_source()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_eventhandler_host_admission";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "eventhandler_host_admission.prg";
+        write_text(
+            main_path,
+            "oSource = CREATEOBJECT('AdmittedSource')\n"
+            "oRejected = CREATEOBJECT('RejectedSource')\n"
+            "oBadInterface = CREATEOBJECT('BadInterfaceSource')\n"
+            "oHandler = CREATEOBJECT('Handler')\n"
+            "oMissing = CREATEOBJECT('MissingHandler')\n"
+            "lFirst = EVENTHANDLER(oSource, oHandler)\n"
+            "lDuplicate = EVENTHANDLER(oSource, oHandler)\n"
+            "lMissingMethod = EVENTHANDLER(oSource, oMissing)\n"
+            "lRejectedIdentity = EVENTHANDLER(oRejected, oHandler)\n"
+            "lRejectedInterface = EVENTHANDLER(oBadInterface, oHandler)\n"
+            "lUnbind = EVENTHANDLER(oSource, oHandler, .T.)\n"
+            "lUnbindAgain = EVENTHANDLER(oSource, oHandler, .T.)\n"
+            "RETURN\n"
+            "DEFINE CLASS AdmittedSource AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS RejectedSource AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BadInterfaceSource AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS Handler AS Custom\n"
+            "    PROCEDURE OnChanged\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MissingHandler AS Custom\n"
+            "ENDDEFINE\n");
+
+        auto options = make_runtime_session_options(main_path.string(), temp_root.string());
+        options.com_event_source_admission_callback =
+            [](const copperfin::runtime::RuntimeOleObjectState &source)
+            -> std::optional<copperfin::runtime::RuntimeComEventSourceAdmission>
+        {
+            if (source.prog_id == "AdmittedSource")
+            {
+                return copperfin::runtime::RuntimeComEventSourceAdmission{
+                    .source_identity = "test-owned-local-source",
+                    .handler_interface_id = "ITestEvents",
+                    .required_handler_methods = {"OnChanged"}};
+            }
+            if (source.prog_id == "RejectedSource")
+            {
+                return copperfin::runtime::RuntimeComEventSourceAdmission{
+                    .source_identity = "   ",
+                    .handler_interface_id = "ITestEvents",
+                    .required_handler_methods = {"OnChanged"}};
+            }
+            if (source.prog_id == "BadInterfaceSource")
+            {
+                return copperfin::runtime::RuntimeComEventSourceAdmission{
+                    .source_identity = "test-owned-local-source-without-interface",
+                    .handler_interface_id = " ",
+                    .required_handler_methods = {"OnChanged"}};
+            }
+            return std::nullopt;
+        };
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(options)
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("EVENTHANDLER host-admission script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            if (found == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        };
+
+        check("lfirst", "true");
+        check("lduplicate", "true");
+        check("lmissingmethod", "false");
+        check("lrejectedidentity", "false");
+        check("lrejectedinterface", "false");
+        check("lunbind", "true");
+        check("lunbindagain", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_cursor_xml_numeric_metadata_fails_closed()
     {
         namespace fs = std::filesystem;

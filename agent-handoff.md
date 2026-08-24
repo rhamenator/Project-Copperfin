@@ -29,6 +29,18 @@ runtime-package behavior. A fresh Debug configure/build and focused CTest pass
 1/1 on Linux; protected cross-platform validation remains required before
 merge.
 
+## V1 EVENTHANDLER host capability boundary
+
+`RuntimeSessionOptions::com_event_source_admission_callback` is the only
+portable admission path for `EVENTHANDLER()`. It requires a host-owned local
+source identity, a nonempty handler-interface identity, and an explicit list
+of handler methods; without all of them the call is `.F.`. The runtime owns
+deduplicated bind/unbind records and removes them on either object release.
+It still performs no COM activation, registry/network discovery, connection-
+point dispatch, or external callback. The focused runtime-surface test passes
+on a fresh Linux Debug build; owned Windows dispatch and fault evidence remain
+with `#5164`.
+
 ## V1 visual-asset BOTMARGIN memo test module
 
 The bounded #2564 structural slice moves the paired FRX/LBX `BOTMARGIN` memo
