@@ -22,53 +22,6 @@
 #endif
 
 namespace copperfin::test_dbf_table {
-namespace {
-
-void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
-    bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
-    bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
-}
-
-void write_le_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value) {
-    bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
-    bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
-    bytes[offset + 2U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
-    bytes[offset + 3U] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
-}
-
-void write_be_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
-    bytes[offset] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
-    bytes[offset + 1U] = static_cast<std::uint8_t>(value & 0xFFU);
-}
-
-void write_be_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value) {
-    bytes[offset] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
-    bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
-    bytes[offset + 2U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
-    bytes[offset + 3U] = static_cast<std::uint8_t>(value & 0xFFU);
-}
-
-void write_ascii(std::vector<std::uint8_t>& bytes, std::size_t offset, const std::string& value) {
-    for (std::size_t index = 0; index < value.size(); ++index) {
-        bytes[offset + index] = static_cast<std::uint8_t>(value[index]);
-    }
-}
-
-void write_field_descriptor(
-    std::vector<std::uint8_t>& bytes,
-    std::size_t offset,
-    const std::string& name,
-    char type,
-    std::uint32_t field_offset,
-    std::uint8_t field_length) {
-    write_ascii(bytes, offset, name);
-    bytes[offset + 11U] = static_cast<std::uint8_t>(type);
-    write_le_u32(bytes, offset + 12U, field_offset);
-    bytes[offset + 16U] = field_length;
-}
-
-}  // namespace
-
 void test_memo_payload_that_decodes_empty_stays_empty() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
