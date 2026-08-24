@@ -14,5 +14,8 @@ void expect(bool condition, const std::string& message);
 
 void test_memo_field_create_replace_and_append_round_trip();
 void test_general_and_picture_memo_fields_round_trip();
+void test_memo_payload_that_decodes_empty_stays_empty();
+void test_pack_memo_preserves_payloads_that_decode_empty();
+void test_pack_memo_preserves_binary_picture_payloads();
 
 }  // namespace copperfin::test_dbf_table
