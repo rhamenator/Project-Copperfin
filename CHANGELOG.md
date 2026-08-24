@@ -1,3 +1,7 @@
+- 2026-08-24: Made out-of-tree locale staging remove its generated locale tree
+  before copying. A deleted or renamed source catalog can no longer remain
+  accidentally discoverable from an earlier configure.
+
 - 2026-08-24: Localization slice `#2348` made out-of-tree developer builds carry
   a refreshed locale-resource snapshot beside their executables. Catalog
   discovery now recognizes that executable-relative layout, so Studio's

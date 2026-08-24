@@ -1,5 +1,13 @@
 # Agent Handoff
 
+## V1 out-of-tree locale staging cleanup
+
+The developer-build locale staging rule now removes only its generated
+`resources/locales` subtree before copying source catalogs. This keeps the
+executable-relative catalog lookup from seeing a catalog that was deleted or
+renamed in the source tree. Verify with an out-of-tree configure after placing
+a stale file below that generated subtree; the file must be absent afterward.
+
 ## V1 out-of-tree Studio locale discovery
 
 The #2348 localization slice stages `resources/locales` under an out-of-tree
