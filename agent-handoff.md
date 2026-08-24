@@ -66,18 +66,18 @@ source with lifecycle/fault verification (`#5164`). Do not treat native
 connected-COM evidence; no remote activation, network discovery, registry
 probing, or third-party COM server belongs in this lane.
 
-## V1 DBF raw memo-payload preservation test module
+## V1 DBF memo integrity test module
 
-The bounded #5154/#2564 structural slice moves the empty-decoding memo payload
-and `PACK MEMO` raw-byte preservation regressions into
-`test_dbf_table_raw_memo_payloads.cpp`. Its binary-fixture writers remain
-private to the new module; the minimal shared header continues to expose only
-the existing failure reporter and module declarations. The existing
+The bounded #5155/#2564 structural slice moves the corrupt-sidecar `PACK MEMO`
+and additive-replacement integrity regressions into
+`test_dbf_table_memo_integrity.cpp`. Its binary-fixture writers and file
+helpers are consolidated into `test_dbf_table_support.cpp`; the shared header
+declares only support needed by the existing DBF-table test modules. The existing
 `test_dbf_table` executable, invocation order, fixture bytes, assertions, and
-DBF behavior remain unchanged. Corrupt-sidecar/additive-replacement and
-schema-rewrite preservation regressions remain separate #5155/#5156 slices.
-A fresh Debug build and focused `test_dbf_table` CTest must pass before
-protected cross-platform validation.
+DBF behavior remain unchanged. It follows the already-merged raw-payload
+preservation extraction; schema-rewrite preservation remains the separate
+#5156 slice. A fresh Debug build and focused
+`test_dbf_table` CTest must pass before protected cross-platform validation.
 
 ## V1 basic DBF memo lifecycle test module
 

@@ -28,6 +28,10 @@
   lifetime, fault-containment, and owned-Windows-verification boundaries. No
    COM-event runtime behavior is implemented or claimed yet.
 
+- 2026-08-23: Consolidated shared DBF binary-fixture helpers in the focused
+  DBF-table test support module, removing duplicate helper implementations
+   from the memo-integrity test split without changing DBF behavior.
+
 - 2026-08-23: Continued #2564 test-module refactoring by moving the basic DBF
   memo and G/P create/replace/append lifecycle regressions into
   `test_dbf_table_memo_lifecycle.cpp`. The existing `test_dbf_table`
@@ -9446,8 +9450,9 @@ passes `1/1`.
   rendered status and issue links remain in their defined table columns; its
    existing hazard constraints now remain with the verification boundary.
 
-- 2026-08-23: Continued #2564 test-module refactoring by moving the DBF
-  empty-decoding raw memo-payload and binary picture `PACK MEMO` preservation
-  regressions into `test_dbf_table_raw_memo_payloads.cpp`. The existing
+- 2026-08-23: Continued #2564 test-module refactoring by moving DBF
+  corrupt-sidecar `PACK MEMO` and additive-replacement fail-closed integrity
+  regressions into `test_dbf_table_memo_integrity.cpp`, following the prior
+  raw-payload preservation extraction. The existing
   `test_dbf_table` executable, invocation order, byte-level assertions, and
    DBF behavior remain unchanged.

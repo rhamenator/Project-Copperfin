@@ -4523,8 +4523,10 @@ copperfin_apply_windows_stack_reserve(test_studio_host)
 
 copperfin_add_test(test_dbf_table cf_vfp_assets
     test_dbf_table.cpp
+    test_dbf_table_support.cpp
     test_dbf_table_memo_lifecycle.cpp
     test_dbf_table_raw_memo_payloads.cpp
+    test_dbf_table_memo_integrity.cpp
 )
 
 copperfin_add_test(test_dbf_text_encoding cf_vfp_assets
