@@ -17,6 +17,11 @@
   lifetime, fault-containment, and owned-Windows-verification boundaries. No
    COM-event runtime behavior is implemented or claimed yet.
 
+- 2026-08-23: Continued #2564 test-module refactoring by moving the basic DBF
+  memo and G/P create/replace/append lifecycle regressions into
+  `test_dbf_table_memo_lifecycle.cpp`. The existing `test_dbf_table`
+   executable, invocation order, assertions, and DBF behavior remain unchanged.
+
 - 2026-08-23: Continued #2564 test-module refactoring by moving report/label
   layout-object LEFT preview-bounds regressions into
   `test_studio_host_json_geometry_preview_object_lefts.cpp`. The existing
