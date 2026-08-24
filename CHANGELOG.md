@@ -9,6 +9,12 @@
   from an arbitrary working directory; explicit `COPPERFIN_LOCALE_DIR`
   overrides and installed layouts remain authoritative.
 
+- 2026-08-24: Continued #2564 test-module refactoring by moving the
+  library-package locale-invariance regressions into
+  `test_runtime_pipeline_output_packaging_library_locale.cpp`. The existing
+  `test_runtime_pipeline` executable, fixtures, invocation order, and runtime
+  packaging behavior remain unchanged.
+
 - 2026-08-24: Continued #2564 test-module refactoring by moving the paired
   FRX/LBX `BOTMARGIN` memo round-trip regression into
   `test_visual_asset_editor_report_settings_bottom_margin.cpp`. The existing
