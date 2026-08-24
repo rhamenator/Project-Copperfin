@@ -5106,6 +5106,7 @@ copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline_test
     test_runtime_pipeline_fixture_isolation.cpp
     test_runtime_pipeline_output_packaging_support.h
     test_runtime_pipeline_output_packaging_library.cpp
+    test_runtime_pipeline_output_packaging_library_locale.cpp
     test_runtime_pipeline_output_packaging_fll.cpp
     test_runtime_pipeline_output_packaging_fxp_app.cpp
     test_runtime_pipeline_output_packaging_compiler.cpp

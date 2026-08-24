@@ -19,6 +19,16 @@ existing precedence; JSON keys, command tokens, statuses, and exit codes remain
 invariant. Fresh Debug `test_localization` and `test_studio_host_json` pass;
 cross-platform hosted validation remains required before merge.
 
+## V1 runtime-pipeline library locale test module
+
+The bounded #2564 structural slice moves the library-package manifest and
+wrapper locale-invariance regressions into
+`test_runtime_pipeline_output_packaging_library_locale.cpp`. The existing
+`test_runtime_pipeline` executable retains its fixtures, invocation order, and
+runtime-package behavior. A fresh Debug configure/build and focused CTest pass
+1/1 on Linux; protected cross-platform validation remains required before
+merge.
+
 ## V1 visual-asset BOTMARGIN memo test module
 
 The bounded #2564 structural slice moves the paired FRX/LBX `BOTMARGIN` memo
