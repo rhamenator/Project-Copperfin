@@ -1062,6 +1062,16 @@ namespace copperfin::runtime
             std::size_t ordinal = 0;
         };
 
+        struct ComEventHandlerBinding
+        {
+            int source_handle = 0;
+            int handler_handle = 0;
+            std::string source_identity;
+            std::string handler_interface_id;
+            std::vector<std::string> required_handler_methods;
+            std::size_t ordinal = 0;
+        };
+
         struct WindowMessageBinding
         {
             int window_handle = 0;
@@ -1152,6 +1162,7 @@ namespace copperfin::runtime
         bool representative_application_right_to_left = true;
         bool representative_application_show_tips = false;
         std::vector<NativeEventBinding> native_event_bindings;
+        std::vector<ComEventHandlerBinding> com_eventhandler_bindings;
         std::set<std::string> active_native_event_keys;
         std::set<std::string> active_native_property_assignments;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
@@ -1270,7 +1281,7 @@ namespace copperfin::runtime
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
-        PrgValue eventhandler_com_event();
+        PrgValue eventhandler_com_event(const std::vector<PrgValue> &arguments);
         PrgValue raise_native_event(
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
@@ -3272,9 +3283,9 @@ namespace copperfin::runtime
             {
                 return bind_native_event(frame, arguments, argument_references);
             },
-            [this](const std::vector<PrgValue> &) -> PrgValue
+            [this](const std::vector<PrgValue> &arguments) -> PrgValue
             {
-                return eventhandler_com_event();
+                return eventhandler_com_event(arguments);
             },
             [this, &frame](
                 const std::vector<PrgValue> &arguments,
@@ -7934,14 +7945,99 @@ namespace copperfin::runtime
         return make_number_value(binding_count);
     }
 
-    PrgValue PrgRuntimeSession::Impl::eventhandler_com_event()
+    PrgValue PrgRuntimeSession::Impl::eventhandler_com_event(const std::vector<PrgValue> &arguments)
     {
-        // LLR-VFP-COM-002 requires a logical failure for every source that is
-        // not an admitted local, connected COM event source. Copperfin has no
-        // such source boundary yet; this portable surface must therefore be
-        // recognized but fail closed without activation, discovery, probing,
-        // binding-state mutation, or an attempted fallback to native events.
-        return make_boolean_value(false);
+        // LLR-VFP-COM-002 / HZ-runtime-crash-01: absence of an explicit,
+        // host-owned local admission capability is a side-effect-free failure.
+        if (arguments.size() < 2U)
+        {
+            return make_boolean_value(false);
+        }
+
+        auto source_object = resolve_ole_object(arguments[0]);
+        auto handler_object = resolve_ole_object(arguments[1]);
+        if (!source_object.has_value() || !handler_object.has_value())
+        {
+            return make_boolean_value(false);
+        }
+        const bool unbind = arguments.size() >= 3U && value_as_bool(arguments[2]);
+        if (unbind)
+        {
+            // Unbinding must remain available after a host revokes admission
+            // (for example during fault rollback). The source/handler pair is
+            // the runtime-owned binding key; no refreshed host metadata is
+            // needed to remove stale state.
+            const auto previous_size = com_eventhandler_bindings.size();
+            com_eventhandler_bindings.erase(
+                std::remove_if(
+                    com_eventhandler_bindings.begin(),
+                    com_eventhandler_bindings.end(),
+                    [source_handle = (*source_object)->handle, handler_handle = (*handler_object)->handle](
+                        const ComEventHandlerBinding &binding)
+                    {
+                        return binding.source_handle == source_handle &&
+                               binding.handler_handle == handler_handle;
+                    }),
+                com_eventhandler_bindings.end());
+            return make_boolean_value(com_eventhandler_bindings.size() != previous_size);
+        }
+        if (!options.com_event_source_admission_callback)
+        {
+            return make_boolean_value(false);
+        }
+        if (normalize_identifier((*source_object)->last_action) == "createobjectex")
+        {
+            return make_boolean_value(false);
+        }
+
+        const auto admission = options.com_event_source_admission_callback(**source_object);
+        if (!admission.has_value() || trim_copy(admission->source_identity).empty() ||
+            trim_copy(admission->handler_interface_id).empty())
+        {
+            return make_boolean_value(false);
+        }
+
+        std::vector<std::string> required_methods;
+        for (const std::string &method : admission->required_handler_methods)
+        {
+            const std::string normalized = normalize_identifier(trim_copy(method));
+            if (normalized.empty() ||
+                std::find(required_methods.begin(), required_methods.end(), normalized) != required_methods.end())
+            {
+                return make_boolean_value(false);
+            }
+            std::string program_path;
+            std::string resolved_method;
+            if (find_native_object_method(**handler_object, normalized, program_path, resolved_method) == nullptr)
+            {
+                return make_boolean_value(false);
+            }
+            required_methods.push_back(normalized);
+        }
+        if (required_methods.empty())
+        {
+            return make_boolean_value(false);
+        }
+
+        const auto matches = [&](const ComEventHandlerBinding &binding)
+        {
+            return binding.source_handle == (*source_object)->handle &&
+                   binding.handler_handle == (*handler_object)->handle &&
+                   binding.source_identity == admission->source_identity &&
+                   binding.handler_interface_id == admission->handler_interface_id;
+        };
+        if (std::find_if(com_eventhandler_bindings.begin(), com_eventhandler_bindings.end(), matches) ==
+            com_eventhandler_bindings.end())
+        {
+            com_eventhandler_bindings.push_back({
+                .source_handle = (*source_object)->handle,
+                .handler_handle = (*handler_object)->handle,
+                .source_identity = admission->source_identity,
+                .handler_interface_id = admission->handler_interface_id,
+                .required_handler_methods = std::move(required_methods),
+                .ordinal = next_native_event_binding_ordinal++});
+        }
+        return make_boolean_value(true);
     }
 
     PrgValue PrgRuntimeSession::Impl::raise_native_event(
@@ -10338,6 +10434,16 @@ namespace copperfin::runtime
                            (!binding.target_is_routine && discarded_handles.contains(binding.target_handle));
                 }),
             native_event_bindings.end());
+        com_eventhandler_bindings.erase(
+            std::remove_if(
+                com_eventhandler_bindings.begin(),
+                com_eventhandler_bindings.end(),
+                [&discarded_handles](const ComEventHandlerBinding &binding)
+                {
+                    return discarded_handles.contains(binding.source_handle) ||
+                           discarded_handles.contains(binding.handler_handle);
+                }),
+            com_eventhandler_bindings.end());
         window_message_bindings.erase(
             std::remove_if(
                 window_message_bindings.begin(),
@@ -10562,6 +10668,15 @@ namespace copperfin::runtime
                                (!binding.target_is_routine && binding.target_handle == handle);
                     }),
                 native_event_bindings.end());
+            com_eventhandler_bindings.erase(
+                std::remove_if(
+                    com_eventhandler_bindings.begin(),
+                    com_eventhandler_bindings.end(),
+                    [handle](const ComEventHandlerBinding &binding)
+                    {
+                        return binding.source_handle == handle || binding.handler_handle == handle;
+                    }),
+                com_eventhandler_bindings.end());
             native_property_expression_text_by_handle.erase(handle);
             native_default_property_expression_text_by_handle.erase(handle);
             native_object_arrays.erase(handle);
