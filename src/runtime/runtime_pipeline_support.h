@@ -183,6 +183,14 @@ RuntimeCompanionCopyResult copy_companion_files_if_present(
     std::vector<std::string>& warnings);
 
 // ==== DLL/FLL native-wrapper and library-export manifest generation ====
+struct NativeWrapperProcessResult {
+    bool started = false;
+    int exit_code = -1;
+};
+NativeWrapperProcessResult run_native_wrapper_process(
+    const std::string& executable,
+    const std::vector<std::string>& arguments,
+    const std::filesystem::path& output_log_path);
 std::vector<std::string> collect_library_exported_symbols(const RuntimePackagePlan& plan);
 std::map<std::string, std::size_t> collect_library_export_parameter_counts(const RuntimePackagePlan& plan);
 std::string build_routine_kind_name(const RoutineKind kind);

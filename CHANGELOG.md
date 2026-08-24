@@ -1,3 +1,8 @@
+- 2026-08-24: Continued #2564 source-modularity work by extracting the
+  platform-specific native-wrapper configure/build process runner into
+  `runtime_pipeline_native_wrapper_process.cpp`. Wrapper command-line,
+  logging, exit-status, and package behavior are unchanged.
+
 - 2026-08-24: Continued #2564 source-modularity work by separating native-wrapper
   build-script and API-manifest emission into
   `runtime_pipeline_library_export_artifacts.cpp`. The generated wrapper,

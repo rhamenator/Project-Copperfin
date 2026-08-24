@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 native-wrapper process module
+
+The bounded #2564 source-modularity slice moves the platform-specific native
+wrapper configure/build process runner out of
+`runtime_pipeline_public_api.cpp` into
+`runtime_pipeline_native_wrapper_process.cpp`. The existing command-line
+quoting, child output capture, exit-status behavior, and internal helper
+contract remain unchanged. A fresh Linux Debug `test_runtime_pipeline` build
+and focused CTest pass 1/1 in 70.78 seconds. Protected cross-platform
+validation remains required before merge.
+
 ## V1 library-export artifact-emitter module
 
 The bounded #2564 source-modularity slice separates native-wrapper CMake,
