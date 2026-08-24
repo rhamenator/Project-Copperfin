@@ -33,6 +33,14 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+void windows_diagnostic_stage(const char* const stage) {
+#if defined(_WIN32)
+    std::cerr << "workspace-agent parser stage: " << stage << '\n';
+#else
+    static_cast<void>(stage);
+#endif
+}
+
 class TempTree {
 public:
     TempTree() {
@@ -96,6 +104,7 @@ void expect_content_free_denial(
 }
 
 void test_configuration_and_exact_identity_authority() {
+    windows_diagnostic_stage("configuration-and-identity");
     TempTree tree;
     auto configuration = tree.configuration();
     const auto boundary = WorkspaceAgentProcessParserBoundary::create(configuration);
@@ -156,6 +165,7 @@ void test_configuration_and_exact_identity_authority() {
 }
 
 void test_invalid_configuration_fails_closed() {
+    windows_diagnostic_stage("invalid-configuration");
     TempTree tree;
     auto invalid_schema = tree.configuration();
     invalid_schema.schema_version = 2U;
@@ -252,6 +262,7 @@ void test_invalid_configuration_fails_closed() {
            "RQ-CF-AGENT-018: parser-binding count overflow must fail before capture");
 
     const auto oversized_path = tree.root / "bin" / "oversized-tool";
+    windows_diagnostic_stage("oversized-image");
     TempTree::write(oversized_path, "");
     std::error_code resize_error;
     fs::resize_file(
@@ -273,6 +284,7 @@ void test_invalid_configuration_fails_closed() {
     }
 
     std::error_code link_error;
+    windows_diagnostic_stage("hard-link");
     fs::create_hard_link(
         tree.root / "bin" / "trusted-tool",
         tree.root / "bin" / "trusted-alias",
@@ -287,6 +299,7 @@ void test_invalid_configuration_fails_closed() {
 }  // namespace
 
 int main() {
+    windows_diagnostic_stage("begin");
     test_configuration_and_exact_identity_authority();
     test_invalid_configuration_fails_closed();
     if (failures == 0) {
