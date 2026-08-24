@@ -30,10 +30,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MSVC)
+    # CMake's Debug defaults place /RTC1 in CMAKE_CXX_FLAGS_DEBUG.  Managed
+    # C++ rejects that option at command-line parse time, even if a target
+    # appends /RTC-.  Move the default to target-scoped options so /clr
+    # targets can exclude it altogether, like the explicit /EHsc policy.
+    string(REGEX REPLACE "(^|[ \\t])/RTC1([ \\t]|$)" "\\1\\2"
+        CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}" CACHE STRING
+        "Flags used by the CXX compiler during DEBUG builds." FORCE)
     add_compile_options(
         /sdl
         "$<$<NOT:$<BOOL:$<TARGET_PROPERTY:COPPERFIN_DISABLE_CFG>>>:/guard:cf>"
         /Qspectre
+        "$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Debug>,$<NOT:$<BOOL:$<TARGET_PROPERTY:COPPERFIN_MANAGED_CPP>>>>:/RTC1>"
     )
     add_link_options(
         /DYNAMICBASE

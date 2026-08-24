@@ -17,6 +17,9 @@
 #include <vector>
 
 #if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
 #include <process.h>
 #else
 #include <unistd.h>
@@ -49,6 +52,18 @@ unsigned long process_id() {
 std::string utf8_path(const fs::path& path) {
     return path_to_utf8_string(path);
 }
+
+#if defined(_WIN32)
+std::string required_windows_system_root() {
+    std::vector<wchar_t> buffer(32768U, L'\0');
+    const UINT length = GetWindowsDirectoryW(
+        buffer.data(), static_cast<UINT>(buffer.size()));
+    if (length == 0U || length >= buffer.size()) {
+        return {};
+    }
+    return utf8_path(fs::path(std::wstring(buffer.data(), length)));
+}
+#endif
 
 fs::path unique_root() {
     return fs::temp_directory_path() /
@@ -104,7 +119,15 @@ PolyglotArtifactInvocationRequest invocation(
         .max_attempts = 1U};
     request.artifact_arguments = {"-I", "-S", utf8_path(script)};
     request.working_directory = utf8_path(root);
+#if defined(_WIN32)
+    // The adapter intentionally does not inherit ambient variables. Python
+    // launched from the hosted tool cache still needs this explicit Windows
+    // loader/standard-library root, so use the OS API rather than an ambient
+    // PATH, PYTHONHOME, or runner-provided environment value.
+    request.environment = {{"SystemRoot", required_windows_system_root()}};
+#else
     request.environment = {};
+#endif
     request.poll_interval_ms = 2U;
     request.stdin_limit_bytes = 64U * 1024U;
     request.stdout_limit_bytes = 64U * 1024U;

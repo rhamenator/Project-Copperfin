@@ -1,6 +1,16 @@
+- 2026-08-24: Made the Windows Python sidecar fixture provide the OS-derived
+  `SystemRoot` explicitly to its otherwise isolated child environment. This
+  keeps the interpreter usable after runner Python provisioning without
+  inheriting ambient `PATH`, `PYTHONHOME`, or runner environment state.
+
 - 2026-08-23: Provision an explicit Python 3.13 interpreter for generated-launcher
   sidecar validation on Windows, Linux, and macOS instead of relying on each
   hosted runner image's mutable default interpreter.
+
+- 2026-08-23: Made the Windows Debug mixed-mode DECLARE fixture explicitly
+  disable incompatible MSVC runtime checks while retaining `/clr`, and replaced
+  the race-prone shared agent-channel sequence protocol with immutable,
+  UUID-addressed message files and local-only cursor state.
 
 - 2026-08-23: Continued #2564 test-module refactoring by moving report/label
   layout-object LEFT preview-bounds regressions into

@@ -1,5 +1,14 @@
 # Agent Handoff
 
+## Windows Python sidecar environment
+
+The Python sidecar fixture has an intentionally complete, non-inherited child
+environment. Hosted Python 3.13 on Windows needs an explicit `SystemRoot` to
+start and locate its standard-library resources. The fixture obtains that one
+value through `GetWindowsDirectoryW`; it does not inherit `PATH`,
+`PYTHONHOME`, or arbitrary runner variables. The regression stays portable:
+POSIX retains an empty child environment.
+
 ## Generated-launcher Python sidecar validation environment
 
 The generated-launcher validation workflow now uses a SHA-pinned setup action
@@ -7,6 +16,16 @@ to provision Python 3.13 on Windows, Linux, and macOS. This removes
 dependence on a mutable runner-image Python default after a Windows-only Python
 sidecar failure; the source/protocol behavior stays unchanged. The next action
 is to inspect the hosted Windows result on the exact workflow head.
+
+## Windows Debug mixed-mode fixture and agent-channel protocol
+
+The Windows mixed-mode DECLARE fixture excludes `/RTC1` at source: CMake moves
+its Debug default into a native-only target expression, so managed `/clr`
+targets never receive the incompatible option and cannot hit MSVC `D8016`.
+The live agent channel now uses immutable UUID-addressed message files through
+`scripts/agent_channel.py`; `log.jsonl` is historic only and local cursors are
+ignored by Git. Focused contract tests cover both guarantees. The next action
+is to obtain the hosted Windows Debug confirmation for the fixture change.
 
 ## V1 report layout-object LEFT preview-bounds test module
 

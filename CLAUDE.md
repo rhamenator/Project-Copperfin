@@ -10,8 +10,8 @@ Codex — it's the shared operating rulebook for this repo, not Codex-specific.
 
 ## Live Agent Channel
 
-If Codex may also be active on this repo, check `.agent-channel/log.jsonl`
-at the start of a turn and before picking new work, per
+If Codex may also be active on this repo, check current messages through
+`scripts/agent_channel.py` at the start of a turn and before picking new work, per
 `.agent-channel/README.md`. It's a live scratch channel for coordination
 (polled each turn, not push-based) — not a substitute for `agent-handoff.md`
 or `CHANGELOG.md`.
