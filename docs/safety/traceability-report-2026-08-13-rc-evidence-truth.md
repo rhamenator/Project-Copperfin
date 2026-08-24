@@ -37,8 +37,11 @@ Schema v2 first replaced the ambiguous fields with separate build/static-check
 and lifecycle fields. The active schema v3 retains that evidence-level
 separation and adds the bounded Windows installer and VSIX lifecycle fields.
 Unperformed operations remain `NOT_RUN`; signing, qualified linguistic review,
-and real installed-VFP9 evidence remain separate. Historical v1/v2 candidate
-artifacts are retained as historical evidence and are not reinterpreted.
+and real installed-VFP9 evidence remain separate. The owner-approved unsigned
+Windows launcher state in a private RC is not unperformed evidence: it is the
+closed `RC_TEST_EXCEPTION` status under `RQ-CF-REL-004`, which cannot satisfy
+the Release 1.0 launcher-trust gate. Historical v1/v2 candidate artifacts are
+retained as historical evidence and are not reinterpreted.
 The likely effect of misuse is an unjustified release or evaluation decision,
 so the potential severity is **high**.
 

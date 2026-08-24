@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:copperfin:schema:rc-validation-manifest:3",
-  "$comment": "Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation; DV-rc-evidence-v2-schema-validation; RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope; DV-windows-installer-lifecycle-contract; RQ-CF-REL-003; DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract; HZ-system-failure-01; HZ-data-corruption-01; HZ-doc-command-01.",
+  "$comment": "Traceability: RQ-CF-REL-001; DQ-rc-evidence-v2-scope-separation; DV-rc-evidence-v2-schema-validation; RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope; DV-windows-installer-lifecycle-contract; RQ-CF-REL-003; DQ-windows-vsix-lifecycle-scope; DV-windows-vsix-lifecycle-contract; RQ-CF-REL-004; DQ-rc-launcher-trust-exception; DV-rc-launcher-trust-exception-contract; HZ-system-failure-01; HZ-data-corruption-01; HZ-doc-command-01.",
   "title": "Copperfin private evaluation release-candidate validation manifest v3",
   "type": "object",
   "additionalProperties": false,
@@ -138,7 +138,7 @@
         "linux_package_repository"
       ],
       "properties": {
-        "windows_launcher_release_trust": { "const": "NOT_RUN" },
+        "windows_launcher_release_trust": { "const": "RC_TEST_EXCEPTION" },
         "windows_authenticode": { "const": "UNSUPPORTED_AND_DISCLOSED" },
         "visual_studio_vsix": { "const": "UNSUPPORTED_AND_DISCLOSED" },
         "macos_developer_id_and_notarization": { "const": "UNSUPPORTED_AND_DISCLOSED" },
@@ -196,6 +196,7 @@
         "PASS",
         "FAIL",
         "NOT_RUN",
+        "RC_TEST_EXCEPTION",
         "BLOCKED_EXTERNAL",
         "UNSUPPORTED_AND_DISCLOSED",
         "NOT_APPLICABLE"

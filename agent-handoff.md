@@ -79,6 +79,17 @@ preservation extraction; schema-rewrite preservation remains the separate
 #5156 slice. A fresh Debug build and focused
 `test_dbf_table` CTest must pass before protected cross-platform validation.
 
+## V1 RC launcher-trust exception
+
+Private `official_release: false` RC bundles now record unsigned Windows
+launcher inventory as `signing.windows_launcher_release_trust =
+RC_TEST_EXCEPTION`. This closed status is an owner-test exception, not a pass
+or a release-signing result, and it cannot satisfy the enforced Release 1.0
+launcher-trust gate. The private RC workflow retains no release environment or
+secrets. Validate with the assembler self-test, JSON schema parsing, and
+`test_rc_candidate_workflow_contract`; protected exact-tag execution remains
+required before retaining release evidence.
+
 ## V1 basic DBF memo lifecycle test module
 
 The bounded #5152/#2564 structural slice moves the basic M-field and G/P-field

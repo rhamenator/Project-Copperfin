@@ -9456,3 +9456,8 @@ passes `1/1`.
   raw-payload preservation extraction. The existing
   `test_dbf_table` executable, invocation order, byte-level assertions, and
    DBF behavior remain unchanged.
+
+- 2026-08-24: RC manifests now record unsigned Windows launcher inventory as
+  the explicit `RC_TEST_EXCEPTION` status rather than an ambiguous not-run
+  value. The status is valid only for private `official_release: false`
+   evaluation bundles and cannot satisfy the Release 1.0 launcher-trust gate.
