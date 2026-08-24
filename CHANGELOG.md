@@ -1,3 +1,9 @@
+- 2026-08-24: Continued #2564 source-modularity work by separating native-wrapper
+  build-script and API-manifest emission into
+  `runtime_pipeline_library_export_artifacts.cpp`. The generated wrapper,
+  FLL/library manifests, public helper contracts, and package behavior are
+  unchanged.
+
 - 2026-08-24: Continued #2564 source-modularity work by extracting library
   export discovery and API-manifest metadata generation from the generated
   native-wrapper emitter into `runtime_pipeline_library_export_metadata.cpp`.

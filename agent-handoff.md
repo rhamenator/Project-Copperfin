@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 library-export artifact-emitter module
+
+The bounded #2564 source-modularity slice separates native-wrapper CMake,
+shell/PowerShell build-script, FLL API-manifest, and DLL/library API-manifest
+emission into `runtime_pipeline_library_export_artifacts.cpp`. Its emitter body
+is unchanged from the prior `runtime_pipeline_library_export_manifest.cpp`
+implementation; the runtime-pipeline target and public helper declarations
+remain unchanged. A fresh Linux Debug `test_runtime_pipeline` build and focused
+CTest pass 1/1 in 67.92 seconds. Protected cross-platform validation remains
+required before merge.
+
 ## V1 library-export metadata module
 
 The bounded #2564 source-modularity slice extracts library-export discovery,

@@ -508,6 +508,7 @@ set(COPPERFIN_RUNTIME_PIPELINE_SOURCES
     src/runtime/runtime_pipeline_text_and_identifier_utils.cpp
     src/runtime/runtime_pipeline_file_io_and_classification.cpp
     src/runtime/runtime_pipeline_library_export_metadata.cpp
+    src/runtime/runtime_pipeline_library_export_artifacts.cpp
     src/runtime/runtime_pipeline_library_export_manifest.cpp
     src/runtime/runtime_pipeline_fxp_and_archive_manifest.cpp
     src/runtime/runtime_pipeline_ast_ir_manifest.cpp
