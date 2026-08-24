@@ -185,6 +185,16 @@ struct RuntimeComEventSourceAdmission {
     std::string source_identity{};
     std::string handler_interface_id{};
     std::vector<std::string> required_handler_methods{};
+    // Optional host-owned subscription factory. It receives a sink that
+    // accepts only one normalized handler-method identifier at a time. The
+    // factory owns every native resource needed to subscribe and its returned
+    // disconnect action must stop and quiesce future sink calls before it
+    // returns. Neither the sink nor this contract may expose COM pointers,
+    // cookies, HRESULT values, payload bytes, or mutable runtime state.
+    // An empty factory preserves metadata-only admission; it does not create
+    // an external delivery path.
+    std::function<std::function<void()>(const std::function<bool(std::string)>&)>
+        subscribe_local_event_source;
 };
 
 struct RuntimePauseState {

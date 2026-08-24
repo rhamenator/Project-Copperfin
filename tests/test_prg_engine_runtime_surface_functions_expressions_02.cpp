@@ -258,6 +258,155 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_eventhandler_drains_admitted_external_tokens_on_runtime_thread()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_eventhandler_external_token";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "eventhandler_external_token.prg";
+        write_text(
+            main_path,
+            "nHandlerCalls = 0\n"
+            "oSource = CREATEOBJECT('AdmittedSource')\n"
+            "oHandler = CREATEOBJECT('Handler')\n"
+            "lBound = EVENTHANDLER(oSource, oHandler)\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS AdmittedSource AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS Handler AS Custom\n"
+            "    PROCEDURE OnChanged\n"
+            "        nHandlerCalls = nHandlerCalls + 1\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        std::function<bool(std::string)> delivery_sink;
+        int disconnect_count = 0;
+        auto options = make_runtime_session_options(main_path.string(), temp_root.string());
+        options.com_event_source_admission_callback =
+            [&delivery_sink, &disconnect_count](const copperfin::runtime::RuntimeOleObjectState &source)
+            -> std::optional<copperfin::runtime::RuntimeComEventSourceAdmission>
+        {
+            if (source.prog_id != "AdmittedSource")
+            {
+                return std::nullopt;
+            }
+            return copperfin::runtime::RuntimeComEventSourceAdmission{
+                .source_identity = "test-owned-local-source",
+                .handler_interface_id = "ITestEvents",
+                .required_handler_methods = {"OnChanged"},
+                .subscribe_local_event_source =
+                    [&delivery_sink, &disconnect_count](const std::function<bool(std::string)> &sink)
+                    {
+                        delivery_sink = sink;
+                        return [&delivery_sink, &disconnect_count]()
+                        {
+                            ++disconnect_count;
+                            delivery_sink = {};
+                        };
+                    }};
+        };
+
+        {
+            copperfin::runtime::PrgRuntimeSession session =
+                copperfin::runtime::PrgRuntimeSession::create(options);
+            auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop && state.waiting_for_events,
+                   "admitted external-token fixture should pause in READ EVENTS");
+            expect(static_cast<bool>(delivery_sink),
+                   "host subscription should receive a bounded runtime-owned delivery sink");
+            if (!delivery_sink)
+            {
+                fs::remove_all(temp_root, ignored);
+                return;
+            }
+
+            expect(!delivery_sink("OtherMethod"),
+                   "a host may not enqueue a method outside the admitted interface contract");
+            expect(delivery_sink("OnChanged"),
+                   "an admitted method token should be accepted before runtime-thread delivery");
+            state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop && state.waiting_for_events,
+                   "external token dispatch should return to the READ EVENTS pause");
+            const auto calls = state.globals.find("nhandlercalls");
+            expect(calls != state.globals.end() && copperfin::runtime::format_value(calls->second) == "1",
+                   "only the admitted external token should invoke the existing PRG handler method");
+            expect(std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+            {
+                return event.category == "prg.eventhandler.dispatch" &&
+                       event.detail == "test-owned-local-source -> onchanged";
+            }), "runtime should retain an auditable, content-free external event dispatch record");
+        }
+
+        expect(disconnect_count == 1,
+               "runtime teardown should deterministically disconnect the admitted host subscription once");
+        expect(!delivery_sink,
+               "host teardown should not retain an enqueue callback after the runtime session is destroyed");
+
+        const fs::path release_path = temp_root / "eventhandler_external_token_release.prg";
+        write_text(
+            release_path,
+            "oSource = CREATEOBJECT('AdmittedSource')\n"
+            "oHandler = CREATEOBJECT('Handler')\n"
+            "lBound = EVENTHANDLER(oSource, oHandler)\n"
+            "oSource.Release()\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS AdmittedSource AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS Handler AS Custom\n"
+            "    PROCEDURE OnChanged\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+        auto release_options = make_runtime_session_options(release_path.string(), temp_root.string());
+        release_options.com_event_source_admission_callback = options.com_event_source_admission_callback;
+        copperfin::runtime::PrgRuntimeSession release_session =
+            copperfin::runtime::PrgRuntimeSession::create(release_options);
+        const auto released_state = release_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(released_state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   released_state.waiting_for_events,
+               "source-release fixture should continue to its READ EVENTS pause");
+        expect(disconnect_count == 2,
+               "source release should disconnect the admitted host subscription before a later callback");
+        expect(!delivery_sink,
+               "source release should retire the host enqueue callback rather than retaining a stale binding");
+
+        const fs::path fault_path = temp_root / "eventhandler_external_token_fault.prg";
+        write_text(
+            fault_path,
+            "oSource = CREATEOBJECT('AdmittedSource')\n"
+            "oHandler = CREATEOBJECT('FaultingHandler')\n"
+            "lBound = EVENTHANDLER(oSource, oHandler)\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS AdmittedSource AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS FaultingHandler AS Custom\n"
+            "    PROCEDURE OnChanged\n"
+            "        THROW 'contained-host-fault'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+        auto fault_options = make_runtime_session_options(fault_path.string(), temp_root.string());
+        fault_options.com_event_source_admission_callback = options.com_event_source_admission_callback;
+        copperfin::runtime::PrgRuntimeSession fault_session =
+            copperfin::runtime::PrgRuntimeSession::create(fault_options);
+        const auto fault_paused = fault_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(fault_paused.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   fault_paused.waiting_for_events && delivery_sink("OnChanged"),
+               "fault fixture should admit exactly one allowed callback before runtime delivery");
+        const auto fault_state = fault_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(fault_state.reason == copperfin::runtime::DebugPauseReason::error,
+               "an escaping admitted handler fault should remain a contained runtime error");
+        expect(disconnect_count == 3,
+               "an escaping handler fault should disconnect its subscription before returning the error");
+        expect(!delivery_sink,
+               "an escaping handler fault should retire the host enqueue callback");
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_cursor_xml_numeric_metadata_fails_closed()
     {
         namespace fs = std::filesystem;
