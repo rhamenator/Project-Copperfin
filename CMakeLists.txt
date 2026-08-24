@@ -540,6 +540,7 @@ add_library(cf_runtime_text
 )
 
 add_library(cf_xbase_runtime
+    src/runtime/runtime_external_event_queue.cpp
     src/runtime/prg_engine_command_helpers.cpp
     src/runtime/prg_engine_date_time_functions.cpp
     src/runtime/prg_engine_file_io_functions.cpp

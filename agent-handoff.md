@@ -1,5 +1,15 @@
 # Agent Handoff
 
+## V1 external event-token queue
+
+Issue #5186 adds `runtime_external_event_queue.{h,cpp}`, an internal,
+thread-safe FIFO for normalized, bounded host event tokens. It rejects empty,
+malformed, overlong, and over-capacity input without partial mutation and
+exposes no mutable runtime session state. This is only the portable handoff
+primitive for the Windows `EVENTHANDLER()` adapter in #5185; it does not
+subscribe to COM, dispatch a handler, or change any PRG/JSON contract. Fresh
+Debug CTest `test_runtime_external_event_queue` passes 1/1.
+
 ## V1 native-wrapper process module
 
 The bounded #2564 source-modularity slice moves the platform-specific native
