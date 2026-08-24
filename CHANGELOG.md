@@ -1,3 +1,10 @@
+- 2026-08-24: Added controlled runtime-thread delivery for admitted
+  `EVENTHANDLER()` method tokens. A host-owned subscription can enqueue only
+  an already-declared handler method through a weak, bounded queue sink; the
+  runtime revalidates the binding before dispatch and disconnects it on
+  unbind, object release, shutdown, or an escaping handler fault. This still
+  does not implement a Windows COM connection point or source fixture.
+
 - 2026-08-24: Added the internal bounded external-event token queue required
   by the Windows `EVENTHANDLER()` COM adapter. Host callbacks can now hand off
   only normalized event tokens for later runtime-thread consumption; this does

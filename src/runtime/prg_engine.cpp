@@ -20,6 +20,7 @@
 #include "prg_engine_runtime_config.h"
 #include "prg_engine_locale_code_page.h"
 #include "prg_engine_runtime_surface_functions.h"
+#include "runtime_external_event_queue.h"
 #include "prg_engine_table_structure_helpers.h"
 #include "managed_declared_call.h"
 #include "native_declared_call.h"
@@ -1069,6 +1070,7 @@ namespace copperfin::runtime
             std::string source_identity;
             std::string handler_interface_id;
             std::vector<std::string> required_handler_methods;
+            std::function<void()> disconnect_subscription;
             std::size_t ordinal = 0;
         };
 
@@ -1163,6 +1165,10 @@ namespace copperfin::runtime
         bool representative_application_show_tips = false;
         std::vector<NativeEventBinding> native_event_bindings;
         std::vector<ComEventHandlerBinding> com_eventhandler_bindings;
+        // The only state a host callback can reach. A weak reference is passed
+        // to the host so late callbacks fail closed after runtime teardown.
+        std::shared_ptr<detail::ExternalEventTokenQueue> external_event_tokens =
+            std::make_shared<detail::ExternalEventTokenQueue>();
         std::set<std::string> active_native_event_keys;
         std::set<std::string> active_native_property_assignments;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
@@ -1282,6 +1288,9 @@ namespace copperfin::runtime
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
         PrgValue eventhandler_com_event(const std::vector<PrgValue> &arguments);
+        void retire_com_eventhandler_bindings_for_handles(const std::set<int> &handles);
+        void retire_com_eventhandler_binding(std::size_t ordinal);
+        bool drain_external_event_tokens();
         PrgValue raise_native_event(
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
@@ -1393,6 +1402,11 @@ namespace copperfin::runtime
 
         ~Impl()
         {
+            while (!com_eventhandler_bindings.empty())
+            {
+                retire_com_eventhandler_binding(com_eventhandler_bindings.front().ordinal);
+            }
+            external_event_tokens.reset();
             release_declared_dll_functions();
             for (const auto &path : owned_xasset_bootstrap_paths)
             {
@@ -7945,6 +7959,152 @@ namespace copperfin::runtime
         return make_number_value(binding_count);
     }
 
+    void PrgRuntimeSession::Impl::retire_com_eventhandler_binding(std::size_t ordinal)
+    {
+        const auto found = std::find_if(
+            com_eventhandler_bindings.begin(),
+            com_eventhandler_bindings.end(),
+            [ordinal](const ComEventHandlerBinding &binding)
+            {
+                return binding.ordinal == ordinal;
+            });
+        if (found == com_eventhandler_bindings.end())
+        {
+            return;
+        }
+
+        // The host contract requires disconnect to quiesce its callback before
+        // return. Do it before dropping the runtime binding so a callback can
+        // never retain an established subscription after explicit unbind,
+        // release, or a contained delivery fault.
+        if (found->disconnect_subscription)
+        {
+            try
+            {
+                found->disconnect_subscription();
+            }
+            catch (...)
+            {
+                // A host teardown failure must not preserve the runtime
+                // binding. The weak queue sink prevents later callbacks from
+                // acquiring mutable runtime state.
+            }
+        }
+        com_eventhandler_bindings.erase(found);
+    }
+
+    void PrgRuntimeSession::Impl::retire_com_eventhandler_bindings_for_handles(const std::set<int> &handles)
+    {
+        std::vector<std::size_t> retired_ordinals;
+        for (const ComEventHandlerBinding &binding : com_eventhandler_bindings)
+        {
+            if (handles.contains(binding.source_handle) || handles.contains(binding.handler_handle))
+            {
+                retired_ordinals.push_back(binding.ordinal);
+            }
+        }
+        for (const std::size_t ordinal : retired_ordinals)
+        {
+            retire_com_eventhandler_binding(ordinal);
+        }
+    }
+
+    bool PrgRuntimeSession::Impl::drain_external_event_tokens()
+    {
+        if (external_event_tokens == nullptr)
+        {
+            return false;
+        }
+
+        bool delivered = false;
+        for (const std::string &token : external_event_tokens->drain())
+        {
+            constexpr std::string_view prefix = "com-eventhandler:";
+            if (!token.starts_with(prefix))
+            {
+                continue;
+            }
+            const std::size_t separator = token.find(':', prefix.size());
+            if (separator == std::string::npos || separator == prefix.size() ||
+                separator + 1U >= token.size())
+            {
+                continue;
+            }
+
+            std::size_t ordinal = 0U;
+            const char *ordinal_begin = token.data() + prefix.size();
+            const char *ordinal_end = token.data() + separator;
+            if (const auto [parsed_end, error] = std::from_chars(ordinal_begin, ordinal_end, ordinal);
+                error != std::errc{} || parsed_end != ordinal_end || ordinal == 0U)
+            {
+                continue;
+            }
+            const std::string method = normalize_identifier(token.substr(separator + 1U));
+            if (method.empty())
+            {
+                continue;
+            }
+
+            const auto binding = std::find_if(
+                com_eventhandler_bindings.begin(),
+                com_eventhandler_bindings.end(),
+                [ordinal](const ComEventHandlerBinding &candidate)
+                {
+                    return candidate.ordinal == ordinal;
+                });
+            if (binding == com_eventhandler_bindings.end() ||
+                !ole_objects.contains(binding->source_handle) ||
+                !ole_objects.contains(binding->handler_handle) ||
+                std::find(binding->required_handler_methods.begin(),
+                          binding->required_handler_methods.end(),
+                          method) == binding->required_handler_methods.end())
+            {
+                continue;
+            }
+
+            RuntimeOleObjectState &handler_object = ole_objects.at(binding->handler_handle);
+            std::string method_program_path;
+            std::string resolved_method;
+            if (find_native_object_method(handler_object, method, method_program_path, resolved_method) == nullptr)
+            {
+                continue;
+            }
+
+            const NativeEventBinding dispatch_binding{
+                .source_handle = binding->source_handle,
+                .event_name = method,
+                .target_is_routine = false,
+                .target_program_path = {},
+                .target_handle = binding->handler_handle,
+                .delegate_name = method,
+                .flags = 0,
+                .ordinal = binding->ordinal};
+            const std::string source_identity = binding->source_identity;
+            const bool was_waiting_for_events = waiting_for_events;
+            waiting_for_events = false;
+            try
+            {
+                (void)invoke_native_event_delegate(
+                    dispatch_binding,
+                    {.source_handle = binding->source_handle, .event_name = method, .event_type = 0},
+                    {},
+                    {});
+                events.push_back({.category = "prg.eventhandler.dispatch",
+                                  .detail = source_identity + " -> " + method,
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                delivered = true;
+            }
+            catch (...)
+            {
+                retire_com_eventhandler_binding(ordinal);
+                waiting_for_events = was_waiting_for_events && !stack.empty();
+                throw;
+            }
+            waiting_for_events = was_waiting_for_events && !stack.empty();
+        }
+        return delivered;
+    }
+
     PrgValue PrgRuntimeSession::Impl::eventhandler_com_event(const std::vector<PrgValue> &arguments)
     {
         // LLR-VFP-COM-002 / HZ-runtime-crash-01: absence of an explicit,
@@ -7967,19 +8127,20 @@ namespace copperfin::runtime
             // (for example during fault rollback). The source/handler pair is
             // the runtime-owned binding key; no refreshed host metadata is
             // needed to remove stale state.
-            const auto previous_size = com_eventhandler_bindings.size();
-            com_eventhandler_bindings.erase(
-                std::remove_if(
-                    com_eventhandler_bindings.begin(),
-                    com_eventhandler_bindings.end(),
-                    [source_handle = (*source_object)->handle, handler_handle = (*handler_object)->handle](
-                        const ComEventHandlerBinding &binding)
-                    {
-                        return binding.source_handle == source_handle &&
-                               binding.handler_handle == handler_handle;
-                    }),
-                com_eventhandler_bindings.end());
-            return make_boolean_value(com_eventhandler_bindings.size() != previous_size);
+            std::vector<std::size_t> retired_ordinals;
+            for (const ComEventHandlerBinding &binding : com_eventhandler_bindings)
+            {
+                if (binding.source_handle == (*source_object)->handle &&
+                    binding.handler_handle == (*handler_object)->handle)
+                {
+                    retired_ordinals.push_back(binding.ordinal);
+                }
+            }
+            for (const std::size_t ordinal : retired_ordinals)
+            {
+                retire_com_eventhandler_binding(ordinal);
+            }
+            return make_boolean_value(!retired_ordinals.empty());
         }
         if (!options.com_event_source_admission_callback)
         {
@@ -8029,13 +8190,46 @@ namespace copperfin::runtime
         if (std::find_if(com_eventhandler_bindings.begin(), com_eventhandler_bindings.end(), matches) ==
             com_eventhandler_bindings.end())
         {
-            com_eventhandler_bindings.push_back({
+            ComEventHandlerBinding binding{
                 .source_handle = (*source_object)->handle,
                 .handler_handle = (*handler_object)->handle,
                 .source_identity = admission->source_identity,
                 .handler_interface_id = admission->handler_interface_id,
                 .required_handler_methods = std::move(required_methods),
-                .ordinal = next_native_event_binding_ordinal++});
+                .disconnect_subscription = {},
+                .ordinal = next_native_event_binding_ordinal++};
+            if (admission->subscribe_local_event_source)
+            {
+                const std::weak_ptr<detail::ExternalEventTokenQueue> queue = external_event_tokens;
+                const std::size_t ordinal = binding.ordinal;
+                const std::vector<std::string> allowed_methods = binding.required_handler_methods;
+                try
+                {
+                    binding.disconnect_subscription = admission->subscribe_local_event_source(
+                        [queue, ordinal, allowed_methods](std::string method) -> bool
+                        {
+                            const std::string normalized = normalize_identifier(trim_copy(method));
+                            if (std::find(allowed_methods.begin(), allowed_methods.end(), normalized) ==
+                                allowed_methods.end())
+                            {
+                                return false;
+                            }
+                            const std::shared_ptr<detail::ExternalEventTokenQueue> locked_queue = queue.lock();
+                            return locked_queue != nullptr &&
+                                locked_queue->try_push(
+                                    "com-eventhandler:" + std::to_string(ordinal) + ":" + normalized);
+                        });
+                }
+                catch (...)
+                {
+                    return make_boolean_value(false);
+                }
+                if (!binding.disconnect_subscription)
+                {
+                    return make_boolean_value(false);
+                }
+            }
+            com_eventhandler_bindings.push_back(std::move(binding));
         }
         return make_boolean_value(true);
     }
@@ -10434,16 +10628,7 @@ namespace copperfin::runtime
                            (!binding.target_is_routine && discarded_handles.contains(binding.target_handle));
                 }),
             native_event_bindings.end());
-        com_eventhandler_bindings.erase(
-            std::remove_if(
-                com_eventhandler_bindings.begin(),
-                com_eventhandler_bindings.end(),
-                [&discarded_handles](const ComEventHandlerBinding &binding)
-                {
-                    return discarded_handles.contains(binding.source_handle) ||
-                           discarded_handles.contains(binding.handler_handle);
-                }),
-            com_eventhandler_bindings.end());
+        retire_com_eventhandler_bindings_for_handles(discarded_handles);
         window_message_bindings.erase(
             std::remove_if(
                 window_message_bindings.begin(),
@@ -10668,15 +10853,7 @@ namespace copperfin::runtime
                                (!binding.target_is_routine && binding.target_handle == handle);
                     }),
                 native_event_bindings.end());
-            com_eventhandler_bindings.erase(
-                std::remove_if(
-                    com_eventhandler_bindings.begin(),
-                    com_eventhandler_bindings.end(),
-                    [handle](const ComEventHandlerBinding &binding)
-                    {
-                        return binding.source_handle == handle || binding.handler_handle == handle;
-                    }),
-                com_eventhandler_bindings.end());
+            retire_com_eventhandler_bindings_for_handles({handle});
             native_property_expression_text_by_handle.erase(handle);
             native_default_property_expression_text_by_handle.erase(handle);
             native_object_arrays.erase(handle);
@@ -12625,19 +12802,27 @@ namespace copperfin::runtime
         {
             (void)start_escape_handler();
         }
-        if (waiting_for_events)
-        {
-            return finalize_pause_state(
-                DebugPauseReason::event_loop,
-                runtime_text("Runtime.Prg.Session.Message.WaitingInReadEvents"));
-        }
-
         const std::size_t base_depth = stack.size();
 
         try
         {
+            if (waiting_for_events)
+            {
+                // Host callbacks enqueue only bounded method tokens. The
+                // runtime owns validation and invokes a handler only on this
+                // thread; an escaping handler fault is contained by this
+                // enclosing run() error boundary.
+                (void)drain_external_event_tokens();
+                if (waiting_for_events)
+                {
+                    return finalize_pause_state(
+                        DebugPauseReason::event_loop,
+                        runtime_text("Runtime.Prg.Session.Message.WaitingInReadEvents"));
+                }
+            }
             while (true)
             {
+                (void)drain_external_event_tokens();
                 const Statement *pending_statement = current_statement();
         const bool pending_statement_handles_cancellation =
                     pending_statement != nullptr && pending_statement->kind == StatementKind::sleep_command;

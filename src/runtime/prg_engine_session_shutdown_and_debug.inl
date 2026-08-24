@@ -50,7 +50,16 @@
             }
             clear_all_shared_lock_ownership();
 
-            // Release synthetic SQL/OLE/runtime interop state.
+            // Release synthetic SQL/OLE/runtime interop state. Disconnect an
+            // admitted host source before its runtime objects disappear.
+            while (!com_eventhandler_bindings.empty())
+            {
+                retire_com_eventhandler_binding(com_eventhandler_bindings.front().ordinal);
+            }
+            if (external_event_tokens != nullptr)
+            {
+                external_event_tokens->clear();
+            }
             sql_connections_by_session.clear();
             next_sql_handle_by_session.clear();
             registered_api_functions_by_session.clear();

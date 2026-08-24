@@ -1,14 +1,27 @@
 # Agent Handoff
 
+## V1 controlled EVENTHANDLER token delivery
+
+Issue #5188 connects an optional host-owned admitted-source subscription to
+the internal queue without adding a PRG or JSON contract. The host receives a
+weak sink that accepts only one listed handler-method identifier; the runtime
+thread drains its bounded token, rechecks the source/handler binding and
+method, and uses the existing iterative native-method frame path. The host's
+disconnect action is invoked before a bound source or handler is discarded,
+at shutdown, and after an escaping delivery fault. This is not a COM
+connection-point implementation: Windows ownership, `IConnectionPoint`
+subscription, and an owned Windows fixture remain #5185/#5184 work.
+Fresh Debug `test_prg_engine_runtime_surface_functions` passes 1/1.
+
 ## V1 external event-token queue
 
 Issue #5186 adds `runtime_external_event_queue.{h,cpp}`, an internal,
 thread-safe FIFO for normalized, bounded host event tokens. It rejects empty,
 malformed, overlong, and over-capacity input without partial mutation and
 exposes no mutable runtime session state. This is only the portable handoff
-primitive for the Windows `EVENTHANDLER()` adapter in #5185; it does not
-subscribe to COM, dispatch a handler, or change any PRG/JSON contract. Fresh
-Debug CTest `test_runtime_external_event_queue` passes 1/1.
+primitive for the Windows `EVENTHANDLER()` adapter in #5185. By itself it
+does not subscribe to COM or change any PRG/JSON contract. Fresh Debug CTest
+`test_runtime_external_event_queue` passes 1/1.
 
 ## V1 native-wrapper process module
 
