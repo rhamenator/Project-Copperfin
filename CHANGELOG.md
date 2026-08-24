@@ -1,3 +1,9 @@
+- 2026-08-24: Continued #2564 test-module refactoring by extracting the shared
+  VFP-asset test support (locale guard, localized validation lookup, and
+  synthetic binary-fixture writers) into `test_vfp_assets_support.h`. The
+  existing `test_vfp_assets` executable, fixture bytes, assertions, invocation
+  order, and asset-inspection behavior remain unchanged.
+
 - 2026-08-24: Made the Windows Python sidecar fixture provide the OS-derived
   `SystemRoot` explicitly to its otherwise isolated child environment. This
   keeps the interpreter usable after runner Python provisioning without
