@@ -1,12 +1,12 @@
 # Agent Handoff
 
-## V1 visual-asset method-list test module
+## V1 visual-asset blank-property test module
 
-The bounded #2564 structural slice moves the selected-object method-list
-regression into `test_visual_asset_editor_method_listing.cpp`. The existing
-`test_visual_asset_editor` executable retains its fixture bytes, assertions,
-and invocation order. A fresh Debug build and focused CTest pass 1/1; protected
-cross-platform validation remains required before merge.
+The bounded #2564 structural slice moves the blank-property-value preservation
+regression into `test_visual_asset_editor_property_blank_value.cpp`. The
+existing `test_visual_asset_editor` executable retains its fixture bytes,
+ assertions, and invocation order. A fresh Debug build and focused CTest pass
+ 1/1; protected cross-platform validation remains required before merge.
 
 ## V1 VFP-asset test support
 
