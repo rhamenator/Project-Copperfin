@@ -1,5 +1,14 @@
 # Agent Handoff
 
+## V1 visual-asset BOTMARGIN memo test module
+
+The bounded #2564 structural slice moves the paired FRX/LBX `BOTMARGIN` memo
+round-trip regression into
+`test_visual_asset_editor_report_settings_bottom_margin.cpp`. The existing
+`test_visual_asset_editor` executable retains the same fixture bytes,
+assertions, invocation order, and visual-asset behavior. A fresh Debug build
+and focused CTest must pass before protected cross-platform validation.
+
 ## V1 visual-asset property comment-line test module
 
 The bounded #2564 structural slice moves the report-settings comment-line
