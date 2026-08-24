@@ -1,5 +1,14 @@
 # Agent Handoff
 
+## V1 VFP-asset test support
+
+The bounded #2564 structural slice extracts reusable VFP-asset test support
+(locale guard, localized validation lookup, and synthetic binary-fixture
+writers) into `test_vfp_assets_support.h`. The existing `test_vfp_assets`
+target retains the same fixture bytes, assertions, invocation order, and
+asset-inspection behavior. A fresh Debug configure/build and focused CTest
+pass 1/1; protected cross-platform validation remains required before merge.
+
 ## Windows Python sidecar environment
 
 The Python sidecar fixture has an intentionally complete, non-inherited child
