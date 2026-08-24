@@ -636,6 +636,36 @@ void test_catalog_root_resolution_finds_repo_build_output_layout_from_executable
     fs::remove_all(temp_root, ignored);
 }
 
+void test_catalog_root_resolution_finds_bundled_build_tree_layout_from_executable_path() {
+    namespace fs = std::filesystem;
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_localization_bundled_build_tree_catalog_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+
+    const fs::path executable_path = temp_root / "build" / "copperfin_studio_host";
+    fs::create_directories(executable_path.parent_path());
+    write_text(executable_path, "");
+    seed_test_catalogs(executable_path.parent_path() / "resources" / "locales");
+
+    const fs::path working_directory = temp_root / "independent-working-directory";
+    fs::create_directories(working_directory);
+    fs::path resolved_root;
+    {
+        ScopedCurrentPath current_path(working_directory);
+        resolved_root = copperfin::localization::resolve_catalog_root(executable_path);
+    }
+    const auto catalog = copperfin::localization::load_catalogs(resolved_root, "en-US");
+
+    expect(
+        fs::equivalent(resolved_root, executable_path.parent_path() / "resources" / "locales") &&
+            catalog.translate("Command.Inspect") == "Inspect",
+        "#2348: catalog root resolution should find bundled locales beside an out-of-tree build executable");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_catalog_root_resolution_finds_repo_build_output_layout_from_path_launched_basename() {
     namespace fs = std::filesystem;
     ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");

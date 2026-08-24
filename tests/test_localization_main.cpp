@@ -20,6 +20,7 @@ void test_catalog_root_auto_discovery_preserves_executable_candidate_precedence(
 void test_catalog_root_explicit_override_remains_authoritative();
 void test_catalog_root_resolution_searches_parent_directories();
 void test_catalog_root_resolution_finds_repo_build_output_layout_from_executable_path();
+void test_catalog_root_resolution_finds_bundled_build_tree_layout_from_executable_path();
 void test_catalog_root_resolution_finds_repo_build_output_layout_from_path_launched_basename();
 void test_parser_behavior_remains_locale_invariant();
 void test_runtime_session_diagnostics_route_through_catalog();
@@ -85,6 +86,7 @@ int main(int argc, char** argv) {
     test_catalog_root_explicit_override_remains_authoritative();
     test_catalog_root_resolution_searches_parent_directories();
     test_catalog_root_resolution_finds_repo_build_output_layout_from_executable_path();
+    test_catalog_root_resolution_finds_bundled_build_tree_layout_from_executable_path();
     test_catalog_root_resolution_finds_repo_build_output_layout_from_path_launched_basename();
     test_parser_behavior_remains_locale_invariant();
     test_runtime_session_diagnostics_route_through_catalog();

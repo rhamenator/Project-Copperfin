@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 out-of-tree Studio locale discovery
+
+The #2348 localization slice stages `resources/locales` under an out-of-tree
+build's `resources/` directory and recognizes that directory beside a host
+executable. This keeps default visual-editor diagnostics localized when Studio
+is invoked from an arbitrary working directory without a locale-root override.
+Explicit `COPPERFIN_LOCALE_DIR` overrides and installed layouts retain their
+existing precedence; JSON keys, command tokens, statuses, and exit codes remain
+invariant. Fresh Debug `test_localization` and `test_studio_host_json` pass;
+cross-platform hosted validation remains required before merge.
+
 ## V1 visual-asset BOTMARGIN memo test module
 
 The bounded #2564 structural slice moves the paired FRX/LBX `BOTMARGIN` memo

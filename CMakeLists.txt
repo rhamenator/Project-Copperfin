@@ -845,6 +845,17 @@ install(DIRECTORY resources/locales/
     DESTINATION share/copperfin/locales
 )
 
+# Make an out-of-tree developer build runnable from an arbitrary working
+# directory, matching the executable-relative resource layout used by the
+# installed hosts. Catalog inputs participate in CMake's reconfigure check so
+# edits are reflected by the next normal build.
+file(GLOB_RECURSE COPPERFIN_BUILD_TREE_LOCALE_CATALOGS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/locales/*")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    ${COPPERFIN_BUILD_TREE_LOCALE_CATALOGS})
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/locales"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/resources")
+
 # Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
 # DV-windows-installer-lifecycle-contract; HZ-system-failure-01;
 # HZ-data-corruption-01; HZ-doc-command-01.

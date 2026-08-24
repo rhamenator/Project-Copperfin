@@ -559,6 +559,7 @@ std::filesystem::path resolve_catalog_root(const std::filesystem::path& executab
         const std::vector<std::filesystem::path> candidates{
             executable_root / ".." / "share" / "copperfin" / "locales",
             executable_root / "share" / "copperfin" / "locales",
+            executable_root / "resources" / "locales",
             executable_root / ".." / "resources" / "locales",
             executable_root / ".." / ".." / "resources" / "locales"
         };
