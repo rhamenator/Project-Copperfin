@@ -90,6 +90,18 @@ secrets. Validate with the assembler self-test, JSON schema parsing, and
 `test_rc_candidate_workflow_contract`; protected exact-tag execution remains
 required before retaining release evidence.
 
+## V1 DBF schema-rewrite memo-preservation test module
+
+The bounded #5156/#2564 structural slice moves the schema-rewrite regression
+that verifies raw M/G/P payload preservation, unaffected field bytes,
+null-state provenance, deleted-row markers, and fail-closed corrupt-sidecar
+handling into `test_dbf_table_schema_rewrite_memo.cpp`. It reuses the shared
+binary-fixture helpers while keeping its field-byte reader private; the existing
+`test_dbf_table` executable, function invocation order, assertions, and DBF
+behavior remain unchanged. The moved test body matches its former source range
+byte-for-byte. A fresh Debug build and focused `test_dbf_table` CTest pass 1/1;
+protected cross-platform validation remains required before merge.
+
 ## V1 basic DBF memo lifecycle test module
 
 The bounded #5152/#2564 structural slice moves the basic M-field and G/P-field

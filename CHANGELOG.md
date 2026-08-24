@@ -32,6 +32,12 @@
   DBF-table test support module, removing duplicate helper implementations
    from the memo-integrity test split without changing DBF behavior.
 
+- 2026-08-24: Continued #2564 test-module refactoring by moving the DBF
+  schema-rewrite raw-memo and unaffected-field-byte preservation regression
+  into `test_dbf_table_schema_rewrite_memo.cpp`. The existing
+  `test_dbf_table` executable, invocation order, assertions, and DBF behavior
+  remain unchanged.
+
 - 2026-08-23: Continued #2564 test-module refactoring by moving the basic DBF
   memo and G/P create/replace/append lifecycle regressions into
   `test_dbf_table_memo_lifecycle.cpp`. The existing `test_dbf_table`
