@@ -1,7 +1,8 @@
 - 2026-08-24: Continued #2564 test-module refactoring by moving the visual
-  asset method-list regression into `test_visual_asset_editor_method_listing.cpp`.
-  The existing `test_visual_asset_editor` executable, fixture bytes,
-  assertions, and invocation order remain unchanged.
+  asset blank-property-value preservation regression into
+  `test_visual_asset_editor_property_blank_value.cpp`. The existing
+  `test_visual_asset_editor` executable, fixture bytes, assertions, and
+  invocation order remain unchanged.
 
 - 2026-08-24: Continued #2564 test-module refactoring by extracting the shared
   VFP-asset test support (locale guard, localized validation lookup, and
