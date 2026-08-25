@@ -1,3 +1,10 @@
+- 2026-08-25: Continued #2564 source-modularity work by extracting native
+  runtime event delegation, `BINDEVENT()`/`RAISEEVENT()`/`UNBINDEVENTS()` /
+  `AEVENTS()` handling, host-owned `EVENTHANDLER()` dispatch, window-message
+  bindings, and deterministic binding retirement into
+  `prg_engine_event_binding_dispatch.inl`. Existing PRG/runtime, security,
+  containment, and user-facing behavior are unchanged.
+
 - 2026-08-25: Continued #2564 source-modularity work by extracting runtime
   package-transaction locking, pinned-parent containment, staged
   materialization, deferred finalization, commit, rollback, and test hooks into
