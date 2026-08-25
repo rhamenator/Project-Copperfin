@@ -12,6 +12,19 @@ provider adapter, real sandbox enforcement, general mutable-tool surface, or
 POSIX/macOS executor: those remain unimplemented. This documentation-only
 slice changes no policy, executable behavior, public API, or machine contract.
 
+## V1 report-object deleted-subtree JSON regression module
+
+The bounded #5246/#2564 structural slice moves the contiguous report-object
+deleted-subtree JSON regression family from
+`test_studio_host_json_objects_diagnostics_and_misc.cpp` to
+`test_studio_host_json_report_object_deleted_subtree.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate target; existing
+fixtures, invocation behavior, report/label stable selection, localization,
+preview-bound, and machine contracts remain unchanged. The moved body is
+byte-identical to the pre-extraction source. A fresh Linux Debug
+`test_studio_host_json` build and focused CTest passed `1/1` in 457.75 seconds
+with `TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
 ## V1 Studio designer-dispatch JSON regression module
 
 The bounded #5242/#2564 structural slice moves the contiguous Studio
