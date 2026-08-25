@@ -1,5 +1,18 @@
 # Agent Handoff
 
+## V1 library-export compilation-preamble module
+
+The bounded #2564 structural slice in #5194 moves the platform-specific
+include and export-macro preamble emitted into generated native wrappers from
+`runtime_pipeline_library_export_manifest.cpp` into
+`runtime_pipeline_library_export_preamble.cpp`. Preserve the exact emitted
+include order, Windows/POSIX branches, export definitions, blank-line
+termination, and the existing public runtime-pipeline helper contract. A fresh
+Debug build in a relocated `/home/rich` build directory plus focused
+`test_runtime_pipeline` CTest passed 1/1 in 71.82 seconds; the local `/tmp`
+build failure was an environmental quota limit and not product evidence.
+Protected cross-platform validation remains required before merge.
+
 ## V1 owned-COM adapter hosted evidence
 
 Protected Windows run `32794260256` passed at merged adapter head `e68056ad0`.
