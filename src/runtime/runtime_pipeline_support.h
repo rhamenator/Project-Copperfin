@@ -205,6 +205,7 @@ void append_native_wrapper_compilation_preamble(std::ostringstream& stream);
 void append_native_wrapper_host_authentication_source(std::ostringstream& stream);
 void append_native_wrapper_bridge_model_source(std::ostringstream& stream);
 void append_native_wrapper_request_serialization_source(std::ostringstream& stream);
+void append_native_wrapper_process_launch_source(std::ostringstream& stream);
 void append_native_wrapper_response_handling_source(std::ostringstream& stream);
 std::string build_module_definition_source(const RuntimePackagePlan& plan);
 std::string build_native_wrapper_source(const RuntimePackagePlan& plan);
