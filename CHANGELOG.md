@@ -1,4 +1,10 @@
 - 2026-08-25: Continued #2564 source-modularity work by extracting runtime
+  package-transaction locking, pinned-parent containment, staged
+  materialization, deferred finalization, commit, rollback, and test hooks into
+  `runtime_pipeline_package_transaction.cpp`. Package, compiler, security,
+  localization, and user-facing behavior are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting runtime
   package-plan construction and runtime/debug manifest serialization into
   `runtime_pipeline_package_plan_manifest.cpp`. Package, compiler, security,
   localization, and user-facing behavior are unchanged.

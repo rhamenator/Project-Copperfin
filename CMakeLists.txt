@@ -527,6 +527,7 @@ set(COPPERFIN_RUNTIME_PIPELINE_SOURCES
     src/runtime/runtime_pipeline_manifest_pair.cpp
     src/runtime/runtime_pipeline_manifest_pair_io.cpp
     src/runtime/runtime_pipeline_package_plan_manifest.cpp
+    src/runtime/runtime_pipeline_package_transaction.cpp
     src/runtime/runtime_pipeline_public_api.cpp
 )
 
