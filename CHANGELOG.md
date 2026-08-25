@@ -1,3 +1,9 @@
+- 2026-08-25: Recorded protected Windows evidence for the owned local
+  `EVENTHANDLER()` COM connection-point lane. Run `32794260256` passed the
+  adapter fixture's delivery, rejection, explicit-unbind, release-cleanup, and
+  handler-fault-cleanup cases without opening activation, discovery, remote,
+  network, or PRG/JSON COM-resource paths.
+
 - 2026-08-25: Corrected the owned-COM lifecycle fixture so its generated PRG
   programs place `Release()` on a real subsequent line rather than embedding a
   literal escape sequence. The regression now guards that fixture-input
