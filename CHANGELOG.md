@@ -3,6 +3,12 @@
   reflection into `prg_engine_native_reflection_dispatch.inl`. Runtime
   behavior, public APIs, UI behavior, and localization remain unchanged.
 
+- 2026-08-25: Continued #2564 source-modularity work by extracting private
+  xAsset bootstrap and VCX class-source materialization into
+  `prg_engine_xasset_materialization.inl`. Verified-byte snapshot handling,
+  bootstrap cleanup, generated-source behavior, localization, package/debug,
+  and public runtime contracts are unchanged.
+
 - 2026-08-25: Continued #2564 source-modularity work by extracting native
   runtime event delegation, `BINDEVENT()`/`RAISEEVENT()`/`UNBINDEVENTS()` /
   `AEVENTS()` handling, host-owned `EVENTHANDLER()` dispatch, window-message

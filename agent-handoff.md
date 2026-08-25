@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 xAsset bootstrap and VCX-source materialization module
+
+The bounded #5222/#2564 structural slice moves the contiguous private xAsset
+bootstrap materialization and VCX-to-PRG class-source materialization from
+`prg_engine.cpp` to `prg_engine_xasset_materialization.inl`. The fragment
+remains in the same private `PrgRuntimeSession::Impl` translation-unit context;
+public APIs, CMake topology, verified-byte snapshot handling, xAsset bootstrap
+cleanup, generated-source shape, localization, package/debug contracts, and
+runtime behavior remain unchanged. The moved 323-line body is byte-identical
+to the pre-extraction source. A fresh Linux Debug exact-head build passed
+`test_prg_engine_dynamic_xasset_security` and
+`test_prg_engine_runtime_surface_procedure_classes` 2/2 in 1.45 seconds with
+`TMPDIR` under `~/temp`; obtain the protected matrix before merge.
+
 ## V1 native object-member and focus-dispatch module
 
 The bounded #5218/#2564 structural slice moves the contiguous native PRG
