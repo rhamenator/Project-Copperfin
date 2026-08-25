@@ -12,8 +12,26 @@ counter. The moved source is byte-identical except for that counter remaining
 with its sole consumer, and no public header, package format, manifest,
 security, localization, compiler, or user-facing contract changes. A fresh
 Linux Debug `test_runtime_pipeline` build succeeded and focused CTest passed
-1/1 in 74.03 seconds with `TMPDIR` under `~/temp`. Obtain the complete
-protected matrix before merge.
+1/1 in 74.03 seconds with `TMPDIR` under `~/temp`. The complete protected
+matrix passed before merge: DCO, Socket, GCC/Clang executable paths,
+Ubuntu/macOS/Windows generated launcher, Windows Win32/x64 DECLARE, and
+Windows environment paths.
+
+## V1 native event binding/dispatch module
+
+The bounded #5216/#2564 structural slice moves the contiguous native runtime
+event implementation from `prg_engine.cpp` to the included
+`prg_engine_event_binding_dispatch.inl` module. It retains native-event and
+window-message delegate invocation, `BINDEVENT()`/`RAISEEVENT()`/
+`UNBINDEVENTS()`/`AEVENTS()`, the fail-closed host-owned `EVENTHANDLER()`
+boundary, token draining, deterministic retirement, callback containment, and
+release cleanup in one private implementation boundary. The moved source body
+is byte-identical (apart from omitting its terminal blank line); public
+headers, PRG/JSON/package/security/localization
+contracts, and stack-frugal execution are unchanged. A fresh Linux Debug
+`test_prg_engine_runtime_surface_functions` build completed successfully and
+focused CTest passed 1/1 in 5.49 seconds with `TMPDIR` under `~/temp`. Obtain
+the complete protected matrix before merge.
 
 ## V1 runtime package-plan and manifest module
 
@@ -29,8 +47,8 @@ and user-facing contracts do not change. A fresh Linux Debug
 `~/temp`. Two reruns of the focused executable completed all other fixtures
 but failed only its existing `.NET` child-launch checks, even though
 `dotnet --info` succeeds in the shell. Treat that local executable-launch
-condition as an environment limitation and obtain a clean protected matrix
-before merge.
+condition as an environment limitation; the subsequent complete protected
+matrix passed before merge.
 
 ## V1 library-entrypoint emitter module
 
