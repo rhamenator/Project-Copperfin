@@ -37,6 +37,20 @@ unchanged. A fresh Linux Debug `test_visual_asset_editor` rerun passed `1/1` in
 20.37 seconds with `TMPDIR` under `~/temp`; obtain the refreshed protected
 matrix before merge.
 
+## V1 workspace-agent parser test aliasing correction
+
+Windows diagnostic evidence identified undefined behavior in the existing
+`test_workspace_agent_process_parser` fixture: `std::vector::push_back()` and
+`assign()` were passed a reference to `front()` from the same vector, even
+though either mutation may reallocate and invalidate that reference. The test
+now copies the binding into a standalone value before each mutation. This keeps
+the existing duplicate and over-limit `RQ-CF-AGENT-018` fail-closed cases while
+making them deterministic under MSVC Debug and Release. No production parser,
+authority, launch, security-policy, or public behavior changes. Fresh Linux
+Debug CTest passed `1/1`; fresh Linux Release CTest passed the same target for
+50 consecutive runs, both with `TMPDIR` under `~/temp`. The protected Windows
+matrix remains required evidence.
+
 ## V1 index-probe asset test module
 
 The bounded #5226/#2564 structural slice moves the contiguous CDX/DCX/IDX/NDX/
