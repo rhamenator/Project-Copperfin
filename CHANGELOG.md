@@ -1,4 +1,11 @@
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  HighlightBackColor and HighlightForeColor visual-asset regression pair from
+  `test_visual_asset_editor_appearance_colors.cpp` into
+  `test_visual_asset_editor_appearance_highlight_colors.inl`. The aggregate
+  target, invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   ItemBackColor and ItemForeColor visual-asset regression pair from
   `test_visual_asset_editor_appearance_colors.cpp` into
   `test_visual_asset_editor_appearance_item_colors.inl`. The aggregate target,
