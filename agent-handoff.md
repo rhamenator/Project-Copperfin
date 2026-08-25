@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## V1 visual-asset selected-object behavior regression module
+
+The bounded #5258/#2564 structural slice moves the contiguous deleted-state,
+tab-order, tab-stop, visibility, enabled, read-only, and locked visual-asset
+setter regression family from `test_visual_asset_editor_setters_behavior.cpp`
+into `test_visual_asset_editor_setters_behavior_selected_object.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+`test_visual_asset_editor` executable; declarations, invocation order,
+fixtures, xAsset mutation and undo behavior, localization, and machine
+contracts are unchanged. The 1,070-line moved body is byte-identical to its
+pre-extraction source block. No product or compatibility behavior is added. A
+fresh Linux Debug configuration built `test_visual_asset_editor`; focused CTest
+passed `1/1` in 20.49 seconds with `TMPDIR` under `~/temp`. Obtain the protected
+matrix before merge.
+
 ## V1 visual-asset SelectedItem color regression module
 
 The bounded #5256/#2564 structural slice moves the contiguous

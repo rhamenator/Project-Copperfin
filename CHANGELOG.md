@@ -1,4 +1,12 @@
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  selected-object deleted-state, tab order, tab stop, visibility, enabled,
+  read-only, and locked visual-asset setter regressions from
+  `test_visual_asset_editor_setters_behavior.cpp` into
+  `test_visual_asset_editor_setters_behavior_selected_object.inl`. The
+  aggregate target, invocation behavior, xAsset mutation and undo coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   SelectedItemBackColor and SelectedItemForeColor visual-asset regression pair
   from `test_visual_asset_editor_appearance_colors.cpp` into
   `test_visual_asset_editor_appearance_selected_item_colors.inl`. The aggregate
