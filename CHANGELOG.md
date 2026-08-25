@@ -1,3 +1,9 @@
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  CDX/DCX/IDX/NDX/MDX index-probe and localized-diagnostic regressions from
+  `test_vfp_assets.cpp` into `test_vfp_assets_index_probe_contracts.inl`. The
+  aggregate test target, invocation order, existing parser/format coverage,
+  localization coverage, and all runtime and machine contracts are unchanged.
+
 - 2026-08-25: Continued #2564 test-module refactoring by moving the core
   whole-database JSON export and non-mutating import-planning contract tests
   from `test_vfp_assets.cpp` into

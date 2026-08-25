@@ -1,5 +1,15 @@
 # Agent Handoff
 
+## V1 index-probe asset test module
+
+The bounded #5226/#2564 structural slice moves the contiguous CDX/DCX/IDX/NDX/
+MDX index-probe and localized-diagnostic regressions from `test_vfp_assets.cpp`
+to `test_vfp_assets_index_probe_contracts.inl`. They remain included in the
+same anonymous-namespace test translation unit; the aggregate executable, test
+registration order, fixtures, existing parser/format coverage, and
+localization coverage remain unchanged. This slice adds no parser, asset,
+runtime, format, or machine-contract behavior.
+
 ## V1 whole-database JSON asset test module
 
 The bounded #5224/#2564 structural slice moves the contiguous core
