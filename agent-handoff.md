@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## V1 buffering CURVAL/admission test module
+
+The bounded #5202/#2564 structural slice moves the contiguous existing
+CURVAL/LUPDATE verified-admission regressions from
+`test_prg_engine_runtime_surface_functions_buffering.cpp` to the included
+`test_prg_engine_runtime_surface_functions_buffering_curval_admission.inl`
+ownership fragment.
+The test executable, declarations, and invocation order remain unchanged.
+This is structural only: no runtime behavior, requirements, RC artifact, or
+user-facing contract changes. The moved bodies are byte-identical. A fresh
+Linux Debug build and focused `test_prg_engine_runtime_surface_functions_buffering`
+CTest passed 1/1 in 0.63 seconds with `TMPDIR` under `/home/rich/temp`; the
+clean rebuild also restored the complete `cf_design_model` archive before the
+fresh link.
+
 ## V1 library-export request-serialization module
 
 The bounded #2564 slice in #5198 moves the generated wrapper's descriptor,

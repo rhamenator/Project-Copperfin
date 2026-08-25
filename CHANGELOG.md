@@ -1,3 +1,10 @@
+- 2026-08-25: Continued the #2564 test-module refactoring lane by moving the
+  existing CURVAL/LUPDATE verified-admission regressions from the oversized
+  buffering runtime-surface translation unit into a dedicated included test
+  fragment. The
+  aggregate executable, declarations, invocation order, requirements, and
+  runtime behavior are unchanged; this is structural-only coverage ownership.
+
 - 2026-08-25: Continued #2564 source-modularity work by extracting native
   OLECONTROL/object-member compatibility and expression/INSERT serialization
   helpers into `prg_engine_native_object_helpers.cpp`. Existing runtime
