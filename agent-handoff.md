@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 library-entrypoint emitter module
+
+The bounded #5210/#2564 structural slice moves generated native FLL and
+DLL/OCX library-entrypoint emission from
+`runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_entrypoints.cpp`. The manifest retains only
+orchestration after response handling. The moved FLL (249 lines), DLL/OCX
+(206 lines), and fallback (5 lines) emitter fragments are byte-identical to
+their pre-extraction source. Generated wrapper text and export metadata,
+bridge, package, security, and user-facing contracts do not change. Obtain a
+fresh Debug build before merge and run `test_runtime_pipeline` with `TMPDIR`
+under `~/temp`: the focused test passed 1/1 in 70.77 seconds on 2026-08-25.
+An immediately preceding run reported only the transient existing `.NET`
+child-launch failure; the rerun passed, and the predecessor response-handling
+build also passed 1/1 in 70.41 seconds under the same temporary-root policy.
+The protected matrix remains required before merge.
+
 ## V1 library-export process-launch module
 
 The bounded #5208/#2564 structural slice moves generated native-wrapper

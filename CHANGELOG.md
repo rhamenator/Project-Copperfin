@@ -1,4 +1,10 @@
 - 2026-08-25: Continued #2564 source-modularity work by extracting generated
+  FLL and DLL/OCX native library-entrypoint emission into
+  `runtime_pipeline_library_export_entrypoints.cpp`. Generated wrapper text,
+  export contracts, bridge behavior, package behavior, and security behavior
+  are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting generated
   native-wrapper process-launch emission into
   `runtime_pipeline_library_export_process_launch.cpp`. Generated wrapper text,
   host-authentication, path/environment, process, package, and security
