@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 whole-database JSON asset test module
+
+The bounded #5224/#2564 structural slice moves the contiguous core
+whole-database JSON export and non-mutating import-plan contract regressions
+from `test_vfp_assets.cpp` to `test_vfp_assets_database_json_contracts.inl`.
+They remain included in the same anonymous-namespace test translation unit;
+the aggregate executable, test registration order, fixtures, and existing
+`RQ-CF-MODERNIZATION-001`/`RQ-CF-MODERNIZATION-002` coverage remain unchanged.
+This does not add `IMPORT DATABASE` syntax or any reconstruction, output,
+overwrite, provider, or other file-mutation authority. The first local build
+attempt was blocked before compilation completed because the compiler selected
+quota-managed `/tmp`; the focused Debug rebuild and `test_vfp_assets` CTest
+rerun passed 1/1 in 2.20 seconds with `TMPDIR` under `~/temp`.
+
 ## V1 xAsset bootstrap and VCX-source materialization module
 
 The bounded #5222/#2564 structural slice moves the contiguous private xAsset
