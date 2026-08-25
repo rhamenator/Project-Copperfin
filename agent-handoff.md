@@ -16,6 +16,25 @@ behavior is added. A fresh Linux Debug configuration built the focused
 `2/2` in 42.44 seconds with `TMPDIR` under `~/temp`. Obtain the protected
 matrix before merge.
 
+## V1 Studio GRIDH regression module
+
+The bounded #5254/#2564 structural slice moves the contiguous stable-selection
+GRIDH report/label regression family from
+`test_studio_host_json_settings_page_layout_fields.cpp` to
+`test_studio_host_json_settings_page_layout_grid_horizontal_fields.inl`. The
+fragment remains included in the same test translation-unit namespace and
+aggregate targets; declarations, invocation behavior, fixtures, Studio host
+JSON, report/label stable selection, localization, DBF/xAsset mutation
+semantics, and machine contracts are unchanged. No product or compatibility
+behavior is added. A fresh Linux Debug configuration built the focused
+`test_studio_host_report_direct_setting_fields` and
+`test_studio_host_report_page_setup_fields` targets; the exact CTest pair passed
+`2/2` in 44.01 seconds with `TMPDIR` under `~/temp`. After rebasing onto the
+merged margin module, the combined pair rebuilt and passed `2/2` in 43.96
+seconds. Obtain the protected matrix before merge. The moved body is
+byte-identical to the pre-extraction source; one terminal blank line is omitted
+to satisfy the repository whitespace gate.
+
 ## V1 report/label visual-property regression modules
 
 The bounded #5250/#2564 structural slice moves the contiguous deleted
