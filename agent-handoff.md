@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 library-export response-handling module
+
+The bounded #5204/#2564 structural slice moves the contiguous generated
+native-wrapper response-validation, response-read/parse, fallback-selection,
+and return-materialization emission from
+`runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_response_handling.cpp`. It remains after the
+request-serialization emission and before output-kind FLL/DLL emission. The
+moved 982-line emitter segment is byte-identical to the pre-extraction source;
+the generated bridge request/response, fallback, process, package, and
+user-facing contracts do not change. A fresh Linux Debug build and focused
+`test_runtime_pipeline` CTest passed 1/1 in 70.84 seconds with `TMPDIR` under
+`/home/rich/temp`.
+
 ## V1 buffering CURVAL/admission test module
 
 The bounded #5202/#2564 structural slice moves the contiguous existing
