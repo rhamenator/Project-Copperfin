@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## V1 report/label left/right-margin regression module
+
+The bounded #5252/#2564 structural slice moves the contiguous stable-selection
+LEFTMARGIN and RIGHTMARGI report/label regression functions from
+`test_studio_host_json_settings_page_layout_fields.cpp` into
+`test_studio_host_json_settings_page_layout_margin_fields.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate test
+targets; declarations, invocation behavior, existing fixtures, Studio host
+JSON, DBF/xAsset mutation semantics, report/label stable selection,
+localization, and machine contracts are unchanged. No product or compatibility
+behavior is added. A fresh Linux Debug configuration built the focused
+`test_studio_host_report_direct_setting_fields` and
+`test_studio_host_report_page_setup_fields` targets; the exact CTest pair passed
+`2/2` in 42.44 seconds with `TMPDIR` under `~/temp`. Obtain the protected
+matrix before merge.
+
 ## V1 report/label visual-property regression modules
 
 The bounded #5250/#2564 structural slice moves the contiguous deleted
