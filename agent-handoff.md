@@ -1,5 +1,17 @@
 # Agent Handoff
 
+## V1 owned-COM adapter hosted evidence
+
+Protected Windows run `32794260256` passed at merged adapter head `e68056ad0`.
+It builds and executes the package-free local connection-point fixture, proving
+runtime-token/PRG-handler delivery, unavailable-interface/empty-contract/
+undeclared-ID rejection, direct and PRG-level unbind, source/handler-release
+unadvise, and handler-fault cleanup. It also passes the workflow's private
+workspace-agent/parser checks. `LLR-VFP-COM-002` is recovered only for this
+strictly owned local Windows lane; do not claim remote COM, third-party server,
+network, activation/discovery, payload-marshaling, or PRG/JSON COM-resource
+support.
+
 ## V1 owned-COM lifecycle fixture correction
 
 The release-cleanup case in the Windows owned-COM fixture originally wrote a
