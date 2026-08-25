@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 runtime package-plan and manifest module
+
+The bounded #5212/#2564 structural slice moves the runtime package-plan
+construction plus runtime/debug manifest serialization from
+`runtime_pipeline_public_api.cpp` to
+`runtime_pipeline_package_plan_manifest.cpp`. The 646-line moved public-API
+segment is byte-identical to its pre-extraction source; the two private
+manifest-version constants move with their sole consumers. Transaction,
+materialization, primary-output, package, compiler, security, localization,
+and user-facing contracts do not change. A fresh Linux Debug
+`test_runtime_pipeline` build completed successfully with `TMPDIR` under
+`~/temp`. Two reruns of the focused executable completed all other fixtures
+but failed only its existing `.NET` child-launch checks, even though
+`dotnet --info` succeeds in the shell. Treat that local executable-launch
+condition as an environment limitation and obtain a clean protected matrix
+before merge.
+
 ## V1 library-entrypoint emitter module
 
 The bounded #5210/#2564 structural slice moves generated native FLL and
