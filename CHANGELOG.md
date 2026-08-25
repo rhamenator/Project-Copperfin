@@ -1,3 +1,11 @@
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  Studio designer-context JSON smoke regression family from
+  `test_studio_host_json_dispatch_designer.cpp` into
+  `test_studio_host_json_dispatch_designer_contexts.inl`. The aggregate test
+  target, invocation behavior, Studio host JSON, report/label, localization,
+  invocation-admission, dispatch, launch, asset, security, and machine
+  contracts are unchanged.
+
 - 2026-08-25: Corrected undefined behavior in the workspace-agent
   process-parser regression fixture found by direct Windows diagnosis. Its
   duplicate- and excessive-binding cases now copy the canonical binding before
