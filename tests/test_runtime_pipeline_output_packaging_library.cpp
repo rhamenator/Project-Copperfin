@@ -141,6 +141,9 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should carry a self-contained runtime-host hash verifier");
         expect(wrapper_source.find("copperfin_runtime_bridge_read_verified_host") != std::string::npos,
                "library-output wrapper source should verify the sibling host before launch");
+        expect(wrapper_source.find("copperfin_runtime_bridge_sha256_bytes") <
+                   wrapper_source.find("copperfin_runtime_bridge_read_verified_host"),
+               "library-output wrapper source should emit host digest verification before verified-host admission");
         expect(wrapper_source.find("FILE_FLAG_OPEN_REPARSE_POINT") != std::string::npos,
                "library-output wrapper source should reject Windows reparse-point host redirection");
         expect(wrapper_source.find("O_NOFOLLOW") != std::string::npos,
