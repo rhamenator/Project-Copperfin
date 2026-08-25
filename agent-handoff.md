@@ -11,6 +11,19 @@ executable, existing declarations, invocation order, fixtures, Studio host
 JSON, report/label, localization, and machine contracts remain unchanged. A
 focused native rerun is required before merge.
 
+## V1 visual-asset method-reorder regression module
+
+The bounded #5232/#2564 structural slice moves the contiguous visual-asset
+method-reordering and failed-batch rollback regressions from
+`test_visual_asset_editor_methods.cpp` to
+`test_visual_asset_editor_method_reorder_contracts.inl`. The fragment remains
+in the same test translation-unit namespace; the aggregate executable,
+declarations, invocation order, fixtures, visual-asset behavior, raw-byte
+preservation, report/label, localization, and machine contracts remain
+unchanged. A fresh Linux Debug `test_visual_asset_editor` rerun passed `1/1` in
+20.37 seconds with `TMPDIR` under `~/temp`; obtain the refreshed protected
+matrix before merge.
+
 ## V1 index-probe asset test module
 
 The bounded #5226/#2564 structural slice moves the contiguous CDX/DCX/IDX/NDX/
