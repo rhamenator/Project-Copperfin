@@ -1,3 +1,10 @@
+- 2026-08-25: Continued #2564 test-module refactoring by moving the cohesive
+  FLL package, generated-wrapper, export, manifest, and debug-contract
+  regression body from `test_runtime_pipeline_output_packaging_fll.cpp` into
+  `test_runtime_pipeline_output_packaging_fll_contracts.inl`. The aggregate
+  target, package/debug artifacts, export evidence, security behavior,
+  localization, and machine contracts are unchanged.
+
 - 2026-08-25: Corrected the workspace-agent security overview to match the
   implemented narrow Windows-only unrestricted-local executor and its mandatory
   content-free intent/outcome audit boundary. The overview continues to state

@@ -1,5 +1,18 @@
 # Agent Handoff
 
+## V1 FLL package/debug-contract regression module
+
+The bounded #5248/#2564 structural slice moves the cohesive FLL package,
+generated-wrapper, export, manifest, and debug-contract regression body from
+`test_runtime_pipeline_output_packaging_fll.cpp` to
+`test_runtime_pipeline_output_packaging_fll_contracts.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate
+`test_runtime_pipeline` target; package/debug artifacts, export evidence,
+security behavior, localization, and machine contracts remain unchanged. The
+moved body is byte-identical to the pre-extraction source. A fresh Linux Debug
+`test_runtime_pipeline` build and focused CTest passed `1/1` in 70.04 seconds
+with `TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
 ## V1 workspace-agent security-overview accuracy
 
 The bounded #5244 documentation correction aligns `docs/04-security-model.md`
