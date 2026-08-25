@@ -9,11 +9,14 @@ and ItemForeColor visual-asset regression pair from
 included in the same test translation-unit namespace and aggregate executable;
 declarations, invocation behavior, fixtures, visual-asset editing, undo
 behavior, raw-byte preservation, localization, and machine contracts are
-unchanged. The 400-line moved body is byte-identical to its pre-extraction
-source block (SHA-256 `3ef089976c601f528bedece3eaf9a004d1d5f6e66eaff1db3deffd584d6b7002`).
-No product or compatibility behavior is added. A fresh Linux Debug
+unchanged. The original 400-line source range (including two separator blank
+lines) has SHA-256 `3ef089976c601f528bedece3eaf9a004d1d5f6e66eaff1db3deffd584d6b7002`;
+the extracted 398-line module contains the same executable body after those
+nonfunctional separators are omitted (SHA-256
+`d060b84d209a6a0c1b7d5942587746c0f91aedc9d1afc2629880e53475918dea`). No
+product or compatibility behavior is added. A fresh Linux Debug
 configuration built `test_visual_asset_editor`; focused CTest passed `1/1` in
-20.25 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix before
+21.67 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix before
 merge.
 
 ## V1 visual-asset DisabledItem color regression module
