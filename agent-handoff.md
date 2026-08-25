@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## V1 visual-asset DisabledItem color regression module
+
+The bounded #5260/#2564 structural slice moves the contiguous
+DisabledItemBackColor and DisabledItemForeColor visual-asset regression pair
+from `test_visual_asset_editor_appearance_colors.cpp` to
+`test_visual_asset_editor_appearance_disabled_item_colors.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, visual-asset editing,
+undo behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The 400-line moved body is byte-identical to its pre-extraction
+source block (SHA-256 `819afdd9a61010ba8827d1e2267639363e7825e3ffbceaa8fddcd15b61130e7c`).
+No product or compatibility behavior is added. A fresh Linux Debug
+configuration built `test_visual_asset_editor`; focused CTest passed `1/1` in
+19.69 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix before
+merge.
+
 ## V1 visual-asset selected-object behavior regression module
 
 The bounded #5258/#2564 structural slice moves the contiguous deleted-state,
