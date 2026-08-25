@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## V1 runtime package-transaction module
+
+The bounded #5214/#2564 structural slice moves the runtime package transaction
+ownership boundary from `runtime_pipeline_public_api.cpp` to
+`runtime_pipeline_package_transaction.cpp`: locking, pinned-parent identity,
+staged content materialization, deferred finalization, commit/rollback, and
+the existing test hooks move together. `runtime_pipeline_public_api.cpp`
+retains only the native-wrapper primary-output builder and its private sequence
+counter. The moved source is byte-identical except for that counter remaining
+with its sole consumer, and no public header, package format, manifest,
+security, localization, compiler, or user-facing contract changes. A fresh
+Linux Debug `test_runtime_pipeline` build succeeded and focused CTest passed
+1/1 in 74.03 seconds with `TMPDIR` under `~/temp`. Obtain the complete
+protected matrix before merge.
+
 ## V1 runtime package-plan and manifest module
 
 The bounded #5212/#2564 structural slice moves the runtime package-plan
