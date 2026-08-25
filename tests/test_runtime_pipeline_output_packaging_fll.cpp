@@ -131,6 +131,9 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should carry a self-contained runtime-host hash verifier");
         expect(wrapper_source.find("copperfin_runtime_bridge_read_verified_host") != std::string::npos,
                "fll-output wrapper source should verify the sibling host before launch");
+        expect(wrapper_source.find("copperfin_runtime_bridge_sha256_bytes") <
+                   wrapper_source.find("copperfin_runtime_bridge_read_verified_host"),
+               "fll-output wrapper source should emit host digest verification before verified-host admission");
         expect(wrapper_source.find("FILE_FLAG_OPEN_REPARSE_POINT") != std::string::npos,
                "fll-output wrapper source should reject Windows reparse-point host redirection");
         expect(wrapper_source.find("O_NOFOLLOW") != std::string::npos,

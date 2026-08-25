@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 library-export host-authentication module
+
+The bounded #2564 slice in #5196 moves the generated wrapper's host
+authentication emission from `runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_host_authentication.cpp`. Preserve the exact
+SHA-256 source, manifest lookup, Windows reparse-point and POSIX symlink
+rejection paths, descriptor handling, and emitted ordering. A capture-based
+comparison confirmed the extracted generated text is byte-identical to the
+pre-extraction 8,778-byte segment; the focused library and FLL tests also
+assert that digest verification precedes verified-host admission.
+
 ## V1 library-export compilation-preamble module
 
 The bounded #2564 structural slice in #5194 moves the platform-specific

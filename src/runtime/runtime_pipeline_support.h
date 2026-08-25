@@ -202,6 +202,7 @@ std::string build_placeholder_int_parameter_list(const std::vector<std::string>&
 std::string build_manifest_parameter_names(const std::vector<std::string>& parameter_names);
 std::string build_manifest_source_location(const SourceLocation& location);
 void append_native_wrapper_compilation_preamble(std::ostringstream& stream);
+void append_native_wrapper_host_authentication_source(std::ostringstream& stream);
 std::string build_module_definition_source(const RuntimePackagePlan& plan);
 std::string build_native_wrapper_source(const RuntimePackagePlan& plan);
 std::string build_native_wrapper_cmake_source(const RuntimePackagePlan& plan);
