@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 native object-member and focus-dispatch module
+
+The bounded #5218/#2564 structural slice moves the contiguous native PRG
+object-member invocation, focus-transition, tab-stop traversal, and
+option-group movement implementation from `prg_engine.cpp` to
+`prg_engine_native_object_focus_dispatch.inl`. The fragment is included in the
+same private `PrgRuntimeSession::Impl` translation-unit context; no public API,
+CMake target, runtime behavior, UI behavior, or localization contract changes.
+The moved 1,409-line body is byte-identical to the pre-extraction source apart
+from omitting its terminal blank line, as required by the repository whitespace
+gate. A fresh Linux Debug exact-head build passed
+`test_prg_engine_runtime_surface_functions` 1/1 in 22.88 seconds with `TMPDIR`
+under `~/temp`; obtain the required protected matrix before merge.
+
 ## V1 runtime package-transaction module
 
 The bounded #5214/#2564 structural slice moves the runtime package transaction
