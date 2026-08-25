@@ -1,3 +1,9 @@
+- 2026-08-25: Continued #2564 source-modularity work by extracting the
+  generated native-wrapper compilation preamble into
+  `runtime_pipeline_library_export_preamble.cpp`. The platform include order,
+  platform export macros, generated wrapper text, public helper contract, and
+  runtime-package behavior are unchanged.
+
 - 2026-08-25: Recorded protected Windows evidence for the owned local
   `EVENTHANDLER()` COM connection-point lane. Run `32794260256` passed the
   adapter fixture's delivery, rejection, explicit-unbind, release-cleanup, and
