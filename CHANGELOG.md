@@ -1,4 +1,12 @@
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  library package definition, generated-wrapper, manifest, export, and build
+  contract regression from `test_runtime_pipeline_output_packaging_library.cpp`
+  into `test_runtime_pipeline_output_packaging_library_definition_contracts.inl`.
+  The aggregate target, invocation order, package/debug contracts, generated
+  wrapper coverage, security behavior, localization, and runtime behavior are
+  unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   stable-selection GRIDV report/label regression family from
   `test_studio_host_json_settings_page_layout_fields.cpp` into
   `test_studio_host_json_settings_page_layout_grid_vertical_fields.inl`. The
