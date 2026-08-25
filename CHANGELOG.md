@@ -1,3 +1,11 @@
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  stable-selection report/label LEFTMARGIN and RIGHTMARGI regression functions
+  from `test_studio_host_json_settings_page_layout_fields.cpp` into
+  `test_studio_host_json_settings_page_layout_margin_fields.inl`. The aggregate
+  target, invocation behavior, Studio host JSON, DBF/xAsset mutation coverage,
+  report/label stable selection, localization, and machine contracts are
+  unchanged.
+
 - 2026-08-25: Continued #2564 test-module refactoring by moving the deleted
   report/label visual-property clear, move, and rejection regression families
   from `test_studio_host_json_report_visual_properties.cpp` into three
