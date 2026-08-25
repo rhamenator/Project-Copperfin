@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 library-export request-serialization module
+
+The bounded #2564 slice in #5198 moves the generated wrapper's descriptor,
+invocation, command-flag, JSON request serialization, and placeholder-return
+emission from `runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_request_serialization.cpp`. Preserve the
+exact generated source ordering: it follows the bridge data model and precedes
+the process-environment helpers. A capture-based comparison confirmed the
+extracted 17,085-byte generated segment is byte-identical to the pre-extraction
+text. Fresh Linux Debug build and focused `test_runtime_pipeline` CTest pass
+1/1 in 67.85 seconds when `TMPDIR` is the writable `/home/rich/temp` area;
+the initial `/tmp` invocation encountered the known per-user quota before
+runtime packaging could begin.
+
 ## V1 library-export host-authentication module
 
 The bounded #2564 slice in #5196 moves the generated wrapper's host
