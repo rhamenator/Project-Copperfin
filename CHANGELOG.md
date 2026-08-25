@@ -6,6 +6,13 @@
   localization, and machine contracts are unchanged.
 
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  visual-asset method-reordering and failed-batch rollback regressions from
+  `test_visual_asset_editor_methods.cpp` into
+  `test_visual_asset_editor_method_reorder_contracts.inl`. The aggregate test
+  target, invocation order, visual-asset behavior, raw-byte preservation,
+  report/label, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   CDX/DCX/IDX/NDX/MDX index-probe and localized-diagnostic regressions from
   `test_vfp_assets.cpp` into `test_vfp_assets_index_probe_contracts.inl`. The
   aggregate test target, invocation order, existing parser/format coverage,
