@@ -6,6 +6,13 @@
   general mutable-tool surface, and POSIX/macOS executor remain unimplemented.
 
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  report-object deleted-subtree JSON regression family from
+  `test_studio_host_json_objects_diagnostics_and_misc.cpp` into
+  `test_studio_host_json_report_object_deleted_subtree.inl`. The aggregate
+  target, invocation behavior, report/label fixtures, stable-selection,
+  localization, preview-bound, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   Studio designer-dispatch JSON regression family from
   `test_studio_host_json_dispatch_designer.cpp` into
   `test_studio_host_json_dispatch_designer_dispatch.inl`. The aggregate test
