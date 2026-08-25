@@ -1,5 +1,18 @@
 # Agent Handoff
 
+## V1 library-package definition regression module
+
+The bounded #2564 structural slice moves the contiguous library package
+definition, generated-wrapper, manifest, export, and build-contract regression
+from `test_runtime_pipeline_output_packaging_library.cpp` into
+`test_runtime_pipeline_output_packaging_library_definition_contracts.inl`. The
+fragment remains included in the same namespace and aggregate test target; test
+registration and invocation order, fixtures, package/debug artifacts, generated
+wrapper coverage, security checks, localization, and runtime behavior are
+unchanged. No package or compiler capability is added. A fresh Linux Debug
+`test_runtime_pipeline` build and focused CTest passed `1/1` in 79.59 seconds
+with `TMPDIR` under `~/temp`; obtain the protected matrix before merge.
+
 ## V1 Studio GRIDV regression module
 
 The bounded #5230/#2564 structural slice moves the contiguous stable-selection
