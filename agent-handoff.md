@@ -45,6 +45,16 @@ binding rules. It does not activate, discover, probe, or contact a third-party
 or remote COM server. Issue #5190 requires the focused Windows workflow
 evidence before this becomes a recovered-complete claim.
 
+## V1 external event-token queue concurrent delivery coverage
+
+The internal `ExternalEventTokenQueue` now has a focused four-producer and
+one-runtime-consumer regression. It remains deliberately below its fixed
+capacity so every normalized token must be accepted; concurrent draining must
+retain every accepted token exactly once and leave the queue empty. This
+extends the existing validation/FIFO/boundary coverage without adding a public
+PRG, JSON, or COM contract. Direct Linux compilation with strict warnings and
+execution of the queue test pass.
+
 ## V1 controlled EVENTHANDLER token delivery
 
 Issue #5188 connects an optional host-owned admitted-source subscription to
