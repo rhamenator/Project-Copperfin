@@ -711,3 +711,4 @@ void test_studio_host_json_moves_deleted_report_visual_property_batches_by_stabl
 
 #endif
 
+#endif

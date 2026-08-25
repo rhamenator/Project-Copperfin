@@ -569,4 +569,3 @@ void test_studio_host_json_clears_deleted_report_visual_property_batches_by_stab
 }
 
 #endif
-

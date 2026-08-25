@@ -1,3 +1,10 @@
+- 2026-08-25: Continued #2564 test-module refactoring by moving the deleted
+  report/label visual-property clear, move, and rejection regression families
+  from `test_studio_host_json_report_visual_properties.cpp` into three
+  included modules. The aggregate target, invocation behavior, Studio host
+  JSON, DBF/xAsset mutation coverage, report/label stable selection,
+  localization, and machine contracts are unchanged.
+
 - 2026-08-25: Continued #2564 test-module refactoring by moving the cohesive
   FLL package, generated-wrapper, export, manifest, and debug-contract
   regression body from `test_runtime_pipeline_output_packaging_fll.cpp` into

@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 report/label visual-property regression modules
+
+The bounded #5250/#2564 structural slice moves the contiguous deleted
+report/label visual-property clear, move, and rejection regression families
+from `test_studio_host_json_report_visual_properties.cpp` into the included
+`*_clears.inl`, `*_moves.inl`, and `*_rejections.inl` modules. They remain in
+the same test translation-unit namespace and aggregate executable; declarations,
+invocation behavior, fixtures, Studio host JSON, DBF/xAsset mutation semantics,
+report/label stable selection, localization, and machine contracts are
+unchanged. The test-function bodies are byte-identical to the pre-extraction
+source apart from the two terminal blank lines omitted to satisfy the repository
+whitespace gate; the conditional guards are made self-contained in each included
+module. The direct source drops from 2,186 to 11 lines. A fresh
+Linux Debug `test_studio_host_json` build and focused CTest rerun passed `1/1`
+in 442.44 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix before
+merge.
+The macro-specialized clear-only and move-only executables also rebuilt and
+passed `2/2` in 12.23 seconds, directly covering their self-contained
+preprocessor guards.
+
 ## V1 FLL package/debug-contract regression module
 
 The bounded #5248/#2564 structural slice moves the cohesive FLL package,
