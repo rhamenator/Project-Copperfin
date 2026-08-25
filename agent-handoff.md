@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## V1 Studio designer-execution JSON regression module
+
+The bounded #5240/#2564 structural slice moves the contiguous Studio
+designer-execution JSON regression family from
+`test_studio_host_json_dispatch_designer.cpp` to
+`test_studio_host_json_dispatch_designer_execution.inl`. The fragment remains
+included in the same test translation-unit namespace; the aggregate executable,
+existing declaration and invocation, fixtures, non-executing dispatch/launch
+boundary, Studio host JSON, report/label, localization, asset, security, and
+machine contracts remain unchanged. The moved body is byte-identical to the
+pre-extraction source. A fresh Linux Debug `test_studio_host_json` build and
+focused CTest passed `1/1` in 457.39 seconds with `TMPDIR` under `~/temp`.
+Obtain the protected matrix before merge.
+
 ## V1 Studio designer-context JSON regression module
 
 The bounded #5238/#2564 structural slice moves the contiguous Studio

@@ -1,4 +1,12 @@
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  Studio designer-execution JSON regression family from
+  `test_studio_host_json_dispatch_designer.cpp` into
+  `test_studio_host_json_dispatch_designer_execution.inl`. The aggregate test
+  target, invocation behavior, non-executing dispatch/launch boundary, Studio
+  host JSON, report/label, localization, asset, security, and machine contracts
+  are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   Studio designer-context JSON smoke regression family from
   `test_studio_host_json_dispatch_designer.cpp` into
   `test_studio_host_json_dispatch_designer_contexts.inl`. The aggregate test
