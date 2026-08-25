@@ -232,8 +232,11 @@ void test_prg_eventhandler_release_and_fault_disconnect_owned_com_source() {
 
     for (const auto& [file_name, release_statement] :
          std::array<std::pair<const char*, const char*>, 2U>{{
-             {"owned_source_release.prg", "oSource.Release()\\n"},
-             {"owned_handler_release.prg", "oHandler.Release()\\n"}}}) {
+             {"owned_source_release.prg", "oSource.Release()\n"},
+             {"owned_handler_release.prg", "oHandler.Release()\n"}}}) {
+        expect(std::string(release_statement).find('\n') != std::string::npos &&
+                   std::string(release_statement).find("\\n") == std::string::npos,
+               "lifecycle fixture must write an actual PRG line ending after Release()");
         const fs::path program = root / file_name;
         write_text(program,
             "oSource = CREATEOBJECT('AdmittedSource')\n"
