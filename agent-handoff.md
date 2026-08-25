@@ -1,5 +1,28 @@
 # Agent Handoff
 
+## V1 library-export process-launch module
+
+The bounded #5208/#2564 structural slice moves generated native-wrapper
+launch-plan, request/response artifact-path, platform argument/environment,
+verified-host process-execution, and process-result emission from
+`runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_process_launch.cpp`. It remains after request
+serialization and before response handling. The moved 567-line emitter segment
+is byte-identical to the pre-extraction source; generated wrapper text and
+host-authentication, path/environment, process, package, security, and
+user-facing contracts do not change. Obtain a fresh focused runtime-pipeline
+build/test and protected-matrix result before merge. A fresh Linux Debug build
+of `test_runtime_pipeline` completed successfully. Its CTest execution then
+failed when the host's quota-managed `/tmp` rejected fixture locks with
+`errno=122`; an immediately preceding merged-head executable reproduced the
+same 129-failure cascade. This local storage-quota limitation is not introduced
+by the structural slice. With `TMPDIR` under `/home/rich/temp`, the extracted
+build completed all package fixtures and ran for 73.33 seconds; it failed only
+the two existing .NET child-launch cases. The immediately preceding merged-head
+executable reproduced those same two failures in 72.67 seconds under its own
+`/home/rich/temp` directory. Retain the direct baseline comparison and obtain
+the protected-matrix result before merge.
+
 ## V1 library-export bridge-model module
 
 The bounded #5206/#2564 structural slice moves the generated native-wrapper
