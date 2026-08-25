@@ -1,4 +1,11 @@
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  stable-selection GRIDV report/label regression family from
+  `test_studio_host_json_settings_page_layout_fields.cpp` into
+  `test_studio_host_json_settings_page_layout_grid_vertical_fields.inl`. The
+  aggregate test target, invocation order, Studio host JSON, report/label,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   CDX/DCX/IDX/NDX/MDX index-probe and localized-diagnostic regressions from
   `test_vfp_assets.cpp` into `test_vfp_assets_index_probe_contracts.inl`. The
   aggregate test target, invocation order, existing parser/format coverage,
