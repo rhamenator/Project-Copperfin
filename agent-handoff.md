@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## V1 Studio GRIDV regression module
+
+The bounded #5230/#2564 structural slice moves the contiguous stable-selection
+GRIDV report/label regression family from
+`test_studio_host_json_settings_page_layout_fields.cpp` to
+`test_studio_host_json_settings_page_layout_grid_vertical_fields.inl`. The
+fragment remains in the same test translation-unit namespace; the aggregate
+executable, existing declarations, invocation order, fixtures, Studio host
+JSON, report/label, localization, and machine contracts remain unchanged. A
+focused native rerun is required before merge.
+
 ## V1 index-probe asset test module
 
 The bounded #5226/#2564 structural slice moves the contiguous CDX/DCX/IDX/NDX/
