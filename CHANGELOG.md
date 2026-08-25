@@ -27,6 +27,11 @@
   fault cleanup. Hosted Windows execution remains required before the
   recovered requirement can be marked complete.
 
+- 2026-08-24: Added a deterministic concurrent-producer/runtime-consumer
+  regression for the internal `EVENTHANDLER()` external-event token queue.
+  It verifies that bounded accepted tokens are retained exactly once while the
+  runtime drains concurrently; no PRG or JSON contract changed.
+
 - 2026-08-24: Added controlled runtime-thread delivery for admitted
   `EVENTHANDLER()` method tokens. A host-owned subscription can enqueue only
   an already-declared handler method through a weak, bounded queue sink; the
