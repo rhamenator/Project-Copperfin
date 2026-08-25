@@ -14,6 +14,19 @@ text. Fresh Linux Debug build and focused `test_runtime_pipeline` CTest pass
 the initial `/tmp` invocation encountered the known per-user quota before
 runtime packaging could begin.
 
+## V1 PRG native-object helper module
+
+The bounded #2564 slice in #5200 moves unique native OLECONTROL verb and
+OBJECTVERB helpers, native object member/accessor/assigner matching, runtime
+expression serialization, INSERT serialization, and native method-override
+key construction from `prg_engine.cpp` into
+`prg_engine_native_object_helpers.cpp`. Visual-object predicates stay in their
+established owners and must not be duplicated. The internal header is the
+single declaration boundary. Fresh Linux Debug build and focused
+`test_prg_engine_runtime_surface_functions` CTest pass 1/1 in 5.11 seconds;
+that executable includes the existing OLECONTROL interop and INSERT runtime
+coverage. This is structural only and introduces no PRG contract.
+
 ## V1 library-export host-authentication module
 
 The bounded #2564 slice in #5196 moves the generated wrapper's host

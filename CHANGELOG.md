@@ -1,3 +1,8 @@
+- 2026-08-25: Continued #2564 source-modularity work by extracting native
+  OLECONTROL/object-member compatibility and expression/INSERT serialization
+  helpers into `prg_engine_native_object_helpers.cpp`. Existing runtime
+  behavior and PRG-facing contracts are unchanged.
+
 - 2026-08-25: Continued #2564 source-modularity work by extracting generated
   native-wrapper descriptor, invocation, and request-serialization emission
   into `runtime_pipeline_library_export_request_serialization.cpp`. The

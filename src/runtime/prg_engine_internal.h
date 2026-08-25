@@ -218,4 +218,28 @@ Program parse_program_source(
     const std::map<std::string, std::string>& source_text_overrides = {},
     bool require_source_text_overrides = false);
 
+PrgValue canonicalize_native_olecontrol_doverb_argument(const PrgValue& verb);
+std::optional<PrgValue> read_native_olecontrol_objectverb_by_index(
+    const RuntimeOleObjectState& runtime_object,
+    const std::vector<PrgValue>& arguments);
+bool runtime_object_member_matches(
+    const std::vector<std::string>& members,
+    const std::string& normalized_member_name);
+bool runtime_object_method_ends_with_suffix(
+    const std::string& method_name,
+    const std::string& suffix,
+    std::string* stem = nullptr);
+bool runtime_object_has_accessor_property(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_property_name);
+bool runtime_object_has_assigner_property(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_property_name);
+std::string serialize_runtime_expression_text(const PrgValue& value);
+std::string serialize_insert_value_expression(const PrgValue& value);
+std::string serialize_insert_row_expression_list(const std::vector<PrgValue>& row);
+std::string make_native_method_override_key(
+    const std::string& program_path,
+    const std::string& qualified_method_name);
+
 }  // namespace copperfin::runtime
