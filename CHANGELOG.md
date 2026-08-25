@@ -5,6 +5,12 @@
   `prg_engine_event_binding_dispatch.inl`. Existing PRG/runtime, security,
   containment, and user-facing behavior are unchanged.
 
+- 2026-08-25: Continued #2564 source-modularity work by extracting native PRG
+  object-member invocation, focus transition, tab-stop traversal, and
+  option-group movement into `prg_engine_native_object_focus_dispatch.inl`.
+  Runtime behavior, public APIs, UI behavior, and localization remain
+  unchanged.
+
 - 2026-08-25: Continued #2564 source-modularity work by extracting runtime
   package-transaction locking, pinned-parent containment, staged
   materialization, deferred finalization, commit, rollback, and test hooks into
