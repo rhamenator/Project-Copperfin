@@ -1,5 +1,14 @@
 # Agent Handoff
 
+## V1 owned-COM lifecycle fixture correction
+
+The release-cleanup case in the Windows owned-COM fixture originally wrote a
+literal `\\n` after `Release()` into its temporary PRG. It now writes an actual
+line ending and asserts that this input boundary remains true, so the hosted
+test proves source/handler-release unadvise rather than an accidentally merged
+source line. The correction is test-only; it does not broaden the adapter or
+its local-only trust boundary.
+
 ## V1 owned-COM adapter rejection correction
 
 The Windows `IDispatch` sink must return a failing HRESULT—not `S_FALSE`—for

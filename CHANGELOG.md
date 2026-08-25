@@ -1,3 +1,8 @@
+- 2026-08-25: Corrected the owned-COM lifecycle fixture so its generated PRG
+  programs place `Release()` on a real subsequent line rather than embedding a
+  literal escape sequence. The regression now guards that fixture-input
+  boundary before asserting source/handler-release unadvise behavior.
+
 - 2026-08-24: Corrected the Windows owned-COM adapter's rejection HRESULT so
   an undeclared or quiesced dispatch ID cannot be mistaken for successful
   delivery by a source that checks `SUCCEEDED()`. The focused workflow's
