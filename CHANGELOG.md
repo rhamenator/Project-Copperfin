@@ -1,4 +1,10 @@
 - 2026-08-25: Continued #2564 source-modularity work by extracting generated
+  native-wrapper bridge path helpers and data-model declarations into
+  `runtime_pipeline_library_export_bridge_model.cpp`. Generated wrapper text,
+  bridge contracts, package behavior, process behavior, and security behavior
+  are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting generated
   native-wrapper response validation, response handling, fallback selection,
   and return materialization emission into
   `runtime_pipeline_library_export_response_handling.cpp`. Generated wrapper

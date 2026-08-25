@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 library-export bridge-model module
+
+The bounded #5206/#2564 structural slice moves the generated native-wrapper
+bridge path helpers and bridge data-model declarations from
+`runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_bridge_model.cpp`. It remains after the
+compilation preamble and host-authentication emission and before request
+serialization. The moved 474-line emitter segment is byte-identical to the
+pre-extraction source; generated wrapper text and bridge, package, process,
+security, and user-facing contracts do not change. A fresh Linux Debug build
+of `test_runtime_pipeline` completed successfully. Its CTest execution then
+reproduced two pre-existing local .NET child-launch failures; the immediately
+preceding merged-head executable reproduced the same two failures under the
+same `/home/rich/temp` environment. This local limitation is not introduced by
+the structural slice; retain the direct baseline comparison and obtain the
+protected matrix result before merge.
+
 ## V1 library-export response-handling module
 
 The bounded #5204/#2564 structural slice moves the contiguous generated

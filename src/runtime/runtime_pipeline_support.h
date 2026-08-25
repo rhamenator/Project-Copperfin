@@ -203,6 +203,7 @@ std::string build_manifest_parameter_names(const std::vector<std::string>& param
 std::string build_manifest_source_location(const SourceLocation& location);
 void append_native_wrapper_compilation_preamble(std::ostringstream& stream);
 void append_native_wrapper_host_authentication_source(std::ostringstream& stream);
+void append_native_wrapper_bridge_model_source(std::ostringstream& stream);
 void append_native_wrapper_request_serialization_source(std::ostringstream& stream);
 void append_native_wrapper_response_handling_source(std::ostringstream& stream);
 std::string build_module_definition_source(const RuntimePackagePlan& plan);
