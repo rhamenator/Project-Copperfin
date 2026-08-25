@@ -1,3 +1,10 @@
+- 2026-08-25: Continued #2564 test-module refactoring by moving the core
+  whole-database JSON export and non-mutating import-planning contract tests
+  from `test_vfp_assets.cpp` into
+  `test_vfp_assets_database_json_contracts.inl`. The aggregate test target,
+  invocation order, `RQ-CF-MODERNIZATION-001`/`002` coverage, and explicit
+  no-reconstruction/no-mutation boundary are unchanged.
+
 - 2026-08-25: Continued #2564 source-modularity work by extracting native PRG
   property/property-expression reads and native method-source read/write
   reflection into `prg_engine_native_reflection_dispatch.inl`. Runtime
