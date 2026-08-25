@@ -5225,6 +5225,13 @@ copperfin_add_test(test_workspace_agent_process_invocation cf_security
 )
 
 if(WIN32)
+    copperfin_add_test(test_windows_com_event_adapter cf_xbase_runtime
+        test_windows_com_event_adapter.cpp
+    )
+    target_include_directories(test_windows_com_event_adapter PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/runtime
+    )
+
     add_executable(workspace_agent_execution_fixture
         workspace_agent_execution_fixture.cpp
     )

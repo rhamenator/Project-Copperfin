@@ -1,3 +1,26 @@
+- 2026-08-25: Corrected the owned-COM lifecycle fixture so its generated PRG
+  programs place `Release()` on a real subsequent line rather than embedding a
+  literal escape sequence. The regression now guards that fixture-input
+  boundary before asserting source/handler-release unadvise behavior.
+
+- 2026-08-24: Corrected the Windows owned-COM adapter's rejection HRESULT so
+  an undeclared or quiesced dispatch ID cannot be mistaken for successful
+  delivery by a source that checks `SUCCEEDED()`. The focused workflow's
+  PE-image boundary contract now explicitly retains the adapter between its
+  existing protected test targets.
+
+- 2026-08-24: Made the Windows COM-event adapter header define `NOMINMAX`
+  before including `windows.h`, so the Windows SDK `max` macro cannot corrupt
+  Copperfin runtime headers in a host-owned adapter test or integration unit.
+
+- 2026-08-24: Added the Windows-only, host-private `EVENTHANDLER()` COM
+  connection-point adapter and its package-free owned-source fixture. Only
+  declared zero-argument dispatch IDs reach the bounded runtime-token path;
+  the fixture proves callback delivery, interface/dispatch rejection, direct
+  and PRG-level unbind, source/handler-release cleanup, and contained handler
+  fault cleanup. Hosted Windows execution remains required before the
+  recovered requirement can be marked complete.
+
 - 2026-08-24: Added controlled runtime-thread delivery for admitted
   `EVENTHANDLER()` method tokens. A host-owned subscription can enqueue only
   an already-declared handler method through a weak, bounded queue sink; the
@@ -9545,3 +9568,8 @@ passes `1/1`.
   interface identity with required handler methods; duplicate bind/unbind and
   source/handler release cleanup are deterministic, while COM activation and
   platform callback dispatch remain unimplemented.
+- 2026-08-24: Added a Windows-only, package-free owned `IConnectionPoint`
+  adapter and fixture for admitted `EVENTHANDLER()` delivery. The host-private
+  seam maps only declared zero-argument dispatch IDs to bounded runtime tokens;
+  the fixture exercises native callback through the iterative PRG handler path
+  and verifies deterministic teardown. Windows-hosted evidence is pending.
