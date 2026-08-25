@@ -26,6 +26,11 @@
   `test_visual_asset_editor_method_reorder_contracts.inl`. The aggregate test
   target, invocation order, visual-asset behavior, raw-byte preservation,
   report/label, localization, and machine contracts are unchanged.
+- 2026-08-25: Implemented the bounded #5228 native runtime recovery for
+  `EJECT PAGE`: a retained static `ON PAGE` command now executes through the
+  existing iterative frame machine with deterministic runtime events. Printer,
+  alternate-file, page-line, and report/label pagination semantics remain
+  explicitly unimplemented.
 
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   CDX/DCX/IDX/NDX/MDX index-probe and localized-diagnostic regressions from

@@ -50,6 +50,16 @@ authority, launch, security-policy, or public behavior changes. Fresh Linux
 Debug CTest passed `1/1`; fresh Linux Release CTest passed the same target for
 50 consecutive runs, both with `TMPDIR` under `~/temp`. The protected Windows
 matrix remains required evidence.
+## V1 ON PAGE EJECT dispatch
+
+The bounded #5228/#3217 runtime slice recovers only the documented headless
+`EJECT PAGE` trigger for an existing static `ON PAGE` command. It parses the
+command, dispatches the retained action through an owned synthetic routine in
+the existing iterative frame machine, and records `runtime.eject_page` and
+`runtime.on_page` evidence. Existing query and clear behavior remains intact;
+macro-backed actions fail closed. Do not claim printer or alternate-file output,
+`_PADVANCE`, `_PLENGTH`, `_PLINENO`, `_PAGENO`, line-threshold behavior, or
+report/label pagination; those need their own evidenced architecture.
 
 ## V1 index-probe asset test module
 

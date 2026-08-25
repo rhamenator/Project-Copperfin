@@ -6484,6 +6484,14 @@
                 emit_print_event(*result, statement.location);
                 return {};
             }
+            case StatementKind::eject_page_command:
+            {
+                const bool dispatched = start_page_handler(statement.location);
+                events.push_back({.category = "runtime.eject_page",
+                                  .detail = dispatched ? "handler=dispatched" : "handler=not_dispatched",
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::create_cursor_command:
             {
                 const std::string alias_expression = statement.secondary_expression.empty()

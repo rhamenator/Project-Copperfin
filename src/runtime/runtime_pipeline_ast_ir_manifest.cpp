@@ -200,6 +200,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "rename_file_command";
         case StatementKind::print_command:
             return "print_command";
+        case StatementKind::eject_page_command:
+            return "eject_page_command";
         case StatementKind::create_cursor_command:
             return "create_cursor_command";
         case StatementKind::create_table_command:
