@@ -1,3 +1,8 @@
+- 2026-08-25: Continued #2564 source-modularity work by extracting native PRG
+  property/property-expression reads and native method-source read/write
+  reflection into `prg_engine_native_reflection_dispatch.inl`. Runtime
+  behavior, public APIs, UI behavior, and localization remain unchanged.
+
 - 2026-08-25: Continued #2564 source-modularity work by extracting native
   runtime event delegation, `BINDEVENT()`/`RAISEEVENT()`/`UNBINDEVENTS()` /
   `AEVENTS()` handling, host-owned `EVENTHANDLER()` dispatch, window-message

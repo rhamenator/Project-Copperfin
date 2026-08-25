@@ -12,7 +12,22 @@ The moved 1,409-line body is byte-identical to the pre-extraction source apart
 from omitting its terminal blank line, as required by the repository whitespace
 gate. A fresh Linux Debug exact-head build passed
 `test_prg_engine_runtime_surface_functions` 1/1 in 22.88 seconds with `TMPDIR`
-under `~/temp`; obtain the required protected matrix before merge.
+under `~/temp`. The complete protected matrix passed before merge: DCO, Socket
+Security, GCC/Clang executable paths, Ubuntu/macOS/Windows generated-launcher
+paths, Windows Win32/x64 DECLARE, and Windows environment paths.
+
+## V1 native property and method-reflection module
+
+The bounded #5220/#2564 structural slice moves native PRG property and
+property-expression reads together with native method-source reads/writes from
+`prg_engine.cpp` to `prg_engine_native_reflection_dispatch.inl`. The fragment
+is included in the same private `PrgRuntimeSession::Impl` translation-unit
+context; public APIs, CMake target topology, runtime behavior, UI behavior,
+and localization contracts remain unchanged. The moved 717-line body is
+byte-identical to the pre-extraction source apart from omission of its terminal
+blank line, as required by the repository whitespace gate. A fresh Linux Debug
+exact-head build passed `test_prg_engine_runtime_surface_functions` 1/1 in 5.15
+seconds with `TMPDIR` under `~/temp`; obtain the protected matrix before merge.
 
 ## V1 runtime package-transaction module
 
