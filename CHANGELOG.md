@@ -1,3 +1,8 @@
+- 2026-08-25: Continued #2564 source-modularity work by extracting runtime
+  package-plan construction and runtime/debug manifest serialization into
+  `runtime_pipeline_package_plan_manifest.cpp`. Package, compiler, security,
+  localization, and user-facing behavior are unchanged.
+
 - 2026-08-25: Continued #2564 source-modularity work by extracting generated
   FLL and DLL/OCX native library-entrypoint emission into
   `runtime_pipeline_library_export_entrypoints.cpp`. Generated wrapper text,
