@@ -240,14 +240,16 @@ void test_invalid_configuration_fails_closed() {
            "RQ-CF-AGENT-018: unknown parser dependency contracts must fail closed");
 
     auto duplicate = tree.configuration();
-    duplicate.windows_bindings.push_back(duplicate.windows_bindings.front());
+    const auto duplicate_binding = duplicate.windows_bindings.front();
+    duplicate.windows_bindings.push_back(duplicate_binding);
     expect(!WorkspaceAgentProcessParserBoundary::create(duplicate).has_value(),
            "RQ-CF-AGENT-018: duplicate canonical parser bindings must fail closed");
 
     auto excessive = tree.configuration();
+    const auto excessive_binding = excessive.windows_bindings.front();
     excessive.windows_bindings.assign(
         copperfin::security::workspace_agent_maximum_windows_process_parser_bindings + 1U,
-        excessive.windows_bindings.front());
+        excessive_binding);
     expect(!WorkspaceAgentProcessParserBoundary::create(excessive).has_value(),
            "RQ-CF-AGENT-018: parser-binding count overflow must fail before capture");
 

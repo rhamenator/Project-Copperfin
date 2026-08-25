@@ -1,3 +1,10 @@
+- 2026-08-25: Corrected undefined behavior in the workspace-agent
+  process-parser regression fixture found by direct Windows diagnosis. Its
+  duplicate- and excessive-binding cases now copy the canonical binding before
+  mutating the same `std::vector`, avoiding reference invalidation by possible
+  reallocation. This is test-only; parser authority and launch behavior are
+  unchanged.
+
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   library package definition, generated-wrapper, manifest, export, and build
   contract regression from `test_runtime_pipeline_output_packaging_library.cpp`
