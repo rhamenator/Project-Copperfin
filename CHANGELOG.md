@@ -1,4 +1,10 @@
 - 2026-08-25: Continued #2564 source-modularity work by extracting generated
+  native-wrapper descriptor, invocation, and request-serialization emission
+  into `runtime_pipeline_library_export_request_serialization.cpp`. The
+  generated wrapper text, request schema, command flags, and package behavior
+  are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting generated
   native-wrapper host authentication into
   `runtime_pipeline_library_export_host_authentication.cpp`. The emitted SHA-256
   verifier, manifest digest lookup, Windows/POSIX verified-host branches, and

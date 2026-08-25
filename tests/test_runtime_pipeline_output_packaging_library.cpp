@@ -154,6 +154,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared bridge-descriptor surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(") != std::string::npos,
                "library-output wrapper source should declare a bridge-descriptor helper");
+        expect(wrapper_source.find("struct CopperfinRuntimeBridgeStubEmissionReturnSurface") <
+                   wrapper_source.find("static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor("),
+               "library-output wrapper source should emit its request-serialization helpers after the bridge data model");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeReturn copperfin_build_runtime_bridge_placeholder_return_binding(") <
+                   wrapper_source.find("static std::string copperfin_runtime_bridge_library_export_env_var()"),
+               "library-output wrapper source should emit its request-serialization helpers before process environment helpers");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeInvocation") != std::string::npos,
                "library-output wrapper source should declare a shared bridge-invocation surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeInvocation copperfin_build_runtime_bridge_invocation(") != std::string::npos,

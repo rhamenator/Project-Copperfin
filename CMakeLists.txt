@@ -511,6 +511,7 @@ set(COPPERFIN_RUNTIME_PIPELINE_SOURCES
     src/runtime/runtime_pipeline_library_export_artifacts.cpp
     src/runtime/runtime_pipeline_library_export_preamble.cpp
     src/runtime/runtime_pipeline_library_export_host_authentication.cpp
+    src/runtime/runtime_pipeline_library_export_request_serialization.cpp
     src/runtime/runtime_pipeline_library_export_manifest.cpp
     src/runtime/runtime_pipeline_native_wrapper_process.cpp
     src/runtime/runtime_pipeline_fxp_and_archive_manifest.cpp
