@@ -651,6 +651,13 @@ namespace copperfin::runtime
             std::string routine_name;
         };
 
+        struct PageActionRoutine
+        {
+            std::string action_text;
+            std::string source_path;
+            std::string routine_name;
+        };
+
         struct TransactionJournalFileEntry
         {
             std::string original_path;
@@ -937,6 +944,7 @@ namespace copperfin::runtime
         std::string page_handler_line_expression;
         std::string shutdown_handler;
         EscapeActionRoutine escape_action_routine;
+        PageActionRoutine page_action_routine;
         std::string udfparms_mode = "VALUE";
         std::size_t expression_evaluation_depth = 0U;
         bool resumable_expression_dispatch_active = false;
@@ -1061,6 +1069,7 @@ namespace copperfin::runtime
         bool dispatch_key_label(const std::string &key_label);
         bool dispatch_escape();
         bool start_escape_handler();
+        bool start_page_handler(const SourceLocation &location);
         bool dispatch_popup_bar_selection(const std::string &popup_name, std::int64_t bar_number);
         void assign_native_window_metadata(RuntimeOleObjectState &runtime_object);
         [[nodiscard]] std::optional<std::intptr_t> hwnd_from_whandle(std::intptr_t whandle) const;
@@ -7883,6 +7892,50 @@ namespace copperfin::runtime
     bool PrgRuntimeSession::Impl::dispatch_escape()
     {
         return waiting_for_events && start_escape_handler();
+    }
+
+    bool PrgRuntimeSession::Impl::start_page_handler(const SourceLocation &location)
+    {
+        if (stack.empty() || page_handler.empty() || page_handler.find('&') != std::string::npos || !can_push_frame())
+        {
+            return false;
+        }
+
+        Program& source_program = load_program(stack.back().file_path);
+        const Routine* action_routine = nullptr;
+        if (page_action_routine.action_text == page_handler &&
+            page_action_routine.source_path == source_program.path)
+        {
+            const auto cached = source_program.routines.find(normalize_identifier(page_action_routine.routine_name));
+            if (cached != source_program.routines.end())
+            {
+                action_routine = &cached->second;
+            }
+        }
+        if (action_routine == nullptr)
+        {
+            const std::string action_routine_name = "__copperfin_page_action_" +
+                std::to_string(runtime_instance_id) + "_" + std::to_string(++next_popup_action_id);
+            const Program action_program = parse_program_source(
+                source_program.path,
+                "PROCEDURE " + action_routine_name + "\n" + page_handler + "\nRETURN\nENDPROC\n");
+            const auto found = action_program.routines.find(normalize_identifier(action_routine_name));
+            if (found == action_program.routines.end())
+            {
+                return false;
+            }
+            auto [inserted, created] = source_program.routines.emplace(normalize_identifier(action_routine_name), found->second);
+            if (!created)
+            {
+                return false;
+            }
+            page_action_routine = {page_handler, source_program.path, action_routine_name};
+            action_routine = &inserted->second;
+        }
+
+        events.push_back({.category = "runtime.on_page", .detail = "handler=dispatched", .location = location});
+        push_routine_frame(source_program.path, *action_routine);
+        return true;
     }
 
     bool PrgRuntimeSession::Impl::dispatch_popup_bar_selection(

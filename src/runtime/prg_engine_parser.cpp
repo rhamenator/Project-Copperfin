@@ -1232,6 +1232,10 @@ void assign_dialog_positional_if_empty(std::string& field, const std::vector<std
 }
 
 bool parse_file_storage_statement(const std::string& line, Statement& statement) {
+    if (uppercase_copy(trim_copy(line)) == "EJECT PAGE") {
+        statement.kind = StatementKind::eject_page_command;
+        return true;
+    }
     if (starts_with_insensitive(line, "ERASE ") || starts_with_insensitive(line, "DELETE FILE ")) {
         statement.kind = StatementKind::erase_command;
         const bool starts_delete = starts_with_insensitive(line, "DELETE FILE ");

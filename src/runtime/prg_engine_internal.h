@@ -107,6 +107,7 @@ enum class StatementKind {
     copy_file_command,
     rename_file_command,
     print_command,
+    eject_page_command,
     create_cursor_command,
     create_table_command,
     alter_table_command,
