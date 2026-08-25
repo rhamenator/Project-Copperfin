@@ -1,5 +1,17 @@
 # Agent Handoff
 
+## V1 workspace-agent security-overview accuracy
+
+The bounded #5244 documentation correction aligns `docs/04-security-model.md`
+with the detailed workspace-agent policy. Copperfin implements a deliberately
+narrow Windows-only executor for an admitted, warned `unrestricted_local`
+session, with an authenticated private image, bounded transport, and mandatory
+content-free intent/outcome audit commits. It remains current-user authority,
+not a sandbox or privilege elevation. Do not claim a product consent dialog,
+provider adapter, real sandbox enforcement, general mutable-tool surface, or
+POSIX/macOS executor: those remain unimplemented. This documentation-only
+slice changes no policy, executable behavior, public API, or machine contract.
+
 ## V1 Studio designer-dispatch JSON regression module
 
 The bounded #5242/#2564 structural slice moves the contiguous Studio

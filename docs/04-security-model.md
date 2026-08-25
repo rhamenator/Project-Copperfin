@@ -69,8 +69,13 @@ activation additionally requires trusted Copperfin UI, an available audit
 sink, the exact current localized warning contract, and affirmative consent.
 It allows the current user's file, process, and network authority but never
 administrator/root elevation. Provider sign-in is authentication only and
-cannot satisfy any local-authority gate. The host dialog, mutable executor,
-sandbox, audit commits, and provider adapters are not implemented yet; see
+cannot satisfy any local-authority gate. The native policy includes a narrow
+Windows-only executor for an admitted, warned `unrestricted_local` session: it
+launches an authenticated private executable image with bounded transport and
+mandatory content-free intent/outcome audit commits. That is current-user
+authority, not a workspace sandbox or privilege elevation. The host consent
+dialog, provider adapters, real sandbox enforcement, general mutable-tool
+surface, and POSIX/macOS executor are not implemented; see
 [`64-workspace-agent-access-policy.md`](64-workspace-agent-access-policy.md).
 
 Current federation baseline: live execution is explicit, limited to one local

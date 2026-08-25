@@ -1,3 +1,10 @@
+- 2026-08-25: Corrected the workspace-agent security overview to match the
+  implemented narrow Windows-only unrestricted-local executor and its mandatory
+  content-free intent/outcome audit boundary. The overview continues to state
+  that it is current-user authority rather than a sandbox or elevation, and
+  that the product consent dialog, provider adapters, real sandbox enforcement,
+  general mutable-tool surface, and POSIX/macOS executor remain unimplemented.
+
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   Studio designer-dispatch JSON regression family from
   `test_studio_host_json_dispatch_designer.cpp` into
