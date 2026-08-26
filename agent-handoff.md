@@ -19,6 +19,22 @@ No product or compatibility behavior is added. A fresh Linux Debug build of
 19.60 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix
 before merge.
 
+## V1 Studio grid-data selector regression module
+
+The bounded #2564 structural slice moves the contiguous stable-selector
+ButtonCount, DataSession, LockColumns, and LockColumnsLeft Studio-host JSON
+regression family from `test_studio_host_json_setters_data.cpp` to
+`test_studio_host_json_setters_data_grid_selectors.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, Studio-host JSON, xAsset mutation,
+localization, and machine contracts are unchanged. The original 560-line source
+range has SHA-256 `635a4a5f61fde73acc5ae7f6901f4923882929ec2b0aee43942cb64abc6cd9f5`;
+the extracted 559-line module omits one nonfunctional terminal separator blank
+line and has SHA-256 `f8199e6c38c3c4b4d5087d1a408bc4f4ff5ce1fd3cd19daefc6966376d4c0f07`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_studio_host_json` and focused CTest passed `1/1` in 453.45 seconds with
+`TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
 ## V1 visual-asset batch-operation regression module
 
 The bounded #2564 structural slice moves the contiguous multi-property and

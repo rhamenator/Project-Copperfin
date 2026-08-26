@@ -6,6 +6,13 @@
   preservation, localization, and machine contracts are unchanged.
 
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  stable-selector ButtonCount, DataSession, LockColumns, and LockColumnsLeft
+  Studio-host JSON regressions from `test_studio_host_json_setters_data.cpp`
+  into `test_studio_host_json_setters_data_grid_selectors.inl`. The aggregate
+  target, invocation behavior, xAsset mutation coverage, localization, and
+  machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   visual-asset multi-property and report/label batch-operation regressions from
   `test_visual_asset_editor_update_batch.cpp` into
   `test_visual_asset_editor_update_batch_operations.inl`. The aggregate target,
