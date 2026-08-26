@@ -19,6 +19,26 @@ existing `test_studio_host_json` CTest passed 1/1 in 447.59 seconds with
 `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
 integration.
 
+## Visual-asset method CRUD regression module
+
+The bounded #5344/#2564 structural slice moves the contiguous single-object
+visual-asset method query, update/append, and delete regression family
+(existing annotations #762, #747, #748, and #1004) from
+`test_visual_asset_editor_methods.cpp` into the included
+`test_visual_asset_editor_method_crud.inl` fragment. The parent translation
+unit namespace, aggregate `test_visual_asset_editor` target, declarations,
+invocation order, existing method-reorder include, xAsset mutation/undo
+assertions, DBF/FPT contracts, and localization are unchanged. The original
+338-line source range (including its terminal separator blank line) has SHA-256
+`0892b09af957956c92662792f137dd651d8b908720cce932231532d3814048e8`; the
+337-line extracted module intentionally omits only that nonfunctional separator
+blank line and has SHA-256
+`fe9da0a1bb5eec2dc987a9f99f4001d0014df2076e698887ee43effc73aac7e9`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the existing `test_visual_asset_editor` CTest passed 1/1 in 19.34 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
 ## Studio window help and chrome regression module
 
 The bounded #5339/#2564 structural slice moves the contiguous Caption,
