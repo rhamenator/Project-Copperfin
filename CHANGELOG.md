@@ -1,4 +1,11 @@
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  FontBold and FontItalic visual-asset regression pair from
+  `test_visual_asset_editor_appearance_fonts.cpp` into
+  `test_visual_asset_editor_appearance_font_styles.inl`. The aggregate target,
+  invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   FontName and FontSize visual-asset regression pair from
   `test_visual_asset_editor_appearance_fonts.cpp` into
   `test_visual_asset_editor_appearance_base_fonts.inl`. The aggregate target,

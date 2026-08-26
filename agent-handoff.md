@@ -1,5 +1,23 @@
 # Agent Handoff
 
+## V1 visual-asset font-style regression module
+
+The bounded #5270/#2564 structural slice moves the contiguous FontBold and
+FontItalic visual-asset regression pair from
+`test_visual_asset_editor_appearance_fonts.cpp` to
+`test_visual_asset_editor_appearance_font_styles.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, visual-asset editing, undo
+behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 368-line source range has SHA-256
+`4d34ae498496f28c32726427c255a0ee825fd7852c7cfb63a28ac735a7f6a1de`; the
+extracted 367-line module omits one nonfunctional terminal separator blank line
+and has SHA-256
+`be1eda5fc9e5e2804632ec276adadb765fc0d564f7b549d95ae90a4609015f64`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build
+of `test_visual_asset_editor`; focused CTest passed `1/1` in 21.46 seconds
+with `TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
 ## V1 visual-asset base font regression module
 
 The bounded #5268/#2564 structural slice moves the contiguous FontName and
