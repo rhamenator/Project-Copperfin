@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## V1 Studio report schema fallback regression module
+
+The bounded #5284/#2564 structural slice moves the contiguous report-object
+fallback-schema, unresolved-placeholder, and synthesized-title Studio-host JSON
+regression family from `test_studio_host_json_objects_diagnostics_and_misc.cpp` to
+`test_studio_host_json_report_schema_fallbacks.inl`. The fragment remains
+included in the same translation-unit namespace and macro location; the
+dedicated and aggregate targets, helper guards, fixtures, report/label coverage,
+selection behavior, localization, and machine contracts are unchanged. The
+original 963-line source range and byte-identical extracted module each have
+SHA-256 `8f4ab0360980e06d89a7acea82f529f8c2f8b892f21bbefa840f372e1c2ac06b`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+both focused CTests: `test_studio_host_report_schema_fallbacks` in 13.44 seconds
+and `test_studio_host_report_unresolved_memo_placeholders` in 9.84 seconds.
+Obtain the protected matrix before integration.
+
 ## V1 Studio report deleted-state regression module
 
 The bounded #5282/#2564 structural slice moves the contiguous report
