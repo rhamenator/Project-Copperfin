@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## V1 Studio visual-method inspection regression module
+
+The bounded #5298/#2564 structural slice moves the contiguous Studio-host
+visual-method list and query JSON regression family (requirements #1422 and
+#1423) from `test_studio_host_json_visual_editor_json_methods.cpp` to
+`test_studio_host_json_visual_editor_json_methods_inspection.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+fixtures, invocation behavior, non-mutating visual-asset inspection,
+deleted-record observations, localization, and machine contracts are unchanged.
+The original 263-line source range and byte-identical extracted module have
+SHA-256 `9f0bbc144d9ace3b3822801c2651247fd3191a137369e1e4387dc7583a38a387`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 443.76 seconds. Obtain the
+protected matrix before integration.
+
 ## V1 Studio visual-property mutation regression module
 
 The bounded #5296/#2564 structural slice moves the contiguous Studio-host
