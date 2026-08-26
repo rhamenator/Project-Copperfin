@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## V1 visual-asset highlight color regression module
+
+The bounded #5264/#2564 structural slice moves the contiguous
+HighlightBackColor and HighlightForeColor visual-asset regression pair from
+`test_visual_asset_editor_appearance_colors.cpp` to
+`test_visual_asset_editor_appearance_highlight_colors.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, visual-asset editing,
+undo behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 400-line source range has SHA-256
+`13b5bf79f6f296fc714d6b362f939a4f887dfcc931edfac02fd855657d9ce769`; the
+extracted 399-line module omits one nonfunctional terminal separator blank line
+and has SHA-256
+`881f2efdf1c39d5bce6660c3488cbed1fdcbd91fda09d743217e35de5952a751`.
+No product or compatibility behavior is added. A fresh Linux Debug
+configuration built `test_visual_asset_editor`; focused CTest passed `1/1` in
+20.64 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix after
+the dependent Item color slice merges.
+
 ## V1 visual-asset Item color regression module
 
 The bounded #5262/#2564 structural slice moves the contiguous ItemBackColor
