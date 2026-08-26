@@ -1,3 +1,10 @@
+- 2026-08-26: Continued #5321/#2564 test-module refactoring by moving the
+  contiguous Studio-host selected-color JSON regressions (#1056–#1059) from
+  `test_studio_host_json_appearance_colors.cpp` into
+  `test_studio_host_json_appearance_colors_selected.inl`. The aggregate target,
+  invocation behavior, visual-asset mutation/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
 - 2026-08-26: Corrected the `RQ-CF-AGENT-018` workspace-agent parser
   negative-test fixture so vector growth uses a standalone binding value rather
   than a reference into storage that `assign` or `push_back` may relocate. This
