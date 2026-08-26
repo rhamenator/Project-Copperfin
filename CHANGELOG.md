@@ -1,3 +1,10 @@
+- 2026-08-26: Continued #5288/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-property direct and batch move JSON regressions
+  from test_studio_host_json_visual_editor_json_properties.cpp into
+  test_studio_host_json_visual_editor_json_properties_move.inl. The aggregate
+  target, invocation behavior, visual-asset mutation and rollback coverage,
+  localization, and machine contracts are unchanged.
+
 - 2026-08-26: Continued #5286/#2564 test-module refactoring by moving the
   contiguous Studio-host visual-property clear/copy and batch clear/copy JSON
   regressions from `test_studio_host_json_visual_editor_json_properties.cpp`
