@@ -9890,3 +9890,9 @@ passes `1/1`.
   seam maps only declared zero-argument dispatch IDs to bounded runtime tokens;
   the fixture exercises native callback through the iterative PRG handler path
   and verifies deterministic teardown. Windows-hosted evidence is pending.
+- 2026-08-25: Continued #5282/#2564 test-module refactoring by moving the
+  contiguous report deleted-state Studio-host JSON regression family from
+  `test_studio_host_json_objects_diagnostics_and_misc.cpp` into
+  `test_studio_host_json_report_deleted_states.inl`. The dedicated and aggregate
+  targets, helper guards, report/label coverage, invocation behavior,
+  localization, and machine contracts are unchanged.

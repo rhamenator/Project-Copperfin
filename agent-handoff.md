@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## V1 Studio report deleted-state regression module
+
+The bounded #5282/#2564 structural slice moves the contiguous report
+deleted-state Studio-host JSON regression family from
+`test_studio_host_json_objects_diagnostics_and_misc.cpp` to
+`test_studio_host_json_report_deleted_states.inl`. The fragment remains
+included in the same translation-unit namespace and macro location; the
+dedicated and aggregate targets, helper guards, fixtures, report/label coverage,
+selection behavior, localization, and machine contracts are unchanged. The
+original 831-line source range has SHA-256
+`a0a39ad81396d158b34e27c658c413d38a3a3e3fc16d468ea7ff10763db53243`; the
+extracted 830-line module omits one nonfunctional terminal separator blank line
+and has SHA-256
+`94fd620f78098df0ce0186e7afd24553a4adfa8ca88a1ac5062db83796672fde`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_studio_host_report_deleted_states` and focused CTest passed 1/1 in 8.81
+seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix before
+integration.
+
 ## V1 visual-asset font-outline and shadow regression module
 
 The bounded #5280/#2564 structural slice moves the contiguous direct
