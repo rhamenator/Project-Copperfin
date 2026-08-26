@@ -1,3 +1,11 @@
+- 2026-08-26: Continued #5341/#2564 test-module refactoring by moving the
+  contiguous Studio-host JSON object-metadata diagnostic and pseudo-localization
+  regressions (#2426, #2487, and #2504–#2513) from
+  `test_studio_host_json_diagnostics_general.cpp` into
+  `test_studio_host_json_diagnostics_object_metadata.cpp`. The aggregate
+  target, invocation behavior, localization assertions, and machine-readable
+  CLI contracts are unchanged.
+
 - 2026-08-26: Continued #5335/#2564 test-module refactoring by moving the
   contiguous Studio window-size and position launch-contract regressions
   (#1151–#1154 and #1156–#1160) from

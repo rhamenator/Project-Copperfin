@@ -775,6 +775,7 @@ add_executable(test_studio_host_json
     test_studio_host_json_diagnostics_target_selectors.cpp
     test_studio_host_json_diagnostics_values.cpp
     test_studio_host_json_diagnostics_general.cpp
+    test_studio_host_json_diagnostics_object_metadata.cpp
     test_studio_host_json_parse_diagnostics_toolbox.cpp
     test_studio_host_json_parse_diagnostics_visual.cpp
     test_studio_host_json_parse_diagnostics_core.cpp
