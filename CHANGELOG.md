@@ -1,3 +1,15 @@
+- 2026-08-26: Continued #5328/#2564 test-module refactoring by moving the
+  contiguous workspace-agent session-layout preparation, identity-binding, and
+  audited cleanup lifecycle regressions (RQ-CF-AGENT-012, -013, -014, -015,
+  -016, -020, and -021) from
+  `test_workspace_agent_isolated_environment.cpp` into
+  `test_workspace_agent_isolated_environment_session_layout_lifecycle.inl`.
+  The aggregate target, invocation behavior, security assertions, and
+  localization are unchanged; the private-directory contract checker now reads
+  the included module with its parent so its machine-verification coverage is
+  preserved, and the generated-launcher workflow's direct-push filter names
+  the extracted file so cross-platform validation cannot be skipped.
+
 - 2026-08-26: Continued #5326/#2564 test-module refactoring by moving the
   contiguous Studio-host static stable-selector color JSON regressions
   (#1064–#1067) from `test_studio_host_json_appearance_colors.cpp` into

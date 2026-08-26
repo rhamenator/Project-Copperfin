@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## Workspace-agent session-layout lifecycle regression module
+
+The bounded #5328/#2564 structural slice moves the contiguous workspace-agent
+session-layout preparation, containment, identity-binding, and cleanup lifecycle
+regressions (RQ-CF-AGENT-012, -013, -014, -015, -016, -020, and -021) from
+`test_workspace_agent_isolated_environment.cpp` into
+`test_workspace_agent_isolated_environment_session_layout_lifecycle.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; shared fixtures, test invocation order, authorization behavior,
+localization, and machine contracts are unchanged. The original and extracted
+743-line source range are byte-identical and have SHA-256
+`e36ed72e41f8b442927a79ce0cfd6275f742157595c520176e19704ec1929d88`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the focused `test_workspace_agent_isolated_environment` CTest passed 1/1 in
+3.96 seconds with the declared repository temporary-directory setting. The
+private-directory, exact-snapshot materialization, and process-parser contract
+checks also pass. The generated-launcher direct-push filter and its contract
+now explicitly cover the extracted module; obtain the protected matrix before
+integration.
+
 ## V1 Studio static color regression module
 
 The bounded #5326/#2564 structural slice moves the contiguous Studio-host
