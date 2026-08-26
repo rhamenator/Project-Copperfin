@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## V1 Studio visual-property reorder regression module
+
+The bounded #5292/#2564 structural slice moves the contiguous Studio-host
+visual-property direct and batch reorder JSON regression family (requirements
+#1443 and #1444) from
+test_studio_host_json_visual_editor_json_properties.cpp to
+test_studio_host_json_visual_editor_json_properties_reorder.inl. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+fixtures, invocation behavior, visual-asset mutation and rollback coverage,
+localization, and machine contracts are unchanged. The original 500-line source
+range has SHA-256
+91564042388fc3376b71ac329361734ba9833aa9b578a031e87c2decd060342; the
+498-line extracted module omits two nonfunctional terminal separator blank lines
+and has SHA-256
+6720deac6afa10edfbb77425af61c5ee10290ce03b5a65ef3c5db8723f8e5e41.
+No product or compatibility behavior is added. Fresh focused Linux Debug test
+test_studio_host_json CTest passed 1/1 in 453.15 seconds. Obtain the protected
+matrix before integration.
+
 ## V1 Studio visual-property rename regression module
 
 The bounded #5290/#2564 structural slice moves the contiguous Studio-host
