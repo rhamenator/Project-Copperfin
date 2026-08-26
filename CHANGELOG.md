@@ -10,6 +10,12 @@
   preserved, and the generated-launcher workflow's direct-push filter names
   the extracted file so cross-platform validation cannot be skipped.
 
+- 2026-08-26: Continued #5330/#2564 test-module refactoring by moving the
+  contiguous DBF table validation-localization regressions (#2381–#2385) from
+  `test_dbf_table.cpp` into `test_dbf_table_validation_localization.inl`.
+  The aggregate target, invocation behavior, localized diagnostic assertions,
+  data-integrity coverage, and machine contracts are unchanged.
+
 - 2026-08-26: Continued #5326/#2564 test-module refactoring by moving the
   contiguous Studio-host static stable-selector color JSON regressions
   (#1064–#1067) from `test_studio_host_json_appearance_colors.cpp` into
