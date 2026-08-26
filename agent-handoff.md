@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## V1 Studio visual-method delete regression module
+
+The bounded #5302/#2564 structural slice moves the contiguous Studio-host
+single visual-method delete JSON regression family (requirement #1425) from
+`test_studio_host_json_visual_editor_json_methods.cpp` to
+`test_studio_host_json_visual_editor_json_methods_delete.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+fixtures, invocation behavior, visual-asset removal/unrelated-method
+preservation/no-mutation/undo coverage, localization, and machine contracts are
+unchanged. The original 165-line source range and byte-identical extracted
+module have SHA-256
+`3a5a96fd5db9318a0e5356777845f998c9c39f68153bb2ef2b0fa20b92bb9213`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 443.36 seconds. Obtain the
+protected matrix before integration.
+
 ## V1 Studio visual-method update regression module
 
 The bounded #5300/#2564 structural slice moves the contiguous Studio-host

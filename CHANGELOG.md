@@ -9957,3 +9957,9 @@ passes `1/1`.
   `test_studio_host_json_visual_editor_json_methods_update.inl`. The aggregate
   target, update/append/no-mutation/undo coverage, localization, and machine
   contracts are unchanged.
+- 2026-08-26: Continued #5302/#2564 test-module refactoring by moving the
+  contiguous Studio-host single visual-method delete JSON regressions from
+  `test_studio_host_json_visual_editor_json_methods.cpp` into
+  `test_studio_host_json_visual_editor_json_methods_delete.inl`. The aggregate
+  target, removal/no-mutation/undo coverage, localization, and machine
+  contracts are unchanged.
