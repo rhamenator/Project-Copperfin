@@ -1,3 +1,11 @@
+- 2026-08-26: Continued #5335/#2564 test-module refactoring by moving the
+  contiguous Studio window-size and position launch-contract regressions
+  (#1151–#1154 and #1156–#1160) from
+  `test_studio_host_behavior_window_chrome.cpp` into
+  `test_studio_host_behavior_window_size_position.inl`. The aggregate target,
+  invocation behavior, localization, and machine-readable launch contracts are
+  unchanged.
+
 - 2026-08-26: Continued #5328/#2564 test-module refactoring by moving the
   contiguous workspace-agent session-layout preparation, identity-binding, and
   audited cleanup lifecycle regressions (RQ-CF-AGENT-012, -013, -014, -015,
