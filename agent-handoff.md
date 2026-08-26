@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 Studio window-size and position launch regression module
+
+The bounded #5335/#2564 structural slice moves the contiguous Studio
+window-size and position launch-contract regression families (#1151–#1154 and
+#1156–#1160)
+from `test_studio_host_behavior_window_chrome.cpp` into
+`test_studio_host_behavior_window_size_position.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate target; shared
+fixtures, invocation behavior, localization, and machine-readable launch
+contracts are unchanged. The original and extracted 827-line source range are
+byte-identical and have SHA-256
+`20675ede61ce3404678598cccd6f9ac66b3cc1196fc926a3f7919fded05000fc`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the focused `test_studio_host` CTest passed 1/1 in 2.48 seconds with the
+declared repository temporary-directory setting; obtain the protected matrix
+before integration.
+
 ## Workspace-agent session-layout lifecycle regression module
 
 The bounded #5328/#2564 structural slice moves the contiguous workspace-agent
