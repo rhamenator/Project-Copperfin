@@ -9932,3 +9932,9 @@ passes `1/1`.
   `test_studio_host_json_report_deleted_states.inl`. The dedicated and aggregate
   targets, helper guards, report/label coverage, invocation behavior,
   localization, and machine contracts are unchanged.
+- 2026-08-26: Continued #5294/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-property filter, query, and list JSON
+  regressions from `test_studio_host_json_visual_editor_json_properties.cpp`
+  into `test_studio_host_json_visual_editor_json_properties_inspection.inl`.
+  The aggregate target, invocation behavior, read-only visual-asset inspection
+  coverage, localization, and machine contracts are unchanged.
