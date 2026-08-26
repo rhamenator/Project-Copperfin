@@ -20,6 +20,23 @@ checks also pass. The generated-launcher direct-push filter and its contract
 now explicitly cover the extracted module; obtain the protected matrix before
 integration.
 
+## DBF validation-localization regression module
+
+The bounded #5330/#2564 structural slice moves the contiguous DBF table
+validation-localization regression family (#2381–#2385) from
+`test_dbf_table.cpp` into `test_dbf_table_validation_localization.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; shared fixtures, test invocation order, localized diagnostic assertions,
+data-integrity coverage, and machine contracts are unchanged. The original
+225-line source range has SHA-256
+`10500f84bbba988f86e06bb6875253d8f577d80ec32ab7878cc2cf79a1ba5903`; the
+224-line extracted module intentionally omits only the nonfunctional terminal
+separator blank line and has SHA-256
+`173901fdf9f046d37dfaf6c29a1a2b1f61f9e2b4321f23af72ff725f50e43ee0`.
+No product or compatibility behavior is added. A fresh Linux Debug focused
+`test_dbf_table` CTest passed 1/1 in 1.71 seconds; obtain the protected matrix
+before integration.
+
 ## V1 Studio static color regression module
 
 The bounded #5326/#2564 structural slice moves the contiguous Studio-host
