@@ -36,6 +36,24 @@ No product or compatibility behavior is added. A fresh Linux Debug build must
 pass the focused `test_studio_host_json` CTest 1/1 in 447.02 seconds; obtain
 the protected matrix before integration.
 
+## V1 Studio dynamic font-strikethru regression module
+
+The bounded #5312/#5305/#2564 structural slice moves the contiguous Studio-host
+dynamic font-strikethru JSON regression family (requirement #1193) from
+`test_studio_host_json_appearance_fonts.cpp` to
+`test_studio_host_json_appearance_fonts_dynamic_strikethru.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+shared fixtures, invocation behavior, visual-asset mutation/error/no-mutation
+coverage, localization, and machine contracts are unchanged. The original
+124-line source range has SHA-256
+`99f1fcea74dd91cfeb3d7a8b6698353a3698870946322bcaeb85d98cb31107e7`; the
+123-line extracted module intentionally omits its nonfunctional terminal
+separator blank line and has SHA-256
+`21d6a4e3be804eab8c8aa1b0c9c27f787a7618fa052807393634020052f654d2`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 447.69 seconds; obtain
+the protected matrix before integration.
+
 ## V1 Studio dynamic font-bold regression module
 
 The bounded #5306/#5305/#2564 structural slice moves the contiguous Studio-host
