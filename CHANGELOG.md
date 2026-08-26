@@ -10077,3 +10077,12 @@ passes `1/1`.
   `test_studio_host_json_visual_editor_json_methods_delete.inl`. The aggregate
   target, removal/no-mutation/undo coverage, localization, and machine
   contracts are unchanged.
+- 2026-08-26: Continued #5337/#2564 test-module refactoring by moving the
+  contiguous Studio-host ControlBox, Desktop, KeyPreview, MacDesktop,
+  MaxButton, and MinButton launch-contract regressions (#1074, #1147–#1150,
+  and #1155)
+  from `test_studio_host_behavior_window_chrome.cpp` into
+  `test_studio_host_behavior_window_chrome_options.inl`. The aggregate target,
+  invocation behavior, localized assertions, and machine contracts are
+  unchanged. A fresh Linux Debug `test_studio_host` CTest passed 1/1 in 2.64
+  seconds.
