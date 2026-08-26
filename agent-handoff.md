@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## Studio object-metadata diagnostic regression module
+
+The bounded #5341/#2564 structural slice moves the contiguous Studio-host JSON
+object-metadata diagnostic and pseudo-localization regression family (existing
+annotations #2426, #2487, and #2504–#2513) from
+`test_studio_host_json_diagnostics_general.cpp` into the separately compiled
+`test_studio_host_json_diagnostics_object_metadata.cpp` module. The aggregate
+`test_studio_host_json` target, test entry-point declaration and invocation
+order, localized assertions, and machine-readable CLI contracts are unchanged.
+The original 751-line function range has SHA-256
+`09c8376cc94969185e84c2b8bab59fa36bc2f1803ca2fed6739536f1ea3aedf4`; the
+new 759-line compilation module retains that byte-identical function under its
+own license/include preamble and namespace wrapper and has SHA-256
+`4ad017d873b2ee0730b730b5adc9fe3fa8ed8f83e8411a5ad6b644a6cc70795e`.
+No product or compatibility behavior is added. A fresh Linux Debug build of the
+existing `test_studio_host_json` CTest passed 1/1 in 447.59 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
 ## Studio window help and chrome regression module
 
 The bounded #5339/#2564 structural slice moves the contiguous Caption,
