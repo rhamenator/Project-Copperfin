@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## Studio window help and chrome regression module
+
+The bounded #5339/#2564 structural slice moves the contiguous Caption,
+WhatsThisHelpID, WhatsThisHelp, WhatsThisButton, StatusBarText, and Closable
+launch-contract regression families (recovered requirements #1042, #1044,
+#1073, and #1142–#1144) from `test_studio_host_behavior_window_chrome.cpp`
+into `test_studio_host_behavior_window_help_chrome.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate `test_studio_host`
+target; shared fixtures, test invocation order, localized assertions, and
+machine-readable launch contracts are unchanged. The original 505-line source
+range has SHA-256 `525a87cb2762645e526281d8df10c3a0c878a02c5b41bd297be1987dc5d6130d`;
+the 504-line extracted module intentionally omits only its nonfunctional
+terminal separator blank line and has SHA-256
+`c0914120e18b88d868180e8b8f418eb126463a660eb35fba1eb00f1841d714f4`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build of
+the focused `test_studio_host` CTest, which passed 1/1 in 2.71 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
 ## Studio window chrome option regression module
 
 The bounded #5337/#2564 structural slice moves the contiguous ControlBox,

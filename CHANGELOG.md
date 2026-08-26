@@ -10086,3 +10086,12 @@ passes `1/1`.
   invocation behavior, localized assertions, and machine contracts are
   unchanged. A fresh Linux Debug `test_studio_host` CTest passed 1/1 in 2.64
   seconds.
+- 2026-08-26: Continued #5339/#2564 test-module refactoring by moving the
+  contiguous Studio-host Caption, WhatsThisHelpID, WhatsThisHelp,
+  WhatsThisButton, StatusBarText, and Closable launch-contract regressions
+  (#1042, #1044, #1073, and #1142–#1144) from
+  `test_studio_host_behavior_window_chrome.cpp` into
+  `test_studio_host_behavior_window_help_chrome.inl`. The aggregate target,
+  invocation behavior, localized assertions, and machine contracts are
+  unchanged. A fresh Linux Debug `test_studio_host` CTest passed 1/1 in 2.71
+  seconds.
