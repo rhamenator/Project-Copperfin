@@ -16,6 +16,14 @@
   The aggregate target, invocation behavior, localized diagnostic assertions,
   data-integrity coverage, and machine contracts are unchanged.
 
+- 2026-08-26: Continued #5332/#2564 test-module refactoring by moving the
+  contiguous PRG report/label rendering, preview-status, filtered-output, and
+  localized-missing-report regression family from
+  `test_prg_engine_work_areas.cpp` into
+  `test_prg_engine_work_areas_report_label.inl`. The aggregate target, VFP9
+   sample guard, recovered runtime coverage, localization assertions, and
+   machine contracts are unchanged.
+
 - 2026-08-26: Continued #5326/#2564 test-module refactoring by moving the
   contiguous Studio-host static stable-selector color JSON regressions
   (#1064–#1067) from `test_studio_host_json_appearance_colors.cpp` into
