@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## V1 visual-asset font-decoration regression module
+
+The bounded #5272/#2564 structural slice moves the contiguous FontUnderline
+and FontStrikethru visual-asset regression pair from
+`test_visual_asset_editor_appearance_fonts.cpp` to
+`test_visual_asset_editor_appearance_font_decorations.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, visual-asset editing,
+undo behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 374-line source range has SHA-256
+`6e465bd9b0d86cb8d74f06369198e72fa9de46c972963d39ccd5e2f8a18fc57b`;
+the extracted 373-line module omits one nonfunctional terminal separator blank
+line and has SHA-256
+`e6eefb2eb96b337b8a3dfdc7925b1a6b00e6cd1533eddeddfb71fd6a5d16f2b8`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_visual_asset_editor` completed and focused CTest passed `1/1` in
+19.60 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix
+before merge.
+
 ## V1 visual-asset font-style regression module
 
 The bounded #5270/#2564 structural slice moves the contiguous FontBold and
