@@ -45,6 +45,7 @@ on:
       - "tests/test_platform_private_directory.cpp"
       - "tests/test_platform_path.cpp"
       - "tests/test_workspace_agent_isolated_environment.cpp"
+      - "tests/test_workspace_agent_isolated_environment_session_layout_lifecycle.inl"
       - "tests/test_workspace_agent_session.cpp"
       - "tests/test_workspace_agent_process_parser.cpp"
       - "tests/test_platform_disk_space.cpp"
