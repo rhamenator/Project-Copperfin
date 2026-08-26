@@ -1,3 +1,11 @@
+- 2026-08-25: Continued #5278/#2564 test-module refactoring by moving the
+  contiguous stable-selector FormSetClass, DefaultFilePath, InitialSelectedAlias,
+  LinkMaster, and RowSource Studio-host JSON regressions from
+  `test_studio_host_json_setters_data.cpp` into
+  `test_studio_host_json_setters_data_remaining_selectors.inl`. The aggregate
+  target, invocation behavior, xAsset mutation coverage, localization, and
+  machine contracts are unchanged.
+
 - 2026-08-25: Continued #5276/#2564 test-module refactoring by moving the
   contiguous stable-selector Partition, RecordSourceType, ColumnOrder,
   ChildOrder, and RecordSource Studio-host JSON regressions from

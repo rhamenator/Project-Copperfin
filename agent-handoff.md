@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 remaining Studio stable data-selector regression module
+
+The bounded #5278/#2564 structural slice moves the contiguous stable-selector
+FormSetClass, DefaultFilePath, InitialSelectedAlias, LinkMaster, and RowSource
+Studio-host JSON regression family from `test_studio_host_json_setters_data.cpp`
+to `test_studio_host_json_setters_data_remaining_selectors.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, Studio-host JSON,
+xAsset mutation, localization, and machine contracts are unchanged. The
+original 615-line source range has SHA-256
+`094888c0cd1ca8016518bff7554838d4aed09e009d8f45bae16ae0a3562677de`; the
+extracted 613-line module omits two nonfunctional separator blank lines and has
+SHA-256 `21fbbf12b15f2b6553a58dcab8bef5268945a91c9a4264045e5499bec2061df2`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_studio_host_json` and focused CTest passed `1/1` in 454.76 seconds with
+`TMPDIR` under `~/temp`. Obtain the protected matrix before integration.
+
 ## V1 Studio stable data-selector regression module
 
 The bounded #5276/#2564 structural slice moves the contiguous stable-selector
