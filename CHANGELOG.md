@@ -1,3 +1,10 @@
+- 2026-08-26: Continued #5314/#5305/#2564 test-module refactoring by moving the
+  contiguous Studio-host dynamic font-outline JSON regressions for recovered
+  requirement #1194 from `test_studio_host_json_appearance_fonts.cpp` into
+  `test_studio_host_json_appearance_fonts_dynamic_outline.inl`. The aggregate
+  target, invocation behavior, visual-asset mutation/error/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
 - 2026-08-26: Continued #5309/#5305/#2564 test-module refactoring by moving the
   contiguous Studio-host dynamic font-italic JSON regressions for recovered
   requirement #1191 from `test_studio_host_json_appearance_fonts.cpp` into
