@@ -1,5 +1,23 @@
 # Agent Handoff
 
+## V1 Studio dynamic font-bold regression module
+
+The bounded #5306/#5305/#2564 structural slice moves the contiguous Studio-host
+dynamic font-bold JSON regression family (requirement #1190) from
+`test_studio_host_json_appearance_fonts.cpp` to
+`test_studio_host_json_appearance_fonts_dynamic_bold.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate target; shared
+fixtures, invocation behavior, visual-asset mutation/error/no-mutation coverage,
+localization, and machine contracts are unchanged. The original 124-line source
+range has SHA-256
+`7eee40fab7777dccf38799228e5be3c869851c381653681eaa322cddbed98f86`; the
+123-line extracted module intentionally omits its nonfunctional terminal
+separator blank line and has SHA-256
+`51d3c2da9401fc479e7f5c596c674357dfb906d04fb8113e1db7971c179fba4e`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 438.77 seconds. Obtain the
+protected matrix before integration.
+
 ## V1 Studio visual-method delete regression module
 
 The bounded #5302/#2564 structural slice moves the contiguous Studio-host
