@@ -1,5 +1,23 @@
 # Agent Handoff
 
+## V1 Studio visual-property clear/copy regression module
+
+The bounded #5286/#2564 structural slice moves the contiguous Studio-host
+visual-property clear/copy and batch clear/copy JSON regression family from
+`test_studio_host_json_visual_editor_json_properties.cpp` to
+`test_studio_host_json_visual_editor_json_properties_clear_copy.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; fixtures, invocation behavior, visual-asset mutation coverage,
+localization, and machine contracts are unchanged. The original 750-line source
+range has SHA-256
+`2aa2480c6ed76631944f2b9e49b72ad64d2736e5f78ba2da3b7a447a6daab637`; the
+749-line extracted module omits one nonfunctional terminal separator blank line
+and has SHA-256
+`295f36c3847a1e45d648be9ccd15ee3287e4ca8c51e371b1274e8235c7b0d435`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 490.89 seconds. Obtain the
+protected matrix before integration.
+
 ## V1 Studio report schema fallback regression module
 
 The bounded #5284/#2564 structural slice moves the contiguous report-object
