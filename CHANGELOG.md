@@ -1,3 +1,11 @@
+- 2026-08-26: Continued #5284/#2564 test-module refactoring by moving the
+  contiguous report-object fallback-schema, unresolved-placeholder, and
+  synthesized-title Studio-host JSON regressions from
+  `test_studio_host_json_objects_diagnostics_and_misc.cpp` into
+  `test_studio_host_json_report_schema_fallbacks.inl`. The aggregate target,
+  invocation behavior, report/label compatibility coverage, localization, and
+  machine contracts are unchanged.
+
 - 2026-08-25: Continued #5278/#2564 test-module refactoring by moving the
   contiguous stable-selector FormSetClass, DefaultFilePath, InitialSelectedAlias,
   LinkMaster, and RowSource Studio-host JSON regressions from
