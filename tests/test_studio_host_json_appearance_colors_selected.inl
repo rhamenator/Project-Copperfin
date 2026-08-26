@@ -559,4 +559,3 @@ void test_studio_host_json_assigns_selected_item_fore_color_by_stable_selectors(
         fs::remove_all(temp_root, ignored);
     }
 }
-
