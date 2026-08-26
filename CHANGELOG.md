@@ -5,6 +5,10 @@
   invocation behavior, visual-asset mutation/no-mutation coverage,
   localization, and machine contracts are unchanged.
 
+- 2026-08-26: Corrected the selected-color regression module's terminal
+  whitespace and exact-source provenance record. The nonfunctional separator
+  blank line at EOF is intentionally omitted; no behavior or contract changed.
+
 - 2026-08-26: Corrected the `RQ-CF-AGENT-018` workspace-agent parser
   negative-test fixture so vector growth uses a standalone binding value rather
   than a reference into storage that `assign` or `push_back` may relocate. This

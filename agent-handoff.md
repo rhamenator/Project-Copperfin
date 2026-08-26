@@ -8,12 +8,15 @@ selected-color JSON regressions (#1056–#1059) from
 `test_studio_host_json_appearance_colors_selected.inl`. The fragment remains
 included in the same translation-unit namespace and aggregate target; shared
 fixtures, invocation behavior, visual-asset mutation/no-mutation coverage,
-localization, and machine contracts are unchanged. The original and extracted
-562-line source range are byte-identical and have SHA-256
-`59e7f7cbda09bb7914d580b7e35fef6dd8ea39003076d34f5d30eb9f108f782e`.
-No product or compatibility behavior is added. Run a fresh Linux Debug build
-of the focused `test_studio_host_json` CTest (passed 1/1 in 454.41 seconds)
-and obtain the protected matrix before integration.
+localization, and machine contracts are unchanged. The original 562-line
+source range has SHA-256
+`59e7f7cbda09bb7914d580b7e35fef6dd8ea39003076d34f5d30eb9f108f782e`; the
+561-line extracted module intentionally omits its nonfunctional terminal
+separator blank line and has SHA-256
+`a68977925ba30b7cd30a415e2644f5883b95c0d945fa3f94951b1f5ead7f527f`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the focused `test_studio_host_json` CTest passed 1/1 in 450.72 seconds; obtain
+the protected matrix before integration.
 
 ## Workspace-agent parser test fixture aliasing correction
 
