@@ -1,3 +1,11 @@
+- 2026-08-25: Continued #5276/#2564 test-module refactoring by moving the
+  contiguous stable-selector Partition, RecordSourceType, ColumnOrder,
+  ChildOrder, and RecordSource Studio-host JSON regressions from
+  `test_studio_host_json_setters_data.cpp` into
+  `test_studio_host_json_setters_data_stable_selectors.inl`. The aggregate
+  target, invocation behavior, xAsset mutation coverage, localization, and
+  machine contracts are unchanged.
+
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   FontUnderline and FontStrikethru visual-asset regression pair from
   `test_visual_asset_editor_appearance_fonts.cpp` into
