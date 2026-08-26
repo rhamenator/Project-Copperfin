@@ -9938,3 +9938,10 @@ passes `1/1`.
   into `test_studio_host_json_visual_editor_json_properties_inspection.inl`.
   The aggregate target, invocation behavior, read-only visual-asset inspection
   coverage, localization, and machine contracts are unchanged.
+- 2026-08-26: Continued #5296/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-property update-batch and stable-selector
+  clear JSON regressions from
+  `test_studio_host_json_visual_editor_json_properties.cpp` into
+  `test_studio_host_json_visual_editor_json_properties_mutation.inl`. The
+  aggregate target, mutation/rollback/undo coverage, localization, and machine
+  contracts are unchanged.

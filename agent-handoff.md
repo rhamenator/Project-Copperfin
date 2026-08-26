@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## V1 Studio visual-property mutation regression module
+
+The bounded #5296/#2564 structural slice moves the contiguous Studio-host
+visual-property update-batch and stable-selector clear JSON regression family
+(requirements #1446 and #1021) from
+`test_studio_host_json_visual_editor_json_properties.cpp` to
+`test_studio_host_json_visual_editor_json_properties_mutation.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; fixtures, invocation behavior, visual-asset mutation, rollback, undo,
+localization, and machine contracts are unchanged. The original 297-line source
+range and byte-identical extracted module have SHA-256
+`1289075fd48131f1e3777110538dfea316036a1cb2b6d0ec6197376425511113`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 457.97 seconds. Obtain the
+protected matrix before integration.
+
 ## V1 Studio visual-property inspection regression module
 
 The bounded #5294/#2564 structural slice moves the contiguous Studio-host
