@@ -18,6 +18,24 @@ No product or compatibility behavior is added. A fresh Linux Debug build passed
 the focused `test_studio_host_json` CTest 1/1 in 438.77 seconds. Obtain the
 protected matrix before integration.
 
+## V1 Studio visual-method batch-delete regression module
+
+The bounded #5304/#2564 structural slice moves the contiguous Studio-host
+visual-method batch-delete JSON regression family (requirement #1430) from
+`test_studio_host_json_visual_editor_json_methods.cpp` to
+`test_studio_host_json_visual_editor_json_methods_delete_batch.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; fixtures, invocation behavior, visual-asset mutation, rollback, undo,
+localization, and machine contracts are unchanged. The original 203-line source
+range has SHA-256
+`36cc6ebb2152215754ed5e65f8159d35f10287276fdd9bcf418f4a888f5bf8b3`; the
+202-line extracted module omits its nonfunctional terminal separator blank line
+and has SHA-256
+`1c03a0732066e9db68e0f4b77409daf933e8d488a5375d8907fe72652cd5ceb1`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 445.89 seconds. Obtain the
+protected matrix before integration.
+
 ## V1 Studio visual-method delete regression module
 
 The bounded #5302/#2564 structural slice moves the contiguous Studio-host

@@ -5,6 +5,14 @@
   target, invocation behavior, visual-asset mutation/error/no-mutation
   coverage, localization, and machine contracts are unchanged.
 
+- 2026-08-26: Continued #5304/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-method batch-delete JSON regressions for
+  recovered requirement #1430 from
+  `test_studio_host_json_visual_editor_json_methods.cpp` into
+  `test_studio_host_json_visual_editor_json_methods_delete_batch.inl`. The
+  aggregate target, invocation behavior, visual-asset mutation, rollback, undo,
+  localization, and machine contracts are unchanged.
+
 - 2026-08-26: Continued #5292/#2564 test-module refactoring by moving the
   contiguous Studio-host visual-property direct and batch reorder JSON
   regressions from `test_studio_host_json_visual_editor_json_properties.cpp`
