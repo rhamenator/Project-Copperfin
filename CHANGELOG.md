@@ -6,6 +6,13 @@
   target, invocation behavior, xAsset mutation coverage, localization, and
   machine contracts are unchanged.
 
+- 2026-08-25: Continued #5280/#2564 test-module refactoring by moving the
+  contiguous direct FontOutline and FontShadow visual-asset regressions from
+  `test_visual_asset_editor_appearance_fonts.cpp` into
+  `test_visual_asset_editor_appearance_font_outline_shadow.inl`. The aggregate
+  target, invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
 - 2026-08-25: Continued #5276/#2564 test-module refactoring by moving the
   contiguous stable-selector Partition, RecordSourceType, ColumnOrder,
   ChildOrder, and RecordSource Studio-host JSON regressions from

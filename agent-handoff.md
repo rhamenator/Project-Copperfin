@@ -1,5 +1,23 @@
 # Agent Handoff
 
+## V1 visual-asset font-outline and shadow regression module
+
+The bounded #5280/#2564 structural slice moves the contiguous direct
+FontOutline and FontShadow visual-asset regression pair from
+`test_visual_asset_editor_appearance_fonts.cpp` to
+`test_visual_asset_editor_appearance_font_outline_shadow.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, visual-asset editing,
+undo behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 378-line source range has SHA-256
+`59b763d8e7dcffdaf759d1d0b921467e54eabe2f84bbe24ff4a4905775cd3f26`; the
+extracted 376-line module omits two nonfunctional terminal separator blank
+lines and has SHA-256
+`90423b0fc6a204c8eddafc100a5dcdc37dea6410ef68022d477cc6fb7312a40e`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_visual_asset_editor` and focused CTest passed 1/1 in 20.19 seconds with
+`TMPDIR` under `~/temp`. Obtain the protected matrix before integration.
+
 ## V1 remaining Studio stable data-selector regression module
 
 The bounded #5278/#2564 structural slice moves the contiguous stable-selector
