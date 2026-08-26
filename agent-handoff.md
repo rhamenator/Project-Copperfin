@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## Studio window chrome option regression module
+
+The bounded #5337/#2564 structural slice moves the contiguous ControlBox,
+Desktop, KeyPreview, MacDesktop, MaxButton, and MinButton launch-contract
+regression families (recovered requirements #1074, #1147–#1150, and #1155) from
+`test_studio_host_behavior_window_chrome.cpp` into
+`test_studio_host_behavior_window_chrome_options.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate `test_studio_host`
+target; shared fixtures, test invocation order, localized assertions, and
+machine-readable launch contracts are unchanged. The original and extracted
+source range contains 516 lines and has SHA-256
+`658707a392a699c93cc7a29566df92b5e8619ac2464f4dcaf6be23359794af75`; the
+515-line extracted module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`69d13ae41ebfa2a3c2e4a84647764413c9c0bf87b99e672ded592f3bf3402e4c`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build of
+the focused `test_studio_host` CTest, which passed 1/1 in 2.86 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
 ## V1 Studio window-size and position launch regression module
 
 The bounded #5335/#2564 structural slice moves the contiguous Studio
