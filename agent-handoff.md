@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 Studio static color regression module
+
+The bounded #5326/#2564 structural slice moves the contiguous Studio-host
+static stable-selector color JSON regressions (#1064–#1067) from
+`test_studio_host_json_appearance_colors.cpp` into
+`test_studio_host_json_appearance_colors_static.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate target; shared
+fixtures, invocation behavior, visual-asset mutation/no-mutation coverage,
+localization, and machine contracts are unchanged. The original 564-line source
+range has SHA-256 `e1b3eff52f3908ba627c283f631f75cb2a8b1ea1604842cf4718991dd95f0377`;
+the 563-line extracted module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`b1a375ae5d16a4044d129c2b5d9942079c97f1b2ff84d343cbdd5632d5c829e3`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build of
+the focused `test_studio_host_json` CTest, which passed 1/1 in 441.26 seconds;
+obtain the protected matrix before integration.
+
 ## V1 Studio item-state color regression module
 
 The bounded #5324/#2564 structural slice moves the contiguous Studio-host

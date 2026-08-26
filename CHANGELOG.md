@@ -1,3 +1,10 @@
+- 2026-08-26: Continued #5326/#2564 test-module refactoring by moving the
+  contiguous Studio-host static stable-selector color JSON regressions
+  (#1064–#1067) from `test_studio_host_json_appearance_colors.cpp` into
+  `test_studio_host_json_appearance_colors_static.inl`. The aggregate target,
+  invocation behavior, visual-asset mutation/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
 - 2026-08-26: Continued #5324/#2564 test-module refactoring by moving the
   contiguous Studio-host disabled/item stable-selector color JSON regressions
   (#1060–#1063) from `test_studio_host_json_appearance_colors.cpp` into
