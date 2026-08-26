@@ -37,6 +37,24 @@ No product or compatibility behavior is added. A fresh Linux Debug focused
 `test_dbf_table` CTest passed 1/1 in 1.71 seconds; obtain the protected matrix
 before integration.
 
+## V1 PRG report and label work-area regression module
+
+The bounded #5332/#2564 structural slice moves the contiguous report/label
+rendering, SYS(2040)/SYS(2024) status, filtered-output, and localized
+missing-report regression family from `test_prg_engine_work_areas.cpp` into
+`test_prg_engine_work_areas_report_label.inl`. The fragment remains included
+in the same translation-unit namespace and aggregate target. Its VFP9 sample
+guard, synthetic fixtures, recovered runtime coverage, localization assertions,
+and machine contracts are unchanged. The original 285-line source range has
+SHA-256 `03905b9364850d7187356debfae3332a7585f0d6669e19da038a16ed9bb5919e`;
+the extracted 284-line module intentionally omits only its nonfunctional
+terminal separator blank line and has SHA-256
+`2000eeb704fbbd839e6b54263d73a958739ed6a3beeb9609bdc3a48d5b1450fb`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build
+of the focused `test_prg_engine_work_areas` CTest, which passed 1/1 in 388.13
+seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected
+matrix before integration.
+
 ## V1 Studio static color regression module
 
 The bounded #5326/#2564 structural slice moves the contiguous Studio-host
