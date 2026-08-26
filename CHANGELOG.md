@@ -1,3 +1,11 @@
+- 2026-08-26: Continued #5346/#2564 test-module refactoring by moving the
+  contiguous visual-asset selected-property query, single-property clear, and
+  batch-clear rollback regressions from
+  `test_visual_asset_editor_properties.cpp` into
+  `test_visual_asset_editor_property_query_clear.inl`. The aggregate target,
+  invocation behavior, selector/undo/DBF-FPT assertions, localization, and
+  machine-readable contracts are unchanged.
+
 - 2026-08-26: Continued #5341/#2564 test-module refactoring by moving the
   contiguous Studio-host JSON object-metadata diagnostic and pseudo-localization
   regressions (#2426, #2487, and #2504–#2513) from

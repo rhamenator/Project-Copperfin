@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## Visual-asset property query and clear regression module
+
+The bounded #5346/#2564 structural slice moves the contiguous visual-asset
+selected-property query, single-property clear, and batch-clear rollback
+regressions from `test_visual_asset_editor_properties.cpp` into
+`test_visual_asset_editor_property_query_clear.inl`. The fragment remains
+included inside the same translation-unit namespace and aggregate
+`test_visual_asset_editor` target; its selector, undo, DBF/FPT,
+no-mutation, localization, and machine-readable-contract assertions remain
+unchanged. The original 398-line source range has SHA-256
+`140f53077e2e9cb4a9e1f12f4f0bc9cdfa7a372c5010ee3d103aeca9bf2f5e99`; the
+extracted module intentionally omits only its nonfunctional terminal separator
+blank line, contains 397 lines, and has SHA-256
+`5d22727eeb34957bd423e0930fcb3978ebcbad55c133b215af39e31e4aa90003`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the existing `test_visual_asset_editor` CTest passed 1/1 in 19.70 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
 ## Studio object-metadata diagnostic regression module
 
 The bounded #5341/#2564 structural slice moves the contiguous Studio-host JSON
