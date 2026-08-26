@@ -9,9 +9,11 @@ single visual-method delete JSON regression family (requirement #1425) from
 remains included in the same translation-unit namespace and aggregate target;
 fixtures, invocation behavior, visual-asset removal/unrelated-method
 preservation/no-mutation/undo coverage, localization, and machine contracts are
-unchanged. The original 165-line source range and byte-identical extracted
-module have SHA-256
-`3a5a96fd5db9318a0e5356777845f998c9c39f68153bb2ef2b0fa20b92bb9213`.
+unchanged. The original 165-line source range has SHA-256
+`3a5a96fd5db9318a0e5356777845f998c9c39f68153bb2ef2b0fa20b92bb9213`; the
+164-line extracted module omits its nonfunctional terminal separator blank line
+and has SHA-256
+`ce506d2288d43dd85bc57df38b54c33d5b30f374101cd080363c977b31eda160`.
 No product or compatibility behavior is added. A fresh Linux Debug build passed
 the focused `test_studio_host_json` CTest 1/1 in 443.36 seconds. Obtain the
 protected matrix before integration.
