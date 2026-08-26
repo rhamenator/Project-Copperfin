@@ -14,8 +14,26 @@ coverage, localization, and machine contracts are unchanged. The original
 123-line extracted module intentionally omits its nonfunctional terminal
 separator blank line and has SHA-256
 `32fcccbd4d5f86d4d635715d2ab941c8decb02204726940c56683b9a4477c744`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 452.67 seconds; obtain the
+protected matrix before integration.
+
+## V1 Studio dynamic font-underline regression module
+
+The bounded #5311/#5305/#2564 structural slice moves the contiguous Studio-host
+dynamic font-underline JSON regression family (requirement #1192) from
+`test_studio_host_json_appearance_fonts.cpp` to
+`test_studio_host_json_appearance_fonts_dynamic_underline.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+shared fixtures, invocation behavior, visual-asset mutation/error/no-mutation
+coverage, localization, and machine contracts are unchanged. The original
+124-line source range has SHA-256
+`d4e9722a0f73f4c1fec7ed6f6de07434960712a268156ad671ac001a7d52654f`; the
+123-line extracted module intentionally omits its nonfunctional terminal
+separator blank line and has SHA-256
+`3b258611b08b6b04c195027dffbe693825b59091a170ea4f83542f27db98ad59`.
 No product or compatibility behavior is added. A fresh Linux Debug build must
-pass the focused `test_studio_host_json` CTest 1/1 in 452.67 seconds; obtain
+pass the focused `test_studio_host_json` CTest 1/1 in 447.02 seconds; obtain
 the protected matrix before integration.
 
 ## V1 Studio dynamic font-bold regression module

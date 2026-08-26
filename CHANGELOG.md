@@ -5,6 +5,13 @@
   target, invocation behavior, visual-asset mutation/error/no-mutation coverage,
   localization, and machine contracts are unchanged.
 
+- 2026-08-26: Continued #5311/#5305/#2564 test-module refactoring by moving the
+  contiguous Studio-host dynamic font-underline JSON regressions for recovered
+  requirement #1192 from `test_studio_host_json_appearance_fonts.cpp` into
+  `test_studio_host_json_appearance_fonts_dynamic_underline.inl`. The aggregate
+  target, invocation behavior, visual-asset mutation/error/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
 - 2026-08-26: Continued #5306/#5305/#2564 test-module refactoring by moving
   the contiguous Studio-host dynamic font-bold JSON regression family from
   `test_studio_host_json_appearance_fonts.cpp` into
