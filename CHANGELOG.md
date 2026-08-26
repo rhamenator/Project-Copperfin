@@ -1,3 +1,10 @@
+- 2026-08-26: Corrected the `RQ-CF-AGENT-018` workspace-agent parser
+  negative-test fixture so vector growth uses a standalone binding value rather
+  than a reference into storage that `assign` or `push_back` may relocate. This
+  removes a Windows/MSVC Debug invalid-container-reference failure and
+  allocation-dependent Release failure; no product behavior, authorization
+  boundary, localization, or machine-readable contract changed.
+
 - 2026-08-26: Continued #5317/#5305/#2564 test-module refactoring by moving the
   contiguous Studio-host dynamic font-shadow JSON regressions for recovered
   requirement #1195 from `test_studio_host_json_appearance_fonts.cpp` into

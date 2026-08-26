@@ -1,5 +1,18 @@
 # Agent Handoff
 
+## Workspace-agent parser test fixture aliasing correction
+
+The bounded #5319 test-only correction preserves the existing
+`RQ-CF-AGENT-018` oversized parser-binding fail-closed check while making both
+vector-growth fill values independent of `windows_bindings` storage. Windows
+diagnostic evidence at `ff295e5dd21071373be709928e084a4ddef570fd` established
+that passing `windows_bindings.front()` directly to `assign` creates an invalid
+reference after reallocation in MSVC Debug; Release manifestations are
+allocation-dependent. No product authorization behavior, compatibility policy,
+localization, or machine-readable contract changed. Run the focused parser test
+from a fresh Linux Debug build (passed 1/1 in 0.02 seconds) and obtain the
+protected Windows matrix before integration.
+
 ## V1 Studio dynamic font-shadow regression module
 
 The bounded #5317/#5305/#2564 structural slice moves the contiguous Studio-host
