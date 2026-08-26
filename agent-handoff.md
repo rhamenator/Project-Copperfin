@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## V1 Studio stable data-selector regression module
+
+The bounded #5276/#2564 structural slice moves the contiguous stable-selector
+Partition, RecordSourceType, ColumnOrder, ChildOrder, and RecordSource
+Studio-host JSON regression family from
+`test_studio_host_json_setters_data.cpp` to
+`test_studio_host_json_setters_data_stable_selectors.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, Studio-host JSON, xAsset mutation,
+localization, and machine contracts are unchanged. The extracted module is
+681 lines with SHA-256
+`6d26f69d6d9be71faab34e810de0dd7b633fdd1fb8d0818b1dfb84c391738422`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_studio_host_json` and focused CTest passed `1/1` in 448.49 seconds with
+`TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
 ## V1 visual-asset font-decoration regression module
 
 The bounded #5272/#2564 structural slice moves the contiguous FontUnderline
