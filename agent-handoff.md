@@ -16,6 +16,23 @@ blank line, contains 397 lines, and has SHA-256
 `5d22727eeb34957bd423e0930fcb3978ebcbad55c133b215af39e31e4aa90003`.
 No product or compatibility behavior is added. A fresh Linux Debug build of
 the existing `test_visual_asset_editor` CTest passed 1/1 in 19.70 seconds with
+
+## Visual-asset property copy regression module
+
+The bounded #5348/#2564 structural slice moves the contiguous visual-asset
+single-property copy and batch-copy rollback regressions from
+`test_visual_asset_editor_properties.cpp` into
+`test_visual_asset_editor_property_copy.inl`. The fragment remains included
+inside the same translation-unit namespace and aggregate
+`test_visual_asset_editor` target; selector, undo, DBF/FPT, no-mutation,
+localization, and machine-readable-contract assertions remain unchanged. The
+original 476-line source range has SHA-256
+`e28684c4cf45a614e01103e71fea500a77f1ea1aa5924983a7c231d23c3c6bb4`; the
+extracted 475-line module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`a405897bf876c5e010de9c281e82ad4d1a7f7d69c04f2bf54d6d74ae2db3f4eb`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the existing `test_visual_asset_editor` CTest passed 1/1 in 19.85 seconds with
 `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
 integration.
 
