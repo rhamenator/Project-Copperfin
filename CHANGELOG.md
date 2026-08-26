@@ -6,6 +6,14 @@
   target, invocation behavior, localization assertions, and machine-readable
   CLI contracts are unchanged.
 
+- 2026-08-26: Continued #5344/#2564 test-module refactoring by moving the
+  contiguous visual-asset method query, update/append, and delete regressions
+  (#762, #747, #748, and #1004) from
+  `test_visual_asset_editor_methods.cpp` into
+  `test_visual_asset_editor_method_crud.inl`. The aggregate target, xAsset
+  mutation and undo assertions, DBF/FPT contracts, and localization are
+  unchanged.
+
 - 2026-08-26: Continued #5335/#2564 test-module refactoring by moving the
   contiguous Studio window-size and position launch-contract regressions
   (#1151–#1154 and #1156–#1160) from
