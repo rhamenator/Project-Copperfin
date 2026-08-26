@@ -6,6 +6,13 @@
   preservation, localization, and machine contracts are unchanged.
 
 - 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  visual-asset multi-property and report/label batch-operation regressions from
+  `test_visual_asset_editor_update_batch.cpp` into
+  `test_visual_asset_editor_update_batch_operations.inl`. The aggregate target,
+  invocation behavior, xAsset mutation and undo behavior, report/label
+  coverage, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
   FontBold and FontItalic visual-asset regression pair from
   `test_visual_asset_editor_appearance_fonts.cpp` into
   `test_visual_asset_editor_appearance_font_styles.inl`. The aggregate target,

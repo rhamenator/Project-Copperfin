@@ -19,6 +19,23 @@ No product or compatibility behavior is added. A fresh Linux Debug build of
 19.60 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix
 before merge.
 
+## V1 visual-asset batch-operation regression module
+
+The bounded #2564 structural slice moves the contiguous multi-property and
+report/label batch-operation regression family from
+`test_visual_asset_editor_update_batch.cpp` to
+`test_visual_asset_editor_update_batch_operations.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, xAsset mutation and undo behavior,
+report/label coverage, localization, and machine contracts are unchanged. The
+original 497-line source range has SHA-256
+`42b1474a6de6715402f05009a69d5ea682b5823e0066f16379b284d106a500ec`; the
+extracted 496-line module omits one nonfunctional terminal separator blank line
+and has SHA-256 `cc1e7c19dbc6ff73b59506dec58b9e663d0de881cbf7a9f49a25cffe10f09d9c`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_visual_asset_editor` and focused CTest passed `1/1` in 20.46 seconds
+with `TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
 ## V1 visual-asset font-style regression module
 
 The bounded #5270/#2564 structural slice moves the contiguous FontBold and
