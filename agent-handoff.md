@@ -1,5 +1,23 @@
 # Agent Handoff
 
+## V1 Studio visual-property inspection regression module
+
+The bounded #5294/#2564 structural slice moves the contiguous Studio-host
+visual-property filter, query, and list JSON regression family (requirements
+#1415, #1416, and #1417) from
+`test_studio_host_json_visual_editor_json_properties.cpp` to
+`test_studio_host_json_visual_editor_json_properties_inspection.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; fixtures, invocation behavior, non-mutating visual-asset inspection,
+localization, and machine contracts are unchanged. The source function ranges
+(8-269 and 277-381) have combined SHA-256
+`2054be1563678bf588973a0d45852a99aa623cd63de1d29c9d20995989fbb409`; the
+367-line extracted module has SHA-256
+`b46400b522edd6be6115f1d0c332aa382060257b12e8f2703ccb2ea523be7e1d`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 456.42 seconds. Obtain the
+protected matrix before integration.
+
 ## V1 Studio visual-property reorder regression module
 
 The bounded #5292/#2564 structural slice moves the contiguous Studio-host
