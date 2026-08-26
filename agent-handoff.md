@@ -9,9 +9,9 @@ Studio-host JSON regression family from
 `test_studio_host_json_setters_data_stable_selectors.inl`. The fragment remains
 included in the same test translation-unit namespace and aggregate executable;
 declarations, invocation behavior, fixtures, Studio-host JSON, xAsset mutation,
-localization, and machine contracts are unchanged. The original 683-line source
-range and extracted module are byte-identical, with SHA-256
-`8aa8b03db7326ea87de46983415eae92e56f7fa545c2c70ecec6e48b2bbed9cc`.
+localization, and machine contracts are unchanged. The extracted module is
+681 lines with SHA-256
+`6d26f69d6d9be71faab34e810de0dd7b633fdd1fb8d0818b1dfb84c391738422`.
 No product or compatibility behavior is added. A fresh Linux Debug build of
 `test_studio_host_json` and focused CTest passed `1/1` in 448.49 seconds with
 `TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
