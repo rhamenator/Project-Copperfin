@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## Studio toolbox-palette object-creation-plan regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+toolbox-palette object-creation-plan regression from
+`test_studio_host_json_dispatch_toolbox_palette.cpp` into the included
+`test_studio_host_json_dispatch_toolbox_palette_creation_plan.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; create-plan invocation, exit statuses, JSON
+and localization assertions, cleanup behavior, and machine-readable contracts
+are unchanged. The original and extracted 238-line function have identical
+SHA-256 `b671eaf5a36f253db55694d7ab255187dd1c845f41456a73f1598d3bedaabcc6`;
+the parent source falls from 1,917 to 1,679 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
 ## Studio toolbox-palette launch-catalog regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
