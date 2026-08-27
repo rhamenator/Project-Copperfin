@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## Studio toolbox-palette launch-catalog regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+toolbox-palette launch-catalog regression from
+`test_studio_host_json_dispatch_toolbox_palette.cpp` into the included
+`test_studio_host_json_dispatch_toolbox_palette_launch_catalog.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; catalog invocation, exit statuses, JSON and
+localization assertions, cleanup behavior, and machine-readable contracts are
+unchanged. Verify the original and extracted function hashes before committing,
+then run a fresh Linux RelWithDebInfo build and the focused CTest with `TMPDIR`,
+`TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
 ## Studio toolbox-palette query-filter regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
