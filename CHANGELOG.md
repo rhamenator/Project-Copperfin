@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox direct-plan diagnostic and localization regression into
+  `test_studio_host_json_parse_diagnostics_toolbox_direct_plan.inl`. The
+  aggregate target, invocation behavior, localization assertions, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio toolbox direct-create parser-localization regression into
   `test_studio_host_json_parse_diagnostics_toolbox_direct_create.inl`. The
   aggregate target, command invocation, exit-status, JSON, localization, and
