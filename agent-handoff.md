@@ -13,9 +13,10 @@ has SHA-256
 `8e07134617e8cb3d3da250fa42c3f832dc169fffb8ab01c0f795db5e091b06b7`;
 the parent source falls from 2,281 to 2,188 lines. Run a fresh Linux
 RelWithDebInfo build and the existing focused `test_studio_host` CTest passed
-1/1 in 0.36 seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`;
-obtain the protected matrix before integration. No product or compatibility
-behavior is added.
+1/1 in 0.36 seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`. The
+protected Linux, macOS, Windows, DCO, and security matrix passed, and the
+slice merged as `cedba3846643cebb9a9c1b66c7c73fa78a484b1d`; GitHub reports a
+valid merge-commit signature. No product or compatibility behavior is added.
 
 ## Studio toolbox direct-create diagnostic regression module
 
