@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## Studio stable-selector ungroup regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+stable-selector ungroup regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_stable_selector_ungroup.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; object-name and unique-id selection, root,
+empty, missing, and ambiguous mutation behavior, JSON/localization assertions,
+cleanup behavior, and machine-readable contracts for recovered requirement
+`#1029` are unchanged. The original and extracted 119-line function have
+identical SHA-256 `7b6661658f0da6e55c34b7895aa114b663e9a718afcf763ab5599d624def2a59`.
+Run a fresh Linux RelWithDebInfo build and the focused existing CTest with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
 ## Studio stable-selector property-rename regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
