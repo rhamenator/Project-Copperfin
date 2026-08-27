@@ -1,8 +1,22 @@
+- 2026-08-26: Continued #5352/#2564 test-module refactoring by moving the
+  contiguous visual-asset RowSource and RowSourceType setter regressions from
+  `test_visual_asset_editor_setters_data.cpp` into
+  `test_visual_asset_editor_setters_row_source.inl`. The aggregate target,
+  invocation behavior, selector/undo/DBF-FPT assertions, localization, and
+  machine-readable contracts are unchanged.
+
 - 2026-08-26: Continued #5346/#2564 test-module refactoring by moving the
   contiguous visual-asset selected-property query, single-property clear, and
   batch-clear rollback regressions from
   `test_visual_asset_editor_properties.cpp` into
   `test_visual_asset_editor_property_query_clear.inl`. The aggregate target,
+
+- 2026-08-26: Continued #5352/#2564 test-module refactoring by moving the
+  contiguous visual-asset RowSource and RowSourceType setter regressions from
+  `test_visual_asset_editor_setters_data.cpp` into
+  `test_visual_asset_editor_setters_row_source.inl`. The aggregate target,
+  invocation behavior, selector/undo/DBF-FPT assertions, localization, and
+  machine-readable contracts are unchanged.
 
 - 2026-08-26: Continued #5348/#2564 test-module refactoring by moving the
   contiguous visual-asset single-property copy and batch-copy rollback
