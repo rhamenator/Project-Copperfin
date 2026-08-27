@@ -10273,3 +10273,7 @@ passes `1/1`.
   `.F.` direction result. The fixture also rejects both existing files and
   directories as output paths; no parser encoding or runtime behavior is
   claimed.
+- 2026-08-27: Corrected the opt-in real-VFP9 `DESCENDING()` inverse-override
+  collection probe so only the attempted macro command is caught. Later
+  observation or TSV-write failures now remain visible instead of being
+  misclassified as an unavailable command.

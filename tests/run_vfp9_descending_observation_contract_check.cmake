@@ -47,6 +47,8 @@ require_text("lcAscendingOverrideCommand = \"SET ORDER TO TAG DescTag ASCENDING\
 require_text("active-persisted-descending-tag-runtime-ascending" "runtime ascending-tag override result row")
 require_text("unavailable:" "unavailable runtime ascending-override outcome")
 require_text("CATCH TO loException" "contained runtime ascending-override probe")
+require_text("lnAscendingOverrideError = loException.ErrorNo" "contained runtime ascending-override failure capture")
+require_text("IF lnAscendingOverrideError = 0" "post-probe observation branch")
 require_text("SET INDEX TO (lcIdx) ORDER (lcIdx) DESCENDING" "documented IDX runtime-order override")
 require_text("active-idx-runtime-descending" "IDX runtime-descending result row")
 require_text("descending-observation.tsv" "machine-readable observation output")

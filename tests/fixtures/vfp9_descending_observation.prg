@@ -8,7 +8,7 @@
 
 LPARAMETERS tcOutputRoot
 
-LOCAL lcRoot, lcTable, lcCdx, lcIdx, lcObservation, lcAscendingOverrideCommand, lnTag
+LOCAL lcRoot, lcTable, lcCdx, lcIdx, lcObservation, lcAscendingOverrideCommand, lnAscendingOverrideError, lnTag
 
 IF VARTYPE(tcOutputRoot) <> "C" OR EMPTY(ALLTRIM(tcOutputRoot))
     ? "Usage: DO vfp9_descending_observation WITH <new-output-directory>"
@@ -66,12 +66,18 @@ SET ORDER TO TAG AscTag DESCENDING
 * is retained as an observation instead of aborting collection or inventing a
 * direction value.
 lcAscendingOverrideCommand = "SET ORDER TO TAG DescTag ASCENDING"
+lnAscendingOverrideError = 0
 TRY
     &lcAscendingOverrideCommand
-    =WriteDescendingObservation(lcObservation, "active-persisted-descending-tag-runtime-ascending", DESCENDING(), TAG(), ORDER())
 CATCH TO loException
-    =WriteDescendingObservation(lcObservation, "active-persisted-descending-tag-runtime-ascending", "?", "", "", "unavailable:" + ALLTRIM(STR(loException.ErrorNo)))
+    lnAscendingOverrideError = loException.ErrorNo
 ENDTRY
+
+IF lnAscendingOverrideError = 0
+    =WriteDescendingObservation(lcObservation, "active-persisted-descending-tag-runtime-ascending", DESCENDING(), TAG(), ORDER())
+ELSE
+    =WriteDescendingObservation(lcObservation, "active-persisted-descending-tag-runtime-ascending", "?", "", "", "unavailable:" + ALLTRIM(STR(lnAscendingOverrideError)))
+ENDIF
 
 USE
 USE (lcTable) EXCLUSIVE
