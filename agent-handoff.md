@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## Studio-host live geometry-snap regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+geometry-snap regression into
+`test_studio_host_geometry_live_edit_actions_snap.inl`. It remains in the
+aggregate `test_studio_host_geometry_live_edit_actions` target; FRX/LBX snap
+JSON assertions, selected-object/preview metadata, cleanup, and isolation
+contract are unchanged. The original and extracted 154-line function SHA-256
+is `9cadf0369df63cdf22cf77f6afb331fa89990812a1c159d51b18b6e4767600a9`;
+the parent source falls from 1,617 to 1,464 lines. A fresh Linux
+RelWithDebInfo build and focused existing CTest passed 1/1 in 6.57 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix
+before integration. No product or compatibility behavior is added.
+
 ## Studio-host live geometry-resize regression module
 
 The bounded #2564 structural slice moves the contiguous live report/label
