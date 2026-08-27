@@ -282,6 +282,13 @@ add_test(
 )
 
 add_test(
+    NAME test_vfp9_descending_observation_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_vfp9_descending_observation_contract_check.cmake
+)
+
+add_test(
     NAME test_package_signer_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
