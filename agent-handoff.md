@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## SQL cursor derived-string temporary-order regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor
+derived-string temporary-order regression from
+`test_prg_engine_sql_cursors_seek_and_order.cpp` into the included
+`test_prg_engine_sql_cursors_seek_and_order_derived_string_temporary_order.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_prg_engine_sql_cursors_seek_and_order` target; VFP `LEFT`, `SUBSTR`, and
+`PADL` temporary-order `SEEK`/`RECNO` assertions, SQL cursor behavior, cleanup,
+and machine-readable contracts are unchanged. The original and extracted
+75-line function have identical SHA-256
+`d4a89aa902f677e28700d140b4ef3121e32e0b4f3296b67219548b267ace73bb`; the
+parent source falls from 2,060 to 1,986 lines. A fresh Linux RelWithDebInfo
+build and focused existing CTest passed 1/1 in 0.05 seconds with `TMPDIR`,
+`TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
 ## SQL cursor temporary-order normalization regression module
 
 The bounded #2564 structural slice moves the contiguous SQL cursor
