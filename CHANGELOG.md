@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host live report/label restore-after-delete regression into
+  `test_studio_host_geometry_live_edit_actions_restore_deleted.inl`. The
+  aggregate target, JSON behavior, report/label coverage, isolation contract,
+  and machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio-host live report/label geometry-snap regression into
   `test_studio_host_geometry_live_edit_actions_snap.inl`. The aggregate
   target, JSON behavior, report/label coverage, isolation contract, and
