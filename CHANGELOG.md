@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox-palette launch-catalog regression into
+  `test_studio_host_json_dispatch_toolbox_palette_launch_catalog.inl`. The
+  aggregate target, catalog JSON behavior, localization, and machine-readable
+  contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio-host toolbox-palette query-filter regression into
   `test_studio_host_json_dispatch_toolbox_palette_query_filters.inl`. The
   aggregate target, query JSON behavior, localization, and machine-readable
