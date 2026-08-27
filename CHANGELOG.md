@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  SQL cursor plain-string collation regression into
+  `test_prg_engine_sql_cursors_seek_and_order_plain_string_collate.inl`. The
+  aggregate target, VFP collation assertions, SQL cursor behavior, and machine
+  contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio-host ButtonCount launch-contract parser regression family into
   `test_studio_host_setters_data_button_count.inl`. The aggregate target,
   command grammar, request contracts, and ambiguity/invalid-input coverage are
