@@ -11,6 +11,20 @@ machine-readable contracts are unchanged. The original and extracted 63-line
 function SHA-256 is `1a0e813481558f371edf56e409b94e3421087c47ed1ac9f5e47fcbf0d21c45c7`.
 A fresh Linux RelWithDebInfo focused CTest passed 1/1 in 0.05 seconds.
 
+## Studio-host live geometry-nudge regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+geometry-nudge regression into
+`test_studio_host_geometry_live_edit_actions_nudge.inl`. It remains in the
+aggregate `test_studio_host_geometry_live_edit_actions` target; FRX/LBX nudge
+JSON assertions, selected-object/preview metadata, cleanup, and isolation
+contract are unchanged. The original and extracted 153-line function SHA-256
+is `e2de3b4368f4c6874d86d2414b1a6c423b9c7eebb0939e70f10f837a9d5839f4`;
+the parent source falls from 2,076 to 1,922 lines. A fresh Linux
+RelWithDebInfo build and focused existing CTest passed 1/1 in 6.86 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix
+before integration. No product or compatibility behavior is added.
+
 ## SQL cursor default-padding temporary-order regression module
 
 The bounded #2564 structural slice moves the contiguous SQL cursor default
