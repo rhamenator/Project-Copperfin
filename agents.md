@@ -162,6 +162,7 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
 - Update `CHANGELOG.md` whenever a turn ships lasting repo changes or materially updates tracked documentation.
 - Do not create extra prompt files unless explicitly requested.
 - If a temporary planning note is created, fold any lasting guidance back into tracked docs and delete the throwaway note.
+- Remove a slice's scratch build/verification directory (e.g. a per-slice temp checkout or build tree) once its pull request merges or closes. These accumulate silently outside the repo and have previously exhausted the host's `/tmp` quota; do not rely on another agent or a human to notice and clean up after you.
 - Before cutting or approving a release tag, run `scripts/validate-safety-traceability.ps1` or the Safety Traceability Gate workflow against the intended release issue set and archive the report artifact.
 
 ## Steering Continuity

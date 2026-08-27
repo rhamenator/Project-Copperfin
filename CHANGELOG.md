@@ -1,3 +1,11 @@
+- 2026-08-27: Added a `Handoff Rules` convention to `agents.md` requiring an
+  agent to remove its own slice-scoped scratch build/verification directory
+  once the corresponding pull request merges or closes, rather than leaving
+  it for another agent or a human to notice. Motivated by a live incident
+  where accumulated per-slice scratch directories under the host's `/tmp`
+  exhausted its quota and intermittently broke shell tool execution for both
+  agents. No runtime, test, or release behavior changed.
+
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   SQL cursor derived-string temporary-order regression into
   `test_prg_engine_sql_cursors_seek_and_order_derived_string_temporary_order.inl`.
