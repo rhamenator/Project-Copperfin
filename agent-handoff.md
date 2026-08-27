@@ -18,6 +18,23 @@ passed 1/1 in 64.02 seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`.
 Obtain the protected matrix before integration. No product or compatibility
 behavior is added.
 
+## Studio toolbox direct-plan diagnostic regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+toolbox direct-plan diagnostic and localization regression from
+`test_studio_host_json_parse_diagnostics_toolbox.cpp` into the included
+`test_studio_host_json_parse_diagnostics_toolbox_direct_plan.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; command invocation, exit status,
+localization assertions, cleanup behavior, and machine-readable contracts are
+unchanged. The extracted 143-line fragment has SHA-256
+`9ff9fbdd8a10bc61c0d1f40c2e1596c5234bd0f2801eb9a130794d4f3880f5fd`;
+the parent source falls from 2,297 to 2,155 lines. A fresh Linux
+RelWithDebInfo build and the existing aggregate CTest passed 1/1 in 63.54
+seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the
+protected matrix before integration. No product or compatibility behavior is
+added.
+
 ## Studio stable-selector property-set regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
