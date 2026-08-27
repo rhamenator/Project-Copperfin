@@ -1,3 +1,10 @@
+- 2026-08-26: Continued #5354/#2564 test-module refactoring by moving the
+  contiguous visual-asset BoundColumn setter regression from
+  `test_visual_asset_editor_setters_data.cpp` into
+  `test_visual_asset_editor_setters_bound_column.inl`. The aggregate target,
+  invocation behavior, selector/undo/DBF-FPT assertions, localization, and
+  machine-readable contracts are unchanged.
+
 - 2026-08-26: Continued #5352/#2564 test-module refactoring by moving the
   contiguous visual-asset RowSource and RowSourceType setter regressions from
   `test_visual_asset_editor_setters_data.cpp` into
