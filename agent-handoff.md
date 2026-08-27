@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## Studio stable-selector property-rename regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+stable-selector property-rename regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_stable_selector_property_rename.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; object-name and unique-id selector behavior,
+exit statuses, JSON and localization assertions, cleanup behavior, and
+machine-readable contracts are unchanged. The original and extracted 119-line
+function have identical SHA-256
+`52457862b26f4023eb86d9a8b6a336c3a9e891a8e5d25cc412d44db6a5616489`; the
+parent source falls from 1,449 to 1,331 lines. Run a fresh Linux RelWithDebInfo
+build and the existing focused CTest with `TMPDIR`, `TMP`, and `TEMP` set to
+`~/temp`; obtain the protected matrix before integration. No product or
+compatibility behavior is added.
+
 ## Studio toolbox-object creation regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
