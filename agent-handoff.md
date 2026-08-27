@@ -1,20 +1,20 @@
 # Agent Handoff
 
-## Studio toolbox-palette launch-plan regression module
+## Studio editor-action dispatch localization-refresh regression module
 
-The bounded #2564 structural slice moves the contiguous Studio-host
-toolbox-palette launch-plan JSON regression from
-`test_studio_host_json_dispatch_toolbox_palette.cpp` into the included
-`test_studio_host_json_dispatch_toolbox_palette_launch_plan.inl` fragment. It
+The bounded #2564 structural slice moves the contiguous Studio editor-action
+dispatch and invocation-admission localization-refresh regression from
+`test_context_editor_actions.cpp` into the included
+`test_context_editor_actions_default_dispatch_locales.inl` fragment. It
 remains in the same translation-unit namespace and aggregate
-`test_studio_host_json` target; command invocation, exit status, JSON and
-localization assertions, cleanup behavior, and machine-readable contracts are
-unchanged. The original and extracted 148-line function have identical
-SHA-256 `07320f89d214868fbadb31a8e32ea835609881a80e99eaaddcface3ab3219bb3`;
-the parent source falls from 2,247 to 2,100 lines. Run a fresh Linux
-RelWithDebInfo build and the existing aggregate CTest with `TMPDIR`, `TMP`, and
-`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
-product or compatibility behavior is added.
+`test_context_editor_actions` target; locale selection, catalog assertions,
+invariant action tokens, and machine-readable contracts are unchanged. The
+original and extracted 105-line function have identical SHA-256
+`fa6c880c52feb517afcbc36acccca5e28c7e2d2c9fdd6b2c55e9588826a857a6`; the
+parent source falls from 2,079 to 1,975 lines. Run a fresh Linux RelWithDebInfo
+build and the existing focused CTest with `TMPDIR`, `TMP`, and `TEMP` set to
+`~/temp`; obtain the protected matrix before integration. No product or
+compatibility behavior is added.
 
 ## SQL cursor plain-string collation regression module
 
