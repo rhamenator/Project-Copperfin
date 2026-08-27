@@ -10312,3 +10312,7 @@ passes `1/1`.
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   SQL cursor `RIGHT`/`STR` temporary-order regression into a dedicated included
   module. The aggregate target and VFP SQL cursor contracts are unchanged.
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  SQL cursor default-padding/STR-variant temporary-order regression into a
+  dedicated included module. The aggregate target and VFP SQL cursor contracts
+  are unchanged.

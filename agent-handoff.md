@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## SQL cursor default-padding temporary-order regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor default
+PADL/STR temporary-order regression into
+`test_prg_engine_sql_cursors_seek_and_order_default_padding.inl`. It remains
+in the aggregate `test_prg_engine_sql_cursors_seek_and_order` target; VFP
+default PADL/STR temporary-order SEEK/RECNO assertions, cleanup, and
+machine-readable contracts are unchanged. The original and extracted 63-line
+function SHA-256 is `01efc6d6e2c0145b8332bc38783b268ea60805a879b0e1244cb10cdd69807c47`.
+A fresh Linux RelWithDebInfo focused CTest passed 1/1 in 0.04 seconds.
+
 ## SQL cursor RIGHT/STR temporary-order regression module
 
 The bounded #2564 structural slice moves the contiguous SQL cursor RIGHT/STR
