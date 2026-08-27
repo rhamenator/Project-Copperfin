@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## Studio toolbox-palette diagnostic regression module
+
+The bounded #5356/#2564 structural slice moves the contiguous Studio-host
+toolbox-palette JSON diagnostic and localization regression family from
+`test_studio_host_json_parse_diagnostics_toolbox.cpp` into the included
+`test_studio_host_json_parse_diagnostics_toolbox_palette.inl` fragment. It
+remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; command invocation, exit-status, JSON payload,
+invariant-token, localization, and cleanup assertions are unchanged. The
+original 181-line source range has SHA-256
+`9f4b397c4d2a59a4a88889ff0d1ff6a38fc5a8dfd1efea6ce9c8df708e6232c6`; the
+extracted 180-line module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`7877ac86d3a990e123f3ed3dab9a39e845d225c4e3fd8fc25bacb2fcbd6d71b0`.
+No product or compatibility behavior is added. A fresh Linux Debug build and
+the existing `test_studio_host_json` CTest passed 1/1 in 445.10 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
 ## Visual-asset data-binding setter regression module
 
 The bounded #5350/#2564 structural slice moves the contiguous LockColumns,

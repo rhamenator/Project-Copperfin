@@ -10154,3 +10154,9 @@ passes `1/1`.
   `test_visual_asset_editor_setters_data_binding.inl`. The aggregate target,
   invocation behavior, xAsset mutation/undo assertions, localization, and
   machine-readable contracts are unchanged.
+- 2026-08-26: Continued #5356/#2564 test-module refactoring by moving the
+  contiguous Studio-host toolbox-palette JSON diagnostic and localization
+  regressions from `test_studio_host_json_parse_diagnostics_toolbox.cpp` into
+  `test_studio_host_json_parse_diagnostics_toolbox_palette.inl`. The aggregate
+  target, invocation behavior, localization assertions, and machine-readable
+  CLI contracts are unchanged.
