@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox-palette query-filter regression into
+  `test_studio_host_json_dispatch_toolbox_palette_query_filters.inl`. The
+  aggregate target, query JSON behavior, localization, and machine-readable
+  contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio editor-action dispatch localization-refresh regression into
   `test_context_editor_actions_default_dispatch_locales.inl`. The aggregate
   target, locale behavior, invariant tokens, and machine-readable contracts
