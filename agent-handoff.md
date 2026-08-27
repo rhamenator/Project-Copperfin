@@ -1,5 +1,16 @@
 # Agent Handoff
 
+## SQL cursor RIGHT/STR temporary-order regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor RIGHT/STR
+temporary-order regression into
+`test_prg_engine_sql_cursors_seek_and_order_right_str_temporary_order.inl`.
+It remains in the aggregate `test_prg_engine_sql_cursors_seek_and_order`
+target; VFP RIGHT/STR temporary-order SEEK/RECNO assertions, cleanup, and
+machine-readable contracts are unchanged. The original and extracted 62-line
+function SHA-256 is `06dff09b1a2c66cb1a5c6983e0a3150bcbf4fdbae134485419824417fd334a68`.
+A fresh Linux RelWithDebInfo focused CTest passed 1/1 in 0.04 seconds.
+
 ## SQL cursor derived-string temporary-order regression module
 
 The bounded #2564 structural slice moves the contiguous SQL cursor
