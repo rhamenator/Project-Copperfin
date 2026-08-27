@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## Studio-host live geometry-alignment regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+geometry-alignment regression into
+`test_studio_host_geometry_live_edit_actions_align.inl`. It remains in the
+aggregate `test_studio_host_geometry_live_edit_actions` target; FRX/LBX
+alignment JSON assertions, selected-object/preview metadata, cleanup, and
+isolation contract are unchanged. The original and extracted 153-line function
+SHA-256 is `19b17b263c020be7a8008c8844c6f7e644971639c0bd31dbadf8c958de0ea2b2`;
+the parent source falls from 1,922 to 1,770 lines. A fresh Linux
+RelWithDebInfo build and focused existing CTest passed 1/1 in 6.06 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix
+before integration. No product or compatibility behavior is added.
+
 ## SQL cursor PADR/decimal-STR temporary-order regression module
 
 The bounded #2564 structural slice moves the contiguous SQL cursor PADR and
