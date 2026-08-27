@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## SQL cursor temporary-order normalization regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor
+temporary-order normalization regression from
+`test_prg_engine_sql_cursors_seek_and_order.cpp` into the included
+`test_prg_engine_sql_cursors_seek_and_order_temporary_order_normalization.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_prg_engine_sql_cursors_seek_and_order` target; VFP `UPPER(NAME)`
+temporary-order behavior, SEEK/RECNO assertions, runtime order/seek metadata,
+cleanup, and machine-readable contracts are unchanged. The original and
+extracted 75-line function have identical SHA-256
+`d13b9cb792ad322856039cd57ea52dc1c0f11eed0c5b3ff33f72d06b617ff5ef`; the
+parent source falls from 2,060 to 1,986 lines. Run a fresh Linux RelWithDebInfo
+build and the existing focused CTest with `TMPDIR`, `TMP`, and `TEMP` set to
+`~/temp`; obtain the protected matrix before integration. No product or
+compatibility behavior is added.
+
 ## Studio stable-selector ungroup regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
