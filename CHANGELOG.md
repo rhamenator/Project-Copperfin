@@ -1,4 +1,11 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  SQL cursor derived-string temporary-order regression into
+  `test_prg_engine_sql_cursors_seek_and_order_derived_string_temporary_order.inl`.
+  The aggregate target, `LEFT`, `SUBSTR`, and `PADL` VFP temporary-order
+  assertions, SQL cursor behavior, cleanup, and machine-readable contracts are
+  unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   SQL cursor temporary-order normalization regression into
   `test_prg_engine_sql_cursors_seek_and_order_temporary_order_normalization.inl`.
   The aggregate target, VFP normalization/order assertions, runtime-event
