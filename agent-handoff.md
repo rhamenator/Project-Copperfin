@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## Studio selection-toolbox batch creation regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+selection-toolbox batch creation regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_selection_toolbox_batches.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; selection-toolbox batch invocation, exit
+statuses, JSON and localization assertions, cleanup behavior, and
+machine-readable contracts are unchanged. The original and extracted 385-line
+function have identical SHA-256
+`fa3a4c89e09fc8ec78bfb35a8f42cabeab8b7cd724504ba32584cb357e9fbf52`;
+the parent source falls from 2,369 to 1,984 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
 ## Studio toolbox-palette creation-batch-plan regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
