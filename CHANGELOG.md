@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio toolbox direct-create parser-localization regression into
+  `test_studio_host_json_parse_diagnostics_toolbox_direct_create.inl`. The
+  aggregate target, command invocation, exit-status, JSON, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio host stable-selector property-set regression into
   `test_studio_host_json_object_lifecycle_stable_selector_property.inl`. The
   dedicated target, invocation behavior, localization, SCX test data, and
