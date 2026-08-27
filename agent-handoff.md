@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## Studio stable-selector property-set regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+stable-selector property-set regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_stable_selector_property.inl`
+fragment. It remains under the same existing compile guard and in the same
+translation-unit namespace and focused
+`test_studio_host_stable_selector_mutation` target; command invocation,
+exit-status, localization, SCX fixture data, cleanup, and machine-readable
+contracts are unchanged. The original and extracted 94-line function both
+have SHA-256 `135e5645a6875951f72ae3fa712648f91f5c304353aa820a077db251643f1236`.
+The parent source falls from 2,461 to 2,368 lines. A fresh Linux Debug build
+and focused CTest passed 1/1 in 5.69 seconds with `TMPDIR`, `TMP`, and `TEMP`
+set to `~/temp`; obtain the protected matrix before integration. No product or
+compatibility behavior is added.
+
 ## Studio usage/catalog diagnostic regression module
 
 The bounded #5359/#2564 structural slice moves the contiguous Studio-host
