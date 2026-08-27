@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host selection-toolbox object-creation regression into
+  `test_studio_host_json_object_lifecycle_selection_toolbox_objects.inl`.
+  The aggregate target, selection-context JSON behavior, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio-host selection-toolbox batch creation regression into
   `test_studio_host_json_object_lifecycle_selection_toolbox_batches.inl`.
   The aggregate target, batch JSON behavior, localization, and
