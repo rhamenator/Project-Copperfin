@@ -21,6 +21,24 @@ the existing `test_visual_asset_editor` CTest passed 1/1 in 19.54 seconds
 with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected
 matrix before integration.
 
+## Visual-asset BoundColumn setter regression module
+
+The bounded #5354/#2564 structural slice moves the contiguous visual-asset
+BoundColumn setter regression from `test_visual_asset_editor_setters_data.cpp`
+into the included `test_visual_asset_editor_setters_bound_column.inl` fragment.
+The fragment remains inside the same translation-unit namespace and aggregate
+`test_visual_asset_editor` target; selector, undo, DBF/FPT, no-mutation,
+localization, machine-readable-contract assertions, and test invocation order
+remain unchanged. The original 194-line source range has SHA-256
+`72fd61e8798ee37a0d6d19ad763387bbf3d7e8691978b8da142922785c819c4d`; the
+193-line extracted module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`ac9cfbda332048cbd8b15189bf089d86803791f656fc14ff2b58e309cd2dbdd7`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the existing `test_visual_asset_editor` CTest passed 1/1 in 19.07 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; the branch is rebased on the
+merged RowSource/data-binding v1 head before protected validation.
+
 ## Visual-asset RowSource setter regression module
 
 The bounded #5352/#2564 structural slice moves the contiguous visual-asset
