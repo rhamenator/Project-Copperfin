@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## SQL cursor plain-string collation regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor
+plain-string collation regression from
+`test_prg_engine_sql_cursors_seek_and_order.cpp` into the included
+`test_prg_engine_sql_cursors_seek_and_order_plain_string_collate.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_prg_engine_sql_cursors_seek_and_order` target; VFP collation assertions,
+SQL cursor behavior, test isolation labels, and machine-readable contracts are
+unchanged. The original 64-line function and extracted module have identical
+SHA-256 `1d26960f8b8e73ca7a60bb8244707c44da64c1a26870e084b29ca5782d9c7862`;
+the parent source falls from 2,271 to 2,208 lines. A fresh Linux
+RelWithDebInfo build and the existing focused CTest passed 1/1 in 0.03 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`. Obtain the protected matrix
+before integration. No product or compatibility behavior is added.
+
 ## Studio ButtonCount launch-contract regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
