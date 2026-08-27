@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host live report/label geometry alignment regression into
+  `test_studio_host_geometry_live_edit_actions_align.inl`. The aggregate
+  target, JSON behavior, report/label coverage, isolation contract, and
+  machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio-host live report/label geometry nudge regression into
   `test_studio_host_geometry_live_edit_actions_nudge.inl`. The aggregate
   target, JSON behavior, report/label coverage, isolation contract, and
