@@ -16,6 +16,25 @@ existing test_studio_host_json CTest with TMPDIR, TMP, and TEMP set to
 ~/temp; obtain the protected matrix before integration. No product or
 compatibility behavior is added.
 
+## Studio report/label font-mutation regression module
+
+The bounded #5362/#2564 structural slice moves the contiguous Studio-host
+report/label font metadata and font-option mutation regression family from
+test_studio_host_json_geometry_font_metadata.cpp into the included
+test_studio_host_json_geometry_font_mutations.inl fragment. It remains in
+the same translation-unit namespace and aggregate test_studio_host_json
+target; command invocation, exit status, localization, DBF/FPT test data,
+cleanup behavior, and machine-readable contracts are unchanged. The original
+1,064-line range has SHA-256
+4619926fac71dc74b468aac7a8fae37e84284a3c7acf768e139499c9cdc06a94; the
+1,063-line fragment intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+1f43f972629df04bdfdc0380883a7f4226a51f806c02405598cb315decb234db. The
+parent source falls from 2,335 to 1,272 lines. Run a fresh Debug build and the
+existing aggregate CTest with TMPDIR, TMP, and TEMP set to ~/temp; obtain the
+protected matrix before integration. No product or compatibility behavior is
+added.
+
 ## VFP9 DESCENDING() observation fixture
 
 Issue #5358 now has the controlled source fixture

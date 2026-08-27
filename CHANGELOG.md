@@ -5,6 +5,12 @@
   target, invocation behavior, localization assertions, and machine-readable
   contracts are unchanged.
 
+- 2026-08-27: Continued #5362/#2564 test-module refactoring by moving the
+  contiguous Studio report/label font-metadata mutation regressions into
+  test_studio_host_json_geometry_font_mutations.inl. The aggregate target,
+  invocation behavior, localization assertions, asset test data, and
+  machine-readable contracts are unchanged.
+
 - 2026-08-26: Continued #5354/#2564 test-module refactoring by moving the
   contiguous visual-asset BoundColumn setter regression from
   `test_visual_asset_editor_setters_data.cpp` into
