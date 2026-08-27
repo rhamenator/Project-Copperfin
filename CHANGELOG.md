@@ -10270,4 +10270,6 @@ passes `1/1`.
 - 2026-08-27: Extended the opt-in real-VFP9 `DESCENDING()` observation fixture
   with a contained inverse runtime-override probe. An unsupported `ASCENDING`
   command is now retained as `unavailable`, rather than being confused with a
-  `.F.` direction result; no parser encoding or runtime behavior is claimed.
+  `.F.` direction result. The fixture also rejects both existing files and
+  directories as output paths; no parser encoding or runtime behavior is
+  claimed.

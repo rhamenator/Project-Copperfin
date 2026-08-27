@@ -284,7 +284,7 @@ added.
 Issue #5358 now has the controlled source fixture
 `tests/fixtures/vfp9_descending_observation.prg`. Run it only in a disposable
 real VFP9 process and supply a new, nonexistent output directory. It rejects
-an existing directory, creates its own DBF/CDX/IDX assets, and writes
+an existing file or directory, creates its own DBF/CDX/IDX assets, and writes
 `descending-observation.tsv` covering no active order, persisted ascending and
 descending tags, a runtime descending override, an optional contained runtime
 ascending-override probe, and a single-entry IDX runtime override. The inverse

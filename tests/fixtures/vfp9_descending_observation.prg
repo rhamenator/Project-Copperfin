@@ -16,8 +16,8 @@ IF VARTYPE(tcOutputRoot) <> "C" OR EMPTY(ALLTRIM(tcOutputRoot))
 ENDIF
 
 lcRoot = FULLPATH(ALLTRIM(tcOutputRoot))
-IF DIRECTORY(lcRoot)
-    ? "Refusing to use an existing output directory: " + lcRoot
+IF DIRECTORY(lcRoot) OR FILE(lcRoot)
+    ? "Refusing to use an existing output path: " + lcRoot
     RETURN .F.
 ENDIF
 
