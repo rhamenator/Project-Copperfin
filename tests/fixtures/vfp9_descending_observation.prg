@@ -8,7 +8,7 @@
 
 LPARAMETERS tcOutputRoot
 
-LOCAL lcRoot, lcTable, lcCdx, lcIdx, lcObservation, lnTag
+LOCAL lcRoot, lcTable, lcCdx, lcIdx, lcObservation, lcAscendingOverrideCommand, lnTag
 
 IF VARTYPE(tcOutputRoot) <> "C" OR EMPTY(ALLTRIM(tcOutputRoot))
     ? "Usage: DO vfp9_descending_observation WITH <new-output-directory>"
@@ -42,7 +42,7 @@ INDEX ON name TAG AscTag
 INDEX ON name TAG DescTag DESCENDING
 INDEX ON record_id TO (lcIdx)
 
-=STRTOFILE("case" + CHR(9) + "descending" + CHR(9) + "tag" + CHR(9) + "order" + CHR(13) + CHR(10), lcObservation)
+=STRTOFILE("case" + CHR(9) + "descending" + CHR(9) + "tag" + CHR(9) + "order" + CHR(9) + "outcome" + CHR(13) + CHR(10), lcObservation)
 
 SET ORDER TO 0
 =WriteDescendingObservation(lcObservation, "no-active-order", DESCENDING(), "", ORDER())
@@ -61,6 +61,18 @@ ENDFOR
 SET ORDER TO TAG AscTag DESCENDING
 =WriteDescendingObservation(lcObservation, "active-ascending-tag-runtime-descending", DESCENDING(), TAG(), ORDER())
 
+* The shipped help documents DESCENDING runtime overrides but not an ASCENDING
+* inverse override. Probe it through a runtime macro so an unsupported command
+* is retained as an observation instead of aborting collection or inventing a
+* direction value.
+lcAscendingOverrideCommand = "SET ORDER TO TAG DescTag ASCENDING"
+TRY
+    &lcAscendingOverrideCommand
+    =WriteDescendingObservation(lcObservation, "active-persisted-descending-tag-runtime-ascending", DESCENDING(), TAG(), ORDER())
+CATCH TO loException
+    =WriteDescendingObservation(lcObservation, "active-persisted-descending-tag-runtime-ascending", "?", "", "", "unavailable:" + ALLTRIM(STR(loException.ErrorNo)))
+ENDTRY
+
 USE
 USE (lcTable) EXCLUSIVE
 SET INDEX TO (lcIdx) ORDER (lcIdx) DESCENDING
@@ -71,8 +83,20 @@ USE
 RETURN .T.
 
 PROCEDURE WriteDescendingObservation
-LPARAMETERS tcFile, tcCase, tlDescending, tcTag, tcOrder
+LPARAMETERS tcFile, tcCase, tlDescending, tcTag, tcOrder, tcOutcome
 
 LOCAL lcValue
-lcValue = IIF(tlDescending, "T", "F")
-RETURN STRTOFILE(tcCase + CHR(9) + lcValue + CHR(9) + tcTag + CHR(9) + tcOrder + CHR(13) + CHR(10), tcFile, 1)
+IF PCOUNT() < 6
+    tcOutcome = "observed"
+ENDIF
+
+DO CASE
+CASE VARTYPE(tlDescending) = "L"
+    lcValue = IIF(tlDescending, "T", "F")
+CASE VARTYPE(tlDescending) = "C"
+    lcValue = tlDescending
+OTHERWISE
+    lcValue = "?"
+ENDCASE
+
+RETURN STRTOFILE(tcCase + CHR(9) + lcValue + CHR(9) + tcTag + CHR(9) + tcOrder + CHR(9) + tcOutcome + CHR(13) + CHR(10), tcFile, 1)
