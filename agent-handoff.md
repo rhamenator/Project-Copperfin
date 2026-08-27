@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## Studio-host live geometry-resize regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+geometry-resize regression into
+`test_studio_host_geometry_live_edit_actions_resize.inl`. It remains in the
+aggregate `test_studio_host_geometry_live_edit_actions` target; FRX/LBX resize
+JSON assertions, selected-object/preview metadata, cleanup, and isolation
+contract are unchanged. The original and extracted 154-line function SHA-256
+is `afc387dd209498c901ec95151baafcfd0d74f7ba129bdd886c2aaa06106cc562`;
+the parent source falls from 1,770 to 1,617 lines. A fresh Linux
+RelWithDebInfo build and focused existing CTest passed 1/1 in 6.49 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix
+before integration. No product or compatibility behavior is added.
+
 ## Studio-host live geometry-alignment regression module
 
 The bounded #2564 structural slice moves the contiguous live report/label
