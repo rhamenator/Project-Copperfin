@@ -10267,3 +10267,13 @@ passes `1/1`.
   #5358. It creates only caller-directed, new DBF/CDX/IDX fixtures in a
   disposable process and records persisted-tag versus runtime-order results;
   it does not infer or claim an index-byte encoding.
+- 2026-08-27: Extended the opt-in real-VFP9 `DESCENDING()` observation fixture
+  with a contained inverse runtime-override probe. An unsupported `ASCENDING`
+  command is now retained as `unavailable`, rather than being confused with a
+  `.F.` direction result. The fixture also rejects both existing files and
+  directories as output paths; no parser encoding or runtime behavior is
+  claimed.
+- 2026-08-27: Corrected the opt-in real-VFP9 `DESCENDING()` inverse-override
+  collection probe so only the attempted macro command is caught. Later
+  observation or TSV-write failures now remain visible instead of being
+  misclassified as an unavailable command.

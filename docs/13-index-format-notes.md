@@ -74,4 +74,6 @@ Next implementation steps:
    generated DBF/CDX/IDX fixtures, and use those observations to recover the
    persisted direction encoding and master-order override boundary before
    adding `DESCENDING()` support. The fixture is evidence collection only; it
-   does not assert a guessed byte offset or modify existing user data.
+   does not assert a guessed byte offset or modify existing user data. Its
+   optional inverse-override probe records an unavailable command distinctly
+   from a logical direction result.
