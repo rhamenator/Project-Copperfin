@@ -10124,3 +10124,12 @@ passes `1/1`.
   invocation behavior, localized assertions, and machine contracts are
   unchanged. A fresh Linux Debug `test_studio_host` CTest passed 1/1 in 2.71
   seconds.
+- 2026-08-26: Continued #5350/#2564 test-module refactoring by moving the
+  contiguous visual-asset data-binding setter regressions (LockColumns,
+  LockColumnsLeft, RecordSource, LinkMaster, InitialSelectedAlias,
+  DefaultFilePath, FormSetClass, RecordSourceType, Partition, ColumnOrder,
+  ChildOrder, and DataSession) from
+  `test_visual_asset_editor_setters_data.cpp` into
+  `test_visual_asset_editor_setters_data_binding.inl`. The aggregate target,
+  invocation behavior, xAsset mutation/undo assertions, localization, and
+  machine-readable contracts are unchanged.
