@@ -16,6 +16,23 @@ Run a fresh Linux RelWithDebInfo build and the focused existing CTest with
 `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
 integration. No product or compatibility behavior is added.
 
+## SQL cursor deferred-filter regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor
+deferred-filter navigation regression from
+`test_prg_engine_sql_cursors_seek_and_order.cpp` into the included
+`test_prg_engine_sql_cursors_seek_and_order_filter_deferred.inl` fragment. It
+remains in the same translation-unit namespace and aggregate
+`test_prg_engine_sql_cursors_seek_and_order` target; deferred `SET FILTER`
+navigation, SQL cursor/work-area selection, VFP boundary-state assertions,
+runtime-filter event details, cleanup, and machine-readable contracts are
+unchanged. The original and extracted 148-line function have identical
+SHA-256 `3c934ec4f48aeec3fb9075c7899234bf5483922d4e6d64456fc1030678de4fc8`;
+the parent source falls from 2,208 to 2,060 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
 ## Studio stable-selector property-rename regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
