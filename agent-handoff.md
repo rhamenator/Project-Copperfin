@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## Studio selection-toolbox object-creation regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+selection-toolbox object-creation regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_selection_toolbox_objects.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; selection-context invocation, exit statuses,
+JSON and localization assertions, cleanup behavior, and machine-readable
+contracts are unchanged. The original and extracted 363-line function have
+identical SHA-256 `07338c24fa528289eecca55de927caec41d21c38c41336b45e570aac64b1b9c0`;
+the parent source falls from 1,984 to 1,622 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
 ## Studio selection-toolbox batch creation regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
