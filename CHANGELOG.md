@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host ButtonCount launch-contract parser regression family into
+  `test_studio_host_setters_data_button_count.inl`. The aggregate target,
+  command grammar, request contracts, and ambiguity/invalid-input coverage are
+  unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio-host toolbox direct-plan diagnostic and localization regression into
   `test_studio_host_json_parse_diagnostics_toolbox_direct_plan.inl`. The
   aggregate target, invocation behavior, localization assertions, and

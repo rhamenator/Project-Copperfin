@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## Studio ButtonCount launch-contract regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+ButtonCount launch-contract parser regression family from
+`test_studio_host_setters_data.cpp` into the included
+`test_studio_host_setters_data_button_count.inl` fragment. It remains in the
+same translation-unit namespace and aggregate `test_studio_host` target;
+command grammar, request contracts, target-selector assertions, and
+invalid-input/ambiguity coverage are unchanged. The extracted 94-line module
+has SHA-256
+`8e07134617e8cb3d3da250fa42c3f832dc169fffb8ab01c0f795db5e091b06b7`;
+the parent source falls from 2,281 to 2,188 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused `test_studio_host` CTest passed
+1/1 in 0.36 seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`;
+obtain the protected matrix before integration. No product or compatibility
+behavior is added.
+
 ## Studio toolbox direct-create diagnostic regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host toolbox
