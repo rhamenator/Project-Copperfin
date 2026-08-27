@@ -1,5 +1,23 @@
 # Agent Handoff
 
+## Studio toolbox direct-create diagnostic regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host toolbox
+direct-create JSON parser-localization regression from
+`test_studio_host_json_parse_diagnostics_toolbox.cpp` into the included
+`test_studio_host_json_parse_diagnostics_toolbox_direct_create.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; command invocation, exit status, JSON payload,
+invariant tokens, localization assertions, cleanup behavior, and
+machine-readable contracts are unchanged. The original 140-line range and
+extracted module have identical SHA-256
+`30e3006f413be79848a47c41c66b4fe503310edf0118fe9b7e150613391a3e85`; the
+parent source falls from 2,297 to 2,157 lines. A fresh Linux RelWithDebInfo
+build of the aggregate target and the existing `test_studio_host_json` CTest
+passed 1/1 in 64.02 seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`.
+Obtain the protected matrix before integration. No product or compatibility
+behavior is added.
+
 ## Studio stable-selector property-set regression module
 
 The bounded #2564 structural slice moves the contiguous Studio-host
