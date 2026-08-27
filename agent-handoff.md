@@ -1,5 +1,26 @@
 # Agent Handoff
 
+## Visual-asset data-binding setter regression module
+
+The bounded #5350/#2564 structural slice moves the contiguous LockColumns,
+LockColumnsLeft, RecordSource, LinkMaster, InitialSelectedAlias,
+DefaultFilePath, FormSetClass, RecordSourceType, Partition, ColumnOrder,
+ChildOrder, and DataSession setter regressions from
+`test_visual_asset_editor_setters_data.cpp` into the included
+`test_visual_asset_editor_setters_data_binding.inl` fragment. It remains in
+the same translation-unit namespace and aggregate `test_visual_asset_editor`
+target; entry-point declarations and invocation order, xAsset mutation and
+undo checks, localization, and machine-readable contracts are unchanged. The
+original 276-line range has SHA-256
+`70e51c76cf68c2835dec18cae5f26a98cb5c2a5ef68cf12fda3d6d5bb7b03366`; the
+extracted 275-line fragment intentionally omits only its nonfunctional
+terminal separator blank line and has SHA-256
+`a5b77084307159c4c3cb5f6a5d4020ae0adc6c91804857c8f7e4a521e2a1c3de`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the existing `test_visual_asset_editor` CTest passed 1/1 in 19.54 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected
+matrix before integration.
+
 ## Visual-asset property query and clear regression module
 
 The bounded #5346/#2564 structural slice moves the contiguous visual-asset
