@@ -69,3 +69,9 @@ Next implementation steps:
 2. Correlate DBF field metadata with index expressions for migration planning.
 3. Deepen read-only validation against real VFP and dBase fixtures beyond the current smoke coverage.
 4. Design and stage explicit index-write fidelity slices (separate from read/inspection parsing).
+5. Run `tests/fixtures/vfp9_descending_observation.prg` in a disposable real
+   VFP9 process with a new output directory, retain its TSV output plus the
+   generated DBF/CDX/IDX fixtures, and use those observations to recover the
+   persisted direction encoding and master-order override boundary before
+   adding `DESCENDING()` support. The fixture is evidence collection only; it
+   does not assert a guessed byte offset or modify existing user data.

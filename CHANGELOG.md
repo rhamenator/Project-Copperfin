@@ -10160,3 +10160,7 @@ passes `1/1`.
   `test_studio_host_json_parse_diagnostics_toolbox_palette.inl`. The aggregate
   target, invocation behavior, localization assertions, and machine-readable
   CLI contracts are unchanged.
+- 2026-08-26: Added an opt-in real-VFP9 `DESCENDING()` observation fixture for
+  #5358. It creates only caller-directed, new DBF/CDX/IDX fixtures in a
+  disposable process and records persisted-tag versus runtime-order results;
+  it does not infer or claim an index-byte encoding.
