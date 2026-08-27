@@ -10277,3 +10277,8 @@ passes `1/1`.
   collection probe so only the attempted macro command is caught. Later
   observation or TSV-write failures now remain visible instead of being
   misclassified as an unavailable command.
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host stable-selector ungroup regression into
+  `test_studio_host_json_object_lifecycle_stable_selector_ungroup.inl`. The
+  aggregate target, #1029 behavior, localization, and machine-readable
+  contracts are unchanged.
