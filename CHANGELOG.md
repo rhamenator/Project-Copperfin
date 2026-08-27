@@ -3,6 +3,11 @@
   batch-clear rollback regressions from
   `test_visual_asset_editor_properties.cpp` into
   `test_visual_asset_editor_property_query_clear.inl`. The aggregate target,
+
+- 2026-08-26: Continued #5348/#2564 test-module refactoring by moving the
+  contiguous visual-asset single-property copy and batch-copy rollback
+  regressions from `test_visual_asset_editor_properties.cpp` into
+  `test_visual_asset_editor_property_copy.inl`. The aggregate target,
   invocation behavior, selector/undo/DBF-FPT assertions, localization, and
   machine-readable contracts are unchanged.
 
