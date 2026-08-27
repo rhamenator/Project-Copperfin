@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox-palette creation-batch regression into
+  `test_studio_host_json_dispatch_toolbox_palette_creation_batch.inl`. The
+  aggregate target, batch JSON behavior, localization, and machine-readable
+  contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio-host toolbox-palette object-creation-plan regression into
   `test_studio_host_json_dispatch_toolbox_palette_creation_plan.inl`. The
   aggregate target, create-plan JSON behavior, localization, and
