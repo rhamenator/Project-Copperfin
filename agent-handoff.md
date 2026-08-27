@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## Studio usage/catalog diagnostic regression module
+
+The bounded #5359/#2564 structural slice moves the contiguous Studio-host
+usage, selected execution-catalog, and localization regression function from
+test_studio_host_json_parse_diagnostics_core.cpp into the included
+test_studio_host_json_parse_diagnostics_usage_catalogs.inl fragment. It
+remains in the same translation-unit namespace and aggregate
+test_studio_host_json target; command invocation, exit status, localization
+assertions, cleanup behavior, and machine-readable contracts are unchanged.
+The original 1,465-line range and extracted module have identical SHA-256
+57968fded6413b75a9dd50b065969e433bad57c886a45c82ab6a72d14ed6d553; the
+parent source falls from 2,332 to 868 lines. Run a fresh Debug build and the
+existing test_studio_host_json CTest with TMPDIR, TMP, and TEMP set to
+~/temp; obtain the protected matrix before integration. No product or
+compatibility behavior is added.
+
 ## VFP9 DESCENDING() observation fixture
 
 Issue #5358 now has the controlled source fixture

@@ -1,3 +1,10 @@
+- 2026-08-26: Continued #5359/#2564 test-module refactoring by moving the
+  contiguous Studio-host usage and selected execution-catalog localization
+  regression from test_studio_host_json_parse_diagnostics_core.cpp into
+  test_studio_host_json_parse_diagnostics_usage_catalogs.inl. The aggregate
+  target, invocation behavior, localization assertions, and machine-readable
+  contracts are unchanged.
+
 - 2026-08-26: Continued #5354/#2564 test-module refactoring by moving the
   contiguous visual-asset BoundColumn setter regression from
   `test_visual_asset_editor_setters_data.cpp` into
