@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## Studio-host live restore-after-delete regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+restore-after-delete regression into
+`test_studio_host_geometry_live_edit_actions_restore_deleted.inl`. It remains
+in the aggregate `test_studio_host_geometry_live_edit_actions` target; FRX/LBX
+restore-after-delete JSON assertions, selected-object/preview metadata,
+cleanup, and isolation contract are unchanged. The original and extracted
+201-line function SHA-256 is
+`986c4519c6864a4b4757e6542253d9516e8806899a464cfbce35f7d454b2bda8`; the
+parent source falls from 1,464 to 1,264 lines. A fresh Linux RelWithDebInfo
+build and focused existing CTest passed 1/1 in 5.85 seconds with `TMPDIR`,
+`TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
 ## Studio-host live geometry-snap regression module
 
 The bounded #2564 structural slice moves the contiguous live report/label
