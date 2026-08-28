@@ -1,4 +1,11 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio editor-action launch-plan coverage for data, menu, and project
+  contexts plus invalid-action denials into
+  `test_context_editor_actions_launch_validation.inl`. The aggregate
+  `test_context_editor_actions` target, localized diagnostics, and
+  machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio toolbox palette/invocation/dispatch admission and execution regression
   into `test_context_editor_actions_toolbox_dispatch.inl`. The aggregate
   `test_context_editor_actions` target, localized diagnostics, non-mutating

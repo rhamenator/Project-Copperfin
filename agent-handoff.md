@@ -1,5 +1,19 @@
 # Agent Handoff
 
+## Studio editor-action launch validation regression module
+
+The bounded #2564 structural slice moves the contiguous editor-action
+launch-plan coverage for data-environment, menu-item, and project-item contexts
+plus wrong, missing, and unknown action denials into
+`test_context_editor_actions_launch_validation.inl`. It remains in the
+aggregate `test_context_editor_actions` target; localized diagnostics and
+machine-readable behavior are unchanged. The original and extracted 121-line
+contract SHA-256 is
+`bf930fedae0416f3b942959158291553bd84d0e48d998d5d8d1825645fac928c`; the
+parent source falls from 1,821 to 1,702 lines. Obtain fresh focused and
+protected-matrix evidence before integration. No product or compatibility
+behavior is added.
+
 ## Studio toolbox palette/invocation/dispatch regression module
 
 The bounded #2564 structural slice moves the contiguous Studio toolbox
