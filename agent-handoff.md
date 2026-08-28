@@ -9,7 +9,7 @@ plus wrong, missing, and unknown action denials into
 aggregate `test_context_editor_actions` target; localized diagnostics and
 machine-readable behavior are unchanged. The original and extracted 121-line
 contract SHA-256 is
-`bf930fedae0416f3b942959158291553bd84d0e48d998d5d8d1825645fac928c`; the
+`5f652bb5ca66f391771c74fa868b9e9d3a262eb69cd6a94fccd72cfec61f2fc0`; the
 parent source falls from 1,821 to 1,702 lines. Obtain fresh focused and
 protected-matrix evidence before integration. No product or compatibility
 behavior is added.
