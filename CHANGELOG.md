@@ -1,4 +1,10 @@
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio toolbox palette/invocation/dispatch admission and execution regression
+  into `test_context_editor_actions_toolbox_dispatch.inl`. The aggregate
+  `test_context_editor_actions` target, localized diagnostics, non-mutating
+  dispatch contract, and machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio-host live unplaced restore-after-delete regression into
   `test_studio_host_geometry_live_edit_actions_restore_unplaced_deleted.inl`.
   The aggregate target, JSON behavior, report/label coverage, isolation

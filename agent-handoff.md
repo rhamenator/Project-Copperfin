@@ -1,5 +1,20 @@
 # Agent Handoff
 
+## Studio toolbox palette/invocation/dispatch regression module
+
+The bounded #2564 structural slice moves the contiguous Studio toolbox
+palette, invocation-admission, dispatch, execution-admission, and invalid
+metadata regression into `test_context_editor_actions_toolbox_dispatch.inl`.
+It remains in the aggregate `test_context_editor_actions` target; localized
+diagnostics, non-mutating dry-run behavior, invariant command and argument
+tokens, and report-safe toolbox filtering are unchanged. The original and
+extracted 157-line contract SHA-256 is
+`c9db87f18b341dd135635b98fa7d49426b602799a2ab5acb30859535eee727bb`; the
+parent source falls from 1,978 to 1,821 lines. A fresh Linux RelWithDebInfo
+build and focused existing CTest passed 1/1 in 0.32 seconds with `TMPDIR`,
+`TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
 ## Studio-host live unplaced restore-after-delete regression module
 
 The bounded #2564 structural slice moves the contiguous live report/label
