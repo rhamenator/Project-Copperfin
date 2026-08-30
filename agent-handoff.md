@@ -1,5 +1,117 @@
 # Agent Handoff
 
+## In-progress: full Windows validation + second adversarial review of PR #5399
+
+**Steering-continuity record** (not yet recoverable from the branch/PR itself
+alone — this note exists so a session restart doesn't lose it; update or
+delete this section once #5399 actually merges). Repository owner's ChatGPT
+Pro lapsed (~2 weeks out as of 2026-08-30), so Codex's PR-review bot may be
+unavailable; owner is restarting sessions on session-limit cutoffs, so
+anything running only as a background subagent of the active session is at
+risk of being silently killed with no trace. Do not treat silence as a clean
+bill of health for anything described below as "in progress" — check
+directly (`gh run view <id>`, `gh pr checks 5399`) rather than assume.
+
+As of 2026-08-30 ~03:05 EDT, head `071f564e4` (PR #5398 reconciled in, plus
+all fixes below):
+
+- A first adversarial `/code-review --branch agent/v1-windows-path-alias-rejection max`
+  pass (on head `0a6bd7e86`) found a real regression: the `create()` dedup
+  (converging on `strict_absolute_file_path()`) silently required a non-empty
+  `filename()`, which the sibling `WorkspaceAgentProcessTargetBoundary::create()`
+  does not require for the identical workspace-root argument — a root like
+  `C:\Workspace\` would be rejected by the file-target boundary while still
+  accepted by the process-target boundary. Fixed (`e7ad049be`, reverted to the
+  original inline checks + alias check) and locked in with a regression test
+  plus a CHANGELOG fix for an omitted touched file (`aae658fea`).
+- A **second** adversarial review pass (same command, on final head
+  `071f564e4`) and a full unrestricted `workflow_dispatch` run of "Windows
+  Native Validation" (the only workflow that builds/runs the complete native
+  test suite — required PR checks on `v1-development` only cover a narrow,
+  per-test-target subset; see below) are both running now. If you cannot find
+  their results already reported: re-run both before merging #5399.
+- Still open, not urgent: `path_has_windows_alias_prone_component()` is
+  duplicated verbatim across 4 files (target_containment, process_containment,
+  environment, audit_sink) instead of a shared header — architecture note
+  from the first adversarial review, not a live bug, not yet consolidated.
+- **Important standing fact for any future Windows-side change to this repo**:
+  PRs targeting `v1-development` do NOT get the full native test suite — only
+  `native-validation-{windows,linux,macos}.yml` run the complete, unrestricted
+  `ctest` suite, and they trigger only on `branches: [main]`. The
+  `v1-development`-triggered workflows (`windows-environment-validation.yml`,
+  `generated-launcher-validation.yml`, `windows-x86-declare-validation.yml`,
+  `executable-path-validation.yml`) each build/run only an explicit, narrow
+  `-R` filtered subset of test targets. Before trusting green CI as real
+  coverage of a new/changed Windows-relevant test file, grep
+  `.github/workflows/*.yml` for that exact test target name; if absent,
+  manually `gh workflow run "Windows Native Validation" --ref <branch>` for
+  real verification before merging.
+- Also filed from this review pass (linked as sub-issues of `#34`, tracking
+  comment on `#34`): #5400 (TOCTOU race in `inspect_physical_path_containment`,
+  most severe), #5401 (`stop()` exception-safety gap), #5402 (heap
+  buffer over-read in `external_process_policy.cpp`'s `get_company_name()`),
+  #5403 (open policy question: should `workspace_sandbox` mode require a
+  confirmation gate like `unrestricted_local` does?). None of these four are
+  fixed yet; #5400 in particular needs real design work (atomic
+  resolve-and-verify), not a quick patch.
+
+## Windows trailing-dot/trailing-space path-alias rejection
+
+Fixes a real, previously unaddressed gap in the workspace-agent security
+boundary: `strict_relative_file_path`/`strict_absolute_file_path`
+(`workspace_agent_target_containment.cpp`),
+`strict_relative_executable_path`/`strict_relative_working_directory_path`/
+`strict_absolute_executable_path`/`strict_absolute_working_directory_path`
+(`workspace_agent_process_containment.cpp`), and
+`strict_absolute_directory_spelling` (`workspace_agent_environment.cpp`) all
+rejected `.`/`..` components and (in the process/environment files) UNC and
+device/stream syntax, but none rejected a component ending in a trailing dot
+or space. Win32 silently normalizes `tool.`/`tool ` to the same object as
+`tool`, so an admitted "safe" path spelling and the object actually touched
+could diverge.
+
+This was diagnosed and repeatedly re-flagged by automated review across owner
+PRs #5006 through #5012 (2026-08-14 through 2026-08-15; see `.agent-channel/`
+history around that window), which explicitly held merge each time and named
+the specific regression harnesses needed. Every PR merged over the hold
+regardless, and the follow-on documentation PRs (#5007, #5009, #5011)
+recorded `RQ-CF-AGENT-009`/`010`/`011`/`012` as `defined`/accepted despite the
+reviewer's exact-head counter-evidence. This was found during an unrelated
+branch-cleanup audit; the gap was still present and the traceability rows
+still incorrect as of 2026-08-30.
+
+Fix: a Windows-only `path_has_windows_alias_prone_component()` helper (added
+per-file, matching this codebase's existing convention of duplicating these
+small anonymous-namespace path predicates rather than centralizing them) is
+now consulted by all seven `strict_*` functions above. It is a no-op
+(`return false`) on non-Windows hosts, where this aliasing cannot occur, so
+POSIX behavior and existing POSIX-only test expectations are unchanged.
+Regression coverage was added directly to the existing
+`test_workspace_agent_target_containment.cpp`,
+`test_workspace_agent_process_containment.cpp`, and
+`test_workspace_agent_isolated_environment_session_layout_lifecycle.inl`
+(guarded `#if defined(_WIN32)`, matching the existing UNC/device-syntax test
+pattern in the same files) rather than as new standalone harness files.
+
+`docs/32-recovered-requirements-traceability.md` rows for `RQ-CF-AGENT-009`,
+`RQ-CF-AGENT-010`, and `RQ-CF-AGENT-012` had their requirement text corrected
+to state the trailing-dot/space rejection explicitly, since it is now true
+and enforced. `RQ-CF-AGENT-011`, `015`, `017`, `019`, `023`, and `029` derive
+from these and should be reviewed separately for whether their own evidence
+needs the same correction -- not attempted here to keep this change scoped to
+the actual code fix.
+
+Verified locally (Linux, GCC/Clang): `cf_security` and the three touched test
+binaries build warning-free and all pass, plus the four other tests that
+construct these boundaries (`test_workspace_agent_session`,
+`test_workspace_agent_audit_sink`, `test_workspace_agent_process_invocation`)
+to check for indirect regressions. The new `_WIN32`-guarded assertions
+themselves could not be locally compiled or executed on this Linux host (no
+Windows SDK headers available); they are written by exact analogy to this
+codebase's existing, CI-verified UNC/device-syntax tests in the same files
+and functions, and protected Windows CI evidence should be obtained before
+merge.
+
 ## Studio editor-action launch validation regression module
 
 The bounded #2564 structural slice moves the contiguous editor-action

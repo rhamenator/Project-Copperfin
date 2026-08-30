@@ -34,10 +34,32 @@ bool path_has_embedded_nul(const std::filesystem::path& path) {
     return false;
 }
 
+#if defined(_WIN32)
+// Win32's CreateFileW/GetFullPathNameW silently strip a trailing '.' or ' '
+// from each path component before resolving it, so "log." and "log " name
+// the same object as "log". A component-boundary check alone cannot reject
+// this: it must inspect each component's own last character.
+bool path_has_windows_alias_prone_component(const std::filesystem::path& path) {
+    for (const auto& component : path) {
+        const auto& native = component.native();
+        if (!native.empty() &&
+            (native.back() == L'.' || native.back() == L' ')) {
+            return true;
+        }
+    }
+    return false;
+}
+#else
+bool path_has_windows_alias_prone_component(const std::filesystem::path&) {
+    return false;
+}
+#endif
+
 bool relative_log_path_is_safe(const std::filesystem::path& path) {
     if (path.empty() || path.is_absolute() || path.has_root_name() ||
         path.has_root_directory() || path.filename().empty() ||
-        path_has_embedded_nul(path)) {
+        path_has_embedded_nul(path) ||
+        path_has_windows_alias_prone_component(path)) {
         return false;
     }
     for (const auto& component : path) {

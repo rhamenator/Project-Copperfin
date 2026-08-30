@@ -327,6 +327,52 @@ void test_configuration_and_layout_fail_closed() {
     expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
                 missing_system_root).has_value(),
            "RQ-CF-AGENT-012: Windows construction requires an explicit trusted system root");
+
+    // Win32 silently strips a trailing '.' or ' ' from a path component, so
+    // e.g. "sessions." would otherwise name the same object as the admitted
+    // "sessions" -- an alias the strict-spelling check must reject before it
+    // is ever used to bind trust.
+    auto trailing_dot_storage = tree.configuration();
+    trailing_dot_storage.trusted_session_storage_root =
+        std::filesystem::path(tree.session_storage.wstring() + L".");
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                trailing_dot_storage).has_value(),
+           "RQ-CF-AGENT-012: a trailing-dot session storage root must fail");
+
+    auto trailing_space_storage = tree.configuration();
+    trailing_space_storage.trusted_session_storage_root =
+        std::filesystem::path(tree.session_storage.wstring() + L" ");
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                trailing_space_storage).has_value(),
+           "RQ-CF-AGENT-012: a trailing-space session storage root must fail");
+
+    auto trailing_dot_executable_directory = tree.configuration();
+    trailing_dot_executable_directory.trusted_executable_directories = {
+        std::filesystem::path(tree.approved_one.wstring() + L".")};
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                trailing_dot_executable_directory).has_value(),
+           "RQ-CF-AGENT-012: a trailing-dot approved executable directory must fail");
+
+    auto trailing_space_executable_directory = tree.configuration();
+    trailing_space_executable_directory.trusted_executable_directories = {
+        std::filesystem::path(tree.approved_one.wstring() + L" ")};
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                trailing_space_executable_directory).has_value(),
+           "RQ-CF-AGENT-012: a trailing-space approved executable directory must fail");
+
+    auto trailing_dot_system_root = tree.configuration();
+    trailing_dot_system_root.trusted_windows_system_root =
+        std::filesystem::path(tree.windows_system_root.wstring() + L".");
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                trailing_dot_system_root).has_value(),
+           "RQ-CF-AGENT-012: a trailing-dot Windows system root must fail");
+
+    auto trailing_space_system_root = tree.configuration();
+    trailing_space_system_root.trusted_windows_system_root =
+        std::filesystem::path(tree.windows_system_root.wstring() + L" ");
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                trailing_space_system_root).has_value(),
+           "RQ-CF-AGENT-012: a trailing-space Windows system root must fail");
 #else
     auto unexpected_system_root = tree.configuration();
     unexpected_system_root.trusted_windows_system_root = tree.windows_system_root;

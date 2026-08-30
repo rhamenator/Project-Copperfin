@@ -435,6 +435,23 @@ void test_configuration_containment_and_size_limit_fail_closed() {
                !too_large.ready() && too_large.session_sink().commit == nullptr,
            "RQ-CF-AGENT-006: escaping, missing-root, and unsafe-size configurations must be inert");
 
+#if defined(_WIN32)
+    // Win32 silently strips a trailing '.' or ' ' from a path component, so
+    // "events.log." and "events.log " would otherwise name the same object
+    // as the admitted "events.log" -- an alias the strict-spelling check
+    // must reject before it ever reaches filesystem lookup.
+    WorkspaceAgentSessionAuditFileSink trailing_dot(root.path(), "events.log.");
+    WorkspaceAgentSessionAuditFileSink trailing_space(root.path(), "events.log ");
+    WorkspaceAgentSessionAuditFileSink trailing_dot_directory(root.path(), "logs./events.log");
+    expect(!trailing_dot.ready() && trailing_dot.session_sink().commit == nullptr,
+           "RQ-CF-AGENT-006: a trailing-dot log filename must be inert");
+    expect(!trailing_space.ready() && trailing_space.session_sink().commit == nullptr,
+           "RQ-CF-AGENT-006: a trailing-space log filename must be inert");
+    expect(!trailing_dot_directory.ready() &&
+               trailing_dot_directory.session_sink().commit == nullptr,
+           "RQ-CF-AGENT-006: a trailing-dot log directory component must be inert");
+#endif
+
     auto embedded_nul_name = fs::path("target.log").native();
     embedded_nul_name.push_back(fs::path::value_type{});
     embedded_nul_name += fs::path("different").native();

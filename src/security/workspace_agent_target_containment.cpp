@@ -41,17 +41,40 @@ bool path_has_dot_component(const std::filesystem::path& path) {
     return false;
 }
 
+#if defined(_WIN32)
+// Win32's CreateFileW/GetFullPathNameW silently strip a trailing '.' or ' '
+// from each path component before resolving it, so "tool." and "tool " name
+// the same object as "tool". A component-boundary check alone cannot reject
+// this: it must inspect each component's own last character.
+bool path_has_windows_alias_prone_component(const std::filesystem::path& path) {
+    for (const auto& component : path) {
+        const auto& native = component.native();
+        if (!native.empty() &&
+            (native.back() == L'.' || native.back() == L' ')) {
+            return true;
+        }
+    }
+    return false;
+}
+#else
+bool path_has_windows_alias_prone_component(const std::filesystem::path&) {
+    return false;
+}
+#endif
+
 bool strict_relative_file_path(const std::filesystem::path& path) {
     return !path.empty() && !path_has_embedded_nul(path) &&
         !path.is_absolute() && !path.has_root_name() &&
         !path.has_root_directory() && !path_has_dot_component(path) &&
-        !path.filename().empty();
+        !path.filename().empty() &&
+        !path_has_windows_alias_prone_component(path);
 }
 
 bool strict_absolute_file_path(const std::filesystem::path& path) {
     return !path.empty() && !path_has_embedded_nul(path) &&
         path.is_absolute() && !path_has_dot_component(path) &&
-        !path.filename().empty();
+        !path.filename().empty() &&
+        !path_has_windows_alias_prone_component(path);
 }
 
 bool path_is_direct_directory(const std::filesystem::path& path) {
@@ -132,6 +155,7 @@ WorkspaceAgentFileTargetBoundary::create(
         path_has_embedded_nul(trusted_absolute_workspace_root) ||
         !trusted_absolute_workspace_root.is_absolute() ||
         path_has_dot_component(trusted_absolute_workspace_root) ||
+        path_has_windows_alias_prone_component(trusted_absolute_workspace_root) ||
         !path_is_direct_directory(trusted_absolute_workspace_root)) {
         return std::nullopt;
     }

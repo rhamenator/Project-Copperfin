@@ -329,6 +329,30 @@ void test_boundary_requires_explicit_direct_process_targets() {
                 R"(\\server/share\working)")
                 .allowed,
            "RQ-CF-AGENT-010: mixed-separator UNC working directories must fail before lookup");
+    // Win32 silently strips a trailing '.' or ' ' from a path component, so
+    // "workspace-tool." and "workspace-tool " would otherwise name the same
+    // object as the admitted "workspace-tool" -- an alias the strict-spelling
+    // check must reject before it ever reaches filesystem lookup.
+    expect(!boundary->inspect_workspace_process("bin/workspace-tool.", ".").allowed,
+           "RQ-CF-AGENT-010: a workspace executable with a trailing dot must fail before lookup");
+    expect(!boundary->inspect_workspace_process("bin/workspace-tool ", ".").allowed,
+           "RQ-CF-AGENT-010: a workspace executable with a trailing space must fail before lookup");
+    expect(!boundary->inspect_workspace_process("bin/workspace-tool", "nested.").allowed,
+           "RQ-CF-AGENT-010: a workspace working directory with a trailing dot must fail before lookup");
+    expect(!boundary->inspect_workspace_process("bin/workspace-tool", "nested ").allowed,
+           "RQ-CF-AGENT-010: a workspace working directory with a trailing space must fail before lookup");
+    expect(!boundary->inspect_local_process(
+                std::filesystem::path(
+                    (tree.outside / "bin" / "local-tool").wstring() + L"."),
+                tree.outside / "working")
+                .allowed,
+           "RQ-CF-AGENT-010: a local executable with a trailing dot must fail before lookup");
+    expect(!boundary->inspect_local_process(
+                tree.outside / "bin" / "local-tool",
+                std::filesystem::path(
+                    (tree.outside / "working").wstring() + L" "))
+                .allowed,
+           "RQ-CF-AGENT-010: a local working directory with a trailing space must fail before lookup");
 #endif
     expect(!boundary->inspect_workspace_process("missing", ".").allowed,
            "RQ-CF-AGENT-010: a missing executable must fail closed");

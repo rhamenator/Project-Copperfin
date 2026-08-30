@@ -137,6 +137,18 @@ void test_boundary_rejects_aliases_and_indirection() {
            "RQ-CF-AGENT-009: trusted workspace configuration must require an absolute root");
     expect(!WorkspaceAgentFileTargetBoundary::create(tree.workspace / "inside.prg").has_value(),
            "RQ-CF-AGENT-009: a regular file cannot become the workspace root");
+#if defined(_WIN32)
+    // Win32 silently strips a trailing '.' or ' ' from a path component, so
+    // an alias-prone workspace root could otherwise canonicalize to the same
+    // object as the admitted root while file-target preflights remain
+    // available against it under an ambiguous spelling.
+    expect(!WorkspaceAgentFileTargetBoundary::create(
+                std::filesystem::path(tree.workspace.wstring() + L".")).has_value(),
+           "RQ-CF-AGENT-009: a trailing-dot workspace root must fail before boundary creation");
+    expect(!WorkspaceAgentFileTargetBoundary::create(
+                std::filesystem::path(tree.workspace.wstring() + L" ")).has_value(),
+           "RQ-CF-AGENT-009: a trailing-space workspace root must fail before boundary creation");
+#endif
 
     auto boundary = WorkspaceAgentFileTargetBoundary::create(tree.workspace);
     expect(boundary.has_value(),
@@ -144,6 +156,17 @@ void test_boundary_rejects_aliases_and_indirection() {
     if (!boundary.has_value()) {
         return;
     }
+
+    // A trailing path separator (filename() empty, but not alias-prone) is a
+    // legitimate, common root spelling -- e.g. "C:\Workspace\" -- and must
+    // remain accepted consistently with
+    // WorkspaceAgentProcessTargetBoundary::create(), which imposes no
+    // filename requirement on the identical argument. A prior refactor here
+    // briefly regressed this by validating the root with the file-target
+    // spelling check (which requires a non-empty filename) instead of the
+    // directory-appropriate check.
+    expect(WorkspaceAgentFileTargetBoundary::create(tree.workspace / "").has_value(),
+           "RQ-CF-AGENT-009: a workspace root with a trailing separator must still configure the boundary");
 
     const auto inside = boundary->inspect_workspace_file("nested/child.prg");
     expect(inside.allowed && inside.canonical_path ==
@@ -196,6 +219,27 @@ void test_boundary_rejects_aliases_and_indirection() {
            "RQ-CF-AGENT-009: unrestricted-local inspection may identify a direct absolute file outside the workspace");
     expect(!boundary->inspect_local_file("outside/outside.prg").allowed,
            "RQ-CF-AGENT-009: unrestricted-local targets must still use unambiguous absolute paths");
+
+#if defined(_WIN32)
+    // Win32 silently strips a trailing '.' or ' ' from a path component, so
+    // "inside.prg." and "inside.prg " would otherwise name the same object
+    // as the admitted "inside.prg" -- an alias the strict-spelling check must
+    // reject before it ever reaches filesystem lookup.
+    expect(!boundary->inspect_workspace_file("inside.prg.").allowed,
+           "RQ-CF-AGENT-009: a workspace target with a trailing dot must fail before lookup");
+    expect(!boundary->inspect_workspace_file("inside.prg ").allowed,
+           "RQ-CF-AGENT-009: a workspace target with a trailing space must fail before lookup");
+    expect(!boundary->inspect_workspace_file("nested./child.prg").allowed,
+           "RQ-CF-AGENT-009: a workspace target with a trailing-dot directory component must fail before lookup");
+    expect(!boundary->inspect_local_file(
+                std::filesystem::path((tree.outside / "outside.prg").wstring() + L"."))
+                .allowed,
+           "RQ-CF-AGENT-009: a local target with a trailing dot must fail before lookup");
+    expect(!boundary->inspect_local_file(
+                std::filesystem::path((tree.outside / "outside.prg").wstring() + L" "))
+                .allowed,
+           "RQ-CF-AGENT-009: a local target with a trailing space must fail before lookup");
+#endif
 }
 
 void test_session_bound_file_target_preflight() {

@@ -241,6 +241,27 @@ bool path_has_dot_component(const std::filesystem::path& path) {
 }
 
 #if defined(_WIN32)
+// Win32's CreateFileW/GetFullPathNameW silently strip a trailing '.' or ' '
+// from each path component before resolving it, so "tool." and "tool " name
+// the same object as "tool". A component-boundary check alone cannot reject
+// this: it must inspect each component's own last character.
+bool path_has_windows_alias_prone_component(const std::filesystem::path& path) {
+    for (const auto& component : path) {
+        const auto& native = component.native();
+        if (!native.empty() &&
+            (native.back() == L'.' || native.back() == L' ')) {
+            return true;
+        }
+    }
+    return false;
+}
+#else
+bool path_has_windows_alias_prone_component(const std::filesystem::path&) {
+    return false;
+}
+#endif
+
+#if defined(_WIN32)
 bool path_has_windows_device_or_stream_syntax(const std::filesystem::path& path) {
     const auto& native = path.native();
     if (native.rfind(L"\\\\?\\", 0U) == 0U ||
@@ -275,7 +296,8 @@ bool strict_relative_executable_path(const std::filesystem::path& path) {
         !path.is_absolute() && !path.has_root_name() &&
         !path.has_root_directory() && !path_has_dot_component(path) &&
         !path.filename().empty() &&
-        !path_has_windows_device_or_stream_syntax(path);
+        !path_has_windows_device_or_stream_syntax(path) &&
+        !path_has_windows_alias_prone_component(path);
 }
 
 bool strict_relative_working_directory_path(const std::filesystem::path& path) {
@@ -286,19 +308,22 @@ bool strict_relative_working_directory_path(const std::filesystem::path& path) {
         !path.is_absolute() && !path.has_root_name() &&
         !path.has_root_directory() && !path_has_dot_component(path) &&
         !path.filename().empty() &&
-        !path_has_windows_device_or_stream_syntax(path);
+        !path_has_windows_device_or_stream_syntax(path) &&
+        !path_has_windows_alias_prone_component(path);
 }
 
 bool strict_absolute_executable_path(const std::filesystem::path& path) {
     return !path.empty() && !path_has_embedded_nul(path) && path.is_absolute() &&
         !path_has_dot_component(path) && !path.filename().empty() &&
-        !path_has_windows_device_or_stream_syntax(path);
+        !path_has_windows_device_or_stream_syntax(path) &&
+        !path_has_windows_alias_prone_component(path);
 }
 
 bool strict_absolute_working_directory_path(const std::filesystem::path& path) {
     return !path.empty() && !path_has_embedded_nul(path) && path.is_absolute() &&
         !path_has_dot_component(path) &&
-        !path_has_windows_device_or_stream_syntax(path);
+        !path_has_windows_device_or_stream_syntax(path) &&
+        !path_has_windows_alias_prone_component(path);
 }
 
 bool path_is_direct_directory(const std::filesystem::path& path) {
