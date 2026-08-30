@@ -16,11 +16,13 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cstdlib>
 #include <cwctype>
 #include <filesystem>
 #include <functional>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -29,6 +31,8 @@
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#else
+#include <sys/stat.h>
 #endif
 
 namespace {
@@ -1345,6 +1349,48 @@ void test_physical_path_containment_rejects_indirection() {
         expect(!dangling.allowed && dangling.failure == PhysicalPathContainmentFailure::indirect_component,
                "dangling package symlinks should fail as indirection instead of being followed");
     }
+
+#if !defined(_WIN32)
+    // A FIFO with no writer must never hang either call: both walk_contained_path()'s
+    // final-component openat() and read_physically_contained_file_snapshot()'s reopen
+    // use O_NONBLOCK precisely to prevent this. Bounded with a timed future rather than
+    // a direct call so a regression here fails this test instead of hanging the suite.
+    const fs::path fifo_path = content_root / "planted.fifo";
+    if (::mkfifo(fifo_path.c_str(), 0600) == 0) {
+        auto inspected_future = std::async(std::launch::async, [&]() {
+            return copperfin::security::inspect_physical_path_containment(
+                fifo_path, package_root);
+        });
+        const bool inspected_in_time =
+            inspected_future.wait_for(std::chrono::seconds(3)) == std::future_status::ready;
+        expect(inspected_in_time,
+               "opening a FIFO during containment inspection must not hang the caller");
+        if (inspected_in_time) {
+            const auto fifo_containment = inspected_future.get();
+            expect(fifo_containment.allowed,
+                   "a FIFO is not itself an indirect component and should be admitted");
+            if (fifo_containment.allowed) {
+                auto snapshot_future = std::async(std::launch::async, [&]() {
+                    return copperfin::security::read_physically_contained_file_snapshot(
+                        fifo_containment, package_root);
+                });
+                const bool snapshot_in_time =
+                    snapshot_future.wait_for(std::chrono::seconds(3)) ==
+                    std::future_status::ready;
+                expect(snapshot_in_time,
+                       "reading a FIFO snapshot with no writer must not hang the caller");
+                if (snapshot_in_time) {
+                    const auto fifo_snapshot = snapshot_future.get();
+                    expect(!fifo_snapshot.ok &&
+                               fifo_snapshot.failure ==
+                                   PhysicalPathContainmentFailure::not_regular_file,
+                           "a FIFO must be rejected as not a regular file, not silently read");
+                }
+            }
+        }
+        fs::remove(fifo_path, ignored);
+    }
+#endif
 
     fs::remove_all(temp_root, ignored);
 }

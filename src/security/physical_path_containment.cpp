@@ -13,6 +13,8 @@
 #include <optional>
 #include <string>
 #include <system_error>
+#include <utility>
+#include <vector>
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -80,84 +82,9 @@ std::optional<std::filesystem::path> contained_relative_path(
         : std::nullopt;
 }
 
-PhysicalPathContainmentFailure inspect_direct_components(
-    const std::filesystem::path& root,
-    const std::filesystem::path& relative_path) {
 #if defined(_WIN32)
-    auto inspect = [](const std::filesystem::path& candidate) {
-        const DWORD attributes = ::GetFileAttributesW(candidate.c_str());
-        if (attributes == INVALID_FILE_ATTRIBUTES) {
-            return PhysicalPathContainmentFailure::path_unavailable;
-        }
-        return (attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U
-            ? PhysicalPathContainmentFailure::indirect_component
-            : PhysicalPathContainmentFailure::none;
-    };
-
-    if (const DWORD root_attributes = ::GetFileAttributesW(root.c_str());
-        root_attributes == INVALID_FILE_ATTRIBUTES) {
-        return PhysicalPathContainmentFailure::root_unavailable;
-    }
-    std::filesystem::path current = root;
-    for (const auto& part : relative_path) {
-        if (part == ".") {
-            continue;
-        }
-        current /= part;
-        if (const auto failure = inspect(current);
-            failure != PhysicalPathContainmentFailure::none) {
-            return failure;
-        }
-    }
-#else
-    struct stat root_status{};
-    if (::stat(root.c_str(), &root_status) != 0) {
-        return PhysicalPathContainmentFailure::root_unavailable;
-    }
-
-    std::filesystem::path current = root;
-    for (const auto& part : relative_path) {
-        if (part == ".") {
-            continue;
-        }
-        current /= part;
-        struct stat current_status{};
-        if (::lstat(current.c_str(), &current_status) != 0) {
-            return PhysicalPathContainmentFailure::path_unavailable;
-        }
-        if (S_ISLNK(current_status.st_mode)) {
-            return PhysicalPathContainmentFailure::indirect_component;
-        }
-        if (current_status.st_dev != root_status.st_dev) {
-            return PhysicalPathContainmentFailure::cross_device_component;
-        }
-    }
-#endif
-    return PhysicalPathContainmentFailure::none;
-}
-
-std::optional<PhysicalPathIdentity> read_direct_identity(
-    const std::filesystem::path& path) {
-#if defined(_WIN32)
-    const HANDLE handle = ::CreateFileW(
-        path.c_str(),
-        FILE_READ_ATTRIBUTES,
-        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-        nullptr,
-        OPEN_EXISTING,
-        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-        nullptr);
-    if (handle == INVALID_HANDLE_VALUE) {
-        return std::nullopt;
-    }
-
-    BY_HANDLE_FILE_INFORMATION information{};
-    const bool read = ::GetFileInformationByHandle(handle, &information) != 0;
-    ::CloseHandle(handle);
-    if (!read || (information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
-        return std::nullopt;
-    }
-
+PhysicalPathIdentity identity_from_handle_information(
+    const BY_HANDLE_FILE_INFORMATION& information) {
     return PhysicalPathIdentity{
         .storage_id = information.dwVolumeSerialNumber,
         .file_id =
@@ -174,12 +101,17 @@ std::optional<PhysicalPathIdentity> read_direct_identity(
             (static_cast<std::uint64_t>(information.ftCreationTime.dwHighDateTime) << 32U) |
             information.ftCreationTime.dwLowDateTime
     };
+}
 #else
-    struct stat status{};
-    if (::lstat(path.c_str(), &status) != 0 || S_ISLNK(status.st_mode)) {
-        return std::nullopt;
-    }
+// descriptor is used only for a best-effort, descriptor-relative creation-time
+// lookup on Linux (statx with AT_EMPTY_PATH) so that call is bound to the
+// exact object already open on descriptor rather than re-resolving a path
+// string -- consistent with the rest of this file no longer trusting a
+// second path-based lookup for anything security-relevant.
+PhysicalPathIdentity identity_from_descriptor(
+    int descriptor, const struct stat& status) {
 #if defined(__APPLE__)
+    static_cast<void>(descriptor);
     const std::uint64_t modified_ticks =
         static_cast<std::uint64_t>(status.st_mtimespec.tv_sec) * 1'000'000'000ULL +
         static_cast<std::uint64_t>(status.st_mtimespec.tv_nsec);
@@ -195,7 +127,7 @@ std::optional<PhysicalPathIdentity> read_direct_identity(
 #if defined(__linux__) && defined(STATX_BTIME)
     struct statx extended_status {};
     if (::statx(
-            AT_FDCWD, path.c_str(), AT_SYMLINK_NOFOLLOW, STATX_BTIME,
+            descriptor, "", AT_EMPTY_PATH, STATX_BTIME,
             &extended_status) == 0 &&
         (extended_status.stx_mask & STATX_BTIME) != 0U &&
         extended_status.stx_btime.tv_sec >= 0 &&
@@ -215,8 +147,8 @@ std::optional<PhysicalPathIdentity> read_direct_identity(
         .link_count = static_cast<std::uint64_t>(status.st_nlink),
         .creation_ticks = creation_ticks
     };
-#endif
 }
+#endif
 
 PhysicalFileSnapshotResult failed_snapshot(
     const PhysicalPathContainmentFailure failure) {
@@ -227,6 +159,346 @@ PhysicalFileSnapshotResult failed_snapshot(
         .failure = failure
     };
 }
+
+// Splits a relative path into single, slash-free components, skipping "."
+// entries. relative_path_is_contained() has already rejected ".." and
+// absolute paths before this is ever called.
+std::vector<std::filesystem::path> relative_components(
+    const std::filesystem::path& relative_path) {
+    std::vector<std::filesystem::path> parts;
+    for (const auto& part : relative_path) {
+        if (part != ".") {
+            parts.push_back(part);
+        }
+    }
+    return parts;
+}
+
+#if defined(_WIN32)
+
+class ScopedFileHandle {
+public:
+    ScopedFileHandle() = default;
+    explicit ScopedFileHandle(HANDLE handle) noexcept : handle_(handle) {}
+    ScopedFileHandle(const ScopedFileHandle&) = delete;
+    ScopedFileHandle& operator=(const ScopedFileHandle&) = delete;
+    ScopedFileHandle(ScopedFileHandle&& other) noexcept : handle_(other.release()) {}
+    ScopedFileHandle& operator=(ScopedFileHandle&& other) noexcept {
+        if (this != &other) {
+            reset(other.release());
+        }
+        return *this;
+    }
+    ~ScopedFileHandle() { reset(INVALID_HANDLE_VALUE); }
+
+    [[nodiscard]] HANDLE get() const noexcept { return handle_; }
+    [[nodiscard]] bool valid() const noexcept { return handle_ != INVALID_HANDLE_VALUE; }
+    HANDLE release() noexcept {
+        const HANDLE value = handle_;
+        handle_ = INVALID_HANDLE_VALUE;
+        return value;
+    }
+    void reset(HANDLE handle) noexcept {
+        if (handle_ != INVALID_HANDLE_VALUE) {
+            ::CloseHandle(handle_);
+        }
+        handle_ = handle;
+    }
+
+private:
+    HANDLE handle_ = INVALID_HANDLE_VALUE;
+};
+
+struct WalkedHandle {
+    ScopedFileHandle handle;
+    PhysicalPathContainmentFailure failure = PhysicalPathContainmentFailure::none;
+};
+
+// Opens root/relative_path one component at a time, rejecting a reparse
+// point or a cross-volume component at the exact moment each is opened
+// rather than in a separate pass. This does not give the same kernel-level
+// atomicity as the POSIX openat()/O_NOFOLLOW chain below -- Win32 has no
+// "open this name relative to an already-open parent handle" primitive
+// without native NT APIs -- but it removes the second, wholesale
+// std::filesystem::canonical() re-walk of the same untrusted relative path
+// that the original implementation performed after this check, which was
+// the actual exploitable gap: a component swapped after this walk starts
+// is caught by the *next* component's own reparse-point check on the
+// then-current filesystem state, rather than silently surviving into an
+// entirely separate, later resolution pass.
+WalkedHandle walk_contained_path(
+    const std::filesystem::path& root,
+    const std::filesystem::path& relative_path) {
+    ScopedFileHandle current(::CreateFileW(
+        root.c_str(),
+        FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr));
+    if (!current.valid()) {
+        return {ScopedFileHandle(), PhysicalPathContainmentFailure::root_unavailable};
+    }
+    // The root itself is not rejected for being a reparse point: callers may
+    // legitimately pass an already-resolved alias (e.g. a package alias
+    // directory) as the trust boundary's root, and the original
+    // implementation never rejected that case either. Reparse points are
+    // rejected starting at the first path component *under* the root below,
+    // which is what actually prevents an attacker-controlled component from
+    // redirecting the walk outside the root.
+    BY_HANDLE_FILE_INFORMATION root_information{};
+    if (::GetFileInformationByHandle(current.get(), &root_information) == 0) {
+        return {ScopedFileHandle(), PhysicalPathContainmentFailure::root_unavailable};
+    }
+
+    std::filesystem::path accumulated = root;
+    for (const auto& part : relative_components(relative_path)) {
+        accumulated /= part;
+        ScopedFileHandle next(::CreateFileW(
+            accumulated.c_str(),
+            FILE_READ_ATTRIBUTES,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+            nullptr));
+        if (!next.valid()) {
+            return {ScopedFileHandle(), PhysicalPathContainmentFailure::path_unavailable};
+        }
+        BY_HANDLE_FILE_INFORMATION information{};
+        if (::GetFileInformationByHandle(next.get(), &information) == 0) {
+            return {ScopedFileHandle(), PhysicalPathContainmentFailure::path_unavailable};
+        }
+        if ((information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+            return {ScopedFileHandle(), PhysicalPathContainmentFailure::indirect_component};
+        }
+        // Intentional: brings Windows to parity with the POSIX walk's
+        // pre-existing st_dev check below, which this Windows walk never had
+        // before this rewrite. A component landing on a different volume --
+        // e.g. a SUBST'd drive or another volume mounted under the root
+        // without going through a reparse point -- is exactly the same class
+        // of containment escape the POSIX side has always rejected; treating
+        // it as a bug to revert rather than a correctness fix would leave
+        // Windows strictly weaker than POSIX for no documented reason.
+        if (information.dwVolumeSerialNumber != root_information.dwVolumeSerialNumber) {
+            return {ScopedFileHandle(), PhysicalPathContainmentFailure::cross_device_component};
+        }
+        current = std::move(next);
+    }
+    return {std::move(current), PhysicalPathContainmentFailure::none};
+}
+
+// Reconstructs a path string for the exact object walk_contained_path
+// already verified and opened, by reading back the kernel's own record of
+// that handle's path rather than recomputing it independently. Mirrors
+// path_of_descriptor() below for POSIX: without this, the Windows side
+// re-derived canonical_path by string-concatenating component_root and
+// lexical_relative, which is exactly the untrusted, pre-walk path the
+// handle-based walk above exists to not trust -- making the subsequent
+// contained_relative_path(canonical_path, canonical_root) check a
+// tautology on Windows, since it recomputed rather than verified. See
+// path_of_descriptor()'s comment above for what this string is (and is not)
+// trusted for once a caller re-resolves it later, e.g. via
+// read_physically_contained_file_snapshot().
+std::optional<std::filesystem::path> path_of_handle(HANDLE handle) {
+    std::array<wchar_t, 32768> buffer{};
+    const DWORD length = ::GetFinalPathNameByHandleW(
+        handle, buffer.data(), static_cast<DWORD>(buffer.size()),
+        FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    if (length == 0 || length >= buffer.size()) {
+        return std::nullopt;
+    }
+    std::wstring resolved(buffer.data(), length);
+
+    // VOLUME_NAME_DOS still returns the extended-length \\?\ namespace for
+    // ordinary local/UNC paths on current Windows. canonical_root (produced
+    // by std::filesystem::canonical()) and every caller of this API use the
+    // ordinary drive-letter/UNC spelling, so leaving the prefix on would
+    // make every containment comparison against canonical_root fail on its
+    // very first component -- rejecting every legitimately contained path.
+    // Mirrors the identical stripping already done for the same API call in
+    // resolve_windows_host_spelling() (runtime_pipeline_file_io_and_classification.cpp).
+    // A residual device-namespace path (not drive-letter or UNC) is treated
+    // as unavailable rather than returned with a namespace canonical_root
+    // could never match, per that same precedent.
+    constexpr std::wstring_view extended_prefix = L"\\\\?\\";
+    constexpr std::wstring_view extended_unc_prefix = L"\\\\?\\UNC\\";
+    if (resolved.starts_with(extended_unc_prefix)) {
+        resolved = L"\\\\" + resolved.substr(extended_unc_prefix.size());
+    } else if (resolved.starts_with(extended_prefix) &&
+               resolved.size() >= extended_prefix.size() + 2U &&
+               ((resolved[extended_prefix.size()] >= L'A' &&
+                 resolved[extended_prefix.size()] <= L'Z') ||
+                (resolved[extended_prefix.size()] >= L'a' &&
+                 resolved[extended_prefix.size()] <= L'z')) &&
+               resolved[extended_prefix.size() + 1U] == L':') {
+        resolved.erase(0U, extended_prefix.size());
+    } else if (resolved.starts_with(extended_prefix)) {
+        return std::nullopt;
+    }
+    return std::filesystem::path(resolved);
+}
+
+#else  // POSIX
+
+class ScopedDescriptor {
+public:
+    ScopedDescriptor() = default;
+    explicit ScopedDescriptor(int descriptor) noexcept : descriptor_(descriptor) {}
+    ScopedDescriptor(const ScopedDescriptor&) = delete;
+    ScopedDescriptor& operator=(const ScopedDescriptor&) = delete;
+    ScopedDescriptor(ScopedDescriptor&& other) noexcept : descriptor_(other.release()) {}
+    ScopedDescriptor& operator=(ScopedDescriptor&& other) noexcept {
+        if (this != &other) {
+            reset(other.release());
+        }
+        return *this;
+    }
+    ~ScopedDescriptor() { reset(-1); }
+
+    [[nodiscard]] int get() const noexcept { return descriptor_; }
+    [[nodiscard]] bool valid() const noexcept { return descriptor_ >= 0; }
+    int release() noexcept {
+        const int value = descriptor_;
+        descriptor_ = -1;
+        return value;
+    }
+    void reset(int descriptor) noexcept {
+        if (descriptor_ >= 0) {
+            ::close(descriptor_);
+        }
+        descriptor_ = descriptor;
+    }
+
+private:
+    int descriptor_ = -1;
+};
+
+struct WalkedDescriptor {
+    ScopedDescriptor descriptor;
+    PhysicalPathContainmentFailure failure = PhysicalPathContainmentFailure::none;
+};
+
+// Opens root/relative_path one component at a time via openat() with
+// O_NOFOLLOW, carrying the previous component's descriptor forward as the
+// directory relative to which the next component is opened. Rejecting a
+// symlink and opening the next component happen in the same syscall for
+// every step, so there is no window between "this component was verified
+// non-indirect" and "this is what gets opened" for an attacker to exploit
+// by swapping a component after it was checked but before it was used --
+// unlike a design that walks the path once to check it, then resolves it
+// again separately (e.g. via a second std::filesystem::canonical() call)
+// to actually open it.
+WalkedDescriptor walk_contained_path(
+    const std::filesystem::path& root,
+    const std::filesystem::path& relative_path) {
+    ScopedDescriptor current(::open(root.c_str(), O_RDONLY | O_CLOEXEC));
+    if (!current.valid()) {
+        return {ScopedDescriptor(), PhysicalPathContainmentFailure::root_unavailable};
+    }
+    struct stat root_status{};
+    if (::fstat(current.get(), &root_status) != 0) {
+        return {ScopedDescriptor(), PhysicalPathContainmentFailure::root_unavailable};
+    }
+
+    const auto parts = relative_components(relative_path);
+    for (std::size_t index = 0U; index < parts.size(); ++index) {
+        const bool is_last = (index + 1U == parts.size());
+        // Intermediate components must be directories; O_DIRECTORY rejects a
+        // regular file (or anything else) at that step explicitly rather
+        // than relying on a later openat() to fail with ENOTDIR. The final
+        // component is left unconstrained: callers use this for both file
+        // targets and directory roots. O_NONBLOCK ensures opening a FIFO
+        // planted at an untrusted path returns immediately instead of
+        // blocking the calling thread indefinitely waiting for a writer;
+        // it has no effect on regular files or directories. Callers that
+        // need a blocking read reopen the already-verified canonical path
+        // through their own type-appropriate call.
+        const int flags = O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK |
+            (is_last ? 0 : O_DIRECTORY);
+        const int opened = ::openat(current.get(), parts[index].c_str(), flags);
+        if (opened < 0) {
+            // O_NOFOLLOW alone makes a symlink component fail with ELOOP.
+            // Combined with O_DIRECTORY (non-last components), the kernel
+            // instead reports ENOTDIR for a symlink, since it cannot confirm
+            // the eventual target is a directory without following it --
+            // verified empirically, not merely inferred from documentation.
+            // ENOTDIR can also mean a genuine non-directory (e.g. a plain
+            // file) is blocking the path with no symlink involved; an
+            // AT_SYMLINK_NOFOLLOW-qualified fstatat() on the same
+            // already-open parent disambiguates the two purely for
+            // diagnostic accuracy -- it does not affect the fail-closed
+            // outcome, which is identical either way, and reading (not
+            // opening) that component's own metadata cannot itself hang.
+            PhysicalPathContainmentFailure failure =
+                PhysicalPathContainmentFailure::path_unavailable;
+            if (errno == ELOOP) {
+                failure = PhysicalPathContainmentFailure::indirect_component;
+            } else if (errno == ENOTDIR) {
+                struct stat blocked_status{};
+                failure = (::fstatat(
+                                current.get(), parts[index].c_str(),
+                                &blocked_status, AT_SYMLINK_NOFOLLOW) == 0 &&
+                            S_ISLNK(blocked_status.st_mode))
+                    ? PhysicalPathContainmentFailure::indirect_component
+                    : PhysicalPathContainmentFailure::path_unavailable;
+            }
+            return {ScopedDescriptor(), failure};
+        }
+        ScopedDescriptor next(opened);
+        struct stat next_status{};
+        if (::fstat(next.get(), &next_status) != 0) {
+            return {ScopedDescriptor(), PhysicalPathContainmentFailure::path_unavailable};
+        }
+        if (next_status.st_dev != root_status.st_dev) {
+            return {ScopedDescriptor(), PhysicalPathContainmentFailure::cross_device_component};
+        }
+        current = std::move(next);
+    }
+    return {std::move(current), PhysicalPathContainmentFailure::none};
+}
+
+// Reconstructs an absolute path string for the exact object walk_contained_path
+// already verified and opened, by reading back the kernel's own record of
+// that descriptor's path rather than recomputing it independently (which
+// could disagree with what was actually opened). Within this function, this
+// is what makes canonical_path trustworthy rather than tautological. It does
+// NOT make every later use of that string equally race-free: this same
+// string is what read_physically_contained_file_snapshot() reopens by path
+// (not by descriptor) to actually read file bytes, so that function's own
+// before/after PhysicalPathIdentity comparison -- not any property of this
+// string itself -- is what re-establishes the binding for that reopen. See
+// issue #5409 for the residual, narrow TOCTOU window that architecture still
+// has and the plan to close it by carrying the descriptor/handle through
+// instead.
+// Linux path readback requires /proc/self/fd to be mounted; a minimal
+// namespace/chroot without /proc will make this (and therefore
+// inspect_physical_path_containment() as a whole) fail with
+// path_unavailable rather than succeed. This is an accepted trade-off, not
+// an oversight: the only portable alternative is re-resolving the untrusted
+// path independently (e.g. via std::filesystem::canonical()), which is
+// exactly the TOCTOU-vulnerable design this rewrite replaces -- there is no
+// strictly-better fallback available without native OS-specific APIs.
+std::optional<std::filesystem::path> path_of_descriptor(int descriptor) {
+#if defined(__APPLE__)
+    std::array<char, PATH_MAX> buffer{};
+    if (::fcntl(descriptor, F_GETPATH, buffer.data()) != 0) {
+        return std::nullopt;
+    }
+    return std::filesystem::path(buffer.data());
+#else
+    std::error_code error;
+    auto resolved = std::filesystem::read_symlink(
+        "/proc/self/fd/" + std::to_string(descriptor), error);
+    if (error) {
+        return std::nullopt;
+    }
+    return resolved;
+#endif
+}
+
+#endif  // POSIX
 
 }  // namespace
 
@@ -282,30 +554,47 @@ PhysicalPathContainmentResult inspect_physical_path_containment(
         return failed_result(PhysicalPathContainmentFailure::outside_root);
     }
 
-    if (const auto component_failure =
-            inspect_direct_components(component_root, *lexical_relative);
-        component_failure != PhysicalPathContainmentFailure::none) {
-        return failed_result(component_failure);
+    auto walked = walk_contained_path(component_root, *lexical_relative);
+    if (walked.failure != PhysicalPathContainmentFailure::none) {
+        return failed_result(walked.failure);
     }
 
-    const std::filesystem::path canonical_path =
-        std::filesystem::canonical(absolute_path, filesystem_error);
-    if (filesystem_error) {
+#if defined(_WIN32)
+    BY_HANDLE_FILE_INFORMATION information{};
+    if (::GetFileInformationByHandle(walked.handle.get(), &information) == 0) {
         return failed_result(PhysicalPathContainmentFailure::path_unavailable);
     }
+    if ((information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+        return failed_result(PhysicalPathContainmentFailure::indirect_component);
+    }
+    const PhysicalPathIdentity identity = identity_from_handle_information(information);
+    const auto resolved_path = path_of_handle(walked.handle.get());
+    if (!resolved_path.has_value()) {
+        return failed_result(PhysicalPathContainmentFailure::path_unavailable);
+    }
+    const std::filesystem::path canonical_path = *resolved_path;
+#else
+    struct stat status{};
+    if (::fstat(walked.descriptor.get(), &status) != 0) {
+        return failed_result(PhysicalPathContainmentFailure::path_unavailable);
+    }
+    const PhysicalPathIdentity identity =
+        identity_from_descriptor(walked.descriptor.get(), status);
+    const auto resolved_path = path_of_descriptor(walked.descriptor.get());
+    if (!resolved_path.has_value()) {
+        return failed_result(PhysicalPathContainmentFailure::path_unavailable);
+    }
+    const std::filesystem::path canonical_path = *resolved_path;
+#endif
+
     if (!contained_relative_path(canonical_path, canonical_root).has_value()) {
         return failed_result(PhysicalPathContainmentFailure::outside_root);
-    }
-
-    const auto identity = read_direct_identity(canonical_path);
-    if (!identity.has_value()) {
-        return failed_result(PhysicalPathContainmentFailure::indirect_component);
     }
 
     return {
         .allowed = true,
         .canonical_path = canonical_path,
-        .identity = *identity,
+        .identity = identity,
         .failure = PhysicalPathContainmentFailure::none
     };
 }
@@ -353,19 +642,8 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
         ::CloseHandle(handle);
         return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
     }
-    const PhysicalPathIdentity before_identity{
-        .storage_id = before_information.dwVolumeSerialNumber,
-        .file_id =
-            (static_cast<std::uint64_t>(before_information.nFileIndexHigh) << 32U) |
-            before_information.nFileIndexLow,
-        .file_size =
-            (static_cast<std::uint64_t>(before_information.nFileSizeHigh) << 32U) |
-            before_information.nFileSizeLow,
-        .modified_ticks =
-            (static_cast<std::uint64_t>(before_information.ftLastWriteTime.dwHighDateTime) << 32U) |
-            before_information.ftLastWriteTime.dwLowDateTime,
-        .link_count = before_information.nNumberOfLinks
-    };
+    const PhysicalPathIdentity before_identity =
+        identity_from_handle_information(before_information);
     if (before_identity != expected.identity) {
         ::CloseHandle(handle);
         return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
@@ -396,23 +674,18 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
     if (!after_read) {
         return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
     }
-    const PhysicalPathIdentity after_identity{
-        .storage_id = after_information.dwVolumeSerialNumber,
-        .file_id =
-            (static_cast<std::uint64_t>(after_information.nFileIndexHigh) << 32U) |
-            after_information.nFileIndexLow,
-        .file_size =
-            (static_cast<std::uint64_t>(after_information.nFileSizeHigh) << 32U) |
-            after_information.nFileSizeLow,
-        .modified_ticks =
-            (static_cast<std::uint64_t>(after_information.ftLastWriteTime.dwHighDateTime) << 32U) |
-            after_information.ftLastWriteTime.dwLowDateTime,
-        .link_count = after_information.nNumberOfLinks
-    };
+    const PhysicalPathIdentity after_identity =
+        identity_from_handle_information(after_information);
 #else
+    // O_NONBLOCK matches walk_contained_path()'s final-component open above:
+    // a FIFO at this path must not hang the calling thread indefinitely
+    // waiting for a writer. It has no effect on the regular file this path
+    // is required to be (checked via S_ISREG immediately below); the
+    // blocking, buffered ::read() loop further down still runs normally
+    // once that check passes.
     const int descriptor = ::open(
         expected.canonical_path.c_str(),
-        O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+        O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK);
     if (descriptor < 0) {
         return failed_snapshot(PhysicalPathContainmentFailure::path_unavailable);
     }
@@ -426,22 +699,8 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
         ::close(descriptor);
         return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
     }
-#if defined(__APPLE__)
-    const std::uint64_t before_modified_ticks =
-        static_cast<std::uint64_t>(before_status.st_mtimespec.tv_sec) * 1'000'000'000ULL +
-        static_cast<std::uint64_t>(before_status.st_mtimespec.tv_nsec);
-#else
-    const std::uint64_t before_modified_ticks =
-        static_cast<std::uint64_t>(before_status.st_mtim.tv_sec) * 1'000'000'000ULL +
-        static_cast<std::uint64_t>(before_status.st_mtim.tv_nsec);
-#endif
-    const PhysicalPathIdentity before_identity{
-        .storage_id = static_cast<std::uint64_t>(before_status.st_dev),
-        .file_id = static_cast<std::uint64_t>(before_status.st_ino),
-        .file_size = static_cast<std::uint64_t>(before_status.st_size),
-        .modified_ticks = before_modified_ticks,
-        .link_count = static_cast<std::uint64_t>(before_status.st_nlink)
-    };
+    const PhysicalPathIdentity before_identity =
+        identity_from_descriptor(descriptor, before_status);
     if (before_identity != expected.identity) {
         ::close(descriptor);
         return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
@@ -472,26 +731,15 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
 
     struct stat after_status{};
     const bool after_read = ::fstat(descriptor, &after_status) == 0;
-    ::close(descriptor);
     if (!after_read) {
+        ::close(descriptor);
         return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
     }
-#if defined(__APPLE__)
-    const std::uint64_t after_modified_ticks =
-        static_cast<std::uint64_t>(after_status.st_mtimespec.tv_sec) * 1'000'000'000ULL +
-        static_cast<std::uint64_t>(after_status.st_mtimespec.tv_nsec);
-#else
-    const std::uint64_t after_modified_ticks =
-        static_cast<std::uint64_t>(after_status.st_mtim.tv_sec) * 1'000'000'000ULL +
-        static_cast<std::uint64_t>(after_status.st_mtim.tv_nsec);
-#endif
-    const PhysicalPathIdentity after_identity{
-        .storage_id = static_cast<std::uint64_t>(after_status.st_dev),
-        .file_id = static_cast<std::uint64_t>(after_status.st_ino),
-        .file_size = static_cast<std::uint64_t>(after_status.st_size),
-        .modified_ticks = after_modified_ticks,
-        .link_count = static_cast<std::uint64_t>(after_status.st_nlink)
-    };
+    // Must run before closing descriptor: on Linux, identity_from_descriptor()
+    // queries creation time via statx() against this same descriptor.
+    const PhysicalPathIdentity after_identity =
+        identity_from_descriptor(descriptor, after_status);
+    ::close(descriptor);
 #endif
 
     if (after_identity != expected.identity || bytes.size() != expected.identity.file_size) {
