@@ -4604,6 +4604,69 @@ if(COPPERFIN_BUILD_ROBUSTNESS_TESTS)
     endif()
 endif()
 
+# Optional, open-ended libFuzzer coverage for the same DBF header parser
+# (docs/65-dbf-header-parser-fuzzing.md), complementing the bounded,
+# deterministic sweeps above. Absent from default and release builds; only
+# built when the local compiler supports -fsanitize=fuzzer,address,undefined
+# (libFuzzer is not available under MSVC).
+if(COPPERFIN_BUILD_FUZZ_TESTS AND NOT MSVC)
+    include(CheckCXXSourceCompiles)
+    include(CMakePushCheckState)
+    cmake_push_check_state(RESET)
+    set(CMAKE_REQUIRED_FLAGS
+        "-fsanitize=fuzzer,address,undefined -fno-sanitize-recover=all")
+    set(CMAKE_REQUIRED_LINK_OPTIONS "-fsanitize=fuzzer,address,undefined")
+    check_cxx_source_compiles(
+        "extern \"C\" int LLVMFuzzerTestOneInput(const unsigned char*, unsigned long) { return 0; }"
+        COPPERFIN_HAS_LIBFUZZER)
+    cmake_pop_check_state()
+    if(COPPERFIN_HAS_LIBFUZZER)
+        set(copperfin_dbf_header_fuzz_work_dir
+            "${CMAKE_CURRENT_BINARY_DIR}/dbf-header-fuzz")
+        set(copperfin_dbf_header_fuzz_corpus_dir
+            "${copperfin_dbf_header_fuzz_work_dir}/corpus")
+        set(copperfin_dbf_header_fuzz_seed_corpus_dir
+            "${CMAKE_CURRENT_SOURCE_DIR}/fuzz/corpus/dbf_header")
+        file(MAKE_DIRECTORY "${copperfin_dbf_header_fuzz_work_dir}")
+        add_executable(fuzz_dbf_header
+            fuzz_dbf_header.cpp
+            ${CMAKE_SOURCE_DIR}/src/vfp/dbf_header.cpp
+        )
+        target_include_directories(fuzz_dbf_header PRIVATE
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_link_libraries(fuzz_dbf_header PRIVATE cf_localization)
+        target_compile_options(fuzz_dbf_header PRIVATE
+            -Wall -Wextra -Wpedantic
+            -fsanitize=fuzzer,address,undefined -fno-sanitize-recover=all -g
+        )
+        target_link_options(fuzz_dbf_header PRIVATE
+            -fsanitize=fuzzer,address,undefined
+        )
+        # Bounded, fixed-seed smoke run against only the checked-in synthetic
+        # corpus -- reproducible for a given libFuzzer version/corpus, not an
+        # open-ended search. Longer exploratory runs are a manual/local
+        # activity; see docs/65-dbf-header-parser-fuzzing.md. libFuzzer treats
+        # its corpus argument as read-write, adding every newly-covering input
+        # it discovers, so the wrapper script resets the build-tree corpus
+        # from the checked-in seeds immediately before every run -- a repeat
+        # ctest invocation in the same build tree must not run against a
+        # corpus already grown by a prior run.
+        add_test(
+            NAME test_dbf_header_fuzz_smoke
+            COMMAND "${CMAKE_COMMAND}"
+                "-DSEED_CORPUS_DIR=${copperfin_dbf_header_fuzz_seed_corpus_dir}"
+                "-DCORPUS_DIR=${copperfin_dbf_header_fuzz_corpus_dir}"
+                "-DFUZZ_EXECUTABLE=$<TARGET_FILE:fuzz_dbf_header>"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/run_dbf_header_fuzz_smoke_check.cmake"
+        )
+        set_tests_properties(test_dbf_header_fuzz_smoke PROPERTIES
+            WORKING_DIRECTORY "${copperfin_dbf_header_fuzz_work_dir}"
+            TIMEOUT 60
+        )
+    endif()
+endif()
+
 copperfin_add_test(test_visual_asset_editor_code_page cf_vfp_assets
     test_visual_asset_editor_code_page.cpp
 )
