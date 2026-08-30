@@ -443,11 +443,13 @@ void test_configuration_containment_and_size_limit_fail_closed() {
     WorkspaceAgentSessionAuditFileSink trailing_dot(root.path(), "events.log.");
     WorkspaceAgentSessionAuditFileSink trailing_space(root.path(), "events.log ");
     WorkspaceAgentSessionAuditFileSink trailing_dot_directory(root.path(), "logs./events.log");
-    expect(!trailing_dot.ready() && trailing_dot.session_sink().commit == nullptr &&
-               !trailing_space.ready() && trailing_space.session_sink().commit == nullptr &&
-               !trailing_dot_directory.ready() &&
+    expect(!trailing_dot.ready() && trailing_dot.session_sink().commit == nullptr,
+           "RQ-CF-AGENT-006: a trailing-dot log filename must be inert");
+    expect(!trailing_space.ready() && trailing_space.session_sink().commit == nullptr,
+           "RQ-CF-AGENT-006: a trailing-space log filename must be inert");
+    expect(!trailing_dot_directory.ready() &&
                trailing_dot_directory.session_sink().commit == nullptr,
-           "RQ-CF-AGENT-006: Windows trailing-dot/trailing-space log paths must be inert");
+           "RQ-CF-AGENT-006: a trailing-dot log directory component must be inert");
 #endif
 
     auto embedded_nul_name = fs::path("target.log").native();

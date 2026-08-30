@@ -353,6 +353,20 @@ void test_configuration_and_layout_fail_closed() {
                 trailing_dot_executable_directory).has_value(),
            "RQ-CF-AGENT-012: a trailing-dot approved executable directory must fail");
 
+    auto trailing_space_executable_directory = tree.configuration();
+    trailing_space_executable_directory.trusted_executable_directories = {
+        std::filesystem::path(tree.approved_one.wstring() + L" ")};
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                trailing_space_executable_directory).has_value(),
+           "RQ-CF-AGENT-012: a trailing-space approved executable directory must fail");
+
+    auto trailing_dot_system_root = tree.configuration();
+    trailing_dot_system_root.trusted_windows_system_root =
+        std::filesystem::path(tree.windows_system_root.wstring() + L".");
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                trailing_dot_system_root).has_value(),
+           "RQ-CF-AGENT-012: a trailing-dot Windows system root must fail");
+
     auto trailing_space_system_root = tree.configuration();
     trailing_space_system_root.trusted_windows_system_root =
         std::filesystem::path(tree.windows_system_root.wstring() + L" ");
