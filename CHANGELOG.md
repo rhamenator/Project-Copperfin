@@ -1,3 +1,786 @@
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio editor-action launch-plan coverage for data, menu, and project
+  contexts plus invalid-action denials into
+  `test_context_editor_actions_launch_validation.inl`. The aggregate
+  `test_context_editor_actions` target, localized diagnostics, and
+  machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio toolbox palette/invocation/dispatch admission and execution regression
+  into `test_context_editor_actions_toolbox_dispatch.inl`. The aggregate
+  `test_context_editor_actions` target, localized diagnostics, non-mutating
+  dispatch contract, and machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host live unplaced restore-after-delete regression into
+  `test_studio_host_geometry_live_edit_actions_restore_unplaced_deleted.inl`.
+  The aggregate target, JSON behavior, report/label coverage, isolation
+  contract, and machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host live report/label restore-after-delete regression into
+  `test_studio_host_geometry_live_edit_actions_restore_deleted.inl`. The
+  aggregate target, JSON behavior, report/label coverage, isolation contract,
+  and machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host live report/label geometry-snap regression into
+  `test_studio_host_geometry_live_edit_actions_snap.inl`. The aggregate
+  target, JSON behavior, report/label coverage, isolation contract, and
+  machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host live report/label geometry-resize regression into
+  `test_studio_host_geometry_live_edit_actions_resize.inl`. The aggregate
+  target, JSON behavior, report/label coverage, isolation contract, and
+  machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host live report/label geometry alignment regression into
+  `test_studio_host_geometry_live_edit_actions_align.inl`. The aggregate
+  target, JSON behavior, report/label coverage, isolation contract, and
+  machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host live report/label geometry nudge regression into
+  `test_studio_host_geometry_live_edit_actions_nudge.inl`. The aggregate
+  target, JSON behavior, report/label coverage, isolation contract, and
+  machine-readable behavior are unchanged.
+
+- 2026-08-27: Added a `Handoff Rules` convention to `agents.md` requiring an
+  agent to remove its own slice-scoped scratch build/verification directory
+  once the corresponding pull request merges or closes, rather than leaving
+  it for another agent or a human to notice. Motivated by a live incident
+  where accumulated per-slice scratch directories under the host's `/tmp`
+  exhausted its quota and intermittently broke shell tool execution for both
+  agents. No runtime, test, or release behavior changed.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  SQL cursor derived-string temporary-order regression into
+  `test_prg_engine_sql_cursors_seek_and_order_derived_string_temporary_order.inl`.
+  The aggregate target, `LEFT`, `SUBSTR`, and `PADL` VFP temporary-order
+  assertions, SQL cursor behavior, cleanup, and machine-readable contracts are
+  unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  SQL cursor temporary-order normalization regression into
+  `test_prg_engine_sql_cursors_seek_and_order_temporary_order_normalization.inl`.
+  The aggregate target, VFP normalization/order assertions, runtime-event
+  contract, and machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  SQL cursor deferred-filter navigation regression into
+  `test_prg_engine_sql_cursors_seek_and_order_filter_deferred.inl`. The
+  aggregate target, VFP filter/navigation assertions, runtime-event contract,
+  and machine-readable behavior are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host stable-selector property-rename regression into
+  `test_studio_host_json_object_lifecycle_stable_selector_property_rename.inl`.
+  The aggregate target, JSON behavior, localization, and machine-readable
+  contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox-object creation regression into
+  `test_studio_host_json_object_lifecycle_toolbox_objects.inl`. The aggregate
+  target, form/report-context JSON behavior, localization, and machine-readable
+  contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host selection-toolbox object-creation regression into
+  `test_studio_host_json_object_lifecycle_selection_toolbox_objects.inl`.
+  The aggregate target, selection-context JSON behavior, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host selection-toolbox batch creation regression into
+  `test_studio_host_json_object_lifecycle_selection_toolbox_batches.inl`.
+  The aggregate target, batch JSON behavior, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox-palette creation-batch-plan regression into
+  `test_studio_host_json_dispatch_toolbox_palette_creation_batch_plan.inl`.
+  The aggregate target, batch-plan JSON behavior, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox-palette creation-batch regression into
+  `test_studio_host_json_dispatch_toolbox_palette_creation_batch.inl`. The
+  aggregate target, batch JSON behavior, localization, and machine-readable
+  contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox-palette object-creation-plan regression into
+  `test_studio_host_json_dispatch_toolbox_palette_creation_plan.inl`. The
+  aggregate target, create-plan JSON behavior, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox-palette launch-catalog regression into
+  `test_studio_host_json_dispatch_toolbox_palette_launch_catalog.inl`. The
+  aggregate target, catalog JSON behavior, localization, and machine-readable
+  contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox-palette query-filter regression into
+  `test_studio_host_json_dispatch_toolbox_palette_query_filters.inl`. The
+  aggregate target, query JSON behavior, localization, and machine-readable
+  contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio editor-action dispatch localization-refresh regression into
+  `test_context_editor_actions_default_dispatch_locales.inl`. The aggregate
+  target, locale behavior, invariant tokens, and machine-readable contracts
+  are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  SQL cursor plain-string collation regression into
+  `test_prg_engine_sql_cursors_seek_and_order_plain_string_collate.inl`. The
+  aggregate target, VFP collation assertions, SQL cursor behavior, and machine
+  contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host ButtonCount launch-contract parser regression family into
+  `test_studio_host_setters_data_button_count.inl`. The aggregate target,
+  command grammar, request contracts, and ambiguity/invalid-input coverage are
+  unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host toolbox direct-plan diagnostic and localization regression into
+  `test_studio_host_json_parse_diagnostics_toolbox_direct_plan.inl`. The
+  aggregate target, invocation behavior, localization assertions, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio toolbox direct-create parser-localization regression into
+  `test_studio_host_json_parse_diagnostics_toolbox_direct_create.inl`. The
+  aggregate target, command invocation, exit-status, JSON, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio host stable-selector property-set regression into
+  `test_studio_host_json_object_lifecycle_stable_selector_property.inl`. The
+  dedicated target, invocation behavior, localization, SCX test data, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-26: Continued #5359/#2564 test-module refactoring by moving the
+  contiguous Studio-host usage and selected execution-catalog localization
+  regression from test_studio_host_json_parse_diagnostics_core.cpp into
+  test_studio_host_json_parse_diagnostics_usage_catalogs.inl. The aggregate
+  target, invocation behavior, localization assertions, and machine-readable
+  contracts are unchanged.
+
+- 2026-08-27: Continued #5362/#2564 test-module refactoring by moving the
+  contiguous Studio report/label font-metadata mutation regressions into
+  test_studio_host_json_geometry_font_mutations.inl. The aggregate target,
+  invocation behavior, localization assertions, asset test data, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-26: Continued #5354/#2564 test-module refactoring by moving the
+  contiguous visual-asset BoundColumn setter regression from
+  `test_visual_asset_editor_setters_data.cpp` into
+  `test_visual_asset_editor_setters_bound_column.inl`. The aggregate target,
+  invocation behavior, selector/undo/DBF-FPT assertions, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-26: Continued #5352/#2564 test-module refactoring by moving the
+  contiguous visual-asset RowSource and RowSourceType setter regressions from
+  `test_visual_asset_editor_setters_data.cpp` into
+  `test_visual_asset_editor_setters_row_source.inl`. The aggregate target,
+  invocation behavior, selector/undo/DBF-FPT assertions, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-26: Continued #5346/#2564 test-module refactoring by moving the
+  contiguous visual-asset selected-property query, single-property clear, and
+  batch-clear rollback regressions from
+  `test_visual_asset_editor_properties.cpp` into
+  `test_visual_asset_editor_property_query_clear.inl`. The aggregate target,
+
+- 2026-08-26: Continued #5352/#2564 test-module refactoring by moving the
+  contiguous visual-asset RowSource and RowSourceType setter regressions from
+  `test_visual_asset_editor_setters_data.cpp` into
+  `test_visual_asset_editor_setters_row_source.inl`. The aggregate target,
+  invocation behavior, selector/undo/DBF-FPT assertions, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-26: Continued #5348/#2564 test-module refactoring by moving the
+  contiguous visual-asset single-property copy and batch-copy rollback
+  regressions from `test_visual_asset_editor_properties.cpp` into
+  `test_visual_asset_editor_property_copy.inl`. The aggregate target,
+  invocation behavior, selector/undo/DBF-FPT assertions, localization, and
+  machine-readable contracts are unchanged.
+
+- 2026-08-26: Continued #5341/#2564 test-module refactoring by moving the
+  contiguous Studio-host JSON object-metadata diagnostic and pseudo-localization
+  regressions (#2426, #2487, and #2504–#2513) from
+  `test_studio_host_json_diagnostics_general.cpp` into
+  `test_studio_host_json_diagnostics_object_metadata.cpp`. The aggregate
+  target, invocation behavior, localization assertions, and machine-readable
+  CLI contracts are unchanged.
+
+- 2026-08-26: Continued #5344/#2564 test-module refactoring by moving the
+  contiguous visual-asset method query, update/append, and delete regressions
+  (#762, #747, #748, and #1004) from
+  `test_visual_asset_editor_methods.cpp` into
+  `test_visual_asset_editor_method_crud.inl`. The aggregate target, xAsset
+  mutation and undo assertions, DBF/FPT contracts, and localization are
+  unchanged.
+
+- 2026-08-26: Continued #5335/#2564 test-module refactoring by moving the
+  contiguous Studio window-size and position launch-contract regressions
+  (#1151–#1154 and #1156–#1160) from
+  `test_studio_host_behavior_window_chrome.cpp` into
+  `test_studio_host_behavior_window_size_position.inl`. The aggregate target,
+  invocation behavior, localization, and machine-readable launch contracts are
+  unchanged.
+
+- 2026-08-26: Continued #5328/#2564 test-module refactoring by moving the
+  contiguous workspace-agent session-layout preparation, identity-binding, and
+  audited cleanup lifecycle regressions (RQ-CF-AGENT-012, -013, -014, -015,
+  -016, -020, and -021) from
+  `test_workspace_agent_isolated_environment.cpp` into
+  `test_workspace_agent_isolated_environment_session_layout_lifecycle.inl`.
+  The aggregate target, invocation behavior, security assertions, and
+  localization are unchanged; the private-directory contract checker now reads
+  the included module with its parent so its machine-verification coverage is
+  preserved, and the generated-launcher workflow's direct-push filter names
+  the extracted file so cross-platform validation cannot be skipped.
+
+- 2026-08-26: Continued #5330/#2564 test-module refactoring by moving the
+  contiguous DBF table validation-localization regressions (#2381–#2385) from
+  `test_dbf_table.cpp` into `test_dbf_table_validation_localization.inl`.
+  The aggregate target, invocation behavior, localized diagnostic assertions,
+  data-integrity coverage, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5332/#2564 test-module refactoring by moving the
+  contiguous PRG report/label rendering, preview-status, filtered-output, and
+  localized-missing-report regression family from
+  `test_prg_engine_work_areas.cpp` into
+  `test_prg_engine_work_areas_report_label.inl`. The aggregate target, VFP9
+   sample guard, recovered runtime coverage, localization assertions, and
+   machine contracts are unchanged.
+
+- 2026-08-26: Continued #5326/#2564 test-module refactoring by moving the
+  contiguous Studio-host static stable-selector color JSON regressions
+  (#1064–#1067) from `test_studio_host_json_appearance_colors.cpp` into
+  `test_studio_host_json_appearance_colors_static.inl`. The aggregate target,
+  invocation behavior, visual-asset mutation/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5324/#2564 test-module refactoring by moving the
+  contiguous Studio-host disabled/item stable-selector color JSON regressions
+  (#1060–#1063) from `test_studio_host_json_appearance_colors.cpp` into
+  `test_studio_host_json_appearance_colors_item_states.inl`. The aggregate
+  target, invocation behavior, visual-asset mutation/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5321/#2564 test-module refactoring by moving the
+  contiguous Studio-host selected-color JSON regressions (#1056–#1059) from
+  `test_studio_host_json_appearance_colors.cpp` into
+  `test_studio_host_json_appearance_colors_selected.inl`. The aggregate target,
+  invocation behavior, visual-asset mutation/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Corrected the selected-color regression module's terminal
+  whitespace and exact-source provenance record. The nonfunctional separator
+  blank line at EOF is intentionally omitted; no behavior or contract changed.
+
+- 2026-08-26: Corrected the `RQ-CF-AGENT-018` workspace-agent parser
+  negative-test fixture so vector growth uses a standalone binding value rather
+  than a reference into storage that `assign` or `push_back` may relocate. This
+  removes a Windows/MSVC Debug invalid-container-reference failure and
+  allocation-dependent Release failure; no product behavior, authorization
+  boundary, localization, or machine-readable contract changed.
+
+- 2026-08-26: Continued #5317/#5305/#2564 test-module refactoring by moving the
+  contiguous Studio-host dynamic font-shadow JSON regressions for recovered
+  requirement #1195 from `test_studio_host_json_appearance_fonts.cpp` into
+  `test_studio_host_json_appearance_fonts_dynamic_shadow.inl`. The aggregate
+  target, invocation behavior, visual-asset mutation/error/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5314/#5305/#2564 test-module refactoring by moving the
+  contiguous Studio-host dynamic font-outline JSON regressions for recovered
+  requirement #1194 from `test_studio_host_json_appearance_fonts.cpp` into
+  `test_studio_host_json_appearance_fonts_dynamic_outline.inl`. The aggregate
+  target, invocation behavior, visual-asset mutation/error/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5309/#5305/#2564 test-module refactoring by moving the
+  contiguous Studio-host dynamic font-italic JSON regressions for recovered
+  requirement #1191 from `test_studio_host_json_appearance_fonts.cpp` into
+  `test_studio_host_json_appearance_fonts_dynamic_italic.inl`. The aggregate
+  target, invocation behavior, visual-asset mutation/error/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5311/#5305/#2564 test-module refactoring by moving the
+  contiguous Studio-host dynamic font-underline JSON regressions for recovered
+  requirement #1192 from `test_studio_host_json_appearance_fonts.cpp` into
+  `test_studio_host_json_appearance_fonts_dynamic_underline.inl`. The aggregate
+
+- 2026-08-26: Continued #5312/#5305/#2564 test-module refactoring by moving the
+  contiguous Studio-host dynamic font-strikethru JSON regressions for recovered
+  requirement #1193 from `test_studio_host_json_appearance_fonts.cpp` into
+  `test_studio_host_json_appearance_fonts_dynamic_strikethru.inl`. The aggregate
+  target, invocation behavior, visual-asset mutation/error/no-mutation coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5306/#5305/#2564 test-module refactoring by moving
+  the contiguous Studio-host dynamic font-bold JSON regression family from
+  `test_studio_host_json_appearance_fonts.cpp` into
+  `test_studio_host_json_appearance_fonts_dynamic_bold.inl`. The aggregate
+  target, invocation behavior, visual-asset mutation/error/no-mutation
+  coverage, localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5304/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-method batch-delete JSON regressions for
+  recovered requirement #1430 from
+  `test_studio_host_json_visual_editor_json_methods.cpp` into
+  `test_studio_host_json_visual_editor_json_methods_delete_batch.inl`. The
+  aggregate target, invocation behavior, visual-asset mutation, rollback, undo,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5292/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-property direct and batch reorder JSON
+  regressions from `test_studio_host_json_visual_editor_json_properties.cpp`
+  into `test_studio_host_json_visual_editor_json_properties_reorder.inl`.
+  The aggregate target, invocation behavior, visual-asset mutation and rollback
+  coverage, localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5290/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-property direct and batch rename JSON regressions
+  from test_studio_host_json_visual_editor_json_properties.cpp into
+  test_studio_host_json_visual_editor_json_properties_rename.inl. The aggregate
+  target, invocation behavior, visual-asset mutation and rollback coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5288/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-property direct and batch move JSON regressions
+  from test_studio_host_json_visual_editor_json_properties.cpp into
+  test_studio_host_json_visual_editor_json_properties_move.inl. The aggregate
+  target, invocation behavior, visual-asset mutation and rollback coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5286/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-property clear/copy and batch clear/copy JSON
+  regressions from `test_studio_host_json_visual_editor_json_properties.cpp`
+  into `test_studio_host_json_visual_editor_json_properties_clear_copy.inl`.
+  The aggregate target, invocation behavior, visual-asset mutation coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-26: Continued #5284/#2564 test-module refactoring by moving the
+  contiguous report-object fallback-schema, unresolved-placeholder, and
+  synthesized-title Studio-host JSON regressions from
+  `test_studio_host_json_objects_diagnostics_and_misc.cpp` into
+  `test_studio_host_json_report_schema_fallbacks.inl`. The aggregate target,
+  invocation behavior, report/label compatibility coverage, localization, and
+  machine contracts are unchanged.
+
+- 2026-08-25: Continued #5278/#2564 test-module refactoring by moving the
+  contiguous stable-selector FormSetClass, DefaultFilePath, InitialSelectedAlias,
+  LinkMaster, and RowSource Studio-host JSON regressions from
+  `test_studio_host_json_setters_data.cpp` into
+  `test_studio_host_json_setters_data_remaining_selectors.inl`. The aggregate
+  target, invocation behavior, xAsset mutation coverage, localization, and
+  machine contracts are unchanged.
+
+- 2026-08-25: Continued #5280/#2564 test-module refactoring by moving the
+  contiguous direct FontOutline and FontShadow visual-asset regressions from
+  `test_visual_asset_editor_appearance_fonts.cpp` into
+  `test_visual_asset_editor_appearance_font_outline_shadow.inl`. The aggregate
+  target, invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #5276/#2564 test-module refactoring by moving the
+  contiguous stable-selector Partition, RecordSourceType, ColumnOrder,
+  ChildOrder, and RecordSource Studio-host JSON regressions from
+  `test_studio_host_json_setters_data.cpp` into
+  `test_studio_host_json_setters_data_stable_selectors.inl`. The aggregate
+  target, invocation behavior, xAsset mutation coverage, localization, and
+  machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  FontUnderline and FontStrikethru visual-asset regression pair from
+  `test_visual_asset_editor_appearance_fonts.cpp` into
+  `test_visual_asset_editor_appearance_font_decorations.inl`. The aggregate
+  target, invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  stable-selector ButtonCount, DataSession, LockColumns, and LockColumnsLeft
+  Studio-host JSON regressions from `test_studio_host_json_setters_data.cpp`
+  into `test_studio_host_json_setters_data_grid_selectors.inl`. The aggregate
+  target, invocation behavior, xAsset mutation coverage, localization, and
+  machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  visual-asset multi-property and report/label batch-operation regressions from
+  `test_visual_asset_editor_update_batch.cpp` into
+  `test_visual_asset_editor_update_batch_operations.inl`. The aggregate target,
+  invocation behavior, xAsset mutation and undo behavior, report/label
+  coverage, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  FontBold and FontItalic visual-asset regression pair from
+  `test_visual_asset_editor_appearance_fonts.cpp` into
+  `test_visual_asset_editor_appearance_font_styles.inl`. The aggregate target,
+  invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  FontName and FontSize visual-asset regression pair from
+  `test_visual_asset_editor_appearance_fonts.cpp` into
+  `test_visual_asset_editor_appearance_base_fonts.inl`. The aggregate target,
+  invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  BackColor and ForeColor visual-asset regression pair from
+  `test_visual_asset_editor_appearance_colors.cpp` into
+  `test_visual_asset_editor_appearance_base_colors.inl`. The aggregate target,
+  invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  HighlightBackColor and HighlightForeColor visual-asset regression pair from
+  `test_visual_asset_editor_appearance_colors.cpp` into
+  `test_visual_asset_editor_appearance_highlight_colors.inl`. The aggregate
+  target, invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  ItemBackColor and ItemForeColor visual-asset regression pair from
+  `test_visual_asset_editor_appearance_colors.cpp` into
+  `test_visual_asset_editor_appearance_item_colors.inl`. The aggregate target,
+  invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  DisabledItemBackColor and DisabledItemForeColor visual-asset regression pair
+  from `test_visual_asset_editor_appearance_colors.cpp` into
+  `test_visual_asset_editor_appearance_disabled_item_colors.inl`. The aggregate
+  target, invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  selected-object deleted-state, tab order, tab stop, visibility, enabled,
+  read-only, and locked visual-asset setter regressions from
+  `test_visual_asset_editor_setters_behavior.cpp` into
+  `test_visual_asset_editor_setters_behavior_selected_object.inl`. The
+  aggregate target, invocation behavior, xAsset mutation and undo coverage,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  SelectedItemBackColor and SelectedItemForeColor visual-asset regression pair
+  from `test_visual_asset_editor_appearance_colors.cpp` into
+  `test_visual_asset_editor_appearance_selected_item_colors.inl`. The aggregate
+  target, invocation behavior, visual-asset editing, undo behavior, raw-byte
+  preservation, report/label, localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  stable-selection GRIDH report/label regression family from
+  `test_studio_host_json_settings_page_layout_fields.cpp` into
+  `test_studio_host_json_settings_page_layout_grid_horizontal_fields.inl`. The
+  aggregate target, invocation behavior, Studio host JSON, DBF/xAsset mutation
+  coverage, report/label stable selection, localization, and machine contracts
+  are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  stable-selection report/label LEFTMARGIN and RIGHTMARGI regression functions
+  from `test_studio_host_json_settings_page_layout_fields.cpp` into
+  `test_studio_host_json_settings_page_layout_margin_fields.inl`. The aggregate
+  target, invocation behavior, Studio host JSON, DBF/xAsset mutation coverage,
+  report/label stable selection, localization, and machine contracts are
+  unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the deleted
+  report/label visual-property clear, move, and rejection regression families
+  from `test_studio_host_json_report_visual_properties.cpp` into three
+  included modules. The aggregate target, invocation behavior, Studio host
+  JSON, DBF/xAsset mutation coverage, report/label stable selection,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the cohesive
+  FLL package, generated-wrapper, export, manifest, and debug-contract
+  regression body from `test_runtime_pipeline_output_packaging_fll.cpp` into
+  `test_runtime_pipeline_output_packaging_fll_contracts.inl`. The aggregate
+  target, package/debug artifacts, export evidence, security behavior,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-25: Corrected the workspace-agent security overview to match the
+  implemented narrow Windows-only unrestricted-local executor and its mandatory
+  content-free intent/outcome audit boundary. The overview continues to state
+  that it is current-user authority rather than a sandbox or elevation, and
+  that the product consent dialog, provider adapters, real sandbox enforcement,
+  general mutable-tool surface, and POSIX/macOS executor remain unimplemented.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  report-object deleted-subtree JSON regression family from
+  `test_studio_host_json_objects_diagnostics_and_misc.cpp` into
+  `test_studio_host_json_report_object_deleted_subtree.inl`. The aggregate
+  target, invocation behavior, report/label fixtures, stable-selection,
+  localization, preview-bound, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  Studio designer-dispatch JSON regression family from
+  `test_studio_host_json_dispatch_designer.cpp` into
+  `test_studio_host_json_dispatch_designer_dispatch.inl`. The aggregate test
+  target, invocation behavior, non-executing dispatch-planning boundary, Studio
+  host JSON, report/label, localization, asset, security, and machine contracts
+  are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  Studio designer-execution JSON regression family from
+  `test_studio_host_json_dispatch_designer.cpp` into
+  `test_studio_host_json_dispatch_designer_execution.inl`. The aggregate test
+  target, invocation behavior, non-executing dispatch/launch boundary, Studio
+  host JSON, report/label, localization, asset, security, and machine contracts
+  are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  Studio designer-context JSON smoke regression family from
+  `test_studio_host_json_dispatch_designer.cpp` into
+  `test_studio_host_json_dispatch_designer_contexts.inl`. The aggregate test
+  target, invocation behavior, Studio host JSON, report/label, localization,
+  invocation-admission, dispatch, launch, asset, security, and machine
+  contracts are unchanged.
+
+- 2026-08-25: Corrected undefined behavior in the workspace-agent
+  process-parser regression fixture found by direct Windows diagnosis. Its
+  duplicate- and excessive-binding cases now copy the canonical binding before
+  mutating the same `std::vector`, avoiding reference invalidation by possible
+  reallocation. This is test-only; parser authority and launch behavior are
+  unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  library package definition, generated-wrapper, manifest, export, and build
+  contract regression from `test_runtime_pipeline_output_packaging_library.cpp`
+  into `test_runtime_pipeline_output_packaging_library_definition_contracts.inl`.
+  The aggregate target, invocation order, package/debug contracts, generated
+  wrapper coverage, security behavior, localization, and runtime behavior are
+  unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  stable-selection GRIDV report/label regression family from
+  `test_studio_host_json_settings_page_layout_fields.cpp` into
+  `test_studio_host_json_settings_page_layout_grid_vertical_fields.inl`. The
+  aggregate test target, invocation order, Studio host JSON, report/label,
+  localization, and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  visual-asset method-reordering and failed-batch rollback regressions from
+  `test_visual_asset_editor_methods.cpp` into
+  `test_visual_asset_editor_method_reorder_contracts.inl`. The aggregate test
+  target, invocation order, visual-asset behavior, raw-byte preservation,
+  report/label, localization, and machine contracts are unchanged.
+- 2026-08-25: Implemented the bounded #5228 native runtime recovery for
+  `EJECT PAGE`: a retained static `ON PAGE` command now executes through the
+  existing iterative frame machine with deterministic runtime events. Printer,
+  alternate-file, page-line, and report/label pagination semantics remain
+  explicitly unimplemented.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the contiguous
+  CDX/DCX/IDX/NDX/MDX index-probe and localized-diagnostic regressions from
+  `test_vfp_assets.cpp` into `test_vfp_assets_index_probe_contracts.inl`. The
+  aggregate test target, invocation order, existing parser/format coverage,
+  localization coverage, and all runtime and machine contracts are unchanged.
+
+- 2026-08-25: Continued #2564 test-module refactoring by moving the core
+  whole-database JSON export and non-mutating import-planning contract tests
+  from `test_vfp_assets.cpp` into
+  `test_vfp_assets_database_json_contracts.inl`. The aggregate test target,
+  invocation order, `RQ-CF-MODERNIZATION-001`/`002` coverage, and explicit
+  no-reconstruction/no-mutation boundary are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting native PRG
+  property/property-expression reads and native method-source read/write
+  reflection into `prg_engine_native_reflection_dispatch.inl`. Runtime
+  behavior, public APIs, UI behavior, and localization remain unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting private
+  xAsset bootstrap and VCX class-source materialization into
+  `prg_engine_xasset_materialization.inl`. Verified-byte snapshot handling,
+  bootstrap cleanup, generated-source behavior, localization, package/debug,
+  and public runtime contracts are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting native
+  runtime event delegation, `BINDEVENT()`/`RAISEEVENT()`/`UNBINDEVENTS()` /
+  `AEVENTS()` handling, host-owned `EVENTHANDLER()` dispatch, window-message
+  bindings, and deterministic binding retirement into
+  `prg_engine_event_binding_dispatch.inl`. Existing PRG/runtime, security,
+  containment, and user-facing behavior are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting native PRG
+  object-member invocation, focus transition, tab-stop traversal, and
+  option-group movement into `prg_engine_native_object_focus_dispatch.inl`.
+  Runtime behavior, public APIs, UI behavior, and localization remain
+  unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting runtime
+  package-transaction locking, pinned-parent containment, staged
+  materialization, deferred finalization, commit, rollback, and test hooks into
+  `runtime_pipeline_package_transaction.cpp`. Package, compiler, security,
+  localization, and user-facing behavior are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting runtime
+  package-plan construction and runtime/debug manifest serialization into
+  `runtime_pipeline_package_plan_manifest.cpp`. Package, compiler, security,
+  localization, and user-facing behavior are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting generated
+  FLL and DLL/OCX native library-entrypoint emission into
+  `runtime_pipeline_library_export_entrypoints.cpp`. Generated wrapper text,
+  export contracts, bridge behavior, package behavior, and security behavior
+  are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting generated
+  native-wrapper process-launch emission into
+  `runtime_pipeline_library_export_process_launch.cpp`. Generated wrapper text,
+  host-authentication, path/environment, process, package, and security
+  behavior are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting generated
+  native-wrapper bridge path helpers and data-model declarations into
+  `runtime_pipeline_library_export_bridge_model.cpp`. Generated wrapper text,
+  bridge contracts, package behavior, process behavior, and security behavior
+  are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting generated
+  native-wrapper response validation, response handling, fallback selection,
+  and return materialization emission into
+  `runtime_pipeline_library_export_response_handling.cpp`. Generated wrapper
+  text, bridge request/response and fallback contracts, process behavior, and
+  package behavior are unchanged.
+
+- 2026-08-25: Continued the #2564 test-module refactoring lane by moving the
+  existing CURVAL/LUPDATE verified-admission regressions from the oversized
+  buffering runtime-surface translation unit into a dedicated included test
+  fragment. The
+  aggregate executable, declarations, invocation order, requirements, and
+  runtime behavior are unchanged; this is structural-only coverage ownership.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting native
+  OLECONTROL/object-member compatibility and expression/INSERT serialization
+  helpers into `prg_engine_native_object_helpers.cpp`. Existing runtime
+  behavior and PRG-facing contracts are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting generated
+  native-wrapper descriptor, invocation, and request-serialization emission
+  into `runtime_pipeline_library_export_request_serialization.cpp`. The
+  generated wrapper text, request schema, command flags, and package behavior
+  are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting generated
+  native-wrapper host authentication into
+  `runtime_pipeline_library_export_host_authentication.cpp`. The emitted SHA-256
+  verifier, manifest digest lookup, Windows/POSIX verified-host branches, and
+  generated-wrapper text are unchanged.
+
+- 2026-08-25: Continued #2564 source-modularity work by extracting the
+  generated native-wrapper compilation preamble into
+  `runtime_pipeline_library_export_preamble.cpp`. The platform include order,
+  platform export macros, generated wrapper text, public helper contract, and
+  runtime-package behavior are unchanged.
+
+- 2026-08-25: Recorded protected Windows evidence for the owned local
+  `EVENTHANDLER()` COM connection-point lane. Run `32794260256` passed the
+  adapter fixture's delivery, rejection, explicit-unbind, release-cleanup, and
+  handler-fault-cleanup cases without opening activation, discovery, remote,
+  network, or PRG/JSON COM-resource paths.
+
+- 2026-08-25: Corrected the owned-COM lifecycle fixture so its generated PRG
+  programs place `Release()` on a real subsequent line rather than embedding a
+  literal escape sequence. The regression now guards that fixture-input
+  boundary before asserting source/handler-release unadvise behavior.
+
+- 2026-08-24: Corrected the Windows owned-COM adapter's rejection HRESULT so
+  an undeclared or quiesced dispatch ID cannot be mistaken for successful
+  delivery by a source that checks `SUCCEEDED()`. The focused workflow's
+  PE-image boundary contract now explicitly retains the adapter between its
+  existing protected test targets.
+
+- 2026-08-24: Made the Windows COM-event adapter header define `NOMINMAX`
+  before including `windows.h`, so the Windows SDK `max` macro cannot corrupt
+  Copperfin runtime headers in a host-owned adapter test or integration unit.
+
+- 2026-08-24: Added the Windows-only, host-private `EVENTHANDLER()` COM
+  connection-point adapter and its package-free owned-source fixture. Only
+  declared zero-argument dispatch IDs reach the bounded runtime-token path;
+  the fixture proves callback delivery, interface/dispatch rejection, direct
+  and PRG-level unbind, source/handler-release cleanup, and contained handler
+  fault cleanup. Hosted Windows execution remains required before the
+  recovered requirement can be marked complete.
+
+- 2026-08-24: Added a deterministic concurrent-producer/runtime-consumer
+  regression for the internal `EVENTHANDLER()` external-event token queue.
+  It verifies that bounded accepted tokens are retained exactly once while the
+  runtime drains concurrently; no PRG or JSON contract changed.
+
+- 2026-08-24: Added controlled runtime-thread delivery for admitted
+  `EVENTHANDLER()` method tokens. A host-owned subscription can enqueue only
+  an already-declared handler method through a weak, bounded queue sink; the
+  runtime revalidates the binding before dispatch and disconnects it on
+  unbind, object release, shutdown, or an escaping handler fault. This still
+  does not implement a Windows COM connection point or source fixture.
+
+- 2026-08-24: Added the internal bounded external-event token queue required
+  by the Windows `EVENTHANDLER()` COM adapter. Host callbacks can now hand off
+  only normalized event tokens for later runtime-thread consumption; this does
+  not add COM dispatch or a PRG-visible interface.
+
+- 2026-08-24: Continued #2564 source-modularity work by extracting the
+  platform-specific native-wrapper configure/build process runner into
+  `runtime_pipeline_native_wrapper_process.cpp`. Wrapper command-line,
+  logging, exit-status, and package behavior are unchanged.
+
+- 2026-08-24: Continued #2564 source-modularity work by separating native-wrapper
+  build-script and API-manifest emission into
+  `runtime_pipeline_library_export_artifacts.cpp`. The generated wrapper,
+  FLL/library manifests, public helper contracts, and package behavior are
+  unchanged.
+
+- 2026-08-24: Continued #2564 source-modularity work by extracting library
+  export discovery and API-manifest metadata generation from the generated
+  native-wrapper emitter into `runtime_pipeline_library_export_metadata.cpp`.
+  The runtime-package target, public helper contracts, generated output, and
+  existing focused regressions remain unchanged.
+
+- 2026-08-24: Made out-of-tree locale staging remove its generated locale tree
+  before copying. A deleted or renamed source catalog can no longer remain
+  accidentally discoverable from an earlier configure.
+
+- 2026-08-24: Localization slice `#2348` made out-of-tree developer builds carry
+  a refreshed locale-resource snapshot beside their executables. Catalog
+  discovery now recognizes that executable-relative layout, so Studio's
+  internal visual-editor diagnostics retain the selected locale when invoked
+  from an arbitrary working directory; explicit `COPPERFIN_LOCALE_DIR`
+  overrides and installed layouts remain authoritative.
+
+- 2026-08-24: Continued #2564 test-module refactoring by moving the
+  library-package locale-invariance regressions into
+  `test_runtime_pipeline_output_packaging_library_locale.cpp`. The existing
+  `test_runtime_pipeline` executable, fixtures, invocation order, and runtime
+  packaging behavior remain unchanged.
+
+- 2026-08-24: Continued #2564 test-module refactoring by moving the paired
+  FRX/LBX `BOTMARGIN` memo round-trip regression into
+  `test_visual_asset_editor_report_settings_bottom_margin.cpp`. The existing
+  `test_visual_asset_editor` executable, fixture bytes, assertions, invocation
+  order, and visual-asset behavior remain unchanged.
+
+- 2026-08-24: Continued #2564 test-module refactoring by moving the report-settings
+  comment-line preservation regression into
+  `test_visual_asset_editor_property_comment_lines.cpp`. The existing
+  `test_visual_asset_editor` executable, fixture bytes, assertions, invocation
+  order, and visual-asset behavior remain unchanged.
+
+- 2026-08-24: Continued #2564 test-module refactoring by moving the visual
+  asset blank-property-value preservation regression into
+  `test_visual_asset_editor_property_blank_value.cpp`. The existing
+  `test_visual_asset_editor` executable, fixture bytes, assertions, and
+  invocation order remain unchanged.
+
 - 2026-08-24: Continued #2564 test-module refactoring by extracting the shared
   VFP-asset test support (locale guard, localized validation lookup, and
   synthetic binary-fixture writers) into `test_vfp_assets_support.h`. The
@@ -9472,3 +10255,117 @@ passes `1/1`.
   the explicit `RC_TEST_EXCEPTION` status rather than an ambiguous not-run
   value. The status is valid only for private `official_release: false`
    evaluation bundles and cannot satisfy the Release 1.0 launcher-trust gate.
+- 2026-08-24: Made `EVENTHANDLER()` unbind existing source/handler records
+  even after a host revokes admission, and purge those records when failed
+  native-object construction discards an object tree.
+
+- 2026-08-24: Added the fail-closed host capability boundary for the portable
+  `EVENTHANDLER()` registry. A host must explicitly admit a local source and
+  interface identity with required handler methods; duplicate bind/unbind and
+  source/handler release cleanup are deterministic, while COM activation and
+  platform callback dispatch remain unimplemented.
+- 2026-08-24: Added a Windows-only, package-free owned `IConnectionPoint`
+  adapter and fixture for admitted `EVENTHANDLER()` delivery. The host-private
+  seam maps only declared zero-argument dispatch IDs to bounded runtime tokens;
+  the fixture exercises native callback through the iterative PRG handler path
+  and verifies deterministic teardown. Windows-hosted evidence is pending.
+- 2026-08-25: Continued #5282/#2564 test-module refactoring by moving the
+  contiguous report deleted-state Studio-host JSON regression family from
+  `test_studio_host_json_objects_diagnostics_and_misc.cpp` into
+  `test_studio_host_json_report_deleted_states.inl`. The dedicated and aggregate
+  targets, helper guards, report/label coverage, invocation behavior,
+  localization, and machine contracts are unchanged.
+- 2026-08-26: Continued #5294/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-property filter, query, and list JSON
+  regressions from `test_studio_host_json_visual_editor_json_properties.cpp`
+  into `test_studio_host_json_visual_editor_json_properties_inspection.inl`.
+  The aggregate target, invocation behavior, read-only visual-asset inspection
+  coverage, localization, and machine contracts are unchanged.
+- 2026-08-26: Continued #5296/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-property update-batch and stable-selector
+  clear JSON regressions from
+  `test_studio_host_json_visual_editor_json_properties.cpp` into
+  `test_studio_host_json_visual_editor_json_properties_mutation.inl`. The
+  aggregate target, mutation/rollback/undo coverage, localization, and machine
+  contracts are unchanged.
+- 2026-08-26: Continued #5298/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-method list and query JSON regressions from
+  `test_studio_host_json_visual_editor_json_methods.cpp` into
+  `test_studio_host_json_visual_editor_json_methods_inspection.inl`. The
+  aggregate target, invocation behavior, read-only visual-asset inspection,
+  localization, and machine contracts are unchanged.
+- 2026-08-26: Continued #5300/#2564 test-module refactoring by moving the
+  contiguous Studio-host visual-method update JSON regressions from
+  `test_studio_host_json_visual_editor_json_methods.cpp` into
+  `test_studio_host_json_visual_editor_json_methods_update.inl`. The aggregate
+  target, update/append/no-mutation/undo coverage, localization, and machine
+  contracts are unchanged.
+- 2026-08-26: Continued #5302/#2564 test-module refactoring by moving the
+  contiguous Studio-host single visual-method delete JSON regressions from
+  `test_studio_host_json_visual_editor_json_methods.cpp` into
+  `test_studio_host_json_visual_editor_json_methods_delete.inl`. The aggregate
+  target, removal/no-mutation/undo coverage, localization, and machine
+  contracts are unchanged.
+- 2026-08-26: Continued #5337/#2564 test-module refactoring by moving the
+  contiguous Studio-host ControlBox, Desktop, KeyPreview, MacDesktop,
+  MaxButton, and MinButton launch-contract regressions (#1074, #1147–#1150,
+  and #1155)
+  from `test_studio_host_behavior_window_chrome.cpp` into
+  `test_studio_host_behavior_window_chrome_options.inl`. The aggregate target,
+  invocation behavior, localized assertions, and machine contracts are
+  unchanged. A fresh Linux Debug `test_studio_host` CTest passed 1/1 in 2.64
+  seconds.
+- 2026-08-26: Continued #5339/#2564 test-module refactoring by moving the
+  contiguous Studio-host Caption, WhatsThisHelpID, WhatsThisHelp,
+  WhatsThisButton, StatusBarText, and Closable launch-contract regressions
+  (#1042, #1044, #1073, and #1142–#1144) from
+  `test_studio_host_behavior_window_chrome.cpp` into
+  `test_studio_host_behavior_window_help_chrome.inl`. The aggregate target,
+  invocation behavior, localized assertions, and machine contracts are
+  unchanged. A fresh Linux Debug `test_studio_host` CTest passed 1/1 in 2.71
+  seconds.
+- 2026-08-26: Continued #5350/#2564 test-module refactoring by moving the
+  contiguous visual-asset data-binding setter regressions (LockColumns,
+  LockColumnsLeft, RecordSource, LinkMaster, InitialSelectedAlias,
+  DefaultFilePath, FormSetClass, RecordSourceType, Partition, ColumnOrder,
+  ChildOrder, and DataSession) from
+  `test_visual_asset_editor_setters_data.cpp` into
+  `test_visual_asset_editor_setters_data_binding.inl`. The aggregate target,
+  invocation behavior, xAsset mutation/undo assertions, localization, and
+  machine-readable contracts are unchanged.
+- 2026-08-26: Continued #5356/#2564 test-module refactoring by moving the
+  contiguous Studio-host toolbox-palette JSON diagnostic and localization
+  regressions from `test_studio_host_json_parse_diagnostics_toolbox.cpp` into
+  `test_studio_host_json_parse_diagnostics_toolbox_palette.inl`. The aggregate
+  target, invocation behavior, localization assertions, and machine-readable
+  CLI contracts are unchanged.
+- 2026-08-26: Added an opt-in real-VFP9 `DESCENDING()` observation fixture for
+  #5358. It creates only caller-directed, new DBF/CDX/IDX fixtures in a
+  disposable process and records persisted-tag versus runtime-order results;
+  it does not infer or claim an index-byte encoding.
+- 2026-08-27: Extended the opt-in real-VFP9 `DESCENDING()` observation fixture
+  with a contained inverse runtime-override probe. An unsupported `ASCENDING`
+  command is now retained as `unavailable`, rather than being confused with a
+  `.F.` direction result. The fixture also rejects both existing files and
+  directories as output paths; no parser encoding or runtime behavior is
+  claimed.
+- 2026-08-27: Corrected the opt-in real-VFP9 `DESCENDING()` inverse-override
+  collection probe so only the attempted macro command is caught. Later
+  observation or TSV-write failures now remain visible instead of being
+  misclassified as an unavailable command.
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  Studio-host stable-selector ungroup regression into
+  `test_studio_host_json_object_lifecycle_stable_selector_ungroup.inl`. The
+  aggregate target, #1029 behavior, localization, and machine-readable
+  contracts are unchanged.
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  SQL cursor `RIGHT`/`STR` temporary-order regression into a dedicated included
+  module. The aggregate target and VFP SQL cursor contracts are unchanged.
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  SQL cursor default-padding/STR-variant temporary-order regression into a
+  dedicated included module. The aggregate target and VFP SQL cursor contracts
+  are unchanged.
+- 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
+  SQL cursor PADR/decimal-STR temporary-order regression into a dedicated
+  included module. The aggregate target and VFP SQL cursor contracts are
+  unchanged.

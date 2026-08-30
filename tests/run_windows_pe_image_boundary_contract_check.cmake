@@ -48,6 +48,6 @@ require_text(tests/test_workspace_agent_process_containment.cpp
 require_text(tests/test_workspace_agent_isolated_environment.cpp
     "Windows PE fixture copy failed")
 require_text(.github/workflows/windows-environment-validation.yml
-    "test_windows_pe_image test_workspace_agent_process_containment")
+    "test_windows_pe_image test_windows_com_event_adapter test_workspace_agent_process_containment")
 
 message(STATUS "Windows PE-image boundary contract passed")

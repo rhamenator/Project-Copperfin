@@ -2,9 +2,10 @@
 
 ## Scope and evidence
 
-This is a requirements and assurance slice only. It does not implement COM
-activation, invoke a server, change native `BINDEVENT()` / `RAISEEVENT()`
-semantics, or claim an implementation exists.
+This record covers the portable capability boundary and the recovered
+Windows-only owned local connection-point lane. It does not implement COM
+activation, invoke a third-party server, change native `BINDEVENT()` /
+`RAISEEVENT()` semantics, or claim general COM-server compatibility.
 
 The compatibility source is mounted VFP9 `dv_foxhelp.chm` (10,870,662 bytes;
 SHA-256 `abaa86e7623bb00e8bd9323cf2d8e162013598e35d9492557a3ddd1c2cf13e79`),
@@ -18,7 +19,7 @@ bindings, and automatic unbind when either object is released.
 | Documentation requirement | Verification disposition | Controlled hazards |
 | --- | --- | --- |
 | `DQ-CF-EVENTHANDLER-001`: recover and distinguish the VFP9 contract from native events and virtual COM provenance. | `DV-CF-EVENTHANDLER-001`: traceability review of `LLR-VFP-COM-002`, source identity, and child boundaries. | `HZ-runtime-crash-01`; `HZ-system-failure-01` |
-| `DQ-CF-EVENTHANDLER-002`: require fail-closed local admission, lifetime cleanup, and no external/remote discovery. | `DV-CF-EVENTHANDLER-002`: later runtime and owned-Windows fixture coverage of admission, unbind, releases, duplicates, and faults. | `HZ-runtime-crash-01`; `HZ-system-failure-01` |
+| `DQ-CF-EVENTHANDLER-002`: require fail-closed local admission, lifetime cleanup, and no external/remote discovery. | `DV-CF-EVENTHANDLER-002`: portable coverage of admission, interface/method validation, unbind, duplicates, and release cleanup; protected Windows run `32794260256` covers owned local dispatch and handler-fault cleanup. | `HZ-runtime-crash-01`; `HZ-system-failure-01` |
 
 ## Hazard, misuse, boundary, and rollback analysis
 
@@ -40,7 +41,13 @@ native events, or arbitrary COM activation.
 ## Current disposition
 
 `DV-CF-EVENTHANDLER-001` is satisfied by this recovery record. The portable
-reject-only portion of `DV-CF-EVENTHANDLER-002` is covered by #5169; valid
-binding, subscription lifetime/fault cleanup, and the owned Windows fixture
-remain pending #5168/#5164. `LLR-VFP-COM-002` is therefore still a `gap`, not
-release evidence for a shipped COM-event feature.
+host capability boundary provides deterministic bind/unbind and
+source/handler-release cleanup. Merged PR #5191 adds the package-free,
+Windows-only owned connection-point adapter and fixture. Protected run
+`32794260256` passed at exact adapter head `e68056ad0`, including real
+callback dispatch to the runtime PRG handler, rejection boundaries, explicit
+unbind, release cleanup, handler-fault cleanup, and the workflow's private
+workspace-agent/parser checks. `LLR-VFP-COM-002` is recovered for this
+strictly owned local Windows lane. Remote activation, registry discovery,
+third-party servers, network I/O, payload marshaling, and COM details in PRG
+or JSON remain excluded.

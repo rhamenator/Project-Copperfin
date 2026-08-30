@@ -510,7 +510,17 @@ endif()
 set(COPPERFIN_RUNTIME_PIPELINE_SOURCES
     src/runtime/runtime_pipeline_text_and_identifier_utils.cpp
     src/runtime/runtime_pipeline_file_io_and_classification.cpp
+    src/runtime/runtime_pipeline_library_export_metadata.cpp
+    src/runtime/runtime_pipeline_library_export_artifacts.cpp
+    src/runtime/runtime_pipeline_library_export_preamble.cpp
+    src/runtime/runtime_pipeline_library_export_host_authentication.cpp
+    src/runtime/runtime_pipeline_library_export_bridge_model.cpp
+    src/runtime/runtime_pipeline_library_export_request_serialization.cpp
+    src/runtime/runtime_pipeline_library_export_process_launch.cpp
+    src/runtime/runtime_pipeline_library_export_response_handling.cpp
+    src/runtime/runtime_pipeline_library_export_entrypoints.cpp
     src/runtime/runtime_pipeline_library_export_manifest.cpp
+    src/runtime/runtime_pipeline_native_wrapper_process.cpp
     src/runtime/runtime_pipeline_fxp_and_archive_manifest.cpp
     src/runtime/runtime_pipeline_ast_ir_manifest.cpp
     src/runtime/runtime_pipeline_csharp_and_launcher.cpp
@@ -519,6 +529,8 @@ set(COPPERFIN_RUNTIME_PIPELINE_SOURCES
     src/runtime/runtime_pipeline_package_content_io.cpp
     src/runtime/runtime_pipeline_manifest_pair.cpp
     src/runtime/runtime_pipeline_manifest_pair_io.cpp
+    src/runtime/runtime_pipeline_package_plan_manifest.cpp
+    src/runtime/runtime_pipeline_package_transaction.cpp
     src/runtime/runtime_pipeline_public_api.cpp
 )
 
@@ -540,10 +552,12 @@ add_library(cf_runtime_text
 )
 
 add_library(cf_xbase_runtime
+    src/runtime/runtime_external_event_queue.cpp
     src/runtime/prg_engine_command_helpers.cpp
     src/runtime/prg_engine_date_time_functions.cpp
     src/runtime/prg_engine_file_io_functions.cpp
     src/runtime/prg_engine.cpp
+    src/runtime/prg_engine_native_object_helpers.cpp
     src/runtime/polyglot_runtime_host.cpp
     src/runtime/index_seek_optimizer.cpp
     src/runtime/prg_engine_helpers.cpp
@@ -600,6 +614,7 @@ target_link_libraries(cf_xbase_runtime
 if(WIN32)
     target_link_libraries(cf_platform_profile PRIVATE winspool)
     target_sources(cf_xbase_runtime PRIVATE
+        src/runtime/windows_com_event_adapter.cpp
         src/runtime/managed_declared_call.cpp
         src/runtime/managed_pe_image.cpp
         src/runtime/native_declared_call.cpp
@@ -847,6 +862,21 @@ add_custom_target(copperfin_package_document_check
 install(DIRECTORY resources/locales/
     DESTINATION share/copperfin/locales
 )
+
+# Make an out-of-tree developer build runnable from an arbitrary working
+# directory, matching the executable-relative resource layout used by the
+# installed hosts. Catalog inputs participate in CMake's reconfigure check so
+# edits are reflected by the next normal build.
+file(GLOB_RECURSE COPPERFIN_BUILD_TREE_LOCALE_CATALOGS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/locales/*")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    ${COPPERFIN_BUILD_TREE_LOCALE_CATALOGS})
+# COPY is additive, so clear only this generated staging subtree before each
+# configure-time copy. This prevents a deleted or renamed source catalog from
+# remaining discoverable beside the out-of-tree executables.
+file(REMOVE_RECURSE "${CMAKE_CURRENT_BINARY_DIR}/resources/locales")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/locales"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/resources")
 
 # Traceability: RQ-CF-REL-002; DQ-windows-installer-lifecycle-scope;
 # DV-windows-installer-lifecycle-contract; HZ-system-failure-01;

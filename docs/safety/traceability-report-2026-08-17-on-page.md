@@ -14,16 +14,23 @@ the command and line expression, `ON('PAGE')` shall return that exact command,
 and bare `ON PAGE` shall clear it. Assignment and querying shall not execute
 the command.
 
-The installed documentation says execution occurs when `_PLINENO` exceeds the
-configured line or after `EJECT PAGE`. Copperfin has no report/label page-line
-accounting, `EJECT PAGE`, pagination, or page-handler dispatch in this slice.
-It must not substitute output-row count for the VFP page model.
+`DQ-prg-on-page-002`: a headless `EJECT PAGE` shall execute one retained static
+non-macro `ON PAGE` command through the existing bounded iterative frame path
+and record deterministic event evidence. A cleared, macro-backed, malformed,
+or unavailable action must not partially execute.
+
+The installed documentation says execution also occurs when `_PLINENO` exceeds
+the configured line. Copperfin deliberately implements only the `EJECT PAGE`
+handler trigger: it has no printer/alternate-file output, `_PADVANCE`,
+`_PLENGTH`, `_PLINENO`, `_PAGENO`, report/label pagination, or line-threshold
+dispatch. It must not substitute output-row count for the VFP page model.
 
 ## Hazard, Misuse, And Rollback
 
 `HZ-system-failure-01` applies proportionally: treating configuration as a
-page event could cause unexpected program execution. The implementation only
-parses, stores, clears, and reads the command; no invocation path is added.
+page event could cause unexpected program execution. The action is admitted
+only as a static non-macro source-program command, parsed into an owned routine,
+and executed through the existing call-depth guard and iterative frame path.
 
 Rollback is coherent: remove the parser/dispatcher/runtime-surface state, the
 dedicated test, this report, and the corresponding matrix, coverage, handoff,
@@ -31,10 +38,10 @@ and changelog entries together. Existing report output behavior is unchanged.
 
 ## Verification
 
-`DV-prg-on-page-001` is the dedicated portable CTest target
+`DV-prg-on-page-001` and `DV-prg-on-page-002` use the dedicated portable CTest target
 `test_prg_engine_on_page`. It verifies parenthesized compound line-expression
-capture, exact command readback, bare clear, and that configuration alone
-leaves the handler body unexecuted. Its
+capture, exact command readback, EJECT-triggered static-command dispatch, bare
+clear, and macro-action non-dispatch. Its
 machine-readable isolation is portable, parallel-safe, test-owned filesystem
 only, and has no environment, child-process, network, or sample dependency.
 

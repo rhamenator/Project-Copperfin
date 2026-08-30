@@ -282,6 +282,13 @@ add_test(
 )
 
 add_test(
+    NAME test_vfp9_descending_observation_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_vfp9_descending_observation_contract_check.cmake
+)
+
+add_test(
     NAME test_package_signer_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
@@ -775,6 +782,7 @@ add_executable(test_studio_host_json
     test_studio_host_json_diagnostics_target_selectors.cpp
     test_studio_host_json_diagnostics_values.cpp
     test_studio_host_json_diagnostics_general.cpp
+    test_studio_host_json_diagnostics_object_metadata.cpp
     test_studio_host_json_parse_diagnostics_toolbox.cpp
     test_studio_host_json_parse_diagnostics_visual.cpp
     test_studio_host_json_parse_diagnostics_core.cpp
@@ -4702,6 +4710,10 @@ copperfin_add_test(test_visual_asset_editor cf_vfp_assets
     test_visual_asset_editor_object_lifecycle_geometry_02.cpp
     test_visual_asset_editor_object_lifecycle_identity_01.cpp
     test_visual_asset_editor_object_lifecycle_identity_02.cpp
+    test_visual_asset_editor_method_listing.cpp
+    test_visual_asset_editor_property_blank_value.cpp
+    test_visual_asset_editor_property_comment_lines.cpp
+    test_visual_asset_editor_report_settings_bottom_margin.cpp
     test_visual_asset_editor_methods.cpp
     test_visual_asset_editor_properties.cpp
     test_visual_asset_editor_report_printer_settings.cpp
@@ -4949,6 +4961,10 @@ copperfin_add_test(test_bounded_process cf_platform_profile
     test_bounded_process.cpp
 )
 
+copperfin_add_test(test_runtime_external_event_queue cf_xbase_runtime
+    test_runtime_external_event_queue.cpp
+)
+
 copperfin_add_test(test_polyglot_parity_comparator cf_platform_profile
     test_polyglot_parity_comparator.cpp
 )
@@ -5162,6 +5178,7 @@ copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline_test
     test_runtime_pipeline_fixture_isolation.cpp
     test_runtime_pipeline_output_packaging_support.h
     test_runtime_pipeline_output_packaging_library.cpp
+    test_runtime_pipeline_output_packaging_library_locale.cpp
     test_runtime_pipeline_output_packaging_fll.cpp
     test_runtime_pipeline_output_packaging_fxp_app.cpp
     test_runtime_pipeline_output_packaging_compiler.cpp
@@ -5276,6 +5293,13 @@ copperfin_add_test(test_workspace_agent_process_invocation cf_security
 )
 
 if(WIN32)
+    copperfin_add_test(test_windows_com_event_adapter cf_xbase_runtime
+        test_windows_com_event_adapter.cpp
+    )
+    target_include_directories(test_windows_com_event_adapter PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/runtime
+    )
+
     add_executable(workspace_agent_execution_fixture
         workspace_agent_execution_fixture.cpp
     )

@@ -183,6 +183,14 @@ RuntimeCompanionCopyResult copy_companion_files_if_present(
     std::vector<std::string>& warnings);
 
 // ==== DLL/FLL native-wrapper and library-export manifest generation ====
+struct NativeWrapperProcessResult {
+    bool started = false;
+    int exit_code = -1;
+};
+NativeWrapperProcessResult run_native_wrapper_process(
+    const std::string& executable,
+    const std::vector<std::string>& arguments,
+    const std::filesystem::path& output_log_path);
 std::vector<std::string> collect_library_exported_symbols(const RuntimePackagePlan& plan);
 std::map<std::string, std::size_t> collect_library_export_parameter_counts(const RuntimePackagePlan& plan);
 std::string build_routine_kind_name(const RoutineKind kind);
@@ -193,6 +201,13 @@ std::map<std::string, SourceLocation> collect_library_export_routine_locations(c
 std::string build_placeholder_int_parameter_list(const std::vector<std::string>& parameter_names);
 std::string build_manifest_parameter_names(const std::vector<std::string>& parameter_names);
 std::string build_manifest_source_location(const SourceLocation& location);
+void append_native_wrapper_compilation_preamble(std::ostringstream& stream);
+void append_native_wrapper_host_authentication_source(std::ostringstream& stream);
+void append_native_wrapper_bridge_model_source(std::ostringstream& stream);
+void append_native_wrapper_request_serialization_source(std::ostringstream& stream);
+void append_native_wrapper_process_launch_source(std::ostringstream& stream);
+void append_native_wrapper_response_handling_source(std::ostringstream& stream);
+void append_native_wrapper_library_entrypoint_source(std::ostringstream& stream, const RuntimePackagePlan& plan);
 std::string build_module_definition_source(const RuntimePackagePlan& plan);
 std::string build_native_wrapper_source(const RuntimePackagePlan& plan);
 std::string build_native_wrapper_cmake_source(const RuntimePackagePlan& plan);

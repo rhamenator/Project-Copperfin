@@ -1,0 +1,61 @@
+# Copyright © 2026 Richard M. Hamilton.
+# SPDX-License-Identifier: GPL-3.0-only
+# Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
+# Traceability: #5358; mounted VFP9 DESCENDING( ) Function topic.
+
+if(NOT DEFINED SOURCE_DIR OR "${SOURCE_DIR}" STREQUAL "")
+    message(FATAL_ERROR "SOURCE_DIR is required")
+endif()
+
+set(fixture "${SOURCE_DIR}/tests/fixtures/vfp9_descending_observation.prg")
+if(NOT EXISTS "${fixture}")
+    message(FATAL_ERROR "VFP9 DESCENDING() observation fixture is missing")
+endif()
+
+file(READ "${fixture}" contents)
+string(REPLACE "\r\n" "\n" contents "${contents}")
+
+function(require_text expected_text description)
+    string(FIND "${contents}" "${expected_text}" match_index)
+    if(match_index EQUAL -1)
+        message(FATAL_ERROR "VFP9 DESCENDING() observation fixture is missing ${description}")
+    endif()
+endfunction()
+
+function(forbid_text forbidden_text description)
+    string(FIND "${contents}" "${forbidden_text}" match_index)
+    if(NOT match_index EQUAL -1)
+        message(FATAL_ERROR "VFP9 DESCENDING() observation fixture contains forbidden ${description}")
+    endif()
+endfunction()
+
+require_text("LPARAMETERS tcOutputRoot" "caller-directed output-root parameter")
+require_text("IF DIRECTORY(lcRoot) OR FILE(lcRoot)" "existing-path guard")
+require_text("Refusing to use an existing output path" "existing-path refusal diagnostic")
+require_text("MD (lcRoot)" "new-root creation")
+require_text("CREATE TABLE (lcTable)" "controlled DBF fixture creation")
+require_text("INDEX ON name TAG AscTag" "ascending CDX tag fixture")
+require_text("INDEX ON name TAG DescTag DESCENDING" "persisted descending CDX tag fixture")
+require_text("INDEX ON record_id TO (lcIdx)" "single-entry IDX fixture")
+require_text("SET ORDER TO 0" "physical-order observation")
+require_text("no-active-order" "no-active-order result row")
+require_text("active-ascending-tag" "active ascending-tag result row")
+require_text("active-persisted-descending-tag" "active persisted-descending-tag result row")
+require_text("DESCENDING(lcCdx, lnTag)" "per-tag persisted-direction observation")
+require_text("active-ascending-tag-runtime-descending" "runtime descending-tag override result row")
+require_text("lcAscendingOverrideCommand = \"SET ORDER TO TAG DescTag ASCENDING\"" "runtime ascending-override probe")
+require_text("active-persisted-descending-tag-runtime-ascending" "runtime ascending-tag override result row")
+require_text("unavailable:" "unavailable runtime ascending-override outcome")
+require_text("CATCH TO loException" "contained runtime ascending-override probe")
+require_text("lnAscendingOverrideError = loException.ErrorNo" "contained runtime ascending-override failure capture")
+require_text("IF lnAscendingOverrideError = 0" "post-probe observation branch")
+require_text("SET INDEX TO (lcIdx) ORDER (lcIdx) DESCENDING" "documented IDX runtime-order override")
+require_text("active-idx-runtime-descending" "IDX runtime-descending result row")
+require_text("descending-observation.tsv" "machine-readable observation output")
+require_text("outcome" "machine-readable observation outcome column")
+require_text("PROCEDURE WriteDescendingObservation" "centralized TSV writer")
+forbid_text("ERASE " "destructive output cleanup")
+forbid_text("DELETE FILE" "destructive output cleanup")
+forbid_text("RMDIR" "destructive output cleanup")
+
+message(STATUS "VFP9 DESCENDING() observation fixture contract passed")

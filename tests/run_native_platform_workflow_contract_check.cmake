@@ -326,13 +326,13 @@ require_text(".github/workflows/windows-environment-validation.yml"
     "name: Windows Environment and Executable Path Validation"
     "focused Windows environment workflow identity")
 require_text(".github/workflows/windows-environment-validation.yml"
-    "--target test_platform_path test_platform_environment test_localization test_licensing_status test_build_host_output test_runtime_host_implicit_path_launch test_tool_license_path_launch test_studio_host_shell_command test_studio_host_report_section_selection_diagnostics test_windows_pe_image test_workspace_agent_process_containment"
+    "--target test_platform_path test_platform_environment test_localization test_licensing_status test_build_host_output test_runtime_host_implicit_path_launch test_tool_license_path_launch test_studio_host_shell_command test_studio_host_report_section_selection_diagnostics test_windows_pe_image test_windows_com_event_adapter test_workspace_agent_process_containment"
     "focused Windows environment target inventory")
 require_text(".github/workflows/windows-environment-validation.yml"
     [=[cmake -S . -B "$env:RUNNER_TEMP/copperfin-environment-build" -DCOPPERFIN_BUILD_TESTS=ON]=]
     "out-of-tree configure command")
 require_text(".github/workflows/windows-environment-validation.yml"
-    [=[ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure -R "^(test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch|test_studio_host_shell_command|test_studio_host_report_section_selection_diagnostics|test_windows_pe_image|test_windows_pe_image_boundary_contract|test_workspace_agent_process_containment)$"]=]
+    [=[ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure --timeout 180 -R "^(test_platform_path|test_platform_path_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch|test_studio_host_shell_command|test_studio_host_report_section_selection_diagnostics|test_windows_pe_image|test_windows_pe_image_boundary_contract|test_windows_com_event_adapter|test_workspace_agent_process_containment)$"]=]
     "out-of-tree localization, runtime-host, and Studio-host CTest contract")
 require_text(".github/workflows/build-vsix.yml"
     "name: Build Visual Studio VSIX"

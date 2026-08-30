@@ -1,5 +1,2030 @@
 # Agent Handoff
 
+## Studio editor-action launch validation regression module
+
+The bounded #2564 structural slice moves the contiguous editor-action
+launch-plan coverage for data-environment, menu-item, and project-item contexts
+plus wrong, missing, and unknown action denials into
+`test_context_editor_actions_launch_validation.inl`. It remains in the
+aggregate `test_context_editor_actions` target; localized diagnostics and
+machine-readable behavior are unchanged. The original and extracted 121-line
+contract SHA-256 is
+`5f652bb5ca66f391771c74fa868b9e9d3a262eb69cd6a94fccd72cfec61f2fc0`; the
+parent source falls from 1,821 to 1,702 lines. Obtain fresh focused and
+protected-matrix evidence before integration. No product or compatibility
+behavior is added.
+
+## Studio toolbox palette/invocation/dispatch regression module
+
+The bounded #2564 structural slice moves the contiguous Studio toolbox
+palette, invocation-admission, dispatch, execution-admission, and invalid
+metadata regression into `test_context_editor_actions_toolbox_dispatch.inl`.
+It remains in the aggregate `test_context_editor_actions` target; localized
+diagnostics, non-mutating dry-run behavior, invariant command and argument
+tokens, and report-safe toolbox filtering are unchanged. The original and
+extracted 157-line contract SHA-256 is
+`c9db87f18b341dd135635b98fa7d49426b602799a2ab5acb30859535eee727bb`; the
+parent source falls from 1,978 to 1,821 lines. A fresh Linux RelWithDebInfo
+build and focused existing CTest passed 1/1 in 0.32 seconds with `TMPDIR`,
+`TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
+## Studio-host live unplaced restore-after-delete regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+unplaced restore-after-delete regression into
+`test_studio_host_geometry_live_edit_actions_restore_unplaced_deleted.inl`.
+It remains in the aggregate `test_studio_host_geometry_live_edit_actions`
+target; FRX/LBX unplaced restore-after-delete JSON assertions,
+selected-object/preview metadata, cleanup, and isolation contract are
+unchanged. The original and extracted 205-line function SHA-256 is
+`51c1954be53aebfe63804040348f2abe561e07939980b65b48315aacceae77c0`; the
+parent source falls from 1,264 to 1,060 lines. A fresh Linux RelWithDebInfo
+build and focused existing CTest passed 1/1 in 5.89 seconds with `TMPDIR`,
+`TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
+## Studio-host live restore-after-delete regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+restore-after-delete regression into
+`test_studio_host_geometry_live_edit_actions_restore_deleted.inl`. It remains
+in the aggregate `test_studio_host_geometry_live_edit_actions` target; FRX/LBX
+restore-after-delete JSON assertions, selected-object/preview metadata,
+cleanup, and isolation contract are unchanged. The original and extracted
+201-line function SHA-256 is
+`986c4519c6864a4b4757e6542253d9516e8806899a464cfbce35f7d454b2bda8`; the
+parent source falls from 1,464 to 1,264 lines. A fresh Linux RelWithDebInfo
+build and focused existing CTest passed 1/1 in 5.85 seconds with `TMPDIR`,
+`TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
+## Studio-host live geometry-snap regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+geometry-snap regression into
+`test_studio_host_geometry_live_edit_actions_snap.inl`. It remains in the
+aggregate `test_studio_host_geometry_live_edit_actions` target; FRX/LBX snap
+JSON assertions, selected-object/preview metadata, cleanup, and isolation
+contract are unchanged. The original and extracted 154-line function SHA-256
+is `9cadf0369df63cdf22cf77f6afb331fa89990812a1c159d51b18b6e4767600a9`;
+the parent source falls from 1,617 to 1,464 lines. A fresh Linux
+RelWithDebInfo build and focused existing CTest passed 1/1 in 6.57 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix
+before integration. No product or compatibility behavior is added.
+
+## Studio-host live geometry-resize regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+geometry-resize regression into
+`test_studio_host_geometry_live_edit_actions_resize.inl`. It remains in the
+aggregate `test_studio_host_geometry_live_edit_actions` target; FRX/LBX resize
+JSON assertions, selected-object/preview metadata, cleanup, and isolation
+contract are unchanged. The original and extracted 154-line function SHA-256
+is `afc387dd209498c901ec95151baafcfd0d74f7ba129bdd886c2aaa06106cc562`;
+the parent source falls from 1,770 to 1,617 lines. A fresh Linux
+RelWithDebInfo build and focused existing CTest passed 1/1 in 6.49 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix
+before integration. No product or compatibility behavior is added.
+
+## Studio-host live geometry-alignment regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+geometry-alignment regression into
+`test_studio_host_geometry_live_edit_actions_align.inl`. It remains in the
+aggregate `test_studio_host_geometry_live_edit_actions` target; FRX/LBX
+alignment JSON assertions, selected-object/preview metadata, cleanup, and
+isolation contract are unchanged. The original and extracted 153-line function
+SHA-256 is `19b17b263c020be7a8008c8844c6f7e644971639c0bd31dbadf8c958de0ea2b2`;
+the parent source falls from 1,922 to 1,770 lines. A fresh Linux
+RelWithDebInfo build and focused existing CTest passed 1/1 in 6.06 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix
+before integration. No product or compatibility behavior is added.
+
+## SQL cursor PADR/decimal-STR temporary-order regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor PADR and
+decimal-STR temporary-order regression into
+`test_prg_engine_sql_cursors_seek_and_order_padr_decimal.inl`. It remains in
+the aggregate `test_prg_engine_sql_cursors_seek_and_order` target; VFP PADR
+and decimal-STR temporary-order SEEK/RECNO assertions, cleanup, and
+machine-readable contracts are unchanged. The original and extracted 63-line
+function SHA-256 is `1a0e813481558f371edf56e409b94e3421087c47ed1ac9f5e47fcbf0d21c45c7`.
+A fresh Linux RelWithDebInfo focused CTest passed 1/1 in 0.05 seconds.
+
+## Studio-host live geometry-nudge regression module
+
+The bounded #2564 structural slice moves the contiguous live report/label
+geometry-nudge regression into
+`test_studio_host_geometry_live_edit_actions_nudge.inl`. It remains in the
+aggregate `test_studio_host_geometry_live_edit_actions` target; FRX/LBX nudge
+JSON assertions, selected-object/preview metadata, cleanup, and isolation
+contract are unchanged. The original and extracted 153-line function SHA-256
+is `e2de3b4368f4c6874d86d2414b1a6c423b9c7eebb0939e70f10f837a9d5839f4`;
+the parent source falls from 2,076 to 1,922 lines. A fresh Linux
+RelWithDebInfo build and focused existing CTest passed 1/1 in 6.86 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix
+before integration. No product or compatibility behavior is added.
+
+## SQL cursor default-padding temporary-order regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor default
+PADL/STR temporary-order regression into
+`test_prg_engine_sql_cursors_seek_and_order_default_padding.inl`. It remains
+in the aggregate `test_prg_engine_sql_cursors_seek_and_order` target; VFP
+default PADL/STR temporary-order SEEK/RECNO assertions, cleanup, and
+machine-readable contracts are unchanged. The original and extracted 63-line
+function SHA-256 is `01efc6d6e2c0145b8332bc38783b268ea60805a879b0e1244cb10cdd69807c47`.
+A fresh Linux RelWithDebInfo focused CTest passed 1/1 in 0.04 seconds.
+
+## SQL cursor RIGHT/STR temporary-order regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor RIGHT/STR
+temporary-order regression into
+`test_prg_engine_sql_cursors_seek_and_order_right_str_temporary_order.inl`.
+It remains in the aggregate `test_prg_engine_sql_cursors_seek_and_order`
+target; VFP RIGHT/STR temporary-order SEEK/RECNO assertions, cleanup, and
+machine-readable contracts are unchanged. The original and extracted 62-line
+function SHA-256 is `06dff09b1a2c66cb1a5c6983e0a3150bcbf4fdbae134485419824417fd334a68`.
+A fresh Linux RelWithDebInfo focused CTest passed 1/1 in 0.04 seconds.
+
+## SQL cursor derived-string temporary-order regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor
+derived-string temporary-order regression from
+`test_prg_engine_sql_cursors_seek_and_order.cpp` into the included
+`test_prg_engine_sql_cursors_seek_and_order_derived_string_temporary_order.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_prg_engine_sql_cursors_seek_and_order` target; VFP `LEFT`, `SUBSTR`, and
+`PADL` temporary-order `SEEK`/`RECNO` assertions, SQL cursor behavior, cleanup,
+and machine-readable contracts are unchanged. The original and extracted
+75-line function have identical SHA-256
+`d4a89aa902f677e28700d140b4ef3121e32e0b4f3296b67219548b267ace73bb`; the
+parent source falls from 2,060 to 1,986 lines. A fresh Linux RelWithDebInfo
+build and focused existing CTest passed 1/1 in 0.05 seconds with `TMPDIR`,
+`TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
+## SQL cursor temporary-order normalization regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor
+temporary-order normalization regression from
+`test_prg_engine_sql_cursors_seek_and_order.cpp` into the included
+`test_prg_engine_sql_cursors_seek_and_order_temporary_order_normalization.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_prg_engine_sql_cursors_seek_and_order` target; VFP `UPPER(NAME)`
+temporary-order behavior, SEEK/RECNO assertions, runtime order/seek metadata,
+cleanup, and machine-readable contracts are unchanged. The original and
+extracted 75-line function have identical SHA-256
+`d13b9cb792ad322856039cd57ea52dc1c0f11eed0c5b3ff33f72d06b617ff5ef`; the
+parent source falls from 2,060 to 1,986 lines. Run a fresh Linux RelWithDebInfo
+build and the existing focused CTest with `TMPDIR`, `TMP`, and `TEMP` set to
+`~/temp`; obtain the protected matrix before integration. No product or
+compatibility behavior is added.
+
+## Studio stable-selector ungroup regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+stable-selector ungroup regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_stable_selector_ungroup.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; object-name and unique-id selection, root,
+empty, missing, and ambiguous mutation behavior, JSON/localization assertions,
+cleanup behavior, and machine-readable contracts for recovered requirement
+`#1029` are unchanged. The original and extracted 119-line function have
+identical SHA-256 `7b6661658f0da6e55c34b7895aa114b663e9a718afcf763ab5599d624def2a59`.
+Run a fresh Linux RelWithDebInfo build and the focused existing CTest with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
+## SQL cursor deferred-filter regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor
+deferred-filter navigation regression from
+`test_prg_engine_sql_cursors_seek_and_order.cpp` into the included
+`test_prg_engine_sql_cursors_seek_and_order_filter_deferred.inl` fragment. It
+remains in the same translation-unit namespace and aggregate
+`test_prg_engine_sql_cursors_seek_and_order` target; deferred `SET FILTER`
+navigation, SQL cursor/work-area selection, VFP boundary-state assertions,
+runtime-filter event details, cleanup, and machine-readable contracts are
+unchanged. The original and extracted 148-line function have identical
+SHA-256 `3c934ec4f48aeec3fb9075c7899234bf5483922d4e6d64456fc1030678de4fc8`;
+the parent source falls from 2,208 to 2,060 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
+## Studio stable-selector property-rename regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+stable-selector property-rename regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_stable_selector_property_rename.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; object-name and unique-id selector behavior,
+exit statuses, JSON and localization assertions, cleanup behavior, and
+machine-readable contracts are unchanged. The original and extracted 119-line
+function have identical SHA-256
+`52457862b26f4023eb86d9a8b6a336c3a9e891a8e5d25cc412d44db6a5616489`; the
+parent source falls from 1,449 to 1,331 lines. Run a fresh Linux RelWithDebInfo
+build and the existing focused CTest with `TMPDIR`, `TMP`, and `TEMP` set to
+`~/temp`; obtain the protected matrix before integration. No product or
+compatibility behavior is added.
+
+## Studio toolbox-object creation regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+toolbox-object creation regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_toolbox_objects.inl` fragment. It
+remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; form/report-context invocation, exit statuses,
+JSON and localization assertions, cleanup behavior, and machine-readable
+contracts are unchanged. The original and extracted 174-line function have
+identical SHA-256 `48ada28a3abab9fb481fb107750b86516700ae4bf4021f5f96690eedf05baa8a`;
+the parent source falls from 1,622 to 1,449 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
+## Studio selection-toolbox object-creation regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+selection-toolbox object-creation regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_selection_toolbox_objects.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; selection-context invocation, exit statuses,
+JSON and localization assertions, cleanup behavior, and machine-readable
+contracts are unchanged. The original and extracted 363-line function have
+identical SHA-256 `07338c24fa528289eecca55de927caec41d21c38c41336b45e570aac64b1b9c0`;
+the parent source falls from 1,984 to 1,622 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
+## Studio selection-toolbox batch creation regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+selection-toolbox batch creation regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_selection_toolbox_batches.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; selection-toolbox batch invocation, exit
+statuses, JSON and localization assertions, cleanup behavior, and
+machine-readable contracts are unchanged. The original and extracted 385-line
+function have identical SHA-256
+`fa3a4c89e09fc8ec78bfb35a8f42cabeab8b7cd724504ba32584cb357e9fbf52`;
+the parent source falls from 2,369 to 1,984 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
+## Studio toolbox-palette creation-batch-plan regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+toolbox-palette creation-batch-plan regression from
+`test_studio_host_json_dispatch_toolbox_palette.cpp` into the included
+`test_studio_host_json_dispatch_toolbox_palette_creation_batch_plan.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; batch-plan invocation, exit statuses, JSON
+and localization assertions, cleanup behavior, and machine-readable contracts
+are unchanged. The original and extracted 356-line function have identical
+SHA-256 `7f130db48ae1ecbd0206749f377a60087a7b53a22e5101e877507b08415f7759`;
+the parent source falls from 1,270 to 915 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
+## Studio toolbox-palette creation-batch regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+toolbox-palette creation-batch regression from
+`test_studio_host_json_dispatch_toolbox_palette.cpp` into the included
+`test_studio_host_json_dispatch_toolbox_palette_creation_batch.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; batch invocation, exit statuses, JSON and
+localization assertions, cleanup behavior, and machine-readable contracts are
+unchanged. The original and extracted 410-line function have identical
+SHA-256 `1679cf5edd46ea40be09c113249423f592906cd13173290d0fd9acf95a13c438`;
+the parent source falls from 1,680 to 1,270 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
+## Studio toolbox-palette object-creation-plan regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+toolbox-palette object-creation-plan regression from
+`test_studio_host_json_dispatch_toolbox_palette.cpp` into the included
+`test_studio_host_json_dispatch_toolbox_palette_creation_plan.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; create-plan invocation, exit statuses, JSON
+and localization assertions, cleanup behavior, and machine-readable contracts
+are unchanged. The original and extracted 238-line function have identical
+SHA-256 `b671eaf5a36f253db55694d7ab255187dd1c845f41456a73f1598d3bedaabcc6`;
+the parent source falls from 1,917 to 1,679 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused CTest with `TMPDIR`, `TMP`, and
+`TEMP` set to `~/temp`; obtain the protected matrix before integration. No
+product or compatibility behavior is added.
+
+## Studio toolbox-palette launch-catalog regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+toolbox-palette launch-catalog regression from
+`test_studio_host_json_dispatch_toolbox_palette.cpp` into the included
+`test_studio_host_json_dispatch_toolbox_palette_launch_catalog.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; catalog invocation, exit statuses, JSON and
+localization assertions, cleanup behavior, and machine-readable contracts are
+unchanged. Verify the original and extracted function hashes before committing,
+then run a fresh Linux RelWithDebInfo build and the focused CTest with `TMPDIR`,
+`TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
+## Studio toolbox-palette query-filter regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+toolbox-palette query-filter regression from
+`test_studio_host_json_dispatch_toolbox_palette.cpp` into the included
+`test_studio_host_json_dispatch_toolbox_palette_query_filters.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; query invocation, exit statuses, JSON and
+localization assertions, cleanup behavior, and machine-readable contracts are
+unchanged. Verify the original and extracted function hashes before committing,
+then run a fresh Linux RelWithDebInfo build and the focused CTest with `TMPDIR`,
+`TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration. No product or compatibility behavior is added.
+
+## Studio editor-action dispatch localization-refresh regression module
+
+The bounded #2564 structural slice moves the contiguous Studio editor-action
+dispatch and invocation-admission localization-refresh regression from
+`test_context_editor_actions.cpp` into the included
+`test_context_editor_actions_default_dispatch_locales.inl` fragment. It
+remains in the same translation-unit namespace and aggregate
+`test_context_editor_actions` target; locale selection, catalog assertions,
+invariant action tokens, and machine-readable contracts are unchanged. The
+original and extracted 105-line function have identical SHA-256
+`fa6c880c52feb517afcbc36acccca5e28c7e2d2c9fdd6b2c55e9588826a857a6`; the
+parent source falls from 2,079 to 1,975 lines. Run a fresh Linux RelWithDebInfo
+build and the existing focused CTest with `TMPDIR`, `TMP`, and `TEMP` set to
+`~/temp`; obtain the protected matrix before integration. No product or
+compatibility behavior is added.
+
+## SQL cursor plain-string collation regression module
+
+The bounded #2564 structural slice moves the contiguous SQL cursor
+plain-string collation regression from
+`test_prg_engine_sql_cursors_seek_and_order.cpp` into the included
+`test_prg_engine_sql_cursors_seek_and_order_plain_string_collate.inl`
+fragment. It remains in the same translation-unit namespace and aggregate
+`test_prg_engine_sql_cursors_seek_and_order` target; VFP collation assertions,
+SQL cursor behavior, test isolation labels, and machine-readable contracts are
+unchanged. The original 64-line function and extracted module have identical
+SHA-256 `1d26960f8b8e73ca7a60bb8244707c44da64c1a26870e084b29ca5782d9c7862`;
+the parent source falls from 2,271 to 2,208 lines. A fresh Linux
+RelWithDebInfo build and the existing focused CTest passed 1/1 in 0.03 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`. Obtain the protected matrix
+before integration. No product or compatibility behavior is added.
+
+## Studio ButtonCount launch-contract regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+ButtonCount launch-contract parser regression family from
+`test_studio_host_setters_data.cpp` into the included
+`test_studio_host_setters_data_button_count.inl` fragment. It remains in the
+same translation-unit namespace and aggregate `test_studio_host` target;
+command grammar, request contracts, target-selector assertions, and
+invalid-input/ambiguity coverage are unchanged. The extracted 94-line module
+has SHA-256
+`8e07134617e8cb3d3da250fa42c3f832dc169fffb8ab01c0f795db5e091b06b7`;
+the parent source falls from 2,281 to 2,188 lines. Run a fresh Linux
+RelWithDebInfo build and the existing focused `test_studio_host` CTest passed
+1/1 in 0.36 seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`. The
+protected Linux, macOS, Windows, DCO, and security matrix passed, and the
+slice merged as `cedba3846643cebb9a9c1b66c7c73fa78a484b1d`; GitHub reports a
+valid merge-commit signature. No product or compatibility behavior is added.
+
+## Studio toolbox direct-create diagnostic regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host toolbox
+direct-create JSON parser-localization regression from
+`test_studio_host_json_parse_diagnostics_toolbox.cpp` into the included
+`test_studio_host_json_parse_diagnostics_toolbox_direct_create.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; command invocation, exit status, JSON payload,
+invariant tokens, localization assertions, cleanup behavior, and
+machine-readable contracts are unchanged. The original 140-line range and
+extracted module have identical SHA-256
+`30e3006f413be79848a47c41c66b4fe503310edf0118fe9b7e150613391a3e85`; the
+parent source falls from 2,297 to 2,157 lines. A fresh Linux RelWithDebInfo
+build of the aggregate target and the existing `test_studio_host_json` CTest
+passed 1/1 in 64.02 seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`.
+Obtain the protected matrix before integration. No product or compatibility
+behavior is added.
+
+## Studio toolbox direct-plan diagnostic regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+toolbox direct-plan diagnostic and localization regression from
+`test_studio_host_json_parse_diagnostics_toolbox.cpp` into the included
+`test_studio_host_json_parse_diagnostics_toolbox_direct_plan.inl` fragment.
+It remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; command invocation, exit status,
+localization assertions, cleanup behavior, and machine-readable contracts are
+unchanged. The extracted 143-line fragment has SHA-256
+`9ff9fbdd8a10bc61c0d1f40c2e1596c5234bd0f2801eb9a130794d4f3880f5fd`;
+the parent source falls from 2,297 to 2,155 lines. A fresh Linux
+RelWithDebInfo build and the existing aggregate CTest passed 1/1 in 63.54
+seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the
+protected matrix before integration. No product or compatibility behavior is
+added.
+
+## Studio stable-selector property-set regression module
+
+The bounded #2564 structural slice moves the contiguous Studio-host
+stable-selector property-set regression from
+`test_studio_host_json_object_lifecycle.cpp` into the included
+`test_studio_host_json_object_lifecycle_stable_selector_property.inl`
+fragment. It remains under the same existing compile guard and in the same
+translation-unit namespace and focused
+`test_studio_host_stable_selector_mutation` target; command invocation,
+exit-status, localization, SCX fixture data, cleanup, and machine-readable
+contracts are unchanged. The original and extracted 94-line function both
+have SHA-256 `135e5645a6875951f72ae3fa712648f91f5c304353aa820a077db251643f1236`.
+The parent source falls from 2,461 to 2,368 lines. A fresh Linux Debug build
+and focused CTest passed 1/1 in 5.69 seconds with `TMPDIR`, `TMP`, and `TEMP`
+set to `~/temp`; obtain the protected matrix before integration. No product or
+compatibility behavior is added.
+
+## Studio usage/catalog diagnostic regression module
+
+The bounded #5359/#2564 structural slice moves the contiguous Studio-host
+usage, selected execution-catalog, and localization regression function from
+test_studio_host_json_parse_diagnostics_core.cpp into the included
+test_studio_host_json_parse_diagnostics_usage_catalogs.inl fragment. It
+remains in the same translation-unit namespace and aggregate
+test_studio_host_json target; command invocation, exit status, localization
+assertions, cleanup behavior, and machine-readable contracts are unchanged.
+The original 1,465-line range and extracted module have identical SHA-256
+57968fded6413b75a9dd50b065969e433bad57c886a45c82ab6a72d14ed6d553; the
+parent source falls from 2,332 to 868 lines. Run a fresh Debug build and the
+existing test_studio_host_json CTest with TMPDIR, TMP, and TEMP set to
+~/temp; obtain the protected matrix before integration. No product or
+compatibility behavior is added.
+
+## Studio report/label font-mutation regression module
+
+The bounded #5362/#2564 structural slice moves the contiguous Studio-host
+report/label font metadata and font-option mutation regression family from
+test_studio_host_json_geometry_font_metadata.cpp into the included
+test_studio_host_json_geometry_font_mutations.inl fragment. It remains in
+the same translation-unit namespace and aggregate test_studio_host_json
+target; command invocation, exit status, localization, DBF/FPT test data,
+cleanup behavior, and machine-readable contracts are unchanged. The original
+1,064-line range has SHA-256
+4619926fac71dc74b468aac7a8fae37e84284a3c7acf768e139499c9cdc06a94; the
+1,063-line fragment intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+1f43f972629df04bdfdc0380883a7f4226a51f806c02405598cb315decb234db. The
+parent source falls from 2,335 to 1,272 lines. Run a fresh Debug build and the
+existing aggregate CTest with TMPDIR, TMP, and TEMP set to ~/temp; obtain the
+protected matrix before integration. No product or compatibility behavior is
+added.
+
+## VFP9 DESCENDING() observation fixture
+
+Issue #5358 now has the controlled source fixture
+`tests/fixtures/vfp9_descending_observation.prg`. Run it only in a disposable
+real VFP9 process and supply a new, nonexistent output directory. It rejects
+an existing file or directory, creates its own DBF/CDX/IDX assets, and writes
+`descending-observation.tsv` covering no active order, persisted ascending and
+descending tags, a runtime descending override, an optional contained runtime
+ascending-override probe, and a single-entry IDX runtime override. The inverse
+probe records an unsupported command as `unavailable`, never as a false
+direction result. Retain the TSV together with generated bytes before deriving
+any CDX or IDX direction field. The fixture does not claim an offset, alter
+existing user data, or implement `DESCENDING()`. Its probe catch covers only
+the macro command; a later observation or TSV-write failure remains visible.
+
+## Studio toolbox-palette diagnostic regression module
+
+The bounded #5356/#2564 structural slice moves the contiguous Studio-host
+toolbox-palette JSON diagnostic and localization regression family from
+`test_studio_host_json_parse_diagnostics_toolbox.cpp` into the included
+`test_studio_host_json_parse_diagnostics_toolbox_palette.inl` fragment. It
+remains in the same translation-unit namespace and aggregate
+`test_studio_host_json` target; command invocation, exit-status, JSON payload,
+invariant-token, localization, and cleanup assertions are unchanged. The
+original 181-line source range has SHA-256
+`9f4b397c4d2a59a4a88889ff0d1ff6a38fc5a8dfd1efea6ce9c8df708e6232c6`; the
+extracted 180-line module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`7877ac86d3a990e123f3ed3dab9a39e845d225c4e3fd8fc25bacb2fcbd6d71b0`.
+No product or compatibility behavior is added. A fresh Linux Debug build and
+the existing `test_studio_host_json` CTest passed 1/1 in 445.10 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
+## Visual-asset data-binding setter regression module
+
+The bounded #5350/#2564 structural slice moves the contiguous LockColumns,
+LockColumnsLeft, RecordSource, LinkMaster, InitialSelectedAlias,
+DefaultFilePath, FormSetClass, RecordSourceType, Partition, ColumnOrder,
+ChildOrder, and DataSession setter regressions from
+`test_visual_asset_editor_setters_data.cpp` into the included
+`test_visual_asset_editor_setters_data_binding.inl` fragment. It remains in
+the same translation-unit namespace and aggregate `test_visual_asset_editor`
+target; entry-point declarations and invocation order, xAsset mutation and
+undo checks, localization, and machine-readable contracts are unchanged. The
+original 276-line range has SHA-256
+`70e51c76cf68c2835dec18cae5f26a98cb5c2a5ef68cf12fda3d6d5bb7b03366`; the
+extracted 275-line fragment intentionally omits only its nonfunctional
+terminal separator blank line and has SHA-256
+`a5b77084307159c4c3cb5f6a5d4020ae0adc6c91804857c8f7e4a521e2a1c3de`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the existing `test_visual_asset_editor` CTest passed 1/1 in 19.54 seconds
+with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected
+matrix before integration.
+
+## Visual-asset BoundColumn setter regression module
+
+The bounded #5354/#2564 structural slice moves the contiguous visual-asset
+BoundColumn setter regression from `test_visual_asset_editor_setters_data.cpp`
+into the included `test_visual_asset_editor_setters_bound_column.inl` fragment.
+The fragment remains inside the same translation-unit namespace and aggregate
+`test_visual_asset_editor` target; selector, undo, DBF/FPT, no-mutation,
+localization, machine-readable-contract assertions, and test invocation order
+remain unchanged. The original 194-line source range has SHA-256
+`72fd61e8798ee37a0d6d19ad763387bbf3d7e8691978b8da142922785c819c4d`; the
+193-line extracted module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`ac9cfbda332048cbd8b15189bf089d86803791f656fc14ff2b58e309cd2dbdd7`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the existing `test_visual_asset_editor` CTest passed 1/1 in 19.07 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; the branch is rebased on the
+merged RowSource/data-binding v1 head before protected validation.
+
+## Visual-asset RowSource setter regression module
+
+The bounded #5352/#2564 structural slice moves the contiguous visual-asset
+RowSource and RowSourceType setter regressions from
+`test_visual_asset_editor_setters_data.cpp` into the included
+`test_visual_asset_editor_setters_row_source.inl` fragment. The fragment
+remains inside the same translation-unit namespace and aggregate
+`test_visual_asset_editor` target; its selector, undo, DBF/FPT, no-mutation,
+localization, and machine-readable-contract assertions and test invocation
+order remain unchanged. The original 379-line source range has SHA-256
+`b8697591f4b4ba5d21cafb16d5fc488cdc7e021eac3cc637734a046f27016147`; the
+378-line extracted module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`37f7845dfd1b71a59594a4bd2aedddb9cd099bfddb6d45fb1a80cca848ca6e63`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the rebased `test_visual_asset_editor` CTest passed 1/1 in 19.08 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
+## Visual-asset property query and clear regression module
+
+The bounded #5346/#2564 structural slice moves the contiguous visual-asset
+selected-property query, single-property clear, and batch-clear rollback
+regressions from `test_visual_asset_editor_properties.cpp` into
+`test_visual_asset_editor_property_query_clear.inl`. The fragment remains
+included inside the same translation-unit namespace and aggregate
+`test_visual_asset_editor` target; its selector, undo, DBF/FPT,
+no-mutation, localization, and machine-readable-contract assertions remain
+unchanged. The original 398-line source range has SHA-256
+`140f53077e2e9cb4a9e1f12f4f0bc9cdfa7a372c5010ee3d103aeca9bf2f5e99`; the
+extracted module intentionally omits only its nonfunctional terminal separator
+blank line, contains 397 lines, and has SHA-256
+`5d22727eeb34957bd423e0930fcb3978ebcbad55c133b215af39e31e4aa90003`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the existing `test_visual_asset_editor` CTest passed 1/1 in 19.70 seconds with
+
+## Visual-asset property copy regression module
+
+The bounded #5348/#2564 structural slice moves the contiguous visual-asset
+single-property copy and batch-copy rollback regressions from
+`test_visual_asset_editor_properties.cpp` into
+`test_visual_asset_editor_property_copy.inl`. The fragment remains included
+inside the same translation-unit namespace and aggregate
+`test_visual_asset_editor` target; selector, undo, DBF/FPT, no-mutation,
+localization, and machine-readable-contract assertions remain unchanged. The
+original 476-line source range has SHA-256
+`e28684c4cf45a614e01103e71fea500a77f1ea1aa5924983a7c231d23c3c6bb4`; the
+extracted 475-line module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`a405897bf876c5e010de9c281e82ad4d1a7f7d69c04f2bf54d6d74ae2db3f4eb`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the existing `test_visual_asset_editor` CTest passed 1/1 in 19.85 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
+## Studio object-metadata diagnostic regression module
+
+The bounded #5341/#2564 structural slice moves the contiguous Studio-host JSON
+object-metadata diagnostic and pseudo-localization regression family (existing
+annotations #2426, #2487, and #2504–#2513) from
+`test_studio_host_json_diagnostics_general.cpp` into the separately compiled
+`test_studio_host_json_diagnostics_object_metadata.cpp` module. The aggregate
+`test_studio_host_json` target, test entry-point declaration and invocation
+order, localized assertions, and machine-readable CLI contracts are unchanged.
+The original 751-line function range has SHA-256
+`09c8376cc94969185e84c2b8bab59fa36bc2f1803ca2fed6739536f1ea3aedf4`; the
+new 759-line compilation module retains that byte-identical function under its
+own license/include preamble and namespace wrapper and has SHA-256
+`4ad017d873b2ee0730b730b5adc9fe3fa8ed8f83e8411a5ad6b644a6cc70795e`.
+No product or compatibility behavior is added. A fresh Linux Debug build of the
+existing `test_studio_host_json` CTest passed 1/1 in 447.59 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
+## Visual-asset method CRUD regression module
+
+The bounded #5344/#2564 structural slice moves the contiguous single-object
+visual-asset method query, update/append, and delete regression family
+(existing annotations #762, #747, #748, and #1004) from
+`test_visual_asset_editor_methods.cpp` into the included
+`test_visual_asset_editor_method_crud.inl` fragment. The parent translation
+unit namespace, aggregate `test_visual_asset_editor` target, declarations,
+invocation order, existing method-reorder include, xAsset mutation/undo
+assertions, DBF/FPT contracts, and localization are unchanged. The original
+338-line source range (including its terminal separator blank line) has SHA-256
+`0892b09af957956c92662792f137dd651d8b908720cce932231532d3814048e8`; the
+337-line extracted module intentionally omits only that nonfunctional separator
+blank line and has SHA-256
+`fe9da0a1bb5eec2dc987a9f99f4001d0014df2076e698887ee43effc73aac7e9`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the existing `test_visual_asset_editor` CTest passed 1/1 in 19.34 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
+## Studio window help and chrome regression module
+
+The bounded #5339/#2564 structural slice moves the contiguous Caption,
+WhatsThisHelpID, WhatsThisHelp, WhatsThisButton, StatusBarText, and Closable
+launch-contract regression families (recovered requirements #1042, #1044,
+#1073, and #1142–#1144) from `test_studio_host_behavior_window_chrome.cpp`
+into `test_studio_host_behavior_window_help_chrome.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate `test_studio_host`
+target; shared fixtures, test invocation order, localized assertions, and
+machine-readable launch contracts are unchanged. The original 505-line source
+range has SHA-256 `525a87cb2762645e526281d8df10c3a0c878a02c5b41bd297be1987dc5d6130d`;
+the 504-line extracted module intentionally omits only its nonfunctional
+terminal separator blank line and has SHA-256
+`c0914120e18b88d868180e8b8f418eb126463a660eb35fba1eb00f1841d714f4`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build of
+the focused `test_studio_host` CTest, which passed 1/1 in 2.71 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
+## Studio window chrome option regression module
+
+The bounded #5337/#2564 structural slice moves the contiguous ControlBox,
+Desktop, KeyPreview, MacDesktop, MaxButton, and MinButton launch-contract
+regression families (recovered requirements #1074, #1147–#1150, and #1155) from
+`test_studio_host_behavior_window_chrome.cpp` into
+`test_studio_host_behavior_window_chrome_options.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate `test_studio_host`
+target; shared fixtures, test invocation order, localized assertions, and
+machine-readable launch contracts are unchanged. The original and extracted
+source range contains 516 lines and has SHA-256
+`658707a392a699c93cc7a29566df92b5e8619ac2464f4dcaf6be23359794af75`; the
+515-line extracted module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`69d13ae41ebfa2a3c2e4a84647764413c9c0bf87b99e672ded592f3bf3402e4c`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build of
+the focused `test_studio_host` CTest, which passed 1/1 in 2.86 seconds with
+`TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected matrix before
+integration.
+
+## V1 Studio window-size and position launch regression module
+
+The bounded #5335/#2564 structural slice moves the contiguous Studio
+window-size and position launch-contract regression families (#1151–#1154 and
+#1156–#1160)
+from `test_studio_host_behavior_window_chrome.cpp` into
+`test_studio_host_behavior_window_size_position.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate target; shared
+fixtures, invocation behavior, localization, and machine-readable launch
+contracts are unchanged. The original and extracted 827-line source range are
+byte-identical and have SHA-256
+`20675ede61ce3404678598cccd6f9ac66b3cc1196fc926a3f7919fded05000fc`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the focused `test_studio_host` CTest passed 1/1 in 2.48 seconds with the
+declared repository temporary-directory setting; obtain the protected matrix
+before integration.
+
+## Workspace-agent session-layout lifecycle regression module
+
+The bounded #5328/#2564 structural slice moves the contiguous workspace-agent
+session-layout preparation, containment, identity-binding, and cleanup lifecycle
+regressions (RQ-CF-AGENT-012, -013, -014, -015, -016, -020, and -021) from
+`test_workspace_agent_isolated_environment.cpp` into
+`test_workspace_agent_isolated_environment_session_layout_lifecycle.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; shared fixtures, test invocation order, authorization behavior,
+localization, and machine contracts are unchanged. The original and extracted
+743-line source range are byte-identical and have SHA-256
+`e36ed72e41f8b442927a79ce0cfd6275f742157595c520176e19704ec1929d88`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the focused `test_workspace_agent_isolated_environment` CTest passed 1/1 in
+3.96 seconds with the declared repository temporary-directory setting. The
+private-directory, exact-snapshot materialization, and process-parser contract
+checks also pass. The generated-launcher direct-push filter and its contract
+now explicitly cover the extracted module; obtain the protected matrix before
+integration.
+
+## DBF validation-localization regression module
+
+The bounded #5330/#2564 structural slice moves the contiguous DBF table
+validation-localization regression family (#2381–#2385) from
+`test_dbf_table.cpp` into `test_dbf_table_validation_localization.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; shared fixtures, test invocation order, localized diagnostic assertions,
+data-integrity coverage, and machine contracts are unchanged. The original
+225-line source range has SHA-256
+`10500f84bbba988f86e06bb6875253d8f577d80ec32ab7878cc2cf79a1ba5903`; the
+224-line extracted module intentionally omits only the nonfunctional terminal
+separator blank line and has SHA-256
+`173901fdf9f046d37dfaf6c29a1a2b1f61f9e2b4321f23af72ff725f50e43ee0`.
+No product or compatibility behavior is added. A fresh Linux Debug focused
+`test_dbf_table` CTest passed 1/1 in 1.71 seconds; obtain the protected matrix
+before integration.
+
+## V1 PRG report and label work-area regression module
+
+The bounded #5332/#2564 structural slice moves the contiguous report/label
+rendering, SYS(2040)/SYS(2024) status, filtered-output, and localized
+missing-report regression family from `test_prg_engine_work_areas.cpp` into
+`test_prg_engine_work_areas_report_label.inl`. The fragment remains included
+in the same translation-unit namespace and aggregate target. Its VFP9 sample
+guard, synthetic fixtures, recovered runtime coverage, localization assertions,
+and machine contracts are unchanged. The original 285-line source range has
+SHA-256 `03905b9364850d7187356debfae3332a7585f0d6669e19da038a16ed9bb5919e`;
+the extracted 284-line module intentionally omits only its nonfunctional
+terminal separator blank line and has SHA-256
+`2000eeb704fbbd839e6b54263d73a958739ed6a3beeb9609bdc3a48d5b1450fb`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build
+of the focused `test_prg_engine_work_areas` CTest, which passed 1/1 in 388.13
+seconds with `TMPDIR`, `TMP`, and `TEMP` set to `~/temp`; obtain the protected
+matrix before integration.
+
+## V1 Studio static color regression module
+
+The bounded #5326/#2564 structural slice moves the contiguous Studio-host
+static stable-selector color JSON regressions (#1064–#1067) from
+`test_studio_host_json_appearance_colors.cpp` into
+`test_studio_host_json_appearance_colors_static.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate target; shared
+fixtures, invocation behavior, visual-asset mutation/no-mutation coverage,
+localization, and machine contracts are unchanged. The original 564-line source
+range has SHA-256 `e1b3eff52f3908ba627c283f631f75cb2a8b1ea1604842cf4718991dd95f0377`;
+the 563-line extracted module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`b1a375ae5d16a4044d129c2b5d9942079c97f1b2ff84d343cbdd5632d5c829e3`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build of
+the focused `test_studio_host_json` CTest, which passed 1/1 in 441.26 seconds;
+obtain the protected matrix before integration.
+
+## V1 Studio item-state color regression module
+
+The bounded #5324/#2564 structural slice moves the contiguous Studio-host
+disabled/item stable-selector color JSON regressions (#1060–#1063) from
+`test_studio_host_json_appearance_colors.cpp` into
+`test_studio_host_json_appearance_colors_item_states.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate target; shared
+fixtures, invocation behavior, visual-asset mutation/no-mutation coverage,
+localization, and machine contracts are unchanged. The original 564-line source
+range has SHA-256 `30616a25b66adbf37ca405890363a2043bad90040e1c72afdf1ad8195dd37f9e`;
+the 563-line extracted module intentionally omits only its nonfunctional terminal
+separator blank line and has SHA-256
+`cc70c029ab14ca5579812d7455b09bfe33c64878371a91549a53535c33081f25`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build of
+the focused `test_studio_host_json` CTest, which passed 1/1 in 441.78 seconds;
+the exact corrected-source rerun passed 1/1 in 438.80 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio selected-color regression module
+
+The bounded #5321/#2564 structural slice moves the contiguous Studio-host
+selected-color JSON regressions (#1056–#1059) from
+`test_studio_host_json_appearance_colors.cpp` into
+`test_studio_host_json_appearance_colors_selected.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate target; shared
+fixtures, invocation behavior, visual-asset mutation/no-mutation coverage,
+localization, and machine contracts are unchanged. The original 562-line
+source range has SHA-256
+`59e7f7cbda09bb7914d580b7e35fef6dd8ea39003076d34f5d30eb9f108f782e`; the
+561-line extracted module intentionally omits its nonfunctional terminal
+separator blank line and has SHA-256
+`a68977925ba30b7cd30a415e2644f5883b95c0d945fa3f94951b1f5ead7f527f`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+the focused `test_studio_host_json` CTest passed 1/1 in 450.72 seconds; obtain
+the protected matrix before integration.
+
+## Workspace-agent parser test fixture aliasing correction
+
+The bounded #5319 test-only correction preserves the existing
+`RQ-CF-AGENT-018` oversized parser-binding fail-closed check while making both
+vector-growth fill values independent of `windows_bindings` storage. Windows
+diagnostic evidence at `ff295e5dd21071373be709928e084a4ddef570fd` established
+that passing `windows_bindings.front()` directly to `assign` creates an invalid
+reference after reallocation in MSVC Debug; Release manifestations are
+allocation-dependent. No product authorization behavior, compatibility policy,
+localization, or machine-readable contract changed. Run the focused parser test
+from a fresh Linux Debug build (passed 1/1 in 0.02 seconds) and obtain the
+protected Windows matrix before integration.
+
+## V1 Studio dynamic font-shadow regression module
+
+The bounded #5317/#5305/#2564 structural slice moves the contiguous Studio-host
+dynamic font-shadow JSON regression family (requirement #1195) from
+`test_studio_host_json_appearance_fonts.cpp` to
+`test_studio_host_json_appearance_fonts_dynamic_shadow.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+shared fixtures, invocation behavior, visual-asset mutation/error/no-mutation
+coverage, localization, and machine contracts are unchanged. The original and
+extracted 123-line source range are byte-identical and have SHA-256
+`43ef213661220beee9f2153033a33e2cda4f846f3bdedeb31945908627c87b94`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 457.43 seconds; obtain the
+protected matrix before integration.
+
+## V1 Studio dynamic font-outline regression module
+
+The bounded #5314/#5305/#2564 structural slice moves the contiguous Studio-host
+dynamic font-outline JSON regression family (requirement #1194) from
+`test_studio_host_json_appearance_fonts.cpp` to
+`test_studio_host_json_appearance_fonts_dynamic_outline.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+shared fixtures, invocation behavior, visual-asset mutation/error/no-mutation
+coverage, localization, and machine contracts are unchanged. The original
+124-line source range has SHA-256
+`e075201aa02053637be740cc368431949f8811be64acc65587c12d8b23f23c4b`; the
+123-line extracted module intentionally omits its nonfunctional terminal
+separator blank line and has SHA-256
+`f57ed67170a76ba9e21a952498f2f15ca6eb81b0ee9560c34dd2588ec15bf1ea`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 437.79 seconds; obtain the
+protected matrix before integration.
+
+## V1 Studio dynamic font-italic regression module
+
+The bounded #5309/#5305/#2564 structural slice moves the contiguous Studio-host
+dynamic font-italic JSON regression family (requirement #1191) from
+`test_studio_host_json_appearance_fonts.cpp` to
+`test_studio_host_json_appearance_fonts_dynamic_italic.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+shared fixtures, invocation behavior, visual-asset mutation/error/no-mutation
+coverage, localization, and machine contracts are unchanged. The original
+124-line source range has SHA-256
+`a46c747be4f2602a5b2c1c12b3eb0fcb7d4aa8bc03b0dcfcc12d393e675a661d`; the
+123-line extracted module intentionally omits its nonfunctional terminal
+separator blank line and has SHA-256
+`32fcccbd4d5f86d4d635715d2ab941c8decb02204726940c56683b9a4477c744`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 452.67 seconds; obtain the
+protected matrix before integration.
+
+## V1 Studio dynamic font-underline regression module
+
+The bounded #5311/#5305/#2564 structural slice moves the contiguous Studio-host
+dynamic font-underline JSON regression family (requirement #1192) from
+`test_studio_host_json_appearance_fonts.cpp` to
+`test_studio_host_json_appearance_fonts_dynamic_underline.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+shared fixtures, invocation behavior, visual-asset mutation/error/no-mutation
+coverage, localization, and machine contracts are unchanged. The original
+124-line source range has SHA-256
+`d4e9722a0f73f4c1fec7ed6f6de07434960712a268156ad671ac001a7d52654f`; the
+123-line extracted module intentionally omits its nonfunctional terminal
+separator blank line and has SHA-256
+`3b258611b08b6b04c195027dffbe693825b59091a170ea4f83542f27db98ad59`.
+No product or compatibility behavior is added. A fresh Linux Debug build must
+pass the focused `test_studio_host_json` CTest 1/1 in 447.02 seconds; obtain
+the protected matrix before integration.
+
+## V1 Studio dynamic font-strikethru regression module
+
+The bounded #5312/#5305/#2564 structural slice moves the contiguous Studio-host
+dynamic font-strikethru JSON regression family (requirement #1193) from
+`test_studio_host_json_appearance_fonts.cpp` to
+`test_studio_host_json_appearance_fonts_dynamic_strikethru.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+shared fixtures, invocation behavior, visual-asset mutation/error/no-mutation
+coverage, localization, and machine contracts are unchanged. The original
+124-line source range has SHA-256
+`99f1fcea74dd91cfeb3d7a8b6698353a3698870946322bcaeb85d98cb31107e7`; the
+123-line extracted module intentionally omits its nonfunctional terminal
+separator blank line and has SHA-256
+`21d6a4e3be804eab8c8aa1b0c9c27f787a7618fa052807393634020052f654d2`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 447.69 seconds; obtain
+the protected matrix before integration.
+
+## V1 Studio dynamic font-bold regression module
+
+The bounded #5306/#5305/#2564 structural slice moves the contiguous Studio-host
+dynamic font-bold JSON regression family (requirement #1190) from
+`test_studio_host_json_appearance_fonts.cpp` to
+`test_studio_host_json_appearance_fonts_dynamic_bold.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate target; shared
+fixtures, invocation behavior, visual-asset mutation/error/no-mutation coverage,
+localization, and machine contracts are unchanged. The original 124-line source
+range has SHA-256
+`7eee40fab7777dccf38799228e5be3c869851c381653681eaa322cddbed98f86`; the
+123-line extracted module intentionally omits its nonfunctional terminal
+separator blank line and has SHA-256
+`51d3c2da9401fc479e7f5c596c674357dfb906d04fb8113e1db7971c179fba4e`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 438.77 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio visual-method batch-delete regression module
+
+The bounded #5304/#2564 structural slice moves the contiguous Studio-host
+visual-method batch-delete JSON regression family (requirement #1430) from
+`test_studio_host_json_visual_editor_json_methods.cpp` to
+`test_studio_host_json_visual_editor_json_methods_delete_batch.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; fixtures, invocation behavior, visual-asset mutation, rollback, undo,
+localization, and machine contracts are unchanged. The original 203-line source
+range has SHA-256
+`36cc6ebb2152215754ed5e65f8159d35f10287276fdd9bcf418f4a888f5bf8b3`; the
+202-line extracted module omits its nonfunctional terminal separator blank line
+and has SHA-256
+`1c03a0732066e9db68e0f4b77409daf933e8d488a5375d8907fe72652cd5ceb1`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 445.89 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio visual-method delete regression module
+
+The bounded #5302/#2564 structural slice moves the contiguous Studio-host
+single visual-method delete JSON regression family (requirement #1425) from
+`test_studio_host_json_visual_editor_json_methods.cpp` to
+`test_studio_host_json_visual_editor_json_methods_delete.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+fixtures, invocation behavior, visual-asset removal/unrelated-method
+preservation/no-mutation/undo coverage, localization, and machine contracts are
+unchanged. The original 165-line source range has SHA-256
+`3a5a96fd5db9318a0e5356777845f998c9c39f68153bb2ef2b0fa20b92bb9213`; the
+164-line extracted module omits its nonfunctional terminal separator blank line
+and has SHA-256
+`ce506d2288d43dd85bc57df38b54c33d5b30f374101cd080363c977b31eda160`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 443.36 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio visual-method update regression module
+
+The bounded #5300/#2564 structural slice moves the contiguous Studio-host
+visual-method update JSON regression family (requirement #1424) from
+`test_studio_host_json_visual_editor_json_methods.cpp` to
+`test_studio_host_json_visual_editor_json_methods_update.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+fixtures, invocation behavior, visual-asset update/append/no-mutation/undo
+coverage, localization, and machine contracts are unchanged. The original
+191-line source range and byte-identical extracted module have SHA-256
+`8d5aeaf77cb197203a8c065fce3fcc6990ccf2eebe43da5bebfe3537a33d0440`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 444.33 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio visual-method inspection regression module
+
+The bounded #5298/#2564 structural slice moves the contiguous Studio-host
+visual-method list and query JSON regression family (requirements #1422 and
+#1423) from `test_studio_host_json_visual_editor_json_methods.cpp` to
+`test_studio_host_json_visual_editor_json_methods_inspection.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+fixtures, invocation behavior, non-mutating visual-asset inspection,
+deleted-record observations, localization, and machine contracts are unchanged.
+The original 263-line source range and byte-identical extracted module have
+SHA-256 `9f0bbc144d9ace3b3822801c2651247fd3191a137369e1e4387dc7583a38a387`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 443.76 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio visual-property mutation regression module
+
+The bounded #5296/#2564 structural slice moves the contiguous Studio-host
+visual-property update-batch and stable-selector clear JSON regression family
+(requirements #1446 and #1021) from
+`test_studio_host_json_visual_editor_json_properties.cpp` to
+`test_studio_host_json_visual_editor_json_properties_mutation.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; fixtures, invocation behavior, visual-asset mutation, rollback, undo,
+localization, and machine contracts are unchanged. The original 297-line source
+range and byte-identical extracted module have SHA-256
+`1289075fd48131f1e3777110538dfea316036a1cb2b6d0ec6197376425511113`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 457.97 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio visual-property inspection regression module
+
+The bounded #5294/#2564 structural slice moves the contiguous Studio-host
+visual-property filter, query, and list JSON regression family (requirements
+#1415, #1416, and #1417) from
+`test_studio_host_json_visual_editor_json_properties.cpp` to
+`test_studio_host_json_visual_editor_json_properties_inspection.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; fixtures, invocation behavior, non-mutating visual-asset inspection,
+localization, and machine contracts are unchanged. The source function ranges
+(8-269 and 277-381) and the byte-identical 367-line extracted module have
+SHA-256 `b46400b522edd6be6115f1d0c332aa382060257b12e8f2703ccb2ea523be7e1d`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 456.42 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio visual-property reorder regression module
+
+The bounded #5292/#2564 structural slice moves the contiguous Studio-host
+visual-property direct and batch reorder JSON regression family (requirements
+#1443 and #1444) from
+test_studio_host_json_visual_editor_json_properties.cpp to
+test_studio_host_json_visual_editor_json_properties_reorder.inl. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+fixtures, invocation behavior, visual-asset mutation and rollback coverage,
+localization, and machine contracts are unchanged. The original 500-line source
+range has SHA-256
+91564042388fc3376b71ac329361734ba9833aa9b578a031e87c2decd060342; the
+498-line extracted module omits two nonfunctional terminal separator blank lines
+and has SHA-256
+6720deac6afa10edfbb77425af61c5ee10290ce03b5a65ef3c5db8723f8e5e41.
+No product or compatibility behavior is added. Fresh focused Linux Debug test
+test_studio_host_json CTest passed 1/1 in 453.15 seconds. Obtain the protected
+matrix before integration.
+
+## V1 Studio visual-property rename regression module
+
+The bounded #5290/#2564 structural slice moves the contiguous Studio-host
+visual-property direct and batch rename JSON regression family (requirements
+#1441 and #1442) from
+test_studio_host_json_visual_editor_json_properties.cpp to
+test_studio_host_json_visual_editor_json_properties_rename.inl. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+fixtures, invocation behavior, visual-asset mutation and rollback coverage,
+localization, and machine contracts are unchanged. The original 462-line source
+range has SHA-256
+b295f28126fcb8594530854420a7f5ab0b248a47985d63806f3f0adf78c1ec07; the
+460-line extracted module omits two nonfunctional terminal separator blank lines
+and has SHA-256
+bd16c66782412ab34781cfa93ad848e9784159a255c4f15568998c992f8e5601.
+No product or compatibility behavior is added. A fresh Linux Debug build and
+focused test_studio_host_json CTest passed 1/1 in 453.74 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio visual-property move regression module
+
+The bounded #5288/#2564 structural slice moves the contiguous Studio-host
+visual-property direct and batch move JSON regression family (requirements
+#1439 and #1440) from
+test_studio_host_json_visual_editor_json_properties.cpp to
+test_studio_host_json_visual_editor_json_properties_move.inl. The fragment
+remains included in the same translation-unit namespace and aggregate target;
+fixtures, invocation behavior, visual-asset mutation and rollback coverage,
+localization, and machine contracts are unchanged. The original 543-line source
+range has SHA-256
+07703cb39b20057bb21f1a425f3dfcf481a165dfea1d049c0c9a1fa87b41ff62; the
+541-line extracted module omits two nonfunctional terminal separator blank lines
+and has SHA-256
+9e9effbe91719394303cae339a0b349deb2305914e66eb8ea589076fcbc48cd7.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused test_studio_host_json CTest 1/1 in 461.04 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio visual-property clear/copy regression module
+
+The bounded #5286/#2564 structural slice moves the contiguous Studio-host
+visual-property clear/copy and batch clear/copy JSON regression family from
+`test_studio_host_json_visual_editor_json_properties.cpp` to
+`test_studio_host_json_visual_editor_json_properties_clear_copy.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+target; fixtures, invocation behavior, visual-asset mutation coverage,
+localization, and machine contracts are unchanged. The original 750-line source
+range has SHA-256
+`2aa2480c6ed76631944f2b9e49b72ad64d2736e5f78ba2da3b7a447a6daab637`; the
+749-line extracted module omits one nonfunctional terminal separator blank line
+and has SHA-256
+`295f36c3847a1e45d648be9ccd15ee3287e4ca8c51e371b1274e8235c7b0d435`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+the focused `test_studio_host_json` CTest 1/1 in 490.89 seconds. Obtain the
+protected matrix before integration.
+
+## V1 Studio report schema fallback regression module
+
+The bounded #5284/#2564 structural slice moves the contiguous report-object
+fallback-schema, unresolved-placeholder, and synthesized-title Studio-host JSON
+regression family from `test_studio_host_json_objects_diagnostics_and_misc.cpp` to
+`test_studio_host_json_report_schema_fallbacks.inl`. The fragment remains
+included in the same translation-unit namespace and macro location; the
+dedicated and aggregate targets, helper guards, fixtures, report/label coverage,
+selection behavior, localization, and machine contracts are unchanged. The
+original 963-line source range and byte-identical extracted module each have
+SHA-256 `8f4ab0360980e06d89a7acea82f529f8c2f8b892f21bbefa840f372e1c2ac06b`.
+No product or compatibility behavior is added. A fresh Linux Debug build passed
+both focused CTests: `test_studio_host_report_schema_fallbacks` in 13.44 seconds
+and `test_studio_host_report_unresolved_memo_placeholders` in 9.84 seconds.
+Obtain the protected matrix before integration.
+
+## V1 Studio report deleted-state regression module
+
+The bounded #5282/#2564 structural slice moves the contiguous report
+deleted-state Studio-host JSON regression family from
+`test_studio_host_json_objects_diagnostics_and_misc.cpp` to
+`test_studio_host_json_report_deleted_states.inl`. The fragment remains
+included in the same translation-unit namespace and macro location; the
+dedicated and aggregate targets, helper guards, fixtures, report/label coverage,
+selection behavior, localization, and machine contracts are unchanged. The
+original 831-line source range has SHA-256
+`a0a39ad81396d158b34e27c658c413d38a3a3e3fc16d468ea7ff10763db53243`; the
+extracted 830-line module omits one nonfunctional terminal separator blank line
+and has SHA-256
+`94fd620f78098df0ce0186e7afd24553a4adfa8ca88a1ac5062db83796672fde`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_studio_host_report_deleted_states` and focused CTest passed 1/1 in 8.81
+seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix before
+integration.
+
+## V1 visual-asset font-outline and shadow regression module
+
+The bounded #5280/#2564 structural slice moves the contiguous direct
+FontOutline and FontShadow visual-asset regression pair from
+`test_visual_asset_editor_appearance_fonts.cpp` to
+`test_visual_asset_editor_appearance_font_outline_shadow.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, visual-asset editing,
+undo behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 378-line source range has SHA-256
+`59b763d8e7dcffdaf759d1d0b921467e54eabe2f84bbe24ff4a4905775cd3f26`; the
+extracted 376-line module omits two nonfunctional terminal separator blank
+lines and has SHA-256
+`90423b0fc6a204c8eddafc100a5dcdc37dea6410ef68022d477cc6fb7312a40e`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_visual_asset_editor` and focused CTest passed 1/1 in 20.19 seconds with
+`TMPDIR` under `~/temp`. Obtain the protected matrix before integration.
+
+## V1 remaining Studio stable data-selector regression module
+
+The bounded #5278/#2564 structural slice moves the contiguous stable-selector
+FormSetClass, DefaultFilePath, InitialSelectedAlias, LinkMaster, and RowSource
+Studio-host JSON regression family from `test_studio_host_json_setters_data.cpp`
+to `test_studio_host_json_setters_data_remaining_selectors.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, Studio-host JSON,
+xAsset mutation, localization, and machine contracts are unchanged. The
+original 615-line source range has SHA-256
+`094888c0cd1ca8016518bff7554838d4aed09e009d8f45bae16ae0a3562677de`; the
+extracted 613-line module omits two nonfunctional separator blank lines and has
+SHA-256 `21fbbf12b15f2b6553a58dcab8bef5268945a91c9a4264045e5499bec2061df2`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_studio_host_json` and focused CTest passed `1/1` in 454.76 seconds with
+`TMPDIR` under `~/temp`. Obtain the protected matrix before integration.
+
+## V1 Studio stable data-selector regression module
+
+The bounded #5276/#2564 structural slice moves the contiguous stable-selector
+Partition, RecordSourceType, ColumnOrder, ChildOrder, and RecordSource
+Studio-host JSON regression family from
+`test_studio_host_json_setters_data.cpp` to
+`test_studio_host_json_setters_data_stable_selectors.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, Studio-host JSON, xAsset mutation,
+localization, and machine contracts are unchanged. The extracted module is
+681 lines with SHA-256
+`6d26f69d6d9be71faab34e810de0dd7b633fdd1fb8d0818b1dfb84c391738422`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_studio_host_json` and focused CTest passed `1/1` in 448.49 seconds with
+`TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
+## V1 visual-asset font-decoration regression module
+
+The bounded #5272/#2564 structural slice moves the contiguous FontUnderline
+and FontStrikethru visual-asset regression pair from
+`test_visual_asset_editor_appearance_fonts.cpp` to
+`test_visual_asset_editor_appearance_font_decorations.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, visual-asset editing,
+undo behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 374-line source range has SHA-256
+`6e465bd9b0d86cb8d74f06369198e72fa9de46c972963d39ccd5e2f8a18fc57b`;
+the extracted 373-line module omits one nonfunctional terminal separator blank
+line and has SHA-256
+`e6eefb2eb96b337b8a3dfdc7925b1a6b00e6cd1533eddeddfb71fd6a5d16f2b8`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_visual_asset_editor` completed and focused CTest passed `1/1` in
+19.60 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix
+before merge.
+
+## V1 Studio grid-data selector regression module
+
+The bounded #2564 structural slice moves the contiguous stable-selector
+ButtonCount, DataSession, LockColumns, and LockColumnsLeft Studio-host JSON
+regression family from `test_studio_host_json_setters_data.cpp` to
+`test_studio_host_json_setters_data_grid_selectors.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, Studio-host JSON, xAsset mutation,
+localization, and machine contracts are unchanged. The original 560-line source
+range has SHA-256 `635a4a5f61fde73acc5ae7f6901f4923882929ec2b0aee43942cb64abc6cd9f5`;
+the extracted 559-line module omits one nonfunctional terminal separator blank
+line and has SHA-256 `f8199e6c38c3c4b4d5087d1a408bc4f4ff5ce1fd3cd19daefc6966376d4c0f07`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_studio_host_json` and focused CTest passed `1/1` in 453.45 seconds with
+`TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
+## V1 visual-asset batch-operation regression module
+
+The bounded #2564 structural slice moves the contiguous multi-property and
+report/label batch-operation regression family from
+`test_visual_asset_editor_update_batch.cpp` to
+`test_visual_asset_editor_update_batch_operations.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, xAsset mutation and undo behavior,
+report/label coverage, localization, and machine contracts are unchanged. The
+original 497-line source range has SHA-256
+`42b1474a6de6715402f05009a69d5ea682b5823e0066f16379b284d106a500ec`; the
+extracted 496-line module omits one nonfunctional terminal separator blank line
+and has SHA-256 `cc1e7c19dbc6ff73b59506dec58b9e663d0de881cbf7a9f49a25cffe10f09d9c`.
+No product or compatibility behavior is added. A fresh Linux Debug build of
+`test_visual_asset_editor` and focused CTest passed `1/1` in 20.46 seconds
+with `TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
+## V1 visual-asset font-style regression module
+
+The bounded #5270/#2564 structural slice moves the contiguous FontBold and
+FontItalic visual-asset regression pair from
+`test_visual_asset_editor_appearance_fonts.cpp` to
+`test_visual_asset_editor_appearance_font_styles.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, visual-asset editing, undo
+behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 368-line source range has SHA-256
+`4d34ae498496f28c32726427c255a0ee825fd7852c7cfb63a28ac735a7f6a1de`; the
+extracted 367-line module omits one nonfunctional terminal separator blank line
+and has SHA-256
+`be1eda5fc9e5e2804632ec276adadb765fc0d564f7b549d95ae90a4609015f64`.
+No product or compatibility behavior is added. Run a fresh Linux Debug build
+of `test_visual_asset_editor`; focused CTest passed `1/1` in 21.46 seconds
+with `TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
+## V1 visual-asset base font regression module
+
+The bounded #5268/#2564 structural slice moves the contiguous FontName and
+FontSize visual-asset regression pair from
+`test_visual_asset_editor_appearance_fonts.cpp` to
+`test_visual_asset_editor_appearance_base_fonts.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, visual-asset editing, undo
+behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 420-line source range has SHA-256
+`c57b9a4ba3915027499cdffee863cb558948eceb56cc82640b946a0c1eded28f`; the
+extracted 419-line module omits one nonfunctional terminal separator blank line
+and has SHA-256
+`9fa2573eb41da18442401806ca7966fc60bece73885503c446f7a81744241969`.
+No product or compatibility behavior is added. A fresh Linux Debug
+configuration built `test_visual_asset_editor`; focused CTest passed `1/1` in
+20.42 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix after
+the active base-color slice merges.
+
+## V1 visual-asset base color regression module
+
+The bounded #5266/#2564 structural slice moves the contiguous BackColor and
+ForeColor visual-asset regression pair from
+`test_visual_asset_editor_appearance_colors.cpp` to
+`test_visual_asset_editor_appearance_base_colors.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, visual-asset editing, undo
+behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 400-line source range has SHA-256
+`04ace0f682ed3c56e57fce00b131f089328f87befe27922af6b89dbf615c8d20`; the
+extracted 399-line module omits one nonfunctional terminal separator blank line
+and has SHA-256
+`1c2ec0aee04a2153f401ce95aa4aa57a13bea2f87138835aad10e038405ffe00`.
+No product or compatibility behavior is added. A fresh Linux Debug
+configuration built `test_visual_asset_editor`; focused CTest passed `1/1` in
+20.11 seconds with `TMPDIR` under `~/temp`. The protected matrix passed before
+merge as `c8f05d0b9`.
+
+## V1 visual-asset highlight color regression module
+
+The bounded #5264/#2564 structural slice moves the contiguous
+HighlightBackColor and HighlightForeColor visual-asset regression pair from
+`test_visual_asset_editor_appearance_colors.cpp` to
+`test_visual_asset_editor_appearance_highlight_colors.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, visual-asset editing,
+undo behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 400-line source range has SHA-256
+`13b5bf79f6f296fc714d6b362f939a4f887dfcc931edfac02fd855657d9ce769`; the
+extracted 399-line module omits one nonfunctional terminal separator blank line
+and has SHA-256
+`881f2efdf1c39d5bce6660c3488cbed1fdcbd91fda09d743217e35de5952a751`.
+No product or compatibility behavior is added. A fresh Linux Debug
+configuration built `test_visual_asset_editor`; focused CTest passed `1/1` in
+20.64 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix after
+the dependent Item color slice merges.
+
+## V1 visual-asset Item color regression module
+
+The bounded #5262/#2564 structural slice moves the contiguous ItemBackColor
+and ItemForeColor visual-asset regression pair from
+`test_visual_asset_editor_appearance_colors.cpp` to
+`test_visual_asset_editor_appearance_item_colors.inl`. The fragment remains
+included in the same test translation-unit namespace and aggregate executable;
+declarations, invocation behavior, fixtures, visual-asset editing, undo
+behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The original 400-line source range (including two separator blank
+lines) has SHA-256 `3ef089976c601f528bedece3eaf9a004d1d5f6e66eaff1db3deffd584d6b7002`;
+the extracted 398-line module contains the same executable body after those
+nonfunctional separators are omitted (SHA-256
+`d060b84d209a6a0c1b7d5942587746c0f91aedc9d1afc2629880e53475918dea`). No
+product or compatibility behavior is added. A fresh Linux Debug
+configuration built `test_visual_asset_editor`; focused CTest passed `1/1` in
+21.67 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix before
+merge.
+
+## V1 visual-asset DisabledItem color regression module
+
+The bounded #5260/#2564 structural slice moves the contiguous
+DisabledItemBackColor and DisabledItemForeColor visual-asset regression pair
+from `test_visual_asset_editor_appearance_colors.cpp` to
+`test_visual_asset_editor_appearance_disabled_item_colors.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, visual-asset editing,
+undo behavior, raw-byte preservation, localization, and machine contracts are
+unchanged. The 400-line moved body is byte-identical to its pre-extraction
+source block (SHA-256 `819afdd9a61010ba8827d1e2267639363e7825e3ffbceaa8fddcd15b61130e7c`).
+No product or compatibility behavior is added. A fresh Linux Debug
+configuration built `test_visual_asset_editor`; focused CTest passed `1/1` in
+19.69 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix before
+merge.
+
+## V1 visual-asset selected-object behavior regression module
+
+The bounded #5258/#2564 structural slice moves the contiguous deleted-state,
+tab-order, tab-stop, visibility, enabled, read-only, and locked visual-asset
+setter regression family from `test_visual_asset_editor_setters_behavior.cpp`
+into `test_visual_asset_editor_setters_behavior_selected_object.inl`. The
+fragment remains included in the same translation-unit namespace and aggregate
+`test_visual_asset_editor` executable; declarations, invocation order,
+fixtures, xAsset mutation and undo behavior, localization, and machine
+contracts are unchanged. The 1,070-line moved body is byte-identical to its
+pre-extraction source block. No product or compatibility behavior is added. A
+fresh Linux Debug configuration built `test_visual_asset_editor`; focused CTest
+passed `1/1` in 20.49 seconds with `TMPDIR` under `~/temp`. Obtain the protected
+matrix before merge.
+
+## V1 visual-asset SelectedItem color regression module
+
+The bounded #5256/#2564 structural slice moves the contiguous
+SelectedItemBackColor and SelectedItemForeColor visual-asset regression pair
+from `test_visual_asset_editor_appearance_colors.cpp` to
+`test_visual_asset_editor_appearance_selected_item_colors.inl`. The fragment
+remains included in the same test translation-unit namespace and aggregate
+executable; declarations, invocation behavior, fixtures, visual-asset editing,
+undo behavior, raw-byte preservation, report/label, localization, and machine
+contracts are unchanged. No product or compatibility behavior is added. A fresh
+Linux Debug configuration built `test_visual_asset_editor`; focused CTest passed
+`1/1` in 22.44 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix
+before merge.
+
+## V1 report/label left/right-margin regression module
+
+The bounded #5252/#2564 structural slice moves the contiguous stable-selection
+LEFTMARGIN and RIGHTMARGI report/label regression functions from
+`test_studio_host_json_settings_page_layout_fields.cpp` into
+`test_studio_host_json_settings_page_layout_margin_fields.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate test
+targets; declarations, invocation behavior, existing fixtures, Studio host
+JSON, DBF/xAsset mutation semantics, report/label stable selection,
+localization, and machine contracts are unchanged. No product or compatibility
+behavior is added. A fresh Linux Debug configuration built the focused
+`test_studio_host_report_direct_setting_fields` and
+`test_studio_host_report_page_setup_fields` targets; the exact CTest pair passed
+`2/2` in 42.44 seconds with `TMPDIR` under `~/temp`. Obtain the protected
+matrix before merge.
+
+## V1 Studio GRIDH regression module
+
+The bounded #5254/#2564 structural slice moves the contiguous stable-selection
+GRIDH report/label regression family from
+`test_studio_host_json_settings_page_layout_fields.cpp` to
+`test_studio_host_json_settings_page_layout_grid_horizontal_fields.inl`. The
+fragment remains included in the same test translation-unit namespace and
+aggregate targets; declarations, invocation behavior, fixtures, Studio host
+JSON, report/label stable selection, localization, DBF/xAsset mutation
+semantics, and machine contracts are unchanged. No product or compatibility
+behavior is added. A fresh Linux Debug configuration built the focused
+`test_studio_host_report_direct_setting_fields` and
+`test_studio_host_report_page_setup_fields` targets; the exact CTest pair passed
+`2/2` in 44.01 seconds with `TMPDIR` under `~/temp`. After rebasing onto the
+merged margin module, the combined pair rebuilt and passed `2/2` in 43.96
+seconds. Obtain the protected matrix before merge. The moved body is
+byte-identical to the pre-extraction source; one terminal blank line is omitted
+to satisfy the repository whitespace gate.
+
+## V1 report/label visual-property regression modules
+
+The bounded #5250/#2564 structural slice moves the contiguous deleted
+report/label visual-property clear, move, and rejection regression families
+from `test_studio_host_json_report_visual_properties.cpp` into the included
+`*_clears.inl`, `*_moves.inl`, and `*_rejections.inl` modules. They remain in
+the same test translation-unit namespace and aggregate executable; declarations,
+invocation behavior, fixtures, Studio host JSON, DBF/xAsset mutation semantics,
+report/label stable selection, localization, and machine contracts are
+unchanged. The test-function bodies are byte-identical to the pre-extraction
+source apart from the two terminal blank lines omitted to satisfy the repository
+whitespace gate; the conditional guards are made self-contained in each included
+module. The direct source drops from 2,186 to 11 lines. A fresh
+Linux Debug `test_studio_host_json` build and focused CTest rerun passed `1/1`
+in 442.44 seconds with `TMPDIR` under `~/temp`. Obtain the protected matrix before
+merge.
+The macro-specialized clear-only and move-only executables also rebuilt and
+passed `2/2` in 12.23 seconds, directly covering their self-contained
+preprocessor guards.
+
+## V1 FLL package/debug-contract regression module
+
+The bounded #5248/#2564 structural slice moves the cohesive FLL package,
+generated-wrapper, export, manifest, and debug-contract regression body from
+`test_runtime_pipeline_output_packaging_fll.cpp` to
+`test_runtime_pipeline_output_packaging_fll_contracts.inl`. The fragment
+remains included in the same translation-unit namespace and aggregate
+`test_runtime_pipeline` target; package/debug artifacts, export evidence,
+security behavior, localization, and machine contracts remain unchanged. The
+moved body is byte-identical to the pre-extraction source. A fresh Linux Debug
+`test_runtime_pipeline` build and focused CTest passed `1/1` in 70.04 seconds
+with `TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
+## V1 workspace-agent security-overview accuracy
+
+The bounded #5244 documentation correction aligns `docs/04-security-model.md`
+with the detailed workspace-agent policy. Copperfin implements a deliberately
+narrow Windows-only executor for an admitted, warned `unrestricted_local`
+session, with an authenticated private image, bounded transport, and mandatory
+content-free intent/outcome audit commits. It remains current-user authority,
+not a sandbox or privilege elevation. Do not claim a product consent dialog,
+provider adapter, real sandbox enforcement, general mutable-tool surface, or
+POSIX/macOS executor: those remain unimplemented. This documentation-only
+slice changes no policy, executable behavior, public API, or machine contract.
+
+## V1 report-object deleted-subtree JSON regression module
+
+The bounded #5246/#2564 structural slice moves the contiguous report-object
+deleted-subtree JSON regression family from
+`test_studio_host_json_objects_diagnostics_and_misc.cpp` to
+`test_studio_host_json_report_object_deleted_subtree.inl`. The fragment remains
+included in the same translation-unit namespace and aggregate target; existing
+fixtures, invocation behavior, report/label stable selection, localization,
+preview-bound, and machine contracts remain unchanged. The moved body is
+byte-identical to the pre-extraction source. A fresh Linux Debug
+`test_studio_host_json` build and focused CTest passed `1/1` in 457.75 seconds
+with `TMPDIR` under `~/temp`. Obtain the protected matrix before merge.
+
+## V1 Studio designer-dispatch JSON regression module
+
+The bounded #5242/#2564 structural slice moves the contiguous Studio
+designer-dispatch JSON regression family from
+`test_studio_host_json_dispatch_designer.cpp` to
+`test_studio_host_json_dispatch_designer_dispatch.inl`. The fragment remains
+included in the same test translation-unit namespace; the aggregate executable,
+existing declaration and invocation, fixtures, non-executing dispatch-planning
+boundary, Studio host JSON, report/label, localization, asset, security, and
+machine contracts remain unchanged. The moved body is byte-identical to the
+pre-extraction source apart from omitting its terminal blank line, as required
+by the repository whitespace gate. A fresh Linux Debug `test_studio_host_json`
+build and focused CTest passed `1/1` in 450.53 seconds with `TMPDIR` under
+`~/temp`. Obtain the protected matrix before merge.
+
+## V1 Studio designer-execution JSON regression module
+
+The bounded #5240/#2564 structural slice moves the contiguous Studio
+designer-execution JSON regression family from
+`test_studio_host_json_dispatch_designer.cpp` to
+`test_studio_host_json_dispatch_designer_execution.inl`. The fragment remains
+included in the same test translation-unit namespace; the aggregate executable,
+existing declaration and invocation, fixtures, non-executing dispatch/launch
+boundary, Studio host JSON, report/label, localization, asset, security, and
+machine contracts remain unchanged. The moved body is byte-identical to the
+pre-extraction source. A fresh Linux Debug `test_studio_host_json` build and
+focused CTest passed `1/1` in 457.39 seconds with `TMPDIR` under `~/temp`.
+Obtain the protected matrix before merge.
+
+## V1 Studio designer-context JSON regression module
+
+The bounded #5238/#2564 structural slice moves the contiguous Studio
+designer-context JSON smoke regression family from
+`test_studio_host_json_dispatch_designer.cpp` to
+`test_studio_host_json_dispatch_designer_contexts.inl`. The fragment remains
+included in the same test translation-unit namespace; the aggregate executable,
+existing declaration and invocation, fixtures, Studio host JSON, report/label,
+localization, invocation-admission, dispatch, launch, asset, security, and
+machine contracts remain unchanged. The moved body is byte-identical to the
+pre-extraction source. A fresh Linux Debug `test_studio_host_json` build and
+focused CTest passed `1/1` in 458.19 seconds with `TMPDIR` under `~/temp`.
+Obtain the protected matrix before merge.
+
+## V1 library-package definition regression module
+
+The bounded #2564 structural slice moves the contiguous library package
+definition, generated-wrapper, manifest, export, and build-contract regression
+from `test_runtime_pipeline_output_packaging_library.cpp` into
+`test_runtime_pipeline_output_packaging_library_definition_contracts.inl`. The
+fragment remains included in the same namespace and aggregate test target; test
+registration and invocation order, fixtures, package/debug artifacts, generated
+wrapper coverage, security checks, localization, and runtime behavior are
+unchanged. No package or compiler capability is added. A fresh Linux Debug
+`test_runtime_pipeline` build and focused CTest passed `1/1` in 79.59 seconds
+with `TMPDIR` under `~/temp`; obtain the protected matrix before merge.
+
+## V1 Studio GRIDV regression module
+
+The bounded #5230/#2564 structural slice moves the contiguous stable-selection
+GRIDV report/label regression family from
+`test_studio_host_json_settings_page_layout_fields.cpp` to
+`test_studio_host_json_settings_page_layout_grid_vertical_fields.inl`. The
+fragment remains in the same test translation-unit namespace; the aggregate
+executable, existing declarations, invocation order, fixtures, Studio host
+JSON, report/label, localization, and machine contracts remain unchanged. A
+focused native rerun is required before merge.
+
+## V1 visual-asset method-reorder regression module
+
+The bounded #5232/#2564 structural slice moves the contiguous visual-asset
+method-reordering and failed-batch rollback regressions from
+`test_visual_asset_editor_methods.cpp` to
+`test_visual_asset_editor_method_reorder_contracts.inl`. The fragment remains
+in the same test translation-unit namespace; the aggregate executable,
+declarations, invocation order, fixtures, visual-asset behavior, raw-byte
+preservation, report/label, localization, and machine contracts remain
+unchanged. A fresh Linux Debug `test_visual_asset_editor` rerun passed `1/1` in
+20.37 seconds with `TMPDIR` under `~/temp`; obtain the refreshed protected
+matrix before merge.
+
+## V1 workspace-agent parser test aliasing correction
+
+Windows diagnostic evidence identified undefined behavior in the existing
+`test_workspace_agent_process_parser` fixture: `std::vector::push_back()` and
+`assign()` were passed a reference to `front()` from the same vector, even
+though either mutation may reallocate and invalidate that reference. The test
+now copies the binding into a standalone value before each mutation. This keeps
+the existing duplicate and over-limit `RQ-CF-AGENT-018` fail-closed cases while
+making them deterministic under MSVC Debug and Release. No production parser,
+authority, launch, security-policy, or public behavior changes. Fresh Linux
+Debug CTest passed `1/1`; fresh Linux Release CTest passed the same target for
+50 consecutive runs, both with `TMPDIR` under `~/temp`. The protected Windows
+matrix remains required evidence.
+## V1 ON PAGE EJECT dispatch
+
+The bounded #5228/#3217 runtime slice recovers only the documented headless
+`EJECT PAGE` trigger for an existing static `ON PAGE` command. It parses the
+command, dispatches the retained action through an owned synthetic routine in
+the existing iterative frame machine, and records `runtime.eject_page` and
+`runtime.on_page` evidence. Existing query and clear behavior remains intact;
+macro-backed actions fail closed. Do not claim printer or alternate-file output,
+`_PADVANCE`, `_PLENGTH`, `_PLINENO`, `_PAGENO`, line-threshold behavior, or
+report/label pagination; those need their own evidenced architecture.
+
+## V1 index-probe asset test module
+
+The bounded #5226/#2564 structural slice moves the contiguous CDX/DCX/IDX/NDX/
+MDX index-probe and localized-diagnostic regressions from `test_vfp_assets.cpp`
+to `test_vfp_assets_index_probe_contracts.inl`. They remain included in the
+same anonymous-namespace test translation unit; the aggregate executable, test
+registration order, fixtures, existing parser/format coverage, and
+localization coverage remain unchanged. This slice adds no parser, asset,
+runtime, format, or machine-contract behavior.
+
+## V1 whole-database JSON asset test module
+
+The bounded #5224/#2564 structural slice moves the contiguous core
+whole-database JSON export and non-mutating import-plan contract regressions
+from `test_vfp_assets.cpp` to `test_vfp_assets_database_json_contracts.inl`.
+They remain included in the same anonymous-namespace test translation unit;
+the aggregate executable, test registration order, fixtures, and existing
+`RQ-CF-MODERNIZATION-001`/`RQ-CF-MODERNIZATION-002` coverage remain unchanged.
+This does not add `IMPORT DATABASE` syntax or any reconstruction, output,
+overwrite, provider, or other file-mutation authority. The first local build
+attempt was blocked before compilation completed because the compiler selected
+quota-managed `/tmp`; the focused Debug rebuild and `test_vfp_assets` CTest
+rerun passed 1/1 in 2.20 seconds with `TMPDIR` under `~/temp`.
+
+## V1 xAsset bootstrap and VCX-source materialization module
+
+The bounded #5222/#2564 structural slice moves the contiguous private xAsset
+bootstrap materialization and VCX-to-PRG class-source materialization from
+`prg_engine.cpp` to `prg_engine_xasset_materialization.inl`. The fragment
+remains in the same private `PrgRuntimeSession::Impl` translation-unit context;
+public APIs, CMake topology, verified-byte snapshot handling, xAsset bootstrap
+cleanup, generated-source shape, localization, package/debug contracts, and
+runtime behavior remain unchanged. The moved 323-line body is byte-identical
+to the pre-extraction source. A fresh Linux Debug exact-head build passed
+`test_prg_engine_dynamic_xasset_security` and
+`test_prg_engine_runtime_surface_procedure_classes` 2/2 in 1.45 seconds with
+`TMPDIR` under `~/temp`; obtain the protected matrix before merge.
+
+## V1 native object-member and focus-dispatch module
+
+The bounded #5218/#2564 structural slice moves the contiguous native PRG
+object-member invocation, focus-transition, tab-stop traversal, and
+option-group movement implementation from `prg_engine.cpp` to
+`prg_engine_native_object_focus_dispatch.inl`. The fragment is included in the
+same private `PrgRuntimeSession::Impl` translation-unit context; no public API,
+CMake target, runtime behavior, UI behavior, or localization contract changes.
+The moved 1,409-line body is byte-identical to the pre-extraction source apart
+from omitting its terminal blank line, as required by the repository whitespace
+gate. A fresh Linux Debug exact-head build passed
+`test_prg_engine_runtime_surface_functions` 1/1 in 22.88 seconds with `TMPDIR`
+under `~/temp`. The complete protected matrix passed before merge: DCO, Socket
+Security, GCC/Clang executable paths, Ubuntu/macOS/Windows generated-launcher
+paths, Windows Win32/x64 DECLARE, and Windows environment paths.
+
+## V1 native property and method-reflection module
+
+The bounded #5220/#2564 structural slice moves native PRG property and
+property-expression reads together with native method-source reads/writes from
+`prg_engine.cpp` to `prg_engine_native_reflection_dispatch.inl`. The fragment
+is included in the same private `PrgRuntimeSession::Impl` translation-unit
+context; public APIs, CMake target topology, runtime behavior, UI behavior,
+and localization contracts remain unchanged. The moved 717-line body is
+byte-identical to the pre-extraction source apart from omission of its terminal
+blank line, as required by the repository whitespace gate. A fresh Linux Debug
+exact-head build passed `test_prg_engine_runtime_surface_functions` 1/1 in 5.15
+seconds with `TMPDIR` under `~/temp`; obtain the protected matrix before merge.
+
+## V1 runtime package-transaction module
+
+The bounded #5214/#2564 structural slice moves the runtime package transaction
+ownership boundary from `runtime_pipeline_public_api.cpp` to
+`runtime_pipeline_package_transaction.cpp`: locking, pinned-parent identity,
+staged content materialization, deferred finalization, commit/rollback, and
+the existing test hooks move together. `runtime_pipeline_public_api.cpp`
+retains only the native-wrapper primary-output builder and its private sequence
+counter. The moved source is byte-identical except for that counter remaining
+with its sole consumer, and no public header, package format, manifest,
+security, localization, compiler, or user-facing contract changes. A fresh
+Linux Debug `test_runtime_pipeline` build succeeded and focused CTest passed
+1/1 in 74.03 seconds with `TMPDIR` under `~/temp`. The complete protected
+matrix passed before merge: DCO, Socket, GCC/Clang executable paths,
+Ubuntu/macOS/Windows generated launcher, Windows Win32/x64 DECLARE, and
+Windows environment paths.
+
+## V1 native event binding/dispatch module
+
+The bounded #5216/#2564 structural slice moves the contiguous native runtime
+event implementation from `prg_engine.cpp` to the included
+`prg_engine_event_binding_dispatch.inl` module. It retains native-event and
+window-message delegate invocation, `BINDEVENT()`/`RAISEEVENT()`/
+`UNBINDEVENTS()`/`AEVENTS()`, the fail-closed host-owned `EVENTHANDLER()`
+boundary, token draining, deterministic retirement, callback containment, and
+release cleanup in one private implementation boundary. The moved source body
+is byte-identical (apart from omitting its terminal blank line); public
+headers, PRG/JSON/package/security/localization
+contracts, and stack-frugal execution are unchanged. A fresh Linux Debug
+`test_prg_engine_runtime_surface_functions` build completed successfully and
+focused CTest passed 1/1 in 5.49 seconds with `TMPDIR` under `~/temp`. Obtain
+the complete protected matrix before merge.
+
+## V1 runtime package-plan and manifest module
+
+The bounded #5212/#2564 structural slice moves the runtime package-plan
+construction plus runtime/debug manifest serialization from
+`runtime_pipeline_public_api.cpp` to
+`runtime_pipeline_package_plan_manifest.cpp`. The 646-line moved public-API
+segment is byte-identical to its pre-extraction source; the two private
+manifest-version constants move with their sole consumers. Transaction,
+materialization, primary-output, package, compiler, security, localization,
+and user-facing contracts do not change. A fresh Linux Debug
+`test_runtime_pipeline` build completed successfully with `TMPDIR` under
+`~/temp`. Two reruns of the focused executable completed all other fixtures
+but failed only its existing `.NET` child-launch checks, even though
+`dotnet --info` succeeds in the shell. Treat that local executable-launch
+condition as an environment limitation; the subsequent complete protected
+matrix passed before merge.
+
+## V1 library-entrypoint emitter module
+
+The bounded #5210/#2564 structural slice moves generated native FLL and
+DLL/OCX library-entrypoint emission from
+`runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_entrypoints.cpp`. The manifest retains only
+orchestration after response handling. The moved FLL (249 lines), DLL/OCX
+(206 lines), and fallback (5 lines) emitter fragments are byte-identical to
+their pre-extraction source. Generated wrapper text and export metadata,
+bridge, package, security, and user-facing contracts do not change. Obtain a
+fresh Debug build before merge and run `test_runtime_pipeline` with `TMPDIR`
+under `~/temp`: the focused test passed 1/1 in 70.77 seconds on 2026-08-25.
+An immediately preceding run reported only the transient existing `.NET`
+child-launch failure; the rerun passed, and the predecessor response-handling
+build also passed 1/1 in 70.41 seconds under the same temporary-root policy.
+The protected matrix remains required before merge.
+
+## V1 library-export process-launch module
+
+The bounded #5208/#2564 structural slice moves generated native-wrapper
+launch-plan, request/response artifact-path, platform argument/environment,
+verified-host process-execution, and process-result emission from
+`runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_process_launch.cpp`. It remains after request
+serialization and before response handling. The moved 567-line emitter segment
+is byte-identical to the pre-extraction source; generated wrapper text and
+host-authentication, path/environment, process, package, security, and
+user-facing contracts do not change. Obtain a fresh focused runtime-pipeline
+build/test and protected-matrix result before merge. A fresh Linux Debug build
+of `test_runtime_pipeline` completed successfully. Its CTest execution then
+failed when the host's quota-managed `/tmp` rejected fixture locks with
+`errno=122`; an immediately preceding merged-head executable reproduced the
+same 129-failure cascade. This local storage-quota limitation is not introduced
+by the structural slice. With `TMPDIR` under `/home/rich/temp`, the extracted
+build completed all package fixtures and ran for 73.33 seconds; it failed only
+the two existing .NET child-launch cases. The immediately preceding merged-head
+executable reproduced those same two failures in 72.67 seconds under its own
+`/home/rich/temp` directory. Retain the direct baseline comparison and obtain
+the protected-matrix result before merge.
+
+## V1 library-export bridge-model module
+
+The bounded #5206/#2564 structural slice moves the generated native-wrapper
+bridge path helpers and bridge data-model declarations from
+`runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_bridge_model.cpp`. It remains after the
+compilation preamble and host-authentication emission and before request
+serialization. The moved 474-line emitter segment is byte-identical to the
+pre-extraction source; generated wrapper text and bridge, package, process,
+security, and user-facing contracts do not change. A fresh Linux Debug build
+of `test_runtime_pipeline` completed successfully. Its CTest execution then
+reproduced two pre-existing local .NET child-launch failures; the immediately
+preceding merged-head executable reproduced the same two failures under the
+same `/home/rich/temp` environment. This local limitation is not introduced by
+the structural slice; retain the direct baseline comparison and obtain the
+protected matrix result before merge.
+
+## V1 library-export response-handling module
+
+The bounded #5204/#2564 structural slice moves the contiguous generated
+native-wrapper response-validation, response-read/parse, fallback-selection,
+and return-materialization emission from
+`runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_response_handling.cpp`. It remains after the
+request-serialization emission and before output-kind FLL/DLL emission. The
+moved 982-line emitter segment is byte-identical to the pre-extraction source;
+the generated bridge request/response, fallback, process, package, and
+user-facing contracts do not change. A fresh Linux Debug build and focused
+`test_runtime_pipeline` CTest passed 1/1 in 70.84 seconds with `TMPDIR` under
+`/home/rich/temp`.
+
+## V1 buffering CURVAL/admission test module
+
+The bounded #5202/#2564 structural slice moves the contiguous existing
+CURVAL/LUPDATE verified-admission regressions from
+`test_prg_engine_runtime_surface_functions_buffering.cpp` to the included
+`test_prg_engine_runtime_surface_functions_buffering_curval_admission.inl`
+ownership fragment.
+The test executable, declarations, and invocation order remain unchanged.
+This is structural only: no runtime behavior, requirements, RC artifact, or
+user-facing contract changes. The moved bodies are byte-identical. A fresh
+Linux Debug build and focused `test_prg_engine_runtime_surface_functions_buffering`
+CTest passed 1/1 in 0.63 seconds with `TMPDIR` under `/home/rich/temp`; the
+clean rebuild also restored the complete `cf_design_model` archive before the
+fresh link.
+
+## V1 library-export request-serialization module
+
+The bounded #2564 slice in #5198 moves the generated wrapper's descriptor,
+invocation, command-flag, JSON request serialization, and placeholder-return
+emission from `runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_request_serialization.cpp`. Preserve the
+exact generated source ordering: it follows the bridge data model and precedes
+the process-environment helpers. A capture-based comparison confirmed the
+extracted 17,085-byte generated segment is byte-identical to the pre-extraction
+text. Fresh Linux Debug build and focused `test_runtime_pipeline` CTest pass
+1/1 in 67.85 seconds when `TMPDIR` is the writable `/home/rich/temp` area;
+the initial `/tmp` invocation encountered the known per-user quota before
+runtime packaging could begin.
+
+## V1 PRG native-object helper module
+
+The bounded #2564 slice in #5200 moves unique native OLECONTROL verb and
+OBJECTVERB helpers, native object member/accessor/assigner matching, runtime
+expression serialization, INSERT serialization, and native method-override
+key construction from `prg_engine.cpp` into
+`prg_engine_native_object_helpers.cpp`. Visual-object predicates stay in their
+established owners and must not be duplicated. The internal header is the
+single declaration boundary. Fresh Linux Debug build and focused
+`test_prg_engine_runtime_surface_functions` CTest pass 1/1 in 5.11 seconds;
+that executable includes the existing OLECONTROL interop and INSERT runtime
+coverage. This is structural only and introduces no PRG contract.
+
+## V1 library-export host-authentication module
+
+The bounded #2564 slice in #5196 moves the generated wrapper's host
+authentication emission from `runtime_pipeline_library_export_manifest.cpp` to
+`runtime_pipeline_library_export_host_authentication.cpp`. Preserve the exact
+SHA-256 source, manifest lookup, Windows reparse-point and POSIX symlink
+rejection paths, descriptor handling, and emitted ordering. A capture-based
+comparison confirmed the extracted generated text is byte-identical to the
+pre-extraction 8,778-byte segment; the focused library and FLL tests also
+assert that digest verification precedes verified-host admission.
+
+## V1 library-export compilation-preamble module
+
+The bounded #2564 structural slice in #5194 moves the platform-specific
+include and export-macro preamble emitted into generated native wrappers from
+`runtime_pipeline_library_export_manifest.cpp` into
+`runtime_pipeline_library_export_preamble.cpp`. Preserve the exact emitted
+include order, Windows/POSIX branches, export definitions, blank-line
+termination, and the existing public runtime-pipeline helper contract. A fresh
+Debug build in a relocated `/home/rich` build directory plus focused
+`test_runtime_pipeline` CTest passed 1/1 in 71.82 seconds; the local `/tmp`
+build failure was an environmental quota limit and not product evidence.
+Protected cross-platform validation remains required before merge.
+
+## V1 owned-COM adapter hosted evidence
+
+Protected Windows run `32794260256` passed at merged adapter head `e68056ad0`.
+It builds and executes the package-free local connection-point fixture, proving
+runtime-token/PRG-handler delivery, unavailable-interface/empty-contract/
+undeclared-ID rejection, direct and PRG-level unbind, source/handler-release
+unadvise, and handler-fault cleanup. It also passes the workflow's private
+workspace-agent/parser checks. `LLR-VFP-COM-002` is recovered only for this
+strictly owned local Windows lane; do not claim remote COM, third-party server,
+network, activation/discovery, payload-marshaling, or PRG/JSON COM-resource
+support.
+
+## V1 owned-COM lifecycle fixture correction
+
+The release-cleanup case in the Windows owned-COM fixture originally wrote a
+literal `\\n` after `Release()` into its temporary PRG. It now writes an actual
+line ending and asserts that this input boundary remains true, so the hosted
+test proves source/handler-release unadvise rather than an accidentally merged
+source line. The correction is test-only; it does not broaden the adapter or
+its local-only trust boundary.
+
+## V1 owned-COM adapter rejection correction
+
+The Windows `IDispatch` sink must return a failing HRESULT—not `S_FALSE`—for
+an unknown dispatch ID, a stopped subscription, or an unavailable delivery
+sink. `S_FALSE` is still successful according to `SUCCEEDED()`, so a source
+could otherwise report a rejected callback as delivered. The focused
+owned-source test exercises that negative case. The Windows environment
+workflow's PE-image contract assertion now includes the adapter test in its
+protected target sequence.
+
+## V1 Windows owned EVENTHANDLER adapter and fixture
+
+Issue #5185 adds a Windows-only, host-private `IConnectionPoint` adapter. It
+owns the COM source reference, connection point, cookie, and `IDispatch` sink;
+only declared zero-argument dispatch IDs become the already bounded method
+tokens from #5189. The package-free in-process fixture proves native callback
+delivery to the iterative PRG handler, rejects unavailable interfaces, empty
+dispatch contracts, and unknown dispatch IDs, and proves direct and PRG-level
+explicit unbind plus source/handler-release and contained-fault unadvise.
+Portable regressions remain the coverage for admission and duplicate/multiple
+binding rules. It does not activate, discover, probe, or contact a third-party
+or remote COM server. Issue #5190 requires the focused Windows workflow
+evidence before this becomes a recovered-complete claim.
+
+## V1 external event-token queue concurrent delivery coverage
+
+The internal `ExternalEventTokenQueue` now has a focused four-producer and
+one-runtime-consumer regression. It remains deliberately below its fixed
+capacity so every normalized token must be accepted; concurrent draining must
+retain every accepted token exactly once and leave the queue empty. This
+extends the existing validation/FIFO/boundary coverage without adding a public
+PRG, JSON, or COM contract. Direct Linux compilation with strict warnings and
+execution of the queue test pass.
+
+## V1 controlled EVENTHANDLER token delivery
+
+Issue #5188 connects an optional host-owned admitted-source subscription to
+the internal queue without adding a PRG or JSON contract. The host receives a
+weak sink that accepts only one listed handler-method identifier; the runtime
+thread drains its bounded token, rechecks the source/handler binding and
+method, and uses the existing iterative native-method frame path. The host's
+disconnect action is invoked before a bound source or handler is discarded,
+at shutdown, and after an escaping delivery fault. This is not a COM
+connection-point implementation: Windows ownership, `IConnectionPoint`
+subscription, and an owned Windows fixture remain #5185/#5184 work.
+Fresh Debug `test_prg_engine_runtime_surface_functions` passes 1/1.
+
+## V1 external event-token queue
+
+Issue #5186 adds `runtime_external_event_queue.{h,cpp}`, an internal,
+thread-safe FIFO for normalized, bounded host event tokens. It rejects empty,
+malformed, overlong, and over-capacity input without partial mutation and
+exposes no mutable runtime session state. This is only the portable handoff
+primitive for the Windows `EVENTHANDLER()` adapter in #5185. By itself it
+does not subscribe to COM or change any PRG/JSON contract. Fresh Debug CTest
+`test_runtime_external_event_queue` passes 1/1.
+
+## V1 native-wrapper process module
+
+The bounded #2564 source-modularity slice moves the platform-specific native
+wrapper configure/build process runner out of
+`runtime_pipeline_public_api.cpp` into
+`runtime_pipeline_native_wrapper_process.cpp`. The existing command-line
+quoting, child output capture, exit-status behavior, and internal helper
+contract remain unchanged. A fresh Linux Debug `test_runtime_pipeline` build
+and focused CTest pass 1/1 in 70.78 seconds. Protected cross-platform
+validation remains required before merge.
+
+## V1 library-export artifact-emitter module
+
+The bounded #2564 source-modularity slice separates native-wrapper CMake,
+shell/PowerShell build-script, FLL API-manifest, and DLL/library API-manifest
+emission into `runtime_pipeline_library_export_artifacts.cpp`. Its emitter body
+is unchanged from the prior `runtime_pipeline_library_export_manifest.cpp`
+implementation; the runtime-pipeline target and public helper declarations
+remain unchanged. A fresh Linux Debug `test_runtime_pipeline` build and focused
+CTest pass 1/1 in 67.92 seconds. Protected cross-platform validation remains
+required before merge.
+
+## V1 library-export metadata module
+
+The bounded #2564 source-modularity slice extracts library-export discovery,
+parameter metadata, source-provenance encoding, and module-definition emission
+into `runtime_pipeline_library_export_metadata.cpp`. The generated native
+wrapper emitter remains in
+`runtime_pipeline_library_export_manifest.cpp`; the existing
+`test_runtime_pipeline` target continues to cover both units' package
+manifests. Fresh Linux Debug build plus focused CTest pass 1/1 in 73.25
+seconds. Protected cross-platform validation remains required before merge.
+
+## V1 out-of-tree locale staging cleanup
+
+The developer-build locale staging rule now removes only its generated
+`resources/locales` subtree before copying source catalogs. This keeps the
+executable-relative catalog lookup from seeing a catalog that was deleted or
+renamed in the source tree. Verify with an out-of-tree configure after placing
+a stale file below that generated subtree; the file must be absent afterward.
+
+## V1 out-of-tree Studio locale discovery
+
+The #2348 localization slice stages `resources/locales` under an out-of-tree
+build's `resources/` directory and recognizes that directory beside a host
+executable. This keeps default visual-editor diagnostics localized when Studio
+is invoked from an arbitrary working directory without a locale-root override.
+Explicit `COPPERFIN_LOCALE_DIR` overrides and installed layouts retain their
+existing precedence; JSON keys, command tokens, statuses, and exit codes remain
+invariant. Fresh Debug `test_localization` and `test_studio_host_json` pass;
+cross-platform hosted validation remains required before merge.
+
+## V1 runtime-pipeline library locale test module
+
+The bounded #2564 structural slice moves the library-package manifest and
+wrapper locale-invariance regressions into
+`test_runtime_pipeline_output_packaging_library_locale.cpp`. The existing
+`test_runtime_pipeline` executable retains its fixtures, invocation order, and
+runtime-package behavior. A fresh Debug configure/build and focused CTest pass
+1/1 on Linux; protected cross-platform validation remains required before
+merge.
+
+## V1 EVENTHANDLER host capability boundary
+
+`RuntimeSessionOptions::com_event_source_admission_callback` is the only
+portable admission path for `EVENTHANDLER()`. It requires a host-owned local
+source identity, a nonempty handler-interface identity, and an explicit list
+of handler methods; without all of them the call is `.F.`. The runtime owns
+deduplicated bind/unbind records and removes them on either object release.
+It still performs no COM activation, registry/network discovery, connection-
+point dispatch, or external callback. The focused runtime-surface test passes
+on a fresh Linux Debug build; owned Windows dispatch and fault evidence remain
+with `#5164`.
+
+Explicit unbind uses the existing runtime source/handler record rather than a
+fresh admission callback, so host revocation cannot leave stale state. Both
+normal release and failed native-object construction purge the same registry.
+
+## V1 visual-asset BOTMARGIN memo test module
+
+The bounded #2564 structural slice moves the paired FRX/LBX `BOTMARGIN` memo
+round-trip regression into
+`test_visual_asset_editor_report_settings_bottom_margin.cpp`. The existing
+`test_visual_asset_editor` executable retains the same fixture bytes,
+assertions, invocation order, and visual-asset behavior. A fresh Debug build
+and focused CTest must pass before protected cross-platform validation.
+
+## V1 visual-asset property comment-line test module
+
+The bounded #2564 structural slice moves the report-settings comment-line
+preservation regression into `test_visual_asset_editor_property_comment_lines.cpp`.
+The existing `test_visual_asset_editor` executable retains the same fixture
+bytes, assertions, invocation order, and visual-asset behavior. A fresh Debug
+build and focused CTest must pass before protected cross-platform validation.
+
+## V1 visual-asset blank-property test module
+
+The bounded #2564 structural slice moves the blank-property-value preservation
+regression into `test_visual_asset_editor_property_blank_value.cpp`. The
+existing `test_visual_asset_editor` executable retains its fixture bytes,
+ assertions, and invocation order. A fresh Debug build and focused CTest pass
+ 1/1; protected cross-platform validation remains required before merge.
+
 ## V1 VFP-asset test support
 
 The bounded #2564 structural slice extracts reusable VFP-asset test support

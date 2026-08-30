@@ -13,6 +13,8 @@ set(environment_header_path
 set(consumer_path "${SOURCE_DIR}/src/security/workspace_agent_environment.cpp")
 set(environment_test_path
     "${SOURCE_DIR}/tests/test_workspace_agent_isolated_environment.cpp")
+set(environment_session_layout_lifecycle_test_path
+    "${SOURCE_DIR}/tests/test_workspace_agent_isolated_environment_session_layout_lifecycle.inl")
 set(root_build_path "${SOURCE_DIR}/CMakeLists.txt")
 set(test_build_path "${SOURCE_DIR}/tests/CMakeLists.txt")
 set(workflow_path "${SOURCE_DIR}/.github/workflows/generated-launcher-validation.yml")
@@ -24,6 +26,7 @@ foreach(path IN ITEMS
         "${environment_header_path}"
         "${consumer_path}"
         "${environment_test_path}"
+        "${environment_session_layout_lifecycle_test_path}"
         "${root_build_path}"
         "${test_build_path}"
         "${workflow_path}"
@@ -38,6 +41,10 @@ file(READ "${source_path}" source_text)
 file(READ "${environment_header_path}" environment_header_text)
 file(READ "${consumer_path}" consumer_text)
 file(READ "${environment_test_path}" environment_test_text)
+file(READ "${environment_session_layout_lifecycle_test_path}"
+    environment_session_layout_lifecycle_test_text)
+string(APPEND environment_test_text
+    "\n${environment_session_layout_lifecycle_test_text}")
 file(READ "${root_build_path}" root_build_text)
 file(READ "${test_build_path}" test_build_text)
 file(READ "${workflow_path}" workflow_text)
@@ -218,6 +225,7 @@ endforeach()
 foreach(path IN ITEMS
         "tests/test_platform_private_directory.cpp"
         "tests/test_workspace_agent_isolated_environment.cpp"
+        "tests/test_workspace_agent_isolated_environment_session_layout_lifecycle.inl"
         "tests/run_platform_private_directory_boundary_contract_check.cmake")
     require_text_count("${workflow_text}" "${path}" 1
         "direct-push private-layout path-filter coverage")

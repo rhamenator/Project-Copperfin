@@ -95,6 +95,15 @@ Completed implementation evidence:
 - corrected-head review identified that physical metadata alone does not
   authenticate mutable executable bytes; the candidate now binds and
   revalidates trusted SHA-256 evidence, with direct regression coverage;
+- Windows diagnostic evidence found undefined behavior in the focused
+  excessive-binding and duplicate-binding test setup: `std::vector` mutation
+  received a reference into the same vector, which a reallocation could
+  invalidate. The test now copies its canonical binding before either mutation,
+  preserving the intended `DQ-workspace-agent-process-parser-002` denial
+  coverage without relying on allocator layout. Windows Debug reproduced the
+  standard-library assertion; optimized execution had been nondeterministic,
+  including one protected-matrix `0xc0000409` fail-fast. This is test-harness
+  correction only; parser authority behavior and hazard controls are unchanged;
 - subsequent exact-head review identified that an adjacent mutable DLL could
   still influence parsing; configuration now accepts only exact-digest product
   evidence for a self-contained parser image and rejects every other dependency
