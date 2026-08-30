@@ -157,6 +157,17 @@ void test_boundary_rejects_aliases_and_indirection() {
         return;
     }
 
+    // A trailing path separator (filename() empty, but not alias-prone) is a
+    // legitimate, common root spelling -- e.g. "C:\Workspace\" -- and must
+    // remain accepted consistently with
+    // WorkspaceAgentProcessTargetBoundary::create(), which imposes no
+    // filename requirement on the identical argument. A prior refactor here
+    // briefly regressed this by validating the root with the file-target
+    // spelling check (which requires a non-empty filename) instead of the
+    // directory-appropriate check.
+    expect(WorkspaceAgentFileTargetBoundary::create(tree.workspace / "").has_value(),
+           "RQ-CF-AGENT-009: a workspace root with a trailing separator must still configure the boundary");
+
     const auto inside = boundary->inspect_workspace_file("nested/child.prg");
     expect(inside.allowed && inside.canonical_path ==
                std::filesystem::canonical(tree.workspace / "nested" / "child.prg") &&

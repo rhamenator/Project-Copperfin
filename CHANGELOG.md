@@ -8,10 +8,11 @@
   time; the traceability rows were left recording `defined` despite the
   documented review holds. Rejection is added to
   `workspace_agent_target_containment.cpp`,
-  `workspace_agent_process_containment.cpp`, and
-  `workspace_agent_environment.cpp` for workspace/local file targets, process
-  executables and working directories, and isolated-environment storage,
-  approved-executable, and Windows-system-root configuration paths. Regression
+  `workspace_agent_process_containment.cpp`,
+  `workspace_agent_environment.cpp`, and `workspace_agent_audit_sink.cpp` for
+  workspace/local file targets, process executables and working directories,
+  isolated-environment storage/approved-executable/Windows-system-root
+  configuration paths, and session audit log paths. Regression
   coverage added to the corresponding existing test files. No POSIX behavior
   changes; the check is a no-op on non-Windows hosts, where this aliasing
   cannot occur.
