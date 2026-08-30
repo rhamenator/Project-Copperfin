@@ -1,5 +1,29 @@
 # Agent Handoff
 
+## In-progress: PR #5407 (TOCTOU fix for #5400), not yet merged
+
+**Steering-continuity record** — this is running only as background
+subagents/workflow dispatches of the active session and would leave no
+trace if the session stops before reporting. If you cannot find these
+results already reported/acted on, re-run both before merging:
+`/code-review --branch agent/v1-physical-path-containment-toctou max`, and
+`gh workflow run "Windows Native Validation" --ref agent/v1-physical-path-containment-toctou`
+(check completion with `gh run list --workflow="Windows Native Validation"
+--branch agent/v1-physical-path-containment-toctou`).
+
+PR #5407 fixes #5400 (the TOCTOU race in `inspect_physical_path_containment`)
+via `openat()`+`O_NOFOLLOW` descriptor chaining on POSIX and a merged
+single-pass walk on Windows (narrows, does not eliminate, the window there —
+see the PR body and the new `RQ-CF-CONTAINMENT-001` traceability row for why).
+Fully verified locally on Linux (six dependent test binaries pass; caught and
+fixed two real defects in the rewrite itself along the way, including an
+`ENOTDIR`-vs-`ELOOP` errno-classification gap verified with a standalone C
+repro, not assumed from documentation). The Windows-side code has never been
+compiled or run anywhere yet — this is exactly the kind of change where the
+manual full-suite dispatch above is not optional, per the standing fact
+below about `v1-development` PRs not getting full native validation by
+default.
+
 ## Shipped: PR #5399 (Windows path-alias rejection), merged as `9f00f388d`
 
 Two adversarial `/code-review` passes plus a full unrestricted
