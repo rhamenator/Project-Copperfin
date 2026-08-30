@@ -77,9 +77,11 @@ these are downloaded or derived from any third-party file.
 libFuzzer's live corpus argument.** libFuzzer treats its corpus argument as
 read-write and adds every newly-covering input it finds; pointing it at this
 source-tree directory would let a local or CI run silently commit generated
-files into version control. The CMake wiring below copies these seeds into a
-build-tree corpus at configure time and only ever points libFuzzer at that
-copy.
+files into version control. `run_dbf_header_fuzz_smoke_check.cmake` resets a
+build-tree corpus from these checked-in seeds immediately before every test
+run and only ever points libFuzzer at that copy -- not just once at configure
+time -- so a second `ctest` invocation in the same build tree runs from the
+fixed seeds again rather than a corpus a prior run already grew.
 
 ## Running the optional targets
 
