@@ -1,28 +1,59 @@
 # Agent Handoff
 
-## In-progress: adversarial review of PR #5399 before merge
+## In-progress: full Windows validation + second adversarial review of PR #5399
 
-**Steering-continuity record** (not yet recoverable from the branch/PR itself —
-this note exists specifically so a session restart doesn't lose it). As of
-2026-08-30, ~06:40 EDT: `agent/v1-windows-path-alias-rejection` (PR #5399,
-head `0a6bd7e86`) is fully pushed and its own CI is green, but before
-merging it, a deliberately adversarial `/code-review --branch
-agent/v1-windows-path-alias-rejection max` pass was launched as a background
-subagent of the active Claude session, specifically to cover for Codex's
-PR-review bot possibly being unavailable (repository owner's ChatGPT Pro
-lapsed; expected back in ~2 weeks; owner is restarting sessions at 3 AM EDT
-due to session limits, which will kill this subagent along with its parent).
+**Steering-continuity record** (not yet recoverable from the branch/PR itself
+alone — this note exists so a session restart doesn't lose it; update or
+delete this section once #5399 actually merges). Repository owner's ChatGPT
+Pro lapsed (~2 weeks out as of 2026-08-30), so Codex's PR-review bot may be
+unavailable; owner is restarting sessions on session-limit cutoffs, so
+anything running only as a background subagent of the active session is at
+risk of being silently killed with no trace. Do not treat silence as a clean
+bill of health for anything described below as "in progress" — check
+directly (`gh run view <id>`, `gh pr checks 5399`) rather than assume.
 
-If you are resuming this and cannot find that review's result already
-reported/acted on: **do not treat silence as a clean bill of health** — the
-subagent may have been killed mid-run with no trace. Re-run the review
-command above before merging #5399. Known state as of this note: PR #5398
-(libFuzzer harness) already merged into v1-development. Two prior review
-rounds on #5399 (from Codex's bot) already found and fixed two real issues
-(a missing `create()` alias check, a fuzz-corpus reset bug on the sibling
-PR); this third pass is an extra check specifically because that bot's
-availability going forward is uncertain, not because of any known problem
-with the current diff.
+As of 2026-08-30 ~03:05 EDT, head `071f564e4` (PR #5398 reconciled in, plus
+all fixes below):
+
+- A first adversarial `/code-review --branch agent/v1-windows-path-alias-rejection max`
+  pass (on head `0a6bd7e86`) found a real regression: the `create()` dedup
+  (converging on `strict_absolute_file_path()`) silently required a non-empty
+  `filename()`, which the sibling `WorkspaceAgentProcessTargetBoundary::create()`
+  does not require for the identical workspace-root argument — a root like
+  `C:\Workspace\` would be rejected by the file-target boundary while still
+  accepted by the process-target boundary. Fixed (`e7ad049be`, reverted to the
+  original inline checks + alias check) and locked in with a regression test
+  plus a CHANGELOG fix for an omitted touched file (`aae658fea`).
+- A **second** adversarial review pass (same command, on final head
+  `071f564e4`) and a full unrestricted `workflow_dispatch` run of "Windows
+  Native Validation" (the only workflow that builds/runs the complete native
+  test suite — required PR checks on `v1-development` only cover a narrow,
+  per-test-target subset; see below) are both running now. If you cannot find
+  their results already reported: re-run both before merging #5399.
+- Still open, not urgent: `path_has_windows_alias_prone_component()` is
+  duplicated verbatim across 4 files (target_containment, process_containment,
+  environment, audit_sink) instead of a shared header — architecture note
+  from the first adversarial review, not a live bug, not yet consolidated.
+- **Important standing fact for any future Windows-side change to this repo**:
+  PRs targeting `v1-development` do NOT get the full native test suite — only
+  `native-validation-{windows,linux,macos}.yml` run the complete, unrestricted
+  `ctest` suite, and they trigger only on `branches: [main]`. The
+  `v1-development`-triggered workflows (`windows-environment-validation.yml`,
+  `generated-launcher-validation.yml`, `windows-x86-declare-validation.yml`,
+  `executable-path-validation.yml`) each build/run only an explicit, narrow
+  `-R` filtered subset of test targets. Before trusting green CI as real
+  coverage of a new/changed Windows-relevant test file, grep
+  `.github/workflows/*.yml` for that exact test target name; if absent,
+  manually `gh workflow run "Windows Native Validation" --ref <branch>` for
+  real verification before merging.
+- Also filed from this review pass (linked as sub-issues of `#34`, tracking
+  comment on `#34`): #5400 (TOCTOU race in `inspect_physical_path_containment`,
+  most severe), #5401 (`stop()` exception-safety gap), #5402 (heap
+  buffer over-read in `external_process_policy.cpp`'s `get_company_name()`),
+  #5403 (open policy question: should `workspace_sandbox` mode require a
+  confirmation gate like `unrestricted_local` does?). None of these four are
+  fixed yet; #5400 in particular needs real design work (atomic
+  resolve-and-verify), not a quick patch.
 
 ## Windows trailing-dot/trailing-space path-alias rejection
 
