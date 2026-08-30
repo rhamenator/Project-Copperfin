@@ -353,6 +353,25 @@ void test_boundary_requires_explicit_direct_process_targets() {
                     (tree.outside / "working").wstring() + L" "))
                 .allowed,
            "RQ-CF-AGENT-010: a local working directory with a trailing space must fail before lookup");
+
+    // Windows reserves these names as device objects regardless of extension
+    // or directory: CreateFileW("NUL", ...) or ("lpt1.txt", ...) opens the
+    // corresponding device, not a regular file with that name, so the
+    // strict-spelling check must reject them before any filesystem lookup.
+    for (const char* device_name : {"NUL", "con", "COM1", "lpt1.txt"}) {
+        expect(!boundary->inspect_workspace_process(device_name, ".").allowed,
+               "RQ-CF-AGENT-#5404: a reserved Windows device name workspace executable must fail before lookup");
+        expect(!boundary->inspect_workspace_process("bin/workspace-tool", device_name).allowed,
+               "RQ-CF-AGENT-#5404: a reserved Windows device name workspace working directory must fail before lookup");
+    }
+    expect(!boundary->inspect_local_process(
+                tree.outside / "bin" / "NUL", tree.outside / "working")
+                .allowed,
+           "RQ-CF-AGENT-#5404: a reserved Windows device name local executable must fail before lookup");
+    expect(!boundary->inspect_local_process(
+                tree.outside / "bin" / "local-tool", tree.outside / "NUL")
+                .allowed,
+           "RQ-CF-AGENT-#5404: a reserved Windows device name local working directory must fail before lookup");
 #endif
     expect(!boundary->inspect_workspace_process("missing", ".").allowed,
            "RQ-CF-AGENT-010: a missing executable must fail closed");

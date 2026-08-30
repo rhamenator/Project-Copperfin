@@ -450,6 +450,22 @@ void test_configuration_containment_and_size_limit_fail_closed() {
     expect(!trailing_dot_directory.ready() &&
                trailing_dot_directory.session_sink().commit == nullptr,
            "RQ-CF-AGENT-006: a trailing-dot log directory component must be inert");
+
+    // Windows reserves these names as device objects regardless of extension
+    // or directory: CreateFileW("NUL", ...) or ("lpt1.txt", ...) opens the
+    // corresponding device, not a regular file with that name, so the
+    // strict-spelling check must reject them before any filesystem lookup.
+    WorkspaceAgentSessionAuditFileSink device_name_log(root.path(), "NUL");
+    WorkspaceAgentSessionAuditFileSink device_name_extension_log(root.path(), "lpt1.txt");
+    WorkspaceAgentSessionAuditFileSink device_name_directory_log(root.path(), "COM1/events.log");
+    expect(!device_name_log.ready() && device_name_log.session_sink().commit == nullptr,
+           "RQ-CF-AGENT-#5404: a reserved Windows device name log filename must be inert");
+    expect(!device_name_extension_log.ready() &&
+               device_name_extension_log.session_sink().commit == nullptr,
+           "RQ-CF-AGENT-#5404: a reserved Windows device name with an extension must be inert");
+    expect(!device_name_directory_log.ready() &&
+               device_name_directory_log.session_sink().commit == nullptr,
+           "RQ-CF-AGENT-#5404: a reserved Windows device name log directory component must be inert");
 #endif
 
     auto embedded_nul_name = fs::path("target.log").native();

@@ -32,6 +32,22 @@
   (diagnostic-only, disambiguated via a non-blocking `fstatat`). No API
   change for callers.
 
+- 2026-08-30: Fixed a related but distinct Windows path-aliasing gap in the
+  same four workspace-agent security boundaries (`RQ-CF-AGENT-030`, issue
+  #5404): none of the strict-spelling checks rejected a path component that
+  is a reserved Windows device name (`CON`, `PRN`, `AUX`, `NUL`,
+  `COM1`-`COM9`, `LPT1`-`LPT9`), so a workspace-relative target or executable
+  path with a component like `NUL`, `nul.txt`, or `con` would pass every
+  existing check and reach `CreateFileW`, which opens the corresponding
+  device object instead of a regular file on Windows. Rejection (Windows
+  only, case-insensitive, matched against the portion of a component before
+  its first `.`) is added to `workspace_agent_target_containment.cpp`,
+  `workspace_agent_process_containment.cpp`, `workspace_agent_environment.cpp`,
+  and `workspace_agent_audit_sink.cpp`, alongside the existing trailing-dot/
+  trailing-space check each of those files already has. No POSIX behavior
+  change. Regression coverage (`NUL`, `con`, `COM1`, `lpt1.txt`) added to each
+  of the four corresponding test files.
+
 - 2026-08-30: Fixed a Windows path-alias gap in the workspace-agent security
   boundary (`RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`, `RQ-CF-AGENT-012`): Win32's
   `CreateFileW`/`GetFullPathNameW` silently strip a trailing `.` or space from

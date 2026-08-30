@@ -255,8 +255,55 @@ bool path_has_windows_alias_prone_component(const std::filesystem::path& path) {
     }
     return false;
 }
+bool path_component_is_reserved_windows_device_name(
+    const std::filesystem::path::string_type& component) {
+    const auto dot = component.find(L'.');
+    const std::filesystem::path::string_type stem =
+        (dot == std::filesystem::path::string_type::npos)
+            ? component
+            : component.substr(0U, dot);
+    if (stem.empty() || stem.size() > 4U) {
+        return false;
+    }
+    std::filesystem::path::string_type upper;
+    upper.reserve(stem.size());
+    for (const wchar_t ch : stem) {
+        upper.push_back(
+            (ch >= L'a' && ch <= L'z') ? static_cast<wchar_t>(ch - (L'a' - L'A')) : ch);
+    }
+    static constexpr std::wstring_view reserved_names[] = {
+        L"CON", L"PRN", L"AUX", L"NUL",
+        L"COM1", L"COM2", L"COM3", L"COM4", L"COM5", L"COM6", L"COM7", L"COM8", L"COM9",
+        L"LPT1", L"LPT2", L"LPT3", L"LPT4", L"LPT5", L"LPT6", L"LPT7", L"LPT8", L"LPT9"
+    };
+    for (const std::wstring_view name : reserved_names) {
+        if (upper == name) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Windows reserves these names as device objects at every path component,
+// not just the final one, and regardless of any extension: CreateFileW on
+// "NUL.txt" opens the NUL device rather than creating a file with that
+// name. Matching is case-insensitive against the portion of the component
+// before its first '.', mirroring how Windows itself resolves the name.
+bool path_has_reserved_windows_device_name_component(
+    const std::filesystem::path& path) {
+    for (const auto& component : path) {
+        if (path_component_is_reserved_windows_device_name(component.native())) {
+            return true;
+        }
+    }
+    return false;
+}
 #else
 bool path_has_windows_alias_prone_component(const std::filesystem::path&) {
+    return false;
+}
+
+bool path_has_reserved_windows_device_name_component(const std::filesystem::path&) {
     return false;
 }
 #endif
@@ -297,7 +344,8 @@ bool strict_relative_executable_path(const std::filesystem::path& path) {
         !path.has_root_directory() && !path_has_dot_component(path) &&
         !path.filename().empty() &&
         !path_has_windows_device_or_stream_syntax(path) &&
-        !path_has_windows_alias_prone_component(path);
+        !path_has_windows_alias_prone_component(path) &&
+        !path_has_reserved_windows_device_name_component(path);
 }
 
 bool strict_relative_working_directory_path(const std::filesystem::path& path) {
@@ -309,21 +357,24 @@ bool strict_relative_working_directory_path(const std::filesystem::path& path) {
         !path.has_root_directory() && !path_has_dot_component(path) &&
         !path.filename().empty() &&
         !path_has_windows_device_or_stream_syntax(path) &&
-        !path_has_windows_alias_prone_component(path);
+        !path_has_windows_alias_prone_component(path) &&
+        !path_has_reserved_windows_device_name_component(path);
 }
 
 bool strict_absolute_executable_path(const std::filesystem::path& path) {
     return !path.empty() && !path_has_embedded_nul(path) && path.is_absolute() &&
         !path_has_dot_component(path) && !path.filename().empty() &&
         !path_has_windows_device_or_stream_syntax(path) &&
-        !path_has_windows_alias_prone_component(path);
+        !path_has_windows_alias_prone_component(path) &&
+        !path_has_reserved_windows_device_name_component(path);
 }
 
 bool strict_absolute_working_directory_path(const std::filesystem::path& path) {
     return !path.empty() && !path_has_embedded_nul(path) && path.is_absolute() &&
         !path_has_dot_component(path) &&
         !path_has_windows_device_or_stream_syntax(path) &&
-        !path_has_windows_alias_prone_component(path);
+        !path_has_windows_alias_prone_component(path) &&
+        !path_has_reserved_windows_device_name_component(path);
 }
 
 bool path_is_direct_directory(const std::filesystem::path& path) {

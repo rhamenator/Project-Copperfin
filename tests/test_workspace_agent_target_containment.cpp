@@ -148,6 +148,8 @@ void test_boundary_rejects_aliases_and_indirection() {
     expect(!WorkspaceAgentFileTargetBoundary::create(
                 std::filesystem::path(tree.workspace.wstring() + L" ")).has_value(),
            "RQ-CF-AGENT-009: a trailing-space workspace root must fail before boundary creation");
+    expect(!WorkspaceAgentFileTargetBoundary::create(tree.workspace / "NUL").has_value(),
+           "RQ-CF-AGENT-#5404: a reserved Windows device name workspace root must fail before boundary creation");
 #endif
 
     auto boundary = WorkspaceAgentFileTargetBoundary::create(tree.workspace);
@@ -239,6 +241,17 @@ void test_boundary_rejects_aliases_and_indirection() {
                 std::filesystem::path((tree.outside / "outside.prg").wstring() + L" "))
                 .allowed,
            "RQ-CF-AGENT-009: a local target with a trailing space must fail before lookup");
+
+    // Windows reserves these names as device objects regardless of extension
+    // or directory: CreateFileW("NUL", ...) or ("lpt1.txt", ...) opens the
+    // corresponding device, not a regular file with that name, so the
+    // strict-spelling check must reject them before any filesystem lookup.
+    for (const char* device_name : {"NUL", "con", "COM1", "lpt1.txt"}) {
+        expect(!boundary->inspect_workspace_file(device_name).allowed,
+               "RQ-CF-AGENT-#5404: a reserved Windows device name workspace target must fail before lookup");
+    }
+    expect(!boundary->inspect_local_file(tree.outside / "NUL").allowed,
+           "RQ-CF-AGENT-#5404: a reserved Windows device name local target must fail before lookup");
 #endif
 }
 
