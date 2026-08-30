@@ -9,7 +9,12 @@ results already reported/acted on, re-run both before merging:
 `/code-review --branch agent/v1-physical-path-containment-toctou max`, and
 `gh workflow run "Windows Native Validation" --ref agent/v1-physical-path-containment-toctou`
 (check completion with `gh run list --workflow="Windows Native Validation"
---branch agent/v1-physical-path-containment-toctou`).
+--branch agent/v1-physical-path-containment-toctou`). As of commit
+`8490854e4` (2026-08-30), both a fresh adversarial review and a Windows
+Native Validation dispatch against that exact commit are in flight; the
+prior Windows dispatch (run `33328528574`) was against the earlier, buggy
+commit `182888a4e` and should not be trusted even if its cached result is
+found green.
 
 PR #5407 fixes #5400 (the TOCTOU race in `inspect_physical_path_containment`)
 via `openat()`+`O_NOFOLLOW` descriptor chaining on POSIX and a merged
@@ -18,11 +23,34 @@ see the PR body and the new `RQ-CF-CONTAINMENT-001` traceability row for why).
 Fully verified locally on Linux (six dependent test binaries pass; caught and
 fixed two real defects in the rewrite itself along the way, including an
 `ENOTDIR`-vs-`ELOOP` errno-classification gap verified with a standalone C
-repro, not assumed from documentation). The Windows-side code has never been
-compiled or run anywhere yet — this is exactly the kind of change where the
-manual full-suite dispatch above is not optional, per the standing fact
-below about `v1-development` PRs not getting full native validation by
-default.
+repro, not assumed from documentation).
+
+A first adversarial `/code-review` pass against that initial commit
+(`182888a4e`) found 4 more real issues, all fixed in commit `8490854e4`:
+a FIFO-triggered DoS from the final-component `openat()` being blocking
+(added `O_NONBLOCK`), a Windows root-open reparse-point check stricter than
+both the prior implementation and this PR's own POSIX side (would have
+broken package-alias-as-root on Windows; removed for the root open only,
+kept for chain components), a Windows post-walk safety-net check that was
+tautological because `canonical_path` was string-concatenated rather than
+derived from the verified handle (fixed via a new `path_of_handle()` using
+`GetFinalPathNameByHandleW`, mirroring `path_of_descriptor()` on POSIX), and
+an `ENOTDIR` misclassification that filed a blocked plain file under the
+same reason code as a blocked symlink (diagnostic-only; disambiguated with a
+non-blocking `fstatat(AT_SYMLINK_NOFOLLOW)`). A 5th finding — duplicate RAII
+wrapper classes vs. existing `ScopedFd`/`ScopedFileDescriptor`/`ScopedHandle`
+in `audit_stream.cpp`/`private_directory.cpp` — was deferred as issue
+`#5408` (sub-issue of `#34`) rather than expanding this PR further. Re-ran
+the full local Linux test battery after these fixes (7/7 pass in a clean
+non-ASan clang build tree; a separate stale ASan build tree's
+`test_runtime_pipeline` failure was confirmed to be an incompatible
+ASan-runtime linkage in that tree specifically, not a regression from this
+change).
+
+The Windows-side code has still never been compiled or run anywhere
+locally — this is exactly the kind of change where the manual full-suite
+dispatch above is not optional, per the standing fact below about
+`v1-development` PRs not getting full native validation by default.
 
 ## Shipped: PR #5399 (Windows path-alias rejection), merged as `9f00f388d`
 

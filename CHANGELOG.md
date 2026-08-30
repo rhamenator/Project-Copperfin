@@ -17,6 +17,19 @@
   rewrite before merge: an `ENOTDIR`/`ELOOP` errno-classification gap
   (`O_NOFOLLOW`+`O_DIRECTORY` on a symlink reports `ENOTDIR`, not `ELOOP` --
   verified empirically) and a use-after-close file-descriptor bug. No API
+  change for callers. A subsequent adversarial review pass on the same
+  branch (before merge) found and fixed 4 more issues: a FIFO-triggered DoS
+  from the final path component's blocking `openat()` (now `O_NONBLOCK`,
+  which has no effect on regular files/directories); an over-strict
+  reparse-point rejection on the Windows root open that would have broken
+  legitimate package-alias-as-root usage (removed for the root only, kept
+  for every component under it); a Windows post-walk safety-net check that
+  was tautological because it re-derived `canonical_path` by string
+  concatenation instead of reading it back from the verified handle (now
+  uses `GetFinalPathNameByHandleW`, mirroring the POSIX `/proc/self/fd`
+  readback); and an `ENOTDIR` failure-reason misclassification that filed a
+  blocked plain file under the same code as a blocked symlink
+  (diagnostic-only, disambiguated via a non-blocking `fstatat`). No API
   change for callers.
 
 - 2026-08-30: Fixed a Windows path-alias gap in the workspace-agent security
