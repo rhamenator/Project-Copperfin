@@ -151,11 +151,7 @@ WorkspaceAgentFileTargetBoundary::WorkspaceAgentFileTargetBoundary(
 std::optional<WorkspaceAgentFileTargetBoundary>
 WorkspaceAgentFileTargetBoundary::create(
     const std::filesystem::path& trusted_absolute_workspace_root) {
-    if (trusted_absolute_workspace_root.empty() ||
-        path_has_embedded_nul(trusted_absolute_workspace_root) ||
-        !trusted_absolute_workspace_root.is_absolute() ||
-        path_has_dot_component(trusted_absolute_workspace_root) ||
-        path_has_windows_alias_prone_component(trusted_absolute_workspace_root) ||
+    if (!strict_absolute_file_path(trusted_absolute_workspace_root) ||
         !path_is_direct_directory(trusted_absolute_workspace_root)) {
         return std::nullopt;
     }
