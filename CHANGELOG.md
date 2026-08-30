@@ -1,3 +1,21 @@
+- 2026-08-30: Fixed a Windows path-alias gap in the workspace-agent security
+  boundary (`RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`, `RQ-CF-AGENT-012`): Win32's
+  `CreateFileW`/`GetFullPathNameW` silently strip a trailing `.` or space from
+  each path component, so e.g. `tool.` and `tool ` resolved to the same object
+  as `tool` while the strict-spelling checks admitted them as distinct,
+  unambiguous targets. This was first identified and repeatedly re-flagged by
+  automated review across PRs #5006-#5012 (2026-08-14/15) and overridden each
+  time; the traceability rows were left recording `defined` despite the
+  documented review holds. Rejection is added to
+  `workspace_agent_target_containment.cpp`,
+  `workspace_agent_process_containment.cpp`, and
+  `workspace_agent_environment.cpp` for workspace/local file targets, process
+  executables and working directories, and isolated-environment storage,
+  approved-executable, and Windows-system-root configuration paths. Regression
+  coverage added to the corresponding existing test files. No POSIX behavior
+  changes; the check is a no-op on non-Windows hosts, where this aliasing
+  cannot occur.
+
 - 2026-08-27: Continued #2564 test-module refactoring by moving the contiguous
   Studio editor-action launch-plan coverage for data, menu, and project
   contexts plus invalid-action denials into

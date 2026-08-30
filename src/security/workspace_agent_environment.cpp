@@ -40,6 +40,27 @@ bool path_has_dot_component(const std::filesystem::path& path) {
 }
 
 #if defined(_WIN32)
+// Win32's CreateFileW/GetFullPathNameW silently strip a trailing '.' or ' '
+// from each path component before resolving it, so "tool." and "tool " name
+// the same object as "tool". A component-boundary check alone cannot reject
+// this: it must inspect each component's own last character.
+bool path_has_windows_alias_prone_component(const std::filesystem::path& path) {
+    for (const auto& component : path) {
+        const auto& native = component.native();
+        if (!native.empty() &&
+            (native.back() == L'.' || native.back() == L' ')) {
+            return true;
+        }
+    }
+    return false;
+}
+#else
+bool path_has_windows_alias_prone_component(const std::filesystem::path&) {
+    return false;
+}
+#endif
+
+#if defined(_WIN32)
 bool path_has_remote_or_device_root(const std::filesystem::path& path) {
     const auto& native = path.native();
     if (native.rfind(L"\\\\?\\", 0U) == 0U ||
@@ -124,7 +145,8 @@ std::string session_directory_name(std::uint64_t generation) {
 
 bool strict_absolute_directory_spelling(const std::filesystem::path& path) {
     if (path.empty() || path_has_embedded_nul(path) || !path.is_absolute() ||
-        path_has_dot_component(path) || path_has_remote_or_device_root(path)) {
+        path_has_dot_component(path) || path_has_remote_or_device_root(path) ||
+        path_has_windows_alias_prone_component(path)) {
         return false;
     }
     const std::string utf8 = copperfin::platform::path_to_utf8_string(path);

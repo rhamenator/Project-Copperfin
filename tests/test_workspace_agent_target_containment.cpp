@@ -196,6 +196,27 @@ void test_boundary_rejects_aliases_and_indirection() {
            "RQ-CF-AGENT-009: unrestricted-local inspection may identify a direct absolute file outside the workspace");
     expect(!boundary->inspect_local_file("outside/outside.prg").allowed,
            "RQ-CF-AGENT-009: unrestricted-local targets must still use unambiguous absolute paths");
+
+#if defined(_WIN32)
+    // Win32 silently strips a trailing '.' or ' ' from a path component, so
+    // "inside.prg." and "inside.prg " would otherwise name the same object
+    // as the admitted "inside.prg" -- an alias the strict-spelling check must
+    // reject before it ever reaches filesystem lookup.
+    expect(!boundary->inspect_workspace_file("inside.prg.").allowed,
+           "RQ-CF-AGENT-009: a workspace target with a trailing dot must fail before lookup");
+    expect(!boundary->inspect_workspace_file("inside.prg ").allowed,
+           "RQ-CF-AGENT-009: a workspace target with a trailing space must fail before lookup");
+    expect(!boundary->inspect_workspace_file("nested./child.prg").allowed,
+           "RQ-CF-AGENT-009: a workspace target with a trailing-dot directory component must fail before lookup");
+    expect(!boundary->inspect_local_file(
+                std::filesystem::path((tree.outside / "outside.prg").wstring() + L"."))
+                .allowed,
+           "RQ-CF-AGENT-009: a local target with a trailing dot must fail before lookup");
+    expect(!boundary->inspect_local_file(
+                std::filesystem::path((tree.outside / "outside.prg").wstring() + L" "))
+                .allowed,
+           "RQ-CF-AGENT-009: a local target with a trailing space must fail before lookup");
+#endif
 }
 
 void test_session_bound_file_target_preflight() {

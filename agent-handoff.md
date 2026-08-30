@@ -1,5 +1,62 @@
 # Agent Handoff
 
+## Windows trailing-dot/trailing-space path-alias rejection
+
+Fixes a real, previously unaddressed gap in the workspace-agent security
+boundary: `strict_relative_file_path`/`strict_absolute_file_path`
+(`workspace_agent_target_containment.cpp`),
+`strict_relative_executable_path`/`strict_relative_working_directory_path`/
+`strict_absolute_executable_path`/`strict_absolute_working_directory_path`
+(`workspace_agent_process_containment.cpp`), and
+`strict_absolute_directory_spelling` (`workspace_agent_environment.cpp`) all
+rejected `.`/`..` components and (in the process/environment files) UNC and
+device/stream syntax, but none rejected a component ending in a trailing dot
+or space. Win32 silently normalizes `tool.`/`tool ` to the same object as
+`tool`, so an admitted "safe" path spelling and the object actually touched
+could diverge.
+
+This was diagnosed and repeatedly re-flagged by automated review across owner
+PRs #5006 through #5012 (2026-08-14 through 2026-08-15; see `.agent-channel/`
+history around that window), which explicitly held merge each time and named
+the specific regression harnesses needed. Every PR merged over the hold
+regardless, and the follow-on documentation PRs (#5007, #5009, #5011)
+recorded `RQ-CF-AGENT-009`/`010`/`011`/`012` as `defined`/accepted despite the
+reviewer's exact-head counter-evidence. This was found during an unrelated
+branch-cleanup audit; the gap was still present and the traceability rows
+still incorrect as of 2026-08-30.
+
+Fix: a Windows-only `path_has_windows_alias_prone_component()` helper (added
+per-file, matching this codebase's existing convention of duplicating these
+small anonymous-namespace path predicates rather than centralizing them) is
+now consulted by all seven `strict_*` functions above. It is a no-op
+(`return false`) on non-Windows hosts, where this aliasing cannot occur, so
+POSIX behavior and existing POSIX-only test expectations are unchanged.
+Regression coverage was added directly to the existing
+`test_workspace_agent_target_containment.cpp`,
+`test_workspace_agent_process_containment.cpp`, and
+`test_workspace_agent_isolated_environment_session_layout_lifecycle.inl`
+(guarded `#if defined(_WIN32)`, matching the existing UNC/device-syntax test
+pattern in the same files) rather than as new standalone harness files.
+
+`docs/32-recovered-requirements-traceability.md` rows for `RQ-CF-AGENT-009`,
+`RQ-CF-AGENT-010`, and `RQ-CF-AGENT-012` had their requirement text corrected
+to state the trailing-dot/space rejection explicitly, since it is now true
+and enforced. `RQ-CF-AGENT-011`, `015`, `017`, `019`, `023`, and `029` derive
+from these and should be reviewed separately for whether their own evidence
+needs the same correction -- not attempted here to keep this change scoped to
+the actual code fix.
+
+Verified locally (Linux, GCC/Clang): `cf_security` and the three touched test
+binaries build warning-free and all pass, plus the four other tests that
+construct these boundaries (`test_workspace_agent_session`,
+`test_workspace_agent_audit_sink`, `test_workspace_agent_process_invocation`)
+to check for indirect regressions. The new `_WIN32`-guarded assertions
+themselves could not be locally compiled or executed on this Linux host (no
+Windows SDK headers available); they are written by exact analogy to this
+codebase's existing, CI-verified UNC/device-syntax tests in the same files
+and functions, and protected Windows CI evidence should be obtained before
+merge.
+
 ## Studio editor-action launch validation regression module
 
 The bounded #2564 structural slice moves the contiguous editor-action
