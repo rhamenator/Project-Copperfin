@@ -1263,6 +1263,21 @@ function(copperfin_configure_native_test_isolation)
             )
         endif()
     endforeach()
+    if(TEST test_dbf_header_fuzz_smoke)
+        # Corpus is a build-tree copy of the checked-in seeds
+        # (tests/fuzz/corpus/dbf_header/), grown in place by libFuzzer inside
+        # this test's own working directory only -- never the source tree.
+        copperfin_set_test_isolation(test_dbf_header_fuzz_smoke
+            PARALLEL_SAFE
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT none
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endif()
     copperfin_set_test_isolation(test_visual_asset_editor
         PARALLEL_SAFE
         FILESYSTEM process-owned
