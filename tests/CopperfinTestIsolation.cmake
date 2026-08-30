@@ -1459,6 +1459,38 @@ function(copperfin_configure_native_test_isolation)
         PLATFORM portable
         AUDIT complete
     )
+    if(TEST test_windows_com_event_adapter)
+        copperfin_set_test_isolation(test_windows_com_event_adapter
+            PARALLEL_SAFE
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT none
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endif()
+    copperfin_set_test_isolation(test_runtime_external_event_queue
+        PARALLEL_SAFE
+        FILESYSTEM none
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+    copperfin_set_test_isolation(test_vfp9_descending_observation_contract
+        PARALLEL_SAFE
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
     copperfin_set_test_isolation(test_windows_pe_image_boundary_contract
         PARALLEL_SAFE
         FILESYSTEM read-only
