@@ -68,6 +68,43 @@ locally — this is exactly the kind of change where the manual full-suite
 dispatch above is not optional, per the standing fact below about
 `v1-development` PRs not getting full native validation by default.
 
+## In-progress: PR #5410 (reserved Windows device names, fixes #5404), not yet merged
+
+**Steering-continuity record** — this is running only as background
+subagents/workflow dispatches of the active session and would leave no
+trace if the session stops before reporting. If you cannot find these
+results already reported/acted on, re-run before merging:
+`/code-review --branch agent/v1-windows-reserved-device-names max`, and
+`gh workflow run "Windows Native Validation" --ref agent/v1-windows-reserved-device-names`
+(check completion with `gh run list --workflow="Windows Native Validation"
+--branch agent/v1-windows-reserved-device-names`). As of commit
+`41a1b3da1` (2026-08-30) both are in flight against that exact commit
+(Windows dispatch run `33330701297`).
+
+PR #5410 adds `path_has_reserved_windows_device_name_component()` (Windows
+only, no-op on POSIX) to the same four files PR #5399 patched for the
+trailing-dot/trailing-space alias class — `workspace_agent_target_containment.cpp`,
+`workspace_agent_process_containment.cpp`, `workspace_agent_environment.cpp`,
+`workspace_agent_audit_sink.cpp` — closing the related-but-distinct gap
+where a component literally named `CON`/`NUL`/`COM1`/etc. (with or without
+an extension) passed every existing check and would open the corresponding
+Win32 device object instead of a regular file/directory. New
+`RQ-CF-AGENT-030` traceability row; regression coverage (`NUL`, `con`,
+`COM1`, `lpt1.txt`) added to all four corresponding test files, following
+the exact pattern the trailing-dot/trailing-space tests already use. Fully
+verified on Linux that nothing regressed (5 affected binaries build and
+pass unchanged), but since the new checks are Windows-only and compiled
+out entirely on POSIX, this local run does not exercise the new code path
+at all — the pending Windows dispatch above is the only evidence that
+matters for this PR, not merely the standing extra-diligence practice.
+
+This branch has **no file overlap** with PR #5407 (`physical_path_containment.cpp`)
+or the planned next pickup for #5402 (`external_process_policy.cpp`) — all
+three were deliberately kept on separate branches off `v1-development` so
+they can proceed in parallel without collision; each will carry its own
+`agent-handoff.md`/`CHANGELOG.md`/traceability additions into
+`v1-development` independently when it merges.
+
 ## Shipped: PR #5399 (Windows path-alias rejection), merged as `9f00f388d`
 
 Two adversarial `/code-review` passes plus a full unrestricted
