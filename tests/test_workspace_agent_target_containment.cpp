@@ -137,6 +137,18 @@ void test_boundary_rejects_aliases_and_indirection() {
            "RQ-CF-AGENT-009: trusted workspace configuration must require an absolute root");
     expect(!WorkspaceAgentFileTargetBoundary::create(tree.workspace / "inside.prg").has_value(),
            "RQ-CF-AGENT-009: a regular file cannot become the workspace root");
+#if defined(_WIN32)
+    // Win32 silently strips a trailing '.' or ' ' from a path component, so
+    // an alias-prone workspace root could otherwise canonicalize to the same
+    // object as the admitted root while file-target preflights remain
+    // available against it under an ambiguous spelling.
+    expect(!WorkspaceAgentFileTargetBoundary::create(
+                std::filesystem::path(tree.workspace.wstring() + L".")).has_value(),
+           "RQ-CF-AGENT-009: a trailing-dot workspace root must fail before boundary creation");
+    expect(!WorkspaceAgentFileTargetBoundary::create(
+                std::filesystem::path(tree.workspace.wstring() + L" ")).has_value(),
+           "RQ-CF-AGENT-009: a trailing-space workspace root must fail before boundary creation");
+#endif
 
     auto boundary = WorkspaceAgentFileTargetBoundary::create(tree.workspace);
     expect(boundary.has_value(),
