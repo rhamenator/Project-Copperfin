@@ -1,59 +1,50 @@
 # Agent Handoff
 
-## In-progress: full Windows validation + second adversarial review of PR #5399
+## Shipped: PR #5399 (Windows path-alias rejection), merged as `9f00f388d`
 
-**Steering-continuity record** (not yet recoverable from the branch/PR itself
-alone — this note exists so a session restart doesn't lose it; update or
-delete this section once #5399 actually merges). Repository owner's ChatGPT
-Pro lapsed (~2 weeks out as of 2026-08-30), so Codex's PR-review bot may be
-unavailable; owner is restarting sessions on session-limit cutoffs, so
-anything running only as a background subagent of the active session is at
-risk of being silently killed with no trace. Do not treat silence as a clean
-bill of health for anything described below as "in progress" — check
-directly (`gh run view <id>`, `gh pr checks 5399`) rather than assume.
+Two adversarial `/code-review` passes plus a full unrestricted
+`workflow_dispatch` run of "Windows Native Validation" all came back clean
+before merge (see the standing CI-coverage fact below for why that manual
+step was necessary). The first adversarial pass caught a real regression
+introduced by an earlier dedup refactor (`create()` silently required a
+non-empty `filename()`, inconsistent with the sibling process-boundary
+`create()` for the identical workspace-root argument — a root like
+`C:\Workspace\` would have been rejected by one boundary and accepted by the
+other); fixed and locked in with a regression test. The second pass found no
+new logic bugs, only lower-severity items (see issues below).
 
-As of 2026-08-30 ~03:05 EDT, head `071f564e4` (PR #5398 reconciled in, plus
-all fixes below):
+**Not fixed, tracked as sub-issues of `#34`** (tracking comment on `#34`):
+#5400 (TOCTOU race in `inspect_physical_path_containment`, most severe —
+needs real design work, not a quick patch), #5401 (`stop()`
+exception-safety gap), #5402 (heap buffer over-read in
+`external_process_policy.cpp`'s `get_company_name()`), #5403 (open policy
+question: should `workspace_sandbox` mode require a confirmation gate like
+`unrestricted_local` does?), #5404 (reserved Windows device names —
+CON/NUL/COM1/etc — are a related but distinct path-aliasing class this PR's
+scope didn't cover), #5405 (consolidate `path_has_windows_alias_prone_component()`,
+now duplicated across 4 files, into a shared header).
 
-- A first adversarial `/code-review --branch agent/v1-windows-path-alias-rejection max`
-  pass (on head `0a6bd7e86`) found a real regression: the `create()` dedup
-  (converging on `strict_absolute_file_path()`) silently required a non-empty
-  `filename()`, which the sibling `WorkspaceAgentProcessTargetBoundary::create()`
-  does not require for the identical workspace-root argument — a root like
-  `C:\Workspace\` would be rejected by the file-target boundary while still
-  accepted by the process-target boundary. Fixed (`e7ad049be`, reverted to the
-  original inline checks + alias check) and locked in with a regression test
-  plus a CHANGELOG fix for an omitted touched file (`aae658fea`).
-- A **second** adversarial review pass (same command, on final head
-  `071f564e4`) and a full unrestricted `workflow_dispatch` run of "Windows
-  Native Validation" (the only workflow that builds/runs the complete native
-  test suite — required PR checks on `v1-development` only cover a narrow,
-  per-test-target subset; see below) are both running now. If you cannot find
-  their results already reported: re-run both before merging #5399.
-- Still open, not urgent: `path_has_windows_alias_prone_component()` is
-  duplicated verbatim across 4 files (target_containment, process_containment,
-  environment, audit_sink) instead of a shared header — architecture note
-  from the first adversarial review, not a live bug, not yet consolidated.
-- **Important standing fact for any future Windows-side change to this repo**:
-  PRs targeting `v1-development` do NOT get the full native test suite — only
-  `native-validation-{windows,linux,macos}.yml` run the complete, unrestricted
-  `ctest` suite, and they trigger only on `branches: [main]`. The
-  `v1-development`-triggered workflows (`windows-environment-validation.yml`,
-  `generated-launcher-validation.yml`, `windows-x86-declare-validation.yml`,
-  `executable-path-validation.yml`) each build/run only an explicit, narrow
-  `-R` filtered subset of test targets. Before trusting green CI as real
-  coverage of a new/changed Windows-relevant test file, grep
-  `.github/workflows/*.yml` for that exact test target name; if absent,
-  manually `gh workflow run "Windows Native Validation" --ref <branch>` for
-  real verification before merging.
-- Also filed from this review pass (linked as sub-issues of `#34`, tracking
-  comment on `#34`): #5400 (TOCTOU race in `inspect_physical_path_containment`,
-  most severe), #5401 (`stop()` exception-safety gap), #5402 (heap
-  buffer over-read in `external_process_policy.cpp`'s `get_company_name()`),
-  #5403 (open policy question: should `workspace_sandbox` mode require a
-  confirmation gate like `unrestricted_local` does?). None of these four are
-  fixed yet; #5400 in particular needs real design work (atomic
-  resolve-and-verify), not a quick patch.
+**Important standing fact for any future Windows-side change to this repo**:
+PRs targeting `v1-development` do NOT get the full native test suite — only
+`native-validation-{windows,linux,macos}.yml` run the complete, unrestricted
+`ctest` suite, and they trigger only on `branches: [main]`. The
+`v1-development`-triggered workflows (`windows-environment-validation.yml`,
+`generated-launcher-validation.yml`, `windows-x86-declare-validation.yml`,
+`executable-path-validation.yml`) each build/run only an explicit, narrow
+`-R` filtered subset of test targets. Before trusting green CI as real
+coverage of a new/changed Windows-relevant test file, grep
+`.github/workflows/*.yml` for that exact test target name; if absent,
+manually `gh workflow run "Windows Native Validation" --ref <branch>` for
+real verification before merging.
+
+**Discovered via that manual full run, unrelated to #5399**: the full suite
+had one pre-existing failure — `test_native_test_isolation_contract`
+reported `test_runtime_external_event_queue`,
+`test_vfp9_descending_observation_contract`, and
+`test_windows_com_event_adapter` as missing isolation classification (a gap
+already on `v1-development`, invisible to per-PR checks for the same reason
+above). Fixed in PR #5406 (`agent/v1-native-test-isolation-audit-completeness`),
+open as of this note.
 
 ## Windows trailing-dot/trailing-space path-alias rejection
 
