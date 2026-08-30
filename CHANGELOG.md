@@ -1,3 +1,24 @@
+- 2026-08-30: Fixed a TOCTOU race in the shared physical-path-containment
+  primitive (`RQ-CF-CONTAINMENT-001`, issue #5400) used by every
+  workspace-agent boundary and by package-content installation:
+  `inspect_physical_path_containment()` verified path components for
+  symlinks/reparse points in one filesystem walk, then separately resolved
+  the same untrusted path again via `std::filesystem::canonical()` to bind
+  identity -- a component swapped between those two walks (e.g. to a symlink
+  pointing at a different real object still nominally inside the trusted
+  root) could make the function return `allowed=true` bound to the wrong
+  object. On POSIX this is now closed by opening each path component in
+  sequence via `openat()` with `O_NOFOLLOW`, carrying the previous
+  component's descriptor forward, so verifying and using a component are the
+  same syscall. On Windows, which lacks a descriptor-relative-open primitive
+  without native NT APIs, the fix instead removes the second, wholesale
+  re-resolution pass entirely, narrowing (not eliminating) the window. Local
+  Linux verification caught and fixed two real defects introduced by the
+  rewrite before merge: an `ENOTDIR`/`ELOOP` errno-classification gap
+  (`O_NOFOLLOW`+`O_DIRECTORY` on a symlink reports `ENOTDIR`, not `ELOOP` --
+  verified empirically) and a use-after-close file-descriptor bug. No API
+  change for callers.
+
 - 2026-08-30: Fixed a Windows path-alias gap in the workspace-agent security
   boundary (`RQ-CF-AGENT-009`, `RQ-CF-AGENT-010`, `RQ-CF-AGENT-012`): Win32's
   `CreateFileW`/`GetFullPathNameW` silently strip a trailing `.` or space from
