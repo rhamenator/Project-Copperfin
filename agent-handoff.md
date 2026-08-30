@@ -2,19 +2,24 @@
 
 ## In-progress: PR #5407 (TOCTOU fix for #5400), not yet merged
 
-**Steering-continuity record** — this is running only as background
-subagents/workflow dispatches of the active session and would leave no
-trace if the session stops before reporting. If you cannot find these
-results already reported/acted on, re-run both before merging:
-`/code-review --branch agent/v1-physical-path-containment-toctou max`, and
+**Steering-continuity record** — this is running only as a background
+workflow dispatch of the active session and would leave no trace if the
+session stops before reporting. If you cannot find this result already
+reported/acted on, re-run before merging:
 `gh workflow run "Windows Native Validation" --ref agent/v1-physical-path-containment-toctou`
 (check completion with `gh run list --workflow="Windows Native Validation"
 --branch agent/v1-physical-path-containment-toctou`). As of commit
-`8490854e4` (2026-08-30), both a fresh adversarial review and a Windows
-Native Validation dispatch against that exact commit are in flight; the
-prior Windows dispatch (run `33328528574`) was against the earlier, buggy
-commit `182888a4e` and should not be trusted even if its cached result is
-found green.
+`af352b005` (2026-08-30, the current branch tip after 2 rounds of
+adversarial-review fixes), a Windows Native Validation dispatch (run
+`33330266844`) against that exact commit is in flight. Every earlier
+Windows dispatch (`33328528574` against `182888a4e`, `33329378451` against
+`51c61cbda`) was against a superseded commit and must not be trusted even
+if its cached result is found green — only a run against `af352b005` or
+later counts. Two full adversarial `/code-review` passes have already run
+against this branch (see below for both rounds' findings) and a third was
+judged not worth its cost given round 2's changes were narrow and mostly
+mirror already-tested patterns elsewhere in the codebase; real Windows CI
+execution is the actual remaining gate, not another text review.
 
 PR #5407 fixes #5400 (the TOCTOU race in `inspect_physical_path_containment`)
 via `openat()`+`O_NOFOLLOW` descriptor chaining on POSIX and a merged
@@ -46,6 +51,28 @@ non-ASan clang build tree; a separate stale ASan build tree's
 `test_runtime_pipeline` failure was confirmed to be an incompatible
 ASan-runtime linkage in that tree specifically, not a regression from this
 change).
+
+A second adversarial `/code-review` pass against commit `8490854e4` found 3
+more real issues, all fixed in commit `af352b005`: the new `path_of_handle()`
+from round 1 didn't strip the extended-length `\\?\` namespace prefix
+`GetFinalPathNameByHandleW` returns for ordinary local/UNC paths, which
+would have made every legitimate Windows containment check fail
+`outside_root` on its first path component (fail-closed, but a total
+functional break on Windows — fixed by mirroring stripping logic already
+used elsewhere in this codebase for the identical API call); the new read
+function's POSIX reopen was still missing the `O_NONBLOCK` round 1 added
+to the check walk, for the same FIFO-hang reason (fixed, now covered by a
+dedicated `mkfifo` + time-bounded `std::async` regression test in
+`test_security_controls.cpp`); and a comment on `path_of_descriptor()`
+overclaimed that `canonical_path`'s trust binding covers every later use of
+that string (corrected — `read_physically_contained_file_snapshot()`
+reopens it by path, not by descriptor, so its own before/after identity
+comparison is what actually protects that reopen). One further finding —
+that same reopen-by-string architecture in the read function predates this
+PR entirely (confirmed against the pre-PR baseline) and is bounded by
+device+inode identity comparison rather than trivially exploitable — was
+deferred as issue `#5409` (sub-issue of `#34`). Re-ran the same 7-test
+local battery clean after these fixes too.
 
 The Windows-side code has still never been compiled or run anywhere
 locally — this is exactly the kind of change where the manual full-suite
