@@ -1,5 +1,29 @@
 # Agent Handoff
 
+## In-progress: adversarial review of PR #5399 before merge
+
+**Steering-continuity record** (not yet recoverable from the branch/PR itself —
+this note exists specifically so a session restart doesn't lose it). As of
+2026-08-30, ~06:40 EDT: `agent/v1-windows-path-alias-rejection` (PR #5399,
+head `0a6bd7e86`) is fully pushed and its own CI is green, but before
+merging it, a deliberately adversarial `/code-review --branch
+agent/v1-windows-path-alias-rejection max` pass was launched as a background
+subagent of the active Claude session, specifically to cover for Codex's
+PR-review bot possibly being unavailable (repository owner's ChatGPT Pro
+lapsed; expected back in ~2 weeks; owner is restarting sessions at 3 AM EDT
+due to session limits, which will kill this subagent along with its parent).
+
+If you are resuming this and cannot find that review's result already
+reported/acted on: **do not treat silence as a clean bill of health** — the
+subagent may have been killed mid-run with no trace. Re-run the review
+command above before merging #5399. Known state as of this note: PR #5398
+(libFuzzer harness) already merged into v1-development. Two prior review
+rounds on #5399 (from Codex's bot) already found and fixed two real issues
+(a missing `create()` alias check, a fuzz-corpus reset bug on the sibling
+PR); this third pass is an extra check specifically because that bot's
+availability going forward is uncertain, not because of any known problem
+with the current diff.
+
 ## Windows trailing-dot/trailing-space path-alias rejection
 
 Fixes a real, previously unaddressed gap in the workspace-agent security
