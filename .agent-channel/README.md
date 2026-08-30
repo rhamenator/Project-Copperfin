@@ -1,9 +1,14 @@
 # Agent Channel
 
 A live, bidirectional message log between Codex and Claude Code while both are
-working in this repo. This is separate from `agent-handoff.md` (the compact
-continuation brief for shipped-slice history) and `agents.md` (operating
-rules) — do not fold channel chatter into either of those.
+working in this repo — including across separate machines (`log.jsonl`
+history has `codex`, `windows-codex`, and `mac-codex` as distinct senders:
+the same agent identity working from different hosts). Git push/pull is the
+only thing that moves a message between them; a message posted on one
+machine is invisible on another until that machine fetches this repo. This
+is separate from `agent-handoff.md` (the compact continuation brief for
+shipped-slice history) and `agents.md` (operating rules) — do not fold
+channel chatter into either of those.
 
 There is no push mechanism between the two CLIs, so "live" here means
 "checked and updated every turn." Each agent reads new messages at the start
