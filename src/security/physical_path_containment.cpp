@@ -273,6 +273,14 @@ WalkedHandle walk_contained_path(
         if ((information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
             return {ScopedFileHandle(), PhysicalPathContainmentFailure::indirect_component};
         }
+        // Intentional: brings Windows to parity with the POSIX walk's
+        // pre-existing st_dev check below, which this Windows walk never had
+        // before this rewrite. A component landing on a different volume --
+        // e.g. a SUBST'd drive or another volume mounted under the root
+        // without going through a reparse point -- is exactly the same class
+        // of containment escape the POSIX side has always rejected; treating
+        // it as a bug to revert rather than a correctness fix would leave
+        // Windows strictly weaker than POSIX for no documented reason.
         if (information.dwVolumeSerialNumber != root_information.dwVolumeSerialNumber) {
             return {ScopedFileHandle(), PhysicalPathContainmentFailure::cross_device_component};
         }
@@ -289,7 +297,10 @@ WalkedHandle walk_contained_path(
 // lexical_relative, which is exactly the untrusted, pre-walk path the
 // handle-based walk above exists to not trust -- making the subsequent
 // contained_relative_path(canonical_path, canonical_root) check a
-// tautology on Windows, since it recomputed rather than verified.
+// tautology on Windows, since it recomputed rather than verified. See
+// path_of_descriptor()'s comment above for what this string is (and is not)
+// trusted for once a caller re-resolves it later, e.g. via
+// read_physically_contained_file_snapshot().
 std::optional<std::filesystem::path> path_of_handle(HANDLE handle) {
     std::array<wchar_t, 32768> buffer{};
     const DWORD length = ::GetFinalPathNameByHandleW(
@@ -298,7 +309,35 @@ std::optional<std::filesystem::path> path_of_handle(HANDLE handle) {
     if (length == 0 || length >= buffer.size()) {
         return std::nullopt;
     }
-    return std::filesystem::path(std::wstring(buffer.data(), length));
+    std::wstring resolved(buffer.data(), length);
+
+    // VOLUME_NAME_DOS still returns the extended-length \\?\ namespace for
+    // ordinary local/UNC paths on current Windows. canonical_root (produced
+    // by std::filesystem::canonical()) and every caller of this API use the
+    // ordinary drive-letter/UNC spelling, so leaving the prefix on would
+    // make every containment comparison against canonical_root fail on its
+    // very first component -- rejecting every legitimately contained path.
+    // Mirrors the identical stripping already done for the same API call in
+    // resolve_windows_host_spelling() (runtime_pipeline_file_io_and_classification.cpp).
+    // A residual device-namespace path (not drive-letter or UNC) is treated
+    // as unavailable rather than returned with a namespace canonical_root
+    // could never match, per that same precedent.
+    constexpr std::wstring_view extended_prefix = L"\\\\?\\";
+    constexpr std::wstring_view extended_unc_prefix = L"\\\\?\\UNC\\";
+    if (resolved.starts_with(extended_unc_prefix)) {
+        resolved = L"\\\\" + resolved.substr(extended_unc_prefix.size());
+    } else if (resolved.starts_with(extended_prefix) &&
+               resolved.size() >= extended_prefix.size() + 2U &&
+               ((resolved[extended_prefix.size()] >= L'A' &&
+                 resolved[extended_prefix.size()] <= L'Z') ||
+                (resolved[extended_prefix.size()] >= L'a' &&
+                 resolved[extended_prefix.size()] <= L'z')) &&
+               resolved[extended_prefix.size() + 1U] == L':') {
+        resolved.erase(0U, extended_prefix.size());
+    } else if (resolved.starts_with(extended_prefix)) {
+        return std::nullopt;
+    }
+    return std::filesystem::path(resolved);
 }
 
 #else  // POSIX
@@ -423,10 +462,24 @@ WalkedDescriptor walk_contained_path(
 // Reconstructs an absolute path string for the exact object walk_contained_path
 // already verified and opened, by reading back the kernel's own record of
 // that descriptor's path rather than recomputing it independently (which
-// could disagree with what was actually opened). This is used only for the
-// path string callers retain for display/further lookups; the trust
-// decision itself is bound to the descriptor's fstat() identity, not to
-// this string.
+// could disagree with what was actually opened). Within this function, this
+// is what makes canonical_path trustworthy rather than tautological. It does
+// NOT make every later use of that string equally race-free: this same
+// string is what read_physically_contained_file_snapshot() reopens by path
+// (not by descriptor) to actually read file bytes, so that function's own
+// before/after PhysicalPathIdentity comparison -- not any property of this
+// string itself -- is what re-establishes the binding for that reopen. See
+// issue #5409 for the residual, narrow TOCTOU window that architecture still
+// has and the plan to close it by carrying the descriptor/handle through
+// instead.
+// Linux path readback requires /proc/self/fd to be mounted; a minimal
+// namespace/chroot without /proc will make this (and therefore
+// inspect_physical_path_containment() as a whole) fail with
+// path_unavailable rather than succeed. This is an accepted trade-off, not
+// an oversight: the only portable alternative is re-resolving the untrusted
+// path independently (e.g. via std::filesystem::canonical()), which is
+// exactly the TOCTOU-vulnerable design this rewrite replaces -- there is no
+// strictly-better fallback available without native OS-specific APIs.
 std::optional<std::filesystem::path> path_of_descriptor(int descriptor) {
 #if defined(__APPLE__)
     std::array<char, PATH_MAX> buffer{};
@@ -624,9 +677,15 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
     const PhysicalPathIdentity after_identity =
         identity_from_handle_information(after_information);
 #else
+    // O_NONBLOCK matches walk_contained_path()'s final-component open above:
+    // a FIFO at this path must not hang the calling thread indefinitely
+    // waiting for a writer. It has no effect on the regular file this path
+    // is required to be (checked via S_ISREG immediately below); the
+    // blocking, buffered ::read() loop further down still runs normally
+    // once that check passes.
     const int descriptor = ::open(
         expected.canonical_path.c_str(),
-        O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+        O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK);
     if (descriptor < 0) {
         return failed_snapshot(PhysicalPathContainmentFailure::path_unavailable);
     }
