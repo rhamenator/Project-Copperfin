@@ -592,6 +592,13 @@ It is enabled only by `COPPERFIN_BUILD_ROBUSTNESS_TESTS=ON`, changes no product
 behavior, and is neither an RC nor v1 completion gate. Any reproducible defect
 found by this lane must be triaged separately according to demonstrated risk.
 
+The same DBF-header parser also carries an optional, open-ended libFuzzer
+harness (docs/65-dbf-header-parser-fuzzing.md) complementing that
+deterministic coverage with coverage-guided mutation over a small checked-in
+seed corpus. It is enabled only by `COPPERFIN_BUILD_FUZZ_TESTS=ON`, requires a
+libFuzzer-capable compiler (not MSVC), changes no product behavior, and is
+likewise neither an RC nor v1 completion gate.
+
 The v1 polyglot lane now has a portable bounded-process prerequisite for its
 first artifact adapter. Direct argv invocation avoids a shell; the complete
 child environment is explicit and empty by default; relative paths and

@@ -55,6 +55,9 @@ option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)
 option(COPPERFIN_BUILD_ROBUSTNESS_TESTS
     "Build optional bounded parser robustness tests (not a release gate)"
     OFF)
+option(COPPERFIN_BUILD_FUZZ_TESTS
+    "Build optional libFuzzer-based parser fuzz targets (not a release gate)"
+    OFF)
 option(COPPERFIN_ENABLE_GNU_COVERAGE
     "Instrument native targets with GCC coverage data (local assurance evidence only)"
     OFF)
