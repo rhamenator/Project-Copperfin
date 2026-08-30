@@ -240,9 +240,15 @@ WalkedHandle walk_contained_path(
     if (!current.valid()) {
         return {ScopedFileHandle(), PhysicalPathContainmentFailure::root_unavailable};
     }
+    // The root itself is not rejected for being a reparse point: callers may
+    // legitimately pass an already-resolved alias (e.g. a package alias
+    // directory) as the trust boundary's root, and the original
+    // implementation never rejected that case either. Reparse points are
+    // rejected starting at the first path component *under* the root below,
+    // which is what actually prevents an attacker-controlled component from
+    // redirecting the walk outside the root.
     BY_HANDLE_FILE_INFORMATION root_information{};
-    if (::GetFileInformationByHandle(current.get(), &root_information) == 0 ||
-        (root_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+    if (::GetFileInformationByHandle(current.get(), &root_information) == 0) {
         return {ScopedFileHandle(), PhysicalPathContainmentFailure::root_unavailable};
     }
 
@@ -273,6 +279,26 @@ WalkedHandle walk_contained_path(
         current = std::move(next);
     }
     return {std::move(current), PhysicalPathContainmentFailure::none};
+}
+
+// Reconstructs a path string for the exact object walk_contained_path
+// already verified and opened, by reading back the kernel's own record of
+// that handle's path rather than recomputing it independently. Mirrors
+// path_of_descriptor() below for POSIX: without this, the Windows side
+// re-derived canonical_path by string-concatenating component_root and
+// lexical_relative, which is exactly the untrusted, pre-walk path the
+// handle-based walk above exists to not trust -- making the subsequent
+// contained_relative_path(canonical_path, canonical_root) check a
+// tautology on Windows, since it recomputed rather than verified.
+std::optional<std::filesystem::path> path_of_handle(HANDLE handle) {
+    std::array<wchar_t, 32768> buffer{};
+    const DWORD length = ::GetFinalPathNameByHandleW(
+        handle, buffer.data(), static_cast<DWORD>(buffer.size()),
+        FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    if (length == 0 || length >= buffer.size()) {
+        return std::nullopt;
+    }
+    return std::filesystem::path(std::wstring(buffer.data(), length));
 }
 
 #else  // POSIX
@@ -344,8 +370,14 @@ WalkedDescriptor walk_contained_path(
         // regular file (or anything else) at that step explicitly rather
         // than relying on a later openat() to fail with ENOTDIR. The final
         // component is left unconstrained: callers use this for both file
-        // targets and directory roots.
-        const int flags = O_RDONLY | O_CLOEXEC | O_NOFOLLOW | (is_last ? 0 : O_DIRECTORY);
+        // targets and directory roots. O_NONBLOCK ensures opening a FIFO
+        // planted at an untrusted path returns immediately instead of
+        // blocking the calling thread indefinitely waiting for a writer;
+        // it has no effect on regular files or directories. Callers that
+        // need a blocking read reopen the already-verified canonical path
+        // through their own type-appropriate call.
+        const int flags = O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK |
+            (is_last ? 0 : O_DIRECTORY);
         const int opened = ::openat(current.get(), parts[index].c_str(), flags);
         if (opened < 0) {
             // O_NOFOLLOW alone makes a symlink component fail with ELOOP.
@@ -353,15 +385,27 @@ WalkedDescriptor walk_contained_path(
             // instead reports ENOTDIR for a symlink, since it cannot confirm
             // the eventual target is a directory without following it --
             // verified empirically, not merely inferred from documentation.
-            // Either way, this component is not a plain, directly-usable
-            // directory/file; preserve that as indirect_component rather
-            // than folding it into a generic "unavailable".
-            return {
-                ScopedDescriptor(),
-                (errno == ELOOP || errno == ENOTDIR)
+            // ENOTDIR can also mean a genuine non-directory (e.g. a plain
+            // file) is blocking the path with no symlink involved; an
+            // AT_SYMLINK_NOFOLLOW-qualified fstatat() on the same
+            // already-open parent disambiguates the two purely for
+            // diagnostic accuracy -- it does not affect the fail-closed
+            // outcome, which is identical either way, and reading (not
+            // opening) that component's own metadata cannot itself hang.
+            PhysicalPathContainmentFailure failure =
+                PhysicalPathContainmentFailure::path_unavailable;
+            if (errno == ELOOP) {
+                failure = PhysicalPathContainmentFailure::indirect_component;
+            } else if (errno == ENOTDIR) {
+                struct stat blocked_status{};
+                failure = (::fstatat(
+                                current.get(), parts[index].c_str(),
+                                &blocked_status, AT_SYMLINK_NOFOLLOW) == 0 &&
+                            S_ISLNK(blocked_status.st_mode))
                     ? PhysicalPathContainmentFailure::indirect_component
-                    : PhysicalPathContainmentFailure::path_unavailable
-            };
+                    : PhysicalPathContainmentFailure::path_unavailable;
+            }
+            return {ScopedDescriptor(), failure};
         }
         ScopedDescriptor next(opened);
         struct stat next_status{};
@@ -471,7 +515,11 @@ PhysicalPathContainmentResult inspect_physical_path_containment(
         return failed_result(PhysicalPathContainmentFailure::indirect_component);
     }
     const PhysicalPathIdentity identity = identity_from_handle_information(information);
-    const std::filesystem::path canonical_path = component_root / *lexical_relative;
+    const auto resolved_path = path_of_handle(walked.handle.get());
+    if (!resolved_path.has_value()) {
+        return failed_result(PhysicalPathContainmentFailure::path_unavailable);
+    }
+    const std::filesystem::path canonical_path = *resolved_path;
 #else
     struct stat status{};
     if (::fstat(walked.descriptor.get(), &status) != 0) {
