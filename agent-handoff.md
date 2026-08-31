@@ -1,42 +1,116 @@
 # Agent Handoff
 
-## In-progress: PR #5416 (WorkspaceAgentSessionController::stop() exception safety, fixes #5401), not yet merged
+## Shipped: PR #5416 (WorkspaceAgentSessionController::stop() exception safety, fixed #5401), merged as `517589e6a` (squash)
 
-**Steering-continuity record** — as of commit `d61fe01ec` (2026-08-31), a
-fresh Windows Native Validation dispatch (run `33354458540`) and a second
-adversarial `/code-review` pass are both in flight; check with `gh run
-list --workflow="Windows Native Validation" --branch
-agent/v1-session-stop-exception-safety`. Every earlier Windows run
-(`33353687668`, against the first, incomplete fix) is superseded and was
-cancelled. If you cannot find these results already reported/acted on,
-re-run both before merging.
+Mirrored `start()`'s `catch(...) { transition_ = idle; throw; }` guard
+around `stop()`'s post-transition-flag section, then went through three
+adversarial `/code-review` rounds before merge, each finding something
+real:
 
-PR #5416's first commit (`3fc3437a9`) mirrored `start()`'s existing
-`catch(...) { transition_ = idle; throw; }` guard around `stop()`'s
-post-transition-flag section, closing an irrecoverable-DoS window (an
-exception there previously left `transition_` stuck at `stopping`
-forever). A first adversarial `/code-review` pass found this was
-**incomplete**: `revoked_session = active_session_;` (a
-`WorkspaceAgentSessionSnapshot` copy that owns a `std::string`, and can
-therefore genuinely throw) ran immediately after `transition_ =
-Transition::stopping;` but was still *outside* that try block, reproducing
-the exact bug one statement earlier than the fix covered. Fixed in
-`d61fe01ec` by replacing all three hand-copied `catch(...)` blocks
-(`start()`, `cleanup_pending_session_layout()`, `stop()`) with one shared
-RAII `ResetOnExit<T>` helper armed immediately after each method sets its
-non-idle `transition_` value, before any other work in that same critical
-section — closing the review's exact finding structurally rather than by
-relocating a try block, and directly addressing the review's related point
-that the hand-copied guard pattern was itself the kind of omission that
-produced this bug. Moved the test-only fault-injection hook's call site to
-match (fires immediately after `arm()`, before the vulnerable copy) and
-re-verified the regression catches the bug by temporarily disabling
-`reset_guard.arm()` this time (not the old catch block) and observing the
-same three assertions fail, then restoring it. Full local Linux battery
-(7/7) passes again.
+- **Round 1**: the initial fix was incomplete — `revoked_session =
+  active_session_;` (a `WorkspaceAgentSessionSnapshot` copy that owns a
+  `std::string`, genuinely throw-capable) ran immediately after
+  `transition_ = Transition::stopping;` but was still *outside* the new
+  `try` block, reproducing the exact bug one statement earlier. Fixed by
+  replacing all three hand-copied `catch(...)` blocks (`start()`,
+  `cleanup_pending_session_layout()`, `stop()`) with one shared RAII
+  `ResetOnExit<T>` helper armed immediately after each method sets its
+  non-idle `transition_` value.
+- **Round 2**: `ResetOnExit` had no `disarm()`, so each method's own
+  success-path `transition_ = Transition::idle;` was always followed by
+  the still-armed guard's destructor redundantly re-locking and
+  re-writing the same field after the enclosing lock released — an
+  unlock/re-lock window where a concurrent thread's legitimate
+  transition could be silently clobbered back to idle. The guard's
+  destructor also had no exception handling around its `lock_guard`
+  construction; since destructors are implicitly `noexcept`, a
+  `std::mutex::lock()` throw would call `std::terminate()` and crash the
+  process — worse than the pre-refactor hand-written blocks it replaced.
+  Fixed by adding `disarm()` (called at each method's own final reset)
+  and swallowing exceptions from the destructor's lock.
+- **Round 3**: the test-only fault-injection hook
+  (`workspace_agent_session_test_hooks.h`) had no macro gate, unlike
+  every other test-only hook in this codebase, so it shipped in every
+  production executable that links `cf_security`. Fixed with a new
+  `COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS` macro (defined
+  only when `COPPERFIN_BUILD_TESTS` is on), matching the existing
+  `cf_runtime_pipeline`/`copperfin_runtime_host` convention. Verified via
+  a separate `-DCOPPERFIN_BUILD_TESTS=OFF` build that `nm` shows the hook
+  symbol is genuinely absent from `libcf_security.a`.
 
-Picking up #5405 (consolidate duplicated path predicates across the four
-`workspace_agent_*` files) next on a separate branch with no file overlap.
+Issue #5401 closed manually (`v1-development` isn't the default branch,
+so `Fixes #5401` didn't auto-close it).
+
+## Shipped: PR #5417 (consolidate duplicated Windows path-safety predicates, fixed #5405), merged as `7a6155cbd` (squash)
+
+`path_has_embedded_nul`, `path_has_dot_component`,
+`path_has_windows_alias_prone_component`, and
+`path_has_reserved_windows_device_name_component` were hand-duplicated
+across four `workspace_agent_*` files — the same duplication that let
+PR #5410's colon-bypass fix miss coverage until an adversarial review
+caught it. Moved all four into `copperfin::platform` (`path.h`/`path.cpp`),
+consumed via `using` declarations; added direct regression coverage at
+the new canonical home in `tests/test_platform_path.cpp`. No behavior
+change; clean on first adversarial review round. Issue #5405 closed
+manually.
+
+## Shipped: PR #5418 (consolidate ScopedFd/ScopedHandle RAII wrappers, fixed #5408), merged as `fc7357766` (squash)
+
+Consolidated `physical_path_containment.cpp`, `audit_stream.cpp`, and
+`private_directory.cpp`'s three hand-duplicated move-only POSIX-descriptor
+and Windows-`HANDLE` RAII wrappers (with small real interface
+differences between copies) into one canonical
+`copperfin::platform::ScopedFd`/`ScopedHandle` pair. Two real issues
+surfaced before merge:
+
+- **Round 1 adversarial review**: the new header included `<windows.h>`
+  unguarded, before any consumer's own `NOMINMAX`/`WIN32_LEAN_AND_MEAN`
+  guard could take effect, silently defeating `audit_stream.cpp`'s
+  `NOMINMAX` protection for its unparenthesized `std::min`/`max` calls —
+  the same bug class this codebase has hit before
+  (`prg_engine_helpers.cpp`). Fixed by having the shared header define
+  both macros itself first.
+- **Windows CI only** (not reproducible locally on Linux): the header
+  originally lived at `include/copperfin/platform/scoped_resource.h` — a
+  *public* header — with per-platform `#if defined(_WIN32)` class bodies,
+  tripping `test_platform_sqlite_api_boundary_contract`'s scan for
+  platform-selection tokens leaking into `include/copperfin/*`. This
+  codebase's convention (established by the SQLite connector work) is
+  that public headers stay platform-agnostic and platform conditionals
+  live in private `src/` headers. Fixed by relocating to
+  `src/platform/scoped_resource.h`, matching the existing
+  `bounded_process_private.h`/`sqlite_api.h` precedent — worth
+  remembering for any future shared cross-platform header: **new headers
+  with `#if defined(_WIN32)` bodies belong under `src/`, not
+  `include/copperfin/`, unless they're pure declarations with the
+  platform branching pushed into the `.cpp`** (the pattern `path.h`
+  already used).
+
+Issue #5408 closed manually.
+
+## Next: I2/#34 sub-issue queue is exhausted for self-selectable work
+
+`gh issue list` shows only two open I2/#34 slices left, and neither is
+pickable without further input:
+
+- **#5403** — a policy question ("does `workspace_sandbox` mode need a
+  confirmation gate?") requiring an owner decision, not implementable
+  unilaterally.
+- **#5409** — `read_physically_contained_file_snapshot()` reopens by
+  path string instead of reusing the verified descriptor/handle from the
+  check phase. Re-evaluated this session and confirmed genuinely too
+  large for one slice: it needs either merging the check-and-read
+  functions or extending the result type to own a live descriptor/handle,
+  evaluated against 4+ call sites (`runtime_pipeline_package_content_io.cpp`,
+  `workspace_agent_process_parser.cpp`,
+  `workspace_agent_target_containment.cpp`,
+  `sqlite_federation_connector.cpp`) before committing to a design — a
+  real API-shape redesign, better scoped as its own multi-slice task with
+  a design pass first, not picked up cold.
+
+Do not self-select further #34 work without new owner input — ask
+whether to scope #5409 as a proper multi-slice task, or pick a different
+umbrella from `docs/05-roadmap.md`.
 
 ## Shipped: PR #5411 (bounded Win32 version-resource string reads), merged as `265734d68` (squash)
 
