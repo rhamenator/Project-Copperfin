@@ -71,12 +71,21 @@ dispatch above is not optional, per the standing fact below about
 ## In-progress: PR #5410 (reserved Windows device names, fixes #5404), not yet merged
 
 **Steering-continuity record** — the Windows Native Validation dispatch
-completed clean (run `33330701297` against commit `41a1b3da1`, `SUCCESS`),
-but the adversarial `/code-review` pass against this branch **failed and
-delivered no findings**: it was terminated mid-run by the session hitting
-its monthly Claude API spend limit (`your session limit resets 7:10pm
-America/Detroit`, 2026-08-30), not by completing normally. Its last
-recorded line before termination was "Now let me re-verify the
+completed clean once (run `33330701297` against commit `41a1b3da1`,
+`SUCCESS`), but that commit was superseded: after PR #5407 merged into
+`v1-development`, this branch had to be rebased onto it (conflicts in
+`CHANGELOG.md`, `agent-handoff.md`, and `.agent-channel/log.jsonl` — the
+last required manually renumbering a `seq` collision per the channel
+README's documented, accepted risk). The rebased head is commit
+`cde053245`; a fresh Windows Native Validation dispatch (run
+`33345554677`) is in flight against it and must come back green before
+merge — the `41a1b3da1` result no longer applies to the current head.
+
+Separately, the adversarial `/code-review` pass against this branch
+**failed and delivered no findings**: it was terminated mid-run by the
+session hitting its monthly Claude API spend limit (`your session limit
+resets 7:10pm America/Detroit`, 2026-08-30), not by completing normally.
+Its last recorded line before termination was "Now let me re-verify the
 colon/stream-syntax bypass hypothesis against these correct file
 snapshots" — it may have been onto something real involving
 `path_has_windows_device_or_stream_syntax()` in
