@@ -1,3 +1,34 @@
+- 2026-08-31: Added `inspect_and_open_physically_contained_path()` and
+  `read_physically_contained_file_snapshot_from_handle()`
+  (`RQ-CF-CONTAINMENT-001`, issue #5409, slice #5420): an additive-only,
+  opt-in pair that closes the residual TOCTOU window
+  `read_physically_contained_file_snapshot()` still has -- it reopens
+  the checked path by string, binding the object it reads to the object
+  the check verified only via an identity comparison, not structurally.
+  The new pair instead carries the check-phase `openat()`/`CreateFileW`
+  walk's own verified descriptor/handle forward (via a new move-only,
+  PIMPL'd `PhysicalPathContainmentHandle` that keeps this public header
+  free of platform-selection tokens, per the lesson from PR #5418's
+  `scoped_resource.h` fix) and reads from it directly, so the object
+  read can never differ from the object verified, on any platform.
+  `inspect_physical_path_containment()` was refactored to share the
+  same underlying walk (`inspect_and_walk()`) so there is one source of
+  truth. No existing call site changed in this slice; call-site
+  migration is separate follow-up scope (issues #5421, #5422). Writing
+  the new closed-window regression test surfaced a real defect before
+  merge: the handle-based read's before/after identity re-check
+  initially reused the full `PhysicalPathIdentity` comparison
+  (including `link_count`), but the test's swap scenario legitimately
+  unlinks the checked path, which drops the still-open descriptor's
+  `st_nlink` from 1 to 0 without touching any content (confirmed via a
+  standalone repro) -- spuriously failing exactly the substitution
+  scenario the new function exists to survive. Fixed with a dedicated
+  `content_identity_matches()` comparison that excludes `link_count`,
+  used only by the new handle-based path; the string-reopening
+  function's original comparison is unchanged. Verified the regression
+  test actually catches this by temporarily reverting the fix and
+  observing it fail, then restoring it.
+
 - 2026-08-31: Consolidated the move-only POSIX-descriptor and Windows-HANDLE
   RAII wrapper classes (issue #5408) that had been hand-duplicated -- with
   small, real interface differences -- across `physical_path_containment.cpp`

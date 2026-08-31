@@ -1395,6 +1395,73 @@ void test_physical_path_containment_rejects_indirection() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #5409/#5420: inspect_and_open_physically_contained_path() +
+// read_physically_contained_file_snapshot_from_handle() close the residual
+// TOCTOU window that the string-reopening
+// read_physically_contained_file_snapshot() has: reopening
+// PhysicalPathContainmentResult::canonical_path by string after the check
+// means the object actually read is whatever the filesystem resolves that
+// path to *at read time*, bound to the checked object only by an incidental
+// identity comparison. The handle-based read is instead bound to the exact
+// object the check verified for the whole call, because it never reopens by
+// path at all.
+void test_physical_path_containment_handle_based_read_survives_path_swap() {
+    namespace fs = std::filesystem;
+    using copperfin::security::PhysicalPathContainmentFailure;
+
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_physical_path_containment_handle_tests";
+    const fs::path package_root = temp_root / "package";
+    const fs::path content_root = package_root / "content";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(content_root);
+
+    const fs::path target_file = content_root / "target.prg";
+    write_file_bytes(target_file, "ORIGINAL\n");
+
+    auto handle = copperfin::security::inspect_and_open_physically_contained_path(
+        target_file,
+        package_root);
+    expect(handle.result().allowed,
+           "the target file should pass physical containment inspection");
+
+    if (handle.result().allowed) {
+        // Swap the path *after* the check succeeded but *before* the read:
+        // delete the checked file and put a different one at the exact same
+        // path, with different content and (on every real filesystem) a
+        // different inode/file id.
+        fs::remove(target_file, ignored);
+        write_file_bytes(target_file, "SWAPPED\n");
+
+        const auto handle_based_snapshot =
+            copperfin::security::read_physically_contained_file_snapshot_from_handle(
+                handle);
+        expect(handle_based_snapshot.ok && handle_based_snapshot.bytes == "ORIGINAL\n",
+               "a handle-based read must return the bytes of the exact object the "
+               "check verified, unaffected by a path swap that happens after the "
+               "check -- issue #5409's closed-window guarantee");
+
+        // Contrast: the pre-existing string-reopening read, given the same
+        // pre-swap containment result, reopens by path and observes the
+        // swapped-in file -- it fails closed via the incidental identity
+        // mismatch (different size/inode/mtime), not because the reopen itself
+        // was ever prevented from reaching the wrong object.
+        const auto string_based_snapshot =
+            copperfin::security::read_physically_contained_file_snapshot(
+                handle.result(),
+                package_root);
+        expect(!string_based_snapshot.ok &&
+                   string_based_snapshot.failure ==
+                       PhysicalPathContainmentFailure::identity_changed,
+               "the pre-existing string-reopening read observes the swapped file "
+               "and only fails closed via incidental identity mismatch, unlike "
+               "the handle-based read's structural guarantee");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -1428,6 +1495,7 @@ int main() {
     test_external_process_policy_handles_long_paths();
 #endif
     test_physical_path_containment_rejects_indirection();
+    test_physical_path_containment_handle_based_read_survives_path_swap();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

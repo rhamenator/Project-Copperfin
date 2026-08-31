@@ -161,6 +161,27 @@ PhysicalFileSnapshotResult failed_snapshot(
     };
 }
 
+// Used only by read_physically_contained_file_snapshot_from_handle()'s
+// before/after checks. Deliberately excludes link_count, unlike
+// PhysicalPathIdentity::operator==: a still-open handle/descriptor keeps the
+// underlying object's content stable regardless of what happens to its
+// directory entry. Unlinking a path the caller holds an open handle to
+// drops st_nlink to 0 (verified empirically) without changing a single byte
+// of the object's content -- link_count is a meaningful signal for the
+// string-reopening read_physically_contained_file_snapshot() above (where
+// it helps detect a *different* object being resolved by the reopen), but
+// it is not a content-mutation signal once a handle already pins the exact
+// object, and treating it as one would make the handle-based read spuriously
+// fail exactly the substitution scenario it exists to survive.
+bool content_identity_matches(
+    const PhysicalPathIdentity& observed,
+    const PhysicalPathIdentity& expected) {
+    return observed.storage_id == expected.storage_id &&
+        observed.file_id == expected.file_id &&
+        observed.file_size == expected.file_size &&
+        observed.modified_ticks == expected.modified_ticks;
+}
+
 // Splits a relative path into single, slash-free components, skipping "."
 // entries. relative_path_is_contained() has already rejected ".." and
 // absolute paths before this is ever called.
@@ -196,12 +217,29 @@ struct WalkedHandle {
 // is caught by the *next* component's own reparse-point check on the
 // then-current filesystem state, rather than silently surviving into an
 // entirely separate, later resolution pass.
+// open_final_component_for_read widens only the last-opened component's
+// access rights from FILE_READ_ATTRIBUTES to FILE_GENERIC_READ (a superset
+// that adds FILE_READ_DATA), so a caller that intends to read the verified
+// object's content via the handle this returns can do so without a second,
+// separately-resolved open. Every non-final component along the walk still
+// opens with FILE_READ_ATTRIBUTES only, matching the existing check-only
+// behavior exactly -- widening those too would be unnecessary and would
+// change the access this walk requests against every intermediate directory
+// for callers that never read anything.
 WalkedHandle walk_contained_path(
     const std::filesystem::path& root,
-    const std::filesystem::path& relative_path) {
+    const std::filesystem::path& relative_path,
+    bool open_final_component_for_read = false) {
+    const auto parts = relative_components(relative_path);
+    // If relative_path resolves to the root itself (parts is empty), the
+    // root's own handle is what a read-intending caller will read from.
+    const DWORD root_access =
+        (parts.empty() && open_final_component_for_read)
+        ? FILE_GENERIC_READ
+        : FILE_READ_ATTRIBUTES;
     ScopedHandle current(::CreateFileW(
         root.c_str(),
-        FILE_READ_ATTRIBUTES,
+        root_access,
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
         nullptr,
         OPEN_EXISTING,
@@ -223,11 +261,16 @@ WalkedHandle walk_contained_path(
     }
 
     std::filesystem::path accumulated = root;
-    for (const auto& part : relative_components(relative_path)) {
-        accumulated /= part;
+    for (std::size_t index = 0U; index < parts.size(); ++index) {
+        accumulated /= parts[index];
+        const bool is_last = (index + 1U == parts.size());
+        const DWORD access =
+            (is_last && open_final_component_for_read)
+            ? FILE_GENERIC_READ
+            : FILE_READ_ATTRIBUTES;
         ScopedHandle next(::CreateFileW(
             accumulated.c_str(),
-            FILE_READ_ATTRIBUTES,
+            access,
             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
             nullptr,
             OPEN_EXISTING,
@@ -329,9 +372,16 @@ struct WalkedDescriptor {
 // unlike a design that walks the path once to check it, then resolves it
 // again separately (e.g. via a second std::filesystem::canonical() call)
 // to actually open it.
+//
+// open_final_component_for_read is accepted for signature parity with the
+// Windows overload (both are called uniformly from inspect_and_walk()) but
+// is otherwise unused here: O_RDONLY, already requested for every
+// component below, already grants read access to file content, unlike
+// Windows' FILE_READ_ATTRIBUTES, which does not.
 WalkedDescriptor walk_contained_path(
     const std::filesystem::path& root,
-    const std::filesystem::path& relative_path) {
+    const std::filesystem::path& relative_path,
+    [[maybe_unused]] bool open_final_component_for_read = false) {
     ScopedFd current(::open(root.c_str(), O_RDONLY | O_CLOEXEC));
     if (!current.valid()) {
         return {ScopedFd(), PhysicalPathContainmentFailure::root_unavailable};
@@ -439,26 +489,41 @@ std::optional<std::filesystem::path> path_of_descriptor(int descriptor) {
 
 #endif  // POSIX
 
-}  // namespace
+// Single source of truth for both inspect_physical_path_containment() and
+// inspect_and_open_physically_contained_path(): performs the exact same
+// verified walk either way and additionally carries the native
+// handle/descriptor forward on success, so a caller that wants to read
+// immediately after checking (issue #5409) can do so without a second,
+// separately-resolved open. inspect_physical_path_containment() discards
+// the native member; inspect_and_open_physically_contained_path() keeps it.
+struct InternalContainmentWalk {
+    PhysicalPathContainmentResult result;
+#if defined(_WIN32)
+    ScopedHandle native;
+#else
+    ScopedFd native;
+#endif
+};
 
-PhysicalPathContainmentResult inspect_physical_path_containment(
+InternalContainmentWalk inspect_and_walk(
     const std::filesystem::path& path,
-    const std::filesystem::path& root) {
+    const std::filesystem::path& root,
+    const bool open_final_component_for_read) {
     std::error_code filesystem_error;
     const std::filesystem::path absolute_root =
         std::filesystem::absolute(root, filesystem_error).lexically_normal();
     if (filesystem_error) {
-        return failed_result(PhysicalPathContainmentFailure::root_unavailable);
+        return {failed_result(PhysicalPathContainmentFailure::root_unavailable), {}};
     }
     const std::filesystem::path absolute_path =
         std::filesystem::absolute(path, filesystem_error).lexically_normal();
     if (filesystem_error) {
-        return failed_result(PhysicalPathContainmentFailure::path_unavailable);
+        return {failed_result(PhysicalPathContainmentFailure::path_unavailable), {}};
     }
     const std::filesystem::path canonical_root =
         std::filesystem::canonical(absolute_root, filesystem_error);
     if (filesystem_error) {
-        return failed_result(PhysicalPathContainmentFailure::root_unavailable);
+        return {failed_result(PhysicalPathContainmentFailure::root_unavailable), {}};
     }
 
     std::filesystem::path component_root = absolute_root;
@@ -490,50 +555,221 @@ PhysicalPathContainmentResult inspect_physical_path_containment(
         }
     }
     if (!lexical_relative.has_value()) {
-        return failed_result(PhysicalPathContainmentFailure::outside_root);
+        return {failed_result(PhysicalPathContainmentFailure::outside_root), {}};
     }
 
-    auto walked = walk_contained_path(component_root, *lexical_relative);
+    auto walked = walk_contained_path(
+        component_root, *lexical_relative, open_final_component_for_read);
     if (walked.failure != PhysicalPathContainmentFailure::none) {
-        return failed_result(walked.failure);
+        return {failed_result(walked.failure), {}};
     }
 
 #if defined(_WIN32)
     BY_HANDLE_FILE_INFORMATION information{};
     if (::GetFileInformationByHandle(walked.handle.get(), &information) == 0) {
-        return failed_result(PhysicalPathContainmentFailure::path_unavailable);
+        return {failed_result(PhysicalPathContainmentFailure::path_unavailable), {}};
     }
     if ((information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
-        return failed_result(PhysicalPathContainmentFailure::indirect_component);
+        return {failed_result(PhysicalPathContainmentFailure::indirect_component), {}};
     }
     const PhysicalPathIdentity identity = identity_from_handle_information(information);
     const auto resolved_path = path_of_handle(walked.handle.get());
     if (!resolved_path.has_value()) {
-        return failed_result(PhysicalPathContainmentFailure::path_unavailable);
+        return {failed_result(PhysicalPathContainmentFailure::path_unavailable), {}};
     }
     const std::filesystem::path canonical_path = *resolved_path;
 #else
     struct stat status{};
     if (::fstat(walked.descriptor.get(), &status) != 0) {
-        return failed_result(PhysicalPathContainmentFailure::path_unavailable);
+        return {failed_result(PhysicalPathContainmentFailure::path_unavailable), {}};
     }
     const PhysicalPathIdentity identity =
         identity_from_descriptor(walked.descriptor.get(), status);
     const auto resolved_path = path_of_descriptor(walked.descriptor.get());
     if (!resolved_path.has_value()) {
-        return failed_result(PhysicalPathContainmentFailure::path_unavailable);
+        return {failed_result(PhysicalPathContainmentFailure::path_unavailable), {}};
     }
     const std::filesystem::path canonical_path = *resolved_path;
 #endif
 
     if (!contained_relative_path(canonical_path, canonical_root).has_value()) {
-        return failed_result(PhysicalPathContainmentFailure::outside_root);
+        return {failed_result(PhysicalPathContainmentFailure::outside_root), {}};
     }
 
     return {
-        .allowed = true,
-        .canonical_path = canonical_path,
-        .identity = identity,
+        PhysicalPathContainmentResult{
+            .allowed = true,
+            .canonical_path = canonical_path,
+            .identity = identity,
+            .failure = PhysicalPathContainmentFailure::none},
+#if defined(_WIN32)
+        std::move(walked.handle)
+#else
+        std::move(walked.descriptor)
+#endif
+    };
+}
+
+}  // namespace
+
+PhysicalPathContainmentResult inspect_physical_path_containment(
+    const std::filesystem::path& path,
+    const std::filesystem::path& root) {
+    return inspect_and_walk(path, root, /*open_final_component_for_read=*/false).result;
+}
+
+class PhysicalPathContainmentHandle::Impl {
+public:
+    PhysicalPathContainmentResult result;
+#if defined(_WIN32)
+    ScopedHandle native;
+#else
+    ScopedFd native;
+#endif
+};
+
+PhysicalPathContainmentHandle::PhysicalPathContainmentHandle() noexcept = default;
+PhysicalPathContainmentHandle::~PhysicalPathContainmentHandle() = default;
+PhysicalPathContainmentHandle::PhysicalPathContainmentHandle(
+    PhysicalPathContainmentHandle&&) noexcept = default;
+PhysicalPathContainmentHandle& PhysicalPathContainmentHandle::operator=(
+    PhysicalPathContainmentHandle&&) noexcept = default;
+PhysicalPathContainmentHandle::PhysicalPathContainmentHandle(
+    std::unique_ptr<Impl> impl) noexcept
+    : impl_(std::move(impl)) {}
+
+const PhysicalPathContainmentResult& PhysicalPathContainmentHandle::result() const noexcept {
+    static const PhysicalPathContainmentResult empty{};
+    return impl_ != nullptr ? impl_->result : empty;
+}
+
+PhysicalPathContainmentHandle inspect_and_open_physically_contained_path(
+    const std::filesystem::path& path,
+    const std::filesystem::path& root) {
+    auto walked = inspect_and_walk(path, root, /*open_final_component_for_read=*/true);
+    auto impl = std::make_unique<PhysicalPathContainmentHandle::Impl>();
+    impl->result = std::move(walked.result);
+    impl->native = std::move(walked.native);
+    return PhysicalPathContainmentHandle(std::move(impl));
+}
+
+PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
+    const PhysicalPathContainmentHandle& handle) {
+    return read_physically_contained_file_snapshot_from_handle(
+        handle, (std::numeric_limits<std::uint64_t>::max)());
+}
+
+PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
+    const PhysicalPathContainmentHandle& handle,
+    const std::uint64_t maximum_bytes) {
+    if (handle.impl_ == nullptr || !handle.impl_->result.allowed ||
+        !handle.impl_->native.valid()) {
+        return failed_snapshot(PhysicalPathContainmentFailure::path_unavailable);
+    }
+    const PhysicalPathContainmentResult& expected = handle.impl_->result;
+    if (expected.identity.file_size > maximum_bytes) {
+        return failed_snapshot(PhysicalPathContainmentFailure::size_limit_exceeded);
+    }
+
+    std::string bytes;
+    PhysicalPathIdentity after_identity;
+#if defined(_WIN32)
+    const HANDLE native = handle.impl_->native.get();
+
+    BY_HANDLE_FILE_INFORMATION before_information{};
+    if (::GetFileInformationByHandle(native, &before_information) == 0 ||
+        (before_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+        return failed_snapshot(PhysicalPathContainmentFailure::indirect_component);
+    }
+    if ((before_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
+        return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
+    }
+    const PhysicalPathIdentity before_identity =
+        identity_from_handle_information(before_information);
+    if (!content_identity_matches(before_identity, expected.identity)) {
+        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+    }
+
+    std::array<char, 64U * 1024U> buffer{};
+    for (;;) {
+        DWORD bytes_read = 0U;
+        if (::ReadFile(
+                native, buffer.data(), static_cast<DWORD>(buffer.size()),
+                &bytes_read, nullptr) == 0) {
+            return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
+        }
+        if (bytes_read == 0U) {
+            break;
+        }
+        if (bytes_read > maximum_bytes ||
+            bytes.size() > maximum_bytes - bytes_read) {
+            return failed_snapshot(
+                PhysicalPathContainmentFailure::size_limit_exceeded);
+        }
+        bytes.append(buffer.data(), bytes_read);
+    }
+
+    BY_HANDLE_FILE_INFORMATION after_information{};
+    if (::GetFileInformationByHandle(native, &after_information) == 0) {
+        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
+    }
+    after_identity = identity_from_handle_information(after_information);
+#else
+    const int native = handle.impl_->native.get();
+
+    struct stat before_status{};
+    if (::fstat(native, &before_status) != 0) {
+        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
+    }
+    if (!S_ISREG(before_status.st_mode)) {
+        return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
+    }
+    const PhysicalPathIdentity before_identity =
+        identity_from_descriptor(native, before_status);
+    if (!content_identity_matches(before_identity, expected.identity)) {
+        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+    }
+
+    std::array<char, 64U * 1024U> buffer{};
+    for (;;) {
+        const ssize_t bytes_read = ::read(native, buffer.data(), buffer.size());
+        if (bytes_read < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
+        }
+        if (bytes_read == 0) {
+            break;
+        }
+        const auto byte_count = static_cast<std::uint64_t>(bytes_read);
+        if (byte_count > maximum_bytes ||
+            bytes.size() > maximum_bytes - byte_count) {
+            return failed_snapshot(
+                PhysicalPathContainmentFailure::size_limit_exceeded);
+        }
+        bytes.append(buffer.data(), static_cast<std::size_t>(bytes_read));
+    }
+
+    struct stat after_status{};
+    if (::fstat(native, &after_status) != 0) {
+        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
+    }
+    // Must run before any further use of native: on Linux,
+    // identity_from_descriptor() queries creation time via statx() against
+    // this same descriptor.
+    after_identity = identity_from_descriptor(native, after_status);
+#endif
+
+    if (!content_identity_matches(after_identity, expected.identity) ||
+        bytes.size() != expected.identity.file_size) {
+        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+    }
+
+    return {
+        .ok = true,
+        .bytes = std::move(bytes),
+        .containment = expected,
         .failure = PhysicalPathContainmentFailure::none
     };
 }
