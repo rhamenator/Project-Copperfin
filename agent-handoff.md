@@ -1,5 +1,35 @@
 # Agent Handoff
 
+## In-progress: PR #5411 (bounded Win32 version-resource string reads, fixes #5402), not yet merged
+
+**Steering-continuity record** — Windows Native Validation dispatch (run
+`33343489771`) against commit `f58a6f73d` is in flight; check completion
+with `gh run list --workflow="Windows Native Validation" --branch
+agent/v1-fix-company-name-overread`. No adversarial `/code-review` pass has
+been attempted yet for this PR: this session hit its monthly Claude API
+spend limit while reviewing the sibling PR #5410 (resets 7:10pm
+America/Detroit, 2026-08-30), so further `/code-review` subagent spawns
+were deliberately avoided for the rest of that session. Run
+`/code-review --branch agent/v1-fix-company-name-overread max` before
+merging, once available.
+
+PR #5411 fixes #5402 (heap buffer over-read in `get_company_name()`) via a
+new shared `copperfin::platform::bounded_wide_string()` helper
+(`include/copperfin/platform/bounded_wide_string.h`), also applied to a
+second, previously-unreported instance of the identical bug found during
+this fix in `file_version.cpp`'s `query_string` helper. The helper is
+header-only and platform-independent, so `tests/test_bounded_wide_string.cpp`
+proves its bounds-safety directly under normal Linux execution (no ASan or
+Windows host needed) even though both production call sites are Windows-only
+and can't be exercised without one. New `RQ-CF-EXTERNAL-PROCESS-001`
+traceability row. Verified locally that `test_bounded_wide_string` and
+`test_security_controls` build warning-free and pass.
+
+This branch, PR #5407 (merged, `physical_path_containment.cpp`), and PR
+#5410 (`workspace_agent_*`/`environment`/`audit_sink.cpp`) were kept on
+separate branches with no file overlap so all three could proceed in
+parallel without collision.
+
 ## Shipped: PR #5407 (TOCTOU fix for #5400), merged as `93b0acbd9` (squash)
 
 Windows Native Validation dispatch (run `33330266844`) against the final

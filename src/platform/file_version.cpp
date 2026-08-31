@@ -4,6 +4,7 @@
 
 #include "copperfin/platform/file_version.h"
 
+#include "copperfin/platform/bounded_wide_string.h"
 #include "copperfin/platform/path.h"
 
 #include <algorithm>
@@ -234,7 +235,8 @@ FileVersionMetadata read_file_version_metadata(const std::filesystem::path& path
             value == nullptr || value_size == 0U) {
             return {};
         }
-        return utf8_from_wide(std::wstring(static_cast<const wchar_t*>(value)));
+        return utf8_from_wide(copperfin::platform::bounded_wide_string(
+            static_cast<const wchar_t*>(value), value_size));
     };
 #else
     std::ifstream input(path, std::ios::binary);
