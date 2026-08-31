@@ -43,6 +43,28 @@
   Crypt/Shell symbols across all three -- none found). All ten affected
   tests re-verified passing after the fix.
 
+- 2026-08-31: Consolidated four Windows path-safety predicates
+  (`path_has_embedded_nul`, `path_has_dot_component`,
+  `path_has_windows_alias_prone_component`,
+  `path_has_reserved_windows_device_name_component`, issue #5405) that had
+  been hand-duplicated verbatim across `workspace_agent_target_containment.cpp`,
+  `workspace_agent_process_containment.cpp`, `workspace_agent_environment.cpp`,
+  and `workspace_agent_audit_sink.cpp` into a single canonical implementation
+  in `include/copperfin/platform/path.h` / `src/platform/path.cpp`, consumed
+  by all four via `using` declarations. This is the same class of risk that
+  produced the colon-suffixed device-name bypass fixed for issue #5404: a
+  fix or hardening applied to one copy silently leaving the other three
+  copies unpatched. `workspace_agent_audit_sink.cpp`'s inline dot-component
+  loop in `relative_log_path_is_safe()` was also folded into the shared
+  `path_has_dot_component()` call. No behavior change: the four consumer
+  test suites (`test_workspace_agent_target_containment`,
+  `test_workspace_agent_process_containment`, `test_workspace_agent_audit_sink`,
+  `test_workspace_agent_isolated_environment`) plus `test_security_controls`
+  pass unchanged, and the predicates now also have direct regression
+  coverage at their canonical home in `tests/test_platform_path.cpp`,
+  including the colon-suffixed legacy MS-DOS device syntax case
+  (`NUL:`, `NUL:hidden.txt`).
+
 - 2026-08-30: Fixed a heap buffer over-read in two Win32 version-resource
   string extractors (`RQ-CF-EXTERNAL-PROCESS-001`, issue #5402):
   `get_company_name()` (`external_process_policy.cpp`) and

@@ -4,6 +4,7 @@
 
 #include "copperfin/security/workspace_agent_process_containment.h"
 
+#include "copperfin/platform/path.h"
 #include "copperfin/platform/windows_pe_image.h"
 
 #include "sha256_native.h"
@@ -219,101 +220,16 @@ WorkspaceAgentProcessTargetPins::executable_snapshot_for_materialization()
 
 namespace {
 
+using copperfin::platform::path_has_dot_component;
+using copperfin::platform::path_has_embedded_nul;
+using copperfin::platform::path_has_reserved_windows_device_name_component;
+using copperfin::platform::path_has_windows_alias_prone_component;
+
 WorkspaceAgentProcessTargetInspection denied(std::string diagnostic_code) {
     WorkspaceAgentProcessTargetInspection result;
     result.diagnostic_code = std::move(diagnostic_code);
     return result;
 }
-
-bool path_has_embedded_nul(const std::filesystem::path& path) {
-    const auto& native = path.native();
-    return native.find(typename std::filesystem::path::value_type{}) !=
-        std::filesystem::path::string_type::npos;
-}
-
-bool path_has_dot_component(const std::filesystem::path& path) {
-    for (const auto& component : path) {
-        if (component == "." || component == "..") {
-            return true;
-        }
-    }
-    return false;
-}
-
-#if defined(_WIN32)
-// Win32's CreateFileW/GetFullPathNameW silently strip a trailing '.' or ' '
-// from each path component before resolving it, so "tool." and "tool " name
-// the same object as "tool". A component-boundary check alone cannot reject
-// this: it must inspect each component's own last character.
-bool path_has_windows_alias_prone_component(const std::filesystem::path& path) {
-    for (const auto& component : path) {
-        const auto& native = component.native();
-        if (!native.empty() &&
-            (native.back() == L'.' || native.back() == L' ')) {
-            return true;
-        }
-    }
-    return false;
-}
-bool path_component_is_reserved_windows_device_name(
-    const std::filesystem::path::string_type& component) {
-    // Legacy MS-DOS device syntax ("NUL:", "COM1:") is still honored by
-    // Win32 path resolution for backward compatibility, so a reserved name
-    // can be terminated by ':' as well as by '.' -- stopping at '.' alone is
-    // a well-known bypass for naive reserved-name checks. This file also has
-    // its own independent path_has_windows_device_or_stream_syntax() check
-    // that already rejects any ':' in a relative component, so this fix is
-    // defense-in-depth here rather than closing a live gap.
-    const auto stop = component.find_first_of(L".:");
-    const std::filesystem::path::string_type stem =
-        (stop == std::filesystem::path::string_type::npos)
-            ? component
-            : component.substr(0U, stop);
-    if (stem.empty() || stem.size() > 4U) {
-        return false;
-    }
-    std::filesystem::path::string_type upper;
-    upper.reserve(stem.size());
-    for (const wchar_t ch : stem) {
-        upper.push_back(
-            (ch >= L'a' && ch <= L'z') ? static_cast<wchar_t>(ch - (L'a' - L'A')) : ch);
-    }
-    static constexpr std::wstring_view reserved_names[] = {
-        L"CON", L"PRN", L"AUX", L"NUL",
-        L"COM1", L"COM2", L"COM3", L"COM4", L"COM5", L"COM6", L"COM7", L"COM8", L"COM9",
-        L"LPT1", L"LPT2", L"LPT3", L"LPT4", L"LPT5", L"LPT6", L"LPT7", L"LPT8", L"LPT9"
-    };
-    for (const std::wstring_view name : reserved_names) {
-        if (upper == name) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Windows reserves these names as device objects at every path component,
-// not just the final one, and regardless of any extension: CreateFileW on
-// "NUL.txt" opens the NUL device rather than creating a file with that
-// name. Matching is case-insensitive against the portion of the component
-// before its first '.', mirroring how Windows itself resolves the name.
-bool path_has_reserved_windows_device_name_component(
-    const std::filesystem::path& path) {
-    for (const auto& component : path) {
-        if (path_component_is_reserved_windows_device_name(component.native())) {
-            return true;
-        }
-    }
-    return false;
-}
-#else
-bool path_has_windows_alias_prone_component(const std::filesystem::path&) {
-    return false;
-}
-
-bool path_has_reserved_windows_device_name_component(const std::filesystem::path&) {
-    return false;
-}
-#endif
 
 #if defined(_WIN32)
 bool path_has_windows_device_or_stream_syntax(const std::filesystem::path& path) {
