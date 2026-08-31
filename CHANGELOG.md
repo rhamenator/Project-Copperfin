@@ -61,7 +61,16 @@
   temporarily disabling the check and observing the test fail, then
   restoring it. Confirmed via a separate `-DCOPPERFIN_BUILD_TESTS=OFF`
   build that the hook symbol is absent from `libcf_security.a`,
-  matching the verification already done for the session test hook.
+  matching the verification already done for the session test hook. A
+  third adversarial review pass found the new test hard-failed the
+  whole suite in an environment where `std::filesystem::create_hard_link`
+  fails (e.g. an overlay/network temp filesystem or a restricted
+  sandbox), instead of skipping gracefully like this same file's
+  pre-existing hard-link test. Fixed by matching that established
+  convention: only assert the security outcome when the hook actually
+  succeeded in creating the link, recording no failure otherwise.
+  Re-verified the test still catches the regression (temporarily
+  disabling the fix and observing it fail, then restoring it).
 
 - 2026-08-31: Added `inspect_and_open_physically_contained_path()` and
   `read_physically_contained_file_snapshot_from_handle()`
