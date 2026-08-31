@@ -4,6 +4,8 @@
 
 #pragma once
 
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS)
+
 namespace copperfin::security {
 
 // Test-only fault-injection seam for WorkspaceAgentSessionController::stop()'s
@@ -13,9 +15,19 @@ namespace copperfin::security {
 // throws. It exists because the real trigger for that guarantee --
 // allocation failure or an OS mutex/condition-variable primitive throwing --
 // cannot be reproduced deterministically through the controller's ordinary
-// public API. Production code must never set this hook; it defaults to
-// nullptr and is a no-op call site (checked-and-skipped) when unset, so it
-// has no effect on production behavior.
+// public API.
+//
+// This entire seam -- the atomic hook variable, the check-and-fire call site
+// in stop(), and this setter -- only exists when
+// COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS is defined, which
+// CMakeLists.txt does only for the cf_security library variant that
+// COPPERFIN_BUILD_TESTS links tests against (matching this codebase's
+// existing convention for test-only hooks, e.g.
+// COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS). A production build never
+// defines the macro, so the symbol this header declares does not exist in a
+// production binary; an adversarial review of PR #5416 found the first
+// version of this header had no such gate and shipped the setter in every
+// production binary that links cf_security.
 //
 // This hook is a single process-global variable shared by every
 // WorkspaceAgentSessionController instance, not scoped per-instance or
@@ -28,3 +40,5 @@ void set_workspace_agent_session_stop_test_only_throw_hook_for_testing(
     void (*hook)());
 
 }  // namespace copperfin::security
+
+#endif  // COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS

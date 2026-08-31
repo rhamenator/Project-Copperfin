@@ -43,7 +43,23 @@
   reset, and by swallowing an exception from the destructor's lock
   (deliberately leaving the field non-idle on that unrecoverable path,
   which is safe because every session entry point already fails closed
-  while non-idle).
+  while non-idle). A third adversarial review found the test-only
+  fault-injection hook itself
+  (`workspace_agent_session_test_hooks.h`) had no macro gate, unlike
+  every other test-only hook in this codebase
+  (`COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS`,
+  `COPPERFIN_RUNTIME_HOST_TEST_HOOKS`): since `cf_security` links into
+  every production executable, the setter shipped in production,
+  letting any code with call access into the process force the next
+  `stop()` call anywhere to throw at the exact point authority had
+  changed but not yet been revoked. Fixed by gating the hook variable,
+  its call site, the setter, and the header's entire declaration behind
+  a new `COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS` macro,
+  defined only on `cf_security` and the test target when
+  `COPPERFIN_BUILD_TESTS` is on, matching the existing
+  `cf_runtime_pipeline`/`copperfin_runtime_host` convention. Verified
+  via a separate `-DCOPPERFIN_BUILD_TESTS=OFF` build: `nm` confirms the
+  hook symbol is entirely absent from the resulting `libcf_security.a`.
 
 - 2026-08-30: Fixed a heap buffer over-read in two Win32 version-resource
   string extractors (`RQ-CF-EXTERNAL-PROCESS-001`, issue #5402):

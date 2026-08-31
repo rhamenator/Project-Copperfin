@@ -263,10 +263,12 @@ private:
     bool armed_ = false;
 };
 
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS)
 // See workspace_agent_session_test_hooks.h. Relaxed ordering is sufficient:
 // this exists only for single-threaded test setup/teardown around a call to
 // stop(), never for production synchronization.
 std::atomic<void (*)()> stop_test_only_throw_hook{nullptr};
+#endif
 
 std::atomic<std::uint64_t> next_workspace_agent_operation_id{1U};
 
@@ -607,10 +609,12 @@ bool same_serialized_process_invocation(
 
 }  // namespace
 
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS)
 void set_workspace_agent_session_stop_test_only_throw_hook_for_testing(
     void (*hook)()) {
     stop_test_only_throw_hook.store(hook, std::memory_order_relaxed);
 }
+#endif
 
 WorkspaceAgentSessionController::WorkspaceAgentSessionController(
     const std::filesystem::path& trusted_absolute_workspace_root)
@@ -916,6 +920,7 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
         }
         transition_ = Transition::stopping;
         reset_guard.arm();
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS)
         // The fault-injection hook fires here, deliberately before the
         // WorkspaceAgentSessionSnapshot copy immediately below (rather than
         // after this lock block closes) so a test can exercise exactly the
@@ -927,6 +932,7 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
             stop_test_only_throw_hook.store(nullptr, std::memory_order_relaxed);
             hook();
         }
+#endif
         revoked_session = active_session_;
         revocation_state = active_revocation_lease_state_;
     }
