@@ -1,3 +1,29 @@
+- 2026-08-31: Consolidated the move-only POSIX-descriptor and Windows-HANDLE
+  RAII wrapper classes (issue #5408) that had been hand-duplicated -- with
+  small, real interface differences -- across `physical_path_containment.cpp`
+  (`ScopedDescriptor`/`ScopedFileHandle`, the only copies with `release()`/
+  `reset()`), `audit_stream.cpp` (`ScopedFileDescriptor`/`ScopedHandle`,
+  get/valid only), and `private_directory.cpp` (`ScopedFd`/`ScopedHandle`,
+  get/valid only, and Windows-side non-movable since it declared a
+  destructor without declaring move operations) into one canonical
+  `copperfin::platform::ScopedFd` / `copperfin::platform::ScopedHandle` pair
+  in a new header-only `include/copperfin/platform/scoped_resource.h`,
+  consumed by all three files via `using` declarations. The canonical
+  classes use the superset interface (get/valid/release/reset, movable,
+  copy-deleted) so every existing call site's usage continues to compile
+  unchanged, and the canonical `ScopedHandle::valid()` treats both
+  `INVALID_HANDLE_VALUE` and `nullptr` as invalid -- matching
+  `private_directory.cpp`'s stricter of the two prior Windows definitions,
+  a safe widening since no existing call site's failure path ever produced
+  a `HANDLE` that only the laxer check would have accepted. No behavior
+  change: all ten affected test binaries
+  (`test_security_controls`, `test_workspace_agent_process_parser`,
+  `test_workspace_agent_isolated_environment`, `test_platform_private_directory`,
+  `test_security_audit_concurrency`, `test_workspace_agent_target_containment`,
+  `test_workspace_agent_process_containment`, `test_workspace_agent_audit_sink`,
+  `test_runtime_host_audit_containment`, `test_runtime_host_audit_stream`)
+  pass unchanged.
+
 - 2026-08-30: Fixed a heap buffer over-read in two Win32 version-resource
   string extractors (`RQ-CF-EXTERNAL-PROCESS-001`, issue #5402):
   `get_company_name()` (`external_process_policy.cpp`) and

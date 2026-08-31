@@ -5,6 +5,7 @@
 #include "copperfin/security/physical_path_containment.h"
 
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/scoped_resource.h"
 
 #include <array>
 #include <cerrno>
@@ -176,41 +177,10 @@ std::vector<std::filesystem::path> relative_components(
 
 #if defined(_WIN32)
 
-class ScopedFileHandle {
-public:
-    ScopedFileHandle() = default;
-    explicit ScopedFileHandle(HANDLE handle) noexcept : handle_(handle) {}
-    ScopedFileHandle(const ScopedFileHandle&) = delete;
-    ScopedFileHandle& operator=(const ScopedFileHandle&) = delete;
-    ScopedFileHandle(ScopedFileHandle&& other) noexcept : handle_(other.release()) {}
-    ScopedFileHandle& operator=(ScopedFileHandle&& other) noexcept {
-        if (this != &other) {
-            reset(other.release());
-        }
-        return *this;
-    }
-    ~ScopedFileHandle() { reset(INVALID_HANDLE_VALUE); }
-
-    [[nodiscard]] HANDLE get() const noexcept { return handle_; }
-    [[nodiscard]] bool valid() const noexcept { return handle_ != INVALID_HANDLE_VALUE; }
-    HANDLE release() noexcept {
-        const HANDLE value = handle_;
-        handle_ = INVALID_HANDLE_VALUE;
-        return value;
-    }
-    void reset(HANDLE handle) noexcept {
-        if (handle_ != INVALID_HANDLE_VALUE) {
-            ::CloseHandle(handle_);
-        }
-        handle_ = handle;
-    }
-
-private:
-    HANDLE handle_ = INVALID_HANDLE_VALUE;
-};
+using copperfin::platform::ScopedHandle;
 
 struct WalkedHandle {
-    ScopedFileHandle handle;
+    ScopedHandle handle;
     PhysicalPathContainmentFailure failure = PhysicalPathContainmentFailure::none;
 };
 
@@ -229,7 +199,7 @@ struct WalkedHandle {
 WalkedHandle walk_contained_path(
     const std::filesystem::path& root,
     const std::filesystem::path& relative_path) {
-    ScopedFileHandle current(::CreateFileW(
+    ScopedHandle current(::CreateFileW(
         root.c_str(),
         FILE_READ_ATTRIBUTES,
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -238,7 +208,7 @@ WalkedHandle walk_contained_path(
         FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
         nullptr));
     if (!current.valid()) {
-        return {ScopedFileHandle(), PhysicalPathContainmentFailure::root_unavailable};
+        return {ScopedHandle(), PhysicalPathContainmentFailure::root_unavailable};
     }
     // The root itself is not rejected for being a reparse point: callers may
     // legitimately pass an already-resolved alias (e.g. a package alias
@@ -249,13 +219,13 @@ WalkedHandle walk_contained_path(
     // redirecting the walk outside the root.
     BY_HANDLE_FILE_INFORMATION root_information{};
     if (::GetFileInformationByHandle(current.get(), &root_information) == 0) {
-        return {ScopedFileHandle(), PhysicalPathContainmentFailure::root_unavailable};
+        return {ScopedHandle(), PhysicalPathContainmentFailure::root_unavailable};
     }
 
     std::filesystem::path accumulated = root;
     for (const auto& part : relative_components(relative_path)) {
         accumulated /= part;
-        ScopedFileHandle next(::CreateFileW(
+        ScopedHandle next(::CreateFileW(
             accumulated.c_str(),
             FILE_READ_ATTRIBUTES,
             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -264,14 +234,14 @@ WalkedHandle walk_contained_path(
             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
             nullptr));
         if (!next.valid()) {
-            return {ScopedFileHandle(), PhysicalPathContainmentFailure::path_unavailable};
+            return {ScopedHandle(), PhysicalPathContainmentFailure::path_unavailable};
         }
         BY_HANDLE_FILE_INFORMATION information{};
         if (::GetFileInformationByHandle(next.get(), &information) == 0) {
-            return {ScopedFileHandle(), PhysicalPathContainmentFailure::path_unavailable};
+            return {ScopedHandle(), PhysicalPathContainmentFailure::path_unavailable};
         }
         if ((information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
-            return {ScopedFileHandle(), PhysicalPathContainmentFailure::indirect_component};
+            return {ScopedHandle(), PhysicalPathContainmentFailure::indirect_component};
         }
         // Intentional: brings Windows to parity with the POSIX walk's
         // pre-existing st_dev check below, which this Windows walk never had
@@ -282,7 +252,7 @@ WalkedHandle walk_contained_path(
         // it as a bug to revert rather than a correctness fix would leave
         // Windows strictly weaker than POSIX for no documented reason.
         if (information.dwVolumeSerialNumber != root_information.dwVolumeSerialNumber) {
-            return {ScopedFileHandle(), PhysicalPathContainmentFailure::cross_device_component};
+            return {ScopedHandle(), PhysicalPathContainmentFailure::cross_device_component};
         }
         current = std::move(next);
     }
@@ -342,41 +312,10 @@ std::optional<std::filesystem::path> path_of_handle(HANDLE handle) {
 
 #else  // POSIX
 
-class ScopedDescriptor {
-public:
-    ScopedDescriptor() = default;
-    explicit ScopedDescriptor(int descriptor) noexcept : descriptor_(descriptor) {}
-    ScopedDescriptor(const ScopedDescriptor&) = delete;
-    ScopedDescriptor& operator=(const ScopedDescriptor&) = delete;
-    ScopedDescriptor(ScopedDescriptor&& other) noexcept : descriptor_(other.release()) {}
-    ScopedDescriptor& operator=(ScopedDescriptor&& other) noexcept {
-        if (this != &other) {
-            reset(other.release());
-        }
-        return *this;
-    }
-    ~ScopedDescriptor() { reset(-1); }
-
-    [[nodiscard]] int get() const noexcept { return descriptor_; }
-    [[nodiscard]] bool valid() const noexcept { return descriptor_ >= 0; }
-    int release() noexcept {
-        const int value = descriptor_;
-        descriptor_ = -1;
-        return value;
-    }
-    void reset(int descriptor) noexcept {
-        if (descriptor_ >= 0) {
-            ::close(descriptor_);
-        }
-        descriptor_ = descriptor;
-    }
-
-private:
-    int descriptor_ = -1;
-};
+using copperfin::platform::ScopedFd;
 
 struct WalkedDescriptor {
-    ScopedDescriptor descriptor;
+    ScopedFd descriptor;
     PhysicalPathContainmentFailure failure = PhysicalPathContainmentFailure::none;
 };
 
@@ -393,13 +332,13 @@ struct WalkedDescriptor {
 WalkedDescriptor walk_contained_path(
     const std::filesystem::path& root,
     const std::filesystem::path& relative_path) {
-    ScopedDescriptor current(::open(root.c_str(), O_RDONLY | O_CLOEXEC));
+    ScopedFd current(::open(root.c_str(), O_RDONLY | O_CLOEXEC));
     if (!current.valid()) {
-        return {ScopedDescriptor(), PhysicalPathContainmentFailure::root_unavailable};
+        return {ScopedFd(), PhysicalPathContainmentFailure::root_unavailable};
     }
     struct stat root_status{};
     if (::fstat(current.get(), &root_status) != 0) {
-        return {ScopedDescriptor(), PhysicalPathContainmentFailure::root_unavailable};
+        return {ScopedFd(), PhysicalPathContainmentFailure::root_unavailable};
     }
 
     const auto parts = relative_components(relative_path);
@@ -444,15 +383,15 @@ WalkedDescriptor walk_contained_path(
                     ? PhysicalPathContainmentFailure::indirect_component
                     : PhysicalPathContainmentFailure::path_unavailable;
             }
-            return {ScopedDescriptor(), failure};
+            return {ScopedFd(), failure};
         }
-        ScopedDescriptor next(opened);
+        ScopedFd next(opened);
         struct stat next_status{};
         if (::fstat(next.get(), &next_status) != 0) {
-            return {ScopedDescriptor(), PhysicalPathContainmentFailure::path_unavailable};
+            return {ScopedFd(), PhysicalPathContainmentFailure::path_unavailable};
         }
         if (next_status.st_dev != root_status.st_dev) {
-            return {ScopedDescriptor(), PhysicalPathContainmentFailure::cross_device_component};
+            return {ScopedFd(), PhysicalPathContainmentFailure::cross_device_component};
         }
         current = std::move(next);
     }

@@ -4,6 +4,8 @@
 
 #include "copperfin/platform/private_directory.h"
 
+#include "copperfin/platform/scoped_resource.h"
+
 #include <algorithm>
 #include <optional>
 #include <system_error>
@@ -50,28 +52,7 @@ bool valid_absolute_path(const std::filesystem::path& path) noexcept {
 
 #if defined(_WIN32)
 
-class ScopedHandle {
-public:
-    explicit ScopedHandle(const HANDLE value = INVALID_HANDLE_VALUE) noexcept
-        : value_(value) {}
-
-    ~ScopedHandle() {
-        if (value_ != INVALID_HANDLE_VALUE && value_ != nullptr) {
-            ::CloseHandle(value_);
-        }
-    }
-
-    ScopedHandle(const ScopedHandle&) = delete;
-    ScopedHandle& operator=(const ScopedHandle&) = delete;
-
-    [[nodiscard]] HANDLE get() const noexcept { return value_; }
-    [[nodiscard]] bool valid() const noexcept {
-        return value_ != INVALID_HANDLE_VALUE && value_ != nullptr;
-    }
-
-private:
-    HANDLE value_ = INVALID_HANDLE_VALUE;
-};
+using copperfin::platform::ScopedHandle;
 
 class ScopedLocalMemory {
 public:
@@ -306,38 +287,7 @@ bool windows_handle_is_private_directory(const HANDLE directory) noexcept {
 
 #if !defined(_WIN32)
 
-class ScopedFd {
-public:
-    explicit ScopedFd(const int value = -1) noexcept : value_(value) {}
-    ~ScopedFd() {
-        if (value_ >= 0) {
-            ::close(value_);
-        }
-    }
-
-    ScopedFd(const ScopedFd&) = delete;
-    ScopedFd& operator=(const ScopedFd&) = delete;
-
-    ScopedFd(ScopedFd&& other) noexcept : value_(other.value_) {
-        other.value_ = -1;
-    }
-    ScopedFd& operator=(ScopedFd&& other) noexcept {
-        if (this != &other) {
-            if (value_ >= 0) {
-                ::close(value_);
-            }
-            value_ = other.value_;
-            other.value_ = -1;
-        }
-        return *this;
-    }
-
-    [[nodiscard]] int get() const noexcept { return value_; }
-    [[nodiscard]] bool valid() const noexcept { return value_ >= 0; }
-
-private:
-    int value_ = -1;
-};
+using copperfin::platform::ScopedFd;
 
 constexpr int directory_open_flags() noexcept {
 #if defined(__linux__) && defined(O_PATH)
