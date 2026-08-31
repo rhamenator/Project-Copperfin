@@ -1,3 +1,26 @@
+- 2026-08-30: Fixed a heap buffer over-read in two Win32 version-resource
+  string extractors (`RQ-CF-EXTERNAL-PROCESS-001`, issue #5402):
+  `get_company_name()` (`external_process_policy.cpp`) and
+  `read_file_version_metadata()`'s `query_string` helper (`file_version.cpp`,
+  covering `CompanyName`, `FileDescription`, `FileVersion`, and every other
+  `StringFileInfo` field it queries) both constructed a `std::wstring` from a
+  `VerQueryValueW` result using the null-terminator-scanning
+  `std::wstring(const wchar_t*)` constructor, ignoring the length
+  `VerQueryValueW` itself declared for that string. A version resource whose
+  string data has no null terminator within that declared length -- on a
+  file that is not necessarily already trusted, since publisher allow-listing
+  is independently settable from signature-trust requirements -- would read
+  past the buffer looking for a zero wherever one happens to occur in
+  memory. Fixed via a new shared `copperfin::platform::bounded_wide_string()`
+  helper (`include/copperfin/platform/bounded_wide_string.h`) used by both
+  call sites, bounding the read to the declared length via `wcsnlen()`
+  regardless of the data's actual content; the second call site
+  (`file_version.cpp`) was not named in the original review finding and was
+  found during this fix. No behavior change for well-formed resources.
+  Regression coverage in `tests/test_bounded_wide_string.cpp` proves the
+  bound holds for a non-terminated buffer sized exactly to its declared
+  length, independent of either Windows-only production call site.
+
 - 2026-08-30: Fixed a TOCTOU race in the shared physical-path-containment
   primitive (`RQ-CF-CONTAINMENT-001`, issue #5400) used by every
   workspace-agent boundary and by package-content installation:
