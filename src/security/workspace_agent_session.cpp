@@ -237,12 +237,24 @@ public:
     ResetOnExit& operator=(const ResetOnExit&) = delete;
     ~ResetOnExit() {
         if (armed_) {
-            std::lock_guard lock(mutex_);
-            target_ = reset_value_;
+            try {
+                std::lock_guard lock(mutex_);
+                target_ = reset_value_;
+            } catch (...) {
+                // A mutex primitive throwing here is an unrecoverable host
+                // condition with nothing safe to report it to (this can run
+                // while another exception is already unwinding). Swallow
+                // rather than let it escape a destructor and std::terminate()
+                // the whole process: every session entry point already
+                // fails closed (denies further start/stop/cleanup) while
+                // target_ is left at its non-idle value, so this degrades to
+                // "permanently fail-closed" instead of a crash.
+            }
         }
     }
 
     void arm() noexcept { armed_ = true; }
+    void disarm() noexcept { armed_ = false; }
 
 private:
     std::mutex& mutex_;
@@ -761,6 +773,7 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
             result.activated = true;
         }
         transition_ = Transition::idle;
+        reset_guard.disarm();
         result.session = active_session_;
     }
     return result;
@@ -858,6 +871,7 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
             pending_layout_cleanups_.erase(pending_layout_cleanups_.begin());
         }
         transition_ = Transition::idle;
+        reset_guard.disarm();
     }
     return result;
 }
@@ -953,6 +967,7 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
     {
         std::lock_guard lock(mutex_);
         transition_ = Transition::idle;
+        reset_guard.disarm();
         result.session = active_session_;
     }
     return result;

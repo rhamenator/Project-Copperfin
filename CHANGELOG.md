@@ -27,7 +27,23 @@
   (`start()`, `cleanup_pending_session_layout()`, `stop()`) with one
   shared RAII `ResetOnExit<T>` helper armed immediately after each
   method sets its non-idle transition value, closing the gap
-  structurally rather than by relocating a try block.
+  structurally rather than by relocating a try block. A second
+  adversarial review found two further real issues in that helper
+  itself: it had no `disarm()`, so each method's own success-path
+  `transition_ = Transition::idle;` was always followed by the guard's
+  destructor redundantly re-locking and re-writing the same field after
+  the enclosing lock released -- an unlock/re-lock window in which a
+  concurrent thread's legitimate transition could be silently clobbered
+  back to idle; and the destructor's `std::lock_guard` construction had
+  no exception handling, so a `std::mutex::lock()` throw (implicitly
+  `noexcept` destructor) would call `std::terminate()` and crash the
+  process, a strictly worse failure mode than the pre-refactor
+  hand-written `catch(...)` blocks it replaced. Fixed by adding
+  `ResetOnExit::disarm()`, called at each method's own explicit final
+  reset, and by swallowing an exception from the destructor's lock
+  (deliberately leaving the field non-idle on that unrecoverable path,
+  which is safe because every session entry point already fails closed
+  while non-idle).
 
 - 2026-08-30: Fixed a heap buffer over-read in two Win32 version-resource
   string extractors (`RQ-CF-EXTERNAL-PROCESS-001`, issue #5402):
