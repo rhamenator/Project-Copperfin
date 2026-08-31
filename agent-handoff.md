@@ -70,32 +70,41 @@ dispatch above is not optional, per the standing fact below about
 
 ## In-progress: PR #5410 (reserved Windows device names, fixes #5404), not yet merged
 
-**Steering-continuity record** — the Windows Native Validation dispatch
-completed clean once (run `33330701297` against commit `41a1b3da1`,
-`SUCCESS`), but that commit was superseded: after PR #5407 merged into
-`v1-development`, this branch had to be rebased onto it (conflicts in
-`CHANGELOG.md`, `agent-handoff.md`, and `.agent-channel/log.jsonl` — the
-last required manually renumbering a `seq` collision per the channel
-README's documented, accepted risk). The rebased head is commit
-`cde053245`; a fresh Windows Native Validation dispatch (run
-`33345554677`) is in flight against it and must come back green before
-merge — the `41a1b3da1` result no longer applies to the current head.
+**Steering-continuity record** — as of commit `dcce82510` (2026-08-31), a
+fresh Windows Native Validation dispatch (run `33346352974`) is in flight
+and must come back green before merge; check with `gh run list
+--workflow="Windows Native Validation" --branch
+agent/v1-windows-reserved-device-names`. History: run `33330701297`
+against commit `41a1b3da1` came back green, but that commit was superseded
+by a rebase onto merged PR #5407 (head became `cde053245`, requiring
+manual `seq`-collision renumbering in `.agent-channel/log.jsonl`, an
+accepted risk the channel README documents); that rebase's own CI run
+(`33345554677`) was then superseded again and cancelled once the
+adversarial review below produced a real fix. Only the run against
+`dcce82510` or later should be trusted.
 
-Separately, the adversarial `/code-review` pass against this branch
-**failed and delivered no findings**: it was terminated mid-run by the
-session hitting its monthly Claude API spend limit (`your session limit
-resets 7:10pm America/Detroit`, 2026-08-30), not by completing normally.
-Its last recorded line before termination was "Now let me re-verify the
-colon/stream-syntax bypass hypothesis against these correct file
-snapshots" — it may have been onto something real involving
-`path_has_windows_device_or_stream_syntax()` in
-`workspace_agent_process_containment.cpp` (a pre-existing colon/UNC/device
-check, separate from this PR's own device-name addition) interacting with
-the new check, but this was never confirmed or reported. **Do not treat
-this PR as adversarially reviewed** — re-run
-`/code-review --branch agent/v1-windows-reserved-device-names max` once
-the spend limit resets (or in a fresh session/billing period) before
-merging, exactly as was done for PR #5399 and PR #5407.
+The adversarial `/code-review` pass that had failed earlier (session hit
+its monthly Claude API spend limit mid-run) was re-run successfully once
+the limit reset and found a real bug: `path_component_is_reserved_windows_device_name()`
+(added by this PR) only split a component on `.`, so a colon-suffixed form
+(`NUL:`, `NUL:hidden.txt`, `com1:stream`) bypassed it entirely — legacy
+MS-DOS device syntax is still honored by Win32 path resolution for
+backward compatibility, a well-known bypass class for naive reserved-name
+checks. Confirmed **attacker-reachable** in `workspace_agent_target_containment.cpp`
+(target/local-file paths are provider/model/prompt/workspace-supplied per
+its own header docs) — highest severity. Also present but lower-urgency in
+`workspace_agent_audit_sink.cpp` (no production caller yet, only tests)
+and `workspace_agent_environment.cpp` (trusted product-host config, not
+attacker input — defense-in-depth only). `workspace_agent_process_containment.cpp`
+was accidentally unaffected because it independently rejects any `:` via
+its own pre-existing check, but was fixed too for consistency. Fixed in
+commit `dcce82510` by splitting on the first of `.` OR `:` in all four
+duplicated copies of the helper, with new regression coverage for the
+colon-suffixed bypass in three of the four test files. Also commented on
+issue #5405 (the pre-existing DRY-duplication tracking issue) since this
+bug is concrete proof of the exact drift risk that issue describes: three
+of the four duplicated copies shared the identical bug, masked in the
+fourth file only by an unrelated, independent check.
 
 PR #5410 adds `path_has_reserved_windows_device_name_component()` (Windows
 only, no-op on POSIX) to the same four files PR #5399 patched for the
