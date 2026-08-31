@@ -4,6 +4,7 @@
 
 #include "copperfin/security/external_process_policy.h"
 
+#include "copperfin/platform/bounded_wide_string.h"
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/executable_path.h"
 #include "copperfin/platform/path.h"
@@ -209,7 +210,8 @@ std::string get_company_name(const std::string& path) {
         return {};
     }
 
-    return narrow(std::wstring(static_cast<wchar_t*>(value)));
+    return narrow(copperfin::platform::bounded_wide_string(
+        static_cast<const wchar_t*>(value), value_size));
 }
 
 bool path_under_root(const std::filesystem::path& path, const std::filesystem::path& root) {
