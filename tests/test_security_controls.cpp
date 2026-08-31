@@ -1457,6 +1457,21 @@ void test_physical_path_containment_handle_based_read_survives_path_swap() {
                "the pre-existing string-reopening read observes the swapped file "
                "and only fails closed via incidental identity mismatch, unlike "
                "the handle-based read's structural guarantee");
+
+        // A caller may legitimately call this function more than once on the
+        // same handle (it takes a const&, nothing consumes or marks it
+        // read-once). Without resetting the file position on every call, a
+        // second call would start reading from wherever the first call left
+        // off (EOF) and spuriously fail with identity_changed on the
+        // resulting truncated read.
+        const auto second_handle_based_snapshot =
+            copperfin::security::read_physically_contained_file_snapshot_from_handle(
+                handle);
+        expect(second_handle_based_snapshot.ok &&
+                   second_handle_based_snapshot.bytes == "ORIGINAL\n",
+               "a second call to the handle-based read on the same handle must "
+               "read the whole object again from the start, not a truncated "
+               "read continuing from the first call's end position");
     }
 
     fs::remove_all(temp_root, ignored);

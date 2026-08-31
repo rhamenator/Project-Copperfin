@@ -23,11 +23,35 @@
   `st_nlink` from 1 to 0 without touching any content (confirmed via a
   standalone repro) -- spuriously failing exactly the substitution
   scenario the new function exists to survive. Fixed with a dedicated
-  `content_identity_matches()` comparison that excludes `link_count`,
-  used only by the new handle-based path; the string-reopening
-  function's original comparison is unchanged. Verified the regression
-  test actually catches this by temporarily reverting the fix and
-  observing it fail, then restoring it.
+  comparison that excludes `link_count`, used only by the new
+  handle-based path; the string-reopening function's original
+  comparison is unchanged. Verified the regression test actually
+  catches this by temporarily reverting the fix and observing it fail,
+  then restoring it. An adversarial `/code-review` pass found three
+  further real issues before merge: (1) the handle-based read never
+  reset the handle/descriptor's file position, so a second call on the
+  same handle (nothing in the API prevents this -- it takes the handle
+  by `const&`, not by consuming it) would read from wherever the first
+  call left off and spuriously fail with `identity_changed` on the
+  resulting truncated read; fixed by seeking to the start
+  unconditionally at the top of every read
+  (`SetFilePointerEx`/`lseek`), with a new regression test proving a
+  second call on the same handle reads the whole object again; (2) on
+  Windows, a `GetFileInformationByHandle()` API failure and an actual
+  reparse-point detection were both reported as `indirect_component`,
+  which would misreport a transient API failure as a symlink-attack
+  rejection in security audit logs once callers migrate to this
+  function (#5421, #5422); split into `read_failed` for the API
+  failure and `indirect_component` only for a genuine reparse point,
+  matching the POSIX branch's existing separation of failure reasons;
+  (3) the link-count-excluding comparison duplicated
+  `PhysicalPathIdentity::operator==`'s field list in a different file,
+  risking silent drift if a field is ever added to one but not the
+  other; fixed by moving the shared field comparison onto
+  `PhysicalPathIdentity` itself as a new `content_equal()` method, with
+  `operator==` now defined as `content_equal() && link_count ==
+  ...` so both live in the same struct and the relationship between
+  them is explicit.
 
 - 2026-08-31: Consolidated the move-only POSIX-descriptor and Windows-HANDLE
   RAII wrapper classes (issue #5408) that had been hand-duplicated -- with

@@ -161,27 +161,6 @@ PhysicalFileSnapshotResult failed_snapshot(
     };
 }
 
-// Used only by read_physically_contained_file_snapshot_from_handle()'s
-// before/after checks. Deliberately excludes link_count, unlike
-// PhysicalPathIdentity::operator==: a still-open handle/descriptor keeps the
-// underlying object's content stable regardless of what happens to its
-// directory entry. Unlinking a path the caller holds an open handle to
-// drops st_nlink to 0 (verified empirically) without changing a single byte
-// of the object's content -- link_count is a meaningful signal for the
-// string-reopening read_physically_contained_file_snapshot() above (where
-// it helps detect a *different* object being resolved by the reopen), but
-// it is not a content-mutation signal once a handle already pins the exact
-// object, and treating it as one would make the handle-based read spuriously
-// fail exactly the substitution scenario it exists to survive.
-bool content_identity_matches(
-    const PhysicalPathIdentity& observed,
-    const PhysicalPathIdentity& expected) {
-    return observed.storage_id == expected.storage_id &&
-        observed.file_id == expected.file_id &&
-        observed.file_size == expected.file_size &&
-        observed.modified_ticks == expected.modified_ticks;
-}
-
 // Splits a relative path into single, slash-free components, skipping "."
 // entries. relative_path_is_contained() has already rejected ".." and
 // absolute paths before this is ever called.
@@ -677,8 +656,10 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
     const HANDLE native = handle.impl_->native.get();
 
     BY_HANDLE_FILE_INFORMATION before_information{};
-    if (::GetFileInformationByHandle(native, &before_information) == 0 ||
-        (before_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+    if (::GetFileInformationByHandle(native, &before_information) == 0) {
+        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
+    }
+    if ((before_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
         return failed_snapshot(PhysicalPathContainmentFailure::indirect_component);
     }
     if ((before_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
@@ -686,8 +667,18 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
     }
     const PhysicalPathIdentity before_identity =
         identity_from_handle_information(before_information);
-    if (!content_identity_matches(before_identity, expected.identity)) {
+    if (!before_identity.content_equal(expected.identity)) {
         return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+    }
+    // The handle may already have been read from (this function takes the
+    // handle by const reference rather than consuming it, so nothing
+    // prevents a caller from calling it more than once). Reset to the start
+    // unconditionally so every call reads the whole object from byte 0,
+    // rather than silently returning a truncated read starting from
+    // whatever position an earlier call left the handle at.
+    LARGE_INTEGER zero_offset{};
+    if (::SetFilePointerEx(native, zero_offset, nullptr, FILE_BEGIN) == 0) {
+        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
     }
 
     std::array<char, 64U * 1024U> buffer{};
@@ -726,8 +717,17 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
     }
     const PhysicalPathIdentity before_identity =
         identity_from_descriptor(native, before_status);
-    if (!content_identity_matches(before_identity, expected.identity)) {
+    if (!before_identity.content_equal(expected.identity)) {
         return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+    }
+    // The handle may already have been read from (this function takes the
+    // handle by const reference rather than consuming it, so nothing
+    // prevents a caller from calling it more than once). Reset to the start
+    // unconditionally so every call reads the whole object from byte 0,
+    // rather than silently returning a truncated read starting from
+    // whatever position an earlier call left the descriptor at.
+    if (::lseek(native, 0, SEEK_SET) != 0) {
+        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
     }
 
     std::array<char, 64U * 1024U> buffer{};
@@ -761,7 +761,7 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
     after_identity = identity_from_descriptor(native, after_status);
 #endif
 
-    if (!content_identity_matches(after_identity, expected.identity) ||
+    if (!after_identity.content_equal(expected.identity) ||
         bytes.size() != expected.identity.file_size) {
         return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
     }

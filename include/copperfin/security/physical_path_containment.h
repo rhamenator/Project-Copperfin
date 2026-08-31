@@ -35,11 +35,23 @@ struct PhysicalPathIdentity {
     // require this field in addition to storage/file identity.
     std::uint64_t creation_ticks = 0U;
 
-    bool operator==(const PhysicalPathIdentity& other) const noexcept {
+    // Excludes link_count: meaningful for a caller re-resolving a path by
+    // string (a link-count change can indicate a different object was
+    // resolved), but not a content-mutation signal for a caller already
+    // holding a live handle/descriptor to the exact object -- unlinking a
+    // path a process holds open drops that object's own link_count without
+    // changing any of its content. See operator== below and
+    // read_physically_contained_file_snapshot_from_handle()'s use of this
+    // method, which is why the two deliberately differ by exactly this one
+    // field rather than being independent comparisons that could drift.
+    [[nodiscard]] bool content_equal(const PhysicalPathIdentity& other) const noexcept {
         return storage_id == other.storage_id && file_id == other.file_id &&
             file_size == other.file_size &&
-            modified_ticks == other.modified_ticks &&
-            link_count == other.link_count;
+            modified_ticks == other.modified_ticks;
+    }
+
+    bool operator==(const PhysicalPathIdentity& other) const noexcept {
+        return content_equal(other) && link_count == other.link_count;
     }
 };
 
