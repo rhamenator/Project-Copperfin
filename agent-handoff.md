@@ -1,5 +1,31 @@
 # Agent Handoff
 
+## In-progress: PR #5416 (WorkspaceAgentSessionController::stop() exception safety, fixes #5401), not yet merged
+
+**Steering-continuity record** — Windows Native Validation dispatch (run
+`33353687668`) and an adversarial `/code-review` pass are both in flight
+against commit `3fc3437a9`; check with `gh run list
+--workflow="Windows Native Validation" --branch
+agent/v1-session-stop-exception-safety`. If you cannot find these results
+already reported/acted on, re-run both before merging.
+
+PR #5416 mirrors `start()`'s existing `catch(...) { transition_ = idle;
+throw; }` guard around `stop()`'s post-transition-flag section, closing an
+irrecoverable-DoS window (an exception there previously left `transition_`
+stuck at `stopping` forever). Verified via a new, narrowly-scoped
+test-only fault-injection hook
+(`include/copperfin/security/workspace_agent_session_test_hooks.h`, a
+free function rather than a method on the security-hardened controller
+class) since the real trigger (allocation/OS-primitive failure) isn't
+reproducible deterministically through the public API. Confirmed the new
+regression actually catches the bug by temporarily reverting the fix and
+observing all three of its assertions fail, then restoring it. Full local
+Linux battery (7/7: `test_workspace_agent_session` plus the broader
+security suite) passes.
+
+Picking up #5405 (consolidate duplicated path predicates across the four
+`workspace_agent_*` files) next on a separate branch with no file overlap.
+
 ## Shipped: PR #5411 (bounded Win32 version-resource string reads), merged as `265734d68` (squash)
 
 Windows Native Validation (run `33343489771`) came back green; the
