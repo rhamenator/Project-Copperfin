@@ -1574,12 +1574,19 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Active Issue Mapping For This Runtime Backlog
 
-- command-surface and expression/runtime-state depth: #7, #8
-- OLE/COM and automation compatibility: #10, #11
-- runtime fault containment and diagnostics beyond the now-closed automation lane: #13, #14
-- shared design-model and memo-heavy designer asset preservation: #22
-- report/label designer fidelity and page/layout metadata editing: #24
+As of 2026-08-31, #7, #8, #10, #11, #13, #14, #22, and #24 are all closed;
+only the document/vector and AI planning policy lane remains open:
+
 - document/vector and AI planning policy: #30, #31
+
+The closed issues are retained here as historical record of what this
+mapping used to track, not as current backlog anchors:
+
+- command-surface and expression/runtime-state depth: #7, #8 (closed)
+- OLE/COM and automation compatibility: #10, #11 (closed)
+- runtime fault containment and diagnostics beyond the now-closed automation lane: #13, #14 (closed)
+- shared design-model and memo-heavy designer asset preservation: #22 (closed)
+- report/label designer fidelity and page/layout metadata editing: #24 (closed)
 
 ### Runtime Arrays And Expressions
 

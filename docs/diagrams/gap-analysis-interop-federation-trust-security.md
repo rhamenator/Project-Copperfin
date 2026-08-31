@@ -44,7 +44,7 @@ flowchart LR
 
     subgraph SECURITY["Security Model (docs/04) vs RBAC Baseline (docs/18)"]
       direction TB
-      S_HAVE["HAVE: docs/18 claims a native\nRBAC baseline - 5 roles, hardening\ntiers, surfaced in Studio host JSON"]
+      S_HAVE["HAVE: docs/18 claims a native\nRBAC baseline - 5 roles, hardening\ntiers, surfaced in Studio host JSON.\ndocs/04 also now has 3 narrow verified\npresent-tense sections (MCP, workspace-\nagent policy, SQLite federation baselines)"]
       S_GAP1["GAP: docs/04's Entra ID / OIDC /\nSAML identity providers - unclaimed"]
       S_GAP2["GAP: docs/04's Copperfin Shield\n(9 capabilities) - no dedicated\ncf_shield code beyond cf_security"]
       S_GAP3["GAP: audit-event enum (11 items)\nnot verified against actual events"]
