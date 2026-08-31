@@ -17,7 +17,7 @@ flowchart TB
     KBX_NEED["WHAT IT TAKES: an audit pass over\nknown Copperfin/VFP9 divergences,\neach evidenced against real VFP9 or\nshipped docs, classified and filed\nas KBX-NNN before it can be called\nan intentional exception"]
     KBX_SPEC --> KBX_REAL --> KBX_NEED
 
-    LANG_SPEC["docs/22 official VFP9 surface:\n429 commands + 413 functions +\n323 properties + 83 methods +\n72 system vars + 69 events +\n22 objects = 1,411 documented items"]
+    LANG_SPEC["docs/22 official VFP9 surface:\n429 commands + 413 functions +\n323 properties + 83 methods +\n72 system vars + 69 events +\n22 objects + 4 preprocessor directives +\n3 operators = 1,418 documented items"]
     LANG_REAL["REALITY: coverage is tracked per-symbol\nin hundreds of individual runtime-surface\nentries; doc's own backlog section states\nthe official inventory is much larger\nthan the current runtime"]
     LANG_NEED["WHAT IT TAKES: close the backlog\nagainst open issues #7/#8/#10/#11/#13/\n#14/#22/#24/#30/#31, expanding coverage\nsymbol-by-symbol with real-VFP9 or\nshipped-doc evidence per docs/07"]
     LANG_SPEC --> LANG_REAL --> LANG_NEED

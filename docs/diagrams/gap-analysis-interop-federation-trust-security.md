@@ -26,8 +26,8 @@ flowchart LR
 
     subgraph FED["Database Federation (docs/21) vs Reality"]
       direction TB
-      F_HAVE["HAVE: cf_platform_profile<br/>deterministic Fox-SQL to backend<br/>translator + execution-planning lane"]
-      F_GAP1["GAP: no live connector execution<br/>for sqlite/postgres/sqlserver/oracle"]
+      F_HAVE["HAVE: cf_platform_profile<br/>deterministic Fox-SQL to backend<br/>translator + execution-planning lane,<br/>PLUS one live read-only local<br/>SQLite connector (docs/49)"]
+      F_GAP1["GAP: no live connector execution<br/>for postgres/sqlserver/oracle/<br/>remote or non-SQLite backends"]
       F_GAP2["GAP: no provider/session/cursor<br/>capability contracts"]
       F_HAVE --> F_GAP1 --> F_GAP2
     end
