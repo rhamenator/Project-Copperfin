@@ -4,7 +4,7 @@
 
 #include "copperfin/platform/private_directory.h"
 
-#include "copperfin/platform/scoped_resource.h"
+#include "scoped_resource.h"
 
 #include <algorithm>
 #include <optional>

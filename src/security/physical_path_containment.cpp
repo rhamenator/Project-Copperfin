@@ -5,7 +5,7 @@
 #include "copperfin/security/physical_path_containment.h"
 
 #include "copperfin/platform/path.h"
-#include "copperfin/platform/scoped_resource.h"
+#include "../platform/scoped_resource.h"
 
 #include <array>
 #include <cerrno>

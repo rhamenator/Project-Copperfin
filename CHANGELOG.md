@@ -41,7 +41,26 @@
   Confirmed none of the three consumer files use any
   `WIN32_LEAN_AND_MEAN`-excluded API (grepped for GDI/WinSock/RPC/DDE/
   Crypt/Shell symbols across all three -- none found). All ten affected
-  tests re-verified passing after the fix.
+  tests re-verified passing after the fix. The full Windows Native
+  Validation run then caught what local testing could not:
+  `test_platform_sqlite_api_boundary_contract` failed with "Public
+  Copperfin header leaks native selection token _WIN32:
+  include/copperfin/platform/scoped_resource.h" -- this codebase
+  enforces (via a contract check scanning every file under
+  `include/copperfin/*`) that public headers stay platform-agnostic,
+  with all `_WIN32`/`__APPLE__`/`__linux__` conditionals confined to
+  private headers under `src/`, matching the existing
+  `src/platform/bounded_process_private.h` and `src/platform/sqlite_api.h`
+  precedent; `scoped_resource.h`'s per-platform class definitions
+  violated that boundary by living in the public `include/` tree. Fixed
+  by relocating it to `src/platform/scoped_resource.h` (still in the
+  `copperfin::platform` namespace, matching `bounded_process_private.h`)
+  and updating all three consumers to the relative private-header
+  include path (`"../platform/scoped_resource.h"` from
+  `src/security/`, `"scoped_resource.h"` from `src/platform/` itself)
+  instead of the public `copperfin/platform/scoped_resource.h` path.
+  All eleven affected tests, including the previously-failing contract
+  check, now pass locally.
 
 - 2026-08-31: Consolidated four Windows path-safety predicates
   (`path_has_embedded_nul`, `path_has_dot_component`,

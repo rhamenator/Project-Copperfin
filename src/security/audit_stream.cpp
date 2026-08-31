@@ -5,7 +5,7 @@
 #include "copperfin/security/audit_stream.h"
 
 #include "copperfin/platform/path.h"
-#include "copperfin/platform/scoped_resource.h"
+#include "../platform/scoped_resource.h"
 #include "copperfin/security/sha256.h"
 #include "localized_text.h"
 
