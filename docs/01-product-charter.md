@@ -27,7 +27,7 @@ Implementation stance:
 
 Version target:
 
-- Version 1 is tested as a Visual FoxPro 9-compatible target. VFP 6, VFP 7, and VFP 8 files may work through shared DBF/FPT/CDX/DBC readers, but they are best-effort and untested rather than separate compile-time targets. Older Fox Software and xBase-family assets can be tracked as wishlist interpretation/inspection targets, but Copperfin should not expose a version-selection dial until the project intentionally funds and tests differentiated behavior.
+- Version 1 is tested as a Visual FoxPro 9-compatible target. VFP 6, VFP 7, and VFP 8 files may work through shared DBF/FPT/CDX/DBC readers, but they are best-effort and untested rather than separate compile-time targets. Older Fox Software and xBase-family assets are real, committed interpretation/inspection targets (tracked under #1076), sequenced after the Version 1 VFP 9 target rather than optional or maybe-never; Copperfin should not expose a version-selection dial until the project intentionally funds and tests differentiated behavior for them.
 
 ## Problem
 

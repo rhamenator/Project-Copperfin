@@ -198,8 +198,8 @@ path operands, not expressions. It reads the existing DBC/DBF data before openin
 the requested output path, creates a missing output directory, and reports a
 localized runtime failure if inspection or output writing fails.
 
-This is a Copperfin modernization extension authorized by the owner-policy
-wishlist in #140, not a claimed Visual FoxPro 9 command. It does not implement
+This is a Copperfin modernization extension authorized by the owner-approved
+scope in #140, not a claimed Visual FoxPro 9 command. It does not implement
 `IMPORT DATABASE`, SQL or Access adapters, provider connections, schema mutation,
 or round-trip reconstruction.
 

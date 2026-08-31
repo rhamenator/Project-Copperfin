@@ -61,7 +61,7 @@ boundary, rollback, and verification analysis.
 
 Copperfin is not only a VFP 9 compatibility clone. The foundation is maintaining existing FoxPro/VFP codebases without forced rewrites, then enabling gradual modernization through .NET-facing commands, interop paths, safer host behavior, modern runtime capabilities, richer tooling, portability, generated outputs, host integration, and eventually the rapid application-building feel FoxPro/VFP provided.
 
-Treat wishlist and future-facing issues as deferred roadmap work, not noise. Do not ignore, close, demote, or discard them merely because they are not current blockers. Work them after important/basic compatibility, usability, release-readiness, and prerequisite architecture are stable enough for that lane.
+Future-facing issues (database/container interchange, migration bridges, legacy Fox Software/xBase format support, and similar) are real, committed roadmap work, not optional or maybe-never -- the owner has thought through these requirements deliberately. Do not treat them as noise, and do not ignore, close, demote, or discard them merely because they are not current blockers. Work them after important/basic compatibility, usability, release-readiness, and prerequisite architecture are stable enough for that lane.
 
 ## Active Execution Rule
 
