@@ -597,15 +597,10 @@ PhysicalPathContainmentResult inspect_physical_path_containment(
     return inspect_and_walk(path, root, /*open_final_component_for_read=*/false).result;
 }
 
-class PhysicalPathContainmentHandle::Impl {
-public:
-    PhysicalPathContainmentResult result;
-#if defined(_WIN32)
-    ScopedHandle native;
-#else
-    ScopedFd native;
-#endif
-};
+// Reuses InternalContainmentWalk's exact shape (result + native
+// handle/descriptor) rather than redeclaring the same two fields and
+// requiring a manual field-by-field copy between the two types.
+class PhysicalPathContainmentHandle::Impl : public InternalContainmentWalk {};
 
 PhysicalPathContainmentHandle::PhysicalPathContainmentHandle() noexcept = default;
 PhysicalPathContainmentHandle::~PhysicalPathContainmentHandle() = default;
@@ -625,10 +620,9 @@ const PhysicalPathContainmentResult& PhysicalPathContainmentHandle::result() con
 PhysicalPathContainmentHandle inspect_and_open_physically_contained_path(
     const std::filesystem::path& path,
     const std::filesystem::path& root) {
-    auto walked = inspect_and_walk(path, root, /*open_final_component_for_read=*/true);
-    auto impl = std::make_unique<PhysicalPathContainmentHandle::Impl>();
-    impl->result = std::move(walked.result);
-    impl->native = std::move(walked.native);
+    auto impl = std::make_unique<PhysicalPathContainmentHandle::Impl>(
+        PhysicalPathContainmentHandle::Impl{
+            inspect_and_walk(path, root, /*open_final_component_for_read=*/true)});
     return PhysicalPathContainmentHandle(std::move(impl));
 }
 
@@ -781,10 +775,29 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
         return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
     }
 
+    // Return after_identity, not expected.identity: several existing
+    // callers of the sibling read_physically_contained_file_snapshot()
+    // (which re-derives its own returned containment via a fresh post-read
+    // walk) use the returned PhysicalFileSnapshotResult's link_count as a
+    // security gate against hardlink-based confinement bypass (e.g.
+    // workspace_agent_target_containment.cpp,
+    // workspace_agent_process_containment.cpp,
+    // runtime_pipeline_package_content_io.cpp). content_equal() above
+    // deliberately excludes link_count when re-checking freshness (a still-
+    // open handle's own content is unaffected by its directory-entry count
+    // changing), but a caller reading link_count back out of the returned
+    // result still needs the true, current value -- after_identity was
+    // queried fresh, after the read, from the same handle, so it reflects
+    // it; expected.identity is the stale check-time snapshot and would
+    // silently hide a hardlink added during the read.
     return {
         .ok = true,
         .bytes = std::move(bytes),
-        .containment = expected,
+        .containment = PhysicalPathContainmentResult{
+            .allowed = true,
+            .canonical_path = expected.canonical_path,
+            .identity = after_identity,
+            .failure = PhysicalPathContainmentFailure::none},
         .failure = PhysicalPathContainmentFailure::none
     };
 }

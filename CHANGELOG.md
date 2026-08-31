@@ -77,7 +77,33 @@
   three times in this file -- deliberately deferred as issue #5424
   rather than expanding this already-multi-round fix's scope to touch
   the pre-existing, already twice-reviewed string-reopening function's
-  internals.
+  internals. A third adversarial review pass found one further real
+  issue: the handle-based read's returned
+  `PhysicalFileSnapshotResult.containment` was the stale, check-time
+  identity snapshot rather than the freshly re-verified post-read one
+  the function already computes and discards. Several existing callers
+  (`workspace_agent_target_containment.cpp`,
+  `workspace_agent_process_containment.cpp`,
+  `runtime_pipeline_package_content_io.cpp`) use the returned
+  `link_count` as a security gate against hardlink-based confinement
+  bypass; since `content_equal()` deliberately excludes `link_count`
+  from the freshness check itself (a still-open handle's content is
+  unaffected by its directory-entry count), a hard link added during
+  the read window would have been silently invisible to any future
+  caller relying on the returned snapshot's `link_count`. Fixed by
+  returning the already-computed post-read identity instead of the
+  pre-read one, with a new regression test proving the returned
+  `link_count` reflects a hard link added after the check but before
+  the read. Also fixed: a stale reference to the renamed
+  `content_identity_matches()` helper (now `content_equal()`) in
+  `docs/32-recovered-requirements-traceability.md`; and unified the
+  `InternalContainmentWalk`/`PhysicalPathContainmentHandle::Impl`
+  duplicate struct pair (identical fields, manual field-by-field copy
+  between them) via inheritance, removing both the duplication and the
+  copy. One further finding -- a redundant native-info syscall inside
+  the walk that predates this PR -- was noted on the existing follow-up
+  issue #5424 rather than opened separately, since it touches the same
+  code paths that issue's scope already covers.
 
 - 2026-08-31: Consolidated the move-only POSIX-descriptor and Windows-HANDLE
   RAII wrapper classes (issue #5408) that had been hand-duplicated -- with

@@ -1544,6 +1544,61 @@ void test_physical_path_containment_handle_based_read_is_safe_for_concurrent_rea
     fs::remove_all(temp_root, ignored);
 }
 
+// #5420 round-3 review: read_physically_contained_file_snapshot_from_handle()
+// re-checks freshness via PhysicalPathIdentity::content_equal(), which
+// deliberately excludes link_count (see the path-swap test above). But
+// several existing callers of the sibling read_physically_contained_file_snapshot()
+// use the *returned* PhysicalFileSnapshotResult::containment.identity.link_count
+// as a security gate against hardlink-based confinement bypass
+// (workspace_agent_target_containment.cpp, workspace_agent_process_containment.cpp,
+// runtime_pipeline_package_content_io.cpp). The handle-based read must
+// therefore still return the true, current link_count in its result, even
+// though it doesn't use link_count to decide whether to fail the read.
+void test_physical_path_containment_handle_based_read_returns_fresh_link_count() {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_physical_path_containment_link_count_tests";
+    const fs::path package_root = temp_root / "package";
+    const fs::path content_root = package_root / "content";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(content_root);
+
+    const fs::path target_file = content_root / "target.prg";
+    write_file_bytes(target_file, "RETURN\n");
+
+    auto handle = copperfin::security::inspect_and_open_physically_contained_path(
+        target_file,
+        package_root);
+    expect(handle.result().allowed && handle.result().identity.link_count == 1U,
+           "a freshly created file should pass containment inspection with link_count 1");
+
+    if (handle.result().allowed) {
+        // Add a hard link *after* the check succeeded but *before* the
+        // read -- the checked object's link_count is now 2, even though its
+        // content is completely unaffected.
+        std::error_code hard_link_error;
+        fs::create_hard_link(
+            target_file, content_root / "target-alias.prg", hard_link_error);
+        if (!hard_link_error) {
+            const auto snapshot =
+                copperfin::security::read_physically_contained_file_snapshot_from_handle(
+                    handle);
+            expect(snapshot.ok && snapshot.bytes == "RETURN\n",
+                   "adding a hard link after the check must not block a "
+                   "handle-based read of unchanged content");
+            expect(snapshot.containment.identity.link_count == 2U,
+                   "the returned containment must reflect the current, "
+                   "post-read link_count, not the stale check-time value, "
+                   "so a caller's own hardlink security gate sees accurate "
+                   "data -- issue #5420 round-3 review finding");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -1579,6 +1634,7 @@ int main() {
     test_physical_path_containment_rejects_indirection();
     test_physical_path_containment_handle_based_read_survives_path_swap();
     test_physical_path_containment_handle_based_read_is_safe_for_concurrent_reads();
+    test_physical_path_containment_handle_based_read_returns_fresh_link_count();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
