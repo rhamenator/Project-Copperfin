@@ -4994,6 +4994,10 @@ copperfin_add_test(test_platform_path cf_platform_support
     test_platform_path.cpp
 )
 
+copperfin_add_test(test_bounded_wide_string cf_platform_support
+    test_bounded_wide_string.cpp
+)
+
 copperfin_add_test(test_platform_disk_space cf_platform_support
     test_platform_disk_space.cpp
 )
