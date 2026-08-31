@@ -1,17 +1,11 @@
 # Agent Handoff
 
-## In-progress: PR #5411 (bounded Win32 version-resource string reads, fixes #5402), not yet merged
+## Shipped: PR #5411 (bounded Win32 version-resource string reads), merged as `265734d68` (squash)
 
-**Steering-continuity record** — Windows Native Validation dispatch (run
-`33343489771`) against commit `f58a6f73d` is in flight; check completion
-with `gh run list --workflow="Windows Native Validation" --branch
-agent/v1-fix-company-name-overread`. No adversarial `/code-review` pass has
-been attempted yet for this PR: this session hit its monthly Claude API
-spend limit while reviewing the sibling PR #5410 (resets 7:10pm
-America/Detroit, 2026-08-30), so further `/code-review` subagent spawns
-were deliberately avoided for the rest of that session. Run
-`/code-review --branch agent/v1-fix-company-name-overread max` before
-merging, once available.
+Windows Native Validation (run `33343489771`) came back green; the
+adversarial `/code-review` pass (initially deferred behind PR #5410 while
+this session was at its monthly Claude API spend limit) ran clean after
+the limit reset, with no findings. Merged and branch deleted.
 
 PR #5411 fixes #5402 (heap buffer over-read in `get_company_name()`) via a
 new shared `copperfin::platform::bounded_wide_string()` helper
@@ -25,10 +19,10 @@ and can't be exercised without one. New `RQ-CF-EXTERNAL-PROCESS-001`
 traceability row. Verified locally that `test_bounded_wide_string` and
 `test_security_controls` build warning-free and pass.
 
-This branch, PR #5407 (merged, `physical_path_containment.cpp`), and PR
-#5410 (`workspace_agent_*`/`environment`/`audit_sink.cpp`) were kept on
-separate branches with no file overlap so all three could proceed in
-parallel without collision.
+This branch, PR #5407 (`physical_path_containment.cpp`), and PR #5410
+(`workspace_agent_*`/`environment`/`audit_sink.cpp`) were kept on separate
+branches with no file overlap so all three could proceed in parallel
+without collision. All three are now merged.
 
 ## Shipped: PR #5407 (TOCTOU fix for #5400), merged as `93b0acbd9` (squash)
 
@@ -98,20 +92,17 @@ locally — this is exactly the kind of change where the manual full-suite
 dispatch above is not optional, per the standing fact below about
 `v1-development` PRs not getting full native validation by default.
 
-## In-progress: PR #5410 (reserved Windows device names, fixes #5404), not yet merged
+## Shipped: PR #5410 (reserved Windows device names, fixes #5404), merged as `dbe4c1a7a` (squash)
 
-**Steering-continuity record** — as of commit `dcce82510` (2026-08-31), a
-fresh Windows Native Validation dispatch (run `33346352974`) is in flight
-and must come back green before merge; check with `gh run list
---workflow="Windows Native Validation" --branch
-agent/v1-windows-reserved-device-names`. History: run `33330701297`
-against commit `41a1b3da1` came back green, but that commit was superseded
-by a rebase onto merged PR #5407 (head became `cde053245`, requiring
-manual `seq`-collision renumbering in `.agent-channel/log.jsonl`, an
-accepted risk the channel README documents); that rebase's own CI run
-(`33345554677`) was then superseded again and cancelled once the
-adversarial review below produced a real fix. Only the run against
-`dcce82510` or later should be trusted.
+Windows Native Validation eventually came back green against the final
+commit after several supersessions (an initial rebase onto merged PR
+#5407 required manual `seq`-collision renumbering in
+`.agent-channel/log.jsonl`, an accepted risk the channel README
+documents; the branch then needed re-syncing to `v1-development` three
+more times as PRs #5411/#5413/#5414 merged out from under it in the same
+session — each resync required re-dispatching Windows CI, since only a
+run against the exact current head commit counts). Merged and branch
+deleted.
 
 The adversarial `/code-review` pass that had failed earlier (session hit
 its monthly Claude API spend limit mid-run) was re-run successfully once
@@ -149,16 +140,34 @@ Win32 device object instead of a regular file/directory. New
 the exact pattern the trailing-dot/trailing-space tests already use. Fully
 verified on Linux that nothing regressed (5 affected binaries build and
 pass unchanged), but since the new checks are Windows-only and compiled
-out entirely on POSIX, this local run does not exercise the new code path
-at all — the pending Windows dispatch above is the only evidence that
-matters for this PR, not merely the standing extra-diligence practice.
+out entirely on POSIX, the Windows Native Validation dispatch was the
+only evidence that actually exercised the new code path.
 
-This branch has **no file overlap** with PR #5407 (`physical_path_containment.cpp`)
-or the planned next pickup for #5402 (`external_process_policy.cpp`) — all
-three were deliberately kept on separate branches off `v1-development` so
-they can proceed in parallel without collision; each will carry its own
-`agent-handoff.md`/`CHANGELOG.md`/traceability additions into
-`v1-development` independently when it merges.
+This branch had no file overlap with PR #5407 (`physical_path_containment.cpp`)
+or PR #5411 (`external_process_policy.cpp`) — all three were deliberately
+kept on separate branches off `v1-development` so they could proceed in
+parallel without collision.
+
+## Shipped: PR #5413 (drop "wishlist" framing) and PR #5414 (doc-freshness audit fixes)
+
+Two docs-only PRs, merged as `b011711d9` and `e51bf2dff` (squash), prompted
+by the same conversation as the PRs above. #5413: the owner clarified that
+future-facing/deferred work (database-container interchange, legacy Fox
+Software/xBase format support, etc.) should never be framed as "wishlist"
+or optional — it's real, committed, deliberately-scoped requirements,
+just sequenced later. Reworded 6 GitHub issues (#137 umbrella, #138, #139,
+#140, #141, #1076, #1077) and 6 live docs (`README.md`, `agents.md`,
+`docs/01/03/12/23`) to drop that framing; `CHANGELOG.md`,
+`agent-handoff.md` narration, and the explicitly-deprecated
+`remaining-work.md` were deliberately left as historical record. #5414:
+a full-codebase review (6 parallel subagents auditing every scored doc in
+`docs/31` plus the ontology/UML ground-truth docs directly against
+source) found zero code bugs — only 4 documentation-staleness issues
+(a stale issue-list in `docs/22`, an executable-count self-contradiction
+in `docs/24`, a missing `cf_migration` row and stale file count in
+`docs/28`, and a stale "entirely aspirational" label on `docs/04` in
+`docs/31`), all fixed directly rather than filed as issues since none
+represented unimplemented work.
 
 ## Shipped: PR #5399 (Windows path-alias rejection), merged as `9f00f388d`
 
