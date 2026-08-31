@@ -2,26 +2,38 @@
 
 ## In-progress: PR #5416 (WorkspaceAgentSessionController::stop() exception safety, fixes #5401), not yet merged
 
-**Steering-continuity record** — Windows Native Validation dispatch (run
-`33353687668`) and an adversarial `/code-review` pass are both in flight
-against commit `3fc3437a9`; check with `gh run list
---workflow="Windows Native Validation" --branch
-agent/v1-session-stop-exception-safety`. If you cannot find these results
-already reported/acted on, re-run both before merging.
+**Steering-continuity record** — as of commit `d61fe01ec` (2026-08-31), a
+fresh Windows Native Validation dispatch (run `33354458540`) and a second
+adversarial `/code-review` pass are both in flight; check with `gh run
+list --workflow="Windows Native Validation" --branch
+agent/v1-session-stop-exception-safety`. Every earlier Windows run
+(`33353687668`, against the first, incomplete fix) is superseded and was
+cancelled. If you cannot find these results already reported/acted on,
+re-run both before merging.
 
-PR #5416 mirrors `start()`'s existing `catch(...) { transition_ = idle;
-throw; }` guard around `stop()`'s post-transition-flag section, closing an
-irrecoverable-DoS window (an exception there previously left `transition_`
-stuck at `stopping` forever). Verified via a new, narrowly-scoped
-test-only fault-injection hook
-(`include/copperfin/security/workspace_agent_session_test_hooks.h`, a
-free function rather than a method on the security-hardened controller
-class) since the real trigger (allocation/OS-primitive failure) isn't
-reproducible deterministically through the public API. Confirmed the new
-regression actually catches the bug by temporarily reverting the fix and
-observing all three of its assertions fail, then restoring it. Full local
-Linux battery (7/7: `test_workspace_agent_session` plus the broader
-security suite) passes.
+PR #5416's first commit (`3fc3437a9`) mirrored `start()`'s existing
+`catch(...) { transition_ = idle; throw; }` guard around `stop()`'s
+post-transition-flag section, closing an irrecoverable-DoS window (an
+exception there previously left `transition_` stuck at `stopping`
+forever). A first adversarial `/code-review` pass found this was
+**incomplete**: `revoked_session = active_session_;` (a
+`WorkspaceAgentSessionSnapshot` copy that owns a `std::string`, and can
+therefore genuinely throw) ran immediately after `transition_ =
+Transition::stopping;` but was still *outside* that try block, reproducing
+the exact bug one statement earlier than the fix covered. Fixed in
+`d61fe01ec` by replacing all three hand-copied `catch(...)` blocks
+(`start()`, `cleanup_pending_session_layout()`, `stop()`) with one shared
+RAII `ResetOnExit<T>` helper armed immediately after each method sets its
+non-idle `transition_` value, before any other work in that same critical
+section — closing the review's exact finding structurally rather than by
+relocating a try block, and directly addressing the review's related point
+that the hand-copied guard pattern was itself the kind of omission that
+produced this bug. Moved the test-only fault-injection hook's call site to
+match (fires immediately after `arm()`, before the vulnerable copy) and
+re-verified the regression catches the bug by temporarily disabling
+`reset_guard.arm()` this time (not the old catch block) and observing the
+same three assertions fail, then restoring it. Full local Linux battery
+(7/7) passes again.
 
 Picking up #5405 (consolidate duplicated path predicates across the four
 `workspace_agent_*` files) next on a separate branch with no file overlap.

@@ -20,6 +20,14 @@
   cannot be reproduced deterministically through the public API; the
   added regression was confirmed to fail without the fix before being
   confirmed to pass with it. No API or non-exceptional behavior change.
+  A first adversarial review found this initial fix incomplete -- the
+  `WorkspaceAgentSessionSnapshot` copy right after `transition_ =
+  stopping` was still outside the new guard and could itself throw --
+  fixed by replacing all three hand-copied `catch(...)` guards
+  (`start()`, `cleanup_pending_session_layout()`, `stop()`) with one
+  shared RAII `ResetOnExit<T>` helper armed immediately after each
+  method sets its non-idle transition value, closing the gap
+  structurally rather than by relocating a try block.
 
 - 2026-08-30: Fixed a heap buffer over-read in two Win32 version-resource
   string extractors (`RQ-CF-EXTERNAL-PROCESS-001`, issue #5402):
