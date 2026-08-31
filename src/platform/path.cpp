@@ -252,4 +252,83 @@ bool path_equal_case_insensitive(
 #endif
 }
 
+bool path_has_embedded_nul(const std::filesystem::path& path) {
+    const auto& native = path.native();
+    return native.find(typename std::filesystem::path::value_type{}) !=
+        std::filesystem::path::string_type::npos;
+}
+
+bool path_has_dot_component(const std::filesystem::path& path) {
+    for (const auto& component : path) {
+        if (component == "." || component == "..") {
+            return true;
+        }
+    }
+    return false;
+}
+
+#if defined(_WIN32)
+bool path_has_windows_alias_prone_component(const std::filesystem::path& path) {
+    for (const auto& component : path) {
+        const auto& native = component.native();
+        if (!native.empty() &&
+            (native.back() == L'.' || native.back() == L' ')) {
+            return true;
+        }
+    }
+    return false;
+}
+
+namespace {
+
+bool path_component_is_reserved_windows_device_name(
+    const std::filesystem::path::string_type& component) {
+    const auto stop = component.find_first_of(L".:");
+    const std::filesystem::path::string_type stem =
+        (stop == std::filesystem::path::string_type::npos)
+            ? component
+            : component.substr(0U, stop);
+    if (stem.empty() || stem.size() > 4U) {
+        return false;
+    }
+    std::filesystem::path::string_type upper;
+    upper.reserve(stem.size());
+    for (const wchar_t ch : stem) {
+        upper.push_back(
+            (ch >= L'a' && ch <= L'z') ? static_cast<wchar_t>(ch - (L'a' - L'A')) : ch);
+    }
+    static constexpr std::wstring_view reserved_names[] = {
+        L"CON", L"PRN", L"AUX", L"NUL",
+        L"COM1", L"COM2", L"COM3", L"COM4", L"COM5", L"COM6", L"COM7", L"COM8", L"COM9",
+        L"LPT1", L"LPT2", L"LPT3", L"LPT4", L"LPT5", L"LPT6", L"LPT7", L"LPT8", L"LPT9"
+    };
+    for (const std::wstring_view name : reserved_names) {
+        if (upper == name) {
+            return true;
+        }
+    }
+    return false;
+}
+
+}  // namespace
+
+bool path_has_reserved_windows_device_name_component(
+    const std::filesystem::path& path) {
+    for (const auto& component : path) {
+        if (path_component_is_reserved_windows_device_name(component.native())) {
+            return true;
+        }
+    }
+    return false;
+}
+#else
+bool path_has_windows_alias_prone_component(const std::filesystem::path&) {
+    return false;
+}
+
+bool path_has_reserved_windows_device_name_component(const std::filesystem::path&) {
+    return false;
+}
+#endif
+
 }  // namespace copperfin::platform
