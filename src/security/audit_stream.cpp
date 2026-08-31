@@ -5,6 +5,7 @@
 #include "copperfin/security/audit_stream.h"
 
 #include "copperfin/platform/path.h"
+#include "../platform/scoped_resource.h"
 #include "copperfin/security/sha256.h"
 #include "localized_text.h"
 
@@ -416,35 +417,7 @@ std::atomic<std::uint64_t> audit_temp_sequence{0U};
 
 #if defined(_WIN32)
 
-class ScopedHandle {
-public:
-    explicit ScopedHandle(HANDLE handle = INVALID_HANDLE_VALUE) : handle_(handle) {}
-    ~ScopedHandle() {
-        if (handle_ != INVALID_HANDLE_VALUE) {
-            ::CloseHandle(handle_);
-        }
-    }
-    ScopedHandle(const ScopedHandle&) = delete;
-    ScopedHandle& operator=(const ScopedHandle&) = delete;
-    ScopedHandle(ScopedHandle&& other) noexcept : handle_(other.handle_) {
-        other.handle_ = INVALID_HANDLE_VALUE;
-    }
-    ScopedHandle& operator=(ScopedHandle&& other) noexcept {
-        if (this != &other) {
-            if (handle_ != INVALID_HANDLE_VALUE) {
-                ::CloseHandle(handle_);
-            }
-            handle_ = other.handle_;
-            other.handle_ = INVALID_HANDLE_VALUE;
-        }
-        return *this;
-    }
-    [[nodiscard]] HANDLE get() const { return handle_; }
-    [[nodiscard]] bool valid() const { return handle_ != INVALID_HANDLE_VALUE; }
-
-private:
-    HANDLE handle_ = INVALID_HANDLE_VALUE;
-};
+using copperfin::platform::ScopedHandle;
 
 class ScopedNamedMutex {
 public:
@@ -693,35 +666,7 @@ AuditAppendResult append_contained_audit_event(
 
 #else
 
-class ScopedFileDescriptor {
-public:
-    explicit ScopedFileDescriptor(int descriptor = -1) : descriptor_(descriptor) {}
-    ~ScopedFileDescriptor() {
-        if (descriptor_ >= 0) {
-            ::close(descriptor_);
-        }
-    }
-    ScopedFileDescriptor(const ScopedFileDescriptor&) = delete;
-    ScopedFileDescriptor& operator=(const ScopedFileDescriptor&) = delete;
-    ScopedFileDescriptor(ScopedFileDescriptor&& other) noexcept : descriptor_(other.descriptor_) {
-        other.descriptor_ = -1;
-    }
-    ScopedFileDescriptor& operator=(ScopedFileDescriptor&& other) noexcept {
-        if (this != &other) {
-            if (descriptor_ >= 0) {
-                ::close(descriptor_);
-            }
-            descriptor_ = other.descriptor_;
-            other.descriptor_ = -1;
-        }
-        return *this;
-    }
-    [[nodiscard]] int get() const { return descriptor_; }
-    [[nodiscard]] bool valid() const { return descriptor_ >= 0; }
-
-private:
-    int descriptor_ = -1;
-};
+using copperfin::platform::ScopedFd;
 
 AuditAppendResult append_contained_audit_event(
     const ContainedAuditPath& path,
@@ -730,7 +675,7 @@ AuditAppendResult append_contained_audit_event(
     const std::size_t max_log_bytes,
     const bool validate_existing_chain,
     const std::string& fixed_timestamp) {
-    ScopedFileDescriptor current_directory(::open(
+    ScopedFd current_directory(::open(
         path.canonical_root.c_str(),
         O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
     struct stat root_status{};
@@ -759,7 +704,7 @@ AuditAppendResult append_contained_audit_event(
                 component.c_str(),
                 O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
         }
-        ScopedFileDescriptor next_directory(next_descriptor);
+        ScopedFd next_directory(next_descriptor);
         struct stat directory_status{};
         if (!next_directory.valid() ||
             ::fstat(next_directory.get(), &directory_status) != 0 ||
@@ -777,7 +722,7 @@ AuditAppendResult append_contained_audit_event(
     const std::string leaf_name =
         copperfin::platform::path_to_utf8_string(path.relative_path.filename());
     std::string existing_text;
-    ScopedFileDescriptor existing_descriptor(::openat(
+    ScopedFd existing_descriptor(::openat(
         current_directory.get(),
         leaf_name.c_str(),
         O_RDONLY | O_NOFOLLOW | O_CLOEXEC));
@@ -837,11 +782,11 @@ AuditAppendResult append_contained_audit_event(
     }
     const std::string updated_text = existing_text + line;
     std::string temp_name;
-    ScopedFileDescriptor temp_descriptor;
+    ScopedFd temp_descriptor;
     for (int attempt = 0; attempt < 64 && !temp_descriptor.valid(); ++attempt) {
         temp_name = ".copperfin-audit-" + std::to_string(::getpid()) + "-" +
             std::to_string(audit_temp_sequence.fetch_add(1U, std::memory_order_relaxed)) + ".tmp";
-        temp_descriptor = ScopedFileDescriptor(::openat(
+        temp_descriptor = ScopedFd(::openat(
             current_directory.get(),
             temp_name.c_str(),
             O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,

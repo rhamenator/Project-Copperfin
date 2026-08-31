@@ -1,3 +1,67 @@
+- 2026-08-31: Consolidated the move-only POSIX-descriptor and Windows-HANDLE
+  RAII wrapper classes (issue #5408) that had been hand-duplicated -- with
+  small, real interface differences -- across `physical_path_containment.cpp`
+  (`ScopedDescriptor`/`ScopedFileHandle`, the only copies with `release()`/
+  `reset()`), `audit_stream.cpp` (`ScopedFileDescriptor`/`ScopedHandle`,
+  get/valid only), and `private_directory.cpp` (`ScopedFd`/`ScopedHandle`,
+  get/valid only, and Windows-side non-movable since it declared a
+  destructor without declaring move operations) into one canonical
+  `copperfin::platform::ScopedFd` / `copperfin::platform::ScopedHandle` pair
+  in a new header-only `include/copperfin/platform/scoped_resource.h`,
+  consumed by all three files via `using` declarations. The canonical
+  classes use the superset interface (get/valid/release/reset, movable,
+  copy-deleted) so every existing call site's usage continues to compile
+  unchanged, and the canonical `ScopedHandle::valid()` treats both
+  `INVALID_HANDLE_VALUE` and `nullptr` as invalid -- matching
+  `private_directory.cpp`'s stricter of the two prior Windows definitions,
+  a safe widening since no existing call site's failure path ever produced
+  a `HANDLE` that only the laxer check would have accepted. No behavior
+  change: all ten affected test binaries
+  (`test_security_controls`, `test_workspace_agent_process_parser`,
+  `test_workspace_agent_isolated_environment`, `test_platform_private_directory`,
+  `test_security_audit_concurrency`, `test_workspace_agent_target_containment`,
+  `test_workspace_agent_process_containment`, `test_workspace_agent_audit_sink`,
+  `test_runtime_host_audit_containment`, `test_runtime_host_audit_stream`)
+  pass unchanged. An adversarial `/code-review` pass found that the new
+  `scoped_resource.h` included `<windows.h>` unguarded, before any
+  consumer's own `NOMINMAX`/`WIN32_LEAN_AND_MEAN` guard could take effect
+  -- since `<windows.h>` carries its own internal include guards, that
+  first unguarded processing made every consumer's later, differently
+  configured `#include <windows.h>` a silent no-op against already-set
+  state, most seriously defeating `audit_stream.cpp`'s `NOMINMAX` guard
+  and leaving its several unparenthesized
+  `std::numeric_limits<std::size_t>::max()`/`std::min<std::size_t>(...)`
+  call sites exposed to the `windows.h` `max`/`min` macros on a Windows
+  build (this codebase has hit exactly this class of bug before, per
+  the `prg_engine_helpers.cpp` NOMINMAX-ordering entry earlier in this
+  file). Fixed by having `scoped_resource.h` itself define both
+  `WIN32_LEAN_AND_MEAN` and `NOMINMAX` (each `#ifndef`-guarded) before
+  its own first `<windows.h>` inclusion, so every consumer's later guard
+  block sees consistent, already-satisfied state instead of dead code.
+  Confirmed none of the three consumer files use any
+  `WIN32_LEAN_AND_MEAN`-excluded API (grepped for GDI/WinSock/RPC/DDE/
+  Crypt/Shell symbols across all three -- none found). All ten affected
+  tests re-verified passing after the fix. The full Windows Native
+  Validation run then caught what local testing could not:
+  `test_platform_sqlite_api_boundary_contract` failed with "Public
+  Copperfin header leaks native selection token _WIN32:
+  include/copperfin/platform/scoped_resource.h" -- this codebase
+  enforces (via a contract check scanning every file under
+  `include/copperfin/*`) that public headers stay platform-agnostic,
+  with all `_WIN32`/`__APPLE__`/`__linux__` conditionals confined to
+  private headers under `src/`, matching the existing
+  `src/platform/bounded_process_private.h` and `src/platform/sqlite_api.h`
+  precedent; `scoped_resource.h`'s per-platform class definitions
+  violated that boundary by living in the public `include/` tree. Fixed
+  by relocating it to `src/platform/scoped_resource.h` (still in the
+  `copperfin::platform` namespace, matching `bounded_process_private.h`)
+  and updating all three consumers to the relative private-header
+  include path (`"../platform/scoped_resource.h"` from
+  `src/security/`, `"scoped_resource.h"` from `src/platform/` itself)
+  instead of the public `copperfin/platform/scoped_resource.h` path.
+  All eleven affected tests, including the previously-failing contract
+  check, now pass locally.
+
 - 2026-08-31: Fixed an exception-safety gap in
   `WorkspaceAgentSessionController::stop()` (`RQ-CF-AGENT-005`, issue
   #5401): `start()` already wraps its post-transition-flag critical
