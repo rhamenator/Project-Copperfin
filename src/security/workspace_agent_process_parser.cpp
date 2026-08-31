@@ -87,7 +87,18 @@ std::optional<CapturedExecutable> capture_binding(
     const auto snapshot = read_physically_contained_file_snapshot_from_handle(
         handle,
         workspace_agent_maximum_windows_process_parser_image_bytes);
-    if (!snapshot.ok) {
+    // read_physically_contained_file_snapshot_from_handle()'s own before/
+    // after freshness check deliberately excludes link_count (it compares
+    // via PhysicalPathIdentity::content_equal(), not operator==) -- a still-
+    // open handle's content is unaffected by its directory-entry count
+    // changing, so that check alone would not catch a hard link added
+    // during the read. The pre-read check above only saw the object's
+    // link_count at walk time. Re-check it here against
+    // snapshot.containment.identity, which read_physically_contained_file_snapshot_from_handle()
+    // populates from a fresh post-read query (issue #5420 round-3 review),
+    // so a hard link added anywhere between the walk and the read
+    // completing is still caught before this binding is trusted.
+    if (!snapshot.ok || snapshot.containment.identity.link_count != 1U) {
         return std::nullopt;
     }
     const auto digest = sha256_hex_for_text(snapshot.bytes);
@@ -180,7 +191,13 @@ WorkspaceAgentProcessParserBoundary::authorize_windows(
     const auto snapshot = read_physically_contained_file_snapshot_from_handle(
         handle,
         workspace_agent_maximum_windows_process_parser_image_bytes);
-    if (!snapshot.ok) {
+    // See the matching comment in capture_binding(): the handle-based
+    // read's own freshness check excludes link_count, so it alone would
+    // not catch a hard link added during this read. Re-check it against
+    // snapshot.containment.identity (a fresh post-read query), matching
+    // the guarantee the prior string-based read_physically_contained_file_snapshot()
+    // provided via its full-identity comparison.
+    if (!snapshot.ok || snapshot.containment.identity.link_count != 1U) {
         return denied("workspace_agent.process_argument_parser_identity_changed");
     }
     const auto digest = sha256_hex_for_text(snapshot.bytes);

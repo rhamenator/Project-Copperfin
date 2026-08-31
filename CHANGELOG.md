@@ -10,12 +10,31 @@
   pre-check (another path-string resolution): the handle-based read
   already rejects a non-regular-file target internally via the same
   handle, and this function's only observable outcome either way is
-  `std::nullopt` -- confirmed unchanged by the existing directory-target
-  regression test in `tests/test_workspace_agent_process_parser.cpp`.
-  No other behavior change; the `link_count`/identity security gates
-  in both functions are unchanged, just evaluated against the
-  handle-based result's fields instead of the string-based one's.
-  Existing regression coverage passes unchanged.
+  `std::nullopt`. An adversarial `/code-review` pass found a real
+  regression this migration introduced in both functions: the prior
+  string-based `read_physically_contained_file_snapshot()` used
+  `PhysicalPathIdentity::operator==` (which includes `link_count`) for
+  its own before/after freshness check, so a hard link added to the
+  trusted executable during the read window was caught as
+  `identity_changed`. The new handle-based read deliberately uses
+  `content_equal()` (excluding `link_count`, see issue #5420) for that
+  same check, and neither `capture_binding()` nor `authorize_windows()`
+  added a compensating post-read `link_count` check of their own --
+  both only checked `link_count` against the pre-read, walk-time
+  identity, so a hard link added during the (potentially large) read
+  would no longer be caught, letting a now-multiply-linked binary keep
+  or receive trust. Fixed by re-checking `link_count` against
+  `snapshot.containment.identity` (the fresh, post-read value
+  `read_physically_contained_file_snapshot_from_handle()` returns,
+  per issue #5420's own round-3 fix) in both functions before
+  proceeding. The same review pass also flagged that this entry
+  originally overclaimed the existing directory-target regression test
+  as validating the `is_regular_file()` removal specifically; that
+  test actually rejects earlier via an identity mismatch and never
+  reaches the removed check's replacement path -- the removal is
+  correct by inspection (both paths return `std::nullopt`), just not
+  independently proven by that particular test. No other behavior
+  change; existing regression coverage passes unchanged.
 
 - 2026-08-31: Added `inspect_and_open_physically_contained_path()` and
   `read_physically_contained_file_snapshot_from_handle()`
