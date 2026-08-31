@@ -17,7 +17,7 @@ A third diagram, the [Runtime Subsystem UML](diagrams/uml-runtime-subsystem.md),
 
 ## Ground-Truth Class Diagram
 
-This mirrors the real native library graph and the five native executables, plus the managed VSIX/Studio layer that talks to them over the JSON design/runtime contract. Class members name real files/concepts, not aspirational APIs. Refreshed 2026-07-24 to add `cf_platform_support`, `cf_licensing`, `cf_package_trust`, and `copperfin_launcher_guard`, which were added to `CMakeLists.txt` after this diagram was first drawn.
+This mirrors the real native library graph and the six native executables (`copperfin_inspect`, `copperfin_mcp_host`, `copperfin_studio_host`, `copperfin_runtime_host`, `copperfin_build_host`, `copperfin_launcher_guard`), plus the managed VSIX/Studio layer that talks to them over the JSON design/runtime contract (`copperfin_studio_managed` is an `IMPORTED` CMake handle for that separately-built managed executable, not a seventh native target). Class members name real files/concepts, not aspirational APIs. Refreshed 2026-07-24 to add `cf_platform_support`, `cf_licensing`, `cf_package_trust`, and `copperfin_launcher_guard` (the sixth executable), which were added to `CMakeLists.txt` after this diagram was first drawn.
 
 ```mermaid
 classDiagram

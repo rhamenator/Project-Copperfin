@@ -66,7 +66,7 @@ flowchart TB
 
     subgraph SEC["Security and Interop"]
       direction TB
-      SECMODEL["docs/04 Security Model<br/>Entra ID, Shield, hardening tiers<br/>-- entirely forward-looking"]
+      SECMODEL["docs/04 Security Model<br/>Entra ID, Shield, hardening tiers<br/>mostly forward-looking, plus 3<br/>narrow verified present-tense sections"]
       RBAC["docs/18 Native Security And RBAC<br/>claims a current code baseline"]
       DOTNET["docs/11 .NET Bridge Spec<br/>full CLR host + marshaling +<br/>parity matrix spec'd"]
       POLYGLOT["docs/19 Polyglot And AI<br/>Subprojects - policy rules"]
@@ -102,7 +102,7 @@ flowchart TB
     class PIPELINE partial;
     class TRUST partial;
     class CONCURRENCY partial;
-    class SECMODEL scaffold;
+    class SECMODEL seed;
     class RBAC seed;
     class DOTNET seed;
     class POLYGLOT seed;
@@ -342,10 +342,23 @@ the same helper.
 
 ### docs/04 vs docs/18 — Security Model vs Native Security And RBAC
 
-These two documents need to be read together, and they disagree in tense.
-`docs/04-security-model.md` is written **entirely in the future conditional** — no
-current-implementation claim appears anywhere in it. `docs/18-native-security-and-rbac.md`
-claims a **present-tense baseline**: "a native security profile with explicit
+These two documents need to be read together. **Correction (2026-08-31):**
+`docs/04-security-model.md` is no longer entirely future-conditional — it now
+also contains narrow, verified present-tense sections ("Current MCP
+baseline," "Current workspace-agent policy baseline," "Current federation
+baseline," `docs/04-security-model.md:59,65,81`) describing real, checkable
+behavior. Each was independently verified against source during this
+correction: the MCP host's fail-closed `ai.mcp` permission check
+(`apps/copperfin_mcp_host/main.cpp`), the workspace-agent access-mode
+distinctions (`include/copperfin/security/workspace_agent_session.h`), and
+the SQLite federation connector's read-only enforcement
+(`src/platform/sqlite_federation_connector.cpp`) all match what docs/04
+claims. The bulk of docs/04 — enterprise identity federation, the
+9-capability "Copperfin Shield" surface — remains genuinely future-looking;
+only these three narrow baseline sections are present-tense and true. Any
+internal doc still summarizing docs/04 as "entirely future-conditional" or
+"pure scaffold" is itself now stale and should cite this correction instead.
+`docs/18-native-security-and-rbac.md` claims a **present-tense baseline**: "a native security profile with explicit
 permissions, roles, providers, features, audit events, and hardening profiles,"
 surfaced in the Studio host JSON and project workspace summary, built around 5
 named roles (`developer`, `build-engineer`, `security-admin`, `auditor`,
@@ -598,7 +611,7 @@ excluded from the compliance map above:
 | --- | --- | --- | --- |
 | 01 | Product Charter | Partial | Empty exception registry makes the Compatibility Fidelity Rule unfalsifiable |
 | 03 | Compatibility And Migration | Partial seed (migrator) | Only read-only `inventory.json` foundation exists; eight outputs and import analysis remain |
-| 04 | Security Model | Scaffold (aspirational) | No enterprise identity/Shield product surface distinct from `cf_security` |
+| 04 | Security Model | Mostly aspirational, with 3 narrow verified present-tense baseline sections | No enterprise identity/Shield product surface distinct from `cf_security` |
 | 11 | .NET Bridge Spec | Partial (Windows DECLARE plus portable policy/adapter/route executor) | None of the four named native `cf_dotnet_*` modules exist |
 | 12 | VFP Asset Editing And Execution | Partial | xAsset execution is first-pass, bounded by language-surface coverage |
 | 13 | Index Format Notes | Partial | No index write fidelity; collation hints are heuristic, not named |
@@ -636,3 +649,24 @@ excluded from the compliance map above:
   of the stale 1,411 total (prose and summary table) are corrected to match.
   Neither correction changes any other document's status language, so no
   further rows moved.
+- 2026-08-31, second correction (same day): a systematic audit comparing
+  every scored document here against actual source (not other docs) found
+  that `docs/04-security-model.md` had grown 3 narrow, verified,
+  present-tense "Current ... baseline" sections (MCP, workspace-agent
+  policy, SQLite federation) since this file last characterized it as
+  "written entirely in the future conditional." Each was independently
+  re-verified against source during this correction (see the docs/04 vs
+  docs/18 section above for file citations). Reclassified `SECMODEL` from
+  `scaffold` to `seed` in the map and updated the summary-table row; the
+  bulk of docs/04 (Entra ID/OIDC/SAML, the 9-capability Shield surface)
+  remains genuinely aspirational, so this is a narrowing of the claim, not
+  a reversal. The same audit also found and fixed unrelated staleness in
+  three other files (not scored by this document, so not reflected in its
+  map): `docs/22-vfp-language-reference-coverage.md`'s "Active Issue
+  Mapping" section still listed 8 closed issues as active backlog;
+  `docs/24-system-uml.md` said "five native executables" while its own
+  diagram already showed six; `docs/28-repository-ontology.md` was missing
+  `cf_migration` from its library table/dependency graph and had a stale
+  "~300 files" test count (actual: 820 `.cpp` files, 227 registered CTest
+  executables). All four fixes were verified directly against source/CMake
+  output before being applied, not inferred from the docs alone.
