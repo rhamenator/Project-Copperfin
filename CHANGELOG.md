@@ -51,7 +51,33 @@
   `PhysicalPathIdentity` itself as a new `content_equal()` method, with
   `operator==` now defined as `content_equal() && link_count ==
   ...` so both live in the same struct and the relationship between
-  them is explicit.
+  them is explicit. A second adversarial review pass, using a
+  compiled concurrent-access harness under ASan/UBSan, empirically
+  reproduced a real race: the handle-based read used a shared
+  file-position cursor (`lseek()`+`read()` / `SetFilePointerEx()`+
+  `ReadFile()`, reset at the top of every call so the handle could be
+  read more than once), so concurrent calls from separate threads on
+  the same handle raced on that cursor -- 1 to 5 of 8 concurrent calls
+  returned corrupted (truncated or spuriously `identity_changed`)
+  results across repeated runs. Fixed by switching to
+  position-independent reads (`pread()` on POSIX; offset-based
+  `ReadFile()` via an `OVERLAPPED` structure, handling
+  `ERROR_HANDLE_EOF` explicitly, on Windows), where each call tracks
+  its own read offset locally and never mutates shared kernel-level
+  cursor state -- this also removes the need for the round-2 seek fix
+  entirely. Added a regression test spawning 8 threads that read the
+  same handle concurrently and confirming every thread gets the
+  complete, correct bytes; verified it reliably catches the race by
+  temporarily reintroducing the shared-cursor pattern (10/10 failures)
+  and confirmed clean after restoring the fix (10/10 passes). The same
+  review pass also found the new handle-based read duplicates most of
+  the read-loop/identity-recheck structure already in the pre-existing
+  string-reopening read function, and that the "query native info ->
+  reject reparse/directory -> build identity" sequence is now written
+  three times in this file -- deliberately deferred as issue #5424
+  rather than expanding this already-multi-round fix's scope to touch
+  the pre-existing, already twice-reviewed string-reopening function's
+  internals.
 
 - 2026-08-31: Consolidated the move-only POSIX-descriptor and Windows-HANDLE
   RAII wrapper classes (issue #5408) that had been hand-duplicated -- with

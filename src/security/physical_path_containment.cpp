@@ -670,23 +670,31 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
     if (!before_identity.content_equal(expected.identity)) {
         return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
     }
-    // The handle may already have been read from (this function takes the
-    // handle by const reference rather than consuming it, so nothing
-    // prevents a caller from calling it more than once). Reset to the start
-    // unconditionally so every call reads the whole object from byte 0,
-    // rather than silently returning a truncated read starting from
-    // whatever position an earlier call left the handle at.
-    LARGE_INTEGER zero_offset{};
-    if (::SetFilePointerEx(native, zero_offset, nullptr, FILE_BEGIN) == 0) {
-        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-    }
-
+    // This function takes the handle by const reference rather than
+    // consuming it, so nothing prevents either a second sequential call or
+    // -- more seriously -- concurrent calls from separate threads on the
+    // same handle. A single shared file-position cursor (ReadFile with a
+    // nullptr OVERLAPPED, or ::read()) would make concurrent callers race
+    // on that cursor: reads reads at this file's mutual offset are
+    // observably corrupted (empirically reproduced with a concurrent-access
+    // harness -- interleaved seeks/reads produced truncated or spuriously
+    // identity_changed results). Reading at an explicit, per-call offset
+    // (position-independent) instead makes concurrent calls on the same
+    // handle safe by construction: each call tracks its own progress
+    // locally and never mutates shared kernel-level position state.
     std::array<char, 64U * 1024U> buffer{};
+    std::uint64_t offset = 0U;
     for (;;) {
+        OVERLAPPED positioned{};
+        positioned.Offset = static_cast<DWORD>(offset & 0xFFFFFFFFU);
+        positioned.OffsetHigh = static_cast<DWORD>(offset >> 32U);
         DWORD bytes_read = 0U;
         if (::ReadFile(
                 native, buffer.data(), static_cast<DWORD>(buffer.size()),
-                &bytes_read, nullptr) == 0) {
+                &bytes_read, &positioned) == 0) {
+            if (::GetLastError() == ERROR_HANDLE_EOF) {
+                break;
+            }
             return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
         }
         if (bytes_read == 0U) {
@@ -698,6 +706,7 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
                 PhysicalPathContainmentFailure::size_limit_exceeded);
         }
         bytes.append(buffer.data(), bytes_read);
+        offset += bytes_read;
     }
 
     BY_HANDLE_FILE_INFORMATION after_information{};
@@ -720,19 +729,24 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
     if (!before_identity.content_equal(expected.identity)) {
         return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
     }
-    // The handle may already have been read from (this function takes the
-    // handle by const reference rather than consuming it, so nothing
-    // prevents a caller from calling it more than once). Reset to the start
-    // unconditionally so every call reads the whole object from byte 0,
-    // rather than silently returning a truncated read starting from
-    // whatever position an earlier call left the descriptor at.
-    if (::lseek(native, 0, SEEK_SET) != 0) {
-        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-    }
-
+    // This function takes the handle by const reference rather than
+    // consuming it, so nothing prevents either a second sequential call or
+    // -- more seriously -- concurrent calls from separate threads on the
+    // same handle. A single shared file-position cursor (::read(), which
+    // consumes and advances one process-wide-per-descriptor offset) would
+    // make concurrent callers race on that cursor: reads at this file's
+    // mutual offset are observably corrupted (empirically reproduced with a
+    // concurrent-access harness -- interleaved seeks/reads produced
+    // truncated or spuriously identity_changed results). Reading at an
+    // explicit, per-call offset via ::pread() instead makes concurrent
+    // calls on the same handle safe by construction: each call tracks its
+    // own progress locally and never mutates the descriptor's shared
+    // kernel-level position state.
     std::array<char, 64U * 1024U> buffer{};
+    std::uint64_t offset = 0U;
     for (;;) {
-        const ssize_t bytes_read = ::read(native, buffer.data(), buffer.size());
+        const ssize_t bytes_read = ::pread(
+            native, buffer.data(), buffer.size(), static_cast<off_t>(offset));
         if (bytes_read < 0) {
             if (errno == EINTR) {
                 continue;
@@ -749,6 +763,7 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
                 PhysicalPathContainmentFailure::size_limit_exceeded);
         }
         bytes.append(buffer.data(), static_cast<std::size_t>(bytes_read));
+        offset += byte_count;
     }
 
     struct stat after_status{};

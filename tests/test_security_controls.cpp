@@ -1460,10 +1460,12 @@ void test_physical_path_containment_handle_based_read_survives_path_swap() {
 
         // A caller may legitimately call this function more than once on the
         // same handle (it takes a const&, nothing consumes or marks it
-        // read-once). Without resetting the file position on every call, a
-        // second call would start reading from wherever the first call left
-        // off (EOF) and spuriously fail with identity_changed on the
-        // resulting truncated read.
+        // read-once). Each call reads at its own explicit offset starting
+        // from 0 (position-independent pread()/offset-based ReadFile()) --
+        // without that, a second call would start reading from wherever the
+        // first call left the descriptor's shared cursor (EOF) and
+        // spuriously fail with identity_changed on the resulting truncated
+        // read.
         const auto second_handle_based_snapshot =
             copperfin::security::read_physically_contained_file_snapshot_from_handle(
                 handle);
@@ -1472,6 +1474,71 @@ void test_physical_path_containment_handle_based_read_survives_path_swap() {
                "a second call to the handle-based read on the same handle must "
                "read the whole object again from the start, not a truncated "
                "read continuing from the first call's end position");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #5420 round-2 review: read_physically_contained_file_snapshot_from_handle()
+// takes its handle by const& with no documented single-caller restriction,
+// so concurrent calls from separate threads on the same handle are a real,
+// intended-to-be-safe use case, not misuse. An earlier version used a shared
+// file-position cursor (lseek()+read() / SetFilePointerEx()+ReadFile()) reset
+// at the top of every call, which raced under concurrent callers -- an
+// adversarial review's concurrent-access harness empirically reproduced
+// corrupted results (truncated reads, spurious identity_changed). Fixed by
+// reading at an explicit, per-call offset (pread() / offset-based ReadFile())
+// so concurrent calls never share mutable position state. This test can't
+// force the exact interleaving the original bug needed to manifest, but it
+// exercises many concurrent readers of a large-enough file that a
+// position-sharing regression reliably produces wrong bytes somewhere across
+// repeated runs.
+void test_physical_path_containment_handle_based_read_is_safe_for_concurrent_reads() {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_physical_path_containment_concurrent_read_tests";
+    const fs::path package_root = temp_root / "package";
+    const fs::path content_root = package_root / "content";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(content_root);
+
+    const fs::path target_file = content_root / "target.prg";
+    std::string expected_bytes;
+    for (int line = 0; line < 4096; ++line) {
+        expected_bytes += "? \"line " + std::to_string(line) + "\"\n";
+    }
+    write_file_bytes(target_file, expected_bytes);
+
+    auto handle = copperfin::security::inspect_and_open_physically_contained_path(
+        target_file,
+        package_root);
+    expect(handle.result().allowed,
+           "the target file should pass physical containment inspection");
+
+    if (handle.result().allowed) {
+        constexpr int reader_count = 8;
+        std::atomic<int> mismatches{0};
+        std::vector<std::thread> readers;
+        for (int reader = 0; reader < reader_count; ++reader) {
+            readers.emplace_back([&] {
+                const auto snapshot =
+                    copperfin::security::read_physically_contained_file_snapshot_from_handle(
+                        handle);
+                if (!snapshot.ok || snapshot.bytes != expected_bytes) {
+                    mismatches.fetch_add(1, std::memory_order_relaxed);
+                }
+            });
+        }
+        for (auto& reader : readers) {
+            reader.join();
+        }
+
+        expect(mismatches.load(std::memory_order_relaxed) == 0,
+               "concurrent handle-based reads on the same handle must each "
+               "independently read the complete, correct bytes -- issue "
+               "#5420's position-independent read fix");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -1511,6 +1578,7 @@ int main() {
 #endif
     test_physical_path_containment_rejects_indirection();
     test_physical_path_containment_handle_based_read_survives_path_swap();
+    test_physical_path_containment_handle_based_read_is_safe_for_concurrent_reads();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
