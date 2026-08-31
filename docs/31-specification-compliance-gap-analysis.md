@@ -70,7 +70,7 @@ flowchart TB
       RBAC["docs/18 Native Security And RBAC<br/>claims a current code baseline"]
       DOTNET["docs/11 .NET Bridge Spec<br/>full CLR host + marshaling +<br/>parity matrix spec'd"]
       POLYGLOT["docs/19 Polyglot And AI<br/>Subprojects - policy rules"]
-      FEDERATION["docs/21 Database Federation<br/>And Query Translation<br/>translator/planner shipped;<br/>no live connector execution"]
+      FEDERATION["docs/21 Database Federation<br/>And Query Translation<br/>translator/planner shipped;<br/>one live read-only SQLite<br/>connector (docs/49); no other<br/>backend connector execution"]
     end
 
     subgraph STUBS["Self-Reported Gaps"]
@@ -106,7 +106,7 @@ flowchart TB
     class RBAC seed;
     class DOTNET seed;
     class POLYGLOT seed;
-    class FEDERATION seed;
+    class FEDERATION partial;
     class STUBINV matrix;
     class FOUND,LANG,PIPE,SEC,STUBS lane;
 ```
@@ -240,7 +240,8 @@ the full migration pipeline remains one of the widest gaps in the review.
 
 This is a **coverage matrix**, not a pass/fail contract: it documents the full
 official VFP9 language surface — **429 commands, 413 functions, 323 properties,
-83 methods, 72 system variables, 69 events, 22 objects — 1,411 documented items
+83 methods, 72 system variables, 69 events, 22 objects, 4 preprocessor
+directives, 3 operators — 1,418 documented items
 total** — and tracks per-symbol Copperfin coverage against it, hundreds of entries
 deep, each phrased as "documented VFP9 behavior → current partial coverage claim
 → explicitly excluded remaining behavior."
@@ -605,7 +606,7 @@ excluded from the compliance map above:
 | 19 | Polyglot And AI Subprojects | Partial (portable artifact boundary, route executor, trusted host composition, PRG seam, Native AOT C# leaf, admitted Python/R sidecar leaves, advisory measured-route strategy, versioned benchmark evidence, bounded read-only MCP DBF-header host, and non-executing agent file/process target preflights) | No general CLR/Python/R runtime surface or broader model/provider and mutable MCP tooling |
 | 20 | Runtime Build And Debug Pipeline | Partial | Engine is PRG-first, not the full command surface |
 | 21 | Database Federation And Query Translation | Partial (real seed) | No live connector execution behind the translator/planner |
-| 22 | VFP Language Reference Coverage | Partial, measured | 1,411 documented items; official surface exceeds current runtime |
+| 22 | VFP Language Reference Coverage | Partial, measured | 1,418 documented items; official surface exceeds current runtime |
 | 25 | Engine Concurrency Policy | Met for current implementation | Shared blocking-policy helper and focused native coverage verify the four invariants; hosted cross-platform evidence remains a release gate |
 | 27 | Known VFP9 Bug Exceptions Registry | Scaffold-only | Zero entries |
 | 29 | Package Trust Contract | Partial | Unsigned fallback is still the default; POSIX/macOS unclaimed |
@@ -621,3 +622,17 @@ excluded from the compliance map above:
   and does not claim overall project completion percentages.
 - Refresh it when a cited document's own status language changes, or when a
   gap closes and should move to the historical record instead.
+- 2026-08-31 correction: the Database Federation node (both the inline map
+  and the detailed diagram) still read "no live connector execution" and
+  classified `FEDERATION` as `seed`, contradicting this file's own prose two
+  paragraphs later, which already documented a real, tested, read-only local
+  SQLite connector (`docs/49`) with a Windows/Linux/macOS hosted build lane.
+  Verified against `src/platform/sqlite_federation_connector.cpp` and its
+  test files directly (they exist and are wired into the build), not just
+  against the docs. Reclassified to `partial` and narrowed the stated gap to
+  the remaining non-SQLite backends. Separately, `docs/22`'s official VFP9
+  surface count grew from 1,411 to 1,418 documented items (it now also lists
+  4 preprocessor-directive and 3 operator entries); this file's two citations
+  of the stale 1,411 total (prose and summary table) are corrected to match.
+  Neither correction changes any other document's status language, so no
+  further rows moved.
