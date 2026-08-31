@@ -1,3 +1,110 @@
+- 2026-08-31: Added `inspect_and_open_physically_contained_path()` and
+  `read_physically_contained_file_snapshot_from_handle()`
+  (`RQ-CF-CONTAINMENT-001`, issue #5409, slice #5420): an additive-only,
+  opt-in pair that closes the residual TOCTOU window
+  `read_physically_contained_file_snapshot()` still has -- it reopens
+  the checked path by string, binding the object it reads to the object
+  the check verified only via an identity comparison, not structurally.
+  The new pair instead carries the check-phase `openat()`/`CreateFileW`
+  walk's own verified descriptor/handle forward (via a new move-only,
+  PIMPL'd `PhysicalPathContainmentHandle` that keeps this public header
+  free of platform-selection tokens, per the lesson from PR #5418's
+  `scoped_resource.h` fix) and reads from it directly, so the object
+  read can never differ from the object verified, on any platform.
+  `inspect_physical_path_containment()` was refactored to share the
+  same underlying walk (`inspect_and_walk()`) so there is one source of
+  truth. No existing call site changed in this slice; call-site
+  migration is separate follow-up scope (issues #5421, #5422). Writing
+  the new closed-window regression test surfaced a real defect before
+  merge: the handle-based read's before/after identity re-check
+  initially reused the full `PhysicalPathIdentity` comparison
+  (including `link_count`), but the test's swap scenario legitimately
+  unlinks the checked path, which drops the still-open descriptor's
+  `st_nlink` from 1 to 0 without touching any content (confirmed via a
+  standalone repro) -- spuriously failing exactly the substitution
+  scenario the new function exists to survive. Fixed with a dedicated
+  comparison that excludes `link_count`, used only by the new
+  handle-based path; the string-reopening function's original
+  comparison is unchanged. Verified the regression test actually
+  catches this by temporarily reverting the fix and observing it fail,
+  then restoring it. An adversarial `/code-review` pass found three
+  further real issues before merge: (1) the handle-based read never
+  reset the handle/descriptor's file position, so a second call on the
+  same handle (nothing in the API prevents this -- it takes the handle
+  by `const&`, not by consuming it) would read from wherever the first
+  call left off and spuriously fail with `identity_changed` on the
+  resulting truncated read; fixed by seeking to the start
+  unconditionally at the top of every read
+  (`SetFilePointerEx`/`lseek`), with a new regression test proving a
+  second call on the same handle reads the whole object again; (2) on
+  Windows, a `GetFileInformationByHandle()` API failure and an actual
+  reparse-point detection were both reported as `indirect_component`,
+  which would misreport a transient API failure as a symlink-attack
+  rejection in security audit logs once callers migrate to this
+  function (#5421, #5422); split into `read_failed` for the API
+  failure and `indirect_component` only for a genuine reparse point,
+  matching the POSIX branch's existing separation of failure reasons;
+  (3) the link-count-excluding comparison duplicated
+  `PhysicalPathIdentity::operator==`'s field list in a different file,
+  risking silent drift if a field is ever added to one but not the
+  other; fixed by moving the shared field comparison onto
+  `PhysicalPathIdentity` itself as a new `content_equal()` method, with
+  `operator==` now defined as `content_equal() && link_count ==
+  ...` so both live in the same struct and the relationship between
+  them is explicit. A second adversarial review pass, using a
+  compiled concurrent-access harness under ASan/UBSan, empirically
+  reproduced a real race: the handle-based read used a shared
+  file-position cursor (`lseek()`+`read()` / `SetFilePointerEx()`+
+  `ReadFile()`, reset at the top of every call so the handle could be
+  read more than once), so concurrent calls from separate threads on
+  the same handle raced on that cursor -- 1 to 5 of 8 concurrent calls
+  returned corrupted (truncated or spuriously `identity_changed`)
+  results across repeated runs. Fixed by switching to
+  position-independent reads (`pread()` on POSIX; offset-based
+  `ReadFile()` via an `OVERLAPPED` structure, handling
+  `ERROR_HANDLE_EOF` explicitly, on Windows), where each call tracks
+  its own read offset locally and never mutates shared kernel-level
+  cursor state -- this also removes the need for the round-2 seek fix
+  entirely. Added a regression test spawning 8 threads that read the
+  same handle concurrently and confirming every thread gets the
+  complete, correct bytes; verified it reliably catches the race by
+  temporarily reintroducing the shared-cursor pattern (10/10 failures)
+  and confirmed clean after restoring the fix (10/10 passes). The same
+  review pass also found the new handle-based read duplicates most of
+  the read-loop/identity-recheck structure already in the pre-existing
+  string-reopening read function, and that the "query native info ->
+  reject reparse/directory -> build identity" sequence is now written
+  three times in this file -- deliberately deferred as issue #5424
+  rather than expanding this already-multi-round fix's scope to touch
+  the pre-existing, already twice-reviewed string-reopening function's
+  internals. A third adversarial review pass found one further real
+  issue: the handle-based read's returned
+  `PhysicalFileSnapshotResult.containment` was the stale, check-time
+  identity snapshot rather than the freshly re-verified post-read one
+  the function already computes and discards. Several existing callers
+  (`workspace_agent_target_containment.cpp`,
+  `workspace_agent_process_containment.cpp`,
+  `runtime_pipeline_package_content_io.cpp`) use the returned
+  `link_count` as a security gate against hardlink-based confinement
+  bypass; since `content_equal()` deliberately excludes `link_count`
+  from the freshness check itself (a still-open handle's content is
+  unaffected by its directory-entry count), a hard link added during
+  the read window would have been silently invisible to any future
+  caller relying on the returned snapshot's `link_count`. Fixed by
+  returning the already-computed post-read identity instead of the
+  pre-read one, with a new regression test proving the returned
+  `link_count` reflects a hard link added after the check but before
+  the read. Also fixed: a stale reference to the renamed
+  `content_identity_matches()` helper (now `content_equal()`) in
+  `docs/32-recovered-requirements-traceability.md`; and unified the
+  `InternalContainmentWalk`/`PhysicalPathContainmentHandle::Impl`
+  duplicate struct pair (identical fields, manual field-by-field copy
+  between them) via inheritance, removing both the duplication and the
+  copy. One further finding -- a redundant native-info syscall inside
+  the walk that predates this PR -- was noted on the existing follow-up
+  issue #5424 rather than opened separately, since it touches the same
+  code paths that issue's scope already covers.
+
 - 2026-08-31: Consolidated the move-only POSIX-descriptor and Windows-HANDLE
   RAII wrapper classes (issue #5408) that had been hand-duplicated -- with
   small, real interface differences -- across `physical_path_containment.cpp`
