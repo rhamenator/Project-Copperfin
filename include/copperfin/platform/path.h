@@ -46,4 +46,37 @@ std::string path_dos_8dot3_filename(const std::filesystem::path& value);
 // facility report no label rather than manufacturing one.
 std::optional<std::string> path_volume_label(const std::filesystem::path& value);
 
+// Reports whether any component of path contains an embedded NUL character.
+// Used by strict path-spelling checks that must reject an untrusted path
+// before it ever reaches a filesystem call, since a NUL truncates most
+// native APIs' view of a string.
+bool path_has_embedded_nul(const std::filesystem::path& path);
+
+// Reports whether any component of path is exactly "." or "..". Used by
+// strict relative-path-spelling checks that must reject traversal or
+// self-reference components before a path is joined onto a trusted root.
+bool path_has_dot_component(const std::filesystem::path& path);
+
+// Reports whether any component of path ends in a trailing '.' or ' '.
+// Win32's CreateFileW/GetFullPathNameW silently strip a trailing '.' or ' '
+// from each path component before resolving it, so e.g. "tool." and "tool "
+// name the same object as "tool" -- a component-boundary check alone cannot
+// reject this, it must inspect each component's own last character. Always
+// returns false on non-Windows platforms, where this aliasing does not
+// occur.
+bool path_has_windows_alias_prone_component(const std::filesystem::path& path);
+
+// Reports whether any component of path is a reserved Windows device name
+// (CON, PRN, AUX, NUL, COM1-COM9, LPT1-LPT9), matched case-insensitively
+// against the portion of the component before its first '.' or ':' --
+// Windows recognizes these names as device objects even when followed by an
+// extension ("NUL.txt") or by legacy MS-DOS colon-terminated device syntax
+// ("NUL:", "NUL:hidden.txt"), both still honored by Win32 path resolution
+// for backward compatibility. CreateFileW on such a component opens the
+// device object rather than a regular file or directory with that name.
+// Always returns false on non-Windows platforms, where these names have no
+// special meaning.
+bool path_has_reserved_windows_device_name_component(
+    const std::filesystem::path& path);
+
 }  // namespace copperfin::platform
