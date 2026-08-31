@@ -373,6 +373,41 @@ void test_configuration_and_layout_fail_closed() {
     expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
                 trailing_space_system_root).has_value(),
            "RQ-CF-AGENT-012: a trailing-space Windows system root must fail");
+
+    // Windows reserves these names as device objects regardless of extension
+    // or directory: CreateFileW("NUL", ...) opens the NUL device, not a
+    // directory with that name, so the strict-spelling check must reject
+    // them before they are ever used to bind trust.
+    auto device_name_storage = tree.configuration();
+    device_name_storage.trusted_session_storage_root =
+        tree.session_storage / "NUL";
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                device_name_storage).has_value(),
+           "RQ-CF-AGENT-#5404: a reserved Windows device name session storage root must fail");
+
+    auto device_name_executable_directory = tree.configuration();
+    device_name_executable_directory.trusted_executable_directories = {
+        tree.approved_one / "COM1"};
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                device_name_executable_directory).has_value(),
+           "RQ-CF-AGENT-#5404: a reserved Windows device name approved executable directory must fail");
+
+    auto device_name_system_root = tree.configuration();
+    device_name_system_root.trusted_windows_system_root =
+        tree.windows_system_root / "con";
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                device_name_system_root).has_value(),
+           "RQ-CF-AGENT-#5404: a reserved Windows device name Windows system root must fail");
+
+    // Legacy MS-DOS device syntax ("NUL:", "COM1:") is still honored by
+    // Win32 path resolution, so a naive check that only splits a component
+    // on '.' can be bypassed by appending ':' plus arbitrary text.
+    auto colon_device_name_storage = tree.configuration();
+    colon_device_name_storage.trusted_session_storage_root =
+        tree.session_storage.parent_path() / "NUL:hidden";
+    expect(!WorkspaceAgentIsolatedEnvironmentBoundary::create(
+                colon_device_name_storage).has_value(),
+           "RQ-CF-AGENT-#5404: a colon-suffixed reserved Windows device name session storage root must fail");
 #else
     auto unexpected_system_root = tree.configuration();
     unexpected_system_root.trusted_windows_system_root = tree.windows_system_root;

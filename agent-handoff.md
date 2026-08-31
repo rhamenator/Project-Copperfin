@@ -98,6 +98,68 @@ locally — this is exactly the kind of change where the manual full-suite
 dispatch above is not optional, per the standing fact below about
 `v1-development` PRs not getting full native validation by default.
 
+## In-progress: PR #5410 (reserved Windows device names, fixes #5404), not yet merged
+
+**Steering-continuity record** — as of commit `dcce82510` (2026-08-31), a
+fresh Windows Native Validation dispatch (run `33346352974`) is in flight
+and must come back green before merge; check with `gh run list
+--workflow="Windows Native Validation" --branch
+agent/v1-windows-reserved-device-names`. History: run `33330701297`
+against commit `41a1b3da1` came back green, but that commit was superseded
+by a rebase onto merged PR #5407 (head became `cde053245`, requiring
+manual `seq`-collision renumbering in `.agent-channel/log.jsonl`, an
+accepted risk the channel README documents); that rebase's own CI run
+(`33345554677`) was then superseded again and cancelled once the
+adversarial review below produced a real fix. Only the run against
+`dcce82510` or later should be trusted.
+
+The adversarial `/code-review` pass that had failed earlier (session hit
+its monthly Claude API spend limit mid-run) was re-run successfully once
+the limit reset and found a real bug: `path_component_is_reserved_windows_device_name()`
+(added by this PR) only split a component on `.`, so a colon-suffixed form
+(`NUL:`, `NUL:hidden.txt`, `com1:stream`) bypassed it entirely — legacy
+MS-DOS device syntax is still honored by Win32 path resolution for
+backward compatibility, a well-known bypass class for naive reserved-name
+checks. Confirmed **attacker-reachable** in `workspace_agent_target_containment.cpp`
+(target/local-file paths are provider/model/prompt/workspace-supplied per
+its own header docs) — highest severity. Also present but lower-urgency in
+`workspace_agent_audit_sink.cpp` (no production caller yet, only tests)
+and `workspace_agent_environment.cpp` (trusted product-host config, not
+attacker input — defense-in-depth only). `workspace_agent_process_containment.cpp`
+was accidentally unaffected because it independently rejects any `:` via
+its own pre-existing check, but was fixed too for consistency. Fixed in
+commit `dcce82510` by splitting on the first of `.` OR `:` in all four
+duplicated copies of the helper, with new regression coverage for the
+colon-suffixed bypass in three of the four test files. Also commented on
+issue #5405 (the pre-existing DRY-duplication tracking issue) since this
+bug is concrete proof of the exact drift risk that issue describes: three
+of the four duplicated copies shared the identical bug, masked in the
+fourth file only by an unrelated, independent check.
+
+PR #5410 adds `path_has_reserved_windows_device_name_component()` (Windows
+only, no-op on POSIX) to the same four files PR #5399 patched for the
+trailing-dot/trailing-space alias class — `workspace_agent_target_containment.cpp`,
+`workspace_agent_process_containment.cpp`, `workspace_agent_environment.cpp`,
+`workspace_agent_audit_sink.cpp` — closing the related-but-distinct gap
+where a component literally named `CON`/`NUL`/`COM1`/etc. (with or without
+an extension) passed every existing check and would open the corresponding
+Win32 device object instead of a regular file/directory. New
+`RQ-CF-AGENT-030` traceability row; regression coverage (`NUL`, `con`,
+`COM1`, `lpt1.txt`) added to all four corresponding test files, following
+the exact pattern the trailing-dot/trailing-space tests already use. Fully
+verified on Linux that nothing regressed (5 affected binaries build and
+pass unchanged), but since the new checks are Windows-only and compiled
+out entirely on POSIX, this local run does not exercise the new code path
+at all — the pending Windows dispatch above is the only evidence that
+matters for this PR, not merely the standing extra-diligence practice.
+
+This branch has **no file overlap** with PR #5407 (`physical_path_containment.cpp`)
+or the planned next pickup for #5402 (`external_process_policy.cpp`) — all
+three were deliberately kept on separate branches off `v1-development` so
+they can proceed in parallel without collision; each will carry its own
+`agent-handoff.md`/`CHANGELOG.md`/traceability additions into
+`v1-development` independently when it merges.
+
 ## Shipped: PR #5399 (Windows path-alias rejection), merged as `9f00f388d`
 
 Two adversarial `/code-review` passes plus a full unrestricted
