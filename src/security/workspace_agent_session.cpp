@@ -4,6 +4,8 @@
 
 #include "copperfin/security/workspace_agent_session.h"
 
+#include "copperfin/security/workspace_agent_session_test_hooks.h"
+
 #include "../platform/bounded_process_private.h"
 
 #include "copperfin/platform/path.h"
@@ -211,6 +213,11 @@ static_assert(
     "RQ-CF-AGENT-028: a completed private launch must reach outcome audit without allocating while transferring its result");
 
 namespace {
+
+// See workspace_agent_session_test_hooks.h. Relaxed ordering is sufficient:
+// this exists only for single-threaded test setup/teardown around a call to
+// stop(), never for production synchronization.
+std::atomic<void (*)()> stop_test_only_throw_hook{nullptr};
 
 std::atomic<std::uint64_t> next_workspace_agent_operation_id{1U};
 
@@ -551,6 +558,11 @@ bool same_serialized_process_invocation(
 
 }  // namespace
 
+void set_workspace_agent_session_stop_test_only_throw_hook_for_testing(
+    void (*hook)()) {
+    stop_test_only_throw_hook.store(hook, std::memory_order_relaxed);
+}
+
 WorkspaceAgentSessionController::WorkspaceAgentSessionController(
     const std::filesystem::path& trusted_absolute_workspace_root)
     : file_target_boundary_(WorkspaceAgentFileTargetBoundary::create(
@@ -857,44 +869,65 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
         revocation_state = active_revocation_lease_state_;
     }
 
-    // A lease is held only around a future direct launch decision. Waiting
-    // here ensures stop cannot report revocation in the middle of that narrow
-    // boundary. The lease release path never takes the controller mutex.
-    if (revocation_state != nullptr) {
-        std::unique_lock revocation_lock(revocation_state->mutex);
-        revocation_state->released.wait(revocation_lock, [&revocation_state] {
-            return revocation_state->outstanding_leases == 0U;
-        });
-        revocation_state->active = false;
-    }
-    {
-        std::lock_guard lock(mutex_);
-        active_session_ = {};
-        active_revocation_lease_state_.reset();
-    }
+    // Mirrors start()'s catch(...)-then-reset-then-rethrow guard around this
+    // entire post-transition-flag section (issue #5401): without it, an
+    // exception here (allocation failure, an OS mutex/condition-variable
+    // primitive throwing) would leave transition_ stuck at stopping forever,
+    // permanently denying every later start()/cleanup_pending_session_layout()/
+    // acquire_process_launch_revocation_lease() call with
+    // session_transition_in_progress.
+    try {
+        if (const auto hook =
+                stop_test_only_throw_hook.load(std::memory_order_relaxed);
+            hook != nullptr) {
+            stop_test_only_throw_hook.store(nullptr, std::memory_order_relaxed);
+            hook();
+        }
 
-    const WorkspaceAgentSessionAuditEvent event{
-        .kind = WorkspaceAgentSessionEventKind::stop,
-        .session_generation = revoked_session.generation,
-        .requested_mode = revoked_session.effective_mode,
-        .effective_mode = WorkspaceAgentAccessMode::advisory,
-        .outcome = "revoked",
-        .diagnostic_code = "workspace_agent.session_stopped"};
-    const AuditOutcome audit = commit_audit_event(event, audit_sink, this);
+        // A lease is held only around a future direct launch decision. Waiting
+        // here ensures stop cannot report revocation in the middle of that
+        // narrow boundary. The lease release path never takes the controller
+        // mutex.
+        if (revocation_state != nullptr) {
+            std::unique_lock revocation_lock(revocation_state->mutex);
+            revocation_state->released.wait(revocation_lock, [&revocation_state] {
+                return revocation_state->outstanding_leases == 0U;
+            });
+            revocation_state->active = false;
+        }
+        {
+            std::lock_guard lock(mutex_);
+            active_session_ = {};
+            active_revocation_lease_state_.reset();
+        }
 
-    WorkspaceAgentSessionStopResult result;
-    result.revoked = true;
-    result.audit_committed = audit.committed;
-    result.audit_receipt = audit.receipt;
-    result.diagnostic_code = audit.committed
-        ? event.diagnostic_code
-        : "workspace_agent.session_stop_audit_commit_failed";
-    {
+        const WorkspaceAgentSessionAuditEvent event{
+            .kind = WorkspaceAgentSessionEventKind::stop,
+            .session_generation = revoked_session.generation,
+            .requested_mode = revoked_session.effective_mode,
+            .effective_mode = WorkspaceAgentAccessMode::advisory,
+            .outcome = "revoked",
+            .diagnostic_code = "workspace_agent.session_stopped"};
+        const AuditOutcome audit = commit_audit_event(event, audit_sink, this);
+
+        WorkspaceAgentSessionStopResult result;
+        result.revoked = true;
+        result.audit_committed = audit.committed;
+        result.audit_receipt = audit.receipt;
+        result.diagnostic_code = audit.committed
+            ? event.diagnostic_code
+            : "workspace_agent.session_stop_audit_commit_failed";
+        {
+            std::lock_guard lock(mutex_);
+            transition_ = Transition::idle;
+            result.session = active_session_;
+        }
+        return result;
+    } catch (...) {
         std::lock_guard lock(mutex_);
         transition_ = Transition::idle;
-        result.session = active_session_;
+        throw;
     }
-    return result;
 }
 
 WorkspaceAgentSessionSnapshot WorkspaceAgentSessionController::snapshot() const {

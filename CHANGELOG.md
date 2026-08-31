@@ -1,3 +1,26 @@
+- 2026-08-31: Fixed an exception-safety gap in
+  `WorkspaceAgentSessionController::stop()` (`RQ-CF-AGENT-005`, issue
+  #5401): `start()` already wraps its post-transition-flag critical
+  section in `try { ... } catch (...) { transition_ = idle; throw; }` so
+  an exception mid-transition can't leave `transition_` stuck, but
+  `stop()` had no equivalent guard around the work it performs after
+  setting `transition_ = stopping` (copying/clearing `active_session_`,
+  waiting on the outstanding-leases condition variable) -- an exception
+  there (allocation failure, an OS mutex/condition-variable primitive
+  throwing) would leave `transition_` permanently at `stopping`,
+  irrecoverably denying every later `start()`/`cleanup_pending_session_layout()`/
+  `acquire_process_launch_revocation_lease()` call with
+  `session_transition_in_progress` until a process restart. Fixed by
+  adding the same guard `start()` already has. Verified via a new,
+  narrowly-scoped test-only fault-injection hook
+  (`include/copperfin/security/workspace_agent_session_test_hooks.h`,
+  a free function rather than a method on the security-hardened
+  controller class, to keep its own public API free of test-only
+  surface) since the real trigger (allocation/OS-primitive failure)
+  cannot be reproduced deterministically through the public API; the
+  added regression was confirmed to fail without the fix before being
+  confirmed to pass with it. No API or non-exceptional behavior change.
+
 - 2026-08-30: Fixed a heap buffer over-read in two Win32 version-resource
   string extractors (`RQ-CF-EXTERNAL-PROCESS-001`, issue #5402):
   `get_company_name()` (`external_process_policy.cpp`) and
