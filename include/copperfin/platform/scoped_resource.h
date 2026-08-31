@@ -5,6 +5,19 @@
 #pragma once
 
 #if defined(_WIN32)
+// This is the first windows.h inclusion for every current consumer of this
+// header. windows.h has internal include guards, so a later, differently
+// configured #include <windows.h> in the consumer (e.g. audit_stream.cpp's
+// own NOMINMAX guard, physical_path_containment.cpp's own
+// WIN32_LEAN_AND_MEAN guard) would be a silent no-op against the
+// unconfigured processing already done here -- defining both up front
+// keeps every consumer's own guard block consistent instead of dead code.
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #else
 #include <unistd.h>

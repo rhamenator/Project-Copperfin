@@ -22,7 +22,26 @@
   `test_security_audit_concurrency`, `test_workspace_agent_target_containment`,
   `test_workspace_agent_process_containment`, `test_workspace_agent_audit_sink`,
   `test_runtime_host_audit_containment`, `test_runtime_host_audit_stream`)
-  pass unchanged.
+  pass unchanged. An adversarial `/code-review` pass found that the new
+  `scoped_resource.h` included `<windows.h>` unguarded, before any
+  consumer's own `NOMINMAX`/`WIN32_LEAN_AND_MEAN` guard could take effect
+  -- since `<windows.h>` carries its own internal include guards, that
+  first unguarded processing made every consumer's later, differently
+  configured `#include <windows.h>` a silent no-op against already-set
+  state, most seriously defeating `audit_stream.cpp`'s `NOMINMAX` guard
+  and leaving its several unparenthesized
+  `std::numeric_limits<std::size_t>::max()`/`std::min<std::size_t>(...)`
+  call sites exposed to the `windows.h` `max`/`min` macros on a Windows
+  build (this codebase has hit exactly this class of bug before, per
+  the `prg_engine_helpers.cpp` NOMINMAX-ordering entry earlier in this
+  file). Fixed by having `scoped_resource.h` itself define both
+  `WIN32_LEAN_AND_MEAN` and `NOMINMAX` (each `#ifndef`-guarded) before
+  its own first `<windows.h>` inclusion, so every consumer's later guard
+  block sees consistent, already-satisfied state instead of dead code.
+  Confirmed none of the three consumer files use any
+  `WIN32_LEAN_AND_MEAN`-excluded API (grepped for GDI/WinSock/RPC/DDE/
+  Crypt/Shell symbols across all three -- none found). All ten affected
+  tests re-verified passing after the fix.
 
 - 2026-08-30: Fixed a heap buffer over-read in two Win32 version-resource
   string extractors (`RQ-CF-EXTERNAL-PROCESS-001`, issue #5402):
