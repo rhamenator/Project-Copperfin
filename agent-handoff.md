@@ -1,25 +1,14 @@
 # Agent Handoff
 
-## In-progress: PR #5407 (TOCTOU fix for #5400), not yet merged
+## Shipped: PR #5407 (TOCTOU fix for #5400), merged as `93b0acbd9` (squash)
 
-**Steering-continuity record** — this is running only as a background
-workflow dispatch of the active session and would leave no trace if the
-session stops before reporting. If you cannot find this result already
-reported/acted on, re-run before merging:
-`gh workflow run "Windows Native Validation" --ref agent/v1-physical-path-containment-toctou`
-(check completion with `gh run list --workflow="Windows Native Validation"
---branch agent/v1-physical-path-containment-toctou`). As of commit
-`af352b005` (2026-08-30, the current branch tip after 2 rounds of
-adversarial-review fixes), a Windows Native Validation dispatch (run
-`33330266844`) against that exact commit is in flight. Every earlier
-Windows dispatch (`33328528574` against `182888a4e`, `33329378451` against
-`51c61cbda`) was against a superseded commit and must not be trusted even
-if its cached result is found green — only a run against `af352b005` or
-later counts. Two full adversarial `/code-review` passes have already run
-against this branch (see below for both rounds' findings) and a third was
-judged not worth its cost given round 2's changes were narrow and mostly
-mirror already-tested patterns elsewhere in the codebase; real Windows CI
-execution is the actual remaining gate, not another text review.
+Windows Native Validation dispatch (run `33330266844`) against the final
+commit `af352b005` came back green; two full adversarial `/code-review`
+passes had already run against this branch and a third was judged not
+worth its cost given round 2's changes were narrow and mostly mirrored
+already-tested patterns elsewhere in the codebase. Merged and branch
+deleted (`agent/v1-physical-path-containment-toctou`, both remote and
+local refs).
 
 PR #5407 fixes #5400 (the TOCTOU race in `inspect_physical_path_containment`)
 via `openat()`+`O_NOFOLLOW` descriptor chaining on POSIX and a merged
