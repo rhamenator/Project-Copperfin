@@ -70,16 +70,23 @@ dispatch above is not optional, per the standing fact below about
 
 ## In-progress: PR #5410 (reserved Windows device names, fixes #5404), not yet merged
 
-**Steering-continuity record** — this is running only as background
-subagents/workflow dispatches of the active session and would leave no
-trace if the session stops before reporting. If you cannot find these
-results already reported/acted on, re-run before merging:
-`/code-review --branch agent/v1-windows-reserved-device-names max`, and
-`gh workflow run "Windows Native Validation" --ref agent/v1-windows-reserved-device-names`
-(check completion with `gh run list --workflow="Windows Native Validation"
---branch agent/v1-windows-reserved-device-names`). As of commit
-`41a1b3da1` (2026-08-30) both are in flight against that exact commit
-(Windows dispatch run `33330701297`).
+**Steering-continuity record** — the Windows Native Validation dispatch
+completed clean (run `33330701297` against commit `41a1b3da1`, `SUCCESS`),
+but the adversarial `/code-review` pass against this branch **failed and
+delivered no findings**: it was terminated mid-run by the session hitting
+its monthly Claude API spend limit (`your session limit resets 7:10pm
+America/Detroit`, 2026-08-30), not by completing normally. Its last
+recorded line before termination was "Now let me re-verify the
+colon/stream-syntax bypass hypothesis against these correct file
+snapshots" — it may have been onto something real involving
+`path_has_windows_device_or_stream_syntax()` in
+`workspace_agent_process_containment.cpp` (a pre-existing colon/UNC/device
+check, separate from this PR's own device-name addition) interacting with
+the new check, but this was never confirmed or reported. **Do not treat
+this PR as adversarially reviewed** — re-run
+`/code-review --branch agent/v1-windows-reserved-device-names max` once
+the spend limit resets (or in a fresh session/billing period) before
+merging, exactly as was done for PR #5399 and PR #5407.
 
 PR #5410 adds `path_has_reserved_windows_device_name_component()` (Windows
 only, no-op on POSIX) to the same four files PR #5399 patched for the
