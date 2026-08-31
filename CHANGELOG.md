@@ -62,6 +62,69 @@
   All eleven affected tests, including the previously-failing contract
   check, now pass locally.
 
+- 2026-08-31: Fixed an exception-safety gap in
+  `WorkspaceAgentSessionController::stop()` (`RQ-CF-AGENT-005`, issue
+  #5401): `start()` already wraps its post-transition-flag critical
+  section in `try { ... } catch (...) { transition_ = idle; throw; }` so
+  an exception mid-transition can't leave `transition_` stuck, but
+  `stop()` had no equivalent guard around the work it performs after
+  setting `transition_ = stopping` (copying/clearing `active_session_`,
+  waiting on the outstanding-leases condition variable) -- an exception
+  there (allocation failure, an OS mutex/condition-variable primitive
+  throwing) would leave `transition_` permanently at `stopping`,
+  irrecoverably denying every later `start()`/`cleanup_pending_session_layout()`/
+  `acquire_process_launch_revocation_lease()` call with
+  `session_transition_in_progress` until a process restart. Fixed by
+  adding the same guard `start()` already has. Verified via a new,
+  narrowly-scoped test-only fault-injection hook
+  (`include/copperfin/security/workspace_agent_session_test_hooks.h`,
+  a free function rather than a method on the security-hardened
+  controller class, to keep its own public API free of test-only
+  surface) since the real trigger (allocation/OS-primitive failure)
+  cannot be reproduced deterministically through the public API; the
+  added regression was confirmed to fail without the fix before being
+  confirmed to pass with it. No API or non-exceptional behavior change.
+  A first adversarial review found this initial fix incomplete -- the
+  `WorkspaceAgentSessionSnapshot` copy right after `transition_ =
+  stopping` was still outside the new guard and could itself throw --
+  fixed by replacing all three hand-copied `catch(...)` guards
+  (`start()`, `cleanup_pending_session_layout()`, `stop()`) with one
+  shared RAII `ResetOnExit<T>` helper armed immediately after each
+  method sets its non-idle transition value, closing the gap
+  structurally rather than by relocating a try block. A second
+  adversarial review found two further real issues in that helper
+  itself: it had no `disarm()`, so each method's own success-path
+  `transition_ = Transition::idle;` was always followed by the guard's
+  destructor redundantly re-locking and re-writing the same field after
+  the enclosing lock released -- an unlock/re-lock window in which a
+  concurrent thread's legitimate transition could be silently clobbered
+  back to idle; and the destructor's `std::lock_guard` construction had
+  no exception handling, so a `std::mutex::lock()` throw (implicitly
+  `noexcept` destructor) would call `std::terminate()` and crash the
+  process, a strictly worse failure mode than the pre-refactor
+  hand-written `catch(...)` blocks it replaced. Fixed by adding
+  `ResetOnExit::disarm()`, called at each method's own explicit final
+  reset, and by swallowing an exception from the destructor's lock
+  (deliberately leaving the field non-idle on that unrecoverable path,
+  which is safe because every session entry point already fails closed
+  while non-idle). A third adversarial review found the test-only
+  fault-injection hook itself
+  (`workspace_agent_session_test_hooks.h`) had no macro gate, unlike
+  every other test-only hook in this codebase
+  (`COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS`,
+  `COPPERFIN_RUNTIME_HOST_TEST_HOOKS`): since `cf_security` links into
+  every production executable, the setter shipped in production,
+  letting any code with call access into the process force the next
+  `stop()` call anywhere to throw at the exact point authority had
+  changed but not yet been revoked. Fixed by gating the hook variable,
+  its call site, the setter, and the header's entire declaration behind
+  a new `COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS` macro,
+  defined only on `cf_security` and the test target when
+  `COPPERFIN_BUILD_TESTS` is on, matching the existing
+  `cf_runtime_pipeline`/`copperfin_runtime_host` convention. Verified
+  via a separate `-DCOPPERFIN_BUILD_TESTS=OFF` build: `nm` confirms the
+  hook symbol is entirely absent from the resulting `libcf_security.a`.
+
 - 2026-08-31: Consolidated four Windows path-safety predicates
   (`path_has_embedded_nul`, `path_has_dot_component`,
   `path_has_windows_alias_prone_component`,

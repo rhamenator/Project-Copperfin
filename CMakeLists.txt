@@ -223,6 +223,12 @@ endif()
 
 target_link_libraries(cf_security PRIVATE cf_localization cf_platform_support)
 
+if(COPPERFIN_BUILD_TESTS)
+    target_compile_definitions(cf_security PRIVATE
+        COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS=1
+    )
+endif()
+
 add_library(cf_licensing
     src/licensing/base64.cpp
     src/licensing/canonical_payload_serializer.cpp
