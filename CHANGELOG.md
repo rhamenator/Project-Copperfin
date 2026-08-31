@@ -1,3 +1,22 @@
+- 2026-08-31: Migrated `workspace_agent_process_parser.cpp`'s two
+  check-then-read pairs (`RQ-CF-CONTAINMENT-001`, issue #5409, slice
+  #5421) -- `capture_binding()` and `authorize_windows()`'s Windows
+  trusted-executable admission/re-authorization -- to
+  `inspect_and_open_physically_contained_path()` +
+  `read_physically_contained_file_snapshot_from_handle()`, so the
+  bytes read and hashed for a trusted binding are bound to the exact
+  object verified, never reopened by path string. `capture_binding()`
+  also dropped its separate `std::filesystem::is_regular_file()`
+  pre-check (another path-string resolution): the handle-based read
+  already rejects a non-regular-file target internally via the same
+  handle, and this function's only observable outcome either way is
+  `std::nullopt` -- confirmed unchanged by the existing directory-target
+  regression test in `tests/test_workspace_agent_process_parser.cpp`.
+  No other behavior change; the `link_count`/identity security gates
+  in both functions are unchanged, just evaluated against the
+  handle-based result's fields instead of the string-based one's.
+  Existing regression coverage passes unchanged.
+
 - 2026-08-31: Added `inspect_and_open_physically_contained_path()` and
   `read_physically_contained_file_snapshot_from_handle()`
   (`RQ-CF-CONTAINMENT-001`, issue #5409, slice #5420): an additive-only,

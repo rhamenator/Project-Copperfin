@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
-#include <system_error>
 #include <utility>
 
 namespace copperfin::security {
@@ -72,17 +71,21 @@ std::optional<CapturedExecutable> capture_binding(
         path.parent_path().empty()) {
         return std::nullopt;
     }
-    auto captured = inspect_physical_path_containment(path, path.parent_path());
-    std::error_code filesystem_error;
+    // Uses the atomic check-and-open primitive (issue #5409/#5420) so the
+    // read below is bound to the exact object just verified, never
+    // reopened by path string. The is_regular_file() pre-check the
+    // string-based version needed is no longer necessary: the handle-based
+    // read already rejects a non-regular-file target internally (via the
+    // same handle, not a further path-string resolution), and this
+    // function's only observable outcome either way is std::nullopt.
+    auto handle = inspect_and_open_physically_contained_path(path, path.parent_path());
+    const auto& captured = handle.result();
     if (!captured.allowed || captured.identity.link_count != 1U ||
-        captured.identity != binding.expected_identity ||
-        !std::filesystem::is_regular_file(
-            captured.canonical_path, filesystem_error) || filesystem_error) {
+        captured.identity != binding.expected_identity) {
         return std::nullopt;
     }
-    const auto snapshot = read_physically_contained_file_snapshot(
-        captured,
-        path.parent_path(),
+    const auto snapshot = read_physically_contained_file_snapshot_from_handle(
+        handle,
         workspace_agent_maximum_windows_process_parser_image_bytes);
     if (!snapshot.ok) {
         return std::nullopt;
@@ -162,17 +165,20 @@ WorkspaceAgentProcessParserBoundary::authorize_windows(
         return denied("workspace_agent.process_argument_parser_not_trusted");
     }
 
-    const auto current = inspect_physical_path_containment(
+    // Atomic check-and-open primitive (issue #5409/#5420): the read below
+    // is bound to the exact object this walk verified, never reopened by
+    // path string.
+    auto handle = inspect_and_open_physically_contained_path(
         binding->canonical_executable,
         binding->canonical_executable.parent_path());
+    const auto& current = handle.result();
     if (!current.allowed || current.canonical_path != binding->canonical_executable ||
         current.identity != binding->identity) {
         return denied("workspace_agent.process_argument_parser_identity_changed");
     }
 
-    const auto snapshot = read_physically_contained_file_snapshot(
-        current,
-        binding->canonical_executable.parent_path(),
+    const auto snapshot = read_physically_contained_file_snapshot_from_handle(
+        handle,
         workspace_agent_maximum_windows_process_parser_image_bytes);
     if (!snapshot.ok) {
         return denied("workspace_agent.process_argument_parser_identity_changed");
