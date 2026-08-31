@@ -4,6 +4,8 @@
 
 #include "copperfin/security/workspace_agent_session.h"
 
+#include "copperfin/security/workspace_agent_session_test_hooks.h"
+
 #include "../platform/bounded_process_private.h"
 
 #include "copperfin/platform/path.h"
@@ -211,6 +213,62 @@ static_assert(
     "RQ-CF-AGENT-028: a completed private launch must reach outcome audit without allocating while transferring its result");
 
 namespace {
+
+// Resets target to reset_value under mutex on destruction, unless disarmed
+// or never armed. This exists so every WorkspaceAgentSessionController
+// method that sets transition_ to a non-idle value can guarantee it is
+// restored on every exit path -- return or exception -- from a single
+// structural point instead of a hand-copied catch(...) block per method.
+// start()'s stop()'s original catch-based guard covered only exceptions
+// thrown after the guard was set up, not exceptions thrown by copying
+// state needed to set it up in the first place (issue #5401); arming this
+// guard immediately after the assignment it protects, before any other
+// work in the same critical section, closes that gap by construction.
+// Templated (rather than naming Transition explicitly) so this anonymous-
+// namespace helper needs no access to that private nested enum -- the type
+// is deduced from the constructor arguments inside each member function
+// that already has that access.
+template <typename T>
+class ResetOnExit {
+public:
+    ResetOnExit(std::mutex& mutex, T& target, T reset_value)
+        : mutex_(mutex), target_(target), reset_value_(std::move(reset_value)) {}
+    ResetOnExit(const ResetOnExit&) = delete;
+    ResetOnExit& operator=(const ResetOnExit&) = delete;
+    ~ResetOnExit() {
+        if (armed_) {
+            try {
+                std::lock_guard lock(mutex_);
+                target_ = reset_value_;
+            } catch (...) {
+                // A mutex primitive throwing here is an unrecoverable host
+                // condition with nothing safe to report it to (this can run
+                // while another exception is already unwinding). Swallow
+                // rather than let it escape a destructor and std::terminate()
+                // the whole process: every session entry point already
+                // fails closed (denies further start/stop/cleanup) while
+                // target_ is left at its non-idle value, so this degrades to
+                // "permanently fail-closed" instead of a crash.
+            }
+        }
+    }
+
+    void arm() noexcept { armed_ = true; }
+    void disarm() noexcept { armed_ = false; }
+
+private:
+    std::mutex& mutex_;
+    T& target_;
+    T reset_value_;
+    bool armed_ = false;
+};
+
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS)
+// See workspace_agent_session_test_hooks.h. Relaxed ordering is sufficient:
+// this exists only for single-threaded test setup/teardown around a call to
+// stop(), never for production synchronization.
+std::atomic<void (*)()> stop_test_only_throw_hook{nullptr};
+#endif
 
 std::atomic<std::uint64_t> next_workspace_agent_operation_id{1U};
 
@@ -551,6 +609,13 @@ bool same_serialized_process_invocation(
 
 }  // namespace
 
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS)
+void set_workspace_agent_session_stop_test_only_throw_hook_for_testing(
+    void (*hook)()) {
+    stop_test_only_throw_hook.store(hook, std::memory_order_relaxed);
+}
+#endif
+
 WorkspaceAgentSessionController::WorkspaceAgentSessionController(
     const std::filesystem::path& trusted_absolute_workspace_root)
     : file_target_boundary_(WorkspaceAgentFileTargetBoundary::create(
@@ -591,6 +656,7 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
     const WorkspaceAgentSessionAuditSink& audit_sink) {
     std::uint64_t candidate_generation = 0U;
     bool session_already_active = false;
+    ResetOnExit reset_guard(mutex_, transition_, Transition::idle);
     {
         std::lock_guard lock(mutex_);
         if (transition_ != Transition::idle) {
@@ -606,125 +672,122 @@ WorkspaceAgentSessionStartResult WorkspaceAgentSessionController::start(
             return result;
         }
         transition_ = Transition::starting;
+        reset_guard.arm();
         candidate_generation = next_generation_++;
         session_already_active = active_session_.active;
     }
 
-    try {
-        WorkspaceAgentActivationDecision decision;
-        if (session_already_active) {
-            decision = controller_denial("workspace_agent.session_already_active");
+    WorkspaceAgentActivationDecision decision;
+    if (session_already_active) {
+        decision = controller_denial("workspace_agent.session_already_active");
+    } else {
+        try {
+            decision = evaluate_workspace_agent_activation(request);
+        } catch (...) {
+            decision = controller_denial("workspace_agent.policy_evaluation_failed");
+        }
+    }
+    std::optional<WorkspaceAgentSessionLayoutPreparationResult> preparation;
+    std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState>
+        candidate_revocation_state;
+    if (decision.allowed && decision.capabilities.run_local_processes &&
+        process_environment_configuration_supplied_) {
+        if (!process_environment_boundary_.has_value()) {
+            decision = controller_denial(
+                "workspace_agent.session_environment_boundary_unavailable");
         } else {
             try {
-                decision = evaluate_workspace_agent_activation(request);
-            } catch (...) {
-                decision = controller_denial("workspace_agent.policy_evaluation_failed");
-            }
-        }
-        std::optional<WorkspaceAgentSessionLayoutPreparationResult> preparation;
-        std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState>
-            candidate_revocation_state;
-        if (decision.allowed && decision.capabilities.run_local_processes &&
-            process_environment_configuration_supplied_) {
-            if (!process_environment_boundary_.has_value()) {
-                decision = controller_denial(
-                    "workspace_agent.session_environment_boundary_unavailable");
-            } else {
-                try {
-                    bool cleanup_receipt_capacity_available = false;
-                    {
-                        std::lock_guard lock(mutex_);
-                        cleanup_receipt_capacity_available =
-                            pending_layout_cleanups_.size() <
-                            workspace_agent_session_max_pending_layout_cleanups;
-                        if (cleanup_receipt_capacity_available) {
-                            // Allocate receipt storage before creating
-                            // filesystem state. The later move cannot orphan a
-                            // prepared layout merely because the FIFO grows.
-                            pending_layout_cleanups_.reserve(
-                                pending_layout_cleanups_.size() + 1U);
-                        }
+                bool cleanup_receipt_capacity_available = false;
+                {
+                    std::lock_guard lock(mutex_);
+                    cleanup_receipt_capacity_available =
+                        pending_layout_cleanups_.size() <
+                        workspace_agent_session_max_pending_layout_cleanups;
+                    if (cleanup_receipt_capacity_available) {
+                        // Allocate receipt storage before creating
+                        // filesystem state. The later move cannot orphan a
+                        // prepared layout merely because the FIFO grows.
+                        pending_layout_cleanups_.reserve(
+                            pending_layout_cleanups_.size() + 1U);
                     }
-                    if (!cleanup_receipt_capacity_available) {
-                        decision = controller_denial(
-                            "workspace_agent.session_layout_cleanup_capacity_reached");
-                    } else {
-                        preparation =
-                            process_environment_boundary_->prepare_session_layout(
-                                candidate_generation);
-                        if (!preparation->prepared ||
-                            preparation->session_generation != candidate_generation) {
-                            decision = controller_denial(
-                                preparation->diagnostic_code.empty()
-                                    ? "workspace_agent.session_environment_preparation_failed"
-                                    : preparation->diagnostic_code);
-                        }
-                    }
-                } catch (...) {
-                    decision = controller_denial(
-                        "workspace_agent.session_environment_preparation_failed");
                 }
-            }
-        }
-        if (decision.allowed && decision.capabilities.run_local_processes) {
-            try {
-                candidate_revocation_state =
-                    std::make_shared<WorkspaceAgentSessionRevocationLeaseState>(
-                        candidate_generation);
+                if (!cleanup_receipt_capacity_available) {
+                    decision = controller_denial(
+                        "workspace_agent.session_layout_cleanup_capacity_reached");
+                } else {
+                    preparation =
+                        process_environment_boundary_->prepare_session_layout(
+                            candidate_generation);
+                    if (!preparation->prepared ||
+                        preparation->session_generation != candidate_generation) {
+                        decision = controller_denial(
+                            preparation->diagnostic_code.empty()
+                                ? "workspace_agent.session_environment_preparation_failed"
+                                : preparation->diagnostic_code);
+                    }
+                }
             } catch (...) {
                 decision = controller_denial(
-                    "workspace_agent.session_revocation_lease_unavailable");
+                    "workspace_agent.session_environment_preparation_failed");
             }
         }
-        const WorkspaceAgentSessionAuditEvent event{
-            .kind = WorkspaceAgentSessionEventKind::start,
-            .session_generation = candidate_generation,
-            .requested_mode = request.requested_mode,
-            .effective_mode = decision.effective_mode,
-            .outcome = decision.allowed ? "allowed" : "denied",
-            .diagnostic_code = decision.diagnostic_code};
-        const AuditOutcome audit = commit_audit_event(event, audit_sink, this);
-
-        WorkspaceAgentSessionStartResult result;
-        result.audit_committed = audit.committed;
-        result.audit_receipt = audit.receipt;
-        result.policy_decision = decision;
-        result.diagnostic_code = audit.committed
-            ? decision.diagnostic_code
-            : "workspace_agent.session_audit_commit_failed";
-
-        {
-            std::lock_guard lock(mutex_);
-            if (preparation.has_value() && preparation->prepared &&
-                preparation->session_generation == candidate_generation) {
-                pending_layout_cleanups_.push_back(std::move(*preparation));
-            }
-            if (audit.committed && decision.allowed && !active_session_.active) {
-                active_session_ = {
-                    .active = true,
-                    .generation = candidate_generation,
-                    .effective_mode = decision.effective_mode,
-                    .capabilities = decision.capabilities,
-                    .activation_audit_receipt = audit.receipt};
-                active_revocation_lease_state_ =
-                    std::move(candidate_revocation_state);
-                result.activated = true;
-            }
-            transition_ = Transition::idle;
-            result.session = active_session_;
-        }
-        return result;
-    } catch (...) {
-        std::lock_guard lock(mutex_);
-        transition_ = Transition::idle;
-        throw;
     }
+    if (decision.allowed && decision.capabilities.run_local_processes) {
+        try {
+            candidate_revocation_state =
+                std::make_shared<WorkspaceAgentSessionRevocationLeaseState>(
+                    candidate_generation);
+        } catch (...) {
+            decision = controller_denial(
+                "workspace_agent.session_revocation_lease_unavailable");
+        }
+    }
+    const WorkspaceAgentSessionAuditEvent event{
+        .kind = WorkspaceAgentSessionEventKind::start,
+        .session_generation = candidate_generation,
+        .requested_mode = request.requested_mode,
+        .effective_mode = decision.effective_mode,
+        .outcome = decision.allowed ? "allowed" : "denied",
+        .diagnostic_code = decision.diagnostic_code};
+    const AuditOutcome audit = commit_audit_event(event, audit_sink, this);
+
+    WorkspaceAgentSessionStartResult result;
+    result.audit_committed = audit.committed;
+    result.audit_receipt = audit.receipt;
+    result.policy_decision = decision;
+    result.diagnostic_code = audit.committed
+        ? decision.diagnostic_code
+        : "workspace_agent.session_audit_commit_failed";
+
+    {
+        std::lock_guard lock(mutex_);
+        if (preparation.has_value() && preparation->prepared &&
+            preparation->session_generation == candidate_generation) {
+            pending_layout_cleanups_.push_back(std::move(*preparation));
+        }
+        if (audit.committed && decision.allowed && !active_session_.active) {
+            active_session_ = {
+                .active = true,
+                .generation = candidate_generation,
+                .effective_mode = decision.effective_mode,
+                .capabilities = decision.capabilities,
+                .activation_audit_receipt = audit.receipt};
+            active_revocation_lease_state_ =
+                std::move(candidate_revocation_state);
+            result.activated = true;
+        }
+        transition_ = Transition::idle;
+        reset_guard.disarm();
+        result.session = active_session_;
+    }
+    return result;
 }
 
 WorkspaceAgentSessionLayoutCleanupAttemptResult
 WorkspaceAgentSessionController::cleanup_pending_session_layout(
     const WorkspaceAgentSessionAuditSink& audit_sink) {
     const WorkspaceAgentSessionLayoutPreparationResult* preparation = nullptr;
+    ResetOnExit reset_guard(mutex_, transition_, Transition::idle);
     {
         std::lock_guard lock(mutex_);
         WorkspaceAgentSessionLayoutCleanupAttemptResult result;
@@ -744,6 +807,7 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
             return result;
         }
         transition_ = Transition::cleaning;
+        reset_guard.arm();
         // The cleaning transition prevents every operation that can mutate the
         // receipt FIFO. Borrow the front receipt instead of copying its
         // heap-backed fields after changing state: this assignment cannot
@@ -751,76 +815,69 @@ WorkspaceAgentSessionController::cleanup_pending_session_layout(
         preparation = &pending_layout_cleanups_.front();
     }
 
-    try {
-        WorkspaceAgentSessionLayoutCleanupAttemptResult result;
-        result.session_generation = preparation->session_generation;
-        const WorkspaceAgentSessionAuditEvent intent{
-            .kind = WorkspaceAgentSessionEventKind::layout_cleanup_intent,
-            .session_generation = preparation->session_generation,
-            .requested_mode = WorkspaceAgentAccessMode::advisory,
-            .effective_mode = WorkspaceAgentAccessMode::advisory,
-            .outcome = "pending",
-            .diagnostic_code = "workspace_agent.session_layout_cleanup_intent"};
-        const AuditOutcome intent_audit =
-            commit_audit_event(intent, audit_sink, this);
-        result.intent_audit_committed = intent_audit.committed;
-        result.intent_audit_receipt = intent_audit.receipt;
-        if (!intent_audit.committed) {
-            result.diagnostic_code =
-                "workspace_agent.session_layout_cleanup_intent_audit_failed";
-            std::lock_guard lock(mutex_);
-            transition_ = Transition::idle;
-            return result;
-        }
-
-        WorkspaceAgentSessionLayoutCleanupResult cleanup;
-        if (!process_environment_boundary_.has_value()) {
-            cleanup.diagnostic_code =
-                "workspace_agent.session_environment_boundary_unavailable";
-        } else {
-            try {
-                result.attempted = true;
-                cleanup =
-                    process_environment_boundary_->cleanup_empty_session_layout(
-                        *preparation);
-            } catch (...) {
-                cleanup.diagnostic_code =
-                    "workspace_agent.environment_session_layout_cleanup_failed";
-            }
-        }
-        result.cleaned = cleanup.cleaned;
-
-        const WorkspaceAgentSessionAuditEvent outcome{
-            .kind = WorkspaceAgentSessionEventKind::layout_cleanup_outcome,
-            .session_generation = preparation->session_generation,
-            .requested_mode = WorkspaceAgentAccessMode::advisory,
-            .effective_mode = WorkspaceAgentAccessMode::advisory,
-            .outcome = cleanup.cleaned ? "cleaned" : "retained",
-            .diagnostic_code = cleanup.diagnostic_code.empty()
-                ? "workspace_agent.environment_session_layout_cleanup_failed"
-                : cleanup.diagnostic_code};
-        const AuditOutcome outcome_audit =
-            commit_audit_event(outcome, audit_sink, this);
-        result.outcome_audit_committed = outcome_audit.committed;
-        result.outcome_audit_receipt = outcome_audit.receipt;
-        result.diagnostic_code = outcome_audit.committed
-            ? outcome.diagnostic_code
-            : "workspace_agent.session_layout_cleanup_outcome_audit_failed";
-        {
-            std::lock_guard lock(mutex_);
-            if (cleanup.cleaned && !pending_layout_cleanups_.empty() &&
-                pending_layout_cleanups_.front().session_generation ==
-                    preparation->session_generation) {
-                pending_layout_cleanups_.erase(pending_layout_cleanups_.begin());
-            }
-            transition_ = Transition::idle;
-        }
+    WorkspaceAgentSessionLayoutCleanupAttemptResult result;
+    result.session_generation = preparation->session_generation;
+    const WorkspaceAgentSessionAuditEvent intent{
+        .kind = WorkspaceAgentSessionEventKind::layout_cleanup_intent,
+        .session_generation = preparation->session_generation,
+        .requested_mode = WorkspaceAgentAccessMode::advisory,
+        .effective_mode = WorkspaceAgentAccessMode::advisory,
+        .outcome = "pending",
+        .diagnostic_code = "workspace_agent.session_layout_cleanup_intent"};
+    const AuditOutcome intent_audit =
+        commit_audit_event(intent, audit_sink, this);
+    result.intent_audit_committed = intent_audit.committed;
+    result.intent_audit_receipt = intent_audit.receipt;
+    if (!intent_audit.committed) {
+        result.diagnostic_code =
+            "workspace_agent.session_layout_cleanup_intent_audit_failed";
         return result;
-    } catch (...) {
-        std::lock_guard lock(mutex_);
-        transition_ = Transition::idle;
-        throw;
     }
+
+    WorkspaceAgentSessionLayoutCleanupResult cleanup;
+    if (!process_environment_boundary_.has_value()) {
+        cleanup.diagnostic_code =
+            "workspace_agent.session_environment_boundary_unavailable";
+    } else {
+        try {
+            result.attempted = true;
+            cleanup =
+                process_environment_boundary_->cleanup_empty_session_layout(
+                    *preparation);
+        } catch (...) {
+            cleanup.diagnostic_code =
+                "workspace_agent.environment_session_layout_cleanup_failed";
+        }
+    }
+    result.cleaned = cleanup.cleaned;
+
+    const WorkspaceAgentSessionAuditEvent outcome{
+        .kind = WorkspaceAgentSessionEventKind::layout_cleanup_outcome,
+        .session_generation = preparation->session_generation,
+        .requested_mode = WorkspaceAgentAccessMode::advisory,
+        .effective_mode = WorkspaceAgentAccessMode::advisory,
+        .outcome = cleanup.cleaned ? "cleaned" : "retained",
+        .diagnostic_code = cleanup.diagnostic_code.empty()
+            ? "workspace_agent.environment_session_layout_cleanup_failed"
+            : cleanup.diagnostic_code};
+    const AuditOutcome outcome_audit =
+        commit_audit_event(outcome, audit_sink, this);
+    result.outcome_audit_committed = outcome_audit.committed;
+    result.outcome_audit_receipt = outcome_audit.receipt;
+    result.diagnostic_code = outcome_audit.committed
+        ? outcome.diagnostic_code
+        : "workspace_agent.session_layout_cleanup_outcome_audit_failed";
+    {
+        std::lock_guard lock(mutex_);
+        if (cleanup.cleaned && !pending_layout_cleanups_.empty() &&
+            pending_layout_cleanups_.front().session_generation ==
+                preparation->session_generation) {
+            pending_layout_cleanups_.erase(pending_layout_cleanups_.begin());
+        }
+        transition_ = Transition::idle;
+        reset_guard.disarm();
+    }
+    return result;
 }
 
 WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
@@ -838,6 +895,15 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
     }
     WorkspaceAgentSessionSnapshot revoked_session;
     std::shared_ptr<WorkspaceAgentSessionRevocationLeaseState> revocation_state;
+    // Armed the moment transition_ becomes stopping (issue #5401), before
+    // the copies immediately below it: WorkspaceAgentSessionSnapshot owns a
+    // std::string, so copying it can throw (e.g. bad_alloc), and that copy
+    // happens while still holding the same lock that sets transition_ --
+    // there is no trivially-non-throwing gap here the way start() has
+    // between setting transition_ = starting and its own try block. Every
+    // exit from this point on, return or exception, restores transition_ to
+    // idle via this guard's destructor; no catch(...) block is needed.
+    ResetOnExit reset_guard(mutex_, transition_, Transition::idle);
     {
         std::lock_guard lock(mutex_);
         if (transition_ != Transition::idle) {
@@ -853,13 +919,28 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
             return result;
         }
         transition_ = Transition::stopping;
+        reset_guard.arm();
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS)
+        // The fault-injection hook fires here, deliberately before the
+        // WorkspaceAgentSessionSnapshot copy immediately below (rather than
+        // after this lock block closes) so a test can exercise exactly the
+        // window this guard exists to cover: transition_ has already
+        // changed, but the throw-capable state copy has not happened yet.
+        if (const auto hook =
+                stop_test_only_throw_hook.load(std::memory_order_relaxed);
+            hook != nullptr) {
+            stop_test_only_throw_hook.store(nullptr, std::memory_order_relaxed);
+            hook();
+        }
+#endif
         revoked_session = active_session_;
         revocation_state = active_revocation_lease_state_;
     }
 
     // A lease is held only around a future direct launch decision. Waiting
-    // here ensures stop cannot report revocation in the middle of that narrow
-    // boundary. The lease release path never takes the controller mutex.
+    // here ensures stop cannot report revocation in the middle of that
+    // narrow boundary. The lease release path never takes the controller
+    // mutex.
     if (revocation_state != nullptr) {
         std::unique_lock revocation_lock(revocation_state->mutex);
         revocation_state->released.wait(revocation_lock, [&revocation_state] {
@@ -892,6 +973,7 @@ WorkspaceAgentSessionStopResult WorkspaceAgentSessionController::stop(
     {
         std::lock_guard lock(mutex_);
         transition_ = Transition::idle;
+        reset_guard.disarm();
         result.session = active_session_;
     }
     return result;

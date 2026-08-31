@@ -1,5 +1,43 @@
 # Agent Handoff
 
+## In-progress: PR #5416 (WorkspaceAgentSessionController::stop() exception safety, fixes #5401), not yet merged
+
+**Steering-continuity record** — as of commit `d61fe01ec` (2026-08-31), a
+fresh Windows Native Validation dispatch (run `33354458540`) and a second
+adversarial `/code-review` pass are both in flight; check with `gh run
+list --workflow="Windows Native Validation" --branch
+agent/v1-session-stop-exception-safety`. Every earlier Windows run
+(`33353687668`, against the first, incomplete fix) is superseded and was
+cancelled. If you cannot find these results already reported/acted on,
+re-run both before merging.
+
+PR #5416's first commit (`3fc3437a9`) mirrored `start()`'s existing
+`catch(...) { transition_ = idle; throw; }` guard around `stop()`'s
+post-transition-flag section, closing an irrecoverable-DoS window (an
+exception there previously left `transition_` stuck at `stopping`
+forever). A first adversarial `/code-review` pass found this was
+**incomplete**: `revoked_session = active_session_;` (a
+`WorkspaceAgentSessionSnapshot` copy that owns a `std::string`, and can
+therefore genuinely throw) ran immediately after `transition_ =
+Transition::stopping;` but was still *outside* that try block, reproducing
+the exact bug one statement earlier than the fix covered. Fixed in
+`d61fe01ec` by replacing all three hand-copied `catch(...)` blocks
+(`start()`, `cleanup_pending_session_layout()`, `stop()`) with one shared
+RAII `ResetOnExit<T>` helper armed immediately after each method sets its
+non-idle `transition_` value, before any other work in that same critical
+section — closing the review's exact finding structurally rather than by
+relocating a try block, and directly addressing the review's related point
+that the hand-copied guard pattern was itself the kind of omission that
+produced this bug. Moved the test-only fault-injection hook's call site to
+match (fires immediately after `arm()`, before the vulnerable copy) and
+re-verified the regression catches the bug by temporarily disabling
+`reset_guard.arm()` this time (not the old catch block) and observing the
+same three assertions fail, then restoring it. Full local Linux battery
+(7/7) passes again.
+
+Picking up #5405 (consolidate duplicated path predicates across the four
+`workspace_agent_*` files) next on a separate branch with no file overlap.
+
 ## Shipped: PR #5411 (bounded Win32 version-resource string reads), merged as `265734d68` (squash)
 
 Windows Native Validation (run `33343489771`) came back green; the

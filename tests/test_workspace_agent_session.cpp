@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/security/workspace_agent_session.h"
+#include "copperfin/security/workspace_agent_session_test_hooks.h"
 
 #include <chrono>
 #include <condition_variable>
@@ -446,6 +447,62 @@ void test_policy_exception_fails_closed_and_restores_transition() {
 #endif
 }
 
+void throw_synthetic_stop_fault() {
+    throw std::runtime_error("synthetic workspace-agent stop fault");
+}
+
+void test_stop_exception_restores_transition() {
+    // #5401: stop() lacked the same catch(...)-then-reset-then-rethrow guard
+    // start() already has around its post-transition-flag section, so an
+    // exception there (allocation failure, an OS mutex/condition-variable
+    // primitive throwing) would leave transition_ stuck at `stopping`
+    // forever. The real trigger isn't reproducible deterministically through
+    // the public API, so this uses the dedicated test-only fault-injection
+    // hook (see workspace_agent_session_test_hooks.h) rather than a natural
+    // failure condition, unlike test_policy_exception_fails_closed_and_restores_transition
+    // above.
+    copperfin::security::set_workspace_agent_session_stop_test_only_throw_hook_for_testing(
+        nullptr);
+
+    WorkspaceAgentSessionController controller;
+    AuditContext start_audit;
+    const auto started = controller.start(
+        request_for(WorkspaceAgentAccessMode::workspace_sandbox),
+        sink_for(start_audit));
+    expect(started.activated, "RQ-CF-AGENT-005: stop-fault fixture should establish audited authority");
+
+    copperfin::security::set_workspace_agent_session_stop_test_only_throw_hook_for_testing(
+        throw_synthetic_stop_fault);
+    AuditContext faulted_stop_audit;
+    bool threw = false;
+    try {
+        [[maybe_unused]] const auto unreached = controller.stop(sink_for(faulted_stop_audit));
+    } catch (const std::runtime_error& error) {
+        threw = std::string_view(error.what()) == "synthetic workspace-agent stop fault";
+    }
+    expect(threw, "RQ-CF-AGENT-005: the injected stop fault should propagate to the caller");
+    expect(faulted_stop_audit.events.empty(),
+           "RQ-CF-AGENT-005: a fault before the audit event must not commit a stop record");
+
+    const auto during_recovery = controller.preflight_tool_request(tool_request(
+        started.session.generation,
+        copperfin::security::workspace_agent_tool_workspace_inspect));
+    expect(during_recovery.diagnostic_code != "workspace_agent.session_transition_in_progress",
+           "RQ-CF-AGENT-005: a faulted stop must not leave the controller permanently mid-transition");
+
+    AuditContext recovery_stop_audit;
+    const auto recovered_stop = controller.stop(sink_for(recovery_stop_audit));
+    expect(recovered_stop.revoked,
+           "RQ-CF-AGENT-005: a faulted stop must not prevent a subsequent stop from revoking cleanly");
+
+    AuditContext recovery_start_audit;
+    const auto recovered_start = controller.start(
+        request_for(WorkspaceAgentAccessMode::workspace_sandbox),
+        sink_for(recovery_start_audit));
+    expect(recovered_start.activated,
+           "RQ-CF-AGENT-005: a faulted stop must not deny a later start with a stuck transition");
+}
+
 void test_overlapping_start_cannot_observe_or_replace_partial_authority() {
     WorkspaceAgentSessionController controller;
     AuditContext blocked_audit;
@@ -708,6 +765,7 @@ int main() {
     test_denials_are_audited_without_creating_authority();
     test_audit_failures_withhold_start_but_cannot_extend_stop();
     test_policy_exception_fails_closed_and_restores_transition();
+    test_stop_exception_restores_transition();
     test_overlapping_start_cannot_observe_or_replace_partial_authority();
     test_audit_serialization_is_stable_and_content_free();
     test_launch_revocation_lease_is_generation_bound_and_blocks_stop();
