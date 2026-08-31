@@ -5,8 +5,10 @@
 #include "copperfin/security/workspace_agent_process_parser.h"
 
 #include "copperfin/security/sha256.h"
+#include "copperfin/security/workspace_agent_process_parser_test_hooks.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -15,6 +17,14 @@
 namespace copperfin::security {
 
 namespace {
+
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_PROCESS_PARSER_TEST_HOOKS)
+// See workspace_agent_process_parser_test_hooks.h. Relaxed ordering is
+// sufficient: this exists only for single-threaded test setup/teardown
+// around a call to capture_binding()/authorize_windows(), never for
+// production synchronization.
+std::atomic<void (*)()> pre_read_test_hook{nullptr};
+#endif
 
 bool path_has_embedded_nul(const std::filesystem::path& path) {
     const auto& native = path.native();
@@ -61,6 +71,40 @@ struct CapturedExecutable {
     std::string sha256;
 };
 
+// Reads a trusted-executable snapshot from an already-verified handle and
+// re-checks link_count against the fresh post-read identity before
+// returning it, since read_physically_contained_file_snapshot_from_handle()'s
+// own freshness check (content_equal()) deliberately excludes link_count
+// (issue #5420) -- a hard link added to the executable between the
+// pre-read containment check and this read completing would otherwise go
+// undetected. Both capture_binding() and authorize_windows() call this
+// single helper rather than each re-implementing the check, so there is
+// exactly one place that can omit it -- an earlier version of this file's
+// migration to the handle-based read did omit it independently in both
+// functions, caught only by adversarial review (see CHANGELOG.md).
+PhysicalFileSnapshotResult read_trusted_executable_snapshot(
+    const PhysicalPathContainmentHandle& handle,
+    const std::uint64_t maximum_bytes) {
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_PROCESS_PARSER_TEST_HOOKS)
+    if (const auto hook =
+            pre_read_test_hook.load(std::memory_order_relaxed);
+        hook != nullptr) {
+        pre_read_test_hook.store(nullptr, std::memory_order_relaxed);
+        hook();
+    }
+#endif
+    auto snapshot =
+        read_physically_contained_file_snapshot_from_handle(handle, maximum_bytes);
+    if (snapshot.ok && snapshot.containment.identity.link_count != 1U) {
+        return PhysicalFileSnapshotResult{
+            .ok = false,
+            .bytes = {},
+            .containment = snapshot.containment,
+            .failure = PhysicalPathContainmentFailure::identity_changed};
+    }
+    return snapshot;
+}
+
 std::optional<CapturedExecutable> capture_binding(
     const WorkspaceAgentWindowsProcessParserBinding& binding) {
     const auto& path = binding.trusted_absolute_executable;
@@ -84,21 +128,10 @@ std::optional<CapturedExecutable> capture_binding(
         captured.identity != binding.expected_identity) {
         return std::nullopt;
     }
-    const auto snapshot = read_physically_contained_file_snapshot_from_handle(
+    const auto snapshot = read_trusted_executable_snapshot(
         handle,
         workspace_agent_maximum_windows_process_parser_image_bytes);
-    // read_physically_contained_file_snapshot_from_handle()'s own before/
-    // after freshness check deliberately excludes link_count (it compares
-    // via PhysicalPathIdentity::content_equal(), not operator==) -- a still-
-    // open handle's content is unaffected by its directory-entry count
-    // changing, so that check alone would not catch a hard link added
-    // during the read. The pre-read check above only saw the object's
-    // link_count at walk time. Re-check it here against
-    // snapshot.containment.identity, which read_physically_contained_file_snapshot_from_handle()
-    // populates from a fresh post-read query (issue #5420 round-3 review),
-    // so a hard link added anywhere between the walk and the read
-    // completing is still caught before this binding is trusted.
-    if (!snapshot.ok || snapshot.containment.identity.link_count != 1U) {
+    if (!snapshot.ok) {
         return std::nullopt;
     }
     const auto digest = sha256_hex_for_text(snapshot.bytes);
@@ -118,6 +151,13 @@ WorkspaceAgentProcessParserAuthorization denied(std::string diagnostic_code) {
 }
 
 }  // namespace
+
+#if defined(COPPERFIN_ENABLE_WORKSPACE_AGENT_PROCESS_PARSER_TEST_HOOKS)
+void set_workspace_agent_process_parser_pre_read_test_hook_for_testing(
+    void (*hook)()) {
+    pre_read_test_hook.store(hook, std::memory_order_relaxed);
+}
+#endif
 
 WorkspaceAgentProcessParserBoundary::WorkspaceAgentProcessParserBoundary(
     std::vector<CapturedBinding> bindings)
@@ -188,16 +228,10 @@ WorkspaceAgentProcessParserBoundary::authorize_windows(
         return denied("workspace_agent.process_argument_parser_identity_changed");
     }
 
-    const auto snapshot = read_physically_contained_file_snapshot_from_handle(
+    const auto snapshot = read_trusted_executable_snapshot(
         handle,
         workspace_agent_maximum_windows_process_parser_image_bytes);
-    // See the matching comment in capture_binding(): the handle-based
-    // read's own freshness check excludes link_count, so it alone would
-    // not catch a hard link added during this read. Re-check it against
-    // snapshot.containment.identity (a fresh post-read query), matching
-    // the guarantee the prior string-based read_physically_contained_file_snapshot()
-    // provided via its full-identity comparison.
-    if (!snapshot.ok || snapshot.containment.identity.link_count != 1U) {
+    if (!snapshot.ok) {
         return denied("workspace_agent.process_argument_parser_identity_changed");
     }
     const auto digest = sha256_hex_for_text(snapshot.bytes);

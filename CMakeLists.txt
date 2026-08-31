@@ -226,6 +226,7 @@ target_link_libraries(cf_security PRIVATE cf_localization cf_platform_support)
 if(COPPERFIN_BUILD_TESTS)
     target_compile_definitions(cf_security PRIVATE
         COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS=1
+        COPPERFIN_ENABLE_WORKSPACE_AGENT_PROCESS_PARSER_TEST_HOOKS=1
     )
 endif()
 

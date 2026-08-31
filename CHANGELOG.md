@@ -34,7 +34,34 @@
   reaches the removed check's replacement path -- the removal is
   correct by inspection (both paths return `std::nullopt`), just not
   independently proven by that particular test. No other behavior
-  change; existing regression coverage passes unchanged.
+  change; existing regression coverage passes unchanged. A second
+  adversarial review pass judged the `link_count` re-check fix itself
+  correct, but flagged two process concerns: the fix shipped with no
+  dedicated regression test (a real security fix per `agents.md`'s
+  focused-regression-coverage requirement, and this exact class of gap
+  had already slipped through once in this same migration), and the
+  check was duplicated verbatim in both functions instead of shared,
+  risking a third caller -- or a future edit to either existing one --
+  silently omitting it again. Fixed both: extracted a single
+  `read_trusted_executable_snapshot()` helper that both
+  `capture_binding()` and `authorize_windows()` call, so there is
+  exactly one place the check can be gotten right or wrong instead of
+  two; and added a new, properly macro-gated test-only hook
+  (`COPPERFIN_ENABLE_WORKSPACE_AGENT_PROCESS_PARSER_TEST_HOOKS`,
+  `workspace_agent_process_parser_test_hooks.h`, matching the
+  established convention from
+  `COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS`) that fires
+  immediately before the read, letting a test deterministically create
+  a hard link in the exact window between the pre-read check and the
+  read -- a window otherwise unreachable through the public API since
+  both functions perform the check and the read within one synchronous
+  call. The new regression test creates the hard link via this hook
+  and confirms `WorkspaceAgentProcessParserBoundary::create()` still
+  denies authority; verified it actually catches the regression by
+  temporarily disabling the check and observing the test fail, then
+  restoring it. Confirmed via a separate `-DCOPPERFIN_BUILD_TESTS=OFF`
+  build that the hook symbol is absent from `libcf_security.a`,
+  matching the verification already done for the session test hook.
 
 - 2026-08-31: Added `inspect_and_open_physically_contained_path()` and
   `read_physically_contained_file_snapshot_from_handle()`

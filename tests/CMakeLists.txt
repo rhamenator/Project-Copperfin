@@ -5290,6 +5290,9 @@ copperfin_add_test(test_workspace_agent_process_containment cf_security
 copperfin_add_test(test_workspace_agent_process_parser cf_security
     test_workspace_agent_process_parser.cpp
 )
+target_compile_definitions(test_workspace_agent_process_parser PRIVATE
+    COPPERFIN_ENABLE_WORKSPACE_AGENT_PROCESS_PARSER_TEST_HOOKS=1
+)
 
 add_test(
     NAME test_workspace_agent_process_parser_boundary_contract
