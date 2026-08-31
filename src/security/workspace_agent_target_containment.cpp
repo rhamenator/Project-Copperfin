@@ -60,11 +60,15 @@ bool path_has_windows_alias_prone_component(const std::filesystem::path& path) {
 
 bool path_component_is_reserved_windows_device_name(
     const std::filesystem::path::string_type& component) {
-    const auto dot = component.find(L'.');
+    // Legacy MS-DOS device syntax ("NUL:", "COM1:") is still honored by
+    // Win32 path resolution for backward compatibility, so a reserved name
+    // can be terminated by ':' as well as by '.' -- stopping at '.' alone is
+    // a well-known bypass for naive reserved-name checks.
+    const auto stop = component.find_first_of(L".:");
     const std::filesystem::path::string_type stem =
-        (dot == std::filesystem::path::string_type::npos)
+        (stop == std::filesystem::path::string_type::npos)
             ? component
-            : component.substr(0U, dot);
+            : component.substr(0U, stop);
     if (stem.empty() || stem.size() > 4U) {
         return false;
     }

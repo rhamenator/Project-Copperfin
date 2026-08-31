@@ -252,6 +252,15 @@ void test_boundary_rejects_aliases_and_indirection() {
     }
     expect(!boundary->inspect_local_file(tree.outside / "NUL").allowed,
            "RQ-CF-AGENT-#5404: a reserved Windows device name local target must fail before lookup");
+
+    // Legacy MS-DOS device syntax ("NUL:", "COM1:") is still honored by
+    // Win32 path resolution, so a naive check that only splits a component
+    // on '.' can be bypassed by appending ':' plus arbitrary text --
+    // CreateFileW("NUL:hidden.txt", ...) still opens the NUL device.
+    for (const char* device_name : {"NUL:", "NUL:hidden.txt", "com1:stream"}) {
+        expect(!boundary->inspect_workspace_file(device_name).allowed,
+               "RQ-CF-AGENT-#5404: a colon-suffixed reserved Windows device name must fail before lookup");
+    }
 #endif
 }
 

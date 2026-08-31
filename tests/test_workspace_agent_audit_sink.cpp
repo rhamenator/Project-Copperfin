@@ -466,6 +466,14 @@ void test_configuration_containment_and_size_limit_fail_closed() {
     expect(!device_name_directory_log.ready() &&
                device_name_directory_log.session_sink().commit == nullptr,
            "RQ-CF-AGENT-#5404: a reserved Windows device name log directory component must be inert");
+
+    // Legacy MS-DOS device syntax ("NUL:", "COM1:") is still honored by
+    // Win32 path resolution, so a naive check that only splits a component
+    // on '.' can be bypassed by appending ':' plus arbitrary text.
+    WorkspaceAgentSessionAuditFileSink colon_device_name_log(root.path(), "NUL:events.log");
+    expect(!colon_device_name_log.ready() &&
+               colon_device_name_log.session_sink().commit == nullptr,
+           "RQ-CF-AGENT-#5404: a colon-suffixed reserved Windows device name log filename must be inert");
 #endif
 
     auto embedded_nul_name = fs::path("target.log").native();
