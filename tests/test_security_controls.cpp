@@ -889,6 +889,19 @@ void test_external_process_authorization_follows_posix_volume_case_semantics() {
 
     fs::remove_all(temp_root, ignored);
 }
+
+void test_external_process_authorization_rejects_empty_allowed_path_roots() {
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = "sh",
+        .allowed_path_roots = {},
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+    };
+    expect(
+        !copperfin::security::authorize_external_process(policy).allowed,
+        "#5431: POSIX external-process policy should deny an empty allowed_path_roots "
+        "(fail closed), matching the Windows path fixed for the same scenario");
+}
 #endif
 
 #ifdef _WIN32
@@ -1007,6 +1020,19 @@ void test_external_process_policy_preserves_unicode_paths() {
         SetEnvironmentVariableW(L"PATH", original_path.c_str());
     }
     fs::remove_all(temp_root, ignored);
+}
+
+void test_external_process_policy_rejects_empty_allowed_path_roots() {
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = "cmd.exe",
+        .allowed_path_roots = {},
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+    expect(!authorization.allowed,
+           "#5431: Windows external-process policy should deny an empty allowed_path_roots "
+           "(fail closed) rather than treating it as unrestricted, matching POSIX behavior");
 }
 
 void test_external_process_policy_handles_long_paths() {
@@ -1626,9 +1652,11 @@ int main() {
 #ifndef _WIN32
     test_external_process_authorization_rejects_replacement();
     test_external_process_authorization_follows_posix_volume_case_semantics();
+    test_external_process_authorization_rejects_empty_allowed_path_roots();
 #endif
 #ifdef _WIN32
     test_external_process_policy_preserves_unicode_paths();
+    test_external_process_policy_rejects_empty_allowed_path_roots();
     test_external_process_policy_handles_long_paths();
 #endif
     test_physical_path_containment_rejects_indirection();
