@@ -112,6 +112,32 @@ std::vector<std::filesystem::path> casefold_package_entries(
     return matches;
 }
 
+// Deliberately fail-fast, no retry, on every rejection path below
+// (ambiguous match, missing, containment-denied, read-failed, and the
+// post-read rename/replace rejection) -- decided in issue #5435 rather
+// than added silently. Two reasons:
+//
+//   1. This runs at package build time, not in a production execution
+//      path -- a transient race with another legitimate tool touching
+//      package_root (an overlapping rebuild, an editor autosave, an AV
+//      scan) fails the whole package build, and a human re-running the
+//      build is the existing, sufficient recovery path for any build
+//      failure. Not attacker-adjacent, so the cost of not auto-recovering
+//      is low.
+//   2. Auto-retrying specifically the rename/replace rejection (#5426's
+//      round-2 fix) would work against the reason that check exists: it
+//      would give a TOCTOU attacker's swap window more read attempts to
+//      land outside it, and a "succeeded on retry" outcome would erase
+//      the audit signal that a rename/replace was ever observed --
+//      exactly the security event issue #5427's round-3 fix (distinct
+//      error code instead of reusing containment_denied) was about
+//      *not* masking. Blind retry can't tell a benign race from an
+//      attacker's second attempt.
+//
+// If build-time flakiness from this function becomes an observed
+// operational problem, a bounded, code-aware retry (e.g. retry only the
+// ambiguous-match and missing-file cases, never the rename/replace
+// rejection) would be the way to revisit this, not a blanket retry.
 bool admit_launcher_artifact(
     const LauncherArtifactSpec& spec,
     const std::filesystem::path& package_root,
