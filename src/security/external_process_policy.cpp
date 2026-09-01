@@ -347,7 +347,7 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
     if (policy.allowed_path_roots.empty()) {
         return {.allowed = false,
                 .resolved_path = resolved_path,
-                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots"),
+                .error = security_text("Security.ExternalProcessPolicy.Error.EmptyAllowedPathRoots"),
                 .file_identity = {}};
     }
     bool root_match = false;
@@ -422,7 +422,7 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
     if (policy.allowed_path_roots.empty()) {
         return {.allowed = false,
                 .resolved_path = resolved_path,
-                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots"),
+                .error = security_text("Security.ExternalProcessPolicy.Error.EmptyAllowedPathRoots"),
                 .file_identity = {}};
     }
     const bool root_match = std::any_of(
