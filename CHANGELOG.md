@@ -1,3 +1,21 @@
+- 2026-09-01: Fixed a test-hygiene gap found while investigating a Windows
+  CI failure in a docs-only PR (#5439) that unexpectedly touched an
+  already-merged code path: `test_supporting_artifact_admission_rejects_rename_during_read()`
+  (issue #5427's regression test, in `test_polyglot_python_sidecar.cpp`)
+  cleaned up its moved-aside temp file but not the replacement file its
+  hook writes back at the original path, leaving a stray file in `root` --
+  which the rest of that test file's tests also use. Confirmed via
+  `inspect_and_open_physically_contained_path()`'s Windows
+  `CreateFileW(..., FILE_SHARE_DELETE, ...)` call that the rename actually
+  succeeds on Windows (not just POSIX), so this cleanup gap was real
+  there too, not merely theoretical. The specific CI failure investigated
+  turned out to be an unrelated, already-documented flake in this same
+  test file (an intermittent Python subprocess round-trip timing issue on
+  Windows CI, previously seen and cleared by rerun during #5420's own
+  review) -- confirmed by a clean rerun -- but the cleanup gap was real
+  regardless and is fixed here as good hygiene, not as the flake's root
+  cause.
+
 - 2026-09-01: A second adversarial review pass on PR #5436/issue #5427
   found the round-1 post-read re-walk fix (below) reused
   `PolyglotSupportingArtifactAdmissionError::containment_denied` for the
