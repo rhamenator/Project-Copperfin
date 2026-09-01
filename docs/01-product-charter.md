@@ -86,7 +86,7 @@ Language and framework choices should be judged against these, not the other way
 - support for every third-party ActiveX control on day one
 - full cloud-native rewrite of every legacy app automatically
 
-Note: producing binaries for FoxBASE, FoxBASE+, FoxPro 1.x/2.x, dBASE, or Clipper was previously listed here as a non-goal. As of 2026-09-01 it is tracked under #1077 as an active Version 1 blocking criterion (part of the migration pipeline under #137) rather than excluded from v1 scope; see the Version target note above.
+Note: producing binaries for FoxBASE, FoxBASE+, FoxPro 1.x/2.x, dBASE, or Clipper was previously listed here as a non-goal. As of 2026-09-01 it is tracked under #1077 as an active Version 1 blocking criterion (part of the migration pipeline under #137) rather than excluded from Version 1 scope; see the Version target note above.
 
 ## Compatibility Fidelity Rule
 
