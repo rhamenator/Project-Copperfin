@@ -495,6 +495,7 @@ internal static class CopperfinStudioHostBridge
             }
 
             wrapperCommand = $"{Quote(studioHostPath)}{(string.IsNullOrWhiteSpace(arguments) ? string.Empty : " " + arguments)}";
+            EnsureSafeForCmdExeCommandLine(wrapperCommand);
             commandArguments = $"/d /c %{WindowsScriptWrapperCommandVariable}%";
         }
 
@@ -619,6 +620,53 @@ internal static class CopperfinStudioHostBridge
         var extension = Path.GetExtension(path);
         return string.Equals(extension, ".cmd", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(extension, ".bat", StringComparison.OrdinalIgnoreCase);
+    }
+
+    // .cmd/.bat studio hosts are launched by stashing the composed command
+    // text in an environment variable and referencing it via %VARNAME% in
+    // cmd.exe's /d /c argument (see CreateProcessStartInfo above). This is
+    // a double-parse hazard: Quote() (CRT/CommandLineToArgvW-style argv
+    // quoting) only protects the *target executable's* argument parsing --
+    // it does nothing to protect against cmd.exe's own command-line
+    // parser, which re-scans the %VARNAME%-expanded text for its own
+    // metacharacters (&, |, ^, <, >) and for quote characters to decide
+    // whether it is "inside a quoted region". A literal `"` embedded in an
+    // untrusted value (which Quote() escapes as \" for the target
+    // process's argv parser -- CRT-style backslash escaping cmd.exe does
+    // NOT understand) still toggles cmd.exe's own quote state, so an
+    // attacker-controlled value containing a `"` followed later by a `&`
+    // or `|` could break out of the intended single-command execution
+    // (issue #5432). Simulate cmd.exe's own quote-toggle scan and refuse
+    // to launch if any of those metacharacters would land outside a
+    // quoted region, or if the quote count is unbalanced.
+    private static void EnsureSafeForCmdExeCommandLine(string commandText)
+    {
+        var insideQuotes = false;
+        foreach (var character in commandText)
+        {
+            if (character == '"')
+            {
+                insideQuotes = !insideQuotes;
+                continue;
+            }
+            if (insideQuotes)
+            {
+                continue;
+            }
+            if (character is '&' or '|' or '^' or '<' or '>' or '%' or '\r' or '\n')
+            {
+                throw new InvalidOperationException(
+                    "Refusing to launch a .cmd/.bat Studio host: the composed command " +
+                    $"text contains an unquoted cmd.exe metacharacter ('{character}'), " +
+                    "which could allow command-string injection.");
+            }
+        }
+        if (insideQuotes)
+        {
+            throw new InvalidOperationException(
+                "Refusing to launch a .cmd/.bat Studio host: the composed command text " +
+                "has an unbalanced quote, which could allow command-string injection.");
+        }
     }
 
     internal static string QuoteProcessArgument(string value)

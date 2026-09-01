@@ -75,6 +75,7 @@ internal static partial class Program
         TestStudioStartupArgumentsRejectMalformedSelectors();
         TestStudioHostBuildArgumentsPreserveStartupSelectors();
         TestStudioHostProcessStartInfoWrapsWindowsBatchHosts();
+        TestStudioHostProcessStartInfoRejectsCmdInjectionInBatchWrapper();
         TestStudioHostProcessStartInfoAppliesExplicitLocalizationEnvironment();
         TestStudioHostBatchArgumentsKeepVisualStudioProvenance();
         TestStudioTargetSelectionPrefersSelectedItemsForItemCommands();
@@ -1081,6 +1082,77 @@ internal static partial class Program
                    startInfo.RedirectStandardError &&
                    startInfo.CreateNoWindow,
                 "Windows batch-backed Studio hosts should preserve non-shell redirected execution");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COMSPEC", previousComSpec);
+        }
+    }
+
+    private static void TestStudioHostProcessStartInfoRejectsCmdInjectionInBatchWrapper()
+    {
+        var previousComSpec = Environment.GetEnvironmentVariable("COMSPEC");
+        try
+        {
+            Environment.SetEnvironmentVariable("COMSPEC", @"C:\Windows\System32\cmd.exe");
+
+            // A document path containing an embedded quote followed by a
+            // cmd.exe metacharacter. Quote()'s CRT-style escaping turns
+            // the embedded quote into \" -- a literal quote character
+            // cmd.exe's own command-line scanner doesn't understand as
+            // "escaped" -- so without issue #5432's fix this would flip
+            // cmd.exe's notion of "inside a quoted region" partway
+            // through the composed command, exposing the following
+            // " & calc.exe & " to live interpretation.
+            var maliciousDocumentPath = "C:\\Samples\\invoice.frx\" & calc.exe & \"ignored.frx";
+            var maliciousArguments = CopperfinStudioHostBridge.BuildArguments(maliciousDocumentPath);
+
+            var threwForEmbeddedQuoteBreakout = false;
+            try
+            {
+                CopperfinStudioHostBridge.CreateProcessStartInfo(
+                    @"C:\temp\fake studio host.cmd",
+                    maliciousArguments,
+                    redirectOutput: true,
+                    createNoWindow: true,
+                    isWindowsOverride: true);
+            }
+            catch (InvalidOperationException)
+            {
+                threwForEmbeddedQuoteBreakout = true;
+            }
+            Expect(threwForEmbeddedQuoteBreakout,
+                "#5432: batch-wrapped Studio host launches should refuse a composed command " +
+                "whose quote-balance is broken by an embedded cmd.exe metacharacter, closing " +
+                "the command-string injection window");
+
+            var threwForRawMetacharacter = false;
+            try
+            {
+                CopperfinStudioHostBridge.CreateProcessStartInfo(
+                    @"C:\temp\fake studio host.cmd",
+                    "--from-vs --json & calc.exe",
+                    redirectOutput: true,
+                    createNoWindow: true,
+                    isWindowsOverride: true);
+            }
+            catch (InvalidOperationException)
+            {
+                threwForRawMetacharacter = true;
+            }
+            Expect(threwForRawMetacharacter,
+                "#5432: batch-wrapped Studio host launches should refuse an unquoted " +
+                "cmd.exe metacharacter in the composed arguments");
+
+            var safeStartInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
+                @"C:\temp\fake studio host.cmd",
+                "--from-vs --json --set-property --path \"C:\\Samples\\invoice.frx\"",
+                redirectOutput: true,
+                createNoWindow: true,
+                isWindowsOverride: true);
+            Expect(safeStartInfo.Arguments == "/d /c %COPPERFIN_SCRIPT_WRAPPER_COMMAND%",
+                "#5432: properly quoted batch-wrapped Studio host arguments should still " +
+                "launch unchanged");
         }
         finally
         {
