@@ -1,5 +1,96 @@
 # Agent Handoff
 
+## Shipped: PR #5437, #5439, #5440, #5441 (migration-pipeline v1-blocking reclassification and agent-channel sync tail), merged 2026-09-01
+
+Per direct repository-owner instruction, reclassified the
+database/container interchange and migration-bridge pipeline (umbrella
+#137, covering #138, #139, #140, #141, #1076, #1077) from "sequenced
+after Version 1" to an active Version 1 blocking criterion. Before
+writing any docs, verified the request against the live issue bodies
+and found they explicitly said the opposite ("sequenced after Version
+1... not part of it") -- flagged the conflict rather than writing
+contradictory documentation; owner confirmed reconcile the issues
+first. Updated all 7 issue bodies on GitHub (keeping the "real,
+committed, not optional" framing from the earlier #5413 wishlist
+correction, only changing sequencing/blocking status) and
+`docs/01-product-charter.md`, `docs/03-compatibility-and-migration.md`,
+`agents.md` to match (PR #5437). A Copilot review caught the docs
+still slightly conflating #1076/#1077 with "the rest of" the pipeline
+and inconsistent "v1"/"Version 1" terminology -- fixed. Posted a
+formal `.agent-channel` sync so both agents re-sequence their intake
+queues around the new status. #5439-#5441 fold in agent-channel
+messages posted around PR #5436's merge and this session's wrap-up
+that hadn't been committed when their source PRs merged.
+
+See the "Next" section below for what #137's reclassification actually
+opens up.
+
+## Shipped: PR #5423, #5425, #5422 (closed not-applicable), #5428, #5436 (issue #5409's full atomic check-and-read migration series), merged 2026-08-31 to 2026-09-01
+
+Closed out issue #5409 (`read_physically_contained_file_snapshot()`
+reopening the verified path by string instead of reusing the check
+phase's descriptor/handle) in full, across a corrected multi-slice
+survey:
+
+- **PR #5423** (#5420): added the new additive-only
+  `inspect_and_open_physically_contained_path()` +
+  `read_physically_contained_file_snapshot_from_handle()` primitive.
+  4 adversarial review rounds, each finding something real: a
+  self-caught freshness bug in the new closed-window regression test
+  (`link_count` wrongly included in the handle-based read's freshness
+  check -- fixed with a new `content_equal()` comparison method on
+  `PhysicalPathIdentity` that deliberately excludes `link_count`); a
+  real concurrent-access race an earlier round's own fix introduced
+  (shared file-position cursor, fixed with position-independent
+  `pread()`/`OVERLAPPED`-based `ReadFile()`); a stale-identity bug
+  (returned the check-time identity instead of the fresh post-read
+  one, defeating downstream `link_count` security gates); structural
+  cleanup. Deferred cross-function read-loop duplication as #5424.
+- **PR #5425** (#5421): migrated `workspace_agent_process_parser.cpp`'s
+  `capture_binding()`/`authorize_windows()`. 4 rounds: a real,
+  reviewer-caught (not self-caught) regression -- the migration
+  silently dropped an effective post-read `link_count` re-check the
+  old string-based read got "for free"; fixed with a shared
+  `read_trusted_executable_snapshot()` helper, a new macro-gated test
+  hook, then a graceful-skip fix for hard-link-unsupported filesystems.
+- **#5422 closed as not-applicable**: verified the actual code before
+  assuming the #5421 pattern transferred, and it didn't --
+  `workspace_agent_target_containment.cpp`'s apparent check-then-read
+  pair checks two *different* objects (workspace root vs. target file)
+  across an async, audit-logged gap between separate top-level API
+  calls, not a tight pair. Migrating would mean holding a live OS
+  handle open across that gap -- worse than the existing design. While
+  verifying this, re-surveyed every `read_physically_contained_file_snapshot()`
+  call site in the codebase (not just #5409's originally-named four
+  files) and found the two real remaining candidates below.
+- **PR #5428** (#5426): migrated
+  `runtime_pipeline_launcher_artifact_inventory.cpp`'s
+  `admit_launcher_artifact()`. 3 rounds: a bot review found the
+  handle-based read never re-verifies the path still resolves to the
+  checked object after the read (fixed with an independent post-read
+  `inspect_physical_path_containment()` re-walk); a second round found
+  that re-walk used the raw pre-walk path instead of the
+  already-verified `canonical_path` and had no dedicated regression
+  test (fixed both); a third found the re-walk used full identity
+  comparison including `link_count`, contradicting this call site's
+  own documented lack of that invariant (fixed to use `content_equal()`).
+- **PR #5436** (#5427): migrated
+  `polyglot_supporting_artifact_admission.cpp`'s
+  `admit_polyglot_supporting_artifact()`. 3 rounds: a bot review found
+  this call site needed the identical post-read re-walk fix #5426
+  needed, since the inline `expected_sha256` comparison protects bytes
+  read via the handle but not `resolved_path_`'s continued binding for
+  a caller that doesn't revalidate; a second round found the re-walk's
+  denial reused `containment_denied` instead of a distinct code,
+  conflating a TOCTOU-attack signal with a mundane initial-denial
+  meaning (fixed to use the existing `artifact_changed` value, mirroring
+  the sibling `polyglot_artifact_admission.cpp`'s established
+  convention).
+
+Every genuine tight check-then-read pair in the codebase is now
+migrated. Follow-ups deferred as tracked, non-blocking issues: #5434,
+#5435, #5438 (see "Next" section).
+
 ## Shipped: PR #5416 (WorkspaceAgentSessionController::stop() exception safety, fixed #5401), merged as `517589e6a` (squash)
 
 Mirrored `start()`'s `catch(...) { transition_ = idle; throw; }` guard
@@ -88,29 +179,62 @@ surfaced before merge:
 
 Issue #5408 closed manually.
 
-## Next: I2/#34 sub-issue queue is exhausted for self-selectable work
+## Next: migration-bridge pipeline (#137) is now open, v1-blocking work; #5409's whole series shipped
 
-`gh issue list` shows only two open I2/#34 slices left, and neither is
-pickable without further input:
+**#5403 resolved** (owner: intentional as-is, no code change, closed).
+**#5409 shipped in full** across 5 PRs this session/last: #5423 (new
+`inspect_and_open_physically_contained_path()` +
+`read_physically_contained_file_snapshot_from_handle()` atomic
+check-and-read primitive, 4 review rounds), #5425 (migrated
+`workspace_agent_process_parser.cpp`, 4 rounds), #5422 closed as
+not-applicable after reading the actual code (that file's apparent
+check-then-read pair checks two *different* objects across an async
+gap, not a tight pair — see #5422's closing comment for the full
+reasoning), #5428 (migrated `runtime_pipeline_launcher_artifact_inventory.cpp`,
+found via a corrected re-survey, 3 rounds), #5436 (migrated
+`polyglot_supporting_artifact_admission.cpp`, 3 rounds). Every genuine
+tight check-then-read pair in the codebase is now migrated;
+`workspace_agent_target_containment.cpp` and
+`polyglot_supporting_artifact_admission.cpp`'s
+`revalidate_polyglot_supporting_artifact_admission()` are intentionally
+left on the string-reopening path (real admission-to-execution gaps,
+not tight pairs).
 
-- **#5403** — a policy question ("does `workspace_sandbox` mode need a
-  confirmation gate?") requiring an owner decision, not implementable
-  unilaterally.
-- **#5409** — `read_physically_contained_file_snapshot()` reopens by
-  path string instead of reusing the verified descriptor/handle from the
-  check phase. Re-evaluated this session and confirmed genuinely too
-  large for one slice: it needs either merging the check-and-read
-  functions or extending the result type to own a live descriptor/handle,
-  evaluated against 4+ call sites (`runtime_pipeline_package_content_io.cpp`,
-  `workspace_agent_process_parser.cpp`,
-  `workspace_agent_target_containment.cpp`,
-  `sqlite_federation_connector.cpp`) before committing to a design — a
-  real API-shape redesign, better scoped as its own multi-slice task with
-  a design pass first, not picked up cold.
+**As of 2026-09-01, the database/container interchange and
+migration-bridge pipeline is reclassified as an active Version 1
+blocking criterion**, not work sequenced after v1 (PR #5437, direct
+owner instruction). This makes umbrella **#137** and its children
+**#138** (Access/VBA migration bridge), **#139** (.NET execution/interop
+bridge), **#140** (IMPORT/EXPORT DATABASE TYPE JSON/SQL), **#141**
+(IMPORT/EXPORT DATABASE TYPE ACCESS), **#1076** (interpret legacy
+xBase/Fox Software assets), and **#1077** (produce binaries for legacy
+xBase/Fox Software products) live, self-selectable v1 work per
+`docs/05-roadmap.md`'s sequencing rule — not deferred behind VFP 9
+parity-closure work anymore. `docs/01-product-charter.md`,
+`docs/03-compatibility-and-migration.md`, and `agents.md` were updated
+to match; see PR #5437 for the full reasoning (including a scope
+conflict caught and reconciled before writing the docs — the issue
+bodies said the opposite of the request until reconciled).
 
-Do not self-select further #34 work without new owner input — ask
-whether to scope #5409 as a proper multi-slice task, or pick a different
-umbrella from `docs/05-roadmap.md`.
+Open, non-blocking follow-ups from this migration series (none
+selected as next work): **#5434** (extract a shared
+read-and-revalidate-path helper in `physical_path_containment.{h,cpp}`
+for the pattern #5428/#5436 both needed), **#5435** (launcher-inventory
+`admit_launcher_artifact()` reuses one generic error code across 6
+failure modes with no retry for transient races), **#5438** (Windows
+containment-widening may reclassify an untested error code in
+`polyglot_supporting_artifact_admission.cpp`). Also open from an
+earlier broad security review (Codex, via `.agent-channel`, not yet
+started): **#5429** (publisher trust relies on unverified `CompanyName`
+metadata, not the `WinVerifyTrust` signer), **#5430** (TOCTOU across
+signature/publisher/identity checks in `external_process_policy.cpp`),
+**#5431** (Windows fails open on empty `allowed_path_roots`, unlike
+POSIX), **#5432** (cmd.exe command-injection risk in
+`CopperfinStudioHostBridge.cs`'s `.cmd`/`.bat` host launch), **#5433**
+(unpinned NSIS compiler in `build-installers.yml`).
+
+Pick the next slice from the now-open #137 pipeline, or one of the
+above follow-ups, per current owner priority.
 
 ## Shipped: PR #5411 (bounded Win32 version-resource string reads), merged as `265734d68` (squash)
 
