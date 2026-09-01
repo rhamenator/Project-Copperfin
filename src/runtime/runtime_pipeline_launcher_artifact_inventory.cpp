@@ -112,10 +112,11 @@ std::vector<std::filesystem::path> casefold_package_entries(
     return matches;
 }
 
-// Deliberately fail-fast, no retry, on every rejection path below
-// (ambiguous match, missing, containment-denied, read-failed, and the
-// post-read rename/replace rejection) -- decided in issue #5435 rather
-// than added silently. Two reasons:
+// Deliberately fail-fast, no retry, on every rejection path below:
+// parent-path mismatch, a directory-iteration error, ambiguous match,
+// missing, containment-denied, read-failed, the post-read rename/
+// replace rejection, and digest-computation failure -- decided in
+// issue #5435 rather than added silently. Two reasons:
 //
 //   1. This runs at package build time, not in a production execution
 //      path -- a transient race with another legitimate tool touching
