@@ -126,14 +126,24 @@ bool admit_launcher_artifact(
         return false;
     }
 
-    const auto containment = security::inspect_physical_path_containment(*exact, package_root);
+    // Atomic check-and-open primitive (issue #5409/#5420/#5426): the read
+    // below is bound to the exact object this walk verified, never reopened
+    // by path string. This call site has no link_count-dependent trust
+    // invariant (unlike workspace_agent_process_parser.cpp's #5421
+    // migration) -- the digest computed here is only ever stored in the
+    // build-time launcher-artifact inventory, never compared against a
+    // captured identity's link_count downstream -- so no additional
+    // post-read link_count re-check is needed beyond the handle-based
+    // read's own content_equal() freshness check.
+    auto handle = security::inspect_and_open_physically_contained_path(*exact, package_root);
+    const auto& containment = handle.result();
     if (!containment.allowed) {
         error = runtime_text(
             "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
             {{"path", expected_name}});
         return false;
     }
-    const auto snapshot = security::read_physically_contained_file_snapshot(containment, package_root);
+    const auto snapshot = security::read_physically_contained_file_snapshot_from_handle(handle);
     if (!snapshot.ok) {
         error = runtime_text(
             "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",

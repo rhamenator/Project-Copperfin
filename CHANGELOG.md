@@ -1,3 +1,58 @@
+- 2026-09-01: Closed issue #5422 (`RQ-CF-CONTAINMENT-001`, I2/#34 slice:
+  migrate `workspace_agent_target_containment.cpp` to the atomic
+  check-then-read primitive) as not applicable, after reading the actual
+  code rather than assuming the #5421 pattern transferred. The line-157
+  `inspect_physical_path_containment()` call (inside
+  `workspace_root_identity_matches()`, called from
+  `snapshot_workspace_file()`) checks the *workspace root* directory's
+  identity; the line-208 `read_physically_contained_file_snapshot()` call
+  reads the *target file*, using an identity captured by a wholly separate,
+  earlier `inspect_workspace_file()`/`inspect_local_file()` call from a
+  different top-level public API entry point
+  (`workspace_agent_session.cpp`'s `preflight_file_target_request()`, itself
+  invoked from a separate provider/tool-dispatch round trip through
+  `read_workspace_file_snapshot()`, with audit-event commits and
+  session-generation checks in between). There is no tight, adjacent
+  check-then-read pair on the same object here -- migrating would mean
+  holding a live OS file handle open across that entire async, audit-logged
+  round trip, which would be worse than the current design, not better. The
+  existing string-reopening read already does a full before/after
+  `PhysicalPathIdentity` comparison (including `link_count`, via
+  `operator==`) plus an independent post-read containment re-walk,
+  appropriately matched to this call site's actual (non-tight) shape.
+  While verifying this, re-surveyed every `read_physically_contained_file_snapshot()`
+  call site in the codebase (not just the four files #5409 originally
+  named) and found two genuine tight check-then-read pairs the original
+  triage missed: `runtime_pipeline_launcher_artifact_inventory.cpp:129/136`
+  (opened as #5426) and `polyglot_supporting_artifact_admission.cpp`'s
+  `admit_polyglot_supporting_artifact():101/114` (opened as #5427 -- that
+  file's other read call, in `revalidate_polyglot_supporting_artifact_admission()`,
+  reuses an admission-time-captured containment across a real
+  admission-to-execution gap, the same shape as the closed #5422 site, and
+  is explicitly excluded from #5427's scope). Commented the corrected
+  survey onto #5409.
+
+- 2026-09-01: Migrated `runtime_pipeline_launcher_artifact_inventory.cpp`'s
+  `admit_launcher_artifact()` check-then-read pair (`RQ-CF-CONTAINMENT-001`,
+  issue #5409, slice #5426) to
+  `inspect_and_open_physically_contained_path()` +
+  `read_physically_contained_file_snapshot_from_handle()`, so the bytes
+  read and SHA256-hashed for a generated-launcher artifact's build-time
+  inventory entry are bound to the exact object the containment walk
+  verified, never reopened by path string. Unlike #5421's migration, this
+  call site has no `link_count`-dependent trust invariant to preserve: the
+  computed digest is stored only in the launcher-artifact inventory and is
+  never compared against a captured identity's `link_count` by any
+  downstream caller, confirmed by reading every use of the digest before
+  migrating rather than assumed. No new regression test added beyond
+  existing indirect coverage (`test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_materializes`
+  and the launcher-diagnostics localization tests in
+  `test_runtime_pipeline_launcher_and_security.cpp`, both unchanged and
+  passing) -- the atomic primitive's own TOCTOU-closing behavior is already
+  covered generically by #5420's regression suite in
+  `test_security_controls.cpp`, and this migration introduces no
+  call-site-specific security semantics of its own to test.
+
 - 2026-08-31: Migrated `workspace_agent_process_parser.cpp`'s two
   check-then-read pairs (`RQ-CF-CONTAINMENT-001`, issue #5409, slice
   #5421) -- `capture_binding()` and `authorize_windows()`'s Windows
