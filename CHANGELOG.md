@@ -1,3 +1,81 @@
+- 2026-09-01: A second adversarial review pass on PR #5436/issue #5427
+  found the round-1 post-read re-walk fix (below) reused
+  `PolyglotSupportingArtifactAdmissionError::containment_denied` for the
+  new rename/replace rejection, conflating a genuine TOCTOU-attack signal
+  with the mundane "path was never allowed" meaning that code has at the
+  top of the function -- masking exactly the kind of security-relevant
+  event this fix exists to catch from audit logs. Fixed by using the
+  existing `PolyglotSupportingArtifactAdmissionError::artifact_changed`
+  value instead (already used by this file's own
+  `revalidate_polyglot_supporting_artifact_admission()` for its analogous
+  checks) with a new `"polyglot.supporting_artifact.changed_during_admission"`
+  diagnostic code, mirroring the established
+  `polyglot.artifact.changed_during_admission` convention in the sibling
+  `polyglot_artifact_admission.cpp`. Tightened
+  `test_supporting_artifact_admission_rejects_rename_during_read()` to
+  assert the specific error code, not just admission failure; re-verified
+  it still catches the regression. A second finding from this review pass
+  (Windows containment-widening may reclassify an unreadable-but-containable
+  file's error code) duplicates the already-filed issue #5438.
+
+- 2026-09-01: An adversarial review pass on PR #5436/issue #5427 found a
+  real gap this migration's CHANGELOG entry (below) originally claimed
+  didn't exist: the inline `expected_sha256` comparison protects the bytes
+  read via the handle, but -- as issue #5426's identical post-read re-walk
+  fix already established -- it does not by itself guarantee
+  `resolved_path_` still resolves to that same object once
+  `admit_polyglot_supporting_artifact()` returns. A rename/replace during
+  the read lets the handle-bound read still correctly match
+  `expected_sha256` (it reads the original, unchanged object), while
+  `resolved_path_` now points at a different one; this function's own
+  returned admission must be self-consistent regardless of whether a given
+  caller later revalidates before use (the current one known caller,
+  `polyglot_artifact_adapter.cpp`, does, but that is caller convention, not
+  an API guarantee). Fixed by restoring the same independent post-read
+  `inspect_physical_path_containment()` re-walk #5426 needed, using
+  `content_equal()` from the start this time (no `link_count`-dependent
+  invariant exists in this file). Added a macro-gated
+  `COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS` test
+  hook (new `polyglot_supporting_artifact_admission_test_hooks.h`, matching
+  the established convention) and
+  `test_supporting_artifact_admission_rejects_rename_during_read()` in
+  `test_polyglot_python_sidecar.cpp`; verified it catches the regression by
+  temporarily disabling the check and observing the test fail, then
+  restoring it, and confirmed the hook symbol is absent from a genuine
+  `-DCOPPERFIN_BUILD_TESTS=OFF` production build via `nm`. A second finding
+  (Windows containment-widening may reclassify an unreadable-but-containable
+  file from `read_failed` to `containment_denied`, untested either way)
+  deferred as issue #5438 rather than adding conditional Windows-specific
+  probing logic to preserve an untested distinction.
+
+- 2026-09-01: Migrated `polyglot_supporting_artifact_admission.cpp`'s
+  `admit_polyglot_supporting_artifact()` check-then-read pair
+  (`RQ-CF-CONTAINMENT-001`, issue #5409, slice #5427) to
+  `inspect_and_open_physically_contained_path()` +
+  `read_physically_contained_file_snapshot_from_handle()`, so the bytes
+  read and hashed for a polyglot supporting artifact are bound to the
+  exact object the containment walk verified, never reopened by path
+  string. Unlike #5426's migration, this call site needs no independent
+  post-read path-to-object re-walk: the digest computed from the read is
+  compared inline against `request.expected_sha256`, an independently
+  caller-supplied value, so any object substituted during or after the
+  read that doesn't match that expected hash is already rejected by the
+  hash-mismatch check -- there is no "write and forget" window like
+  #5426's name-keyed inventory had. Confirmed by reading the code and
+  reasoning through the threat model before migrating, not assumed:
+  no `link_count`-dependent trust invariant exists in this file either
+  (grepped for it, none found). `revalidate_polyglot_supporting_artifact_admission()`
+  (the file's other `read_physically_contained_file_snapshot()` caller)
+  is intentionally left unmigrated -- it reuses an admission-time-captured
+  containment across a real admission-to-execution gap
+  (`polyglot_artifact_adapter.cpp` calls it immediately before launching
+  the bounded process, on a separate invocation path from admission
+  itself), the same shape as the #5422 call site closed as not-applicable.
+  Existing regression coverage (`test_polyglot_python_sidecar`'s
+  successful-admission and oversized-artifact-rejection paths) passes
+  unchanged; no new test added since the migration introduces no new
+  logic of its own, unlike #5426's added re-walk.
+
 - 2026-09-01: Reclassified the database/container interchange and
   migration-bridge pipeline (umbrella #137, covering #138, #139, #140,
   #141, #1076, and #1077) from "real, committed scope sequenced after
@@ -12,6 +90,7 @@
   (Version target note), and `agents.md` (Product And Roadmap Intent
   section) to match. Posted a formal sync message to `.agent-channel` so
   both participating agents re-sequence their intake queues accordingly.
+
 - 2026-09-01: Fixed a real gap in PR #5428/issue #5426's launcher-artifact
   migration, found by adversarial review before merge:
   `read_physically_contained_file_snapshot_from_handle()` guarantees the
