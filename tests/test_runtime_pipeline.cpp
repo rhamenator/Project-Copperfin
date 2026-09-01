@@ -167,6 +167,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_fd_backed_binary_reads_accept_direct_descriptor_paths();
     test_repeated_materialization_replaces_generated_package_transactionally();
     test_runtime_package_diagnostics_resolve_through_localization_catalog();
+    test_launcher_artifact_admission_rejects_rename_during_read();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

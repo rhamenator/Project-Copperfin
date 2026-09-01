@@ -246,6 +246,7 @@ void test_relative_output_root_preserves_plan_path_contract();
 void test_security_enabled_runtime_host_name_validation();
 void test_runtime_security_role_environment_fidelity();
 void test_runtime_package_diagnostics_resolve_through_localization_catalog();
+void test_launcher_artifact_admission_rejects_rename_during_read();
 
 }  // namespace cf_test_runtime_pipeline
 

@@ -1,3 +1,130 @@
+- 2026-09-01: Fixed a real gap in PR #5428/issue #5426's launcher-artifact
+  migration, found by adversarial review before merge:
+  `read_physically_contained_file_snapshot_from_handle()` guarantees the
+  bytes read are exactly what the containment walk verified, but -- unlike
+  the string-reopening `read_physically_contained_file_snapshot()` it
+  replaces, which independently re-walked the canonical path by string
+  after the read -- it makes no claim about whether the *path* still
+  resolves to that same object once the read completes. Another process
+  renaming or replacing the artifact during the read would let the
+  handle-bound read still succeed (correctly reading the original object's
+  unchanged content), while the resulting inventory entry -- keyed by the
+  artifact's file name -- would record a digest for an object the package
+  no longer actually ships under that name. Fixed by restoring an
+  independent post-read `inspect_physical_path_containment()` re-walk at
+  this call site, mirroring exactly what the string-reopening function did,
+  rejecting rather than silently mis-recording. This is a property of the
+  call site (an inventory keyed by name with no later re-verification step),
+  not a defect in the shared primitive itself -- #5421's callers
+  (`capture_binding()`/`authorize_windows()`) already re-verify
+  independently, by design, immediately before any eventual use.
+
+- 2026-09-01: A second adversarial `/code-review` pass on PR #5428 found four
+  further real issues in the post-read re-walk fix above, all fixed except
+  one deferred as a tracked follow-up. (1) No dedicated regression test
+  existed for the fix, unlike every other fix in this migration series;
+  added `test_launcher_artifact_admission_rejects_rename_during_read()`
+  using a new macro-gated `set_launcher_artifact_post_read_test_hook()`
+  (`runtime_pipeline_test_hooks.h`, matching the existing
+  `COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS` convention), fired
+  synchronously immediately before the post-read re-walk since
+  `admit_launcher_artifact()` runs on the calling thread with no background
+  thread involved. Verified it actually catches the regression by
+  temporarily disabling the check and observing the test fail, then
+  restoring it. (2) The re-walk re-resolved the raw pre-walk `*exact`
+  directory-entry path rather than the already-verified
+  `containment.canonical_path`, so despite the CHANGELOG's claim of
+  mirroring `read_physically_contained_file_snapshot()`'s own post-read
+  check, it was actually re-doing casefold/directory-entry resolution from
+  scratch a second time rather than genuinely mirroring that function's
+  behavior (which re-walks the already-canonical path). Fixed to re-walk
+  `containment.canonical_path`. (3) The fix is hand-inlined at this one
+  call site rather than factored into a shared helper, and issue #5427
+  (`polyglot_supporting_artifact_admission.cpp`) has the identical
+  name-keyed shape and will need the same pattern -- deferred as issue
+  #5434 (extract a shared read-and-revalidate-path helper in
+  `physical_path_containment.{h,cpp}`) rather than expanding this fix's
+  scope into the shared primitive's public surface while CI was already
+  running against this commit's exact-content evidence trail; (4) the
+  added re-walk triples directory-walk syscalls per admitted artifact
+  (not attacker-adjacent, build-time only) -- folded into #5434 as a
+  secondary consideration for that helper's design, not fixed here.
+
+- 2026-09-01: A third adversarial `/code-review` pass on PR #5428 found the
+  round-2 post-read re-walk fix used full `PhysicalPathIdentity::operator!=`
+  (including `link_count`) to compare `after_containment.identity` against
+  `snapshot.containment.identity`, directly contradicting this call site's
+  own comment (a few lines above) stating it has no `link_count`-dependent
+  trust invariant and needs no additional `link_count` post-read re-check.
+  Using the stricter comparison risked spuriously failing the whole package
+  build on a benign, momentary `link_count` change unrelated to content
+  (e.g. an AV/backup/dedup tool briefly hard-linking the artifact). Fixed
+  by using `content_equal()` instead, matching both the comment's stated
+  invariant and the same reasoning `content_equal()` was introduced for in
+  the first place (#5420's own addendum above). Re-verified the rename/
+  replace regression test still passes and still catches the regression
+  (different content still fails `content_equal()`). A second finding --
+  this function reuses one generic error code across six distinct failure
+  modes with no retry anywhere in the call chain for a transient race --
+  was confirmed to be a pre-existing characteristic of this file (not a
+  regression introduced by #5426) and deferred as tracked issue #5435
+  rather than redesigning this function's error handling mid-review.
+
+- 2026-09-01: Closed issue #5422 (`RQ-CF-CONTAINMENT-001`, I2/#34 slice:
+  migrate `workspace_agent_target_containment.cpp` to the atomic
+  check-then-read primitive) as not applicable, after reading the actual
+  code rather than assuming the #5421 pattern transferred. The line-157
+  `inspect_physical_path_containment()` call (inside
+  `workspace_root_identity_matches()`, called from
+  `snapshot_workspace_file()`) checks the *workspace root* directory's
+  identity; the line-208 `read_physically_contained_file_snapshot()` call
+  reads the *target file*, using an identity captured by a wholly separate,
+  earlier `inspect_workspace_file()`/`inspect_local_file()` call from a
+  different top-level public API entry point
+  (`workspace_agent_session.cpp`'s `preflight_file_target_request()`, itself
+  invoked from a separate provider/tool-dispatch round trip through
+  `read_workspace_file_snapshot()`, with audit-event commits and
+  session-generation checks in between). There is no tight, adjacent
+  check-then-read pair on the same object here -- migrating would mean
+  holding a live OS file handle open across that entire async, audit-logged
+  round trip, which would be worse than the current design, not better. The
+  existing string-reopening read already does a full before/after
+  `PhysicalPathIdentity` comparison (including `link_count`, via
+  `operator==`) plus an independent post-read containment re-walk,
+  appropriately matched to this call site's actual (non-tight) shape.
+  While verifying this, re-surveyed every `read_physically_contained_file_snapshot()`
+  call site in the codebase (not just the four files #5409 originally
+  named) and found two genuine tight check-then-read pairs the original
+  triage missed: `runtime_pipeline_launcher_artifact_inventory.cpp:129/136`
+  (opened as #5426) and `polyglot_supporting_artifact_admission.cpp`'s
+  `admit_polyglot_supporting_artifact():101/114` (opened as #5427 -- that
+  file's other read call, in `revalidate_polyglot_supporting_artifact_admission()`,
+  reuses an admission-time-captured containment across a real
+  admission-to-execution gap, the same shape as the closed #5422 site, and
+  is explicitly excluded from #5427's scope). Commented the corrected
+  survey onto #5409.
+
+- 2026-09-01: Migrated `runtime_pipeline_launcher_artifact_inventory.cpp`'s
+  `admit_launcher_artifact()` check-then-read pair (`RQ-CF-CONTAINMENT-001`,
+  issue #5409, slice #5426) to
+  `inspect_and_open_physically_contained_path()` +
+  `read_physically_contained_file_snapshot_from_handle()`, so the bytes
+  read and SHA256-hashed for a generated-launcher artifact's build-time
+  inventory entry are bound to the exact object the containment walk
+  verified, never reopened by path string. Unlike #5421's migration, this
+  call site has no `link_count`-dependent trust invariant to preserve: the
+  computed digest is stored only in the launcher-artifact inventory and is
+  never compared against a captured identity's `link_count` by any
+  downstream caller, confirmed by reading every use of the digest before
+  migrating rather than assumed. No new regression test added beyond
+  existing indirect coverage (`test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_materializes`
+  and the launcher-diagnostics localization tests in
+  `test_runtime_pipeline_launcher_and_security.cpp`, both unchanged and
+  passing) -- the atomic primitive's own TOCTOU-closing behavior is already
+  covered generically by #5420's regression suite in
+  `test_security_controls.cpp`, and this migration introduces no
+  call-site-specific security semantics of its own to test.
+
 - 2026-08-31: Migrated `workspace_agent_process_parser.cpp`'s two
   check-then-read pairs (`RQ-CF-CONTAINMENT-001`, issue #5409, slice
   #5421) -- `capture_binding()` and `authorize_windows()`'s Windows
