@@ -61,7 +61,9 @@ boundary, rollback, and verification analysis.
 
 Copperfin is not only a VFP 9 compatibility clone. The foundation is maintaining existing FoxPro/VFP codebases without forced rewrites, then enabling gradual modernization through .NET-facing commands, interop paths, safer host behavior, modern runtime capabilities, richer tooling, portability, generated outputs, host integration, and eventually the rapid application-building feel FoxPro/VFP provided.
 
-Future-facing issues (database/container interchange, migration bridges, legacy Fox Software/xBase format support, and similar) are real, committed roadmap work, not optional or maybe-never -- the owner has thought through these requirements deliberately. Do not treat them as noise, and do not ignore, close, demote, or discard them merely because they are not current blockers. Work them after important/basic compatibility, usability, release-readiness, and prerequisite architecture are stable enough for that lane.
+Future-facing issues are real, committed roadmap work, not optional or maybe-never -- the owner has thought through these requirements deliberately. Do not treat them as noise, and do not ignore, close, demote, or discard them merely because they were not previously current blockers.
+
+**As of 2026-09-01, the database/container interchange and migration-bridge pipeline (umbrella #137, covering #138, #139, #140, #141, #1076, and #1077 -- Access/VBA migration bridge, .NET execution/interop bridge, JSON/SQL/Access import-export, and legacy Fox Software/xBase interpretation and binary production) is an active Version 1 blocking criterion, not work sequenced after v1.** See `docs/01-product-charter.md` and `docs/03-compatibility-and-migration.md` for the corresponding charter updates. Other future-facing issues not in this pipeline remain sequenced after important/basic compatibility, usability, release-readiness, and prerequisite architecture are stable enough for that lane, unless a similar direct owner instruction reclassifies them.
 
 ## Active Execution Rule
 

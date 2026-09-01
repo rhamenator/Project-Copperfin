@@ -1,3 +1,17 @@
+- 2026-09-01: Reclassified the database/container interchange and
+  migration-bridge pipeline (umbrella #137, covering #138, #139, #140,
+  #141, #1076, and #1077) from "real, committed scope sequenced after
+  Version 1" to an active Version 1 blocking criterion, per direct
+  repository-owner instruction. Updated all 7 issue bodies to reflect the
+  new sequencing (keeping the existing "real, committed, not optional"
+  framing from the earlier #5413 wishlist-framing correction intact) and
+  updated `docs/01-product-charter.md` (Version target note and the
+  Non-Goals section, which previously listed producing legacy-format
+  binaries as an explicit Version 1 non-goal -- now corrected, since that
+  directly contradicted #1077's new status), `docs/03-compatibility-and-migration.md`
+  (Version target note), and `agents.md` (Product And Roadmap Intent
+  section) to match. Posted a formal sync message to `.agent-channel` so
+  both participating agents re-sequence their intake queues accordingly.
 - 2026-09-01: Fixed a real gap in PR #5428/issue #5426's launcher-artifact
   migration, found by adversarial review before merge:
   `read_physically_contained_file_snapshot_from_handle()` guarantees the

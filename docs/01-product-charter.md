@@ -27,7 +27,7 @@ Implementation stance:
 
 Version target:
 
-- Version 1 is tested as a Visual FoxPro 9-compatible target. VFP 6, VFP 7, and VFP 8 files may work through shared DBF/FPT/CDX/DBC readers, but they are best-effort and untested rather than separate compile-time targets. Older Fox Software and xBase-family assets are real, committed interpretation/inspection targets (tracked under #1076), sequenced after the Version 1 VFP 9 target rather than optional or maybe-never; Copperfin should not expose a version-selection dial until the project intentionally funds and tests differentiated behavior for them.
+- Version 1 is tested as a Visual FoxPro 9-compatible target. VFP 6, VFP 7, and VFP 8 files may work through shared DBF/FPT/CDX/DBC readers, but they are best-effort and untested rather than separate compile-time targets. Older Fox Software and xBase-family assets, and the full database/container interchange and migration-bridge pipeline (tracked under #137, including #138, #139, #140, #141, #1076, and #1077), are **active Version 1 blocking criteria as of 2026-09-01** rather than work sequenced after it; Copperfin should not expose a version-selection dial until the project intentionally funds and tests differentiated behavior for the older Fox Software/xBase family specifically.
 
 ## Problem
 
@@ -85,7 +85,8 @@ Language and framework choices should be judged against these, not the other way
 - pixel-perfect recreation of the original IDE shell
 - support for every third-party ActiveX control on day one
 - full cloud-native rewrite of every legacy app automatically
-- producing binaries for FoxBASE, FoxBASE+, FoxPro 1.x/2.x, dBASE, or Clipper
+
+Note: producing binaries for FoxBASE, FoxBASE+, FoxPro 1.x/2.x, dBASE, or Clipper was previously listed here as a non-goal. As of 2026-09-01 it is tracked under #1077 as an active Version 1 blocking criterion (part of the migration pipeline under #137) rather than excluded from v1 scope; see the Version target note above.
 
 ## Compatibility Fidelity Rule
 
