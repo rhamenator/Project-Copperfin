@@ -1,3 +1,31 @@
+- 2026-09-01: Migrated `polyglot_supporting_artifact_admission.cpp`'s
+  `admit_polyglot_supporting_artifact()` check-then-read pair
+  (`RQ-CF-CONTAINMENT-001`, issue #5409, slice #5427) to
+  `inspect_and_open_physically_contained_path()` +
+  `read_physically_contained_file_snapshot_from_handle()`, so the bytes
+  read and hashed for a polyglot supporting artifact are bound to the
+  exact object the containment walk verified, never reopened by path
+  string. Unlike #5426's migration, this call site needs no independent
+  post-read path-to-object re-walk: the digest computed from the read is
+  compared inline against `request.expected_sha256`, an independently
+  caller-supplied value, so any object substituted during or after the
+  read that doesn't match that expected hash is already rejected by the
+  hash-mismatch check -- there is no "write and forget" window like
+  #5426's name-keyed inventory had. Confirmed by reading the code and
+  reasoning through the threat model before migrating, not assumed:
+  no `link_count`-dependent trust invariant exists in this file either
+  (grepped for it, none found). `revalidate_polyglot_supporting_artifact_admission()`
+  (the file's other `read_physically_contained_file_snapshot()` caller)
+  is intentionally left unmigrated -- it reuses an admission-time-captured
+  containment across a real admission-to-execution gap
+  (`polyglot_artifact_adapter.cpp` calls it immediately before launching
+  the bounded process, on a separate invocation path from admission
+  itself), the same shape as the #5422 call site closed as not-applicable.
+  Existing regression coverage (`test_polyglot_python_sidecar`'s
+  successful-admission and oversized-artifact-rejection paths) passes
+  unchanged; no new test added since the migration introduces no new
+  logic of its own, unlike #5426's added re-walk.
+
 - 2026-09-01: Fixed a real gap in PR #5428/issue #5426's launcher-artifact
   migration, found by adversarial review before merge:
   `read_physically_contained_file_snapshot_from_handle()` guarantees the

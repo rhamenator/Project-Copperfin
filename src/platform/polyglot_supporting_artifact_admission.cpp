@@ -98,9 +98,23 @@ PolyglotSupportingArtifactAdmissionResult admit_polyglot_supporting_artifact(
             "polyglot.supporting_artifact.allowed_root_required");
     }
 
-    result.containment_ = security::inspect_physical_path_containment(
+    // Atomic check-and-open primitive (issue #5409/#5420/#5427): the read
+    // below is bound to the exact object this walk verified, never reopened
+    // by path string. Unlike runtime_pipeline_launcher_artifact_inventory.cpp's
+    // #5426 migration, this call site needs no independent post-read
+    // path-to-object re-walk: the digest computed from the read is compared
+    // inline below against request.expected_sha256, an independently
+    // caller-supplied value, so any object substituted during or after the
+    // read that doesn't match that expected hash is already rejected by the
+    // hash-mismatch check -- there is no "write and forget" window like
+    // #5426's name-keyed inventory had, where nothing else would ever catch
+    // a mismatch. revalidate_polyglot_supporting_artifact_admission() below
+    // (unmigrated; see issue #5422's closing comment for why) re-verifies
+    // independently again immediately before actual use.
+    auto handle = security::inspect_and_open_physically_contained_path(
         path_from_utf8_string(request.artifact_path),
         path_from_utf8_string(request.allowed_root));
+    result.containment_ = handle.result();
     if (!result.containment_.allowed) {
         return deny(
             PolyglotSupportingArtifactAdmissionError::containment_denied,
@@ -111,10 +125,8 @@ PolyglotSupportingArtifactAdmissionResult admit_polyglot_supporting_artifact(
             PolyglotSupportingArtifactAdmissionError::artifact_too_large,
             "polyglot.supporting_artifact.size_limit_exceeded");
     }
-    const auto snapshot = security::read_physically_contained_file_snapshot(
-        result.containment_,
-        path_from_utf8_string(result.allowed_root_),
-        result.maximum_bytes_);
+    const auto snapshot = security::read_physically_contained_file_snapshot_from_handle(
+        handle, result.maximum_bytes_);
     if (!snapshot.ok) {
         return deny(
             PolyglotSupportingArtifactAdmissionError::read_failed,
