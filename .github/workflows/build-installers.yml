@@ -78,15 +78,22 @@ jobs:
 
           if (-not $pinnedArchiveAvailable) {
             Write-Warning 'Checksum-pinned NSIS archive unavailable after 3 attempts; falling back to an ambient runner-image or Chocolatey install. That binary is still rejected below unless it reports the pinned NSIS version.'
-            $makensis = Join-Path 'C:\Program Files (x86)\NSIS' 'makensis.exe'
-            $nsisRoot = 'C:\Program Files (x86)\NSIS'
+            # $makensis / $nsisRoot already hold their initial values here
+            # (this branch only runs when the pinned-archive loop above
+            # never reassigned them), so no need to reset them.
             if (-not (Test-Path -LiteralPath $makensis -PathType Leaf)) {
-              # Pin the Chocolatey install to the same version so a mismatch
-              # is discovered immediately (choco itself fails if the exact
-              # version isn't published) rather than after a full install
-              # only to be rejected by the version check below.
+              # Not version-pinned here deliberately: the exact-match check
+              # below already fully gates which version is trusted to build
+              # the installer, so pinning `choco install` itself to
+              # $pinnedVersion would add no security value while making
+              # this fallback brittle against Chocolatey's own version
+              # string formatting (e.g. a suffixed "3.12.20240115"-style
+              # package version would never equal the plain "3.12" that
+              # -Version demands) -- turning a transient pinned-archive
+              # outage into a guaranteed total failure instead of a real
+              # fallback attempt.
               for ($attempt = 1; $attempt -le 3; $attempt++) {
-                & choco install nsis --version=$pinnedVersion -y --no-progress --retry-count=3 --retry-delay=5
+                & choco install nsis -y --no-progress --retry-count=3 --retry-delay=5
                 $chocoExitCode = $LASTEXITCODE
                 if ($chocoExitCode -ne 0) {
                   Write-Warning "Chocolatey NSIS install attempt $attempt exited with code $chocoExitCode."
@@ -105,8 +112,9 @@ jobs:
           }
 
           # Regardless of which path produced makensis.exe, verify it
-          # reports the pinned NSIS version before it is trusted to build
-          # the installer. This is the only check available for the
+          # reports EXACTLY the pinned NSIS version (anchored match, not a
+          # substring or prefix) before it is trusted to build the
+          # installer. This is the only check available for the
           # ambient/Chocolatey paths (no binary hash is known ahead of time
           # for those); the portable archive path above already carries its
           # own SHA-256 pin. Stderr is discarded (2>$null), not merged via
@@ -118,8 +126,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "NSIS compiler verification failed with exit code $LASTEXITCODE."
           }
-          $versionToken = [Regex]::Match($reportedVersion, '\d+(\.\d+)+')
-          if (-not $versionToken.Success -or $versionToken.Value -ne $pinnedVersion) {
+          if ($reportedVersion -notmatch "^v?$([Regex]::Escape($pinnedVersion))$") {
             throw "makensis.exe at $makensis reported version '$reportedVersion', expected the pinned version $pinnedVersion; refusing to build the installer with an unverified compiler."
           }
 
