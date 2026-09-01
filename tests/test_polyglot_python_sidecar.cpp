@@ -342,9 +342,23 @@ void test_supporting_artifact_admission_rejects_rename_during_read(
     // succeeds on Windows since inspect_and_open_physically_contained_path()
     // opens with FILE_SHARE_DELETE, so this cleanup gap was real there, not
     // just on POSIX).
+    // fs::remove(path, ec) clears ec (no error) when the path simply
+    // doesn't exist -- e.g. the moved-aside file when the rename itself
+    // was never permitted -- so checking cleanup_error after each call
+    // distinguishes that from an actual removal failure, without a false
+    // positive when there was nothing to clean up.
     std::error_code cleanup_error;
     fs::remove(g_supporting_artifact_rename_hook_moved_aside, cleanup_error);
+    expect_local(
+        !cleanup_error,
+        "cleanup of the moved-aside rename-race file should not fail, or "
+        "root may leak a stray file into later tests in this file");
+    cleanup_error.clear();
     fs::remove(g_supporting_artifact_rename_hook_original, cleanup_error);
+    expect_local(
+        !cleanup_error,
+        "cleanup of the replacement rename-race file should not fail, or "
+        "root may leak a stray file into later tests in this file");
 }
 }  // namespace
 
