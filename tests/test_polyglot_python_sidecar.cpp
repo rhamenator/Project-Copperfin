@@ -334,8 +334,17 @@ void test_supporting_artifact_admission_rejects_rename_during_read(
             "#5427 regression test");
     }
 
+    // Clean up both the moved-aside original and the replacement the hook
+    // wrote back at g_supporting_artifact_rename_hook_original -- root is
+    // shared with the rest of this file's tests, which must not see a
+    // stray leftover file here (found while investigating an unrelated
+    // Windows CI failure in a downstream test after this one; the rename
+    // succeeds on Windows since inspect_and_open_physically_contained_path()
+    // opens with FILE_SHARE_DELETE, so this cleanup gap was real there, not
+    // just on POSIX).
     std::error_code cleanup_error;
     fs::remove(g_supporting_artifact_rename_hook_moved_aside, cleanup_error);
+    fs::remove(g_supporting_artifact_rename_hook_original, cleanup_error);
 }
 }  // namespace
 
