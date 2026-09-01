@@ -1,3 +1,23 @@
+- 2026-09-01: A second adversarial review pass on PR #5436/issue #5427
+  found the round-1 post-read re-walk fix (below) reused
+  `PolyglotSupportingArtifactAdmissionError::containment_denied` for the
+  new rename/replace rejection, conflating a genuine TOCTOU-attack signal
+  with the mundane "path was never allowed" meaning that code has at the
+  top of the function -- masking exactly the kind of security-relevant
+  event this fix exists to catch from audit logs. Fixed by using the
+  existing `PolyglotSupportingArtifactAdmissionError::artifact_changed`
+  value instead (already used by this file's own
+  `revalidate_polyglot_supporting_artifact_admission()` for its analogous
+  checks) with a new `"polyglot.supporting_artifact.changed_during_admission"`
+  diagnostic code, mirroring the established
+  `polyglot.artifact.changed_during_admission` convention in the sibling
+  `polyglot_artifact_admission.cpp`. Tightened
+  `test_supporting_artifact_admission_rejects_rename_during_read()` to
+  assert the specific error code, not just admission failure; re-verified
+  it still catches the regression. A second finding from this review pass
+  (Windows containment-widening may reclassify an unreadable-but-containable
+  file's error code) duplicates the already-filed issue #5438.
+
 - 2026-09-01: An adversarial review pass on PR #5436/issue #5427 found a
   real gap this migration's CHANGELOG entry (below) originally claimed
   didn't exist: the inline `expected_sha256` comparison protects the bytes

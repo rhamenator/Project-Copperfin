@@ -177,6 +177,19 @@ PolyglotSupportingArtifactAdmissionResult admit_polyglot_supporting_artifact(
     // this file; grepped for it). Using the stricter full-identity
     // comparison would spuriously deny admission on a benign, momentary
     // link_count change unrelated to content.
+    //
+    // Denied with artifact_changed, not containment_denied: a rename/
+    // replace caught here is a materially different security event from
+    // "the path was never allowed" (the meaning containment_denied has at
+    // the top of this function) and reusing that code would mask a genuine
+    // TOCTOU-attack signal from security audit logs behind a mundane
+    // misconfiguration code. Mirrors the established
+    // polyglot.artifact.changed_during_admission convention in the sibling
+    // polyglot_artifact_admission.cpp, and reuses the same
+    // PolyglotSupportingArtifactAdmissionError::artifact_changed value this
+    // file's own revalidate_polyglot_supporting_artifact_admission() already
+    // uses for its analogous checks -- found by a second adversarial review
+    // pass on this PR.
     const auto after_containment = security::inspect_physical_path_containment(
         result.containment_.canonical_path,
         path_from_utf8_string(request.allowed_root));
@@ -184,8 +197,8 @@ PolyglotSupportingArtifactAdmissionResult admit_polyglot_supporting_artifact(
         after_containment.canonical_path != result.containment_.canonical_path ||
         !after_containment.identity.content_equal(snapshot.containment.identity)) {
         return deny(
-            PolyglotSupportingArtifactAdmissionError::containment_denied,
-            "polyglot.supporting_artifact.containment_denied");
+            PolyglotSupportingArtifactAdmissionError::artifact_changed,
+            "polyglot.supporting_artifact.changed_during_admission");
     }
 
     result.containment_ = snapshot.containment;

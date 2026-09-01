@@ -325,10 +325,13 @@ void test_supporting_artifact_admission_rejects_rename_during_read(
     // doesn't permit renaming an open file (e.g. a restricted sandbox).
     if (g_supporting_artifact_rename_hook_renamed) {
         expect_local(
-            !admission.ok(),
+            !admission.ok() && admission.error_code() ==
+                "polyglot.supporting_artifact.changed_during_admission",
             "RQ-CF-CONTAINMENT-001: a supporting artifact renamed/replaced "
             "during the handle-based read must be rejected by the post-read "
-            "path re-walk -- issue #5427 regression test");
+            "path re-walk with a distinct artifact_changed error code, not "
+            "conflated with the initial containment_denied case -- issue "
+            "#5427 regression test");
     }
 
     std::error_code cleanup_error;
