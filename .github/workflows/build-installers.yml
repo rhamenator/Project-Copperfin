@@ -81,8 +81,12 @@ jobs:
             $makensis = Join-Path 'C:\Program Files (x86)\NSIS' 'makensis.exe'
             $nsisRoot = 'C:\Program Files (x86)\NSIS'
             if (-not (Test-Path -LiteralPath $makensis -PathType Leaf)) {
+              # Pin the Chocolatey install to the same version so a mismatch
+              # is discovered immediately (choco itself fails if the exact
+              # version isn't published) rather than after a full install
+              # only to be rejected by the version check below.
               for ($attempt = 1; $attempt -le 3; $attempt++) {
-                & choco install nsis -y --no-progress --retry-count=3 --retry-delay=5
+                & choco install nsis --version=$pinnedVersion -y --no-progress --retry-count=3 --retry-delay=5
                 $chocoExitCode = $LASTEXITCODE
                 if ($chocoExitCode -ne 0) {
                   Write-Warning "Chocolatey NSIS install attempt $attempt exited with code $chocoExitCode."
@@ -105,12 +109,17 @@ jobs:
           # the installer. This is the only check available for the
           # ambient/Chocolatey paths (no binary hash is known ahead of time
           # for those); the portable archive path above already carries its
-          # own SHA-256 pin.
-          $reportedVersion = (& $makensis /VERSION 2>&1 | Out-String).Trim()
+          # own SHA-256 pin. Stderr is discarded (2>$null), not merged via
+          # 2>&1: with $ErrorActionPreference = 'Stop' in scope, merging a
+          # native command's stderr into the pipeline can turn even benign
+          # stderr output into a script-terminating error before the
+          # exit-code/version checks below ever run.
+          $reportedVersion = ((& $makensis /VERSION 2>$null) | Out-String).Trim()
           if ($LASTEXITCODE -ne 0) {
             throw "NSIS compiler verification failed with exit code $LASTEXITCODE."
           }
-          if ($reportedVersion -notmatch [Regex]::Escape($pinnedVersion)) {
+          $versionToken = [Regex]::Match($reportedVersion, '\d+(\.\d+)+')
+          if (-not $versionToken.Success -or $versionToken.Value -ne $pinnedVersion) {
             throw "makensis.exe at $makensis reported version '$reportedVersion', expected the pinned version $pinnedVersion; refusing to build the installer with an unverified compiler."
           }
 
