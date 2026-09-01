@@ -50,6 +50,26 @@
   (not attacker-adjacent, build-time only) -- folded into #5434 as a
   secondary consideration for that helper's design, not fixed here.
 
+- 2026-09-01: A third adversarial `/code-review` pass on PR #5428 found the
+  round-2 post-read re-walk fix used full `PhysicalPathIdentity::operator!=`
+  (including `link_count`) to compare `after_containment.identity` against
+  `snapshot.containment.identity`, directly contradicting this call site's
+  own comment (a few lines above) stating it has no `link_count`-dependent
+  trust invariant and needs no additional `link_count` post-read re-check.
+  Using the stricter comparison risked spuriously failing the whole package
+  build on a benign, momentary `link_count` change unrelated to content
+  (e.g. an AV/backup/dedup tool briefly hard-linking the artifact). Fixed
+  by using `content_equal()` instead, matching both the comment's stated
+  invariant and the same reasoning `content_equal()` was introduced for in
+  the first place (#5420's own addendum above). Re-verified the rename/
+  replace regression test still passes and still catches the regression
+  (different content still fails `content_equal()`). A second finding --
+  this function reuses one generic error code across six distinct failure
+  modes with no retry anywhere in the call chain for a transient race --
+  was confirmed to be a pre-existing characteristic of this file (not a
+  regression introduced by #5426) and deferred as tracked issue #5435
+  rather than redesigning this function's error handling mid-review.
+
 - 2026-09-01: Closed issue #5422 (`RQ-CF-CONTAINMENT-001`, I2/#34 slice:
   migrate `workspace_agent_target_containment.cpp` to the atomic
   check-then-read primitive) as not applicable, after reading the actual
