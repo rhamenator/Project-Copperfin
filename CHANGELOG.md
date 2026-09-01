@@ -1,3 +1,33 @@
+- 2026-09-01: An adversarial review pass on PR #5436/issue #5427 found a
+  real gap this migration's CHANGELOG entry (below) originally claimed
+  didn't exist: the inline `expected_sha256` comparison protects the bytes
+  read via the handle, but -- as issue #5426's identical post-read re-walk
+  fix already established -- it does not by itself guarantee
+  `resolved_path_` still resolves to that same object once
+  `admit_polyglot_supporting_artifact()` returns. A rename/replace during
+  the read lets the handle-bound read still correctly match
+  `expected_sha256` (it reads the original, unchanged object), while
+  `resolved_path_` now points at a different one; this function's own
+  returned admission must be self-consistent regardless of whether a given
+  caller later revalidates before use (the current one known caller,
+  `polyglot_artifact_adapter.cpp`, does, but that is caller convention, not
+  an API guarantee). Fixed by restoring the same independent post-read
+  `inspect_physical_path_containment()` re-walk #5426 needed, using
+  `content_equal()` from the start this time (no `link_count`-dependent
+  invariant exists in this file). Added a macro-gated
+  `COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS` test
+  hook (new `polyglot_supporting_artifact_admission_test_hooks.h`, matching
+  the established convention) and
+  `test_supporting_artifact_admission_rejects_rename_during_read()` in
+  `test_polyglot_python_sidecar.cpp`; verified it catches the regression by
+  temporarily disabling the check and observing the test fail, then
+  restoring it, and confirmed the hook symbol is absent from a genuine
+  `-DCOPPERFIN_BUILD_TESTS=OFF` production build via `nm`. A second finding
+  (Windows containment-widening may reclassify an unreadable-but-containable
+  file from `read_failed` to `containment_denied`, untested either way)
+  deferred as issue #5438 rather than adding conditional Windows-specific
+  probing logic to preserve an untested distinction.
+
 - 2026-09-01: Migrated `polyglot_supporting_artifact_admission.cpp`'s
   `admit_polyglot_supporting_artifact()` check-then-read pair
   (`RQ-CF-CONTAINMENT-001`, issue #5409, slice #5427) to

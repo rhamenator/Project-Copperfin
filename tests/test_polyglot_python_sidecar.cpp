@@ -4,6 +4,7 @@
 
 #include "copperfin/platform/path.h"
 #include "copperfin/platform/polyglot_artifact_adapter.h"
+#include "copperfin/platform/polyglot_supporting_artifact_admission_test_hooks.h"
 #include "copperfin/runtime/polyglot_runtime_host.h"
 #include "copperfin/security/sha256.h"
 #include "prg_engine_test_support.h"
@@ -278,6 +279,61 @@ void test_prg_control(
             value("ncandidatecalls") == "1",
         "ordinary PRG should control and inspect the external Python result");
 }
+
+fs::path g_supporting_artifact_rename_hook_original;
+fs::path g_supporting_artifact_rename_hook_moved_aside;
+bool g_supporting_artifact_rename_hook_renamed = false;
+
+void supporting_artifact_rename_during_read_test_hook() {
+    std::error_code rename_error;
+    fs::rename(
+        g_supporting_artifact_rename_hook_original,
+        g_supporting_artifact_rename_hook_moved_aside,
+        rename_error);
+    g_supporting_artifact_rename_hook_renamed = !rename_error;
+    if (g_supporting_artifact_rename_hook_renamed) {
+        write_text(
+            g_supporting_artifact_rename_hook_original,
+            "replacement-supporting-artifact-bytes-different-content");
+    }
+}
+
+void test_supporting_artifact_admission_rejects_rename_during_read(
+    const fs::path& root) {
+    const fs::path artifact = root / "rename-race.py";
+    write_text(artifact, "original-supporting-artifact-bytes");
+    const auto digest = copperfin::security::sha256_hex_for_file(utf8_path(artifact));
+    expect_local(digest.ok, "the rename-race fixture artifact should be hashable");
+
+    g_supporting_artifact_rename_hook_original = artifact;
+    g_supporting_artifact_rename_hook_moved_aside = root / "rename-race-moved-aside.py";
+    g_supporting_artifact_rename_hook_renamed = false;
+    set_polyglot_supporting_artifact_admission_post_read_test_hook_for_testing(
+        &supporting_artifact_rename_during_read_test_hook);
+
+    const auto admission = admit_polyglot_supporting_artifact({
+        .capability_id = capability_id,
+        .artifact_path = utf8_path(artifact),
+        .allowed_root = utf8_path(root),
+        .expected_sha256 = digest.hex_digest,
+        .maximum_bytes = 1024U * 1024U});
+
+    set_polyglot_supporting_artifact_admission_post_read_test_hook_for_testing(nullptr);
+
+    // Gracefully skip, like this codebase's other rename/hard-link
+    // regression tests, rather than fail the suite when the environment
+    // doesn't permit renaming an open file (e.g. a restricted sandbox).
+    if (g_supporting_artifact_rename_hook_renamed) {
+        expect_local(
+            !admission.ok(),
+            "RQ-CF-CONTAINMENT-001: a supporting artifact renamed/replaced "
+            "during the handle-based read must be rejected by the post-read "
+            "path re-walk -- issue #5427 regression test");
+    }
+
+    std::error_code cleanup_error;
+    fs::remove(g_supporting_artifact_rename_hook_moved_aside, cleanup_error);
+}
 }  // namespace
 
 int main() {
@@ -309,6 +365,8 @@ int main() {
         !size_rejected.ok() && size_rejected.error_code() ==
             "polyglot.supporting_artifact.size_limit_exceeded",
         "supporting admission should reject an oversized script before reading it");
+
+    test_supporting_artifact_admission_rejects_rename_during_read(root);
 
     auto python_admission = admit_python(python);
     expect_local(python_admission.ok(), "the Python interpreter should be admitted");

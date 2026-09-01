@@ -4854,6 +4854,7 @@ if(COPPERFIN_PYTHON3_EXECUTABLE)
     target_compile_definitions(test_polyglot_python_sidecar PRIVATE
         COPPERFIN_POLYGLOT_PYTHON_EXECUTABLE="${COPPERFIN_PYTHON3_EXECUTABLE}"
         COPPERFIN_POLYGLOT_PYTHON_SIDECAR_PATH="${CMAKE_SOURCE_DIR}/samples/polyglot-python-sidecar/candidate.py"
+        COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS=1
     )
     set_tests_properties(test_polyglot_python_sidecar PROPERTIES TIMEOUT 30)
 endif()

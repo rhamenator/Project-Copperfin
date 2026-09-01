@@ -8,7 +8,12 @@
 #include "copperfin/platform/polyglot_route_registry.h"
 #include "copperfin/security/sha256.h"
 
+#if defined(COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS)
+#include "copperfin/platform/polyglot_supporting_artifact_admission_test_hooks.h"
+#endif
+
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -18,6 +23,14 @@
 namespace copperfin::platform {
 
 namespace {
+
+#if defined(COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS)
+// See polyglot_supporting_artifact_admission_test_hooks.h. Relaxed ordering
+// is sufficient: this exists only for single-threaded test setup/teardown
+// around a call to admit_polyglot_supporting_artifact(), never for
+// production synchronization.
+std::atomic<void (*)()> post_read_test_hook{nullptr};
+#endif
 
 constexpr std::uint64_t absolute_maximum_supporting_artifact_bytes =
     16U * 1024U * 1024U;
@@ -52,6 +65,13 @@ bool constant_time_equal(
 }
 
 }  // namespace
+
+#if defined(COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS)
+void set_polyglot_supporting_artifact_admission_post_read_test_hook_for_testing(
+    void (*hook)()) {
+    post_read_test_hook.store(hook, std::memory_order_relaxed);
+}
+#endif
 
 PolyglotSupportingArtifactAdmissionResult admit_polyglot_supporting_artifact(
     const PolyglotSupportingArtifactAdmissionRequest& request) {
@@ -100,17 +120,18 @@ PolyglotSupportingArtifactAdmissionResult admit_polyglot_supporting_artifact(
 
     // Atomic check-and-open primitive (issue #5409/#5420/#5427): the read
     // below is bound to the exact object this walk verified, never reopened
-    // by path string. Unlike runtime_pipeline_launcher_artifact_inventory.cpp's
-    // #5426 migration, this call site needs no independent post-read
-    // path-to-object re-walk: the digest computed from the read is compared
-    // inline below against request.expected_sha256, an independently
-    // caller-supplied value, so any object substituted during or after the
-    // read that doesn't match that expected hash is already rejected by the
-    // hash-mismatch check -- there is no "write and forget" window like
-    // #5426's name-keyed inventory had, where nothing else would ever catch
-    // a mismatch. revalidate_polyglot_supporting_artifact_admission() below
-    // (unmigrated; see issue #5422's closing comment for why) re-verifies
-    // independently again immediately before actual use.
+    // by path string. The inline expected_sha256 comparison below protects
+    // the bytes read via the handle, but -- as issue #5426's identical
+    // post-read re-walk fix established -- it does not by itself guarantee
+    // resolved_path_ still resolves to that same object once this function
+    // returns: a rename/replace during the read lets the handle-bound read
+    // still correctly match expected_sha256 (it's reading the original,
+    // unchanged object), while resolved_path_ now points at a different
+    // one. This function's own returned admission (resolved_path_,
+    // artifact_sha256_, containment_) must be self-consistent regardless of
+    // whether a given caller later revalidates before use, so restore the
+    // same independent post-read path re-walk #5426 needed (found by
+    // adversarial review on this PR).
     auto handle = security::inspect_and_open_physically_contained_path(
         path_from_utf8_string(request.artifact_path),
         path_from_utf8_string(request.allowed_root));
@@ -142,6 +163,29 @@ PolyglotSupportingArtifactAdmissionResult admit_polyglot_supporting_artifact(
         return deny(
             PolyglotSupportingArtifactAdmissionError::hash_mismatch,
             "polyglot.supporting_artifact.sha256_mismatch");
+    }
+#if defined(COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS)
+    if (const auto hook = post_read_test_hook.load(std::memory_order_relaxed);
+        hook != nullptr) {
+        post_read_test_hook.store(nullptr, std::memory_order_relaxed);
+        hook();
+    }
+#endif
+    // content_equal(), not operator== -- this re-walk exists only to
+    // confirm the path still resolves to the same object, not to detect a
+    // hard-link count change (no link_count-dependent invariant exists in
+    // this file; grepped for it). Using the stricter full-identity
+    // comparison would spuriously deny admission on a benign, momentary
+    // link_count change unrelated to content.
+    const auto after_containment = security::inspect_physical_path_containment(
+        result.containment_.canonical_path,
+        path_from_utf8_string(request.allowed_root));
+    if (!after_containment.allowed ||
+        after_containment.canonical_path != result.containment_.canonical_path ||
+        !after_containment.identity.content_equal(snapshot.containment.identity)) {
+        return deny(
+            PolyglotSupportingArtifactAdmissionError::containment_denied,
+            "polyglot.supporting_artifact.containment_denied");
     }
 
     result.containment_ = snapshot.containment;

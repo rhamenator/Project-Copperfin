@@ -334,6 +334,12 @@ endif()
 
 target_link_libraries(cf_platform_profile PRIVATE cf_localization cf_security)
 
+if(COPPERFIN_BUILD_TESTS)
+    target_compile_definitions(cf_platform_profile PRIVATE
+        COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS=1
+    )
+endif()
+
 set(COPPERFIN_SQLITE_CONNECTOR_AVAILABLE OFF)
 set(COPPERFIN_SQLITE_CONNECTOR_SOURCE
     src/platform/sqlite_federation_connector_unavailable.cpp)
