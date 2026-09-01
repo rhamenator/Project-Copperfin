@@ -19,6 +19,37 @@
   (`capture_binding()`/`authorize_windows()`) already re-verify
   independently, by design, immediately before any eventual use.
 
+- 2026-09-01: A second adversarial `/code-review` pass on PR #5428 found four
+  further real issues in the post-read re-walk fix above, all fixed except
+  one deferred as a tracked follow-up. (1) No dedicated regression test
+  existed for the fix, unlike every other fix in this migration series;
+  added `test_launcher_artifact_admission_rejects_rename_during_read()`
+  using a new macro-gated `set_launcher_artifact_post_read_test_hook()`
+  (`runtime_pipeline_test_hooks.h`, matching the existing
+  `COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS` convention), fired
+  synchronously immediately before the post-read re-walk since
+  `admit_launcher_artifact()` runs on the calling thread with no background
+  thread involved. Verified it actually catches the regression by
+  temporarily disabling the check and observing the test fail, then
+  restoring it. (2) The re-walk re-resolved the raw pre-walk `*exact`
+  directory-entry path rather than the already-verified
+  `containment.canonical_path`, so despite the CHANGELOG's claim of
+  mirroring `read_physically_contained_file_snapshot()`'s own post-read
+  check, it was actually re-doing casefold/directory-entry resolution from
+  scratch a second time rather than genuinely mirroring that function's
+  behavior (which re-walks the already-canonical path). Fixed to re-walk
+  `containment.canonical_path`. (3) The fix is hand-inlined at this one
+  call site rather than factored into a shared helper, and issue #5427
+  (`polyglot_supporting_artifact_admission.cpp`) has the identical
+  name-keyed shape and will need the same pattern -- deferred as issue
+  #5434 (extract a shared read-and-revalidate-path helper in
+  `physical_path_containment.{h,cpp}`) rather than expanding this fix's
+  scope into the shared primitive's public surface while CI was already
+  running against this commit's exact-content evidence trail; (4) the
+  added re-walk triples directory-walk syscalls per admitted artifact
+  (not attacker-adjacent, build-time only) -- folded into #5434 as a
+  secondary consideration for that helper's design, not fixed here.
+
 - 2026-09-01: Closed issue #5422 (`RQ-CF-CONTAINMENT-001`, I2/#34 slice:
   migrate `workspace_agent_target_containment.cpp` to the atomic
   check-then-read primitive) as not applicable, after reading the actual

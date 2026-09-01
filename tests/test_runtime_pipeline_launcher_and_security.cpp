@@ -3,8 +3,77 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "test_runtime_pipeline_support.h"
+#include "runtime_pipeline_support.h"
+#include "../src/runtime/runtime_pipeline_test_hooks.h"
 
 namespace cf_test_runtime_pipeline {
+
+namespace {
+std::filesystem::path g_launcher_artifact_rename_hook_original;
+std::filesystem::path g_launcher_artifact_rename_hook_moved_aside;
+bool g_launcher_artifact_rename_hook_renamed = false;
+
+void launcher_artifact_rename_during_read_test_hook() {
+    std::error_code rename_error;
+    std::filesystem::rename(
+        g_launcher_artifact_rename_hook_original,
+        g_launcher_artifact_rename_hook_moved_aside,
+        rename_error);
+    g_launcher_artifact_rename_hook_renamed = !rename_error;
+    if (g_launcher_artifact_rename_hook_renamed) {
+        write_text(
+            g_launcher_artifact_rename_hook_original,
+            "replacement-launcher-bytes-different-length-and-content");
+    }
+}
+}  // namespace
+
+void test_launcher_artifact_admission_rejects_rename_during_read() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_pipeline_launcher_rename_race";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path launcher_path = temp_root / "RenameRace.exe";
+    write_text(launcher_path, "original-launcher-bytes");
+    write_text(temp_root / "Copperfin.GeneratedLauncher.dll", "dll-bytes");
+    write_text(temp_root / "Copperfin.GeneratedLauncher.deps.json", "{}");
+    write_text(temp_root / "Copperfin.GeneratedLauncher.runtimeconfig.json", "{}");
+
+    copperfin::runtime::RuntimePackagePlan plan;
+    plan.package_root = temp_root.string();
+    plan.launcher_output_path = launcher_path.string();
+
+    g_launcher_artifact_rename_hook_original = launcher_path;
+    g_launcher_artifact_rename_hook_moved_aside = temp_root / "RenameRace-moved-aside.exe";
+    g_launcher_artifact_rename_hook_renamed = false;
+    copperfin::runtime::test_hooks::set_launcher_artifact_post_read_test_hook(
+        &launcher_artifact_rename_during_read_test_hook);
+
+    std::vector<copperfin::runtime::RuntimeLauncherArtifact> inventory;
+    std::string error;
+    const bool admitted =
+        copperfin::runtime::runtime_pipeline_detail::inventory_generated_launcher_artifacts(
+            plan, inventory, error);
+
+    copperfin::runtime::test_hooks::set_launcher_artifact_post_read_test_hook(nullptr);
+
+    // Gracefully skip, like this codebase's other rename/hard-link regression
+    // tests, rather than fail the suite when the environment doesn't permit
+    // renaming an open file (e.g. a restricted sandbox).
+    if (g_launcher_artifact_rename_hook_renamed) {
+        expect(
+            !admitted,
+            "RQ-CF-CONTAINMENT-001: a launcher artifact renamed/replaced "
+            "during the handle-based read must be rejected by the post-read "
+            "path re-walk -- issue #5426/PR #5428 regression test");
+    }
+
+    std::error_code cleanup_error;
+    fs::remove_all(temp_root, cleanup_error);
+}
 void test_generated_launcher_forwards_manifest_and_debug_flag() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_launcher_contract";

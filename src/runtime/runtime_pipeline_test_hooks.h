@@ -41,4 +41,13 @@ bool seed_stale_manifest_pair_transaction(
     const std::string& staged_debug_manifest,
     std::string& error);
 
+// Single-shot hook fired immediately before the post-read
+// inspect_physical_path_containment() re-walk in admit_launcher_artifact()
+// (issue #5426/PR #5428). Runs synchronously on the calling thread --
+// inventory_generated_launcher_artifacts() is called directly from
+// materialize_runtime_package()'s own thread, never a background one -- so
+// a test can rename/replace the artifact from within the hook itself with
+// no cross-thread synchronization needed.
+void set_launcher_artifact_post_read_test_hook(void (*hook)());
+
 }  // namespace copperfin::runtime::test_hooks

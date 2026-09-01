@@ -6,12 +6,34 @@
 #include "copperfin/security/physical_path_containment.h"
 
 #include <array>
+#include <atomic>
+
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+#include "runtime_pipeline_test_hooks.h"
+#endif
 
 #if defined(_WIN32)
 #include <windows.h>
 #endif
 
-namespace copperfin::runtime::runtime_pipeline_detail {
+namespace copperfin::runtime {
+
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+namespace {
+// See runtime_pipeline_test_hooks.h. Single-shot, same-thread: fired
+// synchronously from admit_launcher_artifact(), never from a background
+// thread, so relaxed ordering is sufficient.
+std::atomic<void (*)()> launcher_artifact_post_read_test_hook{nullptr};
+}  // namespace
+
+namespace test_hooks {
+void set_launcher_artifact_post_read_test_hook(void (*hook)()) {
+    launcher_artifact_post_read_test_hook.store(hook, std::memory_order_relaxed);
+}
+}  // namespace test_hooks
+#endif
+
+namespace runtime_pipeline_detail {
 namespace {
 
 constexpr std::string_view kGeneratedLauncherInternalPrefix = "Copperfin.GeneratedLauncher.";
@@ -154,8 +176,8 @@ bool admit_launcher_artifact(
     // bytes just read are exactly what the walk verified, but -- unlike the
     // string-reopening read_physically_contained_file_snapshot() it
     // replaces, which re-walked expected.canonical_path by string after the
-    // read -- it makes no claim about whether *exact still resolves to that
-    // same object afterward. Another process could rename/replace the
+    // read -- it makes no claim about whether the path still resolves to
+    // that same object afterward. Another process could rename/replace the
     // artifact during the read: the handle-bound read still succeeds
     // (correctly reading the original object's unchanged content), but this
     // inventory entry is keyed by expected_name, and if that name now
@@ -163,8 +185,22 @@ bool admit_launcher_artifact(
     // object the package no longer actually ships under that name. Restore
     // the independent post-read path re-walk the old function performed, so
     // this call site rejects rather than silently mis-recording (found by
-    // adversarial review on PR #5428).
-    const auto after_containment = security::inspect_physical_path_containment(*exact, package_root);
+    // adversarial review on PR #5428). Re-walks containment.canonical_path
+    // (the already-verified canonical form), not the raw *exact directory
+    // entry, so this genuinely mirrors read_physically_contained_file_snapshot()'s
+    // own post-read check (physical_path_containment.cpp) rather than
+    // re-doing casefold/directory-entry resolution from scratch a second
+    // time.
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+    if (const auto hook =
+            launcher_artifact_post_read_test_hook.load(std::memory_order_relaxed);
+        hook != nullptr) {
+        launcher_artifact_post_read_test_hook.store(nullptr, std::memory_order_relaxed);
+        hook();
+    }
+#endif
+    const auto after_containment = security::inspect_physical_path_containment(
+        containment.canonical_path, package_root);
     if (!after_containment.allowed ||
         after_containment.canonical_path != containment.canonical_path ||
         after_containment.identity != snapshot.containment.identity) {
@@ -394,4 +430,5 @@ bool is_launcher_owned_digest(
         is_internal_generated_launcher_name(copperfin::platform::path_to_utf8_string(path.filename()));
 }
 
-}  // namespace copperfin::runtime::runtime_pipeline_detail
+}  // namespace runtime_pipeline_detail
+}  // namespace copperfin::runtime
