@@ -5,6 +5,7 @@
 #include "copperfin/security/physical_path_containment.h"
 #include "copperfin/security/sha256.h"
 #include "copperfin/security/workspace_agent_process_parser.h"
+#include "copperfin/security/workspace_agent_process_parser_test_hooks.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -290,11 +291,71 @@ void test_invalid_configuration_fails_closed() {
     }
 }
 
+// #5421 round-2 review: capture_binding() and authorize_windows() each
+// checked link_count against the pre-read, walk-time identity, but not
+// against the fresh post-read identity read_physically_contained_file_snapshot_from_handle()
+// returns -- since that function's own freshness check deliberately
+// excludes link_count (issue #5420), a hard link added between the
+// pre-read check and the read completing went undetected. Fixed by
+// checking it via a single shared helper (read_trusted_executable_snapshot())
+// that both functions call. This test proves it: the trusted executable
+// has link_count 1 when capture_binding() performs its pre-read check, and
+// a test-only hook creates a hard link to it immediately before the read
+// itself -- a window no other test in this file reaches, since the
+// pre-existing hard-link test above links before the boundary is ever
+// created, exercising only the pre-read check.
+fs::path g_process_parser_hard_link_hook_target;
+fs::path g_process_parser_hard_link_hook_alias;
+
+void process_parser_create_hard_link_test_hook() {
+    std::error_code ignored;
+    fs::create_hard_link(
+        g_process_parser_hard_link_hook_target,
+        g_process_parser_hard_link_hook_alias,
+        ignored);
+}
+
+void test_capture_binding_rejects_hard_link_added_during_read() {
+    TempTree tree;
+    const auto configuration = tree.configuration();
+
+    g_process_parser_hard_link_hook_target = tree.root / "bin" / "trusted-tool";
+    g_process_parser_hard_link_hook_alias =
+        tree.root / "bin" / "trusted-tool-mid-read-alias";
+    copperfin::security::set_workspace_agent_process_parser_pre_read_test_hook_for_testing(
+        &process_parser_create_hard_link_test_hook);
+
+    const auto boundary = WorkspaceAgentProcessParserBoundary::create(configuration);
+
+    // Defensive: clear the hook even if it never fired (e.g. an earlier
+    // check in capture_binding() failed closed before reaching the read),
+    // so a later test is never affected by a leftover hook.
+    copperfin::security::set_workspace_agent_process_parser_pre_read_test_hook_for_testing(
+        nullptr);
+
+    // Gracefully skip, like the pre-existing hard-link test above, rather
+    // than fail the suite when the environment doesn't support hard links
+    // (e.g. an overlay/network temp filesystem or a restricted sandbox).
+    std::error_code link_check_error;
+    const bool link_created = fs::exists(
+        g_process_parser_hard_link_hook_alias, link_check_error);
+    if (link_created) {
+        expect(!boundary.has_value(),
+               "RQ-CF-AGENT-018: a hard link added between the pre-read "
+               "check and the read must still deny parser authority -- "
+               "issue #5421 round-2 regression test");
+    }
+
+    std::error_code cleanup_error;
+    fs::remove(g_process_parser_hard_link_hook_alias, cleanup_error);
+}
+
 }  // namespace
 
 int main() {
     test_configuration_and_exact_identity_authority();
     test_invalid_configuration_fails_closed();
+    test_capture_binding_rejects_hard_link_added_during_read();
     if (failures == 0) {
         std::cout << "workspace-agent process parser tests passed\n";
     }

@@ -1,3 +1,77 @@
+- 2026-08-31: Migrated `workspace_agent_process_parser.cpp`'s two
+  check-then-read pairs (`RQ-CF-CONTAINMENT-001`, issue #5409, slice
+  #5421) -- `capture_binding()` and `authorize_windows()`'s Windows
+  trusted-executable admission/re-authorization -- to
+  `inspect_and_open_physically_contained_path()` +
+  `read_physically_contained_file_snapshot_from_handle()`, so the
+  bytes read and hashed for a trusted binding are bound to the exact
+  object verified, never reopened by path string. `capture_binding()`
+  also dropped its separate `std::filesystem::is_regular_file()`
+  pre-check (another path-string resolution): the handle-based read
+  already rejects a non-regular-file target internally via the same
+  handle, and this function's only observable outcome either way is
+  `std::nullopt`. An adversarial `/code-review` pass found a real
+  regression this migration introduced in both functions: the prior
+  string-based `read_physically_contained_file_snapshot()` used
+  `PhysicalPathIdentity::operator==` (which includes `link_count`) for
+  its own before/after freshness check, so a hard link added to the
+  trusted executable during the read window was caught as
+  `identity_changed`. The new handle-based read deliberately uses
+  `content_equal()` (excluding `link_count`, see issue #5420) for that
+  same check, and neither `capture_binding()` nor `authorize_windows()`
+  added a compensating post-read `link_count` check of their own --
+  both only checked `link_count` against the pre-read, walk-time
+  identity, so a hard link added during the (potentially large) read
+  would no longer be caught, letting a now-multiply-linked binary keep
+  or receive trust. Fixed by re-checking `link_count` against
+  `snapshot.containment.identity` (the fresh, post-read value
+  `read_physically_contained_file_snapshot_from_handle()` returns,
+  per issue #5420's own round-3 fix) in both functions before
+  proceeding. The same review pass also flagged that this entry
+  originally overclaimed the existing directory-target regression test
+  as validating the `is_regular_file()` removal specifically; that
+  test actually rejects earlier via an identity mismatch and never
+  reaches the removed check's replacement path -- the removal is
+  correct by inspection (both paths return `std::nullopt`), just not
+  independently proven by that particular test. No other behavior
+  change; existing regression coverage passes unchanged. A second
+  adversarial review pass judged the `link_count` re-check fix itself
+  correct, but flagged two process concerns: the fix shipped with no
+  dedicated regression test (a real security fix per `agents.md`'s
+  focused-regression-coverage requirement, and this exact class of gap
+  had already slipped through once in this same migration), and the
+  check was duplicated verbatim in both functions instead of shared,
+  risking a third caller -- or a future edit to either existing one --
+  silently omitting it again. Fixed both: extracted a single
+  `read_trusted_executable_snapshot()` helper that both
+  `capture_binding()` and `authorize_windows()` call, so there is
+  exactly one place the check can be gotten right or wrong instead of
+  two; and added a new, properly macro-gated test-only hook
+  (`COPPERFIN_ENABLE_WORKSPACE_AGENT_PROCESS_PARSER_TEST_HOOKS`,
+  `workspace_agent_process_parser_test_hooks.h`, matching the
+  established convention from
+  `COPPERFIN_ENABLE_WORKSPACE_AGENT_SESSION_TEST_HOOKS`) that fires
+  immediately before the read, letting a test deterministically create
+  a hard link in the exact window between the pre-read check and the
+  read -- a window otherwise unreachable through the public API since
+  both functions perform the check and the read within one synchronous
+  call. The new regression test creates the hard link via this hook
+  and confirms `WorkspaceAgentProcessParserBoundary::create()` still
+  denies authority; verified it actually catches the regression by
+  temporarily disabling the check and observing the test fail, then
+  restoring it. Confirmed via a separate `-DCOPPERFIN_BUILD_TESTS=OFF`
+  build that the hook symbol is absent from `libcf_security.a`,
+  matching the verification already done for the session test hook. A
+  third adversarial review pass found the new test hard-failed the
+  whole suite in an environment where `std::filesystem::create_hard_link`
+  fails (e.g. an overlay/network temp filesystem or a restricted
+  sandbox), instead of skipping gracefully like this same file's
+  pre-existing hard-link test. Fixed by matching that established
+  convention: only assert the security outcome when the hook actually
+  succeeded in creating the link, recording no failure otherwise.
+  Re-verified the test still catches the regression (temporarily
+  disabling the fix and observing it fail, then restoring it).
+
 - 2026-08-31: Added `inspect_and_open_physically_contained_path()` and
   `read_physically_contained_file_snapshot_from_handle()`
   (`RQ-CF-CONTAINMENT-001`, issue #5409, slice #5420): an additive-only,
