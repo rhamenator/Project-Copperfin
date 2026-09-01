@@ -1,3 +1,24 @@
+- 2026-09-01: Fixed a real gap in PR #5428/issue #5426's launcher-artifact
+  migration, found by adversarial review before merge:
+  `read_physically_contained_file_snapshot_from_handle()` guarantees the
+  bytes read are exactly what the containment walk verified, but -- unlike
+  the string-reopening `read_physically_contained_file_snapshot()` it
+  replaces, which independently re-walked the canonical path by string
+  after the read -- it makes no claim about whether the *path* still
+  resolves to that same object once the read completes. Another process
+  renaming or replacing the artifact during the read would let the
+  handle-bound read still succeed (correctly reading the original object's
+  unchanged content), while the resulting inventory entry -- keyed by the
+  artifact's file name -- would record a digest for an object the package
+  no longer actually ships under that name. Fixed by restoring an
+  independent post-read `inspect_physical_path_containment()` re-walk at
+  this call site, mirroring exactly what the string-reopening function did,
+  rejecting rather than silently mis-recording. This is a property of the
+  call site (an inventory keyed by name with no later re-verification step),
+  not a defect in the shared primitive itself -- #5421's callers
+  (`capture_binding()`/`authorize_windows()`) already re-verify
+  independently, by design, immediately before any eventual use.
+
 - 2026-09-01: Closed issue #5422 (`RQ-CF-CONTAINMENT-001`, I2/#34 slice:
   migrate `workspace_agent_target_containment.cpp` to the atomic
   check-then-read primitive) as not applicable, after reading the actual

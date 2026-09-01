@@ -150,6 +150,29 @@ bool admit_launcher_artifact(
             {{"path", expected_name}});
         return false;
     }
+    // read_physically_contained_file_snapshot_from_handle() guarantees the
+    // bytes just read are exactly what the walk verified, but -- unlike the
+    // string-reopening read_physically_contained_file_snapshot() it
+    // replaces, which re-walked expected.canonical_path by string after the
+    // read -- it makes no claim about whether *exact still resolves to that
+    // same object afterward. Another process could rename/replace the
+    // artifact during the read: the handle-bound read still succeeds
+    // (correctly reading the original object's unchanged content), but this
+    // inventory entry is keyed by expected_name, and if that name now
+    // resolves to a different object, the recorded digest would describe an
+    // object the package no longer actually ships under that name. Restore
+    // the independent post-read path re-walk the old function performed, so
+    // this call site rejects rather than silently mis-recording (found by
+    // adversarial review on PR #5428).
+    const auto after_containment = security::inspect_physical_path_containment(*exact, package_root);
+    if (!after_containment.allowed ||
+        after_containment.canonical_path != containment.canonical_path ||
+        after_containment.identity != snapshot.containment.identity) {
+        error = runtime_text(
+            "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
+            {{"path", expected_name}});
+        return false;
+    }
     const auto digest = security::sha256_hex_for_text(snapshot.bytes);
     if (!digest.ok) {
         error = digest.error;
