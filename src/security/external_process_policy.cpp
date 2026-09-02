@@ -408,24 +408,11 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
                 .file_identity = {}};
     }
 
-    // Capture the file identity here, before signature/publisher
-    // verification, so a rename/replace of the executable at any point
-    // between this and the post-verification identity read below is
-    // detectable. Nothing otherwise binds verify_authenticode_signature()'s
-    // path-string open, and the final read_file_identity() call's own
-    // path-string open, to the same underlying file object -- an attacker
-    // who can replace the file at resolved_path in that window could pass
-    // verification against one binary while a different one is what this
-    // authorization actually ends up describing (issue #5430).
-    ExternalProcessFileIdentity pre_verification_identity;
-    if (!read_file_identity(executable_path, pre_verification_identity)) {
-        return {.allowed = false,
-                .resolved_path = resolved_path,
-                .error = security_text(
-                    "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
-                    {{"executableName", policy.executable_name}}),
-                .file_identity = {}};
-    }
+    // EXPERIMENT (diagnostic only, not for merge): pre_verification_identity
+    // capture temporarily removed to isolate whether this extra
+    // read_file_identity() call on dotnet.exe is a contributing factor in
+    // test_generated_launcher_process's "build-host SDK launcher
+    // publication" flake. See PR discussion.
 
     // A single WinVerifyTrust() call serves both the require_trusted_signature
     // check and, when allowed_publishers is non-empty, the publisher match --
@@ -486,17 +473,8 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
                     {{"executableName", policy.executable_name}}),
                 .file_identity = {}};
     }
-    if (!file_identities_equal(identity, pre_verification_identity)) {
-        // The object the checks above verified is not the object this
-        // authorization would actually describe going forward: reject
-        // rather than silently trust a binary swapped in during
-        // verification (issue #5430).
-        return {.allowed = false,
-                .resolved_path = resolved_path,
-                .error = security_text(
-                    "Security.ExternalProcessPolicy.Error.ExecutableChangedDuringAuthorization"),
-                .file_identity = {}};
-    }
+    // EXPERIMENT: pre/post identity comparison temporarily removed along
+    // with the pre-read above.
     return {.allowed = true,
             .resolved_path = resolved_path,
             .error = {},
