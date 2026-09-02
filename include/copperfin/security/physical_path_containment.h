@@ -21,7 +21,17 @@ enum class PhysicalPathContainmentFailure {
     identity_changed,
     not_regular_file,
     size_limit_exceeded,
-    read_failed
+    read_failed,
+    // Distinct from identity_changed: identity_changed can come from a read
+    // itself detecting a mid-read content change (see
+    // read_physically_contained_file_snapshot[_from_handle]()'s own before/
+    // after identity checks), while this value comes only from
+    // revalidate_physical_path_containment_after_read()'s independent
+    // post-read path re-walk finding a different object -- a caller
+    // classifying "was this specifically a rename/replace observed after
+    // the read completed" must not conflate the two (issue #5434 review
+    // finding).
+    path_changed_after_read
 };
 
 struct PhysicalPathIdentity {
@@ -146,31 +156,48 @@ private:
 [[nodiscard]] PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
     const PhysicalPathContainmentHandle& handle);
 
-// Reads via handle (as read_physically_contained_file_snapshot_from_handle()
-// above), then performs an independent post-read re-walk of root to confirm
-// the path still resolves to the same object. The handle-bound read alone
-// guarantees the bytes read are exactly what the check verified, but makes
-// no claim about whether the path still resolves to that same object once
-// this call returns -- a caller whose result is stored or compared *by
-// name* later (rather than reused immediately via the same still-open
-// handle) needs that extra guarantee, or a rename/replace during the read
-// can leave it holding a digest/identity for an object the path no longer
-// actually names. Fails with identity_changed (never read_failed) when the
-// re-walk finds a different object, so this is identifiable in logs
-// distinctly from an ordinary read failure (issue #5434, consolidating the
-// identical hand-rolled re-walk pair from issues #5426 and #5427).
+// Performs an independent post-read re-walk of root to confirm
+// snapshot.containment.canonical_path (from a prior successful read --
+// snapshot.ok must be true) still resolves to the same object. A caller
+// whose result is stored or compared *by name* later (rather than reused
+// immediately via the same still-open handle that produced the read) needs
+// this extra guarantee, or a rename/replace during the read can leave it
+// holding a digest/identity for an object the path no longer actually
+// names. Fails with path_changed_after_read (never identity_changed, and
+// never any failure the read itself could produce) when the re-walk finds
+// a different object, so this specific outcome is identifiable distinctly
+// from an ordinary read failure (issue #5434, consolidating the identical
+// hand-rolled re-walk pair from issues #5426 and #5427). Returns snapshot
+// unchanged on success.
 //
-// post_read_hook, if non-null, runs once after a successful read and
-// before the re-walk -- the same injection point issues #5426/#5427's own
-// hand-rolled versions used for their single-shot test hooks (see e.g.
-// runtime_pipeline_test_hooks.h), preserved here so callers keep that
-// capability without this shared primitive depending on any caller's own
-// test-hook machinery or build flag.
+// post_read_hook, if non-null, runs once before the re-walk -- the same
+// injection point issues #5426/#5427's own hand-rolled versions used for
+// their single-shot test hooks (see e.g. runtime_pipeline_test_hooks.h),
+// preserved here so callers keep that capability without this shared
+// primitive depending on any caller's own test-hook machinery or build
+// flag.
+//
+// Call this directly, after your own caller-specific checks on snapshot's
+// bytes (e.g. a hash comparison), if their relative order matters to your
+// diagnostics -- see admit_polyglot_supporting_artifact()'s use of this
+// split form to preserve its pre-existing hash-mismatch-before-rename
+// precedence. Otherwise, prefer the combined convenience function below.
+[[nodiscard]] PhysicalFileSnapshotResult
+revalidate_physical_path_containment_after_read(
+    const PhysicalFileSnapshotResult& snapshot,
+    const std::filesystem::path& root,
+    void (*post_read_hook)() = nullptr);
+
+// Reads via handle (as read_physically_contained_file_snapshot_from_handle()
+// above), then revalidate_physical_path_containment_after_read() in one
+// call, for a caller with no caller-specific check that needs to run
+// between the two (see that function's own doc comment for callers that
+// do, and for what path_changed_after_read means).
 //
 // Prefer plain read_physically_contained_file_snapshot_from_handle() for
 // callers that revalidate independently at use time instead (e.g. an
 // #5421-style migration that re-verifies immediately before every use) and
-// don't need the extra walk.
+// don't need the extra walk at all.
 [[nodiscard]] PhysicalFileSnapshotResult
 read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
     const PhysicalPathContainmentHandle& handle,

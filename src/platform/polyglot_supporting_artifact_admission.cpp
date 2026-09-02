@@ -128,12 +128,15 @@ PolyglotSupportingArtifactAdmissionResult admit_polyglot_supporting_artifact(
     // unchanged object), while resolved_path_ now points at a different
     // one. This function's own returned admission (resolved_path_,
     // artifact_sha256_, containment_) must be self-consistent regardless of
-    // whether a given caller later revalidates before use, so the
-    // _and_revalidate_path() variant's independent post-read path re-walk
-    // is required here (issue #5434, consolidating what used to be a
-    // hand-rolled re-walk here and in
-    // runtime_pipeline_launcher_artifact_inventory.cpp; originally found by
-    // adversarial review on this PR).
+    // whether a given caller later revalidates before use, so an
+    // independent post-read path re-walk is required here -- via
+    // revalidate_physical_path_containment_after_read(), called explicitly
+    // below (not the combined _and_revalidate_path() convenience function)
+    // so the hash comparison keeps running first, preserving this
+    // function's pre-existing hash-mismatch-before-rename diagnostic
+    // precedence (issue #5434, consolidating what used to be a hand-rolled
+    // re-walk here and in runtime_pipeline_launcher_artifact_inventory.cpp;
+    // originally found by adversarial review on this PR).
     auto handle = security::inspect_and_open_physically_contained_path(
         path_from_utf8_string(request.artifact_path),
         path_from_utf8_string(request.allowed_root));
@@ -148,37 +151,12 @@ PolyglotSupportingArtifactAdmissionResult admit_polyglot_supporting_artifact(
             PolyglotSupportingArtifactAdmissionError::artifact_too_large,
             "polyglot.supporting_artifact.size_limit_exceeded");
     }
-    void (*post_read_hook)() = nullptr;
-#if defined(COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS)
-    post_read_hook = post_read_test_hook.exchange(nullptr, std::memory_order_relaxed);
-#endif
-    const auto snapshot =
-        security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
-            handle,
-            path_from_utf8_string(request.allowed_root),
-            result.maximum_bytes_,
-            post_read_hook);
+    const auto snapshot = security::read_physically_contained_file_snapshot_from_handle(
+        handle, result.maximum_bytes_);
     if (!snapshot.ok) {
-        // Denied with artifact_changed, not containment_denied/read_failed,
-        // when the failure is specifically a rename/replace observed
-        // mid-read: a materially different security event from "the path
-        // was never allowed" (containment_denied's meaning at the top of
-        // this function) or an ordinary I/O failure, and reusing either
-        // code would mask a genuine TOCTOU-attack signal from security
-        // audit logs. Mirrors the established
-        // polyglot.artifact.changed_during_admission convention in the
-        // sibling polyglot_artifact_admission.cpp, and reuses the same
-        // PolyglotSupportingArtifactAdmissionError::artifact_changed value
-        // this file's own revalidate_polyglot_supporting_artifact_admission()
-        // already uses for its analogous checks -- found by a second
-        // adversarial review pass on PR #5428/issue #5427.
         return deny(
-            snapshot.failure == security::PhysicalPathContainmentFailure::identity_changed
-                ? PolyglotSupportingArtifactAdmissionError::artifact_changed
-                : PolyglotSupportingArtifactAdmissionError::read_failed,
-            snapshot.failure == security::PhysicalPathContainmentFailure::identity_changed
-                ? "polyglot.supporting_artifact.changed_during_admission"
-                : "polyglot.supporting_artifact.read_failed");
+            PolyglotSupportingArtifactAdmissionError::read_failed,
+            "polyglot.supporting_artifact.read_failed");
     }
     const auto digest = security::sha256_hex_for_text(snapshot.bytes);
     if (!digest.ok) {
@@ -191,8 +169,30 @@ PolyglotSupportingArtifactAdmissionResult admit_polyglot_supporting_artifact(
             PolyglotSupportingArtifactAdmissionError::hash_mismatch,
             "polyglot.supporting_artifact.sha256_mismatch");
     }
+    void (*post_read_hook)() = nullptr;
+#if defined(COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS)
+    post_read_hook = post_read_test_hook.exchange(nullptr, std::memory_order_relaxed);
+#endif
+    const auto revalidated = security::revalidate_physical_path_containment_after_read(
+        snapshot, path_from_utf8_string(request.allowed_root), post_read_hook);
+    if (!revalidated.ok) {
+        // Denied with artifact_changed, not containment_denied: a rename/
+        // replace caught here is a materially different security event
+        // from "the path was never allowed" (containment_denied's meaning
+        // at the top of this function) and reusing that code would mask a
+        // genuine TOCTOU-attack signal from security audit logs. Mirrors
+        // the established polyglot.artifact.changed_during_admission
+        // convention in the sibling polyglot_artifact_admission.cpp, and
+        // reuses the same PolyglotSupportingArtifactAdmissionError::artifact_changed
+        // value this file's own revalidate_polyglot_supporting_artifact_admission()
+        // already uses for its analogous checks -- found by a second
+        // adversarial review pass on PR #5428/issue #5427.
+        return deny(
+            PolyglotSupportingArtifactAdmissionError::artifact_changed,
+            "polyglot.supporting_artifact.changed_during_admission");
+    }
 
-    result.containment_ = snapshot.containment;
+    result.containment_ = revalidated.containment;
     result.resolved_path_ = path_to_utf8_string(
         result.containment_.canonical_path);
     result.artifact_sha256_ = digest.hex_digest;

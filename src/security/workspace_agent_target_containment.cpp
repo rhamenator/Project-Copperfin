@@ -81,6 +81,12 @@ std::string diagnostic_for_failure(PhysicalPathContainmentFailure failure) {
         case PhysicalPathContainmentFailure::path_unavailable:
         case PhysicalPathContainmentFailure::size_limit_exceeded:
         case PhysicalPathContainmentFailure::read_failed:
+        // Never actually produced by inspect_physical_path_containment()
+        // (only revalidate_physical_path_containment_after_read() in
+        // physical_path_containment.cpp returns this), but the switch
+        // must stay exhaustive; listed here for that reason, not because
+        // this call site can observe it.
+        case PhysicalPathContainmentFailure::path_changed_after_read:
             return "workspace_agent.target_unavailable";
     }
     return "workspace_agent.target_unavailable";

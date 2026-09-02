@@ -220,7 +220,7 @@ bool admit_launcher_artifact(
         // containment diagnostic (found by adversarial review on PR
         // #5444/issue #5435).
         error = runtime_text(
-            snapshot.failure == security::PhysicalPathContainmentFailure::identity_changed
+            snapshot.failure == security::PhysicalPathContainmentFailure::path_changed_after_read
                 ? "Runtime.Package.Error.LauncherArtifactRenamedDuringRead"
                 : "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
             {{"path", expected_name}});

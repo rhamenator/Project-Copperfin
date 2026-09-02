@@ -802,17 +802,10 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
     };
 }
 
-PhysicalFileSnapshotResult
-read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
-    const PhysicalPathContainmentHandle& handle,
+PhysicalFileSnapshotResult revalidate_physical_path_containment_after_read(
+    const PhysicalFileSnapshotResult& snapshot,
     const std::filesystem::path& root,
-    const std::uint64_t maximum_bytes,
     void (* const post_read_hook)()) {
-    const auto snapshot =
-        read_physically_contained_file_snapshot_from_handle(handle, maximum_bytes);
-    if (!snapshot.ok) {
-        return snapshot;
-    }
     if (post_read_hook != nullptr) {
         post_read_hook();
     }
@@ -828,9 +821,31 @@ read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
     if (!after_containment.allowed ||
         after_containment.canonical_path != snapshot.containment.canonical_path ||
         !after_containment.identity.content_equal(snapshot.containment.identity)) {
-        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+        // path_changed_after_read, not identity_changed: this failure must
+        // stay distinguishable from a read itself reporting identity_changed
+        // for a mid-read content change (see
+        // read_physically_contained_file_snapshot_from_handle()'s own
+        // before/after identity checks) -- conflating the two made a caller
+        // that only checks for identity_changed misreport an ordinary
+        // read-time race as a post-read rename/replace (issue #5434 review
+        // finding).
+        return failed_snapshot(PhysicalPathContainmentFailure::path_changed_after_read);
     }
     return snapshot;
+}
+
+PhysicalFileSnapshotResult
+read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+    const PhysicalPathContainmentHandle& handle,
+    const std::filesystem::path& root,
+    const std::uint64_t maximum_bytes,
+    void (* const post_read_hook)()) {
+    const auto snapshot =
+        read_physically_contained_file_snapshot_from_handle(handle, maximum_bytes);
+    if (!snapshot.ok) {
+        return snapshot;
+    }
+    return revalidate_physical_path_containment_after_read(snapshot, root, post_read_hook);
 }
 
 PhysicalFileSnapshotResult
