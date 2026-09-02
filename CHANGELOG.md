@@ -1,3 +1,17 @@
+- 2026-09-02: Added a Windows Defender real-time-scanning exclusion step
+  (`Add-MpPreference -ExclusionPath`, best-effort with try/catch so a
+  failure can't fail the job) for the workspace and temp directories at
+  the start of `generated-launcher-validation.yml`'s `windows-generated-launcher`
+  job. `test_generated_launcher_process` publishes a .NET launcher and its
+  sidecar DLL/JSON files, then immediately stats them; Defender
+  intercepting those same freshly-written files was observed causing
+  `dotnet publish` to report success while the subsequent existence
+  checks intermittently failed (4 consecutive occurrences on an unrelated
+  PR, always the identical assertion, never reproducing on `v1-development`'s
+  own most recent push) -- a known class of Windows CI flakiness for
+  publish-then-stat tests, not a real defect in the packaging logic being
+  tested.
+
 - 2026-09-02: Extracted the identical hand-rolled "handle-based read, then
   independent post-read path re-walk" pattern from
   `runtime_pipeline_launcher_artifact_inventory.cpp`'s

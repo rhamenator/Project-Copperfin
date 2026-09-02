@@ -82,6 +82,34 @@ jobs:
       - name: Check out source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Exclude workspace and temp directories from Windows Defender scanning
+        shell: pwsh
+        run: |
+          # test_generated_launcher_process publishes and then immediately
+          # stats freshly-built .exe/.dll/.json sidecar files; Windows
+          # Defender's real-time scanner intercepting those same files
+          # right after they're written is a known source of intermittent
+          # "publish succeeded but the file isn't there yet" failures on
+          # GitHub-hosted Windows runners. Excluding the paths this job
+          # actually writes to removes that race at its source. Best-effort:
+          # a failure here must not fail the job, so errors are caught and
+          # warned rather than propagated.
+          $exclusionPaths = @(
+            "${{ github.workspace }}",
+            $env:TEMP,
+            $env:RUNNER_TEMP
+          ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
+
+          foreach ($path in $exclusionPaths) {
+            try {
+              Add-MpPreference -ExclusionPath $path -ErrorAction Stop
+              Write-Host "Excluded from Windows Defender real-time scanning: $path"
+            }
+            catch {
+              Write-Warning "Could not add Windows Defender exclusion for '$path': $($_.Exception.Message)"
+            }
+          }
+
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
         with:
