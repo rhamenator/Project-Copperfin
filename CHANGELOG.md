@@ -1,3 +1,16 @@
+- 2026-09-01: Closed a cmd.exe command-string injection window in
+  `.cmd`/`.bat` Studio host launches (#5432): `CreateProcessStartInfo()`
+  stashes the composed command in an environment variable and references
+  it via `%VARNAME%` in cmd.exe's `/d /c` argument, so CRT/argv-style
+  quoting (`Quote()`) doesn't protect against cmd.exe's own metacharacter
+  and quote parsing of the expanded text. Added
+  `EnsureSafeForCmdExeCommandLine()`, which simulates cmd.exe's own
+  quote-toggle scan and refuses to launch if `&`, `|`, `^`, `<`, `>`, or an
+  unquoted `%` (percent-expansion isn't suppressed by quoting, unlike the
+  others -- a review round caught this gap before merge) would reach
+  cmd.exe unguarded, or the quote count is unbalanced. Filed #5446 and
+  #5447 as separate, non-blocking follow-ups on exception-surfacing UX
+  and a more structural fix, respectively.
 - 2026-09-01: Fixed a test-hygiene gap found while investigating a Windows
   CI failure in a docs-only PR (#5439) that unexpectedly touched an
   already-merged code path: `test_supporting_artifact_admission_rejects_rename_during_read()`
