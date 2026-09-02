@@ -112,6 +112,34 @@ std::vector<std::filesystem::path> casefold_package_entries(
     return matches;
 }
 
+// Deliberately fail-fast, no retry, on every rejection path below:
+// parent-path mismatch, a directory-iteration error, ambiguous match,
+// missing, containment-denied, read-failed, the post-read rename/
+// replace rejection, and digest-computation failure -- decided in
+// issue #5435 rather than added silently. Two reasons:
+//
+//   1. This runs at package build time, not in a production execution
+//      path -- a transient race with another legitimate tool touching
+//      package_root (an overlapping rebuild, an editor autosave, an AV
+//      scan) fails the whole package build, and a human re-running the
+//      build is the existing, sufficient recovery path for any build
+//      failure. Not attacker-adjacent, so the cost of not auto-recovering
+//      is low.
+//   2. Auto-retrying specifically the rename/replace rejection (#5426's
+//      round-2 fix) would work against the reason that check exists: it
+//      would give a TOCTOU attacker's swap window more read attempts to
+//      land outside it, and a "succeeded on retry" outcome would erase
+//      the audit signal that a rename/replace was ever observed. That
+//      signal is LauncherArtifactRenamedDuringRead, a diagnostic code
+//      distinct from the generic containment/read-failure paths' code,
+//      kept that way specifically so this isn't masked (issue #5435,
+//      round 2). Blind retry can't tell a benign race from an
+//      attacker's second attempt.
+//
+// If build-time flakiness from this function becomes an observed
+// operational problem, a bounded, code-aware retry (e.g. retry only the
+// ambiguous-match and missing-file cases, never the rename/replace
+// rejection) would be the way to revisit this, not a blanket retry.
 bool admit_launcher_artifact(
     const LauncherArtifactSpec& spec,
     const std::filesystem::path& package_root,
@@ -212,8 +240,13 @@ bool admit_launcher_artifact(
     if (!after_containment.allowed ||
         after_containment.canonical_path != containment.canonical_path ||
         !after_containment.identity.content_equal(snapshot.containment.identity)) {
+        // Distinct from LauncherArtifactNotDirectRegularFile (used by the
+        // containment-denied and read-failed branches above) so this
+        // specific outcome -- a rename/replace observed mid-read -- is
+        // identifiable in logs, not folded into the generic containment
+        // diagnostic (found by adversarial review on PR #5444/issue #5435).
         error = runtime_text(
-            "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
+            "Runtime.Package.Error.LauncherArtifactRenamedDuringRead",
             {{"path", expected_name}});
         return false;
     }
