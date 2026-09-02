@@ -1,3 +1,13 @@
+- 2026-09-01: Hardened Windows installer NSIS acquisition (#5433):
+  the checksum-pinned portable archive is now tried first (not merely as
+  a last-resort fallback after an unpinned ambient runner-image binary or
+  unpinned Chocolatey install), and whichever path produces `makensis.exe`
+  must report exactly the pinned version before it's trusted to build the
+  installer. Extracted to `scripts/install-pinned-nsis.ps1` (mirroring
+  `scripts/verify-windows-sccache.ps1`'s pattern) after review found a
+  hash mismatch was only warned about rather than fatal, an unanchored
+  version regex accepted substring matches like "v3.12-beta", and two
+  independent retry loops duplicated the same backoff shape.
 - 2026-09-01: Fixed a test-hygiene gap found while investigating a Windows
   CI failure in a docs-only PR (#5439) that unexpectedly touched an
   already-merged code path: `test_supporting_artifact_admission_rejects_rename_during_read()`
