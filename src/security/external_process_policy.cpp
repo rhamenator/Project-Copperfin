@@ -171,17 +171,17 @@ std::string resolve_executable_from_path(const std::string& executable_name) {
     }
 }
 
-// Result of a single WinVerifyTrust() call: whether the file has a trusted
-// Authenticode signature, and -- if so -- the display name of the
-// cryptographically verified signer's leaf certificate. Replaces the old
-// two-call design (a separate has_trusted_signature() plus an independent
-// get_company_name() reading the PE version-resource CompanyName field) --
-// CompanyName is unauthenticated metadata the binary's author can set to
-// any string with no cryptographic connection to whatever signature
-// actually verified, so matching allowed_publishers against it let a
-// binary signed by an untrusted signer (or entirely unsigned, when
-// require_trusted_signature is false) claim any publisher name (issue
-// #5429).
+// EXPERIMENT (diagnostic only, not for merge): the WTHelperProvDataFromStateData
+// / WTHelperGetProvSignerFromChain / CertGetNameStringW signer-extraction
+// block (issue #5429) is temporarily removed here, isolating it as a
+// variable separate from the TOCTOU pre/post identity check (issue #5430,
+// kept below) -- a prior experiment already showed removing just the
+// pre-verification identity read does NOT fix
+// test_generated_launcher_process's persistent Windows CI flake, while a
+// full revert of this file DOES fix it, so this experiment narrows down
+// which remaining piece is responsible. publisher matching falls back to
+// the old get_company_name() (PE version-resource CompanyName, restored
+// below) instead of a verified signer identity for this experiment only.
 struct AuthenticodeVerificationResult {
     bool trusted = false;
     std::string signer_display_name;
@@ -208,52 +208,49 @@ AuthenticodeVerificationResult verify_authenticode_signature(const std::string& 
     const LONG status = WinVerifyTrust(nullptr, &policy_guid, &trust_data);
     result.trusted = status == ERROR_SUCCESS;
 
-    if (result.trusted) {
-        // Walk the same trust-provider state WinVerifyTrust just built
-        // (via hWVTStateData) rather than a second, independent lookup --
-        // the signer identity this extracts is the one WinVerifyTrust
-        // itself verified, not a separately-resolved one.
-        CRYPT_PROVIDER_DATA* const provider_data =
-            WTHelperProvDataFromStateData(trust_data.hWVTStateData);
-        if (provider_data != nullptr) {
-            CRYPT_PROVIDER_SGNR* const signer =
-                WTHelperGetProvSignerFromChain(provider_data, 0, FALSE, 0);
-            if (signer != nullptr && signer->csCertChain > 0U &&
-                signer->pasCertChain != nullptr) {
-                const PCCERT_CONTEXT certificate = signer->pasCertChain[0].pCert;
-                if (certificate != nullptr) {
-                    const DWORD name_length = CertGetNameStringW(
-                        certificate,
-                        CERT_NAME_SIMPLE_DISPLAY_TYPE,
-                        0,
-                        nullptr,
-                        nullptr,
-                        0);
-                    if (name_length > 1U) {
-                        std::wstring wide_name(name_length, L'\0');
-                        CertGetNameStringW(
-                            certificate,
-                            CERT_NAME_SIMPLE_DISPLAY_TYPE,
-                            0,
-                            nullptr,
-                            wide_name.data(),
-                            name_length);
-                        // CertGetNameStringW's returned length includes
-                        // the trailing NUL; drop it before narrowing.
-                        if (!wide_name.empty() && wide_name.back() == L'\0') {
-                            wide_name.pop_back();
-                        }
-                        result.signer_display_name = narrow(wide_name);
-                    }
-                }
-            }
-        }
-    }
-
     trust_data.dwStateAction = WTD_STATEACTION_CLOSE;
     WinVerifyTrust(nullptr, &policy_guid, &trust_data);
 
     return result;
+}
+
+std::string get_company_name(const std::string& path) {
+    const std::wstring wide_path = copperfin::platform::path_from_utf8_string(path).wstring();
+    DWORD handle = 0;
+    const DWORD size = GetFileVersionInfoSizeW(wide_path.c_str(), &handle);
+    if (size == 0) {
+        return {};
+    }
+
+    std::vector<std::uint8_t> version_block(size);
+    if (!GetFileVersionInfoW(wide_path.c_str(), 0, size, version_block.data())) {
+        return {};
+    }
+
+    struct LangCodePage {
+        WORD language;
+        WORD code_page;
+    };
+
+    LangCodePage* translation = nullptr;
+    UINT translation_size = 0;
+    if (!VerQueryValueW(version_block.data(), L"\\VarFileInfo\\Translation", reinterpret_cast<LPVOID*>(&translation), &translation_size)
+        || translation == nullptr
+        || translation_size < sizeof(LangCodePage)) {
+        return {};
+    }
+
+    wchar_t query[64]{};
+    swprintf_s(query, L"\\StringFileInfo\\%04x%04x\\CompanyName", translation[0].language, translation[0].code_page);
+
+    LPVOID value = nullptr;
+    UINT value_size = 0;
+    if (!VerQueryValueW(version_block.data(), query, &value, &value_size) || value == nullptr || value_size == 0) {
+        return {};
+    }
+
+    return narrow(copperfin::platform::bounded_wide_string(
+        static_cast<const wchar_t*>(value), value_size));
 }
 
 bool path_under_root(const std::filesystem::path& path, const std::filesystem::path& root) {
@@ -446,21 +443,16 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
     }
 
     if (!policy.allowed_publishers.empty()) {
-        // Denied outright, not just "no match", when verification itself
-        // did not succeed (including when require_trusted_signature is
-        // false): there is then no verified signer identity to compare
-        // allowed_publishers against at all, so treating it as a
-        // publisher mismatch rather than a distinct "unverified" case
-        // would be accurate either way, but computing a match against an
-        // empty signer_display_name is pointless -- short-circuit it.
-        const auto match = verification.trusted
-            ? std::find_if(
-                  policy.allowed_publishers.begin(), policy.allowed_publishers.end(),
-                  [&](const std::string& publisher) {
-                      return !_stricmp(
-                          verification.signer_display_name.c_str(), publisher.c_str());
-                  })
-            : policy.allowed_publishers.end();
+        // EXPERIMENT: publisher matching temporarily uses the old
+        // get_company_name() (unauthenticated PE version-resource
+        // CompanyName) instead of a verified signer identity, matching
+        // this file's verify_authenticode_signature() experiment above.
+        const std::string company_name = get_company_name(resolved_path);
+        const auto match = std::find_if(
+            policy.allowed_publishers.begin(), policy.allowed_publishers.end(),
+            [&](const std::string& publisher) {
+                return !_stricmp(company_name.c_str(), publisher.c_str());
+            });
 
         if (match == policy.allowed_publishers.end()) {
             return {.allowed = false,
