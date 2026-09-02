@@ -344,7 +344,13 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
 
     const std::filesystem::path executable_path =
         copperfin::platform::path_from_utf8_string(resolved_path);
-    bool root_match = policy.allowed_path_roots.empty();
+    if (policy.allowed_path_roots.empty()) {
+        return {.allowed = false,
+                .resolved_path = resolved_path,
+                .error = security_text("Security.ExternalProcessPolicy.Error.EmptyAllowedPathRoots"),
+                .file_identity = {}};
+    }
+    bool root_match = false;
     for (const auto& root : policy.allowed_path_roots) {
         if (path_under_root(
                 executable_path,
@@ -416,7 +422,7 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
     if (policy.allowed_path_roots.empty()) {
         return {.allowed = false,
                 .resolved_path = resolved_path,
-                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots"),
+                .error = security_text("Security.ExternalProcessPolicy.Error.EmptyAllowedPathRoots"),
                 .file_identity = {}};
     }
     const bool root_match = std::any_of(
