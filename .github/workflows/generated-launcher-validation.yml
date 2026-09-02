@@ -105,8 +105,47 @@ jobs:
       - name: Build generated-launcher, portable-platform, polyglot, MCP, and SQLite federation targets
         run: cmake --build build --config Release --target test_generated_launcher_process test_platform_path test_platform_disk_space test_platform_exclusive_file test_platform_file_stream test_platform_font_directories test_platform_environment test_prg_engine_arrays test_prg_engine_file_io_functions test_prg_engine_verified_dbf_security test_prg_engine_locale_code_page test_polyglot_dotnet_candidate test_polyglot_python_sidecar test_polyglot_r_sidecar test_mcp_host copperfin_mcp_host copperfin_build_host test_sqlite_federation_connector test_runtime_host_sqlite_federation --parallel 2
 
+      - name: Exclude launcher test temp directory from Windows Defender scanning
+        shell: pwsh
+        run: |
+          # test_generated_launcher_process (run in the next step) publishes
+          # a .NET launcher and its sidecar DLL/JSON files under
+          # $env:TEMP\copperfin generated launcher process ..., then
+          # immediately stats them. Windows Defender's real-time scanner
+          # intercepting those same freshly-written files there is a known
+          # source of intermittent "publish succeeded but the file isn't
+          # there yet" failures on GitHub-hosted Windows runners. Scoped to
+          # only $env:TEMP (the confirmed location of the race, not the
+          # whole workspace or $env:RUNNER_TEMP) and only for the duration
+          # of the one step that runs this test -- removed again
+          # immediately after, before any later step compiles or runs
+          # anything else -- per review feedback that excluding the whole
+          # checkout/both temp roots for the entire job was broader than
+          # this specific flake needs, and this job compiles and executes
+          # PR-controlled code. Best-effort: a failure here must not fail
+          # the job.
+          try {
+            Add-MpPreference -ExclusionPath $env:TEMP -ErrorAction Stop
+            Write-Host "Excluded from Windows Defender real-time scanning: $env:TEMP"
+          }
+          catch {
+            Write-Warning "Could not add Windows Defender exclusion for '$env:TEMP': $($_.Exception.Message)"
+          }
+
       - name: Run generated-launcher, portable-platform, polyglot, MCP, and SQLite federation tests
         run: ctest --test-dir build -C Release --output-on-failure -R "^(test_generated_launcher_process|test_platform_path|test_platform_path_boundary_contract|test_platform_disk_space|test_platform_disk_space_boundary_contract|test_platform_exclusive_file|test_platform_exclusive_file_boundary_contract|test_platform_file_stream|test_platform_file_stream_boundary_contract|test_platform_font_directories|test_platform_font_directories_boundary_contract|test_platform_environment|test_platform_environment_boundary_contract|test_platform_executable_path_boundary_contract|test_platform_file_version_boundary_contract|test_platform_code_page_boundary_contract|test_platform_sqlite_api_boundary_contract|test_portable_clr_host_boundary_contract|test_native_declared_library_boundary_contract|test_native_declared_call_boundary_contract|test_printer_shell_boundary_contract|test_prg_engine_arrays|test_prg_engine_file_io_functions|test_prg_engine_verified_dbf_security|test_prg_engine_locale_code_page|test_native_platform_workflow_contract|test_github_actions_contract|test_polyglot_dotnet_candidate|test_polyglot_python_sidecar|test_polyglot_r_sidecar|test_mcp_host|test_mcp_host_stdio|test_sqlite_federation_connector|test_runtime_host_sqlite_federation)$"
+
+      - name: Remove launcher test temp directory Windows Defender exclusion
+        if: always()
+        shell: pwsh
+        run: |
+          try {
+            Remove-MpPreference -ExclusionPath $env:TEMP -ErrorAction Stop
+            Write-Host "Removed Windows Defender exclusion: $env:TEMP"
+          }
+          catch {
+            Write-Warning "Could not remove Windows Defender exclusion for '$env:TEMP': $($_.Exception.Message)"
+          }
 
       - name: Build private workspace-agent and parser-authority regressions
         run: cmake --build build --config Release --target test_platform_private_directory test_workspace_agent_session test_workspace_agent_process_parser test_workspace_agent_isolated_environment --parallel 2

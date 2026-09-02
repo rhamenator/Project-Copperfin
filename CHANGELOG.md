@@ -1,3 +1,28 @@
+- 2026-09-02: Added a Windows Defender real-time-scanning exclusion for
+  `generated-launcher-validation.yml`'s `windows-generated-launcher` job.
+  `test_generated_launcher_process` publishes a .NET launcher and its
+  sidecar DLL/JSON files under `$env:TEMP`, then immediately stats them;
+  Defender intercepting those same freshly-written files was observed
+  causing `dotnet publish` to report success while the subsequent
+  existence checks intermittently failed (4 consecutive occurrences on
+  an unrelated PR, always the identical assertion, never reproducing on
+  `v1-development`'s own most recent push) -- a known class of Windows CI
+  flakiness for publish-then-stat tests, not a real defect in the
+  packaging logic being tested. A first version of this fix
+  (`Add-MpPreference -ExclusionPath`, best-effort via try/catch)
+  excluded the whole workspace plus both `$env:TEMP` and
+  `$env:RUNNER_TEMP` for the entire job; a Codex/Copilot review pass
+  found this materially weakened malware scanning for a job that also
+  compiles and executes PR-controlled code, for longer and more broadly
+  than the observed flake needs. Narrowed to only `$env:TEMP` (the
+  confirmed location of the race; `$env:RUNNER_TEMP` and the workspace
+  were never implicated) and only for the duration of the one `ctest`
+  step that runs this test -- added immediately before that step (after
+  compilation has already completed and been fully scanned) and removed
+  again immediately after (via `Remove-MpPreference`, `if: always()` so
+  cleanup runs even when the test itself fails), rather than for the
+  whole job.
+
 - 2026-09-02: Extracted the identical hand-rolled "handle-based read, then
   independent post-read path re-walk" pattern from
   `runtime_pipeline_launcher_artifact_inventory.cpp`'s
