@@ -484,6 +484,7 @@
   "Security.Audit.Error.OpenLogForAppendFailed": "Nao foi possivel abrir o log de auditoria para anexar.",
   "Security.Audit.Error.ReadExistingLogFailed": "Nao foi possivel ler o log de auditoria existente.",
   "Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots": "O caminho do executavel esta fora das raizes permitidas.",
+  "Security.ExternalProcessPolicy.Error.EmptyAllowedPathRoots": "Nenhuma raiz de caminho permitida esta configurada; a politica nega todos os caminhos.",
   "Security.ExternalProcessPolicy.Error.ExecutableChangedAfterAuthorization": "O executavel autorizado mudou antes da inicializacao.",
   "Security.ExternalProcessPolicy.Error.PublisherNotAllowed": "O publisher do executavel nao esta na allow-list.",
   "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed": "Nao foi possivel resolver o executavel no PATH: {executableName}",
