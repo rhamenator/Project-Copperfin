@@ -1144,6 +1144,34 @@ internal static partial class Program
                 "#5432: batch-wrapped Studio host launches should refuse an unquoted " +
                 "cmd.exe metacharacter in the composed arguments");
 
+            // cmd.exe's %VAR% expansion is not suppressed by quoting, unlike
+            // &/|/^/</>, so a quoted value containing '%' must still be
+            // refused -- both because an attacker-controlled %ENVVARNAME%
+            // token would otherwise be live-expanded at launch, and because
+            // a legitimate two-percent filename would otherwise be silently
+            // mangled (cmd.exe substitutes an undefined variable with an
+            // empty string).
+            var percentArguments = CopperfinStudioHostBridge.BuildArguments(
+                "C:\\Samples\\Growth 50%-75%.frx");
+            var threwForPercent = false;
+            try
+            {
+                CopperfinStudioHostBridge.CreateProcessStartInfo(
+                    @"C:\temp\fake studio host.cmd",
+                    percentArguments,
+                    redirectOutput: true,
+                    createNoWindow: true,
+                    isWindowsOverride: true);
+            }
+            catch (InvalidOperationException)
+            {
+                threwForPercent = true;
+            }
+            Expect(threwForPercent,
+                "#5432: batch-wrapped Studio host launches should refuse a '%' character " +
+                "even inside a properly quoted argument, since cmd.exe's %VAR% expansion " +
+                "is not suppressed by quoting");
+
             var safeStartInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
                 @"C:\temp\fake studio host.cmd",
                 "--from-vs --json --set-property --path \"C:\\Samples\\invoice.frx\"",

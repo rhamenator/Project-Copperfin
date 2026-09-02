@@ -649,11 +649,30 @@ internal static class CopperfinStudioHostBridge
                 insideQuotes = !insideQuotes;
                 continue;
             }
+            // Unlike &, |, ^, <, >, a percent sign is NOT made inert by
+            // being inside quotes: cmd.exe's %VAR% expansion happens
+            // regardless of quote state (e.g. `echo "%PATH%"` still
+            // expands PATH). So '%' must be rejected unconditionally,
+            // not gated behind `insideQuotes` -- otherwise an
+            // attacker-controlled %ENVVARNAME% token inside a properly
+            // quoted argument would still get live-expanded by cmd.exe
+            // at launch, and a legitimate two-percent filename (e.g.
+            // "Growth 50%-75%.frx") would be silently mangled (cmd.exe
+            // substitutes an undefined variable with an empty string,
+            // not left literal).
+            if (character == '%')
+            {
+                throw new InvalidOperationException(
+                    "Refusing to launch a .cmd/.bat Studio host: the composed command " +
+                    "text contains a '%' character, which cmd.exe expands as an " +
+                    "environment-variable reference regardless of quoting and could " +
+                    "allow command-string injection or silently mangle the command.");
+            }
             if (insideQuotes)
             {
                 continue;
             }
-            if (character is '&' or '|' or '^' or '<' or '>' or '%' or '\r' or '\n')
+            if (character is '&' or '|' or '^' or '<' or '>' or '\r' or '\n')
             {
                 throw new InvalidOperationException(
                     "Refusing to launch a .cmd/.bat Studio host: the composed command " +
