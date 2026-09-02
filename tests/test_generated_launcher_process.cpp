@@ -20,6 +20,7 @@
 #include <iterator>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 #if defined(_WIN32)
@@ -135,6 +136,49 @@ std::vector<std::string> manifest_lines_with_prefix(
     return lines;
 }
 
+// finalize_runtime_package_primary_output() (via
+// inventory_generated_launcher_artifacts()) has already opened, read, and
+// verified each of these sidecar files by the time it returns -- but on
+// Windows CI, a `PackageRootTransaction` commit that promotes files from a
+// staging location into package_root has been observed to leave a brief
+// window where those same files are not yet visible to a fresh
+// std::filesystem::is_regular_file() check immediately afterward, even
+// though the finalize call itself reported success. Poll for up to ~5
+// seconds rather than checking once, so this test tolerates that window
+// instead of failing on it.
+//
+// Returns, for each entry in required_sidecars (same order and size), its
+// is_regular_file() status as of the poll's last attempt (whichever
+// attempt first found every file present, or the final attempt if none
+// did). The caller must assert against this returned snapshot rather than
+// re-querying std::filesystem::is_regular_file() itself -- otherwise a
+// second, independent occurrence of the same transient false negative
+// between this function's successful poll and the caller's own fresh
+// restat would still fail the test, defeating the retry entirely (review
+// finding on PR #5452).
+std::vector<bool> wait_until_regular_files_exist(
+    const std::filesystem::path& package_root,
+    const std::vector<std::string>& required_sidecars,
+    const int max_attempts = 20,
+    const std::chrono::milliseconds delay = std::chrono::milliseconds(250)) {
+    std::vector<bool> present(required_sidecars.size(), false);
+    for (int attempt = 0; attempt < max_attempts; ++attempt) {
+        bool all_present = true;
+        for (std::size_t index = 0U; index < required_sidecars.size(); ++index) {
+            present[index] =
+                std::filesystem::is_regular_file(package_root / required_sidecars[index]);
+            all_present = all_present && present[index];
+        }
+        if (all_present) {
+            return present;
+        }
+        if (attempt + 1 < max_attempts) {
+            std::this_thread::sleep_for(delay);
+        }
+    }
+    return present;
+}
+
 void expect_launcher_artifact_inventory(
     const std::filesystem::path& package_root,
     const std::filesystem::path& runtime_manifest,
@@ -149,9 +193,11 @@ void expect_launcher_artifact_inventory(
         "Copperfin.GeneratedLauncher.deps.json",
         "Copperfin.GeneratedLauncher.runtimeconfig.json"
     };
-    for (const auto& required_sidecar : required_sidecars) {
-        expect(std::filesystem::is_regular_file(package_root / required_sidecar),
-               context + " should publish required sidecar " + required_sidecar);
+    const auto sidecar_present =
+        wait_until_regular_files_exist(package_root, required_sidecars);
+    for (std::size_t index = 0U; index < required_sidecars.size(); ++index) {
+        expect(sidecar_present[index],
+               context + " should publish required sidecar " + required_sidecars[index]);
     }
 
     const auto runtime_inventory =
