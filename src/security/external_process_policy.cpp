@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <limits>
@@ -249,6 +250,8 @@ AuthenticodeVerificationResult verify_authenticode_signature(const std::string& 
     GUID policy_guid = WINTRUST_ACTION_GENERIC_VERIFY_V2;
     const LONG status = WinVerifyTrust(nullptr, &policy_guid, &trust_data);
     result.trusted = status == ERROR_SUCCESS;
+    std::fprintf(stderr, "[diag] WinVerifyTrust(%s) status=0x%08lX trusted=%d\n",
+                 path.c_str(), static_cast<unsigned long>(status), result.trusted ? 1 : 0);
 
     if (result.trusted) {
         // Walk the same trust-provider state WinVerifyTrust just built
@@ -270,6 +273,8 @@ AuthenticodeVerificationResult verify_authenticode_signature(const std::string& 
         if (extracted) {
             result.signer_display_name = narrow(std::wstring(signer_name_buffer));
         }
+        std::fprintf(stderr, "[diag] signer extraction extracted=%d name=\"%s\"\n",
+                     extracted ? 1 : 0, result.signer_display_name.c_str());
     }
 
     trust_data.dwStateAction = WTD_STATEACTION_CLOSE;

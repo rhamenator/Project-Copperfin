@@ -893,6 +893,8 @@ int run_generated_launcher_test(
                manifest_value(build_host_debug_manifest, "primary_output_path").find(
                    configured_launcher_name) != std::string::npos,
            "custom-output build should preserve output provenance in app.cfdebug");
+    std::cerr << "[diag] build_host stdout:\n" << build_host.stdout_text
+              << "\n[diag] build_host stderr:\n" << build_host.stderr_text << "\n";
     expect_launcher_artifact_inventory(
         build_host_package_root,
         build_host_manifest,

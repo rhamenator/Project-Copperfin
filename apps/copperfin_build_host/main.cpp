@@ -468,6 +468,24 @@ bool run_dotnet_publish(
         return false;
     }
 
+    {
+        std::error_code diag_error;
+        std::cerr << "[diag] dotnet publish exit 0; listing output_dir="
+                  << copperfin::platform::path_to_utf8_string(output_dir) << "\n";
+        for (const auto& entry : std::filesystem::directory_iterator(output_dir, diag_error)) {
+            std::error_code size_error;
+            const auto size = entry.is_regular_file(size_error) && !size_error
+                ? std::filesystem::file_size(entry.path(), size_error)
+                : 0U;
+            std::cerr << "[diag]   "
+                      << copperfin::platform::path_to_utf8_string(entry.path().filename())
+                      << " size=" << size << "\n";
+        }
+        if (diag_error) {
+            std::cerr << "[diag] directory_iterator error: " << diag_error.message() << "\n";
+        }
+    }
+
     const std::string project_stem =
         copperfin::platform::path_to_utf8_string(project_path.stem());
 #if defined(_WIN32)
