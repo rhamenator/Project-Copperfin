@@ -997,6 +997,7 @@
   "Runtime.Package.Error.LauncherArtifactAmbiguous": "Multiple generated-launcher artifacts match the required package identity: {path}",
   "Runtime.Package.Error.LauncherArtifactMissing": "Required generated-launcher artifact is missing: {path}",
   "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile": "Generated-launcher artifact is not a direct regular file: {path}",
+  "Runtime.Package.Error.LauncherArtifactRenamedDuringRead": "Generated-launcher artifact was renamed or replaced during read: {path}",
   "Runtime.Package.Error.LauncherArtifactUnexpected": "Unexpected generated-launcher artifact is present: {path}",
   "Runtime.Package.Error.OutputNameReserved": "Package output name conflicts with a reserved Copperfin artifact: {outputName} conflicts with {reservedName}",
   "Runtime.Package.Error.ManifestPairPathRejected": "Runtime and debug manifest destinations must be direct regular files in the package root: {path}",

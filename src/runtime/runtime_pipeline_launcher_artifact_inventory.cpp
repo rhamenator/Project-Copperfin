@@ -129,10 +129,11 @@ std::vector<std::filesystem::path> casefold_package_entries(
 //      round-2 fix) would work against the reason that check exists: it
 //      would give a TOCTOU attacker's swap window more read attempts to
 //      land outside it, and a "succeeded on retry" outcome would erase
-//      the audit signal that a rename/replace was ever observed --
-//      exactly the security event issue #5427's round-3 fix (distinct
-//      error code instead of reusing containment_denied) was about
-//      *not* masking. Blind retry can't tell a benign race from an
+//      the audit signal that a rename/replace was ever observed. That
+//      signal is LauncherArtifactRenamedDuringRead, a diagnostic code
+//      distinct from the generic containment/read-failure paths' code,
+//      kept that way specifically so this isn't masked (issue #5435,
+//      round 2). Blind retry can't tell a benign race from an
 //      attacker's second attempt.
 //
 // If build-time flakiness from this function becomes an observed
@@ -239,8 +240,13 @@ bool admit_launcher_artifact(
     if (!after_containment.allowed ||
         after_containment.canonical_path != containment.canonical_path ||
         !after_containment.identity.content_equal(snapshot.containment.identity)) {
+        // Distinct from LauncherArtifactNotDirectRegularFile (used by the
+        // containment-denied and read-failed branches above) so this
+        // specific outcome -- a rename/replace observed mid-read -- is
+        // identifiable in logs, not folded into the generic containment
+        // diagnostic (found by adversarial review on PR #5444/issue #5435).
         error = runtime_text(
-            "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
+            "Runtime.Package.Error.LauncherArtifactRenamedDuringRead",
             {{"path", expected_name}});
         return false;
     }

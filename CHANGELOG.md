@@ -1,3 +1,22 @@
+- 2026-09-01: Documented `admit_launcher_artifact()`'s deliberate fail-fast,
+  no-retry behavior on every rejection path (issue #5435): build-time-only
+  execution makes a human-rerun sufficient recovery for transient races,
+  and auto-retrying specifically the post-read rename/replace rejection
+  would give a TOCTOU attacker's swap window more read attempts to land
+  outside it. A Codex review pass on PR #5444 found the documentation's
+  claim that this masking is avoided was false as written: that rejection
+  branch reused the generic `Runtime.Package.Error.LauncherArtifactNotDirectRegularFile`
+  code shared with the containment-denied and read-failed branches, so
+  nothing in the diagnostic actually distinguished "renamed during read"
+  from those. Fixed by adding a dedicated
+  `Runtime.Package.Error.LauncherArtifactRenamedDuringRead` locale key
+  (all 4 catalogs) and using it only for that branch, mirroring the
+  established `artifact_changed`/distinct-diagnostic-code pattern from
+  issue #5427's own round-2 fix (above). Tightened
+  `test_launcher_artifact_admission_rejects_rename_during_read()` to
+  assert the specific error string, not just admission failure;
+  re-verified it still catches the regression.
+
 - 2026-09-01: Fixed a test-hygiene gap found while investigating a Windows
   CI failure in a docs-only PR (#5439) that unexpectedly touched an
   already-merged code path: `test_supporting_artifact_admission_rejects_rename_during_read()`

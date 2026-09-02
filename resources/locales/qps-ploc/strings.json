@@ -124,6 +124,7 @@
   "Runtime.Package.Error.LauncherArtifactAmbiguous": "[!! Müľţïþľë ģëñëŕåţëd-ľåüñçhëŕ åŕţïƒåçţš måţçh ţhë ŕëqüïŕëd þåçķåģë ïdëñţïţÿ: {path} !!]",
   "Runtime.Package.Error.LauncherArtifactMissing": "[!! Ŕëqüïŕëd ģëñëŕåţëd-ľåüñçhëŕ åŕţïƒåçţ ïš mïššïñģ: {path} !!]",
   "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile": "[!! Ģëñëŕåţëd-ľåüñçhëŕ åŕţïƒåçţ ïš ñøţ å dïŕëçţ ŕëģüľåŕ ƒïľë: {path} !!]",
+  "Runtime.Package.Error.LauncherArtifactRenamedDuringRead": "[!! Ģëñëŕåţëd-ľåüñçhëŕ åŕţïƒåçţ wåš ŕëñåmëd øŕ ŕëþľåçëd düŕïñģ ŕëåd: {path} !!]",
   "Runtime.Package.Error.LauncherArtifactUnexpected": "[!! Üñëxþëçţëd ģëñëŕåţëd-ľåüñçhëŕ åŕţïƒåçţ ïš þŕëšëñţ: {path} !!]",
   "Runtime.Package.Error.OutputNameReserved": "Package output name conflicts with a reserved Copperfin artifact: {outputName} conflicts with {reservedName}",
   "Runtime.Package.Error.ManifestPairPathRejected": "Runtime and debug manifest destinations must be direct regular files in the package root: {path}",
