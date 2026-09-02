@@ -10,20 +10,14 @@
 #include "copperfin/platform/path.h"
 #include "localized_text.h"
 
-#if defined(COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS)
-#include "copperfin/security/external_process_policy_test_hooks.h"
-#endif
-
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
-#include <wincrypt.h>
 #include <softpub.h>
 #include <wintrust.h>
 #endif
 
 #include <algorithm>
-#include <atomic>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
@@ -39,21 +33,6 @@
 #endif
 
 namespace copperfin::security {
-
-#if defined(COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS)
-namespace {
-// See external_process_policy_test_hooks.h. Relaxed ordering is
-// sufficient: this exists only for single-threaded test setup/teardown
-// around a call to authorize_external_process(), never for production
-// synchronization.
-std::atomic<void (*)()> pre_identity_check_test_hook{nullptr};
-}  // namespace
-
-void set_external_process_policy_pre_identity_check_test_hook_for_testing(
-    void (*hook)()) {
-    pre_identity_check_test_hook.store(hook, std::memory_order_relaxed);
-}
-#endif
 
 namespace {
 
@@ -171,24 +150,7 @@ std::string resolve_executable_from_path(const std::string& executable_name) {
     }
 }
 
-// Result of a single WinVerifyTrust() call: whether the file has a trusted
-// Authenticode signature, and -- if so -- the display name of the
-// cryptographically verified signer's leaf certificate. Replaces the old
-// two-call design (a separate has_trusted_signature() plus an independent
-// get_company_name() reading the PE version-resource CompanyName field) --
-// CompanyName is unauthenticated metadata the binary's author can set to
-// any string with no cryptographic connection to whatever signature
-// actually verified, so matching allowed_publishers against it let a
-// binary signed by an untrusted signer (or entirely unsigned, when
-// require_trusted_signature is false) claim any publisher name (issue
-// #5429).
-struct AuthenticodeVerificationResult {
-    bool trusted = false;
-    std::string signer_display_name;
-};
-
-AuthenticodeVerificationResult verify_authenticode_signature(const std::string& path) {
-    AuthenticodeVerificationResult result;
+bool has_trusted_signature(const std::string& path) {
     const std::wstring wide_path = copperfin::platform::path_from_utf8_string(path).wstring();
 
     WINTRUST_FILE_INFO file_info{};
@@ -206,54 +168,50 @@ AuthenticodeVerificationResult verify_authenticode_signature(const std::string& 
 
     GUID policy_guid = WINTRUST_ACTION_GENERIC_VERIFY_V2;
     const LONG status = WinVerifyTrust(nullptr, &policy_guid, &trust_data);
-    result.trusted = status == ERROR_SUCCESS;
-
-    if (result.trusted) {
-        // Walk the same trust-provider state WinVerifyTrust just built
-        // (via hWVTStateData) rather than a second, independent lookup --
-        // the signer identity this extracts is the one WinVerifyTrust
-        // itself verified, not a separately-resolved one.
-        CRYPT_PROVIDER_DATA* const provider_data =
-            WTHelperProvDataFromStateData(trust_data.hWVTStateData);
-        if (provider_data != nullptr) {
-            CRYPT_PROVIDER_SGNR* const signer =
-                WTHelperGetProvSignerFromChain(provider_data, 0, FALSE, 0);
-            if (signer != nullptr && signer->csCertChain > 0U &&
-                signer->pasCertChain != nullptr) {
-                const PCCERT_CONTEXT certificate = signer->pasCertChain[0].pCert;
-                if (certificate != nullptr) {
-                    const DWORD name_length = CertGetNameStringW(
-                        certificate,
-                        CERT_NAME_SIMPLE_DISPLAY_TYPE,
-                        0,
-                        nullptr,
-                        nullptr,
-                        0);
-                    if (name_length > 1U) {
-                        std::wstring wide_name(name_length, L'\0');
-                        CertGetNameStringW(
-                            certificate,
-                            CERT_NAME_SIMPLE_DISPLAY_TYPE,
-                            0,
-                            nullptr,
-                            wide_name.data(),
-                            name_length);
-                        // CertGetNameStringW's returned length includes
-                        // the trailing NUL; drop it before narrowing.
-                        if (!wide_name.empty() && wide_name.back() == L'\0') {
-                            wide_name.pop_back();
-                        }
-                        result.signer_display_name = narrow(wide_name);
-                    }
-                }
-            }
-        }
-    }
 
     trust_data.dwStateAction = WTD_STATEACTION_CLOSE;
     WinVerifyTrust(nullptr, &policy_guid, &trust_data);
 
-    return result;
+    return status == ERROR_SUCCESS;
+}
+
+std::string get_company_name(const std::string& path) {
+    const std::wstring wide_path = copperfin::platform::path_from_utf8_string(path).wstring();
+    DWORD handle = 0;
+    const DWORD size = GetFileVersionInfoSizeW(wide_path.c_str(), &handle);
+    if (size == 0) {
+        return {};
+    }
+
+    std::vector<std::uint8_t> version_block(size);
+    if (!GetFileVersionInfoW(wide_path.c_str(), 0, size, version_block.data())) {
+        return {};
+    }
+
+    struct LangCodePage {
+        WORD language;
+        WORD code_page;
+    };
+
+    LangCodePage* translation = nullptr;
+    UINT translation_size = 0;
+    if (!VerQueryValueW(version_block.data(), L"\\VarFileInfo\\Translation", reinterpret_cast<LPVOID*>(&translation), &translation_size)
+        || translation == nullptr
+        || translation_size < sizeof(LangCodePage)) {
+        return {};
+    }
+
+    wchar_t query[64]{};
+    swprintf_s(query, L"\\StringFileInfo\\%04x%04x\\CompanyName", translation[0].language, translation[0].code_page);
+
+    LPVOID value = nullptr;
+    UINT value_size = 0;
+    if (!VerQueryValueW(version_block.data(), query, &value, &value_size) || value == nullptr || value_size == 0) {
+        return {};
+    }
+
+    return narrow(copperfin::platform::bounded_wide_string(
+        static_cast<const wchar_t*>(value), value_size));
 }
 
 bool path_under_root(const std::filesystem::path& path, const std::filesystem::path& root) {
@@ -408,37 +366,7 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
                 .file_identity = {}};
     }
 
-    // Capture the file identity here, before signature/publisher
-    // verification, so a rename/replace of the executable at any point
-    // between this and the post-verification identity read below is
-    // detectable. Nothing otherwise binds verify_authenticode_signature()'s
-    // path-string open, and the final read_file_identity() call's own
-    // path-string open, to the same underlying file object -- an attacker
-    // who can replace the file at resolved_path in that window could pass
-    // verification against one binary while a different one is what this
-    // authorization actually ends up describing (issue #5430).
-    ExternalProcessFileIdentity pre_verification_identity;
-    if (!read_file_identity(executable_path, pre_verification_identity)) {
-        return {.allowed = false,
-                .resolved_path = resolved_path,
-                .error = security_text(
-                    "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
-                    {{"executableName", policy.executable_name}}),
-                .file_identity = {}};
-    }
-
-    // A single WinVerifyTrust() call serves both the require_trusted_signature
-    // check and, when allowed_publishers is non-empty, the publisher match --
-    // the latter needs a verified signer identity to match against
-    // regardless of require_trusted_signature's own value, since there is
-    // no other authenticated source of publisher identity (issue #5429).
-    const bool needs_signature_verification =
-        policy.require_trusted_signature || !policy.allowed_publishers.empty();
-    const AuthenticodeVerificationResult verification = needs_signature_verification
-        ? verify_authenticode_signature(resolved_path)
-        : AuthenticodeVerificationResult{};
-
-    if (policy.require_trusted_signature && !verification.trusted) {
+    if (policy.require_trusted_signature && !has_trusted_signature(resolved_path)) {
         return {.allowed = false,
                 .resolved_path = resolved_path,
                 .error = security_text("Security.ExternalProcessPolicy.Error.UntrustedAuthenticodeSignature"),
@@ -446,21 +374,10 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
     }
 
     if (!policy.allowed_publishers.empty()) {
-        // Denied outright, not just "no match", when verification itself
-        // did not succeed (including when require_trusted_signature is
-        // false): there is then no verified signer identity to compare
-        // allowed_publishers against at all, so treating it as a
-        // publisher mismatch rather than a distinct "unverified" case
-        // would be accurate either way, but computing a match against an
-        // empty signer_display_name is pointless -- short-circuit it.
-        const auto match = verification.trusted
-            ? std::find_if(
-                  policy.allowed_publishers.begin(), policy.allowed_publishers.end(),
-                  [&](const std::string& publisher) {
-                      return !_stricmp(
-                          verification.signer_display_name.c_str(), publisher.c_str());
-                  })
-            : policy.allowed_publishers.end();
+        const std::string company_name = get_company_name(resolved_path);
+        const auto match = std::find_if(policy.allowed_publishers.begin(), policy.allowed_publishers.end(), [&](const std::string& publisher) {
+            return !_stricmp(company_name.c_str(), publisher.c_str());
+        });
 
         if (match == policy.allowed_publishers.end()) {
             return {.allowed = false,
@@ -470,13 +387,6 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
         }
     }
 
-#if defined(COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS)
-    if (const auto hook = pre_identity_check_test_hook.exchange(nullptr, std::memory_order_relaxed);
-        hook != nullptr) {
-        hook();
-    }
-#endif
-
     ExternalProcessFileIdentity identity;
     if (!read_file_identity(executable_path, identity)) {
         return {.allowed = false,
@@ -484,17 +394,6 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
                 .error = security_text(
                     "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
                     {{"executableName", policy.executable_name}}),
-                .file_identity = {}};
-    }
-    if (!file_identities_equal(identity, pre_verification_identity)) {
-        // The object the checks above verified is not the object this
-        // authorization would actually describe going forward: reject
-        // rather than silently trust a binary swapped in during
-        // verification (issue #5430).
-        return {.allowed = false,
-                .resolved_path = resolved_path,
-                .error = security_text(
-                    "Security.ExternalProcessPolicy.Error.ExecutableChangedDuringAuthorization"),
                 .file_identity = {}};
     }
     return {.allowed = true,
