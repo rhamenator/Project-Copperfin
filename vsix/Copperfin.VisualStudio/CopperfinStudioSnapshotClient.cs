@@ -52,12 +52,30 @@ internal static class CopperfinStudioSnapshotClient
         CopperfinLocalization localization,
         bool allowNonZeroExit = false)
     {
-        var startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
-            studioHostPath,
-            arguments,
-            localization: localization,
-            redirectOutput: true,
-            createNoWindow: true);
+        ProcessStartInfo startInfo;
+        try
+        {
+            startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
+                studioHostPath,
+                arguments,
+                localization: localization,
+                redirectOutput: true,
+                createNoWindow: true);
+        }
+        catch (InvalidOperationException)
+        {
+            // EnsureSafeForCmdExeCommandLine() (#5432) throws instead of
+            // returning a normal failure result when it refuses a launch;
+            // route it through this function's existing StudioHostCommandResult
+            // failure shape, which every one of its ~7 callers already checks
+            // via commandResult.Success, so this single fix covers all of them
+            // (issue #5446).
+            return new StudioHostCommandResult
+            {
+                Success = false,
+                Error = localization.Text("AssetEditor.Dialog.StudioHostCouldNotStart")
+            };
+        }
 
         var processResult = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 15000);
         if (!processResult.Started)

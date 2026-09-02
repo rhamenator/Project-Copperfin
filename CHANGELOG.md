@@ -51,6 +51,39 @@
   and the broader security/workspace-agent/polyglot/runtime-pipeline test
   sweep.
 
+- 2026-09-02: Fixed 6 VS extension call sites where `EnsureSafeForCmdExeCommandLine()`'s
+  (#5432) `InvalidOperationException` refusal was silently swallowed or left
+  unguarded, meaning the user saw a button do nothing with zero signal that
+  a launch was refused (issue #5446, found by multi-agent adversarial
+  review on PR #5445): `CopperfinAssetEditorControl.cs`'s
+  `QueueUiActionAsync` had an empty `catch (InvalidOperationException) {}`
+  (removed, so it now falls through to the existing generic handler that
+  surfaces a status label + MessageBox) and `LaunchStudio()` had no
+  try/catch around `CopperfinStudioHostBridge.Launch(...)` at all (added
+  one, using the existing `BuildUnexpectedFailureMessage()` pattern);
+  `OpenInCopperfinStudioCommand.cs`'s `ExecuteAsync` is invoked via a
+  discarded `JoinableTask`, so an uncaught exception there would never
+  surface anywhere (added a try/catch using the method's existing
+  `VsShellUtilities.ShowMessageBox` pattern);
+  `CopperfinProjectWorkflow.cs`'s `RunProcess()`/`StartProcess()` and
+  `CopperfinRuntimeDebugClient.cs`'s `StartPersistentAsync()`/`ReplayAsync()`
+  all called `CreateProcessStartInfo`-family methods before their own try
+  blocks (wrapped each in try/catch, routing into each function's existing
+  reported-failure shape, reusing already-existing locale keys throughout --
+  no new strings needed); `CopperfinStudioSnapshotClient.cs`'s `RunCommand()`
+  (called from ~7 sibling methods) and
+  `CopperfinWorkspaceAgentPolicyClient.cs`'s `TryLoad()` had the identical
+  gap (found by a later Copilot pass on the same PR), fixed the same way.
+  `CopperfinProjectCommands.cs` needed no direct change: its call chain
+  routes entirely through the now-fixed `CopperfinProjectWorkflow.cs`
+  methods. Verified via full local build (`Copperfin.LanguageServiceTests.csproj`,
+  net10.0, and `Copperfin.DesignerSmokeTests.csproj`, net472 -- both
+  buildable on Linux; the full `Copperfin.VisualStudio.csproj` requires the
+  Windows-only VSSDK build tools and could not be locally verified beyond
+  compilation of its constituent source files through those two other
+  projects) plus the full existing `Copperfin.LanguageServiceTests` suite
+  passing unchanged.
+
 - 2026-09-02: A Codex/Copilot review pass on PR #5445 (issue #5432) found
   `EnsureSafeForCmdExeCommandLine()`'s round-2 `%`-unconditional fix
   (below) still gated CR/LF rejection behind `insideQuotes`, the same

@@ -94,11 +94,31 @@ internal sealed class OpenInCopperfinStudioCommand
             return;
         }
 
-        if (!CopperfinStudioHostBridge.Launch(studioHostPath, documentPath!, localization: Localization))
+        try
         {
+            if (!CopperfinStudioHostBridge.Launch(studioHostPath, documentPath!, localization: Localization))
+            {
+                VsShellUtilities.ShowMessageBox(
+                    package,
+                    Localization.Text("AssetEditor.Dialog.StudioLaunchFailed"),
+                    Localization.Text("AssetEditor.Title"),
+                    OLEMSGICON.OLEMSGICON_WARNING,
+                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            // CreateProcessStartInfo()'s EnsureSafeForCmdExeCommandLine()
+            // (#5432) throws instead of returning false when it refuses a
+            // launch. This method is invoked via a discarded JoinableTask
+            // (`_ = package.JoinableTaskFactory.RunAsync(...)` in AddCommand
+            // below), so an uncaught exception here would never surface
+            // anywhere -- catch it and use the same ShowMessageBox pattern
+            // as every other failure mode in this method (issue #5446).
             VsShellUtilities.ShowMessageBox(
                 package,
-                Localization.Text("AssetEditor.Dialog.StudioLaunchFailed"),
+                Localization.Format("AssetEditor.Dialog.UnexpectedFailure", ex.Message),
                 Localization.Text("AssetEditor.Title"),
                 OLEMSGICON.OLEMSGICON_WARNING,
                 OLEMSGBUTTON.OLEMSGBUTTON_OK,
