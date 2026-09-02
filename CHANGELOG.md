@@ -28,6 +28,54 @@
   cmd.exe unguarded, or the quote count is unbalanced. Filed #5446 and
   #5447 as separate, non-blocking follow-ups on exception-surfacing UX
   and a more structural fix, respectively.
+
+- 2026-09-01: Documented `admit_launcher_artifact()`'s deliberate fail-fast,
+  no-retry behavior on every rejection path (issue #5435): build-time-only
+  execution makes a human-rerun sufficient recovery for transient races,
+  and auto-retrying specifically the post-read rename/replace rejection
+  would give a TOCTOU attacker's swap window more read attempts to land
+  outside it. A Codex review pass on PR #5444 found the documentation's
+  claim that this masking is avoided was false as written: that rejection
+  branch reused the generic `Runtime.Package.Error.LauncherArtifactNotDirectRegularFile`
+  code shared with the containment-denied and read-failed branches, so
+  nothing in the diagnostic actually distinguished "renamed during read"
+  from those. Fixed by adding a dedicated
+  `Runtime.Package.Error.LauncherArtifactRenamedDuringRead` locale key
+  (all 4 catalogs) and using it only for that branch, mirroring the
+  established `artifact_changed`/distinct-diagnostic-code pattern from
+  issue #5427's own round-2 fix (above). Tightened
+  `test_launcher_artifact_admission_rejects_rename_during_read()` to
+  assert the specific error string, not just admission failure;
+  re-verified it still catches the regression.
+
+- 2026-09-02: CI (`test_native_platform_workflow_contract`) caught a real
+  regression in the #5433 NSIS-acquisition refactor below: moving the
+  install logic out of `.github/workflows/build-installers.yml` and into
+  `scripts/install-pinned-nsis.ps1` left the workflow-contract check's
+  `require_text` assertions pointed at the wrong file for 7 properties
+  (the retry contract, the fallback URI/SHA-256 pin, the checksum/
+  extraction commands, and the compiler-verification message), so every
+  platform's build failed this test. Fixed by relocating those checks to
+  `scripts/install-pinned-nsis.ps1`, updating two of them for that
+  script's actual variable name (`$fallbackArchive`, not
+  `$nsisFallbackArchive`) and its version-pinned verification message
+  (no exit-code-based check remains, since that was replaced by the
+  anchored pinned-version match below), and adding a new check that the
+  workflow file itself still invokes the script. Verified locally by
+  temporarily breaking a literal in the script and confirming the test
+  fails, then restoring it.
+
+- 2026-09-01: Hardened Windows installer NSIS acquisition (#5433):
+  the checksum-pinned portable archive is now tried first (not merely as
+  a last-resort fallback after an unpinned ambient runner-image binary or
+  unpinned Chocolatey install), and whichever path produces `makensis.exe`
+  must report exactly the pinned version before it's trusted to build the
+  installer. Extracted to `scripts/install-pinned-nsis.ps1` (mirroring
+  `scripts/verify-windows-sccache.ps1`'s pattern) after review found a
+  hash mismatch was only warned about rather than fatal, an unanchored
+  version regex accepted substring matches like "v3.12-beta", and two
+  independent retry loops duplicated the same backoff shape.
+
 - 2026-09-01: Fixed a test-hygiene gap found while investigating a Windows
   CI failure in a docs-only PR (#5439) that unexpectedly touched an
   already-merged code path: `test_supporting_artifact_admission_rejects_rename_during_read()`

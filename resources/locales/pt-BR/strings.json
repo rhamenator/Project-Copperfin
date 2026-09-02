@@ -124,6 +124,7 @@
   "Runtime.Package.Error.LauncherArtifactAmbiguous": "Varios artefatos do launcher gerado correspondem a identidade exigida do pacote: {path}",
   "Runtime.Package.Error.LauncherArtifactMissing": "Esta faltando um artefato obrigatorio do launcher gerado: {path}",
   "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile": "O artefato do launcher gerado nao e um arquivo regular direto: {path}",
+  "Runtime.Package.Error.LauncherArtifactRenamedDuringRead": "O artefato do launcher gerado foi renomeado ou substituido durante a leitura: {path}",
   "Runtime.Package.Error.LauncherArtifactUnexpected": "Ha um artefato inesperado do launcher gerado: {path}",
   "Runtime.Package.Error.OutputNameReserved": "O nome de saida do pacote entra em conflito com um artefato reservado do Copperfin: {outputName} entra em conflito com {reservedName}",
   "Runtime.Package.Error.ManifestPairPathRejected": "Os destinos dos manifestos de runtime e depuracao devem ser arquivos regulares diretos na raiz do pacote: {path}",

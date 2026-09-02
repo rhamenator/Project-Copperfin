@@ -353,26 +353,32 @@ require_text(".github/workflows/build-installers.yml"
     "linux-deb-rpm-installers:"
     "Linux installer job")
 require_text(".github/workflows/build-installers.yml"
+    "install-pinned-nsis.ps1"
+    "pinned NSIS installer script invocation")
+require_text("scripts/install-pinned-nsis.ps1"
     "--retry-count=3 --retry-delay=5"
     "NSIS package-feed retry contract")
-require_text(".github/workflows/build-installers.yml"
-    "https://downloads.sourceforge.net/nsis/nsis-3.12.zip"
+require_text("scripts/install-pinned-nsis.ps1"
+    "https://downloads.sourceforge.net/nsis/"
     "checksum-pinned portable NSIS fallback URI")
-require_text(".github/workflows/build-installers.yml"
+require_text("scripts/install-pinned-nsis.ps1"
     "56581f90db321581c5381193d796fffcf2d24b2f8fed2160a6c6a3baa67f2c4f"
     "portable NSIS fallback SHA-256 pin")
-require_text(".github/workflows/build-installers.yml"
-    "Get-FileHash -LiteralPath $nsisFallbackArchive -Algorithm SHA256"
+require_text("scripts/install-pinned-nsis.ps1"
+    "pinnedVersion = \"3.12\""
+    "pinned NSIS version single source of truth")
+require_text("scripts/install-pinned-nsis.ps1"
+    "Get-FileHash -LiteralPath $fallbackArchive -Algorithm SHA256"
     "portable NSIS fallback checksum verification")
-require_text(".github/workflows/build-installers.yml"
-    "Expand-Archive -LiteralPath $nsisFallbackArchive -DestinationPath $env:RUNNER_TEMP -Force"
+require_text("scripts/install-pinned-nsis.ps1"
+    "Expand-Archive -LiteralPath $fallbackArchive -DestinationPath $env:RUNNER_TEMP -Force"
     "portable NSIS fallback extraction")
-require_text(".github/workflows/build-installers.yml"
+require_text("scripts/install-pinned-nsis.ps1"
     "Test-Path -LiteralPath $makensis -PathType Leaf"
     "NSIS compiler availability contract")
-require_text(".github/workflows/build-installers.yml"
-    "NSIS compiler verification failed with exit code"
-    "NSIS compiler execution verification")
+require_text("scripts/install-pinned-nsis.ps1"
+    "refusing to build the installer with an unverified compiler"
+    "NSIS compiler pinned-version verification")
 require_text(".github/workflows/build-installers.yml"
     "cpack --config build/CPackConfig.cmake -B build/package -C Release -G \"NSIS;ZIP\""
     "Windows CPack generator inventory")

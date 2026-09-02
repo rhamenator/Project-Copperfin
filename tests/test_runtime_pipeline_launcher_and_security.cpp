@@ -69,6 +69,14 @@ void test_launcher_artifact_admission_rejects_rename_during_read() {
             "RQ-CF-CONTAINMENT-001: a launcher artifact renamed/replaced "
             "during the handle-based read must be rejected by the post-read "
             "path re-walk -- issue #5426/PR #5428 regression test");
+        expect(
+            error == runtime_pipeline_english_catalog().translate(
+                         "Runtime.Package.Error.LauncherArtifactRenamedDuringRead",
+                         {{"path", launcher_path.filename().string()}}),
+            "rejection must use a diagnostic distinct from the generic "
+            "containment/read-failure error, so a rename/replace observed "
+            "mid-read is identifiable in logs -- issue #5435/PR #5444 "
+            "round-2 regression test");
     }
 
     std::error_code cleanup_error;
