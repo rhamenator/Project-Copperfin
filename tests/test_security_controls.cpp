@@ -7,6 +7,7 @@
 #include "copperfin/security/audit_stream.h"
 #include "copperfin/security/authorization.h"
 #include "copperfin/security/external_process_policy.h"
+#include "copperfin/security/external_process_policy_test_hooks.h"
 #include "copperfin/security/physical_path_containment.h"
 #include "copperfin/security/process_hardening.h"
 #include "copperfin/security/secret_provider.h"
@@ -1050,6 +1051,112 @@ void test_external_process_policy_rejects_empty_allowed_path_roots() {
         "cmd.exe no longer resolvable on PATH)");
 }
 
+namespace {
+std::filesystem::path g_external_process_policy_swap_original;
+bool g_external_process_policy_swap_performed = false;
+
+void external_process_policy_pre_identity_check_test_hook() {
+    // Simulates an attacker replacing the resolved executable in the
+    // window authorize_external_process() leaves between capturing the
+    // pre-verification file identity and reading it again after the
+    // signature/publisher checks -- the exact race issue #5430 closed.
+    std::error_code rename_error;
+    std::filesystem::path moved_aside = g_external_process_policy_swap_original;
+    moved_aside += L".moved-aside";
+    std::filesystem::rename(
+        g_external_process_policy_swap_original, moved_aside, rename_error);
+    g_external_process_policy_swap_performed = !rename_error;
+    if (g_external_process_policy_swap_performed) {
+        std::ofstream replacement(
+            g_external_process_policy_swap_original, std::ios::binary | std::ios::trunc);
+        replacement << "replacement-bytes-different-length-and-content";
+    }
+}
+}  // namespace
+
+void test_external_process_policy_rejects_executable_swapped_during_authorization() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / L"copperfin_external_process_policy_swap_race";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    wchar_t system_directory[MAX_PATH]{};
+    const UINT system_directory_length = GetSystemDirectoryW(system_directory, MAX_PATH);
+    const fs::path system_command = system_directory_length == 0U
+        ? fs::path{}
+        : fs::path(std::wstring(system_directory, system_directory_length)) / L"cmd.exe";
+    if (system_command.empty() || !fs::exists(system_command, ignored)) {
+        expect(false, "#5430: Windows executable-swap fixture should find cmd.exe");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    const fs::path fixture_path = temp_root / L"copperfin-policy-swap-fixture.exe";
+    fs::copy_file(system_command, fixture_path, fs::copy_options::overwrite_existing, ignored);
+    if (ignored) {
+        expect(false, "#5430: Windows executable-swap fixture should copy cmd.exe");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const DWORD path_length = GetEnvironmentVariableW(L"PATH", nullptr, 0U);
+    std::wstring original_path;
+    if (path_length > 0U) {
+        original_path.resize(static_cast<std::size_t>(path_length));
+        const DWORD copied_length = GetEnvironmentVariableW(
+            L"PATH", original_path.data(), path_length);
+        original_path.resize(static_cast<std::size_t>(copied_length));
+    }
+    const std::wstring fixture_path_value = temp_root.wstring() + L";" + original_path;
+    const bool path_set = SetEnvironmentVariableW(L"PATH", fixture_path_value.c_str()) != FALSE;
+    if (!path_set) {
+        expect(false, "#5430: Windows executable-swap fixture should update PATH");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    g_external_process_policy_swap_original = fixture_path;
+    g_external_process_policy_swap_performed = false;
+    copperfin::security::set_external_process_policy_pre_identity_check_test_hook_for_testing(
+        &external_process_policy_pre_identity_check_test_hook);
+
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = "copperfin-policy-swap-fixture.exe",
+        .allowed_path_roots = {copperfin::platform::path_to_utf8_string(temp_root)},
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+
+    copperfin::security::set_external_process_policy_pre_identity_check_test_hook_for_testing(
+        nullptr);
+
+    if (original_path.empty()) {
+        SetEnvironmentVariableW(L"PATH", nullptr);
+    } else {
+        SetEnvironmentVariableW(L"PATH", original_path.c_str());
+    }
+
+    // Gracefully skip, like this codebase's other rename-during-check
+    // regression tests, rather than fail the suite when the environment
+    // doesn't permit the rename (e.g. a restricted sandbox).
+    if (g_external_process_policy_swap_performed) {
+        expect(!authorization.allowed,
+               "#5430: a resolved executable swapped during authorization checks must be "
+               "rejected, not silently authorized against the pre-swap object");
+        expect(
+            authorization.error ==
+                "The executable changed while authorization checks were in progress.",
+            "#5430: the swap-during-authorization rejection must use a diagnostic distinct "
+            "from the generic path-resolution/publisher-mismatch errors, so this outcome is "
+            "identifiable in logs");
+    }
+
+    std::error_code cleanup_error;
+    fs::remove_all(temp_root, cleanup_error);
+}
+
 void test_external_process_policy_handles_long_paths() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / L"copperfin_security_policy_long_path";
@@ -1672,6 +1779,7 @@ int main() {
 #ifdef _WIN32
     test_external_process_policy_preserves_unicode_paths();
     test_external_process_policy_rejects_empty_allowed_path_roots();
+    test_external_process_policy_rejects_executable_swapped_during_authorization();
     test_external_process_policy_handles_long_paths();
 #endif
     test_physical_path_containment_rejects_indirection();
