@@ -27,12 +27,24 @@ internal static class CopperfinWorkspaceAgentPolicyClient
             return Failure(HostMissing, localization.Text("AssetEditor.Dialog.StudioHostMissing"));
         }
 
-        var startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
-            studioHostPath!,
-            CopperfinStudioHostBridge.BuildWorkspaceAgentPolicyArguments(),
-            localization: localization,
-            redirectOutput: true,
-            createNoWindow: true);
+        System.Diagnostics.ProcessStartInfo startInfo;
+        try
+        {
+            startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
+                studioHostPath!,
+                CopperfinStudioHostBridge.BuildWorkspaceAgentPolicyArguments(),
+                localization: localization,
+                redirectOutput: true,
+                createNoWindow: true);
+        }
+        catch (InvalidOperationException)
+        {
+            // EnsureSafeForCmdExeCommandLine() (#5432) throws instead of
+            // returning a normal failure result when it refuses a launch;
+            // route it through this method's existing Failure(...) shape
+            // (issue #5446).
+            return Failure(HostFailed, localization.Text("AssetEditor.Dialog.StudioHostCouldNotStart"));
+        }
         var processResult = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 15000);
         if (!processResult.Started)
         {

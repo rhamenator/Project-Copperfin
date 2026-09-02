@@ -3767,9 +3767,22 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        if (!CopperfinStudioHostBridge.Launch(studioHostPath, currentPath!, localization: localization))
+        try
         {
-            MessageBox.Show(this, BuildStudioLaunchFailedMessage(), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (!CopperfinStudioHostBridge.Launch(studioHostPath, currentPath!, localization: localization))
+            {
+                MessageBox.Show(this, BuildStudioLaunchFailedMessage(), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            // CreateProcessStartInfo()'s EnsureSafeForCmdExeCommandLine() (#5432)
+            // throws instead of returning false when it refuses a launch, so
+            // this must be caught here too -- otherwise the refusal propagates
+            // unhandled out of this synchronous WinForms click handler instead
+            // of the graceful MessageBox pattern every other failure mode in
+            // this method already uses (issue #5446).
+            MessageBox.Show(this, BuildUnexpectedFailureMessage(ex.Message), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 
@@ -3923,14 +3936,18 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         catch (ObjectDisposedException)
         {
         }
-        catch (InvalidOperationException)
-        {
-        }
         catch (System.ComponentModel.Win32Exception)
         {
         }
         catch (Exception ex)
         {
+            // InvalidOperationException used to be swallowed silently here
+            // too, on the assumption it was always a benign control-state
+            // race like the ObjectDisposedException/Win32Exception cases
+            // above. Since #5432, CreateProcessStartInfo() also throws it
+            // to refuse an unsafe launch -- a real security event that must
+            // not vanish with zero user-visible or logged signal, so it now
+            // falls through to this generic handler instead (issue #5446).
             if (IsDisposed || Disposing || snapshotStatusLabel.IsDisposed)
             {
                 return;

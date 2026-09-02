@@ -268,13 +268,33 @@ internal static class CopperfinProjectWorkflow
         CopperfinLocalization? localization = null)
     {
         localization ??= CopperfinLocalization.FromEnvironment();
-        var startInfo = CreateProcessStartInfo(
-            fileName,
-            arguments,
-            environmentVariables,
-            localization,
-            redirectOutput: true,
-            createNoWindow: true);
+        ProcessStartInfo startInfo;
+        try
+        {
+            startInfo = CreateProcessStartInfo(
+                fileName,
+                arguments,
+                environmentVariables,
+                localization,
+                redirectOutput: true,
+                createNoWindow: true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // CopperfinStudioHostBridge.CreateProcessStartInfo()'s
+            // EnsureSafeForCmdExeCommandLine() (#5432) throws instead of
+            // returning a normal failure result when it refuses a launch;
+            // route it through the same reported-failure shape this
+            // function already uses for every other "process could not
+            // start" case (issue #5446).
+            return new CopperfinProcessExecutionResult
+            {
+                ExitCode = -1,
+                StandardError = localization.Format(
+                    "AssetEditor.Project.Workflow.ProcessCouldNotStartWithMessage",
+                    ex.Message)
+            };
+        }
 
         var processResult = CopperfinProcessRunner.Run(startInfo);
         if (!processResult.Started)
@@ -342,11 +362,20 @@ internal static class CopperfinProjectWorkflow
         CopperfinLocalization? localization = null)
     {
         localization ??= CopperfinLocalization.FromEnvironment();
-        var startInfo = CreateProcessStartInfo(
-            fileName,
-            arguments,
-            localization: localization,
-            createNoWindow: true);
+        ProcessStartInfo startInfo;
+        try
+        {
+            startInfo = CreateProcessStartInfo(
+                fileName,
+                arguments,
+                localization: localization,
+                createNoWindow: true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Same rationale as RunProcess() above (issue #5446).
+            return Failure(fileName, localization.Format("AssetEditor.Project.Workflow.LauncherCouldNotStartWithMessage", ex.Message));
+        }
 
         try
         {

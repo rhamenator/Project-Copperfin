@@ -179,7 +179,22 @@ internal static class CopperfinRuntimeDebugClient
 
         var effectiveDebugManifestPath = PrepareReplayManifest(session.DebugManifestPath);
         var arguments = BuildPersistentArguments(effectiveDebugManifestPath, localization.Locale);
-        var startInfo = CreatePersistentProcessStartInfo(runtimeHostPath!, arguments, localization);
+        ProcessStartInfo startInfo;
+        try
+        {
+            startInfo = CreatePersistentProcessStartInfo(runtimeHostPath!, arguments, localization);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // CreatePersistentProcessStartInfo()'s EnsureSafeForCmdExeCommandLine()
+            // (#5432) throws instead of returning a normal failure result when it
+            // refuses a launch; route it through the same reported-failure shape
+            // this method already uses for a missing runtime host (issue #5446).
+            TryDeleteReplayManifest(session.DebugManifestPath, effectiveDebugManifestPath);
+            session.Success = false;
+            session.Error = localization.Format("AssetEditor.Dialog.RuntimeHostCouldNotStartWithMessage", ex.Message);
+            return session;
+        }
         var transport = await Task.Run(() => CopperfinRuntimeDebugTransport.Start(
             startInfo,
             timeoutMilliseconds: 30000,
@@ -296,10 +311,9 @@ internal static class CopperfinRuntimeDebugClient
                 session.Commands,
                 session.StopOnEntry);
 
-            var startInfo = CreateReplayProcessStartInfo(runtimeHostPath!, arguments, localization);
-
             try
             {
+                var startInfo = CreateReplayProcessStartInfo(runtimeHostPath!, arguments, localization);
                 var processResult = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 30000);
                 if (!processResult.Started)
                 {
@@ -340,6 +354,17 @@ internal static class CopperfinRuntimeDebugClient
                 session.Success = true;
                 session.Error = string.Empty;
                 session.State = pauseState;
+                return session;
+            }
+            catch (InvalidOperationException ex)
+            {
+                // CreateReplayProcessStartInfo()'s EnsureSafeForCmdExeCommandLine()
+                // (#5432) throws instead of returning a normal failure result when
+                // it refuses a launch; route it through the same reported-failure
+                // shape this method already uses for every other "runtime host
+                // could not start" case (issue #5446).
+                session.Success = false;
+                session.Error = localization.Format("AssetEditor.Dialog.RuntimeHostCouldNotStartWithMessage", ex.Message);
                 return session;
             }
             finally
