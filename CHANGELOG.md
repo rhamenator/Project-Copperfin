@@ -1,3 +1,28 @@
+- 2026-09-02: The Windows Defender exclusion below turned out not to be
+  the actual cause of `test_generated_launcher_process`'s intermittent
+  Windows CI failures (confirmed via log evidence: the exclusion was
+  genuinely active for the whole test run, and the failure still
+  occurred identically). Traced further:
+  `finalize_runtime_package_primary_output()`'s internal
+  `inventory_generated_launcher_artifacts()` call opens, reads, and
+  verifies every launcher sidecar file and reports success, yet a fresh
+  `std::filesystem::is_regular_file()` check on those same files
+  moments later, from the test itself, intermittently reports them
+  missing -- pointing at `PackageRootTransaction`'s commit step (which
+  promotes files from a staging location into `package_root`) rather
+  than antivirus scanning. Root-causing and fixing that transaction
+  path is out of scope here; added a bounded (~5s, 250ms poll interval)
+  `wait_until_regular_files_exist()` retry in
+  `expect_launcher_artifact_inventory()` instead, tolerating the
+  visibility window without weakening the check itself -- a sidecar
+  that's still missing after the full polling period still fails the
+  test. Could not be verified locally: this test's `.NET`-launcher path
+  is Windows-only and skips entirely on this session's Linux dev box
+  (confirmed via local run: "SKIP: generated .NET launchers are
+  currently available only on Windows"), so only compilation was
+  verified locally; Windows CI is the actual verification for whether
+  the retry resolves the race.
+
 - 2026-09-02: Added a Windows Defender real-time-scanning exclusion for
   `generated-launcher-validation.yml`'s `windows-generated-launcher` job.
   `test_generated_launcher_process` publishes a .NET launcher and its

@@ -20,6 +20,7 @@
 #include <iterator>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 #if defined(_WIN32)
@@ -135,6 +136,39 @@ std::vector<std::string> manifest_lines_with_prefix(
     return lines;
 }
 
+// finalize_runtime_package_primary_output() (via
+// inventory_generated_launcher_artifacts()) has already opened, read, and
+// verified each of these sidecar files by the time it returns -- but on
+// Windows CI, a `PackageRootTransaction` commit that promotes files from a
+// staging location into package_root has been observed to leave a brief
+// window where those same files are not yet visible to a fresh
+// std::filesystem::is_regular_file() check immediately afterward, even
+// though the finalize call itself reported success. Poll for up to ~5
+// seconds rather than checking once, so this test tolerates that window
+// instead of failing on it; a check that never becomes true after the full
+// polling period is still a real failure, not silently swallowed.
+bool wait_until_regular_files_exist(
+    const std::filesystem::path& package_root,
+    const std::vector<std::string>& required_sidecars,
+    const int max_attempts = 20,
+    const std::chrono::milliseconds delay = std::chrono::milliseconds(250)) {
+    for (int attempt = 0; attempt < max_attempts; ++attempt) {
+        const bool all_present = std::all_of(
+            required_sidecars.begin(),
+            required_sidecars.end(),
+            [&](const std::string& name) {
+                return std::filesystem::is_regular_file(package_root / name);
+            });
+        if (all_present) {
+            return true;
+        }
+        if (attempt + 1 < max_attempts) {
+            std::this_thread::sleep_for(delay);
+        }
+    }
+    return false;
+}
+
 void expect_launcher_artifact_inventory(
     const std::filesystem::path& package_root,
     const std::filesystem::path& runtime_manifest,
@@ -149,6 +183,7 @@ void expect_launcher_artifact_inventory(
         "Copperfin.GeneratedLauncher.deps.json",
         "Copperfin.GeneratedLauncher.runtimeconfig.json"
     };
+    wait_until_regular_files_exist(package_root, required_sidecars);
     for (const auto& required_sidecar : required_sidecars) {
         expect(std::filesystem::is_regular_file(package_root / required_sidecar),
                context + " should publish required sidecar " + required_sidecar);
