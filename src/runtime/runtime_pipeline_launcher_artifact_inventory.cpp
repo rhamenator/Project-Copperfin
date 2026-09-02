@@ -193,60 +193,36 @@ bool admit_launcher_artifact(
             {{"path", expected_name}});
         return false;
     }
-    const auto snapshot = security::read_physically_contained_file_snapshot_from_handle(handle);
-    if (!snapshot.ok) {
-        error = runtime_text(
-            "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
-            {{"path", expected_name}});
-        return false;
-    }
-    // read_physically_contained_file_snapshot_from_handle() guarantees the
-    // bytes just read are exactly what the walk verified, but -- unlike the
-    // string-reopening read_physically_contained_file_snapshot() it
-    // replaces, which re-walked expected.canonical_path by string after the
-    // read -- it makes no claim about whether the path still resolves to
-    // that same object afterward. Another process could rename/replace the
-    // artifact during the read: the handle-bound read still succeeds
-    // (correctly reading the original object's unchanged content), but this
-    // inventory entry is keyed by expected_name, and if that name now
-    // resolves to a different object, the recorded digest would describe an
-    // object the package no longer actually ships under that name. Restore
-    // the independent post-read path re-walk the old function performed, so
-    // this call site rejects rather than silently mis-recording (found by
-    // adversarial review on PR #5428). Re-walks containment.canonical_path
-    // (the already-verified canonical form), not the raw *exact directory
-    // entry, so this genuinely mirrors read_physically_contained_file_snapshot()'s
-    // own post-read check (physical_path_containment.cpp) rather than
-    // re-doing casefold/directory-entry resolution from scratch a second
-    // time.
+    // read_physically_contained_file_snapshot_from_handle() alone guarantees
+    // the bytes read are exactly what the walk verified, but makes no claim
+    // about whether the path still resolves to that same object once this
+    // call returns -- this inventory entry is keyed by expected_name, and a
+    // rename/replace of the artifact during the read would otherwise let a
+    // digest for an object the package no longer actually ships under that
+    // name be silently recorded. The
+    // _and_revalidate_path() variant closes that gap with an independent
+    // post-read re-walk (issue #5434, consolidating what used to be a
+    // hand-rolled re-walk here and in polyglot_supporting_artifact_admission.cpp;
+    // originally found by adversarial review on PR #5428).
+    void (*post_read_hook)() = nullptr;
 #if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
-    if (const auto hook =
-            launcher_artifact_post_read_test_hook.load(std::memory_order_relaxed);
-        hook != nullptr) {
-        launcher_artifact_post_read_test_hook.store(nullptr, std::memory_order_relaxed);
-        hook();
-    }
+    post_read_hook =
+        launcher_artifact_post_read_test_hook.exchange(nullptr, std::memory_order_relaxed);
 #endif
-    const auto after_containment = security::inspect_physical_path_containment(
-        containment.canonical_path, package_root);
-    // content_equal(), not operator== -- this re-walk exists only to confirm
-    // the path still resolves to the same object (matching this call site's
-    // documented lack of a link_count-dependent trust invariant, per the
-    // comment above), not to detect a hard-link count change. Using the
-    // stricter full-identity comparison here would spuriously fail the
-    // whole package build on a benign, momentary link_count change (e.g. an
-    // AV/backup/dedup tool briefly hard-linking the artifact) that leaves
-    // content byte-identical -- found by adversarial review on PR #5428.
-    if (!after_containment.allowed ||
-        after_containment.canonical_path != containment.canonical_path ||
-        !after_containment.identity.content_equal(snapshot.containment.identity)) {
+    const auto snapshot =
+        security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+            handle, package_root, post_read_hook);
+    if (!snapshot.ok) {
         // Distinct from LauncherArtifactNotDirectRegularFile (used by the
-        // containment-denied and read-failed branches above) so this
-        // specific outcome -- a rename/replace observed mid-read -- is
-        // identifiable in logs, not folded into the generic containment
-        // diagnostic (found by adversarial review on PR #5444/issue #5435).
+        // containment-denied branch above) when the failure is specifically
+        // a rename/replace observed mid-read, so this outcome is
+        // identifiable in logs rather than folded into the generic
+        // containment diagnostic (found by adversarial review on PR
+        // #5444/issue #5435).
         error = runtime_text(
-            "Runtime.Package.Error.LauncherArtifactRenamedDuringRead",
+            snapshot.failure == security::PhysicalPathContainmentFailure::identity_changed
+                ? "Runtime.Package.Error.LauncherArtifactRenamedDuringRead"
+                : "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
             {{"path", expected_name}});
         return false;
     }

@@ -1,3 +1,37 @@
+- 2026-09-02: Extracted the identical hand-rolled "handle-based read, then
+  independent post-read path re-walk" pattern from
+  `runtime_pipeline_launcher_artifact_inventory.cpp`'s
+  `admit_launcher_artifact()` (issue #5426) and
+  `polyglot_supporting_artifact_admission.cpp`'s
+  `admit_polyglot_supporting_artifact()` (issue #5427) into one shared
+  primitive,
+  `read_physically_contained_file_snapshot_from_handle_and_revalidate_path()`
+  in `physical_path_containment.{h,cpp}` (issue #5434), so a name-keyed
+  caller (one whose read result is stored/compared by name rather than
+  reused immediately via the same still-open handle) gets the guarantee by
+  construction instead of by convention -- the failure mode issue #5434
+  was filed to prevent, matching how issue #5421 round 1 once dropped an
+  analogous link_count re-check by hand at a different call site. Each
+  caller's own single-shot test hook is preserved via an optional
+  `post_read_hook` function-pointer parameter, fired at the same point
+  between the read and the re-walk their hand-rolled versions used, so
+  this shared primitive doesn't depend on either caller's own test-hook
+  build flag. A minor, deliberate behavior change: the polyglot caller's
+  post-read re-walk now runs before its SHA-256 comparison (matching the
+  launcher caller's existing order, which the shared implementation had
+  to pick one of), so in the theoretical case of both a hash mismatch and
+  a mid-read rename occurring together, it now reports the rename
+  (`artifact_changed`) rather than the hash mismatch -- arguably more
+  informative, and no existing regression test exercises that
+  combination. Left the directory-walk syscall count unchanged (per the
+  issue's own lower-priority, performance-not-correctness framing): the
+  re-walk's independence from the initial check is what makes it a
+  meaningful TOCTOU guard, so folding it back into the same walk would
+  undermine the property this whole migration series exists to provide.
+  Verified via revert (neutering the shared helper's re-walk check) that
+  both callers' existing rename-during-read regression tests still catch
+  the regression; restored and re-verified green.
+
 - 2026-09-02: A Codex/Copilot review pass on PR #5445 (issue #5432) found
   `EnsureSafeForCmdExeCommandLine()`'s round-2 `%`-unconditional fix
   (below) still gated CR/LF rejection behind `insideQuotes`, the same

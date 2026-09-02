@@ -802,6 +802,46 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
     };
 }
 
+PhysicalFileSnapshotResult
+read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+    const PhysicalPathContainmentHandle& handle,
+    const std::filesystem::path& root,
+    const std::uint64_t maximum_bytes,
+    void (* const post_read_hook)()) {
+    const auto snapshot =
+        read_physically_contained_file_snapshot_from_handle(handle, maximum_bytes);
+    if (!snapshot.ok) {
+        return snapshot;
+    }
+    if (post_read_hook != nullptr) {
+        post_read_hook();
+    }
+    // content_equal(), not operator== -- confirms the path still resolves
+    // to the same object, not a hard-link count change. Using the
+    // stricter full-identity comparison would spuriously deny a benign,
+    // momentary link_count change (e.g. an AV/backup/dedup tool briefly
+    // hard-linking the artifact) that leaves content byte-identical, per
+    // both #5426's and #5427's original hand-rolled versions of this
+    // check.
+    const auto after_containment = inspect_physical_path_containment(
+        snapshot.containment.canonical_path, root);
+    if (!after_containment.allowed ||
+        after_containment.canonical_path != snapshot.containment.canonical_path ||
+        !after_containment.identity.content_equal(snapshot.containment.identity)) {
+        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+    }
+    return snapshot;
+}
+
+PhysicalFileSnapshotResult
+read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+    const PhysicalPathContainmentHandle& handle,
+    const std::filesystem::path& root,
+    void (* const post_read_hook)()) {
+    return read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+        handle, root, (std::numeric_limits<std::uint64_t>::max)(), post_read_hook);
+}
+
 PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
     const PhysicalPathContainmentResult& expected,
     const std::filesystem::path& root) {
