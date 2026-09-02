@@ -23,6 +23,17 @@
   verified locally; Windows CI is the actual verification for whether
   the retry resolves the race.
 
+  A Codex/Copilot review pass found the retry as first written didn't
+  actually stabilize anything: `wait_until_regular_files_exist()`'s
+  poll result was discarded, and the caller's `expect()` loop
+  immediately re-queried `std::filesystem::is_regular_file()` fresh for
+  each file -- the exact same race the retry exists to tolerate, now
+  with a second, independent occurrence window right after a
+  successful poll. Fixed by having the helper return the per-file
+  presence snapshot from whichever poll attempt found everything
+  present (or its last attempt, if none did), and asserting against
+  that returned snapshot directly instead of re-stat'ing.
+
 - 2026-09-02: Added a Windows Defender real-time-scanning exclusion for
   `generated-launcher-validation.yml`'s `windows-generated-launcher` job.
   `test_generated_launcher_process` publishes a .NET launcher and its
