@@ -343,6 +343,12 @@ std::string executable_diagnostic_for_failure(
         case PhysicalPathContainmentFailure::not_regular_file:
         case PhysicalPathContainmentFailure::size_limit_exceeded:
         case PhysicalPathContainmentFailure::read_failed:
+        // Never actually produced by inspect_physical_path_containment()
+        // (only revalidate_physical_path_containment_after_read() in
+        // physical_path_containment.cpp returns this), but the switch
+        // must stay exhaustive; listed here for that reason, not because
+        // this call site can observe it.
+        case PhysicalPathContainmentFailure::path_changed_after_read:
             return "workspace_agent.process_executable_unavailable";
     }
     return "workspace_agent.process_executable_unavailable";
@@ -365,6 +371,12 @@ std::string working_directory_diagnostic_for_failure(
         case PhysicalPathContainmentFailure::not_regular_file:
         case PhysicalPathContainmentFailure::size_limit_exceeded:
         case PhysicalPathContainmentFailure::read_failed:
+        // Never actually produced by inspect_physical_path_containment()
+        // (only revalidate_physical_path_containment_after_read() in
+        // physical_path_containment.cpp returns this), but the switch
+        // must stay exhaustive; listed here for that reason, not because
+        // this call site can observe it.
+        case PhysicalPathContainmentFailure::path_changed_after_read:
             return "workspace_agent.process_working_directory_unavailable";
     }
     return "workspace_agent.process_working_directory_unavailable";

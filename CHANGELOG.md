@@ -1,3 +1,56 @@
+- 2026-09-02: Extracted the identical hand-rolled "handle-based read, then
+  independent post-read path re-walk" pattern from
+  `runtime_pipeline_launcher_artifact_inventory.cpp`'s
+  `admit_launcher_artifact()` (issue #5426) and
+  `polyglot_supporting_artifact_admission.cpp`'s
+  `admit_polyglot_supporting_artifact()` (issue #5427) into two shared
+  primitives in `physical_path_containment.{h,cpp}` (issue #5434):
+  `revalidate_physical_path_containment_after_read()`, the re-walk itself
+  (callable standalone after a caller's own checks on the read bytes), and
+  `read_physically_contained_file_snapshot_from_handle_and_revalidate_path()`,
+  a read-then-revalidate convenience for callers with no ordering
+  constraint of their own. A name-keyed caller (one whose read result is
+  stored/compared by name rather than reused immediately via the same
+  still-open handle) now gets this guarantee by construction instead of
+  by convention -- the failure mode issue #5434 was filed to prevent,
+  matching how issue #5421 round 1 once dropped an analogous link_count
+  re-check by hand at a different call site. Each caller's own single-shot
+  test hook is preserved via an optional `post_read_hook` function-pointer
+  parameter, fired at the same point their hand-rolled versions used, so
+  this shared primitive doesn't depend on either caller's own test-hook
+  build flag.
+  A Codex/Copilot review pass found two real gaps in the first version of
+  this extraction: (1) the combined helper forwarded
+  `read_physically_contained_file_snapshot_from_handle()`'s own
+  `identity_changed` failure (a mid-read content-change race, detected by
+  the read itself) indistinguishably from the re-walk's own failure,
+  so a launcher artifact modified during the read -- no rename involved --
+  was misreported as `LauncherArtifactRenamedDuringRead`; fixed by adding
+  a new `path_changed_after_read` failure value used only by the re-walk,
+  keeping the two distinguishable (and updated three other
+  `PhysicalPathContainmentFailure` switch statements elsewhere, in
+  `workspace_agent_target_containment.cpp` and
+  `workspace_agent_process_containment.cpp`, to stay exhaustive over the
+  new value, even though those call sites can never actually produce it).
+  (2) The polyglot caller's post-read re-walk had moved to run before its
+  SHA-256 comparison, contradicting issue #5427's own "no observable
+  behavior change" acceptance criterion; fixed by having
+  `admit_polyglot_supporting_artifact()` call the plain read, then its own
+  hash check, then `revalidate_physical_path_containment_after_read()`
+  explicitly -- restoring its exact original diagnostic precedence while
+  still sharing the re-walk's actual logic. `admit_launcher_artifact()`
+  keeps using the combined convenience function, since it had no such
+  ordering constraint to preserve. Left the directory-walk syscall count
+  unchanged (per the issue's own lower-priority, performance-not-correctness
+  framing): the re-walk's independence from the initial check is what
+  makes it a meaningful TOCTOU guard, so folding it back into the same
+  walk would undermine the property this whole migration series exists to
+  provide. Verified via revert (neutering the shared re-walk check) that
+  both callers' existing rename-during-read regression tests still catch
+  the regression; restored and re-verified green, plus a full local build
+  and the broader security/workspace-agent/polyglot/runtime-pipeline test
+  sweep.
+
 - 2026-09-02: Fixed 6 VS extension call sites where `EnsureSafeForCmdExeCommandLine()`'s
   (#5432) `InvalidOperationException` refusal was silently swallowed or left
   unguarded, meaning the user saw a button do nothing with zero signal that

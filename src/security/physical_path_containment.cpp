@@ -802,6 +802,61 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
     };
 }
 
+PhysicalFileSnapshotResult revalidate_physical_path_containment_after_read(
+    const PhysicalFileSnapshotResult& snapshot,
+    const std::filesystem::path& root,
+    void (* const post_read_hook)()) {
+    if (post_read_hook != nullptr) {
+        post_read_hook();
+    }
+    // content_equal(), not operator== -- confirms the path still resolves
+    // to the same object, not a hard-link count change. Using the
+    // stricter full-identity comparison would spuriously deny a benign,
+    // momentary link_count change (e.g. an AV/backup/dedup tool briefly
+    // hard-linking the artifact) that leaves content byte-identical, per
+    // both #5426's and #5427's original hand-rolled versions of this
+    // check.
+    const auto after_containment = inspect_physical_path_containment(
+        snapshot.containment.canonical_path, root);
+    if (!after_containment.allowed ||
+        after_containment.canonical_path != snapshot.containment.canonical_path ||
+        !after_containment.identity.content_equal(snapshot.containment.identity)) {
+        // path_changed_after_read, not identity_changed: this failure must
+        // stay distinguishable from a read itself reporting identity_changed
+        // for a mid-read content change (see
+        // read_physically_contained_file_snapshot_from_handle()'s own
+        // before/after identity checks) -- conflating the two made a caller
+        // that only checks for identity_changed misreport an ordinary
+        // read-time race as a post-read rename/replace (issue #5434 review
+        // finding).
+        return failed_snapshot(PhysicalPathContainmentFailure::path_changed_after_read);
+    }
+    return snapshot;
+}
+
+PhysicalFileSnapshotResult
+read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+    const PhysicalPathContainmentHandle& handle,
+    const std::filesystem::path& root,
+    const std::uint64_t maximum_bytes,
+    void (* const post_read_hook)()) {
+    const auto snapshot =
+        read_physically_contained_file_snapshot_from_handle(handle, maximum_bytes);
+    if (!snapshot.ok) {
+        return snapshot;
+    }
+    return revalidate_physical_path_containment_after_read(snapshot, root, post_read_hook);
+}
+
+PhysicalFileSnapshotResult
+read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+    const PhysicalPathContainmentHandle& handle,
+    const std::filesystem::path& root,
+    void (* const post_read_hook)()) {
+    return read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+        handle, root, (std::numeric_limits<std::uint64_t>::max)(), post_read_hook);
+}
+
 PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
     const PhysicalPathContainmentResult& expected,
     const std::filesystem::path& root) {
