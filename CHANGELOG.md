@@ -1,3 +1,20 @@
+- 2026-09-02: A Codex/Copilot review pass on PR #5445 (issue #5432) found
+  `EnsureSafeForCmdExeCommandLine()`'s round-2 `%`-unconditional fix
+  (below) still gated CR/LF rejection behind `insideQuotes`, the same
+  bug class it had just fixed for `%`: cmd.exe treats an embedded line
+  break as a command terminator even inside a double-quoted region, so
+  a value like `"text\r\ncalc.exe\r\nrem "` could still splice in an
+  extra command after `%VAR%` expansion. Fixed by moving `\r`/`\n` to
+  the unconditional check alongside `%`, keeping `&`, `|`, `^`, `<`, `>`
+  gated on being outside quotes (those genuinely are neutralized by
+  quoting). Added a regression test mirroring the existing `%`-inside-
+  quotes case; verified via revert that it catches the regression.
+  Separately, Copilot found `CreateProcessStartInfo()`'s new
+  `InvalidOperationException` is unguarded at additional call sites in
+  `CopperfinStudioSnapshotClient.cs` and
+  `CopperfinWorkspaceAgentPolicyClient.TryLoad()` -- folded into the
+  already-filed issue #5446 rather than expanding this PR's scope.
+
 - 2026-09-01: Closed a cmd.exe command-string injection window in
   `.cmd`/`.bat` Studio host launches (#5432): `CreateProcessStartInfo()`
   stashes the composed command in an environment variable and references

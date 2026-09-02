@@ -668,11 +668,24 @@ internal static class CopperfinStudioHostBridge
                     "environment-variable reference regardless of quoting and could " +
                     "allow command-string injection or silently mangle the command.");
             }
+            // Like '%', a line break is NOT made inert by being inside
+            // quotes: cmd.exe treats an embedded CR/LF as a command
+            // terminator even within a double-quoted region, so a value
+            // such as "text\r\ncalc.exe\r\nrem " could still splice in an
+            // extra command after %VAR% expansion. Reject unconditionally.
+            if (character is '\r' or '\n')
+            {
+                throw new InvalidOperationException(
+                    "Refusing to launch a .cmd/.bat Studio host: the composed command " +
+                    "text contains a line break, which cmd.exe treats as a command " +
+                    "terminator regardless of quoting and could allow command-string " +
+                    "injection.");
+            }
             if (insideQuotes)
             {
                 continue;
             }
-            if (character is '&' or '|' or '^' or '<' or '>' or '\r' or '\n')
+            if (character is '&' or '|' or '^' or '<' or '>')
             {
                 throw new InvalidOperationException(
                     "Refusing to launch a .cmd/.bat Studio host: the composed command " +

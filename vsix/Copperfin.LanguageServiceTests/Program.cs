@@ -1172,6 +1172,31 @@ internal static partial class Program
                 "even inside a properly quoted argument, since cmd.exe's %VAR% expansion " +
                 "is not suppressed by quoting");
 
+            // Like '%', a CR/LF is not made inert by quoting: cmd.exe treats
+            // an embedded line break as a command terminator even inside a
+            // double-quoted region, so a quoted value carrying one could
+            // still splice in an extra command after %VAR% expansion.
+            var newlineArguments = CopperfinStudioHostBridge.BuildArguments(
+                "C:\\Samples\\note\r\ncalc.exe\r\nrem .frx");
+            var threwForNewline = false;
+            try
+            {
+                CopperfinStudioHostBridge.CreateProcessStartInfo(
+                    @"C:\temp\fake studio host.cmd",
+                    newlineArguments,
+                    redirectOutput: true,
+                    createNoWindow: true,
+                    isWindowsOverride: true);
+            }
+            catch (InvalidOperationException)
+            {
+                threwForNewline = true;
+            }
+            Expect(threwForNewline,
+                "#5432: batch-wrapped Studio host launches should refuse a line break " +
+                "even inside a properly quoted argument, since cmd.exe treats CR/LF as a " +
+                "command terminator regardless of quoting");
+
             var safeStartInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
                 @"C:\temp\fake studio host.cmd",
                 "--from-vs --json --set-property --path \"C:\\Samples\\invoice.frx\"",
