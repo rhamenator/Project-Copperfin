@@ -376,7 +376,10 @@ bool run_dotnet_publish(
         current_dotnet_runtime_identifier(),
         "--self-contained",
         "false",
-        "-p:UseAppHost=true",
+        // EXPERIMENT (diagnostic only, not for merge): -p:UseAppHost=true
+        // temporarily removed to isolate whether it's a contributing
+        // factor in test_generated_launcher_process's persistent
+        // "build-host SDK launcher publication" Windows CI flake.
         "-o",
         copperfin::platform::path_to_utf8_string(output_dir)
     };
