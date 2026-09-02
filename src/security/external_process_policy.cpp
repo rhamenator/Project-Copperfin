@@ -187,6 +187,48 @@ struct AuthenticodeVerificationResult {
     std::string signer_display_name;
 };
 
+constexpr DWORD kSignerNameBufferChars = 512;
+
+// Walks the trust-provider state WinVerifyTrust() just built to pull out
+// the verified signer's leaf certificate display name. Isolated into its
+// own function with only POD locals (no destructors to unwind) so it can
+// be wrapped in SEH. This guards against an intermittent CI failure
+// (issue #5450) narrowed by bisection to this exact call sequence --
+// removing it eliminates the flake, keeping it (even with the earlier
+// TOCTOU check reverted) reproduces it -- but whose exact internal
+// mechanism is unconfirmed, since this repo's dev environment has no
+// Windows SDK to attach a debugger or capture a crash dump. The leading
+// theory is a rare hardware exception while walking WinTrust's internal
+// chain-provider state on a fresh runner (possibly AV/EDR crypto-API
+// hooking leaving that state inconsistent), which would otherwise crash
+// the whole authorization pipeline and make the calling process vanish
+// before it ever spawned the child executable. On any failure this
+// returns false and the signer is treated as unknown, which fails
+// publisher matching closed rather than silently trusting an unverified
+// name.
+bool extract_signer_display_name(HANDLE state_data, wchar_t (&buffer)[kSignerNameBufferChars]) {
+    __try {
+        CRYPT_PROVIDER_DATA* const provider_data = WTHelperProvDataFromStateData(state_data);
+        if (provider_data == nullptr) {
+            return false;
+        }
+        CRYPT_PROVIDER_SGNR* const signer =
+            WTHelperGetProvSignerFromChain(provider_data, 0, FALSE, 0);
+        if (signer == nullptr || signer->csCertChain == 0U || signer->pasCertChain == nullptr) {
+            return false;
+        }
+        const PCCERT_CONTEXT certificate = signer->pasCertChain[0].pCert;
+        if (certificate == nullptr) {
+            return false;
+        }
+        const DWORD written = CertGetNameStringW(
+            certificate, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, buffer, kSignerNameBufferChars);
+        return written > 1U;
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        return false;
+    }
+}
+
 AuthenticodeVerificationResult verify_authenticode_signature(const std::string& path) {
     AuthenticodeVerificationResult result;
     const std::wstring wide_path = copperfin::platform::path_from_utf8_string(path).wstring();
@@ -212,41 +254,21 @@ AuthenticodeVerificationResult verify_authenticode_signature(const std::string& 
         // Walk the same trust-provider state WinVerifyTrust just built
         // (via hWVTStateData) rather than a second, independent lookup --
         // the signer identity this extracts is the one WinVerifyTrust
-        // itself verified, not a separately-resolved one.
-        CRYPT_PROVIDER_DATA* const provider_data =
-            WTHelperProvDataFromStateData(trust_data.hWVTStateData);
-        if (provider_data != nullptr) {
-            CRYPT_PROVIDER_SGNR* const signer =
-                WTHelperGetProvSignerFromChain(provider_data, 0, FALSE, 0);
-            if (signer != nullptr && signer->csCertChain > 0U &&
-                signer->pasCertChain != nullptr) {
-                const PCCERT_CONTEXT certificate = signer->pasCertChain[0].pCert;
-                if (certificate != nullptr) {
-                    const DWORD name_length = CertGetNameStringW(
-                        certificate,
-                        CERT_NAME_SIMPLE_DISPLAY_TYPE,
-                        0,
-                        nullptr,
-                        nullptr,
-                        0);
-                    if (name_length > 1U) {
-                        std::wstring wide_name(name_length, L'\0');
-                        CertGetNameStringW(
-                            certificate,
-                            CERT_NAME_SIMPLE_DISPLAY_TYPE,
-                            0,
-                            nullptr,
-                            wide_name.data(),
-                            name_length);
-                        // CertGetNameStringW's returned length includes
-                        // the trailing NUL; drop it before narrowing.
-                        if (!wide_name.empty() && wide_name.back() == L'\0') {
-                            wide_name.pop_back();
-                        }
-                        result.signer_display_name = narrow(wide_name);
-                    }
-                }
+        // itself verified, not a separately-resolved one. Retried once
+        // after a short backoff in case the first attempt hit a transient
+        // failure in extract_signer_display_name() rather than a
+        // deterministic one.
+        wchar_t signer_name_buffer[kSignerNameBufferChars] = {};
+        bool extracted = false;
+        for (int attempt = 0; attempt < 2 && !extracted; ++attempt) {
+            if (attempt > 0) {
+                Sleep(50);
             }
+            extracted =
+                extract_signer_display_name(trust_data.hWVTStateData, signer_name_buffer);
+        }
+        if (extracted) {
+            result.signer_display_name = narrow(std::wstring(signer_name_buffer));
         }
     }
 
