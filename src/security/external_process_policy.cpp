@@ -61,6 +61,15 @@ bool read_file_identity(
     const std::filesystem::path& path,
     ExternalProcessFileIdentity& identity) {
 #ifdef _WIN32
+    // Deliberately follows reparse points (no FILE_FLAG_OPEN_REPARSE_POINT)
+    // so this agrees with open_executable_exclusive_of_writers()'s default
+    // CreateFileW behavior below: both derive identity from the resolved
+    // target of a symlink/junction, not the link object itself. Using
+    // different semantics in the two places let identity captured during
+    // authorization (from the handle) permanently disagree with identity
+    // read here during the later pre-launch revalidation, for any
+    // resolved_path that happened to be a reparse point (issue #5455
+    // review).
     const std::wstring wide_path = path.wstring();
     const HANDLE handle = CreateFileW(
         wide_path.c_str(),
@@ -68,7 +77,7 @@ bool read_file_identity(
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
         nullptr,
         OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+        FILE_ATTRIBUTE_NORMAL,
         nullptr);
     if (handle == INVALID_HANDLE_VALUE) {
         return false;
@@ -126,6 +135,23 @@ bool identity_from_handle(HANDLE handle, ExternalProcessFileIdentity& identity) 
 
 struct ScopedHandle {
     HANDLE handle = INVALID_HANDLE_VALUE;
+
+    explicit ScopedHandle(HANDLE value) : handle(value) {}
+    ScopedHandle(const ScopedHandle&) = delete;
+    ScopedHandle& operator=(const ScopedHandle&) = delete;
+    ScopedHandle(ScopedHandle&& other) noexcept : handle(other.handle) {
+        other.handle = INVALID_HANDLE_VALUE;
+    }
+    ScopedHandle& operator=(ScopedHandle&& other) noexcept {
+        if (this != &other) {
+            if (handle != INVALID_HANDLE_VALUE) {
+                CloseHandle(handle);
+            }
+            handle = other.handle;
+            other.handle = INVALID_HANDLE_VALUE;
+        }
+        return *this;
+    }
     ~ScopedHandle() {
         if (handle != INVALID_HANDLE_VALUE) {
             CloseHandle(handle);
@@ -515,10 +541,15 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
     const HANDLE verification_handle =
         open_executable_exclusive_of_writers(executable_path.wstring());
     if (verification_handle == INVALID_HANDLE_VALUE) {
+        // Distinct from ResolveExecutableOnPathFailed: the executable was
+        // found on PATH just fine, but couldn't be opened for the
+        // exclusive duration of verification -- most commonly because
+        // another process holds it open with an incompatible share mode
+        // (issue #5455 review).
         return {.allowed = false,
                 .resolved_path = resolved_path,
                 .error = security_text(
-                    "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
+                    "Security.ExternalProcessPolicy.Error.ExecutableLockedDuringAuthorization",
                     {{"executableName", policy.executable_name}}),
                 .file_identity = {}};
     }
