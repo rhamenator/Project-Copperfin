@@ -214,19 +214,23 @@ std::optional<std::string> read_trust_file(
     const std::filesystem::path& relative_path,
     std::string& error,
     const copperfin::localization::LocalizedCatalog& catalog) {
-    const auto containment = copperfin::security::inspect_physical_path_containment(
+    // Atomic check-and-open primitive (issue #5409/#5420): the read below is
+    // bound to the exact object this walk verifies, never reopened by path
+    // string.
+    auto handle = copperfin::security::inspect_and_open_physically_contained_path(
         package_root / relative_path,
         package_root);
-    if (!containment.allowed) {
+    if (!handle.result().allowed) {
         error = localized_message(
             catalog,
             "Runtime.Package.LauncherGuard.Error.TrustFileRejected",
             copperfin::platform::path_to_utf8_string(relative_path));
         return std::nullopt;
     }
-    const auto snapshot = copperfin::security::read_physically_contained_file_snapshot(
-        containment,
-        package_root);
+    const auto snapshot =
+        copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+            handle,
+            package_root);
     if (!snapshot.ok) {
         error = localized_message(
             catalog,
@@ -356,14 +360,19 @@ bool verify_artifacts(
             return false;
         }
         seen_paths.push_back(record.relative_path);
-        const auto containment = copperfin::security::inspect_physical_path_containment(
+        // Atomic check-and-open primitive (issue #5409/#5420): the read
+        // below is bound to the exact object this walk verifies, never
+        // reopened by path string.
+        auto handle = copperfin::security::inspect_and_open_physically_contained_path(
             package_root / relative,
             package_root);
-        if (!containment.allowed) {
+        if (!handle.result().allowed) {
             error = localized_message(catalog, "Runtime.Package.LauncherGuard.Error.ArtifactRejected", record.relative_path);
             return false;
         }
-        const auto snapshot = copperfin::security::read_physically_contained_file_snapshot(containment, package_root);
+        const auto snapshot =
+            copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+                handle, package_root);
         if (!snapshot.ok) {
             error = localized_message(catalog, "Runtime.Package.LauncherGuard.Error.ArtifactRejected", record.relative_path);
             return false;
