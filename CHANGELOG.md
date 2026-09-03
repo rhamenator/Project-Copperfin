@@ -1,3 +1,26 @@
+- 2026-09-03: Closed an ABA-swap gap in `authorize_external_process()`'s
+  Windows TOCTOU mitigation (#5454), found by Codex and Copilot review of
+  PR #5450. The #5430 fix compared a file identity read before
+  verification against one read after, but each of the three checks
+  (pre-identity, `WinVerifyTrust()`, post-identity) independently reopened
+  the resolved executable by path string -- an attacker could swap in a
+  trusted, signed binary for `WinVerifyTrust()` to verify, then swap the
+  original back before the final identity read, so both identity reads
+  matched while verification had actually run against a different file.
+  Fixed by opening the executable once, sharing read access but denying
+  write/delete sharing to other openers, for the entire duration of
+  verification and identity capture: `WinVerifyTrust()` now verifies
+  through that held handle (`WINTRUST_FILE_INFO::hFile`) rather than
+  reopening by path, and identity is derived from the same handle via
+  `GetFileInformationByHandle()`. This prevents the swap outright (a
+  rename/replace attempt against that path fails with a sharing
+  violation while the handle is open) instead of only detecting it after
+  the fact, so the separate pre/post identity compare is no longer
+  needed for this window. `revalidate_external_process_authorization()`'s
+  path-based recheck immediately before launch is unchanged -- by then
+  the handle has been released, and that check exists specifically to
+  catch changes in the (much smaller) gap between authorization and
+  spawn.
 - 2026-09-02: Hardened `authorize_external_process()`'s Windows path in two
   related ways found by Codex security review:
   - **Issue #5429**: `allowed_publishers` was matched against

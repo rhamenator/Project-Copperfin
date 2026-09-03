@@ -1056,10 +1056,14 @@ std::filesystem::path g_external_process_policy_swap_original;
 bool g_external_process_policy_swap_performed = false;
 
 void external_process_policy_pre_identity_check_test_hook() {
-    // Simulates an attacker replacing the resolved executable in the
-    // window authorize_external_process() leaves between capturing the
-    // pre-verification file identity and reading it again after the
-    // signature/publisher checks -- the exact race issue #5430 closed.
+    // Simulates an attacker attempting to replace the resolved executable
+    // right after authorize_external_process() opens it for the
+    // exclusive duration of verification (issue #5454). Unlike the
+    // original #5430 mitigation this replaces, that open's share mode
+    // denies write/delete sharing to other openers, so this rename
+    // should now *fail* -- the assertions below check that it does,
+    // proving the swap is prevented rather than merely detected
+    // after the fact.
     std::error_code rename_error;
     std::filesystem::path moved_aside = g_external_process_policy_swap_original;
     moved_aside += L".moved-aside";
@@ -1138,20 +1142,21 @@ void test_external_process_policy_rejects_executable_swapped_during_authorizatio
         SetEnvironmentVariableW(L"PATH", original_path.c_str());
     }
 
-    // Gracefully skip, like this codebase's other rename-during-check
-    // regression tests, rather than fail the suite when the environment
-    // doesn't permit the rename (e.g. a restricted sandbox).
-    if (g_external_process_policy_swap_performed) {
-        expect(!authorization.allowed,
-               "#5430: a resolved executable swapped during authorization checks must be "
-               "rejected, not silently authorized against the pre-swap object");
-        expect(
-            authorization.error ==
-                "The executable changed while authorization checks were in progress.",
-            "#5430: the swap-during-authorization rejection must use a diagnostic distinct "
-            "from the generic path-resolution/publisher-mismatch errors, so this outcome is "
-            "identifiable in logs");
-    }
+    // #5454: authorize_external_process() now holds the executable open
+    // (denying write/delete sharing) for the duration of verification,
+    // so the attempted swap itself must fail -- this is a stronger
+    // property than #5430's original "detect the swap after the fact"
+    // mitigation, which was vulnerable to an ABA swap (verify a
+    // different, trusted file, then swap the original back before the
+    // final identity check) that this handle-bound design closes by
+    // construction: there is only ever one file object in play.
+    expect(!g_external_process_policy_swap_performed,
+           "#5454: renaming/replacing the resolved executable while authorization holds it "
+           "open for verification must fail with a sharing violation, not merely be detected "
+           "after the fact");
+    expect(authorization.allowed,
+           "#5454: when the swap attempt is correctly blocked, authorization should proceed "
+           "normally against the original, untouched executable");
 
     std::error_code cleanup_error;
     fs::remove_all(temp_root, cleanup_error);

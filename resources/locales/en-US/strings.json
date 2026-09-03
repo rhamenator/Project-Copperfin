@@ -1259,7 +1259,6 @@
   "Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots": "Executable path is outside allowed roots.",
   "Security.ExternalProcessPolicy.Error.EmptyAllowedPathRoots": "No allowed path roots are configured; the policy denies all paths.",
   "Security.ExternalProcessPolicy.Error.ExecutableChangedAfterAuthorization": "The authorized executable changed before launch.",
-  "Security.ExternalProcessPolicy.Error.ExecutableChangedDuringAuthorization": "The executable changed while authorization checks were in progress.",
   "Security.ExternalProcessPolicy.Error.PublisherNotAllowed": "Executable publisher is not in the allow-list.",
   "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed": "Unable to resolve executable on PATH: {executableName}",
   "Security.ExternalProcessPolicy.Error.UntrustedAuthenticodeSignature": "Executable does not have a trusted Authenticode signature.",
