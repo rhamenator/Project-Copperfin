@@ -9973,3 +9973,56 @@ Focused `test_prg_engine_data_io` and `test_vfp_assets` pass locally. Preserve
 the four locale diagnostics, `RQ-CF-MODERNIZATION-001`, and the explicit
 `HZ-data-corruption-01` limitations; exact-head protected validation remains
 required before merge.
+
+# 2026-09-03 Windows external-process signer/TOCTOU session wrap-up
+
+PR #5399 (`9f00f388d`, merged 2026-08-30) rejected Windows trailing-dot/space
+path aliases. This session then closed out the `external_process_policy.cpp`
+chain it left active: PR #5450 (`29e96650b`, fixes #5429/#5430) found that
+`dotnet.exe`'s real Authenticode signer display name on GitHub Actions Windows
+runners is literally `.NET`, not `Microsoft Corporation` -- the #5429
+allowlist never matched, so `supports_dotnet_launcher_publish()`'s preflight
+probe silently forced `plan.emit_dotnet_launcher = false` and the sidecar was
+never built, with no error surfaced. Fixed by SEH-hardening
+`extract_signer_display_name()` (isolated to POD-only locals, required
+alongside `/EHsc`) and adding `.NET` to `dotnet_process_policy()`'s allowed
+publishers in `apps/copperfin_build_host/main.cpp`.
+
+Adversarial review of #5450 surfaced a real, pre-existing P1: the #5430
+mitigation's pre-identity/`WinVerifyTrust`/post-identity checks each reopened
+the executable by path independently, so an attacker could swap in a trusted
+file for verification and swap the original back before the final identity
+read (ABA TOCTOU), passing both identity checks while verification ran against
+a different file. Filed as #5454, fixed immediately after #5450 merged via PR
+#5455 (`817bfd97c`): `authorize_external_process()` now opens the executable
+exactly once via `CreateFileW(..., FILE_SHARE_READ, ...)`, holding
+`GENERIC_READ` with write/delete sharing denied for the duration of
+authorization -- a rename/delete/overwrite-open attempt against that path
+fails with `ERROR_SHARING_VIOLATION` while the handle is held, so the swap is
+prevented rather than merely detected after the fact. `WinVerifyTrust` verifies
+through that held handle (`WINTRUST_FILE_INFO::hFile`) and identity is derived
+from the same handle via `GetFileInformationByHandle`; the now-dead
+`ExecutableChangedDuringAuthorization` error path was removed. Round-2 review
+of #5455 itself found three more issues in the new code, fixed in the same PR
+before merge: `ScopedHandle` needed explicit move-only semantics -- copy
+constructor/assignment deleted, move constructor/assignment defined to
+transfer ownership (a default-generated copy would double-close); `read_file_identity()` still passed
+`FILE_FLAG_OPEN_REPARSE_POINT`, which disagreed with the new handle-open's
+default reparse-point-following behavior and would false-positive "changed"
+for any resolved executable that is itself a symlink/junction; and a locked-
+executable open failure returned the misleading `ResolveExecutableOnPathFailed`
+instead of a dedicated `ExecutableLockedDuringAuthorization`.
+
+Separately, PR #5457 (`59e95611c`, fixes #5456) closed a CI gap found while
+validating #5455: `audit-containment-validation.yml` -- the only workflow that
+builds and runs `test_security_controls`, the suite covering this file's
+Windows-only logic -- had its `push`/`pull_request` triggers scoped to
+`branches: [main]` only, so it never ran automatically on PRs into
+`v1-development`, this repo's actual base branch. Fixed by adding
+`v1-development` to both trigger lists, matching
+`generated-launcher-validation.yml`'s existing convention; the fix's own PR
+was the first to exercise the corrected trigger. Issue #5453 (no unit-level
+test coverage for the Windows Authenticode/publisher-matching logic
+independent of a real installed executable) remains open, deliberately
+deferred -- it needs synthetic signed test-binary infrastructure this repo
+doesn't have yet.
