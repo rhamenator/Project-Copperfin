@@ -61,6 +61,15 @@ bool read_file_identity(
     const std::filesystem::path& path,
     ExternalProcessFileIdentity& identity) {
 #ifdef _WIN32
+    // Deliberately follows reparse points (no FILE_FLAG_OPEN_REPARSE_POINT)
+    // so this agrees with open_executable_exclusive_of_writers()'s default
+    // CreateFileW behavior below: both derive identity from the resolved
+    // target of a symlink/junction, not the link object itself. Using
+    // different semantics in the two places let identity captured during
+    // authorization (from the handle) permanently disagree with identity
+    // read here during the later pre-launch revalidation, for any
+    // resolved_path that happened to be a reparse point (issue #5455
+    // review).
     const std::wstring wide_path = path.wstring();
     const HANDLE handle = CreateFileW(
         wide_path.c_str(),
@@ -68,7 +77,7 @@ bool read_file_identity(
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
         nullptr,
         OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+        FILE_ATTRIBUTE_NORMAL,
         nullptr);
     if (handle == INVALID_HANDLE_VALUE) {
         return false;
@@ -103,6 +112,86 @@ bool file_identities_equal(
     const ExternalProcessFileIdentity& right) {
     return left.first == right.first && left.second == right.second;
 }
+
+#ifdef _WIN32
+// Derives identity from an already-open handle rather than performing a
+// fresh path-string lookup -- used where the caller needs the identity of
+// the exact file object it is already holding open (issue #5454), as
+// opposed to read_file_identity() above, which is for callers that only
+// have a path (e.g. the pre-launch revalidation check, which by design
+// runs after any handle from authorization has been released).
+bool identity_from_handle(HANDLE handle, ExternalProcessFileIdentity& identity) {
+    BY_HANDLE_FILE_INFORMATION information{};
+    if (!GetFileInformationByHandle(handle, &information) ||
+        (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
+        return false;
+    }
+
+    identity.first = information.dwVolumeSerialNumber;
+    identity.second = (static_cast<std::uint64_t>(information.nFileIndexHigh) << 32U) |
+        information.nFileIndexLow;
+    return true;
+}
+
+struct ScopedHandle {
+    HANDLE handle = INVALID_HANDLE_VALUE;
+
+    explicit ScopedHandle(HANDLE value) : handle(value) {}
+    ScopedHandle(const ScopedHandle&) = delete;
+    ScopedHandle& operator=(const ScopedHandle&) = delete;
+    ScopedHandle(ScopedHandle&& other) noexcept : handle(other.handle) {
+        other.handle = INVALID_HANDLE_VALUE;
+    }
+    ScopedHandle& operator=(ScopedHandle&& other) noexcept {
+        if (this != &other) {
+            if (handle != INVALID_HANDLE_VALUE) {
+                CloseHandle(handle);
+            }
+            handle = other.handle;
+            other.handle = INVALID_HANDLE_VALUE;
+        }
+        return *this;
+    }
+    ~ScopedHandle() {
+        if (handle != INVALID_HANDLE_VALUE) {
+            CloseHandle(handle);
+        }
+    }
+};
+
+// Opens the resolved executable for the exclusive duration of
+// authorization, sharing read access with other readers (AV scanners,
+// the OS image loader, etc.) but denying write and delete sharing --
+// this actively prevents another process from replacing, deleting, or
+// renaming this specific path for as long as the handle stays open,
+// rather than merely detecting such a change after the fact (issue
+// #5454). Retries a bounded number of times only on a transient sharing
+// violation, since some other legitimate reader could momentarily hold
+// an incompatible handle (e.g. a repair/update tool); any other error,
+// or exhausting the retries, is treated as a hard failure -- fail
+// closed, not fail open.
+HANDLE open_executable_exclusive_of_writers(const std::wstring& wide_path) {
+    constexpr int max_attempts = 4;
+    for (int attempt = 0; attempt < max_attempts; ++attempt) {
+        const HANDLE handle = CreateFileW(
+            wide_path.c_str(),
+            GENERIC_READ,
+            FILE_SHARE_READ,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr);
+        if (handle != INVALID_HANDLE_VALUE) {
+            return handle;
+        }
+        if (GetLastError() != ERROR_SHARING_VIOLATION || attempt + 1 == max_attempts) {
+            return INVALID_HANDLE_VALUE;
+        }
+        Sleep(50);
+    }
+    return INVALID_HANDLE_VALUE;
+}
+#endif
 
 #ifdef _WIN32
 std::wstring widen(const std::string& value) {
@@ -229,13 +318,19 @@ bool extract_signer_display_name(HANDLE state_data, wchar_t (&buffer)[kSignerNam
     }
 }
 
-AuthenticodeVerificationResult verify_authenticode_signature(const std::string& path) {
+// file_handle binds verification to the exact file object the caller
+// already holds open (via open_executable_exclusive_of_writers()) rather
+// than letting WinVerifyTrust reopen path independently -- path is still
+// supplied for subject-type/extension resolution, but hFile overrides it
+// for the actual file access (issue #5454).
+AuthenticodeVerificationResult verify_authenticode_signature(const std::string& path, HANDLE file_handle) {
     AuthenticodeVerificationResult result;
     const std::wstring wide_path = copperfin::platform::path_from_utf8_string(path).wstring();
 
     WINTRUST_FILE_INFO file_info{};
     file_info.cbStruct = sizeof(file_info);
     file_info.pcwszFilePath = wide_path.c_str();
+    file_info.hFile = file_handle;
 
     WINTRUST_DATA trust_data{};
     trust_data.cbStruct = sizeof(trust_data);
@@ -430,17 +525,50 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
                 .file_identity = {}};
     }
 
-    // Capture the file identity here, before signature/publisher
-    // verification, so a rename/replace of the executable at any point
-    // between this and the post-verification identity read below is
-    // detectable. Nothing otherwise binds verify_authenticode_signature()'s
-    // path-string open, and the final read_file_identity() call's own
-    // path-string open, to the same underlying file object -- an attacker
-    // who can replace the file at resolved_path in that window could pass
-    // verification against one binary while a different one is what this
-    // authorization actually ends up describing (issue #5430).
-    ExternalProcessFileIdentity pre_verification_identity;
-    if (!read_file_identity(executable_path, pre_verification_identity)) {
+    // Open the executable once, for the exclusive duration of every check
+    // below, sharing read access but denying write/delete sharing to
+    // other openers. This binds signature verification and identity to a
+    // single file object instead of reopening resolved_path by string at
+    // multiple points -- a path string can resolve to a *different*
+    // underlying file at each open, which let an attacker swap in a
+    // trusted binary for verification and swap the original back
+    // afterward (an ABA swap defeating the previous pre/post identity
+    // compare, which only bound the two identity reads to each other,
+    // not to what verification itself actually opened -- issue #5454,
+    // originally issue #5430). Holding this handle actively prevents
+    // that kind of replacement for as long as it stays open, rather than
+    // merely detecting it after the fact.
+    const HANDLE verification_handle =
+        open_executable_exclusive_of_writers(executable_path.wstring());
+    if (verification_handle == INVALID_HANDLE_VALUE) {
+        // Distinct from ResolveExecutableOnPathFailed: the executable was
+        // found on PATH just fine, but couldn't be opened for the
+        // exclusive duration of verification -- most commonly because
+        // another process holds it open with an incompatible share mode
+        // (issue #5455 review).
+        return {.allowed = false,
+                .resolved_path = resolved_path,
+                .error = security_text(
+                    "Security.ExternalProcessPolicy.Error.ExecutableLockedDuringAuthorization",
+                    {{"executableName", policy.executable_name}}),
+                .file_identity = {}};
+    }
+    const ScopedHandle verification_handle_guard{verification_handle};
+
+#if defined(COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS)
+    // Fires with the handle already open and its write/delete-denying
+    // share mode already in effect, so a test hook attempting the same
+    // rename-and-replace attack this mitigates should observe that
+    // attempt fail (a sharing violation), not merely get detected after
+    // succeeding.
+    if (const auto hook = pre_identity_check_test_hook.exchange(nullptr, std::memory_order_relaxed);
+        hook != nullptr) {
+        hook();
+    }
+#endif
+
+    ExternalProcessFileIdentity identity;
+    if (!identity_from_handle(verification_handle, identity)) {
         return {.allowed = false,
                 .resolved_path = resolved_path,
                 .error = security_text(
@@ -457,7 +585,7 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
     const bool needs_signature_verification =
         policy.require_trusted_signature || !policy.allowed_publishers.empty();
     const AuthenticodeVerificationResult verification = needs_signature_verification
-        ? verify_authenticode_signature(resolved_path)
+        ? verify_authenticode_signature(resolved_path, verification_handle)
         : AuthenticodeVerificationResult{};
 
     if (policy.require_trusted_signature && !verification.trusted) {
@@ -492,33 +620,6 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
         }
     }
 
-#if defined(COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS)
-    if (const auto hook = pre_identity_check_test_hook.exchange(nullptr, std::memory_order_relaxed);
-        hook != nullptr) {
-        hook();
-    }
-#endif
-
-    ExternalProcessFileIdentity identity;
-    if (!read_file_identity(executable_path, identity)) {
-        return {.allowed = false,
-                .resolved_path = resolved_path,
-                .error = security_text(
-                    "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
-                    {{"executableName", policy.executable_name}}),
-                .file_identity = {}};
-    }
-    if (!file_identities_equal(identity, pre_verification_identity)) {
-        // The object the checks above verified is not the object this
-        // authorization would actually describe going forward: reject
-        // rather than silently trust a binary swapped in during
-        // verification (issue #5430).
-        return {.allowed = false,
-                .resolved_path = resolved_path,
-                .error = security_text(
-                    "Security.ExternalProcessPolicy.Error.ExecutableChangedDuringAuthorization"),
-                .file_identity = {}};
-    }
     return {.allowed = true,
             .resolved_path = resolved_path,
             .error = {},

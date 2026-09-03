@@ -486,7 +486,7 @@
   "Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots": "O caminho do executavel esta fora das raizes permitidas.",
   "Security.ExternalProcessPolicy.Error.EmptyAllowedPathRoots": "Nenhuma raiz de caminho permitida esta configurada; a politica nega todos os caminhos.",
   "Security.ExternalProcessPolicy.Error.ExecutableChangedAfterAuthorization": "O executavel autorizado mudou antes da inicializacao.",
-  "Security.ExternalProcessPolicy.Error.ExecutableChangedDuringAuthorization": "O executavel mudou enquanto as verificacoes de autorizacao estavam em andamento.",
+  "Security.ExternalProcessPolicy.Error.ExecutableLockedDuringAuthorization": "Nao foi possivel abrir o executavel para verificacao, provavelmente porque outro processo o mantem aberto: {executableName}",
   "Security.ExternalProcessPolicy.Error.PublisherNotAllowed": "O publisher do executavel nao esta na allow-list.",
   "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed": "Nao foi possivel resolver o executavel no PATH: {executableName}",
   "Security.ExternalProcessPolicy.Error.UntrustedAuthenticodeSignature": "O executavel nao possui uma assinatura Authenticode confiavel.",
