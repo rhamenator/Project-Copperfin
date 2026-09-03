@@ -2,7 +2,7 @@ name: Audit Containment Validation
 
 on:
   push:
-    branches: [main]
+    branches: [main, v1-development]
     paths:
       - ".github/workflows/audit-containment-validation.yml"
       - "apps/copperfin_runtime_host/**"
@@ -26,7 +26,7 @@ on:
       - "CMakeLists.txt"
       - "tests/CMakeLists.txt"
   pull_request:
-    branches: [main]
+    branches: [main, v1-development]
     paths:
       - ".github/workflows/audit-containment-validation.yml"
       - "apps/copperfin_runtime_host/**"
