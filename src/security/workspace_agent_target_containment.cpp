@@ -206,13 +206,29 @@ WorkspaceAgentFileTargetBoundary::snapshot_workspace_file(
         !workspace_root_identity_matches()) {
         return {false, {}, {}, "workspace_agent.target_root_identity_changed"};
     }
-    const PhysicalPathContainmentResult expected_containment{
-        .allowed = true,
-        .canonical_path = expected.canonical_path,
-        .identity = expected.identity,
-        .failure = PhysicalPathContainmentFailure::none};
-    const auto snapshot = read_physically_contained_file_snapshot(
-        expected_containment, canonical_workspace_root_, maximum_bytes);
+    // Atomic check-and-open primitive (issue #5409/#5420): the read below is
+    // bound to the exact object this fresh walk verifies, never reopened by
+    // path string the way the prior implementation reused a stored
+    // PhysicalPathContainmentResult's canonical_path.
+    auto handle = inspect_and_open_physically_contained_path(
+        expected.canonical_path, canonical_workspace_root_);
+    const auto& current = handle.result();
+    if (!current.allowed || current.canonical_path != expected.canonical_path) {
+        return {false, {}, {}, "workspace_agent.file_read_target_unavailable"};
+    }
+    if (current.identity != expected.identity) {
+        return {false, {}, {}, "workspace_agent.file_read_identity_changed"};
+    }
+    // _and_revalidate_path, not the plain handle read: this is a public
+    // WorkspaceAgentFileTargetBoundary method with no caller-specific check
+    // that needs to run between the read and the revalidation, so it should
+    // carry its own final-containment guarantee -- that the path this
+    // result is attributed to still names the read object -- rather than
+    // depending on any particular caller (e.g.
+    // WorkspaceAgentSessionController::read_workspace_file_snapshot()'s own
+    // separate final preflight) to supply it (Codex review finding).
+    const auto snapshot = read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+        handle, canonical_workspace_root_, maximum_bytes);
     if (!snapshot.ok) {
         switch (snapshot.failure) {
             case PhysicalPathContainmentFailure::size_limit_exceeded:
@@ -224,6 +240,20 @@ WorkspaceAgentFileTargetBoundary::snapshot_workspace_file(
             default:
                 return {false, {}, {}, "workspace_agent.file_read_target_unavailable"};
         }
+    }
+    // read_physically_contained_file_snapshot_from_handle()'s own freshness
+    // check (content_equal()) deliberately excludes link_count (issue
+    // #5420), so a hard link added between the pre-read containment check
+    // above and this read completing would otherwise go undetected -- the
+    // same gate inspect_existing_regular_file() applies at inspection time,
+    // reapplied here post-read (see workspace_agent_process_parser.cpp's
+    // read_trusted_executable_snapshot() for the identical precedent).
+    // Compared against expected.identity.link_count (invariantly 1U here,
+    // since inspect_existing_regular_file() already gated on it) rather
+    // than a bare literal, so this restates that invariant instead of
+    // silently assuming it (Copilot review finding).
+    if (snapshot.containment.identity.link_count != expected.identity.link_count) {
+        return {false, {}, {}, "workspace_agent.target_multiply_linked"};
     }
     if (!workspace_root_identity_matches()) {
         return {false, {}, {}, "workspace_agent.target_root_identity_changed"};
