@@ -606,10 +606,15 @@ InternalContainmentWalk inspect_and_walk(
 //   comment for why that distinction exists.
 // - before_query_failure_code: what failure code applies if the initial
 //   info-query syscall itself fails, as opposed to succeeding and revealing
-//   a reparse point. The two callers disagreed here before this extraction
-//   (read_failed vs indirect_component) and that is preserved rather than
+//   a reparse point. This only matters on Windows, where the two callers
+//   disagreed before this extraction (read_failed for the handle-based
+//   sibling vs indirect_component for the string-reopening one, whose
+//   original GetFileInformationByHandle-failure check was combined with its
+//   reparse-point check into a single branch) -- preserved here rather than
 //   picked one way, since reconciling it would be an independent behavior
-//   change outside this issue's scope.
+//   change outside this issue's scope. On POSIX both callers already
+//   returned read_failed for an fstat() failure, so this parameter is
+//   ignored there.
 //
 // Returns after_identity (queried post-read), not expected_identity, in the
 // result's containment: several existing callers of
@@ -626,7 +631,7 @@ PhysicalFileSnapshotResult read_open_object_with_identity_recheck(
     const std::filesystem::path& canonical_path,
     const std::uint64_t maximum_bytes,
     const bool full_identity_comparison,
-    const PhysicalPathContainmentFailure before_query_failure_code) {
+    [[maybe_unused]] const PhysicalPathContainmentFailure before_query_failure_code) {
     const auto identity_matches =
         [full_identity_comparison](
             const PhysicalPathIdentity& lhs, const PhysicalPathIdentity& rhs) {
@@ -695,7 +700,11 @@ PhysicalFileSnapshotResult read_open_object_with_identity_recheck(
 #else
     struct stat before_status{};
     if (::fstat(native, &before_status) != 0) {
-        return failed_snapshot(before_query_failure_code);
+        // Both callers agree here (unlike the Windows branch above): an
+        // fstat() failure on an already-open descriptor is read_failed, not
+        // before_query_failure_code, which exists only for Windows'
+        // combined info-query/reparse-point check.
+        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
     }
     if (!S_ISREG(before_status.st_mode)) {
         return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
