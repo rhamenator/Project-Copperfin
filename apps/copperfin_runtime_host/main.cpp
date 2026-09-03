@@ -1637,9 +1637,13 @@ bool verify_manifest_hashes(
 
     const std::filesystem::path runtime_host_path =
         manifest_directory / packaged_runtime_host_file_name();
-    const auto contained_runtime_host = copperfin::security::inspect_physical_path_containment(
+    // Atomic check-and-open primitive (issue #5409/#5420): the read below
+    // is bound to the exact object this walk verifies, never reopened by
+    // path string.
+    auto runtime_host_handle = copperfin::security::inspect_and_open_physically_contained_path(
         runtime_host_path,
         manifest_directory);
+    const auto& contained_runtime_host = runtime_host_handle.result();
     if (!contained_runtime_host.allowed) {
         error = localized_message(
             catalog,
@@ -1648,8 +1652,8 @@ bool verify_manifest_hashes(
         return false;
     }
     const auto runtime_host_snapshot =
-        copperfin::security::read_physically_contained_file_snapshot(
-            contained_runtime_host,
+        copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+            runtime_host_handle,
             manifest_directory);
     if (!runtime_host_snapshot.ok) {
         error = localized_message(
@@ -1769,9 +1773,13 @@ bool verify_manifest_hashes(
             error = localized_message(catalog, "RuntimeHost.Error.DataPayloadMalformed");
             return false;
         }
-        const auto contained_payload = copperfin::security::inspect_physical_path_containment(
+        // Atomic check-and-open primitive (issue #5409/#5420): the read
+        // below is bound to the exact object this walk verifies, never
+        // reopened by path string.
+        auto payload_handle = copperfin::security::inspect_and_open_physically_contained_path(
             *bound_path,
             manifest_directory);
+        const auto& contained_payload = payload_handle.result();
         if (!contained_payload.allowed || physical_identity_has_multiple_links(contained_payload)) {
             error = localized_message(
                 catalog,
@@ -1779,12 +1787,18 @@ bool verify_manifest_hashes(
                 {{"fileName", copperfin::platform::path_to_utf8_string(bound_path->filename())}});
             return false;
         }
-        const auto payload_snapshot = contained_payload.allowed
-            ? copperfin::security::read_physically_contained_file_snapshot(
-                  contained_payload,
-                  manifest_directory)
-            : copperfin::security::PhysicalFileSnapshotResult{};
-        if (!contained_payload.allowed || !payload_snapshot.ok) {
+        const auto payload_snapshot =
+            copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+                payload_handle,
+                manifest_directory);
+        // The read and its post-read re-walk both deliberately use
+        // content_equal() (excluding link_count), so a hard link added
+        // between the pre-read gate above and this point would otherwise
+        // let a multiply linked package-writable file through undetected --
+        // a sandbox-escape-relevant gap, not merely a data-integrity one,
+        // since this path is later written to (Codex review finding, P1).
+        if (!payload_snapshot.ok ||
+            physical_identity_has_multiple_links(payload_snapshot.containment)) {
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
@@ -1820,9 +1834,13 @@ bool verify_manifest_hashes(
             return false;
         }
 
-        const auto contained_payload = copperfin::security::inspect_physical_path_containment(
+        // Atomic check-and-open primitive (issue #5409/#5420): the read
+        // below is bound to the exact object this walk verifies, never
+        // reopened by path string.
+        auto payload_handle = copperfin::security::inspect_and_open_physically_contained_path(
             *bound_payload_path,
             manifest_directory);
+        const auto& contained_payload = payload_handle.result();
         if (!contained_payload.allowed) {
             error = localized_message(
                 catalog,
@@ -1838,8 +1856,8 @@ bool verify_manifest_hashes(
             return false;
         }
         const auto payload_snapshot =
-            copperfin::security::read_physically_contained_file_snapshot(
-                contained_payload,
+            copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+                payload_handle,
                 manifest_directory);
         if (!payload_snapshot.ok) {
             error = localized_message(
@@ -1900,9 +1918,13 @@ bool verify_manifest_hashes(
             return false;
         }
 
-        const auto contained_asset = copperfin::security::inspect_physical_path_containment(
+        // Atomic check-and-open primitive (issue #5409/#5420): the read
+        // below is bound to the exact object this walk verifies, never
+        // reopened by path string.
+        auto asset_handle = copperfin::security::inspect_and_open_physically_contained_path(
             *bound_asset_path,
             manifest_directory);
+        const auto& contained_asset = asset_handle.result();
         if (!contained_asset.allowed) {
             error = localized_message(
                 catalog,
@@ -1911,8 +1933,8 @@ bool verify_manifest_hashes(
             return false;
         }
         const auto asset_snapshot =
-            copperfin::security::read_physically_contained_file_snapshot(
-                contained_asset,
+            copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+                asset_handle,
                 manifest_directory);
         if (!asset_snapshot.ok) {
             error = localized_message(
@@ -1931,7 +1953,17 @@ bool verify_manifest_hashes(
                 writable_data_paths.begin(),
                 writable_data_paths.end(),
                 contained_asset.canonical_path) != writable_data_paths.end();
-        if (package_writable && physical_identity_has_multiple_links(contained_asset)) {
+        // Checked against asset_snapshot.containment (the fresh post-read
+        // identity), not contained_asset (the pre-read identity bound to
+        // asset_handle.result()): the read and its post-read re-walk both
+        // deliberately use content_equal() (excluding link_count), so a
+        // hard link added during the read would otherwise let a multiply
+        // linked package-writable asset through undetected -- a
+        // sandbox-escape-relevant gap, not merely a data-integrity one,
+        // since this path is later written to (Codex review finding, P1,
+        // same class as the writable data payload site above).
+        if (package_writable &&
+            physical_identity_has_multiple_links(asset_snapshot.containment)) {
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
@@ -3754,13 +3786,16 @@ int run_runtime_host_main_impl(int argc, char** argv) {
                 copperfin::platform::path_to_utf8_string(bound_asset->lexically_normal());
             auto source_text = verified_source_texts.find(physical_key);
             if (source_text == verified_source_texts.end()) {
-                const auto containment =
-                    copperfin::security::inspect_physical_path_containment(
+                // Atomic check-and-open primitive (issue #5409/#5420): the
+                // read below is bound to the exact object this walk
+                // verifies, never reopened by path string.
+                auto handle =
+                    copperfin::security::inspect_and_open_physically_contained_path(
                         *bound_asset,
                         manifest_directory);
                 const auto snapshot =
-                    copperfin::security::read_physically_contained_file_snapshot(
-                        containment,
+                    copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+                        handle,
                         manifest_directory);
                 if (!snapshot.ok) {
                     std::cout << "status: error\n";
@@ -3825,13 +3860,16 @@ int run_runtime_host_main_impl(int argc, char** argv) {
                 verified_bridge_source_text = source_found->second;
                 verified_bridge_source_path = bound_bridge_source_text;
             } else {
-                const auto bridge_containment =
-                    copperfin::security::inspect_physical_path_containment(
+                // Atomic check-and-open primitive (issue #5409/#5420): the
+                // read below is bound to the exact object this walk
+                // verifies, never reopened by path string.
+                auto bridge_handle =
+                    copperfin::security::inspect_and_open_physically_contained_path(
                         *bound_bridge_source,
                         manifest_directory);
                 const auto bridge_snapshot =
-                    copperfin::security::read_physically_contained_file_snapshot(
-                        bridge_containment,
+                    copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+                        bridge_handle,
                         manifest_directory);
                 if (!bridge_snapshot.ok) {
                     std::cout << "status: error\n";
