@@ -1412,14 +1412,27 @@ bool physical_identity_has_multiple_links(
 // handle bound to its canonical_path, then reads through that same handle
 // -- never reopening by path string the way this function's callers'
 // pre-migration code did. Fails closed (an empty, !ok snapshot) if the
-// fresh walk's identity no longer matches the stored one, rather than
-// trusting the stale stored identity for the read.
+// fresh walk no longer resolves to the same stored canonical_path (a
+// rename between the descriptor's final open and this codebase's
+// /proc/self/fd-based canonical_path readback on Linux could otherwise let
+// a since-renamed file still be accepted and indexed under its old,
+// manifest-declared name -- Codex review finding) or if its identity no
+// longer content_equal()s the stored one. content_equal(), not operator==:
+// this is a freshness check against a benign concurrent link_count change
+// (e.g. an AV/backup/dedup tool), matching
+// revalidate_physical_path_containment_after_read()'s own established
+// rationale, not a security invariant on link_count itself the way
+// PR #5462's package-writable payload/asset gates are -- these 3 call
+// sites only ever read bytes, never write through the result (Copilot
+// review finding).
 copperfin::security::PhysicalFileSnapshotResult read_verified_package_path_snapshot(
     const copperfin::security::PhysicalPathContainmentResult& stored,
     const std::filesystem::path& manifest_directory) {
     auto handle = copperfin::security::inspect_and_open_physically_contained_path(
         stored.canonical_path, manifest_directory);
-    if (!handle.result().allowed || handle.result().identity != stored.identity) {
+    if (!handle.result().allowed ||
+        handle.result().canonical_path != stored.canonical_path ||
+        !handle.result().identity.content_equal(stored.identity)) {
         return copperfin::security::PhysicalFileSnapshotResult{};
     }
     return copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
