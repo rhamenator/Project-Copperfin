@@ -1791,7 +1791,14 @@ bool verify_manifest_hashes(
             copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
                 payload_handle,
                 manifest_directory);
-        if (!payload_snapshot.ok) {
+        // The read and its post-read re-walk both deliberately use
+        // content_equal() (excluding link_count), so a hard link added
+        // between the pre-read gate above and this point would otherwise
+        // let a multiply linked package-writable file through undetected --
+        // a sandbox-escape-relevant gap, not merely a data-integrity one,
+        // since this path is later written to (Codex review finding, P1).
+        if (!payload_snapshot.ok ||
+            physical_identity_has_multiple_links(payload_snapshot.containment)) {
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
@@ -1946,7 +1953,17 @@ bool verify_manifest_hashes(
                 writable_data_paths.begin(),
                 writable_data_paths.end(),
                 contained_asset.canonical_path) != writable_data_paths.end();
-        if (package_writable && physical_identity_has_multiple_links(contained_asset)) {
+        // Checked against asset_snapshot.containment (the fresh post-read
+        // identity), not contained_asset (the pre-read identity bound to
+        // asset_handle.result()): the read and its post-read re-walk both
+        // deliberately use content_equal() (excluding link_count), so a
+        // hard link added during the read would otherwise let a multiply
+        // linked package-writable asset through undetected -- a
+        // sandbox-escape-relevant gap, not merely a data-integrity one,
+        // since this path is later written to (Codex review finding, P1,
+        // same class as the writable data payload site above).
+        if (package_writable &&
+            physical_identity_has_multiple_links(asset_snapshot.containment)) {
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
