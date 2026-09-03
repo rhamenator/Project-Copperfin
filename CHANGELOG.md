@@ -1,3 +1,64 @@
+- 2026-09-02: Hardened `authorize_external_process()`'s Windows path in two
+  related ways found by Codex security review:
+  - **Issue #5429**: `allowed_publishers` was matched against
+    `get_company_name()`'s result -- the PE version-resource `CompanyName`
+    field, unauthenticated metadata the binary's author can set to any
+    string with no cryptographic connection to whatever Authenticode
+    signature actually verified. A binary signed by an untrusted-for-this-
+    policy signer, or entirely unsigned when `require_trusted_signature`
+    was `false`, could claim any `CompanyName` and pass a publisher
+    allowlist meant to trust only a specific vendor. Fixed by replacing
+    `has_trusted_signature()` + `get_company_name()` with a single
+    `verify_authenticode_signature()` that extracts the actual verified
+    signer's certificate display name from the same `WinVerifyTrust()`
+    call's provider-data state (`WTHelperProvDataFromStateData()` /
+    `WTHelperGetProvSignerFromChain()` / `CertGetNameStringW()` on the
+    signer's leaf certificate), so `allowed_publishers` now matches a
+    cryptographically verified identity. A consequence: since there is no
+    other authenticated source of publisher identity, checking
+    `allowed_publishers` now always requires a verified signature,
+    regardless of `require_trusted_signature`'s own value -- previously,
+    `require_trusted_signature = false` with a non-empty
+    `allowed_publishers` silently ran the (meaningless) unauthenticated
+    metadata check with no signature verification at all.
+  - **Issue #5430**: the signature check, publisher check, and final file-
+    identity read each independently reopened the resolved executable by
+    path string, with nothing binding them to the same underlying file
+    object -- an attacker able to replace the file between any two of
+    these opens could pass verification against one binary while a
+    different one is what the returned authorization actually describes
+    (the same TOCTOU class issue #5409 closed for
+    `physical_path_containment.cpp`'s check-then-read callers). Fixed via
+    the issue's own documented "at minimum" fallback (not full handle-
+    binding, which would need `WTD_CHOICE_FILE`'s `hFile` -- untested and
+    higher-risk given this code can't be compiled on this session's Linux
+    dev box, see below): capture the file identity before signature/
+    publisher verification, then re-verify it's unchanged via a second
+    `read_file_identity()` call afterward, denying with a new
+    `ExecutableChangedDuringAuthorization` diagnostic (distinct from the
+    existing pre-launch `ExecutableChangedAfterAuthorization`) if they
+    differ.
+  A new test-only seam,
+  `set_external_process_policy_pre_identity_check_test_hook_for_testing()`
+  (guarded by `COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS`,
+  mirroring this codebase's established single-shot test-hook convention),
+  fires in the window the fix closes, letting
+  `test_external_process_policy_rejects_executable_swapped_during_authorization()`
+  deterministically rename/replace the resolved executable there and
+  assert the swap is rejected with the new diagnostic -- issue #5430's own
+  acceptance criterion. **Local-testability note**: this file's Windows
+  branch (all of the above) cannot be compiled on this Linux dev box --
+  no Windows SDK headers (`wintrust.h`, `wincrypt.h`) or MSVC/mingw-w64
+  toolchain with them are available here, only `clang-cl` without a
+  paired SDK. Verified as thoroughly as possible without compilation: the
+  POSIX branch and all code outside the `#ifdef _WIN32` blocks build and
+  the full existing local test suite passes unchanged; the Win32 API
+  sequence (`WinVerifyTrust`/`WTHelperProvDataFromStateData`/
+  `WTHelperGetProvSignerFromChain`/`CertGetNameStringW`) was written and
+  re-reviewed against documented struct/function signatures rather than
+  compiled. Windows CI is the actual compile and test gate for this
+  change.
+
 - 2026-09-02: The Windows Defender exclusion below turned out not to be
   the actual cause of `test_generated_launcher_process`'s intermittent
   Windows CI failures (confirmed via log evidence: the exclusion was

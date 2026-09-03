@@ -5264,6 +5264,9 @@ endif()
 copperfin_add_test(test_security_controls cf_security
     test_security_controls.cpp
 )
+target_compile_definitions(test_security_controls PRIVATE
+    COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS=1
+)
 
 copperfin_add_test(test_workspace_agent_policy cf_security
     test_workspace_agent_policy.cpp

@@ -486,6 +486,7 @@
   "Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots": "La ruta del ejecutable esta fuera de las raices permitidas.",
   "Security.ExternalProcessPolicy.Error.EmptyAllowedPathRoots": "No hay raices de rutas permitidas configuradas; la politica deniega todas las rutas.",
   "Security.ExternalProcessPolicy.Error.ExecutableChangedAfterAuthorization": "El ejecutable autorizado cambio antes del inicio.",
+  "Security.ExternalProcessPolicy.Error.ExecutableChangedDuringAuthorization": "El ejecutable cambio mientras las verificaciones de autorizacion estaban en curso.",
   "Security.ExternalProcessPolicy.Error.PublisherNotAllowed": "El publisher del ejecutable no esta en la allow-list.",
   "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed": "No se pudo resolver el ejecutable en PATH: {executableName}",
   "Security.ExternalProcessPolicy.Error.UntrustedAuthenticodeSignature": "El ejecutable no tiene una firma Authenticode confiable.",
