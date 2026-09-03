@@ -272,7 +272,18 @@ copperfin::security::ExternalProcessPolicy dotnet_process_policy() {
 #endif
         .allowed_path_roots = dotnet_allowed_path_roots(),
 #if defined(_WIN32)
-        .allowed_publishers = {"Microsoft Corporation"},
+        // The .NET SDK's dotnet.exe is Authenticode-signed with a leaf
+        // certificate whose simple display name is ".NET", not "Microsoft
+        // Corporation" -- confirmed via CI diagnostic logging (issue
+        // #5450) after the #5429 allowlist's original name caused every
+        // authorization to be silently denied, which in turn made
+        // supports_dotnet_launcher_publish() report unavailable and
+        // suppressed run_dotnet_publish() entirely with no visible error
+        // (plan.emit_dotnet_launcher gets forced false regardless of the
+        // caller's request; see runtime_pipeline_package_plan_manifest.cpp).
+        // "Microsoft Corporation" is kept for any other
+        // Microsoft-signed executable this policy might ever cover.
+        .allowed_publishers = {".NET", "Microsoft Corporation"},
         .require_trusted_signature = true
 #else
         .allowed_publishers = {},
