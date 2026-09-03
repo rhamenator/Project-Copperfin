@@ -219,8 +219,16 @@ WorkspaceAgentFileTargetBoundary::snapshot_workspace_file(
     if (current.identity != expected.identity) {
         return {false, {}, {}, "workspace_agent.file_read_identity_changed"};
     }
-    const auto snapshot = read_physically_contained_file_snapshot_from_handle(
-        handle, maximum_bytes);
+    // _and_revalidate_path, not the plain handle read: this is a public
+    // WorkspaceAgentFileTargetBoundary method with no caller-specific check
+    // that needs to run between the read and the revalidation, so it should
+    // carry its own final-containment guarantee -- that the path this
+    // result is attributed to still names the read object -- rather than
+    // depending on any particular caller (e.g.
+    // WorkspaceAgentSessionController::read_workspace_file_snapshot()'s own
+    // separate final preflight) to supply it (Codex review finding).
+    const auto snapshot = read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+        handle, canonical_workspace_root_, maximum_bytes);
     if (!snapshot.ok) {
         switch (snapshot.failure) {
             case PhysicalPathContainmentFailure::size_limit_exceeded:
@@ -240,7 +248,11 @@ WorkspaceAgentFileTargetBoundary::snapshot_workspace_file(
     // same gate inspect_existing_regular_file() applies at inspection time,
     // reapplied here post-read (see workspace_agent_process_parser.cpp's
     // read_trusted_executable_snapshot() for the identical precedent).
-    if (snapshot.containment.identity.link_count != 1U) {
+    // Compared against expected.identity.link_count (invariantly 1U here,
+    // since inspect_existing_regular_file() already gated on it) rather
+    // than a bare literal, so this restates that invariant instead of
+    // silently assuming it (Copilot review finding).
+    if (snapshot.containment.identity.link_count != expected.identity.link_count) {
         return {false, {}, {}, "workspace_agent.target_multiply_linked"};
     }
     if (!workspace_root_identity_matches()) {

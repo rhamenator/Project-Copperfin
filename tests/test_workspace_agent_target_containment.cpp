@@ -280,9 +280,10 @@ void test_snapshot_workspace_file_denies_content_swapped_after_inspect() {
     expect(!snapshot.captured && snapshot.bytes.empty() &&
                snapshot.diagnostic_code == "workspace_agent.file_read_identity_changed",
            "issue #5409: content swapped between inspect_workspace_file() and "
-           "snapshot_workspace_file() must be caught by the atomic check-and-open "
-           "primitive's own fresh identity comparison -- proves the read is no longer "
-           "trusting a stale path string carried from the earlier inspection");
+           "snapshot_workspace_file() must still be denied via the atomic "
+           "check-and-open primitive's fresh pre-read identity comparison, "
+           "preserving the same stale-identity denial the prior string-reopening "
+           "implementation already provided");
 
     const auto original = boundary->inspect_workspace_file("inside.prg");
     expect(original.allowed,
