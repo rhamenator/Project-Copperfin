@@ -1406,6 +1406,26 @@ bool physical_identity_has_multiple_links(
     return containment.allowed && containment.identity.link_count > 1U;
 }
 
+// Atomic check-and-open primitive (issue #5409/#5420): re-verifies a
+// PhysicalPathContainmentResult captured potentially much earlier (e.g. by
+// verify_manifest_hashes(), stored in verified_package_paths) via a fresh
+// handle bound to its canonical_path, then reads through that same handle
+// -- never reopening by path string the way this function's callers'
+// pre-migration code did. Fails closed (an empty, !ok snapshot) if the
+// fresh walk's identity no longer matches the stored one, rather than
+// trusting the stale stored identity for the read.
+copperfin::security::PhysicalFileSnapshotResult read_verified_package_path_snapshot(
+    const copperfin::security::PhysicalPathContainmentResult& stored,
+    const std::filesystem::path& manifest_directory) {
+    auto handle = copperfin::security::inspect_and_open_physically_contained_path(
+        stored.canonical_path, manifest_directory);
+    if (!handle.result().allowed || handle.result().identity != stored.identity) {
+        return copperfin::security::PhysicalFileSnapshotResult{};
+    }
+    return copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+        handle, manifest_directory);
+}
+
 bool packaged_source_text_extension(const std::filesystem::path& path) {
     const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(path.extension()));
     return extension == ".prg" || extension == ".mpr" ||
@@ -2489,9 +2509,15 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
         return result;
     }
     if (sidecar_exists) {
-        const auto sidecar_containment = copperfin::security::inspect_physical_path_containment(
+        // Atomic check-and-open primitive (issue #5409/#5420): opened once
+        // here to resolve sidecar_path's canonical identity for the
+        // verified_package_paths lookup below; kept open so an unverified
+        // sidecar (only reachable when !security_enabled, below) can read
+        // through this same handle rather than reopening by path string.
+        auto sidecar_handle = copperfin::security::inspect_and_open_physically_contained_path(
             path_from_utf8(sidecar_path),
             manifest_directory);
+        const auto& sidecar_containment = sidecar_handle.result();
         if (!sidecar_containment.allowed) {
             result.error = localized_message(
                 catalog,
@@ -2512,11 +2538,21 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
                 {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(sidecar_path).filename())}});
             return result;
         }
-        const auto sidecar_snapshot = copperfin::security::read_physically_contained_file_snapshot(
-            verified_sidecar == verified_package_paths.end()
-                ? sidecar_containment
-                : verified_sidecar->containment,
-            manifest_directory);
+        copperfin::security::PhysicalFileSnapshotResult sidecar_snapshot;
+        if (verified_sidecar == verified_package_paths.end()) {
+            sidecar_snapshot =
+                copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+                    sidecar_handle, manifest_directory);
+        } else {
+            // verified_sidecar->containment was captured potentially much
+            // earlier, by verify_manifest_hashes(): re-verify and read via
+            // a fresh handle bound to that stored identity, rather than
+            // reusing sidecar_handle (whose identity was captured at this
+            // function's own, later, inspection above) or reopening by
+            // path string.
+            sidecar_snapshot = read_verified_package_path_snapshot(
+                verified_sidecar->containment, manifest_directory);
+        }
         copperfin::security::Sha256Result sidecar_digest{
             .ok = true,
             .hex_digest = {},
@@ -3596,9 +3632,14 @@ int run_runtime_host_main_impl(int argc, char** argv) {
     std::map<std::string, std::string> verified_source_texts;
     std::map<std::string, std::string> verified_file_bytes;
     if (!debug_manifest_privileges) {
-        const auto current_identity = copperfin::security::inspect_physical_path_containment(
+        // Atomic check-and-open primitive (issue #5409/#5420): kept open so
+        // an unverified startup source (only reachable when
+        // !security_enabled, below) can read through this same handle
+        // rather than reopening by path string.
+        auto current_handle = copperfin::security::inspect_and_open_physically_contained_path(
             path_from_utf8(startup_source),
             manifest_directory);
+        const auto& current_identity = current_handle.result();
         if (!current_identity.allowed) {
             std::cout << "status: error\n";
             print_error_line(
@@ -3628,12 +3669,21 @@ int run_runtime_host_main_impl(int argc, char** argv) {
             return 8;
         }
 
-        const auto& expected_identity = verified == verified_package_paths.end()
-            ? current_identity
-            : verified->containment;
-        const auto startup_snapshot = copperfin::security::read_physically_contained_file_snapshot(
-            expected_identity,
-            manifest_directory);
+        copperfin::security::PhysicalFileSnapshotResult startup_snapshot;
+        if (verified == verified_package_paths.end()) {
+            startup_snapshot =
+                copperfin::security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+                    current_handle, manifest_directory);
+        } else {
+            // verified->containment was captured potentially much earlier,
+            // by verify_manifest_hashes(): re-verify and read via a fresh
+            // handle bound to that stored identity, rather than reusing
+            // current_handle (whose identity was captured at this
+            // function's own, later, inspection above) or reopening by
+            // path string.
+            startup_snapshot = read_verified_package_path_snapshot(
+                verified->containment, manifest_directory);
+        }
         if (!startup_snapshot.ok) {
             std::cout << "status: error\n";
             print_error_line(
@@ -3682,10 +3732,12 @@ int run_runtime_host_main_impl(int argc, char** argv) {
                         copperfin::platform::path_to_utf8_string(source_path)))) {
                     continue;
                 }
+                // verified_path.containment was captured potentially much
+                // earlier, by verify_manifest_hashes(): re-verify and read
+                // via a fresh handle bound to that stored identity, never
+                // reopening by path string (issue #5409/#5420).
                 const auto source_snapshot =
-                    copperfin::security::read_physically_contained_file_snapshot(
-                        verified_path.containment,
-                        manifest_directory);
+                    read_verified_package_path_snapshot(verified_path.containment, manifest_directory);
                 const auto source_digest = source_snapshot.ok
                     ? copperfin::security::sha256_hex_for_text(source_snapshot.bytes)
                     : copperfin::security::Sha256Result{};
