@@ -264,6 +264,36 @@ void test_boundary_rejects_aliases_and_indirection() {
 #endif
 }
 
+void test_snapshot_workspace_file_denies_content_swapped_after_inspect() {
+    TempTree tree;
+    auto boundary = WorkspaceAgentFileTargetBoundary::create(tree.workspace);
+    expect(boundary.has_value(),
+           "issue #5409: swap fixture must configure the workspace boundary");
+
+    const auto inspected = boundary->inspect_workspace_file("inside.prg");
+    expect(inspected.allowed,
+           "issue #5409: swap fixture's initial inspection must succeed");
+
+    TempTree::write(tree.workspace / "inside.prg", "swapped-content\n");
+
+    const auto snapshot = boundary->snapshot_workspace_file(inspected, 4096U);
+    expect(!snapshot.captured && snapshot.bytes.empty() &&
+               snapshot.diagnostic_code == "workspace_agent.file_read_identity_changed",
+           "issue #5409: content swapped between inspect_workspace_file() and "
+           "snapshot_workspace_file() must be caught by the atomic check-and-open "
+           "primitive's own fresh identity comparison -- proves the read is no longer "
+           "trusting a stale path string carried from the earlier inspection");
+
+    const auto original = boundary->inspect_workspace_file("inside.prg");
+    expect(original.allowed,
+           "issue #5409: swap fixture's re-inspection after the swap must still succeed");
+    const auto reread = boundary->snapshot_workspace_file(original, 4096U);
+    expect(reread.captured && reread.bytes == "swapped-content\n",
+           "issue #5409: a snapshot taken against a freshly re-inspected identity must "
+           "still succeed, proving the denial above was specific to the stale identity "
+           "and not a general regression");
+}
+
 void test_session_bound_file_target_preflight() {
     TempTree tree;
     WorkspaceAgentSessionController inactive(tree.workspace);
@@ -498,6 +528,7 @@ void test_session_bound_workspace_file_read() {
 
 int main() {
     test_boundary_rejects_aliases_and_indirection();
+    test_snapshot_workspace_file_denies_content_swapped_after_inspect();
     test_session_bound_file_target_preflight();
     test_workspace_root_replacement_fails_closed();
     test_session_bound_workspace_file_read();
