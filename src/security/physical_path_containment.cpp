@@ -589,6 +589,178 @@ InternalContainmentWalk inspect_and_walk(
     };
 }
 
+// Shared by both public read functions below (issue #5424): performs the
+// "reject reparse/directory -> build before-identity -> read all bytes at a
+// position-independent offset -> build after-identity -> reject drift"
+// sequence exactly once against an already-open native handle/descriptor,
+// instead of near-duplicating it per platform per caller (previously four
+// near-identical 64KB-buffer read loops across this file).
+//
+// The two callers differ in two ways that predate this extraction and are
+// preserved exactly via parameters rather than silently unified:
+// - full_identity_comparison: read_physically_contained_file_snapshot_from_handle()
+//   used content_equal() (tolerates a benign concurrent link_count change on
+//   the still-open object); read_physically_contained_file_snapshot() used
+//   operator== (full identity, including link_count) against its freshly
+//   reopened-by-path object. See PhysicalPathIdentity::content_equal()'s own
+//   comment for why that distinction exists.
+// - before_query_failure_code: what failure code applies if the initial
+//   info-query syscall itself fails, as opposed to succeeding and revealing
+//   a reparse point. The two callers disagreed here before this extraction
+//   (read_failed vs indirect_component) and that is preserved rather than
+//   picked one way, since reconciling it would be an independent behavior
+//   change outside this issue's scope.
+//
+// Returns after_identity (queried post-read), not expected_identity, in the
+// result's containment: several existing callers of
+// read_physically_contained_file_snapshot() use the returned snapshot's
+// link_count as a security gate against hardlink-based confinement bypass,
+// and expected_identity is only the stale check-time snapshot.
+PhysicalFileSnapshotResult read_open_object_with_identity_recheck(
+#if defined(_WIN32)
+    HANDLE native,
+#else
+    int native,
+#endif
+    const PhysicalPathIdentity& expected_identity,
+    const std::filesystem::path& canonical_path,
+    const std::uint64_t maximum_bytes,
+    const bool full_identity_comparison,
+    const PhysicalPathContainmentFailure before_query_failure_code) {
+    const auto identity_matches =
+        [full_identity_comparison](
+            const PhysicalPathIdentity& lhs, const PhysicalPathIdentity& rhs) {
+            return full_identity_comparison ? (lhs == rhs) : lhs.content_equal(rhs);
+        };
+
+    std::string bytes;
+    PhysicalPathIdentity after_identity;
+#if defined(_WIN32)
+    BY_HANDLE_FILE_INFORMATION before_information{};
+    if (::GetFileInformationByHandle(native, &before_information) == 0) {
+        return failed_snapshot(before_query_failure_code);
+    }
+    if ((before_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+        return failed_snapshot(PhysicalPathContainmentFailure::indirect_component);
+    }
+    if ((before_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
+        return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
+    }
+    const PhysicalPathIdentity before_identity =
+        identity_from_handle_information(before_information);
+    if (!identity_matches(before_identity, expected_identity)) {
+        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+    }
+
+    // Reading at an explicit, per-call offset (position-independent) rather
+    // than through the handle's single shared file-position cursor makes
+    // concurrent calls against the same still-open handle safe by
+    // construction: a shared cursor (ReadFile with a nullptr OVERLAPPED)
+    // lets concurrent callers race on it, observably corrupting reads
+    // (empirically reproduced with a concurrent-access harness). Equally
+    // correct, and no less safe, for a caller with sole, single-threaded
+    // ownership of a freshly opened handle.
+    std::array<char, 64U * 1024U> buffer{};
+    std::uint64_t offset = 0U;
+    for (;;) {
+        OVERLAPPED positioned{};
+        positioned.Offset = static_cast<DWORD>(offset & 0xFFFFFFFFU);
+        positioned.OffsetHigh = static_cast<DWORD>(offset >> 32U);
+        DWORD bytes_read = 0U;
+        if (::ReadFile(
+                native, buffer.data(), static_cast<DWORD>(buffer.size()),
+                &bytes_read, &positioned) == 0) {
+            if (::GetLastError() == ERROR_HANDLE_EOF) {
+                break;
+            }
+            return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
+        }
+        if (bytes_read == 0U) {
+            break;
+        }
+        if (bytes_read > maximum_bytes ||
+            bytes.size() > maximum_bytes - bytes_read) {
+            return failed_snapshot(
+                PhysicalPathContainmentFailure::size_limit_exceeded);
+        }
+        bytes.append(buffer.data(), bytes_read);
+        offset += bytes_read;
+    }
+
+    BY_HANDLE_FILE_INFORMATION after_information{};
+    if (::GetFileInformationByHandle(native, &after_information) == 0) {
+        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
+    }
+    after_identity = identity_from_handle_information(after_information);
+#else
+    struct stat before_status{};
+    if (::fstat(native, &before_status) != 0) {
+        return failed_snapshot(before_query_failure_code);
+    }
+    if (!S_ISREG(before_status.st_mode)) {
+        return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
+    }
+    const PhysicalPathIdentity before_identity =
+        identity_from_descriptor(native, before_status);
+    if (!identity_matches(before_identity, expected_identity)) {
+        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+    }
+
+    // See the Windows branch above: position-independent pread() offsets
+    // make concurrent calls against the same still-open descriptor safe by
+    // construction, and cost nothing for a caller with sole ownership of a
+    // freshly opened descriptor.
+    std::array<char, 64U * 1024U> buffer{};
+    std::uint64_t offset = 0U;
+    for (;;) {
+        const ssize_t bytes_read = ::pread(
+            native, buffer.data(), buffer.size(), static_cast<off_t>(offset));
+        if (bytes_read < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
+        }
+        if (bytes_read == 0) {
+            break;
+        }
+        const auto byte_count = static_cast<std::uint64_t>(bytes_read);
+        if (byte_count > maximum_bytes ||
+            bytes.size() > maximum_bytes - byte_count) {
+            return failed_snapshot(
+                PhysicalPathContainmentFailure::size_limit_exceeded);
+        }
+        bytes.append(buffer.data(), static_cast<std::size_t>(bytes_read));
+        offset += byte_count;
+    }
+
+    struct stat after_status{};
+    if (::fstat(native, &after_status) != 0) {
+        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
+    }
+    // Must run before any further use of native: on Linux,
+    // identity_from_descriptor() queries creation time via statx() against
+    // this same descriptor.
+    after_identity = identity_from_descriptor(native, after_status);
+#endif
+
+    if (!identity_matches(after_identity, expected_identity) ||
+        bytes.size() != expected_identity.file_size) {
+        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+    }
+
+    return {
+        .ok = true,
+        .bytes = std::move(bytes),
+        .containment = PhysicalPathContainmentResult{
+            .allowed = true,
+            .canonical_path = canonical_path,
+            .identity = after_identity,
+            .failure = PhysicalPathContainmentFailure::none},
+        .failure = PhysicalPathContainmentFailure::none
+    };
+}
+
 }  // namespace
 
 PhysicalPathContainmentResult inspect_physical_path_containment(
@@ -644,162 +816,17 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot_from_handle(
         return failed_snapshot(PhysicalPathContainmentFailure::size_limit_exceeded);
     }
 
-    std::string bytes;
-    PhysicalPathIdentity after_identity;
-#if defined(_WIN32)
-    const HANDLE native = handle.impl_->native.get();
-
-    BY_HANDLE_FILE_INFORMATION before_information{};
-    if (::GetFileInformationByHandle(native, &before_information) == 0) {
-        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-    }
-    if ((before_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
-        return failed_snapshot(PhysicalPathContainmentFailure::indirect_component);
-    }
-    if ((before_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
-        return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
-    }
-    const PhysicalPathIdentity before_identity =
-        identity_from_handle_information(before_information);
-    if (!before_identity.content_equal(expected.identity)) {
-        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
-    }
-    // This function takes the handle by const reference rather than
-    // consuming it, so nothing prevents either a second sequential call or
-    // -- more seriously -- concurrent calls from separate threads on the
-    // same handle. A single shared file-position cursor (ReadFile with a
-    // nullptr OVERLAPPED, or ::read()) would make concurrent callers race
-    // on that cursor: reads reads at this file's mutual offset are
-    // observably corrupted (empirically reproduced with a concurrent-access
-    // harness -- interleaved seeks/reads produced truncated or spuriously
-    // identity_changed results). Reading at an explicit, per-call offset
-    // (position-independent) instead makes concurrent calls on the same
-    // handle safe by construction: each call tracks its own progress
-    // locally and never mutates shared kernel-level position state.
-    std::array<char, 64U * 1024U> buffer{};
-    std::uint64_t offset = 0U;
-    for (;;) {
-        OVERLAPPED positioned{};
-        positioned.Offset = static_cast<DWORD>(offset & 0xFFFFFFFFU);
-        positioned.OffsetHigh = static_cast<DWORD>(offset >> 32U);
-        DWORD bytes_read = 0U;
-        if (::ReadFile(
-                native, buffer.data(), static_cast<DWORD>(buffer.size()),
-                &bytes_read, &positioned) == 0) {
-            if (::GetLastError() == ERROR_HANDLE_EOF) {
-                break;
-            }
-            return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-        }
-        if (bytes_read == 0U) {
-            break;
-        }
-        if (bytes_read > maximum_bytes ||
-            bytes.size() > maximum_bytes - bytes_read) {
-            return failed_snapshot(
-                PhysicalPathContainmentFailure::size_limit_exceeded);
-        }
-        bytes.append(buffer.data(), bytes_read);
-        offset += bytes_read;
-    }
-
-    BY_HANDLE_FILE_INFORMATION after_information{};
-    if (::GetFileInformationByHandle(native, &after_information) == 0) {
-        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-    }
-    after_identity = identity_from_handle_information(after_information);
-#else
-    const int native = handle.impl_->native.get();
-
-    struct stat before_status{};
-    if (::fstat(native, &before_status) != 0) {
-        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-    }
-    if (!S_ISREG(before_status.st_mode)) {
-        return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
-    }
-    const PhysicalPathIdentity before_identity =
-        identity_from_descriptor(native, before_status);
-    if (!before_identity.content_equal(expected.identity)) {
-        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
-    }
-    // This function takes the handle by const reference rather than
-    // consuming it, so nothing prevents either a second sequential call or
-    // -- more seriously -- concurrent calls from separate threads on the
-    // same handle. A single shared file-position cursor (::read(), which
-    // consumes and advances one process-wide-per-descriptor offset) would
-    // make concurrent callers race on that cursor: reads at this file's
-    // mutual offset are observably corrupted (empirically reproduced with a
-    // concurrent-access harness -- interleaved seeks/reads produced
-    // truncated or spuriously identity_changed results). Reading at an
-    // explicit, per-call offset via ::pread() instead makes concurrent
-    // calls on the same handle safe by construction: each call tracks its
-    // own progress locally and never mutates the descriptor's shared
-    // kernel-level position state.
-    std::array<char, 64U * 1024U> buffer{};
-    std::uint64_t offset = 0U;
-    for (;;) {
-        const ssize_t bytes_read = ::pread(
-            native, buffer.data(), buffer.size(), static_cast<off_t>(offset));
-        if (bytes_read < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-            return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-        }
-        if (bytes_read == 0) {
-            break;
-        }
-        const auto byte_count = static_cast<std::uint64_t>(bytes_read);
-        if (byte_count > maximum_bytes ||
-            bytes.size() > maximum_bytes - byte_count) {
-            return failed_snapshot(
-                PhysicalPathContainmentFailure::size_limit_exceeded);
-        }
-        bytes.append(buffer.data(), static_cast<std::size_t>(bytes_read));
-        offset += byte_count;
-    }
-
-    struct stat after_status{};
-    if (::fstat(native, &after_status) != 0) {
-        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-    }
-    // Must run before any further use of native: on Linux,
-    // identity_from_descriptor() queries creation time via statx() against
-    // this same descriptor.
-    after_identity = identity_from_descriptor(native, after_status);
-#endif
-
-    if (!after_identity.content_equal(expected.identity) ||
-        bytes.size() != expected.identity.file_size) {
-        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
-    }
-
-    // Return after_identity, not expected.identity: several existing
-    // callers of the sibling read_physically_contained_file_snapshot()
-    // (which re-derives its own returned containment via a fresh post-read
-    // walk) use the returned PhysicalFileSnapshotResult's link_count as a
-    // security gate against hardlink-based confinement bypass (e.g.
-    // workspace_agent_target_containment.cpp,
-    // workspace_agent_process_containment.cpp,
-    // runtime_pipeline_package_content_io.cpp). content_equal() above
-    // deliberately excludes link_count when re-checking freshness (a still-
-    // open handle's own content is unaffected by its directory-entry count
-    // changing), but a caller reading link_count back out of the returned
-    // result still needs the true, current value -- after_identity was
-    // queried fresh, after the read, from the same handle, so it reflects
-    // it; expected.identity is the stale check-time snapshot and would
-    // silently hide a hardlink added during the read.
-    return {
-        .ok = true,
-        .bytes = std::move(bytes),
-        .containment = PhysicalPathContainmentResult{
-            .allowed = true,
-            .canonical_path = expected.canonical_path,
-            .identity = after_identity,
-            .failure = PhysicalPathContainmentFailure::none},
-        .failure = PhysicalPathContainmentFailure::none
-    };
+    // content_equal (not full identity) and read_failed for an info-query
+    // failure: this function is handed a still-open, possibly concurrently
+    // shared handle by the caller, so a benign link_count drift on that
+    // live object must not be treated as identity_changed. See
+    // read_open_object_with_identity_recheck()'s own comment for how this
+    // differs from read_physically_contained_file_snapshot() below, and why
+    // that difference is preserved rather than unified.
+    return read_open_object_with_identity_recheck(
+        handle.impl_->native.get(), expected.identity, expected.canonical_path,
+        maximum_bytes, /*full_identity_comparison=*/false,
+        /*before_query_failure_code=*/PhysicalPathContainmentFailure::read_failed);
 }
 
 PhysicalFileSnapshotResult revalidate_physical_path_containment_after_read(
@@ -876,132 +903,45 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
             PhysicalPathContainmentFailure::size_limit_exceeded);
     }
 
-    std::string bytes;
 #if defined(_WIN32)
-    const HANDLE handle = ::CreateFileW(
+    ScopedHandle handle(::CreateFileW(
         expected.canonical_path.c_str(),
         GENERIC_READ,
         FILE_SHARE_READ,
         nullptr,
         OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
-        nullptr);
-    if (handle == INVALID_HANDLE_VALUE) {
-        return failed_snapshot(PhysicalPathContainmentFailure::path_unavailable);
-    }
-
-    BY_HANDLE_FILE_INFORMATION before_information{};
-    if (::GetFileInformationByHandle(handle, &before_information) == 0 ||
-        (before_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
-        ::CloseHandle(handle);
-        return failed_snapshot(PhysicalPathContainmentFailure::indirect_component);
-    }
-    if ((before_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
-        ::CloseHandle(handle);
-        return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
-    }
-    const PhysicalPathIdentity before_identity =
-        identity_from_handle_information(before_information);
-    if (before_identity != expected.identity) {
-        ::CloseHandle(handle);
-        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
-    }
-
-    std::array<char, 64U * 1024U> buffer{};
-    for (;;) {
-        DWORD bytes_read = 0U;
-        if (::ReadFile(handle, buffer.data(), static_cast<DWORD>(buffer.size()), &bytes_read, nullptr) == 0) {
-            ::CloseHandle(handle);
-            return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-        }
-        if (bytes_read == 0U) {
-            break;
-        }
-        if (bytes_read > maximum_bytes ||
-            bytes.size() > maximum_bytes - bytes_read) {
-            ::CloseHandle(handle);
-            return failed_snapshot(
-                PhysicalPathContainmentFailure::size_limit_exceeded);
-        }
-        bytes.append(buffer.data(), bytes_read);
-    }
-
-    BY_HANDLE_FILE_INFORMATION after_information{};
-    const bool after_read = ::GetFileInformationByHandle(handle, &after_information) != 0;
-    ::CloseHandle(handle);
-    if (!after_read) {
-        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-    }
-    const PhysicalPathIdentity after_identity =
-        identity_from_handle_information(after_information);
+        nullptr));
 #else
     // O_NONBLOCK matches walk_contained_path()'s final-component open above:
     // a FIFO at this path must not hang the calling thread indefinitely
     // waiting for a writer. It has no effect on the regular file this path
-    // is required to be (checked via S_ISREG immediately below); the
-    // blocking, buffered ::read() loop further down still runs normally
-    // once that check passes.
-    const int descriptor = ::open(
+    // is required to be (checked via S_ISREG inside the shared read helper
+    // below); the blocking, buffered pread() loop there still runs
+    // normally once that check passes.
+    ScopedFd handle(::open(
         expected.canonical_path.c_str(),
-        O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK);
-    if (descriptor < 0) {
+        O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK));
+#endif
+    if (!handle.valid()) {
         return failed_snapshot(PhysicalPathContainmentFailure::path_unavailable);
     }
 
-    struct stat before_status{};
-    if (::fstat(descriptor, &before_status) != 0) {
-        ::close(descriptor);
-        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-    }
-    if (!S_ISREG(before_status.st_mode)) {
-        ::close(descriptor);
-        return failed_snapshot(PhysicalPathContainmentFailure::not_regular_file);
-    }
-    const PhysicalPathIdentity before_identity =
-        identity_from_descriptor(descriptor, before_status);
-    if (before_identity != expected.identity) {
-        ::close(descriptor);
-        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
-    }
-
-    std::array<char, 64U * 1024U> buffer{};
-    for (;;) {
-        const ssize_t bytes_read = ::read(descriptor, buffer.data(), buffer.size());
-        if (bytes_read < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-            ::close(descriptor);
-            return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-        }
-        if (bytes_read == 0) {
-            break;
-        }
-        const auto byte_count = static_cast<std::uint64_t>(bytes_read);
-        if (byte_count > maximum_bytes ||
-            bytes.size() > maximum_bytes - byte_count) {
-            ::close(descriptor);
-            return failed_snapshot(
-                PhysicalPathContainmentFailure::size_limit_exceeded);
-        }
-        bytes.append(buffer.data(), static_cast<std::size_t>(bytes_read));
-    }
-
-    struct stat after_status{};
-    const bool after_read = ::fstat(descriptor, &after_status) == 0;
-    if (!after_read) {
-        ::close(descriptor);
-        return failed_snapshot(PhysicalPathContainmentFailure::read_failed);
-    }
-    // Must run before closing descriptor: on Linux, identity_from_descriptor()
-    // queries creation time via statx() against this same descriptor.
-    const PhysicalPathIdentity after_identity =
-        identity_from_descriptor(descriptor, after_status);
-    ::close(descriptor);
-#endif
-
-    if (after_identity != expected.identity || bytes.size() != expected.identity.file_size) {
-        return failed_snapshot(PhysicalPathContainmentFailure::identity_changed);
+    // Full identity comparison (not content_equal) and indirect_component
+    // for an info-query failure: unlike the handle-based sibling above,
+    // this reopens canonical_path by name (the residual TOCTOU window
+    // issue #5409 closed for handle-carrying callers) and has always
+    // required an exact identity match, including link_count, against the
+    // caller-supplied `expected` snapshot. See
+    // read_open_object_with_identity_recheck()'s own comment for why this
+    // differs from the handle-based sibling and why that difference is
+    // preserved rather than unified.
+    auto snapshot = read_open_object_with_identity_recheck(
+        handle.get(), expected.identity, expected.canonical_path, maximum_bytes,
+        /*full_identity_comparison=*/true,
+        /*before_query_failure_code=*/PhysicalPathContainmentFailure::indirect_component);
+    if (!snapshot.ok) {
+        return snapshot;
     }
 
     const auto after_containment = inspect_physical_path_containment(
@@ -1015,7 +955,7 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
 
     return {
         .ok = true,
-        .bytes = std::move(bytes),
+        .bytes = std::move(snapshot.bytes),
         .containment = after_containment,
         .failure = PhysicalPathContainmentFailure::none
     };
