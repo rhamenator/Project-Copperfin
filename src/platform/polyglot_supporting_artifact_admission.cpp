@@ -229,10 +229,45 @@ bool revalidate_polyglot_supporting_artifact_admission(
             "polyglot.supporting_artifact.invalid_admission");
     }
 
-    const auto snapshot = security::read_physically_contained_file_snapshot(
-        admission.containment_,
-        path_from_utf8_string(admission.allowed_root_),
-        admission.maximum_bytes_);
+    // Atomic check-and-open primitive (issue #5409): the read below is
+    // bound to the exact object this fresh walk verifies, never reopened by
+    // the stored resolved_path_ string the way the prior implementation
+    // reused admission.containment_ directly. Compared against
+    // admission.containment_.identity (the admission-time identity), not
+    // any identity read_physically_contained_file_snapshot_from_handle()
+    // checks internally -- that internal check is a read-time freshness
+    // check against this fresh walk's own open-time identity, not against
+    // the admission-time identity this function exists to revalidate.
+    auto handle = security::inspect_and_open_physically_contained_path(
+        path_from_utf8_string(admission.resolved_path_),
+        path_from_utf8_string(admission.allowed_root_));
+    const auto& current = handle.result();
+    if (!current.allowed ||
+        current.canonical_path != path_from_utf8_string(admission.resolved_path_) ||
+        current.identity != admission.containment_.identity) {
+        return revoke(
+            PolyglotSupportingArtifactAdmissionError::artifact_changed,
+            "polyglot.supporting_artifact.changed_before_execution");
+    }
+    // _and_revalidate_path, not the plain handle read: this function's
+    // whole purpose is to hand its caller a resolved_path()/artifact_sha256()
+    // pair it can trust immediately afterward, so it needs its own
+    // final-containment guarantee -- that resolved_path_ still names the
+    // read object -- rather than depending on the caller to repeat that
+    // check (same defense-in-depth rationale as #5459's
+    // snapshot_workspace_file() migration). A path-changed-after-read
+    // failure falls into the same !snapshot.ok branch below, which already
+    // reports the accurate "changed_before_execution" diagnostic for it.
+    void (*post_read_hook)() = nullptr;
+#if defined(COPPERFIN_ENABLE_POLYGLOT_SUPPORTING_ARTIFACT_ADMISSION_TEST_HOOKS)
+    post_read_hook = post_read_test_hook.exchange(nullptr, std::memory_order_relaxed);
+#endif
+    const auto snapshot =
+        security::read_physically_contained_file_snapshot_from_handle_and_revalidate_path(
+            handle,
+            path_from_utf8_string(admission.allowed_root_),
+            admission.maximum_bytes_,
+            post_read_hook);
     if (!snapshot.ok) {
         return revoke(
             PolyglotSupportingArtifactAdmissionError::artifact_changed,
