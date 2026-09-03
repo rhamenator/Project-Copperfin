@@ -10004,8 +10004,9 @@ through that held handle (`WINTRUST_FILE_INFO::hFile`) and identity is derived
 from the same handle via `GetFileInformationByHandle`; the now-dead
 `ExecutableChangedDuringAuthorization` error path was removed. Round-2 review
 of #5455 itself found three more issues in the new code, fixed in the same PR
-before merge: `ScopedHandle` needed explicit non-copyable/movable semantics
-(a copy would double-close); `read_file_identity()` still passed
+before merge: `ScopedHandle` needed explicit move-only semantics -- copy
+constructor/assignment deleted, move constructor/assignment defined to
+transfer ownership (a default-generated copy would double-close); `read_file_identity()` still passed
 `FILE_FLAG_OPEN_REPARSE_POINT`, which disagreed with the new handle-open's
 default reparse-point-following behavior and would false-positive "changed"
 for any resolved executable that is itself a symlink/junction; and a locked-
