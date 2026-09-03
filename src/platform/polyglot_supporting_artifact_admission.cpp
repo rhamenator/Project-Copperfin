@@ -273,6 +273,22 @@ bool revalidate_polyglot_supporting_artifact_admission(
             PolyglotSupportingArtifactAdmissionError::artifact_changed,
             "polyglot.supporting_artifact.changed_before_execution");
     }
+    // The pre-read check above compares full identity (operator==,
+    // including link_count) against admission.containment_, but the read
+    // itself and its post-read re-walk both deliberately use content_equal()
+    // (excluding link_count -- see revalidate_physical_path_containment_after_read()'s
+    // own doc comment), so a hard link added between that pre-read check and
+    // this point would otherwise go undetected. Re-checked here against
+    // admission.containment_.identity.link_count, not a bare literal, since
+    // this file has no fixed link_count invariant of its own (unlike
+    // workspace_agent_target_containment.cpp's link_count == 1 gate) -- only
+    // that it must not change during this call (Copilot review finding).
+    if (snapshot.containment.identity.link_count !=
+        admission.containment_.identity.link_count) {
+        return revoke(
+            PolyglotSupportingArtifactAdmissionError::artifact_changed,
+            "polyglot.supporting_artifact.changed_before_execution");
+    }
     const auto digest = security::sha256_hex_for_text(snapshot.bytes);
     if (!digest.ok ||
         !constant_time_equal(digest.hex_digest, admission.artifact_sha256_)) {
