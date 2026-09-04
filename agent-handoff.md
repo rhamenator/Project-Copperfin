@@ -10026,3 +10026,60 @@ test coverage for the Windows Authenticode/publisher-matching logic
 independent of a real installed executable) remains open, deliberately
 deferred -- it needs synthetic signed test-binary infrastructure this repo
 doesn't have yet.
+
+## 2026-09-04: local Windows VM stood up; first real VFP9 DESCENDING() evidence gathered
+
+The repository owner built a local Windows VM specifically to get direct,
+fast VFP9 and Windows toolchain access without depending on Codex's remote
+Windows host. Full toolchain installed via `winget`: .NET
+SDK 10, Visual Studio Build Tools 2022 (C++ desktop workload + MSBuild +
+.NET Framework 4.7.2 targeting pack, needed for `vsix/Copperfin.VisualStudio`),
+Python 3.13 (the real python.org build, not the WindowsApps alias -- the
+exact trap that caused a Codex validation flake earlier), CMake, Git. VFP9
+itself installed and patched to `9.0.00.7423` (SP2 + Hotfix 3, the "latest
+fully patched version" per the VFPX `VFPInstallers` README) -- version
+confirmed via the installed `vfp9.exe`'s own file version resource.
+
+Used that install to finally run `tests/fixtures/vfp9_descending_observation.prg`
+(issue #5358) in a real VFP9 process, launched non-interactively via
+`vfp9.exe -c<config.fpw>` with `COMMAND=DO <wrapper-that-calls-it-then-QUITs>`.
+8 of 9 planned observation cases completed; retained at
+`tests/fixtures/vfp9-descending-observation-output/` (TSV + the generated
+DBF/CDX/IDX, README explaining the full observed contract). This recovered
+enough real evidence to write `RQ-CF-PRG-019` (status `gap`, not `defined`)
+in `docs/32-recovered-requirements-traceability.md`: the zero-argument
+`DESCENDING()` function's black-box contract is now solidly evidenced,
+including a genuinely new finding -- VFP9 accepts a runtime `SET ORDER TO
+TAG ... ASCENDING` inverse override without error even though the shipped
+help topic only documents the `DESCENDING` direction, and that override
+correctly wins over a tag's persisted-descending creation direction.
+
+The two-argument `DESCENDING(cCDXFileName, nTagNumber)` form's data,
+initially recorded as uninterpretable, turned out to be fully consistent:
+PR #5488 review (Codex) pointed out that `TAG(lnTag)` uses the *global*
+open-index ordinal (all open `.idx` files before `.cdx` tags, per
+`RQ-CF-PRG-010`) while `DESCENDING(lcCdx, lnTag)` is scoped to just that
+CDX's own tags -- the fixture's shared loop variable made the two labels
+look shifted against each other when each was independently correct.
+Re-derived: `DESCENDING(lcCdx, 1)`=F correctly reports `AscTag`,
+`DESCENDING(lcCdx, 2)`=T correctly reports `DescTag`, and
+`DESCENDING(lcCdx, 3)`=F is a safe non-error default for an out-of-range
+tag number on a 2-tag CDX. So that form's contract is evidenced too, not
+an open gap.
+
+**Deliberately not implemented yet, and not guessed:** the CDX
+persisted-direction byte encoding (needed for Copperfin's own native CDX
+header parser, regardless of argument form -- distinct from asking real
+VFP9's own function, which is what the two-argument-form evidence above
+used), and the single-IDX runtime-override case (`SET INDEX TO ... ORDER
+... DESCENDING` against a plain `.idx`, which didn't complete in either
+the original run or an isolated TRY/CATCH-wrapped retry, with no
+interactive session available to see why). An attempt to empirically
+locate the CDX direction bit by correlating `descending.CDX`'s raw bytes
+against the known tag directions was abandoned: `copperfin_inspect`'s
+existing tag-header heuristics produced garbled, overlapping offsets
+against this specific small (3-record) fixture -- an unsafe basis for
+pinning a byte position, and exactly the kind of guess `docs/32`'s rules
+exist to prevent. Next session: generate a larger/cleaner fixture, and use
+an interactive VFP9 session (not blind non-interactive automation) to
+resolve the remaining gap above before attempting implementation.

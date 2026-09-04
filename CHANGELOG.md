@@ -1,3 +1,34 @@
+- 2026-09-04: Recovered the zero-argument `DESCENDING()` function's
+  black-box contract (#5358) from real, controlled VFP9 observation (a
+  locally built Windows 11 VM, VFP9 `9.0.00.7423`, per `docs/07-clean-room-rules.md`'s
+  allowed-evidence rules -- no decompilation, no guessed byte offsets).
+  8 of 9 planned observation cases from `tests/fixtures/vfp9_descending_observation.prg`
+  completed; results retained at `tests/fixtures/vfp9-descending-observation-output/`
+  (TSV plus the generated DBF/CDX/IDX, with a README explaining the full
+  observed contract). New finding: a runtime `SET ORDER TO TAG ... ASCENDING`
+  inverse override is accepted without error and correctly overrides a
+  tag's persisted-descending creation direction, even though the shipped
+  VFP9 help topic only documents the `DESCENDING` direction. Added
+  `docs/32-recovered-requirements-traceability.md` row `RQ-CF-PRG-019`,
+  status `gap` (deliberately not `defined`) -- the CDX persisted-direction
+  byte encoding and the single-IDX runtime-override case remain unresolved
+  and are documented as open gaps rather than guessed at; an attempt to
+  correlate the retained `descending.CDX` bytes via `copperfin_inspect` was
+  abandoned when its existing tag-header heuristics produced garbled
+  results against this small fixture. `DESCENDING()` itself is **not yet
+  implemented**. PR #5488 review (Codex) caught a real misinterpretation in
+  the initial writeup: the two-argument `DESCENDING(cCDXFileName,
+  nTagNumber)` form's data was recorded as uninterpretable, but was in fact
+  fully consistent once `TAG()`'s global open-index ordinal (`RQ-CF-PRG-010`)
+  was correctly distinguished from `DESCENDING(cCDXFileName, ...)`'s
+  CDX-file-scoped ordinal -- corrected in the README, the traceability row,
+  and `agent-handoff.md`; that form's behavioral contract is now evidenced
+  too (the CDX byte encoding for a native parser remains the only real gap).
+  Also sanitized `agent-handoff.md` per Copilot review: removed internal
+  VM/network operational details not needed to understand or reproduce the
+  result. Updated `docs/13-index-format-notes.md` and `agent-handoff.md`
+  with the same status. `test_safety_traceability_workflow_contract`
+  re-verified green against the updated traceability doc.
 - 2026-09-04: Added `EXPORT DATABASE ... TYPE SQL` (issue #5471, part of the
   #140/#137 migration-pipeline lane), the second `EXPORT DATABASE` output
   format alongside the already-shipped `TYPE JSON`. Refactored the DBC

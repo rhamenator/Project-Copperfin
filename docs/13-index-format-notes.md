@@ -69,11 +69,24 @@ Next implementation steps:
 2. Correlate DBF field metadata with index expressions for migration planning.
 3. Deepen read-only validation against real VFP and dBase fixtures beyond the current smoke coverage.
 4. Design and stage explicit index-write fidelity slices (separate from read/inspection parsing).
-5. Run `tests/fixtures/vfp9_descending_observation.prg` in a disposable real
-   VFP9 process with a new output directory, retain its TSV output plus the
-   generated DBF/CDX/IDX fixtures, and use those observations to recover the
-   persisted direction encoding and master-order override boundary before
-   adding `DESCENDING()` support. The fixture is evidence collection only; it
-   does not assert a guessed byte offset or modify existing user data. Its
-   optional inverse-override probe records an unavailable command distinctly
-   from a logical direction result.
+5. **Done (2026-09-04, partially):** `tests/fixtures/vfp9_descending_observation.prg`
+   was run in a disposable real VFP9 process (`9.0.00.7423`); its TSV output
+   plus the generated DBF/CDX/IDX fixtures are retained at
+   `tests/fixtures/vfp9-descending-observation-output/` (see the README
+   there for the full observed contract and open gaps). This recovered the
+   zero-argument `DESCENDING()` function's black-box contract, including the
+   previously-undocumented `ASCENDING` runtime inverse-override and (after a
+   correction from PR #5488 review) the two-argument
+   `DESCENDING(cCDXFileName, nTagNumber)` form's contract -- its data was
+   initially recorded as uninterpretable, but was fully consistent once
+   `TAG()`'s global open-index ordinal (`RQ-CF-PRG-010`) was correctly
+   distinguished from `DESCENDING(cCDXFileName, ...)`'s CDX-file-scoped
+   ordinal (see `RQ-CF-PRG-019`, status `gap`). It did **not** yet recover
+   the CDX persisted-direction byte encoding needed to implement the
+   persisted-tag case (for either argument form), nor the single-IDX
+   runtime-override case -- an attempt to correlate the retained
+   `descending.CDX` bytes against known tag directions was abandoned when
+   `copperfin_inspect`'s existing tag-header heuristics produced garbled
+   results against that small fixture. A larger, cleaner fixture plus an
+   interactive VFP9 session are needed before `DESCENDING()` can actually be
+   implemented.
