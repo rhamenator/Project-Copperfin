@@ -1,9 +1,18 @@
 # Roadmap
 
 The Copperfin roadmap is organized as a completion tree rather than a fixed
-issue sequence. The top-level product objective is an implementation-complete,
-Windows-first MVP release candidate. The v1 roadmap begins after the complete
-MVP tree has passed its implementation acceptance criteria.
+issue sequence. The top-level product objective is the v1 release candidate:
+an implementation-complete, Windows-first MVP core (slice-lanes A through G)
+plus, as sibling required scope rather than a later phase, federation/interop
+breadth, security depth, and portability (slice-lanes H, I, and J) and the
+database/container interchange and migration-bridge workstreams (root #137,
+which sits under its own root and is not part of H/I/J). "MVP" below names an
+internal implementation checkpoint — the Windows-first core reaching
+implementation-complete and RC-gated — not a separate release that ships
+ahead of v1 or a prerequisite for starting H/I/J/#137 work. Nothing under
+those lanes is deferred, optional, or a "wishlist"; it is real, committed v1
+scope, simply sequenced by current evidence, compatibility risk, and
+blockers like every other workstream in this tree.
 
 This document is durable roadmap guidance. It intentionally does not list
 individual issue numbers or claim percentage completion. Live issue state,
@@ -1055,8 +1064,13 @@ and reports rather than follows symbolic links. Dependency analysis, the other
 eight specified migration outputs, risk scoring, target planning, and any
 source mutation remain separate work.
 
-After MVP implementation completion and release evidence review, continue in
-this order. Three of these six items already have a real, historical
+These items are required v1 scope, not deferred to a release after MVP —
+select the highest-value unfinished one using current evidence, compatibility
+risk, and blockers, the same way any workstream is chosen per the Completion
+Model above. The order below is a default sequencing hint, not a gate: MVP
+implementation completion and release evidence review is expected to make
+several of these easier to prioritize correctly, not a precondition for
+starting them. Three of these seven items already have a real, historical
 lane-letter identity assigned when their root issues were opened — see
 [Lettered Lane History](#lettered-lane-history) for what those roots actually
 cover:
@@ -1119,6 +1133,17 @@ cover:
    *(No lane letter was ever assigned. The durable matrix has begun in
    `docs/32-recovered-requirements-traceability.md`; broad recovery remains a
    standing goal per `docs/28-repository-ontology.md` §7.)*
+7. Add database/container interchange (`IMPORT`/`EXPORT DATABASE ... TYPE
+   JSON`/`SQL`/`ACCESS`), the Access forms/reports/VBA migration bridge, a
+   bounded .NET execution/interop bridge for non-VFP statements, and legacy
+   xBase/Fox Software asset interpretation and binary production.
+   *(No lane letter was ever assigned; tracked under root `#137` —
+   `#138` Access forms/reports/VBA, `#139` .NET execution bridge, `#140`
+   `IMPORT`/`EXPORT DATABASE ... TYPE JSON`/`SQL`, `#141` `... TYPE ACCESS`,
+   `#1076` legacy xBase/Fox Software asset interpretation, `#1077` legacy
+   binary production. `#137`'s own tracking body records this explicitly:
+   "v1 does not ship until this lane ... is done." Scoped leaf issues
+   `#5472`-`#5485` are currently open under this root.)*
 
 ## Lettered Lane History
 
@@ -1307,24 +1332,26 @@ flowchart TD
       E --> D
     end
 
-    MVP["MVP implementation-complete RC target"]
+    MVP["MVP implementation-complete<br/>checkpoint (Windows-first core)"]
 
-    subgraph V1["v1 Roadmap (not started as a workstream) = slice-lanes H + I + J + 2 continuations"]
+    subgraph V1["v1 Required Scope (in progress, not deferred) = slice-lanes H + I + J + migration bridges + 2 continuations"]
       direction LR
       RUNTIME["Broader runtime parity<br/>(#108 continuation)"]
       WORKFLOWS["Full authoring workflows<br/>(#111/#112 continuation)"]
       H["H: Federation, Planning,<br/>.NET Interop<br/>root #113 (#30/#31/#32)"]
       I["I: Security Depth<br/>root #113 (#33/#34)"]
       J["J: Portability (macOS/Linux)<br/>root #114 (#35/#36/#37) - OPEN"]
+      MIGRATE["Interchange/migration bridges<br/>root #137 (#138/#139/#140/#141/#1076/#1077)"]
       TRACE["Requirements Traceability<br/>Matrix - no lettered root"]
       RUNTIME --> H
       WORKFLOWS --> H
       H --> TRACE
       I --> TRACE
       J --> TRACE
+      MIGRATE --> TRACE
     end
 
-    PA --> PB --> PC --> MVP --> V1
+    PA --> PB --> PC --> MVP
 
     class A1,A2,A3,A4,C1,C2,C3,C4,C5 done;
     class E done;
@@ -1388,9 +1415,10 @@ gates for lane E and the host surfaces; broader product-grade shell and
 language-service scope remains open under the live MVP tree and must not be
 treated as complete merely because these focused slices shipped.
 
-### v1 — Post-MVP Roadmap (slice-lanes H + I + J)
+### v1 Required Scope: Federation, Security Depth, and Portability (slice-lanes H + I + J)
 
-Diagram moved to
+These lanes are required v1 scope, not a later release phase — see the
+Completion Model note above. Diagram moved to
 [diagrams/roadmap-v1-lanes-hij.md](diagrams/roadmap-v1-lanes-hij.md) — same
 rendering reason as above.
 

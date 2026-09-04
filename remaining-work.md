@@ -15,6 +15,6 @@ Use this hierarchy instead:
 
 There is no permanently active implementation lane. Select the highest-value unfinished subgoal from the workstream tree in `docs/05-roadmap.md` using live GitHub state and current evidence. Completed subgoals remain closed unless a regression, new compatibility evidence, or release-validation failure creates a new gap. Historical Phase A, D1, E1, and old issue sequences remain closed unless live regression evidence reopens them.
 
-Wishlist and future-facing modernization issues remain valid deferred roadmap work. They should wait behind important/basic compatibility, usability, release-readiness, and prerequisite architecture unless live GitHub state shows they have become the highest-weight blocker.
+Federation, security-depth, portability, and migration-bridge work (slice-lanes H/I/J and root #137's interchange/migration lane) is real, committed v1 scope, not deferred or optional -- it is required before v1 ships, per `docs/05-roadmap.md` and issue #137's own tracking body. Sequence it using live GitHub state, current evidence, compatibility risk, and blockers, the same as any other workstream.
 
 `issues.txt` is only a local snapshot of open issue rows at the time it was exported. It is not a planning authority.
