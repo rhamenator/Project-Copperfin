@@ -415,6 +415,14 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
     expect(export_result.json.empty(),
            "#3988: failed database exports should leave the JSON result empty");
 
+    const auto sql_export_result = copperfin::vfp::export_database_as_sql(temp_path.string(), 10U);
+    expect(!sql_export_result.ok, "#5471: export_database_as_sql should reject missing DBC paths");
+    expect(
+        sql_export_result.error == "DBC path does not exist: " + temp_path.string(),
+        "#5471: export_database_as_sql should share export_database_as_json's default localized missing-DBC error");
+    expect(sql_export_result.sql.empty(),
+           "#5471: failed SQL database exports should leave the SQL result empty");
+
     copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
     const auto english_inspect_result = copperfin::vfp::inspect_asset(temp_path.string());
     locale.set("es-419");
@@ -994,6 +1002,79 @@ void test_export_database_as_json_resolves_unicode_catalog_table_path() {
             result.json.find("\"ALICE\"") != std::string::npos,
             "export JSON should include rows from a Unicode catalog table filename");
     }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_sql_maps_currency_datetime_and_blank_numeric() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sql_value_mapping_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "accounts.dbf";
+    // An embedded CR/LF in the catalog's own DATABASE object name: a crafted
+    // DBC controls this value, and export_database_as_sql() must not let it
+    // escape the "-- database: ..." comment line into executable SQL.
+    const std::string injected_db_name = "Accounts\n'; DROP TABLE accounts; --";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> dbc_records{
+        {"DATABASE", injected_db_name, "", ""},
+        {"TABLE", "accounts", injected_db_name, ""}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields, dbc_records);
+    expect(dbc_create.ok, "SQL value-mapping test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "BALANCE", .type = 'Y', .offset = 1U, .length = 8U, .decimal_count = 0U},
+        {.name = "OPENED", .type = 'T', .offset = 9U, .length = 8U, .decimal_count = 0U},
+        {.name = "SCORE", .type = 'N', .offset = 17U, .length = 5U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path),
+        table_fields,
+        {{"123.45", "julian:2459625 millis:37230000", ""}});
+    expect(table_create.ok, "SQL value-mapping test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_sql should resolve the accounts fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("\r'; DROP TABLE") == std::string::npos &&
+               result.sql.find("\n'; DROP TABLE") == std::string::npos,
+           "export_database_as_sql must not let an embedded newline escape a -- comment");
+    expect(result.sql.find("DROP TABLE accounts") != std::string::npos,
+           "the sanitized (space-substituted) injected text should still appear, just harmlessly on the comment line");
+
+    expect(result.sql.find("\"BALANCE\" DECIMAL(19, 4)") != std::string::npos,
+           "export_database_as_sql should map a Y (currency) field to a fixed DECIMAL(19, 4), not the raw descriptor length/decimals");
+    expect(result.sql.find("123.4500") != std::string::npos,
+           "export_database_as_sql should emit the currency value unquoted at its native scale");
+
+    expect(result.sql.find("\"OPENED\" TIMESTAMP") != std::string::npos,
+           "export_database_as_sql should still declare a T field as TIMESTAMP");
+    expect(result.sql.find("'2024-01-17 10:20:30'") != std::string::npos,
+           "export_database_as_sql should convert the internal julian/millis storage contract into a real timestamp literal");
+    expect(result.sql.find("julian:") == std::string::npos,
+           "export_database_as_sql must never leak the raw internal datetime storage representation into the script");
+
+    // SCORE was written as "" (a blank numeric cell): decodes to an empty
+    // display_value, not is_null, so it must become NULL, not an empty
+    // string literal, in a column declared DECIMAL/INTEGER.
+    expect(result.sql.find("VALUES (123.4500, '2024-01-17 10:20:30', NULL)") != std::string::npos,
+           "export_database_as_sql should emit NULL for a blank numeric cell rather than an empty string literal");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -1768,6 +1849,7 @@ int main() {
     test_inspect_database_container_extracts_first_pass_catalog_metadata();
     test_inspect_asset_resolves_explicit_unicode_memo_sidecar();
     test_export_database_as_json_resolves_unicode_catalog_table_path();
+    test_export_database_as_sql_maps_currency_datetime_and_blank_numeric();
     test_database_json_import_plan_admits_exporter_unreadable_table_marker();
     test_parse_real_vfp_cdx_when_available();
     test_parse_additional_real_vfp_cdx_samples_when_available();

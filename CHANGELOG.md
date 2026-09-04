@@ -1,3 +1,24 @@
+- 2026-09-04: Added `EXPORT DATABASE ... TYPE SQL` (issue #5471, part of the
+  #140/#137 migration-pipeline lane), the second `EXPORT DATABASE` output
+  format alongside the already-shipped `TYPE JSON`. Refactored the DBC
+  catalog-loading/table-resolution logic the JSON exporter already used out
+  of `export_database_as_json()` into a shared `load_database_catalog_snapshot()`
+  helper (`src/vfp/asset_inspector.cpp`), so the new `export_database_as_sql()`
+  reuses the exact same DBC-inspection path rather than a second independent
+  inspector -- the two `TYPE` variants cannot silently disagree on which
+  tables/rows constitute the database. The SQL exporter emits one portable/
+  ANSI-ish dialect: double-quoted identifiers, single-quoted string literals,
+  `CREATE TABLE` per table (VARCHAR/DECIMAL/INTEGER/DOUBLE PRECISION/BOOLEAN/
+  DATE/TIMESTAMP/TEXT type mapping from DBF field types) followed by `INSERT`
+  per row. No new file-mutation risk -- read-only export, same boundary as
+  the JSON exporter. Added `docs/32-recovered-requirements-traceability.md`
+  row `RQ-CF-MODERNIZATION-003`, updated `docs/12-vfp-asset-editing-and-execution.md`,
+  and added matching localization strings (4 locales) plus focused regression
+  coverage in `test_prg_engine_data_io_import_export.cpp` and
+  `test_vfp_assets.cpp`. Also scoped the rest of the #137 migration-pipeline
+  umbrella down to concrete leaf issues (#5471-#5485) across its six child
+  lanes (#138/#139/#140/#141/#1076/#1077), since none had any bounded,
+  implementable slice before this.
 - 2026-09-03: Closed an ABA-swap gap in `authorize_external_process()`'s
   Windows TOCTOU mitigation (#5454), found by Codex and Copilot review of
   PR #5450. The #5430 fix compared a file identity read before
