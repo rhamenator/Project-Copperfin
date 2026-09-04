@@ -1,4 +1,4 @@
-# v1 — Post-MVP Roadmap (slice-lanes H + I + J)
+# v1 Required Scope: Federation, Security Depth, and Portability (slice-lanes H + I + J)
 
 Part of [05-roadmap.md](../05-roadmap.md), one of the
 [Per-Phase Dependency Diagrams And Roadmaps](../05-roadmap.md#per-phase-dependency-diagrams-and-roadmaps).
@@ -7,13 +7,23 @@ This diagram is kept in its own file because GitHub's Mermaid renderer only
 reliably renders the first diagram on a page; a page with several diagrams
 tends to render only the first and leave the rest blank.
 
+Lanes H, I, and J are required v1 scope, not a deferred "post-MVP" release —
+the `MVP` node below is an internal implementation checkpoint (the
+Windows-first core reaching implementation-complete and RC-gated), not a
+separate release that ships ahead of v1. The database/container interchange
+and migration-bridge lane (root [#137](https://github.com/rhamenator/Project-Copperfin/issues/137),
+covering #138/#139/#140/#141/#1076/#1077) is likewise required v1 scope; it
+is a sibling to this diagram's lanes rather than a fourth lane drawn below
+because it sits under its own root rather than #113/#114, and is tracked in
+[05-roadmap.md](../05-roadmap.md) directly.
+
 ```mermaid
 flowchart TB
     classDef partial fill:#a8790c,stroke:#6e4f07,color:#ffffff,stroke-width:1px;
     classDef planned fill:#6b7280,stroke:#484d54,color:#ffffff,stroke-width:1px;
     classDef lane fill:#f2e0cf,stroke:#a85a2a,color:#1b2024,stroke-width:1px;
 
-    MVP["MVP implementation-complete RC<br/>(gate)"]
+    MVP["MVP implementation-complete<br/>checkpoint (not a v1 prerequisite)"]
 
     subgraph V1["v1 Roadmap"]
       direction TB
@@ -48,11 +58,6 @@ flowchart TB
       TRACE["Bidirectional requirements/<br/>architecture/code/test/results<br/>traceability baseline<br/>(v1 item 6) - continuous"]
     end
 
-    MVP --> CONT1
-    MVP --> CONT2
-    MVP --> LANEH
-    MVP --> LANEI
-    MVP --> LANEJ
     CONT1 --> H1
     CONT2 --> H3
     H1 --> TRACE
