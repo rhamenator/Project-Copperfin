@@ -1,3 +1,18 @@
+- 2026-09-04: Clean-room reconnaissance for #5474 (parent #141, related
+  #137) found a real correction to that issue's own premise: there is no
+  official Microsoft Open Specification for the physical MDB/ACCDB file
+  format (unlike `MS-DOC`/`MS-XLS`), contrary to the issue's assumed
+  citable "MS-JETDB" spec. Added `docs/66-access-container-format-notes.md`
+  recording what evidence sources are actually available and allowed per
+  `docs/07-clean-room-rules.md` (Microsoft's DAO/ADO/OLE-DB-for-Jet
+  documentation for the logical surface only; community reverse-engineering
+  references such as mdbtools/Jackcess/"The Unofficial MDB Guide" for study
+  and independent reimplementation, not transplantation; real Access-
+  produced fixtures once available) and the resulting boundary for the
+  #141/#138 slices this unblocks. Several source fetches returned HTTP
+  403/404 in this session's sandboxed network environment; the doc flags
+  its "no official spec" conclusion for re-verification against full
+  source text before a future slice treats it as settled.
 - 2026-09-04: Recovered the zero-argument `DESCENDING()` function's
   black-box contract (#5358) from real, controlled VFP9 observation (a
   locally built Windows 11 VM, VFP9 `9.0.00.7423`, per `docs/07-clean-room-rules.md`'s
