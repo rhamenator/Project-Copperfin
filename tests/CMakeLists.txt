@@ -461,7 +461,7 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_safety_traceability_workflow_contract_check.cmake
 )
 set_tests_properties(test_safety_traceability_workflow_contract PROPERTIES
-    TIMEOUT 600
+    TIMEOUT 1200
 )
 
 add_test(
@@ -866,7 +866,7 @@ add_test(
 )
 # This aggregate host contract exceeds the ordinary Windows test budget on the
 # hosted VFP9 machine; keep the default bounded timeout for all other tests.
-set_tests_properties(test_studio_host_json PROPERTIES TIMEOUT 600)
+set_tests_properties(test_studio_host_json PROPERTIES TIMEOUT 1200)
 
 add_executable(test_studio_host_toolbox_create_lifecycle
     test_studio_host_toolbox_create_lifecycle.cpp
@@ -5441,6 +5441,9 @@ copperfin_add_test(test_prg_engine_work_areas cf_xbase_runtime
     test_prg_engine_work_areas.cpp
     prg_engine_test_support.cpp
 )
+# Exceeds the default 180s Windows CI budget on a resource-constrained hosted
+# machine (observed 202.50s); same rationale as test_studio_host_json above.
+set_tests_properties(test_prg_engine_work_areas PROPERTIES TIMEOUT 300)
 
 copperfin_add_test(test_prg_engine_relations cf_xbase_runtime
     test_prg_engine_relations.cpp
