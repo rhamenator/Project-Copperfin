@@ -1,0 +1,9 @@
+case	descending	tag	order	outcome
+no-active-order	F			observed
+active-ascending-tag	F	ASCTAG	ASCTAG	observed
+active-persisted-descending-tag	T	DESCTAG	DESCTAG	observed
+persisted-tag-1	F	DESCENDING		observed
+persisted-tag-2	T	ASCTAG		observed
+persisted-tag-3	F	DESCTAG		observed
+active-ascending-tag-runtime-descending	T	ASCTAG	ASCTAG	observed
+active-persisted-descending-tag-runtime-ascending	F	DESCTAG	DESCTAG	observed
