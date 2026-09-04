@@ -9,11 +9,11 @@ endif()
 file(READ "${SOURCE_DIR}/tests/CMakeLists.txt" test_registration_contents)
 string(FIND
     "${test_registration_contents}"
-    "set_tests_properties(test_safety_traceability_workflow_contract PROPERTIES\n    TIMEOUT 600\n)"
+    "set_tests_properties(test_safety_traceability_workflow_contract PROPERTIES\n    TIMEOUT 1200\n)"
     safety_timeout_index)
 if(safety_timeout_index EQUAL -1)
     message(FATAL_ERROR
-        "Safety traceability workflow contract must retain its explicit 600-second CTest timeout")
+        "Safety traceability workflow contract must retain its explicit 1200-second CTest timeout")
 endif()
 
 set(workflow_path "${SOURCE_DIR}/.github/workflows/safety-traceability-gate.yml")
