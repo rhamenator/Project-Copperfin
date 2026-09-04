@@ -849,7 +849,7 @@ require_text("scripts/validate-windows.ps1"
     [=["--parallel", "$TestJobs"]=]
     "bounded local Windows CTest command")
 require_text("tests/CMakeLists.txt"
-    "set_tests_properties(test_studio_host_json PROPERTIES TIMEOUT 600)"
+    "set_tests_properties(test_studio_host_json PROPERTIES TIMEOUT 1200)"
     "extended timeout for the known aggregate Studio host JSON test")
 
 require_regex_count("${shared_action}" "\n[ \t]+run:[ \t]*cmake -S "
