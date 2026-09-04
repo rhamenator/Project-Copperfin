@@ -103,6 +103,7 @@ void test_copy_to_type_dif_and_append_from_type_dif_round_trip();
 void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip();
 void test_copy_to_type_json_and_append_from_type_json_round_trip();
 void test_export_database_type_json_writes_catalog_snapshot();
+void test_export_database_type_sql_writes_ddl_and_inserts();
 void test_copy_to_array_fills_2d_runtime_array();
 void test_copy_to_array_fields_clause_allows_keyword_named_field();
 void test_append_from_array_writes_records_from_2d_array();

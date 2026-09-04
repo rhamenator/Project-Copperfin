@@ -1518,33 +1518,40 @@ bool is_single_printable_ascii_character(const std::string& value) {
            static_cast<unsigned char>(value.front()) <= 0x7EU;
 }
 
-}  // namespace (extended)
+// Shared by export_database_as_json() and export_database_as_sql(): loads
+// and decodes the DBC catalog, derives the database display name, and
+// resolves which catalog TABLE objects have an existing .dbf on disk --
+// the exact same catalog/table-resolution path both exporters must use so
+// neither format silently drifts from what the other considers "the
+// database." Only the per-format serialization differs between callers.
+struct DatabaseCatalogSnapshot {
+    bool ok = false;
+    std::string error;
+    std::filesystem::path dbc_fs_path;
+    std::string db_name;
+    std::vector<DbcCatalogObject> catalog;
 
-DatabaseExportResult export_database_as_json(
-    const std::string& dbc_path,
-    std::size_t max_rows_per_table) {
+    struct ResolvedTable { std::string name; std::filesystem::path path; };
+    std::vector<ResolvedTable> resolved_tables;
+};
 
+DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_path) {
     namespace fs = std::filesystem;
-    const fs::path dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
+    DatabaseCatalogSnapshot snapshot;
+    snapshot.dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
 
     std::error_code dbc_status_error;
-    if (!fs::exists(dbc_fs_path, dbc_status_error)) {
-        return {
-            .ok = false,
-            .error = asset_inspector_text("Vfp.AssetInspector.Error.DbcPathMissing", {{"path", dbc_path}}),
-            .json = {}
-        };
+    if (!fs::exists(snapshot.dbc_fs_path, dbc_status_error)) {
+        snapshot.error = asset_inspector_text("Vfp.AssetInspector.Error.DbcPathMissing", {{"path", dbc_path}});
+        return snapshot;
     }
 
-    const SidecarPathResolution dct_resolution = resolve_vfp_memo_sidecar_path(dbc_fs_path);
+    const SidecarPathResolution dct_resolution = resolve_vfp_memo_sidecar_path(snapshot.dbc_fs_path);
     if (dct_resolution.ambiguous) {
-        return {
-            .ok = false,
-            .error = asset_inspector_text(
-                "Vfp.Sidecar.Error.AmbiguousPath",
-                {{"path", copperfin::platform::path_to_utf8_string(dct_resolution.requested_path)}}),
-            .json = {}
-        };
+        snapshot.error = asset_inspector_text(
+            "Vfp.Sidecar.Error.AmbiguousPath",
+            {{"path", copperfin::platform::path_to_utf8_string(dct_resolution.requested_path)}});
+        return snapshot;
     }
     const std::optional<fs::path> dct_path = dct_resolution.path;
     const bool has_dct = dct_path.has_value();
@@ -1552,31 +1559,23 @@ DatabaseExportResult export_database_as_json(
     // Load the raw DBC bytes for direct field-pointer extraction
     const std::vector<std::uint8_t> dbc_bytes = read_binary_file(dbc_path);
     if (dbc_bytes.empty()) {
-        return {
-            .ok = false,
-            .error = asset_inspector_text("Vfp.AssetInspector.Error.DbcReadFailed", {{"path", dbc_path}}),
-            .json = {}
-        };
+        snapshot.error = asset_inspector_text("Vfp.AssetInspector.Error.DbcReadFailed", {{"path", dbc_path}});
+        return snapshot;
     }
 
     const DbfParseResult header_result = parse_dbf_header(dbc_bytes);
     if (!header_result.ok) {
-        return {
-            .ok = false,
-            .error = asset_inspector_text(
-                "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
-                {{"error", header_result.error}}),
-            .json = {}
-        };
+        snapshot.error = asset_inspector_text(
+            "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
+            {{"error", header_result.error}});
+        return snapshot;
     }
 
     // Read all catalog rows with raw memo block numbers
     const std::vector<RawDbcRow> raw_rows = read_raw_dbc_rows(dbc_bytes, header_result.header);
 
     // Decode properties for each row and build DbcCatalogObject list
-    std::vector<DbcCatalogObject> catalog;
-    catalog.reserve(raw_rows.size());
-
+    snapshot.catalog.reserve(raw_rows.size());
     for (const auto& raw : raw_rows) {
         DbcCatalogObject obj;
         obj.record_index = raw.record_index;
@@ -1595,8 +1594,123 @@ DatabaseExportResult export_database_as_json(
             }
         }
 
-        catalog.push_back(std::move(obj));
+        snapshot.catalog.push_back(std::move(obj));
     }
+
+    snapshot.db_name = copperfin::platform::path_to_utf8_string(snapshot.dbc_fs_path.stem());
+    const auto database_object = std::find_if(
+        snapshot.catalog.begin(),
+        snapshot.catalog.end(),
+        [](const DbcCatalogObject& object)
+        {
+            return !object.deleted && object.object_type == "database" && !trim_copy(object.object_name).empty();
+        });
+    if (database_object != snapshot.catalog.end()) {
+        snapshot.db_name = database_object->object_name;
+    }
+
+    const fs::path dbc_dir = snapshot.dbc_fs_path.parent_path();
+    for (const auto& obj : snapshot.catalog) {
+        if (obj.deleted || obj.object_type != "table" || obj.object_name.empty()) {
+            continue;
+        }
+        const std::string& tname = obj.object_name;
+        const auto make_table_path = [&](const std::string& name) {
+            return dbc_dir / copperfin::platform::path_from_utf8_string(name);
+        };
+        const auto resolved_table_path = resolve_first_existing_path({
+            make_table_path(tname + ".dbf"),
+            make_table_path(lowercase_copy(tname) + ".dbf"),
+            make_table_path(uppercase_copy(tname) + ".dbf")
+        });
+        if (!resolved_table_path.has_value()) {
+            continue;
+        }
+        snapshot.resolved_tables.push_back({tname, *resolved_table_path});
+    }
+
+    snapshot.ok = true;
+    return snapshot;
+}
+
+// Portable/ANSI-ish identifier quoting for export_database_as_sql(): wraps
+// in double quotes, doubling any embedded quote character. Deliberately not
+// dialect-specific (no backtick/bracket variants) -- see that function's
+// own non-goal note about dialect targeting.
+std::string sql_quote_identifier(const std::string& name) {
+    std::string quoted = "\"";
+    for (const char character : name) {
+        if (character == '"') {
+            quoted += "\"\"";
+        } else {
+            quoted += character;
+        }
+    }
+    quoted += "\"";
+    return quoted;
+}
+
+// Standard SQL string-literal quoting: single quotes, doubling any embedded
+// single quote.
+std::string sql_quote_string_literal(const std::string& value) {
+    std::string quoted = "'";
+    for (const char character : value) {
+        if (character == '\'') {
+            quoted += "''";
+        } else {
+            quoted += character;
+        }
+    }
+    quoted += "'";
+    return quoted;
+}
+
+// Maps a DBF field descriptor to a portable/ANSI-ish SQL column type.
+// Memo/general/picture pointer fields (M/G/P) map to TEXT: their content is
+// not resolved by the shared catalog/table-reading path this exporter
+// shares with export_database_as_json(), which likewise only ever emits
+// whatever raw display_value that path already produces for those types --
+// this is an existing, not newly introduced, limitation.
+std::string sql_column_type(char field_type, std::uint8_t length, std::uint8_t decimal_count) {
+    const char normalized = static_cast<char>(std::toupper(static_cast<unsigned char>(field_type)));
+    switch (normalized) {
+        case 'N':
+        case 'F':
+        case 'Y':
+            return "DECIMAL(" + std::to_string(length > 0U ? length : 1U) + ", " +
+                std::to_string(decimal_count) + ")";
+        case 'I':
+            return "INTEGER";
+        case 'B':
+            return "DOUBLE PRECISION";
+        case 'L':
+            return "BOOLEAN";
+        case 'D':
+            return "DATE";
+        case 'T':
+            return "TIMESTAMP";
+        case 'C':
+        case 'V':
+            return "VARCHAR(" + std::to_string(length > 0U ? length : 255U) + ")";
+        default:
+            // M, G, P, and any other/unrecognized storage type.
+            return "TEXT";
+    }
+}
+
+}  // namespace (extended)
+
+DatabaseExportResult export_database_as_json(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    namespace fs = std::filesystem;
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        return {.ok = false, .error = snapshot.error, .json = {}};
+    }
+    const auto& catalog = snapshot.catalog;
+    const std::string& db_name = snapshot.db_name;
 
     // Build JSON ----------------------------------------------------------
     std::ostringstream json;
@@ -1608,17 +1722,6 @@ DatabaseExportResult export_database_as_json(
     json << "  \"schema_version\": 1,\n";
 
     // -- database metadata block
-    std::string db_name = copperfin::platform::path_to_utf8_string(dbc_fs_path.stem());
-    const auto database_object = std::find_if(
-        catalog.begin(),
-        catalog.end(),
-        [](const DbcCatalogObject& object)
-        {
-            return !object.deleted && object.object_type == "database" && !trim_copy(object.object_name).empty();
-        });
-    if (database_object != catalog.end()) {
-        db_name = database_object->object_name;
-    }
     json << "  \"database\": {\n";
     json << "    \"path\": \"" << json_escape_str(dbc_path) << "\",\n";
     json << "    \"name\": \"" << json_escape_str(db_name) << "\"\n";
@@ -1673,33 +1776,7 @@ DatabaseExportResult export_database_as_json(
     // -- tables block: row data for each TABLE catalog object
     json << "  \"tables\": {\n";
 
-    // Build a list of (display_name, resolved_path) for tables whose .dbf exists
-    const fs::path dbc_dir = dbc_fs_path.parent_path();
-    struct ResolvedTable { std::string name; fs::path path; };
-    std::vector<ResolvedTable> resolved_tables;
-
-    for (const auto& obj : catalog) {
-        if (obj.deleted || obj.object_type != "table" || obj.object_name.empty()) {
-            continue;
-        }
-        const std::string& tname = obj.object_name;
-        const auto make_table_path = [&](const std::string& name) {
-            return dbc_dir / copperfin::platform::path_from_utf8_string(name);
-        };
-        const auto resolved_table_path = resolve_first_existing_path({
-            make_table_path(tname + ".dbf"),
-            make_table_path(lowercase_copy(tname) + ".dbf"),
-            make_table_path(uppercase_copy(tname) + ".dbf")
-        });
-        if (!resolved_table_path.has_value()) {
-            continue;
-        }
-        ResolvedTable resolved_table;
-        resolved_table.name = tname;
-        resolved_table.path = *resolved_table_path;
-        resolved_tables.push_back(std::move(resolved_table));
-    }
-
+    const auto& resolved_tables = snapshot.resolved_tables;
     for (std::size_t ti = 0U; ti < resolved_tables.size(); ++ti) {
         const auto& rt = resolved_tables[ti];
         const bool last_table = (ti + 1U == resolved_tables.size());
@@ -1786,6 +1863,93 @@ DatabaseExportResult export_database_as_json(
     json << "}\n";
 
     return {.ok = true, .error = {}, .json = json.str()};
+}
+
+DatabaseSqlExportResult export_database_as_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        return {.ok = false, .error = snapshot.error, .sql = {}};
+    }
+
+    std::ostringstream sql;
+    sql.imbue(std::locale::classic());
+    sql << "-- Copperfin EXPORT DATABASE ... TYPE SQL\n";
+    sql << "-- database: " << snapshot.db_name << "\n";
+    sql << "-- source: " << dbc_path << "\n\n";
+
+    const std::size_t row_limit = (max_rows_per_table == 0U)
+        ? std::numeric_limits<std::size_t>::max()
+        : max_rows_per_table;
+
+    for (const auto& rt : snapshot.resolved_tables) {
+        const DbfTableParseResult tbl = parse_dbf_table_from_file(
+            copperfin::platform::path_to_utf8_string(rt.path), row_limit);
+        if (!tbl.ok) {
+            // Keep the same table (not skip silently) via a comment, so a
+            // reader of the script can see every catalog table was
+            // considered, matching how the JSON exporter emits an empty
+            // fields/records entry rather than omitting the key entirely.
+            sql << "-- skipped table " << rt.name << ": " << tbl.error << "\n\n";
+            continue;
+        }
+
+        const std::string quoted_table = sql_quote_identifier(rt.name);
+        sql << "CREATE TABLE " << quoted_table << " (\n";
+        for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
+            const auto& fld = tbl.table.fields[fi];
+            const bool last_field = (fi + 1U == tbl.table.fields.size());
+            sql << "    " << sql_quote_identifier(fld.name) << " "
+                << sql_column_type(fld.type, fld.length, fld.decimal_count)
+                << (last_field ? "\n" : ",\n");
+        }
+        sql << ");\n\n";
+
+        for (const auto& rec : tbl.table.records) {
+            if (rec.deleted) {
+                continue;
+            }
+            sql << "INSERT INTO " << quoted_table << " (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                sql << sql_quote_identifier(rec.values[vi].field_name)
+                    << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ") VALUES (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                const auto& rv = rec.values[vi];
+                bool is_numeric = false;
+                bool is_logical = false;
+                for (const auto& fd : tbl.table.fields) {
+                    if (fd.name == rv.field_name) {
+                        const char ft = static_cast<char>(
+                            std::toupper(static_cast<unsigned char>(fd.type)));
+                        is_numeric = (ft == 'N' || ft == 'F' || ft == 'I' || ft == 'B' || ft == 'Y');
+                        is_logical = (ft == 'L');
+                        break;
+                    }
+                }
+                if (rv.is_null) {
+                    sql << "NULL";
+                } else if (is_logical) {
+                    const std::string& lv = rv.display_value;
+                    sql << ((lv == "true" || lv == "T" || lv == "t" ||
+                              lv == "Y"    || lv == "y")
+                             ? "TRUE" : "FALSE");
+                } else if (is_numeric && !rv.display_value.empty()) {
+                    sql << rv.display_value;
+                } else {
+                    sql << sql_quote_string_literal(rv.display_value);
+                }
+                sql << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ");\n";
+        }
+        sql << "\n";
+    }
+
+    return {.ok = true, .error = {}, .sql = sql.str()};
 }
 
 DatabaseJsonImportPlanResult build_database_json_import_plan(const std::string_view document) {

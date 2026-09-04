@@ -180,28 +180,38 @@ For supported asset types, Copperfin should:
 
 - mixed-mode execution with .NET and SQL connectors
 
-## How To Use: DBC JSON Export
+## How To Use: DBC JSON/SQL Export
 
-Use the native asset-inspector API to export a database container (`.dbc`) into a single JSON snapshot.
+Use the native asset-inspector API to export a database container (`.dbc`) into a
+single JSON snapshot or a portable SQL script.
 
 Copperfin also provides an explicit modernization command for a PRG workflow:
 
 ```foxpro
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE JSON
+EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE SQL
 ```
 
 The command resolves relative source and destination paths from the current default
-directory, adds `.json` when the destination has no extension, and emits the
-`runtime.export_database_json` event on success. It deliberately accepts only the
-literal `TYPE JSON` form in this first slice; the source and destination are quoted
-path operands, not expressions. It reads the existing DBC/DBF data before opening
-the requested output path, creates a missing output directory, and reports a
-localized runtime failure if inspection or output writing fails.
+directory, adds `.json` or `.sql` (matching the requested `TYPE`) when the
+destination has no extension, and emits `runtime.export_database_json` or
+`runtime.export_database_sql` on success. It deliberately accepts only the literal
+`TYPE JSON` or `TYPE SQL` forms; the source and destination are quoted path
+operands, not expressions. It reads the existing DBC/DBF data before opening the
+requested output path, creates a missing output directory, and reports a localized
+runtime failure if inspection or output writing fails. Both `TYPE` variants share
+the same DBC catalog/table-resolution path (`export_database_as_json()` and
+`export_database_as_sql()` both call the same internal loader) so they cannot
+silently drift apart on which tables/rows are considered part of the database --
+only the output serialization differs. The SQL variant emits one portable/ANSI-ish
+dialect (`CREATE TABLE` per table, `INSERT` per row); it does not target a specific
+database engine's SQL dialect quirks.
 
 This is a Copperfin modernization extension authorized by the owner-approved
-scope in #140, not a claimed Visual FoxPro 9 command. It does not implement
-`IMPORT DATABASE`, SQL or Access adapters, provider connections, schema mutation,
-or round-trip reconstruction.
+scope in #140 (see #5471 for the `TYPE SQL` slice specifically), not a claimed
+Visual FoxPro 9 command. It does not implement `IMPORT DATABASE` of any kind, an
+Access adapter, provider connections, schema mutation, or round-trip
+reconstruction back into a DBC/DBF from either exported format.
 
 The snapshot is a versioned machine contract. Every document begins with the
 integer `schema_version: 1`; consumers must reject a missing or unsupported

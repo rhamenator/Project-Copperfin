@@ -135,6 +135,24 @@ struct DatabaseExportResult {
     const std::string& dbc_path,
     std::size_t max_rows_per_table = 0U);
 
+// Result of export_database_as_sql.
+struct DatabaseSqlExportResult {
+    bool ok = false;
+    std::string error;
+    std::string sql;  // the full SQL script when ok == true
+};
+
+// Produces a single portable/ANSI-ish SQL script (CREATE TABLE per table,
+// followed by INSERT statements for its rows) from the same DBC catalog and
+// table-resolution path export_database_as_json() uses. Tables are resolved
+// relative to the directory of dbc_path. max_rows_per_table caps how many
+// rows are exported per table (0 = no cap). No live database connection is
+// involved -- this is static file-to-file export, distinct from the
+// database-federation lane (see docs/21-database-federation-and-query-translation.md).
+[[nodiscard]] DatabaseSqlExportResult export_database_as_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table = 0U);
+
 // ---- Whole-database JSON import planning ----
 
 // A validated, in-memory description of a version-1 export snapshot. The

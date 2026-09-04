@@ -415,6 +415,14 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
     expect(export_result.json.empty(),
            "#3988: failed database exports should leave the JSON result empty");
 
+    const auto sql_export_result = copperfin::vfp::export_database_as_sql(temp_path.string(), 10U);
+    expect(!sql_export_result.ok, "#5471: export_database_as_sql should reject missing DBC paths");
+    expect(
+        sql_export_result.error == "DBC path does not exist: " + temp_path.string(),
+        "#5471: export_database_as_sql should share export_database_as_json's default localized missing-DBC error");
+    expect(sql_export_result.sql.empty(),
+           "#5471: failed SQL database exports should leave the SQL result empty");
+
     copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
     const auto english_inspect_result = copperfin::vfp::inspect_asset(temp_path.string());
     locale.set("es-419");
