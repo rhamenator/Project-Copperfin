@@ -14,6 +14,7 @@ namespace copperfin::platform {
 
 struct BoundedProcessResult;
 struct PrivateWindowsBoundedProcessRequest;
+struct PrivatePosixBoundedProcessRequest;
 
 // Governing requirements: candidate RQ-CF-AGENT-026 through RQ-CF-AGENT-028.
 
@@ -66,6 +67,12 @@ private:
     windows_launch_target() const noexcept;
     [[nodiscard]] const std::filesystem::path*
     windows_native_launch_target() const noexcept;
+    // POSIX only. Returns the retained, already-unlinked, read+execute-only
+    // (0500) descriptor, or -1 if unavailable/invalid. No path is ever
+    // exposed for this descriptor -- callers must exec it directly
+    // (fexecve on Linux; execve("/dev/fd/N", ...) on macOS, which lacks
+    // fexecve), never reopen it by name.
+    [[nodiscard]] int posix_descriptor() const noexcept;
 
     std::unique_ptr<Impl> impl_;
 
@@ -81,6 +88,9 @@ private:
     friend BoundedProcessResult run_bounded_windows_private_executable(
         const PrivateExecutableImage&,
         const PrivateWindowsBoundedProcessRequest&) noexcept;
+    friend BoundedProcessResult run_bounded_posix_private_executable(
+        const PrivateExecutableImage&,
+        const PrivatePosixBoundedProcessRequest&) noexcept;
 };
 
 struct PrivateExecutableImageMaterializationResult {

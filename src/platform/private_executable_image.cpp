@@ -668,6 +668,15 @@ public:
     std::filesystem::path native_path;
     OwnedDirectoryChain directory_chain;
 #else
+    // `descriptor` is a read-only reopen of the materialized file (see the
+    // materialization call site): Linux/macOS both refuse to execute a
+    // file that is open for writing anywhere, keyed on the inode's writer
+    // count, not on which fd a later exec call happens to use -- so the
+    // original O_RDWR descriptor bytes were written through is closed for
+    // real at materialization time, and this read-only descriptor is the
+    // only one that survives for the rest of the image's lifetime (kept
+    // open the same way the original always was, purely to keep this
+    // already-unlinked file's data alive).
     Impl(int descriptor_value, std::size_t size_value) noexcept
         : descriptor(descriptor_value), size(size_value) {}
     ~Impl() {
@@ -723,6 +732,14 @@ PrivateExecutableImage::windows_native_launch_target() const noexcept {
     return impl_ != nullptr && impl_->valid() ? &impl_->native_path : nullptr;
 #else
     return nullptr;
+#endif
+}
+
+int PrivateExecutableImage::posix_descriptor() const noexcept {
+#if defined(_WIN32)
+    return -1;
+#else
+    return impl_ != nullptr && impl_->valid() ? impl_->descriptor : -1;
 #endif
 }
 
@@ -951,9 +968,38 @@ materialize_private_executable_image_in_verified_parent(
                 : PrivateExecutableImageFailure::verification_failed;
             return result;
         }
+        // image_descriptor was opened O_RDWR to write the executable's bytes
+        // into it; Linux and macOS both refuse to execute a file that is
+        // still open for writing anywhere (ETXTBSY) -- and that check is
+        // keyed on the underlying inode's writer count, not on which fd a
+        // later exec call happens to use -- so a second fd opened on the
+        // same still-writable file does not help on its own; the O_RDWR
+        // original itself must actually close. Re-open the same already-
+        // unlinked, already-verified file read-only via /proc/self/fd
+        // (Linux) or /dev/fd (macOS, which lacks /proc/self/fd but
+        // supports the equivalent /dev/fd namespace) -- a kernel-
+        // guaranteed alias to this exact open file description, not a
+        // path-based lookup, so it carries none of the TOCTOU risk a real
+        // path reopen would -- then release and close the O_RDWR original,
+        // permanently sealing the image against further writes for the
+        // rest of its lifetime. The read-only reopen becomes the image's
+        // sole descriptor from here on, for both verification and exec.
+#if defined(__APPLE__)
+        const std::string reopen_path =
+            "/dev/fd/" + std::to_string(image_descriptor.get());
+#else
+        const std::string reopen_path =
+            "/proc/self/fd/" + std::to_string(image_descriptor.get());
+#endif
+        const int readonly_image_descriptor =
+            ::open(reopen_path.c_str(), O_RDONLY | O_CLOEXEC);
+        if (readonly_image_descriptor < 0) {
+            result.failure = PrivateExecutableImageFailure::verification_failed;
+            return result;
+        }
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            image_descriptor.get(), bytes.size());
-        (void)image_descriptor.release();
+            readonly_image_descriptor, bytes.size());
+        ::close(image_descriptor.release());
 #endif
         PrivateExecutableImage image(std::move(impl));
         if (!image.valid() || !image.matches_bytes(bytes)) {

@@ -10,8 +10,10 @@
 #include "sha256_native.h"
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <string_view>
 #include <system_error>
 #include <utility>
@@ -20,6 +22,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
+#include <climits>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -131,12 +134,15 @@ private:
     Impl(int workspace_root_value,
          int executable_value,
          int working_directory_value,
+         std::filesystem::path execution_working_directory_value,
          PhysicalPathIdentity executable_identity_value,
          std::string executable_sha256_value,
          std::vector<std::uint8_t> executable_snapshot_value) noexcept
         : workspace_root(workspace_root_value),
           executable(executable_value),
           working_directory(working_directory_value),
+          execution_working_directory_value(
+              std::move(execution_working_directory_value)),
           executable_identity(executable_identity_value),
           executable_sha256(std::move(executable_sha256_value)),
           executable_snapshot(std::move(executable_snapshot_value)) {}
@@ -149,6 +155,7 @@ private:
 
     [[nodiscard]] bool valid() const noexcept {
         return workspace_root >= 0 && executable >= 0 && working_directory >= 0 &&
+            execution_working_directory_value.is_absolute() &&
             executable_sha256.size() == 64U &&
             static_cast<std::uint64_t>(executable_snapshot.size()) ==
                 executable_identity.file_size;
@@ -161,6 +168,11 @@ private:
         return executable_snapshot;
     }
 
+    [[nodiscard]] const std::filesystem::path& execution_working_directory()
+        const noexcept {
+        return execution_working_directory_value;
+    }
+
 private:
     static void close(int value) noexcept {
         if (value >= 0) {
@@ -171,6 +183,7 @@ private:
     int workspace_root = -1;
     int executable = -1;
     int working_directory = -1;
+    std::filesystem::path execution_working_directory_value;
     PhysicalPathIdentity executable_identity{};
     std::string executable_sha256;
     std::vector<std::uint8_t> executable_snapshot;
@@ -726,6 +739,32 @@ void close_pin_handle(const int handle) noexcept {
     }
 }
 
+// Deliberately duplicates physical_path_containment.cpp's file-local
+// path_of_descriptor() rather than sharing it (that function lives in an
+// anonymous namespace with no header declaration, and this fix is scoped to
+// stay out of that file's carefully curated public surface). Same
+// Linux-vs-macOS behavior for the same reason: reads back the kernel's own
+// record of an already-opened, already-identity-verified descriptor's path,
+// rather than recomputing one independently.
+std::optional<std::filesystem::path> posix_path_of_descriptor(
+    const int descriptor) noexcept {
+#if defined(__APPLE__)
+    std::array<char, PATH_MAX> buffer{};
+    if (::fcntl(descriptor, F_GETPATH, buffer.data()) != 0) {
+        return std::nullopt;
+    }
+    return std::filesystem::path(buffer.data());
+#else
+    std::error_code error;
+    auto resolved = std::filesystem::read_symlink(
+        "/proc/self/fd/" + std::to_string(descriptor), error);
+    if (error) {
+        return std::nullopt;
+    }
+    return resolved;
+#endif
+}
+
 #endif
 
 class ScopedPinHandle {
@@ -993,11 +1032,7 @@ bool WorkspaceAgentProcessTargetPins::Impl::matches_target_identities(
 
 const std::filesystem::path*
 WorkspaceAgentProcessTargetPins::execution_working_directory() const noexcept {
-#if defined(_WIN32)
     return valid() ? &impl_->execution_working_directory() : nullptr;
-#else
-    return nullptr;
-#endif
 }
 
 WorkspaceAgentProcessTargetBoundary::WorkspaceAgentProcessTargetBoundary(
@@ -1352,10 +1387,19 @@ WorkspaceAgentProcessTargetBoundary::pin_process_targets(
             std::move(retained_executable_sha256),
             std::move(authentication.bytes)));
 #else
+    auto resolved_working_directory =
+        posix_path_of_descriptor(working_directory_handle.get());
+    if (!resolved_working_directory.has_value() ||
+        !resolved_working_directory->is_absolute()) {
+        result.diagnostic_code =
+            "workspace_agent.process_target_pin_identity_changed";
+        return result;
+    }
     auto impl = std::make_unique<WorkspaceAgentProcessTargetPins::Impl>(
         root_handle.get(),
         executable_handle.get(),
         working_directory_handle.get(),
+        std::move(*resolved_working_directory),
         executable_identity,
         authority->executable_sha256,
         std::move(authentication.bytes));

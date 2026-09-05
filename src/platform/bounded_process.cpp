@@ -1146,7 +1146,13 @@ void write_posix_input_pipe(
     (void)::close(descriptor);
 }
 
-BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
+BoundedProcessResult run_posix(
+    const BoundedProcessRequest& request,
+    const std::vector<std::string>* retained_arguments = nullptr,
+    const std::vector<std::string>* retained_environment = nullptr,
+    int exec_descriptor = -1,
+    void (*launch_committed)(void*) noexcept = nullptr,
+    void* launch_committed_context = nullptr) {
     BoundedProcessResult result;
     const auto started_at = Clock::now();
     int launch_pipe[2]{-1, -1};
@@ -1206,35 +1212,43 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         return result;
     }
 
-    auto serialized_arguments = serialize_process_arguments(
-        request.executable_path,
-        request.arguments,
-        ProcessArgumentTarget::posix_v1,
-        std::numeric_limits<std::size_t>::max());
-    if (!serialized_arguments.ok) {
-        result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.arguments_invalid";
-        return result;
+    std::vector<std::string> argument_storage;
+    if (retained_arguments != nullptr) {
+        argument_storage = *retained_arguments;
+    } else {
+        auto serialized_arguments = serialize_process_arguments(
+            request.executable_path,
+            request.arguments,
+            ProcessArgumentTarget::posix_v1,
+            std::numeric_limits<std::size_t>::max());
+        if (!serialized_arguments.ok) {
+            result.status = BoundedProcessStatus::launch_failed;
+            result.error_code = "polyglot.process.arguments_invalid";
+            return result;
+        }
+        argument_storage = std::move(serialized_arguments.posix_arguments);
     }
-    std::vector<std::string> argument_storage =
-        std::move(serialized_arguments.posix_arguments);
     std::vector<char*> argv;
     argv.reserve(argument_storage.size() + 1U);
     for (auto& argument : argument_storage) {
         argv.push_back(argument.data());
     }
     argv.push_back(nullptr);
-    const auto serialized_environment = serialize_process_environment(
-        request.environment,
-        ProcessEnvironmentTarget::posix_v1,
-        std::numeric_limits<std::size_t>::max());
-    if (!serialized_environment.ok) {
-        result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.environment_invalid";
-        return result;
+    std::vector<std::string> environment_storage;
+    if (retained_environment != nullptr) {
+        environment_storage = *retained_environment;
+    } else {
+        const auto serialized_environment = serialize_process_environment(
+            request.environment,
+            ProcessEnvironmentTarget::posix_v1,
+            std::numeric_limits<std::size_t>::max());
+        if (!serialized_environment.ok) {
+            result.status = BoundedProcessStatus::launch_failed;
+            result.error_code = "polyglot.process.environment_invalid";
+            return result;
+        }
+        environment_storage = serialized_environment.posix_entries;
     }
-    std::vector<std::string> environment_storage =
-        serialized_environment.posix_entries;
     std::vector<char*> environment;
     environment.reserve(environment_storage.size() + 1U);
     for (auto& variable : environment_storage) {
@@ -1260,7 +1274,20 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         (void)::close(stdin_pipe[0]);
         (void)::close(stdout_pipe[1]);
         (void)::close(stderr_pipe[1]);
-        ::execve(request.executable_path.c_str(), argv.data(), environment.data());
+        if (exec_descriptor >= 0) {
+#if defined(__APPLE__)
+            // macOS has no fexecve(); /dev/fd/N is the standard workaround
+            // (BSD/macOS support the /dev/fd namespace). The descriptor was
+            // inherited across fork() (fork does not honor O_CLOEXEC; only
+            // a successful exec does), so it is still valid here.
+            const std::string fd_path = "/dev/fd/" + std::to_string(exec_descriptor);
+            ::execve(fd_path.c_str(), argv.data(), environment.data());
+#else
+            ::fexecve(exec_descriptor, argv.data(), environment.data());
+#endif
+        } else {
+            ::execve(request.executable_path.c_str(), argv.data(), environment.data());
+        }
         const int child_error = errno;
         (void)write_child_error(launch_pipe[1], child_error);
         _exit(127);
@@ -1424,6 +1451,9 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         return result;
     }
     result.started = true;
+    if (launch_committed != nullptr) {
+        launch_committed(launch_committed_context);
+    }
 
     int status = 0;
     for (;;) {
@@ -1550,7 +1580,14 @@ CurrentProcessElevation current_process_elevation() noexcept {
         ? CurrentProcessElevation::not_elevated
         : CurrentProcessElevation::elevated;
 #else
-    return CurrentProcessElevation::unsupported;
+    // The effective UID is the POSIX analogue of the Windows elevation
+    // check above: root (euid 0) can bypass the file/ownership boundaries
+    // the private-executable-image and containment machinery rely on, so
+    // it is treated as "elevated" and denied by the same caller-side gate,
+    // exactly like a Windows elevated token.
+    return ::geteuid() == 0
+        ? CurrentProcessElevation::elevated
+        : CurrentProcessElevation::not_elevated;
 #endif
 }
 
@@ -1596,6 +1633,90 @@ BoundedProcessResult run_bounded_windows_private_executable(
             transport, &command_line, &environment,
             request.launch_committed, request.launch_committed_context,
             native_path, false);
+#else
+        static_cast<void>(image);
+        static_cast<void>(request);
+        BoundedProcessResult result;
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "workspace_agent.process_execution_platform_unavailable";
+        return result;
+#endif
+    } catch (...) {
+        BoundedProcessResult result;
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "workspace_agent.process_execution_failed";
+        return result;
+    }
+}
+
+BoundedProcessResult run_bounded_posix_private_executable(
+    const PrivateExecutableImage& image,
+    const PrivatePosixBoundedProcessRequest& request) noexcept {
+    try {
+#if !defined(_WIN32)
+        const int descriptor = image.posix_descriptor();
+        if (descriptor < 0 || !image.valid() ||
+            request.arguments.empty() ||
+            request.working_directory.empty() ||
+            !request.working_directory.is_absolute() ||
+            !request.transport.executable_path.empty() ||
+            !request.transport.arguments.empty() ||
+            !request.transport.environment.empty() ||
+            !valid_transport_controls(request.transport)) {
+            return invalid_request();
+        }
+        for (const auto& argument : request.arguments) {
+            if (contains_nul(argument)) {
+                return invalid_request();
+            }
+        }
+        for (const auto& variable : request.environment) {
+            if (contains_nul(variable) ||
+                variable.find('=') == std::string::npos) {
+                return invalid_request();
+            }
+        }
+        BoundedProcessRequest transport = request.transport;
+        transport.working_directory = path_to_utf8_string(request.working_directory);
+        if (transport.working_directory.empty()) {
+            return invalid_request();
+        }
+        if (cancellation_requested(transport)) {
+            BoundedProcessResult result;
+            result.status = BoundedProcessStatus::cancelled;
+            result.error_code = "polyglot.process.cancelled";
+            return result;
+        }
+        // fexecve()/execve("/dev/fd/N") on the raw materialized-image
+        // descriptor fails with ETXTBSY: it was opened O_RDWR to write the
+        // executable's bytes into it during materialization, and both
+        // Linux and macOS refuse to execute a file that is still open for
+        // writing anywhere. Re-open the same already-unlinked, already-
+        // identity-verified file read-only via /proc/self/fd for the exec
+        // itself; the O_RDWR original stays open and owned by `image` for
+        // its own lifetime, unaffected.
+        const std::string readonly_path =
+            "/proc/self/fd/" + std::to_string(descriptor);
+        const int readonly_descriptor =
+            ::open(readonly_path.c_str(), O_RDONLY | O_CLOEXEC);
+        if (readonly_descriptor < 0) {
+            BoundedProcessResult result;
+            result.status = BoundedProcessStatus::launch_failed;
+            result.error_code = "workspace_agent.process_execution_failed";
+            return result;
+        }
+        struct ScopedFileDescriptor {
+            int fd;
+            ~ScopedFileDescriptor() {
+                if (fd >= 0) {
+                    ::close(fd);
+                }
+            }
+        } readonly_guard{readonly_descriptor};
+        return run_posix(
+            transport, &request.arguments, &request.environment,
+            readonly_descriptor, request.launch_committed,
+            request.launch_committed_context);
 #else
         static_cast<void>(image);
         static_cast<void>(request);

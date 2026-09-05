@@ -1723,11 +1723,16 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             denial = "workspace_agent.process_execution_requires_unrestricted_local";
         } else if (!controls_valid) {
             denial = "workspace_agent.process_execution_invalid_controls";
-        } else if (environment_plan.environment_platform !=
-                       WorkspaceAgentProcessEnvironmentPlatform::windows_v1 ||
-                   plan.argument_parser_contract !=
-                       WorkspaceAgentProcessArgumentParserContract::
-                           windows_c_runtime_argv_v1) {
+        } else if (!((environment_plan.environment_platform ==
+                          WorkspaceAgentProcessEnvironmentPlatform::windows_v1 &&
+                      plan.argument_parser_contract ==
+                          WorkspaceAgentProcessArgumentParserContract::
+                              windows_c_runtime_argv_v1) ||
+                     (environment_plan.environment_platform ==
+                          WorkspaceAgentProcessEnvironmentPlatform::posix_v1 &&
+                      plan.argument_parser_contract ==
+                          WorkspaceAgentProcessArgumentParserContract::
+                              posix_argv_v1))) {
             denial = "workspace_agent.process_execution_platform_unavailable";
         } else {
             switch (copperfin::platform::current_process_elevation()) {
@@ -1758,8 +1763,19 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             }
         }
 
+        const bool windows_target = environment_plan.environment_platform ==
+            WorkspaceAgentProcessEnvironmentPlatform::windows_v1;
+        constexpr void (*release_launch_authority_on_commit)(void*) noexcept =
+            [](void* context) noexcept {
+                auto* retained = static_cast<WorkspaceAgentMaterializedProcessLaunch*>(
+                    context);
+                if (retained != nullptr && retained->impl_ != nullptr) {
+                    retained->impl_->release_launch_authority();
+                }
+            };
         copperfin::platform::PrivateWindowsBoundedProcessRequest native_request;
-        if (denial.empty()) {
+        copperfin::platform::PrivatePosixBoundedProcessRequest posix_request;
+        if (denial.empty() && windows_target) {
             native_request.command_line = plan.windows_command_line;
             native_request.environment_block =
                 plan.serialized_environment.windows_environment_block;
@@ -1779,14 +1795,30 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
                         return (*callback)();
                     };
             }
-            native_request.launch_committed = [](void* context) noexcept {
-                auto* retained = static_cast<WorkspaceAgentMaterializedProcessLaunch*>(
-                    context);
-                if (retained != nullptr && retained->impl_ != nullptr) {
-                    retained->impl_->release_launch_authority();
-                }
-            };
+            native_request.launch_committed = release_launch_authority_on_commit;
             native_request.launch_committed_context = &launch;
+        } else if (denial.empty()) {
+            posix_request.arguments = plan.posix_arguments;
+            posix_request.environment =
+                plan.serialized_environment.posix_environment;
+            posix_request.working_directory = *stable_working_directory;
+            posix_request.transport.standard_input = controls.standard_input;
+            posix_request.transport.timeout_ms = controls.timeout_ms;
+            posix_request.transport.poll_interval_ms = controls.poll_interval_ms;
+            posix_request.transport.stdin_limit_bytes = controls.stdin_limit_bytes;
+            posix_request.transport.stdout_limit_bytes = controls.stdout_limit_bytes;
+            posix_request.transport.stderr_limit_bytes = controls.stderr_limit_bytes;
+            if (controls.cancellation_requested) {
+                posix_request.transport.cancellation_requested =
+                    [controller = this,
+                     callback = &controls.cancellation_requested]() {
+                        const ControllerCallbackScope cancellation_scope(
+                            controller, ControllerCallbackKind::cancellation);
+                        return (*callback)();
+                    };
+            }
+            posix_request.launch_committed = release_launch_authority_on_commit;
+            posix_request.launch_committed_context = &launch;
         }
 
         const WorkspaceAgentSessionAuditEvent intent{
@@ -1833,9 +1865,11 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
 
         if (denial.empty()) {
             result.attempted = true;
-            result.process =
-                copperfin::platform::run_bounded_windows_private_executable(
-                    launch.impl_->image.image_, native_request);
+            result.process = windows_target
+                ? copperfin::platform::run_bounded_windows_private_executable(
+                      launch.impl_->image.image_, native_request)
+                : copperfin::platform::run_bounded_posix_private_executable(
+                      launch.impl_->image.image_, posix_request);
             // Build the actual event separately so allocation failure leaves the
             // prebuilt, content-free launch-failure event intact. Once intent is
             // durable, an outcome submission must not be skipped by bookkeeping.

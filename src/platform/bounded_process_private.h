@@ -9,12 +9,25 @@
 
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace copperfin::platform {
 
 struct PrivateWindowsBoundedProcessRequest {
     std::u16string command_line;
     std::u16string environment_block;
+    std::filesystem::path working_directory;
+    BoundedProcessRequest transport;
+    void (*launch_committed)(void*) noexcept = nullptr;
+    void* launch_committed_context = nullptr;
+};
+
+struct PrivatePosixBoundedProcessRequest {
+    // Already-serialized argv (including argv[0]) and envp ("NAME=value")
+    // entries, exactly as produced by the trusted plan/parser boundary --
+    // this seam does not re-derive or re-parse them.
+    std::vector<std::string> arguments;
+    std::vector<std::string> environment;
     std::filesystem::path working_directory;
     BoundedProcessRequest transport;
     void (*launch_committed)(void*) noexcept = nullptr;
@@ -29,10 +42,21 @@ enum class CurrentProcessElevation {
 };
 
 // Trusted implementation seam. The security controller supplies one opaque
-// exact image and its internally retained plan. Non-Windows hosts fail closed.
+// exact image and its internally retained plan. Non-Windows callers of this
+// specific overload fail closed; see run_bounded_posix_private_executable for
+// the Linux/macOS counterpart.
 [[nodiscard]] BoundedProcessResult run_bounded_windows_private_executable(
     const PrivateExecutableImage& image,
     const PrivateWindowsBoundedProcessRequest& request) noexcept;
+
+// POSIX counterpart: execs the image's retained descriptor directly
+// (fexecve on Linux; execve("/dev/fd/N", ...) on macOS, which lacks
+// fexecve) instead of a path, reusing the same fork/pipe/thread/waitpid
+// supervision as the plain POSIX run_bounded_process path. Windows callers
+// of this overload fail closed.
+[[nodiscard]] BoundedProcessResult run_bounded_posix_private_executable(
+    const PrivateExecutableImage& image,
+    const PrivatePosixBoundedProcessRequest& request) noexcept;
 
 [[nodiscard]] CurrentProcessElevation current_process_elevation() noexcept;
 
