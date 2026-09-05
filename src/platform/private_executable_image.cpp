@@ -19,6 +19,7 @@
 #include <windows.h>
 #else
 #include <cerrno>
+#include <cstdio>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -614,20 +615,59 @@ bool codesign_in_place(const std::string& path) noexcept {
     std::vector<char*> argv{
         executable.data(), sign_flag.data(), identity.data(),
         force_flag.data(), target.data(), nullptr};
+    // TEMPORARY diagnostic instrumentation (RQ-CF-AGENT-031 CI round):
+    // captures whether execve() itself failed (e.g. codesign missing at
+    // this fixed path) versus codesign running and exiting nonzero, since
+    // a bare bool return conflates the two.
+    int exec_pipe[2]{-1, -1};
+    if (::pipe(exec_pipe) != 0) {
+        return false;
+    }
+    (void)::fcntl(exec_pipe[1], F_SETFD, FD_CLOEXEC);
     const pid_t child = ::fork();
     if (child < 0) {
+        (void)::close(exec_pipe[0]);
+        (void)::close(exec_pipe[1]);
         return false;
     }
     if (child == 0) {
+        ::close(exec_pipe[0]);
         ::execve(argv[0], argv.data(), environ);
+        const int exec_errno = errno;
+        (void)::write(exec_pipe[1], &exec_errno, sizeof(exec_errno));
         _exit(127);
     }
+    ::close(exec_pipe[1]);
+    int exec_errno = 0;
+    const ssize_t exec_errno_bytes =
+        ::read(exec_pipe[0], &exec_errno, sizeof(exec_errno));
+    ::close(exec_pipe[0]);
     int status = 0;
     pid_t waited;
     do {
         waited = ::waitpid(child, &status, 0);
     } while (waited < 0 && errno == EINTR);
-    return waited == child && WIFEXITED(status) && WEXITSTATUS(status) == 0;
+    const bool exec_failed = exec_errno_bytes == sizeof(exec_errno);
+    const bool succeeded =
+        !exec_failed && waited == child && WIFEXITED(status) &&
+        WEXITSTATUS(status) == 0;
+    char diagnostic[256];
+    const int diagnostic_length = ::snprintf(
+        diagnostic, sizeof(diagnostic),
+        "MACOS_MATERIALIZE_DIAG stage=codesign path=%s exec_failed=%d "
+        "exec_errno=%d waited=%d exited=%d exit_code=%d signaled=%d "
+        "term_sig=%d succeeded=%d\n",
+        path.c_str(), exec_failed ? 1 : 0, exec_failed ? exec_errno : 0,
+        waited == child ? 1 : 0, WIFEXITED(status) ? 1 : 0,
+        WIFEXITED(status) ? WEXITSTATUS(status) : -1,
+        WIFSIGNALED(status) ? 1 : 0,
+        WIFSIGNALED(status) ? WTERMSIG(status) : -1, succeeded ? 1 : 0);
+    if (diagnostic_length > 0) {
+        (void)::write(
+            STDERR_FILENO, diagnostic,
+            static_cast<std::size_t>(diagnostic_length));
+    }
+    return succeeded;
 }
 #endif
 
@@ -1100,15 +1140,50 @@ materialize_private_executable_image_in_verified_parent(
         const bool parent_stable = descriptor_identity_matches(
             parent_descriptor.get(), expected_parent_storage_id,
             expected_parent_file_id, expected_parent_creation_ticks);
-        if (!parent_stable ||
+        const bool chmod_rw_ok = parent_stable &&
             // Owner rw, no exec yet: codesign(1) below reopens this file
             // by path for writing, a fresh open() subject to current mode
             // bits, unlike our own writes here through the already-open
             // O_RDWR descriptor.
-            ::fchmod(image_descriptor.get(), 0600) != 0 ||
-            !write_all(image_descriptor.get(), bytes) ||
-            !exact_file_shape(image_descriptor.get(), bytes.size()) ||
-            !native_matches_bytes(image_descriptor.get(), bytes)) {
+            ::fchmod(image_descriptor.get(), 0600) == 0;
+        const int chmod_rw_errno = errno;
+        const bool wrote_ok = chmod_rw_ok && write_all(image_descriptor.get(), bytes);
+        const bool pre_sign_shape_ok =
+            wrote_ok && exact_file_shape(image_descriptor.get(), bytes.size());
+        const bool pre_sign_bytes_ok =
+            pre_sign_shape_ok && native_matches_bytes(image_descriptor.get(), bytes);
+        {
+            struct stat pre_sign_status {};
+            const int pre_sign_fstat_rc =
+                ::fstat(image_descriptor.get(), &pre_sign_status);
+            char diagnostic[384];
+            const int diagnostic_length = ::snprintf(
+                diagnostic, sizeof(diagnostic),
+                "MACOS_MATERIALIZE_DIAG stage=pre-sign parent_stable=%d "
+                "chmod_rw_ok=%d chmod_rw_errno=%d wrote_ok=%d "
+                "shape_ok=%d bytes_ok=%d fstat_rc=%d st_mode=%o "
+                "st_nlink=%d st_size=%lld expected_size=%zu\n",
+                parent_stable ? 1 : 0, chmod_rw_ok ? 1 : 0, chmod_rw_errno,
+                wrote_ok ? 1 : 0, pre_sign_shape_ok ? 1 : 0,
+                pre_sign_bytes_ok ? 1 : 0, pre_sign_fstat_rc,
+                pre_sign_fstat_rc == 0
+                    ? static_cast<unsigned>(pre_sign_status.st_mode)
+                    : 0U,
+                pre_sign_fstat_rc == 0
+                    ? static_cast<int>(pre_sign_status.st_nlink)
+                    : -1,
+                pre_sign_fstat_rc == 0
+                    ? static_cast<long long>(pre_sign_status.st_size)
+                    : -1LL,
+                bytes.size());
+            if (diagnostic_length > 0) {
+                (void)::write(
+                    STDERR_FILENO, diagnostic,
+                    static_cast<std::size_t>(diagnostic_length));
+            }
+        }
+        if (!parent_stable || !chmod_rw_ok || !wrote_ok || !pre_sign_shape_ok ||
+            !pre_sign_bytes_ok) {
             result.failure = !parent_stable
                 ? PrivateExecutableImageFailure::parent_identity_changed
                 : PrivateExecutableImageFailure::verification_failed;
@@ -1120,8 +1195,24 @@ materialize_private_executable_image_in_verified_parent(
         // file's content and size (see Impl's doc comment), so this must
         // happen before signing, against the raw, pre-signature write.
         const std::filesystem::path real_path = parent / leaf_name;
-        if (!codesign_in_place(real_path.native()) ||
-            ::fchmod(image_descriptor.get(), 0500) != 0) {
+        const bool signed_ok = codesign_in_place(real_path.native());
+        const bool chmod_ro_ok = signed_ok &&
+            ::fchmod(image_descriptor.get(), 0500) == 0;
+        const int chmod_ro_errno = errno;
+        {
+            char diagnostic[256];
+            const int diagnostic_length = ::snprintf(
+                diagnostic, sizeof(diagnostic),
+                "MACOS_MATERIALIZE_DIAG stage=sign signed_ok=%d "
+                "chmod_ro_ok=%d chmod_ro_errno=%d\n",
+                signed_ok ? 1 : 0, chmod_ro_ok ? 1 : 0, chmod_ro_errno);
+            if (diagnostic_length > 0) {
+                (void)::write(
+                    STDERR_FILENO, diagnostic,
+                    static_cast<std::size_t>(diagnostic_length));
+            }
+        }
+        if (!signed_ok || !chmod_ro_ok) {
             parent_descriptor.reset();
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
@@ -1140,12 +1231,53 @@ materialize_private_executable_image_in_verified_parent(
         // for this platform specifically).
         const int readonly_image_descriptor =
             ::open(real_path.c_str(), O_RDONLY | O_CLOEXEC);
+        const int reopen_errno = errno;
         if (readonly_image_descriptor < 0) {
+            char diagnostic[192];
+            const int diagnostic_length = ::snprintf(
+                diagnostic, sizeof(diagnostic),
+                "MACOS_MATERIALIZE_DIAG stage=reopen rc=%d errno=%d\n",
+                readonly_image_descriptor, reopen_errno);
+            if (diagnostic_length > 0) {
+                (void)::write(
+                    STDERR_FILENO, diagnostic,
+                    static_cast<std::size_t>(diagnostic_length));
+            }
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
         struct stat signed_status {};
-        if (::fstat(readonly_image_descriptor, &signed_status) != 0) {
+        const int post_sign_fstat_rc =
+            ::fstat(readonly_image_descriptor, &signed_status);
+        const int post_sign_fstat_errno = errno;
+        {
+            char diagnostic[320];
+            const int diagnostic_length = ::snprintf(
+                diagnostic, sizeof(diagnostic),
+                "MACOS_MATERIALIZE_DIAG stage=post-sign fstat_rc=%d "
+                "fstat_errno=%d st_mode=%o st_uid=%d euid=%d st_nlink=%d "
+                "st_size=%lld\n",
+                post_sign_fstat_rc, post_sign_fstat_rc == 0 ? 0 : post_sign_fstat_errno,
+                post_sign_fstat_rc == 0
+                    ? static_cast<unsigned>(signed_status.st_mode)
+                    : 0U,
+                post_sign_fstat_rc == 0
+                    ? static_cast<int>(signed_status.st_uid)
+                    : -1,
+                static_cast<int>(::geteuid()),
+                post_sign_fstat_rc == 0
+                    ? static_cast<int>(signed_status.st_nlink)
+                    : -1,
+                post_sign_fstat_rc == 0
+                    ? static_cast<long long>(signed_status.st_size)
+                    : -1LL);
+            if (diagnostic_length > 0) {
+                (void)::write(
+                    STDERR_FILENO, diagnostic,
+                    static_cast<std::size_t>(diagnostic_length));
+            }
+        }
+        if (post_sign_fstat_rc != 0) {
             ::close(readonly_image_descriptor);
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
