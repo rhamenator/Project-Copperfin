@@ -1207,8 +1207,16 @@ materialize_private_executable_image_in_verified_parent(
         const bool chmod_rw_ok = ::fchmod(image_descriptor.get(), 0600) == 0;
         const int chmod_rw_errno = errno;
         const bool signed_ok = chmod_rw_ok && codesign_in_place(real_path.native());
-        const bool chmod_ro_ok =
-            chmod_rw_ok && ::fchmod(image_descriptor.get(), 0500) == 0;
+        // codesign(1) does not necessarily rewrite the file in place: CI
+        // evidence shows it can write a replacement and rename it over
+        // the original (post-sign fstat showing a mode inherited from the
+        // pre-sign 0600 relax above, on a real Mach-O binary, even though
+        // this exact fchmod reported success) -- so image_descriptor may
+        // now refer to a detached, no-longer-linked inode rather than
+        // whatever codesign actually left at real_path. Restore via the
+        // path, not the stale descriptor, to guarantee this reaches
+        // whichever file is actually linked there now.
+        const bool chmod_ro_ok = chmod_rw_ok && ::chmod(real_path.c_str(), 0500) == 0;
         const int chmod_ro_errno = errno;
         {
             char diagnostic[256];

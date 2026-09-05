@@ -606,6 +606,25 @@ void test_exact_private_executable_image_materialization() {
     launch_materialized.image.reset();
     expect(!std::filesystem::exists(private_root / launch_leaf),
            "RQ-CF-AGENT-027: transitioned launch-image destruction must remove the exact object");
+#elif defined(__APPLE__)
+    {
+        // RQ-CF-AGENT-031 (supersedes RQ-CF-AGENT-026's POSIX unlink
+        // clause for macOS only -- see PrivateExecutableImage's header
+        // for the full reasoning): the image stays linked and
+        // read+execute-only for its whole lifetime instead, defended by
+        // a kernel-enforced code signature rather than filesystem-
+        // namespace invisibility.
+        std::error_code status_error;
+        const auto status =
+            std::filesystem::status(private_root / leaf, status_error);
+        expect(!status_error &&
+                   status.type() == std::filesystem::file_type::regular &&
+                   status.permissions() ==
+                       (std::filesystem::perms::owner_read |
+                        std::filesystem::perms::owner_exec),
+               "RQ-CF-AGENT-031: macOS must retain one code-signed, "
+               "read+execute-only image while authority is live");
+    }
 #else
     expect(!std::filesystem::exists(private_root / leaf),
            "RQ-CF-AGENT-026: a POSIX image must leave no mutable pathname after creation");
