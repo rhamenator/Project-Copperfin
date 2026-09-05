@@ -668,40 +668,55 @@ public:
     std::filesystem::path native_path;
     OwnedDirectoryChain directory_chain;
 #else
-    // `descriptor` is a read-only reopen of the materialized file (see the
-    // materialization call site): Linux/macOS both refuse to execute a
-    // file that is open for writing anywhere, keyed on the inode's writer
-    // count, not on which fd a later exec call happens to use -- so the
-    // original O_RDWR descriptor bytes were written through is closed for
-    // real at materialization time, and this read-only descriptor is the
-    // only one that survives for the rest of the image's lifetime (kept
-    // open the same way the original always was, purely to keep this
-    // file's data alive). On Linux the file is also already unlinked and
-    // execution_path stays empty. On macOS the file is deliberately left
-    // linked (fdescfs's same-process-opener restriction on /dev/fd rules
-    // out fork-then-exec-by-descriptor there -- see posix_execution_path()
-    // in the header), and execution_path names it.
+    // `descriptor` is a read-only reopen of the materialized, already-
+    // unlinked file (see the materialization call site): Linux/macOS both
+    // refuse to execute a file that is open for writing anywhere, keyed on
+    // the inode's writer count, not on which fd a later exec call happens
+    // to use -- so the original O_RDWR descriptor the bytes were written
+    // through is closed for real at materialization time, and this
+    // read-only descriptor is the only one that survives for the rest of
+    // the image's lifetime, purely to keep this already-unlinked file's
+    // data alive -- on both platforms, unlinked identically and
+    // immediately at materialization time, satisfying the same
+    // materialized-image-unlinked invariant either way (see
+    // test_workspace_agent_isolated_environment.cpp's "RQ-CF-AGENT-026:
+    // POSIX must unlink the image before exposing materialized
+    // authority").
+    //
+    // macOS additionally retains parent_directory and the expected_parent_*
+    // identity fields (unused on Linux) so that posix_prepare_launch_link()
+    // can, immediately before each launch attempt, re-verify the parent
+    // directory's identity and create one fresh, launch-scoped hardlink
+    // from this already-unlinked, already-verified image straight back
+    // into it. Exec then goes through that real path
+    // (posix_exec_in_child()) rather than through /dev/fd, because macOS's
+    // fdescfs will not let a forked child look up an inherited
+    // descriptor's /dev/fd path at all (confirmed empirically: fstat() on
+    // an inherited descriptor succeeds and reports the correct file, while
+    // access()/execve() via its /dev/fd path both fail identically with
+    // EACCES) -- but a real, linked path has no such restriction.
+    // posix_discard_launch_link() removes it again once that one launch
+    // attempt resolves, active_launch_link tracking whether one is
+    // currently live.
     Impl(
         int descriptor_value, std::size_t size_value,
-        std::filesystem::path execution_path_value = {}) noexcept
+        std::filesystem::path parent_directory_value = {},
+        std::uint64_t expected_parent_storage_id_value = 0U,
+        std::uint64_t expected_parent_file_id_value = 0U,
+        std::uint64_t expected_parent_creation_ticks_value = 0U) noexcept
         : descriptor(descriptor_value),
-          execution_path(std::move(execution_path_value)),
+          parent_directory(std::move(parent_directory_value)),
+          expected_parent_storage_id(expected_parent_storage_id_value),
+          expected_parent_file_id(expected_parent_file_id_value),
+          expected_parent_creation_ticks(expected_parent_creation_ticks_value),
           size(size_value) {}
     ~Impl() {
-        // On macOS, execution_path is the last reference to the linked
-        // file (see posix_exec_in_child()); this object's destruction is
-        // the natural, single point to unlink it. Safe with respect to
-        // any in-flight exec of it: PrivateExecutableImage is passed to
-        // run_bounded_posix_private_executable() by const reference and
-        // outlives that (synchronous) call by ordinary C++ lifetime rules,
-        // and that call does not return until run_posix() does, which
-        // itself does not return until any child it forked has either
-        // fully resolved its own exec attempt or been fully reaped -- so
-        // this destructor can never run while an exec of this path is
-        // still in flight. On Linux execution_path is always empty and
-        // this is a no-op.
-        if (!execution_path.empty()) {
-            (void)::unlink(execution_path.c_str());
+        // Defense in depth only -- posix_discard_launch_link() is always
+        // called by run_bounded_posix_private_executable() once its one
+        // launch attempt resolves, so active_launch_link should already be
+        // empty by the time this destructor runs.
+        if (!active_launch_link.empty()) {
+            (void)::unlink(active_launch_link.c_str());
         }
         if (descriptor >= 0) {
             (void)::close(descriptor);
@@ -716,7 +731,11 @@ public:
             native_matches_bytes(descriptor, expected);
     }
     int descriptor = -1;
-    std::filesystem::path execution_path;
+    std::filesystem::path parent_directory;
+    std::uint64_t expected_parent_storage_id = 0U;
+    std::uint64_t expected_parent_file_id = 0U;
+    std::uint64_t expected_parent_creation_ticks = 0U;
+    mutable std::filesystem::path active_launch_link;
 #endif
     std::size_t size = 0U;
 };
@@ -767,6 +786,78 @@ int PrivateExecutableImage::posix_descriptor() const noexcept {
 #endif
 }
 
+bool PrivateExecutableImage::posix_prepare_launch_link() const noexcept {
+#if defined(_WIN32)
+    return true;
+#else
+    if (impl_ == nullptr || !impl_->valid()) {
+        errno = EBADF;
+        return false;
+    }
+#if defined(__APPLE__)
+    if (!impl_->active_launch_link.empty()) {
+        return true;  // idempotent: a link is already prepared and live.
+    }
+    if (impl_->parent_directory.empty()) {
+        errno = EBADF;
+        return false;
+    }
+    const int parent_descriptor = ::open(
+        impl_->parent_directory.c_str(),
+        O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (parent_descriptor < 0) {
+        return false;
+    }
+    if (!descriptor_identity_matches(
+            parent_descriptor, impl_->expected_parent_storage_id,
+            impl_->expected_parent_file_id,
+            impl_->expected_parent_creation_ticks)) {
+        (void)::close(parent_descriptor);
+        errno = EACCES;
+        return false;
+    }
+    // A fresh name per (process, descriptor) pair: unique enough that a
+    // stale leftover from a prior crash cannot collide with a live launch,
+    // without needing an atomic counter.
+    const std::string leaf_name = ".copperfin-launch-" +
+        std::to_string(::getpid()) + "-" +
+        std::to_string(impl_->descriptor);
+    // Sources the new directory entry directly from the sealed,
+    // already-verified descriptor via /dev/fd -- done here, in the same
+    // process that opened that descriptor directly (not yet forked), which
+    // is exactly what fdescfs permits (see the header and Impl's doc
+    // comment for why a forked child could not do this same lookup
+    // itself). AT_SYMLINK_FOLLOW: /dev/fd/<n> must resolve to the file the
+    // descriptor references, not be linked as a symlink-like object in its
+    // own right.
+    const std::string source_path =
+        "/dev/fd/" + std::to_string(impl_->descriptor);
+    const bool linked = ::linkat(
+        AT_FDCWD, source_path.c_str(), parent_descriptor, leaf_name.c_str(),
+        AT_SYMLINK_FOLLOW) == 0;
+    const int link_errno = errno;
+    (void)::close(parent_descriptor);
+    if (!linked) {
+        errno = link_errno;
+        return false;
+    }
+    impl_->active_launch_link = impl_->parent_directory / leaf_name;
+    return true;
+#else
+    return true;
+#endif
+#endif
+}
+
+void PrivateExecutableImage::posix_discard_launch_link() const noexcept {
+#if !defined(_WIN32)
+    if (impl_ != nullptr && !impl_->active_launch_link.empty()) {
+        (void)::unlink(impl_->active_launch_link.c_str());
+        impl_->active_launch_link.clear();
+    }
+#endif
+}
+
 bool PrivateExecutableImage::posix_exec_in_child(
     char* const argv[], char* const environment[]) const noexcept {
 #if defined(_WIN32)
@@ -779,31 +870,11 @@ bool PrivateExecutableImage::posix_exec_in_child(
         return false;
     }
 #if defined(__APPLE__)
-    if (impl_->execution_path.empty()) {
+    if (impl_->active_launch_link.empty()) {
         errno = EBADF;
         return false;
     }
-    // Fresh, same-process open: this is what fdescfs actually requires --
-    // see the header comment above for why the inherited descriptor's own
-    // /dev/fd path cannot be used here instead.
-    const int verify_descriptor = ::open(
-        impl_->execution_path.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
-    if (verify_descriptor < 0) {
-        return false;
-    }
-    struct stat verify_stat {};
-    struct stat sealed_stat {};
-    const bool identity_verified =
-        ::fstat(verify_descriptor, &verify_stat) == 0 &&
-        ::fstat(impl_->descriptor, &sealed_stat) == 0 &&
-        verify_stat.st_dev == sealed_stat.st_dev &&
-        verify_stat.st_ino == sealed_stat.st_ino;
-    (void)::close(verify_descriptor);
-    if (!identity_verified) {
-        errno = EACCES;
-        return false;
-    }
-    ::execve(impl_->execution_path.c_str(), argv, environment);
+    ::execve(impl_->active_launch_link.c_str(), argv, environment);
     return false;
 #else
     ::fexecve(impl_->descriptor, argv, environment);
@@ -1022,7 +1093,6 @@ materialize_private_executable_image_in_verified_parent(
                     : PrivateExecutableImageFailure::creation_failed;
             return result;
         }
-#if !defined(__APPLE__)
         const bool unlinked = ::unlinkat(
             parent_descriptor.get(), leaf_name.c_str(), 0) == 0;
         if (!unlinked) {
@@ -1030,19 +1100,12 @@ materialize_private_executable_image_in_verified_parent(
             return result;
         }
         image_descriptor.mark_unlinked();
-#endif
-        // On macOS the file is deliberately left linked here (see
-        // posix_execution_path() in the header for why); image_descriptor's
-        // RAII default (linked_ = true) still auto-unlinks it on every
-        // failure return below, right up until release() at the bottom of
-        // this block hands ownership of the sealed read-only descriptor to
-        // Impl. It is the caller's responsibility (run_bounded_posix_
-        // private_executable()) to unlink it once that caller's own use of
-        // the path has fully resolved.
         const bool parent_stable = descriptor_identity_matches(
             parent_descriptor.get(), expected_parent_storage_id,
             expected_parent_file_id, expected_parent_creation_ticks);
+#if !defined(__APPLE__)
         parent_descriptor.reset();
+#endif
         if (!parent_stable ||
             ::fchmod(image_descriptor.get(), 0500) != 0 ||
             !write_all(image_descriptor.get(), bytes) ||
@@ -1060,21 +1123,20 @@ materialize_private_executable_image_in_verified_parent(
         // later exec call happens to use -- so a second fd opened on the
         // same still-writable file does not help on its own; the O_RDWR
         // original itself must actually close. Re-open the same already-
-        // verified file read-only via /proc/self/fd (Linux, where it is
-        // also already unlinked) or /dev/fd (macOS, which lacks
-        // /proc/self/fd but supports the equivalent /dev/fd namespace; the
-        // file is still linked there, but this reopen is done by this same
-        // process that opened the original descriptor, which is exactly
-        // what fdescfs permits) -- a kernel-guaranteed alias to this exact
-        // open file description, not a path-based lookup, so it carries
-        // none of the TOCTOU risk a real path reopen would -- then release
-        // and close the O_RDWR original, permanently sealing the image
-        // against further writes for the rest of its lifetime. The
+        // unlinked, already-verified file read-only via /proc/self/fd
+        // (Linux) or /dev/fd (macOS, which lacks /proc/self/fd but
+        // supports the equivalent /dev/fd namespace; this reopen is done
+        // by this same process that opened the original descriptor, which
+        // is exactly what fdescfs permits) -- a kernel-guaranteed alias to
+        // this exact open file description, not a path-based lookup, so it
+        // carries none of the TOCTOU risk a real path reopen would -- then
+        // release and close the O_RDWR original, permanently sealing the
+        // image against further writes for the rest of its lifetime. The
         // read-only reopen becomes the image's sole descriptor from here
-        // on: for verification always, and for exec on Linux (fexecve);
-        // on macOS it is used only for a same-process identity check
-        // immediately before exec, since exec itself goes through
-        // posix_execution_path() instead (see the header for why).
+        // on: for verification always; for exec on Linux (fexecve()); and,
+        // on macOS, to source the launch-scoped hardlink posix_prepare_
+        // launch_link() creates (see the header for why exec cannot go
+        // through /dev/fd directly there the way it does on Linux).
 #if defined(__APPLE__)
         const std::string reopen_path =
             "/dev/fd/" + std::to_string(image_descriptor.get());
@@ -1085,12 +1147,18 @@ materialize_private_executable_image_in_verified_parent(
         const int readonly_image_descriptor =
             ::open(reopen_path.c_str(), O_RDONLY | O_CLOEXEC);
         if (readonly_image_descriptor < 0) {
+#if defined(__APPLE__)
+            parent_descriptor.reset();
+#endif
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
 #if defined(__APPLE__)
+        parent_descriptor.reset();
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            readonly_image_descriptor, bytes.size(), parent / leaf);
+            readonly_image_descriptor, bytes.size(), parent,
+            expected_parent_storage_id, expected_parent_file_id,
+            expected_parent_creation_ticks);
 #else
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
             readonly_image_descriptor, bytes.size());

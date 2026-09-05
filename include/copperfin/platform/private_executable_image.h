@@ -67,34 +67,56 @@ private:
     windows_launch_target() const noexcept;
     [[nodiscard]] const std::filesystem::path*
     windows_native_launch_target() const noexcept;
-    // POSIX only. Returns the retained, read+execute-only (0500) descriptor,
-    // or -1 if unavailable/invalid. On Linux this is already-unlinked; no
-    // path is ever exposed for it, and callers must exec it directly via
-    // fexecve(). On macOS see posix_exec_in_child() below -- the image
-    // stays linked there instead, and this descriptor is used only for a
-    // same-process identity check immediately before exec, never for
-    // /dev/fd-based exec.
+    // POSIX only. Returns the retained, read+execute-only (0500), already-
+    // unlinked descriptor, or -1 if unavailable/invalid. No path is ever
+    // exposed for it. On Linux this is what posix_exec_in_child() execs
+    // directly (fexecve()). On macOS it is used only to source a fresh,
+    // launch-scoped hardlink in posix_prepare_launch_link() below -- never
+    // for /dev/fd-based exec itself.
     [[nodiscard]] int posix_descriptor() const noexcept;
-    // POSIX only. Must be called only in the freshly-forked child,
-    // immediately before exec, with argv/environment already fully built
-    // (NUL-terminated, execve()-style). On success this call never returns
-    // (execve() replaces the process image); on failure it returns false
-    // with errno set, for the caller to report and _exit() as usual. On
-    // Linux this execs posix_descriptor() directly (fexecve()). On macOS
-    // it instead execs by real, still-linked path -- entirely internally;
-    // no native path is ever exposed through this header's surface --
-    // because macOS's fdescfs (/dev/fd) only permits path lookups (open,
+    // POSIX only, meaningful only on macOS (a no-op returning true
+    // elsewhere). Must be called by the not-yet-forked process that
+    // materialized this image, once per launch attempt, before fork()+
+    // exec(). macOS's fdescfs (/dev/fd) only permits path lookups (open,
     // access, exec) from the same process that opened the underlying
     // descriptor directly; a forked child that merely inherited it via
     // fork() is denied with EACCES even though the descriptor itself is
     // perfectly valid (confirmed empirically: fstat() on the inherited
     // descriptor succeeds and reports the correct file, while access()/
-    // execve() via its /dev/fd path both fail identically). Immediately
-    // before exec it performs its own (device, inode) identity check,
-    // via a fresh same-process open of the retained real path, against
-    // posix_descriptor(); this narrows, but -- unlike Linux's exec-by-
-    // descriptor -- cannot fully eliminate, the TOCTOU window between
-    // that check and exec.
+    // execve() via its /dev/fd path both fail identically) -- so a forked
+    // child cannot exec posix_descriptor() by /dev/fd itself the way
+    // Linux's fexecve() can. This re-verifies the parent directory's
+    // identity (in case it changed since materialization) and, from here,
+    // in this same not-yet-forked process, creates one fresh hardlink
+    // sourced directly from posix_descriptor() back into that directory --
+    // entirely internally; no native path is ever exposed through this
+    // header's surface. A forked child then execs that real, ordinary
+    // linked path via posix_exec_in_child(), which carries none of
+    // /dev/fd's same-process restriction. Returns false with errno set on
+    // failure (no link created). posix_discard_launch_link() removes the
+    // link again once the one launch attempt this was prepared for has
+    // fully resolved.
+    [[nodiscard]] bool posix_prepare_launch_link() const noexcept;
+    // POSIX only, meaningful only on macOS (a no-op elsewhere). Removes
+    // the hardlink created by posix_prepare_launch_link(), if any. Safe to
+    // call unconditionally, including when no link was ever created. Must
+    // be called only after the exec attempt against that link has fully
+    // resolved one way or another (see run_bounded_posix_private_
+    // executable() for the exact safe-timing argument), since it is not
+    // otherwise safe to remove a path a forked child may still be in the
+    // middle of resolving for exec.
+    void posix_discard_launch_link() const noexcept;
+    // POSIX only. Must be called only in the freshly-forked child,
+    // immediately before exec, with argv/environment already fully built
+    // (NUL-terminated, execve()-style) and, on macOS, only after a
+    // successful posix_prepare_launch_link() in the pre-fork parent. On
+    // success this call never returns (execve() replaces the process
+    // image); on failure it returns false with errno set, for the caller
+    // to report and _exit() as usual. On Linux this execs posix_
+    // descriptor() directly (fexecve()). On macOS it execs the real,
+    // launch-scoped path posix_prepare_launch_link() created instead --
+    // entirely internally; no native path is ever exposed through this
+    // header's surface.
     [[nodiscard]] bool posix_exec_in_child(
         char* const argv[], char* const environment[]) const noexcept;
 

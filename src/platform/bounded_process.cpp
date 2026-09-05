@@ -1687,14 +1687,36 @@ BoundedProcessResult run_bounded_posix_private_executable(
             result.error_code = "polyglot.process.cancelled";
             return result;
         }
-        // posix_private_exec_override() bridges to image.posix_exec_in_
-        // child(), which execs image.posix_descriptor() directly on Linux
-        // (fexecve) or, on macOS, by the image's real, still-linked path
-        // instead -- entirely internally, with no native path exposed
-        // through PrivateExecutableImage's header surface; see that
-        // method's doc comment and private_executable_image.cpp for why
-        // and how. `context` must outlive the call, which it does here:
-        // `image` is a const reference owned by our own caller.
+        // On macOS, image.posix_prepare_launch_link() creates one fresh,
+        // launch-scoped hardlink back into the image's already-unlinked,
+        // already-verified parent directory -- entirely internally, no
+        // native path ever exposed through PrivateExecutableImage's header
+        // surface -- because macOS's fdescfs will not let a forked child
+        // look up an inherited descriptor's /dev/fd path at all (see that
+        // method's doc comment for the full story). posix_private_exec_
+        // override() then bridges run_posix()'s forked-child exec step to
+        // image.posix_exec_in_child(), which execs that real path there
+        // (or, on Linux, execs posix_descriptor() directly via fexecve();
+        // posix_prepare_launch_link()/posix_discard_launch_link() are both
+        // no-ops there). `context` must outlive the call, which it does
+        // here: `image` is a const reference owned by our own caller.
+        if (!image.posix_prepare_launch_link()) {
+            BoundedProcessResult result;
+            result.status = BoundedProcessStatus::launch_failed;
+            result.error_code = "workspace_agent.process_launch_link_failed";
+            result.native_error = errno;
+            return result;
+        }
+        // Guarantees the link is removed once this launch attempt
+        // resolves one way or another, on every exit from here (including
+        // through an exception) -- run_posix() does not return until it
+        // does, either because it never forked at all, or because it has
+        // fully reaped the child it did fork, so this cannot race a still-
+        // in-flight exec attempt against the link.
+        struct LaunchLinkGuard {
+            const PrivateExecutableImage* image;
+            ~LaunchLinkGuard() { image->posix_discard_launch_link(); }
+        } launch_link_guard{&image};
         return run_posix(
             transport, &request.arguments, &request.environment,
             posix_private_exec_override,
