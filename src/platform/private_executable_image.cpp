@@ -1140,14 +1140,17 @@ materialize_private_executable_image_in_verified_parent(
         const bool parent_stable = descriptor_identity_matches(
             parent_descriptor.get(), expected_parent_storage_id,
             expected_parent_file_id, expected_parent_creation_ticks);
-        const bool chmod_rw_ok = parent_stable &&
-            // Owner rw, no exec yet: codesign(1) below reopens this file
-            // by path for writing, a fresh open() subject to current mode
-            // bits, unlike our own writes here through the already-open
-            // O_RDWR descriptor.
-            ::fchmod(image_descriptor.get(), 0600) == 0;
-        const int chmod_rw_errno = errno;
-        const bool wrote_ok = chmod_rw_ok && write_all(image_descriptor.get(), bytes);
+        // Seal to the final owner read/execute-only mode *before*
+        // verification, exactly like Linux: exact_file_shape() requires
+        // mode 0500 unconditionally, so verifying while the file is still
+        // relaxed for codesign(1) below would always fail the mode check
+        // (confirmed empirically: an earlier ordering that verified while
+        // still 0600 failed shape_ok on every real macOS CI run, deter-
+        // ministically, before codesign ever ran).
+        const bool chmod_sealed_ok = parent_stable &&
+            ::fchmod(image_descriptor.get(), 0500) == 0;
+        const int chmod_sealed_errno = errno;
+        const bool wrote_ok = chmod_sealed_ok && write_all(image_descriptor.get(), bytes);
         const bool pre_sign_shape_ok =
             wrote_ok && exact_file_shape(image_descriptor.get(), bytes.size());
         const bool pre_sign_bytes_ok =
@@ -1160,12 +1163,13 @@ materialize_private_executable_image_in_verified_parent(
             const int diagnostic_length = ::snprintf(
                 diagnostic, sizeof(diagnostic),
                 "MACOS_MATERIALIZE_DIAG stage=pre-sign parent_stable=%d "
-                "chmod_rw_ok=%d chmod_rw_errno=%d wrote_ok=%d "
+                "chmod_sealed_ok=%d chmod_sealed_errno=%d wrote_ok=%d "
                 "shape_ok=%d bytes_ok=%d fstat_rc=%d st_mode=%o "
                 "st_nlink=%d st_size=%lld expected_size=%zu\n",
-                parent_stable ? 1 : 0, chmod_rw_ok ? 1 : 0, chmod_rw_errno,
-                wrote_ok ? 1 : 0, pre_sign_shape_ok ? 1 : 0,
-                pre_sign_bytes_ok ? 1 : 0, pre_sign_fstat_rc,
+                parent_stable ? 1 : 0, chmod_sealed_ok ? 1 : 0,
+                chmod_sealed_errno, wrote_ok ? 1 : 0,
+                pre_sign_shape_ok ? 1 : 0, pre_sign_bytes_ok ? 1 : 0,
+                pre_sign_fstat_rc,
                 pre_sign_fstat_rc == 0
                     ? static_cast<unsigned>(pre_sign_status.st_mode)
                     : 0U,
@@ -1182,7 +1186,7 @@ materialize_private_executable_image_in_verified_parent(
                     static_cast<std::size_t>(diagnostic_length));
             }
         }
-        if (!parent_stable || !chmod_rw_ok || !wrote_ok || !pre_sign_shape_ok ||
+        if (!parent_stable || !chmod_sealed_ok || !wrote_ok || !pre_sign_shape_ok ||
             !pre_sign_bytes_ok) {
             result.failure = !parent_stable
                 ? PrivateExecutableImageFailure::parent_identity_changed
@@ -1195,24 +1199,33 @@ materialize_private_executable_image_in_verified_parent(
         // file's content and size (see Impl's doc comment), so this must
         // happen before signing, against the raw, pre-signature write.
         const std::filesystem::path real_path = parent / leaf_name;
-        const bool signed_ok = codesign_in_place(real_path.native());
-        const bool chmod_ro_ok = signed_ok &&
-            ::fchmod(image_descriptor.get(), 0500) == 0;
+        // Briefly relax to owner rw so codesign(1) -- a fresh open() by
+        // path -- can write the signature; restored to the verified,
+        // sealed 0500 immediately after, regardless of signing outcome,
+        // so this file is never left more permissive than sealed on any
+        // failure path either.
+        const bool chmod_rw_ok = ::fchmod(image_descriptor.get(), 0600) == 0;
+        const int chmod_rw_errno = errno;
+        const bool signed_ok = chmod_rw_ok && codesign_in_place(real_path.native());
+        const bool chmod_ro_ok =
+            chmod_rw_ok && ::fchmod(image_descriptor.get(), 0500) == 0;
         const int chmod_ro_errno = errno;
         {
             char diagnostic[256];
             const int diagnostic_length = ::snprintf(
                 diagnostic, sizeof(diagnostic),
-                "MACOS_MATERIALIZE_DIAG stage=sign signed_ok=%d "
-                "chmod_ro_ok=%d chmod_ro_errno=%d\n",
-                signed_ok ? 1 : 0, chmod_ro_ok ? 1 : 0, chmod_ro_errno);
+                "MACOS_MATERIALIZE_DIAG stage=sign chmod_rw_ok=%d "
+                "chmod_rw_errno=%d signed_ok=%d chmod_ro_ok=%d "
+                "chmod_ro_errno=%d\n",
+                chmod_rw_ok ? 1 : 0, chmod_rw_errno, signed_ok ? 1 : 0,
+                chmod_ro_ok ? 1 : 0, chmod_ro_errno);
             if (diagnostic_length > 0) {
                 (void)::write(
                     STDERR_FILENO, diagnostic,
                     static_cast<std::size_t>(diagnostic_length));
             }
         }
-        if (!signed_ok || !chmod_ro_ok) {
+        if (!chmod_rw_ok || !signed_ok || !chmod_ro_ok) {
             parent_descriptor.reset();
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
