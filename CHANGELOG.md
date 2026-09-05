@@ -1,3 +1,36 @@
+- 2026-09-04: Design pass for #5480 (parent #139, related #137/#35/#36/#37)
+  found that Copperfin already has a mature, production polyglot boundary
+  (`CFPOLYGLOTDISPATCH()` -> `PolyglotRuntimeHost` -> route registry ->
+  artifact admission -> bounded process invocation, `docs/19`/`docs/43`)
+  that already does exactly what #139's "bounded .NET runtime bridge for
+  executing non-VFP statements during migration workflows" needs. Added
+  `docs/67-migration-dotnet-interop-bridge-design.md` recommending the
+  migration bridge be a new capability registered through that existing
+  boundary rather than a second, parallel mechanism -- which also answers
+  the portable-core-boundary question for free, since the existing boundary
+  already targets all six cross-platform RIDs. Narrows "execute non-VFP
+  statements" to invoking one pre-built, admitted .NET artifact with
+  bounded structured data (the same shape as the existing
+  `samples.dotnet.add-v1` capability), explicitly excluding arbitrary C#
+  source execution. Defines guardrails mirroring `docs/21`'s AI Rule
+  (deterministic path first, optional policy-controlled layer second,
+  never a hidden requirement) and explicit non-overlap with
+  `CopperfinStudioHostBridge.cs` (unrelated VS-extension/native-host IPC).
+  Defines a concrete bounded first-implementation slice for a follow-up
+  issue, per this issue's acceptance criteria. PR #5491 review (Codex) found
+  three real design gaps, all fixed: the draft claimed the host boundary
+  itself guarantees no network/reflection access, but `run_bounded_process`
+  only bounds process lifecycle/I/O, not syscalls -- that guarantee actually
+  comes from the specific admitted artifact's own reviewed source, now
+  stated correctly; `PolyglotRuntimeHost::create()` unconditionally rejects
+  construction if a capability's artifact fails admission even when that
+  capability's route is `off`, so "fall back to native when off" is not
+  sufficient on a deployment missing the artifact -- the doc now requires
+  omitting that capability's route/binding entirely in that case; and the
+  proposed single generic capability accepting a transform-artifact ID as a
+  request argument does not fit the host's capability-ID-only dispatch --
+  corrected to one capability per concrete transform, each bound to exactly
+  one admitted executable.
 - 2026-09-04: Clean-room reconnaissance for #5474 (parent #141, related
   #137) found a real correction to that issue's own premise: there is no
   official Microsoft Open Specification for the physical MDB/ACCDB file
