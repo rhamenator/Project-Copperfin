@@ -1280,6 +1280,22 @@ BoundedProcessResult run_posix(
             // (BSD/macOS support the /dev/fd namespace). The descriptor was
             // inherited across fork() (fork does not honor O_CLOEXEC; only
             // a successful exec does), so it is still valid here.
+            //
+            // Darwin's fdescfs hides any descriptor that still has
+            // FD_CLOEXEC set from /dev/fd lookups (this is intentional
+            // upstream behavior, not a bug: it stops a close-on-exec
+            // descriptor from leaking into a *different* exec via the
+            // /dev/fd namespace) -- opening /dev/fd/N for such a
+            // descriptor fails with EBADF. image.posix_descriptor() is
+            // opened O_CLOEXEC in the parent for defense-in-depth (so it
+            // never leaks into any unrelated child the parent spawns),
+            // but this fd-table entry belongs to this forked child alone,
+            // which is about to either exec or _exit(127) -- clearing the
+            // flag here is scoped to that entry and does not affect the
+            // parent's copy of the same descriptor (FD_CLOEXEC lives on
+            // the per-process descriptor table entry, not the shared
+            // open file description).
+            (void)::fcntl(exec_descriptor, F_SETFD, 0);
             const std::string fd_path = "/dev/fd/" + std::to_string(exec_descriptor);
             ::execve(fd_path.c_str(), argv.data(), environment.data());
 #else
