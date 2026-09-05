@@ -16,6 +16,7 @@
 #include <chrono>
 #include <cerrno>
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <limits>
 #include <string>
@@ -36,6 +37,7 @@
 #include <csignal>
 #include <fcntl.h>
 #include <pthread.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -1297,6 +1299,37 @@ BoundedProcessResult run_posix(
             // open file description).
             (void)::fcntl(exec_descriptor, F_SETFD, 0);
             const std::string fd_path = "/dev/fd/" + std::to_string(exec_descriptor);
+            // TEMPORARY diagnostic instrumentation (to be removed once the
+            // macOS EACCES root cause is confirmed): dump what the child
+            // sees about exec_descriptor right before the exec attempt, via
+            // raw write() to the already-dup2'd stderr fd so it surfaces in
+            // the test harness's captured stderr= diagnostic field.
+            {
+                struct stat exec_stat {};
+                const int fstat_result = ::fstat(exec_descriptor, &exec_stat);
+                const int fstat_errno = errno;
+                const int access_result = ::access(fd_path.c_str(), X_OK);
+                const int access_errno = errno;
+                const int fcntl_flags = ::fcntl(exec_descriptor, F_GETFD);
+                char diagnostic[320];
+                const int diagnostic_length = ::snprintf(
+                    diagnostic, sizeof(diagnostic),
+                    "MACOS_EXEC_DIAG fd=%d path=%s fstat_rc=%d fstat_errno=%d "
+                    "st_mode=%o is_reg=%d st_uid=%d euid=%d access_x_rc=%d "
+                    "access_errno=%d fd_getfd=%d\n",
+                    exec_descriptor, fd_path.c_str(), fstat_result,
+                    fstat_result == 0 ? 0 : fstat_errno,
+                    static_cast<unsigned>(exec_stat.st_mode),
+                    fstat_result == 0 ? S_ISREG(exec_stat.st_mode) : -1,
+                    fstat_result == 0 ? static_cast<int>(exec_stat.st_uid) : -1,
+                    static_cast<int>(::geteuid()), access_result,
+                    access_result == 0 ? 0 : access_errno, fcntl_flags);
+                if (diagnostic_length > 0) {
+                    (void)::write(
+                        STDERR_FILENO, diagnostic,
+                        static_cast<std::size_t>(diagnostic_length));
+                }
+            }
             ::execve(fd_path.c_str(), argv.data(), environment.data());
 #else
             ::fexecve(exec_descriptor, argv.data(), environment.data());
