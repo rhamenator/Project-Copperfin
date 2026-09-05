@@ -676,10 +676,33 @@ public:
     // real at materialization time, and this read-only descriptor is the
     // only one that survives for the rest of the image's lifetime (kept
     // open the same way the original always was, purely to keep this
-    // already-unlinked file's data alive).
-    Impl(int descriptor_value, std::size_t size_value) noexcept
-        : descriptor(descriptor_value), size(size_value) {}
+    // file's data alive). On Linux the file is also already unlinked and
+    // execution_path stays empty. On macOS the file is deliberately left
+    // linked (fdescfs's same-process-opener restriction on /dev/fd rules
+    // out fork-then-exec-by-descriptor there -- see posix_execution_path()
+    // in the header), and execution_path names it.
+    Impl(
+        int descriptor_value, std::size_t size_value,
+        std::filesystem::path execution_path_value = {}) noexcept
+        : descriptor(descriptor_value),
+          execution_path(std::move(execution_path_value)),
+          size(size_value) {}
     ~Impl() {
+        // On macOS, execution_path is the last reference to the linked
+        // file (see posix_exec_in_child()); this object's destruction is
+        // the natural, single point to unlink it. Safe with respect to
+        // any in-flight exec of it: PrivateExecutableImage is passed to
+        // run_bounded_posix_private_executable() by const reference and
+        // outlives that (synchronous) call by ordinary C++ lifetime rules,
+        // and that call does not return until run_posix() does, which
+        // itself does not return until any child it forked has either
+        // fully resolved its own exec attempt or been fully reaped -- so
+        // this destructor can never run while an exec of this path is
+        // still in flight. On Linux execution_path is always empty and
+        // this is a no-op.
+        if (!execution_path.empty()) {
+            (void)::unlink(execution_path.c_str());
+        }
         if (descriptor >= 0) {
             (void)::close(descriptor);
         }
@@ -693,6 +716,7 @@ public:
             native_matches_bytes(descriptor, expected);
     }
     int descriptor = -1;
+    std::filesystem::path execution_path;
 #endif
     std::size_t size = 0U;
 };
@@ -741,6 +765,57 @@ int PrivateExecutableImage::posix_descriptor() const noexcept {
 #else
     return impl_ != nullptr && impl_->valid() ? impl_->descriptor : -1;
 #endif
+}
+
+bool PrivateExecutableImage::posix_exec_in_child(
+    char* const argv[], char* const environment[]) const noexcept {
+#if defined(_WIN32)
+    static_cast<void>(argv);
+    static_cast<void>(environment);
+    return false;
+#else
+    if (impl_ == nullptr || !impl_->valid()) {
+        errno = EBADF;
+        return false;
+    }
+#if defined(__APPLE__)
+    if (impl_->execution_path.empty()) {
+        errno = EBADF;
+        return false;
+    }
+    // Fresh, same-process open: this is what fdescfs actually requires --
+    // see the header comment above for why the inherited descriptor's own
+    // /dev/fd path cannot be used here instead.
+    const int verify_descriptor = ::open(
+        impl_->execution_path.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (verify_descriptor < 0) {
+        return false;
+    }
+    struct stat verify_stat {};
+    struct stat sealed_stat {};
+    const bool identity_verified =
+        ::fstat(verify_descriptor, &verify_stat) == 0 &&
+        ::fstat(impl_->descriptor, &sealed_stat) == 0 &&
+        verify_stat.st_dev == sealed_stat.st_dev &&
+        verify_stat.st_ino == sealed_stat.st_ino;
+    (void)::close(verify_descriptor);
+    if (!identity_verified) {
+        errno = EACCES;
+        return false;
+    }
+    ::execve(impl_->execution_path.c_str(), argv, environment);
+    return false;
+#else
+    ::fexecve(impl_->descriptor, argv, environment);
+    return false;
+#endif
+#endif
+}
+
+bool posix_private_exec_override(
+    void* context, char* const argv[], char* const environment[]) noexcept {
+    return static_cast<const PrivateExecutableImage*>(context)
+        ->posix_exec_in_child(argv, environment);
 }
 
 PrivateExecutableImageMaterializationResult
@@ -947,6 +1022,7 @@ materialize_private_executable_image_in_verified_parent(
                     : PrivateExecutableImageFailure::creation_failed;
             return result;
         }
+#if !defined(__APPLE__)
         const bool unlinked = ::unlinkat(
             parent_descriptor.get(), leaf_name.c_str(), 0) == 0;
         if (!unlinked) {
@@ -954,6 +1030,15 @@ materialize_private_executable_image_in_verified_parent(
             return result;
         }
         image_descriptor.mark_unlinked();
+#endif
+        // On macOS the file is deliberately left linked here (see
+        // posix_execution_path() in the header for why); image_descriptor's
+        // RAII default (linked_ = true) still auto-unlinks it on every
+        // failure return below, right up until release() at the bottom of
+        // this block hands ownership of the sealed read-only descriptor to
+        // Impl. It is the caller's responsibility (run_bounded_posix_
+        // private_executable()) to unlink it once that caller's own use of
+        // the path has fully resolved.
         const bool parent_stable = descriptor_identity_matches(
             parent_descriptor.get(), expected_parent_storage_id,
             expected_parent_file_id, expected_parent_creation_ticks);
@@ -975,15 +1060,21 @@ materialize_private_executable_image_in_verified_parent(
         // later exec call happens to use -- so a second fd opened on the
         // same still-writable file does not help on its own; the O_RDWR
         // original itself must actually close. Re-open the same already-
-        // unlinked, already-verified file read-only via /proc/self/fd
-        // (Linux) or /dev/fd (macOS, which lacks /proc/self/fd but
-        // supports the equivalent /dev/fd namespace) -- a kernel-
-        // guaranteed alias to this exact open file description, not a
-        // path-based lookup, so it carries none of the TOCTOU risk a real
-        // path reopen would -- then release and close the O_RDWR original,
-        // permanently sealing the image against further writes for the
-        // rest of its lifetime. The read-only reopen becomes the image's
-        // sole descriptor from here on, for both verification and exec.
+        // verified file read-only via /proc/self/fd (Linux, where it is
+        // also already unlinked) or /dev/fd (macOS, which lacks
+        // /proc/self/fd but supports the equivalent /dev/fd namespace; the
+        // file is still linked there, but this reopen is done by this same
+        // process that opened the original descriptor, which is exactly
+        // what fdescfs permits) -- a kernel-guaranteed alias to this exact
+        // open file description, not a path-based lookup, so it carries
+        // none of the TOCTOU risk a real path reopen would -- then release
+        // and close the O_RDWR original, permanently sealing the image
+        // against further writes for the rest of its lifetime. The
+        // read-only reopen becomes the image's sole descriptor from here
+        // on: for verification always, and for exec on Linux (fexecve);
+        // on macOS it is used only for a same-process identity check
+        // immediately before exec, since exec itself goes through
+        // posix_execution_path() instead (see the header for why).
 #if defined(__APPLE__)
         const std::string reopen_path =
             "/dev/fd/" + std::to_string(image_descriptor.get());
@@ -997,8 +1088,13 @@ materialize_private_executable_image_in_verified_parent(
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
+#if defined(__APPLE__)
+        auto impl = std::make_unique<PrivateExecutableImage::Impl>(
+            readonly_image_descriptor, bytes.size(), parent / leaf);
+#else
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
             readonly_image_descriptor, bytes.size());
+#endif
         ::close(image_descriptor.release());
 #endif
         PrivateExecutableImage image(std::move(impl));

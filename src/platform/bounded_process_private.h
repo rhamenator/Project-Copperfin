@@ -58,6 +58,17 @@ enum class CurrentProcessElevation {
     const PrivateExecutableImage& image,
     const PrivatePosixBoundedProcessRequest& request) noexcept;
 
+// Bridges run_posix()'s (bounded_process.cpp, anonymous-namespace) forked-
+// child exec step to PrivateExecutableImage::posix_exec_in_child() without
+// exposing any native path through that class's header surface: `context`
+// must be the address of the same PrivateExecutableImage supplied to
+// run_bounded_posix_private_executable() for this launch. Matches the
+// bool (*)(void*, char* const[], char* const[]) noexcept exec-override
+// callback shape run_posix() invokes in the forked child immediately
+// before exec, in place of its default execve(request.executable_path).
+[[nodiscard]] bool posix_private_exec_override(
+    void* context, char* const argv[], char* const environment[]) noexcept;
+
 [[nodiscard]] CurrentProcessElevation current_process_elevation() noexcept;
 
 }  // namespace copperfin::platform

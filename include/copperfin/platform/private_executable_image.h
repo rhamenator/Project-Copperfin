@@ -67,16 +67,46 @@ private:
     windows_launch_target() const noexcept;
     [[nodiscard]] const std::filesystem::path*
     windows_native_launch_target() const noexcept;
-    // POSIX only. Returns the retained, already-unlinked, read+execute-only
-    // (0500) descriptor, or -1 if unavailable/invalid. No path is ever
-    // exposed for this descriptor -- callers must exec it directly
-    // (fexecve on Linux; execve("/dev/fd/N", ...) on macOS, which lacks
-    // fexecve), never reopen it by name.
+    // POSIX only. Returns the retained, read+execute-only (0500) descriptor,
+    // or -1 if unavailable/invalid. On Linux this is already-unlinked; no
+    // path is ever exposed for it, and callers must exec it directly via
+    // fexecve(). On macOS see posix_exec_in_child() below -- the image
+    // stays linked there instead, and this descriptor is used only for a
+    // same-process identity check immediately before exec, never for
+    // /dev/fd-based exec.
     [[nodiscard]] int posix_descriptor() const noexcept;
+    // POSIX only. Must be called only in the freshly-forked child,
+    // immediately before exec, with argv/environment already fully built
+    // (NUL-terminated, execve()-style). On success this call never returns
+    // (execve() replaces the process image); on failure it returns false
+    // with errno set, for the caller to report and _exit() as usual. On
+    // Linux this execs posix_descriptor() directly (fexecve()). On macOS
+    // it instead execs by real, still-linked path -- entirely internally;
+    // no native path is ever exposed through this header's surface --
+    // because macOS's fdescfs (/dev/fd) only permits path lookups (open,
+    // access, exec) from the same process that opened the underlying
+    // descriptor directly; a forked child that merely inherited it via
+    // fork() is denied with EACCES even though the descriptor itself is
+    // perfectly valid (confirmed empirically: fstat() on the inherited
+    // descriptor succeeds and reports the correct file, while access()/
+    // execve() via its /dev/fd path both fail identically). Immediately
+    // before exec it performs its own (device, inode) identity check,
+    // via a fresh same-process open of the retained real path, against
+    // posix_descriptor(); this narrows, but -- unlike Linux's exec-by-
+    // descriptor -- cannot fully eliminate, the TOCTOU window between
+    // that check and exec.
+    [[nodiscard]] bool posix_exec_in_child(
+        char* const argv[], char* const environment[]) const noexcept;
 
     std::unique_ptr<Impl> impl_;
 
     friend struct PrivateExecutableImageMaterializationResult;
+    // Bridges run_posix()'s (bounded_process.cpp, anonymous namespace)
+    // forked-child exec step to posix_exec_in_child() above, since a
+    // function with internal linkage cannot itself be named as a friend
+    // here. See bounded_process_private.h for its declaration.
+    friend bool posix_private_exec_override(
+        void*, char* const[], char* const[]) noexcept;
     friend PrivateExecutableImageMaterializationResult
     materialize_private_executable_image_in_verified_parent(
         const std::filesystem::path&,

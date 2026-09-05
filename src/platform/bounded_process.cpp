@@ -16,7 +16,6 @@
 #include <chrono>
 #include <cerrno>
 #include <cstdint>
-#include <cstdio>
 #include <filesystem>
 #include <limits>
 #include <string>
@@ -37,7 +36,6 @@
 #include <csignal>
 #include <fcntl.h>
 #include <pthread.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -1152,7 +1150,10 @@ BoundedProcessResult run_posix(
     const BoundedProcessRequest& request,
     const std::vector<std::string>* retained_arguments = nullptr,
     const std::vector<std::string>* retained_environment = nullptr,
-    int exec_descriptor = -1,
+    bool (*exec_override)(
+        void* context, char* const argv[],
+        char* const environment[]) noexcept = nullptr,
+    void* exec_override_context = nullptr,
     void (*launch_committed)(void*) noexcept = nullptr,
     void* launch_committed_context = nullptr) {
     BoundedProcessResult result;
@@ -1276,64 +1277,14 @@ BoundedProcessResult run_posix(
         (void)::close(stdin_pipe[0]);
         (void)::close(stdout_pipe[1]);
         (void)::close(stderr_pipe[1]);
-        if (exec_descriptor >= 0) {
-#if defined(__APPLE__)
-            // macOS has no fexecve(); /dev/fd/N is the standard workaround
-            // (BSD/macOS support the /dev/fd namespace). The descriptor was
-            // inherited across fork() (fork does not honor O_CLOEXEC; only
-            // a successful exec does), so it is still valid here.
-            //
-            // Darwin's fdescfs hides any descriptor that still has
-            // FD_CLOEXEC set from /dev/fd lookups (this is intentional
-            // upstream behavior, not a bug: it stops a close-on-exec
-            // descriptor from leaking into a *different* exec via the
-            // /dev/fd namespace) -- opening /dev/fd/N for such a
-            // descriptor fails with EBADF. image.posix_descriptor() is
-            // opened O_CLOEXEC in the parent for defense-in-depth (so it
-            // never leaks into any unrelated child the parent spawns),
-            // but this fd-table entry belongs to this forked child alone,
-            // which is about to either exec or _exit(127) -- clearing the
-            // flag here is scoped to that entry and does not affect the
-            // parent's copy of the same descriptor (FD_CLOEXEC lives on
-            // the per-process descriptor table entry, not the shared
-            // open file description).
-            (void)::fcntl(exec_descriptor, F_SETFD, 0);
-            const std::string fd_path = "/dev/fd/" + std::to_string(exec_descriptor);
-            // TEMPORARY diagnostic instrumentation (to be removed once the
-            // macOS EACCES root cause is confirmed): dump what the child
-            // sees about exec_descriptor right before the exec attempt, via
-            // raw write() to the already-dup2'd stderr fd so it surfaces in
-            // the test harness's captured stderr= diagnostic field.
-            {
-                struct stat exec_stat {};
-                const int fstat_result = ::fstat(exec_descriptor, &exec_stat);
-                const int fstat_errno = errno;
-                const int access_result = ::access(fd_path.c_str(), X_OK);
-                const int access_errno = errno;
-                const int fcntl_flags = ::fcntl(exec_descriptor, F_GETFD);
-                char diagnostic[320];
-                const int diagnostic_length = ::snprintf(
-                    diagnostic, sizeof(diagnostic),
-                    "MACOS_EXEC_DIAG fd=%d path=%s fstat_rc=%d fstat_errno=%d "
-                    "st_mode=%o is_reg=%d st_uid=%d euid=%d access_x_rc=%d "
-                    "access_errno=%d fd_getfd=%d\n",
-                    exec_descriptor, fd_path.c_str(), fstat_result,
-                    fstat_result == 0 ? 0 : fstat_errno,
-                    static_cast<unsigned>(exec_stat.st_mode),
-                    fstat_result == 0 ? S_ISREG(exec_stat.st_mode) : -1,
-                    fstat_result == 0 ? static_cast<int>(exec_stat.st_uid) : -1,
-                    static_cast<int>(::geteuid()), access_result,
-                    access_result == 0 ? 0 : access_errno, fcntl_flags);
-                if (diagnostic_length > 0) {
-                    (void)::write(
-                        STDERR_FILENO, diagnostic,
-                        static_cast<std::size_t>(diagnostic_length));
-                }
-            }
-            ::execve(fd_path.c_str(), argv.data(), environment.data());
-#else
-            ::fexecve(exec_descriptor, argv.data(), environment.data());
-#endif
+        if (exec_override != nullptr) {
+            // Delegates the actual exec to the caller-supplied override
+            // (posix_private_exec_override() for the private-executable-
+            // image launch path -- see bounded_process_private.h and
+            // PrivateExecutableImage::posix_exec_in_child() for what it
+            // does per platform and why). This returns only on failure,
+            // with errno already set by the override.
+            (void)exec_override(exec_override_context, argv.data(), environment.data());
         } else {
             ::execve(request.executable_path.c_str(), argv.data(), environment.data());
         }
@@ -1736,18 +1687,18 @@ BoundedProcessResult run_bounded_posix_private_executable(
             result.error_code = "polyglot.process.cancelled";
             return result;
         }
-        // `descriptor` (image.posix_descriptor()) is already a read-only
-        // reopen sealed against further writes by
-        // materialize_private_executable_image_in_verified_parent() --
-        // see private_executable_image.cpp, where the original O_RDWR
-        // descriptor the bytes were written through is closed for real
-        // once materialization completes, specifically so that fd can be
-        // exec'd at all (Linux/macOS both refuse to execute a file that is
-        // open for writing anywhere, keyed on the inode's writer count,
-        // not on which fd number the exec call uses). No further reopen is
-        // needed or safe to add here.
+        // posix_private_exec_override() bridges to image.posix_exec_in_
+        // child(), which execs image.posix_descriptor() directly on Linux
+        // (fexecve) or, on macOS, by the image's real, still-linked path
+        // instead -- entirely internally, with no native path exposed
+        // through PrivateExecutableImage's header surface; see that
+        // method's doc comment and private_executable_image.cpp for why
+        // and how. `context` must outlive the call, which it does here:
+        // `image` is a const reference owned by our own caller.
         return run_posix(
-            transport, &request.arguments, &request.environment, descriptor,
+            transport, &request.arguments, &request.environment,
+            posix_private_exec_override,
+            const_cast<void*>(static_cast<const void*>(&image)),
             request.launch_committed, request.launch_committed_context);
 #else
         static_cast<void>(image);
