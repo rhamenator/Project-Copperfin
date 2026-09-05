@@ -824,11 +824,16 @@ This remains a non-executing prerequisite. `RQ-CF-AGENT-026` originally
 retained Windows' write-capable creation handle, which protected immutability
 but imposed a write-sharing obligation on any later loader open. The derived
 `RQ-CF-AGENT-027` transition below supersedes only that Windows same-handle
-detail. POSIX retains an unlinked descriptor, but portable descriptor
-execution, especially on macOS, remains unresolved. No working-directory
-entry, sandbox, endpoint/descendant policy, outcome audit, or product process
-creation is performed, and the `RQ-CF-AGENT-019` promotion gate remains
-invariantly denied.
+detail. Linux retains an unlinked descriptor and execs it directly by
+descriptor. macOS cannot do either: it has no true `fexecve()`, and its
+`/dev/fd` workaround for exec-by-descriptor only resolves paths for the same
+process that opened the descriptor directly, denying a forked child that
+merely inherited it -- so the derived `RQ-CF-AGENT-031` transition further
+below supersedes only macOS's unlink-before-success detail, retaining a
+linked, code-signed image instead. No working-directory entry, sandbox,
+endpoint/descendant policy, outcome audit, or product process creation is
+performed, and the `RQ-CF-AGENT-019` promotion gate remains invariantly
+denied.
 
 ## Windows immutable launch-handle transition prerequisite
 
@@ -869,9 +874,75 @@ and exits without exercising product authority.
 
 This is still not an executor. The opaque image exposes neither its file id,
 path, handle, nor a launch operation; the controller promotion gate remains
-denied. POSIX/macOS descriptor execution, working-directory entry, sandboxing,
-endpoint and descendant controls, process outcome audit, and actual tool
-execution remain separate requirements.
+denied. Linux descriptor execution, macOS retained-image execution,
+working-directory entry, sandboxing, endpoint and descendant controls,
+process outcome audit, and actual tool execution remain separate
+requirements.
+
+## macOS code-signed retained-image transition prerequisite
+
+Candidate `RQ-CF-AGENT-031` refines only macOS's detail of `RQ-CF-AGENT-026`.
+Three independently CI-falsified attempts preceded this text and are recorded
+here rather than discarded, because each ruled out a plausible-looking
+approach with real evidence rather than assumption. First, a leftover reopen
+from an early ETXTBSY fix used `/proc/self/fd` unconditionally with no
+`__APPLE__` branch, which does not exist on macOS. Second, clearing
+`FD_CLOEXEC` let a forked child locate its inherited descriptor's `/dev/fd`
+path, but macOS's fdescfs still refused that lookup with `EACCES`: `fstat()`
+on the same descriptor by raw number succeeds and reports the correct file,
+mode, and owner, proving the descriptor itself was never the problem, only
+path-based lookup of it from a process that did not open it directly. Third,
+keeping the image linked for its whole lifetime and reintroducing a real path
+only immediately before exec both violated the pre-existing
+"`RQ-CF-AGENT-026`: POSIX must unlink the image before exposing materialized
+authority" test (which does not distinguish POSIX platforms) and, separately,
+`linkat()` sourcing a hardlink from `/dev/fd` onto an already-unlinked
+(zero-link) file was refused outright with `EPERM`: macOS provides no
+supported way to resurrect an unlinked inode into the namespace, unlike
+Linux's well-known `/proc/self/fd` relinking convention.
+
+`RQ-CF-AGENT-031` instead keeps the image linked for its whole lifetime from
+materialization onward -- accepting that macOS cannot reproduce Linux's
+filesystem-namespace invisibility -- and substitutes a different security
+paradigm macOS actually enforces at the kernel level: code-signature
+verification at every exec. After the exact bytes are written and reread
+against the originally approved span (the same check Linux performs, at the
+same point, before anything further happens to the file), the platform
+boundary relaxes the file to owner read/write, ad-hoc code-signs it in place
+by invoking `/usr/bin/codesign` directly by fixed path (no shell, no PATH
+search, matching this document's existing no-shell/no-path-search posture
+for launching trusted binaries), and restores owner read/execute-only mode.
+Signing changes the file's exact bytes and size, so this is the one and only
+point where the raw pre-signature write is compared against the caller's
+span; from here on, validity means "unchanged since sealing," verified by
+shape (regular file, owner-only, mode `0500`, linked exactly once, and the
+post-signing size) rather than by re-comparing against the original bytes.
+The retained descriptor and real path persist for the image's entire
+lifetime and are destroyed together, only when the image object itself is
+destroyed; exec uses the real path directly, never `/dev/fd`.
+
+The security property this substitutes is deliberately weaker in one
+dimension and, arguably, stronger in another. It is weaker on
+confidentiality: unlike an unlinked file, another same-UID process can locate
+and read this file while it exists. It is not weaker on the integrity
+property `RQ-CF-AGENT-026`'s unlink actually exists to protect: because
+permission bits, `chflags`, and ACLs are all still owner-relaxable by any
+process sharing the file's UID -- exactly the actor this design must
+resist -- none of them would have added real protection here regardless of
+platform. A kernel-enforced signature check at the moment of exec cannot be
+defeated the same way; tampering after signing is refused at exec time, not
+merely discouraged by a policy the same attacker already has standing to
+relax. This has not yet been confirmed on a real macOS host; ad-hoc signing
+carries no certificate-backed provenance beyond "unchanged since sealing,"
+and enforcement strength is not proven uniform across every supported macOS
+host (Apple Silicon refuses any unsigned or mismatched code unconditionally;
+some older or Intel hosts have historically been more permissive toward
+locally created, non-quarantined binaries).
+
+This remains a non-executing prerequisite; only the retention mechanism
+changes. No working-directory entry, sandbox, endpoint/descendant policy,
+outcome audit, or product process creation is performed here, and the
+`RQ-CF-AGENT-019` promotion gate remains invariantly denied.
 
 ## Windows warned-unrestricted exact-image execution
 

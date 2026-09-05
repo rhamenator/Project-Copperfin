@@ -67,56 +67,46 @@ private:
     windows_launch_target() const noexcept;
     [[nodiscard]] const std::filesystem::path*
     windows_native_launch_target() const noexcept;
-    // POSIX only. Returns the retained, read+execute-only (0500), already-
-    // unlinked descriptor, or -1 if unavailable/invalid. No path is ever
-    // exposed for it. On Linux this is what posix_exec_in_child() execs
-    // directly (fexecve()). On macOS it is used only to source a fresh,
-    // launch-scoped hardlink in posix_prepare_launch_link() below -- never
-    // for /dev/fd-based exec itself.
+    // POSIX only. Returns the retained, read+execute-only (0500)
+    // descriptor, or -1 if unavailable/invalid. No path is ever exposed
+    // for it. On Linux (RQ-CF-AGENT-026) this is already-unlinked, and is
+    // what posix_exec_in_child() execs directly (fexecve()). On macOS
+    // (RQ-CF-AGENT-031) the underlying file instead stays linked and
+    // code-signed for the image's whole lifetime -- see that method's doc
+    // comment for why, and Impl's doc comment in the .cpp for the full
+    // reasoning; this descriptor is retained there only to keep the file's
+    // data alive and for ongoing shape verification, not for exec.
     [[nodiscard]] int posix_descriptor() const noexcept;
-    // POSIX only, meaningful only on macOS (a no-op returning true
-    // elsewhere). Must be called by the not-yet-forked process that
-    // materialized this image, once per launch attempt, before fork()+
-    // exec(). macOS's fdescfs (/dev/fd) only permits path lookups (open,
-    // access, exec) from the same process that opened the underlying
-    // descriptor directly; a forked child that merely inherited it via
-    // fork() is denied with EACCES even though the descriptor itself is
-    // perfectly valid (confirmed empirically: fstat() on the inherited
-    // descriptor succeeds and reports the correct file, while access()/
-    // execve() via its /dev/fd path both fail identically) -- so a forked
-    // child cannot exec posix_descriptor() by /dev/fd itself the way
-    // Linux's fexecve() can. This re-verifies the parent directory's
-    // identity (in case it changed since materialization) and, from here,
-    // in this same not-yet-forked process, creates one fresh hardlink
-    // sourced directly from posix_descriptor() back into that directory --
-    // entirely internally; no native path is ever exposed through this
-    // header's surface. A forked child then execs that real, ordinary
-    // linked path via posix_exec_in_child(), which carries none of
-    // /dev/fd's same-process restriction. Returns false with errno set on
-    // failure (no link created). posix_discard_launch_link() removes the
-    // link again once the one launch attempt this was prepared for has
-    // fully resolved.
-    [[nodiscard]] bool posix_prepare_launch_link() const noexcept;
-    // POSIX only, meaningful only on macOS (a no-op elsewhere). Removes
-    // the hardlink created by posix_prepare_launch_link(), if any. Safe to
-    // call unconditionally, including when no link was ever created. Must
-    // be called only after the exec attempt against that link has fully
-    // resolved one way or another (see run_bounded_posix_private_
-    // executable() for the exact safe-timing argument), since it is not
-    // otherwise safe to remove a path a forked child may still be in the
-    // middle of resolving for exec.
-    void posix_discard_launch_link() const noexcept;
     // POSIX only. Must be called only in the freshly-forked child,
     // immediately before exec, with argv/environment already fully built
-    // (NUL-terminated, execve()-style) and, on macOS, only after a
-    // successful posix_prepare_launch_link() in the pre-fork parent. On
-    // success this call never returns (execve() replaces the process
-    // image); on failure it returns false with errno set, for the caller
-    // to report and _exit() as usual. On Linux this execs posix_
-    // descriptor() directly (fexecve()). On macOS it execs the real,
-    // launch-scoped path posix_prepare_launch_link() created instead --
-    // entirely internally; no native path is ever exposed through this
-    // header's surface.
+    // (NUL-terminated, execve()-style). On success this call never returns
+    // (execve() replaces the process image); on failure it returns false
+    // with errno set, for the caller to report and _exit() as usual.
+    //
+    // On Linux (RQ-CF-AGENT-026) this execs posix_descriptor() directly
+    // (fexecve()) -- the file is already unlinked, so no path is involved.
+    //
+    // On macOS (RQ-CF-AGENT-031, which supersedes RQ-CF-AGENT-026's POSIX
+    // unlink clause for this platform only) this execs the image's real,
+    // permanently-linked path instead -- entirely internally; no native
+    // path is ever exposed through this header's surface. macOS provides
+    // no supported way to relink an already-unlinked file back into the
+    // namespace (confirmed empirically: linkat() sourcing from a /dev/fd
+    // path onto a zero-link inode fails with EPERM), and no true
+    // fexecve() analog either (its /dev/fd workaround for exec-by-
+    // descriptor only permits path lookups from the same process that
+    // opened the descriptor directly, denying a forked child that merely
+    // inherited it via fork() -- confirmed empirically: fstat() on the
+    // inherited descriptor succeeds and reports the correct file, while
+    // access()/execve() via its /dev/fd path both fail identically with
+    // EACCES). Since filesystem-namespace invisibility is unavailable,
+    // materialize_private_executable_image_in_verified_parent() instead
+    // ad-hoc code-signs the file once, immediately after its exact bytes
+    // are written and verified, so that AMFI refuses to exec it at the
+    // kernel level if its on-disk content no longer matches that
+    // signature -- unlike permission bits, chflags, or ACLs, this cannot
+    // be silently defeated by a same-UID attacker merely by owning the
+    // file.
     [[nodiscard]] bool posix_exec_in_child(
         char* const argv[], char* const environment[]) const noexcept;
 

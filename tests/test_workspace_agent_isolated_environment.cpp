@@ -1347,9 +1347,36 @@ void test_prepared_candidate_materializes_only_retained_snapshot() {
     const auto temporary =
         tree.session_storage / "session-1" / "temp";
 #if defined(_WIN32)
-    expect(std::filesystem::exists(
-               temporary / "copperfin-agent-image-1.exe"),
+    const auto native_image_path = temporary / "copperfin-agent-image-1.exe";
+#else
+    const auto native_image_path = temporary / "copperfin-agent-image-1.bin";
+#endif
+#if defined(_WIN32)
+    expect(std::filesystem::exists(native_image_path),
            "RQ-CF-AGENT-026: Windows must retain one handle-protected image while authority is live");
+#elif defined(__APPLE__)
+    {
+        // RQ-CF-AGENT-031 (supersedes RQ-CF-AGENT-026's POSIX unlink
+        // clause for macOS only, which has no supported way to relink an
+        // already-unlinked file back into the namespace, and no true
+        // fexecve() analog either -- see PrivateExecutableImage's header
+        // for the full reasoning): the image stays linked and
+        // read+execute-only for its whole lifetime, defended by a
+        // kernel-enforced code signature rather than filesystem-namespace
+        // invisibility. Actual signature enforcement at exec time is
+        // exercised by this file's own bounded-launch tests, which exec
+        // this same materialization path for real.
+        std::error_code status_error;
+        const auto status =
+            std::filesystem::status(native_image_path, status_error);
+        expect(!status_error &&
+                   status.type() == std::filesystem::file_type::regular &&
+                   status.permissions() ==
+                       (std::filesystem::perms::owner_read |
+                        std::filesystem::perms::owner_exec),
+               "RQ-CF-AGENT-031: macOS must retain one code-signed, "
+               "read+execute-only image while authority is live");
+    }
 #else
     expect(std::filesystem::is_empty(temporary),
            "RQ-CF-AGENT-026: POSIX must unlink the image before exposing materialized authority");
@@ -1374,8 +1401,7 @@ void test_prepared_candidate_materializes_only_retained_snapshot() {
     materialized.launch.reset();
     stop_thread.join();
     expect(stop_finished.load() && stop_result.revoked &&
-               !std::filesystem::exists(
-                   temporary / "copperfin-agent-image-1.exe"),
+               !std::filesystem::exists(native_image_path),
            "RQ-CF-AGENT-026: image cleanup must precede lease release and completed revocation");
 
     const auto cleaned = controller.cleanup_pending_session_layout(audit_sink());
