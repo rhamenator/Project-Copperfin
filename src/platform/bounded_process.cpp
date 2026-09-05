@@ -1687,36 +1687,19 @@ BoundedProcessResult run_bounded_posix_private_executable(
             result.error_code = "polyglot.process.cancelled";
             return result;
         }
-        // fexecve()/execve("/dev/fd/N") on the raw materialized-image
-        // descriptor fails with ETXTBSY: it was opened O_RDWR to write the
-        // executable's bytes into it during materialization, and both
-        // Linux and macOS refuse to execute a file that is still open for
-        // writing anywhere. Re-open the same already-unlinked, already-
-        // identity-verified file read-only via /proc/self/fd for the exec
-        // itself; the O_RDWR original stays open and owned by `image` for
-        // its own lifetime, unaffected.
-        const std::string readonly_path =
-            "/proc/self/fd/" + std::to_string(descriptor);
-        const int readonly_descriptor =
-            ::open(readonly_path.c_str(), O_RDONLY | O_CLOEXEC);
-        if (readonly_descriptor < 0) {
-            BoundedProcessResult result;
-            result.status = BoundedProcessStatus::launch_failed;
-            result.error_code = "workspace_agent.process_execution_failed";
-            return result;
-        }
-        struct ScopedFileDescriptor {
-            int fd;
-            ~ScopedFileDescriptor() {
-                if (fd >= 0) {
-                    ::close(fd);
-                }
-            }
-        } readonly_guard{readonly_descriptor};
+        // `descriptor` (image.posix_descriptor()) is already a read-only
+        // reopen sealed against further writes by
+        // materialize_private_executable_image_in_verified_parent() --
+        // see private_executable_image.cpp, where the original O_RDWR
+        // descriptor the bytes were written through is closed for real
+        // once materialization completes, specifically so that fd can be
+        // exec'd at all (Linux/macOS both refuse to execute a file that is
+        // open for writing anywhere, keyed on the inode's writer count,
+        // not on which fd number the exec call uses). No further reopen is
+        // needed or safe to add here.
         return run_posix(
-            transport, &request.arguments, &request.environment,
-            readonly_descriptor, request.launch_committed,
-            request.launch_committed_context);
+            transport, &request.arguments, &request.environment, descriptor,
+            request.launch_committed, request.launch_committed_context);
 #else
         static_cast<void>(image);
         static_cast<void>(request);
