@@ -31,9 +31,11 @@
 #include <bcrypt.h>
 #elif defined(__linux__)
 #include <cerrno>
+#include <pthread.h>
 #include <sys/random.h>
 #include <unistd.h>
 #elif defined(__APPLE__)
+#include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
 #endif
@@ -279,6 +281,78 @@ std::uint64_t current_process_execution_identity() noexcept {
     const auto process_id = ::getpid();
     return process_id > 0 ? static_cast<std::uint64_t>(process_id) : 0U;
 #endif
+}
+
+#if !defined(_WIN32)
+// RQ-CF-AGENT-028 / issue #5493: a PID-only check can only ever detect a
+// fork from the forked-away child's side -- its getpid() genuinely differs
+// from the value captured before an application-supplied audit-sink
+// callback ran. The parent's own PID never changes across its own fork()
+// call, so it is permanently blind to a fork having happened at all unless
+// something else observes it. pthread_atfork() lets both continuations
+// observe the same fork: its child handler runs in the new child
+// immediately after fork() (before fork() returns there), and its parent
+// handler runs in the parent immediately after fork() returns there. Each
+// continuation starts from the same pre-fork counter value and bumps its
+// own copy exactly once, so a caller that snapshots this counter before a
+// callback and compares it after sees a change on *either* side of a fork
+// that occurred during the callback -- not just the side whose own PID
+// changed.
+std::atomic<std::uint64_t> workspace_agent_fork_generation{0U};
+
+void workspace_agent_fork_generation_child_handler() noexcept {
+    workspace_agent_fork_generation.fetch_add(1U, std::memory_order_relaxed);
+}
+
+void workspace_agent_fork_generation_parent_handler() noexcept {
+    workspace_agent_fork_generation.fetch_add(1U, std::memory_order_relaxed);
+}
+
+// pthread_atfork() can itself fail (documented only for ENOMEM, but the
+// contract makes no promise it always succeeds). If registration never
+// succeeds, the counter below can never move and would look identical
+// before and after every callback -- silently indistinguishable from "no
+// fork happened," which is exactly the false negative this whole
+// mechanism exists to close. A function-local static's initializer runs
+// at most once even under concurrent first calls (C++11 thread-safe
+// initialization), so registration is attempted exactly once per process;
+// its result is cached and trusted for the rest of the process's
+// lifetime rather than retried, since a retry could not tell a caller
+// mid-callback whether the fork it is currently checking for would have
+// been observed.
+bool workspace_agent_fork_generation_trustworthy() noexcept {
+    static const bool registered = ::pthread_atfork(
+        nullptr, workspace_agent_fork_generation_parent_handler,
+        workspace_agent_fork_generation_child_handler) == 0;
+    return registered;
+}
+#endif
+
+// trustworthy=false means the counter itself could not be wired up and
+// must not be trusted; callers must treat that the same as "a fork was
+// observed" (see workspace_agent_fork_observed()) and fail closed, rather
+// than silently trusting a counter that can never move.
+struct WorkspaceAgentForkGenerationSnapshot {
+    bool trustworthy = false;
+    std::uint64_t value = 0U;
+};
+
+WorkspaceAgentForkGenerationSnapshot
+capture_workspace_agent_fork_generation() noexcept {
+#if defined(_WIN32)
+    return {true, 0U};
+#else
+    return {
+        workspace_agent_fork_generation_trustworthy(),
+        workspace_agent_fork_generation.load(std::memory_order_relaxed)};
+#endif
+}
+
+bool workspace_agent_fork_observed(
+    const WorkspaceAgentForkGenerationSnapshot& before,
+    const WorkspaceAgentForkGenerationSnapshot& after) noexcept {
+    return !before.trustworthy || !after.trustworthy ||
+        before.value != after.value;
 }
 
 std::string make_workspace_agent_operation_namespace() noexcept {
@@ -1132,6 +1206,8 @@ WorkspaceAgentSessionController::read_workspace_file_snapshot(
 
         const std::uint64_t execution_process_identity =
             current_process_execution_identity();
+        const WorkspaceAgentForkGenerationSnapshot fork_generation_at_intent =
+            capture_workspace_agent_fork_generation();
         const std::string operation_instance_id =
             make_workspace_agent_operation_namespace();
         if (execution_process_identity == 0U || operation_instance_id.empty()) {
@@ -1187,40 +1263,56 @@ WorkspaceAgentSessionController::read_workspace_file_snapshot(
             return result;
         }
         if (current_process_execution_identity() != execution_process_identity) {
+            // Forked-away child continuation: its own PID differs, so it
+            // denies and stops without committing an outcome audit,
+            // mirroring execute_materialized_process_launch's identical
+            // treatment of this side (RQ-CF-AGENT-028 / issue #5493).
             result.diagnostic_code =
                 "workspace_agent.file_read_process_changed_after_intent_audit";
             return result;
         }
+        // A PID-only check is permanently blind to a fork that happened
+        // during the callback but left this continuation's own PID
+        // unchanged -- that is the parent's side of exactly that fork. See
+        // capture_workspace_agent_fork_generation()'s doc comment.
+        const bool fork_observed_after_intent_audit = workspace_agent_fork_observed(
+            fork_generation_at_intent, capture_workspace_agent_fork_generation());
 
-        result.attempted = true;
-        const WorkspaceAgentFileTargetInspection expected{
-            .allowed = true,
-            .canonical_path = preliminary.canonical_path,
-            .identity = preliminary.identity,
-            .diagnostic_code = "workspace_agent.target_request_allowed"};
-        const auto snapshot = file_target_boundary_->snapshot_workspace_file(
-            expected, workspace_agent_workspace_file_read_max_bytes);
-        if (snapshot.captured) {
-            const auto final_preflight = preflight_file_target_request(target_request);
-            if (final_preflight.allowed &&
-                final_preflight.session_generation == preliminary.session_generation &&
-                final_preflight.tool_id == preliminary.tool_id &&
-                final_preflight.canonical_path == preliminary.canonical_path &&
-                final_preflight.identity == preliminary.identity &&
-                snapshot.identity == preliminary.identity) {
-                result.bytes = snapshot.bytes;
-                result.diagnostic_code = "workspace_agent.file_read_captured";
-                outcome.outcome = "captured";
-                outcome.diagnostic_code = result.diagnostic_code;
+        if (fork_observed_after_intent_audit) {
+            result.diagnostic_code =
+                "workspace_agent.file_read_fork_observed_after_intent_audit";
+            outcome.diagnostic_code = result.diagnostic_code;
+        } else {
+            result.attempted = true;
+            const WorkspaceAgentFileTargetInspection expected{
+                .allowed = true,
+                .canonical_path = preliminary.canonical_path,
+                .identity = preliminary.identity,
+                .diagnostic_code = "workspace_agent.target_request_allowed"};
+            const auto snapshot = file_target_boundary_->snapshot_workspace_file(
+                expected, workspace_agent_workspace_file_read_max_bytes);
+            if (snapshot.captured) {
+                const auto final_preflight = preflight_file_target_request(target_request);
+                if (final_preflight.allowed &&
+                    final_preflight.session_generation == preliminary.session_generation &&
+                    final_preflight.tool_id == preliminary.tool_id &&
+                    final_preflight.canonical_path == preliminary.canonical_path &&
+                    final_preflight.identity == preliminary.identity &&
+                    snapshot.identity == preliminary.identity) {
+                    result.bytes = snapshot.bytes;
+                    result.diagnostic_code = "workspace_agent.file_read_captured";
+                    outcome.outcome = "captured";
+                    outcome.diagnostic_code = result.diagnostic_code;
+                } else {
+                    result.diagnostic_code = "workspace_agent.file_read_identity_changed";
+                    outcome.diagnostic_code = result.diagnostic_code;
+                }
             } else {
-                result.diagnostic_code = "workspace_agent.file_read_identity_changed";
+                result.diagnostic_code = snapshot.diagnostic_code.empty()
+                    ? "workspace_agent.file_read_failed"
+                    : snapshot.diagnostic_code;
                 outcome.diagnostic_code = result.diagnostic_code;
             }
-        } else {
-            result.diagnostic_code = snapshot.diagnostic_code.empty()
-                ? "workspace_agent.file_read_failed"
-                : snapshot.diagnostic_code;
-            outcome.diagnostic_code = result.diagnostic_code;
         }
         const AuditOutcome outcome_audit = commit_audit_event(outcome, audit_sink, this);
         result.outcome_audit_committed = outcome_audit.committed;
@@ -1658,6 +1750,8 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             environment_plan.effective_mode;
         const std::uint64_t execution_process_identity =
             current_process_execution_identity();
+        const WorkspaceAgentForkGenerationSnapshot fork_generation_at_intent =
+            capture_workspace_agent_fork_generation();
         if (execution_process_identity == 0U) {
             unavailable.diagnostic_code =
                 "workspace_agent.process_execution_namespace_unavailable";
@@ -1866,9 +1960,25 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
         // the forked continuation releases its private launch authority and
         // stops before either action.
         if (current_process_execution_identity() != execution_process_identity) {
+            // Forked-away child continuation: its own PID differs, so it
+            // denies and stops without committing an outcome audit.
             result.diagnostic_code =
                 "workspace_agent.process_execution_process_changed_after_intent_audit";
             return result;
+        }
+        // A PID-only check is permanently blind to a fork that happened
+        // during the callback but left this continuation's own PID
+        // unchanged -- that is the parent's side of exactly that fork
+        // (RQ-CF-AGENT-028 / issue #5493). Unlike the forked-away child
+        // above, the parent still commits a denied outcome audit here,
+        // like any other denial reason.
+        if (denial.empty() &&
+            workspace_agent_fork_observed(
+                fork_generation_at_intent,
+                capture_workspace_agent_fork_generation())) {
+            denial = "workspace_agent.process_execution_fork_observed_after_intent_audit";
+            outcome_event.outcome = "denied";
+            outcome_event.diagnostic_code = denial;
         }
 
         if (denial.empty()) {
