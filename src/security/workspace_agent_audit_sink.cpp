@@ -139,13 +139,14 @@ bool process_launch_failure_diagnostic_is_valid(std::string_view diagnostic) {
 }
 
 bool process_denial_diagnostic_is_valid(std::string_view diagnostic) {
-    static constexpr std::array<std::string_view, 6U> diagnostics{{
+    static constexpr std::array<std::string_view, 7U> diagnostics{{
         "workspace_agent.process_execution_elevated_host_denied",
         "workspace_agent.process_execution_elevation_unavailable",
         "workspace_agent.process_execution_invalid_controls",
         "workspace_agent.process_execution_platform_unavailable",
         "workspace_agent.process_execution_working_directory_unavailable",
-        "workspace_agent.process_execution_requires_unrestricted_local"}};
+        "workspace_agent.process_execution_requires_unrestricted_local",
+        "workspace_agent.process_execution_fork_observed_after_intent_audit"}};
     return std::find(diagnostics.begin(), diagnostics.end(), diagnostic) !=
         diagnostics.end();
 }
@@ -232,7 +233,9 @@ bool workspace_file_read_audit_event_is_valid(
          event.diagnostic_code == "workspace_agent.file_read_identity_changed" ||
          event.diagnostic_code == "workspace_agent.file_read_size_limit_exceeded" ||
          event.diagnostic_code == "workspace_agent.file_read_target_unavailable" ||
-         event.diagnostic_code == "workspace_agent.target_root_identity_changed");
+         event.diagnostic_code == "workspace_agent.target_root_identity_changed" ||
+         event.diagnostic_code ==
+             "workspace_agent.file_read_fork_observed_after_intent_audit");
 }
 
 bool session_audit_event_is_valid(const WorkspaceAgentSessionAuditEvent& event) {
