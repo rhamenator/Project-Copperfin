@@ -308,22 +308,52 @@ void workspace_agent_fork_generation_parent_handler() noexcept {
     workspace_agent_fork_generation.fetch_add(1U, std::memory_order_relaxed);
 }
 
-std::uint64_t current_workspace_agent_fork_generation() noexcept {
-    // A function-local static's initializer runs at most once even under
-    // concurrent first calls (C++11 thread-safe initialization), so this
-    // registers the atfork handlers exactly once per process regardless of
-    // how many threads call this function.
-    static const int registered = ::pthread_atfork(
+// pthread_atfork() can itself fail (documented only for ENOMEM, but the
+// contract makes no promise it always succeeds). If registration never
+// succeeds, the counter below can never move and would look identical
+// before and after every callback -- silently indistinguishable from "no
+// fork happened," which is exactly the false negative this whole
+// mechanism exists to close. A function-local static's initializer runs
+// at most once even under concurrent first calls (C++11 thread-safe
+// initialization), so registration is attempted exactly once per process;
+// its result is cached and trusted for the rest of the process's
+// lifetime rather than retried, since a retry could not tell a caller
+// mid-callback whether the fork it is currently checking for would have
+// been observed.
+bool workspace_agent_fork_generation_trustworthy() noexcept {
+    static const bool registered = ::pthread_atfork(
         nullptr, workspace_agent_fork_generation_parent_handler,
-        workspace_agent_fork_generation_child_handler);
-    (void)registered;
-    return workspace_agent_fork_generation.load(std::memory_order_relaxed);
-}
-#else
-std::uint64_t current_workspace_agent_fork_generation() noexcept {
-    return 0U;
+        workspace_agent_fork_generation_child_handler) == 0;
+    return registered;
 }
 #endif
+
+// trustworthy=false means the counter itself could not be wired up and
+// must not be trusted; callers must treat that the same as "a fork was
+// observed" (see workspace_agent_fork_observed()) and fail closed, rather
+// than silently trusting a counter that can never move.
+struct WorkspaceAgentForkGenerationSnapshot {
+    bool trustworthy = false;
+    std::uint64_t value = 0U;
+};
+
+WorkspaceAgentForkGenerationSnapshot
+capture_workspace_agent_fork_generation() noexcept {
+#if defined(_WIN32)
+    return {true, 0U};
+#else
+    return {
+        workspace_agent_fork_generation_trustworthy(),
+        workspace_agent_fork_generation.load(std::memory_order_relaxed)};
+#endif
+}
+
+bool workspace_agent_fork_observed(
+    const WorkspaceAgentForkGenerationSnapshot& before,
+    const WorkspaceAgentForkGenerationSnapshot& after) noexcept {
+    return !before.trustworthy || !after.trustworthy ||
+        before.value != after.value;
+}
 
 std::string make_workspace_agent_operation_namespace() noexcept {
     std::array<unsigned char, 16U> bytes{};
@@ -1176,8 +1206,8 @@ WorkspaceAgentSessionController::read_workspace_file_snapshot(
 
         const std::uint64_t execution_process_identity =
             current_process_execution_identity();
-        const std::uint64_t fork_generation_at_intent =
-            current_workspace_agent_fork_generation();
+        const WorkspaceAgentForkGenerationSnapshot fork_generation_at_intent =
+            capture_workspace_agent_fork_generation();
         const std::string operation_instance_id =
             make_workspace_agent_operation_namespace();
         if (execution_process_identity == 0U || operation_instance_id.empty()) {
@@ -1244,10 +1274,9 @@ WorkspaceAgentSessionController::read_workspace_file_snapshot(
         // A PID-only check is permanently blind to a fork that happened
         // during the callback but left this continuation's own PID
         // unchanged -- that is the parent's side of exactly that fork. See
-        // current_workspace_agent_fork_generation()'s doc comment.
-        const bool fork_observed_after_intent_audit =
-            current_workspace_agent_fork_generation() !=
-            fork_generation_at_intent;
+        // capture_workspace_agent_fork_generation()'s doc comment.
+        const bool fork_observed_after_intent_audit = workspace_agent_fork_observed(
+            fork_generation_at_intent, capture_workspace_agent_fork_generation());
 
         if (fork_observed_after_intent_audit) {
             result.diagnostic_code =
@@ -1721,8 +1750,8 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             environment_plan.effective_mode;
         const std::uint64_t execution_process_identity =
             current_process_execution_identity();
-        const std::uint64_t fork_generation_at_intent =
-            current_workspace_agent_fork_generation();
+        const WorkspaceAgentForkGenerationSnapshot fork_generation_at_intent =
+            capture_workspace_agent_fork_generation();
         if (execution_process_identity == 0U) {
             unavailable.diagnostic_code =
                 "workspace_agent.process_execution_namespace_unavailable";
@@ -1904,8 +1933,9 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
         // above, the parent still commits a denied outcome audit here,
         // like any other denial reason.
         if (denial.empty() &&
-            current_workspace_agent_fork_generation() !=
-                fork_generation_at_intent) {
+            workspace_agent_fork_observed(
+                fork_generation_at_intent,
+                capture_workspace_agent_fork_generation())) {
             denial = "workspace_agent.process_execution_fork_observed_after_intent_audit";
             outcome_event.outcome = "denied";
             outcome_event.diagnostic_code = denial;
