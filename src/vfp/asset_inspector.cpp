@@ -20,6 +20,7 @@
 #include <map>
 #include <mutex>
 #include <optional>
+#include <random>
 #include <set>
 #include <sstream>
 #include <string_view>
@@ -2213,6 +2214,247 @@ DatabaseJsonImportPlanResult build_database_json_import_plan(const std::string_v
     }
 
     return {.ok = true, .error_code = {}, .plan = std::move(plan)};
+}
+
+namespace {
+
+std::string generate_import_staging_suffix() {
+    static thread_local std::mt19937_64 engine{std::random_device{}()};
+    std::uniform_int_distribution<std::uint64_t> distribution;
+    std::ostringstream stream;
+    stream << std::hex << std::setfill('0') << std::setw(16) << distribution(engine);
+    return stream.str();
+}
+
+struct StagedImportFile {
+    std::filesystem::path staged_path;
+    std::filesystem::path final_path;
+};
+
+void remove_staged_import_files_and_directory(
+    const std::vector<StagedImportFile>& staged,
+    const std::filesystem::path& staging_dir) {
+    std::error_code ignored;
+    for (const auto& file : staged) {
+        std::filesystem::remove(file.staged_path, ignored);
+    }
+    std::filesystem::remove_all(staging_dir, ignored);
+}
+
+struct TableRowExtractionResult {
+    bool ok = false;
+    std::string error;
+    std::vector<std::vector<std::string>> rows;
+};
+
+// Re-parses one table's already-bounded records_json fragment (a substring
+// of the overall envelope build_database_json_import_plan() already size-
+// limited) and converts each row into the plain-string-per-field shape
+// create_dbf_table_file() expects, using each field's own validated type to
+// decide how a JSON value must be shaped: boolean for logical fields,
+// number for numeric fields, string otherwise. A present-but-wrongly-typed
+// value fails closed rather than silently coercing; a null or absent value
+// becomes an empty field value.
+TableRowExtractionResult extract_import_table_rows(
+    const DatabaseJsonImportTablePlan& table_plan) {
+    using copperfin::platform::JsonSelectionError;
+    using copperfin::platform::JsonValueKind;
+    using copperfin::platform::parse_json_document;
+
+    const auto parsed = parse_json_document(table_plan.records_json);
+    if (!parsed.ok()) {
+        return {.ok = false, .error = asset_inspector_text(
+            "Vfp.AssetInspector.Error.DatabaseImportInvalidRecords",
+            {{"table", table_plan.name}})};
+    }
+
+    TableRowExtractionResult result;
+    for (std::size_t row_index = 0U;; ++row_index) {
+        const std::string row_pointer = "/" + std::to_string(row_index);
+        const auto row = parsed.document.select(row_pointer);
+        if (row.error == JsonSelectionError::value_not_found) {
+            break;
+        }
+        if (!row.ok() || row.kind != JsonValueKind::object) {
+            return {.ok = false, .error = asset_inspector_text(
+                "Vfp.AssetInspector.Error.DatabaseImportInvalidRecords",
+                {{"table", table_plan.name}})};
+        }
+
+        std::vector<std::string> row_values;
+        row_values.reserve(table_plan.fields.size());
+        for (const auto& field : table_plan.fields) {
+            const auto value = parsed.document.select(
+                row_pointer + "/" + json_pointer_token(field.name));
+            const char upper_type = static_cast<char>(
+                std::toupper(static_cast<unsigned char>(field.type)));
+            const bool is_numeric = (upper_type == 'N' || upper_type == 'F' ||
+                upper_type == 'I' || upper_type == 'B' || upper_type == 'Y');
+            const bool is_logical = (upper_type == 'L');
+
+            if (!value.ok() || value.kind == JsonValueKind::null_value) {
+                row_values.emplace_back();
+                continue;
+            }
+            if (is_logical) {
+                if (value.kind != JsonValueKind::boolean) {
+                    return {.ok = false, .error = asset_inspector_text(
+                        "Vfp.AssetInspector.Error.DatabaseImportInvalidRecords",
+                        {{"table", table_plan.name}})};
+                }
+                row_values.push_back(value.raw_json == "true" ? "T" : "F");
+            } else if (is_numeric) {
+                if (value.kind != JsonValueKind::number) {
+                    return {.ok = false, .error = asset_inspector_text(
+                        "Vfp.AssetInspector.Error.DatabaseImportInvalidRecords",
+                        {{"table", table_plan.name}})};
+                }
+                row_values.push_back(value.raw_json);
+            } else {
+                if (value.kind != JsonValueKind::string) {
+                    return {.ok = false, .error = asset_inspector_text(
+                        "Vfp.AssetInspector.Error.DatabaseImportInvalidRecords",
+                        {{"table", table_plan.name}})};
+                }
+                row_values.push_back(value.decoded_string);
+            }
+        }
+        result.rows.push_back(std::move(row_values));
+    }
+    result.ok = true;
+    return result;
+}
+
+}  // namespace
+
+DatabaseJsonImportResult materialize_database_json_import_plan(
+    const DatabaseJsonImportPlan& plan,
+    const std::string& dbc_path) {
+    namespace fs = std::filesystem;
+    const auto failure = [](std::string message) {
+        return DatabaseJsonImportResult{.ok = false, .error = std::move(message), .table_count = 0U};
+    };
+
+    if (plan.tables.empty()) {
+        return failure(asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportNoTables"));
+    }
+
+    const fs::path dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
+    const fs::path dbc_dir = dbc_fs_path.parent_path();
+
+    std::error_code exists_error;
+    if (fs::exists(dbc_fs_path, exists_error)) {
+        return failure(asset_inspector_text(
+            "Vfp.AssetInspector.Error.DatabaseImportDestinationExists", {{"path", dbc_path}}));
+    }
+
+    // Resolve and pre-check every table's destination path up front -- one
+    // already-existing table file must fail the whole import closed before
+    // anything is written, not partially materialize around it.
+    struct TableDestination {
+        const DatabaseJsonImportTablePlan* plan = nullptr;
+        fs::path path;
+    };
+    std::vector<TableDestination> table_destinations;
+    std::set<std::string> casefolded_names;
+    for (const auto& table_plan : plan.tables) {
+        if (!casefolded_names.insert(lowercase_copy(table_plan.name)).second) {
+            return failure(asset_inspector_text(
+                "Vfp.AssetInspector.Error.DatabaseImportDuplicateTableName",
+                {{"table", table_plan.name}}));
+        }
+        const fs::path table_path = dbc_dir /
+            copperfin::platform::path_from_utf8_string(table_plan.name + ".dbf");
+        if (fs::exists(table_path, exists_error)) {
+            return failure(asset_inspector_text(
+                "Vfp.AssetInspector.Error.DatabaseImportDestinationExists",
+                {{"path", copperfin::platform::path_to_utf8_string(table_path)}}));
+        }
+        table_destinations.push_back({&table_plan, table_path});
+    }
+
+    // Stage every file in a temporary directory beside the destination DBC
+    // (same volume, so the final commit renames are atomic on POSIX and
+    // Windows), verify each one, and only then commit them into place.
+    const fs::path staging_dir = dbc_dir /
+        (".copperfin-import-" + generate_import_staging_suffix());
+    std::error_code mkdir_error;
+    fs::create_directories(staging_dir, mkdir_error);
+    if (mkdir_error) {
+        return failure(asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportStagingFailed"));
+    }
+
+    std::vector<StagedImportFile> staged;
+    const auto abort_staging = [&](std::string message) {
+        remove_staged_import_files_and_directory(staged, staging_dir);
+        return failure(std::move(message));
+    };
+
+    for (const auto& destination : table_destinations) {
+        const TableRowExtractionResult rows = extract_import_table_rows(*destination.plan);
+        if (!rows.ok) {
+            return abort_staging(rows.error);
+        }
+        const fs::path staged_path = staging_dir / destination.path.filename();
+        const DbfWriteResult write_result = create_dbf_table_file(
+            copperfin::platform::path_to_utf8_string(staged_path),
+            destination.plan->fields,
+            rows.rows);
+        if (!write_result.ok) {
+            return abort_staging(write_result.error);
+        }
+        staged.push_back({staged_path, destination.path});
+    }
+
+    // The catalog is a minimal DBF: one row per table registering it as a
+    // "table" object so load_database_catalog_snapshot() resolves it back.
+    // No PROPERTIES memo, database-level row, field-level catalog rows, or
+    // relation metadata is reconstructed -- table structure and data only,
+    // matching this slice's scope.
+    const std::vector<DbfFieldDescriptor> catalog_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 0U, .length = 10U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 0U, .length = 128U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 0U, .length = 128U, .decimal_count = 0U},
+    };
+    std::vector<std::vector<std::string>> catalog_rows;
+    catalog_rows.reserve(table_destinations.size());
+    for (const auto& destination : table_destinations) {
+        catalog_rows.push_back({"Table", destination.plan->name, std::string{}});
+    }
+    const fs::path staged_dbc_path = staging_dir / dbc_fs_path.filename();
+    const DbfWriteResult catalog_result = create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(staged_dbc_path),
+        catalog_fields,
+        catalog_rows);
+    if (!catalog_result.ok) {
+        return abort_staging(catalog_result.error);
+    }
+    staged.push_back({staged_dbc_path, dbc_fs_path});
+
+    // Commit: tables before the catalog (already the staged order above),
+    // one rename at a time. A same-volume rename is atomic per file; if any
+    // rename fails partway, every already-committed file is removed so the
+    // destination is left exactly as it was found -- nothing partial.
+    std::vector<StagedImportFile> committed;
+    committed.reserve(staged.size());
+    for (const auto& file : staged) {
+        std::error_code rename_error;
+        fs::rename(file.staged_path, file.final_path, rename_error);
+        if (rename_error) {
+            std::error_code ignored;
+            for (const auto& done : committed) {
+                fs::remove(done.final_path, ignored);
+            }
+            remove_staged_import_files_and_directory(staged, staging_dir);
+            return failure(asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportCommitFailed"));
+        }
+        committed.push_back(file);
+    }
+
+    std::error_code cleanup_error;
+    fs::remove_all(staging_dir, cleanup_error);
+
+    return {.ok = true, .error = {}, .table_count = table_destinations.size()};
 }
 
 }  // namespace copperfin::vfp

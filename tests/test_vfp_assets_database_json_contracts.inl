@@ -313,3 +313,104 @@ void test_build_database_json_import_plan_validates_without_mutation() {
                overflow_decimal.error_code == "database_json_import.invalid_field",
            "database JSON planning should reject out-of-range decimal text without integer wraparound");
 }
+
+void test_materialize_database_json_import_plan_fails_closed_and_round_trips() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_database_json_materialize_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::string document = R"JSON({
+  "schema_version": 1,
+  "database": {"path": "/source/Northwind.dbc", "name": "Northwind"},
+  "catalog": [{"record_index": 1}],
+  "tables": {
+    "Orders": {
+      "fields": [{"name": "ORDERID", "type": "N", "length": 8, "decimals": 0}],
+      "records": [{"ORDERID": 7}, {"ORDERID": 12}]
+    },
+    "Customers": {
+      "fields": [{"name": "NAME", "type": "C", "length": 40, "decimals": 0},
+                 {"name": "ACTIVE", "type": "L", "length": 1, "decimals": 0}],
+      "records": [{"NAME": "Acme", "ACTIVE": true}, {"NAME": null, "ACTIVE": false}]
+    }
+  }
+})JSON";
+    const auto plan_result = copperfin::vfp::build_database_json_import_plan(document);
+    expect(plan_result.ok, "materializer fixture plan should build successfully");
+    if (!plan_result.ok) {
+        return;
+    }
+
+    // Empty plan.
+    const auto empty_result = copperfin::vfp::materialize_database_json_import_plan(
+        copperfin::vfp::DatabaseJsonImportPlan{}, (temp_dir / "empty.dbc").string());
+    expect(!empty_result.ok && empty_result.table_count == 0U,
+           "materializing a plan with no tables should fail closed");
+    expect(!fs::exists(temp_dir / "empty.dbc"),
+           "a no-tables plan must not create a destination DBC");
+
+    // Successful materialization and round-trip via the real exporter.
+    const fs::path dbc_path = temp_dir / "northwind.dbc";
+    const auto materialize_result = copperfin::vfp::materialize_database_json_import_plan(
+        plan_result.plan, dbc_path.string());
+    expect(materialize_result.ok, "materializing a valid plan should succeed: " + materialize_result.error);
+    expect(materialize_result.table_count == 2U, "materializing should report both tables");
+    expect(fs::exists(dbc_path), "materializing should create the destination DBC");
+    expect(fs::exists(temp_dir / "Orders.dbf") && fs::exists(temp_dir / "Customers.dbf"),
+           "materializing should create one DBF per table");
+
+    const auto reexported = copperfin::vfp::export_database_as_json(dbc_path.string());
+    expect(reexported.ok, "the materialized DBC should itself be exportable: " + reexported.error);
+    if (reexported.ok) {
+        expect(reexported.json.find("\"NAME\": \"Acme\"") != std::string::npos,
+               "materializing should restore character row data");
+        expect(reexported.json.find("\"NAME\": \"\"") != std::string::npos,
+               "materializing should turn a JSON null into a blank field value rather than failing");
+        expect(reexported.json.find("\"ACTIVE\": true") != std::string::npos &&
+                   reexported.json.find("\"ACTIVE\": false") != std::string::npos,
+               "materializing should restore both logical values, not coerce them to one");
+        expect(reexported.json.find("\"ORDERID\": 7") != std::string::npos &&
+                   reexported.json.find("\"ORDERID\": 12") != std::string::npos,
+               "materializing should restore every numeric row, not just the first");
+    }
+
+    // Fail closed: destination DBC already exists. Must not touch it.
+    const std::uintmax_t dbc_size_before = fs::file_size(dbc_path, ignored);
+    const auto exists_result = copperfin::vfp::materialize_database_json_import_plan(
+        plan_result.plan, dbc_path.string());
+    expect(!exists_result.ok, "materializing into an existing DBC path should fail closed");
+    expect(fs::file_size(dbc_path, ignored) == dbc_size_before,
+           "a rejected re-materialization must not modify the existing destination");
+
+    // Fail closed: a derived table path already exists, DBC path is free.
+    // Nothing -- not even the DBC -- may be created around the collision.
+    const fs::path collision_dir = temp_dir / "collision";
+    fs::create_directories(collision_dir, ignored);
+    const auto pre_existing_table = copperfin::vfp::create_dbf_table_file(
+        (collision_dir / "Orders.dbf").string(),
+        {{.name = "X", .type = 'C', .length = 1U}},
+        {{"z"}});
+    expect(pre_existing_table.ok, "table-collision fixture should create the pre-existing table");
+    const auto table_collision_result = copperfin::vfp::materialize_database_json_import_plan(
+        plan_result.plan, (collision_dir / "fresh.dbc").string());
+    expect(!table_collision_result.ok,
+           "materializing should fail closed when a derived table path already exists");
+    expect(!fs::exists(collision_dir / "fresh.dbc"),
+           "a table-path collision must not leave a partially materialized DBC behind");
+    expect(!fs::exists(collision_dir / "Customers.dbf"),
+           "a table-path collision on one table must not materialize any other table either");
+
+    // No staging directories should ever be left behind, success or failure.
+    for (const auto& entry : fs::directory_iterator(temp_dir)) {
+        expect(entry.path().filename().string().rfind(".copperfin-import-", 0U) != 0U,
+               "no temporary staging directory should remain after materialize_database_json_import_plan returns");
+    }
+    for (const auto& entry : fs::directory_iterator(collision_dir)) {
+        expect(entry.path().filename().string().rfind(".copperfin-import-", 0U) != 0U,
+               "no temporary staging directory should remain in the collision directory either");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
