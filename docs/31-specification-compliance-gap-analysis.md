@@ -519,11 +519,21 @@ Windows candidate `RQ-CF-AGENT-027` replaces the write-capable creation handle
 with an exact file-id read-only identity anchor, retains a linked-path
 read/delete handle only after identity equality, and directly
 tests the `CreateProcessW` loader open. Both protected Windows workflows now
-pass the exact-head pathname, mapping, sharing, loader, and cleanup regressions;
-the POSIX/macOS descriptor representation is not yet claimed directly
-launchable. An allow path remains unavailable until an executor consumes
-exactly that private image and plan through the remaining platform transition
-with the sandbox,
+pass the exact-head pathname, mapping, sharing, loader, and cleanup regressions.
+Issue #5492 (PR #5494, not yet merged) now implements the POSIX/macOS executor:
+Linux execs the already-unlinked, sealed descriptor directly via `fexecve()`
+(RQ-CF-AGENT-026); macOS cannot reproduce that filesystem-namespace invisibility
+(`linkat()` refuses resurrecting an unlinked inode, and its `/dev/fd` exec
+workaround only permits same-process-opener lookups, denying a forked child
+that merely inherited the descriptor), so macOS-specific candidate
+`RQ-CF-AGENT-031` instead keeps the image linked, ad-hoc code-signs it via
+`/usr/bin/codesign`, and execs its real path directly -- tampering after
+signing is refused by the kernel's own code-signature enforcement (AMFI) at
+exec time rather than by permission bits a same-UID attacker could equally
+relax. Both platforms are confirmed clean on real CI as of commit `99e142763`,
+with only the separately-tracked #5493 gap (fixed in PR #5495, also not yet
+merged) remaining. An allow path remains unavailable until these merge and
+the remaining platform transition adds the sandbox,
 endpoint/descendant, and outcome-audit controls.
 Candidate `RQ-CF-AGENT-020` now returns exact session/child identities from
 successful preparation and exposes a separate trusted-host primitive that

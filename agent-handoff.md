@@ -1,5 +1,116 @@
 # Agent Handoff
 
+## In progress: PR #5494 (POSIX/macOS private-executable launch, #5492) and PR #5495 (RQ-CF-AGENT-028 fork-detection fix, #5493), neither merged as of 2026-09-06
+
+**PR #5494** (`agent/posix-macos-private-executable-launch` → `v1-development`)
+implements #5492: the non-Windows branch of workspace-agent process
+execution was a deliberate fail-closed stub even though POSIX image
+materialization already worked. Linux execs via `fexecve()` on the
+already-unlinked, sealed descriptor -- straightforward and confirmed
+working from early in the PR. macOS took six design iterations, each
+falsified by real macOS CI (this repo's macOS workflow only auto-triggers
+on PRs targeting `main`, so it must be dispatched manually against
+branches targeting `v1-development`): a leftover `/proc/self/fd`-only
+reopen; `FD_CLOEXEC` hiding an inherited descriptor from `/dev/fd`
+(macOS's `fdescfs` only permits `/dev/fd` lookups from the descriptor's
+own opener, not an inheriting forked child); exec-by-real-path kept
+linked for the image's whole lifetime (violated the pre-existing
+RQ-CF-AGENT-026 unlink-before-exec invariant); a launch-scoped relink
+immediately before exec (`linkat()` refused sourcing a hardlink from
+`/dev/fd` onto an already-unlinked file with `EPERM`, confirmed
+reproducibly). The design that finally stuck and is now confirmed
+clean on real macOS CI is **RQ-CF-AGENT-031**: a macOS-specific
+requirement (formally documented in
+`docs/32-recovered-requirements-traceability.md` and
+`docs/64-workspace-agent-access-policy.md`'s "macOS code-signed
+retained-image transition prerequisite" section) that keeps the image
+linked but ad-hoc code-signs it via `/usr/bin/codesign --sign - --force`
+immediately before sealing it read-only, so post-signing tampering is
+refused by the kernel (AMFI) at exec time rather than relying on
+permission bits a same-UID attacker could equally relax. Getting the
+code-signing design itself working took two more CI-informed fixes: a
+chmod-ordering bug (the file was checked against its required `0500`
+mode while still relaxed to `0600` for signing) and a bug where
+`codesign(1)` replaces rather than modifies a file in place on a
+real-sized binary, so the post-signing permission restore must use the
+real path rather than a possibly-now-detached pre-signing descriptor.
+Commit history on the branch: `feb4f5e40` → `af831975b` → `72ac1bdb1`
+→ `6f2f9556a` → `73ab63515` → `eca77f8fa` (adopts RQ-CF-AGENT-031) →
+`e0ac5c590` (diagnostics) → `d3c02ed54` → `ef0d8a33f` → `d444f110a`
+(diagnostics removed) → `182b1ae09` (docs confirm clean CI) →
+`99e142763` (three more real bugs found and fixed from unresolved bot
+review threads on the PR itself -- see below). CI is fully clean except
+the pre-existing, separately-tracked `#5493` gap (see PR #5495 below);
+this PR cannot merge until #5495 merges and this branch picks up the fix,
+because `ubuntu-latest generated launcher process` and
+`macos-latest generated launcher process` are both required status
+checks on `v1-development` and #5493 makes them fail on every branch
+until fixed.
+
+Commit `99e142763` fixes three real, still-live findings from
+`chatgpt-codex-connector`/Copilot bot review threads on PR #5494 (two
+other threads were stale, already superseded by the RQ-CF-AGENT-031
+pivot): (1) the POSIX private-exec launch entered the pinned working
+directory via `chdir()` on a saved pathname even though
+`WorkspaceAgentProcessTargetPins` already holds a race-free open
+directory descriptor used only for identity validation -- a same-UID
+attacker who renamed/replaced the directory after pinning would have
+been silently followed into the replacement; fixed by adding
+`execution_working_directory_descriptor()` and calling `fchdir()` on it
+when available. (2) `fexecve()` documents `ENOENT` for a script target
+(`#!`) when its descriptor has `FD_CLOEXEC` set, and the POSIX target
+gate admits any execute-permitted file, not only ELF binaries; fixed by
+clearing `FD_CLOEXEC` in `posix_exec_in_child()` immediately before
+`fexecve()` (safe there specifically because that forked child never
+execs or forks anything else first). (3) both platform branches of
+materialization opened the final read-only image descriptor into a bare
+`int` before `std::make_unique<Impl>(...)`, which could leak the fd if
+that allocation throws; fixed by wrapping it in the existing
+`OwnedDescriptor` RAII guard immediately after `open()`. All five review
+threads were replied-to with the fix rationale and formally resolved via
+GitHub's GraphQL API.
+
+**PR #5495** (`fix/rq-cf-agent-028-fork-detection` → `v1-development`)
+fixes #5493, a real, separately-filed pre-existing gap that #5492's work
+surfaced (POSIX execution had never actually compiled and run this test
+scenario before): `current_process_execution_identity()` in
+`src/security/workspace_agent_session.cpp` is a plain PID check used to
+detect whether an application-supplied audit-sink callback forked during
+`commit_audit_event()`. A PID-only check can only ever catch that from
+the forked-away **child's** side; the **parent's** own PID never changes
+across its own `fork()` call, so the parent was permanently blind to a
+fork having happened at all and would proceed to actually execute the
+bounded process or read the file for real -- verified via direct
+debug-print evidence in the issue body. Fixed with a process-wide
+fork-generation counter bumped by both a `pthread_atfork()` parent
+handler and child handler; both continuations start from the same
+pre-fork value and bump their own copy exactly once, so comparing a
+snapshot taken before `commit_audit_event()` against one taken after
+reveals a fork on either side. Applied at both call sites
+(`execute_materialized_process_launch` and the file-read intent-audit
+check), each keeping its existing asymmetric treatment: the forked-away
+child denies without committing an outcome audit (unchanged), the parent
+now also denies but -- new behavior -- follows the same path as any
+other denial and still commits a denied outcome audit. Verified locally:
+the previously-failing `RQ-CF-AGENT-028` `ForkingIntentAudit` test in
+`tests/test_workspace_agent_isolated_environment.cpp` now passes, and
+the full relevant local test group is 17/17 clean, the first fully green
+run of that group across this entire investigation. CI (automatic matrix
+plus a manually-dispatched macOS run) is green except for two Windows
+checks and the macOS manual dispatch still finishing as of this note;
+`macos-latest`/`ubuntu-latest generated launcher process` already pass,
+confirming the fix resolves the actual root cause. The repository owner
+has given explicit live merge approval for this specific PR once CI
+finishes clean.
+
+**Sequencing for whoever picks this up next:** merge #5495 first, close
+#5493 manually (this repo's default branch enforcement means `Fixes #N`
+in a PR targeting `v1-development` does not auto-close), then rebase or
+merge `v1-development` into #5494's branch, push, re-run its CI
+(including a fresh manual macOS dispatch), and once its required checks
+are clean, get a fresh explicit merge approval for #5494 specifically --
+the approval already given was scoped to #5495, not #5494.
+
 ## Shipped: PR #5437, #5439, #5440, #5441 (migration-pipeline v1-blocking reclassification and agent-channel sync tail), merged 2026-09-01
 
 Per direct repository-owner instruction, reclassified the
