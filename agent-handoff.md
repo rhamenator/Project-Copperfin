@@ -1,6 +1,46 @@
 # Agent Handoff
 
-## In progress: PR for #5472 (`IMPORT DATABASE ... TYPE JSON` materialization), not yet opened/merged as of 2026-09-06
+## Shipped: PR #5498 (`IMPORT DATABASE ... TYPE JSON` materialization, #5472), merged 2026-09-06
+
+**Update:** merged into `v1-development` as `c6a341409` with the repository
+owner's explicit live "Try to merge it" approval. Issue #5472 was closed
+manually (this repo's default branch isn't `v1-development`, so `Fixes
+#5472` in the PR body never auto-closed it -- see
+`feedback_copperfin_issue_autoclose` in the operator's memory for this
+recurring gap).
+
+Before merge, real review findings surfaced across 9 threads and were
+fixed for real, not dismissed or merged past: a P1 path-traversal
+vulnerability (an untrusted JSON table name containing `../` or an
+absolute path could escape the destination directory -- fixed by
+rejecting unsafe table names, `table_name_is_safe_filesystem_component()`,
+before any path is derived from them), a P1 memo-sidecar (`.fpt`)
+data-loss bug (only the `.dbf` was staged/committed for a table with an
+M/G/P field, silently dropping the memo payload -- fixed by detecting
+memo fields and staging/committing the sidecar alongside its `.dbf`), a
+P1 fail-closed gap (`std::filesystem::rename` has replace semantics on
+POSIX, silently defeating the destination-exists preflight checks against
+anything created during the staging window -- fixed by switching the
+commit loop to `fs::create_hard_link`, which fails instead of replacing),
+a quote-handling bug (`is_quoted_path_operand` accepted both `'` and `"`
+but `unquote_string()` only strips `'` -- fixed by restricting to
+single-quote; the identical pre-existing bug in `EXPORT DATABASE`, which
+this pattern was copied from, is tracked separately in #5499, filed but
+not yet fixed), and an overclaiming diagnostic ("nothing was left behind"
+on commit failure, when cleanup there is actually best-effort and ignores
+filesystem errors -- reworded across all 4 locales). Two new regression
+tests were added covering the path-traversal rejection (relative and
+absolute) and the memo-sidecar fix (round-tripped through
+`export_database_as_json` to confirm the actual payload survives, not
+just the file's existence). Full local `ctest` regression: 393/393
+passed after the fixes, on top of the clean cross-platform CI the PR
+already had before review.
+
+The original in-progress account below is left intact as the
+design/investigation history; only this note and the header reflect the
+actual outcome.
+
+## In progress: PR for #5472 (`IMPORT DATABASE ... TYPE JSON` materialization), not yet opened/merged as of 2026-09-06 (superseded by #5498, see above)
 
 Implements #5472 (parent #140/#137), picked up autonomously overnight
 while the repository owner was away, per their standing instruction to
