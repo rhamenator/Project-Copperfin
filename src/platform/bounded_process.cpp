@@ -1146,7 +1146,17 @@ void write_posix_input_pipe(
     (void)::close(descriptor);
 }
 
-BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
+BoundedProcessResult run_posix(
+    const BoundedProcessRequest& request,
+    const std::vector<std::string>* retained_arguments = nullptr,
+    const std::vector<std::string>* retained_environment = nullptr,
+    bool (*exec_override)(
+        void* context, char* const argv[],
+        char* const environment[]) noexcept = nullptr,
+    void* exec_override_context = nullptr,
+    void (*launch_committed)(void*) noexcept = nullptr,
+    void* launch_committed_context = nullptr,
+    int chdir_descriptor = -1) {
     BoundedProcessResult result;
     const auto started_at = Clock::now();
     int launch_pipe[2]{-1, -1};
@@ -1206,35 +1216,43 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         return result;
     }
 
-    auto serialized_arguments = serialize_process_arguments(
-        request.executable_path,
-        request.arguments,
-        ProcessArgumentTarget::posix_v1,
-        std::numeric_limits<std::size_t>::max());
-    if (!serialized_arguments.ok) {
-        result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.arguments_invalid";
-        return result;
+    std::vector<std::string> argument_storage;
+    if (retained_arguments != nullptr) {
+        argument_storage = *retained_arguments;
+    } else {
+        auto serialized_arguments = serialize_process_arguments(
+            request.executable_path,
+            request.arguments,
+            ProcessArgumentTarget::posix_v1,
+            std::numeric_limits<std::size_t>::max());
+        if (!serialized_arguments.ok) {
+            result.status = BoundedProcessStatus::launch_failed;
+            result.error_code = "polyglot.process.arguments_invalid";
+            return result;
+        }
+        argument_storage = std::move(serialized_arguments.posix_arguments);
     }
-    std::vector<std::string> argument_storage =
-        std::move(serialized_arguments.posix_arguments);
     std::vector<char*> argv;
     argv.reserve(argument_storage.size() + 1U);
     for (auto& argument : argument_storage) {
         argv.push_back(argument.data());
     }
     argv.push_back(nullptr);
-    const auto serialized_environment = serialize_process_environment(
-        request.environment,
-        ProcessEnvironmentTarget::posix_v1,
-        std::numeric_limits<std::size_t>::max());
-    if (!serialized_environment.ok) {
-        result.status = BoundedProcessStatus::launch_failed;
-        result.error_code = "polyglot.process.environment_invalid";
-        return result;
+    std::vector<std::string> environment_storage;
+    if (retained_environment != nullptr) {
+        environment_storage = *retained_environment;
+    } else {
+        const auto serialized_environment = serialize_process_environment(
+            request.environment,
+            ProcessEnvironmentTarget::posix_v1,
+            std::numeric_limits<std::size_t>::max());
+        if (!serialized_environment.ok) {
+            result.status = BoundedProcessStatus::launch_failed;
+            result.error_code = "polyglot.process.environment_invalid";
+            return result;
+        }
+        environment_storage = serialized_environment.posix_entries;
     }
-    std::vector<std::string> environment_storage =
-        serialized_environment.posix_entries;
     std::vector<char*> environment;
     environment.reserve(environment_storage.size() + 1U);
     for (auto& variable : environment_storage) {
@@ -1252,7 +1270,9 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
             ::dup2(stdout_pipe[1], STDOUT_FILENO) == -1 ||
             ::dup2(stderr_pipe[1], STDERR_FILENO) == -1 ||
             ::setpgid(0, 0) != 0 ||
-            ::chdir(request.working_directory.c_str()) != 0) {
+            (chdir_descriptor >= 0
+                 ? ::fchdir(chdir_descriptor) != 0
+                 : ::chdir(request.working_directory.c_str()) != 0)) {
             const int child_error = errno;
             (void)write_child_error(launch_pipe[1], child_error);
             _exit(127);
@@ -1260,7 +1280,17 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         (void)::close(stdin_pipe[0]);
         (void)::close(stdout_pipe[1]);
         (void)::close(stderr_pipe[1]);
-        ::execve(request.executable_path.c_str(), argv.data(), environment.data());
+        if (exec_override != nullptr) {
+            // Delegates the actual exec to the caller-supplied override
+            // (posix_private_exec_override() for the private-executable-
+            // image launch path -- see bounded_process_private.h and
+            // PrivateExecutableImage::posix_exec_in_child() for what it
+            // does per platform and why). This returns only on failure,
+            // with errno already set by the override.
+            (void)exec_override(exec_override_context, argv.data(), environment.data());
+        } else {
+            ::execve(request.executable_path.c_str(), argv.data(), environment.data());
+        }
         const int child_error = errno;
         (void)write_child_error(launch_pipe[1], child_error);
         _exit(127);
@@ -1424,6 +1454,9 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         return result;
     }
     result.started = true;
+    if (launch_committed != nullptr) {
+        launch_committed(launch_committed_context);
+    }
 
     int status = 0;
     for (;;) {
@@ -1550,7 +1583,14 @@ CurrentProcessElevation current_process_elevation() noexcept {
         ? CurrentProcessElevation::not_elevated
         : CurrentProcessElevation::elevated;
 #else
-    return CurrentProcessElevation::unsupported;
+    // The effective UID is the POSIX analogue of the Windows elevation
+    // check above: root (euid 0) can bypass the file/ownership boundaries
+    // the private-executable-image and containment machinery rely on, so
+    // it is treated as "elevated" and denied by the same caller-side gate,
+    // exactly like a Windows elevated token.
+    return ::geteuid() == 0
+        ? CurrentProcessElevation::elevated
+        : CurrentProcessElevation::not_elevated;
 #endif
 }
 
@@ -1596,6 +1636,76 @@ BoundedProcessResult run_bounded_windows_private_executable(
             transport, &command_line, &environment,
             request.launch_committed, request.launch_committed_context,
             native_path, false);
+#else
+        static_cast<void>(image);
+        static_cast<void>(request);
+        BoundedProcessResult result;
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "workspace_agent.process_execution_platform_unavailable";
+        return result;
+#endif
+    } catch (...) {
+        BoundedProcessResult result;
+        result.status = BoundedProcessStatus::launch_failed;
+        result.error_code = "workspace_agent.process_execution_failed";
+        return result;
+    }
+}
+
+BoundedProcessResult run_bounded_posix_private_executable(
+    const PrivateExecutableImage& image,
+    const PrivatePosixBoundedProcessRequest& request) noexcept {
+    try {
+#if !defined(_WIN32)
+        const int descriptor = image.posix_descriptor();
+        if (descriptor < 0 || !image.valid() ||
+            request.working_directory_descriptor < 0 ||
+            request.arguments.empty() ||
+            request.working_directory.empty() ||
+            !request.working_directory.is_absolute() ||
+            !request.transport.executable_path.empty() ||
+            !request.transport.arguments.empty() ||
+            !request.transport.environment.empty() ||
+            !valid_transport_controls(request.transport)) {
+            return invalid_request();
+        }
+        for (const auto& argument : request.arguments) {
+            if (contains_nul(argument)) {
+                return invalid_request();
+            }
+        }
+        for (const auto& variable : request.environment) {
+            if (contains_nul(variable) ||
+                variable.find('=') == std::string::npos) {
+                return invalid_request();
+            }
+        }
+        BoundedProcessRequest transport = request.transport;
+        transport.working_directory = path_to_utf8_string(request.working_directory);
+        if (transport.working_directory.empty()) {
+            return invalid_request();
+        }
+        if (cancellation_requested(transport)) {
+            BoundedProcessResult result;
+            result.status = BoundedProcessStatus::cancelled;
+            result.error_code = "polyglot.process.cancelled";
+            return result;
+        }
+        // posix_private_exec_override() bridges run_posix()'s forked-child
+        // exec step to image.posix_exec_in_child(), which execs posix_
+        // descriptor() directly via fexecve() on Linux (RQ-CF-AGENT-026,
+        // already unlinked), or the image's real, permanently-linked and
+        // code-signed path on macOS (RQ-CF-AGENT-031) -- entirely
+        // internally, with no native path exposed through PrivateExecutable
+        // Image's header surface either way; see that method's doc comment
+        // for the full reasoning. `context` must outlive the call, which it
+        // does here: `image` is a const reference owned by our own caller.
+        return run_posix(
+            transport, &request.arguments, &request.environment,
+            posix_private_exec_override,
+            const_cast<void*>(static_cast<const void*>(&image)),
+            request.launch_committed, request.launch_committed_context,
+            request.working_directory_descriptor);
 #else
         static_cast<void>(image);
         static_cast<void>(request);

@@ -514,14 +514,20 @@ pins and the exact-generation lease behind one opaque move-only candidate after
 a complete final revalidation. Candidate `RQ-CF-AGENT-026` consumes that
 candidate once, privately materializes only its retained snapshot beneath the
 exact receipted generation temp directory, and keeps the plan, pins, and lease
-live until the image is destroyed. POSIX retains an unlinked descriptor;
+live until the image is destroyed. Linux retains an unlinked descriptor;
 Windows candidate `RQ-CF-AGENT-027` replaces the write-capable creation handle
 with an exact file-id read-only identity anchor, retains a linked-path
 read/delete handle only after identity equality, and directly
-tests the `CreateProcessW` loader open. Both protected Windows workflows now
-pass the exact-head pathname, mapping, sharing, loader, and cleanup regressions;
-the POSIX/macOS descriptor representation is not yet claimed directly
-launchable. An allow path remains unavailable until an executor consumes
+tests the `CreateProcessW` loader open; macOS candidate `RQ-CF-AGENT-031`
+instead retains a linked, ad-hoc code-signed image for its whole lifetime
+after three CI-falsified attempts established that macOS supports neither
+Linux's unlink-then-descriptor-exec pattern nor relinking an already-unlinked
+file back into the namespace. Both protected Windows workflows now pass the
+exact-head pathname, mapping, sharing, loader, and cleanup regressions; the
+macOS code-signed retention has only local Linux-side regression evidence
+(the change is macOS-only) and awaits protected macOS CI confirmation; the
+Linux descriptor representation is not yet claimed directly launchable
+either. An allow path remains unavailable until an executor consumes
 exactly that private image and plan through the remaining platform transition
 with the sandbox,
 endpoint/descendant, and outcome-audit controls.

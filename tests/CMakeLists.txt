@@ -5357,8 +5357,31 @@ if(WIN32)
             $<TARGET_FILE:workspace_agent_execution_probe>
     )
 else()
-    copperfin_add_test(test_workspace_agent_isolated_environment cf_security
+    add_executable(workspace_agent_execution_fixture
+        workspace_agent_execution_fixture.cpp
+    )
+    target_compile_options(workspace_agent_execution_fixture PRIVATE
+        -Wall -Wextra -Wpedantic
+    )
+
+    add_executable(test_workspace_agent_isolated_environment
         test_workspace_agent_isolated_environment.cpp
+    )
+    target_link_libraries(test_workspace_agent_isolated_environment PRIVATE
+        cf_security
+    )
+    target_compile_options(test_workspace_agent_isolated_environment PRIVATE
+        -Wall -Wextra -Wpedantic
+    )
+    add_dependencies(
+        test_workspace_agent_isolated_environment
+        workspace_agent_execution_fixture
+    )
+    add_test(
+        NAME test_workspace_agent_isolated_environment
+        COMMAND
+            $<TARGET_FILE:test_workspace_agent_isolated_environment>
+            $<TARGET_FILE:workspace_agent_execution_fixture>
     )
 endif()
 
