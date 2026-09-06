@@ -402,6 +402,77 @@ void test_materialize_database_json_import_plan_fails_closed_and_round_trips() {
     expect(!fs::exists(collision_dir / "Customers.dbf"),
            "a table-path collision on one table must not materialize any other table either");
 
+    // Fail closed: a table name that would escape the destination directory
+    // must be rejected before any path is derived from it, and must not
+    // create anything -- not the DBC, not any other table in the plan.
+    const fs::path traversal_dir = temp_dir / "traversal";
+    fs::create_directories(traversal_dir, ignored);
+    copperfin::vfp::DatabaseJsonImportPlan traversal_plan = plan_result.plan;
+    traversal_plan.tables.front().name = "../escaped";
+    const auto traversal_result = copperfin::vfp::materialize_database_json_import_plan(
+        traversal_plan, (traversal_dir / "fresh.dbc").string());
+    expect(!traversal_result.ok,
+           "a table name that escapes the destination directory must be rejected");
+    expect(!fs::exists(traversal_dir / "fresh.dbc"),
+           "a rejected unsafe table name must not leave a destination DBC behind");
+    expect(!fs::exists(temp_dir / "escaped.dbf"),
+           "a rejected '../' table name must not materialize a table outside the destination directory");
+    for (const auto& entry : fs::directory_iterator(traversal_dir)) {
+        expect(entry.path().filename().string().rfind(".copperfin-import-", 0U) != 0U,
+               "no temporary staging directory should remain after a rejected unsafe table name");
+    }
+
+    copperfin::vfp::DatabaseJsonImportPlan absolute_plan = plan_result.plan;
+#if defined(_WIN32)
+    absolute_plan.tables.front().name = "C:\\escaped";
+#else
+    absolute_plan.tables.front().name = "/escaped";
+#endif
+    const auto absolute_result = copperfin::vfp::materialize_database_json_import_plan(
+        absolute_plan, (traversal_dir / "fresh2.dbc").string());
+    expect(!absolute_result.ok,
+           "an absolute-path table name must be rejected rather than replacing the destination path");
+    expect(!fs::exists(traversal_dir / "fresh2.dbc"),
+           "a rejected absolute table name must not leave a destination DBC behind");
+
+    // Memo (M) fields get a .fpt sidecar written alongside the .dbf by
+    // create_dbf_table_file(); materializing must stage and commit that
+    // sidecar too, not just the .dbf.
+    const fs::path memo_dir = temp_dir / "memo";
+    fs::create_directories(memo_dir, ignored);
+    const std::string memo_document = R"JSON({
+  "schema_version": 1,
+  "database": {"path": "/source/Notes.dbc", "name": "Notes"},
+  "catalog": [{"record_index": 1}],
+  "tables": {
+    "Notes": {
+      "fields": [{"name": "TITLE", "type": "C", "length": 20, "decimals": 0},
+                 {"name": "BODY", "type": "M", "length": 4, "decimals": 0}],
+      "records": [{"TITLE": "first", "BODY": "a memo payload long enough to matter"}]
+    }
+  }
+})JSON";
+    const auto memo_plan_result = copperfin::vfp::build_database_json_import_plan(memo_document);
+    expect(memo_plan_result.ok, "memo-sidecar fixture plan should build successfully");
+    if (memo_plan_result.ok) {
+        const fs::path memo_dbc_path = memo_dir / "notes.dbc";
+        const auto memo_materialize_result = copperfin::vfp::materialize_database_json_import_plan(
+            memo_plan_result.plan, memo_dbc_path.string());
+        expect(memo_materialize_result.ok,
+               "materializing a memo-field table should succeed: " + memo_materialize_result.error);
+        expect(fs::exists(memo_dir / "Notes.dbf"), "materializing should create the memo table's .dbf");
+        expect(fs::exists(memo_dir / "Notes.fpt"),
+               "materializing a memo-field table must also commit its .fpt sidecar");
+
+        const auto memo_reexported = copperfin::vfp::export_database_as_json(memo_dbc_path.string());
+        expect(memo_reexported.ok,
+               "the materialized memo-table DBC should itself be exportable: " + memo_reexported.error);
+        if (memo_reexported.ok) {
+            expect(memo_reexported.json.find("a memo payload long enough to matter") != std::string::npos,
+                   "the committed .fpt sidecar must actually contain the memo payload, not just exist");
+        }
+    }
+
     // No staging directories should ever be left behind, success or failure.
     for (const auto& entry : fs::directory_iterator(temp_dir)) {
         expect(entry.path().filename().string().rfind(".copperfin-import-", 0U) != 0U,

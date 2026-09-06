@@ -2218,6 +2218,20 @@ DatabaseJsonImportPlanResult build_database_json_import_plan(const std::string_v
 
 namespace {
 
+// A table name from untrusted JSON must never be usable to escape the
+// destination DBC's own directory. std::filesystem::path's operator/
+// silently replaces the whole path when the appended component is
+// absolute, and a relative "../x" component resolves outside dbc_dir at
+// the OS level even though the path string still nominally starts with
+// it -- so this is rejected before any path is ever constructed from the
+// name, not detected afterward.
+bool table_name_is_safe_filesystem_component(const std::string& name) {
+    if (name.empty() || name == "." || name == "..") {
+        return false;
+    }
+    return name.find_first_of("/\\:") == std::string::npos;
+}
+
 std::string generate_import_staging_suffix() {
     static thread_local std::mt19937_64 engine{std::random_device{}()};
     std::uniform_int_distribution<std::uint64_t> distribution;
@@ -2358,6 +2372,11 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     std::vector<TableDestination> table_destinations;
     std::set<std::string> casefolded_names;
     for (const auto& table_plan : plan.tables) {
+        if (!table_name_is_safe_filesystem_component(table_plan.name)) {
+            return failure(asset_inspector_text(
+                "Vfp.AssetInspector.Error.DatabaseImportUnsafeTableName",
+                {{"table", table_plan.name}}));
+        }
         if (!casefolded_names.insert(lowercase_copy(table_plan.name)).second) {
             return failure(asset_inspector_text(
                 "Vfp.AssetInspector.Error.DatabaseImportDuplicateTableName",
@@ -2369,6 +2388,20 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
             return failure(asset_inspector_text(
                 "Vfp.AssetInspector.Error.DatabaseImportDestinationExists",
                 {{"path", copperfin::platform::path_to_utf8_string(table_path)}}));
+        }
+        const bool table_has_memo_field = std::any_of(
+            table_plan.fields.begin(), table_plan.fields.end(),
+            [](const DbfFieldDescriptor& field) {
+                return field.type == 'M' || field.type == 'G' || field.type == 'P';
+            });
+        if (table_has_memo_field) {
+            fs::path memo_path = table_path;
+            memo_path.replace_extension(".fpt");
+            if (fs::exists(memo_path, exists_error)) {
+                return failure(asset_inspector_text(
+                    "Vfp.AssetInspector.Error.DatabaseImportDestinationExists",
+                    {{"path", copperfin::platform::path_to_utf8_string(memo_path)}}));
+            }
         }
         table_destinations.push_back({&table_plan, table_path});
     }
@@ -2404,6 +2437,30 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
             return abort_staging(write_result.error);
         }
         staged.push_back({staged_path, destination.path});
+
+        // A table with an M/G/P field gets a .fpt memo sidecar written
+        // alongside the .dbf by create_dbf_table_file() -- it must be
+        // staged and committed too, or a successful-looking import either
+        // loses the memo payload (removed with the rest of staging_dir) or
+        // resolves the DBF's memo pointers against an unrelated,
+        // previously-existing sidecar at the final destination.
+        const bool has_memo_field = std::any_of(
+            destination.plan->fields.begin(), destination.plan->fields.end(),
+            [](const DbfFieldDescriptor& field) {
+                return field.type == 'M' || field.type == 'G' || field.type == 'P';
+            });
+        if (has_memo_field) {
+            fs::path staged_memo_path = staged_path;
+            staged_memo_path.replace_extension(".fpt");
+            std::error_code memo_exists_error;
+            if (!fs::exists(staged_memo_path, memo_exists_error)) {
+                return abort_staging(
+                    asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportStagingFailed"));
+            }
+            fs::path final_memo_path = destination.path;
+            final_memo_path.replace_extension(".fpt");
+            staged.push_back({staged_memo_path, final_memo_path});
+        }
     }
 
     // The catalog is a minimal DBF: one row per table registering it as a
@@ -2432,15 +2489,23 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     staged.push_back({staged_dbc_path, dbc_fs_path});
 
     // Commit: tables before the catalog (already the staged order above),
-    // one rename at a time. A same-volume rename is atomic per file; if any
-    // rename fails partway, every already-committed file is removed so the
-    // destination is left exactly as it was found -- nothing partial.
+    // one file at a time via create_hard_link() rather than rename().
+    // std::filesystem::rename() replaces an existing destination on POSIX,
+    // which would silently defeat the fail-closed preflight checks above
+    // against anything created during the staging window; create_hard_link()
+    // fails instead of replacing when the destination already exists, so a
+    // race during that window is caught here too, not just at preflight.
+    // If any commit fails partway, every already-committed file is removed
+    // so the destination is left exactly as it was found -- nothing
+    // partial. The staging copies themselves are cleaned up afterward by
+    // removing staging_dir; each committed file is now an independent hard
+    // link to the same data, unaffected by that removal.
     std::vector<StagedImportFile> committed;
     committed.reserve(staged.size());
     for (const auto& file : staged) {
-        std::error_code rename_error;
-        fs::rename(file.staged_path, file.final_path, rename_error);
-        if (rename_error) {
+        std::error_code link_error;
+        fs::create_hard_link(file.staged_path, file.final_path, link_error);
+        if (link_error) {
             std::error_code ignored;
             for (const auto& done : committed) {
                 fs::remove(done.final_path, ignored);
