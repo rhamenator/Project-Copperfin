@@ -1,3 +1,45 @@
+- 2026-09-06: Implements #5472 (parent #140/#137): the `IMPORT DATABASE
+  <quoted-json-path> TO <quoted-dbc-path> TYPE JSON` command, the first
+  materialization step in the `EXPORT`/`IMPORT DATABASE` command family and
+  the first command in it that mutates database files on disk
+  (`HZ-data-corruption-01`, `RQ-CF-MODERNIZATION-004`,
+  `docs/32-recovered-requirements-traceability.md`). Reuses
+  `RQ-CF-MODERNIZATION-002`'s existing planning/validation boundary
+  unchanged and adds only the materialization step that boundary was
+  deliberately forbidden from performing: `materialize_database_json_import_plan()`
+  (`include/copperfin/vfp/asset_inspector.h`, `src/vfp/asset_inspector.cpp`)
+  fails closed before writing anything if the destination DBC or any
+  derived `<table>.dbf` path already exists, stages every file (tables,
+  then the DBC catalog) in a temporary directory beside the destination,
+  verifies each write, and only then commits every staged file into place
+  one same-volume rename at a time -- any failure during staging or commit
+  removes every already-committed file and all temporary artifacts,
+  leaving the destination exactly as it was found. The materialized DBC
+  catalog registers each table as a `table`-type object so
+  `export_database_as_json()`'s existing table-resolution path reads it
+  back correctly; no index, relation, or container-metadata reconstruction
+  is attempted. `import_database_command` is its own package-debug IR
+  opcode (`src/runtime/prg_engine_internal.h`,
+  `src/runtime/runtime_pipeline_ast_ir_manifest.cpp`), parsed alongside
+  `EXPORT DATABASE` (`src/runtime/prg_engine_parser.cpp`) and dispatched in
+  `src/runtime/prg_engine_dispatch.inl` with the same quoted-path-only
+  syntax contract and localized diagnostics (`resources/locales/*/strings.json`)
+  as the export commands. `tests/test_prg_engine_data_io_import_export.cpp`
+  proves the full PRG-script round trip (a real exported snapshot
+  re-imported and read back through the real exporter, matching on table
+  name and multi-row character/numeric/logical data), the explicit runtime
+  event, both fail-closed destination-collision cases (including that a
+  rejected re-import does not modify already-materialized files), and the
+  syntax contract. `tests/test_vfp_assets.cpp` proves the materializer
+  directly, including a JSON `null` value becoming a blank field rather
+  than failing, an empty-plan rejection, and that no temporary staging
+  directory is ever left behind on success or failure. Full Release build
+  clean with no new warnings; both focused suites pass in full locally on
+  Linux. Protected cross-platform CI evidence remains pending. Not
+  scoped: `IMPORT DATABASE ... TYPE SQL` (tracked separately as #5473,
+  blocked on this work) and any schema migration/reconciliation against an
+  existing differently-shaped DBC.
+
 - 2026-09-04: Design pass for #5480 (parent #139, related #137/#35/#36/#37)
   found that Copperfin already has a mature, production polyglot boundary
   (`CFPOLYGLOTDISPATCH()` -> `PolyglotRuntimeHost` -> route registry ->

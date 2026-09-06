@@ -1,6 +1,103 @@
 # Agent Handoff
 
-## In progress: PR #5494 (POSIX/macOS private-executable launch, #5492) and PR #5495 (RQ-CF-AGENT-028 fork-detection fix, #5493), neither merged as of 2026-09-06
+## In progress: PR for #5472 (`IMPORT DATABASE ... TYPE JSON` materialization), not yet opened/merged as of 2026-09-06
+
+Implements #5472 (parent #140/#137), picked up autonomously overnight
+while the repository owner was away, per their standing instruction to
+keep advancing both Copperfin and BrassLedger and never merge a Copperfin
+PR without their live explicit go-ahead in the same turn -- this one is
+left open for that review, not merged.
+
+All of #140's other small follow-ups (#5429-5438, the earlier broad
+security-review backlog) were already closed and merged before this
+picked up; #5471 (`EXPORT DATABASE ... TYPE SQL`) already shipped. #5472
+was the next unblocked, already-scoped-with-acceptance-criteria slice.
+`agent/5429-5430-windows-signer-toctou` and
+`agent/5454-external-process-handle-bound-verification` are stale local
+branches from that already-merged work and can be deleted; their commits
+are ancestors of `v1-development`.
+
+Branch: `agent/5472-import-database-json-materialization`, based on
+`v1-development` at the point #5496 merged. Adds
+`materialize_database_json_import_plan()`
+(`include/copperfin/vfp/asset_inspector.h`, `src/vfp/asset_inspector.cpp`)
+reusing `RQ-CF-MODERNIZATION-002`'s existing planning boundary unchanged,
+plus the `IMPORT DATABASE <json> TO <dbc> TYPE JSON` PRG syntax
+(`src/runtime/prg_engine_parser.cpp`, new `import_database_command`
+`StatementKind` in `src/runtime/prg_engine_internal.h`, its own IR opcode
+in `src/runtime/runtime_pipeline_ast_ir_manifest.cpp`, dispatch in
+`src/runtime/prg_engine_dispatch.inl` mirroring `EXPORT DATABASE`'s own
+quoted-path-only syntax contract and localized diagnostics in
+`resources/locales/*/strings.json`). New `RQ-CF-MODERNIZATION-004` row in
+`docs/32-recovered-requirements-traceability.md`; CHANGELOG entry.
+
+This is the first command in the `EXPORT`/`IMPORT DATABASE` family that
+mutates database files on disk (`HZ-data-corruption-01`, per the issue's
+own hazard note), so it fails closed before writing anything if the
+destination DBC or any derived `<table>.dbf` path already exists, stages
+every file (tables, then the DBC catalog) in a temporary directory beside
+the destination, verifies each write, then commits one same-volume
+rename at a time -- any failure during staging or commit removes every
+already-committed file and all temporary artifacts, leaving the
+destination exactly as found. The materialized DBC catalog registers
+each table as a minimal `table`-type object (no `PROPERTIES` memo,
+database-level row, or relation metadata) so the existing
+`export_database_as_json()` table-resolution path reads it back
+correctly -- confirmed by round-tripping the real generated-launcher-style
+fixture through both directions, not assumed.
+
+**Verified locally on Linux:** clean warning-free Release build (`ninja`,
+full project, `-Wall -Wextra -Wpedantic`, no new warnings).
+`tests/test_prg_engine_data_io_import_export.cpp`
+(`test_import_database_type_json_round_trips_via_export`) proves the full
+PRG-script round trip -- a real `EXPORT DATABASE` snapshot re-imported
+and read back through the real exporter matching on table name and
+multi-row character/numeric/logical data, the `runtime.import_database_json`
+event, both fail-closed destination-collision cases (including that a
+rejected re-import does not modify already-materialized files), and the
+quoted-path-only syntax contract. `tests/test_vfp_assets.cpp`
+(`test_materialize_database_json_import_plan_fails_closed_and_round_trips`)
+proves the materializer directly, including a JSON `null` value becoming
+a blank field rather than failing, an empty-plan rejection, and that no
+temporary staging directory is ever left behind on success or failure. A
+broader full-suite `ctest` run was dispatched before this note was
+written to catch any unrelated regression from the new `StatementKind`
+enum value and IR manifest entry; check its result before doing anything
+else with this branch.
+
+**Not yet done, for whoever picks this up next:** push the branch, open
+the PR against `v1-development` referencing #5472, dispatch the
+automatic CI matrix (and a manual `native-validation-macos.yml` dispatch
+if this repo's macOS workflow still doesn't auto-trigger on
+`v1-development`-targeting PRs -- check first rather than assuming),
+watch for and resolve any bot review threads on their merits (this
+session's established practice: fix real findings, reply-and-resolve
+stale ones, never dismiss without checking), and get the repository
+owner's live explicit "merge it" before merging -- their standing
+instruction applies to this PR exactly as it did to #5494/#5495/#5496.
+No protected Windows/macOS CI evidence exists yet for this change;
+`std::filesystem::rename`'s same-volume-atomic guarantee and
+`create_directories`'s recursive-parent behavior are believed portable
+but unconfirmed cross-platform for this specific code path.
+
+## Shipped: PR #5495, #5494, #5496 (POSIX/macOS private-executable launch, its #5493 fork-detection prerequisite, and doc-staleness fixes), all merged 2026-09-06
+
+**Update:** all three PRs described below merged into `v1-development` on
+2026-09-06 with the repository owner's explicit live approval for each,
+in the sequence the "Sequencing for whoever picks this up next" note at
+the end of this section anticipated: #5495 first (fixing #5493 fully
+closed it), then #5494 rebased onto the result and merged, then #5496
+(which needed its own conflict resolution against #5494's merge, since
+both touched `docs/31-specification-compliance-gap-analysis.md`'s
+POSIX/macOS gap paragraph -- resolved by writing that paragraph in
+present tense once #5494 was actually merged, matching a bot-review
+finding on #5496 that had caught the same doc describing unmerged work
+as already implemented). RQ-CF-AGENT-031 is now checked-in, confirmed
+working end to end on real macOS CI. The original in-progress account
+below is left intact as the design/investigation history; only this note
+and the header reflect the actual outcome.
+
+
 
 **PR #5494** (`agent/posix-macos-private-executable-launch` → `v1-development`)
 implements #5492: the non-Windows branch of workspace-agent process

@@ -183,4 +183,28 @@ struct DatabaseJsonImportPlanResult {
 [[nodiscard]] DatabaseJsonImportPlanResult build_database_json_import_plan(
     std::string_view document);
 
+// Result of materialize_database_json_import_plan.
+struct DatabaseJsonImportResult {
+    bool ok = false;
+    std::string error;
+    std::size_t table_count = 0;
+};
+
+// Materializes an already-validated import plan into a new DBC catalog and
+// one DBF file per table, at dbc_path and <dbc_dir>/<table_name>.dbf
+// respectively. Fails closed without writing anything if dbc_path or any
+// derived table path already exists. All files are staged in a temporary
+// directory beside dbc_path and verified there first; only once every file
+// has been staged successfully are they committed into place one at a time
+// (tables before the catalog, so a reader never observes a catalog
+// referencing a not-yet-existing table). Any failure during staging or
+// commit removes every already-committed file and all temporary artifacts,
+// leaving nothing behind at the destination -- this is the first command in
+// this family that mutates database files on disk (HZ-data-corruption-01).
+// No index (CDX/IDX) or relation/container-metadata reconstruction is
+// performed; only table structure and row data.
+[[nodiscard]] DatabaseJsonImportResult materialize_database_json_import_plan(
+    const DatabaseJsonImportPlan& plan,
+    const std::string& dbc_path);
+
 }  // namespace copperfin::vfp

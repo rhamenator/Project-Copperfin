@@ -210,6 +210,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "alter_table_command";
         case StatementKind::export_database_command:
             return "export_database_command";
+        case StatementKind::import_database_command:
+            return "import_database_command";
         case StatementKind::copy_to_command:
             return "copy_to_command";
         case StatementKind::append_from_command:

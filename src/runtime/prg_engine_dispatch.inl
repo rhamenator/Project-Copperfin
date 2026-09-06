@@ -8124,6 +8124,109 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::import_database_command:
+            {
+                // IMPORT DATABASE <json> TO <dbc> TYPE JSON. The source is
+                // read here (ordinary PRG-authority file I/O, matching
+                // EXPORT DATABASE's own boundary); everything past that is
+                // the bounded vfp::build_database_json_import_plan() /
+                // vfp::materialize_database_json_import_plan() pair, which
+                // never treats the source document as a path, command, or
+                // provider connection and fails closed without writing
+                // anything on any error.
+                const std::string source_operand = trim_copy(statement.expression);
+                const std::string destination_operand = trim_copy(statement.secondary_expression);
+                // unquote_string() only strips single quotes; a double-quoted
+                // operand must be rejected here rather than accepted and then
+                // silently mishandled (left with its quote characters still
+                // embedded in the resolved path).
+                const auto is_quoted_path_operand = [](const std::string& operand)
+                {
+                    return operand.size() >= 2U &&
+                        operand.front() == '\'' &&
+                        operand.back() == '\'';
+                };
+                const std::string source_raw = unquote_string(source_operand);
+                const std::string destination_raw = unquote_string(destination_operand);
+                const std::string import_type = normalize_identifier(
+                    unquote_string(trim_copy(statement.tertiary_expression)));
+                if (!is_quoted_path_operand(source_operand) ||
+                    !is_quoted_path_operand(destination_operand) ||
+                    source_raw.empty() || destination_raw.empty() || import_type != "json")
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ImportDatabaseJsonSyntax");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                namespace fs = std::filesystem;
+                fs::path source_path = copperfin::platform::path_from_utf8_string(source_raw);
+                fs::path destination_path = copperfin::platform::path_from_utf8_string(destination_raw);
+                if (source_path.is_relative())
+                {
+                    source_path = copperfin::platform::path_from_utf8_string(current_default_directory()) / source_path;
+                }
+                if (destination_path.is_relative())
+                {
+                    destination_path = copperfin::platform::path_from_utf8_string(current_default_directory()) / destination_path;
+                }
+                source_path = source_path.lexically_normal();
+                destination_path = destination_path.lexically_normal();
+                if (destination_path.extension().empty())
+                {
+                    destination_path += ".dbc";
+                }
+
+                std::ifstream source_input(source_path, std::ios::binary);
+                if (!source_input.good())
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ImportDatabaseSourceOpenFailed");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                std::ostringstream source_buffer;
+                source_buffer << source_input.rdbuf();
+                if (!source_input.good() && !source_input.eof())
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ImportDatabaseSourceOpenFailed");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const auto plan_result = vfp::build_database_json_import_plan(source_buffer.str());
+                if (!plan_result.ok)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ImportDatabasePlanFailed",
+                        {{"errorCode", plan_result.error_code}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const auto import_result = vfp::materialize_database_json_import_plan(
+                    plan_result.plan, copperfin::platform::path_to_utf8_string(destination_path));
+                if (!import_result.ok)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ImportDatabaseJsonFailed",
+                        {{"errorMessage", import_result.error}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                events.push_back({.category = "runtime.import_database_json",
+                                  .detail = copperfin::platform::path_to_utf8_string(destination_path),
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::append_from_command:
             {
                 // APPEND FROM ARRAY <array> [FIELDS <list>]

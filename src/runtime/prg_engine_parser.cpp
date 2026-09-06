@@ -1459,6 +1459,19 @@ bool parse_table_transfer_statement(const std::string& line, Statement& statemen
         statement.tertiary_expression = extract_command_clause(body, "TYPE", {});
         return true;
     }
+    // Copperfin modernization extension (not a Visual FoxPro compatibility
+    // spelling): IMPORT DATABASE <json> TO <dbc> TYPE JSON.
+    if (starts_with_insensitive(line, "IMPORT DATABASE ")) {
+        statement.kind = StatementKind::import_database_command;
+        const std::string body = trim_copy(line.substr(16U));
+        const std::size_t to_position = find_first_keyword_top_level(body, {"TO"});
+        statement.expression = to_position == std::string::npos
+            ? body
+            : trim_copy(body.substr(0U, to_position));
+        statement.secondary_expression = extract_command_clause(body, "TO", {"TYPE"});
+        statement.tertiary_expression = extract_command_clause(body, "TYPE", {});
+        return true;
+    }
     if (starts_with_insensitive(line, "COPY TO ARRAY ")) {
         statement.kind = StatementKind::copy_to_command;
         statement.identifier = "array";
