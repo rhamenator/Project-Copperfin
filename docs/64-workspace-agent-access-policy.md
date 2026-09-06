@@ -932,12 +932,23 @@ resist -- none of them would have added real protection here regardless of
 platform. A kernel-enforced signature check at the moment of exec cannot be
 defeated the same way; tampering after signing is refused at exec time, not
 merely discouraged by a policy the same attacker already has standing to
-relax. This has not yet been confirmed on a real macOS host; ad-hoc signing
-carries no certificate-backed provenance beyond "unchanged since sealing,"
-and enforcement strength is not proven uniform across every supported macOS
-host (Apple Silicon refuses any unsigned or mismatched code unconditionally;
-some older or Intel hosts have historically been more permissive toward
-locally created, non-quarantined binaries).
+relax. This has been confirmed on a real macOS CI host (materialization,
+signing, exec, and destruction-time cleanup of the actual generated-launcher
+Mach-O binary all succeed, across multiple independent runs) after two
+real bugs the initial design missed were found and fixed by that same CI
+evidence: an ordering bug where the file was checked against its required
+`0500` mode while still relaxed to `0600` for signing, and a bug where
+`codesign(1)` replaces rather than modifies a file in place on a
+binary large enough to need its signature blob, so the post-signing
+permission restore must operate on the real path rather than a
+pre-signing descriptor that may now point to a detached inode. Ad-hoc
+signing still carries no certificate-backed provenance beyond "unchanged
+since sealing," and enforcement strength is not proven uniform across every
+supported macOS host (Apple Silicon refuses any unsigned or mismatched code
+unconditionally; some older or Intel hosts have historically been more
+permissive toward locally created, non-quarantined binaries) -- that
+uniformity claim remains unverified, distinct from the mechanism itself now
+being confirmed to work.
 
 This remains a non-executing prerequisite; only the retention mechanism
 changes. No working-directory entry, sandbox, endpoint/descendant policy,
