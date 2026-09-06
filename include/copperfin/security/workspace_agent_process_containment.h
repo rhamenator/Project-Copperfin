@@ -85,6 +85,14 @@ private:
     [[nodiscard]] const std::filesystem::path*
     execution_working_directory() const noexcept;
 
+    // Borrowed (not owned) POSIX directory descriptor pinned at acquisition
+    // time, for entering the directory via fchdir() rather than re-resolving
+    // execution_working_directory()'s saved pathname. The path may no longer
+    // name the same directory by launch time (rename/replace); the caller
+    // must not close this descriptor. Returns -1 on Windows or when the pins
+    // are invalid.
+    [[nodiscard]] int execution_working_directory_descriptor() const noexcept;
+
     std::unique_ptr<Impl> impl_;
 
     friend class WorkspaceAgentProcessTargetBoundary;

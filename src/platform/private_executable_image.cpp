@@ -874,6 +874,16 @@ bool PrivateExecutableImage::posix_exec_in_child(
     ::execve(impl_->execution_path.c_str(), argv, environment);
     return false;
 #else
+    // fexecve()/execveat() documents ENOENT when the target is a script
+    // (starts with "#!") and its descriptor has the close-on-exec flag
+    // set -- the kernel's own re-exec of the interpreter reopens the
+    // target via /proc/self/fd/<fd>, which an O_CLOEXEC descriptor fails.
+    // impl_->descriptor is kept O_CLOEXEC for its whole parent-process
+    // lifetime (so it never leaks into unrelated children this process
+    // forks for other purposes); clearing it here is safe precisely
+    // because this forked child never execs or forks anything else
+    // before this exact call.
+    (void)::fcntl(impl_->descriptor, F_SETFD, 0);
     ::fexecve(impl_->descriptor, argv, environment);
     return false;
 #endif
@@ -1160,22 +1170,25 @@ materialize_private_executable_image_in_verified_parent(
         // reopen by its real path -- ordinary paths have none of /dev/fd's
         // same-process restriction (see the header for why that matters
         // for this platform specifically).
-        const int readonly_image_descriptor =
-            ::open(real_path.c_str(), O_RDONLY | O_CLOEXEC);
-        if (readonly_image_descriptor < 0) {
+        // Owned immediately so a throwing make_unique below (allocation
+        // failure, not merely a non-noexcept constructor) can't leak this
+        // fd during stack unwinding; released only once construction has
+        // actually succeeded.
+        OwnedDescriptor readonly_image_descriptor_owner(
+            ::open(real_path.c_str(), O_RDONLY | O_CLOEXEC));
+        if (readonly_image_descriptor_owner.get() < 0) {
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
         struct stat signed_status {};
-        if (::fstat(readonly_image_descriptor, &signed_status) != 0) {
-            ::close(readonly_image_descriptor);
+        if (::fstat(readonly_image_descriptor_owner.get(), &signed_status) != 0) {
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
         // `size` from here on is the file's exact byte count after
         // signing, not bytes.size() -- see Impl's doc comment.
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            readonly_image_descriptor,
+            readonly_image_descriptor_owner.release(),
             static_cast<std::size_t>(signed_status.st_size), real_path);
         ::close(image_descriptor.release());
 #else
@@ -1216,14 +1229,18 @@ materialize_private_executable_image_in_verified_parent(
         // both for ongoing verification and for exec (fexecve()).
         const std::string reopen_path =
             "/proc/self/fd/" + std::to_string(image_descriptor.get());
-        const int readonly_image_descriptor =
-            ::open(reopen_path.c_str(), O_RDONLY | O_CLOEXEC);
-        if (readonly_image_descriptor < 0) {
+        // Owned immediately so a throwing make_unique below (allocation
+        // failure, not merely a non-noexcept constructor) can't leak this
+        // fd during stack unwinding; released only once construction has
+        // actually succeeded.
+        OwnedDescriptor readonly_image_descriptor_owner(
+            ::open(reopen_path.c_str(), O_RDONLY | O_CLOEXEC));
+        if (readonly_image_descriptor_owner.get() < 0) {
             result.failure = PrivateExecutableImageFailure::verification_failed;
             return result;
         }
         auto impl = std::make_unique<PrivateExecutableImage::Impl>(
-            readonly_image_descriptor, bytes.size());
+            readonly_image_descriptor_owner.release(), bytes.size());
         ::close(image_descriptor.release());
 #endif
 #endif

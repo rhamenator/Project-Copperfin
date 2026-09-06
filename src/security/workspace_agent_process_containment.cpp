@@ -173,6 +173,13 @@ private:
         return execution_working_directory_value;
     }
 
+    // Borrowed: the caller must not close this. Entering it via fchdir()
+    // avoids re-resolving execution_working_directory_value's saved
+    // pathname, which may no longer name this same directory by launch time.
+    [[nodiscard]] int working_directory_descriptor() const noexcept {
+        return working_directory;
+    }
+
 private:
     static void close(int value) noexcept {
         if (value >= 0) {
@@ -1033,6 +1040,15 @@ bool WorkspaceAgentProcessTargetPins::Impl::matches_target_identities(
 const std::filesystem::path*
 WorkspaceAgentProcessTargetPins::execution_working_directory() const noexcept {
     return valid() ? &impl_->execution_working_directory() : nullptr;
+}
+
+int WorkspaceAgentProcessTargetPins::execution_working_directory_descriptor()
+    const noexcept {
+#if defined(_WIN32)
+    return -1;
+#else
+    return valid() ? impl_->working_directory_descriptor() : -1;
+#endif
 }
 
 WorkspaceAgentProcessTargetBoundary::WorkspaceAgentProcessTargetBoundary(

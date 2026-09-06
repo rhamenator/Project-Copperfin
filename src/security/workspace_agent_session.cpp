@@ -1753,18 +1753,24 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             }
         }
 
+        const bool windows_target = environment_plan.environment_platform ==
+            WorkspaceAgentProcessEnvironmentPlatform::windows_v1;
         const std::filesystem::path* stable_working_directory = nullptr;
+        int stable_working_directory_descriptor = -1;
         if (denial.empty()) {
             stable_working_directory = launch.impl_->candidate.impl_->pins
                 .execution_working_directory();
-            if (stable_working_directory == nullptr) {
+            stable_working_directory_descriptor =
+                launch.impl_->candidate.impl_->pins
+                    .execution_working_directory_descriptor();
+            if (stable_working_directory == nullptr ||
+                (!windows_target &&
+                 stable_working_directory_descriptor < 0)) {
                 denial =
                     "workspace_agent.process_execution_working_directory_unavailable";
             }
         }
 
-        const bool windows_target = environment_plan.environment_platform ==
-            WorkspaceAgentProcessEnvironmentPlatform::windows_v1;
         constexpr void (*release_launch_authority_on_commit)(void*) noexcept =
             [](void* context) noexcept {
                 auto* retained = static_cast<WorkspaceAgentMaterializedProcessLaunch*>(
@@ -1802,6 +1808,8 @@ WorkspaceAgentSessionController::execute_materialized_process_launch(
             posix_request.environment =
                 plan.serialized_environment.posix_environment;
             posix_request.working_directory = *stable_working_directory;
+            posix_request.working_directory_descriptor =
+                stable_working_directory_descriptor;
             posix_request.transport.standard_input = controls.standard_input;
             posix_request.transport.timeout_ms = controls.timeout_ms;
             posix_request.transport.poll_interval_ms = controls.poll_interval_ms;

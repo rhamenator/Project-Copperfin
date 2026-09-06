@@ -1155,7 +1155,8 @@ BoundedProcessResult run_posix(
         char* const environment[]) noexcept = nullptr,
     void* exec_override_context = nullptr,
     void (*launch_committed)(void*) noexcept = nullptr,
-    void* launch_committed_context = nullptr) {
+    void* launch_committed_context = nullptr,
+    int chdir_descriptor = -1) {
     BoundedProcessResult result;
     const auto started_at = Clock::now();
     int launch_pipe[2]{-1, -1};
@@ -1269,7 +1270,9 @@ BoundedProcessResult run_posix(
             ::dup2(stdout_pipe[1], STDOUT_FILENO) == -1 ||
             ::dup2(stderr_pipe[1], STDERR_FILENO) == -1 ||
             ::setpgid(0, 0) != 0 ||
-            ::chdir(request.working_directory.c_str()) != 0) {
+            (chdir_descriptor >= 0
+                 ? ::fchdir(chdir_descriptor) != 0
+                 : ::chdir(request.working_directory.c_str()) != 0)) {
             const int child_error = errno;
             (void)write_child_error(launch_pipe[1], child_error);
             _exit(127);
@@ -1656,6 +1659,7 @@ BoundedProcessResult run_bounded_posix_private_executable(
 #if !defined(_WIN32)
         const int descriptor = image.posix_descriptor();
         if (descriptor < 0 || !image.valid() ||
+            request.working_directory_descriptor < 0 ||
             request.arguments.empty() ||
             request.working_directory.empty() ||
             !request.working_directory.is_absolute() ||
@@ -1700,7 +1704,8 @@ BoundedProcessResult run_bounded_posix_private_executable(
             transport, &request.arguments, &request.environment,
             posix_private_exec_override,
             const_cast<void*>(static_cast<const void*>(&image)),
-            request.launch_committed, request.launch_committed_context);
+            request.launch_committed, request.launch_committed_context,
+            request.working_directory_descriptor);
 #else
         static_cast<void>(image);
         static_cast<void>(request);

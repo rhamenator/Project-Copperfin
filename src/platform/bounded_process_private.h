@@ -29,6 +29,12 @@ struct PrivatePosixBoundedProcessRequest {
     std::vector<std::string> arguments;
     std::vector<std::string> environment;
     std::filesystem::path working_directory;
+    // Borrowed (not owned) directory descriptor pinned at acquisition time.
+    // The forked child enters it via fchdir() rather than re-resolving
+    // working_directory's saved pathname, which may no longer name the same
+    // directory by launch time (rename/replace). Required (>= 0); this
+    // trusted seam fails closed without it.
+    int working_directory_descriptor = -1;
     BoundedProcessRequest transport;
     void (*launch_committed)(void*) noexcept = nullptr;
     void* launch_committed_context = nullptr;
