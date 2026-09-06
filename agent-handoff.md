@@ -4,10 +4,11 @@
 
 **Update:** merged into `v1-development` as `c6a341409` with the repository
 owner's explicit live "Try to merge it" approval. Issue #5472 was closed
-manually (this repo's default branch isn't `v1-development`, so `Fixes
-#5472` in the PR body never auto-closed it -- see
-`feedback_copperfin_issue_autoclose` in the operator's memory for this
-recurring gap).
+manually: this repo's default branch isn't `v1-development`, so GitHub's
+`Fixes #5472` auto-close keyword in the PR body never triggered, and it
+had to be closed by hand after the merge. This is a recurring gap for any
+PR merged into `v1-development` rather than the default branch -- expect
+to close referenced issues manually going forward too.
 
 Before merge, real review findings surfaced across 9 threads and were
 fixed for real, not dismissed or merged past: a P1 path-traversal
