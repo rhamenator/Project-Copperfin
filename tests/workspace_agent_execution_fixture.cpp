@@ -8,8 +8,37 @@
 #include <string_view>
 #include <thread>
 
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#else
+extern char** environ;
+#endif
+
+namespace {
+
+bool ambient_github_token_unset() {
+#if defined(_WIN32)
+    ::SetLastError(ERROR_SUCCESS);
+    const DWORD ambient_length =
+        ::GetEnvironmentVariableW(L"GITHUB_TOKEN", nullptr, 0U);
+    return ambient_length == 0U && ::GetLastError() == ERROR_ENVVAR_NOT_FOUND;
+#else
+    // Checks presence by name only, the same way the Windows branch above
+    // does with a zero-size GetEnvironmentVariableW query -- neither branch
+    // ever retrieves or exposes the actual credential value.
+    constexpr std::string_view prefix = "GITHUB_TOKEN=";
+    for (char** entry = ::environ; entry != nullptr && *entry != nullptr;
+         ++entry) {
+        if (std::string_view(*entry).substr(0U, prefix.size()) == prefix) {
+            return false;
+        }
+    }
+    return true;
+#endif
+}
+
+}  // namespace
 
 int main(int argc, char** argv) {
     std::cerr << "workspace-agent-child-entry-v1\n";
@@ -21,11 +50,7 @@ int main(int argc, char** argv) {
     if (argc == 3 && argv[0] != nullptr && argv[1] != nullptr &&
         argv[2] != nullptr &&
         std::string_view(argv[1]) == "--workspace-agent-child-v1") {
-        ::SetLastError(ERROR_SUCCESS);
-        const DWORD ambient_length =
-            ::GetEnvironmentVariableW(L"GITHUB_TOKEN", nullptr, 0U);
-        const bool ambient_unset = ambient_length == 0U &&
-            ::GetLastError() == ERROR_ENVVAR_NOT_FOUND;
+        const bool ambient_unset = ambient_github_token_unset();
         std::cout << "workspace-agent-child-v1\n"
                   << "argv0=" << argv[0] << '\n'
                   << "payload=" << argv[2] << '\n'

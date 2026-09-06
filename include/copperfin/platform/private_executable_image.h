@@ -14,6 +14,7 @@ namespace copperfin::platform {
 
 struct BoundedProcessResult;
 struct PrivateWindowsBoundedProcessRequest;
+struct PrivatePosixBoundedProcessRequest;
 
 // Governing requirements: candidate RQ-CF-AGENT-026 through RQ-CF-AGENT-028.
 
@@ -66,10 +67,58 @@ private:
     windows_launch_target() const noexcept;
     [[nodiscard]] const std::filesystem::path*
     windows_native_launch_target() const noexcept;
+    // POSIX only. Returns the retained, read+execute-only (0500)
+    // descriptor, or -1 if unavailable/invalid. No path is ever exposed
+    // for it. On Linux (RQ-CF-AGENT-026) this is already-unlinked, and is
+    // what posix_exec_in_child() execs directly (fexecve()). On macOS
+    // (RQ-CF-AGENT-031) the underlying file instead stays linked and
+    // code-signed for the image's whole lifetime -- see that method's doc
+    // comment for why, and Impl's doc comment in the .cpp for the full
+    // reasoning; this descriptor is retained there only to keep the file's
+    // data alive and for ongoing shape verification, not for exec.
+    [[nodiscard]] int posix_descriptor() const noexcept;
+    // POSIX only. Must be called only in the freshly-forked child,
+    // immediately before exec, with argv/environment already fully built
+    // (NUL-terminated, execve()-style). On success this call never returns
+    // (execve() replaces the process image); on failure it returns false
+    // with errno set, for the caller to report and _exit() as usual.
+    //
+    // On Linux (RQ-CF-AGENT-026) this execs posix_descriptor() directly
+    // (fexecve()) -- the file is already unlinked, so no path is involved.
+    //
+    // On macOS (RQ-CF-AGENT-031, which supersedes RQ-CF-AGENT-026's POSIX
+    // unlink clause for this platform only) this execs the image's real,
+    // permanently-linked path instead -- entirely internally; no native
+    // path is ever exposed through this header's surface. macOS provides
+    // no supported way to relink an already-unlinked file back into the
+    // namespace (confirmed empirically: linkat() sourcing from a /dev/fd
+    // path onto a zero-link inode fails with EPERM), and no true
+    // fexecve() analog either (its /dev/fd workaround for exec-by-
+    // descriptor only permits path lookups from the same process that
+    // opened the descriptor directly, denying a forked child that merely
+    // inherited it via fork() -- confirmed empirically: fstat() on the
+    // inherited descriptor succeeds and reports the correct file, while
+    // access()/execve() via its /dev/fd path both fail identically with
+    // EACCES). Since filesystem-namespace invisibility is unavailable,
+    // materialize_private_executable_image_in_verified_parent() instead
+    // ad-hoc code-signs the file once, immediately after its exact bytes
+    // are written and verified, so that AMFI refuses to exec it at the
+    // kernel level if its on-disk content no longer matches that
+    // signature -- unlike permission bits, chflags, or ACLs, this cannot
+    // be silently defeated by a same-UID attacker merely by owning the
+    // file.
+    [[nodiscard]] bool posix_exec_in_child(
+        char* const argv[], char* const environment[]) const noexcept;
 
     std::unique_ptr<Impl> impl_;
 
     friend struct PrivateExecutableImageMaterializationResult;
+    // Bridges run_posix()'s (bounded_process.cpp, anonymous namespace)
+    // forked-child exec step to posix_exec_in_child() above, since a
+    // function with internal linkage cannot itself be named as a friend
+    // here. See bounded_process_private.h for its declaration.
+    friend bool posix_private_exec_override(
+        void*, char* const[], char* const[]) noexcept;
     friend PrivateExecutableImageMaterializationResult
     materialize_private_executable_image_in_verified_parent(
         const std::filesystem::path&,
@@ -81,6 +130,9 @@ private:
     friend BoundedProcessResult run_bounded_windows_private_executable(
         const PrivateExecutableImage&,
         const PrivateWindowsBoundedProcessRequest&) noexcept;
+    friend BoundedProcessResult run_bounded_posix_private_executable(
+        const PrivateExecutableImage&,
+        const PrivatePosixBoundedProcessRequest&) noexcept;
 };
 
 struct PrivateExecutableImageMaterializationResult {

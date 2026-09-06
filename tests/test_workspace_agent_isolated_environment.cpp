@@ -218,8 +218,8 @@ static_assert(
 
 int failures = 0;
 std::filesystem::path running_test_executable;
-#if defined(_WIN32)
 std::filesystem::path child_fixture_executable;
+#if defined(_WIN32)
 std::filesystem::path child_probe_executable;
 #endif
 
@@ -316,7 +316,6 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
-#if defined(_WIN32)
 bool output_working_directory_matches(
     const std::string& output,
     const std::filesystem::path& expected) {
@@ -360,7 +359,6 @@ bool contains_output_line(
     }
     return false;
 }
-#endif
 
 class TempTree {
 public:
@@ -433,17 +431,23 @@ public:
             throw std::runtime_error("Windows PE fixture copy failed");
         }
 #else
-        std::ofstream stream(path, std::ios::binary | std::ios::trunc);
-        stream << "must not execute\n";
-        stream.close();
-        std::error_code error;
+        std::error_code copy_error;
+        std::filesystem::copy_file(
+            child_fixture_executable,
+            path,
+            std::filesystem::copy_options::overwrite_existing,
+            copy_error);
+        if (copy_error) {
+            throw std::runtime_error("POSIX fixture copy failed");
+        }
+        std::error_code permission_error;
         std::filesystem::permissions(
             path,
             std::filesystem::perms::owner_exec |
                 std::filesystem::perms::group_exec |
                 std::filesystem::perms::others_exec,
             std::filesystem::perm_options::add,
-            error);
+            permission_error);
 #endif
     }
 
@@ -1343,9 +1347,36 @@ void test_prepared_candidate_materializes_only_retained_snapshot() {
     const auto temporary =
         tree.session_storage / "session-1" / "temp";
 #if defined(_WIN32)
-    expect(std::filesystem::exists(
-               temporary / "copperfin-agent-image-1.exe"),
+    const auto native_image_path = temporary / "copperfin-agent-image-1.exe";
+#else
+    const auto native_image_path = temporary / "copperfin-agent-image-1.bin";
+#endif
+#if defined(_WIN32)
+    expect(std::filesystem::exists(native_image_path),
            "RQ-CF-AGENT-026: Windows must retain one handle-protected image while authority is live");
+#elif defined(__APPLE__)
+    {
+        // RQ-CF-AGENT-031 (supersedes RQ-CF-AGENT-026's POSIX unlink
+        // clause for macOS only, which has no supported way to relink an
+        // already-unlinked file back into the namespace, and no true
+        // fexecve() analog either -- see PrivateExecutableImage's header
+        // for the full reasoning): the image stays linked and
+        // read+execute-only for its whole lifetime, defended by a
+        // kernel-enforced code signature rather than filesystem-namespace
+        // invisibility. Actual signature enforcement at exec time is
+        // exercised by this file's own bounded-launch tests, which exec
+        // this same materialization path for real.
+        std::error_code status_error;
+        const auto status =
+            std::filesystem::status(native_image_path, status_error);
+        expect(!status_error &&
+                   status.type() == std::filesystem::file_type::regular &&
+                   status.permissions() ==
+                       (std::filesystem::perms::owner_read |
+                        std::filesystem::perms::owner_exec),
+               "RQ-CF-AGENT-031: macOS must retain one code-signed, "
+               "read+execute-only image while authority is live");
+    }
 #else
     expect(std::filesystem::is_empty(temporary),
            "RQ-CF-AGENT-026: POSIX must unlink the image before exposing materialized authority");
@@ -1370,8 +1401,7 @@ void test_prepared_candidate_materializes_only_retained_snapshot() {
     materialized.launch.reset();
     stop_thread.join();
     expect(stop_finished.load() && stop_result.revoked &&
-               !std::filesystem::exists(
-                   temporary / "copperfin-agent-image-1.exe"),
+               !std::filesystem::exists(native_image_path),
            "RQ-CF-AGENT-026: image cleanup must precede lease release and completed revocation");
 
     const auto cleaned = controller.cleanup_pending_session_layout(audit_sink());
@@ -1549,20 +1579,60 @@ void test_materialized_execution_is_windows_unrestricted_and_audited() {
     expect(execution_contract_holds,
            "RQ-CF-AGENT-028: warned non-elevated Windows execution must consume the exact image and fixed argv/environment/cwd under bounded process-tree ownership and paired audit");
 #else
-    expect(!executed.attempted && executed.intent_audit_committed &&
+    const std::string expected_argv0 = copperfin::platform::path_to_utf8_string(
+        std::filesystem::canonical(tree.workspace / "bin" / "workspace-tool"));
+    const bool execution_contract_holds =
+        executed.attempted && executed.intent_audit_committed &&
                executed.outcome_audit_committed && executed.operation_id != 0U &&
                executed.operation_id != first_controller_operation_id &&
                valid_process_instance_id(executed.process_instance_id) &&
                executed.process_instance_id !=
                    first_controller_process_instance_id &&
-               !executed.process.started &&
-               executed.diagnostic_code ==
-                   "workspace_agent.process_execution_platform_unavailable" &&
+               executed.process.started && executed.process.completed() &&
+               executed.process.process_tree_closed &&
+               executed.process.exit_code == 23 &&
+               contains_output_line(
+                   executed.process.standard_output,
+                   "workspace-agent-child-v1") &&
+               contains_output_line(
+                   executed.process.standard_output,
+                   "argv0=" + expected_argv0) &&
+               contains_output_line(
+                   executed.process.standard_output,
+                   "payload=literal-payload") &&
+               output_working_directory_matches(
+                   executed.process.standard_output,
+                   std::filesystem::canonical(tree.workspace / "working")) &&
+               contains_output_line(
+                   executed.process.standard_output, "ambient=<unset>") &&
+               contains_output_line(
+                   executed.process.standard_error,
+                   "workspace-agent-child-entry-v1") &&
+               executed.diagnostic_code == "polyglot.process.exited" &&
                audit.events.size() == 2U &&
-               audit.events[1].outcome == "denied" &&
+               audit.events[0].operation_id == audit.events[1].operation_id &&
+               audit.events[0].process_instance_id ==
+                   executed.process_instance_id &&
+               audit.events[1].process_instance_id ==
+                   executed.process_instance_id &&
+               audit.events[1].outcome == "exited" &&
                std::filesystem::is_empty(
-                   tree.session_storage / "session-1" / "temp"),
-           "RQ-CF-AGENT-028: non-Windows hosts must consume and audit the exact attempt without exposing or executing the retained image");
+                   tree.session_storage / "session-1" / "temp");
+    if (!execution_contract_holds) {
+        std::cerr << "RQ-CF-AGENT-028 POSIX execution diagnostics: status="
+                  << copperfin::platform::bounded_process_status_name(
+                         executed.process.status)
+                  << " error=" << executed.process.error_code
+                  << " native_error=" << executed.process.native_error
+                  << " started=" << executed.process.started
+                  << " tree_closed=" << executed.process.process_tree_closed
+                  << " exit=" << executed.process.exit_code
+                  << " diagnostic=" << executed.diagnostic_code
+                  << " stdout=" << executed.process.standard_output
+                  << " stderr=" << executed.process.standard_error << '\n';
+    }
+    expect(execution_contract_holds,
+           "RQ-CF-AGENT-028: warned non-elevated POSIX execution must consume the exact image and fixed argv/environment/cwd under bounded process-tree ownership and paired audit");
 #endif
     expect(controller.stop(audit_sink()).revoked &&
                controller.cleanup_pending_session_layout(audit_sink()).cleaned,
@@ -1909,6 +1979,20 @@ int main(int argc, char** argv) {
         running_test_executable = std::filesystem::canonical(
             std::filesystem::path(argv[0]), canonical_error);
     }
+#if !defined(_WIN32)
+    if (argc <= 1 || argv[1] == nullptr) {
+        std::cerr << "FAIL: POSIX execution fixture path is required\n";
+        return EXIT_FAILURE;
+    }
+    std::error_code posix_fixture_error;
+    child_fixture_executable = std::filesystem::canonical(
+        std::filesystem::path(argv[1]), posix_fixture_error);
+    if (running_test_executable.empty() || posix_fixture_error ||
+        child_fixture_executable.empty()) {
+        std::cerr << "FAIL: POSIX execution fixture requires an exact executable path\n";
+        return EXIT_FAILURE;
+    }
+#endif
 #if defined(_WIN32)
     const bool non_elevated_driver =
         argc == 4 && argv[1] != nullptr &&
