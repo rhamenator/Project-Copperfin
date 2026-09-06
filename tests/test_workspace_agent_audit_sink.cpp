@@ -332,6 +332,26 @@ void test_direct_malformed_events_are_rejected_without_mutation() {
                    sink.commit(unsupported_path, sink.context).ok,
                "RQ-CF-AGENT-028: the durable sink must admit only fixed content-free path-compatibility and image-binding diagnostics");
     }
+    auto fork_observed_process_intent = process_intent;
+    auto fork_observed_process_outcome = process_outcome;
+    fork_observed_process_intent.operation_id = diagnostic_operation_id;
+    fork_observed_process_outcome.operation_id = diagnostic_operation_id++;
+    fork_observed_process_outcome.outcome = "denied";
+    fork_observed_process_outcome.diagnostic_code =
+        "workspace_agent.process_execution_fork_observed_after_intent_audit";
+    expect(sink.commit(fork_observed_process_intent, sink.context).ok &&
+               sink.commit(fork_observed_process_outcome, sink.context).ok,
+           "RQ-CF-AGENT-028: the durable sink must admit the parent-side fork-observed denial diagnostic (issue #5493)");
+    auto fork_observed_file_read_intent = file_read_intent;
+    auto fork_observed_file_read_outcome = file_read_outcome;
+    fork_observed_file_read_intent.operation_id = diagnostic_operation_id;
+    fork_observed_file_read_outcome.operation_id = diagnostic_operation_id++;
+    fork_observed_file_read_outcome.outcome = "failed";
+    fork_observed_file_read_outcome.diagnostic_code =
+        "workspace_agent.file_read_fork_observed_after_intent_audit";
+    expect(sink.commit(fork_observed_file_read_intent, sink.context).ok &&
+               sink.commit(fork_observed_file_read_outcome, sink.context).ok,
+           "RQ-CF-AGENT-029: the durable sink must admit the parent-side fork-observed denial diagnostic for file reads (issue #5493)");
     const std::string before = read_bytes(file_sink.log_path());
 
     std::vector<WorkspaceAgentSessionAuditEvent> malformed;
