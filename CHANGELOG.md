@@ -1,3 +1,32 @@
+- 2026-09-06: Follow-up to #5472/#5498: adversarial review of PR #5498
+  before merge surfaced 5 real findings, all fixed rather than dismissed.
+  Two P1s: an untrusted JSON table name containing `../` or an absolute
+  path could escape the destination directory (fixed by rejecting unsafe
+  names via a new `table_name_is_safe_filesystem_component()` check before
+  any path is derived from them), and a table with an M/G/P memo field
+  silently lost its payload because only the `.dbf` was staged/committed,
+  not the auto-created `.fpt` sidecar (fixed by detecting memo fields and
+  staging/committing the sidecar alongside its `.dbf`). One further
+  fail-closed gap: `std::filesystem::rename` has replace semantics on
+  POSIX, silently defeating the destination-exists preflight checks
+  against anything created during the staging window (fixed by switching
+  the commit loop to `fs::create_hard_link`, which fails instead of
+  replacing). A quote-handling bug (`is_quoted_path_operand` accepted both
+  `'` and `"` but `unquote_string()` only strips `'`) was fixed by
+  restricting to single-quote; the identical pre-existing bug in `EXPORT
+  DATABASE`, which this pattern was copied from, is out of scope here and
+  tracked separately as #5499. An overclaiming diagnostic ("nothing was
+  left behind" on commit failure, when cleanup there is actually
+  best-effort and ignores filesystem errors) was reworded across all 4
+  locales. Two new regression tests cover the path-traversal rejection and
+  the memo-sidecar round trip (`export_database_as_json()` confirms the
+  actual payload survives, not just the file's existence). Full local
+  `ctest` regression: 393/393 passed. Merged into `v1-development` as
+  `c6a341409` with the repository owner's live approval; issue #5472
+  closed manually afterward since this repo's default branch isn't
+  `v1-development`, so GitHub's `Fixes #5472` auto-close keyword never
+  triggered.
+
 - 2026-09-06: Implements #5472 (parent #140/#137): the `IMPORT DATABASE
   <quoted-json-path> TO <quoted-dbc-path> TYPE JSON` command, the first
   materialization step in the `EXPORT`/`IMPORT DATABASE` command family and
