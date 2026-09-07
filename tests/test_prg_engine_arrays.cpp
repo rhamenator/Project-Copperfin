@@ -671,6 +671,73 @@ void test_asize_two_argument_form_preserves_existing_column_count() {
     fs::remove_all(temp_root, ignored);
 }
 
+// resize_array() used to allocate a brand-new full-size buffer and manually
+// copy every surviving element on every call, even when the column count was
+// unchanged and growth was a pure append (row-major layout means element
+// (r, c) sits at r * columns + c both before and after a same-column-count
+// resize -- no element ever needs to move). That made an N-step
+// DIMENSION-in-a-loop growth pattern -- a common way to build a dynamic
+// array in this runtime, since AADD() is not yet implemented -- O(n^2)
+// instead of O(n). This proves both correctness (every value survives
+// thousands of one-row growths) and, implicitly, performance: this test
+// would have been prohibitively slow under the old quadratic behavior.
+void test_array_single_row_growth_loop_preserves_all_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_growth_loop";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    constexpr int last_index = 5000;
+    const fs::path main_path = temp_root / "array_growth_loop.prg";
+    write_text(
+        main_path,
+        "FOR i = 1 TO " + std::to_string(last_index) + "\n"
+        "    DIMENSION aGrow[i]\n"
+        "    aGrow[i] = i * 2\n"
+        "ENDFOR\n"
+        "nFinalLength = ALEN(aGrow)\n"
+        "nFirstValue = aGrow[1]\n"
+        "nMiddleValue = aGrow[" + std::to_string(last_index / 2) + "]\n"
+        "nLastValue = aGrow[" + std::to_string(last_index) + "]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "single-row array growth loop should complete: " + state.message);
+
+    const auto final_length = state.globals.find("nfinallength");
+    const auto first_value = state.globals.find("nfirstvalue");
+    const auto middle_value = state.globals.find("nmiddlevalue");
+    const auto last_value = state.globals.find("nlastvalue");
+
+    expect(final_length != state.globals.end(), "growth loop should expose the final array length");
+    expect(first_value != state.globals.end(), "growth loop should preserve the first element");
+    expect(middle_value != state.globals.end(), "growth loop should preserve a middle element");
+    expect(last_value != state.globals.end(), "growth loop should preserve the last element");
+
+    if (final_length != state.globals.end()) {
+        expect(copperfin::runtime::format_value(final_length->second) == std::to_string(last_index),
+               "growth loop should end with exactly one row per iteration");
+    }
+    if (first_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first_value->second) == "2",
+               "growth loop must not lose the first element written on the first, smallest resize");
+    }
+    if (middle_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(middle_value->second) == std::to_string(last_index),
+               "growth loop must preserve a value written many resizes before the final one");
+    }
+    if (last_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(last_value->second) == std::to_string(last_index * 2),
+               "growth loop must preserve the value written on the final, largest resize");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_array_metadata_and_text_functions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_metadata";
@@ -2023,6 +2090,7 @@ int main() {
     test_array_dimension_and_element_assignment();
     test_preprocessor_constants_expand_in_array_subscripts_but_not_bracket_literals();
     test_asize_two_argument_form_preserves_existing_column_count();
+    test_array_single_row_growth_loop_preserves_all_values();
     test_array_metadata_and_text_functions();
     test_macro_expanded_array_helpers_and_access();
     test_store_uses_assignment_target_semantics();
