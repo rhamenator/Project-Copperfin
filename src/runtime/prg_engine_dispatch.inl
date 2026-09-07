@@ -5426,7 +5426,8 @@
                         normalized_name == "strictdate" || normalized_name == "optimize" ||
                         normalized_name == "talk" || normalized_name == "safety" || normalized_name == "escape" ||
                         normalized_name == "century" || normalized_name == "seconds" || normalized_name == "exclusive" ||
-                        normalized_name == "multilocks" || normalized_name == "null" || normalized_name == "ansi")
+                        normalized_name == "multilocks" || normalized_name == "null" || normalized_name == "ansi" ||
+                        normalized_name == "truncateonoverflow")
                     {
                         current_set_state()[normalized_name] = normalize_boolean_set_value(option_value.empty() ? "on" : option_value);
                     }

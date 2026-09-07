@@ -5,6 +5,8 @@
 
 namespace copperfin::table_mutation_tests
 {
+    void test_scan_replace_loop_updates_every_record_at_scale();
+    void test_append_blank_loop_creates_every_record_at_scale();
     void test_local_table_mutation_and_scan_flow();
     void test_delete_all_and_recall_all_affect_whole_local_table();
     void test_replace_for_updates_all_matching_records();
@@ -26,6 +28,10 @@ namespace copperfin::table_mutation_tests
     void test_pack_is_reverted_by_undo();
     void test_zap_is_reverted_by_undo();
     void test_replace_character_field_truncates_to_field_width();
+    void test_replace_character_field_overflow_reports_detailed_error_by_default();
+    void test_replace_numeric_field_overflow_fills_asterisks_when_truncation_enabled();
+    void test_replace_numeric_field_overflow_reports_detailed_error_by_default();
+    void test_table_buffered_replace_numeric_overflow_honors_truncateonoverflow_at_commit();
     void test_character_field_at_maximum_width_round_trips();
     void test_memo_field_replace_with_empty_string();
     void test_set_exclusive_controls_table_maintenance_guards();

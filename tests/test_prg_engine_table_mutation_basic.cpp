@@ -21,6 +21,127 @@ namespace copperfin::table_mutation_tests
 
 using namespace copperfin::test_support;
 
+// vfp::replace_record_field_value()/append_blank_record_to_file() used to
+// read the ENTIRE table file into memory, mutate it, and atomically
+// rewrite the entire file on every single call, making an N-record bulk
+// REPLACE or APPEND O(n^2) in total I/O instead of O(n): before the fix, a
+// 2000-record SCAN...REPLACE...ENDSCAN loop measured ~27.5s in isolation,
+// and doubling the record count roughly quadrupled the time. This proves
+// both correctness (every record ends up with the right value, none are
+// skipped or duplicated) and, implicitly, performance -- this test would
+// have been prohibitively slow under the old quadratic behavior, so its
+// own reasonable completion time is part of what it's proving.
+void test_scan_replace_loop_updates_every_record_at_scale() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scan_replace_scale";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    constexpr int record_count = 2000;
+    std::vector<std::pair<std::string, int>> seed_records;
+    seed_records.reserve(static_cast<std::size_t>(record_count));
+    for (int i = 0; i < record_count; ++i) {
+        seed_records.push_back({"SEED", 0});
+    }
+    const fs::path table_path = temp_root / "bulk.dbf";
+    write_people_dbf(table_path, seed_records);
+
+    const fs::path main_path = temp_root / "scan_replace_scale.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Bulk IN 0\n"
+        "GO TOP\n"
+        "SCAN\n"
+        // NAME (C(10)) rather than AGE (N(3)): a per-record marker derived
+        // from RECNO() needs to fit at 2000 records without hitting the
+        // separate, deliberately-unrelated numeric-overflow behavior this
+        // file also tests elsewhere.
+        "    REPLACE NAME WITH 'R' + LTRIM(STR(RECNO()))\n"
+        "ENDSCAN\n"
+        "nRecordCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "scaled SCAN/REPLACE loop should complete: " + state.message);
+
+    const auto record_count_global = state.globals.find("nrecordcount");
+    expect(record_count_global != state.globals.end(), "script should expose RECCOUNT()");
+    if (record_count_global != state.globals.end()) {
+        expect(copperfin::runtime::format_value(record_count_global->second) == std::to_string(record_count),
+               "SCAN/REPLACE must not add, drop, or duplicate records");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), static_cast<std::size_t>(record_count));
+    expect(parse_result.ok && parse_result.table.records.size() == static_cast<std::size_t>(record_count),
+           "table should remain readable with exactly the seeded record count");
+    if (parse_result.ok && parse_result.table.records.size() == static_cast<std::size_t>(record_count)) {
+        for (std::size_t index = 0U; index < parse_result.table.records.size(); ++index) {
+            expect(parse_result.table.records[index].values[0U].display_value == "R" + std::to_string(index + 1U),
+                   "record " + std::to_string(index + 1U) + " should hold its own RECNO() marker, not another record's value");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// Same "would have been prohibitively slow before the fix" proof for the
+// append side: appending N records one at a time used to read and
+// atomically rewrite the whole (ever-growing) file on every single append.
+void test_append_blank_loop_creates_every_record_at_scale() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_blank_scale";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    constexpr int record_count = 2000;
+    const fs::path table_path = temp_root / "bulk.dbf";
+    write_people_dbf(table_path, {});
+
+    const fs::path main_path = temp_root / "append_blank_scale.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Bulk IN 0\n"
+        "FOR i = 1 TO " + std::to_string(record_count) + "\n"
+        "    APPEND BLANK\n"
+        // NAME (C(10)) rather than AGE (N(3)): see the SCAN/REPLACE test
+        // above for why a RECNO()-derived marker at this record count
+        // needs a wide-enough field.
+        "    REPLACE NAME WITH 'R' + LTRIM(STR(i))\n"
+        "ENDFOR\n"
+        "nRecordCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "scaled APPEND BLANK loop should complete: " + state.message);
+
+    const auto record_count_global = state.globals.find("nrecordcount");
+    expect(record_count_global != state.globals.end(), "script should expose RECCOUNT()");
+    if (record_count_global != state.globals.end()) {
+        expect(copperfin::runtime::format_value(record_count_global->second) == std::to_string(record_count),
+               "appending N records one at a time should end with exactly N records");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), static_cast<std::size_t>(record_count));
+    expect(parse_result.ok && parse_result.table.records.size() == static_cast<std::size_t>(record_count),
+           "table should remain readable with exactly the appended record count");
+    if (parse_result.ok && parse_result.table.records.size() == static_cast<std::size_t>(record_count)) {
+        for (std::size_t index = 0U; index < parse_result.table.records.size(); ++index) {
+            expect(!parse_result.table.records[index].deleted,
+                   "appended record " + std::to_string(index + 1U) + " should not be marked deleted");
+            expect(parse_result.table.records[index].values[0U].display_value == "R" + std::to_string(index + 1U),
+                   "appended record " + std::to_string(index + 1U) + " should hold its own value, not another record's");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_local_table_mutation_and_scan_flow() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_mutation";
@@ -601,6 +722,11 @@ void test_replace_scope_clauses_bound_physical_record_ranges() {
     write_text(
         main_path,
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        // This test's own subject is scope-clause record targeting, not
+        // overflow handling; it uses overlong NAME literals purely as
+        // convenient, visually distinct markers and has always relied on
+        // them being cut to fit rather than erroring.
+        "SET TRUNCATEONOVERFLOW ON\n"
         "GO 1\n"
         "REPLACE NAME WITH 'CURRENT'\n"
         "nNext = 2\n"

@@ -6,9 +6,18 @@ void test_dbf_table_record_value_errors_resolve_through_localization_catalog() {
     const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
 
+    // Overflow-error message text now carries placeholders (path, record
+    // number, field name/width, and the offending value) so a user can
+    // actually locate the bad data -- see #5509's follow-up work. Catalog
+    // lookups with no placeholder map supplied return the raw template
+    // text with those {tokens} still literal, matching this repo's
+    // existing convention for checking templated catalog strings.
+    const std::string english_character_overflow_template =
+        "Character value ({valueLength} bytes) is too large for field {fieldName} ({fieldLength} bytes wide) "
+        "in record {recordNumber} of {path}. Value: {valuePreview}";
     expect(
         english_catalog.translate("Vfp.DbfTable.Error.CharacterValueTooLarge") ==
-            "Character value is too large for the target field.",
+            english_character_overflow_template,
         "#2381: DBF table character overflow error should resolve through the en-US catalog");
     expect(
         english_catalog.translate("Vfp.DbfTable.Error.DateTimeValueInvalid") ==
@@ -16,7 +25,8 @@ void test_dbf_table_record_value_errors_resolve_through_localization_catalog() {
         "#2381: DBF table datetime validation error should resolve through the en-US catalog");
     expect(
         spanish_catalog.translate("Vfp.DbfTable.Error.CharacterValueTooLarge") ==
-            "El valor de caracteres es demasiado grande para el campo destino.",
+            "El valor de caracteres ({valueLength} bytes) es demasiado grande para el campo {fieldName} "
+            "({fieldLength} bytes de ancho) en el registro {recordNumber} de {path}. Valor: {valuePreview}",
         "#2602: DBF table character overflow error should resolve through the es-419 catalog");
     expect(
         portuguese_catalog.translate("Vfp.DbfTable.Error.DateTimeValueInvalid") ==
@@ -28,8 +38,7 @@ void test_dbf_table_record_value_errors_resolve_through_localization_catalog() {
         "#2381: DBF table record/value errors should be pseudo-localizable");
     expect(
         pseudo_catalog.translate("Vfp.DbfTable.Error.CharacterValueTooLarge") ==
-            copperfin::localization::pseudo_localize(
-                "Character value is too large for the target field."),
+            copperfin::localization::pseudo_localize(english_character_overflow_template),
         "#2602: DBF table qps-ploc record/value errors should use the pseudo-localization transform");
 
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -50,8 +59,11 @@ void test_dbf_table_record_value_errors_resolve_through_localization_catalog() {
         copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NAME", "TOO-LONG");
     expect(!replace_result.ok, "#2381: oversized character field writes should fail");
     expect(
-        replace_result.error == "Character value is too large for the target field.",
-        "#2381: oversized character field writes should preserve the default localized error");
+        replace_result.error.find(table_path.string()) != std::string::npos &&
+            replace_result.error.find("NAME") != std::string::npos &&
+            replace_result.error.find("TOO-LONG") != std::string::npos,
+        "#2381: oversized character field writes should preserve the default localized error, now with "
+        "path/field/value detail: " + replace_result.error);
 
     fs::remove_all(temp_dir, ignored);
 }
