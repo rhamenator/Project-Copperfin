@@ -552,6 +552,49 @@
             {
                 return make_number_value(0.0);
             }
+
+            // A row-major array whose column count is unchanged can grow or
+            // shrink by row count alone without moving any existing element:
+            // element (r, c) sits at r * columns + c both before and after,
+            // since `columns` itself didn't change. This is the common case
+            // -- e.g. `DIMENSION arr[i]` growing one row per loop iteration,
+            // the primary way this runtime builds a dynamic array today --
+            // so route it through plain vector resize (amortized-growth
+            // reserve below) instead of the row-major reshuffle required
+            // when the column count itself changes. Repeatedly allocating a
+            // fresh full-size buffer and manually copying every surviving
+            // element on every single-row growth made an N-step grow loop
+            // O(n^2) instead of O(n).
+            if (columns == array->columns)
+            {
+                const std::size_t new_size = rows * columns;
+                if (new_size > array->values.size())
+                {
+                    // Growing: amortize reallocation cost across a grow loop
+                    // by doubling capacity rather than reserving exactly.
+                    if (array->values.capacity() < new_size)
+                    {
+                        array->values.reserve(std::max(new_size, array->values.capacity() * 2U));
+                    }
+                    array->values.resize(new_size);
+                }
+                else if (new_size < array->values.size())
+                {
+                    // Shrinking: plain resize() would destroy the trailing
+                    // elements but keep the old (larger) capacity, so a
+                    // workload that repeatedly shrinks large arrays would
+                    // retain that memory indefinitely. Rebuild at the exact
+                    // size instead, matching what the row-major reshuffle
+                    // path below would have given.
+                    std::vector<PrgValue> shrunk(
+                        std::make_move_iterator(array->values.begin()),
+                        std::make_move_iterator(array->values.begin() + static_cast<std::ptrdiff_t>(new_size)));
+                    array->values = std::move(shrunk);
+                }
+                array->rows = rows;
+                return make_number_value(static_cast<double>(array->values.size()));
+            }
+
             std::vector<PrgValue> new_values(rows * columns);
             const std::size_t copy_rows = std::min(rows, array->rows);
             const std::size_t copy_columns = std::min(columns, array->columns);
