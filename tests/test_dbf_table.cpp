@@ -1904,6 +1904,20 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
 
     void test_replace_write_failure_leaves_original_dbf_intact() {
         // GAP-03: staged DBF write failures must preserve the original table bytes.
+        //
+        // A non-memo field REPLACE now goes through a targeted-I/O fast path
+        // (see #5509) that writes only the target record's bytes via a
+        // direct seek, not through write_binary_file()'s staged
+        // temp-file-then-rename mechanism -- so it never observes this
+        // test's injected failure hook at all, and the fast path's own,
+        // narrower failure characteristics are covered separately by
+        // test_replace_fast_path_rejected_write_leaves_dbf_untouched below.
+        // A memo field write still goes through the full-rewrite path
+        // unconditionally (it needs that path's memo-sidecar rollback
+        // logic), and that path still writes the .dbf file itself via
+        // write_binary_file() first, so using a memo field here keeps this
+        // test exercising the exact "before-promote fails while writing the
+        // .dbf file" scenario it always has.
         namespace fs = std::filesystem;
         const fs::path temp_dir = fs::temp_directory_path() /
          ("copperfin_dbf_replace_write_failure_tests_" + std::to_string(_getpid()));
@@ -1914,9 +1928,9 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         const fs::path table_path = temp_dir / "replace_fail.dbf";
         const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
          {.name = "NAME", .type = 'C', .length = 10U},
-         {.name = "AGE", .type = 'N', .length = 3U}
+         {.name = "BODY", .type = 'M', .length = 4U}
         };
-        const std::vector<std::vector<std::string>> records{{"ALPHA", "10"}};
+        const std::vector<std::vector<std::string>> records{{"ALPHA", "Original payload"}};
         expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records).ok,
             "GAP-03: setup should create a DBF table for staged-write rollback validation");
 
@@ -1925,7 +1939,7 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         const auto replace_result = [&]() {
             ScopedEnvironmentValue fail_path("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", ".dbf");
             ScopedEnvironmentValue fail_stage("COPPERFIN_TEST_FAIL_WRITE_STAGE", "before-promote");
-            return copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NAME", "BRAVO");
+            return copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "BODY", "Updated payload");
         }();
 
         expect(!replace_result.ok,
@@ -1993,6 +2007,12 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
     void test_staged_write_rollback_removes_temp_and_preserves_original() {
         // GAP-03: staged-write rollback should preserve original on-disk state and
         // clean temp/backup artifacts.
+        //
+        // As in test_replace_write_failure_leaves_original_dbf_intact above,
+        // a memo field forces this write through the full-rewrite path so
+        // it still exercises write_binary_file()'s staged temp-then-rename
+        // rollback -- a non-memo field would now take the targeted-I/O fast
+        // path (#5509) and never reach this injected hook at all.
         namespace fs = std::filesystem;
         const fs::path temp_dir = fs::temp_directory_path() /
          ("copperfin_dbf_staged_rollback_tests_" + std::to_string(_getpid()));
@@ -2003,9 +2023,9 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         const fs::path table_path = temp_dir / "rollback.dbf";
         const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
          {.name = "NAME", .type = 'C', .length = 10U},
-         {.name = "AGE", .type = 'N', .length = 3U}
+         {.name = "BODY", .type = 'M', .length = 4U}
         };
-        const std::vector<std::vector<std::string>> records{{"ALPHA", "10"}, {"BRAVO", "20"}};
+        const std::vector<std::vector<std::string>> records{{"ALPHA", "First payload"}, {"BRAVO", "Second payload"}};
         expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records).ok,
             "GAP-03: setup should create table for staged-write rollback checks");
 
@@ -2013,7 +2033,7 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         const auto result = [&]() {
             ScopedEnvironmentValue fail_path("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", "rollback.dbf");
             ScopedEnvironmentValue fail_stage("COPPERFIN_TEST_FAIL_WRITE_STAGE", "before-promote");
-            return copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "AGE", "21");
+            return copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "BODY", "Updated second payload");
         }();
 
         expect(!result.ok,
@@ -2026,6 +2046,64 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
             "GAP-03: staged rollback should remove DBF temp artifacts");
         expect(!fs::exists(table_path.string() + ".cpbak"),
             "GAP-03: staged rollback should remove DBF backup artifacts");
+
+        fs::remove_all(temp_dir, ignored);
+    }
+
+    // #5509: the targeted-I/O fast path for non-memo REPLACE writes trades
+    // write_binary_file()'s whole-file atomic rewrite for a direct seek to
+    // just the target record -- but it still only ever writes to the real
+    // file *after* write_field_bytes() has validated the value fits (or the
+    // caller opted into truncation). A rejected write -- field not found,
+    // record out of range, or an overflowing value with truncation not
+    // enabled -- must therefore leave the file completely untouched, byte
+    // for byte, exactly like the full-rewrite path's own rollback
+    // guarantees, just by never reaching the write at all rather than by
+    // undoing it.
+    void test_replace_fast_path_rejected_write_leaves_dbf_untouched() {
+        namespace fs = std::filesystem;
+        const fs::path temp_dir = fs::temp_directory_path() /
+         ("copperfin_dbf_fast_path_rejected_write_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / "fast_path_rejected.dbf";
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+         {.name = "NAME", .type = 'C', .length = 10U},
+         {.name = "AGE", .type = 'N', .length = 3U}
+        };
+        const std::vector<std::vector<std::string>> records{{"ALPHA", "10"}};
+        expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records).ok,
+            "setup should create a DBF table for fast-path rejection checks");
+
+        const auto original_bytes = read_binary_file(table_path);
+
+        const auto missing_field_result =
+            copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NOPE", "X");
+        expect(!missing_field_result.ok, "fast path should reject a nonexistent field name");
+        expect(read_binary_file(table_path) == original_bytes,
+            "a rejected fast-path write for a nonexistent field must not touch the file at all");
+
+        const auto out_of_range_result =
+            copperfin::vfp::replace_record_field_value(table_path.string(), 5U, "NAME", "X");
+        expect(!out_of_range_result.ok, "fast path should reject an out-of-range record index");
+        expect(read_binary_file(table_path) == original_bytes,
+            "a rejected fast-path write for an out-of-range record must not touch the file at all");
+
+        const auto overflow_result =
+            copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NAME", "WAY TOO LONG TO FIT", false);
+        expect(!overflow_result.ok, "fast path should reject an overflowing value when truncation is not allowed");
+        expect(read_binary_file(table_path) == original_bytes,
+            "a rejected fast-path write for an overflowing value must not touch the file at all");
+
+        const auto successful_result =
+            copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NAME", "BRAVO");
+        expect(successful_result.ok, "a valid fast-path write should still succeed after prior rejections");
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(parse_result.ok && parse_result.table.records.size() == 1U &&
+                   parse_result.table.records[0].values[0U].display_value == "BRAVO",
+               "the eventual successful write should still take effect correctly");
 
         fs::remove_all(temp_dir, ignored);
     }
@@ -2202,6 +2280,7 @@ int main(int argc, char* argv[]) {
     test_replace_write_failure_leaves_original_dbf_intact();
     test_memo_sidecar_write_failure_leaves_dbf_header_consistent();
     test_staged_write_rollback_removes_temp_and_preserves_original();
+    test_replace_fast_path_rejected_write_leaves_dbf_untouched();
     test_dbf_with_zero_record_length_is_rejected();
     test_dbf_with_header_shorter_than_minimum_is_rejected();
     test_dbf_header_claim_beyond_file_size_is_rejected();

@@ -282,6 +282,12 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     write_text(
         main_path,
         "USE '" + table_path.string() + "'\n"
+        // This test's subject is macro-expanded array name resolution for
+        // SCATTER/GATHER, not overflow handling; 'DeepMacroChg' below is
+        // purely a descriptive marker value that happens to be a couple
+        // characters wider than NAME's field width and has always relied
+        // on being cut to fit rather than erroring.
+        "SET TRUNCATEONOVERFLOW ON\n"
         "GO 1\n"
         "SCATTER FIELDS NAME, AGE TO aRow\n"
         "nArrayLen = ALEN(aRow)\n"

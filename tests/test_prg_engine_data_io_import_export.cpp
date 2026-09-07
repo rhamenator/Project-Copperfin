@@ -683,16 +683,20 @@ void test_append_from_rolls_back_matched_field_write_failure() {
            "matched APPEND FROM field-write failure should pause with an error");
     expect(state.location.line == 3U,
            "matched APPEND FROM field-write failure should highlight the command");
-    const auto qps_catalog = copperfin::localization::load_catalogs(
-        copperfin::localization::resolve_catalog_root(),
-        "qps-ploc");
-    const std::string expected_writer_error = qps_catalog.translate(
-        "Runtime.Prg.Dispatch.Error.AppendFromFailed",
-        {{"errorMessage", copperfin::localization::pseudo_localize(
-            "Character value is too large for the target field.")}});
-    expect(state.message == expected_writer_error,
-           "failed APPEND FROM should preserve the localized matched-field writer diagnostic (got '" +
-               state.message + "')");
+    // The wrapped writer diagnostic now carries placeholder detail (path,
+    // record number, field name/width, offending value) rather than a
+    // fixed sentence -- see #5509's follow-up overflow-error work -- so
+    // check for the AppendFromFailed wrapper plus the specific field and
+    // value involved rather than an exact reconstructed string.
+    // The surrounding "APPEND FROM: {errorMessage}" wrapper template text is
+    // itself pseudo-localized in this qps-ploc test (by design, to prove
+    // pseudo-localization applies to the wrapper too), so only the
+    // placeholder-substituted values -- inserted after that transform --
+    // can be checked for their literal form.
+    expect(state.message.find("NAME") != std::string::npos &&
+               state.message.find("TOO-LONG") != std::string::npos,
+           "failed APPEND FROM should preserve the matched-field writer diagnostic naming the "
+           "offending field and value (got '" + state.message + "')");
     expect(!session.can_undo_command(),
            "failed APPEND FROM should roll back instead of committing an undo entry");
 

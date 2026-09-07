@@ -1222,7 +1222,7 @@
             CursorState &cursor,
             const std::vector<ReplaceAssignment> &assignments,
             const Frame &frame,
-            bool truncate_character_overflow_for_local_fields = false)
+            bool allow_truncation = false)
         {
             struct EvaluatedReplaceAssignment
             {
@@ -1381,7 +1381,19 @@
                 {
                     const PrgValue value = evaluate_expression(assignment.expression, frame);
                     std::string serialized_value = serialize_value_for_cursor_field(assignment.field_name, value);
-                    if (truncate_character_overflow_for_local_fields)
+                    // Buffered (CURSORSETPROP-buffering) records are held in
+                    // memory until a later flush, not written through
+                    // write_field_bytes() immediately, so they can't get
+                    // that function's own detailed-error/truncation
+                    // handling for free the way the direct-write path does.
+                    // Preserve this sub-path's own existing truncation
+                    // behavior, now gated by the same allow_truncation
+                    // switch as the direct-write path, but without this
+                    // session's investigation extending to how a buffered
+                    // record's flush would need to surface a detailed
+                    // overflow error -- that's scoped as separate follow-up
+                    // work, not implemented here.
+                    if (allow_truncation)
                     {
                         const std::string normalized_field = collapse_identifier(assignment.field_name);
                         const auto descriptors = cursor_field_descriptors(cursor);
@@ -1465,30 +1477,13 @@
             {
                 const PrgValue value = evaluate_expression(assignment.expression, frame);
                 std::string serialized_value = serialize_value_for_cursor_field(assignment.field_name, value);
-                if (truncate_character_overflow_for_local_fields)
-                {
-                    const std::string normalized_field = collapse_identifier(assignment.field_name);
-                    const auto descriptors = cursor_field_descriptors(cursor);
-                    const auto descriptor = std::find_if(
-                        descriptors.begin(),
-                        descriptors.end(),
-                        [&](const vfp::DbfFieldDescriptor &candidate)
-                        {
-                            return collapse_identifier(candidate.name) == normalized_field;
-                        });
-                    if (descriptor != descriptors.end() && descriptor->type == 'C')
-                    {
-                        const std::string trimmed = trim_copy(serialized_value);
-                        if (trimmed.size() > descriptor->length)
-                        {
-                            serialized_value = trimmed.substr(0U, descriptor->length);
-                        }
-                        else
-                        {
-                            serialized_value = trimmed;
-                        }
-                    }
-                }
+                // Overflow handling (truncate vs. a detailed error) is now
+                // decided uniformly at the vfp:: layer, which has the
+                // field's real width and the table path in hand for a
+                // proper diagnostic; it also already trims trailing
+                // whitespace itself for character fields (not leading
+                // whitespace, which is preserved in dBASE semantics) before
+                // measuring length, so no pre-truncation belongs here.
                 evaluated_assignments.push_back({
                     .field_name = assignment.field_name,
                     .serialized_value = std::move(serialized_value),
@@ -1502,12 +1497,14 @@
                           cursor.source_path,
                           cursor.recno - 1U,
                           assignment.field_name,
-                          assignment.serialized_value)
+                          assignment.serialized_value,
+                          allow_truncation)
                     : vfp::replace_record_field_value(
                           cursor.source_path,
                           cursor.recno - 1U,
                           assignment.field_name,
-                          assignment.serialized_value);
+                          assignment.serialized_value,
+                          allow_truncation);
                 if (!result.ok)
                 {
                     last_error_message = result.error;
@@ -1535,11 +1532,12 @@
             const std::string &for_expression,
             const std::string &while_expression)
         {
+            const bool allow_truncation = is_set_enabled("truncateonoverflow");
             if (!scope.has_value() &&
                 trim_copy(for_expression).empty() &&
                 trim_copy(while_expression).empty())
             {
-                return replace_current_record_fields(cursor, assignments, frame, true);
+                return replace_current_record_fields(cursor, assignments, frame, allow_truncation);
             }
 
             const AggregateScopeClause effective_scope = scope.value_or(AggregateScopeClause{});
@@ -1553,7 +1551,7 @@
             for (const std::size_t recno : target_records)
             {
                 move_cursor_to(cursor, static_cast<long long>(recno));
-                if (!replace_current_record_fields(cursor, assignments, frame, true))
+                if (!replace_current_record_fields(cursor, assignments, frame, allow_truncation))
                 {
                     return false;
                 }
@@ -1783,6 +1781,7 @@
 
         bool commit_buffered_record(CursorState &cursor, std::size_t recno, bool force_update = false)
         {
+            const bool allow_truncation = is_set_enabled("truncateonoverflow");
             const auto buffered = cursor.buffered_records.find(recno);
             if (buffered == cursor.buffered_records.end())
             {
@@ -1831,7 +1830,8 @@
                 buffered->second,
                 appended,
                 field_states == cursor.buffered_field_states.end() ? nullptr : &field_states->second,
-                deletion_requires_update);
+                deletion_requires_update,
+                allow_truncation);
             if (!admission_patch.has_value())
             {
                 return false;
@@ -1847,7 +1847,8 @@
                     cursor.source_path,
                     recno - 1U,
                     field.field_name,
-                    field.display_value);
+                    field.display_value,
+                    allow_truncation);
                 if (!result.ok)
                 {
                     last_error_message = result.error;
@@ -1897,7 +1898,8 @@
             const vfp::DbfRecord &buffered_record,
             bool appended,
             const std::map<std::size_t, int> *field_states,
-            bool deletion_requires_update)
+            bool deletion_requires_update,
+            bool allow_truncation)
         {
             if (!options.require_verified_file_byte_overrides)
             {
@@ -1971,7 +1973,12 @@
             std::size_t staged_record_index = persisted_recno == 0U ? 0U : persisted_recno - 1U;
             if (appended)
             {
-                const auto append_result = vfp::append_blank_record_to_file(
+                // Deliberately the whole-file-rewrite entry point, not the
+                // targeted-I/O fast path (#5509): this staged-snapshot
+                // commit is tested against injected partial-write failures
+                // at whole-file granularity, and that guarantee is exactly
+                // what this admission step needs to preserve.
+                const auto append_result = vfp::append_blank_record_to_file_full_rewrite(
                     copperfin::platform::path_to_utf8_string(*staged_table_path));
                 if (!append_result.ok || append_result.record_count == 0U)
                 {
@@ -1987,11 +1994,12 @@
                     continue;
                 }
                 const auto &field = buffered_record.values[field_index];
-                const auto replacement = vfp::replace_record_field_value(
+                const auto replacement = vfp::replace_record_field_value_full_rewrite(
                     copperfin::platform::path_to_utf8_string(*staged_table_path),
                     staged_record_index,
                     field.field_name,
-                    field.display_value);
+                    field.display_value,
+                    allow_truncation);
                 if (!replacement.ok)
                 {
                     return fail(replacement.error);
@@ -2671,6 +2679,7 @@
                 return make_boolean_value(true);
             }
 
+            const bool allow_truncation = is_set_enabled("truncateonoverflow");
             const bool force_update = arguments.size() >= 2U && value_as_bool(arguments[1]);
             if (cursor->buffering_mode == 2 || cursor->buffering_mode == 3)
             {
@@ -2713,7 +2722,8 @@
                     record,
                     appended,
                     field_states == cursor->buffered_field_states.end() ? nullptr : &field_states->second,
-                    deletion_requires_update);
+                    deletion_requires_update,
+                    allow_truncation);
                 if (!admission_patch.has_value())
                 {
                     return make_boolean_value(false);
@@ -2722,7 +2732,7 @@
                 {
                     const int buffering_mode = cursor->buffering_mode;
                     cursor->buffering_mode = 1;
-                    const bool append_succeeded = append_blank_record(*cursor);
+                    const bool append_succeeded = append_blank_record(*cursor, /*use_full_rewrite=*/true);
                     cursor->buffering_mode = buffering_mode;
                     if (!append_succeeded)
                     {
@@ -2751,11 +2761,12 @@
                         continue;
                     }
                     const auto &field = record.values[field_index];
-                    const auto result = vfp::replace_record_field_value(
+                    const auto result = vfp::replace_record_field_value_full_rewrite(
                         cursor->source_path,
                         persisted_recno - 1U,
                         field.field_name,
-                        field.display_value);
+                        field.display_value,
+                        allow_truncation);
                     if (!result.ok)
                     {
                         last_error_message = result.error;
@@ -2948,7 +2959,7 @@
             return false;
         }
 
-        bool append_blank_record(CursorState &cursor)
+        bool append_blank_record(CursorState &cursor, bool use_full_rewrite = false)
         {
             if (cursor.remote)
             {
@@ -3025,7 +3036,9 @@
                 return false;
             }
 
-            const auto result = vfp::append_blank_record_to_file(cursor.source_path);
+            const auto result = use_full_rewrite
+                ? vfp::append_blank_record_to_file_full_rewrite(cursor.source_path)
+                : vfp::append_blank_record_to_file(cursor.source_path);
             if (!result.ok)
             {
                 last_error_message = result.error;

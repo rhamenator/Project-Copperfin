@@ -72,12 +72,37 @@ DbfWriteResult replace_record_field_value(
     const std::string& path,
     std::size_t record_index,
     const std::string& field_name,
-    const std::string& value);
+    const std::string& value,
+    bool allow_truncation = false);
 DbfWriteResult replace_record_field_value_additive(
     const std::string& path,
     std::size_t record_index,
     const std::string& field_name,
-    const std::string& value);
+    const std::string& value,
+    bool allow_truncation = false);
+// Whole-file-read/mutate/atomically-rewrite variants of the two entry
+// points above, bypassing the targeted-I/O fast paths those use by
+// default (see #5509). Exists for callers that specifically need
+// write_binary_file()'s staged temp-file-then-rename durability guarantee
+// for a non-memo field write -- today, only the verified/staged buffered-
+// commit admission path (prg_engine_records.inl), which stages an entire
+// snapshot for a TABLEUPDATE() flush and is tested against injected
+// partial-write failures at that granularity. Prefer the fast-path-first
+// entry points above for ordinary REPLACE/APPEND BLANK; reach for these
+// only when that specific whole-file atomicity is the actual requirement.
+DbfWriteResult append_blank_record_to_file_full_rewrite(const std::string& path);
+DbfWriteResult replace_record_field_value_full_rewrite(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& value,
+    bool allow_truncation = false);
+DbfWriteResult replace_record_field_value_additive_full_rewrite(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& value,
+    bool allow_truncation = false);
 DbfWriteResult set_record_deleted_flag(
     const std::string& path,
     std::size_t record_index,
