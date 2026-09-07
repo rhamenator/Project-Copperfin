@@ -8150,9 +8150,11 @@
                 const std::string destination_raw = unquote_string(destination_operand);
                 const std::string import_type = normalize_identifier(
                     unquote_string(trim_copy(statement.tertiary_expression)));
+                const bool is_json = (import_type == "json");
+                const bool is_sql = (import_type == "sql");
                 if (!is_quoted_path_operand(source_operand) ||
                     !is_quoted_path_operand(destination_operand) ||
-                    source_raw.empty() || destination_raw.empty() || import_type != "json")
+                    source_raw.empty() || destination_raw.empty() || (!is_json && !is_sql))
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Dispatch.Error.ImportDatabaseJsonSyntax");
@@ -8199,11 +8201,15 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                const auto plan_result = vfp::build_database_json_import_plan(source_buffer.str());
+                const auto plan_result = is_json
+                    ? vfp::build_database_json_import_plan(source_buffer.str())
+                    : vfp::build_database_sql_import_plan(source_buffer.str());
                 if (!plan_result.ok)
                 {
                     last_error_message = runtime_text(
-                        "Runtime.Prg.Dispatch.Error.ImportDatabasePlanFailed",
+                        is_sql
+                            ? "Runtime.Prg.Dispatch.Error.ImportDatabaseSqlPlanFailed"
+                            : "Runtime.Prg.Dispatch.Error.ImportDatabasePlanFailed",
                         {{"errorCode", plan_result.error_code}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -8215,14 +8221,16 @@
                 if (!import_result.ok)
                 {
                     last_error_message = runtime_text(
-                        "Runtime.Prg.Dispatch.Error.ImportDatabaseJsonFailed",
+                        is_sql
+                            ? "Runtime.Prg.Dispatch.Error.ImportDatabaseSqlFailed"
+                            : "Runtime.Prg.Dispatch.Error.ImportDatabaseJsonFailed",
                         {{"errorMessage", import_result.error}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
 
-                events.push_back({.category = "runtime.import_database_json",
+                events.push_back({.category = is_sql ? "runtime.import_database_sql" : "runtime.import_database_json",
                                   .detail = copperfin::platform::path_to_utf8_string(destination_path),
                                   .location = statement.location});
                 return {};

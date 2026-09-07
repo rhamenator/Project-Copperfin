@@ -485,3 +485,200 @@ void test_materialize_database_json_import_plan_fails_closed_and_round_trips() {
 
     fs::remove_all(temp_dir, ignored);
 }
+
+// ---- build_database_sql_import_plan tests ----
+
+void test_build_database_sql_import_plan_validates_without_mutation() {
+    const std::string document =
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: Northwind\n"
+        "-- source: /source/Northwind.dbc\n"
+        "\n"
+        "CREATE TABLE \"Customers\" (\n"
+        "    \"NAME\" VARCHAR(40),\n"
+        "    \"ACTIVE\" BOOLEAN\n"
+        ");\n"
+        "\n"
+        "INSERT INTO \"Customers\" (\"NAME\", \"ACTIVE\") VALUES ('Acme', TRUE);\n"
+        "INSERT INTO \"Customers\" (\"NAME\", \"ACTIVE\") VALUES (NULL, FALSE);\n"
+        "\n"
+        "CREATE TABLE \"Orders\" (\n"
+        "    \"ORDERID\" DECIMAL(8, 0)\n"
+        ");\n"
+        "\n"
+        "INSERT INTO \"Orders\" (\"ORDERID\") VALUES (7);\n"
+        "INSERT INTO \"Orders\" (\"ORDERID\") VALUES (12);\n";
+
+    const auto result = copperfin::vfp::build_database_sql_import_plan(document);
+    expect(result.ok, "database SQL import planning should accept the exact dialect export_database_as_sql() emits: " + result.error_code);
+    expect(result.error_code.empty(), "successful database SQL planning should not retain an error code");
+    if (result.ok) {
+        expect(result.plan.database_name == "Northwind",
+               "database SQL planning should retain the database name from the header comment");
+        expect(result.plan.tables.size() == 2U && result.plan.tables[0].name == "Customers" &&
+                   result.plan.tables[1].name == "Orders",
+               "database SQL planning should retain tables in CREATE TABLE order");
+        expect(result.plan.tables[0].fields.size() == 2U &&
+                   result.plan.tables[0].fields[0].name == "NAME" && result.plan.tables[0].fields[0].type == 'C' &&
+                   result.plan.tables[0].fields[1].name == "ACTIVE" && result.plan.tables[0].fields[1].type == 'L',
+               "database SQL planning should map VARCHAR/BOOLEAN columns to C/L field descriptors");
+        expect(result.plan.tables[0].records_json == "[{\"NAME\":\"Acme\",\"ACTIVE\":true},{\"NAME\":null,\"ACTIVE\":false}]",
+               "database SQL planning should convert INSERT literals to the same JSON row shape the JSON path already consumes");
+        expect(result.plan.tables[1].fields[0].type == 'N' && result.plan.tables[1].fields[0].length == 8U,
+               "database SQL planning should map DECIMAL columns to N field descriptors");
+        expect(result.plan.tables[1].records_json == "[{\"ORDERID\":7},{\"ORDERID\":12}]",
+               "database SQL planning should retain every INSERT row for a table, not just the first");
+    }
+
+    const auto missing_header = copperfin::vfp::build_database_sql_import_plan(
+        "CREATE TABLE \"X\" (\"A\" INTEGER);\n");
+    expect(!missing_header.ok && missing_header.error_code == "database_sql_import.invalid_header",
+           "database SQL planning should reject a document missing the exporter's exact three-line header");
+
+    const auto foreign_dialect = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE X (A INT);\n");
+    expect(!foreign_dialect.ok,
+           "database SQL planning should reject unquoted identifiers rather than guessing at a foreign SQL dialect");
+
+    const auto unknown_type = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"X\" (\"A\" NUMERIC(5));\n");
+    expect(!unknown_type.ok && unknown_type.error_code == "database_sql_import.unknown_column_type",
+           "database SQL planning should reject a column type outside export_database_as_sql()'s fixed vocabulary");
+
+    const auto duplicate_table = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"People\" (\"A\" INTEGER);\n"
+        "CREATE TABLE \"people\" (\"B\" INTEGER);\n");
+    expect(!duplicate_table.ok && duplicate_table.error_code == "database_sql_import.duplicate_table_name",
+           "database SQL planning should reject cross-platform case-folded table-name collisions, matching the JSON path");
+
+    const auto unknown_insert_table = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"People\" (\"A\" INTEGER);\n"
+        "INSERT INTO \"Other\" (\"A\") VALUES (1);\n");
+    expect(!unknown_insert_table.ok && unknown_insert_table.error_code == "database_sql_import.insert_unknown_table",
+           "database SQL planning should reject an INSERT INTO a table with no matching CREATE TABLE");
+
+    const auto unknown_insert_column = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"People\" (\"A\" INTEGER);\n"
+        "INSERT INTO \"People\" (\"B\") VALUES (1);\n");
+    expect(!unknown_insert_column.ok && unknown_insert_column.error_code == "database_sql_import.insert_unknown_column",
+           "database SQL planning should reject an INSERT column with no matching CREATE TABLE field");
+
+    const auto mismatched_value_count = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"People\" (\"A\" INTEGER, \"B\" INTEGER);\n"
+        "INSERT INTO \"People\" (\"A\", \"B\") VALUES (1);\n");
+    expect(!mismatched_value_count.ok && mismatched_value_count.error_code == "database_sql_import.insert_value_count_mismatch",
+           "database SQL planning should reject an INSERT whose VALUES count does not match its column list");
+
+    const auto wrong_value_shape = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"People\" (\"A\" INTEGER);\n"
+        "INSERT INTO \"People\" (\"A\") VALUES ('not a number');\n");
+    expect(!wrong_value_shape.ok && wrong_value_shape.error_code == "database_sql_import.invalid_insert_value",
+           "database SQL planning should reject a string literal supplied for a numeric column rather than coercing it");
+}
+
+// ---- export_database_as_sql -> build_database_sql_import_plan round trip ----
+
+void test_export_database_as_sql_round_trips_through_import() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_database_sql_import_round_trip_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    // Build a real source database via the JSON materializer (already proven
+    // above), so this test exercises export_database_as_sql() against a real
+    // DBC/DBF pair rather than a hand-written fixture string.
+    const std::string source_document = R"JSON({
+  "schema_version": 1,
+  "database": {"path": "/source/Northwind.dbc", "name": "Northwind"},
+  "catalog": [{"record_index": 1}],
+  "tables": {
+    "Orders": {
+      "fields": [{"name": "ORDERID", "type": "N", "length": 8, "decimals": 0}],
+      "records": [{"ORDERID": 7}, {"ORDERID": 12}]
+    },
+    "Customers": {
+      "fields": [{"name": "NAME", "type": "C", "length": 40, "decimals": 0},
+                 {"name": "ACTIVE", "type": "L", "length": 1, "decimals": 0}],
+      "records": [{"NAME": "Acme", "ACTIVE": true}, {"NAME": "O'Brien", "ACTIVE": false}]
+    }
+  }
+})JSON";
+    const auto source_plan = copperfin::vfp::build_database_json_import_plan(source_document);
+    expect(source_plan.ok, "round-trip fixture plan should build successfully");
+    if (!source_plan.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+    const fs::path source_dir = temp_dir / "source";
+    fs::create_directories(source_dir, ignored);
+    const fs::path source_dbc_path = source_dir / "source.dbc";
+    const auto source_materialize = copperfin::vfp::materialize_database_json_import_plan(
+        source_plan.plan, source_dbc_path.string());
+    expect(source_materialize.ok, "round-trip fixture database should materialize: " + source_materialize.error);
+    if (!source_materialize.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    const auto sql_export = copperfin::vfp::export_database_as_sql(source_dbc_path.string());
+    expect(sql_export.ok, "export_database_as_sql should succeed against the fixture database: " + sql_export.error);
+    if (!sql_export.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    const auto sql_plan = copperfin::vfp::build_database_sql_import_plan(sql_export.sql);
+    expect(sql_plan.ok, "build_database_sql_import_plan should accept export_database_as_sql()'s own output: " + sql_plan.error_code);
+    if (!sql_plan.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    const fs::path reimport_dir = temp_dir / "reimport";
+    fs::create_directories(reimport_dir, ignored);
+    const fs::path reimported_dbc_path = reimport_dir / "reimported.dbc";
+    const auto reimport_materialize = copperfin::vfp::materialize_database_json_import_plan(
+        sql_plan.plan, reimported_dbc_path.string());
+    expect(reimport_materialize.ok,
+           "materializing the SQL-derived plan should succeed: " + reimport_materialize.error);
+    expect(reimport_materialize.table_count == 2U, "the SQL round trip should recreate both tables");
+
+    const auto reexported_json = copperfin::vfp::export_database_as_json(reimported_dbc_path.string());
+    expect(reexported_json.ok, "the SQL round-tripped DBC should itself be exportable: " + reexported_json.error);
+    if (reexported_json.ok) {
+        expect(reexported_json.json.find("\"NAME\": \"Acme\"") != std::string::npos,
+               "the SQL round trip should preserve character row data");
+        expect(reexported_json.json.find("\"NAME\": \"O'Brien\"") != std::string::npos,
+               "the SQL round trip should preserve an embedded single quote through both quoting layers");
+        expect(reexported_json.json.find("\"ACTIVE\": true") != std::string::npos &&
+                   reexported_json.json.find("\"ACTIVE\": false") != std::string::npos,
+               "the SQL round trip should preserve both logical values");
+        expect(reexported_json.json.find("\"ORDERID\": 7") != std::string::npos &&
+                   reexported_json.json.find("\"ORDERID\": 12") != std::string::npos,
+               "the SQL round trip should preserve every numeric row");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}

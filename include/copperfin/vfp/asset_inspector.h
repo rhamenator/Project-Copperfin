@@ -183,6 +183,20 @@ struct DatabaseJsonImportPlanResult {
 [[nodiscard]] DatabaseJsonImportPlanResult build_database_json_import_plan(
     std::string_view document);
 
+// Parses the narrow, fixed SQL dialect export_database_as_sql() itself
+// produces (its required three-line header comment, then CREATE TABLE and
+// INSERT INTO statements using exactly that function's identifier/literal
+// quoting and column-type vocabulary) into the same DatabaseJsonImportPlan
+// materialize_database_json_import_plan() already consumes -- a parser/
+// adapter in front of the existing materializer, not a second write path.
+// This is not a general-purpose SQL parser: anything outside that exact
+// subset is rejected with a distinct error_code rather than guessed at.
+// Some field-type precision is intentionally lost on the round trip (N, F,
+// and Y all become 'N'; M, G, and P all become 'M'), matching the same
+// narrowing export_database_as_sql() already performs on the way out.
+[[nodiscard]] DatabaseJsonImportPlanResult build_database_sql_import_plan(
+    std::string_view document);
+
 // Result of materialize_database_json_import_plan.
 struct DatabaseJsonImportResult {
     bool ok = false;

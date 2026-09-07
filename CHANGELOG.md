@@ -1,3 +1,50 @@
+- 2026-09-06: Implements #5473 (parent #140, `RQ-CF-MODERNIZATION-005`):
+  the `IMPORT DATABASE <quoted-sql-path> TO <quoted-dbc-path> TYPE SQL`
+  command. Adds `vfp::build_database_sql_import_plan()`
+  (`include/copperfin/vfp/asset_inspector.h`, `src/vfp/asset_inspector.cpp`)
+  as a parser/adapter in front of #5472's existing
+  `materialize_database_json_import_plan()` -- not a second write path.
+  It parses only the exact, narrow SQL dialect `EXPORT DATABASE ... TYPE
+  SQL` (#5471) itself emits: a fixed three-line header comment used as an
+  up-front subset gate, double- and single-quoted identifiers/literals
+  with doubled-quote escaping, and `CREATE TABLE`/`INSERT INTO`
+  statements using exactly that exporter's column-type vocabulary. This
+  is explicitly not a general-purpose SQL parser: a missing header,
+  unquoted identifiers, an unrecognized column type, an `INSERT`
+  referencing an undefined table or column, a `VALUES`/column-count
+  mismatch, or a literal shape wrong for its column's type is rejected
+  with a distinct `error_code` before anything is written, rather than
+  guessed at. Field-type precision narrows on the round trip the same
+  way the exporter already narrows it going out: `N`/`F`/`Y` all become
+  `N`, and `M`/`G`/`P` all become `M`. `import_database_command`'s
+  existing `TYPE` dispatch (`src/runtime/prg_engine_dispatch.inl`) now
+  routes `TYPE SQL` to this parser and `TYPE JSON` to the existing one,
+  sharing the syntax contract and localized diagnostics
+  (`resources/locales/*/strings.json`) with only the plan-construction
+  step and its own distinct `runtime.import_database_sql` event
+  differing from the JSON path. Also reworded the shared
+  `ImportDatabaseJsonSyntax`/`ImportDatabaseSourceOpenFailed` diagnostics
+  (previously JSON-specific text) to cover both `TYPE` values, matching
+  `EXPORT DATABASE`'s own precedent. `tests/test_prg_engine_data_io_import_export.cpp`
+  proves the full PRG-script round trip (a real exported SQL snapshot
+  re-imported and read back through the independent JSON exporter,
+  matching on table name and multi-row character/numeric/logical data),
+  the distinct runtime event, destination-already-exists fail-closed
+  behavior, and rejection of an out-of-subset SQL document without
+  creating a destination. `tests/test_vfp_assets.cpp` proves the parser
+  directly against the accepted-subset boundary (valid input succeeds; a
+  missing header, unquoted identifiers, an unrecognized column type, a
+  case-folded duplicate table name, an unknown INSERT table/column, a
+  value-count mismatch, and a wrong-shape literal each fail closed with
+  a distinct error code) and proves the library-level
+  `export_database_as_sql()` -> `build_database_sql_import_plan()` round
+  trip directly, including an embedded single quote surviving both
+  quoting layers. Full local `ctest` regression passed after the change,
+  on top of a clean warning-free Release build. Not scoped: a
+  general-purpose SQL parser, a live database connection, and
+  index/relation/container-metadata reconstruction (all inherited,
+  unchanged, from #5472's materializer).
+
 - 2026-09-06: Follow-up to #5472/#5498: adversarial review of PR #5498
   before merge surfaced 5 real findings, all fixed rather than dismissed.
   Two P1s: an untrusted JSON table name containing `../` or an absolute

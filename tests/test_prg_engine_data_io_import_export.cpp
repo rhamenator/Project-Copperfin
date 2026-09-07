@@ -1920,10 +1920,122 @@ void test_import_database_type_json_round_trips_via_export() {
     expect(!expression_state.completed,
            "IMPORT DATABASE TYPE JSON should reject an expression source in its quoted-path-only first slice");
     expect(expression_state.message ==
-               "IMPORT DATABASE requires a JSON source, a DBC destination, and TYPE JSON",
+               "IMPORT DATABASE requires a source, a DBC destination, and TYPE JSON or TYPE SQL",
            "IMPORT DATABASE TYPE JSON should report the localized quoted-path-only syntax diagnostic");
     expect(!fs::exists(temp_root / "not-created.dbc"),
            "IMPORT DATABASE TYPE JSON should reject an expression operand before creating output");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_import_database_type_sql_round_trips_via_export() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_import_database_sql";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    // Same source fixture shape as the IMPORT DATABASE TYPE JSON test above,
+    // but round-tripped through EXPORT/IMPORT DATABASE ... TYPE SQL instead.
+    const fs::path source_dbc_path = temp_root / "northwind.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> catalog_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .length = 16U},
+        {.name = "OBJECTNAME", .type = 'C', .length = 64U},
+        {.name = "PARENTNAME", .type = 'C', .length = 64U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+    };
+    const auto catalog_create = copperfin::vfp::create_dbf_table_file(
+        source_dbc_path.string(),
+        catalog_fields,
+        {{"DATABASE", "Northwind", "", ""}, {"TABLE", "People", "Northwind", ""}});
+    expect(catalog_create.ok, "IMPORT DATABASE TYPE SQL fixture should create the source DBC catalog");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NAME", .type = 'C', .length = 32U},
+        {.name = "AGE", .type = 'N', .length = 5U, .decimal_count = 0U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        (temp_root / "People.dbf").string(), table_fields,
+        {{"Alice", "30", "T"}, {"Bob", "45", "F"}});
+    expect(table_create.ok, "IMPORT DATABASE TYPE SQL fixture should create the source catalog table");
+
+    write_text(
+        temp_root / "export_for_import.prg",
+        "EXPORT DATABASE 'northwind.dbc' TO 'snapshot' TYPE SQL\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession export_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "export_for_import.prg").string(), temp_root.string(), false));
+    const auto export_state = export_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(export_state.completed, "IMPORT DATABASE TYPE SQL fixture's EXPORT step should complete: " + export_state.message);
+
+    write_text(
+        temp_root / "import_database_sql.prg",
+        "IMPORT DATABASE 'snapshot.sql' TO 'restored/restored.dbc' TYPE SQL\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession import_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "import_database_sql.prg").string(), temp_root.string(), false));
+    const auto import_state = import_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(import_state.completed, "IMPORT DATABASE TYPE SQL script should complete: " + import_state.message);
+
+    const fs::path restored_dbc_path = temp_root / "restored" / "restored.dbc";
+    const fs::path restored_table_path = temp_root / "restored" / "People.dbf";
+    expect(fs::exists(restored_dbc_path), "IMPORT DATABASE TYPE SQL should create the destination DBC");
+    expect(fs::exists(restored_table_path), "IMPORT DATABASE TYPE SQL should materialize the table DBF");
+
+    const bool has_event = std::any_of(import_state.events.begin(), import_state.events.end(),
+        [&](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "runtime.import_database_sql" && event.detail == restored_dbc_path.string();
+        });
+    expect(has_event, "IMPORT DATABASE TYPE SQL should emit its own distinct runtime event");
+
+    // Round-trip proof: read the restored DBC back through the JSON exporter
+    // (an independent reader from the SQL path that produced the snapshot)
+    // and confirm table/row data match.
+    const auto restored_export = copperfin::vfp::export_database_as_json(restored_dbc_path.string());
+    expect(restored_export.ok, "IMPORT DATABASE TYPE SQL output should itself be exportable: " + restored_export.error);
+    if (restored_export.ok) {
+        expect(restored_export.json.find("\"People\"") != std::string::npos,
+               "IMPORT DATABASE TYPE SQL should restore the table under its original name");
+        expect(restored_export.json.find("\"Alice\"") != std::string::npos,
+               "IMPORT DATABASE TYPE SQL should restore character row data");
+        expect(restored_export.json.find("\"AGE\": 30") != std::string::npos,
+               "IMPORT DATABASE TYPE SQL should restore numeric row data");
+        expect(restored_export.json.find("\"ACTIVE\": true") != std::string::npos,
+               "IMPORT DATABASE TYPE SQL should restore logical row data");
+        expect(restored_export.json.find("\"Bob\"") != std::string::npos &&
+                   restored_export.json.find("\"ACTIVE\": false") != std::string::npos,
+               "IMPORT DATABASE TYPE SQL should restore every row, not just the first");
+    }
+
+    // Fail-closed: importing again into the exact same destination must be
+    // rejected without touching the already-materialized files.
+    const std::uintmax_t table_size_before = fs::file_size(restored_table_path, ignored);
+    copperfin::runtime::PrgRuntimeSession reimport_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "import_database_sql.prg").string(), temp_root.string(), false));
+    const auto reimport_state = reimport_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!reimport_state.completed,
+           "IMPORT DATABASE TYPE SQL should fail closed when the destination DBC already exists");
+    expect(fs::file_size(restored_table_path, ignored) == table_size_before,
+           "IMPORT DATABASE TYPE SQL must not modify an existing table when the destination DBC already exists");
+
+    // An out-of-subset SQL document must be rejected with a clear
+    // diagnostic, not silently mis-parsed or partially materialized.
+    write_text(temp_root / "not-the-dialect.sql", "SELECT * FROM People;\n");
+    write_text(
+        temp_root / "import_database_sql_foreign_dialect.prg",
+        "IMPORT DATABASE 'not-the-dialect.sql' TO 'rejected.dbc' TYPE SQL\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession foreign_dialect_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(
+            (temp_root / "import_database_sql_foreign_dialect.prg").string(), temp_root.string(), false));
+    const auto foreign_dialect_state = foreign_dialect_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!foreign_dialect_state.completed,
+           "IMPORT DATABASE TYPE SQL should reject SQL outside export_database_as_sql()'s own narrow dialect");
+    expect(!fs::exists(temp_root / "rejected.dbc"),
+           "IMPORT DATABASE TYPE SQL should not create a destination when the source SQL is out of subset");
 
     fs::remove_all(temp_root, ignored);
 }

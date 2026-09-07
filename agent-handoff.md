@@ -1,5 +1,53 @@
 # Agent Handoff
 
+## In progress: PR for #5473 (`IMPORT DATABASE ... TYPE SQL`), not yet merged as of 2026-09-06
+
+Implements #5473 (parent #140, `RQ-CF-MODERNIZATION-005`), the next
+unblocked slice after #5472/#5498 shipped: `IMPORT DATABASE
+<quoted-sql-path> TO <quoted-dbc-path> TYPE SQL`. `vfp::build_database_sql_import_plan()`
+(`include/copperfin/vfp/asset_inspector.h`, `src/vfp/asset_inspector.cpp`)
+is a parser/adapter in front of #5472's existing
+`materialize_database_json_import_plan()` -- not a second write path --
+that accepts only the exact, narrow SQL dialect `EXPORT DATABASE ... TYPE
+SQL` (#5471) itself emits (a fixed three-line header comment used as an
+up-front subset gate, doubled-quote-escaped identifiers/literals, and
+`CREATE TABLE`/`INSERT INTO` using exactly that exporter's column-type
+vocabulary), rejecting anything else with a distinct `error_code` before
+writing anything. Field-type precision narrows the same way the exporter
+already narrows it going out (`N`/`F`/`Y` all become `N`; `M`/`G`/`P` all
+become `M`). `import_database_command`'s `TYPE` dispatch
+(`src/runtime/prg_engine_dispatch.inl`) now routes `TYPE SQL` to this
+parser and `TYPE JSON` to the existing one, sharing the syntax/diagnostic
+contract with only plan construction and the runtime event
+(`runtime.import_database_sql`) differing. Also genericized the
+`ImportDatabaseJsonSyntax`/`ImportDatabaseSourceOpenFailed` diagnostics
+(previously hardcoded to "TYPE JSON" text) to cover both `TYPE` values,
+matching `EXPORT DATABASE`'s own precedent.
+
+New tests: `tests/test_prg_engine_data_io_import_export.cpp`
+(`test_import_database_type_sql_round_trips_via_export`) proves the full
+PRG-script round trip and rejection of an out-of-subset SQL document;
+`tests/test_vfp_assets.cpp` (`test_build_database_sql_import_plan_validates_without_mutation`,
+`test_export_database_as_sql_round_trips_through_import`) prove the
+parser directly against the accepted-subset boundary and the
+library-level round trip, including an embedded single quote surviving
+both quoting layers. Full local `ctest` regression passed after the
+change (one unrelated test, `test_prg_engine_work_areas`, hit ctest's
+own 300s timeout under this run's parallel load but passes cleanly when
+run standalone with more headroom -- confirmed via `git diff --stat`
+that this file was never touched by this change; noted as an
+environmental characteristic, not a defect in this slice, matching how a
+similar transient timeout was previously noted in BrassLedger's own
+changelog).
+
+`docs/32-recovered-requirements-traceability.md` gained the
+`RQ-CF-MODERNIZATION-005` row; `CHANGELOG.md` has the full entry.
+
+Picked up autonomously per the repository owner's standing instruction
+to keep advancing Copperfin and never merge a PR without their live
+explicit go-ahead in the same turn -- this one is left open for that
+review, not merged.
+
 ## Shipped: PR #5498 (`IMPORT DATABASE ... TYPE JSON` materialization, #5472), merged 2026-09-06
 
 **Update:** merged into `v1-development` as `c6a341409` with the repository
