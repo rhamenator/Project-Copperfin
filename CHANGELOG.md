@@ -27,6 +27,22 @@
   the last value written across thousands of resizes. Full local `ctest`
   regression passed after the fix, on a clean warning-free Debug build.
 
+  Follow-up (same day, PR review): the same-column fast path's initial
+  version used a single `values.resize(new_size)` call for both growth
+  and shrinkage. For growth that's correct and is what gives the O(n)
+  win above, but for shrinkage `std::vector::resize()` to a smaller size
+  destroys the trailing elements while keeping the vector's prior
+  (larger) capacity -- unlike the row-major-reshuffle path it replaced,
+  which always allocated an exact-sized replacement buffer. A workload
+  that repeatedly shrinks large same-column arrays (e.g. draining rows
+  in a loop) would therefore retain that memory indefinitely instead of
+  releasing it as the old code did. Fixed by distinguishing the two
+  directions explicitly: growth still uses amortized `reserve()` +
+  `resize()`, while shrinkage now move-constructs an exact-sized
+  replacement vector, matching the prior exact-capacity behavior for
+  that direction without reintroducing the O(n^2) growth-loop cost this
+  fix exists to remove.
+
 - 2026-09-07: Fixes #5497: `can_open_table_cursor()`
   (`src/runtime/prg_engine_cursor.inl`) scanned every currently open cursor
   on every `USE`/table-open call to check for a duplicate alias, making a
