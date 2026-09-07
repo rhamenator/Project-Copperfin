@@ -1,3 +1,56 @@
+- 2026-09-07: Fixes #5508: `REPLACE ALL <field> WITH <value>` and
+  `REPLACE REST <field> WITH <value>` failed with "The target field was
+  not found in the table" instead of replacing every (or the remaining)
+  record -- confirmed with a minimal repro (`REPLACE ALL AMOUNT WITH
+  999`) and, per the issue, no test anywhere in the suite exercised
+  literal `REPLACE ALL`/`REPLACE REST` before this. Found while
+  empirically benchmarking a different superlinear-I/O audit.
+
+  Root cause: `parse_aggregate_scope_clause()`
+  (`src/runtime/prg_engine_command_helpers.cpp`) is shared by `SCAN`,
+  `DELETE`, `RECALL`, and `REPLACE`. For the first three, the scope
+  keyword (`ALL`/`REST`/`NEXT n`/`RECORD n`) is the entire segment
+  before `FOR`/`WHILE`/`IN` -- nothing else follows it. VFP's official
+  `REPLACE` grammar instead puts the scope keyword *before* the
+  mandatory field-assignment list in that same segment (`REPLACE ALL
+  AMOUNT WITH 999` -- `ALL` is followed by `AMOUNT WITH 999`, not
+  nothing). The function's guard assumed `ALL`/`REST` are always bare,
+  trailing tokens and returned the *unmodified* input early whenever
+  `ALL`/`REST` had non-empty trailing text, leaving the literal text
+  `"ALL AMOUNT WITH 999"` to flow into `parse_replace_assignments()`,
+  which then tried to parse `"ALL AMOUNT"` as a field name.
+
+  This codebase's `REPLACE` handling has also long accepted (and tests,
+  e.g. `test_replace_scope_clauses_bound_physical_record_ranges`, aka
+  "#3927") the scope keyword coming *after* the field-assignment list
+  instead (`REPLACE field WITH value NEXT n`) -- a more lenient
+  superset of the official grammar. Fixing only the leading-keyword
+  case without preserving the trailing one would have silently broken
+  that established, tested behavior.
+
+  Fixed by adding `parse_leading_aggregate_scope_clause()`: it checks
+  whether the *first* word of the text is a scope keyword (handling
+  `REPLACE ALL/REST/NEXT n/RECORD n field WITH value`), and falls back
+  to the existing, unchanged `parse_aggregate_scope_clause()` when it
+  isn't (handling `REPLACE field WITH value ALL/REST/NEXT n/RECORD n`).
+  `REPLACE`'s command parser (`prg_engine_parser.cpp`) now calls this
+  new function instead of the trailing-only one; `SCAN`/`DELETE`/`RECALL`
+  are untouched. Also added explicit `all_records` handling to
+  `parse_aggregate_scope_clause()` itself, rather than relying on
+  `AggregateScopeClause::kind`'s default value being coincidentally
+  correct for that case, per the issue's own suggestion.
+
+  New regression coverage in `tests/test_prg_engine_table_mutation_basic.cpp`:
+  `test_replace_all_updates_every_record`, `test_replace_rest_updates_only_remaining_records`,
+  `test_replace_next_updates_exact_record_count`,
+  `test_replace_record_updates_exactly_one_record`, and
+  `test_replace_all_composes_with_for_clause` (proving the leading-scope
+  form composes correctly with a `FOR` clause). The pre-existing
+  trailing-scope test (`test_replace_scope_clauses_bound_physical_record_ranges`,
+  "#3927") continues to pass unchanged, proving both forms now coexist.
+  Full local `ctest` regression passed after the fix, on a clean
+  warning-free Debug build.
+
 - 2026-09-07: Fixes #5509: `append_blank_record_to_file()` and
   `replace_record_field_value()` (`src/vfp/dbf_table.cpp`) both read the
   **entire DBF file** into memory, mutated one record, and atomically

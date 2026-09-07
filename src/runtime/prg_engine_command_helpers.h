@@ -69,6 +69,17 @@ std::string extract_fields_command_clause(
 std::vector<ReplaceAssignment> parse_replace_assignments(const std::string& text);
 std::vector<CalculateAssignment> parse_calculate_assignments(const std::string& text);
 AggregateScopeClause parse_aggregate_scope_clause(const std::string& text, std::string& expression_text);
+// Like parse_aggregate_scope_clause(), but for commands whose scope keyword
+// (ALL/REST/NEXT n/RECORD n) is a *leading* token followed by more required
+// text in the same segment (REPLACE's mandatory field-assignment list),
+// rather than a trailing, otherwise-bare token (SCAN/DELETE/RECALL's shape).
+// remaining_text is set to the text after the consumed keyword (and, for
+// NEXT/RECORD, its count/record-number token); it is left equal to the
+// trimmed input when no leading scope keyword is present, matching
+// parse_aggregate_scope_clause()'s "did this actually consume anything"
+// contract that callers rely on to distinguish "no scope" from "all_records"
+// despite AggregateScopeClause::kind defaulting to all_records.
+AggregateScopeClause parse_leading_aggregate_scope_clause(const std::string& text, std::string& remaining_text);
 std::string format_total_numeric_value(double value, std::uint8_t decimal_count);
 std::optional<TotalCommandPlan> parse_total_command_plan(const std::string& body, std::string& error_message);
 

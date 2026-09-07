@@ -312,7 +312,12 @@ AggregateScopeClause parse_aggregate_scope_clause(const std::string& text, std::
     }
 
     expression_text = trim_copy(expression_text.substr(0U, keyword_position));
-    if (normalized_keyword == "rest") {
+    if (normalized_keyword == "all") {
+        // Already AggregateScopeClause's default, but set it explicitly
+        // rather than relying on that default being coincidentally
+        // correct for this branch.
+        scope.kind = AggregateScopeKind::all_records;
+    } else if (normalized_keyword == "rest") {
         scope.kind = AggregateScopeKind::rest_records;
     } else if (normalized_keyword == "next") {
         scope.kind = AggregateScopeKind::next_records;
@@ -322,6 +327,80 @@ AggregateScopeClause parse_aggregate_scope_clause(const std::string& text, std::
         scope.raw_value = tail;
     }
     return scope;
+}
+
+AggregateScopeClause parse_leading_aggregate_scope_clause(const std::string& text, std::string& remaining_text) {
+    AggregateScopeClause scope;
+    remaining_text = trim_copy(text);
+    if (remaining_text.empty()) {
+        return scope;
+    }
+
+    const auto [keyword, tail] = split_first_word(remaining_text);
+    const std::string normalized_keyword = normalize_identifier(keyword);
+    const bool is_scope_keyword =
+        normalized_keyword == "all" || normalized_keyword == "rest" ||
+        normalized_keyword == "next" || normalized_keyword == "record";
+    if (!is_scope_keyword) {
+        return parse_aggregate_scope_clause(text, remaining_text);
+    }
+
+    // A scope keyword immediately followed by WITH is actually the field
+    // name of an ordinary current-record REPLACE (a table can legally
+    // have a field literally named ALL/REST/NEXT/RECORD) -- don't
+    // consume it as a scope in that case, matching what the trailing-form
+    // parser already did for this specific shape (tail non-empty but not
+    // itself a further assignment).
+    if (normalize_identifier(split_first_word(tail).first) == "with") {
+        return parse_aggregate_scope_clause(text, remaining_text);
+    }
+
+    if (normalized_keyword == "all") {
+        scope.kind = AggregateScopeKind::all_records;
+        remaining_text = tail;
+        return scope;
+    }
+    if (normalized_keyword == "rest") {
+        scope.kind = AggregateScopeKind::rest_records;
+        remaining_text = tail;
+        return scope;
+    }
+
+    // NEXT/RECORD: the count/record-number expression can itself contain
+    // whitespace (e.g. a parenthesized expression like "(nNext + 1)"), so
+    // grabbing just the first whitespace-delimited token would truncate
+    // it and misroute the rest into the field-assignment list. Anchor on
+    // the first top-level WITH instead, then walk back over exactly one
+    // identifier token (the field name immediately preceding it) to find
+    // where the count expression ends and the assignment list begins.
+    const std::size_t with_position = find_keyword_top_level(tail, "WITH");
+    if (with_position != std::string::npos) {
+        std::size_t field_start = with_position;
+        while (field_start > 0U && std::isspace(static_cast<unsigned char>(tail[field_start - 1U])) != 0) {
+            --field_start;
+        }
+        std::size_t identifier_start = field_start;
+        while (identifier_start > 0U) {
+            const unsigned char prior = static_cast<unsigned char>(tail[identifier_start - 1U]);
+            if (std::isalnum(prior) != 0 || prior == '_' || prior == '.') {
+                --identifier_start;
+            } else {
+                break;
+            }
+        }
+        const std::string count_expression = trim_copy(tail.substr(0U, identifier_start));
+        if (!count_expression.empty()) {
+            scope.kind = normalized_keyword == "next" ? AggregateScopeKind::next_records : AggregateScopeKind::record;
+            scope.raw_value = count_expression;
+            remaining_text = trim_copy(tail.substr(identifier_start));
+            return scope;
+        }
+    }
+
+    // Malformed as a leading NEXT/RECORD (no WITH found, or no count
+    // expression before the field name) -- fall through to the
+    // trailing-form fallback below rather than guessing.
+    return parse_aggregate_scope_clause(text, remaining_text);
 }
 
 std::string format_total_numeric_value(double value, std::uint8_t decimal_count) {
