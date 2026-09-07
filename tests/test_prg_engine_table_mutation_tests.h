@@ -13,6 +13,8 @@ namespace copperfin::table_mutation_tests
     void test_replace_next_updates_exact_record_count();
     void test_replace_record_updates_exactly_one_record();
     void test_replace_all_composes_with_for_clause();
+    void test_replace_field_named_all_is_not_treated_as_scope();
+    void test_replace_next_accepts_parenthesized_count_expression();
     void test_replace_scope_clauses_bound_physical_record_ranges();
     void test_delete_and_recall_scope_clauses_bound_physical_record_ranges();
     void test_replace_additive_appends_only_memo_assignments();
