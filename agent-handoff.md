@@ -6,7 +6,9 @@ Fixes #5497. `can_open_table_cursor()` scanned every currently open cursor
 on every `USE`/table-open call to check for a duplicate alias, making a
 PRG script that opens N cursors one at a time -- a common, unbounded
 xBase pattern with no ceiling other than the 32767-work-area limit --
-O(n²) overall instead of O(n). Root-caused (not just observed) by
+O(n²) overall instead of O(n log n) (the alias index is a `std::map`,
+so each open is an O(log n) lookup, not O(1)). Root-caused (not just
+observed) by
 attaching `gdb -p <pid> -batch -ex bt` to the already-hung
 `test_prg_engine_work_areas` process while it sat past 231+ seconds at
 99.9% CPU: the backtrace showed it was still executing an ordinary `USE
@@ -22,8 +24,9 @@ check keeps its own O(n) scan unchanged -- that branch isn't the pattern
 this issue's test exercises, and combining both fixes was judged a
 larger, separate risk than this fix's own blast radius.
 `test_work_area_exhaustion_preserves_selected_area` (32767 sequential
-opens) now completes in ~20 seconds, previously killed after 231+
-seconds without completing.
+opens) now completes in the same process as the rest of
+`test_prg_engine_work_areas` in ~22 seconds total, previously killed
+after 231+ seconds without completing.
 
 New `test_open_table_cursor_rejects_alias_and_table_collisions` proves
 the refactored check still rejects a genuine duplicate alias and a
