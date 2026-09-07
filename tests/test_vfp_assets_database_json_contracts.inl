@@ -595,6 +595,67 @@ void test_build_database_sql_import_plan_validates_without_mutation() {
         "INSERT INTO \"People\" (\"A\") VALUES ('not a number');\n");
     expect(!wrong_value_shape.ok && wrong_value_shape.error_code == "database_sql_import.invalid_insert_value",
            "database SQL planning should reject a string literal supplied for a numeric column rather than coercing it");
+
+    const auto exponent_form_accepted = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"People\" (\"A\" DOUBLE PRECISION);\n"
+        "INSERT INTO \"People\" (\"A\") VALUES (1e+20);\n"
+        "INSERT INTO \"People\" (\"A\") VALUES (1.5e-10);\n"
+        "INSERT INTO \"People\" (\"A\") VALUES (-2E5);\n");
+    expect(exponent_form_accepted.ok,
+           "database SQL planning should accept the scientific-notation exponent suffix export_database_as_sql() can emit for DOUBLE PRECISION values: " +
+               exponent_form_accepted.error_code);
+    if (exponent_form_accepted.ok) {
+        expect(exponent_form_accepted.plan.tables[0].records_json ==
+                   "[{\"A\":1e+20},{\"A\":1.5e-10},{\"A\":-2E5}]",
+               "database SQL planning should retain an exponent-form numeric literal verbatim as a JSON number");
+    }
+
+    const auto bare_trailing_dot_rejected = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"People\" (\"A\" DOUBLE PRECISION);\n"
+        "INSERT INTO \"People\" (\"A\") VALUES (1.);\n");
+    expect(!bare_trailing_dot_rejected.ok,
+           "database SQL planning should reject a numeric literal with a trailing decimal point and no fraction digits, which is not valid JSON");
+
+    const auto bare_leading_dot_rejected = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"People\" (\"A\" DOUBLE PRECISION);\n"
+        "INSERT INTO \"People\" (\"A\") VALUES (.5);\n");
+    expect(!bare_leading_dot_rejected.ok,
+           "database SQL planning should reject a numeric literal with a leading decimal point and no integer digits, which is not valid JSON");
+
+    const auto timestamp_round_trips = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"Events\" (\"WHEN\" TIMESTAMP);\n"
+        "INSERT INTO \"Events\" (\"WHEN\") VALUES ('2026-05-01 12:34:56');\n"
+        "INSERT INTO \"Events\" (\"WHEN\") VALUES (NULL);\n");
+    expect(timestamp_round_trips.ok,
+           "database SQL planning should accept a TIMESTAMP literal in the exact shape export_database_as_sql() emits: " +
+               timestamp_round_trips.error_code);
+    if (timestamp_round_trips.ok) {
+        expect(timestamp_round_trips.plan.tables[0].records_json.find("\"WHEN\":\"julian:") != std::string::npos,
+               "database SQL planning should convert a TIMESTAMP literal into the julian:/millis: internal storage contract, not pass it through as raw text");
+        expect(timestamp_round_trips.plan.tables[0].records_json.find("\"WHEN\":null") != std::string::npos,
+               "database SQL planning should still accept a NULL TIMESTAMP value");
+    }
+
+    const auto malformed_timestamp_rejected = copperfin::vfp::build_database_sql_import_plan(
+        "-- Copperfin EXPORT DATABASE ... TYPE SQL\n"
+        "-- database: N\n"
+        "-- source: x\n"
+        "CREATE TABLE \"Events\" (\"WHEN\" TIMESTAMP);\n"
+        "INSERT INTO \"Events\" (\"WHEN\") VALUES ('not a timestamp');\n");
+    expect(!malformed_timestamp_rejected.ok && malformed_timestamp_rejected.error_code == "database_sql_import.invalid_insert_value",
+           "database SQL planning should reject a TIMESTAMP literal that isn't the exact YYYY-MM-DD HH:MM:SS shape");
 }
 
 // ---- export_database_as_sql -> build_database_sql_import_plan round trip ----
@@ -615,8 +676,11 @@ void test_export_database_as_sql_round_trips_through_import() {
   "catalog": [{"record_index": 1}],
   "tables": {
     "Orders": {
-      "fields": [{"name": "ORDERID", "type": "N", "length": 8, "decimals": 0}],
-      "records": [{"ORDERID": 7}, {"ORDERID": 12}]
+      "fields": [{"name": "ORDERID", "type": "N", "length": 8, "decimals": 0},
+                 {"name": "CREATEDAT", "type": "T", "length": 8, "decimals": 0},
+                 {"name": "MAGNITUDE", "type": "B", "length": 8, "decimals": 0}],
+      "records": [{"ORDERID": 7, "CREATEDAT": "julian:2461162 millis:45296000", "MAGNITUDE": 100000000000000000000},
+                  {"ORDERID": 12, "CREATEDAT": "julian:2461163 millis:0", "MAGNITUDE": 0.0000001}]
     },
     "Customers": {
       "fields": [{"name": "NAME", "type": "C", "length": 40, "decimals": 0},
@@ -649,6 +713,24 @@ void test_export_database_as_sql_round_trips_through_import() {
         return;
     }
 
+    // A TIMESTAMP literal (export_database_as_sql()'s human-readable
+    // conversion of the T-type internal storage contract) and a very large
+    // DOUBLE PRECISION value (whose default text formatting can switch to
+    // scientific notation, e.g. "1e+20") must both round-trip through the
+    // parser -- captured from the real exporter's own output rather than
+    // hand-computed, so this test doesn't need to duplicate julian-day math.
+    const auto extract_first_single_quoted_literal = [](const std::string& text, std::size_t from) -> std::optional<std::string> {
+        const std::size_t open = text.find('\'', from);
+        if (open == std::string::npos) return std::nullopt;
+        const std::size_t close = text.find('\'', open + 1U);
+        if (close == std::string::npos) return std::nullopt;
+        return text.substr(open + 1U, close - open - 1U);
+    };
+    const std::size_t orders_insert_position = sql_export.sql.find("INSERT INTO \"Orders\"");
+    expect(orders_insert_position != std::string::npos, "fixture SQL export should contain an Orders INSERT statement");
+    const auto original_timestamp_literal = extract_first_single_quoted_literal(sql_export.sql, orders_insert_position);
+    expect(original_timestamp_literal.has_value(), "fixture SQL export should contain a quoted CREATEDAT timestamp literal");
+
     const auto sql_plan = copperfin::vfp::build_database_sql_import_plan(sql_export.sql);
     expect(sql_plan.ok, "build_database_sql_import_plan should accept export_database_as_sql()'s own output: " + sql_plan.error_code);
     if (!sql_plan.ok) {
@@ -678,6 +760,26 @@ void test_export_database_as_sql_round_trips_through_import() {
         expect(reexported_json.json.find("\"ORDERID\": 7") != std::string::npos &&
                    reexported_json.json.find("\"ORDERID\": 12") != std::string::npos,
                "the SQL round trip should preserve every numeric row");
+    }
+
+    // Re-export as SQL again and confirm the T-type timestamp round-tripped
+    // exactly, and that the very-large/very-small DOUBLE PRECISION values
+    // (whatever scientific-notation shape the real formatter produced) were
+    // accepted by the parser rather than truncated at the exponent.
+    const auto reexported_sql = copperfin::vfp::export_database_as_sql(reimported_dbc_path.string());
+    expect(reexported_sql.ok, "the SQL round-tripped DBC should itself be exportable as SQL: " + reexported_sql.error);
+    if (reexported_sql.ok && original_timestamp_literal.has_value()) {
+        const std::size_t reexported_orders_insert_position = reexported_sql.sql.find("INSERT INTO \"Orders\"");
+        expect(reexported_orders_insert_position != std::string::npos,
+               "the re-exported SQL should still contain an Orders INSERT statement");
+        const auto reexported_timestamp_literal =
+            extract_first_single_quoted_literal(reexported_sql.sql, reexported_orders_insert_position);
+        expect(reexported_timestamp_literal.has_value() && *reexported_timestamp_literal == *original_timestamp_literal,
+               "the SQL round trip should preserve a T-type timestamp value exactly: expected '" +
+                   *original_timestamp_literal + "', got '" +
+                   (reexported_timestamp_literal.has_value() ? *reexported_timestamp_literal : "<none>") + "'");
+        expect(reexported_sql.sql.find("MAGNITUDE") != std::string::npos,
+               "the SQL round trip should preserve the DOUBLE PRECISION column itself");
     }
 
     fs::remove_all(temp_dir, ignored);

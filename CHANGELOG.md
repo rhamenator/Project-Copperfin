@@ -1,3 +1,33 @@
+- 2026-09-07: Follow-up to #5473/PR #5501: review found 4 real defects in
+  `build_database_sql_import_plan()`, all fixed. Two P1s: a `T`-type
+  (TIMESTAMP) value round-tripped as raw text instead of being converted
+  back into this codebase's `julian:<day> millis:<ms>` internal storage
+  contract, so every populated timestamp failed materialization with
+  `DateTimeValueInvalid` -- fixed by adding `sql_datetime_storage_from_literal()`,
+  the inverse of the existing `sql_datetime_literal_from_storage()`. And
+  the number tokenizer stopped at the mantissa for scientific-notation
+  DOUBLE PRECISION values (e.g. `1e+20`, which `ostringstream`'s default
+  double formatting can emit), leaving `e+20` as spurious trailing tokens
+  and rejecting otherwise-valid exporter output -- fixed by extending
+  `read_number()` to accept an optional exponent suffix. Two further
+  fixes: the same tokenizer accepted `1.` and `.5`, neither of which is
+  valid JSON, risking corrupt `records_json`, now requiring at least one
+  digit on each side of a decimal point; and mapping SQL `TEXT` back to a
+  memo-pointer `M` field used `length = 10`, inconsistent with the
+  4-byte block-number width this codebase's own JSON import path and
+  other schema construction already use for `M`/`G`/`P` fields, now
+  `length = 4`. Also corrected `docs/32-recovered-requirements-traceability.md`'s
+  `RQ-CF-MODERNIZATION-005` row, which had backwards described
+  single-quoted string literals as using doubled-*double*-quote escaping.
+  New regression coverage: the full `export_database_as_sql()` ->
+  `build_database_sql_import_plan()` round trip now includes a `T`-type
+  timestamp value and an extreme-magnitude `B`-type value, asserting the
+  timestamp literal survives exactly and the real formatter's output
+  (whatever scientific-notation shape it takes) is accepted; direct unit
+  tests prove exponent-form acceptance, `1.`/`.5` rejection, and
+  TIMESTAMP literal conversion/rejection. Full local `ctest` regression
+  passed after the change, on a clean warning-free Release build.
+
 - 2026-09-06: Implements #5473 (parent #140, `RQ-CF-MODERNIZATION-005`):
   the `IMPORT DATABASE <quoted-sql-path> TO <quoted-dbc-path> TYPE SQL`
   command. Adds `vfp::build_database_sql_import_plan()`

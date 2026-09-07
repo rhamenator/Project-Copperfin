@@ -2304,27 +2304,57 @@ private:
         }
     }
 
+    // JSON-number-compatible: requires at least one digit before a decimal
+    // point (rejecting a bare ".5") and at least one after it if present
+    // (rejecting a bare "1."), and accepts the scientific-notation exponent
+    // suffix ostringstream's default double formatting can emit for very
+    // large or small DOUBLE PRECISION values (e.g. "1e+20") -- a token this
+    // parser must accept even though this dialect's grammar has no other
+    // use for 'e'/'E', since export_database_as_sql() can produce it.
     SqlToken read_number() {
         const std::size_t start = position_;
-        if (text_[position_] == '-') {
+        if (position_ < text_.size() && text_[position_] == '-') {
             ++position_;
         }
-        bool has_digits = false;
+        const std::size_t integer_start = position_;
         while (position_ < text_.size() && text_[position_] >= '0' && text_[position_] <= '9') {
             ++position_;
-            has_digits = true;
+        }
+        if (position_ == integer_start) {
+            return invalid_number(start);
         }
         if (position_ < text_.size() && text_[position_] == '.') {
+            const std::size_t dot_position = position_;
             ++position_;
+            const std::size_t fraction_start = position_;
             while (position_ < text_.size() && text_[position_] >= '0' && text_[position_] <= '9') {
                 ++position_;
-                has_digits = true;
+            }
+            if (position_ == fraction_start) {
+                position_ = dot_position;
+                return invalid_number(start);
             }
         }
-        const std::string text_slice(text_.substr(start, position_ - start));
-        return has_digits
-            ? SqlToken{.kind = SqlTokenKind::number, .text = text_slice}
-            : SqlToken{.kind = SqlTokenKind::invalid, .text = text_slice};
+        if (position_ < text_.size() && (text_[position_] == 'e' || text_[position_] == 'E')) {
+            const std::size_t exponent_marker = position_;
+            ++position_;
+            if (position_ < text_.size() && (text_[position_] == '+' || text_[position_] == '-')) {
+                ++position_;
+            }
+            const std::size_t exponent_digits_start = position_;
+            while (position_ < text_.size() && text_[position_] >= '0' && text_[position_] <= '9') {
+                ++position_;
+            }
+            if (position_ == exponent_digits_start) {
+                position_ = exponent_marker;
+                return invalid_number(start);
+            }
+        }
+        return {.kind = SqlTokenKind::number, .text = std::string(text_.substr(start, position_ - start))};
+    }
+
+    SqlToken invalid_number(std::size_t start) {
+        return {.kind = SqlTokenKind::invalid, .text = std::string(text_.substr(start, position_ - start))};
     }
 
     SqlToken read_bare_word() {
@@ -2401,6 +2431,58 @@ SqlImportHeader parse_sql_import_header(const std::string_view document) {
     return header;
 }
 
+// Inverse of sql_datetime_literal_from_storage(): parses the exact
+// "YYYY-MM-DD HH:MM:SS" shape that function (and therefore
+// export_database_as_sql()) always emits for a non-null T-type value, back
+// into this codebase's "julian:<day> millis:<ms>" internal storage contract
+// parse_datetime_storage_value() (src/vfp/dbf_table.cpp) requires --
+// without this conversion, a table with any populated timestamp value
+// could never be materialized. Returns std::nullopt for anything not
+// exactly that shape, rather than guessing.
+std::optional<std::string> sql_datetime_storage_from_literal(const std::string& literal) {
+    if (literal.size() != 19U ||
+        literal[4] != '-' || literal[7] != '-' || literal[10] != ' ' ||
+        literal[13] != ':' || literal[16] != ':') {
+        return std::nullopt;
+    }
+    const auto parse_digits = [&](std::size_t offset, std::size_t count) -> std::optional<int> {
+        int value = 0;
+        for (std::size_t index = 0U; index < count; ++index) {
+            const char character = literal[offset + index];
+            if (character < '0' || character > '9') {
+                return std::nullopt;
+            }
+            value = value * 10 + (character - '0');
+        }
+        return value;
+    };
+    const auto year = parse_digits(0U, 4U);
+    const auto month = parse_digits(5U, 2U);
+    const auto day = parse_digits(8U, 2U);
+    const auto hour = parse_digits(11U, 2U);
+    const auto minute = parse_digits(14U, 2U);
+    const auto second = parse_digits(17U, 2U);
+    if (!year.has_value() || !month.has_value() || !day.has_value() ||
+        !hour.has_value() || !minute.has_value() || !second.has_value() ||
+        *month < 1 || *month > 12 || *day < 1 || *day > 31 ||
+        *hour > 23 || *minute > 59 || *second > 59) {
+        return std::nullopt;
+    }
+    // Mirrors sql_julian_day_to_date()'s own inverse (Fliegel-Van Flandern
+    // astronomical Julian day, minus 702 to match this codebase's existing
+    // epoch convention) rather than depending on cf_xbase_runtime's
+    // date_to_julian(), for the same reason that function's own comment
+    // gives: cf_xbase_runtime already depends on cf_vfp_assets, so the
+    // reverse dependency isn't available.
+    const int julian_day =
+        ((1461 * (*year + 4800 + (*month - 14) / 12)) / 4 +
+         (367 * (*month - 2 - 12 * ((*month - 14) / 12))) / 12 -
+         (3 * ((*year + 4900 + (*month - 14) / 12) / 100)) / 4 +
+         *day - 32075) - 702;
+    const int millis = ((*hour * 3600) + (*minute * 60) + *second) * 1000;
+    return "julian:" + std::to_string(julian_day) + " millis:" + std::to_string(millis);
+}
+
 struct SqlImportValueResult {
     bool ok = false;
     std::string json_fragment;
@@ -2409,9 +2491,9 @@ struct SqlImportValueResult {
 // Converts one already-typed VALUES literal into the JSON fragment
 // extract_import_table_rows() (shared with the JSON import path) already
 // knows how to read for that field's type category -- number literal for
-// numeric fields, true/false for logical fields, a quoted JSON string
-// otherwise. A literal of the wrong shape for its column's type is
-// rejected rather than coerced.
+// numeric fields, true/false for logical fields, a converted timestamp
+// string for T-type fields, a quoted JSON string otherwise. A literal of
+// the wrong shape for its column's type is rejected rather than coerced.
 SqlImportValueResult sql_import_value_to_json(const SqlToken& token, char field_type) {
     if (sql_token_is_keyword(token, "NULL")) {
         return {.ok = true, .json_fragment = "null"};
@@ -2420,6 +2502,7 @@ SqlImportValueResult sql_import_value_to_json(const SqlToken& token, char field_
     const bool is_numeric = (upper_type == 'N' || upper_type == 'F' || upper_type == 'I' ||
         upper_type == 'B' || upper_type == 'Y');
     const bool is_logical = (upper_type == 'L');
+    const bool is_datetime = (upper_type == 'T');
     if (is_logical) {
         if (sql_token_is_keyword(token, "TRUE")) {
             return {.ok = true, .json_fragment = "true"};
@@ -2437,6 +2520,13 @@ SqlImportValueResult sql_import_value_to_json(const SqlToken& token, char field_
     }
     if (token.kind != SqlTokenKind::string_literal) {
         return {};
+    }
+    if (is_datetime) {
+        const auto storage = sql_datetime_storage_from_literal(token.text);
+        if (!storage.has_value()) {
+            return {};
+        }
+        return {.ok = true, .json_fragment = "\"" + json_escape_str(*storage) + "\""};
     }
     return {.ok = true, .json_fragment = "\"" + json_escape_str(token.text) + "\""};
 }
@@ -2541,7 +2631,13 @@ DatabaseJsonImportPlanResult build_database_sql_import_plan(const std::string_vi
                 } else if (sql_token_is_keyword(current, "TIMESTAMP")) {
                     advance(); field_type = 'T'; length = 8U; decimals = 0U;
                 } else if (sql_token_is_keyword(current, "TEXT")) {
-                    advance(); field_type = 'M'; length = 10U; decimals = 0U;
+                    // A memo-pointer field's on-disk value is always a
+                    // 4-byte block number, matching the length this
+                    // codebase's own JSON import path and other schema
+                    // construction already use for M/G/P fields -- not an
+                    // arbitrary width, even though is_dbf_table_field_
+                    // storage_layout_writable() itself only requires >= 4.
+                    advance(); field_type = 'M'; length = 4U; decimals = 0U;
                 } else {
                     return failure("database_sql_import.unknown_column_type");
                 }
