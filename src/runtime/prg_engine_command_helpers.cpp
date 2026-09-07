@@ -312,7 +312,12 @@ AggregateScopeClause parse_aggregate_scope_clause(const std::string& text, std::
     }
 
     expression_text = trim_copy(expression_text.substr(0U, keyword_position));
-    if (normalized_keyword == "rest") {
+    if (normalized_keyword == "all") {
+        // Already AggregateScopeClause's default, but set it explicitly
+        // rather than relying on that default being coincidentally
+        // correct for this branch.
+        scope.kind = AggregateScopeKind::all_records;
+    } else if (normalized_keyword == "rest") {
         scope.kind = AggregateScopeKind::rest_records;
     } else if (normalized_keyword == "next") {
         scope.kind = AggregateScopeKind::next_records;
@@ -322,6 +327,48 @@ AggregateScopeClause parse_aggregate_scope_clause(const std::string& text, std::
         scope.raw_value = tail;
     }
     return scope;
+}
+
+AggregateScopeClause parse_leading_aggregate_scope_clause(const std::string& text, std::string& remaining_text) {
+    AggregateScopeClause scope;
+    remaining_text = trim_copy(text);
+    if (remaining_text.empty()) {
+        return scope;
+    }
+
+    const auto [keyword, tail] = split_first_word(remaining_text);
+    const std::string normalized_keyword = normalize_identifier(keyword);
+
+    if (normalized_keyword == "all") {
+        scope.kind = AggregateScopeKind::all_records;
+        remaining_text = tail;
+        return scope;
+    }
+    if (normalized_keyword == "rest") {
+        scope.kind = AggregateScopeKind::rest_records;
+        remaining_text = tail;
+        return scope;
+    }
+    if (normalized_keyword == "next" || normalized_keyword == "record") {
+        const auto [count_token, after_count] = split_first_word(tail);
+        if (!count_token.empty()) {
+            scope.kind = normalized_keyword == "next" ? AggregateScopeKind::next_records : AggregateScopeKind::record;
+            scope.raw_value = count_token;
+            remaining_text = after_count;
+            return scope;
+        }
+        // Malformed as a leading NEXT/RECORD (nothing after it) -- fall
+        // through to the trailing-form fallback below rather than
+        // guessing.
+    }
+
+    // Not a leading scope keyword: this codebase has also historically
+    // accepted (and tests, e.g. #3927) REPLACE's scope keyword coming
+    // *after* the field-assignment list ("REPLACE field WITH value NEXT
+    // n"), matching the trailing-bare-token shape SCAN/DELETE/RECALL use.
+    // Fall back to that existing, tested parser for this shape rather
+    // than duplicating it.
+    return parse_aggregate_scope_clause(text, remaining_text);
 }
 
 std::string format_total_numeric_value(double value, std::uint8_t decimal_count) {

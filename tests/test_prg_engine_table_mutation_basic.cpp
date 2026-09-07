@@ -239,6 +239,229 @@ void test_replace_for_updates_all_matching_records() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #5508: parse_aggregate_scope_clause() assumed ALL/REST are always bare,
+// trailing tokens (true for SCAN/DELETE/RECALL), but REPLACE's grammar puts
+// the scope keyword *before* its mandatory field-assignment list in the
+// same segment ("REPLACE ALL AMOUNT WITH 999"). That made the early-return
+// guard for a non-empty tail fire, leaving "ALL AMOUNT WITH 999" completely
+// unparsed and producing "target field not found" for the literal field
+// name "ALL AMOUNT". Proves REPLACE ALL/REST/NEXT/RECORD now actually work.
+void test_replace_all_updates_every_record() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_all_scope";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "replace_all_scope.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE ALL NAME WITH 'SAME'\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "GO 3\n"
+        "cName3 = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "REPLACE ALL should complete: " + state.message);
+
+    const auto name1 = state.globals.find("cname1");
+    const auto name2 = state.globals.find("cname2");
+    const auto name3 = state.globals.find("cname3");
+    if (name1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name1->second) == "SAME", "REPLACE ALL should update record 1");
+    }
+    if (name2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name2->second) == "SAME", "REPLACE ALL should update record 2");
+    }
+    if (name3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name3->second) == "SAME", "REPLACE ALL should update record 3");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_replace_rest_updates_only_remaining_records() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_rest_scope";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "replace_rest_scope.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 2\n"
+        "REPLACE REST NAME WITH 'TAIL'\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "GO 3\n"
+        "cName3 = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "REPLACE REST should complete: " + state.message);
+
+    const auto name1 = state.globals.find("cname1");
+    const auto name2 = state.globals.find("cname2");
+    const auto name3 = state.globals.find("cname3");
+    if (name1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name1->second) == "ALPHA", "REPLACE REST should not update record 1 (before the starting position)");
+    }
+    if (name2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name2->second) == "TAIL", "REPLACE REST should update record 2 (the starting position)");
+    }
+    if (name3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name3->second) == "TAIL", "REPLACE REST should update record 3 (after the starting position)");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_replace_next_updates_exact_record_count() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_next_scope";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "replace_next_scope.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE NEXT 2 NAME WITH 'HEAD'\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "GO 3\n"
+        "cName3 = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "REPLACE NEXT should complete: " + state.message);
+
+    const auto name1 = state.globals.find("cname1");
+    const auto name2 = state.globals.find("cname2");
+    const auto name3 = state.globals.find("cname3");
+    if (name1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name1->second) == "HEAD", "REPLACE NEXT 2 should update record 1");
+    }
+    if (name2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name2->second) == "HEAD", "REPLACE NEXT 2 should update record 2");
+    }
+    if (name3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name3->second) == "CHARLIE", "REPLACE NEXT 2 should not update the third record (past the count)");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_replace_record_updates_exactly_one_record() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_record_scope";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "replace_record_scope.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE RECORD 2 NAME WITH 'TARGETED'\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "GO 3\n"
+        "cName3 = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "REPLACE RECORD should complete: " + state.message);
+
+    const auto name1 = state.globals.find("cname1");
+    const auto name2 = state.globals.find("cname2");
+    const auto name3 = state.globals.find("cname3");
+    if (name1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name1->second) == "ALPHA", "REPLACE RECORD 2 should not update record 1");
+    }
+    if (name2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name2->second) == "TARGETED", "REPLACE RECORD 2 should update record 2");
+    }
+    if (name3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name3->second) == "CHARLIE", "REPLACE RECORD 2 should not update record 3");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_replace_all_composes_with_for_clause() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_all_for_scope";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "replace_all_for_scope.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE ALL NAME WITH 'OLD' FOR AGE < 25\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "GO 3\n"
+        "cName3 = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "REPLACE ALL ... FOR should complete: " + state.message);
+
+    const auto name1 = state.globals.find("cname1");
+    const auto name2 = state.globals.find("cname2");
+    const auto name3 = state.globals.find("cname3");
+    if (name1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name1->second) == "OLD", "REPLACE ALL ... FOR should update matching record 1");
+    }
+    if (name2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name2->second) == "OLD", "REPLACE ALL ... FOR should update matching record 2");
+    }
+    if (name3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name3->second) == "CHARLIE", "REPLACE ALL ... FOR should not update non-matching record 3");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_replace_scope_clauses_bound_physical_record_ranges() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_scopes";

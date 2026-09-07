@@ -14,6 +14,11 @@ int main()
     test_local_table_mutation_and_scan_flow();
     test_delete_all_and_recall_all_affect_whole_local_table();
     test_replace_for_updates_all_matching_records();
+    test_replace_all_updates_every_record();
+    test_replace_rest_updates_only_remaining_records();
+    test_replace_next_updates_exact_record_count();
+    test_replace_record_updates_exactly_one_record();
+    test_replace_all_composes_with_for_clause();
     test_replace_scope_clauses_bound_physical_record_ranges();
     test_delete_and_recall_scope_clauses_bound_physical_record_ranges();
     test_replace_additive_appends_only_memo_assignments();

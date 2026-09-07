@@ -2474,7 +2474,7 @@ Program parse_program_impl(
             const std::string assignments_and_scope =
                 tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
             const AggregateScopeClause scope =
-                parse_aggregate_scope_clause(assignments_and_scope, statement.expression);
+                parse_leading_aggregate_scope_clause(assignments_and_scope, statement.expression);
             if (statement.expression != trim_copy(assignments_and_scope)) {
                 switch (scope.kind) {
                 case AggregateScopeKind::all_records:

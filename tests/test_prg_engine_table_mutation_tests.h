@@ -8,6 +8,11 @@ namespace copperfin::table_mutation_tests
     void test_local_table_mutation_and_scan_flow();
     void test_delete_all_and_recall_all_affect_whole_local_table();
     void test_replace_for_updates_all_matching_records();
+    void test_replace_all_updates_every_record();
+    void test_replace_rest_updates_only_remaining_records();
+    void test_replace_next_updates_exact_record_count();
+    void test_replace_record_updates_exactly_one_record();
+    void test_replace_all_composes_with_for_clause();
     void test_replace_scope_clauses_bound_physical_record_ranges();
     void test_delete_and_recall_scope_clauses_bound_physical_record_ranges();
     void test_replace_additive_appends_only_memo_assignments();
