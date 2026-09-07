@@ -1,5 +1,32 @@
 # Agent Handoff
 
+## Shipped: PR #5503 (`EXPORT DATABASE` double-quoted operand fix, #5499), merged 2026-09-07
+
+Fixes #5499, filed during #5498's review as the identical, pre-existing
+`export_database_command` counterpart to a bug already fixed on the
+`import_database_command` side: `is_quoted_path_operand` accepted either
+`'` or `"` as a quote character, but `unquote_string()` immediately after
+only strips single quotes, so a double-quoted operand like `EXPORT
+DATABASE "Northwind.dbc" TO "out.json" TYPE JSON` passed syntax
+validation while leaving the literal `"` characters embedded in the
+resolved filesystem path. Fixed the same way the import side already
+was: only accept `'`-quoted operands.
+
+New regression coverage in `tests/test_prg_engine_data_io_import_export.cpp`
+asserts a double-quoted `EXPORT DATABASE` operand is rejected with the
+localized `ExportDatabaseJsonSyntax` diagnostic before any output is
+created, and that no path with literal embedded quote characters is
+produced.
+
+Merged into `v1-development` as `6ee0d5bf7` with the repository owner's
+explicit live "Go ahead and merge 5503" approval. Full CI green,
+including the manually-dispatched `native-validation-macos.yml`. Local
+`ctest -j8` regression passed except `test_prg_engine_work_areas`, which
+timed out even standalone -- confirmed unrelated (untouched by this
+diff) and already tracked separately as #5497. Issue #5499 was closed
+manually: this repo's default branch isn't `v1-development`, so the
+`Fixes #5499` keyword doesn't auto-close.
+
 ## Shipped: PR #5501 (`IMPORT DATABASE ... TYPE SQL`, #5473), merged 2026-09-07
 
 **Update:** merged into `v1-development` as `fc380b24e` with the repository
