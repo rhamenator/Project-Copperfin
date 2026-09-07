@@ -148,8 +148,58 @@
   the atomicity guarantee `test_prg_engine_runtime_surface_functions_buffering`
   depends on without touching the fast path used everywhere else.
 
-  Full local `ctest` regression passed after the fix (394/394, 2
-  intentionally skipped), on a clean warning-free Debug build.
+  Follow-up (same day, PR review): fixed five further gaps the reviewers
+  (Copilot and Codex) found in this change. (1) `write_field_bytes()`'s
+  `table_path` parameter had a default of `{}`, and two call sites
+  (`create_dbf_table_file_with_memo_payloads()`,
+  `stage_dbf_raw_record_appends()`) never passed it, so an overflow on
+  those paths would report a blank path in an otherwise detailed error;
+  the default is removed and both call sites now pass their own `path`.
+  (2) The numeric-overflow error text said "digits" in all four locale
+  catalogs, but the check it describes compares character count
+  (`text.size()` after trim, which can include a sign or decimal point),
+  not digit count; reworded to "characters" everywhere. (3) The targeted
+  append path's crash-safety comment claimed a crash before the
+  record-count write left the file byte-identical to before the append,
+  but the 3-byte last-update stamp is written before the record count
+  too, so that's a logical guarantee (record count, and therefore what
+  any reader sees, is unchanged) and not literally byte-identical;
+  reworded to say so precisely. (4) P1:
+  `append_blank_record_to_file_targeted()` computed its insert offset
+  from the header's declared record count without checking it against
+  the file's actual size, so a truncated or corrupt table (declaring
+  more records than it physically holds) would seek past the real EOF
+  and write there, creating a large sparse gap and incrementing the
+  header's record count over data that was never actually written --
+  where the whole-file path it falls back to already rejects the same
+  input with `TableDataTruncated` before writing anything. Fixed by
+  checking the real file size before seeking and falling back to that
+  existing, correct rejection when they disagree. (5) P2: a numeric or
+  V/Q buffered-cursor (`CURSORSETPROP("Buffering", ...)`) `REPLACE`
+  overflow with `SET TRUNCATEONOVERFLOW ON` was silently *not* honored
+  at `TABLEUPDATE()` commit time -- the buffered pre-processing step
+  only pre-truncates character fields in memory, and the flush path's
+  own write calls (`stage_verified_buffered_commit_admission_patch()`,
+  `commit_buffered_record()`, and the table-buffering flush loop) all
+  omitted `allow_truncation`, defaulting it to `false` and rejecting the
+  commit instead of asterisk-filling as the switch promises for every
+  other write path. Threaded the active `SET TRUNCATEONOVERFLOW` setting
+  through all three of those call sites so a buffered commit now honors
+  it the same way a direct `REPLACE` does. New coverage,
+  `test_table_buffered_replace_numeric_overflow_honors_truncateonoverflow_at_commit`
+  (`tests/test_prg_engine_table_mutation_maintenance.cpp`), proves a
+  table-buffered numeric overflow now commits and lands asterisk-filled
+  on disk instead of failing `TABLEUPDATE()`. A related, separate gap
+  Codex also flagged -- the targeted REPLACE fast path always reported
+  "record 1" in an overflow error regardless of which record was
+  actually being replaced, since it feeds `write_field_bytes()` a
+  single-record buffer with `record_index` forced to 0 for that buffer's
+  own offset math -- is fixed by adding a `diagnostic_record_index`
+  parameter to `write_field_bytes()` that overrides just the
+  user-facing record number in that case.
+
+  Full local `ctest` regression passed after all of the above (394/394,
+  2 intentionally skipped), on a clean warning-free Debug build.
 
 - 2026-09-07: Fixes #5497: `can_open_table_cursor()`
   (`src/runtime/prg_engine_cursor.inl`) scanned every currently open cursor

@@ -1759,7 +1759,7 @@
   "Vfp.DbfTable.Error.MemoSidecarPathMissing": "Nao foi possivel inferir um caminho de arquivo complementar de memo para a tabela.",
   "Vfp.DbfTable.Error.MemoFieldWidthTooSmall": "Campos Memo exigem largura de pelo menos 4 bytes.",
   "Vfp.DbfTable.Error.ReadMemoPayloadFailed": "Nao foi possivel recuperar a carga util de memo do arquivo complementar.",
-  "Vfp.DbfTable.Error.NumericValueTooLarge": "O valor numerico ({valueLength} digitos) e grande demais para o campo {fieldName} ({fieldLength} digitos de largura) no registro {recordNumber} de {path}. Valor: {valuePreview}",
+  "Vfp.DbfTable.Error.NumericValueTooLarge": "O valor numerico ({valueLength} caracteres) e grande demais para o campo {fieldName} ({fieldLength} caracteres de largura) no registro {recordNumber} de {path}. Valor: {valuePreview}",
   "Vfp.DbfTable.Error.OpaqueValueInvalid": "Campos opacos/binarios exigem texto bruto que caiba na largura do campo ou uma carga hexadecimal com prefixo 0x.",
   "Vfp.DbfTable.Error.OpenTableFailed": "Nao foi possivel abrir o arquivo da tabela.",
   "Vfp.DbfTable.Error.RecordDataTruncated": "Os dados do registro estao truncados.",

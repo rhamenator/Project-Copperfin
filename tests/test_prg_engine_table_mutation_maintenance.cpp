@@ -417,6 +417,61 @@ void test_replace_numeric_field_overflow_reports_detailed_error_by_default() {
     fs::remove_all(temp_root, ignored);
 }
 
+// The in-memory pre-processing that gates a buffered REPLACE's value against
+// SET TRUNCATEONOVERFLOW only handled character fields directly; a buffered
+// numeric overflow was left at full width in the buffer and then rejected
+// at TABLEUPDATE() flush time regardless of the switch, since the flush's
+// own write call defaulted allow_truncation to false. Proves the switch now
+// actually reaches a table-buffered (CURSORSETPROP mode 5) commit: the
+// TABLEUPDATE() must succeed and the on-disk field must be asterisk-filled,
+// not rejected.
+void test_table_buffered_replace_numeric_overflow_honors_truncateonoverflow_at_commit() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_buffered_truncate_numeric";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "buffered_truncate_numeric.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET TRUNCATEONOVERFLOW ON\n"
+        "=CURSORSETPROP('Buffering', 5, 'People')\n"
+        "REPLACE AGE WITH 9999\n"
+        "lCommitted = TABLEUPDATE(.T., .T., 'People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "buffered numeric overflow with SET TRUNCATEONOVERFLOW ON should complete: " + state.message);
+
+    const auto committed = state.globals.find("lcommitted");
+    expect(committed != state.globals.end(), "script should expose the TABLEUPDATE result");
+    if (committed != state.globals.end()) {
+        expect(copperfin::runtime::format_value(committed->second) == "T",
+               "TABLEUPDATE should commit a truncation-eligible numeric overflow instead of rejecting it");
+    }
+
+    std::ifstream table_file(table_path, std::ios::binary);
+    expect(static_cast<bool>(table_file), "should be able to reopen the table to inspect raw bytes");
+    if (table_file) {
+        std::vector<std::uint8_t> bytes{std::istreambuf_iterator<char>(table_file), std::istreambuf_iterator<char>()};
+        constexpr std::size_t age_field_offset = 32U + 32U + 32U + 1U + 1U + 10U;
+        expect(bytes.size() >= age_field_offset + 3U, "table should be large enough to contain the AGE field bytes");
+        if (bytes.size() >= age_field_offset + 3U) {
+            const std::string age_bytes(bytes.begin() + static_cast<std::ptrdiff_t>(age_field_offset),
+                                         bytes.begin() + static_cast<std::ptrdiff_t>(age_field_offset) + 3);
+            expect(age_bytes == "***", "committed buffered numeric overflow should be asterisk-filled on disk, matching the direct-write path");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_character_field_at_maximum_width_round_trips() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_exact_char_width";

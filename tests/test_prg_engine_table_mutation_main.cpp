@@ -30,6 +30,7 @@ int main()
     test_replace_character_field_overflow_reports_detailed_error_by_default();
     test_replace_numeric_field_overflow_fills_asterisks_when_truncation_enabled();
     test_replace_numeric_field_overflow_reports_detailed_error_by_default();
+    test_table_buffered_replace_numeric_overflow_honors_truncateonoverflow_at_commit();
     test_character_field_at_maximum_width_round_trips();
     test_memo_field_replace_with_empty_string();
     test_set_exclusive_controls_table_maintenance_guards();

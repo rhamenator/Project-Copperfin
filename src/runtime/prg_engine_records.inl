@@ -1781,6 +1781,7 @@
 
         bool commit_buffered_record(CursorState &cursor, std::size_t recno, bool force_update = false)
         {
+            const bool allow_truncation = is_set_enabled("truncateonoverflow");
             const auto buffered = cursor.buffered_records.find(recno);
             if (buffered == cursor.buffered_records.end())
             {
@@ -1829,7 +1830,8 @@
                 buffered->second,
                 appended,
                 field_states == cursor.buffered_field_states.end() ? nullptr : &field_states->second,
-                deletion_requires_update);
+                deletion_requires_update,
+                allow_truncation);
             if (!admission_patch.has_value())
             {
                 return false;
@@ -1845,7 +1847,8 @@
                     cursor.source_path,
                     recno - 1U,
                     field.field_name,
-                    field.display_value);
+                    field.display_value,
+                    allow_truncation);
                 if (!result.ok)
                 {
                     last_error_message = result.error;
@@ -1895,7 +1898,8 @@
             const vfp::DbfRecord &buffered_record,
             bool appended,
             const std::map<std::size_t, int> *field_states,
-            bool deletion_requires_update)
+            bool deletion_requires_update,
+            bool allow_truncation)
         {
             if (!options.require_verified_file_byte_overrides)
             {
@@ -1994,7 +1998,8 @@
                     copperfin::platform::path_to_utf8_string(*staged_table_path),
                     staged_record_index,
                     field.field_name,
-                    field.display_value);
+                    field.display_value,
+                    allow_truncation);
                 if (!replacement.ok)
                 {
                     return fail(replacement.error);
@@ -2674,6 +2679,7 @@
                 return make_boolean_value(true);
             }
 
+            const bool allow_truncation = is_set_enabled("truncateonoverflow");
             const bool force_update = arguments.size() >= 2U && value_as_bool(arguments[1]);
             if (cursor->buffering_mode == 2 || cursor->buffering_mode == 3)
             {
@@ -2716,7 +2722,8 @@
                     record,
                     appended,
                     field_states == cursor->buffered_field_states.end() ? nullptr : &field_states->second,
-                    deletion_requires_update);
+                    deletion_requires_update,
+                    allow_truncation);
                 if (!admission_patch.has_value())
                 {
                     return make_boolean_value(false);
@@ -2758,7 +2765,8 @@
                         cursor->source_path,
                         persisted_recno - 1U,
                         field.field_name,
-                        field.display_value);
+                        field.display_value,
+                        allow_truncation);
                     if (!result.ok)
                     {
                         last_error_message = result.error;

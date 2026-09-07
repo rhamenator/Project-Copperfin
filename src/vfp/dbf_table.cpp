@@ -737,11 +737,17 @@ DbfWriteResult write_field_bytes(
     std::size_t record_index,
     const RawFieldDescriptor& field,
     const std::string& value,
-    const std::string& table_path = {},
-    bool allow_truncation = false) {
+    const std::string& table_path,
+    bool allow_truncation = false,
+    // The targeted REPLACE fast path feeds this a single-record buffer
+    // (record_index always 0 for that buffer's own offset math) but still
+    // needs error messages to name the real record number being replaced;
+    // when set, this overrides record_index for diagnostic text only.
+    std::optional<std::size_t> diagnostic_record_index = std::nullopt) {
     if (record_index >= header.record_count) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordIndexOutOfRange"), .record_count = header.record_count};
     }
+    const std::size_t reported_record_index = diagnostic_record_index.value_or(record_index);
 
     const std::size_t record_offset = header.header_length + (record_index * header.record_length);
     const std::size_t field_offset = record_offset + field.offset;
@@ -777,7 +783,7 @@ DbfWriteResult write_field_bytes(
                         "Vfp.DbfTable.Error.CharacterValueTooLarge",
                         {
                             {"path", table_path},
-                            {"recordNumber", std::to_string(record_index + 1U)},
+                            {"recordNumber", std::to_string(reported_record_index + 1U)},
                             {"fieldName", field.name},
                             {"fieldLength", std::to_string(field.length)},
                             {"valueLength", std::to_string(encoded.text.size())},
@@ -819,7 +825,7 @@ DbfWriteResult write_field_bytes(
                             "Vfp.DbfTable.Error.NumericValueTooLarge",
                             {
                                 {"path", table_path},
-                                {"recordNumber", std::to_string(record_index + 1U)},
+                                {"recordNumber", std::to_string(reported_record_index + 1U)},
                                 {"fieldName", field.name},
                                 {"fieldLength", std::to_string(field.length)},
                                 {"valueLength", std::to_string(text.size())},
@@ -910,7 +916,7 @@ DbfWriteResult write_field_bytes(
                             "Vfp.DbfTable.Error.VqValueTooLarge",
                             {
                                 {"path", table_path},
-                                {"recordNumber", std::to_string(record_index + 1U)},
+                                {"recordNumber", std::to_string(reported_record_index + 1U)},
                                 {"fieldName", field.name},
                                 {"fieldLength", std::to_string(payload_capacity)},
                                 {"valueLength", std::to_string(text.size())},
@@ -1083,14 +1089,17 @@ DbfWriteResult append_blank_record_bytes(
 // count -- never any existing record data) and appends it via a targeted
 // seek, instead of reading the whole file into memory to grow a copy by one
 // record and rewriting the whole thing. Writes are ordered new-record
-// bytes, then EOF marker, then the record-count header field last, so a
-// crash before that last write leaves the file's *logical* content
-// (anything reading via the still-unchanged record count) byte-identical to
-// before the append started -- the orphaned new-record bytes are harmless
-// trailing data past the old logical end of file, never a torn *existing*
-// record. Returns std::nullopt for anything unexpected (a structural read
-// failure, an unwritable stream), so append_blank_record_to_file falls back
-// to the whole-file path rather than leaving the table in a partial state.
+// bytes, then EOF marker, then the last-update stamp, then the
+// record-count header field last, so a crash before that last write leaves
+// the file's *logical* content (anything reading via the still-unchanged
+// record count) unchanged from before the append started -- the orphaned
+// new-record bytes are harmless trailing data past the old logical end of
+// file, never a torn *existing* record. This is a logical guarantee, not a
+// byte-identical one: the last-update stamp (header bytes 1-3) may already
+// be updated even if a crash lands before the record-count write. Returns
+// std::nullopt for anything unexpected (a structural read failure, an
+// unwritable stream), so append_blank_record_to_file falls back to the
+// whole-file path rather than leaving the table in a partial state.
 std::optional<DbfWriteResult> append_blank_record_to_file_targeted(const std::string& path) {
     if (const auto sidecar_error = ambiguous_required_sidecar_error_for_path(path); sidecar_error.has_value()) {
         return DbfWriteResult{.ok = false, .error = *sidecar_error};
@@ -1128,6 +1137,20 @@ std::optional<DbfWriteResult> append_blank_record_to_file_targeted(const std::st
 
     std::fstream io(platform::path_from_utf8_string(path), std::ios::binary | std::ios::in | std::ios::out);
     if (!io) {
+        return std::nullopt;
+    }
+
+    // A header declaring more records than the file actually holds (a
+    // truncated or corrupt table) would otherwise let insert_offset land
+    // past the real end of file: seeking there and writing creates a huge
+    // sparse gap instead of failing, unlike the whole-file path this falls
+    // back to, which validates this via table_bytes.size() before writing
+    // anything. Validate against the real file size the same way here,
+    // falling back to that already-correct rejection rather than silently
+    // corrupting the file's logical structure.
+    io.seekg(0, std::ios::end);
+    const std::streamoff actual_size = io.tellg();
+    if (actual_size < 0 || insert_offset > static_cast<std::size_t>(actual_size)) {
         return std::nullopt;
     }
 
@@ -1986,7 +2009,8 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
                     header,
                     record_index,
                     raw_fields[field_index],
-                    records[record_index][field_index]);
+                    records[record_index][field_index],
+                    path);
             }
             if (!write_result.ok) {
                 return write_result;
@@ -2508,7 +2532,8 @@ DbfRawRecordMutationResult stage_dbf_raw_record_appends(
                     staged_header,
                     record_index,
                     *field,
-                    value);
+                    value,
+                    path);
             }
             if (!write_result.ok) {
                 return failed_raw_record_mutation(write_result.error, state.header.record_count);
@@ -2875,12 +2900,15 @@ std::optional<DbfWriteResult> replace_record_field_value_targeted(
     // header describing a single-record buffer (header_length 0, one
     // record) so that math lands correctly within record_bytes -- this
     // reuses its exact tested field-encoding logic unchanged rather than
-    // duplicating it for a targeted write.
+    // duplicating it for a targeted write. record_index is forced to 0 for
+    // that buffer-offset math, so pass the real record_index separately as
+    // diagnostic_record_index so an overflow error still names the actual
+    // record being replaced instead of always reporting record 1.
     DbfHeader single_record_header = header;
     single_record_header.header_length = 0U;
     single_record_header.record_count = 1U;
     const DbfWriteResult write_result = write_field_bytes(
-        record_bytes, single_record_header, 0U, *field, value, path, allow_truncation);
+        record_bytes, single_record_header, 0U, *field, value, path, allow_truncation, record_index);
     if (!write_result.ok) {
         return DbfWriteResult{.ok = false, .error = write_result.error, .record_count = header.record_count};
     }
