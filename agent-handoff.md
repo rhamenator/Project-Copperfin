@@ -1,5 +1,52 @@
 # Agent Handoff
 
+## Shipped: PR #5505 (O(n^2) work-area-open fix, #5497), merged 2026-09-07
+
+Fixes #5497. `can_open_table_cursor()` scanned every currently open cursor
+on every `USE`/table-open call to check for a duplicate alias, making a
+PRG script that opens N cursors one at a time -- a common, unbounded
+xBase pattern with no ceiling other than the 32767-work-area limit --
+O(n²) overall instead of O(n). Root-caused (not just observed) by
+attaching `gdb -p <pid> -batch -ex bt` to the already-hung
+`test_prg_engine_work_areas` process while it sat past 231+ seconds at
+99.9% CPU: the backtrace showed it was still executing an ordinary `USE
+... AGAIN IN 0` statement -- statement 9776 of 32767 -- confirming
+genuine O(n²) work, not a deadlock.
+
+Fixed by adding `DataSessionState::open_cursor_aliases`, a normalized-
+alias -> work-area index kept in sync with `session.cursors` at all 5
+existing insertion/removal sites plus both full-session-clear sites
+(`CLOSE ALL` and interpreter shutdown), turning the alias-uniqueness
+check into an O(log n) lookup. The table-already-open-without-`AGAIN`
+check keeps its own O(n) scan unchanged -- that branch isn't the pattern
+this issue's test exercises, and combining both fixes was judged a
+larger, separate risk than this fix's own blast radius.
+`test_work_area_exhaustion_preserves_selected_area` (32767 sequential
+opens) now completes in ~20 seconds, previously killed after 231+
+seconds without completing.
+
+New `test_open_table_cursor_rejects_alias_and_table_collisions` proves
+the refactored check still rejects a genuine duplicate alias and a
+same-path reopen without `AGAIN`, still allows `AGAIN` to reopen the
+same path under a different alias, and still allows replacing a work
+area's own cursor while keeping its existing alias (the self-collision
+exclusion the old per-work-area loop skip relied on) -- a real gap in
+dedicated functional coverage found while making this change; only the
+two diagnostics' catalog text was previously tested.
+
+Merged into `v1-development` as `749e56dac` with the repository owner's
+explicit live "merge the copperfin PRs" approval. Full CI green
+including the manually-dispatched `native-validation-macos.yml`; two
+full local `ctest` regressions passed (100% tests passed, 0 failed, out
+of 394), one at the same `-j64` parallelism that originally exposed the
+bug. Issue #5497 was closed manually -- this repo's default branch isn't
+`v1-development`, so `Fixes #5497` never auto-closed.
+
+The user then asked for a broader audit: mitigate other bugs in the
+system that scale processing, memory, or I/O with an exponent greater
+than one where possible. That audit follows below, or in a later entry
+if still in progress when this note was written.
+
 ## Shipped: PR #5503 (`EXPORT DATABASE` double-quoted operand fix, #5499), merged 2026-09-07
 
 Fixes #5499, filed during #5498's review as the identical, pre-existing
