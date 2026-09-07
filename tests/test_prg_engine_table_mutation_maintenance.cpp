@@ -452,7 +452,7 @@ void test_table_buffered_replace_numeric_overflow_honors_truncateonoverflow_at_c
     const auto committed = state.globals.find("lcommitted");
     expect(committed != state.globals.end(), "script should expose the TABLEUPDATE result");
     if (committed != state.globals.end()) {
-        expect(copperfin::runtime::format_value(committed->second) == "T",
+        expect(copperfin::runtime::format_value(committed->second) == "true",
                "TABLEUPDATE should commit a truncation-eligible numeric overflow instead of rejecting it");
     }
 
