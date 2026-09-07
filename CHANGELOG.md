@@ -1,3 +1,80 @@
+- 2026-09-07: Follow-up to #5473/PR #5501: review found 4 real defects in
+  `build_database_sql_import_plan()`, all fixed. Two P1s: a `T`-type
+  (TIMESTAMP) value round-tripped as raw text instead of being converted
+  back into this codebase's `julian:<day> millis:<ms>` internal storage
+  contract, so every populated timestamp failed materialization with
+  `DateTimeValueInvalid` -- fixed by adding `sql_datetime_storage_from_literal()`,
+  the inverse of the existing `sql_datetime_literal_from_storage()`. And
+  the number tokenizer stopped at the mantissa for scientific-notation
+  DOUBLE PRECISION values (e.g. `1e+20`, which `ostringstream`'s default
+  double formatting can emit), leaving `e+20` as spurious trailing tokens
+  and rejecting otherwise-valid exporter output -- fixed by extending
+  `read_number()` to accept an optional exponent suffix. Two further
+  fixes: the same tokenizer accepted `1.` and `.5`, neither of which is
+  valid JSON, risking corrupt `records_json`, now requiring at least one
+  digit on each side of a decimal point; and mapping SQL `TEXT` back to a
+  memo-pointer `M` field used `length = 10`, inconsistent with the
+  4-byte block-number width this codebase's own JSON import path and
+  other schema construction already use for `M`/`G`/`P` fields, now
+  `length = 4`. Also corrected `docs/32-recovered-requirements-traceability.md`'s
+  `RQ-CF-MODERNIZATION-005` row, which had backwards described
+  single-quoted string literals as using doubled-*double*-quote escaping.
+  New regression coverage: the full `export_database_as_sql()` ->
+  `build_database_sql_import_plan()` round trip now includes a `T`-type
+  timestamp value and an extreme-magnitude `B`-type value, asserting the
+  timestamp literal survives exactly and the real formatter's output
+  (whatever scientific-notation shape it takes) is accepted; direct unit
+  tests prove exponent-form acceptance, `1.`/`.5` rejection, and
+  TIMESTAMP literal conversion/rejection. Full local `ctest` regression
+  passed after the change, on a clean warning-free Release build.
+
+- 2026-09-06: Implements #5473 (parent #140, `RQ-CF-MODERNIZATION-005`):
+  the `IMPORT DATABASE <quoted-sql-path> TO <quoted-dbc-path> TYPE SQL`
+  command. Adds `vfp::build_database_sql_import_plan()`
+  (`include/copperfin/vfp/asset_inspector.h`, `src/vfp/asset_inspector.cpp`)
+  as a parser/adapter in front of #5472's existing
+  `materialize_database_json_import_plan()` -- not a second write path.
+  It parses only the exact, narrow SQL dialect `EXPORT DATABASE ... TYPE
+  SQL` (#5471) itself emits: a fixed three-line header comment used as an
+  up-front subset gate, double- and single-quoted identifiers/literals
+  with doubled-quote escaping, and `CREATE TABLE`/`INSERT INTO`
+  statements using exactly that exporter's column-type vocabulary. This
+  is explicitly not a general-purpose SQL parser: a missing header,
+  unquoted identifiers, an unrecognized column type, an `INSERT`
+  referencing an undefined table or column, a `VALUES`/column-count
+  mismatch, or a literal shape wrong for its column's type is rejected
+  with a distinct `error_code` before anything is written, rather than
+  guessed at. Field-type precision narrows on the round trip the same
+  way the exporter already narrows it going out: `N`/`F`/`Y` all become
+  `N`, and `M`/`G`/`P` all become `M`. `import_database_command`'s
+  existing `TYPE` dispatch (`src/runtime/prg_engine_dispatch.inl`) now
+  routes `TYPE SQL` to this parser and `TYPE JSON` to the existing one,
+  sharing the syntax contract and localized diagnostics
+  (`resources/locales/*/strings.json`) with only the plan-construction
+  step and its own distinct `runtime.import_database_sql` event
+  differing from the JSON path. Also reworded the shared
+  `ImportDatabaseJsonSyntax`/`ImportDatabaseSourceOpenFailed` diagnostics
+  (previously JSON-specific text) to cover both `TYPE` values, matching
+  `EXPORT DATABASE`'s own precedent. `tests/test_prg_engine_data_io_import_export.cpp`
+  proves the full PRG-script round trip (a real exported SQL snapshot
+  re-imported and read back through the independent JSON exporter,
+  matching on table name and multi-row character/numeric/logical data),
+  the distinct runtime event, destination-already-exists fail-closed
+  behavior, and rejection of an out-of-subset SQL document without
+  creating a destination. `tests/test_vfp_assets.cpp` proves the parser
+  directly against the accepted-subset boundary (valid input succeeds; a
+  missing header, unquoted identifiers, an unrecognized column type, a
+  case-folded duplicate table name, an unknown INSERT table/column, a
+  value-count mismatch, and a wrong-shape literal each fail closed with
+  a distinct error code) and proves the library-level
+  `export_database_as_sql()` -> `build_database_sql_import_plan()` round
+  trip directly, including an embedded single quote surviving both
+  quoting layers. Full local `ctest` regression passed after the change,
+  on top of a clean warning-free Release build. Not scoped: a
+  general-purpose SQL parser, a live database connection, and
+  index/relation/container-metadata reconstruction (all inherited,
+  unchanged, from #5472's materializer).
+
 - 2026-09-06: Follow-up to #5472/#5498: adversarial review of PR #5498
   before merge surfaced 5 real findings, all fixed rather than dismissed.
   Two P1s: an untrusted JSON table name containing `../` or an absolute

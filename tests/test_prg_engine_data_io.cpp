@@ -81,6 +81,7 @@ int main() {
     test_export_database_type_json_writes_catalog_snapshot();
     test_export_database_type_sql_writes_ddl_and_inserts();
     test_import_database_type_json_round_trips_via_export();
+    test_import_database_type_sql_round_trips_via_export();
     test_copy_to_array_fills_2d_runtime_array();
     test_copy_to_array_fields_clause_allows_keyword_named_field();
     test_append_from_array_writes_records_from_2d_array();

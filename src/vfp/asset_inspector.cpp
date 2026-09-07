@@ -2218,6 +2218,561 @@ DatabaseJsonImportPlanResult build_database_json_import_plan(const std::string_v
 
 namespace {
 
+// ---- build_database_sql_import_plan() tokenizer/parser ----
+//
+// A hand-rolled tokenizer/parser for the exact, narrow SQL dialect
+// export_database_as_sql() itself emits -- not a general-purpose SQL
+// parser. Every token shape below mirrors that function's own emission
+// exactly: sql_quote_identifier()'s doubled-double-quote escaping,
+// sql_quote_string_literal()'s doubled-single-quote escaping, and
+// sql_column_type()'s fixed vocabulary. Anything else yields an `invalid`
+// token or a parse failure with a distinct error_code, rather than a guess.
+
+enum class SqlTokenKind { identifier, quoted_identifier, string_literal, number, punct, end_of_input, invalid };
+
+struct SqlToken {
+    SqlTokenKind kind = SqlTokenKind::end_of_input;
+    std::string text;
+};
+
+class SqlImportTokenizer {
+public:
+    explicit SqlImportTokenizer(std::string_view text) : text_(text) {}
+
+    SqlToken next() {
+        skip_ignorable();
+        if (position_ >= text_.size()) {
+            return {.kind = SqlTokenKind::end_of_input, .text = {}};
+        }
+        const char ch = text_[position_];
+        if (ch == '"') {
+            return read_quoted('"', SqlTokenKind::quoted_identifier);
+        }
+        if (ch == '\'') {
+            return read_quoted('\'', SqlTokenKind::string_literal);
+        }
+        if (ch == '(' || ch == ')' || ch == ',' || ch == ';') {
+            ++position_;
+            return {.kind = SqlTokenKind::punct, .text = std::string(1U, ch)};
+        }
+        if (ch == '-' || (ch >= '0' && ch <= '9')) {
+            return read_number();
+        }
+        if (std::isalpha(static_cast<unsigned char>(ch)) != 0 || ch == '_') {
+            return read_bare_word();
+        }
+        ++position_;
+        return {.kind = SqlTokenKind::invalid, .text = std::string(1U, ch)};
+    }
+
+private:
+    void skip_ignorable() {
+        for (;;) {
+            while (position_ < text_.size() &&
+                   std::isspace(static_cast<unsigned char>(text_[position_])) != 0) {
+                ++position_;
+            }
+            if (position_ + 1U < text_.size() && text_[position_] == '-' && text_[position_ + 1U] == '-') {
+                while (position_ < text_.size() && text_[position_] != '\n') {
+                    ++position_;
+                }
+                continue;
+            }
+            break;
+        }
+    }
+
+    SqlToken read_quoted(char quote, SqlTokenKind kind) {
+        ++position_;
+        std::string decoded;
+        for (;;) {
+            if (position_ >= text_.size()) {
+                return {.kind = SqlTokenKind::invalid, .text = decoded};
+            }
+            const char ch = text_[position_];
+            if (ch == quote) {
+                if (position_ + 1U < text_.size() && text_[position_ + 1U] == quote) {
+                    decoded.push_back(quote);
+                    position_ += 2U;
+                    continue;
+                }
+                ++position_;
+                return {.kind = kind, .text = decoded};
+            }
+            decoded.push_back(ch);
+            ++position_;
+        }
+    }
+
+    // JSON-number-compatible: requires at least one digit before a decimal
+    // point (rejecting a bare ".5") and at least one after it if present
+    // (rejecting a bare "1."), and accepts the scientific-notation exponent
+    // suffix ostringstream's default double formatting can emit for very
+    // large or small DOUBLE PRECISION values (e.g. "1e+20") -- a token this
+    // parser must accept even though this dialect's grammar has no other
+    // use for 'e'/'E', since export_database_as_sql() can produce it.
+    SqlToken read_number() {
+        const std::size_t start = position_;
+        if (position_ < text_.size() && text_[position_] == '-') {
+            ++position_;
+        }
+        const std::size_t integer_start = position_;
+        while (position_ < text_.size() && text_[position_] >= '0' && text_[position_] <= '9') {
+            ++position_;
+        }
+        if (position_ == integer_start) {
+            return invalid_number(start);
+        }
+        if (position_ < text_.size() && text_[position_] == '.') {
+            const std::size_t dot_position = position_;
+            ++position_;
+            const std::size_t fraction_start = position_;
+            while (position_ < text_.size() && text_[position_] >= '0' && text_[position_] <= '9') {
+                ++position_;
+            }
+            if (position_ == fraction_start) {
+                position_ = dot_position;
+                return invalid_number(start);
+            }
+        }
+        if (position_ < text_.size() && (text_[position_] == 'e' || text_[position_] == 'E')) {
+            const std::size_t exponent_marker = position_;
+            ++position_;
+            if (position_ < text_.size() && (text_[position_] == '+' || text_[position_] == '-')) {
+                ++position_;
+            }
+            const std::size_t exponent_digits_start = position_;
+            while (position_ < text_.size() && text_[position_] >= '0' && text_[position_] <= '9') {
+                ++position_;
+            }
+            if (position_ == exponent_digits_start) {
+                position_ = exponent_marker;
+                return invalid_number(start);
+            }
+        }
+        return {.kind = SqlTokenKind::number, .text = std::string(text_.substr(start, position_ - start))};
+    }
+
+    SqlToken invalid_number(std::size_t start) {
+        return {.kind = SqlTokenKind::invalid, .text = std::string(text_.substr(start, position_ - start))};
+    }
+
+    SqlToken read_bare_word() {
+        const std::size_t start = position_;
+        while (position_ < text_.size() &&
+               (std::isalnum(static_cast<unsigned char>(text_[position_])) != 0 || text_[position_] == '_')) {
+            ++position_;
+        }
+        return {.kind = SqlTokenKind::identifier, .text = std::string(text_.substr(start, position_ - start))};
+    }
+
+    std::string_view text_;
+    std::size_t position_ = 0U;
+};
+
+bool sql_token_is_keyword(const SqlToken& token, const std::string_view keyword) {
+    if (token.kind != SqlTokenKind::identifier || token.text.size() != keyword.size()) {
+        return false;
+    }
+    for (std::size_t index = 0U; index < keyword.size(); ++index) {
+        if (std::tolower(static_cast<unsigned char>(token.text[index])) !=
+            std::tolower(static_cast<unsigned char>(keyword[index]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool sql_token_is_punct(const SqlToken& token, char punct) {
+    return token.kind == SqlTokenKind::punct && token.text.size() == 1U && token.text.front() == punct;
+}
+
+struct SqlImportHeader {
+    bool ok = false;
+    std::string database_name;
+    std::size_t body_offset = 0U;
+};
+
+// The exact three-line header export_database_as_sql() always emits, used
+// as the up-front narrow-subset gate: anything else is rejected before any
+// token is even read, rather than attempting to parse it as SQL.
+SqlImportHeader parse_sql_import_header(const std::string_view document) {
+    SqlImportHeader header;
+    constexpr std::string_view magic_line = "-- Copperfin EXPORT DATABASE ... TYPE SQL";
+    constexpr std::string_view database_prefix = "-- database: ";
+    constexpr std::string_view source_prefix = "-- source: ";
+    std::size_t position = 0U;
+    const auto read_line = [&]() {
+        const std::size_t newline = document.find('\n', position);
+        const std::string_view line = (newline == std::string_view::npos)
+            ? document.substr(position)
+            : document.substr(position, newline - position);
+        position = (newline == std::string_view::npos) ? document.size() : newline + 1U;
+        return (!line.empty() && line.back() == '\r') ? line.substr(0U, line.size() - 1U) : line;
+    };
+    if (read_line() != magic_line) {
+        return header;
+    }
+    const std::string_view line2 = read_line();
+    if (line2.size() <= database_prefix.size() || line2.substr(0U, database_prefix.size()) != database_prefix) {
+        return header;
+    }
+    const std::string database_name(line2.substr(database_prefix.size()));
+    if (database_name.empty()) {
+        return header;
+    }
+    const std::string_view line3 = read_line();
+    if (line3.size() < source_prefix.size() || line3.substr(0U, source_prefix.size()) != source_prefix) {
+        return header;
+    }
+    header.ok = true;
+    header.database_name = database_name;
+    header.body_offset = position;
+    return header;
+}
+
+// Inverse of sql_datetime_literal_from_storage(): parses the exact
+// "YYYY-MM-DD HH:MM:SS" shape that function (and therefore
+// export_database_as_sql()) always emits for a non-null T-type value, back
+// into this codebase's "julian:<day> millis:<ms>" internal storage contract
+// parse_datetime_storage_value() (src/vfp/dbf_table.cpp) requires --
+// without this conversion, a table with any populated timestamp value
+// could never be materialized. Returns std::nullopt for anything not
+// exactly that shape, rather than guessing.
+std::optional<std::string> sql_datetime_storage_from_literal(const std::string& literal) {
+    if (literal.size() != 19U ||
+        literal[4] != '-' || literal[7] != '-' || literal[10] != ' ' ||
+        literal[13] != ':' || literal[16] != ':') {
+        return std::nullopt;
+    }
+    const auto parse_digits = [&](std::size_t offset, std::size_t count) -> std::optional<int> {
+        int value = 0;
+        for (std::size_t index = 0U; index < count; ++index) {
+            const char character = literal[offset + index];
+            if (character < '0' || character > '9') {
+                return std::nullopt;
+            }
+            value = value * 10 + (character - '0');
+        }
+        return value;
+    };
+    const auto year = parse_digits(0U, 4U);
+    const auto month = parse_digits(5U, 2U);
+    const auto day = parse_digits(8U, 2U);
+    const auto hour = parse_digits(11U, 2U);
+    const auto minute = parse_digits(14U, 2U);
+    const auto second = parse_digits(17U, 2U);
+    if (!year.has_value() || !month.has_value() || !day.has_value() ||
+        !hour.has_value() || !minute.has_value() || !second.has_value() ||
+        *month < 1 || *month > 12 || *day < 1 || *day > 31 ||
+        *hour > 23 || *minute > 59 || *second > 59) {
+        return std::nullopt;
+    }
+    // Mirrors sql_julian_day_to_date()'s own inverse (Fliegel-Van Flandern
+    // astronomical Julian day, minus 702 to match this codebase's existing
+    // epoch convention) rather than depending on cf_xbase_runtime's
+    // date_to_julian(), for the same reason that function's own comment
+    // gives: cf_xbase_runtime already depends on cf_vfp_assets, so the
+    // reverse dependency isn't available.
+    const int julian_day =
+        ((1461 * (*year + 4800 + (*month - 14) / 12)) / 4 +
+         (367 * (*month - 2 - 12 * ((*month - 14) / 12))) / 12 -
+         (3 * ((*year + 4900 + (*month - 14) / 12) / 100)) / 4 +
+         *day - 32075) - 702;
+    const int millis = ((*hour * 3600) + (*minute * 60) + *second) * 1000;
+    return "julian:" + std::to_string(julian_day) + " millis:" + std::to_string(millis);
+}
+
+struct SqlImportValueResult {
+    bool ok = false;
+    std::string json_fragment;
+};
+
+// Converts one already-typed VALUES literal into the JSON fragment
+// extract_import_table_rows() (shared with the JSON import path) already
+// knows how to read for that field's type category -- number literal for
+// numeric fields, true/false for logical fields, a converted timestamp
+// string for T-type fields, a quoted JSON string otherwise. A literal of
+// the wrong shape for its column's type is rejected rather than coerced.
+SqlImportValueResult sql_import_value_to_json(const SqlToken& token, char field_type) {
+    if (sql_token_is_keyword(token, "NULL")) {
+        return {.ok = true, .json_fragment = "null"};
+    }
+    const char upper_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field_type)));
+    const bool is_numeric = (upper_type == 'N' || upper_type == 'F' || upper_type == 'I' ||
+        upper_type == 'B' || upper_type == 'Y');
+    const bool is_logical = (upper_type == 'L');
+    const bool is_datetime = (upper_type == 'T');
+    if (is_logical) {
+        if (sql_token_is_keyword(token, "TRUE")) {
+            return {.ok = true, .json_fragment = "true"};
+        }
+        if (sql_token_is_keyword(token, "FALSE")) {
+            return {.ok = true, .json_fragment = "false"};
+        }
+        return {};
+    }
+    if (is_numeric) {
+        if (token.kind != SqlTokenKind::number) {
+            return {};
+        }
+        return {.ok = true, .json_fragment = token.text};
+    }
+    if (token.kind != SqlTokenKind::string_literal) {
+        return {};
+    }
+    if (is_datetime) {
+        const auto storage = sql_datetime_storage_from_literal(token.text);
+        if (!storage.has_value()) {
+            return {};
+        }
+        return {.ok = true, .json_fragment = "\"" + json_escape_str(*storage) + "\""};
+    }
+    return {.ok = true, .json_fragment = "\"" + json_escape_str(token.text) + "\""};
+}
+
+}  // namespace
+
+DatabaseJsonImportPlanResult build_database_sql_import_plan(const std::string_view document) {
+    const auto failure = [](std::string code) {
+        return DatabaseJsonImportPlanResult{.ok = false, .error_code = std::move(code), .plan = {}};
+    };
+
+    const SqlImportHeader header = parse_sql_import_header(document);
+    if (!header.ok) {
+        return failure("database_sql_import.invalid_header");
+    }
+
+    SqlImportTokenizer tokenizer(document.substr(header.body_offset));
+    SqlToken current = tokenizer.next();
+    const auto advance = [&]() { current = tokenizer.next(); };
+
+    DatabaseJsonImportPlan plan;
+    plan.database_name = header.database_name;
+    std::map<std::string, std::size_t> table_index_by_name;
+    std::set<std::string> casefolded_table_names;
+
+    while (current.kind != SqlTokenKind::end_of_input) {
+        if (current.kind == SqlTokenKind::invalid) {
+            return failure("database_sql_import.invalid_token");
+        }
+        if (sql_token_is_keyword(current, "CREATE")) {
+            advance();
+            if (!sql_token_is_keyword(current, "TABLE")) {
+                return failure("database_sql_import.invalid_create_table");
+            }
+            advance();
+            if (current.kind != SqlTokenKind::quoted_identifier || current.text.empty()) {
+                return failure("database_sql_import.invalid_create_table");
+            }
+            const std::string table_name = current.text;
+            if (!casefolded_table_names.insert(lowercase_copy(table_name)).second) {
+                return failure("database_sql_import.duplicate_table_name");
+            }
+            advance();
+            if (!sql_token_is_punct(current, '(')) {
+                return failure("database_sql_import.invalid_create_table");
+            }
+            advance();
+
+            DatabaseJsonImportTablePlan table_plan;
+            table_plan.name = table_name;
+            std::set<std::string> casefolded_field_names;
+            for (;;) {
+                if (current.kind != SqlTokenKind::quoted_identifier || current.text.empty()) {
+                    return failure("database_sql_import.invalid_field");
+                }
+                const std::string field_name = current.text;
+                if (!casefolded_field_names.insert(lowercase_copy(field_name)).second) {
+                    return failure("database_sql_import.duplicate_field_name");
+                }
+                advance();
+                if (current.kind != SqlTokenKind::identifier) {
+                    return failure("database_sql_import.unknown_column_type");
+                }
+                char field_type = '\0';
+                std::size_t length = 0U;
+                std::size_t decimals = 0U;
+                if (sql_token_is_keyword(current, "VARCHAR")) {
+                    advance();
+                    if (!sql_token_is_punct(current, '(')) return failure("database_sql_import.unknown_column_type");
+                    advance();
+                    if (current.kind != SqlTokenKind::number || !parse_decimal_in_range(current.text, 1U, 255U, length))
+                        return failure("database_sql_import.unknown_column_type");
+                    advance();
+                    if (!sql_token_is_punct(current, ')')) return failure("database_sql_import.unknown_column_type");
+                    advance();
+                    field_type = 'C';
+                } else if (sql_token_is_keyword(current, "DECIMAL")) {
+                    advance();
+                    if (!sql_token_is_punct(current, '(')) return failure("database_sql_import.unknown_column_type");
+                    advance();
+                    if (current.kind != SqlTokenKind::number || !parse_decimal_in_range(current.text, 1U, 255U, length))
+                        return failure("database_sql_import.unknown_column_type");
+                    advance();
+                    if (!sql_token_is_punct(current, ',')) return failure("database_sql_import.unknown_column_type");
+                    advance();
+                    if (current.kind != SqlTokenKind::number || !parse_decimal_in_range(current.text, 0U, length, decimals))
+                        return failure("database_sql_import.unknown_column_type");
+                    advance();
+                    if (!sql_token_is_punct(current, ')')) return failure("database_sql_import.unknown_column_type");
+                    advance();
+                    field_type = 'N';
+                } else if (sql_token_is_keyword(current, "INTEGER")) {
+                    advance(); field_type = 'I'; length = 4U; decimals = 0U;
+                } else if (sql_token_is_keyword(current, "DOUBLE")) {
+                    advance();
+                    if (!sql_token_is_keyword(current, "PRECISION")) return failure("database_sql_import.unknown_column_type");
+                    advance(); field_type = 'B'; length = 8U; decimals = 0U;
+                } else if (sql_token_is_keyword(current, "BOOLEAN")) {
+                    advance(); field_type = 'L'; length = 1U; decimals = 0U;
+                } else if (sql_token_is_keyword(current, "DATE")) {
+                    advance(); field_type = 'D'; length = 8U; decimals = 0U;
+                } else if (sql_token_is_keyword(current, "TIMESTAMP")) {
+                    advance(); field_type = 'T'; length = 8U; decimals = 0U;
+                } else if (sql_token_is_keyword(current, "TEXT")) {
+                    // A memo-pointer field's on-disk value is always a
+                    // 4-byte block number, matching the length this
+                    // codebase's own JSON import path and other schema
+                    // construction already use for M/G/P fields -- not an
+                    // arbitrary width, even though is_dbf_table_field_
+                    // storage_layout_writable() itself only requires >= 4.
+                    advance(); field_type = 'M'; length = 4U; decimals = 0U;
+                } else {
+                    return failure("database_sql_import.unknown_column_type");
+                }
+                const DbfFieldDescriptor descriptor{
+                    .name = field_name,
+                    .type = field_type,
+                    .offset = 0U,
+                    .length = static_cast<std::uint8_t>(length),
+                    .decimal_count = static_cast<std::uint8_t>(decimals)};
+                if (!is_dbf_table_field_storage_layout_writable(descriptor.type, descriptor.length)) {
+                    return failure("database_sql_import.invalid_field");
+                }
+                table_plan.fields.push_back(descriptor);
+
+                if (sql_token_is_punct(current, ',')) { advance(); continue; }
+                if (sql_token_is_punct(current, ')')) { advance(); break; }
+                return failure("database_sql_import.invalid_create_table");
+            }
+            if (!sql_token_is_punct(current, ';')) {
+                return failure("database_sql_import.invalid_create_table");
+            }
+            advance();
+            if (table_plan.fields.empty()) {
+                return failure("database_sql_import.invalid_create_table");
+            }
+            table_index_by_name.emplace(table_name, plan.tables.size());
+            plan.tables.push_back(std::move(table_plan));
+            continue;
+        }
+
+        if (sql_token_is_keyword(current, "INSERT")) {
+            advance();
+            if (!sql_token_is_keyword(current, "INTO")) {
+                return failure("database_sql_import.invalid_insert");
+            }
+            advance();
+            if (current.kind != SqlTokenKind::quoted_identifier) {
+                return failure("database_sql_import.invalid_insert");
+            }
+            const auto table_lookup = table_index_by_name.find(current.text);
+            if (table_lookup == table_index_by_name.end()) {
+                return failure("database_sql_import.insert_unknown_table");
+            }
+            DatabaseJsonImportTablePlan& table_plan = plan.tables[table_lookup->second];
+            advance();
+            if (!sql_token_is_punct(current, '(')) {
+                return failure("database_sql_import.invalid_insert");
+            }
+            advance();
+
+            std::vector<std::string> column_names;
+            for (;;) {
+                if (current.kind != SqlTokenKind::quoted_identifier) {
+                    return failure("database_sql_import.invalid_insert");
+                }
+                column_names.push_back(current.text);
+                advance();
+                if (sql_token_is_punct(current, ',')) { advance(); continue; }
+                if (sql_token_is_punct(current, ')')) { advance(); break; }
+                return failure("database_sql_import.invalid_insert");
+            }
+            if (column_names.empty()) {
+                return failure("database_sql_import.invalid_insert");
+            }
+
+            std::vector<const DbfFieldDescriptor*> column_fields;
+            column_fields.reserve(column_names.size());
+            for (const std::string& column_name : column_names) {
+                const auto field_iterator = std::find_if(
+                    table_plan.fields.begin(), table_plan.fields.end(),
+                    [&](const DbfFieldDescriptor& field) { return field.name == column_name; });
+                if (field_iterator == table_plan.fields.end()) {
+                    return failure("database_sql_import.insert_unknown_column");
+                }
+                column_fields.push_back(&*field_iterator);
+            }
+
+            if (!sql_token_is_keyword(current, "VALUES")) {
+                return failure("database_sql_import.invalid_insert");
+            }
+            advance();
+            if (!sql_token_is_punct(current, '(')) {
+                return failure("database_sql_import.invalid_insert");
+            }
+            advance();
+
+            std::vector<std::string> value_fragments;
+            for (;;) {
+                if (value_fragments.size() >= column_fields.size()) {
+                    return failure("database_sql_import.insert_value_count_mismatch");
+                }
+                const SqlImportValueResult converted =
+                    sql_import_value_to_json(current, column_fields[value_fragments.size()]->type);
+                if (!converted.ok) {
+                    return failure("database_sql_import.invalid_insert_value");
+                }
+                value_fragments.push_back(converted.json_fragment);
+                advance();
+                if (sql_token_is_punct(current, ',')) { advance(); continue; }
+                if (sql_token_is_punct(current, ')')) { advance(); break; }
+                return failure("database_sql_import.invalid_insert");
+            }
+            if (value_fragments.size() != column_fields.size()) {
+                return failure("database_sql_import.insert_value_count_mismatch");
+            }
+            if (!sql_token_is_punct(current, ';')) {
+                return failure("database_sql_import.invalid_insert");
+            }
+            advance();
+
+            std::string row_json = "{";
+            for (std::size_t index = 0U; index < column_names.size(); ++index) {
+                if (index > 0U) row_json += ",";
+                row_json += "\"" + json_escape_str(column_names[index]) + "\":" + value_fragments[index];
+            }
+            row_json += "}";
+            table_plan.records_json += (table_plan.records_json.empty() ? "[" : ",") + row_json;
+            continue;
+        }
+
+        return failure("database_sql_import.invalid_document");
+    }
+
+    if (plan.tables.empty()) {
+        return failure("database_sql_import.invalid_document");
+    }
+    for (auto& table_plan : plan.tables) {
+        table_plan.records_json = table_plan.records_json.empty() ? "[]" : table_plan.records_json + "]";
+    }
+
+    return {.ok = true, .error_code = {}, .plan = std::move(plan)};
+}
+
+namespace {
+
 // A table name from untrusted JSON must never be usable to escape the
 // destination DBC's own directory. std::filesystem::path's operator/
 // silently replaces the whole path when the appended component is
