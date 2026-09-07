@@ -1718,6 +1718,28 @@ void test_export_database_type_json_writes_catalog_snapshot() {
     expect(!fs::exists(temp_root / "not-created.json"),
            "EXPORT DATABASE TYPE JSON should reject an expression operand before creating output");
 
+    // #5499: unquote_string() only strips single quotes, so a double-quoted
+    // operand must be rejected here rather than accepted and then silently
+    // mishandled (left with its quote characters still embedded in the
+    // resolved path). Matches import_database_command's own equivalent test.
+    const fs::path double_quoted_path = temp_root / "export_database_double_quoted.prg";
+    write_text(
+        double_quoted_path,
+        "EXPORT DATABASE \"northwind.dbc\" TO \"not-created-double-quoted.json\" TYPE JSON\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession double_quoted_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(double_quoted_path.string(), temp_root.string(), false));
+    const auto double_quoted_state = double_quoted_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!double_quoted_state.completed,
+           "EXPORT DATABASE TYPE JSON should reject a double-quoted operand rather than mishandle it");
+    expect(double_quoted_state.message ==
+               "EXPORT DATABASE requires a DBC source, an output destination, and TYPE JSON or TYPE SQL",
+           "EXPORT DATABASE TYPE JSON should report the localized quoted-path-only syntax diagnostic for a double-quoted operand");
+    expect(!fs::exists(temp_root / "not-created-double-quoted.json"),
+           "EXPORT DATABASE TYPE JSON should reject a double-quoted operand before creating output");
+    expect(!fs::exists(temp_root / "\"not-created-double-quoted.json\""),
+           "EXPORT DATABASE TYPE JSON must not create a path with literal embedded quote characters");
+
     fs::remove_all(temp_root, ignored);
 }
 

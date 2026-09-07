@@ -8018,11 +8018,16 @@
             {
                 const std::string source_operand = trim_copy(statement.expression);
                 const std::string destination_operand = trim_copy(statement.secondary_expression);
+                // unquote_string() only strips single quotes; a double-quoted
+                // operand must be rejected here rather than accepted and then
+                // silently mishandled (left with its quote characters still
+                // embedded in the resolved path). Matches import_database_command's
+                // own fix for the identical, pre-existing pattern copied from here.
                 const auto is_quoted_path_operand = [](const std::string& operand)
                 {
                     return operand.size() >= 2U &&
-                        (operand.front() == '\'' || operand.front() == '"') &&
-                        operand.back() == operand.front();
+                        operand.front() == '\'' &&
+                        operand.back() == '\'';
                 };
                 const std::string source_raw = unquote_string(source_operand);
                 const std::string destination_raw = unquote_string(destination_operand);
