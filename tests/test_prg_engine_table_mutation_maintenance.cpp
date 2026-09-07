@@ -240,6 +240,12 @@ void test_zap_is_reverted_by_undo() {
     fs::remove_all(temp_root, ignored);
 }
 
+// REPLACE overflow handling is opt-in as of the truncateonoverflow SET
+// option: by default a value that doesn't fit its field is a detailed
+// error (see test_replace_character_field_overflow_reports_detailed_error_by_default
+// below), and this test proves the opposite, explicitly-enabled case --
+// SET TRUNCATEONOVERFLOW ON reproduces the legacy dBASE/FoxPro behavior
+// some existing scripts rely on: silently cut to fit, no error.
 void test_replace_character_field_truncates_to_field_width() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_truncate_char";
@@ -254,6 +260,7 @@ void test_replace_character_field_truncates_to_field_width() {
     write_text(
         main_path,
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET TRUNCATEONOVERFLOW ON\n"
         "REPLACE NAME WITH 'ABCDEFGHIJKL'\n"
         "cName = NAME\n"
         "RETURN\n");
@@ -267,8 +274,145 @@ void test_replace_character_field_truncates_to_field_width() {
     expect(name != state.globals.end(), "truncation script should expose the updated NAME value");
     if (name != state.globals.end()) {
         expect(copperfin::runtime::format_value(name->second) == "ABCDEFGHIJ",
-               "REPLACE should truncate character values to field width");
+               "SET TRUNCATEONOVERFLOW ON should truncate character values to field width");
     }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// Companion to the test above: without SET TRUNCATEONOVERFLOW, the same
+// overflowing REPLACE must fail closed (not silently corrupt data by
+// storing a truncated value the script never asked for), and the error
+// must carry enough detail -- table path, record number, field name and
+// width, and a preview of the offending value -- for a user to actually
+// find the bad data.
+void test_replace_character_field_overflow_reports_detailed_error_by_default() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_overflow_strict_char";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "overflow_strict_char.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE NAME WITH 'ABCDEFGHIJKL'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "REPLACE overflowing a character field must fail closed by default (no SET TRUNCATEONOVERFLOW)");
+    expect(state.message.find(table_path.string()) != std::string::npos,
+           "overflow error should name the table path so the data can be located");
+    expect(state.message.find("NAME") != std::string::npos,
+           "overflow error should name the offending field");
+    expect(state.message.find("10") != std::string::npos,
+           "overflow error should report the field's actual width");
+    expect(state.message.find("ABCDEFGHIJ") != std::string::npos,
+           "overflow error should preview the offending value");
+
+    const fs::path readback_path = temp_root / "readback.prg";
+    write_text(
+        readback_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "cName = NAME\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession readback_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(readback_path.string(), temp_root.string()));
+    const auto readback_state = readback_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(readback_state.completed, "readback script should complete");
+    const auto name = readback_state.globals.find("cname");
+    expect(name != readback_state.globals.end(), "readback should expose the NAME value");
+    if (name != readback_state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "ALPHA",
+               "a rejected overflowing REPLACE must not have mutated the record at all");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// Numeric overflow can't be "truncated" the way a string can -- cutting
+// digits off a number changes its magnitude, not just its length -- so
+// SET TRUNCATEONOVERFLOW ON reproduces the legacy dBASE/FoxPro numeric-
+// overflow display convention instead: fill the field with asterisks.
+void test_replace_numeric_field_overflow_fills_asterisks_when_truncation_enabled() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_truncate_numeric";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "truncate_numeric.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET TRUNCATEONOVERFLOW ON\n"
+        "REPLACE AGE WITH 9999\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "numeric overflow with SET TRUNCATEONOVERFLOW ON should complete: " + state.message);
+
+    // AGE is N(3); read the raw on-disk bytes directly rather than through
+    // STR()/numeric parsing, since an asterisk-filled field isn't a valid
+    // number to begin with.
+    std::ifstream table_file(table_path, std::ios::binary);
+    expect(static_cast<bool>(table_file), "should be able to reopen the table to inspect raw bytes");
+    if (table_file) {
+        std::vector<std::uint8_t> bytes{std::istreambuf_iterator<char>(table_file), std::istreambuf_iterator<char>()};
+        // header_length(32 fixed + 32 NAME descriptor + 32 AGE descriptor + 1
+        // terminator = 97) + record delete-flag(1) + NAME(10) = 108
+        constexpr std::size_t age_field_offset = 32U + 32U + 32U + 1U + 1U + 10U;
+        expect(bytes.size() >= age_field_offset + 3U, "table should be large enough to contain the AGE field bytes");
+        if (bytes.size() >= age_field_offset + 3U) {
+            const std::string age_bytes(bytes.begin() + static_cast<std::ptrdiff_t>(age_field_offset),
+                                         bytes.begin() + static_cast<std::ptrdiff_t>(age_field_offset) + 3);
+            expect(age_bytes == "***", "SET TRUNCATEONOVERFLOW ON should fill an overflowing numeric field with asterisks, not a wrong truncated number");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// Without the switch, numeric overflow must fail closed with the same
+// level of diagnostic detail as character overflow -- asterisk-filling by
+// default would silently discard a value the script explicitly tried to
+// store, which is worse than an error for anyone not expecting it.
+void test_replace_numeric_field_overflow_reports_detailed_error_by_default() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_overflow_strict_numeric";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "overflow_strict_numeric.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE AGE WITH 9999\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "REPLACE overflowing a numeric field must fail closed by default (no SET TRUNCATEONOVERFLOW)");
+    expect(state.message.find(table_path.string()) != std::string::npos,
+           "overflow error should name the table path so the data can be located");
+    expect(state.message.find("AGE") != std::string::npos,
+           "overflow error should name the offending field");
+    expect(state.message.find("9999") != std::string::npos,
+           "overflow error should preview the offending value");
 
     fs::remove_all(temp_root, ignored);
 }

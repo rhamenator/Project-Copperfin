@@ -716,12 +716,29 @@ DbfWriteResult write_memo_field_text(
         false);
 }
 
+namespace {
+
+// A bounded preview of an offending value for an error message: long values
+// are cut short (with an explicit marker) so the message stays readable,
+// while still giving enough of the actual data for a user to grep the
+// source and find the offending record.
+std::string summarize_value_for_diagnostic(const std::string& value, std::size_t max_chars = 80U) {
+    if (value.size() <= max_chars) {
+        return value;
+    }
+    return value.substr(0U, max_chars) + "...(" + std::to_string(value.size()) + " chars total)";
+}
+
+}  // namespace
+
 DbfWriteResult write_field_bytes(
     std::vector<std::uint8_t>& table_bytes,
     const DbfHeader& header,
     std::size_t record_index,
     const RawFieldDescriptor& field,
-    const std::string& value) {
+    const std::string& value,
+    const std::string& table_path = {},
+    bool allow_truncation = false) {
     if (record_index >= header.record_count) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordIndexOutOfRange"), .record_count = header.record_count};
     }
@@ -747,7 +764,26 @@ DbfWriteResult write_field_bytes(
                 return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TextEncodingConversionFailed"), .record_count = header.record_count};
             }
             if (encoded.text.size() > field.length) {
-                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CharacterValueTooLarge"), .record_count = header.record_count};
+                if (allow_truncation) {
+                    std::copy(
+                        encoded.text.begin(),
+                        encoded.text.begin() + static_cast<std::ptrdiff_t>(field.length),
+                        table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
+                    break;
+                }
+                return {
+                    .ok = false,
+                    .error = dbf_table_text(
+                        "Vfp.DbfTable.Error.CharacterValueTooLarge",
+                        {
+                            {"path", table_path},
+                            {"recordNumber", std::to_string(record_index + 1U)},
+                            {"fieldName", field.name},
+                            {"fieldLength", std::to_string(field.length)},
+                            {"valueLength", std::to_string(encoded.text.size())},
+                            {"valuePreview", summarize_value_for_diagnostic(value)},
+                        }),
+                    .record_count = header.record_count};
             }
             std::copy(
                 encoded.text.begin(),
@@ -763,7 +799,33 @@ DbfWriteResult write_field_bytes(
             const std::string text = trim_both(value);
             if (!text.empty()) {
                 if (text.size() > field.length) {
-                    return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.NumericValueTooLarge"), .record_count = header.record_count};
+                    if (allow_truncation) {
+                        // Legacy dBASE/FoxPro numeric-overflow convention: fill the
+                        // field with asterisks rather than silently keeping a
+                        // truncated (and therefore wrong) numeric value -- cutting
+                        // digits off a number changes its magnitude in a way that
+                        // cutting characters off a string does not, so this is
+                        // deliberately not the same "just cut it to fit" behavior
+                        // as the character-field case above.
+                        std::fill_n(
+                            table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                            field.length,
+                            static_cast<std::uint8_t>('*'));
+                        break;
+                    }
+                    return {
+                        .ok = false,
+                        .error = dbf_table_text(
+                            "Vfp.DbfTable.Error.NumericValueTooLarge",
+                            {
+                                {"path", table_path},
+                                {"recordNumber", std::to_string(record_index + 1U)},
+                                {"fieldName", field.name},
+                                {"fieldLength", std::to_string(field.length)},
+                                {"valueLength", std::to_string(text.size())},
+                                {"valuePreview", summarize_value_for_diagnostic(value)},
+                            }),
+                        .record_count = header.record_count};
                 }
                 const auto padding = static_cast<std::ptrdiff_t>(field.length - text.size());
                 std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset) + padding);
@@ -839,7 +901,23 @@ DbfWriteResult write_field_bytes(
 
             const std::size_t payload_capacity = static_cast<std::size_t>(field.length - 1U);
             if (text.size() > payload_capacity) {
-                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.VqValueTooLarge"), .record_count = header.record_count};
+                if (allow_truncation) {
+                    text.resize(payload_capacity);
+                } else {
+                    return {
+                        .ok = false,
+                        .error = dbf_table_text(
+                            "Vfp.DbfTable.Error.VqValueTooLarge",
+                            {
+                                {"path", table_path},
+                                {"recordNumber", std::to_string(record_index + 1U)},
+                                {"fieldName", field.name},
+                                {"fieldLength", std::to_string(payload_capacity)},
+                                {"valueLength", std::to_string(text.size())},
+                                {"valuePreview", summarize_value_for_diagnostic(value)},
+                            }),
+                        .record_count = header.record_count};
+                }
             }
 
             std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
@@ -923,28 +1001,22 @@ DbfWriteResult write_field_bytes(
     return {.ok = true, .error = {}, .record_count = header.record_count};
 }
 
-DbfWriteResult append_blank_record_bytes(
+// Initializes one blank record's default field bytes within table_bytes at
+// record_offset (a delete-flag byte of 0x20, then each field's own blank
+// representation). Shared between the whole-file append path below and the
+// targeted-I/O append fast path further down, so the two can never drift
+// out of sync on what "blank" means for a given field type.
+DbfWriteResult fill_blank_record_fields(
     std::vector<std::uint8_t>& table_bytes,
-    const DbfHeader& header,
+    std::size_t record_offset,
+    std::size_t record_count_for_error,
     const std::vector<RawFieldDescriptor>& fields) {
-    const std::size_t insert_offset = header.header_length + (static_cast<std::size_t>(header.record_count) * header.record_length);
-    if (insert_offset > table_bytes.size()) {
-        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableDataTruncated"), .record_count = header.record_count};
-    }
-
-    const bool had_eof_marker = !table_bytes.empty() && table_bytes.back() == 0x1AU;
-    if (had_eof_marker) {
-        table_bytes.pop_back();
-    }
-
-    table_bytes.resize(table_bytes.size() + header.record_length, static_cast<std::uint8_t>(' '));
-    const std::size_t record_offset = insert_offset;
     table_bytes[record_offset] = 0x20U;
 
     for (const auto& field : fields) {
         const std::size_t field_offset = record_offset + field.offset;
         if ((field_offset + field.length) > table_bytes.size()) {
-            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordLayoutExceedsSize"), .record_count = header.record_count};
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordLayoutExceedsSize"), .record_count = record_count_for_error};
         }
 
         switch (field.type) {
@@ -961,39 +1033,14 @@ DbfWriteResult append_blank_record_bytes(
                 table_bytes[field_offset] = static_cast<std::uint8_t>('?');
                 break;
             case 'B':
-                std::fill_n(
-                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
-                    field.length,
-                    static_cast<std::uint8_t>(0U));
-                break;
             case 'I':
-                std::fill_n(
-                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
-                    field.length,
-                    static_cast<std::uint8_t>(0U));
-                break;
             case 'Y':
             case 'T':
-                std::fill_n(
-                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
-                    field.length,
-                    static_cast<std::uint8_t>(0U));
-                break;
             case 'M':
             case 'G':
             case 'P':
-                std::fill_n(
-                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
-                    field.length,
-                    static_cast<std::uint8_t>(0U));
-                break;
             case 'V':
             case 'Q':
-                std::fill_n(
-                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
-                    field.length,
-                    static_cast<std::uint8_t>(0U));
-                break;
             default:
                 std::fill_n(
                     table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
@@ -1003,9 +1050,117 @@ DbfWriteResult append_blank_record_bytes(
         }
     }
 
+    return {.ok = true, .error = {}, .record_count = record_count_for_error};
+}
+
+DbfWriteResult append_blank_record_bytes(
+    std::vector<std::uint8_t>& table_bytes,
+    const DbfHeader& header,
+    const std::vector<RawFieldDescriptor>& fields) {
+    const std::size_t insert_offset = header.header_length + (static_cast<std::size_t>(header.record_count) * header.record_length);
+    if (insert_offset > table_bytes.size()) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableDataTruncated"), .record_count = header.record_count};
+    }
+
+    const bool had_eof_marker = !table_bytes.empty() && table_bytes.back() == 0x1AU;
+    if (had_eof_marker) {
+        table_bytes.pop_back();
+    }
+
+    table_bytes.resize(table_bytes.size() + header.record_length, static_cast<std::uint8_t>(' '));
+    const DbfWriteResult fill_result = fill_blank_record_fields(table_bytes, insert_offset, header.record_count, fields);
+    if (!fill_result.ok) {
+        return fill_result;
+    }
+
     table_bytes.push_back(0x1AU);
     write_le_u32(table_bytes, 4U, header.record_count + 1U);
     return {.ok = true, .error = {}, .record_count = header.record_count + 1U};
+}
+
+// Fast targeted-I/O path for append: computes the new blank record's bytes
+// directly (needs only the header + field descriptors, bounded by field
+// count -- never any existing record data) and appends it via a targeted
+// seek, instead of reading the whole file into memory to grow a copy by one
+// record and rewriting the whole thing. Writes are ordered new-record
+// bytes, then EOF marker, then the record-count header field last, so a
+// crash before that last write leaves the file's *logical* content
+// (anything reading via the still-unchanged record count) byte-identical to
+// before the append started -- the orphaned new-record bytes are harmless
+// trailing data past the old logical end of file, never a torn *existing*
+// record. Returns std::nullopt for anything unexpected (a structural read
+// failure, an unwritable stream), so append_blank_record_to_file falls back
+// to the whole-file path rather than leaving the table in a partial state.
+std::optional<DbfWriteResult> append_blank_record_to_file_targeted(const std::string& path) {
+    if (const auto sidecar_error = ambiguous_required_sidecar_error_for_path(path); sidecar_error.has_value()) {
+        return DbfWriteResult{.ok = false, .error = *sidecar_error};
+    }
+
+    const DbfParseResult header_result = parse_dbf_header_from_file(path);
+    if (!header_result.ok) {
+        return std::nullopt;
+    }
+    const DbfHeader& header = header_result.header;
+
+    std::ifstream descriptor_input(platform::path_from_utf8_string(path), std::ios::binary);
+    if (!descriptor_input) {
+        return std::nullopt;
+    }
+    std::vector<std::uint8_t> header_bytes(header.header_length, 0U);
+    descriptor_input.read(reinterpret_cast<char*>(header_bytes.data()), static_cast<std::streamsize>(header_bytes.size()));
+    if (descriptor_input.gcount() != static_cast<std::streamsize>(header_bytes.size())) {
+        return std::nullopt;
+    }
+    descriptor_input.close();
+    const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(header_bytes);
+    if (const auto error = ambiguous_table_sidecar_error(path, header, fields); error.has_value()) {
+        return DbfWriteResult{.ok = false, .error = *error, .record_count = header.record_count};
+    }
+
+    std::vector<std::uint8_t> record_bytes(header.record_length, static_cast<std::uint8_t>(' '));
+    const DbfWriteResult fill_result = fill_blank_record_fields(record_bytes, 0U, header.record_count, fields);
+    if (!fill_result.ok) {
+        return fill_result;
+    }
+
+    const std::size_t insert_offset =
+        static_cast<std::size_t>(header.header_length) + (static_cast<std::size_t>(header.record_count) * header.record_length);
+
+    std::fstream io(platform::path_from_utf8_string(path), std::ios::binary | std::ios::in | std::ios::out);
+    if (!io) {
+        return std::nullopt;
+    }
+
+    io.seekp(static_cast<std::streamoff>(insert_offset));
+    io.write(reinterpret_cast<const char*>(record_bytes.data()), static_cast<std::streamsize>(record_bytes.size()));
+    const char eof_marker = static_cast<char>(0x1A);
+    io.write(&eof_marker, 1);
+    if (!io.good()) {
+        return std::nullopt;
+    }
+
+    std::vector<std::uint8_t> stamp_bytes(4U, 0U);
+    io.clear();
+    io.seekg(0);
+    io.read(reinterpret_cast<char*>(stamp_bytes.data()), static_cast<std::streamsize>(stamp_bytes.size()));
+    if (io.gcount() == static_cast<std::streamsize>(stamp_bytes.size()) && stamp_dbf_last_update_date(stamp_bytes)) {
+        io.clear();
+        io.seekp(1);
+        io.write(reinterpret_cast<const char*>(stamp_bytes.data()) + 1, 3);
+    }
+
+    const std::uint32_t new_record_count = header.record_count + 1U;
+    std::vector<std::uint8_t> record_count_bytes(4U, 0U);
+    write_le_u32(record_count_bytes, 0U, new_record_count);
+    io.clear();
+    io.seekp(4);
+    io.write(reinterpret_cast<const char*>(record_count_bytes.data()), static_cast<std::streamsize>(record_count_bytes.size()));
+    io.flush();
+    if (!io.good()) {
+        return std::nullopt;
+    }
+
+    return DbfWriteResult{.ok = true, .error = {}, .record_count = new_record_count};
 }
 
 class MemoReader {
@@ -2596,7 +2751,7 @@ DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDesc
         preserve_raw_source_fields);
 }
 
-DbfWriteResult append_blank_record_to_file(const std::string& path) {
+DbfWriteResult append_blank_record_to_file_full_rewrite(const std::string& path) {
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
     }
@@ -2630,12 +2785,137 @@ DbfWriteResult append_blank_record_to_file(const std::string& path) {
     return result;
 }
 
+DbfWriteResult append_blank_record_to_file(const std::string& path) {
+    if (const auto fast_result = append_blank_record_to_file_targeted(path); fast_result.has_value()) {
+        return *fast_result;
+    }
+    return append_blank_record_to_file_full_rewrite(path);
+}
+
+// Fast targeted-I/O path for the common case: a non-memo field write to an
+// existing record. Reads only the fixed header plus field-descriptor region
+// (bounded by field count, not record count) and the single target record's
+// bytes -- not the whole file -- then writes back only those same
+// record-length bytes plus the header's 3-byte last-update stamp. This
+// avoids reading and rewriting the entire table on every write, which made
+// writing N records one at a time (REPLACE inside a SCAN loop, or the
+// DIF/SYLK/spreadsheet import loops' per-row/per-field replace calls) O(n^2)
+// in total I/O instead of O(n).
+//
+// A crash mid-write can therefore only ever tear the single record being
+// written -- never the header, never any other record, never the file's
+// structure -- matching real xBase engines' traditional per-record write
+// durability rather than this codebase's previous (and still-used, for the
+// memo case below) whole-file-atomic-rewrite-per-write guarantee.
+//
+// Returns std::nullopt for anything this fast path doesn't handle -- a memo
+// field (which needs the sidecar/rollback logic in
+// replace_record_field_value_impl), an out-of-range record, or any
+// structural read failure -- so the full-rewrite implementation remains the
+// single source of truth for every case this fast path doesn't explicitly
+// claim.
+std::optional<DbfWriteResult> replace_record_field_value_targeted(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& value,
+    bool allow_truncation) {
+    if (const auto sidecar_error = ambiguous_required_sidecar_error_for_path(path); sidecar_error.has_value()) {
+        return DbfWriteResult{.ok = false, .error = *sidecar_error};
+    }
+
+    const DbfParseResult header_result = parse_dbf_header_from_file(path);
+    if (!header_result.ok) {
+        return std::nullopt;
+    }
+    const DbfHeader& header = header_result.header;
+    if (record_index >= header.record_count) {
+        return DbfWriteResult{.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordIndexOutOfRange"), .record_count = header.record_count};
+    }
+
+    std::ifstream descriptor_input(platform::path_from_utf8_string(path), std::ios::binary);
+    if (!descriptor_input) {
+        return std::nullopt;
+    }
+    std::vector<std::uint8_t> header_bytes(header.header_length, 0U);
+    descriptor_input.read(reinterpret_cast<char*>(header_bytes.data()), static_cast<std::streamsize>(header_bytes.size()));
+    if (descriptor_input.gcount() != static_cast<std::streamsize>(header_bytes.size())) {
+        return std::nullopt;
+    }
+    descriptor_input.close();
+
+    const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(header_bytes);
+    if (const auto error = ambiguous_table_sidecar_error(path, header, fields); error.has_value()) {
+        return DbfWriteResult{.ok = false, .error = *error, .record_count = header.record_count};
+    }
+    const auto field = find_raw_field(fields, field_name);
+    if (!field.has_value()) {
+        return DbfWriteResult{.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldNotFoundInTable"), .record_count = header.record_count};
+    }
+    if (is_memo_pointer_field(field->type)) {
+        return std::nullopt;
+    }
+
+    const std::size_t record_offset = static_cast<std::size_t>(header.header_length) + (record_index * header.record_length);
+
+    std::fstream io(platform::path_from_utf8_string(path), std::ios::binary | std::ios::in | std::ios::out);
+    if (!io) {
+        return std::nullopt;
+    }
+
+    std::vector<std::uint8_t> record_bytes(header.record_length, 0U);
+    io.seekg(static_cast<std::streamoff>(record_offset));
+    io.read(reinterpret_cast<char*>(record_bytes.data()), static_cast<std::streamsize>(record_bytes.size()));
+    if (io.gcount() != static_cast<std::streamsize>(record_bytes.size())) {
+        return std::nullopt;
+    }
+
+    // write_field_bytes() derives its write offset from
+    // header_length + record_index * record_length + field.offset. Feed it a
+    // header describing a single-record buffer (header_length 0, one
+    // record) so that math lands correctly within record_bytes -- this
+    // reuses its exact tested field-encoding logic unchanged rather than
+    // duplicating it for a targeted write.
+    DbfHeader single_record_header = header;
+    single_record_header.header_length = 0U;
+    single_record_header.record_count = 1U;
+    const DbfWriteResult write_result = write_field_bytes(
+        record_bytes, single_record_header, 0U, *field, value, path, allow_truncation);
+    if (!write_result.ok) {
+        return DbfWriteResult{.ok = false, .error = write_result.error, .record_count = header.record_count};
+    }
+
+    io.clear();
+    io.seekp(static_cast<std::streamoff>(record_offset));
+    io.write(reinterpret_cast<const char*>(record_bytes.data()), static_cast<std::streamsize>(record_bytes.size()));
+    if (!io.good()) {
+        return std::nullopt;
+    }
+
+    std::vector<std::uint8_t> stamp_bytes(4U, 0U);
+    io.clear();
+    io.seekg(0);
+    io.read(reinterpret_cast<char*>(stamp_bytes.data()), static_cast<std::streamsize>(stamp_bytes.size()));
+    if (io.gcount() == static_cast<std::streamsize>(stamp_bytes.size()) && stamp_dbf_last_update_date(stamp_bytes)) {
+        io.clear();
+        io.seekp(1);
+        io.write(reinterpret_cast<const char*>(stamp_bytes.data()) + 1, 3);
+    }
+    io.flush();
+    if (!io.good()) {
+        return std::nullopt;
+    }
+
+    return DbfWriteResult{.ok = true, .error = {}, .record_count = header.record_count};
+}
+
 static DbfWriteResult replace_record_field_value_impl(
     const std::string& path,
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value,
-    bool additive) {
+    bool additive,
+    bool allow_truncation) {
     SidecarPathResolution memo_resolution;
     if (primary_always_requires_memo_sidecar(path)) {
         memo_resolution = resolve_memo_sidecar_path(path);
@@ -2752,7 +3032,7 @@ static DbfWriteResult replace_record_field_value_impl(
                 header_result.header.record_count);
         }
     } else {
-        result = write_field_bytes(bytes, header_result.header, record_index, *field, value);
+        result = write_field_bytes(bytes, header_result.header, record_index, *field, value, path, allow_truncation);
     }
     if (!result.ok) {
         return result;
@@ -2780,16 +3060,44 @@ DbfWriteResult replace_record_field_value(
     const std::string& path,
     std::size_t record_index,
     const std::string& field_name,
-    const std::string& value) {
-    return replace_record_field_value_impl(path, record_index, field_name, value, false);
+    const std::string& value,
+    bool allow_truncation) {
+    if (const auto fast_result = replace_record_field_value_targeted(path, record_index, field_name, value, allow_truncation);
+        fast_result.has_value()) {
+        return *fast_result;
+    }
+    return replace_record_field_value_impl(path, record_index, field_name, value, false, allow_truncation);
 }
 
 DbfWriteResult replace_record_field_value_additive(
     const std::string& path,
     std::size_t record_index,
     const std::string& field_name,
-    const std::string& value) {
-    return replace_record_field_value_impl(path, record_index, field_name, value, true);
+    const std::string& value,
+    bool allow_truncation) {
+    // Additive only changes behavior for memo fields (byte-append rather
+    // than replace); the fast path above never handles memo fields, so an
+    // additive request always goes straight to the full-rewrite path, which
+    // already implements the memo-append semantics.
+    return replace_record_field_value_impl(path, record_index, field_name, value, true, allow_truncation);
+}
+
+DbfWriteResult replace_record_field_value_full_rewrite(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& value,
+    bool allow_truncation) {
+    return replace_record_field_value_impl(path, record_index, field_name, value, false, allow_truncation);
+}
+
+DbfWriteResult replace_record_field_value_additive_full_rewrite(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& value,
+    bool allow_truncation) {
+    return replace_record_field_value_impl(path, record_index, field_name, value, true, allow_truncation);
 }
 
 DbfWriteResult set_record_deleted_flag(

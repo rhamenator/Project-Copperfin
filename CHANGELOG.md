@@ -1,3 +1,156 @@
+- 2026-09-07: Fixes #5509: `append_blank_record_to_file()` and
+  `replace_record_field_value()` (`src/vfp/dbf_table.cpp`) both read the
+  **entire DBF file** into memory, mutated one record, and atomically
+  rewrote the **entire file** back out (via `write_binary_file()`'s
+  temp-file-then-rename mechanism) on every single call. Any bulk
+  mutation pattern that calls either once per record --
+  `SCAN ... REPLACE field WITH x ... ENDSCAN` (probably the single most
+  common xBase idiom of all), `APPEND BLANK` in a loop, and the
+  DIF/SYLK/spreadsheet `APPEND FROM ... TYPE ...` import loops -- did
+  O(n^2) total I/O instead of O(n), since file size itself grows with
+  record count. Empirically confirmed quadratic scaling before the fix
+  via `SCAN ... REPLACE AMOUNT WITH 999 ... ENDSCAN`, isolated: 500
+  records took ~2.04s, 1000 (2x) took ~7.18s (~3.5x), 2000 (2x again)
+  took ~27.58s (~3.8x) -- roughly 12x the time for 4x the record count.
+
+  Discussed the fix directly with the repository owner before
+  implementing, since the obvious naive fix (seek directly to the target
+  record and write only its bytes) trades away `write_binary_file()`'s
+  atomic-rewrite guarantee -- a deliberate, first-class safety property
+  in this codebase (`HZ-data-corruption-01`). The owner's explicit
+  direction: real xBase engines have always written DBF records in
+  place via a direct seek (that's *why* real VFP is fast at bulk
+  REPLACE/APPEND); this codebase's whole-file-atomic-rewrite-per-write
+  was already stricter than the format's own traditional guarantee, at
+  a severe performance cost, and adopting the real-VFP-equivalent
+  per-record durability model (a crash mid-write can tear only the one
+  record being written, never the header, never any other record, never
+  the file's structure) is the right trade. Memo-field writes are
+  explicitly excluded from this and continue through the existing
+  full-rewrite path with its own rollback-on-partial-failure logic,
+  which is architecturally more delicate (variable-size memo blocks,
+  two files kept in sync) and wasn't part of this change.
+
+  `append_blank_record_to_file_targeted()` and
+  `replace_record_field_value_targeted()` need only the fixed header
+  plus field-descriptor region (bounded by field count, never record
+  count) and, for REPLACE, the single target record's bytes -- never the
+  whole file. Both order their writes so that a crash before the last
+  write leaves the file's *logical* content (anything reading via the
+  still-unchanged record count) byte-identical to before the operation
+  started: append writes the new record, then the EOF marker, then the
+  record-count header field last; replace writes the record, then the
+  3-byte last-update stamp. `write_field_bytes()`'s per-field encoding
+  logic is reused unchanged for the fast REPLACE path by feeding it a
+  `DbfHeader` describing a single-record buffer, rather than duplicated.
+  `append_blank_record_bytes()`'s per-field blank-initialization switch
+  is now shared (`fill_blank_record_fields()`) between the existing
+  whole-file append path and the new fast path, rather than duplicated.
+  Both fast paths return `std::nullopt` for anything they don't handle
+  (a memo field, an unreadable/malformed header, an unwritable stream),
+  falling back to the existing full-rewrite implementations, which
+  remain the single source of truth for every case the fast paths don't
+  explicitly claim.
+
+  After the fix, the same 2000-record `SCAN ... REPLACE ... ENDSCAN`
+  case completes in low single-digit seconds. New regression coverage:
+  `test_scan_replace_loop_updates_every_record_at_scale` and
+  `test_append_blank_loop_creates_every_record_at_scale`
+  (`tests/test_prg_engine_table_mutation_basic.cpp`) prove correctness
+  at 2000 records -- every record gets its own value, none skipped or
+  duplicated -- which would have been prohibitively slow under the old
+  quadratic behavior, so their own reasonable completion time is itself
+  part of what they prove.
+  `test_replace_fast_path_rejected_write_leaves_dbf_untouched`
+  (`tests/test_dbf_table.cpp`) proves the fast path's own, narrower
+  guarantee: a rejected write (missing field, out-of-range record,
+  disallowed overflow) never touches the file at all, byte for byte,
+  before a subsequent valid write still succeeds correctly. Two existing
+  fault-injection tests
+  (`test_replace_write_failure_leaves_original_dbf_intact`,
+  `test_staged_write_rollback_removes_temp_and_preserves_original`) were
+  updated to target a memo field instead of a plain one, since their
+  injected-failure hooks live in `write_binary_file()`, which the fast
+  path (correctly) no longer calls for ordinary field writes -- a memo
+  field still forces the full-rewrite path, which still writes the
+  `.dbf` file itself through that same mechanism first, so the scenario
+  they were built to prove is still exercised, just via the code path
+  that still provides it.
+
+  Separately, per the same conversation: overflow handling for the
+  fields these fast paths touch is now a fail-closed-by-default,
+  explicit opt-in choice rather than a silent, unconditional one. A
+  character value that doesn't fit its field now returns a detailed
+  error naming the table path, record number, field name and width, and
+  a preview of the offending value (`write_field_bytes()`, all four
+  locale catalogs) instead of the previous parameterless message -- and,
+  separately, the interpreter's own REPLACE-command handler
+  (`prg_engine_records.inl`) used to silently truncate character
+  overflow unconditionally for local cursors; that pre-truncation is
+  removed in favor of the vfp:: layer's own correctly-detailed handling
+  (which also fixed a minor inaccuracy: the old logic trimmed *both*
+  leading and trailing whitespace before measuring length, but dBASE
+  character-field semantics only trim trailing whitespace). The new
+  `SET TRUNCATEONOVERFLOW` option (default `OFF`) opts back into
+  truncation for scripts that want it, for `REPLACE` specifically (SQL
+  `INSERT` intentionally stays strict, matching ordinary SQL semantics,
+  not xBase's). Character and V/Q (varchar/varbinary) fields are cut to
+  fit when enabled; numeric fields are filled with asterisks instead,
+  matching the legacy dBASE/FoxPro numeric-overflow display convention,
+  since truncating digits off a number changes its magnitude in a way
+  truncating characters off a string does not. New coverage in
+  `tests/test_prg_engine_table_mutation_maintenance.cpp` proves both the
+  default detailed-error behavior and the opt-in truncation/asterisk-fill
+  behavior for character and numeric overflow; the pre-existing
+  `test_replace_character_field_truncates_to_field_width` (and
+  `test_replace_scope_clauses_bound_physical_record_ranges`, which
+  incidentally relied on the same unconditional truncation for an
+  overlong marker literal unrelated to what it actually tests) were
+  updated to `SET TRUNCATEONOVERFLOW ON` explicitly rather than relying
+  on it being the default.
+
+  This session's investigation also found that
+  `CURSORSETPROP("Buffering", ...)` optimistic/pessimistic row/table
+  buffering modes are already implemented as session state
+  (`CursorState::buffering_mode`) but not yet wired to defer the
+  physical DBF write itself -- the real-VFP mechanism xBase programmers
+  already use to batch bulk changes and flush via `TABLEUPDATE()` would
+  be the natural, further performance win for scripts that opt into it,
+  but wiring that up is separable, larger-scoped follow-up work, not
+  needed to resolve the O(n^2) complaint this fix addresses. Buffered
+  (CURSORSETPROP-mode) REPLACE's own separate, pre-existing character-
+  truncation branch is left with its prior unconditional behavior, now
+  just gated by the same `SET TRUNCATEONOVERFLOW` switch as the direct-
+  write path, since that sub-path holds changes in memory until a later
+  flush rather than calling `write_field_bytes()` immediately -- giving
+  it the same detailed-error treatment needs its own follow-up once that
+  flush path is understood well enough to extend safely.
+
+  Verification also surfaced two gaps in the fast paths themselves,
+  both fixed before landing this change. First,
+  `replace_record_field_value_targeted()` was missing the
+  `ambiguous_table_sidecar_error()` check the full-rewrite path already
+  performed, so a REPLACE on a non-memo field of a memo-backed table
+  with an ambiguous (case-folded-duplicate) `.fpt` sidecar would
+  incorrectly succeed via the fast path instead of failing closed --
+  caught by the existing `test_vfp_sidecar_path` coverage. Second, the
+  `TABLEUPDATE()` optimistic-table-buffering (`CURSORSETPROP("Buffering", 5)`)
+  flush loop in `prg_engine_records.inl` commits each buffered record via
+  its own direct `append_blank_record()`/`vfp::replace_record_field_value()`
+  calls, separately from the verified-snapshot admission-patch staging
+  step that precedes it; both still went through the ordinary fast-path
+  dispatchers, which don't offer `write_binary_file()`'s fault-injection-
+  tested partial-write atomicity that this flush path's own tests rely
+  on. `append_blank_record()` gained an `use_full_rewrite` parameter
+  (default `false`, preserving the fast path for ordinary `APPEND BLANK`
+  and `INSERT INTO`) and the flush loop now passes `true` and calls
+  `vfp::replace_record_field_value_full_rewrite()` directly, restoring
+  the atomicity guarantee `test_prg_engine_runtime_surface_functions_buffering`
+  depends on without touching the fast path used everywhere else.
+
+  Full local `ctest` regression passed after the fix (394/394, 2
+  intentionally skipped), on a clean warning-free Debug build.
+
 - 2026-09-07: Fixes #5497: `can_open_table_cursor()`
   (`src/runtime/prg_engine_cursor.inl`) scanned every currently open cursor
   on every `USE`/table-open call to check for a duplicate alias, making a
