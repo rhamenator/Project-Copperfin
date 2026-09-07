@@ -11201,6 +11201,7 @@
                     {
                         session.cursors.clear();
                         session.aliases.clear();
+                        session.open_cursor_aliases.clear();
                         session.table_locks.clear();
                         session.record_locks.clear();
                     }

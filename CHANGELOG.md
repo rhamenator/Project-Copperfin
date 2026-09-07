@@ -1,3 +1,37 @@
+- 2026-09-07: Fixes #5497: `can_open_table_cursor()`
+  (`src/runtime/prg_engine_cursor.inl`) scanned every currently open cursor
+  on every `USE`/table-open call to check for a duplicate alias, making a
+  PRG script that opens N cursors one at a time (a common, unbounded xBase
+  pattern -- the only ceiling is the 32767-work-area limit) O(n^2) overall
+  instead of O(n). `test_prg_engine_work_areas`'s own
+  `test_work_area_exhaustion_preserves_selected_area` test, which opens
+  32767 work areas sequentially, was the victim: it ran past 231+ seconds
+  at 99.9% CPU (root-caused with `gdb -p <pid> -batch -ex bt` mid-run,
+  which showed it still executing ordinary `USE ... AGAIN IN 0` statement
+  9776 of 32767, not deadlocked) and exceeded even a generous per-test
+  `ctest` timeout in isolation, not just under full-suite load. Fixed by
+  adding `DataSessionState::open_cursor_aliases`, a normalized-alias ->
+  work-area index kept in sync with `session.cursors` at all 5 existing
+  insertion/removal sites plus both full-session-clear sites (`CLOSE ALL`
+  and interpreter shutdown), turning the alias-uniqueness check into an
+  O(log n) lookup; the table-already-open-without-`AGAIN` check keeps its
+  existing O(n) scan unchanged; that branch is not the pattern this issue's
+  test exercises, and combining both fixes in one change was judged a
+  larger, separate risk than this fix's own blast radius. The exhaustion
+  test now completes in the same process as the rest of
+  `test_prg_engine_work_areas` in ~22 seconds (previously killed after
+  231+ seconds without completing). New regression coverage,
+  `test_open_table_cursor_rejects_alias_and_table_collisions`, proves the
+  refactored check still rejects a genuine duplicate alias and a
+  same-path reopen without `AGAIN`, still allows `AGAIN` to reopen the
+  same path under a different alias, and still allows replacing a work
+  area's own cursor while keeping its existing alias (the self-collision
+  exclusion the old per-work-area loop skip relied on) -- a gap in
+  dedicated functional coverage for both diagnostics found while making
+  this change; only their catalog text was previously tested. Full local
+  `ctest` regression passed after the fix, on a clean warning-free Debug
+  build.
+
 - 2026-09-07: Fixes #5499: `export_database_command`
   (`src/runtime/prg_engine_dispatch.inl`) accepted a double-quoted
   `EXPORT DATABASE` operand via `is_quoted_path_operand`, but the

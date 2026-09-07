@@ -430,6 +430,7 @@
             cursor.remote_records = std::move(remote_records);
             cursor.remote_fields = std::move(remote_fields);
             session.cursors[target_area] = std::move(cursor);
+            register_open_cursor_alias(session, target_area, alias);
             if (sql_handle > 0)
             {
                 auto &connections = current_sql_connections();
@@ -653,6 +654,7 @@
                 cursor.local_fields = table_result.table.fields;
                 cursor.field_rules = field_rules;
                 session.cursors[target_area] = std::move(cursor);
+                register_open_cursor_alias(session, target_area, alias);
                 return true;
             }
             else if (alias.empty())
@@ -722,6 +724,7 @@
             cursor.remote_records = std::move(remote_records);
             cursor.field_rules = field_rules;
             session.cursors[target_area] = std::move(cursor);
+            register_open_cursor_alias(session, target_area, alias);
             if (remote && sql_handle > 0)
             {
                 auto &connections = current_sql_connections();
