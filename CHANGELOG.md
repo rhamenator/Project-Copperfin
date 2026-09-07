@@ -1,3 +1,19 @@
+- 2026-09-07: Fixes #5499: `export_database_command`
+  (`src/runtime/prg_engine_dispatch.inl`) accepted a double-quoted
+  `EXPORT DATABASE` operand via `is_quoted_path_operand`, but the
+  `unquote_string()` call immediately after only strips single quotes,
+  so `EXPORT DATABASE "Northwind.dbc" TO "out.json" TYPE JSON` passed
+  syntax validation while leaving the literal `"` characters embedded in
+  the resolved filesystem path. This was the pre-existing source of the
+  identical pattern already fixed on the `import_database_command` side
+  during #5498's review (tracked separately here since it was out of
+  scope for that PR's diff); the fix is the same restriction, only
+  accepting `'`-quoted operands. New regression coverage in
+  `tests/test_prg_engine_data_io_import_export.cpp` asserts a
+  double-quoted `EXPORT DATABASE` operand is rejected with the localized
+  `ExportDatabaseJsonSyntax` diagnostic before any output is created,
+  and that no path with literal embedded quote characters is produced.
+
 - 2026-09-07: Follow-up to #5473/PR #5501: review found 4 real defects in
   `build_database_sql_import_plan()`, all fixed. Two P1s: a `T`-type
   (TIMESTAMP) value round-tripped as raw text instead of being converted
