@@ -1,6 +1,41 @@
 # Agent Handoff
 
-## In progress: PR for #5473 (`IMPORT DATABASE ... TYPE SQL`), not yet merged as of 2026-09-06
+## Shipped: PR #5501 (`IMPORT DATABASE ... TYPE SQL`, #5473), merged 2026-09-07
+
+**Update:** merged into `v1-development` as `fc380b24e` with the repository
+owner's explicit live "Merge it if it's clean" approval. Issue #5473 was
+closed manually (this repo's default branch isn't `v1-development`, so
+GitHub's `Fixes #5473` auto-close keyword never triggered -- the same
+recurring gap noted for #5472/#5498).
+
+Before merge, review found 4 real defects, all fixed for real (commit
+`5b8abea0f`): a P1 where a `T`-type (TIMESTAMP) value round-tripped as
+raw text instead of converting back into this codebase's
+`julian:<day> millis:<ms>` internal storage contract, failing
+materialization on every populated timestamp (fixed by adding
+`sql_datetime_storage_from_literal()`, the inverse of the existing
+`sql_datetime_literal_from_storage()`); a P1 where the number tokenizer
+stopped at the mantissa for scientific-notation DOUBLE PRECISION values
+(e.g. `1e+20`, which `ostringstream`'s default double formatting can
+emit), rejecting otherwise-valid exporter output (fixed by accepting an
+optional exponent suffix); a tokenizer gap accepting `1.`/`.5`, neither
+valid JSON, risking corrupt `records_json` (fixed by requiring a digit on
+each side of a decimal point); and a `TEXT`->`M` field mapping using
+`length = 10` instead of the 4-byte block-number width this codebase's
+own JSON import path and other schema construction already use. New
+regression coverage: the full `export_database_as_sql()` ->
+`build_database_sql_import_plan()` round trip now includes a real
+T-type timestamp and an extreme-magnitude B-type value; direct unit
+tests prove exponent-form acceptance, `1.`/`.5` rejection, and TIMESTAMP
+conversion/rejection. Full local `ctest` regression and clean CI
+(Windows/macOS/Ubuntu, manually-dispatched `native-validation-macos.yml`)
+passed after the fixes.
+
+The original in-progress account below is left intact as the
+design/investigation history; only this note and the header reflect the
+actual outcome.
+
+## In progress: PR for #5473 (`IMPORT DATABASE ... TYPE SQL`), not yet merged as of 2026-09-06 (superseded by #5501, see above)
 
 Implements #5473 (parent #140, `RQ-CF-MODERNIZATION-005`), the next
 unblocked slice after #5472/#5498 shipped: `IMPORT DATABASE
