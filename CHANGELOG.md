@@ -201,6 +201,51 @@
   Full local `ctest` regression passed after all of the above (394/394,
   2 intentionally skipped), on a clean warning-free Debug build.
 
+- 2026-09-07: Fixes #5507: `resize_array()`
+  (`src/runtime/prg_engine_variables.inl`) unconditionally allocated a
+  brand-new full-size buffer and manually copied every surviving element
+  on every call, even when the column count was unchanged and the resize
+  was a pure row-count change. Since `AADD()` is not yet implemented,
+  `DIMENSION arr[i]` inside a loop -- growing one row per iteration -- is
+  the primary way this runtime builds a dynamic array today, making an
+  N-step growth loop O(n^2) instead of O(n): resizing to size k copies
+  k-1 existing elements, so growing from 1 to N does 1+2+...+(N-1) =
+  O(N^2) total copies. Found during a broader audit for superlinear-
+  complexity bugs prompted by #5497's fix, using the same "allocate a
+  new full-size buffer and manually copy everything" structural pattern
+  as a search key across the codebase. Empirically confirmed quadratic
+  scaling before the fix: a 5000-step growth loop took ~2.2s in
+  isolation, a 20000-step loop (4x the N) took ~27.3s -- roughly 12x the
+  time for 4x the N. Fixed by routing the same-column-count case (the
+  common one) through a plain `values.resize()` with self-managed
+  amortized-growth `reserve()` instead of the row-major reshuffle, since
+  row-major layout means element (r, c) sits at `r * columns + c` both
+  before and after a same-column-count resize -- no element ever needs
+  to move in that case, only when the column count itself genuinely
+  changes (a real 2D reshape) does the existing manual-copy path still
+  run. After the fix the same 20000-step loop takes ~2.3s, scaling
+  linearly with N. New regression coverage,
+  `test_array_single_row_growth_loop_preserves_all_values`, proves a
+  5000-step single-row growth loop preserves the first, a middle, and
+  the last value written across thousands of resizes. Full local `ctest`
+  regression passed after the fix, on a clean warning-free Debug build.
+
+  Follow-up (same day, PR review): the same-column fast path's initial
+  version used a single `values.resize(new_size)` call for both growth
+  and shrinkage. For growth that's correct and is what gives the O(n)
+  win above, but for shrinkage `std::vector::resize()` to a smaller size
+  destroys the trailing elements while keeping the vector's prior
+  (larger) capacity -- unlike the row-major-reshuffle path it replaced,
+  which always allocated an exact-sized replacement buffer. A workload
+  that repeatedly shrinks large same-column arrays (e.g. draining rows
+  in a loop) would therefore retain that memory indefinitely instead of
+  releasing it as the old code did. Fixed by distinguishing the two
+  directions explicitly: growth still uses amortized `reserve()` +
+  `resize()`, while shrinkage now move-constructs an exact-sized
+  replacement vector, matching the prior exact-capacity behavior for
+  that direction without reintroducing the O(n^2) growth-loop cost this
+  fix exists to remove.
+
 - 2026-09-07: Fixes #5497: `can_open_table_cursor()`
   (`src/runtime/prg_engine_cursor.inl`) scanned every currently open cursor
   on every `USE`/table-open call to check for a duplicate alias, making a
