@@ -690,6 +690,87 @@ void test_work_area_exhaustion_preserves_selected_area() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #5497: can_open_table_cursor()'s alias-uniqueness check was refactored from an
+// O(n) scan of every open cursor into an O(log n) DataSessionState::open_cursor_aliases
+// index lookup (fixing the O(n^2) pathological slowdown the exhaustion test above
+// surfaces at 32767 work areas). This proves the refactored check still rejects a
+// genuine duplicate alias, still rejects reopening the same table path without AGAIN,
+// still allows AGAIN to reopen the same path under a different alias, and still
+// allows replacing a work area's own cursor while keeping that same alias (the
+// self-collision exclusion the old per-work-area loop skip relied on).
+void test_open_table_cursor_rejects_alias_and_table_collisions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_collisions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path cities_path = temp_root / "cities.dbf";
+    write_simple_dbf(people_path, {"ALPHA"});
+    write_simple_dbf(cities_path, {"OSLO"});
+
+    const fs::path duplicate_alias_path = temp_root / "duplicate_alias.prg";
+    write_text(
+        duplicate_alias_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + cities_path.string() + "' ALIAS People IN 0\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession duplicate_alias_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(duplicate_alias_path.string(), temp_root.string()));
+    const auto duplicate_alias_state = duplicate_alias_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(duplicate_alias_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "opening a second table with an already-open alias should pause with an error");
+    expect(
+        duplicate_alias_state.message == active_runtime_text("Runtime.Prg.Cursor.Error.AliasAlreadyOpen", {{"alias", "People"}}),
+        "duplicate alias should report the localized AliasAlreadyOpen diagnostic");
+    expect(duplicate_alias_state.work_area.aliases.size() == 1U,
+           "a rejected duplicate-alias USE must not leave a second cursor open");
+
+    const fs::path reopen_path = temp_root / "table_reopen.prg";
+    write_text(
+        reopen_path,
+        "USE '" + people_path.string() + "' ALIAS FirstPeople IN 0\n"
+        "USE '" + people_path.string() + "' ALIAS SecondPeople IN 0\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession reopen_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(reopen_path.string(), temp_root.string()));
+    const auto reopen_state = reopen_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(reopen_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "reopening the same table without AGAIN should pause with an error");
+    expect(
+        reopen_state.message == active_runtime_text("Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired", {{"path", people_path.string()}}),
+        "reopening the same table without AGAIN should report the localized diagnostic");
+
+    const fs::path reopen_again_path = temp_root / "table_reopen_again.prg";
+    write_text(
+        reopen_again_path,
+        "USE '" + people_path.string() + "' ALIAS FirstPeople IN 0\n"
+        "USE '" + people_path.string() + "' ALIAS SecondPeople AGAIN IN 0\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession reopen_again_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(reopen_again_path.string(), temp_root.string()));
+    const auto reopen_again_state = reopen_again_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(reopen_again_state.completed, "AGAIN should allow reopening the same table under a different alias");
+    expect(reopen_again_state.work_area.aliases.size() == 2U, "AGAIN should leave both aliases open");
+
+    const fs::path replace_same_alias_path = temp_root / "same_alias_same_area.prg";
+    write_text(
+        replace_same_alias_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 5\n"
+        "USE '" + cities_path.string() + "' ALIAS People AGAIN IN 5\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession replace_same_alias_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(replace_same_alias_path.string(), temp_root.string()));
+    const auto replace_same_alias_state = replace_same_alias_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(replace_same_alias_state.completed,
+           "replacing a work area's own cursor while keeping the same alias must not be treated as a self-collision");
+    expect(replace_same_alias_state.work_area.aliases.size() == 1U,
+           "replacing a work area's cursor must not leave a stale second alias entry");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_select_and_use_in_designator_expressions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_designator_expressions";
@@ -1913,6 +1994,7 @@ int main() {
     test_work_area_upper_boundary_wraps_without_overflow();
     test_work_area_above_vfp_boundary_fails_closed();
     test_work_area_exhaustion_preserves_selected_area();
+    test_open_table_cursor_rejects_alias_and_table_collisions();
     test_select_and_use_in_designator_expressions();
     test_expression_driven_in_targeting_across_local_data_commands();
     test_select_zero_and_use_in_zero_reuse_closed_work_area();

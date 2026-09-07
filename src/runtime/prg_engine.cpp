@@ -622,6 +622,11 @@ namespace copperfin::runtime
             int next_work_area = 1;
             std::map<int, std::string> aliases;
             std::map<int, CursorState> cursors;
+            // Normalized cursor.alias -> work_area, kept in sync with `cursors` at every
+            // insertion/removal site so can_open_table_cursor()'s alias-uniqueness check
+            // can be an O(log n) lookup instead of an O(n) scan of every open cursor. Do
+            // not read or write cursor.alias into `cursors` without updating this too.
+            std::map<std::string, int> open_cursor_aliases;
             std::vector<RelationState> relations;
             std::set<int> table_locks;
             std::map<int, std::set<std::size_t>> record_locks;

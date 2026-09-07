@@ -253,6 +253,7 @@
             session.aliases.erase(cursor->work_area);
             session.table_locks.erase(cursor->work_area);
             session.record_locks.erase(cursor->work_area);
+            unregister_open_cursor_alias(session, cursor->work_area, cursor->alias);
             session.cursors.erase(cursor->work_area);
             session.next_work_area = std::min(session.next_work_area, closed_work_area);
         }
@@ -1160,6 +1161,35 @@
             return {};
         }
 
+        // Keep DataSessionState::open_cursor_aliases (normalized alias -> work_area) in
+        // sync with session.cursors at every insertion/removal site. This lets
+        // can_open_table_cursor()'s alias-uniqueness check be an O(log n) lookup
+        // instead of an O(n) scan of every currently open cursor -- opening N cursors
+        // one at a time (a common xBase pattern with no upper bound other than the
+        // 32767 work-area ceiling) was previously O(n^2) overall.
+        static void register_open_cursor_alias(DataSessionState &session, int work_area, const std::string &alias)
+        {
+            const std::string normalized_alias = normalize_identifier(alias);
+            if (!normalized_alias.empty())
+            {
+                session.open_cursor_aliases[normalized_alias] = work_area;
+            }
+        }
+
+        static void unregister_open_cursor_alias(DataSessionState &session, int work_area, const std::string &alias)
+        {
+            const std::string normalized_alias = normalize_identifier(alias);
+            if (normalized_alias.empty())
+            {
+                return;
+            }
+            const auto existing = session.open_cursor_aliases.find(normalized_alias);
+            if (existing != session.open_cursor_aliases.end() && existing->second == work_area)
+            {
+                session.open_cursor_aliases.erase(existing);
+            }
+        }
+
         bool can_open_table_cursor(
             const std::string &resolved_path,
             const std::string &alias,
@@ -1171,24 +1201,30 @@
             const std::string normalized_alias = normalize_identifier(alias);
             const std::string normalized_path = normalize_path(resolved_path);
 
-            for (const auto &[work_area, cursor] : session.cursors)
+            if (!normalized_alias.empty())
             {
-                if (work_area == target_area)
-                {
-                    continue;
-                }
-
-                if (!normalized_alias.empty() && normalize_identifier(cursor.alias) == normalized_alias)
+                const auto existing = session.open_cursor_aliases.find(normalized_alias);
+                if (existing != session.open_cursor_aliases.end() && existing->second != target_area)
                 {
                     last_error_message = runtime_text("Runtime.Prg.Cursor.Error.AliasAlreadyOpen", {{"alias", alias}});
                     return false;
                 }
+            }
 
-                if (!remote && !allow_again && !normalized_path.empty() &&
-                    normalize_path(cursor.source_path) == normalized_path)
+            if (!remote && !allow_again && !normalized_path.empty())
+            {
+                for (const auto &[work_area, cursor] : session.cursors)
                 {
-                    last_error_message = runtime_text("Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired", {{"path", resolved_path}});
-                    return false;
+                    if (work_area == target_area)
+                    {
+                        continue;
+                    }
+
+                    if (normalize_path(cursor.source_path) == normalized_path)
+                    {
+                        last_error_message = runtime_text("Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired", {{"path", resolved_path}});
+                        return false;
+                    }
                 }
             }
 

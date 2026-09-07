@@ -434,6 +434,7 @@
                 if (const auto cursor_found = session.cursors.find(area); cursor_found != session.cursors.end())
                 {
                     release_shared_lock_ownership_for_cursor(cursor_found->second, session, current_data_session);
+                    unregister_open_cursor_alias(session, area, cursor_found->second.alias);
                 }
                 session.aliases.erase(area);
                 session.table_locks.erase(area);
