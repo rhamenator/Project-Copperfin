@@ -345,7 +345,8 @@ IndexParseResult parse_cdx_family_probe(
             .name_offset_hint = tag.name_offset_hint,
             .key_expression_offset_hint = tag.key_expression_offset_hint,
             .for_expression_offset_hint = tag.for_expression_offset_hint,
-            .inferred_name = tag.inferred_name
+            .inferred_name = tag.inferred_name,
+            .descending_hint = tag.descending_hint
         });
     }
     if (!probe.tags.empty()) {
@@ -569,7 +570,6 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
                 const std::uint16_t entry_count = read_le_u16(bytes, tag_header_offset + 2U);
                 tag_probe.tag_sort_marker_hint = make_tag_sort_marker(flags, entry_count);
             }
-
             if (tag_probe.key_expression_hint.empty() || tag_probe.for_expression_hint.empty()) {
                 const std::size_t page_end = std::min(
                     bytes.size(),

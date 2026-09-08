@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 namespace copperfin::test_support {
 
@@ -160,7 +161,11 @@ void write_people_dbf(
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 }
 
-void write_synthetic_cdx(const std::filesystem::path& path, const std::string& tag_name, const std::string& expression) {
+void write_synthetic_cdx(
+    const std::filesystem::path& path,
+    const std::string& tag_name,
+    const std::string& expression,
+    bool descending) {
     std::vector<std::uint8_t> bytes(4096U, 0U);
     write_le_u16(bytes, 0U, 1024U);
     write_le_u16(bytes, 12U, 10U);
@@ -169,11 +174,25 @@ void write_synthetic_cdx(const std::filesystem::path& path, const std::string& t
     write_le_u16(bytes, 1026U, 0x0001U);
     write_le_u32(bytes, 1028U, 2048U);
 
+    if (expression.size() > (bytes.size() - 2048U)) {
+        throw std::length_error("write_synthetic_cdx: expression too long for synthetic fixture buffer");
+    }
     for (std::size_t index = 0; index < expression.size(); ++index) {
         bytes[2048U + index] = static_cast<std::uint8_t>(expression[index]);
     }
 
+    // Persisted ASCENDING/DESCENDING creation direction (issue #5358): a
+    // single byte at a fixed offset (502) within the tag's own header
+    // page (2048 here), determined empirically against a real, fully
+    // patched VFP9 install -- see CdxTagDescriptor::descending_hint.
+    if (descending) {
+        bytes[2048U + 502U] = 0x01U;
+    }
+
     const std::size_t tail_offset = (3U * 512U) - 10U;
+    if (tag_name.size() > (bytes.size() - tail_offset)) {
+        throw std::length_error("write_synthetic_cdx: tag_name too long for synthetic fixture buffer");
+    }
     for (std::size_t index = 0; index < tag_name.size(); ++index) {
         bytes[tail_offset + index] = static_cast<std::uint8_t>(tag_name[index]);
     }

@@ -31,7 +31,8 @@ void write_people_dbf(
 void write_synthetic_cdx(
     const std::filesystem::path& path,
     const std::string& tag_name,
-    const std::string& expression);
+    const std::string& expression,
+    bool descending = false);
 void write_synthetic_idx(const std::filesystem::path& path, const std::string& expression);
 void write_synthetic_idx_with_for(
     const std::filesystem::path& path,

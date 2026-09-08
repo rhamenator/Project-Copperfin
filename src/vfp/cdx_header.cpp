@@ -28,6 +28,26 @@ std::uint16_t read_le_u16(const std::vector<std::uint8_t>& bytes, std::size_t of
 constexpr std::uint16_t cdx_leaf_flag = 0x0001U;
 constexpr std::uint16_t cdx_directory_flag = 0x0002U;
 
+// Page-relative offset of the persisted ASCENDING/DESCENDING creation-
+// direction byte within a tag's own header page (issue #5358). See the
+// doc comment on CdxTagDescriptor::descending_hint for how this was
+// determined.
+constexpr std::size_t cdx_tag_descending_flag_page_offset = 502U;
+
+bool read_tag_descending_flag(
+    const std::vector<std::uint8_t>& bytes,
+    std::uint32_t tag_page_offset) {
+    if (tag_page_offset == 0U) {
+        return false;
+    }
+    const std::size_t flag_offset =
+        static_cast<std::size_t>(tag_page_offset) + cdx_tag_descending_flag_page_offset;
+    if (flag_offset >= bytes.size()) {
+        return false;
+    }
+    return bytes[flag_offset] != 0U;
+}
+
 struct PrintableRun {
     std::size_t offset = 0;
     std::string text;
@@ -441,14 +461,36 @@ std::vector<CdxTagDescriptor> collect_directory_leaf_tags(
         for (std::size_t index = 0; index < entry_count; ++index) {
             const std::size_t name_offset = tail_start + (index * key_length);
             const std::size_t page_hint_offset = page_start + 4U + (index * 4U);
+            // A single (entry_count == 1) tag's name is right-aligned
+            // within its key_length-sized slot, null-padded on the left --
+            // confirmed against three independent real, fully patched
+            // VFP9-generated CDX files (a 6-character and two other short
+            // names each landed at the END of their slot, not the start).
+            // Stopping at the first byte (the old behavior) hit that
+            // leading padding immediately and produced an empty name,
+            // which looks_like_tag_name_candidate() then rejected --
+            // silently discarding every single-tag CDX's only tag.
+            // Dropping embedded '\0' bytes instead of stopping at the
+            // first one recovers the name regardless of which side it's
+            // padded on.
+            //
+            // NOTE: for entry_count > 1, real VFP9 packs names
+            // variable-length and back-to-back with no separator, ending
+            // at the slot group's own last byte (also confirmed against a
+            // real 2-tag fixture: "DESCTAG"+"ASCTAG" with no boundary
+            // marker between them) -- not in per-entry fixed-size slots
+            // as this loop's own indexing still assumes. This fix does
+            // not attempt to solve that separate, harder problem; a
+            // multi-tag file's individual tag names/expressions remain
+            // unreliable until that packing is independently recovered
+            // (tracked as follow-up, not claimed as fixed by #5358).
             std::string chunk;
             chunk.reserve(key_length);
             for (std::size_t char_index = 0; char_index < key_length && (name_offset + char_index) < bytes.size(); ++char_index) {
                 const char ch = static_cast<char>(bytes[name_offset + char_index]);
-                if (ch == '\0') {
-                    break;
+                if (ch != '\0') {
+                    chunk.push_back(ch);
                 }
-                chunk.push_back(ch);
             }
 
             chunk = trim_copy(chunk);
@@ -456,20 +498,29 @@ std::vector<CdxTagDescriptor> collect_directory_leaf_tags(
                 continue;
             }
 
+            const std::uint32_t tag_page_offset = looks_like_tag_page_offset(
+                read_le_u32(bytes, page_hint_offset),
+                page_size,
+                bytes.size())
+                ? read_le_u32(bytes, page_hint_offset)
+                : 0U;
             tags.push_back({
                 .name_hint = chunk,
                 .key_expression_hint = {},
                 .for_expression_hint = {},
-                .tag_page_offset_hint = looks_like_tag_page_offset(
-                    read_le_u32(bytes, page_hint_offset),
-                    page_size,
-                    bytes.size())
-                    ? read_le_u32(bytes, page_hint_offset)
-                    : 0U,
+                .tag_page_offset_hint = tag_page_offset,
                 .name_offset_hint = static_cast<std::uint32_t>(name_offset),
                 .key_expression_offset_hint = 0U,
                 .for_expression_offset_hint = 0U,
                 .inferred_name = false
+                // descending_hint is deliberately left at its default
+                // (false) here: tag_page_offset is frequently invalid
+                // (0xFFFFFFFF) in real VFP9-generated compound CDX files
+                // -- confirmed empirically against three independent real
+                // fixtures -- so it is not a reliable anchor to this
+                // tag's own header page on its own. extract_tag_descriptors()
+                // (below) sets the real value once expression discovery
+                // has resolved a trustworthy anchor for this tag.
             });
         }
     }
@@ -657,6 +708,48 @@ std::vector<CdxTagDescriptor> extract_tag_descriptors(
         used_expression_offsets.insert(best_expression.offset);
         tag.key_expression_hint = best_expression.text;
         tag.key_expression_offset_hint = static_cast<std::uint32_t>(best_expression.offset);
+    }
+
+    // Persisted ASCENDING/DESCENDING creation direction (issue #5358):
+    // read only from an anchor that is either a directly valid,
+    // structurally-confirmed pointer to this tag's own header page
+    // (tag_page_offset_hint), or -- for single-tag structural CDX files
+    // only -- the validated root_node_offset + page_size fallback below.
+    // Using key_expression_offset_hint or other heuristically-discovered
+    // anchors as a substitute was tried and reverted: real VFP9-generated
+    // compound CDX files' expression-discovery heuristic can itself latch
+    // onto the tag's own name text (found in the same directory-tail
+    // region) rather than its true key expression once name discovery
+    // improved, which would have made this read silently wrong instead
+    // of conservatively absent.
+    //
+    // tag_page_offset_hint itself is frequently invalid in real compound
+    // CDX files: confirmed 0xFFFFFFFF (small fixtures) or 0 (a large,
+    // 2000-record/23-page table) across five independent real single-tag
+    // files. For exactly that single-tag case, though, root_node_offset
+    // + page_size is a confirmed-correct substitute anchor: verified by
+    // diffing matching ascending/descending real fixture pairs at both
+    // sizes (byte 502 of that page is the only byte that differs, in
+    // every pair). This does NOT generalize to multi-tag (entry_count >
+    // 1) compound CDX files -- the same probe against a real 2-tag
+    // fixture shows both of its two directly-following pages reading as
+    // ascending regardless of the known ascending/descending ground
+    // truth for each tag, so multi-tag files still conservatively report
+    // .F.; recovering their real per-entry page association is separate,
+    // harder follow-up work, not claimed as solved here.
+    for (CdxTagDescriptor& tag : tags) {
+        if (tag.tag_page_offset_hint != 0U) {
+            tag.descending_hint = read_tag_descending_flag(bytes, tag.tag_page_offset_hint);
+            continue;
+        }
+        if (tags.size() == 1U && page_size != 0U) {
+            const std::uint32_t root_node_offset = read_le_u32(bytes, 0U);
+            if (root_node_offset != 0U) {
+                const std::uint32_t candidate =
+                    static_cast<std::uint32_t>(root_node_offset + page_size);
+                tag.descending_hint = read_tag_descending_flag(bytes, candidate);
+            }
+        }
     }
 
     std::vector<std::size_t> keyed_tag_indexes;

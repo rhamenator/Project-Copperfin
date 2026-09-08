@@ -604,7 +604,7 @@
                                           .normalization_hint = tag.normalization_hint,
                                           .collation_hint = tag.collation_hint,
                                           .key_domain_hint = index_asset.probe.key_domain_hint,
-                                          .descending = false});
+                                          .descending = tag.descending_hint});
                     }
                     continue;
                 }
@@ -613,6 +613,13 @@
                 {
                     const std::string fallback_name = copperfin::platform::path_to_utf8_string(
                         copperfin::platform::path_from_utf8_string(index_asset.path).stem());
+                    // Classic single-order (non-tagged) .IDX/.NDX files have
+                    // no per-tag descriptor to carry a descending_hint --
+                    // IndexProbe itself has no such field yet. #5358's fix
+                    // is scoped to the far more common compound (CDX)
+                    // multi-tag case above, which is what the recorded VFP9
+                    // evidence covers; persisted direction for single-order
+                    // files is left as a known follow-up.
                     orders.push_back({.name = fallback_name.empty() ? collapse_identifier(index_asset.probe.key_expression_hint) : fallback_name,
                                       .expression = index_asset.probe.key_expression_hint,
                                       .for_expression = index_asset.probe.for_expression_hint,

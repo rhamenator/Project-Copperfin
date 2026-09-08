@@ -32,6 +32,25 @@ struct CdxTagDescriptor {
     std::uint32_t key_expression_offset_hint = 0;
     std::uint32_t for_expression_offset_hint = 0;
     bool inferred_name = false;
+    // Persisted creation direction (issue #5358): a single byte at a fixed
+    // offset within the tag's own header page, 0x00 for a tag created with
+    // ASCENDING (the default) and 0x01 for one created with DESCENDING.
+    // Confirmed empirically against a real, fully patched VFP9 install
+    // (09.00.0000.7423): two otherwise byte-identical tag header pages
+    // (same table, field, and tag name, differing only in the ASCENDING/
+    // DESCENDING keyword used to create them) differ at exactly one byte,
+    // reproduced twice across unrelated field types/tag names/table
+    // content -- not inferred from decompilation or undocumented sources.
+    // See docs/32-recovered-requirements-traceability.md for the recorded
+    // evidence.
+    //
+    // Scope note: reliably populated only for single-tag structural CDX
+    // files (one tag per .cdx, the common "INDEX ... TAG name OF file.cdx"
+    // case), where the tag's own header page can be found from
+    // root_node_offset + page_size. Real multi-tag (entry_count > 1)
+    // compound CDX files' per-entry page association has not been
+    // recovered, so this defaults to false (not guessed) for those.
+    bool descending_hint = false;
 };
 
 struct CdxParseResult {
