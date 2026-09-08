@@ -204,20 +204,45 @@ void test_dbase_legacy_layouts_fail_closed_when_truncated() {
     const auto first_terminator = std::search(
         memo_bytes.begin(), memo_bytes.end(),
         dbase_iii_memo_terminator.begin(), dbase_iii_memo_terminator.end());
-    // The reader must not consume arbitrary trailing DBT bytes as memo text
-    // when the documented dBASE III terminator is absent.
+    // The reader must not consume a later memo block when the requested dBASE
+    // III memo is missing its documented terminator.
     if (first_terminator != memo_bytes.end()) {
-        std::fill(first_terminator, memo_bytes.end(), 0U);
+        std::fill(first_terminator, first_terminator + dbase_iii_memo_terminator.size(), 0U);
         expect(write_binary_file(malformed_memo_path, memo_bytes),
             "dBASE III malformed memo fixture should be writable");
         const auto malformed_memo = copperfin::vfp::parse_dbf_table_from_file(
             legacy_dbase_fixture_path("dbase_83.dbf").string(),
-            1U,
+            2U,
             malformed_memo_path.string());
-        expect(malformed_memo.ok && !malformed_memo.table.records.empty() &&
+        expect(malformed_memo.ok && malformed_memo.table.records.size() >= 2U &&
                    malformed_memo.table.records.front().values.size() > 11U &&
                    malformed_memo.table.records.front().values[11U].display_value == "<memo block 1>",
-            "dBASE III reader should fail closed to a memo-block placeholder when its terminator is missing");
+            "dBASE III reader should fail closed to a memo-block placeholder when a later memo still has a terminator");
+        expect(malformed_memo.ok && malformed_memo.table.records.size() >= 2U &&
+                   malformed_memo.table.records[1U].values.size() > 11U &&
+                   malformed_memo.table.records[1U].values[11U].display_value.starts_with("Gift wrap"),
+            "dBASE III reader should keep later memo blocks readable after a prior unterminated memo");
+    }
+
+    const fs::path resized_memo_path = temp_dir / "memo_blocksize_1024.dbt";
+    memo_bytes = read_binary_file(legacy_dbase_fixture_path("dbase_8b.dbt"));
+    constexpr std::uint16_t nondefault_dbase_iv_block_size = 1024U;
+    expect(memo_bytes.size() >= 512U, "dBASE IV block-size fixture should contain a complete header block");
+    if (memo_bytes.size() >= 512U) {
+        std::vector<std::uint8_t> resized_memo_bytes(nondefault_dbase_iv_block_size, 0U);
+        std::copy_n(memo_bytes.begin(), 512U, resized_memo_bytes.begin());
+        resized_memo_bytes.insert(resized_memo_bytes.end(), memo_bytes.begin() + 512, memo_bytes.end());
+        write_le_u16(resized_memo_bytes, 20U, nondefault_dbase_iv_block_size);
+        expect(write_binary_file(resized_memo_path, resized_memo_bytes),
+            "dBASE IV non-default block-size fixture should be writable");
+        const auto resized_memo = copperfin::vfp::parse_dbf_table_from_file(
+            legacy_dbase_fixture_path("dbase_8b.dbf").string(),
+            1U,
+            resized_memo_path.string());
+        expect(resized_memo.ok && !resized_memo.table.records.empty() &&
+                   resized_memo.table.records.front().values.size() > 5U &&
+                   resized_memo.table.records.front().values[5U].display_value.starts_with("First memo"),
+            "dBASE IV reader should honor the DBT header block size");
     }
 
     fs::remove_all(temp_dir, ignored);

@@ -52,6 +52,11 @@ void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uin
     bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
 }
 
+std::uint16_t read_le_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
+    return static_cast<std::uint16_t>(bytes[offset]) |
+           static_cast<std::uint16_t>(static_cast<std::uint16_t>(bytes[offset + 1U]) << 8U);
+}
+
 std::uint16_t read_be_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
     return static_cast<std::uint16_t>((static_cast<std::uint16_t>(bytes[offset]) << 8U) |
                                       static_cast<std::uint16_t>(bytes[offset + 1]));
@@ -377,6 +382,8 @@ struct DbfReadLayout {
     DbfMemoStorageFormat memo_storage_format = DbfMemoStorageFormat::visual_foxpro;
 };
 
+bool is_memo_pointer_field(char field_type);
+
 DbfReadLayout dbf_read_layout(const DbfHeader& header) {
     if (header.format_family() != DbfFormatFamily::dbase) {
         return {};
@@ -417,6 +424,76 @@ SidecarPathResolution resolve_memo_sidecar_path(
     std::filesystem::path candidate = platform::path_from_utf8_string(path);
     candidate.replace_extension(".dbt");
     return resolve_unique_casefold_path(candidate);
+}
+
+std::optional<std::uint32_t> parse_memo_block_number(
+    const std::vector<std::uint8_t>& raw,
+    DbfMemoStorageFormat storage_format) {
+    if (storage_format == DbfMemoStorageFormat::visual_foxpro) {
+        return raw.size() >= 4U ? std::optional<std::uint32_t>(read_le_u32(raw, 0U)) : std::nullopt;
+    }
+
+    const std::string text = trim_both(std::string(raw.begin(), raw.end()));
+    if (text.empty()) {
+        return 0U;
+    }
+    if (text.find_first_not_of("0123456789") != std::string::npos) {
+        return std::nullopt;
+    }
+    try {
+        const unsigned long value = std::stoul(text);
+        if (value > std::numeric_limits<std::uint32_t>::max()) {
+            return std::nullopt;
+        }
+        return static_cast<std::uint32_t>(value);
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+
+std::vector<std::uint32_t> collect_referenced_memo_blocks(
+    const std::vector<std::uint8_t>& table_bytes,
+    const DbfHeader& header,
+    const std::vector<DbfFieldDescriptor>& fields,
+    DbfMemoStorageFormat storage_format) {
+    if (storage_format == DbfMemoStorageFormat::visual_foxpro ||
+        header.record_length == 0U ||
+        table_bytes.size() < header.header_length) {
+        return {};
+    }
+
+    const std::size_t available_record_count =
+        (table_bytes.size() - header.header_length) / header.record_length;
+    const std::size_t record_count = std::min<std::size_t>(header.record_count, available_record_count);
+    std::vector<std::uint32_t> block_numbers;
+    for (std::size_t record_index = 0U; record_index < record_count; ++record_index) {
+        const std::size_t record_offset = header.header_length + (record_index * header.record_length);
+        for (const auto& field : fields) {
+            if (field.type != 'B' && !is_memo_pointer_field(field.type)) {
+                continue;
+            }
+
+            const std::size_t field_start = record_offset + field.offset;
+            const std::size_t field_end = field_start + field.length;
+            if (field_end > table_bytes.size()) {
+                break;
+            }
+
+            const std::optional<std::uint32_t> block_number = parse_memo_block_number(
+                std::vector<std::uint8_t>{
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_start),
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_end)
+                },
+                storage_format);
+            if (block_number.has_value() && *block_number != 0U) {
+                block_numbers.push_back(*block_number);
+            }
+        }
+    }
+
+    std::sort(block_numbers.begin(), block_numbers.end());
+    block_numbers.erase(std::unique(block_numbers.begin(), block_numbers.end()), block_numbers.end());
+    return block_numbers;
 }
 
 std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std::uint8_t>& table_bytes) {
@@ -1251,8 +1328,10 @@ public:
 
     explicit MemoReader(
         const std::string& path,
-        DbfMemoStorageFormat storage_format = DbfMemoStorageFormat::visual_foxpro)
-        : storage_format_(storage_format) {
+        DbfMemoStorageFormat storage_format = DbfMemoStorageFormat::visual_foxpro,
+        std::vector<std::uint32_t> referenced_blocks = {})
+        : storage_format_(storage_format),
+          referenced_blocks_(std::move(referenced_blocks)) {
         if (path.empty()) {
             return;
         }
@@ -1272,9 +1351,13 @@ public:
             return;
         }
 
-        block_size_ = storage_format_ == DbfMemoStorageFormat::visual_foxpro
-            ? read_be_u16(bytes_, 6U)
-            : 512U;
+        if (storage_format_ == DbfMemoStorageFormat::visual_foxpro) {
+            block_size_ = read_be_u16(bytes_, 6U);
+        } else if (storage_format_ == DbfMemoStorageFormat::dbase_iii) {
+            block_size_ = 512U;
+        } else {
+            block_size_ = read_le_u16(bytes_, 20U);
+        }
         if (block_size_ == 0U) {
             bytes_.clear();
             return;
@@ -1298,12 +1381,23 @@ public:
 
         if (storage_format_ == DbfMemoStorageFormat::dbase_iii) {
             const auto begin = bytes_.begin() + static_cast<std::ptrdiff_t>(offset);
+            auto search_end = bytes_.end();
+            const auto next_block = std::upper_bound(
+                referenced_blocks_.begin(),
+                referenced_blocks_.end(),
+                block_number);
+            if (next_block != referenced_blocks_.end()) {
+                const std::uint64_t next_offset = static_cast<std::uint64_t>(*next_block) * block_size_;
+                if (next_offset < bytes_.size()) {
+                    search_end = bytes_.begin() + static_cast<std::ptrdiff_t>(next_offset);
+                }
+            }
             const auto terminator = std::search(
                 begin,
-                bytes_.end(),
+                search_end,
                 dbase_iii_memo_terminator.begin(),
                 dbase_iii_memo_terminator.end());
-            if (terminator == bytes_.end()) {
+            if (terminator == search_end) {
                 return std::nullopt;
             }
             return std::vector<std::uint8_t>{begin, terminator};
@@ -1353,6 +1447,7 @@ private:
     std::vector<std::uint8_t> bytes_;
     std::uint32_t block_size_ = 0;
     DbfMemoStorageFormat storage_format_ = DbfMemoStorageFormat::visual_foxpro;
+    std::vector<std::uint32_t> referenced_blocks_;
     bool available_ = false;
 };
 
@@ -1379,31 +1474,6 @@ struct DecodedDbfValue {
     DecodedDbfValue(bool success, std::string value)
         : ok(success), display_value(std::move(value)) {}
 };
-
-std::optional<std::uint32_t> parse_memo_block_number(
-    const std::vector<std::uint8_t>& raw,
-    DbfMemoStorageFormat storage_format) {
-    if (storage_format == DbfMemoStorageFormat::visual_foxpro) {
-        return raw.size() >= 4U ? std::optional<std::uint32_t>(read_le_u32(raw, 0U)) : std::nullopt;
-    }
-
-    const std::string text = trim_both(std::string(raw.begin(), raw.end()));
-    if (text.empty()) {
-        return 0U;
-    }
-    if (text.find_first_not_of("0123456789") != std::string::npos) {
-        return std::nullopt;
-    }
-    try {
-        const unsigned long value = std::stoul(text);
-        if (value > std::numeric_limits<std::uint32_t>::max()) {
-            return std::nullopt;
-        }
-        return static_cast<std::uint32_t>(value);
-    } catch (const std::exception&) {
-        return std::nullopt;
-    }
-}
 
 DecodedDbfValue decode_value(
     char field_type,
@@ -1808,7 +1878,10 @@ DbfTableParseResult parse_dbf_table_from_file(
         resolved_memo_sidecar_path = selected_sidecar_path(memo_resolution);
     }
 
-    const MemoReader memo_reader(resolved_memo_sidecar_path, layout.memo_storage_format);
+    const MemoReader memo_reader(
+        resolved_memo_sidecar_path,
+        layout.memo_storage_format,
+        collect_referenced_memo_blocks(bytes, table.header, table.fields, layout.memo_storage_format));
     const std::size_t record_count = std::min<std::size_t>(table.header.record_count, max_records);
     const std::size_t data_offset = table.header.header_length;
     const std::size_t record_length = table.header.record_length;
