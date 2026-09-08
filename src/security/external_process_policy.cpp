@@ -489,7 +489,8 @@ bool path_under_root(const std::filesystem::path& path, const std::filesystem::p
 
 }  // namespace
 
-#if defined(COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS) && defined(_WIN32)
+#if defined(COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS)
+#if defined(_WIN32)
 AuthenticodeSignatureProbeResult verify_authenticode_signature_for_testing(const std::string& path) {
     const std::wstring wide_path = copperfin::platform::path_from_utf8_string(path).wstring();
     const HANDLE handle = open_executable_exclusive_of_writers(wide_path);
@@ -500,7 +501,16 @@ AuthenticodeSignatureProbeResult verify_authenticode_signature_for_testing(const
     const AuthenticodeVerificationResult verification = verify_authenticode_signature(path, handle);
     return {.trusted = verification.trusted, .signer_display_name = verification.signer_display_name};
 }
-#endif  // COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS && _WIN32
+#else
+// Authenticode is a Windows-only concept; authorize_external_process()
+// itself already denies require_trusted_signature on this platform. See
+// the header's doc comment for why this stays declared (not just
+// defined) unconditionally.
+AuthenticodeSignatureProbeResult verify_authenticode_signature_for_testing(const std::string&) {
+    return {};
+}
+#endif  // _WIN32
+#endif  // COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS
 
 ExternalProcessAuthorizationResult authorize_external_process(const ExternalProcessPolicy& policy) {
 #ifdef _WIN32

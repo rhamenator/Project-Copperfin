@@ -42,7 +42,6 @@ struct AuthenticodeSignatureProbeResult {
     std::string signer_display_name;
 };
 
-#if defined(_WIN32)
 // Test-only seam exposing the raw Authenticode verification step
 // (verify_authenticode_signature(), internal to external_process_policy.cpp)
 // in isolation, independent of allowed_path_roots/allowed_publishers/PATH
@@ -55,9 +54,15 @@ struct AuthenticodeSignatureProbeResult {
 // signer name on GitHub Actions Windows runners is ".NET", not "Microsoft
 // Corporation"). Tests should discover the real name via this hook first,
 // then use it, rather than assume it.
+//
+// Declared unconditionally (no platform preprocessor check here) per
+// this repo's public-header contract (test_platform_sqlite_api_boundary_contract):
+// public headers under include/copperfin/ must never reference a native
+// platform-selection macro. Returns a default (untrusted, empty signer)
+// result on platforms where Authenticode does not apply -- the platform
+// split lives entirely in the .cpp definition instead.
 [[nodiscard]] AuthenticodeSignatureProbeResult
 verify_authenticode_signature_for_testing(const std::string& path);
-#endif  // _WIN32
 
 }  // namespace copperfin::security
 

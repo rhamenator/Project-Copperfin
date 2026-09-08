@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <cwctype>
@@ -1243,6 +1244,276 @@ void test_external_process_policy_handles_long_paths() {
     }
     fs::remove_all(temp_root, ignored);
 }
+
+// #5453: isolated unit coverage for the Windows Authenticode signer/
+// publisher-matching logic, independent of any specific installed
+// executable's real signature -- the coverage gap that let #5429's
+// original publisher string go unverified until #5450's CI kept
+// failing. Rather than generating and trust-injecting a self-signed
+// test certificate (new CI infrastructure this repo doesn't have), these
+// tests use a real Microsoft-signed system binary (cmd.exe, always
+// present and always trusted by the OS's own default trust store) as the
+// "trusted" fixture, and this test binary's own executable (a debug
+// build output, not code-signed by this repo's CI) as the "unsigned"
+// fixture. verify_authenticode_signature_for_testing() discovers cmd.exe's
+// *actual* verified signer name at test-run time rather than hardcoding
+// an assumed one -- hardcoding is exactly the mistake #5450 uncovered
+// (dotnet.exe's real GitHub Actions signer name is ".NET", not "Microsoft
+// Corporation").
+namespace {
+
+std::filesystem::path copy_cmd_exe_fixture(const std::filesystem::path &fixture_path) {
+    namespace fs = std::filesystem;
+    wchar_t system_directory[MAX_PATH]{};
+    const UINT system_directory_length = GetSystemDirectoryW(system_directory, MAX_PATH);
+    const fs::path system_command = system_directory_length == 0U
+        ? fs::path{}
+        : fs::path(std::wstring(system_directory, system_directory_length)) / L"cmd.exe";
+    std::error_code ignored;
+    if (system_command.empty() || !fs::exists(system_command, ignored)) {
+        return {};
+    }
+    fs::copy_file(system_command, fixture_path, fs::copy_options::overwrite_existing, ignored);
+    return ignored ? fs::path{} : fixture_path;
+}
+
+std::filesystem::path current_test_executable_path() {
+    wchar_t buffer[MAX_PATH]{};
+    const DWORD length = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
+    if (length == 0U || length >= MAX_PATH) {
+        return {};
+    }
+    return std::filesystem::path(std::wstring(buffer, length));
+}
+
+}  // namespace
+
+void test_verify_authenticode_signature_hook_reports_trust_and_signer_for_known_signed_binary() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_security_authenticode_probe";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path fixture_path = copy_cmd_exe_fixture(temp_root / "signed-fixture.exe");
+    if (fixture_path.empty()) {
+        expect(false, "#5453: Authenticode probe fixture should find and copy cmd.exe");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const auto result = copperfin::security::verify_authenticode_signature_for_testing(
+        copperfin::platform::path_to_utf8_string(fixture_path));
+    expect(result.trusted, "#5453: a real Microsoft-signed system binary should verify as trusted");
+    expect(!result.signer_display_name.empty(),
+           "#5453: a trusted signature should carry a non-empty verified signer display name");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_external_process_authorization_allows_trusted_signature_matching_real_publisher() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_security_authenticode_allow";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path fixture_path = copy_cmd_exe_fixture(temp_root / "signed-fixture.exe");
+    if (fixture_path.empty()) {
+        expect(false, "#5453: Authenticode allow fixture should find and copy cmd.exe");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const auto probe = copperfin::security::verify_authenticode_signature_for_testing(
+        copperfin::platform::path_to_utf8_string(fixture_path));
+    if (!probe.trusted || probe.signer_display_name.empty()) {
+        expect(false, "#5453: fixture must be trusted with a known signer name before testing publisher matching");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = copperfin::platform::path_to_utf8_string(fixture_path),
+        .allowed_path_roots = {copperfin::platform::path_to_utf8_string(temp_root)},
+        .allowed_publishers = {probe.signer_display_name},
+        .require_trusted_signature = true
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+    expect(authorization.allowed,
+           "#5453: a trusted signature whose signer matches allowed_publishers should be authorized");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_external_process_authorization_matches_publisher_case_insensitively() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_security_authenticode_case";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path fixture_path = copy_cmd_exe_fixture(temp_root / "signed-fixture.exe");
+    if (fixture_path.empty()) {
+        expect(false, "#5453: Authenticode case-insensitivity fixture should find and copy cmd.exe");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const auto probe = copperfin::security::verify_authenticode_signature_for_testing(
+        copperfin::platform::path_to_utf8_string(fixture_path));
+    if (!probe.trusted || probe.signer_display_name.empty()) {
+        expect(false, "#5453: fixture must be trusted with a known signer name before testing case-insensitive matching");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    std::string case_variant_publisher = probe.signer_display_name;
+    std::transform(
+        case_variant_publisher.begin(),
+        case_variant_publisher.end(),
+        case_variant_publisher.begin(),
+        [](unsigned char ch) { return static_cast<char>(std::isupper(ch) != 0 ? std::tolower(ch) : std::toupper(ch)); });
+
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = copperfin::platform::path_to_utf8_string(fixture_path),
+        .allowed_path_roots = {copperfin::platform::path_to_utf8_string(temp_root)},
+        .allowed_publishers = {case_variant_publisher},
+        .require_trusted_signature = true
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+    expect(authorization.allowed,
+           "#5453: publisher matching should be case-insensitive, matching the existing _stricmp implementation");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_external_process_authorization_rejects_mismatched_publisher() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_security_authenticode_mismatch";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path fixture_path = copy_cmd_exe_fixture(temp_root / "signed-fixture.exe");
+    if (fixture_path.empty()) {
+        expect(false, "#5453: Authenticode mismatch fixture should find and copy cmd.exe");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = copperfin::platform::path_to_utf8_string(fixture_path),
+        .allowed_path_roots = {copperfin::platform::path_to_utf8_string(temp_root)},
+        .allowed_publishers = {"Definitely-Not-A-Real-Publisher-5453"},
+        .require_trusted_signature = true
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+    expect(!authorization.allowed,
+           "#5453: a trusted signature whose signer does not match allowed_publishers should be denied");
+    expect(authorization.error == "Executable publisher is not in the allow-list.",
+           "#5453: the denial should be the distinct PublisherNotAllowed diagnostic");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_external_process_authorization_rejects_unsigned_binary_when_trust_required() {
+    namespace fs = std::filesystem;
+    const fs::path fixture_path = current_test_executable_path();
+    if (fixture_path.empty()) {
+        expect(false, "#5453: unsigned-fixture test should resolve its own running executable path");
+        return;
+    }
+
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = copperfin::platform::path_to_utf8_string(fixture_path),
+        .allowed_path_roots = {copperfin::platform::path_to_utf8_string(fixture_path.parent_path())},
+        .allowed_publishers = {},
+        .require_trusted_signature = true
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+    expect(!authorization.allowed,
+           "#5453: an unsigned binary should be denied when require_trusted_signature is true");
+    expect(authorization.error == "Executable does not have a trusted Authenticode signature.",
+           "#5453: the denial should be the distinct UntrustedAuthenticodeSignature diagnostic");
+}
+
+// #5453: a non-obvious interaction the issue explicitly calls out --
+// require_trusted_signature=false does not make allowed_publishers a
+// no-op. Matching a publisher still requires *some* verified signer to
+// compare against (verification.trusted ? ... : allowed_publishers.end()
+// in authorize_external_process()), so an unsigned binary is still
+// denied, just via PublisherNotAllowed rather than
+// UntrustedAuthenticodeSignature, since the latter check is gated on
+// require_trusted_signature specifically.
+void test_external_process_authorization_requires_trust_even_when_signature_not_required() {
+    namespace fs = std::filesystem;
+    const fs::path fixture_path = current_test_executable_path();
+    if (fixture_path.empty()) {
+        expect(false, "#5453: unsigned-fixture-without-required-trust test should resolve its own running executable path");
+        return;
+    }
+
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = copperfin::platform::path_to_utf8_string(fixture_path),
+        .allowed_path_roots = {copperfin::platform::path_to_utf8_string(fixture_path.parent_path())},
+        .allowed_publishers = {"AnyPublisherAtAll"},
+        .require_trusted_signature = false
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+    expect(!authorization.allowed,
+           "#5453: allowed_publishers should still require a verified signer even when require_trusted_signature is false");
+    expect(authorization.error == "Executable publisher is not in the allow-list.",
+           "#5453: with no verified signer to compare, the denial should be PublisherNotAllowed, not UntrustedAuthenticodeSignature");
+}
+
+void test_external_process_authorization_rejects_tampered_signature() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_security_authenticode_tampered";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path fixture_path = copy_cmd_exe_fixture(temp_root / "tampered-fixture.exe");
+    if (fixture_path.empty()) {
+        expect(false, "#5453: Authenticode tampering fixture should find and copy cmd.exe");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const auto original_size = fs::file_size(fixture_path, ignored);
+    if (ignored || original_size == 0U) {
+        expect(false, "#5453: Authenticode tampering fixture should have a readable size");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    // Truncating the last byte invalidates the file's Authenticode
+    // signature regardless of whether that byte fell within the
+    // digest-covered content or the trailing certificate table itself --
+    // either way, the file's bytes on disk no longer match what was
+    // signed, which is exactly the property this test proves
+    // WinVerifyTrust actually checks.
+    fs::resize_file(fixture_path, original_size - 1U, ignored);
+    if (ignored) {
+        expect(false, "#5453: Authenticode tampering fixture should be truncatable");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = copperfin::platform::path_to_utf8_string(fixture_path),
+        .allowed_path_roots = {copperfin::platform::path_to_utf8_string(temp_root)},
+        .allowed_publishers = {},
+        .require_trusted_signature = true
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+    expect(!authorization.allowed,
+           "#5453: a tampered (truncated) signed binary should fail Authenticode verification");
+    expect(authorization.error == "Executable does not have a trusted Authenticode signature.",
+           "#5453: a tampered signature should be denied as untrusted, not silently accepted");
+
+    fs::remove_all(temp_root, ignored);
+}
 #endif
 
 // #252 [gap-06e]
@@ -1786,6 +2057,13 @@ int main() {
     test_external_process_policy_rejects_empty_allowed_path_roots();
     test_external_process_policy_rejects_executable_swapped_during_authorization();
     test_external_process_policy_handles_long_paths();
+    test_verify_authenticode_signature_hook_reports_trust_and_signer_for_known_signed_binary();
+    test_external_process_authorization_allows_trusted_signature_matching_real_publisher();
+    test_external_process_authorization_matches_publisher_case_insensitively();
+    test_external_process_authorization_rejects_mismatched_publisher();
+    test_external_process_authorization_rejects_unsigned_binary_when_trust_required();
+    test_external_process_authorization_requires_trust_even_when_signature_not_required();
+    test_external_process_authorization_rejects_tampered_signature();
 #endif
     test_physical_path_containment_rejects_indirection();
     test_physical_path_containment_handle_based_read_survives_path_swap();
