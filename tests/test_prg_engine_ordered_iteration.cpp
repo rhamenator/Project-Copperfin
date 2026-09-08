@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -149,6 +150,10 @@ void write_synthetic_two_tag_cdx(
     write_le_u32(bytes, 1028U, 2048U);
     write_le_u32(bytes, 1032U, 2560U);
 
+    if (first_expression.size() > 512U || second_expression.size() > 512U)
+    {
+        throw std::length_error("write_synthetic_two_tag_cdx: expression too long for synthetic fixture buffer");
+    }
     for (std::size_t index = 0; index < first_expression.size(); ++index)
     {
         bytes[2048U + index] = static_cast<std::uint8_t>(first_expression[index]);
@@ -167,6 +172,10 @@ void write_synthetic_two_tag_cdx(
     }
 
     const std::size_t tail_start = 1024U + 512U - (2U * 10U);
+    if (first_tag_name.size() > 10U || second_tag_name.size() > 10U)
+    {
+        throw std::length_error("write_synthetic_two_tag_cdx: tag name too long for its 10-byte slot");
+    }
     for (std::size_t index = 0; index < first_tag_name.size(); ++index)
     {
         bytes[tail_start + index] = static_cast<std::uint8_t>(first_tag_name[index]);

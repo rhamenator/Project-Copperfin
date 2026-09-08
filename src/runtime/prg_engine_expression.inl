@@ -122,7 +122,7 @@
                 std::function<int(const std::string &)> aerror_callback,
                 std::function<PrgValue(const std::string &, const std::vector<std::string> &)> aggregate_callback,
                 std::function<std::string(const std::string &, bool)> order_callback,
-                std::function<bool(const std::string &, std::size_t, const std::string &)> descending_callback,
+                std::function<bool(const std::string &, std::optional<std::size_t>, const std::string &)> descending_callback,
                 std::function<std::string(const std::string &, std::size_t, const std::string &)> tag_callback,
                 std::function<std::size_t(const std::string &, const std::string &, const std::string &)> tagno_callback,
                 std::function<std::string(const std::string &, std::size_t, const std::string &)> key_callback,
@@ -1281,21 +1281,26 @@
                     // DESCENDING(cCDXFileName, nTagNumber [, cTableAlias | nWorkArea]):
                     // reports the persisted creation direction of a specific
                     // tag within cCDXFileName, without changing the active
-                    // order (tag_number > 0 signals this form to the
+                    // order (an engaged tag_number signals this form to the
                     // callback). DESCENDING([cTableAlias | nWorkArea]):
-                    // reports the currently active order's direction
-                    // (tag_number 0 signals this form).
+                    // reports the currently active order's direction (a
+                    // nullopt tag_number signals this form). nTagNumber is
+                    // passed through unclamped so an explicit 0 or negative
+                    // value is preserved as "explicitly provided but out of
+                    // range" rather than silently coerced up to tag 1.
                     if (arguments.size() >= 2U)
                     {
                         const std::string index_file_name = value_as_string(arguments[0]);
-                        const std::size_t tag_number =
-                            static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])));
+                        const double raw_tag_number = value_as_number(arguments[1]);
+                        const std::size_t tag_number = raw_tag_number > 0.0
+                            ? static_cast<std::size_t>(raw_tag_number)
+                            : 0U;
                         const std::string designator =
                             arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
                         return make_boolean_value(descending_callback_(index_file_name, tag_number, designator));
                     }
                     const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
-                    return make_boolean_value(descending_callback_({}, 0U, designator));
+                    return make_boolean_value(descending_callback_({}, std::nullopt, designator));
                 }
                 if (function == "tag")
                 {
@@ -3701,7 +3706,7 @@
             std::function<int(const std::string &)> aerror_callback_;
             std::function<PrgValue(const std::string &, const std::vector<std::string> &)> aggregate_callback_;
             std::function<std::string(const std::string &, bool)> order_callback_;
-            std::function<bool(const std::string &, std::size_t, const std::string &)> descending_callback_;
+            std::function<bool(const std::string &, std::optional<std::size_t>, const std::string &)> descending_callback_;
             std::function<std::string(const std::string &, std::size_t, const std::string &)> tag_callback_;
             std::function<std::size_t(const std::string &, const std::string &, const std::string &)> tagno_callback_;
             std::function<std::string(const std::string &, std::size_t, const std::string &)> key_callback_;

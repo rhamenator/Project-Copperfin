@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 namespace copperfin::test_support {
 
@@ -173,6 +174,9 @@ void write_synthetic_cdx(
     write_le_u16(bytes, 1026U, 0x0001U);
     write_le_u32(bytes, 1028U, 2048U);
 
+    if (expression.size() > (bytes.size() - 2048U)) {
+        throw std::length_error("write_synthetic_cdx: expression too long for synthetic fixture buffer");
+    }
     for (std::size_t index = 0; index < expression.size(); ++index) {
         bytes[2048U + index] = static_cast<std::uint8_t>(expression[index]);
     }
@@ -186,6 +190,9 @@ void write_synthetic_cdx(
     }
 
     const std::size_t tail_offset = (3U * 512U) - 10U;
+    if (tag_name.size() > (bytes.size() - tail_offset)) {
+        throw std::length_error("write_synthetic_cdx: tag_name too long for synthetic fixture buffer");
+    }
     for (std::size_t index = 0; index < tag_name.size(); ++index) {
         bytes[tail_offset + index] = static_cast<std::uint8_t>(tag_name[index]);
     }

@@ -1154,7 +1154,7 @@
         // .F., not an error.
         bool descending_function_value(
             const std::string &index_file_name,
-            std::size_t tag_number,
+            std::optional<std::size_t> tag_number,
             const std::string &designator) const
         {
             const CursorState *cursor = resolve_cursor_target(designator);
@@ -1162,7 +1162,7 @@
             {
                 return false;
             }
-            if (tag_number == 0U)
+            if (!tag_number.has_value())
             {
                 if (cursor->active_order_name.empty())
                 {
@@ -1170,10 +1170,17 @@
                 }
                 return cursor->active_order_descending;
             }
+            if (*tag_number == 0U)
+            {
+                // Explicit two-argument form with an out-of-range tag
+                // number (DESCENDING(file, 0)): always .F., distinct from
+                // the "no tag number given" active-order form above.
+                return false;
+            }
 
             const std::vector<const CursorState::OrderState *> matching_orders =
                 matching_orders_for_index_file(*cursor, index_file_name);
-            const std::size_t resolved_index = tag_number - 1U;
+            const std::size_t resolved_index = *tag_number - 1U;
             if (resolved_index >= matching_orders.size())
             {
                 return false;

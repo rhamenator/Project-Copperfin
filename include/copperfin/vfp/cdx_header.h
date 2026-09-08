@@ -43,6 +43,13 @@ struct CdxTagDescriptor {
     // content -- not inferred from decompilation or undocumented sources.
     // See docs/32-recovered-requirements-traceability.md for the recorded
     // evidence.
+    //
+    // Scope note: reliably populated only for single-tag structural CDX
+    // files (one tag per .cdx, the common "INDEX ... TAG name OF file.cdx"
+    // case), where the tag's own header page can be found from
+    // root_node_offset + page_size. Real multi-tag (entry_count > 1)
+    // compound CDX files' per-entry page association has not been
+    // recovered, so this defaults to false (not guessed) for those.
     bool descending_hint = false;
 };
 

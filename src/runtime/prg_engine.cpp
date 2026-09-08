@@ -1477,7 +1477,7 @@ namespace copperfin::runtime
             {
                 return order_function_value(expression_cursor_designator(designator), include_path);
             },
-            [this, expression_cursor_designator](const std::string &index_file_name, std::size_t tag_number, const std::string &designator)
+            [this, expression_cursor_designator](const std::string &index_file_name, std::optional<std::size_t> tag_number, const std::string &designator)
             {
                 return descending_function_value(index_file_name, tag_number, expression_cursor_designator(designator));
             },
