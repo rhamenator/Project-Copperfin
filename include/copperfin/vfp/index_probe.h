@@ -34,6 +34,9 @@ struct IndexTagProbe {
     std::uint8_t key_format_marker = 0;
     std::uint8_t key_type_marker = 0;
     bool inferred_name = false;
+    // Persisted ASCENDING/DESCENDING creation direction (issue #5358).
+    // See CdxTagDescriptor::descending_hint for how this is derived.
+    bool descending_hint = false;
 };
 
 struct IndexProbe {

@@ -1133,6 +1133,54 @@
             return uppercase_copy(cursor->active_order_name);
         }
 
+        // DESCENDING([cTableAlias | nWorkArea]): reports whether the
+        // designated cursor's currently active order was created with
+        // DESCENDING, or has been activated with a runtime DESCENDING
+        // override (SET ORDER TO ... DESCENDING) -- the override, when
+        // present, always wins over the persisted creation direction,
+        // matching real VFP9 (confirmed empirically against a fully
+        // patched 09.00.0000.7423 install; see
+        // docs/32-recovered-requirements-traceability.md, issue #5358).
+        // .F. when no order is active, matching VFP9's own observed
+        // behavior for that case.
+        //
+        // DESCENDING(cCDXFileName, nTagNumber [, cTableAlias | nWorkArea]):
+        // a distinct two-argument form (tag_number > 0 here) reporting the
+        // persisted creation direction of the nTagNumber-th tag *within
+        // that CDX file specifically*, without making it the active order.
+        // The ordinal is scoped to that one CDX file's own tags, not the
+        // cursor's global open-index ordinal TAG()/TAGNO() use -- also
+        // confirmed empirically. An out-of-range tag number is a safe
+        // .F., not an error.
+        bool descending_function_value(
+            const std::string &index_file_name,
+            std::size_t tag_number,
+            const std::string &designator) const
+        {
+            const CursorState *cursor = resolve_cursor_target(designator);
+            if (cursor == nullptr)
+            {
+                return false;
+            }
+            if (tag_number == 0U)
+            {
+                if (cursor->active_order_name.empty())
+                {
+                    return false;
+                }
+                return cursor->active_order_descending;
+            }
+
+            const std::vector<const CursorState::OrderState *> matching_orders =
+                matching_orders_for_index_file(*cursor, index_file_name);
+            const std::size_t resolved_index = tag_number - 1U;
+            if (resolved_index >= matching_orders.size())
+            {
+                return false;
+            }
+            return matching_orders[resolved_index]->descending;
+        }
+
         std::string tag_function_value(const std::string &index_file_name, std::size_t tag_number, const std::string &designator) const
         {
             const CursorState *cursor = resolve_cursor_target(designator);

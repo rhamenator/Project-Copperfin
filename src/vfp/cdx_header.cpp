@@ -28,6 +28,26 @@ std::uint16_t read_le_u16(const std::vector<std::uint8_t>& bytes, std::size_t of
 constexpr std::uint16_t cdx_leaf_flag = 0x0001U;
 constexpr std::uint16_t cdx_directory_flag = 0x0002U;
 
+// Page-relative offset of the persisted ASCENDING/DESCENDING creation-
+// direction byte within a tag's own header page (issue #5358). See the
+// doc comment on CdxTagDescriptor::descending_hint for how this was
+// determined.
+constexpr std::size_t cdx_tag_descending_flag_page_offset = 502U;
+
+bool read_tag_descending_flag(
+    const std::vector<std::uint8_t>& bytes,
+    std::uint32_t tag_page_offset) {
+    if (tag_page_offset == 0U) {
+        return false;
+    }
+    const std::size_t flag_offset =
+        static_cast<std::size_t>(tag_page_offset) + cdx_tag_descending_flag_page_offset;
+    if (flag_offset >= bytes.size()) {
+        return false;
+    }
+    return bytes[flag_offset] != 0U;
+}
+
 struct PrintableRun {
     std::size_t offset = 0;
     std::string text;
@@ -456,20 +476,22 @@ std::vector<CdxTagDescriptor> collect_directory_leaf_tags(
                 continue;
             }
 
+            const std::uint32_t tag_page_offset = looks_like_tag_page_offset(
+                read_le_u32(bytes, page_hint_offset),
+                page_size,
+                bytes.size())
+                ? read_le_u32(bytes, page_hint_offset)
+                : 0U;
             tags.push_back({
                 .name_hint = chunk,
                 .key_expression_hint = {},
                 .for_expression_hint = {},
-                .tag_page_offset_hint = looks_like_tag_page_offset(
-                    read_le_u32(bytes, page_hint_offset),
-                    page_size,
-                    bytes.size())
-                    ? read_le_u32(bytes, page_hint_offset)
-                    : 0U,
+                .tag_page_offset_hint = tag_page_offset,
                 .name_offset_hint = static_cast<std::uint32_t>(name_offset),
                 .key_expression_offset_hint = 0U,
                 .for_expression_offset_hint = 0U,
-                .inferred_name = false
+                .inferred_name = false,
+                .descending_hint = read_tag_descending_flag(bytes, tag_page_offset)
             });
         }
     }
