@@ -360,6 +360,65 @@ struct RawFieldDescriptor {
     std::uint8_t decimal_count = 0;
 };
 
+enum class DbfMemoStorageFormat {
+    visual_foxpro,
+    dbase_iii,
+    dbase_iv
+};
+
+struct DbfReadLayout {
+    std::size_t descriptor_start = 32U;
+    std::size_t descriptor_size = 32U;
+    std::size_t descriptor_name_width = 11U;
+    std::size_t descriptor_type_offset = 11U;
+    std::size_t descriptor_length_offset = 16U;
+    std::size_t descriptor_decimal_count_offset = 17U;
+    bool uses_physical_field_offsets = true;
+    DbfMemoStorageFormat memo_storage_format = DbfMemoStorageFormat::visual_foxpro;
+};
+
+DbfReadLayout dbf_read_layout(const DbfHeader& header) {
+    if (header.format_family() != DbfFormatFamily::dbase) {
+        return {};
+    }
+
+    // dBASE III/IV descriptors retain a four-byte in-memory field-address
+    // slot, not the on-disk offset used by VFP. Physical fields are packed
+    // sequentially after the record deletion marker. dBASE 7 moves its
+    // descriptors behind its 68-byte fixed header and expands them to 48
+    // bytes; its descriptor contains no on-disk field offset at all.
+    if ((header.version & 0x07U) == 0x04U) {
+        return {
+            .descriptor_start = 68U,
+            .descriptor_size = 48U,
+            .descriptor_name_width = 32U,
+            .descriptor_type_offset = 32U,
+            .descriptor_length_offset = 33U,
+            .descriptor_decimal_count_offset = 34U,
+            .uses_physical_field_offsets = false,
+            .memo_storage_format = DbfMemoStorageFormat::dbase_iv
+        };
+    }
+
+    return {
+        .uses_physical_field_offsets = false,
+        .memo_storage_format = header.version == 0x83U
+            ? DbfMemoStorageFormat::dbase_iii
+            : DbfMemoStorageFormat::dbase_iv
+    };
+}
+
+SidecarPathResolution resolve_memo_sidecar_path(
+    const std::string& path,
+    const DbfHeader& header) {
+    if (header.format_family() != DbfFormatFamily::dbase) {
+        return resolve_memo_sidecar_path(path);
+    }
+    std::filesystem::path candidate = platform::path_from_utf8_string(path);
+    candidate.replace_extension(".dbt");
+    return resolve_unique_casefold_path(candidate);
+}
+
 std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std::uint8_t>& table_bytes) {
     std::vector<RawFieldDescriptor> fields;
     std::size_t descriptor_offset = 32U;
@@ -1190,7 +1249,10 @@ class MemoReader {
 public:
     MemoReader() = default;
 
-    explicit MemoReader(const std::string& path) {
+    explicit MemoReader(
+        const std::string& path,
+        DbfMemoStorageFormat storage_format = DbfMemoStorageFormat::visual_foxpro)
+        : storage_format_(storage_format) {
         if (path.empty()) {
             return;
         }
@@ -1210,7 +1272,9 @@ public:
             return;
         }
 
-        block_size_ = read_be_u16(bytes_, 6U);
+        block_size_ = storage_format_ == DbfMemoStorageFormat::visual_foxpro
+            ? read_be_u16(bytes_, 6U)
+            : 512U;
         if (block_size_ == 0U) {
             bytes_.clear();
             return;
@@ -1228,11 +1292,30 @@ public:
         }
 
         const std::uint64_t offset = static_cast<std::uint64_t>(block_number) * block_size_;
+        if (offset >= bytes_.size()) {
+            return std::nullopt;
+        }
+
+        if (storage_format_ == DbfMemoStorageFormat::dbase_iii) {
+            const auto begin = bytes_.begin() + static_cast<std::ptrdiff_t>(offset);
+            const auto terminator = std::search(
+                begin,
+                bytes_.end(),
+                dbase_iii_memo_terminator.begin(),
+                dbase_iii_memo_terminator.end());
+            if (terminator == bytes_.end()) {
+                return std::nullopt;
+            }
+            return std::vector<std::uint8_t>{begin, terminator};
+        }
+
         if ((offset + 8U) > bytes_.size()) {
             return std::nullopt;
         }
 
-        const std::uint32_t length = read_be_u32(bytes_, static_cast<std::size_t>(offset + 4U));
+        const std::uint32_t length = storage_format_ == DbfMemoStorageFormat::dbase_iv
+            ? read_le_u32(bytes_, static_cast<std::size_t>(offset + 4U))
+            : read_be_u32(bytes_, static_cast<std::size_t>(offset + 4U));
         const std::uint64_t payload_offset = offset + 8U;
         const std::uint64_t payload_end = payload_offset + length;
         if (payload_end > bytes_.size()) {
@@ -1266,8 +1349,10 @@ public:
     }
 
 private:
+    static constexpr std::array<std::uint8_t, 2U> dbase_iii_memo_terminator = {0x1AU, 0x1AU};
     std::vector<std::uint8_t> bytes_;
     std::uint32_t block_size_ = 0;
+    DbfMemoStorageFormat storage_format_ = DbfMemoStorageFormat::visual_foxpro;
     bool available_ = false;
 };
 
@@ -1295,10 +1380,36 @@ struct DecodedDbfValue {
         : ok(success), display_value(std::move(value)) {}
 };
 
+std::optional<std::uint32_t> parse_memo_block_number(
+    const std::vector<std::uint8_t>& raw,
+    DbfMemoStorageFormat storage_format) {
+    if (storage_format == DbfMemoStorageFormat::visual_foxpro) {
+        return raw.size() >= 4U ? std::optional<std::uint32_t>(read_le_u32(raw, 0U)) : std::nullopt;
+    }
+
+    const std::string text = trim_both(std::string(raw.begin(), raw.end()));
+    if (text.empty()) {
+        return 0U;
+    }
+    if (text.find_first_not_of("0123456789") != std::string::npos) {
+        return std::nullopt;
+    }
+    try {
+        const unsigned long value = std::stoul(text);
+        if (value > std::numeric_limits<std::uint32_t>::max()) {
+            return std::nullopt;
+        }
+        return static_cast<std::uint32_t>(value);
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+
 DecodedDbfValue decode_value(
     char field_type,
     const std::vector<std::uint8_t>& raw,
     const MemoReader& memo_reader,
+    DbfMemoStorageFormat memo_storage_format,
     std::uint8_t code_page_mark,
     bool& is_null,
     std::uint32_t& memo_block_number) {
@@ -1342,14 +1453,47 @@ DecodedDbfValue decode_value(
             }
             return trim_both(value);
         }
-        case 'I': {
+        case 'I':
+        case '+': {
             if (raw.size() < 4U) {
                 return {};
+            }
+            if (memo_storage_format != DbfMemoStorageFormat::visual_foxpro) {
+                // dBASE Level 7 stores Long and Autoincrement as a
+                // big-endian sign/magnitude value: the high bit is set for
+                // non-negative values. VFP's similarly named integer
+                // storage is a little-endian two's-complement value.
+                const std::uint32_t encoded = read_be_u32(raw, 0U);
+                const std::int64_t magnitude = static_cast<std::int64_t>(encoded & 0x7FFFFFFFU);
+                return std::to_string((encoded & 0x80000000U) != 0U ? magnitude : -magnitude);
             }
             const std::int32_t value = static_cast<std::int32_t>(read_le_u32(raw, 0U));
             return std::to_string(value);
         }
         case 'B': {
+            // dBASE uses B for a ten-character DBT block pointer; VFP uses
+            // B for an eight-byte IEEE double. The DBF version family, not
+            // the field letter alone, decides which physical representation
+            // is safe to decode.
+            if (memo_storage_format != DbfMemoStorageFormat::visual_foxpro) {
+                const std::optional<std::uint32_t> block_number =
+                    parse_memo_block_number(raw, memo_storage_format);
+                if (!block_number.has_value() || *block_number == 0U) {
+                    return {};
+                }
+                memo_block_number = *block_number;
+                const auto memo_bytes = memo_reader.read_block_raw(*block_number);
+                if (memo_bytes.has_value()) {
+                    // dBASE B is a binary field. Preserve its bytes as a
+                    // deterministic display representation; treating a
+                    // printable subset as text would be an unsupported OLE
+                    // or binary interpretation claim.
+                    return format_binary_bytes(*memo_bytes);
+                }
+                std::ostringstream stream;
+                stream << "<memo block " << *block_number << ">";
+                return stream.str();
+            }
             if (raw.size() < 8U) {
                 return {};
             }
@@ -1381,22 +1525,13 @@ DecodedDbfValue decode_value(
             }
             return value;
         }
-        case 'T': {
-            if (raw.size() < 8U) {
-                return {};
-            }
-            const std::uint32_t julian_day = read_le_u32(raw, 0U);
-            const std::uint32_t millis = read_le_u32(raw, 4U);
-            std::ostringstream stream;
-            stream.imbue(std::locale::classic());
-            stream << "julian:" << julian_day << " millis:" << millis;
-            return stream.str();
-        }
         case 'M': {
-            if (raw.size() < 4U) {
+            const std::optional<std::uint32_t> parsed_block_number =
+                parse_memo_block_number(raw, memo_storage_format);
+            if (!parsed_block_number.has_value()) {
                 return {};
             }
-            const std::uint32_t block_number = read_le_u32(raw, 0U);
+            const std::uint32_t block_number = *parsed_block_number;
             memo_block_number = block_number;
             if (block_number == 0U) {
                 return {};
@@ -1422,17 +1557,28 @@ DecodedDbfValue decode_value(
         }
         case 'G':
         case 'P': {
-            if (raw.size() < 4U) {
+            const std::optional<std::uint32_t> parsed_block_number =
+                parse_memo_block_number(raw, memo_storage_format);
+            if (!parsed_block_number.has_value()) {
                 return {};
             }
-            const std::uint32_t block_number = read_le_u32(raw, 0U);
+            const std::uint32_t block_number = *parsed_block_number;
             memo_block_number = block_number;
             if (block_number == 0U) {
                 return {};
             }
-            const auto memo_text = memo_reader.read_block(block_number);
-            if (memo_text.has_value()) {
-                return *memo_text;
+            if (memo_storage_format != DbfMemoStorageFormat::visual_foxpro) {
+                const auto memo_bytes = memo_reader.read_block_raw(block_number);
+                if (memo_bytes.has_value()) {
+                    // dBASE General/Picture payloads are binary assets, not
+                    // text memos. Expose bytes without interpreting them.
+                    return format_binary_bytes(*memo_bytes);
+                }
+            } else {
+                const auto memo_text = memo_reader.read_block(block_number);
+                if (memo_text.has_value()) {
+                    return *memo_text;
+                }
             }
             std::ostringstream stream;
             stream << "<memo block " << block_number << ">";
@@ -1443,6 +1589,32 @@ DecodedDbfValue decode_value(
                 return {};
             }
             return format_currency_display_value(read_le_i64(raw, 0U));
+        }
+        case '@':
+        case 'T': {
+            if (raw.size() < 8U) {
+                return {};
+            }
+            const std::uint32_t julian_day = read_le_u32(raw, 0U);
+            const std::uint32_t millis = read_le_u32(raw, 4U);
+            std::ostringstream stream;
+            stream.imbue(std::locale::classic());
+            stream << "julian:" << julian_day << " millis:" << millis;
+            return stream.str();
+        }
+        case 'O': {
+            if (raw.size() < 8U) {
+                return {};
+            }
+            double value = 0.0;
+            std::array<std::uint8_t, 8U> storage{};
+            std::copy_n(raw.begin(), 8U, storage.begin());
+            std::memcpy(&value, storage.data(), storage.size());
+            std::ostringstream stream;
+            stream.imbue(std::locale::classic());
+            stream.precision(15);
+            stream << value;
+            return trim_both(stream.str());
         }
         case '0': {
             is_null = true;
@@ -1584,36 +1756,59 @@ DbfTableParseResult parse_dbf_table_from_file(
 
     DbfTable table;
     table.header = header_result.header;
+    const DbfReadLayout layout = dbf_read_layout(table.header);
 
     if (bytes.size() < table.header.header_length) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.HeaderLengthExceedsFile")};
     }
 
-    std::size_t field_offset = 32U;
+    std::size_t field_offset = layout.descriptor_start;
     const std::size_t header_limit = table.header.header_length;
-    while ((field_offset + 32U) <= bytes.size() &&
-           (field_offset + 32U) <= header_limit &&
+    std::uint32_t next_physical_field_offset = 1U;
+    bool descriptor_terminator_found = false;
+    while ((field_offset + layout.descriptor_size) <= bytes.size() &&
+           (field_offset + layout.descriptor_size) <= header_limit &&
            bytes[field_offset] != 0x0DU) {
         DbfFieldDescriptor field;
-        field.name = read_ascii_name(bytes, field_offset, 11U);
-        field.type = static_cast<char>(bytes[field_offset + 11U]);
-        field.offset = read_le_u32(bytes, field_offset + 12U);
-        field.length = bytes[field_offset + 16U];
-        field.decimal_count = bytes[field_offset + 17U];
+        field.name = read_ascii_name(bytes, field_offset, layout.descriptor_name_width);
+        field.type = static_cast<char>(bytes[field_offset + layout.descriptor_type_offset]);
+        field.offset = layout.uses_physical_field_offsets
+            ? read_le_u32(bytes, field_offset + 12U)
+            : next_physical_field_offset;
+        field.length = bytes[field_offset + layout.descriptor_length_offset];
+        field.decimal_count = bytes[field_offset + layout.descriptor_decimal_count_offset];
+        if (table.header.format_family() == DbfFormatFamily::dbase &&
+            (field.length == 0U || field.offset == 0U ||
+             field.offset >= table.header.record_length ||
+             field.length > table.header.record_length - field.offset)) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordLayoutExceedsSize")};
+        }
+        next_physical_field_offset += field.length;
         table.fields.push_back(std::move(field));
-        field_offset += 32U;
+        field_offset += layout.descriptor_size;
+    }
+    if (field_offset < header_limit && field_offset < bytes.size() && bytes[field_offset] == 0x0DU) {
+        descriptor_terminator_found = true;
+    }
+    // The legacy layouts have an independently documented descriptor
+    // terminator inside the declared header. Retain the VFP parser's
+    // established permissive behavior for its adversarial/recovery fixtures;
+    // this new read-only dBASE branch must not change their result.
+    if (table.header.format_family() == DbfFormatFamily::dbase &&
+        !descriptor_terminator_found) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableHeaderTruncated")};
     }
 
     if (resolved_memo_sidecar_path.empty() &&
         table_uses_memo_sidecar(table.header, table.fields)) {
-        memo_resolution = resolve_memo_sidecar_path(path);
+        memo_resolution = resolve_memo_sidecar_path(path, table.header);
         if (memo_resolution.ambiguous) {
             return {.ok = false, .error = ambiguous_sidecar_error(memo_resolution)};
         }
         resolved_memo_sidecar_path = selected_sidecar_path(memo_resolution);
     }
 
-    const MemoReader memo_reader(resolved_memo_sidecar_path);
+    const MemoReader memo_reader(resolved_memo_sidecar_path, layout.memo_storage_format);
     const std::size_t record_count = std::min<std::size_t>(table.header.record_count, max_records);
     const std::size_t data_offset = table.header.header_length;
     const std::size_t record_length = table.header.record_length;
@@ -1645,6 +1840,7 @@ DbfTableParseResult parse_dbf_table_from_file(
                 field.type,
                 raw,
                 memo_reader,
+                layout.memo_storage_format,
                 table.header.code_page_mark,
                 is_null,
                 memo_block_number);
@@ -2625,9 +2821,29 @@ DbfWriteResult create_dbf_table_file(
     return create_dbf_table_file_with_memo_payloads(path, fields, records, nullptr);
 }
 
+// The legacy dBASE reader deliberately has no write-format implementation.
+// Rejecting a mutation here, before a VFP-oriented writer can reinterpret the
+// older descriptor or memo layout, is safer than relying on documentation
+// alone to preserve the input table byte-for-byte.
+static std::optional<DbfWriteResult> dbase_read_only_mutation_error(
+    const std::string& path) {
+    const DbfParseResult header_result = parse_dbf_header_from_file(path);
+    if (!header_result.ok || header_result.header.format_family() != DbfFormatFamily::dbase) {
+        return std::nullopt;
+    }
+    return DbfWriteResult{
+        .ok = false,
+        .error = dbf_table_text("Vfp.DbfTable.Error.LegacyDbaseReadOnly"),
+        .record_count = header_result.header.record_count
+    };
+}
+
 DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field) {
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
+    }
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
     }
     const DbfParseResult header_result = parse_dbf_header_from_file(path);
     if (!header_result.ok) {
@@ -2683,6 +2899,9 @@ DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& 
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
     }
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
     const DbfParseResult header_result = parse_dbf_header_from_file(path);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
@@ -2734,6 +2953,9 @@ DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDesc
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
     }
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
     const DbfParseResult header_result = parse_dbf_header_from_file(path);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
@@ -2780,6 +3002,9 @@ DbfWriteResult append_blank_record_to_file_full_rewrite(const std::string& path)
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
     }
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
     std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -2811,6 +3036,9 @@ DbfWriteResult append_blank_record_to_file_full_rewrite(const std::string& path)
 }
 
 DbfWriteResult append_blank_record_to_file(const std::string& path) {
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
     if (const auto fast_result = append_blank_record_to_file_targeted(path); fast_result.has_value()) {
         return *fast_result;
     }
@@ -3090,6 +3318,9 @@ DbfWriteResult replace_record_field_value(
     const std::string& field_name,
     const std::string& value,
     bool allow_truncation) {
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
     if (const auto fast_result = replace_record_field_value_targeted(path, record_index, field_name, value, allow_truncation);
         fast_result.has_value()) {
         return *fast_result;
@@ -3103,6 +3334,9 @@ DbfWriteResult replace_record_field_value_additive(
     const std::string& field_name,
     const std::string& value,
     bool allow_truncation) {
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
     // Additive only changes behavior for memo fields (byte-append rather
     // than replace); the fast path above never handles memo fields, so an
     // additive request always goes straight to the full-rewrite path, which
@@ -3116,6 +3350,9 @@ DbfWriteResult replace_record_field_value_full_rewrite(
     const std::string& field_name,
     const std::string& value,
     bool allow_truncation) {
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
     return replace_record_field_value_impl(path, record_index, field_name, value, false, allow_truncation);
 }
 
@@ -3125,6 +3362,9 @@ DbfWriteResult replace_record_field_value_additive_full_rewrite(
     const std::string& field_name,
     const std::string& value,
     bool allow_truncation) {
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
     return replace_record_field_value_impl(path, record_index, field_name, value, true, allow_truncation);
 }
 
@@ -3134,6 +3374,9 @@ DbfWriteResult set_record_deleted_flag(
     bool deleted) {
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
+    }
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
     }
     std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
@@ -3176,6 +3419,9 @@ DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t reco
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
     }
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
     std::vector<std::uint8_t> bytes = read_binary_file(path);
     if (bytes.empty()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -3217,6 +3463,9 @@ DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t reco
 DbfWriteResult pack_dbf_table_file(const std::string& path) {
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
+    }
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
     }
     std::vector<std::uint8_t> bytes = read_binary_file(path);
     if (bytes.empty()) {
@@ -3271,6 +3520,9 @@ DbfWriteResult pack_dbf_memo_file(const std::string& path) {
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
     }
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
     const DbfParseResult header_result = parse_dbf_header_from_file(path);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
@@ -3312,6 +3564,9 @@ DbfWriteResult pack_dbf_memo_file(const std::string& path) {
 DbfWriteResult zap_dbf_table_file(const std::string& path) {
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
+    }
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
     }
     std::vector<std::uint8_t> bytes = read_binary_file(path);
     if (bytes.empty()) {

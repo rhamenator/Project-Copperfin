@@ -199,7 +199,15 @@ void test_parse_dbf_header() {
            "dBASE Level 7 version byte should classify as the dbase inspection family");
     dbase_header.version = 0x0CU;
     expect(dbase_header.format_family() == copperfin::vfp::DbfFormatFamily::dbase,
-           "dBASE Level 7 memo-flag version byte should retain the dbase inspection family");
+        "dBASE Level 7 memo-flag version byte should retain the dbase inspection family");
+    dbase_header.version = 0x8CU;
+    expect(dbase_header.has_memo_file(),
+        "dBASE Level 7 bit-7 memo flag should report its DBT sidecar");
+    expect(dbase_header.version_description() == "dBASE Level 7 with memo",
+        "dBASE Level 7 memo flags should have a precise localized description");
+    dbase_header.version = 0x1CU;
+    expect(dbase_header.version_description() == "dBASE Level 7 SQL table with memo",
+        "dBASE Level 7 SQL and memo flags should compose in the description");
     copperfin::vfp::DbfHeader foxbase_header;
     foxbase_header.version = 0x02U;
     expect(foxbase_header.format_family() == copperfin::vfp::DbfFormatFamily::foxbase,
@@ -808,6 +816,10 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.DbfHeader.Version.DbaseIvMemoSql",
         "Vfp.DbfHeader.Version.DbaseIvSqlTable",
         "Vfp.DbfHeader.Version.DbaseIvSystemFile",
+        "Vfp.DbfHeader.Version.DbaseLevel7",
+        "Vfp.DbfHeader.Version.DbaseLevel7Memo",
+        "Vfp.DbfHeader.Version.DbaseLevel7MemoSql",
+        "Vfp.DbfHeader.Version.DbaseLevel7SqlTable",
         "Vfp.DbfHeader.Version.FoxProMemo",
         "Vfp.DbfHeader.Version.Foxbase",
         "Vfp.DbfHeader.Version.Unknown",

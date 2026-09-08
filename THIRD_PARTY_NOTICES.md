@@ -4,6 +4,15 @@ Project Copperfin includes the following separately licensed material. These
 notices do not change the GPL-3.0-only-with-exception terms for first-party
 Project Copperfin code.
 
+## dBASE Compatibility Test Fixtures
+
+Location: `tests/fixtures/legacy-dbase-infused/`
+
+Unmodified binary test artifacts are from Keith Morrison's `infused/dbf`
+repository at commit `6b6547384439fd009815d20112b22c58eee83503`. They are
+provided under the MIT License; the complete upstream license text is retained
+beside the fixtures in `tests/fixtures/legacy-dbase-infused/LICENSE`.
+
 ## Vendored Ed25519 Verification Code
 
 Location: `src/licensing/third_party/ed25519_ref/`
