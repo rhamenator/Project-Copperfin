@@ -489,6 +489,19 @@ bool path_under_root(const std::filesystem::path& path, const std::filesystem::p
 
 }  // namespace
 
+#if defined(COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS) && defined(_WIN32)
+AuthenticodeSignatureProbeResult verify_authenticode_signature_for_testing(const std::string& path) {
+    const std::wstring wide_path = copperfin::platform::path_from_utf8_string(path).wstring();
+    const HANDLE handle = open_executable_exclusive_of_writers(wide_path);
+    if (handle == INVALID_HANDLE_VALUE) {
+        return {};
+    }
+    const ScopedHandle handle_guard{handle};
+    const AuthenticodeVerificationResult verification = verify_authenticode_signature(path, handle);
+    return {.trusted = verification.trusted, .signer_display_name = verification.signer_display_name};
+}
+#endif  // COPPERFIN_ENABLE_EXTERNAL_PROCESS_POLICY_TEST_HOOKS && _WIN32
+
 ExternalProcessAuthorizationResult authorize_external_process(const ExternalProcessPolicy& policy) {
 #ifdef _WIN32
     const std::string resolved_path = resolve_executable_from_path(policy.executable_name);
