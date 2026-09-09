@@ -157,6 +157,7 @@ License documents:
 - [`docs/66-access-container-format-notes.md`](docs/66-access-container-format-notes.md)
 - [`docs/67-migration-dotnet-interop-bridge-design.md`](docs/67-migration-dotnet-interop-bridge-design.md)
 - [`docs/68-access-mdb-jet-physical-page-layout-notes.md`](docs/68-access-mdb-jet-physical-page-layout-notes.md)
+- [`docs/69-dbase-import-field-mapping.md`](docs/69-dbase-import-field-mapping.md)
 - [`docs/DO-178C-ASSURANCE-POLICY.md`](docs/DO-178C-ASSURANCE-POLICY.md)
 - [`docs/RELEASE-READINESS-REVIEW.md`](docs/RELEASE-READINESS-REVIEW.md)
 - [`docs/localization.md`](docs/localization.md)

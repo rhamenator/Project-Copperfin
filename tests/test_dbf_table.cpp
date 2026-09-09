@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/vfp/dbf_import.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "test_dbf_table_support.h"
 #include "test_environment_support.h"
@@ -642,6 +643,100 @@ void test_create_dbase_iii_table_file_rejects_unsafe_schemas() {
         "a field count whose descriptor table overflows a 16-bit header length should be rejected");
     expect(!fs::exists(temp_dir / "too_many.dbf", ignored),
         "a rejected too-many-fields schema must not leave a partial file behind");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_import_dbase_table_to_vfp_native_round_trips() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbase_import_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path destination = temp_dir / "imported.dbf";
+    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(
+        legacy_dbase_fixture_path("dbase_83.dbf").string(),
+        destination.string());
+    expect(import_result.ok, "importing the real dBASE III + memo fixture should succeed");
+    expect(import_result.record_count == 67U, "the import result should report the imported record count");
+    expect(import_result.field_mappings.size() == 15U, "the import result should report every field's mapping");
+
+    const auto imported = copperfin::vfp::parse_dbf_table_from_file(destination.string(), 1U);
+    expect(imported.ok, "the imported destination table should itself parse");
+    expect(
+        imported.table.header.format_family() == copperfin::vfp::DbfFormatFamily::visual_foxpro,
+        "the imported destination table should be VFP-native, not dBASE-family");
+    if (imported.ok && !imported.table.records.empty() &&
+        imported.table.records.front().values.size() == 15U) {
+        const auto& first = imported.table.records.front().values;
+        expect(first[6U].display_value == "Assorted Petits Fours",
+            "imported character field values should match the dBASE source");
+        expect(first[11U].display_value.starts_with("Our Original assortment"),
+            "imported memo field content should match the dBASE source");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_import_dbase_table_to_vfp_native_rejects_unsupported_field_type() {
+    // A synthetic dBASE III header (version 0x03) with one field of type
+    // 'B' -- dBASE's binary DBT-block-pointer type, which this first
+    // import slice deliberately does not support (see
+    // map_dbase_field_to_vfp_native in src/vfp/dbf_import.cpp).
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbase_import_unsupported_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    std::vector<std::uint8_t> bytes(32U + 32U + 1U + 11U + 1U, 0U);
+    bytes[0] = 0x03U;
+    write_le_u32(bytes, 4U, 1U);
+    write_le_u16(bytes, 8U, 32U + 32U + 1U);
+    write_le_u16(bytes, 10U, 11U);
+    write_ascii(bytes, 32U, "PAYLOAD");
+    bytes[32U + 11U] = static_cast<std::uint8_t>('B');
+    bytes[32U + 16U] = 10U;
+    bytes[64U] = 0x0DU;
+    bytes.back() = 0x1AU;
+    bytes[65U] = static_cast<std::uint8_t>(' ');
+    write_ascii(bytes, 66U, "0000000001");
+
+    const fs::path source = temp_dir / "unsupported_source.dbf";
+    expect(write_binary_file(source, bytes), "the synthetic unsupported-field fixture should be writable");
+
+    const fs::path destination = temp_dir / "should_not_exist.dbf";
+    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(
+        source.string(),
+        destination.string());
+    expect(!import_result.ok, "importing a source field type outside this slice's scope should fail closed");
+    expect(!fs::exists(destination, ignored),
+        "a rejected import must not leave a partial destination file behind");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_import_dbase_table_to_vfp_native_rejects_existing_destination() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbase_import_existing_dest_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path destination = temp_dir / "already_here.dbf";
+    expect(write_binary_file(destination, {0x00U}), "the pre-existing destination fixture should be writable");
+    const std::vector<std::uint8_t> original_bytes = read_binary_file(destination);
+
+    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(
+        legacy_dbase_fixture_path("dbase_83.dbf").string(),
+        destination.string());
+    expect(!import_result.ok, "importing into an existing destination path should fail closed");
+    expect(read_binary_file(destination) == original_bytes,
+        "a rejected import must not touch an existing destination file's bytes");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -2698,6 +2793,9 @@ int main(int argc, char* argv[]) {
     test_create_dbf_table_file_round_trips();
     test_create_dbase_iii_table_file_round_trips_and_rejects_overwrite();
     test_create_dbase_iii_table_file_rejects_unsafe_schemas();
+    test_import_dbase_table_to_vfp_native_round_trips();
+    test_import_dbase_table_to_vfp_native_rejects_unsupported_field_type();
+    test_import_dbase_table_to_vfp_native_rejects_existing_destination();
     test_dbf_mutations_stamp_last_update_date();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_string_fields_store_literal_null_text();

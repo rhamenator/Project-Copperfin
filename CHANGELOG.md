@@ -1,3 +1,21 @@
+- 2026-09-09: Fixes #5523: added `import_dbase_table_to_vfp_native()`, the
+  first slice of #5517's `IMPORT DATABASE ... TYPE XBASE` wizard --
+  importing one dBASE-family source table into a brand-new VFP-native
+  table, reusing #5482's existing dBASE reader and the existing VFP-native
+  writer rather than building new binary-format code. `C`/`N`/`F`/`L`/`D`
+  copy directly; `M` (memo) copies its decoded text via a second pass
+  through the existing `replace_record_field_value()` REPLACE path, since
+  the base table-creation API only accepts a blank memo pointer at
+  creation time; dBASE Level 7's `I`/`+` (Long/Autoincrement) map to VFP
+  `I` by value only (autoincrement behavior is not preserved); `O`
+  (double) maps to VFP `B`. Any other source field type (`B` binary DBT
+  payloads, `@` Julian-day timestamps not yet convertible by the reader,
+  or anything else) rejects the whole import before any destination file
+  is created. See `docs/69-dbase-import-field-mapping.md` for the full
+  written mapping table and the reasoning behind each exclusion.
+  FoxBASE/FoxPro/Clipper source support, DBC container import, and a
+  dry-run/report mode remain explicit follow-up slices.
+
 - 2026-09-09: Fixes #5521: added read-only MDB/ACCDB container-level
   signature and Jet/ACE generation-byte detection
   (`parse_access_container_header()`), a narrower prerequisite carved out
