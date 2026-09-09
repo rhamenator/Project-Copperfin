@@ -9,6 +9,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/exclusive_file.h"
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/sidecar_path.h"
@@ -2999,6 +3000,13 @@ DbfWriteResult create_dbase_iii_table_file(
         if (field.type != 'C' && field.type != 'N' && field.type != 'L' && field.type != 'D') {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateUnsupportedFieldType")};
         }
+        // write_field_bytes()'s 'D' case always writes an 8-character
+        // YYYYMMDD payload regardless of the descriptor's declared length;
+        // a shorter declared length would let that write run past the
+        // field (or, for the last field, past the record buffer).
+        if (field.type == 'D' && field.length != 8U) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DateFieldWidthInvalid")};
+        }
 
         raw_fields.push_back({
             .name = trimmed_name,
@@ -3007,7 +3015,17 @@ DbfWriteResult create_dbase_iii_table_file(
             .length = field.length,
             .decimal_count = field.decimal_count
         });
+        // The on-disk header/record-length fields are 16-bit; reject a
+        // schema that would silently wrap them rather than build a
+        // malformed file (or, for the field-count case, write descriptor
+        // bytes past a too-small buffer allocated from the wrapped size).
         next_offset += field.length;
+        if (next_offset > std::numeric_limits<std::uint16_t>::max()) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordWidthTooLarge")};
+        }
+    }
+    if ((32U + (raw_fields.size() * 32U) + 1U) > std::numeric_limits<std::uint16_t>::max()) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TooManyFieldsForHeader")};
     }
 
     const std::uint16_t header_length = static_cast<std::uint16_t>(32U + (raw_fields.size() * 32U) + 1U);
@@ -3062,8 +3080,14 @@ DbfWriteResult create_dbase_iii_table_file(
         }
     }
 
+    // A clean, confident "it exists" stat result gives a precise early
+    // error; anything else (doesn't exist, or the stat itself failed) falls
+    // through to the exclusive-create attempt below, which is the actual
+    // no-overwrite guarantee -- it refuses to replace an existing entry
+    // atomically, so a stat error here can never be mistaken for "safe to
+    // write."
     std::error_code exists_error;
-    if (std::filesystem::exists(platform::path_from_utf8_string(path), exists_error)) {
+    if (std::filesystem::exists(platform::path_from_utf8_string(path), exists_error) && !exists_error) {
         return {
             .ok = false,
             .error = dbf_table_text("Vfp.DbfTable.Error.CreateDestinationExists", {{"path", path}}),
@@ -3071,7 +3095,10 @@ DbfWriteResult create_dbase_iii_table_file(
         };
     }
 
-    if (!stamp_dbf_last_update_date(bytes) || !write_binary_file(path, bytes)) {
+    if (!stamp_dbf_last_update_date(bytes) ||
+        !platform::write_new_durable_file(
+            platform::path_from_utf8_string(path),
+            std::string_view(reinterpret_cast<const char*>(bytes.data()), bytes.size()))) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = records.size()};
     }
 

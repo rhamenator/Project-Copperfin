@@ -557,6 +557,65 @@ void test_create_dbase_iii_table_file_round_trips_and_rejects_overwrite() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_create_dbase_iii_table_file_rejects_unsafe_schemas() {
+    // #5519 review: write_field_bytes()'s 'D' case always writes 8 bytes
+    // regardless of the descriptor's declared length, so a shorter length
+    // must be rejected before any file is created rather than risking an
+    // out-of-bounds write into an adjacent field or past the record.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbase_iii_unsafe_schema_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> short_date_fields{
+        {.name = "WHEN", .type = 'D', .length = 4U, .decimal_count = 0U},
+    };
+    const auto short_date_result = copperfin::vfp::create_dbase_iii_table_file(
+        (temp_dir / "short_date.dbf").string(), short_date_fields, {{"20260101"}});
+    expect(!short_date_result.ok,
+        "a Date field declared narrower than 8 bytes should be rejected before writing");
+    expect(!fs::exists(temp_dir / "short_date.dbf", ignored),
+        "a rejected schema must not leave a partial file behind");
+
+    // #5519 review: the on-disk header/record-length fields are 16-bit;
+    // a combined field width past 65535 must be rejected rather than
+    // silently wrapping into a too-small allocation that the descriptor/
+    // record-writing loops then write past.
+    std::vector<copperfin::vfp::DbfFieldDescriptor> wide_fields;
+    std::vector<std::string> wide_row;
+    for (int index = 0; index < 300; ++index) {
+        std::string name = "F" + std::to_string(index);
+        wide_fields.push_back({.name = name, .type = 'C', .length = 255U, .decimal_count = 0U});
+        wide_row.push_back("x");
+    }
+    const auto wide_result = copperfin::vfp::create_dbase_iii_table_file(
+        (temp_dir / "too_wide.dbf").string(), wide_fields, {wide_row});
+    expect(!wide_result.ok,
+        "a schema whose combined field width overflows a 16-bit record length should be rejected");
+    expect(!fs::exists(temp_dir / "too_wide.dbf", ignored),
+        "a rejected overflowing schema must not leave a partial file behind");
+
+    // A field count alone (each field narrow) can also overflow the
+    // 16-bit header length even when no single field's width is unusual.
+    std::vector<copperfin::vfp::DbfFieldDescriptor> many_fields;
+    std::vector<std::string> many_row;
+    for (int index = 0; index < 2048; ++index) {
+        std::string name = "N" + std::to_string(index);
+        many_fields.push_back({.name = name, .type = 'C', .length = 1U, .decimal_count = 0U});
+        many_row.push_back("x");
+    }
+    const auto many_result = copperfin::vfp::create_dbase_iii_table_file(
+        (temp_dir / "too_many.dbf").string(), many_fields, {many_row});
+    expect(!many_result.ok,
+        "a field count whose descriptor table overflows a 16-bit header length should be rejected");
+    expect(!fs::exists(temp_dir / "too_many.dbf", ignored),
+        "a rejected too-many-fields schema must not leave a partial file behind");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_mutate_and_append_dbf_table() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2607,6 +2666,7 @@ int main(int argc, char* argv[]) {
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
     test_create_dbase_iii_table_file_round_trips_and_rejects_overwrite();
+    test_create_dbase_iii_table_file_rejects_unsafe_schemas();
     test_dbf_mutations_stamp_last_update_date();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_string_fields_store_literal_null_text();
