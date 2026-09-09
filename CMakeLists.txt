@@ -408,6 +408,7 @@ else()
 endif()
 
 add_library(cf_vfp_assets
+    src/vfp/access_container.cpp
     src/vfp/asset_inspector.cpp
     src/vfp/cdx_header.cpp
     src/vfp/dbf_header.cpp
