@@ -1,3 +1,15 @@
+- 2026-09-09: Fixes #5530: confirmed and documented that Clipper source
+  support in `IMPORT DATABASE ... TYPE XBASE` already worked, requiring
+  no new code. Clipper's default (non-DBFCDX) RDD writes DBF/DBT tables
+  byte-compatible with dBASE III's version `0x83` layout (confirmed in
+  #5484), so `DbfFormatFamily` has no distinct `clipper` value --
+  Clipper-produced tables already classify as `dbase`, which
+  `import_xbase_table_to_vfp_native()` already accepted from #5523
+  onward. Added a regression test proving this with the same real
+  dBASE III + memo fixture #5484 used for the equivalent read-side
+  claim, and updated `docs/69-dbase-import-field-mapping.md`'s
+  non-goals to stop listing Clipper as a pending follow-up.
+
 - 2026-09-09: Fixes #5528: investigated where the widely-repeated
   "`0xFB` = FoxBASE" claim actually comes from (full trail in
   `docs/70-foxbase-0xfb-investigation.md`). Traced it back through

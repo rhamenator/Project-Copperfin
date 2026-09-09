@@ -977,6 +977,39 @@ void test_import_xbase_table_to_vfp_native_round_trips_0xfb_foxbase() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_import_xbase_table_to_vfp_native_round_trips_clipper_compatible_source() {
+    // #5530: Clipper's default (non-DBFCDX) RDD writes DBF/DBT tables
+    // byte-compatible with dBASE III+ (0x83; has-memo) layout
+    // (confirmed in #5484), so DbfFormatFamily has no distinct
+    // "clipper" value -- Clipper-produced tables already classify as
+    // DbfFormatFamily::dbase and were already accepted by this importer.
+    // No new Clipper-specific code was needed; this proves that claim
+    // with a regression test rather than leaving it undemonstrated,
+    // reusing the same real dBASE III + memo fixture #5484 used for the
+    // equivalent read-side claim.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_clipper_import_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path destination = temp_dir / "imported.dbf";
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(
+        legacy_dbase_fixture_path("dbase_83.dbf").string(),
+        destination.string());
+    expect(import_result.ok, "importing a Clipper-compatible (dBASE III + memo) source should succeed");
+    expect(import_result.record_count == 67U, "the import result should report the imported record count");
+
+    const auto imported = copperfin::vfp::parse_dbf_table_from_file(destination.string(), 1U);
+    expect(imported.ok, "the imported destination table should itself parse");
+    expect(
+        imported.table.header.format_family() == copperfin::vfp::DbfFormatFamily::visual_foxpro,
+        "the imported destination table should be VFP-native");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_import_xbase_table_to_vfp_native_rejects_foxpro_general_field() {
     // #5526 review: classic FoxPro (0xF5) tables can legitimately contain
     // 'G' (General) and 'P' (Picture) fields, which this slice explicitly
@@ -3189,6 +3222,7 @@ int main(int argc, char* argv[]) {
     test_import_xbase_table_to_vfp_native_round_trips_foxbase();
     test_dbf_reader_uses_dbase_iii_layout_for_0xfb();
     test_import_xbase_table_to_vfp_native_round_trips_0xfb_foxbase();
+    test_import_xbase_table_to_vfp_native_round_trips_clipper_compatible_source();
     test_import_xbase_table_to_vfp_native_rejects_foxpro_general_field();
     test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes();
     test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro();
