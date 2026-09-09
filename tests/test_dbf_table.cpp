@@ -979,8 +979,8 @@ void test_import_xbase_table_to_vfp_native_round_trips_0xfb_foxbase() {
 
 void test_import_xbase_table_to_vfp_native_round_trips_clipper_compatible_source() {
     // #5530: Clipper's default (non-DBFCDX) RDD writes DBF/DBT tables
-    // byte-compatible with dBASE III PLUS's version 0x83 (has-memo)
-    // layout (confirmed in #5484), so DbfFormatFamily has no distinct
+    // byte-compatible with dBASE III+ (0x83; has-memo) layout
+    // (confirmed in #5484), so DbfFormatFamily has no distinct
     // "clipper" value -- Clipper-produced tables already classify as
     // DbfFormatFamily::dbase and were already accepted by this importer.
     // No new Clipper-specific code was needed; this proves that claim

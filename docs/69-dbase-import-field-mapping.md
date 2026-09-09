@@ -14,7 +14,7 @@ FoxPro additionally has its own `G`/`P` General/Picture types (not shared
 with dBASE III/IV), which this slice does not yet support -- see the
 unsupported-types table below. Clipper source support (#5530) required no
 new code: Clipper's default (non-DBFCDX) RDD writes DBF/DBT tables
-byte-compatible with dBASE III's version `0x83` layout (confirmed in
+byte-compatible with dBASE III+ (`0x83`; has-memo) layout (confirmed in
 #5484), so `DbfFormatFamily` has no distinct `clipper` value -- Clipper-
 produced tables already classify as `dbase` and were already accepted.
 
@@ -70,8 +70,8 @@ investigation doc for the full reasoning and evidence trail.
 
 Clipper source tables are already supported, with no source-family
 allowlist change needed. Clipper's default (non-DBFCDX) RDD writes
-DBF/DBT tables byte-compatible with dBASE III PLUS's version `0x83`
-(has-memo) layout -- confirmed in #5484 -- so `DbfFormatFamily` has no
+DBF/DBT tables byte-compatible with dBASE III+ (`0x83`; has-memo)
+layout -- confirmed in #5484 -- so `DbfFormatFamily` has no
 distinct `clipper` value: Clipper-produced tables already classify as
 `dbase`, which this importer already accepted from #5523 onward.
 `test_import_xbase_table_to_vfp_native_round_trips_clipper_compatible_source`
