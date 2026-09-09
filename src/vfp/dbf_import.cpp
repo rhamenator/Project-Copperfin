@@ -125,6 +125,17 @@ std::optional<DbfFieldDescriptor> map_xbase_field_to_vfp_native(const DbfFieldDe
                 .length = 8U,
                 .decimal_count = 0U
             };
+        case 'G':
+        case 'P':
+            // FoxPro General/Picture: the reader already decodes these as
+            // opaque binary payloads (RQ-CF-LEGACY-003), which would need
+            // the raw-bytes write_memo_field_bytes() path rather than the
+            // encoded-text write_memo_field_text() path 'M' uses above --
+            // the same category of work already deferred for dBASE 'B'
+            // below. Explicitly listed (rather than falling through to
+            // the generic default) so this exclusion is a deliberate
+            // scope decision, not an oversight, per #5525's review.
+            return std::nullopt;
         default:
             // dBASE B (binary DBT payload), @ (Julian-day/millisecond
             // timestamp -- the reader does not yet convert this to a real
@@ -172,9 +183,18 @@ DbfImportResult import_xbase_table_to_vfp_native(
         return {.ok = false, .error = source.error};
     }
     const DbfFormatFamily source_family = source.table.header.format_family();
+    const bool is_verified_foxbase =
+        source_family == DbfFormatFamily::foxbase && source.table.header.version == 0x02U;
+    // RQ-CF-LEGACY-003 records that 0xFB's genuine physical layout is
+    // unverified against a real fixture and may not actually match 0x02's
+    // layout -- dbf_read_layout() deliberately only specializes 0x02 and
+    // leaves 0xFB on the generic default layout for that reason. Importing
+    // an 0xFB file could therefore serialize fields read from incorrect
+    // offsets while still reporting success. Only the verified 0x02
+    // version is accepted here until 0xFB's layout is confirmed.
     if (source_family != DbfFormatFamily::dbase &&
-        source_family != DbfFormatFamily::foxbase &&
-        source_family != DbfFormatFamily::foxpro) {
+        source_family != DbfFormatFamily::foxpro &&
+        !is_verified_foxbase) {
         return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.UnsupportedSourceFamily")};
     }
     if (source.table.header.code_page_mark != 0U) {

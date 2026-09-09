@@ -898,6 +898,73 @@ void test_import_xbase_table_to_vfp_native_round_trips_foxbase() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_import_xbase_table_to_vfp_native_rejects_unverified_0xfb_foxbase() {
+    // #5525/#5526 review: 0xFB also classifies as DbfFormatFamily::foxbase,
+    // but RQ-CF-LEGACY-003 records that its genuine physical layout is
+    // unverified against a real fixture -- dbf_read_layout() deliberately
+    // does not specialize it the way 0x02 is specialized. Importing an
+    // 0xFB file could silently serialize fields read from wrong offsets;
+    // only the verified 0x02 version should be accepted.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_unverified_0xfb_import_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    auto bytes = read_binary_file(legacy_foxpro_fixture_path("dbase_02.dbf"));
+    expect(!bytes.empty(), "the FoxBASE fixture should be readable for patching");
+    const fs::path source = temp_dir / "unverified_0xfb.dbf";
+    if (!bytes.empty()) {
+        bytes[0] = 0xFBU;
+        expect(write_binary_file(source, bytes), "the version-patched 0xFB fixture should be writable");
+    }
+
+    const fs::path destination = temp_dir / "should_not_exist.dbf";
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(source.string(), destination.string());
+    expect(!import_result.ok, "importing an unverified 0xFB FoxBASE source should fail closed");
+    expect(!fs::exists(destination, ignored), "a rejected import must not leave a partial destination file behind");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_import_xbase_table_to_vfp_native_rejects_foxpro_general_field() {
+    // #5526 review: classic FoxPro (0xF5) tables can legitimately contain
+    // 'G' (General) and 'P' (Picture) fields, which this slice explicitly
+    // does not support (they'd need the raw-bytes write_memo_field_bytes()
+    // path, not 'M''s encoded-text path). Prove the rejection is real and
+    // fails closed rather than silently mismapping the field.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_foxpro_general_field_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U, .decimal_count = 0U},
+        {.name = "PHOTO", .type = 'G', .length = 4U, .decimal_count = 0U},
+    };
+    const fs::path source = temp_dir / "synthetic_foxpro_general.dbf";
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        source.string(), fields, {{"Item", ""}});
+    expect(create_result.ok, "creating the base VFP-native fixture with a General field should succeed");
+
+    auto bytes = read_binary_file(source);
+    expect(!bytes.empty(), "the base fixture should be readable back for patching");
+    if (!bytes.empty()) {
+        bytes[0] = 0xF5U;
+        expect(write_binary_file(source, bytes), "the version-patched FoxPro fixture should be writable");
+    }
+
+    const fs::path destination = temp_dir / "should_not_exist.dbf";
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(source.string(), destination.string());
+    expect(!import_result.ok, "importing a FoxPro source with a General field should fail closed, not silently mismap it");
+    expect(!fs::exists(destination, ignored), "a rejected import must not leave a partial destination file behind");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3071,6 +3138,8 @@ int main(int argc, char* argv[]) {
     test_import_dbase_table_to_vfp_native_rejects_unresolved_memo_payload();
     test_import_dbase_table_to_vfp_native_rejects_existing_memo_sidecar_conflict();
     test_import_xbase_table_to_vfp_native_round_trips_foxbase();
+    test_import_xbase_table_to_vfp_native_rejects_unverified_0xfb_foxbase();
+    test_import_xbase_table_to_vfp_native_rejects_foxpro_general_field();
     test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes();
     test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro();
     test_double_field_round_trips_full_ieee754_precision();

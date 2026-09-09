@@ -4,19 +4,21 @@ Written field-type mapping for issues #5523 and #5525 (parent #5517, #137),
 the first concrete slices of the `IMPORT DATABASE ... TYPE XBASE` wizard:
 `copperfin::vfp::import_xbase_table_to_vfp_native()` in
 `src/vfp/dbf_import.cpp`. This covers dBASE-family (`DbfFormatFamily::dbase`)
-and, as of #5525, FoxBASE (`DbfFormatFamily::foxbase`) and FoxPro
-(`DbfFormatFamily::foxpro`) sources. FoxBASE and FoxPro use a strict subset
-of dBASE's type system -- `C`/`N`/`F`/`L`/`D`/`M` only; dBASE Level 7's
-`I`/`+`/`O` types cannot occur in those older formats -- so the same mapping
-table and importer cover all three families. Clipper source support is an
-explicit follow-up once #5484's NTX/DBT compatibility work is trusted for
-it.
+and, as of #5525, FoxBASE (`DbfFormatFamily::foxbase`, restricted to the
+verified `0x02` version byte -- see below) and FoxPro
+(`DbfFormatFamily::foxpro`) sources. FoxBASE and FoxPro cannot produce
+dBASE Level 7's `I`/`+`/`O` types (those older formats predate Level 7), so
+the same base mapping table covers all four families for the shared
+`C`/`N`/`F`/`L`/`D`/`M` types; FoxPro additionally has its own `G`/`P`
+General/Picture types (not shared with dBASE III/IV), which this slice
+does not yet support -- see the unsupported-types table below. Clipper
+source support is an explicit follow-up once #5484's NTX/DBT compatibility
+work is trusted for it.
 
 ## Supported source types
 
-FoxBASE and FoxPro sources only ever produce the `C`/`N`/`F`/`L`/`D`/`M` rows
-below; the `I`/`+`/`O` rows are dBASE Level 7-specific and cannot occur for
-those families.
+`I`/`+`/`O` are dBASE Level 7-specific and cannot occur for FoxBASE/FoxPro
+sources.
 
 | dBASE-family type | Meaning | Target VFP type | Notes |
 | --- | --- | --- | --- |
@@ -36,7 +38,21 @@ those families.
 | --- | --- | --- |
 | `B` | Binary DBT-block pointer (dBASE's own `B`, distinct from VFP's `B` double) | The existing reader already treats this as an opaque binary payload (not reinterpreted, per `RQ-CF-LEGACY-002`). Writing it into a VFP General (`G`) field would require the same "resolve to a memo/General block, write raw bytes" path `M` uses, but through `write_memo_field_bytes()` (raw bytes) rather than `write_memo_field_text()` (encoded text) -- deferred to a follow-up slice rather than adding an unverified second memo-write path in this first pass. |
 | `@` | Julian-day/millisecond timestamp | The existing reader does not yet convert this to a real calendar date/time (`parse_dbf_table_from_file()` currently exposes it only as a diagnostic `julian:N millis:M` string, not a value `write_field_bytes()`'s VFP `T`/`Y` cases can consume). There is nothing meaningful to write until that conversion exists upstream in the reader. |
-| any other letter | -- | Not part of dBASE's documented type set for this family; fails closed the same as `B`/`@`. |
+| `G` / `P` | FoxPro General / Picture (binary payload, FoxPro-only) | Same category of work as `B` above -- the reader already decodes these as opaque binary payloads (`RQ-CF-LEGACY-003`), and writing them would need `write_memo_field_bytes()`'s raw-bytes path rather than `M`'s encoded-text path. Deferred to a follow-up slice; explicitly listed in the mapping switch (not left to the generic default case) so the exclusion is a deliberate scope decision. |
+| any other letter | -- | Not part of dBASE-family's documented type set; fails closed the same as `B`/`@`/`G`/`P`. |
+
+### FoxBASE version restriction
+
+Only FoxBASE's `0x02` version byte is accepted, not `0xFB`. Both classify
+as `DbfFormatFamily::foxbase`, but `RQ-CF-LEGACY-003` records that `0xFB`'s
+genuine physical layout was never verified against a real fixture --
+`dbf_read_layout()` deliberately does not specialize it the way `0x02` is
+specialized, so it falls back to the generic default layout. Importing an
+`0xFB` file could therefore silently serialize fields read from the wrong
+byte offsets while still reporting success. This restriction is enforced
+in `import_xbase_table_to_vfp_native()` directly (checking
+`header.version == 0x02U`, not just `format_family() == foxbase`), not
+just documented.
 
 An unsupported source field type fails the whole import closed *before* any
 destination file is created or written -- see
