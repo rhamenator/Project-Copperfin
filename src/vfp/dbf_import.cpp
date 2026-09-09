@@ -169,19 +169,24 @@ void remove_destination_artifacts(const std::string& destination_path) {
     }
 }
 
-}  // namespace
+// Shared by the committing import and the #5532 dry-run preview: checks
+// source family and code page, then maps every field. When
+// collect_all_issues is false (the committing path's contract), this
+// fails closed on the first unmappable field, matching its existing,
+// already-tested behavior exactly. When true (the preview path), it
+// keeps going and collects every unmappable field instead, so a caller
+// can see the complete picture before deciding whether to import at all.
+struct FieldMappingPlan {
+    bool ok = false;
+    std::string error;
+    std::vector<DbfFieldDescriptor> target_fields;
+    std::vector<DbfImportFieldMapping> field_mappings;
+    std::vector<std::size_t> memo_field_indexes;
+    std::vector<DbfImportFieldIssue> field_issues;
+};
 
-DbfImportResult import_xbase_table_to_vfp_native(
-    const std::string& source_path,
-    const std::string& destination_path,
-    const std::string& source_memo_sidecar_path) {
-    const DbfTableParseResult source = parse_dbf_table_from_file(
-        source_path,
-        std::numeric_limits<std::size_t>::max(),
-        source_memo_sidecar_path);
-    if (!source.ok) {
-        return {.ok = false, .error = source.error};
-    }
+FieldMappingPlan plan_field_mapping(const DbfTableParseResult& source, bool collect_all_issues) {
+    FieldMappingPlan plan;
     const DbfFormatFamily source_family = source.table.header.format_family();
     // dbf_read_layout() now routes 0xFB through the same physical layout
     // as the already-verified 0x03 (dBASE III) byte -- not 0x02's own
@@ -195,7 +200,8 @@ DbfImportResult import_xbase_table_to_vfp_native(
     if (source_family != DbfFormatFamily::dbase &&
         source_family != DbfFormatFamily::foxpro &&
         source_family != DbfFormatFamily::foxbase) {
-        return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.UnsupportedSourceFamily")};
+        plan.error = dbf_import_text("Vfp.DbfImport.Error.UnsupportedSourceFamily");
+        return plan;
     }
     if (source.table.header.code_page_mark != 0U) {
         // code_page_mark 0 decodes/encodes as UTF-8 on both the read and
@@ -208,7 +214,64 @@ DbfImportResult import_xbase_table_to_vfp_native(
         // non-ASCII character in a tightly-sized field can silently fail
         // to fit. Rather than guess a safe worst-case width expansion,
         // this first slice only supports code-page-0 sources.
-        return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.UnsupportedCodePage")};
+        plan.error = dbf_import_text("Vfp.DbfImport.Error.UnsupportedCodePage");
+        return plan;
+    }
+
+    plan.target_fields.reserve(source.table.fields.size());
+    plan.field_mappings.reserve(source.table.fields.size());
+    bool any_unmapped = false;
+    for (const DbfFieldDescriptor& source_field : source.table.fields) {
+        const auto mapped = map_xbase_field_to_vfp_native(source_field);
+        if (!mapped.has_value()) {
+            any_unmapped = true;
+            const std::string reason = dbf_import_text(
+                "Vfp.DbfImport.Error.UnsupportedFieldType",
+                {
+                    {"fieldName", source_field.name},
+                    {"fieldType", std::string(1U, source_field.type)},
+                });
+            if (!collect_all_issues) {
+                plan.error = reason;
+                return plan;
+            }
+            plan.field_issues.push_back({
+                .field_name = source_field.name,
+                .source_type = source_field.type,
+                .reason = reason
+            });
+            continue;
+        }
+        if (mapped->type == 'M') {
+            plan.memo_field_indexes.push_back(plan.target_fields.size());
+        }
+        plan.field_mappings.push_back({
+            .field_name = source_field.name,
+            .source_type = source_field.type,
+            .target_type = mapped->type
+        });
+        plan.target_fields.push_back(*mapped);
+    }
+    plan.ok = !any_unmapped;
+    return plan;
+}
+
+}  // namespace
+
+DbfImportResult import_xbase_table_to_vfp_native(
+    const std::string& source_path,
+    const std::string& destination_path,
+    const std::string& source_memo_sidecar_path) {
+    const DbfTableParseResult source = parse_dbf_table_from_file(
+        source_path,
+        std::numeric_limits<std::size_t>::max(),
+        source_memo_sidecar_path);
+    if (!source.ok) {
+        return {.ok = false, .error = source.error};
+    }
+    FieldMappingPlan plan = plan_field_mapping(source, /*collect_all_issues=*/false);
+    if (!plan.ok) {
+        return {.ok = false, .error = plan.error};
     }
 
     std::error_code exists_error;
@@ -219,36 +282,7 @@ DbfImportResult import_xbase_table_to_vfp_native(
         return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
     }
 
-    std::vector<DbfFieldDescriptor> target_fields;
-    std::vector<DbfImportFieldMapping> field_mappings;
-    std::vector<std::size_t> memo_field_indexes;
-    target_fields.reserve(source.table.fields.size());
-    field_mappings.reserve(source.table.fields.size());
-    for (const DbfFieldDescriptor& source_field : source.table.fields) {
-        const auto mapped = map_xbase_field_to_vfp_native(source_field);
-        if (!mapped.has_value()) {
-            return {
-                .ok = false,
-                .error = dbf_import_text(
-                    "Vfp.DbfImport.Error.UnsupportedFieldType",
-                    {
-                        {"fieldName", source_field.name},
-                        {"fieldType", std::string(1U, source_field.type)},
-                    })
-            };
-        }
-        if (mapped->type == 'M') {
-            memo_field_indexes.push_back(target_fields.size());
-        }
-        field_mappings.push_back({
-            .field_name = source_field.name,
-            .source_type = source_field.type,
-            .target_type = mapped->type
-        });
-        target_fields.push_back(*mapped);
-    }
-
-    if (!memo_field_indexes.empty()) {
+    if (!plan.memo_field_indexes.empty()) {
         // create_dbf_table_file() resolves and writes to whatever memo
         // sidecar path already exists alongside destination_path (a
         // case-insensitive companion-discovery lookup, matching how the
@@ -266,7 +300,7 @@ DbfImportResult import_xbase_table_to_vfp_native(
     }
 
     for (const DbfRecord& record : source.table.records) {
-        for (const std::size_t field_index : memo_field_indexes) {
+        for (const std::size_t field_index : plan.memo_field_indexes) {
             if (field_index >= record.values.size()) {
                 continue;
             }
@@ -276,7 +310,7 @@ DbfImportResult import_xbase_table_to_vfp_native(
                     .error = dbf_import_text(
                         "Vfp.DbfImport.Error.UnresolvedMemoPayload",
                         {
-                            {"fieldName", target_fields[field_index].name},
+                            {"fieldName", plan.target_fields[field_index].name},
                             {"recordNumber", std::to_string(record.record_index + 1U)},
                         })
                 };
@@ -296,7 +330,7 @@ DbfImportResult import_xbase_table_to_vfp_native(
         row.reserve(record.values.size());
         for (std::size_t field_index = 0U; field_index < record.values.size(); ++field_index) {
             const DbfRecordValue& value = record.values[field_index];
-            if (target_fields[field_index].type == 'M') {
+            if (plan.target_fields[field_index].type == 'M') {
                 row.emplace_back();
                 continue;
             }
@@ -305,7 +339,7 @@ DbfImportResult import_xbase_table_to_vfp_native(
         target_records.push_back(std::move(row));
     }
 
-    const DbfWriteResult create_result = create_dbf_table_file(destination_path, target_fields, target_records);
+    const DbfWriteResult create_result = create_dbf_table_file(destination_path, plan.target_fields, target_records);
     if (!create_result.ok) {
         return {.ok = false, .error = create_result.error};
     }
@@ -313,7 +347,7 @@ DbfImportResult import_xbase_table_to_vfp_native(
     // Second pass: fill in real memo content record by record.
     for (std::size_t record_index = 0U; record_index < source.table.records.size(); ++record_index) {
         const DbfRecord& record = source.table.records[record_index];
-        for (const std::size_t field_index : memo_field_indexes) {
+        for (const std::size_t field_index : plan.memo_field_indexes) {
             if (field_index >= record.values.size()) {
                 continue;
             }
@@ -324,7 +358,7 @@ DbfImportResult import_xbase_table_to_vfp_native(
             const DbfWriteResult memo_result = replace_record_field_value(
                 destination_path,
                 record_index,
-                target_fields[field_index].name,
+                plan.target_fields[field_index].name,
                 value.display_value);
             if (!memo_result.ok) {
                 // Roll back rather than leaving a partially-imported
@@ -341,7 +375,27 @@ DbfImportResult import_xbase_table_to_vfp_native(
         .ok = true,
         .error = {},
         .record_count = source.table.records.size(),
-        .field_mappings = std::move(field_mappings)
+        .field_mappings = std::move(plan.field_mappings)
+    };
+}
+
+DbfImportPreviewResult preview_xbase_table_import(
+    const std::string& source_path,
+    const std::string& source_memo_sidecar_path) {
+    const DbfTableParseResult source = parse_dbf_table_from_file(
+        source_path,
+        std::numeric_limits<std::size_t>::max(),
+        source_memo_sidecar_path);
+    if (!source.ok) {
+        return {.ok = false, .error = source.error};
+    }
+    FieldMappingPlan plan = plan_field_mapping(source, /*collect_all_issues=*/true);
+    return {
+        .ok = plan.ok,
+        .error = std::move(plan.error),
+        .record_count = source.table.records.size(),
+        .field_mappings = std::move(plan.field_mappings),
+        .field_issues = std::move(plan.field_issues)
     };
 }
 

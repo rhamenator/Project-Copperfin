@@ -23,6 +23,38 @@ struct DbfImportResult {
     std::vector<DbfImportFieldMapping> field_mappings;
 };
 
+// One field this source cannot losslessly import, per #5532's dry-run
+// preview -- see docs/69-dbase-import-field-mapping.md for the full
+// unsupported-type table these reasons come from.
+struct DbfImportFieldIssue {
+    std::string field_name;
+    char source_type = '\0';
+    std::string reason;
+};
+
+struct DbfImportPreviewResult {
+    // True only if the source parsed, its format family and code page are
+    // supported, and every field mapped successfully -- i.e. a real import
+    // of this exact source would currently succeed (up to record-level
+    // memo-payload issues, which the preview does not check; see the
+    // function comment below).
+    bool ok = false;
+    // Set only for a table-level failure (source parse failure,
+    // unsupported format family, unsupported code page) that stops the
+    // preview before it can even enumerate fields. Empty otherwise, even
+    // when field_issues is non-empty -- unmappable fields are reported
+    // there, not here.
+    std::string error;
+    std::size_t record_count = 0;
+    // Every field that *would* map successfully.
+    std::vector<DbfImportFieldMapping> field_mappings;
+    // Every field that would not -- unlike the committing path, which
+    // fails closed on the first one it finds, this collects all of them
+    // so a caller can see the complete picture before deciding whether to
+    // proceed.
+    std::vector<DbfImportFieldIssue> field_issues;
+};
+
 // #5523/#5525: first slices of #5517's IMPORT DATABASE ... TYPE XBASE
 // wizard. Reads one legacy dBASE/FoxBASE/FoxPro-family table (source_path,
 // DbfFormatFamily::dbase/foxbase/foxpro -- see #5482/#5483's readers) and
@@ -46,6 +78,24 @@ struct DbfImportResult {
 DbfImportResult import_xbase_table_to_vfp_native(
     const std::string& source_path,
     const std::string& destination_path,
+    const std::string& source_memo_sidecar_path = {});
+
+// #5532: dry-run/report mode. Performs the same source-family, code-page,
+// and per-field mapping checks as import_xbase_table_to_vfp_native()
+// without ever writing anything -- no destination_path is needed, since
+// nothing is created. Unlike the committing path, which fails closed on
+// the first unmappable field it finds (a safety property: never write a
+// partial or silently-lossy table), this collects every unmappable field
+// so a caller can see the complete picture before deciding whether to
+// import at all.
+//
+// Does not check for unresolved memo payloads (the reader's "<memo block
+// N>" diagnostic placeholder) or a destination-side memo-sidecar
+// conflict -- both are properties of a specific destination/write
+// attempt, not of the source table's importability in the abstract, so
+// they remain checks the committing path performs, not this preview.
+DbfImportPreviewResult preview_xbase_table_import(
+    const std::string& source_path,
     const std::string& source_memo_sidecar_path = {});
 
 }  // namespace copperfin::vfp
