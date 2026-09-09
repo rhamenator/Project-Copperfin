@@ -9,6 +9,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/exclusive_file.h"
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/sidecar_path.h"
@@ -2950,6 +2951,158 @@ DbfWriteResult create_dbf_table_file(
     const std::vector<DbfFieldDescriptor>& fields,
     const std::vector<std::vector<std::string>>& records) {
     return create_dbf_table_file_with_memo_payloads(path, fields, records, nullptr);
+}
+
+// #5485: the first legacy binary-output target. Writes a dBASE III-
+// compatible table (structure + data only, no memo/index sidecar) using
+// #5482's read-side ground truth for the format: a 32-byte main header with
+// version 0x03, 32-byte field descriptors whose offset slot (bytes 12-15)
+// is left zero -- meaningless on disk in real dBASE III files, per the
+// dBASE-family reader's own sequential-offset handling -- and physically
+// sequential C/N/L/D field packing after the deletion marker. Field value
+// encoding is otherwise identical to VFP's, so this reuses write_field_bytes
+// unchanged rather than re-deriving C/N/L/D formatting rules.
+DbfWriteResult create_dbase_iii_table_file(
+    const std::string& path,
+    const std::vector<DbfFieldDescriptor>& fields,
+    const std::vector<std::vector<std::string>>& records) {
+    if (fields.empty()) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateFieldRequired")};
+    }
+
+    std::vector<RawFieldDescriptor> raw_fields;
+    raw_fields.reserve(fields.size());
+    std::uint32_t next_offset = 1U;
+    for (const auto& field : fields) {
+        const std::string trimmed_name = trim_both(field.name);
+        if (trimmed_name.empty()) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldNameRequired")};
+        }
+        if (const auto error = free_table_field_name_length_error(trimmed_name); error.has_value()) {
+            return {.ok = false, .error = *error, .record_count = records.size()};
+        }
+        const std::string normalized_name = serialized_dbf_field_name_key(trimmed_name);
+        const auto duplicate = std::find_if(
+            raw_fields.begin(),
+            raw_fields.end(),
+            [&](const RawFieldDescriptor& existing) {
+                return serialized_dbf_field_name_key(existing.name) == normalized_name;
+            });
+        if (duplicate != raw_fields.end()) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldExists")};
+        }
+        if (field.length == 0U) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldLengthRequired")};
+        }
+        // dBASE III's real field-type set: no memo/General/Picture (no DBT
+        // sidecar in this first slice), no VFP-only Double/Integer/Varchar
+        // types.
+        if (field.type != 'C' && field.type != 'N' && field.type != 'L' && field.type != 'D') {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateUnsupportedFieldType")};
+        }
+        // write_field_bytes()'s 'D' case always writes an 8-character
+        // YYYYMMDD payload regardless of the descriptor's declared length;
+        // a shorter declared length would let that write run past the
+        // field (or, for the last field, past the record buffer).
+        if (field.type == 'D' && field.length != 8U) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DateFieldWidthInvalid")};
+        }
+
+        raw_fields.push_back({
+            .name = trimmed_name,
+            .type = field.type,
+            .offset = next_offset,
+            .length = field.length,
+            .decimal_count = field.decimal_count
+        });
+        // The on-disk header/record-length fields are 16-bit; reject a
+        // schema that would silently wrap them rather than build a
+        // malformed file (or, for the field-count case, write descriptor
+        // bytes past a too-small buffer allocated from the wrapped size).
+        next_offset += field.length;
+        if (next_offset > std::numeric_limits<std::uint16_t>::max()) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordWidthTooLarge")};
+        }
+    }
+    if ((32U + (raw_fields.size() * 32U) + 1U) > std::numeric_limits<std::uint16_t>::max()) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TooManyFieldsForHeader")};
+    }
+
+    const std::uint16_t header_length = static_cast<std::uint16_t>(32U + (raw_fields.size() * 32U) + 1U);
+    const std::uint16_t record_length = static_cast<std::uint16_t>(next_offset);
+    std::vector<std::uint8_t> bytes(
+        static_cast<std::size_t>(header_length) + (records.size() * static_cast<std::size_t>(record_length)) + 1U,
+        0U);
+
+    bytes[0] = 0x03U;
+    write_le_u32(bytes, 4U, static_cast<std::uint32_t>(records.size()));
+    write_le_u16(bytes, 8U, header_length);
+    write_le_u16(bytes, 10U, record_length);
+
+    std::size_t descriptor_offset = 32U;
+    for (const auto& field : raw_fields) {
+        const std::string field_name = serialized_dbf_field_name(field.name);
+        std::copy(field_name.begin(), field_name.end(), bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_offset));
+        bytes[descriptor_offset + dbf_descriptor_name_width] = static_cast<std::uint8_t>(field.type);
+        // Bytes 12-15 deliberately left zero: real dBASE III files store an
+        // in-memory field address there, not an on-disk offset.
+        bytes[descriptor_offset + 16U] = field.length;
+        bytes[descriptor_offset + 17U] = field.decimal_count;
+        descriptor_offset += 32U;
+    }
+    bytes[descriptor_offset] = 0x0DU;
+    bytes.back() = 0x1AU;
+
+    const DbfHeader header{
+        .version = bytes[0],
+        .last_update_year = 0U,
+        .last_update_month = 0U,
+        .last_update_day = 0U,
+        .record_count = static_cast<std::uint32_t>(records.size()),
+        .header_length = header_length,
+        .record_length = record_length,
+        .table_flags = 0U,
+        .code_page_mark = 0U
+    };
+
+    for (std::size_t record_index = 0U; record_index < records.size(); ++record_index) {
+        if (records[record_index].size() != raw_fields.size()) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
+        }
+        const std::size_t record_offset = header.header_length + (record_index * header.record_length);
+        bytes[record_offset] = 0x20U;
+        for (std::size_t field_index = 0U; field_index < raw_fields.size(); ++field_index) {
+            const DbfWriteResult write_result = write_field_bytes(
+                bytes, header, record_index, raw_fields[field_index], records[record_index][field_index], path);
+            if (!write_result.ok) {
+                return write_result;
+            }
+        }
+    }
+
+    // A clean, confident "it exists" stat result gives a precise early
+    // error; anything else (doesn't exist, or the stat itself failed) falls
+    // through to the exclusive-create attempt below, which is the actual
+    // no-overwrite guarantee -- it refuses to replace an existing entry
+    // atomically, so a stat error here can never be mistaken for "safe to
+    // write."
+    std::error_code exists_error;
+    if (std::filesystem::exists(platform::path_from_utf8_string(path), exists_error) && !exists_error) {
+        return {
+            .ok = false,
+            .error = dbf_table_text("Vfp.DbfTable.Error.CreateDestinationExists", {{"path", path}}),
+            .record_count = records.size()
+        };
+    }
+
+    if (!stamp_dbf_last_update_date(bytes) ||
+        !platform::write_new_durable_file(
+            platform::path_from_utf8_string(path),
+            std::string_view(reinterpret_cast<const char*>(bytes.data()), bytes.size()))) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = records.size()};
+    }
+
+    return {.ok = true, .error = {}, .record_count = records.size()};
 }
 
 // The legacy dBASE/FoxBASE/FoxPro readers deliberately have no write-format

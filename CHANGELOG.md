@@ -1,3 +1,25 @@
+- 2026-09-09: Fixes #5485: Copperfin can now write dBASE III-compatible
+  tables (`create_dbase_iii_table_file()`) -- structure and data only, no
+  memo or index sidecar in this first legacy binary-output slice under
+  #1077. It writes a real dBASE III (`0x03`) header/descriptor layout,
+  matching #5482's read-side ground truth (a zeroed, meaningless-on-disk
+  offset slot, sequential field packing), reuses the existing VFP writer's
+  `C`/`N`/`L`/`D` value-encoding path since dBASE III has the same on-disk
+  text encoding for those types, and rejects both out-of-scope field types
+  and a `D` field declared narrower than the fixed 8-byte width it always
+  writes (the latter could otherwise write past the field into adjacent
+  data). Rejects a schema whose combined field width or field count would
+  overflow the on-disk 16-bit header/record-length fields, rather than
+  silently wrapping into an undersized buffer. Creates the destination file
+  atomically-exclusively via the existing `write_new_durable_file()`
+  primitive -- never replacing an existing entry, even under a concurrent
+  creator or an inconclusive existence check -- rather than checking for an
+  existing file and then using a replace-capable writer. Round-tripped
+  through #5482's own dBASE-family reader; no external dBASE-family product
+  is available in this environment to verify against instead.
+  FoxBASE/FoxPro/Clipper binary output, memo/index output, and historical
+  runtime execution remain intentionally out of scope.
+
 - 2026-09-08: Fixes #5482: the DBF reader previously classified dBASE files
   but then parsed all of them as Visual FoxPro tables. It now uses the dBASE
   III/IV packed-record layout instead of descriptor memory-address values,
