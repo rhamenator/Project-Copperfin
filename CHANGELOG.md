@@ -16,6 +16,24 @@
   FoxBASE/FoxPro/Clipper source support, DBC container import, and a
   dry-run/report mode remain explicit follow-up slices.
 
+  Review found and fixed several correctness gaps before merge: `F`
+  (Float) was documented as mapping to `N` but the code kept it as `F`
+  -- fixed to actually map to `N`; a non-default source code page could
+  silently produce an unimportable table (source text widens to UTF-8
+  on decode, but the destination keeps the source's declared byte width
+  and is always created as code-page-0) -- now rejected up front; an
+  unresolvable source memo pointer (missing/truncated `.dbt`) was
+  silently written as its `"<memo block N>"` diagnostic placeholder
+  text instead of failing -- now rejected before any destination file
+  is created; a same-base `.fpt` left over from something else could be
+  silently overwritten when the destination `.dbf` itself didn't exist
+  yet -- now detected and rejected; a failure partway through filling
+  in memo content left a partial, unretryable destination behind -- now
+  rolled back. Also fixed `dbf_table.cpp`'s double-value read formatting,
+  which used a fixed 15-digit precision insufficient to always
+  round-trip an IEEE-754 double exactly (e.g. `1.0000000000000002`
+  could silently become `1`) -- widened to `max_digits10` (17).
+
 - 2026-09-09: Fixes #5521: added read-only MDB/ACCDB container-level
   signature and Jet/ACE generation-byte detection
   (`parse_access_container_header()`), a narrower prerequisite carved out

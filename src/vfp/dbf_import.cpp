@@ -5,6 +5,7 @@
 #include "copperfin/vfp/dbf_import.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/sidecar_path.h"
 
 #include "copperfin/localization/localization.h"
 
@@ -60,7 +61,6 @@ std::optional<DbfFieldDescriptor> map_dbase_field_to_vfp_native(const DbfFieldDe
     switch (source.type) {
         case 'C':
         case 'N':
-        case 'F':
         case 'L':
         case 'D':
             // Direct: identical on-disk text encoding and semantics on
@@ -69,6 +69,19 @@ std::optional<DbfFieldDescriptor> map_dbase_field_to_vfp_native(const DbfFieldDe
             return DbfFieldDescriptor{
                 .name = source.name,
                 .type = source.type,
+                .offset = 0U,
+                .length = source.length,
+                .decimal_count = source.decimal_count
+            };
+        case 'F':
+            // dBASE Float -> VFP Numeric: both sides already decode/encode
+            // 'F' and 'N' identically (see write_field_bytes()'s shared
+            // 'N'/'F' case), and VFP itself treats Float as a legacy
+            // synonym for Numeric, so this maps to the canonical 'N'
+            // rather than perpetuating the separate letter.
+            return DbfFieldDescriptor{
+                .name = source.name,
+                .type = 'N',
                 .offset = 0U,
                 .length = source.length,
                 .decimal_count = source.decimal_count
@@ -118,6 +131,30 @@ std::optional<DbfFieldDescriptor> map_dbase_field_to_vfp_native(const DbfFieldDe
     }
 }
 
+// The dBASE-family reader (dbf_table.cpp) exposes an unresolved memo
+// payload (missing/truncated/unreadable DBT block) as the diagnostic text
+// "<memo block N>" rather than failing the whole table parse -- see the
+// 'M'/'G'/'P' cases in that file's field-decoding switch. Copying that
+// diagnostic string into the destination as if it were real memo content
+// would silently corrupt the imported data while still reporting success,
+// so it must be detected and rejected here instead.
+bool looks_like_unresolved_memo_placeholder(const DbfRecordValue& value) {
+    if (value.memo_block_number == 0U) {
+        return false;
+    }
+    return value.display_value == ("<memo block " + std::to_string(value.memo_block_number) + ">");
+}
+
+void remove_destination_artifacts(const std::string& destination_path) {
+    std::error_code ignored;
+    std::filesystem::remove(platform::path_from_utf8_string(destination_path), ignored);
+    const SidecarPathResolution memo_resolution =
+        resolve_vfp_memo_sidecar_path(platform::path_from_utf8_string(destination_path));
+    if (memo_resolution.path.has_value()) {
+        std::filesystem::remove(*memo_resolution.path, ignored);
+    }
+}
+
 }  // namespace
 
 DbfImportResult import_dbase_table_to_vfp_native(
@@ -133,6 +170,19 @@ DbfImportResult import_dbase_table_to_vfp_native(
     }
     if (source.table.header.format_family() != DbfFormatFamily::dbase) {
         return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.UnsupportedSourceFamily")};
+    }
+    if (source.table.header.code_page_mark != 0U) {
+        // code_page_mark 0 decodes/encodes as UTF-8 on both the read and
+        // write side (see dbf_text_encoding.cpp), so a code-page-0 source
+        // round-trips through this import with identical byte widths. A
+        // real single-byte code page (e.g. CP1252) does not: the reader
+        // widens it to (possibly multi-byte) UTF-8, but this slice copies
+        // the source field's declared byte width unchanged and the
+        // destination table is always created as code-page-0, so a
+        // non-ASCII character in a tightly-sized field can silently fail
+        // to fit. Rather than guess a safe worst-case width expansion,
+        // this first slice only supports code-page-0 sources.
+        return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.UnsupportedCodePage")};
     }
 
     std::error_code exists_error;
@@ -170,6 +220,42 @@ DbfImportResult import_dbase_table_to_vfp_native(
             .target_type = mapped->type
         });
         target_fields.push_back(*mapped);
+    }
+
+    if (!memo_field_indexes.empty()) {
+        // create_dbf_table_file() resolves and writes to whatever memo
+        // sidecar path already exists alongside destination_path (a
+        // case-insensitive companion-discovery lookup, matching how the
+        // rest of this table-creation family behaves), not only a path it
+        // creates itself. If destination_path itself is absent but a
+        // same-base .fpt companion already exists from something else,
+        // creating a table with memo fields would overwrite that
+        // unrelated file. Only check when the target schema actually has
+        // a memo field, matching the writer's own conditional behavior.
+        const SidecarPathResolution memo_conflict =
+            resolve_vfp_memo_sidecar_path(platform::path_from_utf8_string(destination_path));
+        if (memo_conflict.path.has_value()) {
+            return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.DestinationExists")};
+        }
+    }
+
+    for (const DbfRecord& record : source.table.records) {
+        for (const std::size_t field_index : memo_field_indexes) {
+            if (field_index >= record.values.size()) {
+                continue;
+            }
+            if (looks_like_unresolved_memo_placeholder(record.values[field_index])) {
+                return {
+                    .ok = false,
+                    .error = dbf_import_text(
+                        "Vfp.DbfImport.Error.UnresolvedMemoPayload",
+                        {
+                            {"fieldName", target_fields[field_index].name},
+                            {"recordNumber", std::to_string(record.record_index + 1U)},
+                        })
+                };
+            }
+        }
     }
 
     // First pass: create the table structure with every non-memo value
@@ -215,6 +301,11 @@ DbfImportResult import_dbase_table_to_vfp_native(
                 target_fields[field_index].name,
                 value.display_value);
             if (!memo_result.ok) {
+                // Roll back rather than leaving a partially-imported
+                // destination behind: a retry would otherwise immediately
+                // fail on the destination-exists check above despite the
+                // import having failed.
+                remove_destination_artifacts(destination_path);
                 return {.ok = false, .error = memo_result.error};
             }
         }

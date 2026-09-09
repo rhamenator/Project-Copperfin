@@ -741,6 +741,166 @@ void test_import_dbase_table_to_vfp_native_rejects_existing_destination() {
     fs::remove_all(temp_dir, ignored);
 }
 
+std::vector<std::uint8_t> make_synthetic_dbase_iii_fixture(
+    char field_type,
+    std::uint8_t field_length,
+    const std::string& field_value,
+    std::uint8_t code_page_mark = 0U) {
+    const std::size_t record_length = 1U + field_length;
+    std::vector<std::uint8_t> bytes(32U + 32U + 1U + record_length + 1U, 0U);
+    bytes[0] = 0x03U;
+    write_le_u32(bytes, 4U, 1U);
+    write_le_u16(bytes, 8U, static_cast<std::uint16_t>(32U + 32U + 1U));
+    write_le_u16(bytes, 10U, static_cast<std::uint16_t>(record_length));
+    bytes[29U] = code_page_mark;
+    write_ascii(bytes, 32U, "FIELD1");
+    bytes[32U + 11U] = static_cast<std::uint8_t>(field_type);
+    bytes[32U + 16U] = field_length;
+    bytes[64U] = 0x0DU;
+    bytes.back() = 0x1AU;
+    bytes[65U] = static_cast<std::uint8_t>(' ');
+    write_ascii(bytes, 66U, field_value);
+    return bytes;
+}
+
+void test_import_dbase_table_to_vfp_native_maps_float_to_numeric() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbase_import_float_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto bytes = make_synthetic_dbase_iii_fixture('F', 10U, "     42.5");
+    const fs::path source = temp_dir / "float_source.dbf";
+    expect(write_binary_file(source, bytes), "the synthetic Float-field fixture should be writable");
+
+    const fs::path destination = temp_dir / "float_dest.dbf";
+    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(source.string(), destination.string());
+    expect(import_result.ok, "importing a dBASE Float field should succeed");
+    if (import_result.ok && import_result.field_mappings.size() == 1U) {
+        expect(import_result.field_mappings.front().source_type == 'F',
+            "the reported mapping should record the dBASE Float source type");
+        expect(import_result.field_mappings.front().target_type == 'N',
+            "dBASE Float should map to VFP Numeric, not stay as Float");
+    }
+
+    const auto imported = copperfin::vfp::parse_dbf_table_from_file(destination.string(), 1U);
+    expect(imported.ok && !imported.table.fields.empty() && imported.table.fields.front().type == 'N',
+        "the imported destination field should actually be typed Numeric on disk");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_import_dbase_table_to_vfp_native_rejects_non_default_code_page() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbase_import_code_page_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto bytes = make_synthetic_dbase_iii_fixture('C', 10U, "hello", /*code_page_mark=*/0x01U);
+    const fs::path source = temp_dir / "cp_source.dbf";
+    expect(write_binary_file(source, bytes), "the synthetic non-default-code-page fixture should be writable");
+
+    const fs::path destination = temp_dir / "should_not_exist.dbf";
+    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(source.string(), destination.string());
+    expect(!import_result.ok, "importing a non-default-code-page source should fail closed");
+    expect(!fs::exists(destination, ignored), "a rejected import must not leave a partial destination file behind");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_import_dbase_table_to_vfp_native_rejects_unresolved_memo_payload() {
+    // A dBASE III + memo header (0x83) whose 'M' field points at a real,
+    // nonzero memo block, but with no .dbt sidecar present at all -- the
+    // reader can locate the pointer but not the payload, and exposes that
+    // as the "<memo block N>" diagnostic placeholder rather than failing
+    // the whole table parse.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbase_import_unresolved_memo_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    auto bytes = make_synthetic_dbase_iii_fixture('M', 10U, "0000000001");
+    bytes[0] = 0x83U;
+    const fs::path source = temp_dir / "unresolved_memo_source.dbf";
+    expect(write_binary_file(source, bytes), "the synthetic unresolved-memo fixture should be writable");
+
+    const fs::path destination = temp_dir / "should_not_exist.dbf";
+    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(source.string(), destination.string());
+    expect(!import_result.ok, "importing a source with an unresolvable memo payload should fail closed");
+    expect(!fs::exists(destination, ignored), "a rejected import must not leave a partial destination file behind");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_import_dbase_table_to_vfp_native_rejects_existing_memo_sidecar_conflict() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbase_import_memo_conflict_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    // The destination .dbf does not exist, but a same-base .fpt does --
+    // simulating an unrelated leftover file that must not be silently
+    // overwritten when the target schema has a memo field.
+    const fs::path destination = temp_dir / "conflict.dbf";
+    const fs::path stray_memo = temp_dir / "conflict.fpt";
+    expect(write_binary_file(stray_memo, {0xAAU, 0xBBU, 0xCCU}),
+        "the stray pre-existing memo sidecar fixture should be writable");
+    const std::vector<std::uint8_t> original_stray_bytes = read_binary_file(stray_memo);
+
+    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(
+        legacy_dbase_fixture_path("dbase_83.dbf").string(),
+        destination.string());
+    expect(!import_result.ok, "importing into a destination with a conflicting memo sidecar should fail closed");
+    expect(!fs::exists(destination, ignored), "a rejected import must not leave a partial destination .dbf behind");
+    expect(read_binary_file(stray_memo) == original_stray_bytes,
+        "a rejected import must not touch an unrelated existing memo sidecar's bytes");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_double_field_round_trips_full_ieee754_precision() {
+    // #5523 review: dbf_table.cpp's double-formatting precision was fixed
+    // from a fixed 15 digits to max_digits10 (17) so a value needing full
+    // IEEE-754 precision to round-trip exactly (like 1.0000000000000002)
+    // does not silently become a different value. Exercised here directly
+    // through the public VFP-native 'B' (double) write/read path, which
+    // shares the exact formatting code the dBASE 'O' import mapping also
+    // depends on.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_double_precision_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "VALUE", .type = 'B', .length = 8U, .decimal_count = 0U},
+    };
+    const std::string precise_value = "1.0000000000000002";
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "precise.dbf").string(), fields, {{precise_value}});
+    expect(create_result.ok, "creating a table with a full-precision double value should succeed");
+
+    const auto parsed = copperfin::vfp::parse_dbf_table_from_file((temp_dir / "precise.dbf").string(), 1U);
+    expect(parsed.ok && !parsed.table.records.empty() && !parsed.table.records.front().values.empty(),
+        "the precise-double fixture should parse back");
+    if (parsed.ok && !parsed.table.records.empty() && !parsed.table.records.front().values.empty()) {
+        const double round_tripped = std::stod(parsed.table.records.front().values.front().display_value);
+        expect(round_tripped == std::stod(precise_value),
+            "a double requiring full IEEE-754 precision should round-trip to the exact same value, not a shorter approximation");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_mutate_and_append_dbf_table() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2796,6 +2956,11 @@ int main(int argc, char* argv[]) {
     test_import_dbase_table_to_vfp_native_round_trips();
     test_import_dbase_table_to_vfp_native_rejects_unsupported_field_type();
     test_import_dbase_table_to_vfp_native_rejects_existing_destination();
+    test_import_dbase_table_to_vfp_native_maps_float_to_numeric();
+    test_import_dbase_table_to_vfp_native_rejects_non_default_code_page();
+    test_import_dbase_table_to_vfp_native_rejects_unresolved_memo_payload();
+    test_import_dbase_table_to_vfp_native_rejects_existing_memo_sidecar_conflict();
+    test_double_field_round_trips_full_ieee754_precision();
     test_dbf_mutations_stamp_last_update_date();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_string_fields_store_literal_null_text();

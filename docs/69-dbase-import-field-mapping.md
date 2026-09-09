@@ -35,6 +35,41 @@ destination file is created or written -- see
 `test_import_dbase_table_to_vfp_native_rejects_unsupported_field_type` in
 `tests/test_dbf_table.cpp`.
 
+## Additional safety checks (added after review)
+
+- **Code page**: only `code_page_mark == 0` (UTF-8, per `dbf_text_encoding.cpp`)
+  source tables are supported. A real single-byte code page (e.g. CP1252)
+  decodes to (possibly wider) UTF-8 on read, but this slice copies the
+  source field's declared byte width unchanged and always creates the
+  destination as code-page-0 -- a non-ASCII character in a tightly-sized
+  field could otherwise silently fail to fit. Rejected with
+  `Vfp.DbfImport.Error.UnsupportedCodePage` before any destination file
+  is created.
+- **Unresolved memo payloads**: the dBASE reader exposes a missing/
+  truncated/unreadable memo block as a diagnostic string
+  (`"<memo block N>"`) rather than failing the whole table parse. This
+  importer detects that pattern and rejects the whole import
+  (`Vfp.DbfImport.Error.UnresolvedMemoPayload`) *before* creating any
+  destination file, rather than silently writing the diagnostic text as
+  if it were real memo content.
+- **Existing memo-sidecar conflict**: when the target schema has any
+  memo field, the destination's memo-sidecar path (resolved the same
+  case-insensitive way `create_dbf_table_file()` itself resolves it) is
+  checked for an existing file even when the primary destination `.dbf`
+  path is free -- otherwise a stray same-base `.fpt` left over from
+  something else could be silently overwritten.
+- **Rollback on partial failure**: if the second-pass memo-fill loop
+  fails partway through (e.g. a filesystem error), the destination
+  `.dbf`/`.fpt` created by the first pass are removed before returning
+  the error, so a retry is not immediately blocked by the
+  destination-exists check.
+- **`O` (double) precision**: `dbf_table.cpp`'s reader originally
+  formatted doubles with a fixed 15-digit precision, which is not always
+  enough to round-trip an arbitrary IEEE-754 double exactly. Widened to
+  `std::numeric_limits<double>::max_digits10` (17) so `O`-mapped values
+  actually preserve their exact bit pattern through the decimal-string
+  round trip, matching this document's original claim for that row.
+
 ## Non-goals of this slice (see #5517 for the full wizard's scope)
 
 - No FoxBASE/FoxPro/Clipper source-family support.

@@ -1425,6 +1425,8 @@
   "Vfp.DbfHeader.Version.VisualFoxProAutoincrement": "Visual FoxPro with autoincrement",
   "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar": "Visual FoxPro varbinary/varchar",
   "Vfp.DbfImport.Error.DestinationExists": "Import destination already exists; the source table was not imported.",
+  "Vfp.DbfImport.Error.UnresolvedMemoPayload": "Field {fieldName} in record {recordNumber} references a memo payload that could not be read from the source; the table was not imported.",
+  "Vfp.DbfImport.Error.UnsupportedCodePage": "Only code-page-0 (UTF-8) source tables are supported by this import slice.",
   "Vfp.DbfImport.Error.UnsupportedFieldType": "Field {fieldName} has source type '{fieldType}', which this import slice does not support.",
   "Vfp.DbfImport.Error.UnsupportedSourceFamily": "Only dBASE-family tables are supported by this import slice.",
   "Vfp.DbfTable.Error.CharacterValueTooLarge": "Character value ({valueLength} bytes) is too large for field {fieldName} ({fieldLength} bytes wide) in record {recordNumber} of {path}. Value: {valuePreview}",
