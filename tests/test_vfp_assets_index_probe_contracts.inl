@@ -231,6 +231,55 @@ void test_parse_index_probe_for_mdx_rejects_implausible_header() {
     expect(!result.ok, "parse_index_probe should reject MDX files with an implausible all-zero header block");
 }
 
+void test_parse_index_probe_for_ntx() {
+    std::vector<std::uint8_t> bytes(1024U, 0U);
+    write_le_u16(bytes, 0U, 0x0006U);
+    write_le_u16(bytes, 2U, 0x0517U);
+    write_le_u32(bytes, 4U, 1024U);
+    write_le_u32(bytes, 8U, 3U * 1024U);
+    write_le_u16(bytes, 12U, 18U);
+    write_le_u16(bytes, 14U, 10U);
+    write_le_u16(bytes, 16U, 0U);
+    write_le_u16(bytes, 18U, 46U);
+    write_le_u16(bytes, 20U, 23U);
+    write_ascii(bytes, 22U, "UPPER(NAME)");
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, 3U * 1024U, copperfin::vfp::IndexKind::ntx);
+    expect(result.ok, "parse_index_probe should succeed for a plausible Clipper NTX header");
+    expect(result.probe.kind == copperfin::vfp::IndexKind::ntx, "NTX probe kind should be preserved");
+    expect(result.probe.block_size == 1024U, "NTX probe should use the 1024-byte page size");
+    expect(result.probe.root_node_offset_hint == 1024U, "NTX root page offset should be parsed");
+    expect(result.probe.free_node_offset_hint == (3U * 1024U), "NTX next-unused page offset should be parsed");
+    expect(result.probe.key_length_hint == 10U, "NTX key length should be parsed");
+    expect(result.probe.group_length_hint == 18U, "NTX group length should be parsed");
+    expect(result.probe.max_keys_hint == 46U, "NTX max keys per page should be parsed");
+    expect(result.probe.key_expression_hint == "UPPER(NAME)", "NTX key expression should be extracted");
+    expect(result.probe.normalization_hint == "upper", "NTX probe should expose first-pass normalization hints");
+    expect(result.probe.collation_hint == "case-folded", "NTX probe should expose first-pass collation hints");
+    expect(result.probe.header_sort_marker_hint == "ver:0x06", "NTX probe should expose an opaque header sort marker");
+}
+
+void test_parse_index_probe_for_ntx_rejects_truncated_header() {
+    std::vector<std::uint8_t> bytes(512U, 0U);
+    write_le_u32(bytes, 4U, 1024U);
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, 512U, copperfin::vfp::IndexKind::ntx);
+    expect(!result.ok, "parse_index_probe should reject an NTX header shorter than one 1024-byte page");
+}
+
+void test_parse_index_probe_for_ntx_rejects_inconsistent_group_length() {
+    std::vector<std::uint8_t> bytes(1024U, 0U);
+    write_le_u16(bytes, 0U, 0x0006U);
+    write_le_u32(bytes, 4U, 1024U);
+    write_le_u16(bytes, 12U, 99U);
+    write_le_u16(bytes, 14U, 10U);
+    write_le_u16(bytes, 18U, 46U);
+    write_ascii(bytes, 22U, "NAME");
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, 2U * 1024U, copperfin::vfp::IndexKind::ntx);
+    expect(!result.ok, "parse_index_probe should reject an NTX header whose group length does not match key length + 8");
+}
+
 void test_index_probe_errors_resolve_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -246,6 +295,10 @@ void test_index_probe_errors_resolve_through_localization_catalog() {
         english_catalog.translate("Vfp.IndexProbe.Error.DbaseMdxInvalidValues") ==
             "Header values do not look like a block-oriented dBase MDX file.",
         "#2380: MDX invalid-header error should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Vfp.IndexProbe.Error.ClipperNtxInvalidValues") ==
+            "Header values do not look like a Clipper NTX file.",
+        "#5484: NTX invalid-header error should resolve through the en-US catalog");
     expect(
         spanish_catalog.translate("Vfp.IndexProbe.Error.UnknownExtension") ==
             "Extension de indice desconocida.",

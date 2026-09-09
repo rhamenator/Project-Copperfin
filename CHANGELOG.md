@@ -1,3 +1,19 @@
+- 2026-09-09: Fixes #5484: added read-only Clipper NTX index header probing
+  (`IndexKind::ntx`), following the same 1024-byte-page header-probe-only
+  pattern already used for CDX/IDX/NDX/MDX -- root/next-unused page offsets,
+  key length, a group-length cross-check (key length + 8), a max-keys bound
+  of 92 per documented Clipper limits, and a key expression hint, all
+  grounded in public Clipper/xBase format documentation. Investigation found
+  that Clipper's default (non-DBFCDX) table/memo format is byte-compatible
+  with dBASE III PLUS's version `0x83` has-memo layout, so #5482's existing
+  dBASE-family reader already covers Clipper-produced DBF/DBT data; no
+  separate Clipper table/memo reader was needed, and a regression test
+  documents that compatibility against the existing fixture. No real
+  Clipper-produced DBT/NTX fixture was available in this environment; NTX
+  coverage uses a documentation-grounded synthetic header. NTX write
+  support, B-tree materialization, and Clipper runtime execution remain out
+  of scope.
+
 - 2026-09-09: Fixes #5485: Copperfin can now write dBASE III-compatible
   tables (`create_dbase_iii_table_file()`) -- structure and data only, no
   memo or index sidecar in this first legacy binary-output slice under

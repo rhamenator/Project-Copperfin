@@ -27,10 +27,15 @@ Current coverage:
   - Tag-table parsing now surfaces per-tag page offsets, key-format markers, key-type markers, and thread marker hints.
   - Tag-header page parsing now extracts first-pass key and `FOR` expressions with source offsets, plus expression-derived normalization/collation hints.
   - Treated as a production multi-tag index container for read/inspection workflows; write fidelity remains out of scope.
+- `NTX` (Clipper)
+  - Minimal 1024-byte-page header probe for Clipper's native index format, following the same header-probe-only pattern as `NDX`/`IDX` (no B-tree materialization).
+  - Extracts root page offset, next-unused-page offset, key length, group length (key length + 8, cross-checked), maximum keys per page (bounded at 92, per documented Clipper limits), maximum keys per half page, and a key expression hint.
+  - Clipper's default (non-DBFCDX) table/memo format writes DBF/DBT pairs that are byte-compatible with dBASE III PLUS's version `0x83` (has-memo) layout, so table and memo reading for Clipper-produced data is already covered by the existing dBASE III-family reader (`DbfFormatFamily::dbase`) added for #5482 -- no separate Clipper table/memo reader was needed for #5484; only the NTX index format was genuinely new.
+  - An opaque header sort-marker hint is surfaced from the signature word, without mapping it to a named collation.
 
 Current inspector behavior:
 
-- Direct inspection recognizes `CDX`, `DCX`, `IDX`, `NDX`, and `MDX`.
+- Direct inspection recognizes `CDX`, `DCX`, `IDX`, `NDX`, `MDX`, and `NTX`.
 - DBF/DBC-family inspection now reports structured validation findings when expected structural companion indexes are missing or when present companion indexes fail to parse.
 - The runtime order loader now preserves additive normalization/collation hints through `SET ORDER` and temporary `SEEK ... TAG` overrides, and emits those hints in `runtime.order` / `runtime.seek` event detail for verification.
 - The runtime locate/scan path now emits `runtime.rushmore` diagnostics for index-seek decisions while restoring the caller's active order after temporary optimization probes.
@@ -62,6 +67,11 @@ Reference docs used to keep the probe rules grounded:
   - <https://vfphelp.com/vfp9/html/71acd830-031d-40ee-bc2b-a8d9452d0efc.htm>
 - dBASE table/header reference:
   - <https://www.dbase.com/Knowledgebase/INT/db7_file_fmt.htm>
+- Clipper NTX index and DBT memo format references (used for #5484):
+  - <http://www.manmrk.net/tutorials/database/xbase/ntx.html>
+  - <http://www.manmrk.net/tutorials/database/xbase/dbt.html>
+  - <https://doc.alaska-software.com/content/dbespec_h2_ntxdbe_order_component.cxp>
+  - <https://doc.alaska-software.com/content/dbespec_h2_dbfdbe_data_component.cxp>
 
 Next implementation steps:
 

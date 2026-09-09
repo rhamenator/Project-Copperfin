@@ -16,7 +16,8 @@ enum class IndexKind {
     dcx,
     idx,
     ndx,
-    mdx
+    mdx,
+    ntx
 };
 
 struct IndexTagProbe {

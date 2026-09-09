@@ -1786,6 +1786,8 @@
   "Vfp.DbfTable.Error.VqValueTooLarge": "El valor V/Q ({valueLength} bytes) es demasiado grande para el campo {fieldName} ({fieldLength} bytes de ancho) en el registro {recordNumber} de {path}. Valor: {valuePreview}",
   "Vfp.DbfTable.Error.WriteMemoSidecarFailed": "No se pudo escribir el archivo complementario de memo.",
   "Vfp.DbfTable.Error.WriteTableFailed": "No se pudo escribir el archivo de tabla.",
+  "Vfp.IndexProbe.Error.ClipperNtxHeaderTooSmall": "El archivo es menor que el tamano de pagina de encabezado Clipper NTX de 1024 bytes.",
+  "Vfp.IndexProbe.Error.ClipperNtxInvalidValues": "Los valores del encabezado no parecen corresponder a un archivo Clipper NTX.",
   "Vfp.IndexProbe.Error.DbaseMdxInvalidValues": "Los valores del encabezado no parecen corresponder a un archivo dBase MDX orientado a bloques.",
   "Vfp.IndexProbe.Error.DbaseMdxProbeTooSmall": "El archivo es menor que el tamano minimo de sonda MDX (512 bytes).",
   "Vfp.IndexProbe.Error.DbaseMdxTagMetadataMissing": "No se encontraron metadatos plausibles de etiquetas MDX en la tabla de etiquetas.",

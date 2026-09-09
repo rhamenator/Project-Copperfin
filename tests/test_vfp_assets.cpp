@@ -832,6 +832,8 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.DbfHeader.Version.VisualFoxPro",
         "Vfp.DbfHeader.Version.VisualFoxProAutoincrement",
         "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar",
+        "Vfp.IndexProbe.Error.ClipperNtxHeaderTooSmall",
+        "Vfp.IndexProbe.Error.ClipperNtxInvalidValues",
         "Vfp.IndexProbe.Error.DbaseMdxInvalidValues",
         "Vfp.IndexProbe.Error.DbaseMdxProbeTooSmall",
         "Vfp.IndexProbe.Error.DbaseMdxTagMetadataMissing",
@@ -1857,6 +1859,9 @@ int main() {
     test_parse_index_probe_for_ndx_surfaces_character_domain_without_named_collation();
     test_parse_index_probe_for_mdx();
     test_parse_index_probe_for_mdx_rejects_implausible_header();
+    test_parse_index_probe_for_ntx();
+    test_parse_index_probe_for_ntx_rejects_truncated_header();
+    test_parse_index_probe_for_ntx_rejects_inconsistent_group_length();
     test_index_probe_errors_resolve_through_localization_catalog();
     test_inspect_asset_collects_companion_indexes();
     test_inspect_asset_uses_admitted_index_bytes();
