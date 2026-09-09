@@ -1613,7 +1613,12 @@ DecodedDbfValue decode_value(
             std::memcpy(&value, storage.data(), storage.size());
             std::ostringstream stream;
             stream.imbue(std::locale::classic());
-            stream.precision(15);
+            // max_digits10 (17 for IEEE-754 double), not a shorter
+            // "display" precision like 15: this text is re-parsed on
+            // write (see write_field_bytes()'s 'B' case and #5523's
+            // import path), and a shorter precision can silently change
+            // the value (e.g. 1.0000000000000002 rounds to 1).
+            stream.precision(std::numeric_limits<double>::max_digits10);
             stream << value;
             return trim_both(stream.str());
         }
@@ -1722,7 +1727,12 @@ DecodedDbfValue decode_value(
             std::memcpy(&value, storage.data(), storage.size());
             std::ostringstream stream;
             stream.imbue(std::locale::classic());
-            stream.precision(15);
+            // max_digits10 (17 for IEEE-754 double), not a shorter
+            // "display" precision like 15: this text is re-parsed on
+            // write (see write_field_bytes()'s 'B' case and #5523's
+            // import path), and a shorter precision can silently change
+            // the value (e.g. 1.0000000000000002 rounds to 1).
+            stream.precision(std::numeric_limits<double>::max_digits10);
             stream << value;
             return trim_both(stream.str());
         }
