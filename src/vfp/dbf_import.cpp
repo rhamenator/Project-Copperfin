@@ -183,11 +183,15 @@ DbfImportResult import_xbase_table_to_vfp_native(
         return {.ok = false, .error = source.error};
     }
     const DbfFormatFamily source_family = source.table.header.format_family();
-    // dbf_read_layout() now routes 0xFB through the same layout as the
-    // verified 0x02/0x03 lineage rather than the raw VFP-native default
-    // (see that function and docs/70-foxbase-0xfb-investigation.md for
-    // the research behind this decision), so the whole foxbase family is
-    // accepted here on the same footing as dbase/foxpro.
+    // dbf_read_layout() now routes 0xFB through the same physical layout
+    // as the already-verified 0x03 (dBASE III) byte -- not 0x02's own
+    // distinct 8-byte-header/16-byte-descriptor layout, which 0xFB does
+    // not share -- rather than the raw VFP-native default it previously
+    // fell through to (see that function and
+    // docs/70-foxbase-0xfb-investigation.md for the research behind this
+    // decision). So the whole foxbase family (0x02 and 0xFB) is accepted
+    // here on the same footing as dbase/foxpro, even though its two
+    // members use different physical layouts from each other.
     if (source_family != DbfFormatFamily::dbase &&
         source_family != DbfFormatFamily::foxpro &&
         source_family != DbfFormatFamily::foxbase) {

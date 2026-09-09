@@ -924,6 +924,7 @@ void test_dbf_reader_uses_dbase_iii_layout_for_0xfb() {
 
     const auto original = copperfin::vfp::parse_dbf_table_from_file(
         legacy_dbase_fixture_path("dbase_03.dbf").string(), 14U);
+    expect(original.ok, "the unpatched 0x03 baseline fixture should parse");
     const auto patched_result = copperfin::vfp::parse_dbf_table_from_file(source.string(), 14U);
     expect(patched_result.ok, "the 0xFB-patched dBASE III fixture should still parse");
     expect(
