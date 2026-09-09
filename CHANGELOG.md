@@ -1,3 +1,25 @@
+- 2026-09-08: Fixes #5453: added real Windows coverage for the
+  Authenticode trust and publisher-matching boundary, rather than testing a
+  synthetic policy result. The test hook verifies a known embedded-signed
+  system `dotnet.exe`, independently checks that its authenticated signer is
+  `.NET` while its unauthenticated PE `CompanyName` is `Microsoft
+  Corporation`, and proves policy accepts only the signer identity. A copied
+  fixture is confirmed trusted before truncation, then rejected after
+  tampering. This closes the coverage gap left by #5429/#5430 without
+  treating mutable version-resource metadata as evidence of publisher trust.
+  PR #5514 merged as `fd898aa80`; hosted Windows/MSVC, Linux, macOS, and the
+  manually dispatched native macOS validation all passed.
+
+- 2026-09-08: Fixes #5358: implemented native PRG `DESCENDING()` using
+  controlled real-VFP9 observations and structural CDX evidence. It reports
+  the active order's runtime direction, including `SET ORDER ... ASCENDING` /
+  `DESCENDING` overrides, and supports the file/tag-number form for recovered
+  single-tag CDX structure. Multi-tag CDX directory entries do not yet expose
+  a reliable per-tag header association in the sampled real VFP9 files; that
+  case deliberately returns `.F.` rather than infer a direction from an
+  unsafe offset. PR #5513 merged as `2daeff5f9`; regular hosted validation and
+  manually dispatched native macOS validation passed.
+
 - 2026-09-07: Fixes #5508: `REPLACE ALL <field> WITH <value>` and
   `REPLACE REST <field> WITH <value>` failed with "The target field was
   not found in the table" instead of replacing every (or the remaining)
