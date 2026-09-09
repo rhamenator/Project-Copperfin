@@ -44,10 +44,12 @@ Current inspector behavior:
   - `table.idx`
   - `table.ndx`
   - `table.mdx`
+  - `table.ntx`
   - `table.dbf.cdx`
   - `table.dbf.idx`
   - `table.dbf.ndx`
   - `table.dbf.mdx`
+  - `table.dbf.ntx`
 - DBF headers now expose `has_production_index()` so the same flag can support both FoxPro structural indexes and dBase production indexes.
 
 Local reality checks used during implementation:

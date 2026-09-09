@@ -267,6 +267,25 @@ void test_parse_index_probe_for_ntx_rejects_truncated_header() {
     expect(!result.ok, "parse_index_probe should reject an NTX header shorter than one 1024-byte page");
 }
 
+void test_parse_index_probe_for_ntx_rejects_partial_trailing_page() {
+    // A file whose declared size (1025 bytes) is not a whole number of
+    // 1024-byte pages must fail closed even when the buffered first page
+    // and its root offset otherwise look plausible: the on-disk file only
+    // has a partial trailing page, so root offset 1024 would not actually
+    // contain a complete page.
+    std::vector<std::uint8_t> bytes(1024U, 0U);
+    write_le_u16(bytes, 0U, 0x0006U);
+    write_le_u32(bytes, 4U, 1024U);
+    write_le_u32(bytes, 8U, 0U);
+    write_le_u16(bytes, 12U, 18U);
+    write_le_u16(bytes, 14U, 10U);
+    write_le_u16(bytes, 18U, 46U);
+    write_ascii(bytes, 22U, "NAME");
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, 1025U, copperfin::vfp::IndexKind::ntx);
+    expect(!result.ok, "parse_index_probe should reject an NTX file whose size is not a whole number of 1024-byte pages");
+}
+
 void test_parse_index_probe_for_ntx_rejects_inconsistent_group_length() {
     std::vector<std::uint8_t> bytes(1024U, 0U);
     write_le_u16(bytes, 0U, 0x0006U);

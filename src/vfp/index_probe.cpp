@@ -666,7 +666,7 @@ IndexParseResult parse_clipper_ntx_probe(const std::vector<std::uint8_t>& bytes,
     probe.collation_hint = derive_collation_hint(probe.key_expression_hint, probe.normalization_hint);
     probe.header_sort_marker_hint = make_ndx_header_sort_marker(probe.signature);
 
-    const bool plausible_size = file_size >= probe.block_size;
+    const bool plausible_size = file_size >= probe.block_size && (file_size % probe.block_size) == 0U;
     const bool plausible_root = probe.root_node_offset_hint >= probe.block_size &&
                                 probe.root_node_offset_hint < file_size &&
                                 (probe.root_node_offset_hint % probe.block_size) == 0U;
