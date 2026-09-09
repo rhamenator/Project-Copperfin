@@ -408,11 +408,7 @@ DbfReadLayout dbf_read_layout(const DbfHeader& header) {
         // 16-byte descriptors (11-byte name, 1-byte type, 1-byte length,
         // a 2-byte in-memory field-address slot at bytes 13-14 that is
         // meaningless on disk, then a 1-byte decimal count) -- fields are
-        // packed sequentially with no on-disk offset. `0xfb` is also
-        // documented as a FoxBASE signature, but this specific 8-byte
-        // header/16-byte descriptor layout is only verified against real
-        // `0x02` fixtures; `0xfb` falls back to the default layout below
-        // rather than guessing it shares the same physical structure.
+        // packed sequentially with no on-disk offset.
         return {
             .descriptor_start = 8U,
             .descriptor_size = 16U,
@@ -421,6 +417,29 @@ DbfReadLayout dbf_read_layout(const DbfHeader& header) {
             .descriptor_length_offset = 12U,
             .descriptor_decimal_count_offset = 15U,
             .uses_physical_field_offsets = false
+        };
+    }
+    if (header.version == 0xFBU) {
+        // 0xFB's true physical layout was never confirmed by any primary
+        // source -- see docs/70-foxbase-0xfb-investigation.md for the
+        // full research trail. The community table this value ultimately
+        // traces back to (clicketyclick.dk) marks it "FoxPro ???": an
+        // acknowledged unknown by its own original compiler, not a
+        // documented fact, despite roughly two decades of secondary
+        // sources repeating it with increasing (and unwarranted)
+        // confidence. Every source that ventured an actual guess at its
+        // meaning, rather than just copying the "???", pointed toward
+        // the FoxBASE/FoxPro-2.x-without-memo lineage -- the same
+        // lineage as the already-verified `0x03` byte below -- so this
+        // uses that same sequential-packing, non-physical-offset layout
+        // rather than silently falling through to the raw VFP-native
+        // default (trusted stored offsets, binary memo pointers) that
+        // otherwise applies here and matches none of the converging
+        // guesses. This is a documented best-effort choice, not a
+        // verified one; revise it if a real specimen ever surfaces.
+        return {
+            .uses_physical_field_offsets = false,
+            .memo_storage_format = DbfMemoStorageFormat::dbase_iii
         };
     }
     if (header.format_family() != DbfFormatFamily::dbase) {

@@ -898,32 +898,80 @@ void test_import_xbase_table_to_vfp_native_round_trips_foxbase() {
     fs::remove_all(temp_dir, ignored);
 }
 
-void test_import_xbase_table_to_vfp_native_rejects_unverified_0xfb_foxbase() {
-    // #5525/#5526 review: 0xFB also classifies as DbfFormatFamily::foxbase,
-    // but RQ-CF-LEGACY-003 records that its genuine physical layout is
-    // unverified against a real fixture -- dbf_read_layout() deliberately
-    // does not specialize it the way 0x02 is specialized. Importing an
-    // 0xFB file could silently serialize fields read from wrong offsets;
-    // only the verified 0x02 version should be accepted.
+void test_dbf_reader_uses_dbase_iii_layout_for_0xfb() {
+    // #5528: research (docs/70-foxbase-0xfb-investigation.md) found no
+    // primary source ever confirmed a real 0xFB-signed file's physical
+    // layout, and the original community table this value traces back to
+    // marks it an outright unknown ("FoxPro ???"). Every source that
+    // ventured an actual guess pointed toward the same lineage as the
+    // already-verified 0x03 (dBASE III) byte, so dbf_read_layout() now
+    // routes 0xFB there instead of the raw VFP-native default it
+    // incidentally fell through to before. A real dBASE III fixture,
+    // version-byte-patched to 0xFB, proves the read path.
+    const auto bytes = read_binary_file(legacy_dbase_fixture_path("dbase_03.dbf"));
+    expect(!bytes.empty(), "the dBASE III fixture should be readable for patching");
+    std::filesystem::path temp_dir = std::filesystem::temp_directory_path() /
+        ("copperfin_0xfb_read_layout_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    std::filesystem::remove_all(temp_dir, ignored);
+    std::filesystem::create_directories(temp_dir);
+    const std::filesystem::path source = temp_dir / "0xfb_via_dbase_iii.dbf";
+    auto patched = bytes;
+    if (!patched.empty()) {
+        patched[0] = 0xFBU;
+        expect(write_binary_file(source, patched), "the version-patched 0xFB fixture should be writable");
+    }
+
+    const auto original = copperfin::vfp::parse_dbf_table_from_file(
+        legacy_dbase_fixture_path("dbase_03.dbf").string(), 14U);
+    const auto patched_result = copperfin::vfp::parse_dbf_table_from_file(source.string(), 14U);
+    expect(patched_result.ok, "the 0xFB-patched dBASE III fixture should still parse");
+    expect(
+        patched_result.table.header.format_family() == copperfin::vfp::DbfFormatFamily::foxbase,
+        "0xFB should classify as the foxbase family");
+    expect(
+        patched_result.table.fields.size() == original.table.fields.size() &&
+            patched_result.table.records.size() == original.table.records.size(),
+        "0xFB should read the same field/record counts as the unpatched 0x03 fixture");
+    if (!patched_result.table.records.empty() && !original.table.records.empty() &&
+        patched_result.table.records.front().values.size() == original.table.records.front().values.size()) {
+        for (std::size_t i = 0U; i < patched_result.table.records.front().values.size(); ++i) {
+            expect(
+                patched_result.table.records.front().values[i].display_value ==
+                    original.table.records.front().values[i].display_value,
+                "0xFB should decode field values identically to the same bytes read as 0x03");
+        }
+    }
+
+    std::filesystem::remove_all(temp_dir, ignored);
+}
+
+void test_import_xbase_table_to_vfp_native_round_trips_0xfb_foxbase() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
-        ("copperfin_unverified_0xfb_import_tests_" + std::to_string(_getpid()));
+        ("copperfin_0xfb_import_tests_" + std::to_string(_getpid()));
     std::error_code ignored;
     fs::remove_all(temp_dir, ignored);
     fs::create_directories(temp_dir);
 
-    auto bytes = read_binary_file(legacy_foxpro_fixture_path("dbase_02.dbf"));
-    expect(!bytes.empty(), "the FoxBASE fixture should be readable for patching");
-    const fs::path source = temp_dir / "unverified_0xfb.dbf";
-    if (!bytes.empty()) {
-        bytes[0] = 0xFBU;
-        expect(write_binary_file(source, bytes), "the version-patched 0xFB fixture should be writable");
-    }
+    auto bytes = make_synthetic_dbase_iii_fixture('C', 10U, "hi mom");
+    bytes[0] = 0xFBU;
+    const fs::path source = temp_dir / "0xfb_source.dbf";
+    expect(write_binary_file(source, bytes), "the synthetic 0xFB fixture should be writable");
 
-    const fs::path destination = temp_dir / "should_not_exist.dbf";
+    const fs::path destination = temp_dir / "imported.dbf";
     const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(source.string(), destination.string());
-    expect(!import_result.ok, "importing an unverified 0xFB FoxBASE source should fail closed");
-    expect(!fs::exists(destination, ignored), "a rejected import must not leave a partial destination file behind");
+    expect(import_result.ok, "importing a 0xFB FoxBASE source should now succeed");
+
+    const auto imported = copperfin::vfp::parse_dbf_table_from_file(destination.string(), 1U);
+    expect(imported.ok, "the imported destination table should itself parse");
+    expect(
+        imported.table.header.format_family() == copperfin::vfp::DbfFormatFamily::visual_foxpro,
+        "the imported destination table should be VFP-native, not FoxBASE");
+    if (imported.ok && !imported.table.records.empty() && !imported.table.records.front().values.empty()) {
+        expect(imported.table.records.front().values.front().display_value == "hi mom",
+            "imported field values should match the synthetic 0xFB source");
+    }
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -3138,7 +3186,8 @@ int main(int argc, char* argv[]) {
     test_import_dbase_table_to_vfp_native_rejects_unresolved_memo_payload();
     test_import_dbase_table_to_vfp_native_rejects_existing_memo_sidecar_conflict();
     test_import_xbase_table_to_vfp_native_round_trips_foxbase();
-    test_import_xbase_table_to_vfp_native_rejects_unverified_0xfb_foxbase();
+    test_dbf_reader_uses_dbase_iii_layout_for_0xfb();
+    test_import_xbase_table_to_vfp_native_round_trips_0xfb_foxbase();
     test_import_xbase_table_to_vfp_native_rejects_foxpro_general_field();
     test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes();
     test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro();

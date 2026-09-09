@@ -183,18 +183,14 @@ DbfImportResult import_xbase_table_to_vfp_native(
         return {.ok = false, .error = source.error};
     }
     const DbfFormatFamily source_family = source.table.header.format_family();
-    const bool is_verified_foxbase =
-        source_family == DbfFormatFamily::foxbase && source.table.header.version == 0x02U;
-    // RQ-CF-LEGACY-003 records that 0xFB's genuine physical layout is
-    // unverified against a real fixture and may not actually match 0x02's
-    // layout -- dbf_read_layout() deliberately only specializes 0x02 and
-    // leaves 0xFB on the generic default layout for that reason. Importing
-    // an 0xFB file could therefore serialize fields read from incorrect
-    // offsets while still reporting success. Only the verified 0x02
-    // version is accepted here until 0xFB's layout is confirmed.
+    // dbf_read_layout() now routes 0xFB through the same layout as the
+    // verified 0x02/0x03 lineage rather than the raw VFP-native default
+    // (see that function and docs/70-foxbase-0xfb-investigation.md for
+    // the research behind this decision), so the whole foxbase family is
+    // accepted here on the same footing as dbase/foxpro.
     if (source_family != DbfFormatFamily::dbase &&
         source_family != DbfFormatFamily::foxpro &&
-        !is_verified_foxbase) {
+        source_family != DbfFormatFamily::foxbase) {
         return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.UnsupportedSourceFamily")};
     }
     if (source.table.header.code_page_mark != 0U) {
