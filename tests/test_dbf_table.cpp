@@ -495,6 +495,68 @@ void test_parse_dbf_table_with_memo_sidecar() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_create_dbase_iii_table_file_round_trips_and_rejects_overwrite() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbase_iii_writer_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+    const fs::path table_path = temp_dir / "customers.dbf";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 20U, .decimal_count = 0U},
+        {.name = "BALANCE", .type = 'N', .length = 8U, .decimal_count = 2U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U, .decimal_count = 0U},
+        {.name = "SIGNUP", .type = 'D', .length = 8U, .decimal_count = 0U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Ada Lovelace", "1234.50", "T", "19850812"},
+        {"Grace Hopper", "-9.75", "F", "19431201"},
+    };
+
+    const auto create_result = copperfin::vfp::create_dbase_iii_table_file(
+        table_path.string(), fields, records);
+    expect(create_result.ok, "dBASE III writer should accept a well-formed C/N/L/D schema");
+    expect(create_result.record_count == 2U, "dBASE III writer should report the written record count");
+
+    const std::vector<std::uint8_t> written_bytes = read_binary_file(table_path);
+    expect(!written_bytes.empty() && written_bytes[0] == 0x03U,
+        "dBASE III writer should stamp version 0x03, not a VFP version byte");
+
+    const auto read_back = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(read_back.ok, "the dBASE-family reader should parse the table this writer produced");
+    expect(read_back.table.header.format_family() == copperfin::vfp::DbfFormatFamily::dbase,
+        "the written table should round-trip through the dbase family classification");
+    expect(read_back.table.records.size() == 2U && read_back.table.fields.size() == 4U,
+        "the written table should expose every record and field on read-back");
+    if (read_back.table.records.size() == 2U && read_back.table.records[0].values.size() == 4U) {
+        const auto& first = read_back.table.records[0].values;
+        expect(first[0U].display_value == "Ada Lovelace", "written character values should round-trip");
+        expect(first[1U].display_value == "1234.50", "written numeric values should round-trip with their decimals");
+        expect(first[2U].display_value == "true", "written logical values should round-trip");
+        expect(first[3U].display_value == "1985-08-12", "written date values should round-trip");
+    }
+
+    const auto overwrite_attempt = copperfin::vfp::create_dbase_iii_table_file(
+        table_path.string(), fields, records);
+    expect(!overwrite_attempt.ok, "the dBASE III writer should refuse to silently overwrite an existing file");
+    expect(read_binary_file(table_path) == written_bytes,
+        "a rejected overwrite must not modify the existing file's bytes");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
+        {.name = "NOTES", .type = 'M', .length = 10U, .decimal_count = 0U},
+    };
+    const auto memo_attempt = copperfin::vfp::create_dbase_iii_table_file(
+        (temp_dir / "unsupported.dbf").string(), unsupported_fields, {{"x"}});
+    expect(!memo_attempt.ok,
+        "the dBASE III writer should reject field types outside its first-slice C/N/L/D scope");
+    expect(!fs::exists(temp_dir / "unsupported.dbf", ignored),
+        "a rejected schema must not leave a partial file behind");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_mutate_and_append_dbf_table() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2544,6 +2606,7 @@ int main(int argc, char* argv[]) {
     test_foxbase_foxpro_tables_reject_mutation_without_touching_source_bytes();
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
+    test_create_dbase_iii_table_file_round_trips_and_rejects_overwrite();
     test_dbf_mutations_stamp_last_update_date();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_string_fields_store_literal_null_text();

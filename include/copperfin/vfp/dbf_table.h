@@ -64,6 +64,12 @@ DbfWriteResult create_dbf_table_file(
     const std::string& path,
     const std::vector<DbfFieldDescriptor>& fields,
     const std::vector<std::vector<std::string>>& records);
+// #5485: writes a dBASE III-compatible table (C/N/L/D fields, no memo/index
+// sidecar). Fails closed if `path` already exists rather than overwriting.
+DbfWriteResult create_dbase_iii_table_file(
+    const std::string& path,
+    const std::vector<DbfFieldDescriptor>& fields,
+    const std::vector<std::vector<std::string>>& records);
 DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field);
 DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& field_name);
 DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field);

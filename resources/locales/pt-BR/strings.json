@@ -1743,6 +1743,7 @@
   "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar": "Visual FoxPro varbinary/varchar",
   "Vfp.DbfTable.Error.CharacterValueTooLarge": "O valor de caractere ({valueLength} bytes) e grande demais para o campo {fieldName} ({fieldLength} bytes de largura) no registro {recordNumber} de {path}. Valor: {valuePreview}",
   "Vfp.DbfTable.Error.TextEncodingConversionFailed": "O texto nao pode ser representado na pagina de codigos da tabela.",
+  "Vfp.DbfTable.Error.CreateDestinationExists": "Nao e possivel criar uma tabela em um caminho que ja existe: {path}",
   "Vfp.DbfTable.Error.CreateFieldRequired": "Pelo menos um campo e necessario para criar uma tabela DBF.",
   "Vfp.DbfTable.Error.CreateUnsupportedFieldType": "A criacao de tabela ainda nao esta implementada para um ou mais tipos de campo.",
   "Vfp.DbfTable.Error.CurrencyValueInvalid": "Campos Currency aceitam apenas valores decimais com sinal e ate quatro casas fracionarias.",
