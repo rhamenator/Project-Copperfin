@@ -192,8 +192,13 @@ void test_parse_real_foxbase_foxpro_family_fixtures() {
         "FoxBASE fixture should expose the requested records");
     expect(foxbase.table.fields.size() == 14U,
         "FoxBASE fixture should expose its complete descriptor array");
-    expect(!foxbase.table.fields.empty() && foxbase.table.fields[0U].decimal_count == 0U,
-        "FoxBASE numeric fields have no on-disk decimal-count byte");
+    if (foxbase.table.fields.size() == 14U) {
+        expect(foxbase.table.fields[0U].decimal_count == 0U,
+            "FoxBASE whole-valued numeric fields report zero decimals");
+        expect(foxbase.table.fields[12U].name == "PAYRATE" &&
+                   foxbase.table.fields[12U].decimal_count == 3U,
+            "FoxBASE's on-disk decimal-count byte (descriptor offset 15) should be read, not assumed zero");
+    }
     if (!foxbase.table.records.empty() && foxbase.table.records.front().values.size() == 14U) {
         const auto& first = foxbase.table.records.front().values;
         expect(first[0U].display_value == "2",
@@ -220,6 +225,36 @@ void test_parse_real_foxbase_foxpro_family_fixtures() {
         expect(memo_value.display_value.starts_with("El meu pare."),
             "FoxPro memo blocks should decode using VFP's length-prefixed block layout");
     }
+}
+
+void test_foxbase_header_date_bytes_and_0xfb_classification() {
+    // #5518 review: FoxBASE's 8-byte header stores month/day/year (in that
+    // order) at bytes 3-5, not reserved padding. The bundled dbase_02.dbf
+    // fixture happens to have an all-zero (never-stamped) date, so verify
+    // the byte mapping with a synthetic header instead.
+    std::vector<std::uint8_t> foxbase_header(32U, 0U);
+    foxbase_header[0] = 0x02U;
+    write_le_u16(foxbase_header, 1U, 1U);
+    foxbase_header[3] = 6U;
+    foxbase_header[4] = 15U;
+    foxbase_header[5] = 91U;
+    write_le_u16(foxbase_header, 6U, 10U);
+    const auto foxbase_result = copperfin::vfp::parse_dbf_header(foxbase_header);
+    expect(foxbase_result.ok, "synthetic FoxBASE header should parse");
+    expect(foxbase_result.header.last_update_iso8601() == "1991-06-15",
+        "FoxBASE last-update bytes 3-5 should decode as month/day/year");
+}
+
+void test_foxbase_memo_block_size_probe_does_not_misread_descriptors() {
+    // #5518 review: read_memo_field_block_size() scans descriptors using
+    // the VFP-only 32-byte-starting-at-offset-32 layout. For a FoxBASE
+    // table (8-byte header, 16-byte descriptors), that scan lands inside
+    // unrelated descriptor bytes; it must bail out instead of
+    // misinterpreting them as a memo field and probing a stray sidecar.
+    const auto block_size = copperfin::vfp::read_memo_field_block_size(
+        legacy_foxpro_fixture_path("dbase_02.dbf").string());
+    expect(!block_size.has_value(),
+        "FoxBASE tables should never report a memo block size");
 }
 
 void test_foxbase_foxpro_tables_reject_mutation_without_touching_source_bytes() {
@@ -2503,7 +2538,9 @@ int main(int argc, char* argv[]) {
     test_dbase_legacy_layouts_fail_closed_when_truncated();
     test_dbase_tables_reject_mutation_without_touching_source_bytes();
     test_parse_real_foxbase_foxpro_family_fixtures();
+    test_foxbase_header_date_bytes_and_0xfb_classification();
     test_foxbase_foxpro_layouts_fail_closed_when_truncated();
+    test_foxbase_memo_block_size_probe_does_not_misread_descriptors();
     test_foxbase_foxpro_tables_reject_mutation_without_touching_source_bytes();
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();

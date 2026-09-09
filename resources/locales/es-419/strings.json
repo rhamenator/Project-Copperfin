@@ -1736,7 +1736,6 @@
   "Vfp.DbfHeader.Version.DbaseLevel7MemoSql": "tabla SQL de dBASE Nivel 7 con memo",
   "Vfp.DbfHeader.Version.DbaseLevel7SqlTable": "tabla SQL de dBASE Nivel 7",
   "Vfp.DbfHeader.Version.FoxProMemo": "FoxPro con memo",
-  "Vfp.DbfHeader.Version.FoxProNoMemo": "FoxPro sin memo",
   "Vfp.DbfHeader.Version.Foxbase": "FoxBASE",
   "Vfp.DbfHeader.Version.Unknown": "Desconocido",
   "Vfp.DbfHeader.Version.VisualFoxPro": "Visual FoxPro",

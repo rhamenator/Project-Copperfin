@@ -111,6 +111,7 @@ DbfFormatFamily DbfHeader::format_family() const {
 
     switch (version) {
         case 0x02U:
+        case 0xFBU:
             return DbfFormatFamily::foxbase;
         case 0x03U:
         case 0x43U:
@@ -120,7 +121,6 @@ DbfFormatFamily DbfHeader::format_family() const {
         case 0xCBU:
             return DbfFormatFamily::dbase;
         case 0xF5U:
-        case 0xFBU:
             return DbfFormatFamily::foxpro;
         case 0x30U:
         case 0x31U:
@@ -168,6 +168,7 @@ std::string DbfHeader::version_description(const localization::LocalizedCatalog&
     }
     switch (version) {
         case 0x02U:
+        case 0xFBU:
             return dbf_header_text(catalog, "Vfp.DbfHeader.Version.Foxbase");
         case 0x03U:
             return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseIiiCompatible");
@@ -189,8 +190,6 @@ std::string DbfHeader::version_description(const localization::LocalizedCatalog&
             return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseIvMemoSql");
         case 0xF5U:
             return dbf_header_text(catalog, "Vfp.DbfHeader.Version.FoxProMemo");
-        case 0xFBU:
-            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.FoxProNoMemo");
         default:
             return dbf_header_text(catalog, "Vfp.DbfHeader.Version.Unknown");
     }
@@ -214,12 +213,16 @@ DbfParseResult parse_dbf_header(const std::vector<std::uint8_t>& bytes) {
     if (header.version == 0x02U) {
         // FoxBASE (dBASE II-compatible) predates the 32-byte dBASE III
         // header. Its main header is 8 bytes: version, a 2-byte record
-        // count, 3 reserved bytes, then a 2-byte record length -- there is
-        // no stored last-update date, header length, table-flags, or
+        // count, then the last-update month/day/year (one byte each,
+        // unlike dBASE III's year/month/day order), then a 2-byte record
+        // length -- there is no stored header length, table-flags, or
         // code-page byte. The descriptor table (and therefore the start of
         // record data) is always a fixed 521 bytes regardless of how many
         // fields are actually declared.
         header.record_count = read_le_u16(bytes, 1U);
+        header.last_update_month = bytes[3];
+        header.last_update_day = bytes[4];
+        header.last_update_year = bytes[5];
         header.header_length = 521U;
         header.record_length = read_le_u16(bytes, 6U);
     } else {

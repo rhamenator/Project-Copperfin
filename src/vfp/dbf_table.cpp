@@ -389,10 +389,6 @@ struct DbfReadLayout {
     std::size_t descriptor_length_offset = 16U;
     std::size_t descriptor_decimal_count_offset = 17U;
     bool uses_physical_field_offsets = true;
-    // FoxBASE descriptors have no on-disk decimal-count byte at all; every
-    // field is treated as having zero decimals rather than reading an
-    // unrelated reserved byte.
-    bool descriptor_has_decimal_count = true;
     DbfMemoStorageFormat memo_storage_format = DbfMemoStorageFormat::visual_foxpro;
 };
 
@@ -405,21 +401,25 @@ DbfReadLayout dbf_read_layout(const DbfHeader& header) {
         // memo pointer encoding needs to differ from the VFP default.
         return {.memo_storage_format = DbfMemoStorageFormat::foxpro};
     }
-    if (header.format_family() == DbfFormatFamily::foxbase) {
+    if (header.version == 0x02U) {
         // FoxBASE (dBASE II-compatible) predates the 32-byte dBASE III
         // header entirely: an 8-byte main header is followed by fixed
-        // 16-byte descriptors (11-byte name, 1-byte type, 1-byte length;
-        // no on-disk offset or decimal-count byte -- fields are packed
-        // sequentially and every FoxBASE column is integer/whole-valued).
+        // 16-byte descriptors (11-byte name, 1-byte type, 1-byte length,
+        // a 2-byte in-memory field-address slot at bytes 13-14 that is
+        // meaningless on disk, then a 1-byte decimal count) -- fields are
+        // packed sequentially with no on-disk offset. `0xfb` is also
+        // documented as a FoxBASE signature, but this specific 8-byte
+        // header/16-byte descriptor layout is only verified against real
+        // `0x02` fixtures; `0xfb` falls back to the default layout below
+        // rather than guessing it shares the same physical structure.
         return {
             .descriptor_start = 8U,
             .descriptor_size = 16U,
             .descriptor_name_width = 11U,
             .descriptor_type_offset = 11U,
             .descriptor_length_offset = 12U,
-            .descriptor_decimal_count_offset = 12U,
-            .uses_physical_field_offsets = false,
-            .descriptor_has_decimal_count = false
+            .descriptor_decimal_count_offset = 15U,
+            .uses_physical_field_offsets = false
         };
     }
     if (header.format_family() != DbfFormatFamily::dbase) {
@@ -1808,6 +1808,13 @@ std::optional<std::uint16_t> read_memo_field_block_size(const std::string& table
     if (!header_result.ok || table_bytes.size() < header_result.header.header_length) {
         return std::nullopt;
     }
+    if (header_result.header.format_family() == DbfFormatFamily::foxbase) {
+        // FoxBASE never has a memo file, and its field descriptors (where
+        // recognized) do not use the 32-byte-starting-at-offset-32 layout
+        // `read_raw_field_descriptors` assumes below; scanning it that way
+        // would read descriptor bytes as arbitrary garbage.
+        return std::nullopt;
+    }
 
     bool has_memo_field = false;
     for (const RawFieldDescriptor& field : read_raw_field_descriptors(table_bytes)) {
@@ -1885,9 +1892,7 @@ DbfTableParseResult parse_dbf_table_from_file(
             ? read_le_u32(bytes, field_offset + 12U)
             : next_physical_field_offset;
         field.length = bytes[field_offset + layout.descriptor_length_offset];
-        field.decimal_count = layout.descriptor_has_decimal_count
-            ? bytes[field_offset + layout.descriptor_decimal_count_offset]
-            : 0U;
+        field.decimal_count = bytes[field_offset + layout.descriptor_decimal_count_offset];
         const DbfFormatFamily strict_layout_family = table.header.format_family();
         const bool is_strict_legacy_family =
             strict_layout_family == DbfFormatFamily::dbase ||
