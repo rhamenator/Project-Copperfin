@@ -821,6 +821,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.DbfHeader.Version.DbaseLevel7MemoSql",
         "Vfp.DbfHeader.Version.DbaseLevel7SqlTable",
         "Vfp.DbfHeader.Version.FoxProMemo",
+        "Vfp.DbfHeader.Version.FoxProNoMemo",
         "Vfp.DbfHeader.Version.Foxbase",
         "Vfp.DbfHeader.Version.Unknown",
         "Vfp.DbfHeader.Version.VisualFoxPro",

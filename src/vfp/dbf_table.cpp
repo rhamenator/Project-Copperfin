@@ -368,7 +368,17 @@ struct RawFieldDescriptor {
 enum class DbfMemoStorageFormat {
     visual_foxpro,
     dbase_iii,
-    dbase_iv
+    dbase_iv,
+    // Classic FoxPro (2.x and earlier) stores its FPT header and memo
+    // blocks in the same big-endian, length-prefixed layout VFP inherited
+    // unchanged, but the in-record memo/General pointer is still the
+    // dBASE-style right-justified ASCII decimal text used by FoxBASE/
+    // FoxPro, not VFP's 4-byte little-endian binary pointer. Verified
+    // against the `dbase_f5.dbf`/`dbase_f5.fpt` fixture (see docs/32):
+    // its 'M' field's on-disk bytes read as ASCII digits, and the
+    // referenced FPT block begins with the same 4-byte-type/4-byte-length
+    // big-endian header VFP uses.
+    foxpro
 };
 
 struct DbfReadLayout {
@@ -379,12 +389,39 @@ struct DbfReadLayout {
     std::size_t descriptor_length_offset = 16U;
     std::size_t descriptor_decimal_count_offset = 17U;
     bool uses_physical_field_offsets = true;
+    // FoxBASE descriptors have no on-disk decimal-count byte at all; every
+    // field is treated as having zero decimals rather than reading an
+    // unrelated reserved byte.
+    bool descriptor_has_decimal_count = true;
     DbfMemoStorageFormat memo_storage_format = DbfMemoStorageFormat::visual_foxpro;
 };
 
 bool is_memo_pointer_field(char field_type);
 
 DbfReadLayout dbf_read_layout(const DbfHeader& header) {
+    if (header.format_family() == DbfFormatFamily::foxpro) {
+        // Classic FoxPro's field descriptors already store the correct
+        // on-disk physical field offset the same way VFP does, so only the
+        // memo pointer encoding needs to differ from the VFP default.
+        return {.memo_storage_format = DbfMemoStorageFormat::foxpro};
+    }
+    if (header.format_family() == DbfFormatFamily::foxbase) {
+        // FoxBASE (dBASE II-compatible) predates the 32-byte dBASE III
+        // header entirely: an 8-byte main header is followed by fixed
+        // 16-byte descriptors (11-byte name, 1-byte type, 1-byte length;
+        // no on-disk offset or decimal-count byte -- fields are packed
+        // sequentially and every FoxBASE column is integer/whole-valued).
+        return {
+            .descriptor_start = 8U,
+            .descriptor_size = 16U,
+            .descriptor_name_width = 11U,
+            .descriptor_type_offset = 11U,
+            .descriptor_length_offset = 12U,
+            .descriptor_decimal_count_offset = 12U,
+            .uses_physical_field_offsets = false,
+            .descriptor_has_decimal_count = false
+        };
+    }
     if (header.format_family() != DbfFormatFamily::dbase) {
         return {};
     }
@@ -457,6 +494,7 @@ std::vector<std::uint32_t> collect_referenced_memo_blocks(
     const std::vector<DbfFieldDescriptor>& fields,
     DbfMemoStorageFormat storage_format) {
     if (storage_format == DbfMemoStorageFormat::visual_foxpro ||
+        storage_format == DbfMemoStorageFormat::foxpro ||
         header.record_length == 0U ||
         table_bytes.size() < header.header_length) {
         return {};
@@ -1351,7 +1389,8 @@ public:
             return;
         }
 
-        if (storage_format_ == DbfMemoStorageFormat::visual_foxpro) {
+        if (storage_format_ == DbfMemoStorageFormat::visual_foxpro ||
+            storage_format_ == DbfMemoStorageFormat::foxpro) {
             block_size_ = read_be_u16(bytes_, 6U);
         } else if (storage_format_ == DbfMemoStorageFormat::dbase_iii) {
             block_size_ = 512U;
@@ -1846,8 +1885,15 @@ DbfTableParseResult parse_dbf_table_from_file(
             ? read_le_u32(bytes, field_offset + 12U)
             : next_physical_field_offset;
         field.length = bytes[field_offset + layout.descriptor_length_offset];
-        field.decimal_count = bytes[field_offset + layout.descriptor_decimal_count_offset];
-        if (table.header.format_family() == DbfFormatFamily::dbase &&
+        field.decimal_count = layout.descriptor_has_decimal_count
+            ? bytes[field_offset + layout.descriptor_decimal_count_offset]
+            : 0U;
+        const DbfFormatFamily strict_layout_family = table.header.format_family();
+        const bool is_strict_legacy_family =
+            strict_layout_family == DbfFormatFamily::dbase ||
+            strict_layout_family == DbfFormatFamily::foxbase ||
+            strict_layout_family == DbfFormatFamily::foxpro;
+        if (is_strict_legacy_family &&
             (field.length == 0U || field.offset == 0U ||
              field.offset >= table.header.record_length ||
              field.length > table.header.record_length - field.offset)) {
@@ -1863,10 +1909,17 @@ DbfTableParseResult parse_dbf_table_from_file(
     // The legacy layouts have an independently documented descriptor
     // terminator inside the declared header. Retain the VFP parser's
     // established permissive behavior for its adversarial/recovery fixtures;
-    // this new read-only dBASE branch must not change their result.
-    if (table.header.format_family() == DbfFormatFamily::dbase &&
-        !descriptor_terminator_found) {
-        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableHeaderTruncated")};
+    // the read-only dBASE/FoxBASE/FoxPro branches must not change their
+    // result.
+    {
+        const DbfFormatFamily terminator_check_family = table.header.format_family();
+        const bool requires_terminator =
+            terminator_check_family == DbfFormatFamily::dbase ||
+            terminator_check_family == DbfFormatFamily::foxbase ||
+            terminator_check_family == DbfFormatFamily::foxpro;
+        if (requires_terminator && !descriptor_terminator_found) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableHeaderTruncated")};
+        }
     }
 
     if (resolved_memo_sidecar_path.empty() &&
@@ -2894,21 +2947,33 @@ DbfWriteResult create_dbf_table_file(
     return create_dbf_table_file_with_memo_payloads(path, fields, records, nullptr);
 }
 
-// The legacy dBASE reader deliberately has no write-format implementation.
-// Rejecting a mutation here, before a VFP-oriented writer can reinterpret the
-// older descriptor or memo layout, is safer than relying on documentation
-// alone to preserve the input table byte-for-byte.
+// The legacy dBASE/FoxBASE/FoxPro readers deliberately have no write-format
+// implementation. Rejecting a mutation here, before a VFP-oriented writer
+// can reinterpret the older descriptor or memo layout, is safer than
+// relying on documentation alone to preserve the input table byte-for-byte.
 static std::optional<DbfWriteResult> dbase_read_only_mutation_error(
     const std::string& path) {
     const DbfParseResult header_result = parse_dbf_header_from_file(path);
-    if (!header_result.ok || header_result.header.format_family() != DbfFormatFamily::dbase) {
+    if (!header_result.ok) {
         return std::nullopt;
     }
-    return DbfWriteResult{
-        .ok = false,
-        .error = dbf_table_text("Vfp.DbfTable.Error.LegacyDbaseReadOnly"),
-        .record_count = header_result.header.record_count
-    };
+    switch (header_result.header.format_family()) {
+        case DbfFormatFamily::dbase:
+            return DbfWriteResult{
+                .ok = false,
+                .error = dbf_table_text("Vfp.DbfTable.Error.LegacyDbaseReadOnly"),
+                .record_count = header_result.header.record_count
+            };
+        case DbfFormatFamily::foxbase:
+        case DbfFormatFamily::foxpro:
+            return DbfWriteResult{
+                .ok = false,
+                .error = dbf_table_text("Vfp.DbfTable.Error.LegacyFoxproReadOnly"),
+                .record_count = header_result.header.record_count
+            };
+        default:
+            return std::nullopt;
+    }
 }
 
 DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field) {

@@ -11,9 +11,11 @@ Version target:
   (`foxbase`, `foxpro`, `dbase`, `visual_foxpro`, or `unknown`) derived from
   the documented version byte. dBASE Level 7 flag combinations remain
   `dbase` because their low version bits remain Level 7. The reader accepts
-  bounded dBASE III/IV/7 fixed-field and DBT-memo layouts as an inspection
-  surface, but this is not a claim that Copperfin can execute, mutate, index,
-  or fully preserve assets from that family.
+  bounded dBASE III/IV/7 fixed-field and DBT-memo layouts, and FoxBASE's
+  8-byte-header/16-byte-descriptor and FoxPro's ASCII-text memo/General
+  pointer layouts, as an inspection surface, but this is not a claim that
+  Copperfin can execute, mutate, index, or fully preserve assets from those
+  families.
 
 ### Layer 1: Data Compatibility
 

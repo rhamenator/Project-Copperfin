@@ -120,6 +120,7 @@ DbfFormatFamily DbfHeader::format_family() const {
         case 0xCBU:
             return DbfFormatFamily::dbase;
         case 0xF5U:
+        case 0xFBU:
             return DbfFormatFamily::foxpro;
         case 0x30U:
         case 0x31U:
@@ -188,6 +189,8 @@ std::string DbfHeader::version_description(const localization::LocalizedCatalog&
             return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseIvMemoSql");
         case 0xF5U:
             return dbf_header_text(catalog, "Vfp.DbfHeader.Version.FoxProMemo");
+        case 0xFBU:
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.FoxProNoMemo");
         default:
             return dbf_header_text(catalog, "Vfp.DbfHeader.Version.Unknown");
     }
@@ -208,14 +211,27 @@ DbfParseResult parse_dbf_header(const std::vector<std::uint8_t>& bytes) {
 
     DbfHeader header;
     header.version = bytes[0];
-    header.last_update_year = bytes[1];
-    header.last_update_month = bytes[2];
-    header.last_update_day = bytes[3];
-    header.record_count = read_le_u32(bytes, 4U);
-    header.header_length = read_le_u16(bytes, 8U);
-    header.record_length = read_le_u16(bytes, 10U);
-    header.table_flags = bytes[28];
-    header.code_page_mark = bytes[29];
+    if (header.version == 0x02U) {
+        // FoxBASE (dBASE II-compatible) predates the 32-byte dBASE III
+        // header. Its main header is 8 bytes: version, a 2-byte record
+        // count, 3 reserved bytes, then a 2-byte record length -- there is
+        // no stored last-update date, header length, table-flags, or
+        // code-page byte. The descriptor table (and therefore the start of
+        // record data) is always a fixed 521 bytes regardless of how many
+        // fields are actually declared.
+        header.record_count = read_le_u16(bytes, 1U);
+        header.header_length = 521U;
+        header.record_length = read_le_u16(bytes, 6U);
+    } else {
+        header.last_update_year = bytes[1];
+        header.last_update_month = bytes[2];
+        header.last_update_day = bytes[3];
+        header.record_count = read_le_u32(bytes, 4U);
+        header.header_length = read_le_u16(bytes, 8U);
+        header.record_length = read_le_u16(bytes, 10U);
+        header.table_flags = bytes[28];
+        header.code_page_mark = bytes[29];
+    }
 
     if (!header.looks_like_dbf()) {
         return {.ok = false, .header = header, .error = dbf_header_text("Vfp.DbfHeader.Error.InvalidValues")};

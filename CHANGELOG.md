@@ -13,6 +13,30 @@
   read-only; legacy mutation, index, OLE/binary payload interpretation, and
   historical runtime execution remain intentionally out of scope.
 
+- 2026-09-08: Fixes #5483: the DBF reader now has a dedicated layout for the
+  FoxBASE/FoxPro lineage that predates VFP, instead of silently reusing VFP
+  descriptor semantics. FoxBASE (`0x02`) has no 32-byte dBASE III header at
+  all -- an 8-byte main header, a fixed 521-byte descriptor allocation
+  regardless of declared field count, and 16-byte descriptors with no
+  on-disk field offset or decimal-count byte -- fields are packed
+  sequentially and every numeric field is treated as having zero decimals.
+  FoxPro (`0xf5` memo, `0xfb` no memo) keeps VFP's on-disk field-offset and
+  FPT block-header layout, but its `M`/`G`/`P` memo and General pointers are
+  dBASE-style ASCII decimal text, not VFP's little-endian binary pointer;
+  reading them the VFP way silently produced garbage block numbers. A
+  missing FoxBASE descriptor terminator or an out-of-range FoxBASE/FoxPro
+  field offset now fails closed instead of reading past the record, and
+  every mutation API rejects both families before writing, matching #5482's
+  dBASE-family treatment. Added MIT-licensed, unmodified FoxBASE and FoxPro
+  memo fixture artifacts with retained license and provenance, plus
+  malformed-fixture fail-closed coverage. The `0x02`/`0xf5`/`0xfb` version
+  bytes are shared across each product's whole lineage, so this verifies the
+  `foxbase`/`foxpro` header families generically; no FoxBASE+-only or
+  FoxPro-1.x-only artifact was separately sourced or verified. This is
+  read-only; FoxBASE/FoxPro index reading, Clipper-family handling,
+  General/OLE binary payload interpretation, and historical runtime
+  execution remain intentionally out of scope.
+
 - 2026-09-08: Fixes #5453: added real Windows coverage for the
   Authenticode trust and publisher-matching boundary, rather than testing a
   synthetic policy result. The test hook verifies a known embedded-signed
