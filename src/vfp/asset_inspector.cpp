@@ -180,7 +180,7 @@ bool is_dbf_family_asset(AssetFamily family) {
 
 bool is_index_extension(const std::string& extension) {
     return extension == ".cdx" || extension == ".dcx" || extension == ".idx" ||
-           extension == ".ndx" || extension == ".mdx";
+           extension == ".ndx" || extension == ".mdx" || extension == ".ntx";
 }
 
 std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
@@ -487,6 +487,8 @@ std::vector<std::string> companion_index_paths_for(const std::filesystem::path& 
             append_if_missing(candidates, with_extension(".ndx"));
             append_if_missing(candidates, path_text + ".mdx");
             append_if_missing(candidates, with_extension(".mdx"));
+            append_if_missing(candidates, path_text + ".ntx");
+            append_if_missing(candidates, with_extension(".ntx"));
             return candidates;
         case AssetFamily::database_container:
             append_if_missing(candidates, copperfin::platform::path_to_utf8_string(path) + ".dcx");

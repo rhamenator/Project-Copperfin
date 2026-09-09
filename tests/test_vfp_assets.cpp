@@ -357,6 +357,7 @@ void test_asset_family_detection() {
     expect(asset_family_from_path("sample.idx") == AssetFamily::index, "IDX should map to index");
     expect(asset_family_from_path("sample.ndx") == AssetFamily::index, "NDX should map to index");
     expect(asset_family_from_path("sample.mdx") == AssetFamily::index, "MDX should map to index");
+    expect(asset_family_from_path("sample.ntx") == AssetFamily::index, "NTX should map to index");
     expect(asset_family_from_path("sample.prg") == AssetFamily::program, "PRG should map to program");
     expect(asset_family_from_path("sample.h") == AssetFamily::header, "H should map to header");
     expect(asset_family_from_path("sample.xyz") == AssetFamily::unknown, "unknown extension should stay unknown");
@@ -591,6 +592,7 @@ void test_inspect_asset_collects_companion_indexes() {
     const fs::path cdx_path = temp_dir / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.cdx");
     const fs::path ndx_path = temp_dir / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.ndx");
     const fs::path mdx_path = temp_dir / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.mdx");
+    const fs::path ntx_path = temp_dir / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.ntx");
 
     {
         auto bytes = make_vfp_header();
@@ -623,19 +625,38 @@ void test_inspect_asset_collects_companion_indexes() {
         output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     }
 
+    {
+        std::vector<std::uint8_t> bytes(1024U, 0U);
+        write_le_u16(bytes, 0U, 0x0006U);
+        write_le_u32(bytes, 4U, 1024U);
+        write_le_u16(bytes, 12U, 18U);
+        write_le_u16(bytes, 14U, 10U);
+        write_le_u16(bytes, 18U, 46U);
+        write_ascii(bytes, 22U, "CODE");
+
+        std::ofstream output(ntx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        // Pad to a full second 1024-byte page so the file size is itself a
+        // whole number of pages, matching the root-offset page it claims.
+        std::vector<std::uint8_t> padding(1024U, 0U);
+        output.write(reinterpret_cast<const char*>(padding.data()), static_cast<std::streamsize>(padding.size()));
+    }
+
     const auto result = copperfin::vfp::inspect_asset(
         copperfin::platform::path_to_utf8_string(table_path));
     expect(result.ok, "inspect_asset should succeed for a synthetic DBF with companion indexes");
     expect(result.header_available, "inspect_asset should expose the DBF header");
-    expect(result.indexes.size() == 3U, "inspect_asset should collect same-base CDX, NDX, and MDX companions");
+    expect(result.indexes.size() == 4U, "inspect_asset should collect same-base CDX, NDX, MDX, and NTX companions");
 
     bool saw_cdx = false;
     bool saw_ndx = false;
     bool saw_mdx = false;
+    bool saw_ntx = false;
     for (const auto& index : result.indexes) {
         saw_cdx = saw_cdx || index.probe.kind == copperfin::vfp::IndexKind::cdx;
         saw_ndx = saw_ndx || index.probe.kind == copperfin::vfp::IndexKind::ndx;
         saw_mdx = saw_mdx || index.probe.kind == copperfin::vfp::IndexKind::mdx;
+        saw_ntx = saw_ntx || index.probe.kind == copperfin::vfp::IndexKind::ntx;
         if (index.probe.kind == copperfin::vfp::IndexKind::cdx) {
             expect(!index.probe.tags.empty(), "inspect_asset should parse CDX companion tags");
             if (!index.probe.tags.empty()) {
@@ -659,12 +680,14 @@ void test_inspect_asset_collects_companion_indexes() {
     expect(saw_cdx, "inspect_asset should identify CDX companions");
     expect(saw_ndx, "inspect_asset should identify NDX companions");
     expect(saw_mdx, "inspect_asset should identify MDX companions");
+    expect(saw_ntx, "inspect_asset should identify NTX companions");
 
     std::error_code ignored;
     fs::remove(table_path, ignored);
     fs::remove(cdx_path, ignored);
     fs::remove(ndx_path, ignored);
     fs::remove(mdx_path, ignored);
+    fs::remove(ntx_path, ignored);
     fs::remove(temp_dir, ignored);
 }
 
@@ -926,6 +949,8 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.DbfHeader.Version.VisualFoxPro",
         "Vfp.DbfHeader.Version.VisualFoxProAutoincrement",
         "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar",
+        "Vfp.IndexProbe.Error.ClipperNtxHeaderTooSmall",
+        "Vfp.IndexProbe.Error.ClipperNtxInvalidValues",
         "Vfp.IndexProbe.Error.DbaseMdxInvalidValues",
         "Vfp.IndexProbe.Error.DbaseMdxProbeTooSmall",
         "Vfp.IndexProbe.Error.DbaseMdxTagMetadataMissing",
@@ -1951,6 +1976,10 @@ int main() {
     test_parse_index_probe_for_ndx_surfaces_character_domain_without_named_collation();
     test_parse_index_probe_for_mdx();
     test_parse_index_probe_for_mdx_rejects_implausible_header();
+    test_parse_index_probe_for_ntx();
+    test_parse_index_probe_for_ntx_rejects_truncated_header();
+    test_parse_index_probe_for_ntx_rejects_partial_trailing_page();
+    test_parse_index_probe_for_ntx_rejects_inconsistent_group_length();
     test_index_probe_errors_resolve_through_localization_catalog();
     test_inspect_asset_collects_companion_indexes();
     test_inspect_asset_uses_admitted_index_bytes();

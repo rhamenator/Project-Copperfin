@@ -1469,6 +1469,8 @@
   "Vfp.DbfTable.Error.VqValueTooLarge": "V/Q value ({valueLength} bytes) is too large for field {fieldName} ({fieldLength} bytes wide) in record {recordNumber} of {path}. Value: {valuePreview}",
   "Vfp.DbfTable.Error.WriteMemoSidecarFailed": "Unable to write memo sidecar.",
   "Vfp.DbfTable.Error.WriteTableFailed": "Unable to write table file.",
+  "Vfp.IndexProbe.Error.ClipperNtxHeaderTooSmall": "File is smaller than the 1024-byte Clipper NTX header page size.",
+  "Vfp.IndexProbe.Error.ClipperNtxInvalidValues": "Header values do not look like a Clipper NTX file.",
   "Vfp.IndexProbe.Error.DbaseMdxInvalidValues": "Header values do not look like a block-oriented dBase MDX file.",
   "Vfp.IndexProbe.Error.DbaseMdxProbeTooSmall": "File is smaller than the minimum MDX probe size (512 bytes).",
   "Vfp.IndexProbe.Error.DbaseMdxTagMetadataMissing": "No plausible MDX tag metadata was found in the tag table.",
