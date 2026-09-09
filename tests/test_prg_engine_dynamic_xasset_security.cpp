@@ -41,7 +41,12 @@ void write_form_fixture(
     constexpr std::size_t header_length = 32U + (field_count * 32U) + 1U;
     constexpr std::size_t record_length = 1U + (field_count * 4U);
     std::vector<std::uint8_t> table(header_length + record_length + 1U, 0U);
-    table[0] = 0xF5U;
+    // Version 0x30 (Visual FoxPro): this fixture's descriptors store real
+    // on-disk field offsets and its memo pointers are little-endian binary
+    // block numbers, matching VFP's own SCX/memo-table layout -- not
+    // classic FoxPro 2.x's ASCII-text memo pointer convention, which the
+    // `0xf5` version byte now selects (see docs/32 RQ-CF-LEGACY-003).
+    table[0] = 0x30U;
     write_le_u32(table, 4U, 1U);
     write_le_u16(table, 8U, static_cast<std::uint16_t>(header_length));
     write_le_u16(table, 10U, static_cast<std::uint16_t>(record_length));

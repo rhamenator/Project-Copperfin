@@ -13,6 +13,36 @@
   read-only; legacy mutation, index, OLE/binary payload interpretation, and
   historical runtime execution remain intentionally out of scope.
 
+- 2026-09-09: Fixes #5483: the DBF reader now has a dedicated layout for the
+  FoxBASE/FoxPro lineage that predates VFP, instead of silently reusing VFP
+  descriptor semantics. FoxBASE's `0x02` variant has no 32-byte dBASE III
+  header at all -- an 8-byte main header (record count, then a month/day/year
+  last-update date, then record length), a fixed 521-byte descriptor
+  allocation regardless of declared field count, and 16-byte descriptors
+  with no on-disk field offset but a real decimal-count byte -- fields are
+  packed sequentially. `0xfb` is also a FoxBASE signature (not, as first
+  assumed, a "FoxPro without memo" marker) and now classifies identically to
+  `0x02`, though its own physical layout isn't verified against a real
+  fixture and stays on the generic default read path rather than guessing
+  it matches `0x02`. FoxPro (`0xf5`) keeps VFP's on-disk field-offset and FPT
+  block-header layout, but its `M`/`G`/`P` memo and General pointers are
+  dBASE-style ASCII decimal text, not VFP's little-endian binary pointer;
+  reading them the VFP way silently produced garbage block numbers. A
+  missing FoxBASE descriptor terminator or an out-of-range FoxBASE/FoxPro
+  field offset now fails closed instead of reading past the record, the
+  memo-block-size probe used by runtime cursor snapshots no longer scans
+  FoxBASE descriptors with VFP's layout, and every mutation API rejects both
+  families before writing, matching #5482's dBASE-family treatment. Added
+  MIT-licensed, unmodified FoxBASE and FoxPro memo fixture artifacts with
+  retained license and provenance, plus malformed-fixture fail-closed
+  coverage. The version byte alone does not distinguish FoxBASE from
+  FoxBASE+, nor FoxPro 1.x from later FoxPro 2.x releases, so this verifies
+  the `foxbase`/`foxpro` header families generically; no FoxBASE+-only or
+  FoxPro-1.x-only artifact was separately sourced or verified. This is
+  read-only; FoxBASE/FoxPro index reading, Clipper-family handling,
+  General/OLE binary payload interpretation, and historical runtime
+  execution remain intentionally out of scope.
+
 - 2026-09-08: Fixes #5453: added real Windows coverage for the
   Authenticode trust and publisher-matching boundary, rather than testing a
   synthetic policy result. The test hook verifies a known embedded-signed

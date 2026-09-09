@@ -1761,6 +1761,7 @@
   "Vfp.DbfTable.Error.IntegerValueTooLarge": "El valor Integer es demasiado grande para el campo destino.",
   "Vfp.DbfTable.Error.LogicalValueInvalid": "Los campos Logical solo aceptan valores true/false.",
   "Vfp.DbfTable.Error.LegacyDbaseReadOnly": "Las tablas de la familia dBASE son de solo lectura; la modificacion no es compatible.",
+  "Vfp.DbfTable.Error.LegacyFoxproReadOnly": "Las tablas de la familia FoxBASE/FoxPro son de solo lectura; la modificacion no es compatible.",
   "Vfp.DbfTable.Error.MemoSidecarPathMissing": "No se pudo inferir una ruta de archivo complementario de memo para la tabla.",
   "Vfp.DbfTable.Error.MemoFieldWidthTooSmall": "Los campos Memo requieren un ancho de al menos 4 bytes.",
   "Vfp.DbfTable.Error.ReadMemoPayloadFailed": "No se pudo recuperar la carga util de memo del archivo complementario.",

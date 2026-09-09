@@ -212,6 +212,12 @@ void test_parse_dbf_header() {
     foxbase_header.version = 0x02U;
     expect(foxbase_header.format_family() == copperfin::vfp::DbfFormatFamily::foxbase,
            "FoxBase version byte should classify as the foxbase inspection family");
+    foxbase_header.version = 0xFBU;
+    expect(foxbase_header.format_family() == copperfin::vfp::DbfFormatFamily::foxbase,
+           "#5518: 0xfb is a documented FoxBASE signature, not FoxPro, and should classify as foxbase");
+    expect(!foxbase_header.has_memo_file(), "#5518: 0xfb (FoxBASE) never carries a memo file");
+    expect(foxbase_header.version_description() == "FoxBASE",
+           "#5518: 0xfb should report the same version description as 0x02");
     copperfin::vfp::DbfHeader unknown_header;
     unknown_header.version = 0x7FU;
     expect(unknown_header.format_family() == copperfin::vfp::DbfFormatFamily::unknown,

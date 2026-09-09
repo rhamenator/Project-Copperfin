@@ -175,6 +175,150 @@ void test_parse_real_dbase_family_fixtures() {
     }
 }
 
+std::filesystem::path legacy_foxpro_fixture_path(const std::string& name) {
+    return std::filesystem::path(__FILE__).parent_path() /
+           "fixtures" / "legacy-foxpro-infused" / name;
+}
+
+void test_parse_real_foxbase_foxpro_family_fixtures() {
+    const auto foxbase = copperfin::vfp::parse_dbf_table_from_file(
+        legacy_foxpro_fixture_path("dbase_02.dbf").string(), 3U);
+    expect(foxbase.ok, "FoxBASE fixture should parse");
+    expect(foxbase.table.header.format_family() == copperfin::vfp::DbfFormatFamily::foxbase,
+        "FoxBASE fixture should retain foxbase family classification");
+    expect(!foxbase.table.header.has_memo_file(),
+        "FoxBASE tables never carry a memo file");
+    expect(foxbase.table.records.size() == 3U,
+        "FoxBASE fixture should expose the requested records");
+    expect(foxbase.table.fields.size() == 14U,
+        "FoxBASE fixture should expose its complete descriptor array");
+    if (foxbase.table.fields.size() == 14U) {
+        expect(foxbase.table.fields[0U].decimal_count == 0U,
+            "FoxBASE whole-valued numeric fields report zero decimals");
+        expect(foxbase.table.fields[12U].name == "PAYRATE" &&
+                   foxbase.table.fields[12U].decimal_count == 3U,
+            "FoxBASE's on-disk decimal-count byte (descriptor offset 15) should be read, not assumed zero");
+    }
+    if (!foxbase.table.records.empty() && foxbase.table.records.front().values.size() == 14U) {
+        const auto& first = foxbase.table.records.front().values;
+        expect(first[0U].display_value == "2",
+            "FoxBASE fixture should decode numeric fields");
+        expect(first[1U].display_value == "Stegman",
+            "FoxBASE fixture should decode packed character fields");
+        expect(first[12U].display_value == "6.000",
+            "FoxBASE fixture should use its sequential physical field offsets");
+    }
+
+    const auto foxpro_memo = copperfin::vfp::parse_dbf_table_from_file(
+        legacy_foxpro_fixture_path("dbase_f5.dbf").string(), 2U);
+    expect(foxpro_memo.ok, "FoxPro FPT fixture should parse");
+    expect(foxpro_memo.table.header.format_family() == copperfin::vfp::DbfFormatFamily::foxpro,
+        "FoxPro fixture should retain foxpro family classification");
+    expect(foxpro_memo.table.records.size() == 2U,
+        "FoxPro fixture should expose the requested records");
+    if (foxpro_memo.table.records.size() == 2U &&
+        foxpro_memo.table.records[1U].values.size() == 59U) {
+        const auto& memo_value = foxpro_memo.table.records[1U].values[57U];
+        expect(memo_value.field_name == "OBSE", "FoxPro memo field index should match the declared schema");
+        expect(memo_value.memo_block_number == 8U,
+            "FoxPro memo pointers are ASCII decimal text, not a little-endian binary block number");
+        expect(memo_value.display_value.starts_with("El meu pare."),
+            "FoxPro memo blocks should decode using VFP's length-prefixed block layout");
+    }
+}
+
+void test_foxbase_header_date_bytes_and_0xfb_classification() {
+    // #5518 review: FoxBASE's 8-byte header stores month/day/year (in that
+    // order) at bytes 3-5, not reserved padding. The bundled dbase_02.dbf
+    // fixture happens to have an all-zero (never-stamped) date, so verify
+    // the byte mapping with a synthetic header instead.
+    std::vector<std::uint8_t> foxbase_header(32U, 0U);
+    foxbase_header[0] = 0x02U;
+    write_le_u16(foxbase_header, 1U, 1U);
+    foxbase_header[3] = 6U;
+    foxbase_header[4] = 15U;
+    foxbase_header[5] = 91U;
+    write_le_u16(foxbase_header, 6U, 10U);
+    const auto foxbase_result = copperfin::vfp::parse_dbf_header(foxbase_header);
+    expect(foxbase_result.ok, "synthetic FoxBASE header should parse");
+    expect(foxbase_result.header.last_update_iso8601() == "1991-06-15",
+        "FoxBASE last-update bytes 3-5 should decode as month/day/year");
+}
+
+void test_foxbase_memo_block_size_probe_does_not_misread_descriptors() {
+    // #5518 review: read_memo_field_block_size() scans descriptors using
+    // the VFP-only 32-byte-starting-at-offset-32 layout. For a FoxBASE
+    // table (8-byte header, 16-byte descriptors), that scan lands inside
+    // unrelated descriptor bytes; it must bail out instead of
+    // misinterpreting them as a memo field and probing a stray sidecar.
+    const auto block_size = copperfin::vfp::read_memo_field_block_size(
+        legacy_foxpro_fixture_path("dbase_02.dbf").string());
+    expect(!block_size.has_value(),
+        "FoxBASE tables should never report a memo block size");
+}
+
+void test_foxbase_foxpro_tables_reject_mutation_without_touching_source_bytes() {
+    for (const char* fixture : {"dbase_02.dbf", "dbase_f5.dbf"}) {
+        const std::filesystem::path table_path = legacy_foxpro_fixture_path(fixture);
+        const std::vector<std::uint8_t> original_bytes = read_binary_file(table_path);
+        expect(!original_bytes.empty(), "FoxBASE/FoxPro mutation safety fixture should be readable");
+
+        const auto result = copperfin::vfp::replace_record_field_value(
+            table_path.string(), 0U, "LAST", "must not be written");
+        expect(!result.ok, "FoxBASE/FoxPro tables should reject VFP mutation requests");
+        expect(!result.error.empty(),
+            "FoxBASE/FoxPro mutation rejection should explain the read-only boundary");
+        expect(read_binary_file(table_path) == original_bytes,
+            "rejecting a FoxBASE/FoxPro mutation must preserve every source byte");
+    }
+}
+
+void test_foxbase_foxpro_layouts_fail_closed_when_truncated() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_foxpro_truncation_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path malformed_foxbase_path = temp_dir / "foxbase_missing_terminator.dbf";
+    std::vector<std::uint8_t> foxbase_bytes = read_binary_file(legacy_foxpro_fixture_path("dbase_02.dbf"));
+    constexpr std::size_t foxbase_descriptor_size = 16U;
+    constexpr std::size_t foxbase_field_count = 14U;
+    constexpr std::size_t foxbase_terminator_offset = 8U + (foxbase_field_count * foxbase_descriptor_size);
+    expect(foxbase_bytes.size() > foxbase_terminator_offset,
+        "FoxBASE truncation fixture should contain its descriptor terminator");
+    if (foxbase_bytes.size() > foxbase_terminator_offset) {
+        foxbase_bytes[foxbase_terminator_offset] = 0U;
+        expect(write_binary_file(malformed_foxbase_path, foxbase_bytes),
+            "FoxBASE malformed table fixture should be writable");
+        const auto malformed_foxbase = copperfin::vfp::parse_dbf_table_from_file(
+            malformed_foxbase_path.string(), 1U);
+        expect(!malformed_foxbase.ok,
+            "FoxBASE reader should reject a missing descriptor terminator");
+    }
+
+    const fs::path malformed_foxpro_path = temp_dir / "foxpro_field_offset_exceeds_record.dbf";
+    std::vector<std::uint8_t> foxpro_bytes = read_binary_file(legacy_foxpro_fixture_path("dbase_f5.dbf"));
+    constexpr std::size_t first_field_descriptor_offset_field = 32U + 12U;
+    expect(foxpro_bytes.size() > first_field_descriptor_offset_field + 4U,
+        "FoxPro truncation fixture should contain its first field descriptor");
+    if (foxpro_bytes.size() > first_field_descriptor_offset_field + 4U) {
+        // FoxPro descriptors store their on-disk physical field offset the
+        // same way VFP does; corrupting it past the record length must be
+        // rejected rather than silently read out of bounds.
+        write_le_u32(foxpro_bytes, first_field_descriptor_offset_field, 0xFFFFFFFFU);
+        expect(write_binary_file(malformed_foxpro_path, foxpro_bytes),
+            "FoxPro malformed table fixture should be writable");
+        const auto malformed_foxpro = copperfin::vfp::parse_dbf_table_from_file(
+            malformed_foxpro_path.string(), 1U);
+        expect(!malformed_foxpro.ok,
+            "FoxPro reader should reject a field offset that exceeds the declared record length");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_dbase_legacy_layouts_fail_closed_when_truncated() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2393,6 +2537,11 @@ int main(int argc, char* argv[]) {
     test_parse_real_dbase_family_fixtures();
     test_dbase_legacy_layouts_fail_closed_when_truncated();
     test_dbase_tables_reject_mutation_without_touching_source_bytes();
+    test_parse_real_foxbase_foxpro_family_fixtures();
+    test_foxbase_header_date_bytes_and_0xfb_classification();
+    test_foxbase_foxpro_layouts_fail_closed_when_truncated();
+    test_foxbase_memo_block_size_probe_does_not_misread_descriptors();
+    test_foxbase_foxpro_tables_reject_mutation_without_touching_source_bytes();
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
     test_dbf_mutations_stamp_last_update_date();
