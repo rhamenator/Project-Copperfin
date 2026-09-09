@@ -1,3 +1,24 @@
+- 2026-09-09: Fixes #5528: investigated where the widely-repeated
+  "`0xFB` = FoxBASE" claim actually comes from (full trail in
+  `docs/70-foxbase-0xfb-investigation.md`). Traced it back through
+  several secondary "DBF format encyclopedia" sites to one original
+  community reference table whose compiler marked it an acknowledged
+  unknown ("FoxPro ???"); found no real `0xFB`-signed file ever
+  documented across roughly two decades of active xBase community
+  cataloging; and checked (and rejected) a fabricated AI-assistant
+  citation claiming a source-cited CodeBase/Sequiter specification
+  documents it -- that specification, verified directly, contains no
+  `0xFB` entry, though it did independently corroborate Copperfin's
+  already-verified `0x03`/`0x83`/`0x8B`/`0xF5`/`0x30`/`0x31` bytes. Since
+  every source that ventured an actual guess at `0xFB`'s meaning
+  converged on the same lineage as the already-verified `0x03` byte,
+  decided to support it on that basis: `dbf_read_layout()` now routes
+  `0xFB` through the same sequential-packing layout as `0x03` instead of
+  the raw VFP-native default it previously fell through to, and
+  `import_xbase_table_to_vfp_native()` accepts the whole `foxbase` family
+  (both `0x02` and `0xFB`) rather than only the independently-verified
+  `0x02`. Documented as a best-effort choice, not a verified fact.
+
 - 2026-09-09: Fixes #5525: extended #5523's `IMPORT DATABASE ... TYPE XBASE`
   importer (renamed `import_dbase_table_to_vfp_native()` ->
   `import_xbase_table_to_vfp_native()`) to accept FoxBASE (`0x02` only --

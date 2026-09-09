@@ -41,18 +41,27 @@ sources.
 | `G` / `P` | FoxPro General / Picture (binary payload, FoxPro-only) | Same category of work as `B` above -- the reader already decodes these as opaque binary payloads (`RQ-CF-LEGACY-003`), and writing them would need `write_memo_field_bytes()`'s raw-bytes path rather than `M`'s encoded-text path. Deferred to a follow-up slice; explicitly listed in the mapping switch (not left to the generic default case) so the exclusion is a deliberate scope decision. |
 | any other letter | -- | Not part of dBASE-family's documented type set; fails closed the same as `B`/`@`/`G`/`P`. |
 
-### FoxBASE version restriction
+### FoxBASE `0xFB` support (#5528)
 
-Only FoxBASE's `0x02` version byte is accepted, not `0xFB`. Both classify
-as `DbfFormatFamily::foxbase`, but `RQ-CF-LEGACY-003` records that `0xFB`'s
-genuine physical layout was never verified against a real fixture --
-`dbf_read_layout()` deliberately does not specialize it the way `0x02` is
-specialized, so it falls back to the generic default layout. Importing an
-`0xFB` file could therefore silently serialize fields read from the wrong
-byte offsets while still reporting success. This restriction is enforced
-in `import_xbase_table_to_vfp_native()` directly (checking
-`header.version == 0x02U`, not just `format_family() == foxbase`), not
-just documented.
+Both `0x02` and `0xFB` classify as `DbfFormatFamily::foxbase` and are
+accepted. `0x02`'s physical layout (8-byte header, 16-byte descriptors)
+was independently verified against a real fixture during #5483. `0xFB`'s
+was not -- #5528's research
+(`docs/70-foxbase-0xfb-investigation.md`) traced the widely-repeated
+"`0xFB` = FoxBASE" claim back to a community reference table whose
+original compiler marked it an acknowledged unknown ("FoxPro ???"), found
+no real `0xFB`-signed file ever documented in roughly two decades of
+active xBase community cataloging, and confirmed a separately-checked AI
+assistant's citation claiming a source-cited specification documents it
+was fabricated (that specification, checked directly, contains no `0xFB`
+entry). Every source that ventured an actual guess at `0xFB`'s meaning
+converged on the same lineage as the already-verified `0x03` byte, so
+`dbf_read_layout()` now routes `0xFB` through that same sequential-
+packing layout rather than the raw VFP-native default it previously fell
+through to, and `import_xbase_table_to_vfp_native()` accepts the whole
+`foxbase` family on the same footing as `dbase`/`foxpro`. This is a
+documented best-effort choice, not a verified fact -- see the
+investigation doc for the full reasoning and evidence trail.
 
 An unsupported source field type fails the whole import closed *before* any
 destination file is created or written -- see
