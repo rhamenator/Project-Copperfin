@@ -10492,3 +10492,21 @@ pinning a byte position, and exactly the kind of guess `docs/32`'s rules
 exist to prevent. Next session: generate a larger/cleaner fixture, and use
 an interactive VFP9 session (not blind non-interactive automation) to
 resolve the remaining gap above before attempting implementation.
+
+## 2026-09-08 shipped continuity: #5358 and #5453
+
+PR #5513 merged as `2daeff5f9` and #5358 is closed. Native PRG
+`DESCENDING()` now reports an active order's effective runtime direction and
+the recovered persisted direction for structural single-tag CDX files. The
+multi-tag CDX directory layout seen in real VFP9 fixtures does not supply a
+reliable association between each tag and its header page; that unsupported
+case returns `.F.` conservatively rather than reading an unverified offset.
+Hosted validation and the manually dispatched native macOS run passed.
+
+PR #5514 merged as `fd898aa80` and #5453 is closed. It adds Windows-only,
+real-binary tests for the Authenticode signer boundary: a known embedded-signed
+`dotnet.exe` fixture is accepted only for its verified `.NET` signer, not for
+the independently checked, mutable PE `CompanyName`; a trusted copied fixture
+is rejected after tampering. Hosted Windows/MSVC, Linux, macOS, and native
+macOS validation passed. The next agent should select the next owner-approved,
+unblocked issue from live metadata before starting another implementation slice.
