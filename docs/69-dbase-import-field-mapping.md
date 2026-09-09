@@ -1,19 +1,22 @@
 # dBASE/FoxBASE/FoxPro Import Field Mapping
 
-Written field-type mapping for issues #5523 and #5525 (parent #5517, #137),
-the first concrete slices of the `IMPORT DATABASE ... TYPE XBASE` wizard:
+Written field-type mapping for issues #5523, #5525, #5528, and #5530
+(parent #5517, #137), the first concrete slices of the
+`IMPORT DATABASE ... TYPE XBASE` wizard:
 `copperfin::vfp::import_xbase_table_to_vfp_native()` in
 `src/vfp/dbf_import.cpp`. This covers dBASE-family (`DbfFormatFamily::dbase`)
-and, as of #5525, FoxBASE (`DbfFormatFamily::foxbase`, restricted to the
-verified `0x02` version byte -- see below) and FoxPro
-(`DbfFormatFamily::foxpro`) sources. FoxBASE and FoxPro cannot produce
-dBASE Level 7's `I`/`+`/`O` types (those older formats predate Level 7), so
-the same base mapping table covers all four families for the shared
-`C`/`N`/`F`/`L`/`D`/`M` types; FoxPro additionally has its own `G`/`P`
-General/Picture types (not shared with dBASE III/IV), which this slice
-does not yet support -- see the unsupported-types table below. Clipper
-source support is an explicit follow-up once #5484's NTX/DBT compatibility
-work is trusted for it.
+and, as of #5525/#5528, the whole FoxBASE family (`DbfFormatFamily::foxbase`,
+both `0x02` and `0xFB` -- see below) and FoxPro (`DbfFormatFamily::foxpro`)
+sources. FoxBASE and FoxPro cannot produce dBASE Level 7's `I`/`+`/`O` types
+(those older formats predate Level 7), so the same base mapping table
+covers all four families for the shared `C`/`N`/`F`/`L`/`D`/`M` types;
+FoxPro additionally has its own `G`/`P` General/Picture types (not shared
+with dBASE III/IV), which this slice does not yet support -- see the
+unsupported-types table below. Clipper source support (#5530) required no
+new code: Clipper's default (non-DBFCDX) RDD writes DBF/DBT tables
+byte-compatible with dBASE III's version `0x83` layout (confirmed in
+#5484), so `DbfFormatFamily` has no distinct `clipper` value -- Clipper-
+produced tables already classify as `dbase` and were already accepted.
 
 ## Supported source types
 
@@ -62,6 +65,18 @@ through to, and `import_xbase_table_to_vfp_native()` accepts the whole
 `foxbase` family on the same footing as `dbase`/`foxpro`. This is a
 documented best-effort choice, not a verified fact -- see the
 investigation doc for the full reasoning and evidence trail.
+
+### Clipper source support (#5530)
+
+Clipper source tables are already supported, with no source-family
+allowlist change needed. Clipper's default (non-DBFCDX) RDD writes
+DBF/DBT tables byte-compatible with dBASE III PLUS's version `0x83`
+(has-memo) layout -- confirmed in #5484 -- so `DbfFormatFamily` has no
+distinct `clipper` value: Clipper-produced tables already classify as
+`dbase`, which this importer already accepted from #5523 onward.
+`test_import_xbase_table_to_vfp_native_round_trips_clipper_compatible_source`
+proves this with the same real dBASE III + memo fixture #5484 used for
+the equivalent read-side claim, rather than leaving it undemonstrated.
 
 An unsupported source field type fails the whole import closed *before* any
 destination file is created or written -- see
@@ -122,8 +137,8 @@ destination file is created or written -- see
 
 ## Non-goals of these slices (see #5517 for the full wizard's scope)
 
-- No Clipper source-family support yet (follow-up once #5484's NTX/DBT
-  compatibility work is trusted for it).
+- No NTX index import -- the importer doesn't handle indexes for any
+  source family yet; this is broader scope than Clipper specifically.
 - No DBC container import.
 - No dry-run/report mode -- this slice fails closed on the first unmappable
   field rather than producing a pre-commit report of every issue in the
