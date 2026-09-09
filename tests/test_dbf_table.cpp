@@ -175,6 +175,36 @@ void test_parse_real_dbase_family_fixtures() {
     }
 }
 
+void test_clipper_default_dbf_dbt_format_reads_through_existing_dbase_iii_path() {
+    // Clipper's default (non-DBFCDX) RDD writes DBF/DBT tables that are
+    // byte-for-byte compatible with dBASE III PLUS's version 0x83
+    // (has-memo) layout: same 32-byte field descriptors and packed
+    // physical offsets, same 512-byte DBT blocks with a 4-byte
+    // next-available-block header field, and the same 0x1A 0x1A memo
+    // terminator convention (no length-prefixed blocks, unlike VFP's
+    // FPT). This is corroborated by public Clipper/xBase format
+    // documentation (manmrk.net's Xbase DBT reference, Alaska Software's
+    // Xbase++ DBFDBE specification, which documents its own DBFDBE driver
+    // as writing "the Clipper compatible memo file format (DBT)").
+    // No new table/memo reader code is required for #5484's DBF/DBT
+    // scope: the existing dBASE III-family reader (see #5482) already
+    // covers it, so this fixture round-trip is the regression coverage
+    // for that acceptance criterion.
+    const auto clipper_compatible = copperfin::vfp::parse_dbf_table_from_file(
+        legacy_dbase_fixture_path("dbase_83.dbf").string(), 1U);
+    expect(clipper_compatible.ok, "Clipper-compatible dBASE III DBT fixture should parse");
+    expect(
+        clipper_compatible.table.header.format_family() == copperfin::vfp::DbfFormatFamily::dbase,
+        "Clipper-compatible dBASE III fixture should retain dbase family classification");
+    if (!clipper_compatible.table.records.empty() &&
+        clipper_compatible.table.records.front().values.size() == 15U) {
+        expect(
+            clipper_compatible.table.records.front().values[11U].display_value.starts_with(
+                "Our Original assortment"),
+            "Clipper-compatible DBT memo should stop at its 0x1A 0x1A terminator");
+    }
+}
+
 std::filesystem::path legacy_foxpro_fixture_path(const std::string& name) {
     return std::filesystem::path(__FILE__).parent_path() /
            "fixtures" / "legacy-foxpro-infused" / name;
@@ -2656,6 +2686,7 @@ int main(int argc, char* argv[]) {
 
     test_parse_dbf_table_with_memo_sidecar();
     test_parse_real_dbase_family_fixtures();
+    test_clipper_default_dbf_dbt_format_reads_through_existing_dbase_iii_path();
     test_dbase_legacy_layouts_fail_closed_when_truncated();
     test_dbase_tables_reject_mutation_without_touching_source_bytes();
     test_parse_real_foxbase_foxpro_family_fixtures();

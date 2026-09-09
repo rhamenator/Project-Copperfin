@@ -615,6 +615,87 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
     return {.ok = true, .probe = probe, .error = {}};
 }
 
+IndexParseResult parse_clipper_ntx_probe(const std::vector<std::uint8_t>& bytes, std::uint64_t file_size) {
+    // Clipper NTX header layout (1024-byte page 0), per public Clipper/xBase
+    // format documentation (manmrk.net's Xbase NTX reference) corroborated
+    // against Alaska Software's Xbase++ NTXDBE specification, which
+    // documents NTX as the native Clipper 5.2+ index format:
+    //   0-1   signature/word marker
+    //   2-3   compiler version marker
+    //   4-7   root page offset (bytes, LE)
+    //   8-11  next unused page offset (bytes, LE)
+    //   12-13 group length (key length + 8)
+    //   14-15 key length
+    //   16-17 key decimal count
+    //   18-19 maximum keys per page (documented upper bound: 92)
+    //   20-21 maximum keys per half page
+    //   22..  NUL/space-terminated key expression
+    // This is a minimal header probe, matching the existing CDX/IDX/NDX/MDX
+    // pattern: it surfaces plausibility-checked hints rather than
+    // materializing the full B-tree.
+    constexpr std::uint32_t kPageSize = 1024U;
+
+    if (bytes.size() < kPageSize) {
+        return {
+            .ok = false,
+            .probe = {},
+            .error = index_probe_text("Vfp.IndexProbe.Error.ClipperNtxHeaderTooSmall")
+        };
+    }
+
+    const std::uint16_t signature = read_le_u16(bytes, 0U);
+    const std::uint32_t root_offset = read_le_u32(bytes, 4U);
+    const std::uint32_t next_unused_offset = read_le_u32(bytes, 8U);
+    const std::uint16_t group_length = read_le_u16(bytes, 12U);
+    const std::uint16_t key_length = read_le_u16(bytes, 14U);
+    const std::uint16_t max_keys = read_le_u16(bytes, 18U);
+    const std::uint16_t half_page_keys = read_le_u16(bytes, 20U);
+
+    IndexProbe probe;
+    probe.kind = IndexKind::ntx;
+    probe.file_size = file_size;
+    probe.block_size = kPageSize;
+    probe.root_node_offset_hint = root_offset;
+    probe.free_node_offset_hint = next_unused_offset;
+    probe.key_length_hint = key_length;
+    probe.max_keys_hint = max_keys;
+    probe.group_length_hint = group_length;
+    probe.signature = static_cast<std::uint8_t>(signature & 0xFFU);
+    probe.key_expression_hint = read_ascii_hint(bytes, 22U, 234U);
+    probe.normalization_hint = derive_normalization_hint(probe.key_expression_hint);
+    probe.collation_hint = derive_collation_hint(probe.key_expression_hint, probe.normalization_hint);
+    probe.header_sort_marker_hint = make_ndx_header_sort_marker(probe.signature);
+
+    const bool plausible_size = file_size >= probe.block_size && (file_size % probe.block_size) == 0U;
+    const bool plausible_root = probe.root_node_offset_hint >= probe.block_size &&
+                                probe.root_node_offset_hint < file_size &&
+                                (probe.root_node_offset_hint % probe.block_size) == 0U;
+    // Unlike IDX's free-node offset (which must reference an existing free
+    // node strictly inside the file), NTX's "next unused page" field is an
+    // allocation pointer: it legitimately equals the current end of file
+    // for an actively-growing index with nothing freed yet, so it is
+    // checked against <= file_size rather than < file_size.
+    const bool plausible_free = next_unused_offset == 0U ||
+        (next_unused_offset >= probe.block_size &&
+         next_unused_offset <= file_size &&
+         (next_unused_offset % probe.block_size) == 0U);
+    const bool plausible_key = key_length > 0U && key_length <= 256U;
+    const bool plausible_group = group_length == static_cast<std::uint16_t>(key_length + 8U);
+    const bool plausible_max_keys = max_keys > 0U && max_keys <= 92U;
+    const bool plausible_half_page = half_page_keys <= max_keys;
+
+    if (!plausible_size || !plausible_root || !plausible_free || !plausible_key ||
+        !plausible_group || !plausible_max_keys || !plausible_half_page) {
+        return {
+            .ok = false,
+            .probe = probe,
+            .error = index_probe_text("Vfp.IndexProbe.Error.ClipperNtxInvalidValues")
+        };
+    }
+
+    return {.ok = true, .probe = probe, .error = {}};
+}
+
 }  // namespace
 
 bool IndexProbe::looks_like_index() const {
@@ -652,6 +733,9 @@ IndexKind index_kind_from_path(const std::string& path) {
     if (extension == ".mdx") {
         return IndexKind::mdx;
     }
+    if (extension == ".ntx") {
+        return IndexKind::ntx;
+    }
     return IndexKind::unknown;
 }
 
@@ -669,6 +753,8 @@ const char* index_kind_name(IndexKind kind) {
             return "ndx";
         case IndexKind::mdx:
             return "mdx";
+        case IndexKind::ntx:
+            return "ntx";
     }
     return "unknown";
 }
@@ -687,6 +773,8 @@ IndexParseResult parse_index_probe(
             return parse_dbase_ndx_probe(bytes, file_size);
         case IndexKind::mdx:
             return parse_dbase_mdx_probe(bytes, file_size);
+        case IndexKind::ntx:
+            return parse_clipper_ntx_probe(bytes, file_size);
         case IndexKind::unknown:
             return {
                 .ok = false,
@@ -734,6 +822,8 @@ IndexParseResult parse_index_probe_from_file(const std::string& path) {
     std::size_t probe_size = 512U;
     if (kind == IndexKind::cdx || kind == IndexKind::dcx || kind == IndexKind::mdx) {
         probe_size = static_cast<std::size_t>(file_size);
+    } else if (kind == IndexKind::ntx) {
+        probe_size = 1024U;
     }
     std::vector<std::uint8_t> bytes(probe_size, 0U);
     input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
