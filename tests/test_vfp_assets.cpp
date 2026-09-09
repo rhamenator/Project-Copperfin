@@ -837,6 +837,7 @@ void test_parse_access_container_header_rejects_truncated_file() {
 }
 
 void test_access_container_errors_resolve_through_localization_catalog() {
+    const copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
