@@ -1749,7 +1749,7 @@
   "Vfp.DbfImport.Error.UnresolvedMemoPayload": "El campo {fieldName} en el registro {recordNumber} hace referencia a un contenido de memo que no se pudo leer del origen; la tabla no se importo.",
   "Vfp.DbfImport.Error.UnsupportedCodePage": "Esta division de importacion solo admite tablas de origen con pagina de codigos 0 (UTF-8).",
   "Vfp.DbfImport.Error.UnsupportedFieldType": "El campo {fieldName} tiene el tipo de origen '{fieldType}', que esta division de importacion no admite.",
-  "Vfp.DbfImport.Error.UnsupportedSourceFamily": "Esta division de importacion solo admite tablas de la familia dBASE.",
+  "Vfp.DbfImport.Error.UnsupportedSourceFamily": "Esta division de importacion solo admite tablas dBASE, FoxBASE y FoxPro.",
   "Vfp.DbfTable.Error.CharacterValueTooLarge": "El valor de caracteres ({valueLength} bytes) es demasiado grande para el campo {fieldName} ({fieldLength} bytes de ancho) en el registro {recordNumber} de {path}. Valor: {valuePreview}",
   "Vfp.DbfTable.Error.TextEncodingConversionFailed": "El texto no se puede representar en la pagina de codigos de la tabla.",
   "Vfp.DbfTable.Error.CreateDestinationExists": "No se puede crear una tabla en una ruta que ya existe: {path}",

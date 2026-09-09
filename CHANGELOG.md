@@ -1,3 +1,29 @@
+- 2026-09-09: Fixes #5525: extended #5523's `IMPORT DATABASE ... TYPE XBASE`
+  importer (renamed `import_dbase_table_to_vfp_native()` ->
+  `import_xbase_table_to_vfp_native()`) to accept FoxBASE (`0x02` only --
+  `0xFB`'s physical layout is unverified per `RQ-CF-LEGACY-003` and is
+  explicitly rejected) and FoxPro sources alongside dBASE. FoxBASE/FoxPro
+  cannot produce dBASE Level 7's `I`/`+`/`O` source types, so the existing
+  mapping, code-page restriction, unresolved-memo-payload rejection,
+  memo-sidecar-conflict check, and rollback-on-failure logic all apply
+  unchanged; this was a generalization, not a rewrite. FoxPro's own
+  General/Picture (`G`/`P`) types are explicitly excluded (same deferred
+  category as dBASE `B`) rather than left to an implicit default case. A
+  real FoxBASE fixture round-trips cleanly. A real historical FoxPro
+  fixture (Catalan-language data)
+  surfaced a genuine finding: its `COMN` field contains a byte that isn't
+  valid UTF-8 despite a code-page-0 header, since `code_page_mark == 0` is
+  Copperfin's own reinterpretation as "UTF-8," not a guarantee the
+  original file's bytes actually are -- the writer's existing width-
+  mismatch check correctly rejects the import rather than corrupt the
+  field, so this is documented as a known current limitation
+  (`docs/69-dbase-import-field-mapping.md`) rather than a bug. A clean
+  synthetic FoxPro fixture (a VFP-native table with its version byte
+  patched to `0xF5`, since FoxPro's on-disk layout is otherwise identical
+  to VFP's) proves the positive round-trip path. Clipper source support,
+  DBC container import, and a dry-run/report mode remain explicit
+  follow-up slices.
+
 - 2026-09-09: Fixes #5523: added `import_dbase_table_to_vfp_native()`, the
   first slice of #5517's `IMPORT DATABASE ... TYPE XBASE` wizard --
   importing one dBASE-family source table into a brand-new VFP-native
