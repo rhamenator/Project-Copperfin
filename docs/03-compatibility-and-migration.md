@@ -8,11 +8,12 @@ Version target:
 
 - Version 1 is tested against Visual FoxPro 9 as the sole binary-compatibility target. VFP 6, VFP 7, and VFP 8 asset compatibility is best-effort and untested through the shared DBF/FPT/CDX/DBC readers, not a differentiated compile-time or runtime target. Earlier Fox Software, dBASE, and Clipper-family assets are real, committed interpretation/inspection targets (tracked under #1076); producing binaries for those products is separately committed scope (tracked under #1077). **As of 2026-09-01, the full database/container interchange and migration-bridge pipeline under umbrella #137 -- including #138, #139, #140, #141, #1076, and #1077 -- is an active Version 1 blocking criterion**, not work sequenced after the Version 1 compatibility contract.
 - The read-only inspector exposes a stable DBF `header.format_family` value
-  (`foxbase`, `foxpro`, `dbase`, `visual_foxpro`, or `unknown`) derived only
-  from the documented version byte. dBASE Level 7 flag combinations remain
-  `dbase` because their low version bits remain Level 7. It is format
-  identification, not a claim that Copperfin can execute, write, or fully
-  preserve assets from that family.
+  (`foxbase`, `foxpro`, `dbase`, `visual_foxpro`, or `unknown`) derived from
+  the documented version byte. dBASE Level 7 flag combinations remain
+  `dbase` because their low version bits remain Level 7. The reader accepts
+  bounded dBASE III/IV/7 fixed-field and DBT-memo layouts as an inspection
+  surface, but this is not a claim that Copperfin can execute, mutate, index,
+  or fully preserve assets from that family.
 
 ### Layer 1: Data Compatibility
 

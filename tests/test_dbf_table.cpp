@@ -8,6 +8,7 @@
 #include "test_environment_support.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
@@ -101,6 +102,163 @@ void clear_dbf_last_update_date(const std::filesystem::path& path) {
         bytes[3U] = 0U;
         expect(write_binary_file(path, bytes), "DBF date-stamping fixture should be writable");
     }
+}
+
+std::filesystem::path legacy_dbase_fixture_path(const std::string& name) {
+    return std::filesystem::path(__FILE__).parent_path() /
+           "fixtures" / "legacy-dbase-infused" / name;
+}
+
+void test_parse_real_dbase_family_fixtures() {
+    const auto dbase_iii = copperfin::vfp::parse_dbf_table_from_file(
+        legacy_dbase_fixture_path("dbase_03.dbf").string(), 14U);
+    expect(dbase_iii.ok, "dBASE III fixture should parse");
+    expect(dbase_iii.table.header.format_family() == copperfin::vfp::DbfFormatFamily::dbase,
+        "dBASE III fixture should retain dbase family classification");
+    expect(dbase_iii.table.records.size() == 14U,
+        "dBASE III fixture should expose every declared record");
+    expect(dbase_iii.table.fields.size() == 31U,
+        "dBASE III fixture should expose its complete descriptor array");
+    expect(!dbase_iii.table.records.empty() &&
+               dbase_iii.table.records.front().values.size() == dbase_iii.table.fields.size(),
+        "dBASE III fields should use their packed physical record offsets");
+
+    const auto dbase_iii_memo = copperfin::vfp::parse_dbf_table_from_file(
+        legacy_dbase_fixture_path("dbase_83.dbf").string(), 1U);
+    expect(dbase_iii_memo.ok, "dBASE III DBT fixture should parse");
+    expect(!dbase_iii_memo.table.records.empty() &&
+               dbase_iii_memo.table.records.front().values.size() == 15U,
+        "dBASE III DBT fixture should expose every field");
+    if (!dbase_iii_memo.table.records.empty() &&
+        dbase_iii_memo.table.records.front().values.size() == 15U) {
+        const auto& first = dbase_iii_memo.table.records.front().values;
+        expect(first[6U].display_value == "Assorted Petits Fours",
+            "dBASE III fixture should decode packed character fields");
+        expect(first[11U].display_value.starts_with("Our Original assortment"),
+            "dBASE III DBT memo should stop at its legacy terminator");
+    }
+
+    const auto dbase_iv_memo = copperfin::vfp::parse_dbf_table_from_file(
+        legacy_dbase_fixture_path("dbase_8b.dbf").string(), 1U);
+    expect(dbase_iv_memo.ok, "dBASE IV DBT fixture should parse");
+    expect(!dbase_iv_memo.table.records.empty() &&
+               dbase_iv_memo.table.records.front().values.size() == 6U,
+        "dBASE IV fixture should expose every field");
+    if (!dbase_iv_memo.table.records.empty() &&
+        dbase_iv_memo.table.records.front().values.size() == 6U) {
+        const auto& first = dbase_iv_memo.table.records.front().values;
+        expect(first[0U].display_value == "One",
+            "dBASE IV fixture should decode packed character fields");
+        expect(first[5U].display_value.starts_with("First memo"),
+            "dBASE IV DBT memo should use its little-endian payload length");
+    }
+
+    const auto dbase_level_7 = copperfin::vfp::parse_dbf_table_from_file(
+        legacy_dbase_fixture_path("dbase_8c.dbf").string(), 10U);
+    expect(dbase_level_7.ok, "dBASE Level 7 SQL-flag fixture should parse");
+    expect(dbase_level_7.table.records.size() == 10U,
+        "dBASE Level 7 fixture should expose every declared record");
+    expect(dbase_level_7.table.header.has_memo_file() &&
+               dbase_level_7.table.header.version_description() == "dBASE Level 7 with memo",
+        "dBASE Level 7 memo-flag fixture should report its DBT-capable header precisely");
+    expect(dbase_level_7.table.fields.size() == 6U,
+        "dBASE Level 7 fixture should parse its 48-byte descriptors");
+    if (dbase_level_7.table.fields.size() == 6U) {
+        expect(dbase_level_7.table.fields.front().name == "ID" &&
+                   dbase_level_7.table.fields.front().type == '+',
+            "dBASE Level 7 fixture should retain its extended descriptor layout");
+    }
+    if (!dbase_level_7.table.records.empty() &&
+        !dbase_level_7.table.records.front().values.empty()) {
+        expect(dbase_level_7.table.records.front().values.front().display_value == "1",
+            "dBASE Level 7 autoincrement fields should decode as signed integers");
+    }
+}
+
+void test_dbase_legacy_layouts_fail_closed_when_truncated() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbase_truncation_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path malformed_table_path = temp_dir / "missing_terminator.dbf";
+    std::vector<std::uint8_t> table_bytes = read_binary_file(legacy_dbase_fixture_path("dbase_8c.dbf"));
+    constexpr std::size_t level_7_descriptor_terminator_offset = 68U + (6U * 48U);
+    expect(table_bytes.size() > level_7_descriptor_terminator_offset,
+        "dBASE Level 7 truncation fixture should contain its descriptor terminator");
+    if (table_bytes.size() > level_7_descriptor_terminator_offset) {
+        table_bytes[level_7_descriptor_terminator_offset] = 0U;
+        expect(write_binary_file(malformed_table_path, table_bytes),
+            "dBASE Level 7 malformed table fixture should be writable");
+        const auto malformed_table = copperfin::vfp::parse_dbf_table_from_file(
+            malformed_table_path.string(), 1U);
+        expect(!malformed_table.ok,
+            "dBASE Level 7 reader should reject a missing descriptor terminator");
+    }
+
+    const fs::path malformed_memo_path = temp_dir / "memo_missing_terminator.dbt";
+    std::vector<std::uint8_t> memo_bytes = read_binary_file(legacy_dbase_fixture_path("dbase_83.dbt"));
+    constexpr std::array<std::uint8_t, 2U> dbase_iii_memo_terminator = {0x1AU, 0x1AU};
+    const auto first_terminator = std::search(
+        memo_bytes.begin(), memo_bytes.end(),
+        dbase_iii_memo_terminator.begin(), dbase_iii_memo_terminator.end());
+    // The reader must not consume a later memo block when the requested dBASE
+    // III memo is missing its documented terminator.
+    if (first_terminator != memo_bytes.end()) {
+        std::fill(first_terminator, first_terminator + dbase_iii_memo_terminator.size(), 0U);
+        expect(write_binary_file(malformed_memo_path, memo_bytes),
+            "dBASE III malformed memo fixture should be writable");
+        const auto malformed_memo = copperfin::vfp::parse_dbf_table_from_file(
+            legacy_dbase_fixture_path("dbase_83.dbf").string(),
+            2U,
+            malformed_memo_path.string());
+        expect(malformed_memo.ok && malformed_memo.table.records.size() >= 2U &&
+                   malformed_memo.table.records.front().values.size() > 11U &&
+                   malformed_memo.table.records.front().values[11U].display_value == "<memo block 1>",
+            "dBASE III reader should fail closed to a memo-block placeholder when a later memo still has a terminator");
+        expect(malformed_memo.ok && malformed_memo.table.records.size() >= 2U &&
+                   malformed_memo.table.records[1U].values.size() > 11U &&
+                   malformed_memo.table.records[1U].values[11U].display_value.starts_with("Gift wrap"),
+            "dBASE III reader should keep later memo blocks readable after a prior unterminated memo");
+    }
+
+    const fs::path resized_memo_path = temp_dir / "memo_blocksize_1024.dbt";
+    memo_bytes = read_binary_file(legacy_dbase_fixture_path("dbase_8b.dbt"));
+    constexpr std::uint16_t nondefault_dbase_iv_block_size = 1024U;
+    expect(memo_bytes.size() >= 512U, "dBASE IV block-size fixture should contain a complete header block");
+    if (memo_bytes.size() >= 512U) {
+        std::vector<std::uint8_t> resized_memo_bytes(nondefault_dbase_iv_block_size, 0U);
+        std::copy_n(memo_bytes.begin(), 512U, resized_memo_bytes.begin());
+        resized_memo_bytes.insert(resized_memo_bytes.end(), memo_bytes.begin() + 512, memo_bytes.end());
+        write_le_u16(resized_memo_bytes, 20U, nondefault_dbase_iv_block_size);
+        expect(write_binary_file(resized_memo_path, resized_memo_bytes),
+            "dBASE IV non-default block-size fixture should be writable");
+        const auto resized_memo = copperfin::vfp::parse_dbf_table_from_file(
+            legacy_dbase_fixture_path("dbase_8b.dbf").string(),
+            1U,
+            resized_memo_path.string());
+        expect(resized_memo.ok && !resized_memo.table.records.empty() &&
+                   resized_memo.table.records.front().values.size() > 5U &&
+                   resized_memo.table.records.front().values[5U].display_value.starts_with("First memo"),
+            "dBASE IV reader should honor the DBT header block size");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_dbase_tables_reject_mutation_without_touching_source_bytes() {
+    const std::filesystem::path table_path = legacy_dbase_fixture_path("dbase_03.dbf");
+    const std::vector<std::uint8_t> original_bytes = read_binary_file(table_path);
+    expect(!original_bytes.empty(), "dBASE mutation safety fixture should be readable");
+
+    const auto result = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 0U, "DESC", "must not be written");
+    expect(!result.ok, "dBASE tables should reject VFP mutation requests");
+    expect(!result.error.empty(), "dBASE mutation rejection should explain the read-only boundary");
+    expect(read_binary_file(table_path) == original_bytes,
+        "rejecting a dBASE mutation must preserve every source byte");
 }
 
 void expect_dbf_last_update_date(const std::filesystem::path& path, const std::string& label) {
@@ -2232,6 +2390,9 @@ int main(int argc, char* argv[]) {
     }
 
     test_parse_dbf_table_with_memo_sidecar();
+    test_parse_real_dbase_family_fixtures();
+    test_dbase_legacy_layouts_fail_closed_when_truncated();
+    test_dbase_tables_reject_mutation_without_touching_source_bytes();
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
     test_dbf_mutations_stamp_last_update_date();

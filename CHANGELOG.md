@@ -1,3 +1,18 @@
+- 2026-09-08: Fixes #5482: the DBF reader previously classified dBASE files
+  but then parsed all of them as Visual FoxPro tables. It now uses the dBASE
+  III/IV packed-record layout instead of descriptor memory-address values,
+  recognizes dBASE 7's 68-byte preamble and 48-byte field descriptors, and
+  reads dBASE III/IV DBT memo pointers with their distinct framing rules.
+  dBASE `B`, `I`/`+`, `O`, and `@` are decoded by their dBASE meanings rather
+  than similarly named VFP storage; binary DBT payloads are represented as
+  deterministic bytes rather than interpreted. Existing dBASE files are
+  explicitly read-only: every mutation API rejects them before writing.
+  Added MIT-licensed, unmodified dBASE III,
+  III+memo, IV+memo, and Level-7 memo-flag fixture artifacts with retained license and
+  provenance, plus malformed descriptor/memo fail-closed coverage. This is
+  read-only; legacy mutation, index, OLE/binary payload interpretation, and
+  historical runtime execution remain intentionally out of scope.
+
 - 2026-09-08: Fixes #5453: added real Windows coverage for the
   Authenticode trust and publisher-matching boundary, rather than testing a
   synthetic policy result. The test hook verifies a known embedded-signed

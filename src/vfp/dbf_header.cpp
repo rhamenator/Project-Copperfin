@@ -93,6 +93,12 @@ bool DbfHeader::has_structural_cdx() const {
 }
 
 bool DbfHeader::has_memo_file() const {
+    // dBASE Level 7 retains its version in the low three bits. Either bit 3
+    // (dBASE IV-style) or bit 7 (dBASE III PLUS-style) records a DBT memo
+    // sidecar, independently of the SQL-table flag bits.
+    if ((version & 0x07U) == 0x04U) {
+        return (version & 0x88U) != 0U;
+    }
     return version == 0x83U || version == 0x8BU || version == 0xF5U;
 }
 
@@ -145,6 +151,20 @@ std::string DbfHeader::version_description() const {
 }
 
 std::string DbfHeader::version_description(const localization::LocalizedCatalog& catalog) const {
+    if ((version & 0x07U) == 0x04U) {
+        const bool has_memo = (version & 0x88U) != 0U;
+        const bool is_sql_table = (version & 0x70U) != 0U;
+        if (has_memo && is_sql_table) {
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseLevel7MemoSql");
+        }
+        if (has_memo) {
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseLevel7Memo");
+        }
+        if (is_sql_table) {
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseLevel7SqlTable");
+        }
+        return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseLevel7");
+    }
     switch (version) {
         case 0x02U:
             return dbf_header_text(catalog, "Vfp.DbfHeader.Version.Foxbase");
