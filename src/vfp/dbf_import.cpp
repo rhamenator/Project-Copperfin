@@ -54,10 +54,13 @@ std::string dbf_import_text(
     return dbf_import_catalog().translate(key, placeholders);
 }
 
-// Maps one dBASE-family source field to its VFP-native target type and
-// width, per RQ-CF-MIGRATION-003's written mapping table. Returns no value
-// for a source type this slice does not support.
-std::optional<DbfFieldDescriptor> map_dbase_field_to_vfp_native(const DbfFieldDescriptor& source) {
+// Maps one dBASE/FoxBASE/FoxPro-family source field to its VFP-native
+// target type and width, per RQ-CF-MIGRATION-003's written mapping table.
+// FoxBASE/FoxPro sources only ever produce C/N/F/L/D/M source types (the
+// I/+/O cases below are dBASE Level 7-only and cannot occur for those
+// families), so one shared mapping covers all three. Returns no value for
+// a source type this slice does not support.
+std::optional<DbfFieldDescriptor> map_xbase_field_to_vfp_native(const DbfFieldDescriptor& source) {
     switch (source.type) {
         case 'C':
         case 'N':
@@ -88,7 +91,7 @@ std::optional<DbfFieldDescriptor> map_dbase_field_to_vfp_native(const DbfFieldDe
             };
         case 'M':
             // dBASE III/IV/Level 7 text memo -> VFP memo. Real content is
-            // filled in by a second pass (see import_dbase_table_to_vfp_native)
+            // filled in by a second pass (see import_xbase_table_to_vfp_native)
             // since the base writer only accepts a blank memo pointer at
             // table-creation time.
             return DbfFieldDescriptor{
@@ -131,7 +134,7 @@ std::optional<DbfFieldDescriptor> map_dbase_field_to_vfp_native(const DbfFieldDe
     }
 }
 
-// The dBASE-family reader (dbf_table.cpp) exposes an unresolved memo
+// The dBASE/FoxBASE/FoxPro-family reader (dbf_table.cpp) exposes an unresolved memo
 // payload (missing/truncated/unreadable DBT block) as the diagnostic text
 // "<memo block N>" rather than failing the whole table parse -- see the
 // 'M'/'G'/'P' cases in that file's field-decoding switch. Copying that
@@ -157,7 +160,7 @@ void remove_destination_artifacts(const std::string& destination_path) {
 
 }  // namespace
 
-DbfImportResult import_dbase_table_to_vfp_native(
+DbfImportResult import_xbase_table_to_vfp_native(
     const std::string& source_path,
     const std::string& destination_path,
     const std::string& source_memo_sidecar_path) {
@@ -168,7 +171,10 @@ DbfImportResult import_dbase_table_to_vfp_native(
     if (!source.ok) {
         return {.ok = false, .error = source.error};
     }
-    if (source.table.header.format_family() != DbfFormatFamily::dbase) {
+    const DbfFormatFamily source_family = source.table.header.format_family();
+    if (source_family != DbfFormatFamily::dbase &&
+        source_family != DbfFormatFamily::foxbase &&
+        source_family != DbfFormatFamily::foxpro) {
         return {.ok = false, .error = dbf_import_text("Vfp.DbfImport.Error.UnsupportedSourceFamily")};
     }
     if (source.table.header.code_page_mark != 0U) {
@@ -199,7 +205,7 @@ DbfImportResult import_dbase_table_to_vfp_native(
     target_fields.reserve(source.table.fields.size());
     field_mappings.reserve(source.table.fields.size());
     for (const DbfFieldDescriptor& source_field : source.table.fields) {
-        const auto mapped = map_dbase_field_to_vfp_native(source_field);
+        const auto mapped = map_xbase_field_to_vfp_native(source_field);
         if (!mapped.has_value()) {
             return {
                 .ok = false,

@@ -656,7 +656,7 @@ void test_import_dbase_table_to_vfp_native_round_trips() {
     fs::create_directories(temp_dir);
 
     const fs::path destination = temp_dir / "imported.dbf";
-    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(
         legacy_dbase_fixture_path("dbase_83.dbf").string(),
         destination.string());
     expect(import_result.ok, "importing the real dBASE III + memo fixture should succeed");
@@ -684,7 +684,7 @@ void test_import_dbase_table_to_vfp_native_rejects_unsupported_field_type() {
     // A synthetic dBASE III header (version 0x03) with one field of type
     // 'B' -- dBASE's binary DBT-block-pointer type, which this first
     // import slice deliberately does not support (see
-    // map_dbase_field_to_vfp_native in src/vfp/dbf_import.cpp).
+    // map_xbase_field_to_vfp_native in src/vfp/dbf_import.cpp).
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
         ("copperfin_dbase_import_unsupported_tests_" + std::to_string(_getpid()));
@@ -709,7 +709,7 @@ void test_import_dbase_table_to_vfp_native_rejects_unsupported_field_type() {
     expect(write_binary_file(source, bytes), "the synthetic unsupported-field fixture should be writable");
 
     const fs::path destination = temp_dir / "should_not_exist.dbf";
-    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(
         source.string(),
         destination.string());
     expect(!import_result.ok, "importing a source field type outside this slice's scope should fail closed");
@@ -731,7 +731,7 @@ void test_import_dbase_table_to_vfp_native_rejects_existing_destination() {
     expect(write_binary_file(destination, {0x00U}), "the pre-existing destination fixture should be writable");
     const std::vector<std::uint8_t> original_bytes = read_binary_file(destination);
 
-    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(
         legacy_dbase_fixture_path("dbase_83.dbf").string(),
         destination.string());
     expect(!import_result.ok, "importing into an existing destination path should fail closed");
@@ -776,7 +776,7 @@ void test_import_dbase_table_to_vfp_native_maps_float_to_numeric() {
     expect(write_binary_file(source, bytes), "the synthetic Float-field fixture should be writable");
 
     const fs::path destination = temp_dir / "float_dest.dbf";
-    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(source.string(), destination.string());
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(source.string(), destination.string());
     expect(import_result.ok, "importing a dBASE Float field should succeed");
     if (import_result.ok && import_result.field_mappings.size() == 1U) {
         expect(import_result.field_mappings.front().source_type == 'F',
@@ -805,7 +805,7 @@ void test_import_dbase_table_to_vfp_native_rejects_non_default_code_page() {
     expect(write_binary_file(source, bytes), "the synthetic non-default-code-page fixture should be writable");
 
     const fs::path destination = temp_dir / "should_not_exist.dbf";
-    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(source.string(), destination.string());
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(source.string(), destination.string());
     expect(!import_result.ok, "importing a non-default-code-page source should fail closed");
     expect(!fs::exists(destination, ignored), "a rejected import must not leave a partial destination file behind");
 
@@ -831,7 +831,7 @@ void test_import_dbase_table_to_vfp_native_rejects_unresolved_memo_payload() {
     expect(write_binary_file(source, bytes), "the synthetic unresolved-memo fixture should be writable");
 
     const fs::path destination = temp_dir / "should_not_exist.dbf";
-    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(source.string(), destination.string());
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(source.string(), destination.string());
     expect(!import_result.ok, "importing a source with an unresolvable memo payload should fail closed");
     expect(!fs::exists(destination, ignored), "a rejected import must not leave a partial destination file behind");
 
@@ -855,13 +855,123 @@ void test_import_dbase_table_to_vfp_native_rejects_existing_memo_sidecar_conflic
         "the stray pre-existing memo sidecar fixture should be writable");
     const std::vector<std::uint8_t> original_stray_bytes = read_binary_file(stray_memo);
 
-    const auto import_result = copperfin::vfp::import_dbase_table_to_vfp_native(
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(
         legacy_dbase_fixture_path("dbase_83.dbf").string(),
         destination.string());
     expect(!import_result.ok, "importing into a destination with a conflicting memo sidecar should fail closed");
     expect(!fs::exists(destination, ignored), "a rejected import must not leave a partial destination .dbf behind");
     expect(read_binary_file(stray_memo) == original_stray_bytes,
         "a rejected import must not touch an unrelated existing memo sidecar's bytes");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_import_xbase_table_to_vfp_native_round_trips_foxbase() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_foxbase_import_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path destination = temp_dir / "imported.dbf";
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(
+        legacy_foxpro_fixture_path("dbase_02.dbf").string(),
+        destination.string());
+    expect(import_result.ok, "importing the real FoxBASE fixture should succeed");
+    expect(import_result.record_count == 9U, "the import result should report the imported record count");
+    expect(import_result.field_mappings.size() == 14U, "the import result should report every field's mapping");
+
+    const auto imported = copperfin::vfp::parse_dbf_table_from_file(destination.string(), 1U);
+    expect(imported.ok, "the imported destination table should itself parse");
+    expect(
+        imported.table.header.format_family() == copperfin::vfp::DbfFormatFamily::visual_foxpro,
+        "the imported destination table should be VFP-native, not FoxBASE");
+    if (imported.ok && !imported.table.records.empty() &&
+        imported.table.records.front().values.size() == 14U) {
+        const auto& first = imported.table.records.front().values;
+        expect(first[0U].display_value == "2", "imported numeric field values should match the FoxBASE source");
+        expect(first[1U].display_value == "Stegman", "imported character field values should match the FoxBASE source");
+        expect(first[12U].display_value == "6.000", "imported decimal-count numeric values should match the FoxBASE source");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_foxpro_import_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path destination = temp_dir / "imported.dbf";
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(
+        legacy_foxpro_fixture_path("dbase_f5.dbf").string(),
+        destination.string());
+    // The real dbase_f5.dbf fixture is genuine historical Catalan-language
+    // data whose COMN field contains at least one byte sequence (record 1)
+    // that is not valid UTF-8, despite the source header's code_page_mark
+    // being 0. This slice's code-page-0 safety assumption (see
+    // import_xbase_table_to_vfp_native's UnsupportedCodePage check) relies
+    // on code-page-0 source bytes actually *being* UTF-8 already -- which
+    // held for every field in #5523's dBASE fixture, but does not hold
+    // universally for real legacy data. create_dbf_table_file() itself
+    // correctly detects the resulting width mismatch and rejects the
+    // write, so the import fails closed rather than truncating or
+    // corrupting the field -- exactly the safety property this slice
+    // promises, just triggered by real rather than synthetic data.
+    expect(!import_result.ok,
+        "importing this real FoxPro fixture should fail closed on its non-UTF-8-safe COMN field content "
+        "rather than truncate or corrupt it");
+    expect(!fs::exists(destination, ignored), "a rejected import must not leave a partial destination file behind");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro() {
+    // FoxPro (0xF5) descriptors already store the correct on-disk physical
+    // field offset the same way VFP does (see dbf_read_layout()), so a
+    // clean VFP-native table's bytes are already FoxPro-shaped -- build
+    // one via the existing, already-tested writer and just patch the
+    // version byte, rather than hand-deriving descriptor offsets.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_synthetic_foxpro_import_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 20U, .decimal_count = 0U},
+        {.name = "QTY", .type = 'N', .length = 5U, .decimal_count = 0U},
+    };
+    const fs::path source = temp_dir / "synthetic_foxpro.dbf";
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        source.string(), fields, {{"Widget", "42"}, {"Gadget", "7"}});
+    expect(create_result.ok, "creating the base VFP-native fixture to reshape as FoxPro should succeed");
+
+    auto bytes = read_binary_file(source);
+    expect(!bytes.empty(), "the base fixture should be readable back for patching");
+    if (!bytes.empty()) {
+        bytes[0] = 0xF5U;
+        expect(write_binary_file(source, bytes), "the version-patched FoxPro fixture should be writable");
+    }
+
+    const fs::path destination = temp_dir / "imported.dbf";
+    const auto import_result = copperfin::vfp::import_xbase_table_to_vfp_native(source.string(), destination.string());
+    expect(import_result.ok, "importing a clean synthetic FoxPro source should succeed");
+
+    const auto imported = copperfin::vfp::parse_dbf_table_from_file(destination.string(), 2U);
+    expect(imported.ok, "the imported destination table should itself parse");
+    if (imported.ok && imported.table.records.size() == 2U &&
+        imported.table.records.front().values.size() == 2U) {
+        expect(imported.table.records.front().values[0U].display_value == "Widget",
+            "imported character field values should match the synthetic FoxPro source");
+        expect(imported.table.records[1U].values[1U].display_value == "7",
+            "imported numeric field values should match the synthetic FoxPro source");
+    }
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -2960,6 +3070,9 @@ int main(int argc, char* argv[]) {
     test_import_dbase_table_to_vfp_native_rejects_non_default_code_page();
     test_import_dbase_table_to_vfp_native_rejects_unresolved_memo_payload();
     test_import_dbase_table_to_vfp_native_rejects_existing_memo_sidecar_conflict();
+    test_import_xbase_table_to_vfp_native_round_trips_foxbase();
+    test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes();
+    test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro();
     test_double_field_round_trips_full_ieee754_precision();
     test_dbf_mutations_stamp_last_update_date();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();

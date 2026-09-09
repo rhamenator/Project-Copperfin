@@ -1,16 +1,24 @@
-# dBASE-Family Import Field Mapping
+# dBASE/FoxBASE/FoxPro Import Field Mapping
 
-Written field-type mapping for issue #5523 (parent #5517, #137), the first
-concrete slice of the `IMPORT DATABASE ... TYPE XBASE` wizard:
-`copperfin::vfp::import_dbase_table_to_vfp_native()` in
+Written field-type mapping for issues #5523 and #5525 (parent #5517, #137),
+the first concrete slices of the `IMPORT DATABASE ... TYPE XBASE` wizard:
+`copperfin::vfp::import_xbase_table_to_vfp_native()` in
 `src/vfp/dbf_import.cpp`. This covers dBASE-family (`DbfFormatFamily::dbase`)
-sources only -- FoxBASE, FoxPro, and Clipper source families are explicit
-follow-up slices once this single-table dBASE path is proven, per #5517's
-scoping comment.
+and, as of #5525, FoxBASE (`DbfFormatFamily::foxbase`) and FoxPro
+(`DbfFormatFamily::foxpro`) sources. FoxBASE and FoxPro use a strict subset
+of dBASE's type system -- `C`/`N`/`F`/`L`/`D`/`M` only; dBASE Level 7's
+`I`/`+`/`O` types cannot occur in those older formats -- so the same mapping
+table and importer cover all three families. Clipper source support is an
+explicit follow-up once #5484's NTX/DBT compatibility work is trusted for
+it.
 
 ## Supported source types
 
-| dBASE type | Meaning | Target VFP type | Notes |
+FoxBASE and FoxPro sources only ever produce the `C`/`N`/`F`/`L`/`D`/`M` rows
+below; the `I`/`+`/`O` rows are dBASE Level 7-specific and cannot occur for
+those families.
+
+| dBASE-family type | Meaning | Target VFP type | Notes |
 | --- | --- | --- | --- |
 | `C` | Character | `C` | Direct; identical on-disk text encoding on both sides. |
 | `N` | Numeric | `N` | Direct; same decimal-count semantics. |
@@ -24,7 +32,7 @@ scoping comment.
 
 ## Explicitly unsupported source types (this slice)
 
-| dBASE type | Meaning | Why not supported yet |
+| dBASE-family type | Meaning | Why not supported yet |
 | --- | --- | --- |
 | `B` | Binary DBT-block pointer (dBASE's own `B`, distinct from VFP's `B` double) | The existing reader already treats this as an opaque binary payload (not reinterpreted, per `RQ-CF-LEGACY-002`). Writing it into a VFP General (`G`) field would require the same "resolve to a memo/General block, write raw bytes" path `M` uses, but through `write_memo_field_bytes()` (raw bytes) rather than `write_memo_field_text()` (encoded text) -- deferred to a follow-up slice rather than adding an unverified second memo-write path in this first pass. |
 | `@` | Julian-day/millisecond timestamp | The existing reader does not yet convert this to a real calendar date/time (`parse_dbf_table_from_file()` currently exposes it only as a diagnostic `julian:N millis:M` string, not a value `write_field_bytes()`'s VFP `T`/`Y` cases can consume). There is nothing meaningful to write until that conversion exists upstream in the reader. |
@@ -37,14 +45,31 @@ destination file is created or written -- see
 
 ## Additional safety checks (added after review)
 
-- **Code page**: only `code_page_mark == 0` (UTF-8, per `dbf_text_encoding.cpp`)
-  source tables are supported. A real single-byte code page (e.g. CP1252)
-  decodes to (possibly wider) UTF-8 on read, but this slice copies the
-  source field's declared byte width unchanged and always creates the
-  destination as code-page-0 -- a non-ASCII character in a tightly-sized
-  field could otherwise silently fail to fit. Rejected with
+- **Code page**: only `code_page_mark == 0` source tables are accepted, but
+  `code_page_mark == 0` is *not* itself a sufficient safety guarantee --
+  see the caveat below. A real single-byte code page (e.g. CP1252) decodes
+  to (possibly wider) UTF-8 on read, but this slice copies the source
+  field's declared byte width unchanged and always creates the destination
+  as code-page-0 -- a non-ASCII character in a tightly-sized field could
+  otherwise silently fail to fit. Rejected with
   `Vfp.DbfImport.Error.UnsupportedCodePage` before any destination file
   is created.
+  - **#5525 finding**: `code_page_mark == 0` is Copperfin's own
+    reinterpretation as "UTF-8" (see `dbf_text_encoding.cpp`), not a
+    guarantee the *original* file's bytes actually are valid UTF-8 --
+    older FoxPro/FoxBASE data marked code-page-0 often predates that
+    convention and can contain legacy single-byte-encoded text instead.
+    The real `dbase_f5.dbf` fixture (#5483's FoxPro test fixture)
+    demonstrates this: its `COMN` field contains a byte that is not valid
+    UTF-8 despite a code-page-0 header. This is not a gap in this slice's
+    safety, though -- `create_dbf_table_file()`'s own width check still
+    catches the resulting mismatch and rejects the write before any
+    corruption, exactly as it would for any other oversized value (see
+    `test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes`).
+    It does mean some genuine, otherwise-clean-looking code-page-0 legacy
+    tables will fail to import until a future slice can either detect and
+    re-decode such fields from their real original encoding, or widen
+    affected target fields to accommodate the UTF-8 expansion.
 - **Unresolved memo payloads**: the dBASE reader exposes a missing/
   truncated/unreadable memo block as a diagnostic string
   (`"<memo block N>"`) rather than failing the whole table parse. This
@@ -70,9 +95,10 @@ destination file is created or written -- see
   actually preserve their exact bit pattern through the decimal-string
   round trip, matching this document's original claim for that row.
 
-## Non-goals of this slice (see #5517 for the full wizard's scope)
+## Non-goals of these slices (see #5517 for the full wizard's scope)
 
-- No FoxBASE/FoxPro/Clipper source-family support.
+- No Clipper source-family support yet (follow-up once #5484's NTX/DBT
+  compatibility work is trusted for it).
 - No DBC container import.
 - No dry-run/report mode -- this slice fails closed on the first unmappable
   field rather than producing a pre-commit report of every issue in the

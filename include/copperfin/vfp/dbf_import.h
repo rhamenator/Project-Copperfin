@@ -23,11 +23,14 @@ struct DbfImportResult {
     std::vector<DbfImportFieldMapping> field_mappings;
 };
 
-// #5523: first slice of #5517's IMPORT DATABASE ... TYPE XBASE wizard.
-// Reads one legacy dBASE-family table (source_path, DbfFormatFamily::dbase
-// only -- see #5482's reader) and writes a brand-new VFP-native table at
-// destination_path with equivalent field/record content, reusing the
-// existing dBASE-family reader and VFP-native writer.
+// #5523/#5525: first slices of #5517's IMPORT DATABASE ... TYPE XBASE
+// wizard. Reads one legacy dBASE/FoxBASE/FoxPro-family table (source_path,
+// DbfFormatFamily::dbase/foxbase/foxpro -- see #5482/#5483's readers) and
+// writes a brand-new VFP-native table at destination_path with equivalent
+// field/record content, reusing the existing family readers and VFP-native
+// writer. FoxBASE and FoxPro use a strict subset of dBASE's type system (no
+// dBASE Level 7-only I/+/O types are possible in those older formats), so
+// this same function and mapping cover all three families.
 //
 // Source is opened read-only and never modified. destination_path is never
 // overwritten: an existing entry there fails the import closed before any
@@ -40,7 +43,7 @@ struct DbfImportResult {
 // file is created -- see docs/32-recovered-requirements-traceability.md's
 // RQ-CF-MIGRATION-003 row for the written field-type mapping and the
 // reasoning for excluding those types from this first slice.
-DbfImportResult import_dbase_table_to_vfp_native(
+DbfImportResult import_xbase_table_to_vfp_native(
     const std::string& source_path,
     const std::string& destination_path,
     const std::string& source_memo_sidecar_path = {});
