@@ -4,6 +4,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/path.h"
+#include "copperfin/vfp/access_container.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/cdx_header.h"
 #include "copperfin/vfp/dbf_header.h"
@@ -773,12 +774,104 @@ void test_inspect_database_container_collects_dcx_companion() {
     fs::remove(temp_dir, ignored);
 }
 
+std::vector<std::uint8_t> make_access_container_bytes(std::string_view signature, std::uint8_t generation_byte) {
+    std::vector<std::uint8_t> bytes(64U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x01U;
+    bytes[2] = 0x00U;
+    bytes[3] = 0x00U;
+    write_ascii(bytes, 4U, std::string(signature));
+    bytes[0x14U] = generation_byte;
+    return bytes;
+}
+
+void test_parse_access_container_header_for_jet3_mdb() {
+    const auto bytes = make_access_container_bytes("Standard Jet DB", 0x00U);
+
+    const auto result = copperfin::vfp::parse_access_container_header(bytes);
+    expect(result.ok, "parse_access_container_header should succeed for a plausible Jet 3 MDB header");
+    expect(result.header.family == copperfin::vfp::AccessContainerFamily::jet, "Jet signature should classify as the jet family");
+    expect(result.header.generation == copperfin::vfp::AccessContainerGeneration::jet3, "generation byte 0x00 should classify as jet3");
+    expect(result.header.looks_like_access_container(), "a recognized family should look like an Access container");
+}
+
+void test_parse_access_container_header_for_jet4_mdb() {
+    const auto bytes = make_access_container_bytes("Standard Jet DB", 0x01U);
+
+    const auto result = copperfin::vfp::parse_access_container_header(bytes);
+    expect(result.ok, "parse_access_container_header should succeed for a plausible Jet 4 MDB header");
+    expect(result.header.generation == copperfin::vfp::AccessContainerGeneration::jet4, "generation byte 0x01 should classify as jet4");
+}
+
+void test_parse_access_container_header_for_ace_accdb() {
+    const auto bytes = make_access_container_bytes("Standard ACE DB", 0x02U);
+
+    const auto result = copperfin::vfp::parse_access_container_header(bytes);
+    expect(result.ok, "parse_access_container_header should succeed for a plausible ACE ACCDB header");
+    expect(result.header.family == copperfin::vfp::AccessContainerFamily::ace, "ACE signature should classify as the ace family");
+    expect(result.header.generation == copperfin::vfp::AccessContainerGeneration::later, "generation byte 0x02 should classify only as the coarse 'later' bucket, not a specific edition");
+    expect(result.header.generation_byte == 0x02U, "the raw generation byte should be preserved even when the coarse bucket is 'later'");
+}
+
+void test_parse_access_container_header_rejects_missing_signature() {
+    std::vector<std::uint8_t> bytes(64U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x01U;
+    bytes[2] = 0x00U;
+    bytes[3] = 0x00U;
+    write_ascii(bytes, 4U, "Not A Real Signature");
+
+    const auto result = copperfin::vfp::parse_access_container_header(bytes);
+    expect(!result.ok, "parse_access_container_header should reject a file without a recognized Jet/ACE signature");
+}
+
+void test_parse_access_container_header_rejects_truncated_file() {
+    std::vector<std::uint8_t> bytes(10U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x01U;
+    bytes[2] = 0x00U;
+    bytes[3] = 0x00U;
+
+    const auto result = copperfin::vfp::parse_access_container_header(bytes);
+    expect(!result.ok, "parse_access_container_header should reject a file truncated before the generation byte");
+}
+
+void test_access_container_errors_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate("Vfp.AccessContainer.Error.SignatureMismatch") ==
+            "Header bytes do not look like a Jet or ACE database container.",
+        "#5521: Access container signature-mismatch error should resolve through the en-US catalog");
+    expect(
+        spanish_catalog.translate("Vfp.AccessContainer.Error.SignatureMismatch") ==
+            "Los bytes del encabezado no parecen corresponder a un contenedor de base de datos Jet o ACE.",
+        "#5521: Access container signature-mismatch error should resolve through the es-419 catalog");
+    expect(
+        pseudo_catalog.translate("Vfp.AccessContainer.Error.SignatureMismatch") !=
+            english_catalog.translate("Vfp.AccessContainer.Error.SignatureMismatch"),
+        "#5521: Access container errors should be pseudo-localizable");
+
+    const auto short_result = copperfin::vfp::parse_access_container_header({0x00U});
+    expect(!short_result.ok, "parse_access_container_header should reject a near-empty buffer");
+    expect(
+        short_result.error == "File is smaller than the minimum Access container header probe size (21 bytes).",
+        "#5521: parse_access_container_header should preserve the default localized short-header error");
+}
+
 void test_vfp_locale_catalog_parity() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const std::vector<std::string_view> keys{
+        "Vfp.AccessContainer.Error.HeaderTooSmall",
+        "Vfp.AccessContainer.Error.OpenFileFailed",
+        "Vfp.AccessContainer.Error.ReadHeaderFailed",
+        "Vfp.AccessContainer.Error.SignatureMismatch",
         "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
         "Vfp.AssetInspector.Error.DbcPathMissing",
         "Vfp.AssetInspector.Error.DbcReadFailed",
@@ -1862,6 +1955,12 @@ int main() {
     test_inspect_asset_uses_admitted_index_bytes();
     test_inspect_asset_discovers_virtual_casefolded_index_bytes();
     test_inspect_database_container_collects_dcx_companion();
+    test_parse_access_container_header_for_jet3_mdb();
+    test_parse_access_container_header_for_jet4_mdb();
+    test_parse_access_container_header_for_ace_accdb();
+    test_parse_access_container_header_rejects_missing_signature();
+    test_parse_access_container_header_rejects_truncated_file();
+    test_access_container_errors_resolve_through_localization_catalog();
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();
     test_inspect_database_container_extracts_first_pass_catalog_metadata();

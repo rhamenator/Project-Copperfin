@@ -1,3 +1,25 @@
+- 2026-09-09: Fixes #5521: added read-only MDB/ACCDB container-level
+  signature and Jet/ACE generation-byte detection
+  (`parse_access_container_header()`), a narrower prerequisite carved out
+  of #5476 after investigation found the full table/column enumeration
+  ask requires decoding `MSysObjects` catalog rows via the general
+  Jet/ACE row-decode algorithm -- a path with no independently-checkable
+  invariant to validate against and no real Access-produced fixture
+  available in this environment, so it's intentionally left for a future
+  slice. This slice instead classifies the file from its content bytes
+  (leading `0x00 0x01 0x00 0x00`, then `Standard Jet DB`/`Standard ACE DB`
+  at offset 4), not its extension, and buckets the generation byte at
+  offset `0x14` only into the well-corroborated `jet3`/`jet4` cases plus
+  an opaque `later` bucket for anything newer, since independent
+  community sources disagree on the precise year/edition mapping past
+  Jet 4. Grounded in `docs/68-access-mdb-jet-physical-page-layout-notes.md`,
+  itself sourced from the mdbtools project's own format notes, corroborated
+  against independent secondary community sources -- evidence explicitly
+  documented as community reverse-engineering, not an official Microsoft
+  specification, per `docs/66-access-container-format-notes.md`'s
+  disclosure requirement. Page/table/row/column enumeration, encryption/
+  compression handling, and any writing/mutation remain out of scope.
+
 - 2026-09-09: Fixes #5485: Copperfin can now write dBASE III-compatible
   tables (`create_dbase_iii_table_file()`) -- structure and data only, no
   memo or index sidecar in this first legacy binary-output slice under
