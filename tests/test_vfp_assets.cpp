@@ -2205,7 +2205,11 @@ void test_extract_dbc_stored_procedures_source_reads_code_memo() {
     const std::vector<std::vector<std::string>> records{
         {"Database", "Northwind", "", ""},
         {"Database", "StoredProceduresSource", "", prg_source},
-        {"Database", "StoredProceduresObject", "", "\x01\x02\x03binarycode"},
+        // #5544 review (Copilot): "\x03b" would be consumed as a single
+        // hex escape (\x03b = 0x3B, not \x03 followed by 'b') -- split
+        // into adjacent string literals so the intended 3 binary bytes
+        // followed by literal text actually land as written.
+        {"Database", "StoredProceduresObject", "", "\x01\x02\x03" "binarycode"},
     };
     const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_path.string(), fields, records);
     expect(create_result.ok, "Stored Procedures DBC fixture creation should succeed: " + create_result.error);

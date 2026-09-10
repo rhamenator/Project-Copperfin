@@ -143,7 +143,10 @@ struct DbcStoredProceduresResult {
     bool ok = false;
     std::string error;
     // false when the DBC has no "StoredProceduresSource" catalog row (a
-    // database with no stored procedures at all) -- not itself an error.
+    // database with no stored procedures at all), OR when that row's
+    // CODE memo content could not be resolved (e.g. a missing/unreadable
+    // .dct memo sidecar) -- neither case is itself an error; source_code
+    // stays empty either way.
     bool available = false;
     std::string source_code;  // raw PRG text, exactly as stored; never executed or parsed
 };

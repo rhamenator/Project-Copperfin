@@ -1613,13 +1613,18 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
                 obj.properties = decode_dbc_properties_blob(prop_bytes);
             }
         }
-        // #5538: the CODE memo field, decoded through the DBC's own code
-        // page (decode_dbf_text() -- the same conversion every other DBF/
-        // VFP text field in this codebase goes through). A conversion
-        // failure (e.g. a byte sequence the declared code page cannot
-        // represent) leaves code_source unset rather than surfacing
-        // partially-decoded or raw-byte text.
-        if (raw.code_block != 0U && has_dct) {
+        // #5544 review (Codex, P2): load_database_catalog_snapshot() is
+        // shared by the JSON/SQL/Access-SQL exporters, none of which
+        // need CODE content -- decoding it unconditionally for every row
+        // (including a StoredProceduresObject row's compiled p-code,
+        // which isn't text at all) would add avoidable memo-sidecar I/O
+        // and allocation to those unrelated operations for a real
+        // database with large stored-procedure content. Only the
+        // StoredProceduresSource row itself -- the one
+        // extract_dbc_stored_procedures_source() actually looks for --
+        // is decoded here.
+        if (raw.code_block != 0U && has_dct &&
+            lowercase_copy(raw.object_name) == "storedproceduressource") {
             const std::vector<std::uint8_t> code_bytes =
                 read_memo_block_raw(
                     copperfin::platform::path_to_utf8_string(*dct_path),
