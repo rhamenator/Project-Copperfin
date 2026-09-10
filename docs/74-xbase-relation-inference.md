@@ -85,6 +85,36 @@ avoid this trap, matching the same pattern `export_database_as_postgresql_sql()`
 own CDX-consuming tests (#5537) already had to work around for the same
 reason.
 
+## PR review follow-up
+
+Four findings from #5546's review round were addressed before merge:
+
+- **Companion-index naming style.** `indexed_plain_columns_for_table()`
+  originally only checked the extension-*replacing* sidecar form
+  (`table.cdx`, via `resolve_vfp_sidecar_path()`). It now also checks the
+  extension-*appending* form (`table.dbf.cdx`, via
+  `resolve_unique_casefold_path()` directly), matching
+  `asset_inspector.cpp`'s own `companion_index_paths_for()`, which already
+  checks both forms for every index extension it consults.
+- **Schema-only DBF read.** `infer_xbase_index_relations()` originally
+  called `parse_dbf_table_from_file(path, 0U)` to get a table's field
+  list, but that function unconditionally reads the whole file and scans
+  every record for memo references regardless of `max_records` -- so a
+  caller that only wants field names/types still paid a cost proportional
+  to a potentially multi-gigabyte table/memo pair. A new
+  `parse_dbf_fields_from_file()` (`src/vfp/dbf_table.h`/`.cpp`) reads only
+  the header and field-descriptor block, bounded to `header.header_length`
+  bytes; both it and `parse_dbf_table_from_file()` now share the same
+  extracted `parse_dbf_field_descriptor_block()` layout logic so the two
+  cannot silently disagree on field offsets/types for the same file.
+- **Duplicate relations from repeated input.** `infer_xbase_index_relations()`
+  now deduplicates the per-column table-name list before generating
+  pairwise relations, so a caller supplying the same table name more than
+  once in its input doesn't produce duplicate output.
+- **Test-helper bounds check.** `write_ascii()` (`tests/test_dbf_table_support.cpp`),
+  shared across this test binary's fixtures, now clamps its write to the
+  destination buffer's remaining length instead of writing past the end.
+
 ## Follow-up work
 
 - **Index rebuild** (translating recovered key expressions into a real,

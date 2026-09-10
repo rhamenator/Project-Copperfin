@@ -16,6 +16,17 @@
   `import_xbase_table_to_vfp_native()`, this is a standalone library
   function; #5517's own PRG-level wizard command surface does not exist
   yet either. Issue #5534 remains open pending the index-rebuild half.
+  PR review follow-up: `indexed_plain_columns_for_table()` now checks
+  both companion-index naming styles (extension-replacing `table.cdx`
+  and extension-appending `table.dbf.cdx`), matching
+  `asset_inspector.cpp`'s own `companion_index_paths_for()` precedent;
+  relation inference now reads only the DBF header and field-descriptor
+  block via a new `parse_dbf_fields_from_file()`
+  (`src/vfp/dbf_table.{h,cpp}`) instead of the whole-file/whole-memo-scan
+  `parse_dbf_table_from_file()`; `infer_xbase_index_relations()`
+  deduplicates table names per column before generating pairwise
+  relations, so a caller supplying the same table name twice can't
+  produce duplicate output.
 
 - 2026-09-10: Progress on #5537 (parent #141): `EXPORT DATABASE ... TYPE
   POSTGRESQL` -- the first real-target-engine SQL dialect slice.

@@ -20,6 +20,11 @@ void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uin
 void write_le_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value);
 void write_be_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value);
 void write_be_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value);
+// #5546 review (Copilot): bounds-checked -- a value that would run past
+// the end of `bytes` is silently truncated to fit rather than writing out
+// of bounds (UB). Fixture bytes are pre-sized by every caller, so this
+// truncation should never actually trigger in practice; it exists to make
+// an accidental overflow a silent no-op instead of memory corruption.
 void write_ascii(std::vector<std::uint8_t>& bytes, std::size_t offset, const std::string& value);
 void write_field_descriptor(
     std::vector<std::uint8_t>& bytes,

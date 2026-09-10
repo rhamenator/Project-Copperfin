@@ -59,11 +59,47 @@ std::optional<std::string> plain_column_name_for_key_expression(
     return std::nullopt;
 }
 
+// Consumes one resolved companion-index path (if any), folding its plain-
+// column key expressions into `columns`. Shared by both naming-style
+// probes below so the tag/single-key handling can't drift between them.
+void collect_plain_columns_from_resolved_index(
+    const std::optional<std::filesystem::path>& resolved_path,
+    const std::vector<DbfFieldDescriptor>& fields,
+    std::set<std::string>& columns) {
+    if (!resolved_path.has_value()) {
+        return;
+    }
+    const IndexParseResult index_result =
+        parse_index_probe_from_file(copperfin::platform::path_to_utf8_string(*resolved_path));
+    if (!index_result.ok) {
+        return;
+    }
+    if (!index_result.probe.tags.empty()) {
+        // A compound index (CDX/MDX): every tag's own key expression.
+        for (const IndexTagProbe& tag : index_result.probe.tags) {
+            if (const auto column = plain_column_name_for_key_expression(tag.key_expression_hint, fields);
+                column.has_value()) {
+                columns.insert(uppercase_ascii_copy(*column));
+            }
+        }
+    } else if (const auto column =
+                   plain_column_name_for_key_expression(index_result.probe.key_expression_hint, fields);
+               column.has_value()) {
+        // A single-key index (IDX/NDX/NTX): one key expression at the
+        // probe level, not per-tag.
+        columns.insert(uppercase_ascii_copy(*column));
+    }
+}
+
 // Every plain-column key this table's companion index file(s) reference,
-// deduplicated. Only a same-base-name sidecar is consulted for each of
-// the five documented xBase-family index extensions this codebase already
-// has header probes for (index_probe.cpp), resolved case-insensitively
-// (resolve_vfp_sidecar_path()) -- a table missing a given kind of
+// deduplicated. Both companion-naming styles are consulted for each of the
+// five documented xBase-family index extensions this codebase already has
+// header probes for (index_probe.cpp): the extension-replacing form
+// (table.cdx, via resolve_vfp_sidecar_path()) and the extension-appending
+// form (table.dbf.cdx, via resolve_unique_casefold_path() directly) --
+// matching asset_inspector.cpp's own companion_index_paths_for(), which
+// checks both forms for every index extension (real xBase tooling and
+// migration sources use both conventions). A table missing a given kind of
 // companion, or one that fails to parse, simply contributes nothing for
 // that kind rather than failing the whole scan.
 std::set<std::string> indexed_plain_columns_for_table(
@@ -73,30 +109,13 @@ std::set<std::string> indexed_plain_columns_for_table(
     static constexpr std::array<const char*, 5U> kIndexExtensions{
         ".cdx", ".idx", ".ndx", ".mdx", ".ntx"};
     for (const char* extension : kIndexExtensions) {
-        const SidecarPathResolution resolution = resolve_vfp_sidecar_path(dbf_path, extension);
-        if (!resolution.path.has_value()) {
-            continue;
-        }
-        const IndexParseResult index_result =
-            parse_index_probe_from_file(copperfin::platform::path_to_utf8_string(*resolution.path));
-        if (!index_result.ok) {
-            continue;
-        }
-        if (!index_result.probe.tags.empty()) {
-            // A compound index (CDX/MDX): every tag's own key expression.
-            for (const IndexTagProbe& tag : index_result.probe.tags) {
-                if (const auto column = plain_column_name_for_key_expression(tag.key_expression_hint, fields);
-                    column.has_value()) {
-                    columns.insert(uppercase_ascii_copy(*column));
-                }
-            }
-        } else if (const auto column =
-                       plain_column_name_for_key_expression(index_result.probe.key_expression_hint, fields);
-                   column.has_value()) {
-            // A single-key index (IDX/NDX/NTX): one key expression at the
-            // probe level, not per-tag.
-            columns.insert(uppercase_ascii_copy(*column));
-        }
+        const SidecarPathResolution replace_form = resolve_vfp_sidecar_path(dbf_path, extension);
+        collect_plain_columns_from_resolved_index(replace_form.path, fields, columns);
+
+        std::filesystem::path append_candidate = dbf_path;
+        append_candidate += extension;
+        const SidecarPathResolution append_form = resolve_unique_casefold_path(append_candidate);
+        collect_plain_columns_from_resolved_index(append_form.path, fields, columns);
     }
     return columns;
 }
@@ -109,27 +128,32 @@ std::vector<InferredTableRelation> infer_xbase_index_relations(
     std::map<std::string, std::vector<std::string>> tables_by_column;
 
     for (const XbaseImportedTable& table : tables) {
-        const DbfTableParseResult parsed = parse_dbf_table_from_file(table.dbf_path, 0U);
+        // #5546 review (Codex, Copilot -- duplicate finding): relation
+        // inference only needs field names/types, not the whole table's
+        // records and memo scan -- parse_dbf_fields_from_file() bounds the
+        // read to the header + field-descriptor block only.
+        const DbfFieldsOnlyParseResult parsed = parse_dbf_fields_from_file(table.dbf_path);
         if (!parsed.ok) {
             continue;
         }
         const std::set<std::string> columns = indexed_plain_columns_for_table(
-            copperfin::platform::path_from_utf8_string(table.dbf_path), parsed.table.fields);
+            copperfin::platform::path_from_utf8_string(table.dbf_path), parsed.fields);
         for (const std::string& column : columns) {
             tables_by_column[column].push_back(table.name);
         }
     }
 
     std::vector<InferredTableRelation> relations;
-    for (const auto& [column, table_names] : tables_by_column) {
+    for (const auto& [column, raw_table_names] : tables_by_column) {
+        // #5546 review (Copilot): a caller may supply the same table name
+        // more than once (e.g. duplicate entries in `tables`); deduplicate
+        // before generating pairwise combinations so that doesn't produce
+        // duplicate relations.
+        std::vector<std::string> table_names = raw_table_names;
+        std::sort(table_names.begin(), table_names.end());
+        table_names.erase(std::unique(table_names.begin(), table_names.end()), table_names.end());
         for (std::size_t i = 0U; i < table_names.size(); ++i) {
             for (std::size_t j = i + 1U; j < table_names.size(); ++j) {
-                if (table_names[i] == table_names[j]) {
-                    // The same table indexing the same column more than
-                    // once (e.g. two tags, ascending and descending, over
-                    // the same field) is not a cross-table relation.
-                    continue;
-                }
                 relations.push_back({.table_a = table_names[i], .table_b = table_names[j], .column = column});
             }
         }
