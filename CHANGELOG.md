@@ -1,3 +1,20 @@
+- 2026-09-10: Closing #5476 (parent #141): its acceptance criteria
+  ("enumerates tables and column metadata for representative MDB and
+  ACCDB fixtures") are now met for MDB -- `scan_access_container_schema()`
+  (#5476's own TDEF-page schema reader) combined with `RQ-CF-MIGRATION-005`'s
+  `MSysObjects` catalog join (#5539, merged separately) now resolves real
+  table names, not just page-numbered schema. Independently reconfirmed
+  this session by running `scan_access_container_schema()` directly
+  against two additional real local `.mdb` fixtures (one Jet3, one Jet4):
+  24/26 tables resolved a name for the Jet4 fixture (the 2 unresolved are
+  the documented "candidate page number with no matching discovered
+  table" case, not a bug), 8/8 for the Jet3 fixture. `docs/32`'s
+  `RQ-CF-MIGRATION-004` hazard note updated accordingly (it previously
+  cited #5539 as blocking, before #5539 landed). The one remaining,
+  explicitly documented gap is the ACE/`.accdb` page-size/layout
+  assumption, never verified against a real `.accdb` file -- filed as
+  #5547 rather than silently left unresolved.
+
 - 2026-09-10: Progress on #5534 (parent #5517's `IMPORT DATABASE ...
   TYPE XBASE` wizard): `infer_xbase_index_relations()`
   (`src/vfp/xbase_relation_inference.cpp`) scans a set of tables'
