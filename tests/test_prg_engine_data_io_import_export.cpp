@@ -1717,7 +1717,7 @@ void test_export_database_type_json_writes_catalog_snapshot() {
     expect(!expression_state.completed,
            "EXPORT DATABASE TYPE JSON should reject an expression source in its quoted-path-only first slice");
     expect(expression_state.message ==
-               "EXPORT DATABASE requires a DBC source, an output destination, and TYPE JSON or TYPE SQL",
+               "EXPORT DATABASE requires a DBC source, an output destination, and TYPE JSON, TYPE SQL, or TYPE ACCESS",
            "EXPORT DATABASE TYPE JSON should report the localized quoted-path-only syntax diagnostic");
     expect(!fs::exists(temp_root / "not-created.json"),
            "EXPORT DATABASE TYPE JSON should reject an expression operand before creating output");
@@ -1737,7 +1737,7 @@ void test_export_database_type_json_writes_catalog_snapshot() {
     expect(!double_quoted_state.completed,
            "EXPORT DATABASE TYPE JSON should reject a double-quoted operand rather than mishandle it");
     expect(double_quoted_state.message ==
-               "EXPORT DATABASE requires a DBC source, an output destination, and TYPE JSON or TYPE SQL",
+               "EXPORT DATABASE requires a DBC source, an output destination, and TYPE JSON, TYPE SQL, or TYPE ACCESS",
            "EXPORT DATABASE TYPE JSON should report the localized quoted-path-only syntax diagnostic for a double-quoted operand");
     expect(!fs::exists(temp_root / "not-created-double-quoted.json"),
            "EXPORT DATABASE TYPE JSON should reject a double-quoted operand before creating output");
@@ -1810,6 +1810,80 @@ void test_export_database_type_sql_writes_ddl_and_inserts() {
             return event.category == "runtime.export_database_sql" && event.detail == output_path.string();
         });
     expect(has_event, "EXPORT DATABASE TYPE SQL should emit its explicit runtime event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_export_database_type_access_writes_jet_dialect_ddl_and_inserts() {
+    // #5475 (I-migration/#141 phase 1): EXPORT DATABASE ... TYPE ACCESS
+    // shares TYPE SQL's dispatch path but emits the Access/Jet SQL dialect
+    // instead of the portable/ANSI-ish one -- verify the runtime wiring
+    // (parsing, extension defaulting, output writing, event emission), not
+    // the dialect mapping itself (covered directly against
+    // export_database_as_access_sql() in tests/test_vfp_assets.cpp).
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_export_database_access";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    const fs::path dbc_path = temp_root / "northwind.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> catalog_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .length = 16U},
+        {.name = "OBJECTNAME", .type = 'C', .length = 64U},
+        {.name = "PARENTNAME", .type = 'C', .length = 64U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+    };
+    const auto catalog_create = copperfin::vfp::create_dbf_table_file(
+        dbc_path.string(),
+        catalog_fields,
+        {{"DATABASE", "Northwind", "", ""}, {"TABLE", "People", "Northwind", ""}});
+    expect(catalog_create.ok, "EXPORT DATABASE TYPE ACCESS fixture should create the DBC catalog");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NAME", .type = 'C', .length = 32U},
+        {.name = "AGE", .type = 'N', .length = 3U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        (temp_root / "People.dbf").string(), table_fields, {{"Alice", "30"}});
+    expect(table_create.ok, "EXPORT DATABASE TYPE ACCESS fixture should create the catalog table");
+
+    const fs::path main_path = temp_root / "export_database_access.prg";
+    write_text(
+        main_path,
+        "EXPORT DATABASE 'northwind.dbc' TO 'snapshot' TYPE ACCESS\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "EXPORT DATABASE TYPE ACCESS script should complete: " + state.message);
+
+    const fs::path output_path = temp_root / "snapshot.sql";
+    expect(fs::exists(output_path),
+           "EXPORT DATABASE TYPE ACCESS should append the .sql extension (a script, not a native .accdb writer) and create its output");
+    if (fs::exists(output_path)) {
+        const std::string snapshot = read_text(output_path);
+        expect(snapshot.find("CREATE TABLE [People]") != std::string::npos,
+               "EXPORT DATABASE TYPE ACCESS should emit a CREATE TABLE with square-bracket identifiers");
+        expect(snapshot.find("[NAME] TEXT(32)") != std::string::npos,
+               "EXPORT DATABASE TYPE ACCESS should map a character field to TEXT(length)");
+        expect(snapshot.find("[AGE] DECIMAL(3, 0)") != std::string::npos,
+               "EXPORT DATABASE TYPE ACCESS should map a numeric field to DECIMAL");
+        expect(snapshot.find("INSERT INTO [People]") != std::string::npos,
+               "EXPORT DATABASE TYPE ACCESS should emit an INSERT for the catalog table's row");
+        expect(snapshot.find("'Alice'") != std::string::npos,
+               "EXPORT DATABASE TYPE ACCESS should quote a character value as a string literal");
+        expect(snapshot.find(", 30)") != std::string::npos,
+               "EXPORT DATABASE TYPE ACCESS should emit a numeric value unquoted");
+    }
+    const bool has_event = std::any_of(state.events.begin(), state.events.end(),
+        [&](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "runtime.export_database_access_sql" && event.detail == output_path.string();
+        });
+    expect(has_event, "EXPORT DATABASE TYPE ACCESS should emit its own distinct runtime event");
 
     fs::remove_all(temp_root, ignored);
 }

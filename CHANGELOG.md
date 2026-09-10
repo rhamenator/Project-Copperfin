@@ -1,3 +1,20 @@
+- 2026-09-09: Fixes #5475: added `EXPORT DATABASE ... TYPE ACCESS`
+  (phase 1 of #141), a non-VFP-extension command that emits an
+  Access/Jet-dialect SQL script from a DBC/DBF database container,
+  sharing `TYPE JSON`/`TYPE SQL`'s catalog/table-resolution loader so
+  all three `TYPE` variants agree on which tables/rows constitute the
+  database. `export_database_as_access_sql()` reuses `TYPE SQL`'s
+  structure but swaps in square-bracket `[identifier]` quoting and
+  Access-native column types (`TEXT`/`MEMO`/`LONG`/`DOUBLE`/`CURRENCY`/
+  `DATETIME`/`YESNO`) and `#...#`-delimited date/time literals, grounded
+  in `docs/66-access-container-format-notes.md`'s finding that the
+  *logical* Access SQL/DDL dialect is citable public documentation even
+  though the physical MDB/ACCDB byte format is not. This is explicitly a
+  phase-1 SQL-script export, not a native `.accdb`/`.mdb` binary writer
+  -- the output is meant to be run directly against a real Access
+  database (e.g. pasted into Access's SQL View) rather than requiring
+  hand-translation from the ANSI `TYPE SQL` dialect.
+
 - 2026-09-09: Fixes #5532: added `preview_xbase_table_import()`, a
   dry-run/report mode for `IMPORT DATABASE ... TYPE XBASE` that performs
   the same source-family, code-page, and per-field mapping checks as

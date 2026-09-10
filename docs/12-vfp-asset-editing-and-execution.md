@@ -180,38 +180,50 @@ For supported asset types, Copperfin should:
 
 - mixed-mode execution with .NET and SQL connectors
 
-## How To Use: DBC JSON/SQL Export
+## How To Use: DBC JSON/SQL/Access Export
 
 Use the native asset-inspector API to export a database container (`.dbc`) into a
-single JSON snapshot or a portable SQL script.
+single JSON snapshot, a portable SQL script, or an Access/Jet-dialect SQL script.
 
 Copperfin also provides an explicit modernization command for a PRG workflow:
 
 ```foxpro
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE JSON
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE SQL
+EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE ACCESS
 ```
 
 The command resolves relative source and destination paths from the current default
-directory, adds `.json` or `.sql` (matching the requested `TYPE`) when the
-destination has no extension, and emits `runtime.export_database_json` or
-`runtime.export_database_sql` on success. It deliberately accepts only the literal
-`TYPE JSON` or `TYPE SQL` forms; the source and destination are quoted path
-operands, not expressions. It reads the existing DBC/DBF data before opening the
-requested output path, creates a missing output directory, and reports a localized
-runtime failure if inspection or output writing fails. Both `TYPE` variants share
-the same DBC catalog/table-resolution path (`export_database_as_json()` and
-`export_database_as_sql()` both call the same internal loader) so they cannot
+directory, adds `.json` (`TYPE JSON`) or `.sql` (`TYPE SQL`/`TYPE ACCESS`) when the
+destination has no extension, and emits `runtime.export_database_json`,
+`runtime.export_database_sql`, or `runtime.export_database_access_sql` on success.
+It deliberately accepts only the literal `TYPE JSON`, `TYPE SQL`, or `TYPE ACCESS`
+forms; the source and destination are quoted path operands, not expressions. It
+reads the existing DBC/DBF data before opening the requested output path, creates a
+missing output directory, and reports a localized runtime failure if inspection or
+output writing fails. All three `TYPE` variants share the same DBC catalog/table-
+resolution path (`export_database_as_json()`, `export_database_as_sql()`, and
+`export_database_as_access_sql()` all call the same internal loader) so they cannot
 silently drift apart on which tables/rows are considered part of the database --
-only the output serialization differs. The SQL variant emits one portable/ANSI-ish
+only the output serialization differs. `TYPE SQL` emits one portable/ANSI-ish
 dialect (`CREATE TABLE` per table, `INSERT` per row); it does not target a specific
-database engine's SQL dialect quirks.
+database engine's SQL dialect quirks. `TYPE ACCESS` (#5475, phase 1 of #141) emits
+the same shape of script using the Access/Jet SQL dialect instead -- square-bracket
+`[identifier]` quoting, Access-native column types (`TEXT`/`MEMO`/`LONG`/`DOUBLE`/
+`CURRENCY`/`DATETIME`/`YESNO`), and `#...#`-delimited date/time literals -- grounded
+in `docs/66-access-container-format-notes.md`'s finding that the *logical* Access
+SQL/DDL dialect is citable public documentation, distinct from the physical
+MDB/ACCDB byte format, which is not. It is explicitly a SQL-script export, not a
+native `.accdb`/`.mdb` binary writer; the output is meant to be run directly against
+a real Access database (e.g. pasted into Access's SQL View) rather than requiring
+hand-translation from the ANSI dialect.
 
 This is a Copperfin modernization extension authorized by the owner-approved
-scope in #140 (see #5471 for the `TYPE SQL` slice specifically), not a claimed
-Visual FoxPro 9 command. It does not implement `IMPORT DATABASE` of any kind, an
-Access adapter, provider connections, schema mutation, or round-trip
-reconstruction back into a DBC/DBF from either exported format.
+scope in #140/#141 (see #5471 for the `TYPE SQL` slice and #5475 for the
+`TYPE ACCESS` slice specifically), not a claimed Visual FoxPro 9 command. It does
+not implement `IMPORT DATABASE` of any kind, provider connections, schema
+mutation, or round-trip reconstruction back into a DBC/DBF from any exported
+format.
 
 The snapshot is a versioned machine contract. Every document begins with the
 integer `schema_version: 1`; consumers must reject a missing or unsupported

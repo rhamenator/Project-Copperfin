@@ -439,6 +439,14 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
     expect(sql_export_result.sql.empty(),
            "#5471: failed SQL database exports should leave the SQL result empty");
 
+    const auto access_export_result = copperfin::vfp::export_database_as_access_sql(temp_path.string(), 10U);
+    expect(!access_export_result.ok, "#5475: export_database_as_access_sql should reject missing DBC paths");
+    expect(
+        access_export_result.error == "DBC path does not exist: " + temp_path.string(),
+        "#5475: export_database_as_access_sql should share export_database_as_json's default localized missing-DBC error");
+    expect(access_export_result.sql.empty(),
+           "#5475: failed Access SQL database exports should leave the SQL result empty");
+
     copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
     const auto english_inspect_result = copperfin::vfp::inspect_asset(temp_path.string());
     locale.set("es-419");
@@ -1212,6 +1220,83 @@ void test_export_database_as_sql_maps_currency_datetime_and_blank_numeric() {
     // string literal, in a column declared DECIMAL/INTEGER.
     expect(result.sql.find("VALUES (123.4500, '2024-01-17 10:20:30', NULL)") != std::string::npos,
            "export_database_as_sql should emit NULL for a blank numeric cell rather than an empty string literal");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_access_sql_maps_currency_datetime_and_dates() {
+    // #5475: export_database_as_access_sql() shares export_database_as_sql()'s
+    // catalog/table-walking logic but swaps in the Access/Jet SQL dialect --
+    // square-bracket identifiers, Access-native column types, and #...#
+    // date/time literals -- per docs/66-access-container-format-notes.md's
+    // finding that the Access SQL/DDL dialect is citable public
+    // documentation even though the physical MDB/ACCDB byte layout is not.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_access_sql_value_mapping_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "accounts.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> dbc_records{
+        {"DATABASE", "Accounts", "", ""},
+        {"TABLE", "accounts", "Accounts", ""}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields, dbc_records);
+    expect(dbc_create.ok, "Access SQL value-mapping test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "BALANCE", .type = 'Y', .offset = 1U, .length = 8U, .decimal_count = 0U},
+        {.name = "OPENED", .type = 'T', .offset = 9U, .length = 8U, .decimal_count = 0U},
+        {.name = "SINCE", .type = 'D', .offset = 17U, .length = 8U, .decimal_count = 0U},
+        {.name = "SCORE", .type = 'N', .offset = 25U, .length = 5U, .decimal_count = 0U},
+        {.name = "NAME", .type = 'C', .offset = 30U, .length = 20U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path),
+        table_fields,
+        {{"123.45", "julian:2459625 millis:37230000", "20240117", "", "Jane"}});
+    expect(table_create.ok, "Access SQL value-mapping test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_access_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_access_sql should resolve the accounts fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("CREATE TABLE [accounts]") != std::string::npos,
+           "export_database_as_access_sql should quote identifiers with square brackets, not double quotes");
+    expect(result.sql.find("[BALANCE] CURRENCY") != std::string::npos,
+           "export_database_as_access_sql should map a Y (currency) field to Access's native CURRENCY type");
+    expect(result.sql.find("[OPENED] DATETIME") != std::string::npos,
+           "export_database_as_access_sql should map a T field to Access's DATETIME type");
+    expect(result.sql.find("[SINCE] DATETIME") != std::string::npos,
+           "export_database_as_access_sql should map a D field to Access's DATETIME type too (no separate date-only type)");
+    expect(result.sql.find("[NAME] TEXT(20)") != std::string::npos,
+           "export_database_as_access_sql should map a short Character field to TEXT(length)");
+
+    expect(result.sql.find("#2024-01-17 10:20:30#") != std::string::npos,
+           "export_database_as_access_sql should emit a T value as a #...#-delimited literal, not quoted");
+    expect(result.sql.find("#2024-01-17#") != std::string::npos,
+           "export_database_as_access_sql should emit a D value as a #...#-delimited literal");
+    expect(result.sql.find("julian:") == std::string::npos,
+           "export_database_as_access_sql must never leak the raw internal datetime storage representation");
+
+    // SCORE was written as "" (a blank numeric cell): must still be NULL,
+    // matching export_database_as_sql()'s own established behavior.
+    expect(result.sql.find(
+               "VALUES (123.4500, #2024-01-17 10:20:30#, #2024-01-17#, NULL, 'Jane');") != std::string::npos,
+           "export_database_as_access_sql should emit NULL for a blank numeric cell rather than an empty string literal");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -1997,6 +2082,7 @@ int main() {
     test_inspect_asset_resolves_explicit_unicode_memo_sidecar();
     test_export_database_as_json_resolves_unicode_catalog_table_path();
     test_export_database_as_sql_maps_currency_datetime_and_blank_numeric();
+    test_export_database_as_access_sql_maps_currency_datetime_and_dates();
     test_database_json_import_plan_admits_exporter_unreadable_table_marker();
     test_parse_real_vfp_cdx_when_available();
     test_parse_additional_real_vfp_cdx_samples_when_available();

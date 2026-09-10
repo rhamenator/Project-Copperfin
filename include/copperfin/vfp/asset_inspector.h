@@ -153,6 +153,24 @@ struct DatabaseSqlExportResult {
     const std::string& dbc_path,
     std::size_t max_rows_per_table = 0U);
 
+// #5475 (I-migration/#141 phase 1): produces the same shape of script as
+// export_database_as_sql(), but using the Access/Jet SQL dialect --
+// square-bracket `[identifier]` quoting, Access-native column types
+// (TEXT/MEMO/LONG/DOUBLE/CURRENCY/DATETIME/YESNO), and `#...#`-delimited
+// date/time literals -- so the output can be run directly against a real
+// Access database (e.g. pasted into Access's SQL View, or fed to any tool
+// that accepts Jet/ACE SQL text) rather than needing hand-translation from
+// the ANSI-ish dialect export_database_as_sql() emits. Grounded in
+// docs/66-access-container-format-notes.md's finding that the *logical*
+// Access SQL/DDL dialect is citable public documentation even though the
+// physical MDB/ACCDB byte format is not -- this is a phase-1 SQL-script
+// export, not a native .accdb/.mdb binary writer (see #5475's own explicit
+// non-goal). Tables are resolved the same way export_database_as_sql()
+// resolves them; max_rows_per_table has the same meaning.
+[[nodiscard]] DatabaseSqlExportResult export_database_as_access_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table = 0U);
+
 // ---- Whole-database JSON import planning ----
 
 // A validated, in-memory description of a version-1 export snapshot. The

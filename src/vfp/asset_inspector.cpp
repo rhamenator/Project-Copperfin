@@ -1709,6 +1709,65 @@ std::string sql_column_type(char field_type, std::uint8_t length, std::uint8_t d
     }
 }
 
+// Access/Jet SQL identifier quoting for export_database_as_access_sql():
+// square brackets, per the publicly documented Access SQL/DDL dialect (see
+// docs/66-access-container-format-notes.md's "logical surface is citable"
+// finding). Unlike sql_quote_identifier()'s ANSI double-quote form, Access
+// object names cannot themselves contain "]" (it is one of the characters
+// Access forbids in table/field names), so there is no embedded-quote-
+// character case to escape here.
+std::string access_quote_identifier(const std::string& name) {
+    return "[" + name + "]";
+}
+
+// Maps a DBF field descriptor to an Access/Jet SQL native column type,
+// rather than reusing sql_column_type()'s portable/ANSI-ish vocabulary --
+// per docs/66, the Access SQL/DDL dialect (unlike the physical MDB/ACCDB
+// byte layout) is legitimately citable public documentation, so this
+// dialect-specific mapping is grounded rather than guessed. Two notable
+// departures from sql_column_type(): 'Y' (VFP currency) maps to Access's
+// own CURRENCY type -- an exact fixed-point match, not the DECIMAL(19, 4)
+// approximation the ANSI exporter uses -- and Access's Short Text (TEXT)
+// type caps at 255 characters, so a wider Character field must fall back
+// to MEMO (Access's unbounded text type) rather than an invalid TEXT(n)
+// declaration.
+std::string access_column_type(char field_type, std::uint8_t length, std::uint8_t decimal_count) {
+    const char normalized = static_cast<char>(std::toupper(static_cast<unsigned char>(field_type)));
+    switch (normalized) {
+        case 'N':
+        case 'F':
+            return "DECIMAL(" + std::to_string(length > 0U ? length : 1U) + ", " +
+                std::to_string(decimal_count) + ")";
+        case 'Y':
+            return "CURRENCY";
+        case 'I':
+            return "LONG";
+        case 'B':
+            return "DOUBLE";
+        case 'L':
+            return "YESNO";
+        case 'D':
+            // Access has no date-only column type distinct from DATETIME;
+            // a date-only value is simply a DATETIME with a zero time
+            // component, which Access's UI formats per the column's
+            // display format rather than a separate storage type.
+            return "DATETIME";
+        case 'T':
+            return "DATETIME";
+        case 'C':
+        case 'V':
+            // length is a uint8_t (max 255), which already fits Access
+            // Short Text's own 255-character ceiling -- so any nonzero
+            // length is safely representable as TEXT(length); only a
+            // (theoretically impossible here, but checked for honesty)
+            // zero length falls back to MEMO.
+            return (length > 0U) ? ("TEXT(" + std::to_string(length) + ")") : "MEMO";
+        default:
+            // M, G, P, and any other/unrecognized storage type.
+            return "MEMO";
+    }
+}
+
 // Strips C0 control characters (CR/LF in particular) from text destined for
 // a single-line "-- ..." SQL comment. export_database_as_sql()'s database
 // name and source path both come from data an untrusted/crafted DBC could
@@ -2071,6 +2130,100 @@ DatabaseSqlExportResult export_database_as_sql(
                     // column declared TIMESTAMP.
                     const auto converted = sql_datetime_literal_from_storage(rv.display_value);
                     sql << (converted.has_value() ? sql_quote_string_literal(*converted) : "NULL");
+                } else {
+                    sql << sql_quote_string_literal(rv.display_value);
+                }
+                sql << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ");\n";
+        }
+        sql << "\n";
+    }
+
+    return {.ok = true, .error = {}, .sql = sql.str()};
+}
+
+DatabaseSqlExportResult export_database_as_access_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        return {.ok = false, .error = snapshot.error, .sql = {}};
+    }
+
+    std::ostringstream sql;
+    sql.imbue(std::locale::classic());
+    sql << "-- Copperfin EXPORT DATABASE ... TYPE ACCESS (phase 1: SQL script)\n";
+    sql << "-- database: " << sql_sanitize_comment_text(snapshot.db_name) << "\n";
+    sql << "-- source: " << sql_sanitize_comment_text(dbc_path) << "\n\n";
+
+    const std::size_t row_limit = (max_rows_per_table == 0U)
+        ? std::numeric_limits<std::size_t>::max()
+        : max_rows_per_table;
+
+    for (const auto& rt : snapshot.resolved_tables) {
+        const DbfTableParseResult tbl = parse_dbf_table_from_file(
+            copperfin::platform::path_to_utf8_string(rt.path), row_limit);
+        if (!tbl.ok) {
+            sql << "-- skipped table " << rt.name << ": " << tbl.error << "\n\n";
+            continue;
+        }
+
+        const std::string quoted_table = access_quote_identifier(rt.name);
+        sql << "CREATE TABLE " << quoted_table << " (\n";
+        for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
+            const auto& fld = tbl.table.fields[fi];
+            const bool last_field = (fi + 1U == tbl.table.fields.size());
+            sql << "    " << access_quote_identifier(fld.name) << " "
+                << access_column_type(fld.type, fld.length, fld.decimal_count)
+                << (last_field ? "\n" : ",\n");
+        }
+        sql << ");\n\n";
+
+        for (const auto& rec : tbl.table.records) {
+            if (rec.deleted) {
+                continue;
+            }
+            sql << "INSERT INTO " << quoted_table << " (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                sql << access_quote_identifier(rec.values[vi].field_name)
+                    << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ") VALUES (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                const auto& rv = rec.values[vi];
+                const char ft = static_cast<char>(
+                    std::toupper(static_cast<unsigned char>(rv.field_type)));
+                const bool is_numeric = (ft == 'N' || ft == 'F' || ft == 'I' || ft == 'B' || ft == 'Y');
+                const bool is_logical = (ft == 'L');
+                const bool is_date = (ft == 'D');
+                const bool is_datetime = (ft == 'T');
+                if (rv.is_null) {
+                    sql << "NULL";
+                } else if (is_logical) {
+                    const std::string& lv = rv.display_value;
+                    if (lv == "true") {
+                        sql << "TRUE";
+                    } else if (lv == "false") {
+                        sql << "FALSE";
+                    } else {
+                        sql << "NULL";
+                    }
+                } else if (is_numeric) {
+                    sql << (rv.display_value.empty() ? "NULL" : rv.display_value);
+                } else if (is_date) {
+                    // decode_value()'s 'D' case (dbf_table.cpp) already
+                    // formats the value as "YYYY-MM-DD" (empty string for a
+                    // blank date), so it can be embedded directly inside
+                    // Access SQL's #...# date-literal delimiters -- ISO
+                    // form specifically, since Access accepts it
+                    // unambiguously regardless of the connection's regional
+                    // date format, unlike locale-dependent MM/DD/YYYY.
+                    sql << (rv.display_value.empty() ? "NULL" : ("#" + rv.display_value + "#"));
+                } else if (is_datetime) {
+                    const auto converted = sql_datetime_literal_from_storage(rv.display_value);
+                    sql << (converted.has_value() ? ("#" + *converted + "#") : "NULL");
                 } else {
                     sql << sql_quote_string_literal(rv.display_value);
                 }
