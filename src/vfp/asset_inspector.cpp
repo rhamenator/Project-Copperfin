@@ -1732,6 +1732,21 @@ std::string sql_quote_string_literal(const std::string& value) {
 // treats a leading '+' as valid numeric input elsewhere, so a genuinely
 // real (not crafted) "+123.45" reaching here must not be misclassified
 // as unsafe and silently turned into NULL.
+//
+// #5545 review (Codex, P1): a VFP 'B' (double) field's decoded
+// display_value comes from an unflagged std::ostringstream
+// (src/vfp/dbf_table.cpp's decode_value(), case 'B') at
+// max_digits10 precision -- the default iostream formatting this uses
+// (no std::fixed) switches to scientific notation ("1e+20", "1.5e-10")
+// for sufficiently large or small magnitudes, exactly the way printf's
+// unflagged %g would. Before this fix, any such value failed this
+// validator (which only recognized a plain optionally-signed decimal)
+// and was silently replaced with NULL by every caller -- a genuine,
+// real-world (not merely crafted-input) data-loss bug, not a security
+// concern like the original digit-only check was guarding against.
+// Recognizes an optional well-formed 'e'/'E' exponent suffix
+// (optional sign, at least one digit) after the mantissa, in addition
+// to the plain decimal form already accepted.
 bool looks_like_safe_unquoted_sql_numeric_literal(const std::string& text) {
     if (text.empty()) {
         return false;
@@ -1750,6 +1765,26 @@ bool looks_like_safe_unquoted_sql_numeric_literal(const std::string& text) {
             }
             seen_decimal_point = true;
             continue;
+        }
+        if (character == 'e' || character == 'E') {
+            if (!seen_digit) {
+                return false;
+            }
+            ++index;
+            if (index < text.size() && (text[index] == '-' || text[index] == '+')) {
+                ++index;
+            }
+            if (index >= text.size()) {
+                return false;
+            }
+            bool seen_exponent_digit = false;
+            for (; index < text.size(); ++index) {
+                if (std::isdigit(static_cast<unsigned char>(text[index])) == 0) {
+                    return false;
+                }
+                seen_exponent_digit = true;
+            }
+            return seen_exponent_digit;
         }
         if (std::isdigit(static_cast<unsigned char>(character)) == 0) {
             return false;
@@ -2229,7 +2264,10 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
     std::size_t row_limit) {
     std::vector<ParsedSqlExportTable> parsed_tables;
     for (const auto& rt : snapshot.resolved_tables) {
-        const DbfTableParseResult tbl = parse_dbf_table_from_file(
+        // #5545 review (Copilot): not const, so tbl.table (fields +
+        // every parsed record) can be moved into parsed_tables below
+        // rather than deep-copied.
+        DbfTableParseResult tbl = parse_dbf_table_from_file(
             copperfin::platform::path_to_utf8_string(rt.path), row_limit);
         if (!tbl.ok) {
             // Keep the same table (not skip silently) via a comment, so a
@@ -2323,7 +2361,7 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
             sql << ");\n";
         }
         sql << "\n";
-        parsed_tables.push_back({.resolved = rt, .table = tbl.table});
+        parsed_tables.push_back({.resolved = rt, .table = std::move(tbl.table)});
     }
     return parsed_tables;
 }
@@ -2354,29 +2392,48 @@ std::optional<std::string> plain_column_name_for_index_tag(
 // plain_column_name_for_index_tag()'s own comment), or a "-- skipped
 // index" comment for one that is not -- never silently dropped. Only a
 // same-base-name ".cdx" sidecar is consulted (VFP's conventional
-// "production" compound index, auto-opened alongside the table); a
-// single-file .idx/.ndx/.mdx/.ntx companion is not scanned in this first
-// slice. No per-tag uniqueness is captured by index_probe.cpp's CDX tag
-// reader, so every emitted index is a plain (non-unique) CREATE INDEX.
+// "production" compound index, auto-opened alongside the table, resolved
+// case-insensitively via resolve_vfp_sidecar_path() -- #5545 review,
+// Codex: a literal ".cdx" lookup would silently miss a real
+// "TABLE.CDX" companion on a case-sensitive filesystem); a single-file
+// .idx/.ndx/.mdx/.ntx companion is not scanned in this first slice. No
+// per-tag uniqueness is captured by index_probe.cpp's CDX tag reader, so
+// every emitted index is a plain (non-unique) CREATE INDEX. The
+// generated index name incorporates the CDX tag's own name (unique
+// within one CDX by construction, unlike the column it resolves to --
+// #5545 review, Copilot and Codex both independently flagged that two
+// distinct tags over the same plain column would otherwise generate the
+// identical `<table>_<column>_idx` name, and PostgreSQL rejects a
+// second CREATE INDEX for an already-existing relation name).
 void write_postgresql_create_indexes(
     std::ostringstream& sql,
     const DatabaseCatalogSnapshot::ResolvedTable& rt,
     const std::vector<DbfFieldDescriptor>& fields) {
-    std::filesystem::path cdx_path = rt.path;
-    cdx_path.replace_extension(".cdx");
-    std::error_code exists_error;
-    if (!std::filesystem::exists(cdx_path, exists_error) || exists_error) {
+    const SidecarPathResolution cdx_resolution = resolve_vfp_sidecar_path(rt.path, ".cdx");
+    if (!cdx_resolution.path.has_value()) {
+        // No production CDX at all (or an unresolvable case-fold
+        // ambiguity, itself surfaced elsewhere by inspect_asset()'s own
+        // diagnostics) -- a table with no compound index is a normal,
+        // silent case, not a failure.
         return;
     }
-    const IndexParseResult index_result =
-        parse_index_probe_from_file(copperfin::platform::path_to_utf8_string(cdx_path));
+    const std::string quoted_table = sql_quote_identifier(rt.name);
+    const IndexParseResult index_result = parse_index_probe_from_file(
+        copperfin::platform::path_to_utf8_string(*cdx_resolution.path));
     if (!index_result.ok || index_result.probe.kind != IndexKind::cdx) {
+        // Unlike "no CDX at all" above, a companion that exists but
+        // fails to parse or isn't recognized as CDX is a real, visible
+        // loss of index information for this table -- #5545 review,
+        // Copilot: report it rather than silently omitting every index
+        // with no indication anything was skipped.
+        sql << "-- skipped indexes on " << sql_sanitize_comment_text(rt.name)
+            << ": companion .cdx exists but could not be read as a compound index\n\n";
         return;
     }
 
-    const std::string quoted_table = sql_quote_identifier(rt.name);
     bool wrote_anything = false;
-    for (const IndexTagProbe& tag : index_result.probe.tags) {
+    for (std::size_t tag_index = 0U; tag_index < index_result.probe.tags.size(); ++tag_index) {
+        const IndexTagProbe& tag = index_result.probe.tags[tag_index];
         const auto column = plain_column_name_for_index_tag(tag.key_expression_hint, fields);
         const std::string tag_label = tag.name_hint.empty() ? std::string("(unnamed tag)") : tag.name_hint;
         if (!column.has_value()) {
@@ -2386,7 +2443,13 @@ void write_postgresql_create_indexes(
             wrote_anything = true;
             continue;
         }
-        const std::string index_name = rt.name + "_" + *column + "_idx";
+        // A tag with no captured name (name_hint empty, e.g. an
+        // unresolved/inferred entry) still needs a unique identifier --
+        // fall back to its ordinal position within this CDX rather than
+        // a shared placeholder string every such tag would collide on.
+        const std::string tag_identity =
+            tag.name_hint.empty() ? ("tag" + std::to_string(tag_index)) : tag.name_hint;
+        const std::string index_name = rt.name + "_" + tag_identity + "_idx";
         sql << "CREATE INDEX " << sql_quote_identifier(index_name)
             << " ON " << quoted_table << " (" << sql_quote_identifier(*column) << ");\n";
         wrote_anything = true;

@@ -2431,6 +2431,61 @@ void test_export_database_as_sql_maps_currency_datetime_and_blank_numeric() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_export_database_as_sql_preserves_exponent_form_double_values() {
+    // #5545 review (Codex, P1): a VFP 'B' (double) field's decoded
+    // display_value comes from an unflagged std::ostringstream at
+    // max_digits10 precision (src/vfp/dbf_table.cpp's decode_value(),
+    // case 'B'), which switches to scientific notation for sufficiently
+    // large/small magnitudes. looks_like_safe_unquoted_sql_numeric_literal()
+    // previously only recognized a plain optionally-signed decimal, so
+    // any such value was silently replaced with NULL -- real (not
+    // merely crafted-input) data loss. This proves a genuinely large
+    // double round-trips through export_database_as_sql() as a real
+    // unquoted numeric literal rather than NULL.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sql_exponent_double_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "measurements.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "measurements", ""}});
+    expect(dbc_create.ok, "exponent-double test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "READING", .type = 'B', .offset = 1U, .length = 8U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"1e100"}});
+    expect(table_create.ok, "exponent-double test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_sql should resolve the measurements fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("VALUES (NULL)") == std::string::npos,
+           "export_database_as_sql must not silently replace a legitimate exponent-form double with NULL");
+    const bool has_exponent_literal =
+        result.sql.find("e+") != std::string::npos || result.sql.find("E+") != std::string::npos ||
+        result.sql.find("e100") != std::string::npos || result.sql.find("E100") != std::string::npos;
+    expect(has_exponent_literal,
+           "export_database_as_sql should emit the exponent-form double value unquoted, not drop its magnitude");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 // #5537: a dedicated two-tag synthetic CDX, mirroring
 // make_synthetic_cdx_family_bytes()'s own verified byte layout (same tag-
 // entry/tag-page structure and offsets), but with key expressions that
@@ -2577,6 +2632,78 @@ void test_export_database_as_postgresql_sql_omits_indexes_without_cdx() {
            "export_database_as_postgresql_sql should still emit the table without any index information");
     expect(result.sql.find("CREATE INDEX") == std::string::npos,
            "export_database_as_postgresql_sql should not emit any CREATE INDEX when no companion CDX exists");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5545 review (Copilot and Codex, independently): two distinct tags over
+// the same plain column (e.g. differing only in sort order/filter) must
+// not generate the identical `<table>_<column>_idx` name -- PostgreSQL
+// rejects a second CREATE INDEX for an already-existing relation name,
+// leaving an otherwise advertised runnable export incomplete.
+std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_two_tags_on_same_column() {
+    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x04U;
+    bytes[12] = 0x0AU;
+    bytes[14] = 0xE0U;
+    bytes[15] = 0x01U;
+    bytes[1024U] = 0x03U;
+    write_le_u16(bytes, 1026U, 2U);
+    write_le_u32(bytes, 1028U, 11U * 512U);
+    write_le_u32(bytes, 1032U, 4U * 512U);
+    write_le_u16(bytes, 11U * 512U, 0x0001U);
+    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
+    write_le_u16(bytes, 4U * 512U, 0x0003U);
+    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
+    write_ascii(bytes, (3U * 512U) - 20U, "SKU_ASC");
+    write_ascii(bytes, (3U * 512U) - 10U, "SKU_DESC");
+    write_ascii(bytes, (4U * 512U) + 24U, "sku");
+    write_ascii(bytes, (11U * 512U) + 24U, "sku");
+    return bytes;
+}
+
+void test_export_database_as_postgresql_sql_disambiguates_indexes_on_same_column() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_postgresql_sql_duplicate_column_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const fs::path cdx_path = temp_dir / "widgets.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "PostgreSQL duplicate-column-index test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "SKU", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"W-1"}});
+    expect(table_create.ok, "PostgreSQL duplicate-column-index test: DBF fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_cdx_bytes_with_two_tags_on_same_column();
+        std::ofstream output(cdx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_postgresql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_postgresql_sql should succeed: " + result.error);
+
+    expect(result.sql.find("CREATE INDEX \"widgets_SKU_ASC_idx\" ON \"widgets\" (\"SKU\");") != std::string::npos,
+           "export_database_as_postgresql_sql should name an index after its own CDX tag, not just table+column");
+    expect(result.sql.find("CREATE INDEX \"widgets_SKU_DESC_idx\" ON \"widgets\" (\"SKU\");") != std::string::npos,
+           "export_database_as_postgresql_sql should emit a second, distinctly-named CREATE INDEX for the second tag on the same column");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -3756,8 +3883,10 @@ int main() {
     test_inspect_asset_resolves_explicit_unicode_memo_sidecar();
     test_export_database_as_json_resolves_unicode_catalog_table_path();
     test_export_database_as_sql_maps_currency_datetime_and_blank_numeric();
+    test_export_database_as_sql_preserves_exponent_form_double_values();
     test_export_database_as_postgresql_sql_maps_types_and_creates_indexes();
     test_export_database_as_postgresql_sql_omits_indexes_without_cdx();
+    test_export_database_as_postgresql_sql_disambiguates_indexes_on_same_column();
     test_export_database_as_access_sql_maps_currency_datetime_and_dates();
     test_export_database_as_access_sql_escapes_bracket_in_identifier();
     test_export_database_as_access_sql_clamps_decimal_precision();
