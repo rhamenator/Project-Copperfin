@@ -2174,6 +2174,110 @@ void test_inspect_database_container_extracts_first_pass_catalog_metadata() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5538: real Visual FoxPro stores Stored Procedures source text in a
+// catalog row named "StoredProceduresSource", whose CODE memo field holds
+// the raw PRG text -- grounded in Microsoft's own archived Visual FoxPro
+// Knowledge Base article Q180028, which demonstrates opening a real .dbc
+// as a table and directly reading/writing that row's CODE memo (see
+// docs/73-vfp-dbc-stored-procedures-and-view-sql.md for the full
+// citation). This synthetic fixture reproduces that row shape via
+// create_dbf_table_file()'s existing memo-field support (a CODE field
+// declared 'M' with real string content automatically becomes a real
+// memo block in the generated .dct sidecar, the same mechanism already
+// used for the PROPERTIES field in
+// test_inspect_database_container_extracts_first_pass_catalog_metadata
+// above) rather than committing a real VFP-produced .dbc/.dct pair.
+void test_extract_dbc_stored_procedures_source_reads_code_memo() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_stored_procedures_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "withcode.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 0U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 0U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 0U, .length = 32U, .decimal_count = 0U},
+        {.name = "CODE", .type = 'M', .offset = 0U, .length = 4U, .decimal_count = 0U},
+    };
+    const std::string prg_source = "PROCEDURE Greet\n\tLPARAMETERS tcName\n\tRETURN 'Hello ' + tcName\nENDPROC\n";
+    const std::vector<std::vector<std::string>> records{
+        {"Database", "Northwind", "", ""},
+        {"Database", "StoredProceduresSource", "", prg_source},
+        {"Database", "StoredProceduresObject", "", "\x01\x02\x03binarycode"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_path.string(), fields, records);
+    expect(create_result.ok, "Stored Procedures DBC fixture creation should succeed: " + create_result.error);
+
+    const auto result = copperfin::vfp::extract_dbc_stored_procedures_source(dbc_path.string());
+    expect(result.ok, "extract_dbc_stored_procedures_source should succeed: " + result.error);
+    expect(result.available, "extract_dbc_stored_procedures_source should find the StoredProceduresSource row");
+    expect(result.source_code == prg_source, "extract_dbc_stored_procedures_source should return the CODE memo's exact text");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_extract_dbc_stored_procedures_source_absent_is_not_an_error() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_stored_procedures_absent_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "nocode.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 0U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 0U, .length = 32U, .decimal_count = 0U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Database", "Northwind"},
+        {"Table", "Customers"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_path.string(), fields, records);
+    expect(create_result.ok, "no-stored-procedures DBC fixture creation should succeed: " + create_result.error);
+
+    const auto result = copperfin::vfp::extract_dbc_stored_procedures_source(dbc_path.string());
+    expect(result.ok, "extract_dbc_stored_procedures_source should succeed for a database with no stored procedures: " + result.error);
+    expect(!result.available, "extract_dbc_stored_procedures_source should report unavailable, not an error, when no StoredProceduresSource row exists");
+    expect(result.source_code.empty(), "source_code should stay empty when unavailable");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_extract_dbc_stored_procedures_source_fails_closed_without_memo_sidecar() {
+    // A CODE memo pointer with no readable .dct companion (a malformed/
+    // incomplete database) must not surface partial or garbage text --
+    // matching this issue's acceptance criteria for a fail-closed
+    // structured result rather than a guessed reconstruction.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_stored_procedures_no_sidecar_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "missingsidecar.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 0U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 0U, .length = 32U, .decimal_count = 0U},
+        {.name = "CODE", .type = 'M', .offset = 0U, .length = 4U, .decimal_count = 0U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Database", "StoredProceduresSource", "PROCEDURE Foo\nENDPROC\n"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_path.string(), fields, records);
+    expect(create_result.ok, "DBC fixture creation should succeed: " + create_result.error);
+
+    const fs::path dct_path = temp_dir / "missingsidecar.dct";
+    expect(fs::remove(dct_path, ignored), "the .dct memo sidecar should exist to remove for this test");
+
+    const auto result = copperfin::vfp::extract_dbc_stored_procedures_source(dbc_path.string());
+    expect(result.ok, "extract_dbc_stored_procedures_source should still succeed overall: " + result.error);
+    expect(!result.available, "a CODE memo pointer with no readable .dct companion should report unavailable rather than garbage text");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_inspect_asset_resolves_explicit_unicode_memo_sidecar() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3492,6 +3596,9 @@ int main() {
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();
     test_inspect_database_container_extracts_first_pass_catalog_metadata();
+    test_extract_dbc_stored_procedures_source_reads_code_memo();
+    test_extract_dbc_stored_procedures_source_absent_is_not_an_error();
+    test_extract_dbc_stored_procedures_source_fails_closed_without_memo_sidecar();
     test_inspect_asset_resolves_explicit_unicode_memo_sidecar();
     test_export_database_as_json_resolves_unicode_catalog_table_path();
     test_export_database_as_sql_maps_currency_datetime_and_blank_numeric();

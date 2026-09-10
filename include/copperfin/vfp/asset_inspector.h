@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <map>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -117,7 +118,42 @@ struct DbcCatalogObject {
     std::string object_name;
     std::string parent_name;
     std::vector<DbcProperty> properties;  // decoded from the binary PROPERTIES memo
+    // #5538: this row's CODE memo field, decoded through the DBC's own
+    // code page (matching decode_dbf_text()'s established convention --
+    // see extract_dbc_stored_procedures_source()'s own comment for the
+    // documented row this is meaningful for). nullopt when the row has
+    // no CODE memo content or the DBC has no field named CODE at all.
+    std::optional<std::string> code_source;
 };
+
+// #5538 (parent #137, related #5471/#5537/#113): read-only extraction of a
+// DBC's Stored Procedures source code. Real Visual FoxPro stores this in a
+// dedicated catalog row named "StoredProceduresSource" whose CODE memo
+// field holds the raw PRG source text (a sibling row,
+// "StoredProceduresObject", holds compiled p-code, which this function
+// deliberately does not attempt to decode as text -- see this struct's own
+// comment). Grounded in Microsoft's own archived Visual FoxPro Knowledge
+// Base (Q180028), which demonstrates opening a .dbc as a table and
+// directly reading/writing that row's CODE memo -- not merely community
+// speculation. See docs/73-vfp-dbc-stored-procedures-and-view-sql.md for
+// the full evidence trail, including what this slice does NOT yet cover
+// (SQL view definition text -- deferred pending real-fixture
+// verification, see that document's own reasoning).
+struct DbcStoredProceduresResult {
+    bool ok = false;
+    std::string error;
+    // false when the DBC has no "StoredProceduresSource" catalog row (a
+    // database with no stored procedures at all) -- not itself an error.
+    bool available = false;
+    std::string source_code;  // raw PRG text, exactly as stored; never executed or parsed
+};
+
+// Scans dbc_path's catalog for a "StoredProceduresSource" row (case-
+// insensitive, matching this codebase's existing catalog-field-name
+// tolerance) and returns its CODE memo content verbatim. No execution, no
+// interpretation of the PRG source -- read-only extraction only, per this
+// issue's explicit non-goal.
+[[nodiscard]] DbcStoredProceduresResult extract_dbc_stored_procedures_source(const std::string& dbc_path);
 
 // Result of export_database_as_json.
 struct DatabaseExportResult {

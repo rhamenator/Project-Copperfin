@@ -1,3 +1,18 @@
+- 2026-09-10: Progress on #5538 (parent #137): `extract_dbc_stored_procedures_source()`
+  (`src/vfp/asset_inspector.cpp`) reads a DBC's Stored Procedures source
+  code -- a genuine VFP compatibility gap, not a modernization extra.
+  Grounded in Microsoft's own archived Visual FoxPro Knowledge Base
+  article Q180028, which demonstrates directly opening a `.dbc` as a
+  table and reading/writing a `StoredProceduresSource` catalog row's
+  `CODE` memo field. Read-only: no execution or interpretation of the
+  extracted PRG source. SQL view definition text extraction remains
+  explicitly deferred -- no documentation with the same directness was
+  found for where a view's SQL is physically stored, and the project's
+  Windows VM (built for direct VFP9 fixture creation to settle this) was
+  unreachable over the network during this slice's development. See
+  `docs/73-vfp-dbc-stored-procedures-and-view-sql.md`. Issue #5538
+  remains open pending that follow-up.
+
 - 2026-09-10: Progress on #5539 (parent #141): `scan_access_msysobjects_catalog()`
   (`src/vfp/access_msysobjects.cpp`) decodes rows from the Access `MSysObjects`
   system catalog table using the general Jet3/Jet4 data-row decoding
