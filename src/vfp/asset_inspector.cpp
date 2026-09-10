@@ -7,6 +7,7 @@
 #include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/dbf_text_encoding.h"
 #include "copperfin/vfp/sidecar_path.h"
 
 #include <algorithm>
@@ -1361,6 +1362,7 @@ struct RawDbcRow {
     std::string object_name;
     std::string parent_name;
     std::uint32_t properties_block = 0U;  // memo block number, 0 if absent
+    std::uint32_t code_block = 0U;  // CODE memo field's block number, 0 if absent -- see #5538
 };
 
 std::vector<RawDbcRow> read_raw_dbc_rows(
@@ -1380,6 +1382,7 @@ std::vector<RawDbcRow> read_raw_dbc_rows(
     const RawFieldDescriptor* f_name    = nullptr;
     const RawFieldDescriptor* f_parent  = nullptr;
     const RawFieldDescriptor* f_props   = nullptr;
+    const RawFieldDescriptor* f_code    = nullptr;
 
     for (const auto& f : raw_fields) {
         const std::string upper_name = uppercase_copy(f.name);
@@ -1391,6 +1394,12 @@ std::vector<RawDbcRow> read_raw_dbc_rows(
             f_parent = &f;
         } else if (upper_name == "PROPERTIES" || upper_name == "PROPS") {
             f_props = &f;
+        } else if (upper_name == "CODE") {
+            // #5538: real Visual FoxPro's DBC catalog stores Stored
+            // Procedures source text in a memo field literally named
+            // CODE, on a dedicated "StoredProceduresSource" row -- see
+            // DbcStoredProceduresResult's own documented evidence.
+            f_code = &f;
         }
     }
 
@@ -1439,6 +1448,13 @@ std::vector<RawDbcRow> read_raw_dbc_rows(
             const std::size_t abs = rec_offset + f_props->offset;
             if (abs + 4U <= file_bytes.size()) {
                 row.properties_block = read_le_u32(file_bytes, abs);
+            }
+        }
+        // Extract CODE memo block number (4-byte LE in the 'M' field) -- see #5538.
+        if (f_code != nullptr && f_code->type == 'M' && f_code->length >= 4U) {
+            const std::size_t abs = rec_offset + f_code->offset;
+            if (abs + 4U <= file_bytes.size()) {
+                row.code_block = read_le_u32(file_bytes, abs);
             }
         }
 
@@ -1595,6 +1611,31 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
                     raw.properties_block);
             if (!prop_bytes.empty()) {
                 obj.properties = decode_dbc_properties_blob(prop_bytes);
+            }
+        }
+        // #5544 review (Codex, P2): load_database_catalog_snapshot() is
+        // shared by the JSON/SQL/Access-SQL exporters, none of which
+        // need CODE content -- decoding it unconditionally for every row
+        // (including a StoredProceduresObject row's compiled p-code,
+        // which isn't text at all) would add avoidable memo-sidecar I/O
+        // and allocation to those unrelated operations for a real
+        // database with large stored-procedure content. Only the
+        // StoredProceduresSource row itself -- the one
+        // extract_dbc_stored_procedures_source() actually looks for --
+        // is decoded here.
+        if (raw.code_block != 0U && has_dct &&
+            lowercase_copy(raw.object_name) == "storedproceduressource") {
+            const std::vector<std::uint8_t> code_bytes =
+                read_memo_block_raw(
+                    copperfin::platform::path_to_utf8_string(*dct_path),
+                    raw.code_block);
+            if (!code_bytes.empty()) {
+                const DbfTextConversionResult decoded = decode_dbf_text(
+                    header_result.header.code_page_mark,
+                    std::string_view(reinterpret_cast<const char*>(code_bytes.data()), code_bytes.size()));
+                if (decoded.ok) {
+                    obj.code_source = decoded.text;
+                }
             }
         }
 
@@ -1967,6 +2008,36 @@ std::optional<std::string> sql_datetime_literal_from_storage(const std::string& 
 }
 
 }  // namespace (extended)
+
+DbcStoredProceduresResult extract_dbc_stored_procedures_source(const std::string& dbc_path) {
+    DbcStoredProceduresResult result;
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        result.error = snapshot.error;
+        return result;
+    }
+
+    // #5538: real Visual FoxPro names this catalog row "StoredProceduresSource"
+    // (a sibling "StoredProceduresObject" row holds compiled p-code, which
+    // this function does not look for -- see DbcStoredProceduresResult's
+    // own comment). Matched case-insensitively, consistent with this
+    // codebase's existing catalog-field-name tolerance elsewhere.
+    for (const DbcCatalogObject& object : snapshot.catalog) {
+        if (object.deleted) {
+            continue;
+        }
+        if (lowercase_copy(trim_copy(object.object_name)) == "storedproceduressource") {
+            if (object.code_source.has_value()) {
+                result.available = true;
+                result.source_code = *object.code_source;
+            }
+            break;
+        }
+    }
+
+    result.ok = true;
+    return result;
+}
 
 DatabaseExportResult export_database_as_json(
     const std::string& dbc_path,
