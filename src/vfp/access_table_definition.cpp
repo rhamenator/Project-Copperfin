@@ -3,7 +3,9 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "copperfin/vfp/access_table_definition.h"
+#include "copperfin/vfp/access_msysobjects.h"
 #include "copperfin/platform/path.h"
+#include "access_bytes_internal.h"
 
 #include "copperfin/localization/localization.h"
 
@@ -18,17 +20,9 @@ namespace copperfin::vfp {
 
 namespace {
 
-std::uint16_t read_le_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
-    return static_cast<std::uint16_t>(bytes[offset]) |
-           (static_cast<std::uint16_t>(bytes[offset + 1U]) << 8U);
-}
-
-std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
-    return static_cast<std::uint32_t>(bytes[offset]) |
-           (static_cast<std::uint32_t>(bytes[offset + 1U]) << 8U) |
-           (static_cast<std::uint32_t>(bytes[offset + 2U]) << 16U) |
-           (static_cast<std::uint32_t>(bytes[offset + 3U]) << 24U);
-}
+using copperfin::vfp::access_bytes_internal::read_le_u16;
+using copperfin::vfp::access_bytes_internal::read_le_u32;
+using copperfin::vfp::access_bytes_internal::sanitize_as_utf8;
 
 localization::LocalizedCatalog access_table_definition_catalog() {
     struct CatalogCache {
@@ -185,15 +179,20 @@ struct RawColumnDescriptor {
     std::uint16_t col_num = 0U;
     std::uint8_t bitmask = 0U;
     std::uint16_t col_len = 0U;
+    // Documented (and, for fixed-length columns, cross-validated against
+    // real fixtures) to hold uninitialized garbage for non-fixed-length
+    // columns -- see AccessColumnDefinition::offset_f's own comment.
+    // Captured (not discarded) so #5539's row decoder
+    // (access_msysobjects.cpp) can locate a fixed column's value within
+    // a row without re-parsing the TDEF page a second time.
+    std::uint16_t offset_f = 0U;
 };
 
 // Jet3 column descriptor, 18 bytes: col_type(1), col_num(2), offset_V(2),
 // col_num repeat(2), sort_order(2), misc(2), unknown(2), bitmask(1),
-// offset_F(2), col_len(2). offset_V/offset_F/sort_order/misc are read and
+// offset_F(2), col_len(2). offset_V/sort_order/misc are read and
 // discarded here -- they are not needed for this slice's name/type/length/
-// fixed-length schema output, and offset_F in particular is documented
-// (and cross-validated against real fixtures during this slice's
-// development) to hold uninitialized garbage for non-fixed-length columns.
+// fixed-length schema output.
 RawColumnDescriptor read_jet3_column_descriptor(PageCursor& cursor) {
     RawColumnDescriptor descriptor;
     descriptor.col_type = cursor.u8();
@@ -204,7 +203,7 @@ RawColumnDescriptor read_jet3_column_descriptor(PageCursor& cursor) {
     cursor.u16();  // misc
     cursor.u16();  // unknown
     descriptor.bitmask = cursor.u8();
-    cursor.u16();  // offset_F
+    descriptor.offset_f = cursor.u16();
     descriptor.col_len = cursor.u16();
     return descriptor;
 }
@@ -224,7 +223,7 @@ RawColumnDescriptor read_jet4_column_descriptor(PageCursor& cursor) {
     descriptor.bitmask = cursor.u8();
     cursor.u8();   // misc_flags
     cursor.u32();  // unknown
-    cursor.u16();  // offset_F
+    descriptor.offset_f = cursor.u16();
     descriptor.col_len = cursor.u16();
     return descriptor;
 }
@@ -235,69 +234,9 @@ RawColumnDescriptor read_jet4_column_descriptor(PageCursor& cursor) {
 // is itself "encrypted" with a simple RC4 key per mdbtools' notes, and
 // decrypting that page is out of scope for this slice (see docs/71's own
 // documented gaps). Correct transcoding therefore isn't possible without
-// that follow-up work. What this guarantees instead: the returned string
-// is always valid UTF-8 (an invariant every other string this codebase
-// returns upholds), by replacing any byte sequence that is not valid
-// UTF-8 with U+FFFD rather than passing legacy-code-page bytes through
-// unchanged and silently handing invalid UTF-8 to downstream callers. A
-// real Jet3 name using only ASCII characters -- already valid UTF-8, and
-// the overwhelming common case in practice, confirmed by every column
-// name in this slice's real-fixture cross-validation -- round-trips
-// unchanged either way.
-std::string sanitize_as_utf8(const std::vector<std::uint8_t>& raw) {
-    std::string text;
-    text.reserve(raw.size());
-    std::size_t index = 0U;
-    while (index < raw.size()) {
-        const std::uint8_t lead = raw[index];
-        std::size_t sequence_length = 0U;
-        std::uint32_t code_point = 0U;
-        if (lead < 0x80U) {
-            sequence_length = 1U;
-            code_point = lead;
-        } else if ((lead & 0xE0U) == 0xC0U) {
-            sequence_length = 2U;
-            code_point = lead & 0x1FU;
-        } else if ((lead & 0xF0U) == 0xE0U) {
-            sequence_length = 3U;
-            code_point = lead & 0x0FU;
-        } else if ((lead & 0xF8U) == 0xF0U) {
-            sequence_length = 4U;
-            code_point = lead & 0x07U;
-        } else {
-            text += "\xEF\xBF\xBD";
-            ++index;
-            continue;
-        }
-        bool valid = (index + sequence_length <= raw.size());
-        for (std::size_t offset = 1U; valid && offset < sequence_length; ++offset) {
-            const std::uint8_t continuation = raw[index + offset];
-            if ((continuation & 0xC0U) != 0x80U) {
-                valid = false;
-                break;
-            }
-            code_point = (code_point << 6U) | (continuation & 0x3FU);
-        }
-        // Reject overlong encodings and surrogate/out-of-range code points.
-        if (valid &&
-            ((sequence_length == 2U && code_point < 0x80U) ||
-             (sequence_length == 3U && code_point < 0x800U) ||
-             (sequence_length == 4U && code_point < 0x10000U) ||
-             (code_point >= 0xD800U && code_point <= 0xDFFFU) ||
-             code_point > 0x10FFFFU)) {
-            valid = false;
-        }
-        if (valid) {
-            text.append(reinterpret_cast<const char*>(&raw[index]), sequence_length);
-            index += sequence_length;
-        } else {
-            text += "\xEF\xBF\xBD";
-            ++index;
-        }
-    }
-    return text;
-}
-
+// that follow-up work. sanitize_as_utf8() (access_bytes_internal.h, shared
+// with access_msysobjects.cpp) guarantees the returned string is always
+// valid UTF-8 regardless -- see that header's own comment.
 std::string read_jet3_column_name(PageCursor& cursor) {
     const std::uint8_t length = cursor.u8();
     const std::vector<std::uint8_t> raw = cursor.take(length);
@@ -502,7 +441,8 @@ AccessTableDefinition parse_access_table_definition_page(
             .column_number = raw.col_num,
             .length = raw.col_len,
             .fixed_length = (raw.bitmask & 0x01U) != 0U,
-            .raw_bitmask = raw.bitmask
+            .raw_bitmask = raw.bitmask,
+            .offset_f = raw.offset_f
         });
     }
     return result;
@@ -645,6 +585,33 @@ AccessContainerSchemaResult scan_access_container_schema(const std::string& path
             result.tables.push_back(std::move(table));
         } else {
             result.skipped.push_back({.page_number = page_index, .reason = table.error});
+        }
+    }
+
+    // #5539: attach a real name to each discovered table by decoding
+    // MSysObjects's own catalog rows and matching each Type == 1 row's
+    // candidate TDEF page number (its Id, masked) against the tables
+    // actually discovered above. Only a match against an
+    // ACTUALLY-DISCOVERED table is trusted -- a candidate page number
+    // with no corresponding discovered table (e.g. #5541's real-fixture
+    // finding that Id is not unconditionally reliable, before that was
+    // resolved via independent-reader cross-verification -- see
+    // docs/72) is silently left unattached rather than fabricating a
+    // table entry from the catalog row alone. Failure to decode
+    // MSysObjects at all (a container this slice's row decoder cannot
+    // handle -- see access_msysobjects.h's own documented non-goals) is
+    // not itself a scan failure: page-number-only results, this slice's
+    // pre-#5539 behavior, remain the fallback rather than blocking the
+    // whole schema scan on a best-effort enrichment step.
+    const AccessMSysObjectsScanResult catalog = scan_access_msysobjects_catalog(path);
+    if (catalog.ok) {
+        for (AccessTableDefinition& table : result.tables) {
+            for (const AccessCatalogEntry& entry : catalog.entries) {
+                if (entry.type == 1 && entry.candidate_page_number == table.page_number) {
+                    table.name = entry.name;
+                    break;
+                }
+            }
         }
     }
 
