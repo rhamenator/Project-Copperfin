@@ -196,7 +196,43 @@ std::string DbfHeader::version_description(const localization::LocalizedCatalog&
 }
 
 std::string DbfHeader::last_update_iso8601() const {
-    const unsigned int year = 1900U + static_cast<unsigned int>(last_update_year);
+    // The on-disk last-update-date byte is nominally documented as
+    // "years since 1900" (a theoretical 0-255 range covering 1900-2155),
+    // but real dBASE-family products observably write a genuine
+    // two-digit calendar year (year % 100) instead -- confirmed against
+    // real FoxBASE+ 2.10 output: a table last updated 2026-09-09 has
+    // this byte equal to 26, not 126 (issue #5527). That makes any byte
+    // in [0, 99] genuinely ambiguous between centuries -- the same
+    // ambiguity every two-digit-year scheme has, and not something any
+    // rule can perfectly resolve for all time simultaneously.
+    //
+    // Disambiguated here with a *fixed* century-rollover threshold, not
+    // a "now"-relative one like Visual FoxPro's own `SET CENTURY TO ...
+    // ROLLOVER` default (current two-digit year + 50): a byte below the
+    // threshold is read as 20xx, at or above it as 19xx. A fixed
+    // threshold is the better fit specifically for *this* field, even
+    // though it departs from VFP's own live-date-string convention --
+    // genuine dBASE-family software only ever wrote two-digit years
+    // during roughly 1980-1999, a historically fixed window that does
+    // not advance with the calendar the way a user typing a 2-digit year
+    // today does, so anchoring the threshold to "now" would eventually
+    // misclassify *those* real legacy files once enough years pass,
+    // rather than staying correct for them indefinitely. 80 keeps every
+    // real 1980s/1990s dBASE-era byte (80-99) in the 1900s permanently,
+    // while covering the 2000-2079 range for modern/Copperfin-written
+    // files -- matching the real FoxBASE+ 2.10 evidence above (26 < 80,
+    // so 2000 + 26 = 2026) and remaining stable for decades to come.
+    //
+    // A byte >= 100 is unambiguous on its own (it cannot be a genuine
+    // two-digit year) and always means 1900 + byte -- this covers years
+    // Copperfin's own writer produced before #5527, when it wrote the
+    // raw years-since-1900 value rather than year % 100, and needs no
+    // special-casing: the same "1900 + byte" arithmetic this function
+    // always used still applies for exactly those out-of-range bytes.
+    constexpr unsigned int century_rollover_threshold = 80U;
+    const unsigned int year = (last_update_year < century_rollover_threshold)
+        ? (2000U + static_cast<unsigned int>(last_update_year))
+        : (1900U + static_cast<unsigned int>(last_update_year));
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
     stream << year << '-' << two_digit(last_update_month) << '-' << two_digit(last_update_day);

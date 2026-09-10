@@ -226,6 +226,47 @@ void test_parse_dbf_header() {
            "unrecognized version bytes should remain explicitly unknown");
 }
 
+void test_last_update_iso8601_applies_fixed_century_rollover_for_real_foxbase_byte() {
+    // #5527: real FoxBASE+ 2.10 (not an emulator or reconstruction) wrote
+    // header byte 1 = 0x1A (26 decimal) for a table last updated
+    // 2026-09-09 -- the genuine dBASE-family on-disk convention is a
+    // two-digit calendar year (year % 100), not years-since-1900, despite
+    // the nominal DBF format documentation's 1900-2155 framing. Before
+    // this fix, last_update_iso8601() misread this as 1926.
+    copperfin::vfp::DbfHeader real_foxbase_header;
+    real_foxbase_header.last_update_year = 26U;
+    real_foxbase_header.last_update_month = 9U;
+    real_foxbase_header.last_update_day = 9U;
+    expect(real_foxbase_header.last_update_iso8601() == "2026-09-09",
+           "#5527: a real FoxBASE+ 2.10 two-digit-year byte (26) should resolve to 2026, not 1926");
+
+    // A byte >= 100 is unambiguous (it cannot be a genuine two-digit
+    // year) and must still mean 1900 + byte, matching this function's
+    // behavior before #5527 -- this is how Copperfin's own writer
+    // stamped dates prior to this fix, and how any byte in that range
+    // must continue to be read for files it already wrote.
+    copperfin::vfp::DbfHeader legacy_unbounded_header;
+    legacy_unbounded_header.last_update_year = 126U;
+    legacy_unbounded_header.last_update_month = 4U;
+    legacy_unbounded_header.last_update_day = 7U;
+    expect(legacy_unbounded_header.last_update_iso8601() == "2026-04-07",
+           "#5527: a byte >= 100 is unambiguous and should always mean 1900 + byte");
+
+    // A byte at or above the fixed rollover threshold (80) -- e.g. a
+    // real 1991 FoxBASE fixture, byte 91 -- must resolve to the 1900s,
+    // and must keep doing so indefinitely: this is exactly why the
+    // threshold is fixed rather than "now"-relative (see
+    // last_update_iso8601()'s own comment) -- a real 1980s/1990s legacy
+    // byte should never start being misread as 2080s/2090s just because
+    // enough calendar time has passed since this test was written.
+    copperfin::vfp::DbfHeader old_legacy_header;
+    old_legacy_header.last_update_year = 91U;
+    old_legacy_header.last_update_month = 6U;
+    old_legacy_header.last_update_day = 15U;
+    expect(old_legacy_header.last_update_iso8601() == "1991-06-15",
+           "#5527: a two-digit year at or above the fixed rollover threshold should resolve to the 1900s, not the 2000s");
+}
+
 void test_parse_dbf_header_rejects_short_input() {
     const auto result = copperfin::vfp::parse_dbf_header({0x30U, 0x00U});
     expect(!result.ok, "parse_dbf_header should reject short input");
@@ -2806,6 +2847,7 @@ void test_read_memo_block_raw_returns_correct_bytes() {
 
 int main() {
     test_parse_dbf_header();
+    test_last_update_iso8601_applies_fixed_century_rollover_for_real_foxbase_byte();
     test_parse_dbf_header_rejects_short_input();
     test_dbf_cdx_header_errors_resolve_through_localization_catalog();
     test_vfp_header_and_index_default_catalog_refresh();

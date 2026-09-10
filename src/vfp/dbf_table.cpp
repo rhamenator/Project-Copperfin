@@ -2785,13 +2785,26 @@ bool stamp_dbf_last_update_date(std::vector<std::uint8_t>& bytes) {
         return false;
     }
 #endif
-    if (local_time.tm_year < 0 || local_time.tm_year > 255 ||
+    if (local_time.tm_year < 0 ||
         local_time.tm_mon < 0 || local_time.tm_mon > 11 ||
         local_time.tm_mday < 1 || local_time.tm_mday > 31) {
         return false;
     }
 
-    bytes[1U] = static_cast<std::uint8_t>(local_time.tm_year);
+    // #5527: write the genuine two-digit calendar year (year % 100), the
+    // convention real dBASE-family products actually use on disk --
+    // confirmed against real FoxBASE+ 2.10 output, which writes 26 (not
+    // 126) for a table last updated in 2026. Writing the raw
+    // years-since-1900 value instead (this function's behavior before
+    // #5527) produced a byte no real xBase-family product would ever
+    // write for a post-1999 date, an interop gap for a project whose
+    // whole purpose is xBase-family compatibility.
+    // DbfHeader::last_update_iso8601() disambiguates the resulting
+    // two-digit byte back into a real year using a fixed century-
+    // rollover threshold (see that function's own comment for why a
+    // fixed threshold, not a "now"-relative one, is the right choice
+    // for this specific field).
+    bytes[1U] = static_cast<std::uint8_t>(local_time.tm_year % 100);
     bytes[2U] = static_cast<std::uint8_t>(local_time.tm_mon + 1);
     bytes[3U] = static_cast<std::uint8_t>(local_time.tm_mday);
     return true;

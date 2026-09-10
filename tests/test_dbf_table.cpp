@@ -12,6 +12,7 @@
 #include <array>
 #include <cstdint>
 #include <cstdlib>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -22,6 +23,7 @@
 #define _getpid getpid
 #endif
 #include <locale>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -445,6 +447,60 @@ void expect_dbf_last_update_date(const std::filesystem::path& path, const std::s
                    result.header.last_update_day >= 1U && result.header.last_update_day <= 31U,
                label + " should stamp a valid DBF last-update header date");
     }
+}
+
+void test_stamp_dbf_last_update_date_writes_real_dbase_two_digit_year_convention() {
+    // #5527: the writer must stamp the genuine two-digit calendar year
+    // (year % 100) -- the convention real dBASE-family products (e.g.
+    // real FoxBASE+ 2.10) actually use on disk -- not the raw
+    // years-since-1900 value this function wrote before #5527, which
+    // would produce a byte (e.g. 126 for 2026) no real xBase-family
+    // product would ever write for a post-1999 date. This is checked
+    // against the real wall-clock date at test-run time (a legitimate
+    // round-trip self-consistency check, not a hardcoded future-decaying
+    // assertion): the resulting byte must always be < 100, and reading
+    // it back through last_update_iso8601() must reproduce today's real
+    // year exactly.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_last_update_convention_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+    const fs::path table_path = temp_dir / "stamped.dbf";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "ID", .type = 'N', .length = 5U, .decimal_count = 0U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        copperfin::test_support::path_to_utf8_string(table_path), fields, {{"1"}});
+    expect(create_result.ok, "#5527: the last-update-convention test fixture should be created");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_header_from_file(
+        copperfin::test_support::path_to_utf8_string(table_path));
+    expect(parse_result.ok, "#5527: the stamped table's header should be readable");
+    if (!parse_result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(parse_result.header.last_update_year < 100U,
+           "#5527: stamp_dbf_last_update_date() must write a genuine two-digit year (< 100), matching real dBASE-family output");
+
+    const std::time_t now = std::time(nullptr);
+    std::tm local_time{};
+#if defined(_WIN32)
+    localtime_s(&local_time, &now);
+#else
+    localtime_r(&now, &local_time);
+#endif
+    std::ostringstream expected_year;
+    expected_year.imbue(std::locale::classic());
+    expected_year << (local_time.tm_year + 1900);
+    expect(parse_result.header.last_update_iso8601().starts_with(expected_year.str() + "-"),
+           "#5527: reading the freshly-stamped two-digit-year byte back should reproduce today's real calendar year");
+
+    fs::remove_all(temp_dir, ignored);
 }
 
 void test_parse_dbf_table_with_memo_sidecar() {
@@ -3362,6 +3418,7 @@ int main(int argc, char* argv[]) {
     test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro();
     test_double_field_round_trips_full_ieee754_precision();
     test_dbf_mutations_stamp_last_update_date();
+    test_stamp_dbf_last_update_date_writes_real_dbase_two_digit_year_convention();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_string_fields_store_literal_null_text();
     test_character_fields_stop_at_nul_padding();
