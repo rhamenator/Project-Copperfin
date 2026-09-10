@@ -1,3 +1,25 @@
+- 2026-09-10: Progress on #5479 (parent #138): `scan_access_saved_queries()`
+  (`src/vfp/access_saved_queries.cpp`) reconstructs Access saved queries
+  as SQL text. Investigated alongside sibling issues #5477 (forms/
+  reports) and #5478 (VBA extraction) and found -- unlike those two,
+  both genuinely undocumented by every currently-allowed evidence source
+  -- that saved queries need no new physical-format reverse-engineering:
+  a query's definition is stored as ordinary rows in the `MSysQueries`
+  system table, readable with this codebase's existing TDEF/row-decoding
+  machinery plus #5549's long-value reader for the `Expression` memo
+  column. Grounded in `mdbtools`' own GPL-licensed source code
+  (`src/util/mdb-queries.c`), not just its `HACKING.md` prose (which does
+  not mention queries at all) -- independently cross-checked against
+  `mdb-queries`' own real-fixture output: 7 of 8 individually-verified
+  queries matched byte-for-byte on a real Jet4 fixture with 29 saved
+  queries. Also implemented a conservative Jet4 "compressed unicode"
+  text decoder for the verified-common case (pure single-byte-per-
+  character content, no embedded mode-switch byte) that real testing
+  found necessary for most `Expression` values, while failing closed on
+  the ambiguous mode-switch case #5539 also declined to interpret. See
+  `docs/76-access-saved-query-extraction.md` for the full evidence trail,
+  including the investigation notes on #5477/#5478.
+
 - 2026-09-10: Closes #5549 (parent #141): `read_access_long_value_column()`
   (`src/vfp/access_long_value.cpp`) retrieves a Jet3/Jet4 long-value
   (memo/OLE) column's full byte content -- the mechanism Access uses for

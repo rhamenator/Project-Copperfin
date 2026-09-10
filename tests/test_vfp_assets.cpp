@@ -7,6 +7,7 @@
 #include "copperfin/vfp/access_container.h"
 #include "copperfin/vfp/access_long_value.h"
 #include "copperfin/vfp/access_msysobjects.h"
+#include "copperfin/vfp/access_saved_queries.h"
 #include "copperfin/vfp/access_table_definition.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/cdx_header.h"
@@ -2271,6 +2272,204 @@ void test_scan_access_container_schema_attaches_names_from_catalog() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5479: MSysQueries's own column set for saved-query clause rows,
+// omitting the "Order" column since scan_access_saved_queries() never
+// looks it up by name (matching mdb-queries.c's own scope, which binds
+// it but never references it in its reconstruction switch either).
+std::vector<SyntheticAccessColumn> make_msysqueries_test_columns() {
+    return {
+        {.name = "ObjectId", .type = 0x04U, .length = 4U, .fixed = true},
+        {.name = "Attribute", .type = 0x02U, .length = 1U, .fixed = true},
+        {.name = "Flag", .type = 0x03U, .length = 2U, .fixed = true},
+        {.name = "Name1", .type = 0x0AU, .length = 255U, .fixed = false},
+        {.name = "Name2", .type = 0x0AU, .length = 255U, .fixed = false},
+        {.name = "Expression", .type = 0x0CU, .length = 0U, .fixed = false},
+    };
+}
+
+// An inline (bitmask 0x80) long-value column's raw bytes: the 12-byte
+// field descriptor followed directly by the value -- matches
+// read_access_long_value_column()'s own documented inline case (#5549).
+std::vector<std::uint8_t> make_inline_memo_bytes(const std::string& text) {
+    std::vector<std::uint8_t> bytes(12U, 0U);
+    const auto length = static_cast<std::uint32_t>(text.size());
+    bytes[0] = static_cast<std::uint8_t>(length & 0xFFU);
+    bytes[1] = static_cast<std::uint8_t>((length >> 8U) & 0xFFU);
+    bytes[2] = static_cast<std::uint8_t>((length >> 16U) & 0xFFU);
+    bytes[3] = 0x80U;
+    bytes.insert(bytes.end(), text.begin(), text.end());
+    return bytes;
+}
+
+void test_scan_access_saved_queries_reconstructs_select_from_where() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_saved_queries_happy_path_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto msysobjects_columns = make_msysobjects_test_columns();
+    const std::vector<std::optional<std::vector<std::uint8_t>>> msysobjects_values{
+        le_bytes32(100U),
+        le_bytes32(0U),
+        std::vector<std::uint8_t>{'T', 'e', 's', 't', 'Q', 'u', 'e', 'r', 'y'},
+        le_bytes16(5U),  // MDB_QUERY
+        std::nullopt,
+    };
+    const auto msysobjects_row = make_synthetic_msysobjects_row_bytes(msysobjects_columns, msysobjects_values, true);
+    // scan_access_container_schema() only attaches a table name via its
+    // own MSysObjects catalog join (#5539) -- MSysQueries needs its own
+    // catalog row (Id == its own TDEF page number, 4) for
+    // scan_access_saved_queries() to find it by name.
+    const std::vector<std::optional<std::vector<std::uint8_t>>> msysqueries_catalog_values{
+        le_bytes32(4U),
+        le_bytes32(0U),
+        std::vector<std::uint8_t>{'M', 'S', 'y', 's', 'Q', 'u', 'e', 'r', 'i', 'e', 's'},
+        le_bytes16(1U),  // MDB_TABLE
+        std::nullopt,
+    };
+    const auto msysqueries_catalog_row =
+        make_synthetic_msysobjects_row_bytes(msysobjects_columns, msysqueries_catalog_values, true);
+    const auto msysobjects_data_page = make_synthetic_data_page(
+        2048U, 2U, true, {{.bytes = msysobjects_row}, {.bytes = msysqueries_catalog_row}});
+
+    const auto msysqueries_columns = make_msysqueries_test_columns();
+    // MSysQueries's own TDEF lands at page 4 (trailing_pages[1], since
+    // trailing_pages[0] is the MSysObjects data page at page 3).
+    const auto msysqueries_tdef_page = make_synthetic_jet3_tdef_page(msysqueries_columns, 0x4EU, 3U);
+
+    const auto table_row = make_synthetic_msysobjects_row_bytes(
+        msysqueries_columns,
+        {le_bytes32(100U), std::vector<std::uint8_t>{5U}, le_bytes16(0U),
+         std::vector<std::uint8_t>{'M', 'y', 'T', 'a', 'b', 'l', 'e'}, std::nullopt, std::nullopt},
+        true);
+    const auto column_row = make_synthetic_msysobjects_row_bytes(
+        msysqueries_columns,
+        {le_bytes32(100U), std::vector<std::uint8_t>{6U}, le_bytes16(0U), std::nullopt, std::nullopt,
+         make_inline_memo_bytes("MyTable.MyColumn")},
+        true);
+    const auto where_row = make_synthetic_msysobjects_row_bytes(
+        msysqueries_columns,
+        {le_bytes32(100U), std::vector<std::uint8_t>{8U}, le_bytes16(0U), std::nullopt, std::nullopt,
+         make_inline_memo_bytes("MyTable.MyColumn > 5")},
+        true);
+    const auto msysqueries_data_page =
+        make_synthetic_data_page(2048U, 4U, true, {{.bytes = table_row}, {.bytes = column_row}, {.bytes = where_row}});
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "queries.mdb", true, msysobjects_columns,
+        {msysobjects_data_page, msysqueries_tdef_page, msysqueries_data_page}, 2U);
+
+    const auto result = copperfin::vfp::scan_access_saved_queries(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan_access_saved_queries should succeed for a well-formed synthetic container: " + result.error);
+    expect(result.skipped.empty(), "a fully-decodable query should not be reported as skipped");
+    expect(result.queries.size() == 1U, "exactly one query should be discovered");
+    if (result.queries.size() == 1U) {
+        expect(result.queries[0].name == "TestQuery", "the discovered query should be named from its catalog entry");
+        expect(result.queries[0].sql == "SELECT MyTable.MyColumn FROM [MyTable] WHERE MyTable.MyColumn > 5",
+               "the reconstructed SQL should match the Attribute-based algorithm: got '" + result.queries[0].sql + "'");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_scan_access_saved_queries_skips_query_with_undecodable_clause_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_saved_queries_mode_switch_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto msysobjects_columns = make_msysobjects_test_columns();
+    const std::vector<std::optional<std::vector<std::uint8_t>>> msysobjects_values{
+        le_bytes32(200U),
+        le_bytes32(0U),
+        ucs2le_bytes("BadQuery"),
+        le_bytes16(5U),  // MDB_QUERY
+        std::nullopt,
+    };
+    const auto msysobjects_row = make_synthetic_msysobjects_row_bytes(msysobjects_columns, msysobjects_values, false);
+    const std::vector<std::optional<std::vector<std::uint8_t>>> msysqueries_catalog_values{
+        le_bytes32(4U),
+        le_bytes32(0U),
+        ucs2le_bytes("MSysQueries"),
+        le_bytes16(1U),  // MDB_TABLE
+        std::nullopt,
+    };
+    const auto msysqueries_catalog_row =
+        make_synthetic_msysobjects_row_bytes(msysobjects_columns, msysqueries_catalog_values, false);
+    const auto msysobjects_data_page = make_synthetic_data_page(
+        4096U, 2U, false, {{.bytes = msysobjects_row}, {.bytes = msysqueries_catalog_row}});
+
+    const auto msysqueries_columns = make_msysqueries_test_columns();
+    const auto msysqueries_tdef_page = make_synthetic_jet4_tdef_page(msysqueries_columns, 0x4EU, 1U);
+
+    // A Jet4 "compressed unicode" Expression containing an embedded 0x00
+    // mode-switch byte -- the case this slice deliberately does not
+    // interpret (see access_saved_queries.cpp's own decode_jet4_text()
+    // comment). Bytes: 0xFF 0xFE marker, then 'A' (0x41), then the 0x00
+    // mode-switch byte, then trailing bytes that are never reached.
+    std::vector<std::uint8_t> mode_switch_expression{0xFFU, 0xFEU, 0x41U, 0x00U, 0x42U, 0x00U};
+    std::vector<std::uint8_t> expression_descriptor(12U, 0U);
+    const auto expr_length = static_cast<std::uint32_t>(mode_switch_expression.size());
+    expression_descriptor[0] = static_cast<std::uint8_t>(expr_length & 0xFFU);
+    expression_descriptor[1] = static_cast<std::uint8_t>((expr_length >> 8U) & 0xFFU);
+    expression_descriptor[3] = 0x80U;
+    expression_descriptor.insert(expression_descriptor.end(), mode_switch_expression.begin(), mode_switch_expression.end());
+
+    const auto column_row = make_synthetic_msysobjects_row_bytes(
+        msysqueries_columns,
+        {le_bytes32(200U), std::vector<std::uint8_t>{6U}, le_bytes16(0U), std::nullopt, std::nullopt,
+         expression_descriptor},
+        false);
+    const auto msysqueries_data_page = make_synthetic_data_page(4096U, 4U, false, {{.bytes = column_row}});
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "badquery.mdb", false, msysobjects_columns,
+        {msysobjects_data_page, msysqueries_tdef_page, msysqueries_data_page}, 2U);
+
+    const auto result = copperfin::vfp::scan_access_saved_queries(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "the scan itself should still succeed even though one query is incomplete: " + result.error);
+    expect(result.queries.empty(),
+           "a query with an undecodable clause row should not be reconstructed with silently-missing pieces");
+    expect(result.skipped.size() == 1U && result.skipped[0].name == "BadQuery",
+           "the query with the undecodable clause row should be reported as skipped, not silently dropped or partially built");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_scan_access_saved_queries_reports_ok_with_no_queries() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_saved_queries_none_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto msysobjects_columns = make_msysobjects_test_columns();
+    const std::vector<std::optional<std::vector<std::uint8_t>>> msysobjects_values{
+        le_bytes32(2U),
+        le_bytes32(251658241U),
+        std::vector<std::uint8_t>{'M', 'S', 'y', 's', 'O', 'b', 'j', 'e', 'c', 't', 's'},
+        le_bytes16(1U),  // MDB_TABLE, not a query
+        std::nullopt,
+    };
+    const auto msysobjects_row = make_synthetic_msysobjects_row_bytes(msysobjects_columns, msysobjects_values, true);
+    const auto data_page = make_synthetic_data_page(2048U, 2U, true, {{.bytes = msysobjects_row}});
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "noqueries.mdb", true, msysobjects_columns, {data_page}, 1U);
+
+    const auto result = copperfin::vfp::scan_access_saved_queries(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "a container with no query-type catalog entries should still succeed: " + result.error);
+    expect(result.queries.empty(), "no queries should be discovered");
+    expect(result.skipped.empty(), "nothing should be reported as skipped when there was nothing to skip");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_vfp_locale_catalog_parity() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
@@ -4172,6 +4371,9 @@ int main() {
     test_scan_access_msysobjects_catalog_fails_closed_on_jet3_row_at_or_above_256_bytes();
     test_scan_access_msysobjects_catalog_fails_closed_on_jet4_compressed_unicode_name();
     test_scan_access_container_schema_attaches_names_from_catalog();
+    test_scan_access_saved_queries_reconstructs_select_from_where();
+    test_scan_access_saved_queries_skips_query_with_undecodable_clause_text();
+    test_scan_access_saved_queries_reports_ok_with_no_queries();
     test_parse_access_long_value_field_descriptor_decodes_header();
     test_parse_access_long_value_field_descriptor_rejects_short_input();
     test_read_access_long_value_column_returns_inline_value();
