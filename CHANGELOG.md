@@ -20,6 +20,19 @@
   convention) is unambiguous either way and still resolves to
   `1900 + byte`, so already-written files remain correctly readable.
 
+- 2026-09-10: Review follow-up on #5527: `LUPDATE()`
+  (`src/runtime/prg_engine_records.inl`) had its own independent,
+  unfixed `1900 + last_update_year` computation, so it silently
+  disagreed with `last_update_iso8601()` about the same file's year for
+  any real post-1999 two-digit-year byte (duplicate P1 finding from
+  both Codex and Copilot). The century-disambiguation logic is now a
+  single shared `DbfHeader::last_update_year_full()` accessor
+  (`include/copperfin/vfp/dbf_header.h`/`src/vfp/dbf_header.cpp`), and
+  `LUPDATE()` routes through it, so it agrees with
+  `last_update_iso8601()` for the same file. A new PRG-level regression
+  test (`test_lupdate_reports_full_calendar_year_matching_last_update_iso8601`)
+  proves this directly.
+
 - 2026-09-10: Progress on #5476 (parent #141): added
   `parse_access_table_definition_page()` and
   `scan_access_container_schema()`

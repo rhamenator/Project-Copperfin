@@ -46,6 +46,15 @@ struct DbfHeader {
     [[nodiscard]] std::string version_description() const;
     [[nodiscard]] std::string version_description(const localization::LocalizedCatalog& catalog) const;
     [[nodiscard]] std::string last_update_iso8601() const;
+    // #5527: disambiguates the on-disk `last_update_year` byte into a real
+    // four-digit calendar year using the same fixed century-rollover
+    // threshold `last_update_iso8601()` uses (see that function's own
+    // comment, dbf_header.cpp, for the full reasoning). Every consumer of
+    // `last_update_year` that needs a real calendar year -- not just
+    // `last_update_iso8601()` itself -- must go through this rather than
+    // computing `1900 + last_update_year` directly, or it will silently
+    // reintroduce the same century-ambiguity bug for post-1999 files.
+    [[nodiscard]] unsigned int last_update_year_full() const;
 };
 
 [[nodiscard]] const char* dbf_format_family_name(DbfFormatFamily family);

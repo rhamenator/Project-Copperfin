@@ -1082,6 +1082,61 @@ void test_work_area_and_data_session_compatibility() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_lupdate_reports_full_calendar_year_matching_last_update_iso8601() {
+    // #5527 review (Codex, Copilot -- duplicate P1 finding): LUPDATE()
+    // had its own independent copy of the "1900 + last_update_year"
+    // computation, so it kept returning the pre-#5527 (wrong) year for
+    // any real post-1999 two-digit-year byte even after
+    // DbfHeader::last_update_iso8601() was fixed -- the two would
+    // silently disagree about the same file's last-update year. Fixed by
+    // routing LUPDATE() through the same shared
+    // DbfHeader::last_update_year_full() helper; this proves the runtime
+    // function itself, not just the underlying header accessor, now
+    // agrees with last_update_iso8601() for a table genuinely stamped by
+    // create_dbf_table_file() (which writes the real two-digit-year
+    // convention as of #5527).
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_lupdate_century";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "ID", .type = 'N', .length = 5U, .decimal_count = 0U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        (temp_root / "stamped.dbf").string(), fields, {{"1"}});
+    expect(create_result.ok, "LUPDATE() century test fixture should be created");
+
+    const auto header_result = copperfin::vfp::parse_dbf_header_from_file((temp_root / "stamped.dbf").string());
+    expect(header_result.ok, "LUPDATE() century test fixture header should be readable");
+    const std::string expected_year =
+        header_result.ok ? header_result.header.last_update_iso8601().substr(0U, 4U) : std::string{};
+
+    const fs::path main_path = temp_root / "lupdate_century.prg";
+    write_text(
+        main_path,
+        "PUBLIC nYear\n"
+        "USE '" + (temp_root / "stamped.dbf").string() + "'\n"
+        "nYear = YEAR(LUPDATE())\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "LUPDATE() century script should complete: " + state.message);
+
+    const auto year_global = state.globals.find("nyear");
+    expect(year_global != state.globals.end(), "YEAR(LUPDATE()) result should be available to PRG code");
+    if (year_global != state.globals.end() && header_result.ok) {
+        expect(copperfin::runtime::format_value(year_global->second) == expected_year,
+               "LUPDATE() should report the same full calendar year as last_update_iso8601() for the same file, "
+               "not the pre-#5527 1900 + raw-byte computation");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_eval_macro_and_runtime_state_semantics() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_eval_macro_state";
@@ -2005,6 +2060,7 @@ int main() {
     test_do_command_macro_target();
     test_export_vfp_compatibility_corpus_script();
     test_work_area_and_data_session_compatibility();
+    test_lupdate_reports_full_calendar_year_matching_last_update_iso8601();
     test_eval_macro_and_runtime_state_semantics();
     test_sql_and_ole_compatibility_functions();
     test_sql_pass_through_rows_affected_and_provider_hint();

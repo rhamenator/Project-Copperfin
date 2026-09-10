@@ -469,6 +469,22 @@ void test_stamp_dbf_last_update_date_writes_real_dbase_two_digit_year_convention
     fs::create_directories(temp_dir);
     const fs::path table_path = temp_dir / "stamped.dbf";
 
+    // #5527 review (Copilot): captured before creating the table, not
+    // after, so a year rollover (midnight on Jan 1) landing between the
+    // writer's own std::time() call and this test's expectation can never
+    // make the two disagree -- both are now anchored to the same "no
+    // later than table creation" instant.
+    const std::time_t before_creation = std::time(nullptr);
+    std::tm local_time{};
+#if defined(_WIN32)
+    localtime_s(&local_time, &before_creation);
+#else
+    localtime_r(&before_creation, &local_time);
+#endif
+    std::ostringstream expected_year;
+    expected_year.imbue(std::locale::classic());
+    expected_year << (local_time.tm_year + 1900);
+
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "ID", .type = 'N', .length = 5U, .decimal_count = 0U},
     };
@@ -486,17 +502,6 @@ void test_stamp_dbf_last_update_date_writes_real_dbase_two_digit_year_convention
 
     expect(parse_result.header.last_update_year < 100U,
            "#5527: stamp_dbf_last_update_date() must write a genuine two-digit year (< 100), matching real dBASE-family output");
-
-    const std::time_t now = std::time(nullptr);
-    std::tm local_time{};
-#if defined(_WIN32)
-    localtime_s(&local_time, &now);
-#else
-    localtime_r(&now, &local_time);
-#endif
-    std::ostringstream expected_year;
-    expected_year.imbue(std::locale::classic());
-    expected_year << (local_time.tm_year + 1900);
     expect(parse_result.header.last_update_iso8601().starts_with(expected_year.str() + "-"),
            "#5527: reading the freshly-stamped two-digit-year byte back should reproduce today's real calendar year");
 

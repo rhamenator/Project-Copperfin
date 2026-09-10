@@ -195,7 +195,7 @@ std::string DbfHeader::version_description(const localization::LocalizedCatalog&
     }
 }
 
-std::string DbfHeader::last_update_iso8601() const {
+unsigned int DbfHeader::last_update_year_full() const {
     // The on-disk last-update-date byte is nominally documented as
     // "years since 1900" (a theoretical 0-255 range covering 1900-2155),
     // but real dBASE-family products observably write a genuine
@@ -229,13 +229,24 @@ std::string DbfHeader::last_update_iso8601() const {
     // raw years-since-1900 value rather than year % 100, and needs no
     // special-casing: the same "1900 + byte" arithmetic this function
     // always used still applies for exactly those out-of-range bytes.
+    //
+    // This is the single, shared source of truth for the disambiguation
+    // -- every caller that needs `last_update_year` as a real calendar
+    // year (not just `last_update_iso8601()`) must call this rather than
+    // computing `1900 + last_update_year` directly, or it will silently
+    // reintroduce this exact bug for its own callers (found in review:
+    // the LUPDATE() runtime function had its own independent, unfixed
+    // copy of the old computation).
     constexpr unsigned int century_rollover_threshold = 80U;
-    const unsigned int year = (last_update_year < century_rollover_threshold)
+    return (last_update_year < century_rollover_threshold)
         ? (2000U + static_cast<unsigned int>(last_update_year))
         : (1900U + static_cast<unsigned int>(last_update_year));
+}
+
+std::string DbfHeader::last_update_iso8601() const {
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
-    stream << year << '-' << two_digit(last_update_month) << '-' << two_digit(last_update_day);
+    stream << last_update_year_full() << '-' << two_digit(last_update_month) << '-' << two_digit(last_update_day);
     return stream.str();
 }
 
