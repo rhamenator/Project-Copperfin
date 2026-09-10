@@ -210,6 +210,33 @@ struct DatabaseSqlExportResult {
     const std::string& dbc_path,
     std::size_t max_rows_per_table = 0U);
 
+// #5537 (parent #137, first vendor-dialect slice -- PostgreSQL): produces
+// the same CREATE TABLE/INSERT shape as export_database_as_sql() -- real
+// PostgreSQL already accepts that exporter's double-quoted identifiers,
+// single-quoted string literals, and DECIMAL/INTEGER/DOUBLE PRECISION/
+// BOOLEAN/DATE/TIMESTAMP/VARCHAR/TEXT column types verbatim, per
+// PostgreSQL's own public SQL/DDL reference documentation, so this
+// exporter is its own dedicated code path (matching "one TYPE <VENDOR>
+// variant per target engine," #5537's own scope idea) rather than an
+// alias, so a future vendor-specific type/quoting divergence has
+// somewhere to go without touching the portable baseline. What this
+// exporter adds beyond export_database_as_sql(): CREATE INDEX statements
+// derived from each table's production CDX index tags
+// (src/vfp/index_probe.cpp's existing header-probe reader), for a tag
+// whose key expression is (trimmed, case-insensitively) exactly one of
+// the table's own column names -- a composite/expression key (e.g. a
+// concatenation or function call) does not map cleanly to a single-
+// column CREATE INDEX and is recorded as a skipped-index comment instead
+// of guessed at, per #5537's own explicit scope note. No per-tag
+// uniqueness is currently captured by index_probe.cpp's CDX tag reader,
+// so every emitted index is a plain (non-unique) CREATE INDEX -- never
+// asserting UNIQUE without a captured signal for it. Tables are resolved
+// the same way export_database_as_sql() resolves them; max_rows_per_table
+// has the same meaning.
+[[nodiscard]] DatabaseSqlExportResult export_database_as_postgresql_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table = 0U);
+
 // ---- Whole-database JSON import planning ----
 
 // A validated, in-memory description of a version-1 export snapshot. The

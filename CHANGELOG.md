@@ -1,3 +1,21 @@
+- 2026-09-10: Progress on #5537 (parent #141): `EXPORT DATABASE ... TYPE
+  POSTGRESQL` -- the first real-target-engine SQL dialect slice.
+  `export_database_as_postgresql_sql()` (`src/vfp/asset_inspector.cpp`)
+  emits `TYPE SQL`'s own `CREATE TABLE`/`INSERT` shape verbatim (real
+  PostgreSQL already accepts its double-quoted identifiers and
+  DECIMAL/INTEGER/DOUBLE PRECISION/BOOLEAN/DATE/TIMESTAMP/VARCHAR/TEXT
+  column types, per PostgreSQL's own public documentation), plus the
+  genuinely new piece: `CREATE INDEX` statements derived from each
+  table's production `.cdx` index tags. A tag whose key expression is a
+  plain column reference gets a real `CREATE INDEX`; a composite/
+  expression key (a concatenation, function call) is recorded as a
+  skipped-index comment rather than guessed at. Factored the shared
+  CREATE TABLE/INSERT emission out of `export_database_as_sql()` into a
+  reusable helper so the two dialects can't silently drift apart. Only
+  PostgreSQL is targeted in this first slice; other vendors (SQL
+  Server, Oracle, MySQL, SQLite) remain explicit future follow-ups, one
+  dedicated `TYPE <VENDOR>` variant each.
+
 - 2026-09-10: Progress on #5538 (parent #137): `extract_dbc_stored_procedures_source()`
   (`src/vfp/asset_inspector.cpp`) reads a DBC's Stored Procedures source
   code -- a genuine VFP compatibility gap, not a modernization extra.
