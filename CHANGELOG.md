@@ -1,3 +1,4 @@
+- 2026-09-10: Recorded the owner-requested #5539/#5541 Access catalog proposal in both issue comments and the agent channel: investigate row liveness and Id mapping, preserve row-layout metadata, and verify Jet3/Jet4 decoding before attaching table names. Proposal only; no runtime behavior changed or real-fixture verification claimed.
 - 2026-09-10: Progress on #5476 (parent #141): added
   `parse_access_table_definition_page()` and
   `scan_access_container_schema()`
