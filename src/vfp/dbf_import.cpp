@@ -5,10 +5,12 @@
 #include "copperfin/vfp/dbf_import.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/dbf_text_encoding.h"
 #include "copperfin/vfp/sidecar_path.h"
 
 #include "copperfin/localization/localization.h"
 
+#include <cctype>
 #include <filesystem>
 #include <limits>
 #include <mutex>
@@ -157,6 +159,27 @@ bool looks_like_unresolved_memo_placeholder(const DbfRecordValue& value) {
         return false;
     }
     return value.display_value == ("<memo block " + std::to_string(value.memo_block_number) + ">");
+}
+
+std::string trim_trailing_whitespace(std::string text) {
+    while (!text.empty() && std::isspace(static_cast<unsigned char>(text.back())) != 0) {
+        text.pop_back();
+    }
+    return text;
+}
+
+// Mirrors write_field_bytes()'s 'C' case (dbf_table.cpp) so the #5532
+// dry-run preview can predict a Character-field write failure without
+// performing it. Source code-page-0 data is not guaranteed to already be
+// UTF-8 (see docs/69's #5525 finding); re-encoding it can occasionally
+// produce more bytes than the field's declared width, which the
+// committing path's real writer already detects and rejects -- see
+// test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes.
+// code_page_mark is always 0 here since plan_field_mapping() already
+// rejected any other value before this runs.
+bool character_field_value_fits(const std::string& value, std::size_t field_length) {
+    const DbfTextConversionResult encoded = encode_dbf_text(0U, trim_trailing_whitespace(value));
+    return encoded.ok && encoded.text.size() <= field_length;
 }
 
 void remove_destination_artifacts(const std::string& destination_path) {
@@ -390,13 +413,63 @@ DbfImportPreviewResult preview_xbase_table_import(
         return {.ok = false, .error = source.error};
     }
     FieldMappingPlan plan = plan_field_mapping(source, /*collect_all_issues=*/true);
-    return {
+    DbfImportPreviewResult result{
         .ok = plan.ok,
         .error = std::move(plan.error),
         .record_count = source.table.records.size(),
         .field_mappings = std::move(plan.field_mappings),
         .field_issues = std::move(plan.field_issues)
     };
+    if (!result.ok) {
+        return result;
+    }
+
+    // These two checks mirror conditions the committing path only
+    // discovers once it actually tries to write -- an unresolved memo
+    // payload or a record value too wide for its destination field once
+    // re-encoded. Both are single-error, fail-fast conditions in the
+    // committing path (unlike field-type mapping, there is no existing
+    // "report every instance" contract for these), so the preview
+    // reports the first one it finds via `error` rather than collecting
+    // every occurrence into field_issues, which is reserved for
+    // field-type mapping problems.
+    for (const DbfRecord& record : source.table.records) {
+        for (const std::size_t field_index : plan.memo_field_indexes) {
+            if (field_index >= record.values.size()) {
+                continue;
+            }
+            if (looks_like_unresolved_memo_placeholder(record.values[field_index])) {
+                result.ok = false;
+                result.error = dbf_import_text(
+                    "Vfp.DbfImport.Error.UnresolvedMemoPayload",
+                    {
+                        {"fieldName", plan.target_fields[field_index].name},
+                        {"recordNumber", std::to_string(record.record_index + 1U)},
+                    });
+                return result;
+            }
+        }
+        for (std::size_t field_index = 0U; field_index < plan.target_fields.size(); ++field_index) {
+            if (plan.target_fields[field_index].type != 'C' || field_index >= record.values.size()) {
+                continue;
+            }
+            const DbfRecordValue& value = record.values[field_index];
+            if (value.is_null) {
+                continue;
+            }
+            if (!character_field_value_fits(value.display_value, plan.target_fields[field_index].length)) {
+                result.ok = false;
+                result.error = dbf_import_text(
+                    "Vfp.DbfImport.Error.RecordValueWouldNotFit",
+                    {
+                        {"fieldName", plan.target_fields[field_index].name},
+                        {"recordNumber", std::to_string(record.record_index + 1U)},
+                    });
+                return result;
+            }
+        }
+    }
+    return result;
 }
 
 }  // namespace copperfin::vfp

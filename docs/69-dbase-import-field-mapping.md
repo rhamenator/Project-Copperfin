@@ -96,11 +96,23 @@ collects *every* unmappable field into `DbfImportPreviewResult::field_issues`,
 so a caller can see the complete picture before deciding whether to
 import at all.
 
-The preview does not check for unresolved memo payloads (the reader's
-`"<memo block N>"` diagnostic placeholder) or a destination-side
-memo-sidecar conflict -- both are properties of a specific
-destination/write attempt, not of the source table's importability in
-the abstract, so they remain checks only the committing path performs.
+The preview also checks for unresolved memo payloads (the reader's
+`"<memo block N>"` diagnostic placeholder) and for record values that
+would not fit their destination field once re-encoded -- a real
+possibility even for a code-page-0 source, since `code_page_mark == 0`
+is Copperfin's own reinterpretation as "UTF-8," not a guarantee about
+the original file's real bytes (see the `#5525 finding` callout below;
+`dbase_f5.dbf`'s `COMN` field is the concrete real-world example). Both
+checks report through `DbfImportPreviewResult::error`, matching the
+committing path's own single fail-fast behavior for these two
+conditions -- they are not enumerated into `field_issues`, which is
+reserved for field-*type* mapping problems.
+
+The only checks the preview does *not* perform are destination-side: an
+existing-file conflict or a memo-sidecar collision. Both are properties
+of a specific destination/write attempt, and `preview_xbase_table_import()`
+is never given a `destination_path` at all, so there is nothing for it to
+check.
 
 An unsupported source field type fails the whole import closed *before* any
 destination file is created or written -- see

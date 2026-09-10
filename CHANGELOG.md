@@ -9,10 +9,13 @@
   committing path still fails closed on the first unmappable field it
   finds, while the preview collects every one into
   `DbfImportPreviewResult::field_issues` so a caller can see the whole
-  picture before deciding whether to import. The preview does not check
-  for unresolved memo payloads or a destination-side memo-sidecar
-  conflict, since both are properties of a specific write attempt rather
-  than of the source table's importability in the abstract.
+  picture before deciding whether to import. The preview also checks for
+  unresolved memo payloads and for record values that would not fit
+  their destination field once re-encoded (both report via `error`,
+  matching the committing path's fail-fast behavior for those two
+  conditions); it only skips destination-side checks (existing-file or
+  memo-sidecar conflicts), since it is never given a `destination_path`
+  to check against.
 
 - 2026-09-09: Fixes #5530: confirmed and documented that Clipper source
   support in `IMPORT DATABASE ... TYPE XBASE` already worked, requiring

@@ -34,10 +34,13 @@ struct DbfImportFieldIssue {
 
 struct DbfImportPreviewResult {
     // True only if the source parsed, its format family and code page are
-    // supported, and every field mapped successfully -- i.e. a real import
-    // of this exact source would currently succeed (up to record-level
-    // memo-payload issues, which the preview does not check; see the
-    // function comment below).
+    // supported, every field mapped successfully, no memo field references
+    // an unresolved payload, and every value that would be written fits
+    // its destination field -- i.e. a real import of this exact source
+    // would currently succeed, except for a destination-side conflict
+    // (existing file / memo-sidecar collision), which the preview cannot
+    // check since it is never given a destination_path; see the function
+    // comment below.
     bool ok = false;
     // Set only for a table-level failure (source parse failure,
     // unsupported format family, unsupported code page) that stops the
@@ -81,19 +84,22 @@ DbfImportResult import_xbase_table_to_vfp_native(
     const std::string& source_memo_sidecar_path = {});
 
 // #5532: dry-run/report mode. Performs the same source-family, code-page,
-// and per-field mapping checks as import_xbase_table_to_vfp_native()
-// without ever writing anything -- no destination_path is needed, since
-// nothing is created. Unlike the committing path, which fails closed on
-// the first unmappable field it finds (a safety property: never write a
-// partial or silently-lossy table), this collects every unmappable field
-// so a caller can see the complete picture before deciding whether to
-// import at all.
+// per-field mapping, unresolved-memo-payload, and record-value-fits checks
+// as import_xbase_table_to_vfp_native() without ever writing anything --
+// no destination_path is needed, since nothing is created. Unlike the
+// committing path, which fails closed on the first unmappable field it
+// finds (a safety property: never write a partial or silently-lossy
+// table), this collects every unmappable field so a caller can see the
+// complete picture before deciding whether to import at all; the
+// unresolved-memo-payload and record-value-fits checks still report via
+// the single `error` field, matching the committing path's one-shot
+// failure for those conditions.
 //
-// Does not check for unresolved memo payloads (the reader's "<memo block
-// N>" diagnostic placeholder) or a destination-side memo-sidecar
-// conflict -- both are properties of a specific destination/write
-// attempt, not of the source table's importability in the abstract, so
-// they remain checks the committing path performs, not this preview.
+// Does not check for a destination-side memo-sidecar conflict -- that is
+// a property of a specific destination/write attempt (this function is
+// never given a destination_path), not of the source table's
+// importability in the abstract, so it remains a check only the
+// committing path performs.
 DbfImportPreviewResult preview_xbase_table_import(
     const std::string& source_path,
     const std::string& source_memo_sidecar_path = {});
