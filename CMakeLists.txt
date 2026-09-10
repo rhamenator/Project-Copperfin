@@ -415,6 +415,7 @@ add_library(cf_vfp_assets
     src/vfp/access_table_definition.cpp
     src/vfp/asset_inspector.cpp
     src/vfp/cdx_header.cpp
+    src/vfp/cdx_writer.cpp
     src/vfp/dbf_header.cpp
     src/vfp/dbf_import.cpp
     src/vfp/dbf_text_encoding.cpp

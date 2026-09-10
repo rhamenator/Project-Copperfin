@@ -1651,6 +1651,42 @@ void test_dbf_mutations_stamp_last_update_date() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5534 (index-rebuild half): mark_dbf_table_has_production_index() sets
+// table_flags bit 0x01 (DbfHeader::has_production_index()) -- real VFP9
+// was found to require this bit set before it will resolve
+// `SET ORDER TO TAG ... OF <cdx>` against a table, even when the CDX
+// file is named explicitly (see docs/77). This codebase's own DBF
+// writers otherwise always leave table_flags at 0.
+void test_mark_dbf_table_has_production_index_sets_header_bit() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_production_index_flag_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "indexed.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U}
+    };
+    expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, {{"ALPHA"}, {"BRAVO"}}).ok,
+           "production-index-flag fixture should be created");
+
+    const auto before = copperfin::vfp::parse_dbf_header_from_file(table_path.string());
+    expect(before.ok, "the DBF fixture should parse before setting the flag: " + before.error);
+    expect(!before.header.has_production_index(), "a freshly created table should not already have the production-index flag set");
+
+    const auto mark_result = copperfin::vfp::mark_dbf_table_has_production_index(table_path.string());
+    expect(mark_result.ok, "mark_dbf_table_has_production_index should succeed: " + mark_result.error);
+
+    const auto after = copperfin::vfp::parse_dbf_header_from_file(table_path.string());
+    expect(after.ok, "the DBF fixture should still parse after setting the flag: " + after.error);
+    expect(after.header.has_production_index(), "mark_dbf_table_has_production_index should set the has_production_index flag");
+    expect(after.header.record_count == before.header.record_count, "setting the production-index flag should not change the record count");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_character_and_varchar_fields_preserve_leading_whitespace_on_write() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3570,6 +3606,7 @@ int main(int argc, char* argv[]) {
     test_infer_xbase_index_relations_ignores_unreadable_table();
     test_double_field_round_trips_full_ieee754_precision();
     test_dbf_mutations_stamp_last_update_date();
+    test_mark_dbf_table_has_production_index_sets_header_bit();
     test_stamp_dbf_last_update_date_writes_real_dbase_two_digit_year_convention();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_string_fields_store_literal_null_text();
