@@ -75,8 +75,21 @@ struct PageCursor {
 
     explicit PageCursor(const std::vector<std::uint8_t>& page_bytes) : bytes(page_bytes) {}
 
+    // `position <= bytes.size()` is an invariant this cursor always
+    // maintains (every method that would advance past the end sets
+    // `overrun` and clamps `position` to `bytes.size()` instead), so
+    // `bytes.size() - position` can never underflow here -- which is what
+    // lets this comparison avoid `position + count`, an addition that
+    // could otherwise overflow for a large untrusted `count` (e.g. one
+    // derived from a crafted page's own multi-byte field) and wrap around
+    // to a small value, incorrectly appearing in-bounds and letting a
+    // caller's bounds check be bypassed.
+    [[nodiscard]] bool would_overrun(std::size_t count) const {
+        return overrun || count > bytes.size() - position;
+    }
+
     std::uint8_t u8() {
-        if (overrun || position + 1U > bytes.size()) {
+        if (would_overrun(1U)) {
             overrun = true;
             return 0U;
         }
@@ -84,7 +97,7 @@ struct PageCursor {
     }
 
     std::uint16_t u16() {
-        if (overrun || position + 2U > bytes.size()) {
+        if (would_overrun(2U)) {
             overrun = true;
             return 0U;
         }
@@ -94,7 +107,7 @@ struct PageCursor {
     }
 
     std::uint32_t u32() {
-        if (overrun || position + 4U > bytes.size()) {
+        if (would_overrun(4U)) {
             overrun = true;
             return 0U;
         }
@@ -104,7 +117,7 @@ struct PageCursor {
     }
 
     void skip(std::size_t count) {
-        if (overrun || position + count > bytes.size()) {
+        if (would_overrun(count)) {
             overrun = true;
             position = bytes.size();
             return;
@@ -112,8 +125,30 @@ struct PageCursor {
         position += count;
     }
 
+    // Safely skips `count` repeated `stride`-byte records (used for the
+    // TDEF page's index-info block, whose repeat count -- num_real_idx --
+    // is untrusted page data) without ever computing `count * stride`
+    // directly: that multiplication is exactly the kind of untrusted-data
+    // arithmetic that can overflow and wrap around to a small value,
+    // silently bypassing bounds checking the way the plain multiply-then-
+    // skip pattern this replaces once did. Dividing the remaining capacity
+    // by `stride` instead can only shrink the effective count, never
+    // overflow.
+    void skip_repeated(std::size_t count, std::size_t stride) {
+        if (overrun || stride == 0U) {
+            return;
+        }
+        const std::size_t remaining = bytes.size() - position;
+        if (count > remaining / stride) {
+            overrun = true;
+            position = bytes.size();
+            return;
+        }
+        position += count * stride;
+    }
+
     std::vector<std::uint8_t> take(std::size_t count) {
-        if (overrun || position + count > bytes.size()) {
+        if (would_overrun(count)) {
             overrun = true;
             return {};
         }
@@ -326,7 +361,7 @@ AccessTableDefinition parse_access_table_definition_page(
         num_real_idx = cursor.u32();
         cursor.u32();  // used_pages
         cursor.u32();  // free_pages
-        cursor.skip(static_cast<std::size_t>(num_real_idx) * 8U);
+        cursor.skip_repeated(num_real_idx, 8U);
     } else {
         cursor.u32();  // tdef_len
         cursor.u32();  // unknown
@@ -344,7 +379,7 @@ AccessTableDefinition parse_access_table_definition_page(
         num_real_idx = cursor.u32();
         cursor.u32();  // used_pages
         cursor.u32();  // free_pages
-        cursor.skip(static_cast<std::size_t>(num_real_idx) * 12U);
+        cursor.skip_repeated(num_real_idx, 12U);
     }
 
     if (cursor.overrun) {
@@ -419,7 +454,12 @@ AccessContainerSchemaResult scan_access_container_schema(const std::string& path
         std::istreambuf_iterator<char>());
     input.close();
 
-    if (file_bytes.size() < page_size) {
+    if (file_bytes.size() < page_size || file_bytes.size() % page_size != 0U) {
+        // A file that isn't an exact multiple of the generation's page
+        // size is truncated or corrupt -- fail closed rather than
+        // silently ignoring the trailing partial page via integer
+        // division, which could leave a real (but incomplete) page
+        // unexamined without any indication anything was skipped.
         result.error = access_table_definition_text("Vfp.AccessTableDefinition.Error.ReadPageFailed");
         return result;
     }
@@ -438,11 +478,35 @@ AccessContainerSchemaResult scan_access_container_schema(const std::string& path
             continue;
         }
         tdef_candidate_pages.push_back(page_index);
-        if (offset + 8U <= file_bytes.size()) {
-            const std::uint32_t next_pg = read_le_u32(file_bytes, offset + 4U);
-            if (next_pg != 0U) {
-                continuation_pages.insert(next_pg);
+    }
+
+    // Walk each TDEF candidate's own next_pg chain to mark every page in
+    // it (beyond the chain's own start) as a continuation page, not just
+    // the first hop -- a chain spanning more than two pages would
+    // otherwise leave its later pages unmarked, letting them be
+    // misreported as independent tables (and, if a later page's own
+    // next_pg happens to be 0, even "successfully" parsed as one). Cycle
+    // protection: a well-formed chain cannot legitimately revisit a page,
+    // so a repeated or out-of-range next_pg target ends the walk rather
+    // than looping forever on crafted/corrupt data. A "continuation" that
+    // does not itself begin with the TDEF page-type byte also ends the
+    // walk without erroring the whole scan, rather than reading an
+    // unrelated page's bytes as if they were another next_pg pointer.
+    for (const std::uint32_t start_page : tdef_candidate_pages) {
+        std::set<std::uint32_t> visited{start_page};
+        const std::size_t start_offset = static_cast<std::size_t>(start_page) * page_size;
+        if (start_offset + 8U > file_bytes.size()) {
+            continue;
+        }
+        std::uint32_t next_pg = read_le_u32(file_bytes, start_offset + 4U);
+        while (next_pg != 0U && next_pg < page_count && !visited.contains(next_pg)) {
+            continuation_pages.insert(next_pg);
+            visited.insert(next_pg);
+            const std::size_t next_offset = static_cast<std::size_t>(next_pg) * page_size;
+            if (next_offset + 8U > file_bytes.size() || file_bytes[next_offset] != 0x02U) {
+                break;
             }
+            next_pg = read_le_u32(file_bytes, next_offset + 4U);
         }
     }
 

@@ -1203,6 +1203,115 @@ void test_scan_access_container_schema_rejects_non_access_file() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_parse_access_table_definition_page_rejects_oversized_index_count() {
+    // #5540 review (Copilot): num_real_idx is untrusted page data multiplied
+    // by a fixed per-entry stride (8 bytes for Jet3) to compute how far to
+    // skip past the TDEF's index-info block. The original
+    // count-then-multiply-then-bounds-check pattern could overflow for an
+    // adversarial count, wrapping around to a small value and silently
+    // bypassing the bounds check it was meant to enforce. A page claiming
+    // an index count that could not possibly fit (0xFFFFFFFF entries in a
+    // 2048-byte page) must fail closed rather than let that wraparound
+    // misdirect the cursor into reading unrelated bytes as if they were
+    // column descriptors.
+    auto page = make_synthetic_jet3_tdef_page({{.name = "Id", .type = 0x04U, .length = 4U, .fixed = true}}, 0x4EU, 0U);
+    // num_real_idx sits at byte 31 in the Jet3 layout (8-byte TDEF header +
+    // tdef_len(4) + num_rows(4) + autonumber(4) + table_type(1) +
+    // max_cols(2) + num_var_cols(2) + num_cols(2) + num_idx(4) = 31).
+    write_le_u32(page, 31U, 0xFFFFFFFFU);
+    const auto result = copperfin::vfp::parse_access_table_definition_page(
+        page, copperfin::vfp::AccessContainerGeneration::jet3, 2U);
+    expect(!result.ok, "parse_access_table_definition_page should fail closed on an index count that cannot possibly fit in the page");
+}
+
+void test_scan_access_container_schema_rejects_truncated_trailing_page() {
+    // #5540 review (Copilot): a file size that isn't an exact multiple of
+    // the generation's page size used to be silently truncated via integer
+    // division, leaving a real (but incomplete) trailing page unexamined
+    // without any indication anything was skipped. A truncated/corrupt
+    // container should fail closed instead.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_schema_scan_truncated_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+    const fs::path container_path = temp_dir / "truncated.mdb";
+
+    constexpr std::size_t page_size = 2048U;
+    std::vector<std::uint8_t> file_bytes(page_size * 2U + 10U, 0U);  // 10 stray trailing bytes
+    file_bytes[0] = 0x00U;
+    file_bytes[1] = 0x01U;
+    file_bytes[2] = 0x00U;
+    file_bytes[3] = 0x00U;
+    const std::string signature = "Standard Jet DB";
+    std::copy(signature.begin(), signature.end(), file_bytes.begin() + 4);
+    file_bytes[0x14] = 0x00U;  // Jet3
+
+    expect(write_binary_file(container_path, file_bytes), "the truncated container fixture should be writable");
+
+    const auto result = copperfin::vfp::scan_access_container_schema(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(!result.ok, "scan_access_container_schema should reject a file size that isn't an exact multiple of the page size");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_scan_access_container_schema_excludes_every_page_in_a_multi_hop_chain() {
+    // #5540 review (Copilot): continuation-page exclusion originally only
+    // followed the first next_pg hop. A TDEF chain longer than two pages
+    // (page A -> B -> C) would leave C unmarked -- and since C's own
+    // next_pg is 0 (the natural end of the chain), C could be misreported
+    // as its own independent, successfully-parsed single-page table,
+    // rather than the continuation data it actually is.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_schema_scan_multihop_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+    const fs::path container_path = temp_dir / "multihop.mdb";
+
+    constexpr std::size_t page_size = 2048U;
+    std::vector<std::uint8_t> file_bytes(page_size * 5U, 0U);
+    file_bytes[0] = 0x00U;
+    file_bytes[1] = 0x01U;
+    file_bytes[2] = 0x00U;
+    file_bytes[3] = 0x00U;
+    const std::string signature = "Standard Jet DB";
+    std::copy(signature.begin(), signature.end(), file_bytes.begin() + 4);
+    file_bytes[0x14] = 0x00U;  // Jet3
+
+    // Page 2 (chain start): next_pg = 3.
+    auto page_a = make_synthetic_jet3_tdef_page({{.name = "Id", .type = 0x04U, .length = 4U, .fixed = true}}, 0x4EU, 0U);
+    write_le_u32(page_a, 4U, 3U);
+    std::copy(page_a.begin(), page_a.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(page_size * 2U));
+
+    // Page 3 (middle of the chain): next_pg = 4.
+    auto page_b = make_synthetic_jet3_tdef_page({{.name = "Mid", .type = 0x04U, .length = 4U, .fixed = true}}, 0x4EU, 0U);
+    write_le_u32(page_b, 4U, 4U);
+    std::copy(page_b.begin(), page_b.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(page_size * 3U));
+
+    // Page 4 (chain end): next_pg = 0, so it looks exactly like a
+    // genuine, independently-parseable single-page TDEF if the multi-hop
+    // walk fails to reach it.
+    auto page_c = make_synthetic_jet3_tdef_page({{.name = "End", .type = 0x04U, .length = 4U, .fixed = true}}, 0x4EU, 0U);
+    std::copy(page_c.begin(), page_c.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(page_size * 4U));
+
+    expect(write_binary_file(container_path, file_bytes), "the multi-hop chain container fixture should be writable");
+
+    const auto result = copperfin::vfp::scan_access_container_schema(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan_access_container_schema should succeed for a well-formed synthetic container: " + result.error);
+    expect(result.tables.empty(),
+           "no page in a 3-page TDEF chain should be reported as an independent table, including the chain's own end page");
+    expect(result.skipped.size() == 1U,
+           "only the chain's own start page should be reported (as an unsupported multi-page TDEF), not its continuation pages");
+    if (result.skipped.size() == 1U) {
+        expect(result.skipped[0].page_number == 2U, "the skipped entry should identify the chain-start page");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_vfp_locale_catalog_parity() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
@@ -2693,6 +2802,9 @@ int main() {
     test_parse_access_table_definition_page_rejects_structure_out_of_bounds();
     test_scan_access_container_schema_discovers_tables_and_skips_continuations();
     test_scan_access_container_schema_rejects_non_access_file();
+    test_parse_access_table_definition_page_rejects_oversized_index_count();
+    test_scan_access_container_schema_rejects_truncated_trailing_page();
+    test_scan_access_container_schema_excludes_every_page_in_a_multi_hop_chain();
     test_access_container_errors_resolve_through_localization_catalog();
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();

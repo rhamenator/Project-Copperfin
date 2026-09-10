@@ -19,7 +19,17 @@
   higher-risk than TDEF-page parsing; filed as the explicit follow-up
   #5539 rather than attempted in this pass. Multi-page TDEFs and
   in-TDEF index metadata are separate, documented (not silently
-  unhandled) gaps.
+  unhandled) gaps. Review found three real untrusted-data-parsing gaps
+  before merge: an index-entry count multiplied by a fixed stride could
+  overflow and wrap around, silently bypassing the bounds check meant
+  to catch an oversized value -- `PageCursor::skip_repeated()` now
+  divides remaining capacity by stride instead, which cannot overflow;
+  a file size that wasn't an exact multiple of the page size was
+  silently truncated via integer division instead of failing closed;
+  and continuation-page exclusion only followed the first `next_pg`
+  hop, so a TDEF chain longer than two pages could have its own end
+  page misreported as an independent table -- now walks the full chain
+  with cycle protection.
 
 - 2026-09-09: Fixes #5475: added `EXPORT DATABASE ... TYPE ACCESS`
   (phase 1 of #141), a non-VFP-extension command that emits an
