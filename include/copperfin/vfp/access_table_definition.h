@@ -7,6 +7,7 @@
 #include "copperfin/vfp/access_container.h"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -86,21 +87,40 @@ struct AccessColumnDefinition {
     // related to joins?"), so this codebase does not expose a confident
     // `nullable` field for it.
     std::uint8_t raw_bitmask = 0;
+    // The raw offset_F field: for a fixed_length column, the column's
+    // byte offset within a row's fixed-column region (used by #5539's
+    // row decoder, access_msysobjects.cpp, to locate the value). For a
+    // non-fixed column this field is documented -- and cross-validated
+    // against real fixtures, see this struct's own fixed_length comment
+    // -- to hold uninitialized garbage; callers must not read it unless
+    // fixed_length is true.
+    std::uint16_t offset_f = 0;
 };
 
 struct AccessTableDefinition {
     bool ok = false;
     std::string error;
-    // The page this table's TDEF was read from -- the only identifier
-    // available for a table in this slice, since a table's *name* lives in
-    // rows of the MSysObjects system catalog table, not in its own TDEF
-    // page, and reading MSysObjects's rows requires the general Jet
-    // data-row-decoding algorithm (null bitmask, reverse-order variable-
-    // length offset table, and a Jet3-only jump table for rows >= 256
-    // bytes) that this slice does not implement -- see docs/68's own
-    // documented reasoning for deferring that harder, higher-risk piece
-    // to a dedicated follow-up rather than attempting it in this pass.
+    // The page this table's TDEF was read from. Always populated;
+    // `name` below is the table's real name, populated only when
+    // scan_access_container_schema() could resolve one (see that
+    // field's own comment).
     std::uint32_t page_number = 0;
+    // The table's real name, resolved by scan_access_container_schema()
+    // from a decoded MSysObjects catalog row (#5539,
+    // access_msysobjects.cpp's scan_access_msysobjects_catalog())
+    // whose candidate TDEF page number (its Id, masked per mdbtools'
+    // own mdb_read_catalog() precedent) matches this table's own
+    // page_number -- i.e. a name is attached only when that mapping is
+    // independently corroborated by an actually-discovered TDEF page,
+    // not trusted from the catalog row alone (see #5541's own real-
+    // fixture-based caution about treating MSysObjects.Id as
+    // unconditionally reliable, and docs/72 for how that caution was
+    // subsequently resolved via independent-reader cross-verification).
+    // Left unset (nullopt) when parse_access_table_definition_page()
+    // was called directly (not through scan_access_container_schema()),
+    // when MSysObjects's own rows could not be decoded, or when no
+    // catalog row's candidate page matched this one.
+    std::optional<std::string> name;
     // From the table_type byte: true for 0x53 ('S', system table -- e.g.
     // MSysObjects itself), false for 0x4E ('N', user table).
     bool is_system_table = false;

@@ -5,6 +5,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/access_container.h"
+#include "copperfin/vfp/access_msysobjects.h"
 #include "copperfin/vfp/access_table_definition.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/cdx_header.h"
@@ -961,7 +962,45 @@ struct SyntheticAccessColumn {
     std::uint8_t type = 0U;
     std::uint16_t length = 0U;
     bool fixed = true;
+    // #5539: overrides the column-descriptor's own col_num field, which
+    // is normally just this column's position in `columns` (matching
+    // #5476's original synthetic builders). A real Jet4 fixture found
+    // during #5539's development stored its MSysObjects column
+    // descriptors in a PHYSICAL order that did not match their logical
+    // col_num (alphabetized by name rather than declaration order) --
+    // this override lets a test reproduce that same physical/logical
+    // mismatch rather than only ever testing the case where they
+    // coincide.
+    std::optional<std::uint16_t> column_number_override;
 };
+
+// Real Access assigns each fixed column's offset_F sequentially in
+// col_num order, independent of the column descriptors' own physical
+// storage order in the TDEF page (confirmed during #5539's real-fixture
+// cross-validation -- see SyntheticAccessColumn::column_number_override's
+// own comment). Returns, for each entry in `columns` (by its own vector
+// position), the offset_F a fixed column should use; the value for a
+// non-fixed column is unspecified (never read).
+std::vector<std::uint16_t> compute_synthetic_offset_f_by_col_num_order(
+    const std::vector<SyntheticAccessColumn>& columns) {
+    std::vector<std::size_t> order(columns.size());
+    for (std::size_t index = 0U; index < columns.size(); ++index) {
+        order[index] = index;
+    }
+    std::sort(order.begin(), order.end(), [&](std::size_t left, std::size_t right) {
+        return columns[left].column_number_override.value_or(static_cast<std::uint16_t>(left)) <
+               columns[right].column_number_override.value_or(static_cast<std::uint16_t>(right));
+    });
+    std::vector<std::uint16_t> offset_f(columns.size(), 0U);
+    std::uint16_t cursor = 0U;
+    for (const std::size_t index : order) {
+        if (columns[index].fixed) {
+            offset_f[index] = cursor;
+            cursor = static_cast<std::uint16_t>(cursor + columns[index].length);
+        }
+    }
+    return offset_f;
+}
 
 std::vector<std::uint8_t> make_synthetic_jet3_tdef_page(
     const std::vector<SyntheticAccessColumn>& columns,
@@ -994,22 +1033,20 @@ std::vector<std::uint8_t> make_synthetic_jet3_tdef_page(
     write_le_u32(page, offset, 0U); offset += 4U;  // used_pages
     write_le_u32(page, offset, 0U); offset += 4U;  // free_pages
 
-    std::uint16_t fixed_offset_cursor = 0U;
+    const std::vector<std::uint16_t> offset_f_table = compute_synthetic_offset_f_by_col_num_order(columns);
     for (std::size_t index = 0U; index < columns.size(); ++index) {
         const auto& column = columns[index];
+        const auto col_num = column.column_number_override.value_or(static_cast<std::uint16_t>(index));
         page[offset] = column.type; offset += 1U;
-        write_le_u16(page, offset, static_cast<std::uint16_t>(index)); offset += 2U;  // col_num
+        write_le_u16(page, offset, col_num); offset += 2U;  // col_num
         write_le_u16(page, offset, 0U); offset += 2U;  // offset_V
-        write_le_u16(page, offset, static_cast<std::uint16_t>(index)); offset += 2U;  // col_num (repeat)
+        write_le_u16(page, offset, col_num); offset += 2U;  // col_num (repeat)
         write_le_u16(page, offset, 0x409U); offset += 2U;  // sort_order
         write_le_u16(page, offset, 0U); offset += 2U;  // misc
         write_le_u16(page, offset, 0U); offset += 2U;  // unknown
         page[offset] = column.fixed ? 0x01U : 0x00U; offset += 1U;  // bitmask
-        write_le_u16(page, offset, column.fixed ? fixed_offset_cursor : 0U); offset += 2U;  // offset_F
+        write_le_u16(page, offset, offset_f_table[index]); offset += 2U;  // offset_F
         write_le_u16(page, offset, column.length); offset += 2U;  // col_len
-        if (column.fixed) {
-            fixed_offset_cursor = static_cast<std::uint16_t>(fixed_offset_cursor + column.length);
-        }
     }
     for (const auto& column : columns) {
         page[offset] = static_cast<std::uint8_t>(column.name.size()); offset += 1U;
@@ -1053,24 +1090,22 @@ std::vector<std::uint8_t> make_synthetic_jet4_tdef_page(
     write_le_u32(page, offset, 0U); offset += 4U;  // used_pages
     write_le_u32(page, offset, 0U); offset += 4U;  // free_pages
 
-    std::uint16_t fixed_offset_cursor = 0U;
+    const std::vector<std::uint16_t> offset_f_table = compute_synthetic_offset_f_by_col_num_order(columns);
     for (std::size_t index = 0U; index < columns.size(); ++index) {
         const auto& column = columns[index];
+        const auto col_num = column.column_number_override.value_or(static_cast<std::uint16_t>(index));
         page[offset] = column.type; offset += 1U;
         offset += 4U;  // unknown
-        write_le_u16(page, offset, static_cast<std::uint16_t>(index)); offset += 2U;  // col_num
+        write_le_u16(page, offset, col_num); offset += 2U;  // col_num
         write_le_u16(page, offset, 0U); offset += 2U;  // offset_V
-        write_le_u16(page, offset, static_cast<std::uint16_t>(index)); offset += 2U;  // col_num (repeat)
+        write_le_u16(page, offset, col_num); offset += 2U;  // col_num (repeat)
         write_le_u16(page, offset, 0x409U); offset += 2U;  // misc
         write_le_u16(page, offset, 0U); offset += 2U;  // misc_ext
         page[offset] = column.fixed ? 0x01U : 0x00U; offset += 1U;  // bitmask
         page[offset] = 0U; offset += 1U;  // misc_flags
         offset += 4U;  // unknown
-        write_le_u16(page, offset, column.fixed ? fixed_offset_cursor : 0U); offset += 2U;  // offset_F
+        write_le_u16(page, offset, offset_f_table[index]); offset += 2U;  // offset_F
         write_le_u16(page, offset, column.length); offset += 2U;  // col_len
-        if (column.fixed) {
-            fixed_offset_cursor = static_cast<std::uint16_t>(fixed_offset_cursor + column.length);
-        }
     }
     for (const auto& column : columns) {
         write_le_u16(page, offset, static_cast<std::uint16_t>(column.name.size() * 2U)); offset += 2U;
@@ -1081,6 +1116,195 @@ std::vector<std::uint8_t> make_synthetic_jet4_tdef_page(
         }
     }
     return page;
+}
+
+// #5539: synthetic MSysObjects data-row builder, reproducing the general
+// Jet3/Jet4 row-decoding byte layout (null bitmask, reverse-order
+// variable-length offset table, eod sentinel) independently cross-checked
+// against real Jet3/Jet4 .mdb fixtures during this slice's development --
+// see docs/72's worked byte-level walkthrough for the derivation. Unlike
+// the TDEF builders above, `columns` here must already be listed in
+// col_num (declaration) order: index i describes column i. `values[i]` is
+// column i's byte content, or nullopt for a null column -- a present but
+// empty variable-length value is an empty (not absent) vector, matching
+// the null mask's own not-null-but-zero-length semantics this slice's
+// row decoder relies on (see decode_row()'s own comment,
+// access_msysobjects.cpp).
+std::vector<std::uint8_t> make_synthetic_msysobjects_row_bytes(
+    const std::vector<SyntheticAccessColumn>& columns,
+    const std::vector<std::optional<std::vector<std::uint8_t>>>& values,
+    bool is_jet3) {
+    const std::size_t num_cols_field_width = is_jet3 ? 1U : 2U;
+    const std::size_t entry_width = is_jet3 ? 1U : 2U;
+
+    std::vector<std::uint8_t> fixed_bytes;
+    for (std::size_t index = 0U; index < columns.size(); ++index) {
+        if (!columns[index].fixed) {
+            continue;
+        }
+        std::vector<std::uint8_t> slot(columns[index].length, 0U);
+        if (values[index].has_value()) {
+            const auto& value = *values[index];
+            for (std::size_t byte_index = 0U; byte_index < slot.size() && byte_index < value.size(); ++byte_index) {
+                slot[byte_index] = value[byte_index];
+            }
+        }
+        fixed_bytes.insert(fixed_bytes.end(), slot.begin(), slot.end());
+    }
+
+    std::vector<std::uint8_t> var_bytes;
+    std::vector<std::uint32_t> var_starts;
+    for (std::size_t index = 0U; index < columns.size(); ++index) {
+        if (columns[index].fixed) {
+            continue;
+        }
+        var_starts.push_back(static_cast<std::uint32_t>(
+            num_cols_field_width + fixed_bytes.size() + var_bytes.size()));
+        if (values[index].has_value()) {
+            const auto& value = *values[index];
+            var_bytes.insert(var_bytes.end(), value.begin(), value.end());
+        }
+    }
+    const auto eod = static_cast<std::uint32_t>(num_cols_field_width + fixed_bytes.size() + var_bytes.size());
+    const std::size_t var_len = var_starts.size();
+
+    const std::size_t null_mask_size = (columns.size() + 7U) / 8U;
+    std::vector<std::uint8_t> null_mask(null_mask_size, 0U);
+    for (std::size_t index = 0U; index < columns.size(); ++index) {
+        if (values[index].has_value()) {
+            null_mask[index / 8U] = static_cast<std::uint8_t>(null_mask[index / 8U] | (1U << (index % 8U)));
+        }
+    }
+
+    auto push_entry = [&](std::vector<std::uint8_t>& out, std::uint32_t value) {
+        if (is_jet3) {
+            out.push_back(static_cast<std::uint8_t>(value));
+        } else {
+            out.push_back(static_cast<std::uint8_t>(value & 0xFFU));
+            out.push_back(static_cast<std::uint8_t>((value >> 8U) & 0xFFU));
+        }
+    };
+
+    std::vector<std::uint8_t> row;
+    push_entry(row, static_cast<std::uint32_t>(columns.size()));
+    row.insert(row.end(), fixed_bytes.begin(), fixed_bytes.end());
+    row.insert(row.end(), var_bytes.begin(), var_bytes.end());
+    push_entry(row, eod);
+    for (std::size_t slot = var_len; slot-- > 0U;) {
+        push_entry(row, var_starts[slot]);
+    }
+    push_entry(row, static_cast<std::uint32_t>(var_len));
+    row.insert(row.end(), null_mask.begin(), null_mask.end());
+    (void)entry_width;
+    return row;
+}
+
+struct SyntheticDataRowSlot {
+    std::vector<std::uint8_t> bytes;
+    bool deleted = false;
+    bool lookup_overflow = false;
+};
+
+// #5539: synthetic Jet3/Jet4 data-page builder, laying out its row-offset
+// table and row content the way scan_access_msysobjects_catalog() expects
+// (rows placed from the end of the page backward; a deleted or lookup-
+// overflow row's own slot flag set rather than its content matching).
+std::vector<std::uint8_t> make_synthetic_data_page(
+    std::size_t page_size,
+    std::uint32_t tdef_pg,
+    bool is_jet3,
+    const std::vector<SyntheticDataRowSlot>& rows) {
+    std::vector<std::uint8_t> page(page_size, 0U);
+    page[0] = 0x01U;  // data page
+    write_le_u32(page, 4U, tdef_pg);
+    const std::size_t header_size = is_jet3 ? 10U : 14U;
+    const std::size_t num_rows_offset = is_jet3 ? 8U : 12U;
+    write_le_u16(page, num_rows_offset, static_cast<std::uint16_t>(rows.size()));
+
+    std::size_t cursor = page_size;
+    std::vector<std::uint16_t> offsets(rows.size());
+    for (std::size_t index = 0U; index < rows.size(); ++index) {
+        const std::size_t length =
+            rows[index].lookup_overflow ? 4U : (rows[index].deleted ? 0U : rows[index].bytes.size());
+        const std::size_t start = cursor - length;
+        if (!rows[index].deleted && !rows[index].lookup_overflow) {
+            std::copy(rows[index].bytes.begin(), rows[index].bytes.end(), page.begin() + static_cast<std::ptrdiff_t>(start));
+        }
+        offsets[index] = static_cast<std::uint16_t>(start);
+        cursor = start;
+    }
+    for (std::size_t index = 0U; index < rows.size(); ++index) {
+        std::uint16_t flags = 0U;
+        if (rows[index].deleted) {
+            flags = 0x8000U;
+        } else if (rows[index].lookup_overflow) {
+            flags = 0x4000U;
+        }
+        write_le_u16(page, header_size + index * 2U, static_cast<std::uint16_t>(offsets[index] | flags));
+    }
+    return page;
+}
+
+std::vector<std::uint8_t> ucs2le_bytes(const std::string& ascii_text) {
+    std::vector<std::uint8_t> bytes;
+    bytes.reserve(ascii_text.size() * 2U);
+    for (const char character : ascii_text) {
+        bytes.push_back(static_cast<std::uint8_t>(character));
+        bytes.push_back(0U);
+    }
+    return bytes;
+}
+
+std::vector<std::uint8_t> le_bytes32(std::uint32_t value) {
+    return {
+        static_cast<std::uint8_t>(value & 0xFFU),
+        static_cast<std::uint8_t>((value >> 8U) & 0xFFU),
+        static_cast<std::uint8_t>((value >> 16U) & 0xFFU),
+        static_cast<std::uint8_t>((value >> 24U) & 0xFFU)};
+}
+
+std::vector<std::uint8_t> le_bytes16(std::uint16_t value) {
+    return {static_cast<std::uint8_t>(value & 0xFFU), static_cast<std::uint8_t>((value >> 8U) & 0xFFU)};
+}
+
+// Writes a minimal but well-formed synthetic container file: a page-0
+// container header for the given generation, a blank page 1, MSysObjects's
+// own TDEF at page 2, and every page in `trailing_pages` starting at page
+// 3 -- the same container shape
+// test_scan_access_container_schema_discovers_tables_and_skips_continuations
+// already established, reused here for #5539's row-decode tests.
+std::filesystem::path write_synthetic_msysobjects_container(
+    const std::filesystem::path& temp_dir,
+    const std::string& filename,
+    bool is_jet3,
+    const std::vector<SyntheticAccessColumn>& msysobjects_columns,
+    const std::vector<std::vector<std::uint8_t>>& trailing_pages) {
+    const std::size_t page_size = is_jet3 ? 2048U : 4096U;
+    std::vector<std::uint8_t> file_bytes(page_size * (3U + trailing_pages.size()), 0U);
+
+    file_bytes[0] = 0x00U;
+    file_bytes[1] = 0x01U;
+    file_bytes[2] = 0x00U;
+    file_bytes[3] = 0x00U;
+    const std::string signature = is_jet3 ? "Standard Jet DB" : "Standard ACE DB";
+    std::copy(signature.begin(), signature.end(), file_bytes.begin() + 4);
+    file_bytes[0x14] = is_jet3 ? 0x00U : 0x01U;
+
+    const auto tdef_page = is_jet3
+        ? make_synthetic_jet3_tdef_page(msysobjects_columns, 0x53U, 0U)
+        : make_synthetic_jet4_tdef_page(msysobjects_columns, 0x53U, 0U);
+    std::copy(tdef_page.begin(), tdef_page.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(page_size * 2U));
+
+    for (std::size_t index = 0U; index < trailing_pages.size(); ++index) {
+        std::copy(
+            trailing_pages[index].begin(),
+            trailing_pages[index].end(),
+            file_bytes.begin() + static_cast<std::ptrdiff_t>(page_size * (3U + index)));
+    }
+
+    const std::filesystem::path container_path = temp_dir / filename;
+    expect(write_binary_file(container_path, file_bytes), "synthetic MSysObjects container fixture should be writable");
+    return container_path;
 }
 
 void test_parse_access_table_definition_page_decodes_jet3_columns() {
@@ -1398,6 +1622,349 @@ void test_parse_access_table_definition_page_rejects_unrecognized_table_type() {
     expect(!result.ok, "parse_access_table_definition_page should reject an unrecognized table_type byte rather than default to a user table");
 }
 
+// #5539: a minimal MSysObjects-shaped schema for row-decode tests --
+// Id/ParentId/Type fixed, Name/Extra variable (Extra always left null in
+// most tests, exercising the "declared variable column with no data"
+// path every real MSysObjects row also has for its many usually-empty
+// OLE/memo columns).
+std::vector<SyntheticAccessColumn> make_msysobjects_test_columns() {
+    return {
+        {.name = "Id", .type = 0x04U, .length = 4U, .fixed = true},
+        {.name = "ParentId", .type = 0x04U, .length = 4U, .fixed = true},
+        {.name = "Name", .type = 0x0AU, .length = 255U, .fixed = false},
+        {.name = "Type", .type = 0x03U, .length = 2U, .fixed = true},
+        {.name = "Extra", .type = 0x0AU, .length = 255U, .fixed = false},
+    };
+}
+
+void test_scan_access_msysobjects_catalog_decodes_jet3_row() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_msysobjects_jet3_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto columns = make_msysobjects_test_columns();
+    const std::vector<std::optional<std::vector<std::uint8_t>>> values{
+        le_bytes32(2U),
+        le_bytes32(251658241U),
+        std::vector<std::uint8_t>{'M', 'S', 'y', 's', 'O', 'b', 'j', 'e', 'c', 't', 's'},
+        le_bytes16(1U),
+        std::nullopt,
+    };
+    const auto row = make_synthetic_msysobjects_row_bytes(columns, values, true);
+    const auto data_page = make_synthetic_data_page(2048U, 2U, true, {{.bytes = row}});
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "jet3.mdb", true, columns, {data_page});
+
+    const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan_access_msysobjects_catalog should succeed for a well-formed synthetic Jet3 row: " + result.error);
+    expect(result.skipped.empty(), "a well-formed row should not be reported as skipped");
+    expect(result.entries.size() == 1U, "exactly one MSysObjects row should be decoded");
+    if (result.entries.size() == 1U) {
+        const auto& entry = result.entries[0];
+        expect(entry.id == 2U, "decoded Id should match the synthetic row's fixed-column value");
+        expect(entry.parent_id == 251658241U, "decoded ParentId should match the synthetic row's fixed-column value");
+        expect(entry.type == 1, "decoded Type should match the synthetic row's fixed-column value");
+        expect(entry.name == "MSysObjects", "decoded Name should match the synthetic row's variable-column value");
+        expect(entry.candidate_page_number == 2U, "candidate_page_number should be Id masked to its low 24 bits");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_scan_access_msysobjects_catalog_decodes_jet4_row() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_msysobjects_jet4_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto columns = make_msysobjects_test_columns();
+    const std::vector<std::optional<std::vector<std::uint8_t>>> values{
+        le_bytes32(26U),
+        le_bytes32(251658241U),
+        ucs2le_bytes("Customers"),
+        le_bytes16(1U),
+        std::nullopt,
+    };
+    const auto row = make_synthetic_msysobjects_row_bytes(columns, values, false);
+    const auto data_page = make_synthetic_data_page(4096U, 2U, false, {{.bytes = row}});
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "jet4.mdb", false, columns, {data_page});
+
+    const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan_access_msysobjects_catalog should succeed for a well-formed synthetic Jet4 row: " + result.error);
+    expect(result.entries.size() == 1U, "exactly one MSysObjects row should be decoded");
+    if (result.entries.size() == 1U) {
+        const auto& entry = result.entries[0];
+        expect(entry.id == 26U, "decoded Id should match the synthetic row's fixed-column value");
+        expect(entry.name == "Customers", "decoded Jet4 plain UCS-2LE Name should be transcoded to UTF-8 correctly");
+        expect(entry.candidate_page_number == 26U, "candidate_page_number should be Id masked to its low 24 bits");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_scan_access_msysobjects_catalog_handles_alphabetized_column_storage_order() {
+    // #5539: a real Jet4 fixture found during this slice's development
+    // stores its MSysObjects TDEF column descriptors in PHYSICAL storage
+    // order alphabetized by name, not in col_num (logical declaration)
+    // order -- e.g. "Connect" physically first even though its col_num
+    // is 9. An earlier version of this decoder assumed physical vector
+    // position could be used directly as both the null-mask bit index
+    // and the well-known Id/ParentId/Name/Type column lookup, which
+    // silently decoded garbage against that real fixture. This
+    // reproduces that same physical/logical mismatch against a
+    // synthetic fixture as a regression test.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_msysobjects_alphabetized_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    // Declared (TDEF descriptor) order: Extra, Name, ParentId, Id, Type --
+    // deliberately not matching col_num order -- with column_number_override
+    // restoring the real logical order (Id=0, ParentId=1, Name=2, Type=3,
+    // Extra=4).
+    const std::vector<SyntheticAccessColumn> columns{
+        {.name = "Extra", .type = 0x0AU, .length = 255U, .fixed = false, .column_number_override = 4U},
+        {.name = "Name", .type = 0x0AU, .length = 255U, .fixed = false, .column_number_override = 2U},
+        {.name = "ParentId", .type = 0x04U, .length = 4U, .fixed = true, .column_number_override = 1U},
+        {.name = "Id", .type = 0x04U, .length = 4U, .fixed = true, .column_number_override = 0U},
+        {.name = "Type", .type = 0x03U, .length = 2U, .fixed = true, .column_number_override = 3U},
+    };
+    // Row-content values must still be supplied in col_num order (0..4),
+    // matching make_synthetic_msysobjects_row_bytes()'s own contract --
+    // the row bytes on disk are logically ordered regardless of how the
+    // TDEF happens to physically store its column descriptors.
+    const std::vector<SyntheticAccessColumn> columns_in_col_num_order = make_msysobjects_test_columns();
+    const std::vector<std::optional<std::vector<std::uint8_t>>> values{
+        le_bytes32(2U),
+        le_bytes32(251658241U),
+        std::vector<std::uint8_t>{'M', 'S', 'y', 's', 'O', 'b', 'j', 'e', 'c', 't', 's'},
+        le_bytes16(1U),
+        std::nullopt,
+    };
+    const auto row = make_synthetic_msysobjects_row_bytes(columns_in_col_num_order, values, true);
+    const auto data_page = make_synthetic_data_page(2048U, 2U, true, {{.bytes = row}});
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "alphabetized.mdb", true, columns, {data_page});
+
+    const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan_access_msysobjects_catalog should succeed even when the TDEF's physical column order "
+                       "does not match col_num order: " + result.error);
+    expect(result.entries.size() == 1U, "exactly one MSysObjects row should be decoded");
+    if (result.entries.size() == 1U) {
+        const auto& entry = result.entries[0];
+        expect(entry.id == 2U, "decoded Id should be correct despite the TDEF's alphabetized physical column order");
+        expect(entry.parent_id == 251658241U, "decoded ParentId should be correct despite the alphabetized physical column order");
+        expect(entry.type == 1, "decoded Type should be correct despite the alphabetized physical column order");
+        expect(entry.name == "MSysObjects", "decoded Name should be correct despite the alphabetized physical column order");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_scan_access_msysobjects_catalog_skips_deleted_and_lookup_overflow_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_msysobjects_flags_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto columns = make_msysobjects_test_columns();
+    const std::vector<std::optional<std::vector<std::uint8_t>>> values{
+        le_bytes32(2U),
+        le_bytes32(251658241U),
+        std::vector<std::uint8_t>{'M', 'S', 'y', 's', 'O', 'b', 'j', 'e', 'c', 't', 's'},
+        le_bytes16(1U),
+        std::nullopt,
+    };
+    const auto row = make_synthetic_msysobjects_row_bytes(columns, values, true);
+    const auto data_page = make_synthetic_data_page(
+        2048U, 2U, true,
+        {
+            {.bytes = {}, .deleted = true},
+            {.bytes = {}, .lookup_overflow = true},
+            {.bytes = row},
+        });
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "flags.mdb", true, columns, {data_page});
+
+    const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan_access_msysobjects_catalog should succeed: " + result.error);
+    expect(result.entries.size() == 1U, "only the one genuine row should be decoded; the deleted row should be silently excluded");
+    expect(result.skipped.size() == 1U, "the lookup-overflow row should be reported as skipped, not silently dropped");
+    if (result.skipped.size() == 1U) {
+        expect(
+            result.skipped[0].reason.find("lookup-overflow") != std::string::npos ||
+                result.skipped[0].reason.find("does not follow") != std::string::npos,
+            "the skipped entry's reason should describe the lookup-overflow pointer, got: " + result.skipped[0].reason);
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_scan_access_msysobjects_catalog_fails_closed_on_jet3_row_at_or_above_256_bytes() {
+    // #5539: Jet3 offsets are 1-byte fields (max 256), requiring a jump
+    // table this slice deliberately does not implement (see
+    // access_msysobjects.h's own documented non-goal -- no real fixture
+    // available during this slice's development ever produced a row
+    // this large, so an unverified interpretation of the documented
+    // jump-table algorithm was not shipped). This proves the >= 256-byte
+    // path fails closed (reported in `skipped`) rather than silently
+    // misreading offsets.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_msysobjects_jumptable_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto columns = make_msysobjects_test_columns();
+    const std::vector<std::uint8_t> oversized_extra(280U, static_cast<std::uint8_t>('x'));
+    const std::vector<std::optional<std::vector<std::uint8_t>>> values{
+        le_bytes32(2U),
+        le_bytes32(251658241U),
+        std::vector<std::uint8_t>{'M', 'S', 'y', 's', 'O', 'b', 'j', 'e', 'c', 't', 's'},
+        le_bytes16(1U),
+        oversized_extra,
+    };
+    const auto row = make_synthetic_msysobjects_row_bytes(columns, values, true);
+    expect(row.size() >= 256U, "the synthetic row fixture should genuinely be >= 256 bytes for this test to be meaningful");
+    const auto data_page = make_synthetic_data_page(2048U, 2U, true, {{.bytes = row}});
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "jumptable.mdb", true, columns, {data_page});
+
+    const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan_access_msysobjects_catalog should still succeed overall: " + result.error);
+    expect(result.entries.empty(), "a >= 256-byte Jet3 row should not be decoded");
+    expect(result.skipped.size() == 1U, "a >= 256-byte Jet3 row should be reported as skipped, not silently dropped or misread");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_scan_access_msysobjects_catalog_fails_closed_on_jet4_compressed_unicode_name() {
+    // #5539: every real Jet4 Name value observed during this slice's
+    // development was plain (uncompressed) UCS-2LE. A value beginning
+    // with the 0xFF 0xFE "compressed unicode" marker documented in
+    // mdbtools' HACKING.md is deliberately not decoded (see
+    // access_msysobjects.h's own documented non-goal) -- this proves
+    // that path fails closed rather than mis-decoding the marker bytes
+    // as if they were ordinary UCS-2 characters.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_msysobjects_compressed_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto columns = make_msysobjects_test_columns();
+    const std::vector<std::optional<std::vector<std::uint8_t>>> values{
+        le_bytes32(2U),
+        le_bytes32(251658241U),
+        std::vector<std::uint8_t>{0xFFU, 0xFEU, 'X', 0x00U},
+        le_bytes16(1U),
+        std::nullopt,
+    };
+    const auto row = make_synthetic_msysobjects_row_bytes(columns, values, false);
+    const auto data_page = make_synthetic_data_page(4096U, 2U, false, {{.bytes = row}});
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "compressed.mdb", false, columns, {data_page});
+
+    const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan_access_msysobjects_catalog should still succeed overall: " + result.error);
+    expect(result.entries.empty(), "a compressed-unicode Name value should not be decoded");
+    expect(result.skipped.size() == 1U, "a compressed-unicode Name value should be reported as skipped, not silently dropped or misread");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_scan_access_container_schema_attaches_names_from_catalog() {
+    // #5539's actual deliverable: scan_access_container_schema() giving
+    // discovered tables real names instead of only page numbers, by
+    // decoding MSysObjects's own rows and matching each Type == 1 row's
+    // candidate TDEF page number against a table this scan already
+    // discovered independently (see that function's own comment for why
+    // an unmatched candidate page is left unattached rather than
+    // fabricating a table entry from the catalog row alone).
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_schema_scan_names_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto msysobjects_columns = make_msysobjects_test_columns();
+    // A "real" user table's own TDEF, discoverable at page 3.
+    const auto user_table_page = make_synthetic_jet3_tdef_page(
+        {{.name = "WidgetId", .type = 0x04U, .length = 4U, .fixed = true}}, 0x4EU, 0U);
+
+    // Two MSysObjects catalog rows: MSysObjects naming itself (page 2),
+    // and a catalog row naming the user table at page 3.
+    const std::vector<std::optional<std::vector<std::uint8_t>>> self_values{
+        le_bytes32(2U), le_bytes32(251658241U),
+        std::vector<std::uint8_t>{'M', 'S', 'y', 's', 'O', 'b', 'j', 'e', 'c', 't', 's'},
+        le_bytes16(1U), std::nullopt,
+    };
+    const std::vector<std::optional<std::vector<std::uint8_t>>> widgets_values{
+        le_bytes32(3U), le_bytes32(251658241U),
+        std::vector<std::uint8_t>{'W', 'i', 'd', 'g', 'e', 't', 's'},
+        le_bytes16(1U), std::nullopt,
+    };
+    const auto self_row = make_synthetic_msysobjects_row_bytes(msysobjects_columns, self_values, true);
+    const auto widgets_row = make_synthetic_msysobjects_row_bytes(msysobjects_columns, widgets_values, true);
+    const auto data_page = make_synthetic_data_page(2048U, 2U, true, {{.bytes = self_row}, {.bytes = widgets_row}});
+
+    std::vector<std::uint8_t> file_bytes(2048U * 5U, 0U);
+    file_bytes[0] = 0x00U;
+    file_bytes[1] = 0x01U;
+    file_bytes[2] = 0x00U;
+    file_bytes[3] = 0x00U;
+    const std::string signature = "Standard Jet DB";
+    std::copy(signature.begin(), signature.end(), file_bytes.begin() + 4);
+    file_bytes[0x14] = 0x00U;
+    const auto tdef_page = make_synthetic_jet3_tdef_page(msysobjects_columns, 0x53U, 0U);
+    std::copy(tdef_page.begin(), tdef_page.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(2048U * 2U));
+    std::copy(user_table_page.begin(), user_table_page.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(2048U * 3U));
+    std::copy(data_page.begin(), data_page.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(2048U * 4U));
+
+    const fs::path container_path = temp_dir / "named_schema.mdb";
+    expect(write_binary_file(container_path, file_bytes), "the synthetic named-schema container fixture should be writable");
+
+    const auto result = copperfin::vfp::scan_access_container_schema(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan_access_container_schema should succeed: " + result.error);
+    expect(result.tables.size() == 2U, "both the MSysObjects TDEF and the user table's TDEF should be discovered");
+    bool found_msysobjects = false;
+    bool found_widgets = false;
+    for (const auto& table : result.tables) {
+        if (table.page_number == 2U) {
+            expect(table.name.has_value() && *table.name == "MSysObjects",
+                   "the MSysObjects table itself should be named from its own catalog row");
+            found_msysobjects = true;
+        } else if (table.page_number == 3U) {
+            expect(table.name.has_value() && *table.name == "Widgets",
+                   "the user table at page 3 should be named from the matching catalog row");
+            found_widgets = true;
+        }
+    }
+    expect(found_msysobjects, "the discovered tables should include page 2 (MSysObjects)");
+    expect(found_widgets, "the discovered tables should include page 3 (the user table)");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_vfp_locale_catalog_parity() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
@@ -1408,6 +1975,17 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AccessContainer.Error.OpenFileFailed",
         "Vfp.AccessContainer.Error.ReadHeaderFailed",
         "Vfp.AccessContainer.Error.SignatureMismatch",
+        "Vfp.AccessMSysObjects.Error.ColumnCountMismatch",
+        "Vfp.AccessMSysObjects.Error.CompressedUnicodeUnsupported",
+        "Vfp.AccessMSysObjects.Error.JumpTableUnsupported",
+        "Vfp.AccessMSysObjects.Error.LookupOverflowUnsupported",
+        "Vfp.AccessMSysObjects.Error.NotAnAccessContainer",
+        "Vfp.AccessMSysObjects.Error.OpenFileFailed",
+        "Vfp.AccessMSysObjects.Error.ReadPageFailed",
+        "Vfp.AccessMSysObjects.Error.RowStructureInvalid",
+        "Vfp.AccessMSysObjects.Error.RowTooShort",
+        "Vfp.AccessMSysObjects.Error.UnexpectedSchema",
+        "Vfp.AccessMSysObjects.Error.UnknownGeneration",
         "Vfp.AccessTableDefinition.Error.MultiPageTdefUnsupported",
         "Vfp.AccessTableDefinition.Error.NotATdefPage",
         "Vfp.AccessTableDefinition.Error.NotAnAccessContainer",
@@ -2895,6 +3473,13 @@ int main() {
     test_scan_access_container_schema_excludes_every_page_in_a_multi_hop_chain();
     test_parse_access_table_definition_page_sanitizes_invalid_jet3_utf8();
     test_parse_access_table_definition_page_rejects_unrecognized_table_type();
+    test_scan_access_msysobjects_catalog_decodes_jet3_row();
+    test_scan_access_msysobjects_catalog_decodes_jet4_row();
+    test_scan_access_msysobjects_catalog_handles_alphabetized_column_storage_order();
+    test_scan_access_msysobjects_catalog_skips_deleted_and_lookup_overflow_rows();
+    test_scan_access_msysobjects_catalog_fails_closed_on_jet3_row_at_or_above_256_bytes();
+    test_scan_access_msysobjects_catalog_fails_closed_on_jet4_compressed_unicode_name();
+    test_scan_access_container_schema_attaches_names_from_catalog();
     test_access_container_errors_resolve_through_localization_catalog();
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();

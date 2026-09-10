@@ -1,3 +1,25 @@
+- 2026-09-10: Progress on #5539 (parent #141): `scan_access_msysobjects_catalog()`
+  (`src/vfp/access_msysobjects.cpp`) decodes rows from the Access `MSysObjects`
+  system catalog table using the general Jet3/Jet4 data-row decoding
+  algorithm, and `scan_access_container_schema()` now attaches a real
+  `name` to each table it discovers by matching a decoded catalog row's
+  masked `Id` against an independently-discovered TDEF page (never
+  trusting the catalog row alone). Verified against real Jet3/Jet4
+  fixtures using the independently-installed `mdbtools` reader as ground
+  truth: every real `Type == 1` row decoded matches `mdbtools`' own
+  output exactly across both fixtures. That cross-validation also caught
+  a genuine decoder bug -- one real Jet4 fixture stores its `MSysObjects`
+  TDEF column descriptors in physical storage order alphabetized by name
+  rather than declaration order, which an earlier version silently
+  mis-decoded by assuming they always coincide -- fixed by reindexing
+  columns by their own `column_number` field, with a dedicated
+  regression test. Jet3 jump-table decoding (rows >= 256 bytes) and Jet4
+  compressed-Unicode text remain deliberately unimplemented (no real
+  fixture ever exercised either path); a row hitting either case fails
+  closed into a `skipped` list rather than being guessed at. See
+  `docs/72-access-msysobjects-row-decoding.md` for the full evidence
+  trail. Issue #5539 remains open pending those two deferred items.
+
 - 2026-09-10: Fixes #5527: `DbfHeader::last_update_iso8601()` misread
   post-1999 dates from real dBASE-family files -- confirmed with real
   FoxBASE+ 2.10 (not an emulator) evidence: a table last updated
