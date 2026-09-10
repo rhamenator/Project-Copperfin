@@ -1,3 +1,38 @@
+- 2026-09-10: Fixes #5527: `DbfHeader::last_update_iso8601()` misread
+  post-1999 dates from real dBASE-family files -- confirmed with real
+  FoxBASE+ 2.10 (not an emulator) evidence: a table last updated
+  2026-09-09 has header byte 1 = `0x1A` (26), which the reader
+  previously interpreted as `1900 + 26 = 1926`. Real dBASE-family
+  products write a genuine two-digit calendar year (`year % 100`), not
+  "years since 1900" the way the DBF format's own nominal documentation
+  implies. The reader now disambiguates a byte below a *fixed* 80
+  threshold as `2000 + byte`, and at or above it as `1900 + byte` --
+  fixed rather than "now"-relative like Visual FoxPro's own
+  `SET CENTURY ROLLOVER` default, since genuine legacy dBASE-era files
+  were only ever written during a historically fixed ~1980-1999 window
+  that doesn't advance with the calendar (a sliding threshold would
+  eventually misclassify *those* real files instead). The writer
+  (`stamp_dbf_last_update_date()`) now stamps `year % 100` rather than
+  the raw, unbounded `tm_year` it wrote before, so files Copperfin
+  itself writes are genuinely byte-compatible with real dBASE-family
+  output for the same date, not just self-consistent with Copperfin's
+  own prior reader. A byte >= 100 (Copperfin's pre-fix writer
+  convention) is unambiguous either way and still resolves to
+  `1900 + byte`, so already-written files remain correctly readable.
+
+- 2026-09-10: Review follow-up on #5527: `LUPDATE()`
+  (`src/runtime/prg_engine_records.inl`) had its own independent,
+  unfixed `1900 + last_update_year` computation, so it silently
+  disagreed with `last_update_iso8601()` about the same file's year for
+  any real post-1999 two-digit-year byte (duplicate P1 finding from
+  both Codex and Copilot). The century-disambiguation logic is now a
+  single shared `DbfHeader::last_update_year_full()` accessor
+  (`include/copperfin/vfp/dbf_header.h`/`src/vfp/dbf_header.cpp`), and
+  `LUPDATE()` routes through it, so it agrees with
+  `last_update_iso8601()` for the same file. A new PRG-level regression
+  test (`test_lupdate_reports_full_calendar_year_matching_last_update_iso8601`)
+  proves this directly.
+
 - 2026-09-10: Progress on #5476 (parent #141): added
   `parse_access_table_definition_page()` and
   `scan_access_container_schema()`

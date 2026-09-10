@@ -99,7 +99,11 @@ inline bool dbf_last_update_date_matches_local_calendar(std::string_view bytes) 
         return false;
     }
 #endif
-    return static_cast<unsigned char>(bytes[1U]) == static_cast<unsigned char>(local_time.tm_year) &&
+    // #5527: stamp_dbf_last_update_date() now writes the genuine two-digit
+    // calendar year (year % 100), the real dBASE-family on-disk
+    // convention, rather than the raw unbounded tm_year value it wrote
+    // before -- match that here rather than the pre-#5527 expectation.
+    return static_cast<unsigned char>(bytes[1U]) == static_cast<unsigned char>(local_time.tm_year % 100) &&
            static_cast<unsigned char>(bytes[2U]) == static_cast<unsigned char>(local_time.tm_mon + 1) &&
            static_cast<unsigned char>(bytes[3U]) == static_cast<unsigned char>(local_time.tm_mday);
 }

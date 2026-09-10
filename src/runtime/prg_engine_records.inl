@@ -2563,7 +2563,14 @@
                 {
                     return make_date_value(std::string{});
                 }
-                const int year = 1900 + static_cast<int>(header.last_update_year);
+                // #5527: header.last_update_year is a genuine two-digit
+                // calendar year on real dBASE-family files, not years-
+                // since-1900 -- must go through the shared
+                // last_update_year_full() disambiguation (see its own
+                // comment, dbf_header.cpp) rather than 1900 + byte
+                // directly, or LUPDATE() would silently disagree with
+                // last_update_iso8601() for the same file.
+                const int year = static_cast<int>(header.last_update_year_full());
                 const int month = static_cast<int>(header.last_update_month);
                 const int day = static_cast<int>(header.last_update_day);
                 const auto &set_state = current_set_state();
