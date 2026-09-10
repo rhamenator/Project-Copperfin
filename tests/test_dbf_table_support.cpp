@@ -35,7 +35,12 @@ void write_be_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uin
 }
 
 void write_ascii(std::vector<std::uint8_t>& bytes, std::size_t offset, const std::string& value) {
-    for (std::size_t index = 0; index < value.size(); ++index) {
+    if (offset >= bytes.size()) {
+        return;
+    }
+    const std::size_t available = bytes.size() - offset;
+    const std::size_t write_length = std::min(available, value.size());
+    for (std::size_t index = 0; index < write_length; ++index) {
         bytes[offset + index] = static_cast<std::uint8_t>(value[index]);
     }
 }

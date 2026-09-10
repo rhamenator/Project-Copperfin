@@ -1764,6 +1764,80 @@ DecodedDbfValue decode_value(
     }
 }
 
+struct FieldDescriptorParseResult {
+    bool ok = false;
+    std::vector<DbfFieldDescriptor> fields;
+    std::string error;
+};
+
+// Shared by parse_dbf_table_from_file() and parse_dbf_fields_from_file()
+// (#5546): the generation-specific field-descriptor-block layout logic
+// (dbf_read_layout(), the legacy-family bounds checks, the descriptor-
+// terminator requirement), extracted so the two cannot silently disagree
+// on a given file's field offsets/types. `bytes` must already contain at
+// least `header.header_length` bytes (the caller's own responsibility --
+// this function does not itself bound-check that, matching the discipline
+// its two callers already established independently before this
+// extraction).
+FieldDescriptorParseResult parse_dbf_field_descriptor_block(
+    const std::vector<std::uint8_t>& bytes,
+    const DbfHeader& header,
+    const DbfReadLayout& layout) {
+    FieldDescriptorParseResult result;
+    std::size_t field_offset = layout.descriptor_start;
+    const std::size_t header_limit = header.header_length;
+    std::uint32_t next_physical_field_offset = 1U;
+    bool descriptor_terminator_found = false;
+    while ((field_offset + layout.descriptor_size) <= bytes.size() &&
+           (field_offset + layout.descriptor_size) <= header_limit &&
+           bytes[field_offset] != 0x0DU) {
+        DbfFieldDescriptor field;
+        field.name = read_ascii_name(bytes, field_offset, layout.descriptor_name_width);
+        field.type = static_cast<char>(bytes[field_offset + layout.descriptor_type_offset]);
+        field.offset = layout.uses_physical_field_offsets
+            ? read_le_u32(bytes, field_offset + 12U)
+            : next_physical_field_offset;
+        field.length = bytes[field_offset + layout.descriptor_length_offset];
+        field.decimal_count = bytes[field_offset + layout.descriptor_decimal_count_offset];
+        const DbfFormatFamily strict_layout_family = header.format_family();
+        const bool is_strict_legacy_family =
+            strict_layout_family == DbfFormatFamily::dbase ||
+            strict_layout_family == DbfFormatFamily::foxbase ||
+            strict_layout_family == DbfFormatFamily::foxpro;
+        if (is_strict_legacy_family &&
+            (field.length == 0U || field.offset == 0U ||
+             field.offset >= header.record_length ||
+             field.length > header.record_length - field.offset)) {
+            result.error = dbf_table_text("Vfp.DbfTable.Error.RecordLayoutExceedsSize");
+            return result;
+        }
+        next_physical_field_offset += field.length;
+        result.fields.push_back(std::move(field));
+        field_offset += layout.descriptor_size;
+    }
+    if (field_offset < header_limit && field_offset < bytes.size() && bytes[field_offset] == 0x0DU) {
+        descriptor_terminator_found = true;
+    }
+    // The legacy layouts have an independently documented descriptor
+    // terminator inside the declared header. Retain the VFP parser's
+    // established permissive behavior for its adversarial/recovery fixtures;
+    // the read-only dBASE/FoxBASE/FoxPro branches must not change their
+    // result.
+    {
+        const DbfFormatFamily terminator_check_family = header.format_family();
+        const bool requires_terminator =
+            terminator_check_family == DbfFormatFamily::dbase ||
+            terminator_check_family == DbfFormatFamily::foxbase ||
+            terminator_check_family == DbfFormatFamily::foxpro;
+        if (requires_terminator && !descriptor_terminator_found) {
+            result.error = dbf_table_text("Vfp.DbfTable.Error.TableHeaderTruncated");
+            return result;
+        }
+    }
+    result.ok = true;
+    return result;
+}
+
 }  // namespace
 
 bool is_dbf_table_field_storage_layout_writable(char type, std::uint8_t length) {
@@ -1908,54 +1982,11 @@ DbfTableParseResult parse_dbf_table_from_file(
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.HeaderLengthExceedsFile")};
     }
 
-    std::size_t field_offset = layout.descriptor_start;
-    const std::size_t header_limit = table.header.header_length;
-    std::uint32_t next_physical_field_offset = 1U;
-    bool descriptor_terminator_found = false;
-    while ((field_offset + layout.descriptor_size) <= bytes.size() &&
-           (field_offset + layout.descriptor_size) <= header_limit &&
-           bytes[field_offset] != 0x0DU) {
-        DbfFieldDescriptor field;
-        field.name = read_ascii_name(bytes, field_offset, layout.descriptor_name_width);
-        field.type = static_cast<char>(bytes[field_offset + layout.descriptor_type_offset]);
-        field.offset = layout.uses_physical_field_offsets
-            ? read_le_u32(bytes, field_offset + 12U)
-            : next_physical_field_offset;
-        field.length = bytes[field_offset + layout.descriptor_length_offset];
-        field.decimal_count = bytes[field_offset + layout.descriptor_decimal_count_offset];
-        const DbfFormatFamily strict_layout_family = table.header.format_family();
-        const bool is_strict_legacy_family =
-            strict_layout_family == DbfFormatFamily::dbase ||
-            strict_layout_family == DbfFormatFamily::foxbase ||
-            strict_layout_family == DbfFormatFamily::foxpro;
-        if (is_strict_legacy_family &&
-            (field.length == 0U || field.offset == 0U ||
-             field.offset >= table.header.record_length ||
-             field.length > table.header.record_length - field.offset)) {
-            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordLayoutExceedsSize")};
-        }
-        next_physical_field_offset += field.length;
-        table.fields.push_back(std::move(field));
-        field_offset += layout.descriptor_size;
+    FieldDescriptorParseResult field_result = parse_dbf_field_descriptor_block(bytes, table.header, layout);
+    if (!field_result.ok) {
+        return {.ok = false, .error = field_result.error};
     }
-    if (field_offset < header_limit && field_offset < bytes.size() && bytes[field_offset] == 0x0DU) {
-        descriptor_terminator_found = true;
-    }
-    // The legacy layouts have an independently documented descriptor
-    // terminator inside the declared header. Retain the VFP parser's
-    // established permissive behavior for its adversarial/recovery fixtures;
-    // the read-only dBASE/FoxBASE/FoxPro branches must not change their
-    // result.
-    {
-        const DbfFormatFamily terminator_check_family = table.header.format_family();
-        const bool requires_terminator =
-            terminator_check_family == DbfFormatFamily::dbase ||
-            terminator_check_family == DbfFormatFamily::foxbase ||
-            terminator_check_family == DbfFormatFamily::foxpro;
-        if (requires_terminator && !descriptor_terminator_found) {
-            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableHeaderTruncated")};
-        }
-    }
+    table.fields = std::move(field_result.fields);
 
     if (resolved_memo_sidecar_path.empty() &&
         table_uses_memo_sidecar(table.header, table.fields)) {
@@ -2025,6 +2056,49 @@ DbfTableParseResult parse_dbf_table_from_file(
     }
 
     return {.ok = true, .table = std::move(table), .error = {}};
+}
+
+DbfFieldsOnlyParseResult parse_dbf_fields_from_file(const std::string& path) {
+    std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
+    if (!input) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+    }
+
+    // The 32-byte fixed header alone (parse_dbf_header() only needs
+    // this much) tells us the real header_length -- only THEN do we
+    // know how many bytes the field-descriptor block actually needs,
+    // so the real read below is bounded to exactly that, never the
+    // whole file.
+    std::vector<std::uint8_t> probe_bytes(32U, 0U);
+    input.read(reinterpret_cast<char*>(probe_bytes.data()), static_cast<std::streamsize>(probe_bytes.size()));
+    if (static_cast<std::size_t>(input.gcount()) < probe_bytes.size()) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+    }
+    const DbfParseResult header_result = parse_dbf_header(probe_bytes);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+
+    DbfFieldsOnlyParseResult result;
+    result.header = header_result.header;
+    const DbfReadLayout layout = dbf_read_layout(result.header);
+
+    std::vector<std::uint8_t> bytes(result.header.header_length, 0U);
+    input.seekg(0, std::ios::beg);
+    input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    if (static_cast<std::size_t>(input.gcount()) < bytes.size()) {
+        result.error = dbf_table_text("Vfp.DbfTable.Error.HeaderLengthExceedsFile");
+        return result;
+    }
+
+    FieldDescriptorParseResult field_result = parse_dbf_field_descriptor_block(bytes, result.header, layout);
+    if (!field_result.ok) {
+        result.error = field_result.error;
+        return result;
+    }
+    result.fields = std::move(field_result.fields);
+    result.ok = true;
+    return result;
 }
 
 using DbfCellByteOverrides =

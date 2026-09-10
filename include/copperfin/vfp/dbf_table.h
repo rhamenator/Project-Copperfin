@@ -46,6 +46,26 @@ struct DbfTableParseResult {
     std::string error;
 };
 
+struct DbfFieldsOnlyParseResult {
+    bool ok = false;
+    DbfHeader header{};
+    std::vector<DbfFieldDescriptor> fields;
+    std::string error;
+};
+
+// #5546 review (Codex, Copilot -- duplicate finding): parse_dbf_table_from_file()
+// unconditionally reads the whole file and scans every record for memo
+// references (collect_referenced_memo_blocks()) even when max_records is
+// 0 -- so a caller that only wants field names/types (e.g. relation
+// inference) still pays a cost proportional to a potentially multi-
+// gigabyte table/memo pair. This reads only the header and field-
+// descriptor block, bounding the file read to header.header_length bytes
+// -- never the record data or memo sidecar. Shares the same generation-
+// specific layout logic (dbf_read_layout()) parse_dbf_table_from_file()
+// itself uses, so the two cannot silently disagree on field offsets/
+// types for the same file.
+[[nodiscard]] DbfFieldsOnlyParseResult parse_dbf_fields_from_file(const std::string& path);
+
 struct DbfWriteResult {
     bool ok = false;
     std::string error;

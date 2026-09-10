@@ -5,6 +5,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_import.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/xbase_relation_inference.h"
 #include "test_dbf_table_support.h"
 #include "test_environment_support.h"
 
@@ -1311,6 +1312,150 @@ void test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro() {
         expect(imported.table.records[1U].values[1U].display_value == "7",
             "imported numeric field values should match the synthetic FoxPro source");
     }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5534: a two-tag synthetic CDX, matching the exact byte layout already
+// independently verified against real Jet3/Jet4-adjacent CDX work
+// elsewhere in this test suite (tests/test_vfp_assets.cpp's
+// make_synthetic_cdx_family_bytes() and its own #5537-era sibling
+// make_synthetic_cdx_bytes_for_postgresql_index_test()) -- CDX tag
+// discovery in src/vfp/cdx_header.cpp uses proximity-scored heuristics
+// tuned against real VFP9-generated files, not a simple fixed-offset
+// read, so always using this exact proven two-tag shape (rather than a
+// simplified single-tag variant, which was tried here and found to
+// silently discover zero tags) is deliberate, not incidental.
+std::vector<std::uint8_t> make_two_tag_cdx_bytes(
+    const std::string& first_tag_name, const std::string& first_key_expression,
+    const std::string& second_tag_name, const std::string& second_key_expression) {
+    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x04U;
+    bytes[12] = 0x0AU;
+    bytes[14] = 0xE0U;
+    bytes[15] = 0x01U;
+    bytes[1024U] = 0x03U;
+    write_le_u16(bytes, 1026U, 2U);
+    write_le_u32(bytes, 1028U, 4U * 512U);
+    write_le_u32(bytes, 1032U, 11U * 512U);
+    write_le_u16(bytes, 4U * 512U, 0x0003U);
+    write_le_u16(bytes, (4U * 512U) + 2U, 1U);
+    write_le_u16(bytes, 11U * 512U, 0x0001U);
+    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
+    write_ascii(bytes, (3U * 512U) - 20U, first_tag_name);
+    write_ascii(bytes, (3U * 512U) - 10U, second_tag_name);
+    write_ascii(bytes, (4U * 512U) + 24U, first_key_expression);
+    write_ascii(bytes, (11U * 512U) + 24U, second_key_expression);
+    return bytes;
+}
+
+void test_infer_xbase_index_relations_finds_shared_indexed_column() {
+    // Two tables that each index a column of the same name ("CUST_ID")
+    // should produce one candidate relation between them; a third table
+    // indexing an unrelated column (via a composite/non-plain expression)
+    // should contribute nothing. Column/key-expression/tag-name strings
+    // here are deliberately >= 4 characters and, for a plain-column key
+    // expression specifically, contain an underscore -- src/vfp/cdx_header.cpp's
+    // real-fixture-tuned candidate heuristics
+    // (looks_like_tag_name_candidate(): 4-10 uppercase chars;
+    // looks_like_expression_candidate(): >= 4 chars, and a lowercase
+    // plain identifier is only recognized as a candidate when it also
+    // has an underscore, parens, or a comparison operator) silently
+    // discard anything shorter or plainer than that -- confirmed by
+    // hand-tracing a shorter "ID"/"id" fixture through
+    // parse_index_probe_from_file() directly, which found zero tags.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_xbase_relation_inference_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> customers_fields{
+        {.name = "CUST_ID", .type = 'N', .length = 6U, .decimal_count = 0U},
+        {.name = "NAME", .type = 'C', .length = 20U, .decimal_count = 0U},
+    };
+    const fs::path customers_path = temp_dir / "customers.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(customers_path.string(), customers_fields, {{"1", "Acme"}}).ok,
+           "relation-inference test: customers fixture should be created");
+    {
+        // One tag a plain reference to the shared CUST_ID column, one a
+        // composite expression on NAME that must not be treated as a
+        // plain-column reference.
+        const auto cdx_bytes = make_two_tag_cdx_bytes("CUST_ID", "cust_id", "NAME_TAG", "UPPER(name)");
+        expect(write_binary_file(temp_dir / "customers.cdx", cdx_bytes),
+               "relation-inference test: customers CDX should be writable");
+    }
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> orders_fields{
+        {.name = "CUST_ID", .type = 'N', .length = 6U, .decimal_count = 0U},
+        {.name = "NOTES", .type = 'C', .length = 30U, .decimal_count = 0U},
+    };
+    const fs::path orders_path = temp_dir / "orders.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(orders_path.string(), orders_fields, {{"1", "First order"}}).ok,
+           "relation-inference test: orders fixture should be created");
+    {
+        // One tag a plain reference to the shared CUST_ID column, one a
+        // composite expression on NOTES that must not be treated as a
+        // plain-column reference.
+        const auto cdx_bytes = make_two_tag_cdx_bytes("CUST_ID", "cust_id", "NOTE_TAG", "UPPER(notes)");
+        expect(write_binary_file(temp_dir / "orders.cdx", cdx_bytes),
+               "relation-inference test: orders CDX should be writable");
+    }
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> logs_fields{
+        {.name = "MESSAGE", .type = 'C', .length = 40U, .decimal_count = 0U},
+    };
+    const fs::path logs_path = temp_dir / "logs.dbf";
+    expect(copperfin::vfp::create_dbf_table_file(logs_path.string(), logs_fields, {{"hello"}}).ok,
+           "relation-inference test: logs fixture (no companion index) should be created");
+
+    const std::vector<copperfin::vfp::XbaseImportedTable> imported{
+        {.name = "customers", .dbf_path = customers_path.string()},
+        {.name = "orders", .dbf_path = orders_path.string()},
+        {.name = "logs", .dbf_path = logs_path.string()},
+    };
+    const auto relations = copperfin::vfp::infer_xbase_index_relations(imported);
+
+    bool found_customers_orders_id = false;
+    for (const auto& relation : relations) {
+        const bool matches_pair =
+            (relation.table_a == "customers" && relation.table_b == "orders") ||
+            (relation.table_a == "orders" && relation.table_b == "customers");
+        if (matches_pair && relation.column == "CUST_ID") {
+            found_customers_orders_id = true;
+        }
+        expect(relation.column != "NOTES" && relation.column != "NAME",
+               "infer_xbase_index_relations must not report a relation for a composite-expression key");
+        expect(relation.table_a != "logs" && relation.table_b != "logs",
+               "infer_xbase_index_relations must not involve a table with no companion index");
+    }
+    expect(found_customers_orders_id,
+           "infer_xbase_index_relations should report a candidate relation for two tables sharing an indexed CUST_ID column");
+    expect(relations.size() == 1U,
+           "infer_xbase_index_relations should report exactly one candidate relation for this fixture");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_infer_xbase_index_relations_ignores_unreadable_table() {
+    // A table whose .dbf cannot be read at all must not abort the whole
+    // scan -- it simply contributes no candidate relations, matching the
+    // rest of this codebase's skip-and-continue precedent for best-effort
+    // multi-item scans.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_xbase_relation_inference_unreadable_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::vector<copperfin::vfp::XbaseImportedTable> imported{
+        {.name = "missing", .dbf_path = (temp_dir / "does_not_exist.dbf").string()},
+    };
+    const auto relations = copperfin::vfp::infer_xbase_index_relations(imported);
+    expect(relations.empty(), "infer_xbase_index_relations should return no relations, not fail, for an unreadable table");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -3421,6 +3566,8 @@ int main(int argc, char* argv[]) {
     test_import_xbase_table_to_vfp_native_rejects_foxpro_general_field();
     test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes();
     test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro();
+    test_infer_xbase_index_relations_finds_shared_indexed_column();
+    test_infer_xbase_index_relations_ignores_unreadable_table();
     test_double_field_round_trips_full_ieee754_precision();
     test_dbf_mutations_stamp_last_update_date();
     test_stamp_dbf_last_update_date_writes_real_dbase_two_digit_year_convention();
