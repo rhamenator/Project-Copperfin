@@ -29,7 +29,18 @@
   and continuation-page exclusion only followed the first `next_pg`
   hop, so a TDEF chain longer than two pages could have its own end
   page misreported as an independent table -- now walks the full chain
-  with cycle protection.
+  with cycle protection. A second review pass found two more: a Jet3
+  column name containing a byte that isn't valid UTF-8 on its own (Jet3
+  names are stored in the database's legacy code page, which this
+  slice cannot yet read without decrypting the RC4-obscured Database
+  Definition page) is now replaced with U+FFFD rather than returned as
+  invalid UTF-8; and an unrecognized `table_type` byte is now rejected
+  rather than silently defaulting to "user table." The same pass also
+  restructured `scan_access_container_schema()` from buffering the
+  whole file into a two-pass streaming scan (an 8-byte-per-page header
+  probe, then one page_size buffer reused per page actually decoded),
+  since a real Access database can be up to ~2 GB -- re-verified
+  against the same real Jet3/Jet4 fixtures with unchanged results.
 
 - 2026-09-09: Fixes #5475: added `EXPORT DATABASE ... TYPE ACCESS`
   (phase 1 of #141), a non-VFP-extension command that emits an

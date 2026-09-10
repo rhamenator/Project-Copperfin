@@ -1695,6 +1695,7 @@
   "Vfp.AccessTableDefinition.Error.OpenFileFailed": "Nao foi possivel abrir o arquivo.",
   "Vfp.AccessTableDefinition.Error.ReadPageFailed": "Nao foi possivel ler uma pagina completa do contêiner.",
   "Vfp.AccessTableDefinition.Error.StructureOutOfBounds": "A estrutura de definicao de tabela se estende alem do final de sua pagina.",
+  "Vfp.AccessTableDefinition.Error.UnrecognizedTableType": "A definicao de tabela tem um byte de tipo de tabela nao reconhecido ({tableType}); esperava-se 0x4E (tabela de usuario) ou 0x53 (tabela de sistema).",
   "Vfp.AccessTableDefinition.Error.UnknownGeneration": "A geracao do contêiner nao e reconhecida; o tamanho da pagina nao pode ser determinado.",
   "Vfp.AccessTableDefinition.Error.WrongPageSize": "A pagina tem {actual} bytes; eram esperados {expected} bytes para a geracao deste contêiner.",
   "Vfp.AssetInspector.Error.DatabaseImportCommitFailed": "IMPORT DATABASE TYPE JSON: nao conseguiu confirmar os arquivos preparados no destino; tentou remover tudo que ja havia sido confirmado",

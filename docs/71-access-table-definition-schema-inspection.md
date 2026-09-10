@@ -123,6 +123,28 @@ rather than aborting the whole scan or silently dropping them.
   structural checks failing closed on what looks like corrupt data,
   which is a reasonable fail-closed outcome for an unsupported case
   even though it is not a purpose-built diagnostic for it.
+- **Jet3 column-name code page.** Jet3 column names are stored in the
+  database's legacy single-byte code page, not UTF-8. Reading the
+  actual code-page byte (documented at offset `0x3C` on the Database
+  Definition page) would require decrypting page 0's RC4-obscured
+  region -- the same encryption boundary noted above -- which this
+  slice does not implement. Correct transcoding of a genuinely
+  non-ASCII Jet3 name therefore isn't possible yet; what this slice
+  does instead is guarantee the returned name is always valid UTF-8 (an
+  invariant every other string this codebase returns upholds) by
+  replacing any byte sequence that isn't valid UTF-8 with U+FFFD,
+  rather than passing legacy-code-page bytes through unchanged and
+  handing invalid UTF-8 to callers. A real ASCII-only Jet3 name --
+  every column name observed in this slice's real-fixture
+  cross-validation -- round-trips unchanged either way.
+
+Container scanning also never buffers a whole database into memory at
+once: `scan_access_container_schema()` first reads only each page's
+leading 8 bytes (page type and `next_pg`) to discover TDEF pages and
+their continuation chains, then reads one full page at a time only for
+the pages it actually decodes. A real Access database can be up to
+~2 GB (the Jet/ACE file-size ceiling), so this keeps memory use bounded
+by page count and page size, not file size.
 
 ## ACE (`.accdb`) caveat
 

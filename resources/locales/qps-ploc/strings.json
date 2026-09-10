@@ -1695,6 +1695,7 @@
   "Vfp.AccessTableDefinition.Error.OpenFileFailed": "Unable to open file.",
   "Vfp.AccessTableDefinition.Error.ReadPageFailed": "Unable to read a complete page from the container.",
   "Vfp.AccessTableDefinition.Error.StructureOutOfBounds": "Table definition structure extends past the end of its page.",
+  "Vfp.AccessTableDefinition.Error.UnrecognizedTableType": "Table definition has an unrecognized table type byte ({tableType}); expected 0x4E (user table) or 0x53 (system table).",
   "Vfp.AccessTableDefinition.Error.UnknownGeneration": "Container generation is not recognized; page size cannot be determined.",
   "Vfp.AccessTableDefinition.Error.WrongPageSize": "Page is {actual} bytes; expected {expected} bytes for this container's generation.",
   "Vfp.AssetInspector.Error.DatabaseImportCommitFailed": "IMPORT DATABASE TYPE JSON: unable to commit staged files to their destination; attempted to remove anything already committed",

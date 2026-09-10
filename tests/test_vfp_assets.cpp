@@ -1312,6 +1312,51 @@ void test_scan_access_container_schema_excludes_every_page_in_a_multi_hop_chain(
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_parse_access_table_definition_page_sanitizes_invalid_jet3_utf8() {
+    // #5540 review (Codex): Jet3 column names are stored in the database's
+    // legacy single-byte code page, not UTF-8. This codebase doesn't yet
+    // read that code page (it lives on the RC4-"encrypted" Database
+    // Definition page, decryption of which is out of scope for this
+    // slice), so a real non-ASCII name can't be correctly transcoded --
+    // but it must still never come back as invalid UTF-8, which could
+    // corrupt whatever downstream code assumes every Copperfin string is
+    // valid UTF-8. 0xC9 alone (a lone continuation-less high byte -- e.g.
+    // 'É' in Windows-1252) is not valid UTF-8 on its own.
+    std::vector<SyntheticAccessColumn> columns{
+        {.name = "Ab", .type = 0x04U, .length = 4U, .fixed = true},
+    };
+    auto page = make_synthetic_jet3_tdef_page(columns, 0x4EU, 0U);
+    // Patch the first column's name bytes directly: name_len=1, followed
+    // by the single invalid byte 0xC9, replacing the synthesized "Ab".
+    // The column-descriptor array is 1 column * 18 bytes after the fixed
+    // 31-byte block header (8 + 4+4+4+1+2+2+2+4+4+4+4 = 43), so the name
+    // area starts at 43 + 18 = 61.
+    constexpr std::size_t name_area_offset = 61U;
+    page[name_area_offset] = 1U;
+    page[name_area_offset + 1U] = 0xC9U;
+
+    const auto result = copperfin::vfp::parse_access_table_definition_page(
+        page, copperfin::vfp::AccessContainerGeneration::jet3, 2U);
+    expect(result.ok, "parse_access_table_definition_page should still decode a page with an invalid-UTF-8 name byte: " + result.error);
+    if (result.ok && result.columns.size() == 1U) {
+        expect(result.columns[0].name == "\xEF\xBF\xBD",
+               "an invalid Jet3 name byte should become U+FFFD rather than being passed through as invalid UTF-8");
+    }
+}
+
+void test_parse_access_table_definition_page_rejects_unrecognized_table_type() {
+    // #5540 review (Codex): table_type is only documented to be 0x4E
+    // (user table) or 0x53 (system table). The original version silently
+    // mapped any other value to is_system_table == false, letting a
+    // corrupt or falsely-detected TDEF page report ok=true with
+    // fabricated schema data instead of failing closed.
+    auto page = make_synthetic_jet3_tdef_page(
+        {{.name = "Id", .type = 0x04U, .length = 4U, .fixed = true}}, 0x00U, 0U);
+    const auto result = copperfin::vfp::parse_access_table_definition_page(
+        page, copperfin::vfp::AccessContainerGeneration::jet3, 2U);
+    expect(!result.ok, "parse_access_table_definition_page should reject an unrecognized table_type byte rather than default to a user table");
+}
+
 void test_vfp_locale_catalog_parity() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
@@ -1328,6 +1373,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AccessTableDefinition.Error.OpenFileFailed",
         "Vfp.AccessTableDefinition.Error.ReadPageFailed",
         "Vfp.AccessTableDefinition.Error.StructureOutOfBounds",
+        "Vfp.AccessTableDefinition.Error.UnrecognizedTableType",
         "Vfp.AccessTableDefinition.Error.UnknownGeneration",
         "Vfp.AccessTableDefinition.Error.WrongPageSize",
         "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
@@ -2805,6 +2851,8 @@ int main() {
     test_parse_access_table_definition_page_rejects_oversized_index_count();
     test_scan_access_container_schema_rejects_truncated_trailing_page();
     test_scan_access_container_schema_excludes_every_page_in_a_multi_hop_chain();
+    test_parse_access_table_definition_page_sanitizes_invalid_jet3_utf8();
+    test_parse_access_table_definition_page_rejects_unrecognized_table_type();
     test_access_container_errors_resolve_through_localization_catalog();
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();

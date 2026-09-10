@@ -9,10 +9,10 @@
 
 #include <filesystem>
 #include <fstream>
-#include <iterator>
 #include <mutex>
 #include <set>
 #include <string_view>
+#include <system_error>
 
 namespace copperfin::vfp {
 
@@ -229,10 +229,79 @@ RawColumnDescriptor read_jet4_column_descriptor(PageCursor& cursor) {
     return descriptor;
 }
 
+// Jet3 column names are stored in the database's legacy single-byte code
+// page, not UTF-8. This codebase does not yet read the database's code-
+// page byte -- it lives on the Database Definition page (page 0), which
+// is itself "encrypted" with a simple RC4 key per mdbtools' notes, and
+// decrypting that page is out of scope for this slice (see docs/71's own
+// documented gaps). Correct transcoding therefore isn't possible without
+// that follow-up work. What this guarantees instead: the returned string
+// is always valid UTF-8 (an invariant every other string this codebase
+// returns upholds), by replacing any byte sequence that is not valid
+// UTF-8 with U+FFFD rather than passing legacy-code-page bytes through
+// unchanged and silently handing invalid UTF-8 to downstream callers. A
+// real Jet3 name using only ASCII characters -- already valid UTF-8, and
+// the overwhelming common case in practice, confirmed by every column
+// name in this slice's real-fixture cross-validation -- round-trips
+// unchanged either way.
+std::string sanitize_as_utf8(const std::vector<std::uint8_t>& raw) {
+    std::string text;
+    text.reserve(raw.size());
+    std::size_t index = 0U;
+    while (index < raw.size()) {
+        const std::uint8_t lead = raw[index];
+        std::size_t sequence_length = 0U;
+        std::uint32_t code_point = 0U;
+        if (lead < 0x80U) {
+            sequence_length = 1U;
+            code_point = lead;
+        } else if ((lead & 0xE0U) == 0xC0U) {
+            sequence_length = 2U;
+            code_point = lead & 0x1FU;
+        } else if ((lead & 0xF0U) == 0xE0U) {
+            sequence_length = 3U;
+            code_point = lead & 0x0FU;
+        } else if ((lead & 0xF8U) == 0xF0U) {
+            sequence_length = 4U;
+            code_point = lead & 0x07U;
+        } else {
+            text += "\xEF\xBF\xBD";
+            ++index;
+            continue;
+        }
+        bool valid = (index + sequence_length <= raw.size());
+        for (std::size_t offset = 1U; valid && offset < sequence_length; ++offset) {
+            const std::uint8_t continuation = raw[index + offset];
+            if ((continuation & 0xC0U) != 0x80U) {
+                valid = false;
+                break;
+            }
+            code_point = (code_point << 6U) | (continuation & 0x3FU);
+        }
+        // Reject overlong encodings and surrogate/out-of-range code points.
+        if (valid &&
+            ((sequence_length == 2U && code_point < 0x80U) ||
+             (sequence_length == 3U && code_point < 0x800U) ||
+             (sequence_length == 4U && code_point < 0x10000U) ||
+             (code_point >= 0xD800U && code_point <= 0xDFFFU) ||
+             code_point > 0x10FFFFU)) {
+            valid = false;
+        }
+        if (valid) {
+            text.append(reinterpret_cast<const char*>(&raw[index]), sequence_length);
+            index += sequence_length;
+        } else {
+            text += "\xEF\xBF\xBD";
+            ++index;
+        }
+    }
+    return text;
+}
+
 std::string read_jet3_column_name(PageCursor& cursor) {
     const std::uint8_t length = cursor.u8();
     const std::vector<std::uint8_t> raw = cursor.take(length);
-    return std::string(raw.begin(), raw.end());
+    return sanitize_as_utf8(raw);
 }
 
 // The Jet4 column-name length prefix is a byte count (not a character
@@ -385,6 +454,20 @@ AccessTableDefinition parse_access_table_definition_page(
     if (cursor.overrun) {
         return {.ok = false, .error = access_table_definition_text("Vfp.AccessTableDefinition.Error.StructureOutOfBounds")};
     }
+    if (table_type != 0x4EU && table_type != 0x53U) {
+        // table_type is only documented to be 0x4E ('N', user table) or
+        // 0x53 ('S', system table) -- treating anything else as "not a
+        // system table" (the permissive default this codebase's first
+        // version used) would let a corrupt page, or a page that merely
+        // happens to start with the TDEF page-type byte by coincidence,
+        // report ok=true with fabricated schema data instead of failing
+        // closed the way an unrecognized value should.
+        return {
+            .ok = false,
+            .error = access_table_definition_text(
+                "Vfp.AccessTableDefinition.Error.UnrecognizedTableType",
+                {{"tableType", std::to_string(table_type)}})};
+    }
 
     std::vector<RawColumnDescriptor> raw_columns;
     raw_columns.reserve(num_cols);
@@ -444,17 +527,18 @@ AccessContainerSchemaResult scan_access_container_schema(const std::string& path
         return result;
     }
 
-    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
-    if (!input) {
+    // A real Access database can be up to ~2 GB (the Jet/ACE file-size
+    // ceiling), so this scan deliberately never buffers the whole file --
+    // only individual pages, one at a time. std::filesystem::file_size()
+    // gets the size without reading any file content.
+    std::error_code file_size_error;
+    const auto file_size = std::filesystem::file_size(
+        copperfin::platform::path_from_utf8_string(path), file_size_error);
+    if (file_size_error) {
         result.error = access_table_definition_text("Vfp.AccessTableDefinition.Error.OpenFileFailed");
         return result;
     }
-    const std::vector<std::uint8_t> file_bytes(
-        (std::istreambuf_iterator<char>(input)),
-        std::istreambuf_iterator<char>());
-    input.close();
-
-    if (file_bytes.size() < page_size || file_bytes.size() % page_size != 0U) {
+    if (file_size < page_size || file_size % page_size != 0U) {
         // A file that isn't an exact multiple of the generation's page
         // size is truncated or corrupt -- fail closed rather than
         // silently ignoring the trailing partial page via integer
@@ -463,7 +547,39 @@ AccessContainerSchemaResult scan_access_container_schema(const std::string& path
         result.error = access_table_definition_text("Vfp.AccessTableDefinition.Error.ReadPageFailed");
         return result;
     }
-    const auto page_count = static_cast<std::uint32_t>(file_bytes.size() / page_size);
+    const auto page_count = static_cast<std::uint32_t>(file_size / page_size);
+
+    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
+    if (!input) {
+        result.error = access_table_definition_text("Vfp.AccessTableDefinition.Error.OpenFileFailed");
+        return result;
+    }
+
+    // First pass: a lightweight 8-byte read per page (just enough for the
+    // page-type byte and the next_pg field) to discover every TDEF-typed
+    // page and its continuation chain, without ever holding more than one
+    // page's worth of bytes in memory. page_headers itself is O(page
+    // count), not O(file size) -- 5 bytes per page even for the largest
+    // real Access file (~2 GB / 2048-byte Jet3 pages is roughly 1M pages,
+    // ~5 MB here).
+    struct PageHeaderInfo {
+        std::uint8_t page_type = 0U;
+        std::uint32_t next_pg = 0U;
+    };
+    std::vector<PageHeaderInfo> page_headers(page_count);
+    std::vector<std::uint8_t> header_probe(8U);
+    for (std::uint32_t page_index = 0U; page_index < page_count; ++page_index) {
+        input.seekg(
+            static_cast<std::streamoff>(static_cast<std::uint64_t>(page_index) * page_size),
+            std::ios::beg);
+        input.read(reinterpret_cast<char*>(header_probe.data()), static_cast<std::streamsize>(header_probe.size()));
+        if (static_cast<std::size_t>(input.gcount()) < header_probe.size()) {
+            result.error = access_table_definition_text("Vfp.AccessTableDefinition.Error.ReadPageFailed");
+            return result;
+        }
+        page_headers[page_index].page_type = header_probe[0];
+        page_headers[page_index].next_pg = read_le_u32(header_probe, 4U);
+    }
 
     // A page pointed to by another TDEF's next_pg is a continuation page,
     // not an independent table -- excluded from the discovered-table list
@@ -473,11 +589,9 @@ AccessContainerSchemaResult scan_access_container_schema(const std::string& path
     std::set<std::uint32_t> continuation_pages;
     std::vector<std::uint32_t> tdef_candidate_pages;
     for (std::uint32_t page_index = 0U; page_index < page_count; ++page_index) {
-        const std::size_t offset = static_cast<std::size_t>(page_index) * page_size;
-        if (file_bytes[offset] != 0x02U) {
-            continue;
+        if (page_headers[page_index].page_type == 0x02U) {
+            tdef_candidate_pages.push_back(page_index);
         }
-        tdef_candidate_pages.push_back(page_index);
     }
 
     // Walk each TDEF candidate's own next_pg chain to mark every page in
@@ -491,33 +605,40 @@ AccessContainerSchemaResult scan_access_container_schema(const std::string& path
     // than looping forever on crafted/corrupt data. A "continuation" that
     // does not itself begin with the TDEF page-type byte also ends the
     // walk without erroring the whole scan, rather than reading an
-    // unrelated page's bytes as if they were another next_pg pointer.
+    // unrelated page's bytes as if they were another next_pg pointer. All
+    // of this uses the already-collected page_headers cache, not another
+    // physical read.
     for (const std::uint32_t start_page : tdef_candidate_pages) {
         std::set<std::uint32_t> visited{start_page};
-        const std::size_t start_offset = static_cast<std::size_t>(start_page) * page_size;
-        if (start_offset + 8U > file_bytes.size()) {
-            continue;
-        }
-        std::uint32_t next_pg = read_le_u32(file_bytes, start_offset + 4U);
+        std::uint32_t next_pg = page_headers[start_page].next_pg;
         while (next_pg != 0U && next_pg < page_count && !visited.contains(next_pg)) {
             continuation_pages.insert(next_pg);
             visited.insert(next_pg);
-            const std::size_t next_offset = static_cast<std::size_t>(next_pg) * page_size;
-            if (next_offset + 8U > file_bytes.size() || file_bytes[next_offset] != 0x02U) {
+            if (page_headers[next_pg].page_type != 0x02U) {
                 break;
             }
-            next_pg = read_le_u32(file_bytes, next_offset + 4U);
+            next_pg = page_headers[next_pg].next_pg;
         }
     }
 
+    // Second pass: read only the individual pages actually being decoded,
+    // one page_size buffer reused across iterations -- never the whole
+    // file.
+    std::vector<std::uint8_t> page_bytes(page_size);
     for (const std::uint32_t page_index : tdef_candidate_pages) {
         if (continuation_pages.contains(page_index)) {
             continue;
         }
-        const std::size_t offset = static_cast<std::size_t>(page_index) * page_size;
-        const std::vector<std::uint8_t> page_bytes(
-            file_bytes.begin() + static_cast<std::ptrdiff_t>(offset),
-            file_bytes.begin() + static_cast<std::ptrdiff_t>(offset + page_size));
+        input.seekg(
+            static_cast<std::streamoff>(static_cast<std::uint64_t>(page_index) * page_size),
+            std::ios::beg);
+        input.read(reinterpret_cast<char*>(page_bytes.data()), static_cast<std::streamsize>(page_size));
+        if (static_cast<std::size_t>(input.gcount()) < page_size) {
+            result.skipped.push_back({
+                .page_number = page_index,
+                .reason = access_table_definition_text("Vfp.AccessTableDefinition.Error.ReadPageFailed")});
+            continue;
+        }
         AccessTableDefinition table = parse_access_table_definition_page(
             page_bytes, header_result.header.generation, page_index);
         if (table.ok) {
