@@ -191,27 +191,39 @@ Copperfin also provides an explicit modernization command for a PRG workflow:
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE JSON
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE SQL
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE ACCESS
+EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE POSTGRESQL
 ```
 
 The command resolves relative source and destination paths from the current default
-directory, adds `.json` (`TYPE JSON`) or `.sql` (`TYPE SQL`/`TYPE ACCESS`) when the
-destination has no extension, and emits `runtime.export_database_json`,
-`runtime.export_database_sql`, or `runtime.export_database_access_sql` on success.
-It deliberately accepts only the literal `TYPE JSON`, `TYPE SQL`, or `TYPE ACCESS`
-forms; the source and destination are quoted path operands, not expressions. It
-reads the existing DBC/DBF data before opening the requested output path, creates a
-missing output directory, and reports a localized runtime failure if inspection or
-output writing fails. A destination that would resolve to the same file as the
-source (e.g. `EXPORT DATABASE 'data.dbc' TO 'data.dbc' TYPE ACCESS`, where an
-explicit extension skips the `.sql`/`.json` default) is rejected before anything is
-read or written, rather than truncating the source database once export succeeds.
-All three `TYPE` variants share the same DBC catalog/table-resolution path
-(`export_database_as_json()`, `export_database_as_sql()`, and
-`export_database_as_access_sql()` all call the same internal loader) so they cannot
-silently drift apart on which tables/rows are considered part of the database --
-only the output serialization differs. `TYPE SQL` emits one portable/ANSI-ish
-dialect (`CREATE TABLE` per table, `INSERT` per row); it does not target a specific
-database engine's SQL dialect quirks. `TYPE ACCESS` (#5475, phase 1 of #141) emits
+directory, adds `.json` (`TYPE JSON`) or `.sql` (`TYPE SQL`/`TYPE ACCESS`/
+`TYPE POSTGRESQL`) when the destination has no extension, and emits
+`runtime.export_database_json`, `runtime.export_database_sql`,
+`runtime.export_database_access_sql`, or `runtime.export_database_postgresql_sql`
+on success. It deliberately accepts only the literal `TYPE JSON`, `TYPE SQL`,
+`TYPE ACCESS`, or `TYPE POSTGRESQL` forms; the source and destination are quoted
+path operands, not expressions. It reads the existing DBC/DBF data before opening
+the requested output path, creates a missing output directory, and reports a
+localized runtime failure if inspection or output writing fails. A destination
+that would resolve to the same file as the source (e.g.
+`EXPORT DATABASE 'data.dbc' TO 'data.dbc' TYPE ACCESS`, where an explicit
+extension skips the `.sql`/`.json` default) is rejected before anything is read or
+written, rather than truncating the source database once export succeeds. All
+four `TYPE` variants share the same DBC catalog/table-resolution path
+(`export_database_as_json()`, `export_database_as_sql()`,
+`export_database_as_access_sql()`, and `export_database_as_postgresql_sql()` all
+call the same internal loader) so they cannot silently drift apart on which
+tables/rows are considered part of the database -- only the output serialization
+differs. `TYPE SQL` emits one portable/ANSI-ish dialect (`CREATE TABLE` per table,
+`INSERT` per row); it does not target a specific database engine's SQL dialect
+quirks. `TYPE POSTGRESQL` (#5537, first vendor-dialect slice of #141) emits the
+same `CREATE TABLE`/`INSERT` shape -- real PostgreSQL already accepts `TYPE SQL`'s
+double-quoted identifiers, single-quoted string literals, and
+`DECIMAL`/`INTEGER`/`DOUBLE PRECISION`/`BOOLEAN`/`DATE`/`TIMESTAMP`/`VARCHAR`/`TEXT`
+column types verbatim, per PostgreSQL's own public SQL/DDL documentation -- plus
+`CREATE INDEX` statements derived from each table's production `.cdx` index tags,
+for a tag whose key expression is a plain column reference (a composite/expression
+key is recorded as a skipped-index comment instead of guessed at). `TYPE ACCESS`
+(#5475, phase 1 of #141) emits
 the same shape of script using the Access/Jet SQL dialect instead -- square-bracket
 `[identifier]` quoting (with an embedded `]` escaped by doubling, the Jet/ACE
 convention, since this exporter's input is DBC/DBF catalog metadata that a crafted
@@ -234,8 +246,9 @@ rather than pasted as one multi-statement block into Access's own SQL View, whic
 only ever holds a single statement.
 
 This is a Copperfin modernization extension authorized by the owner-approved
-scope in #140/#141 (see #5471 for the `TYPE SQL` slice and #5475 for the
-`TYPE ACCESS` slice specifically), not a claimed Visual FoxPro 9 command. It does
+scope in #140/#141 (see #5471 for the `TYPE SQL` slice, #5475 for the
+`TYPE ACCESS` slice, and #5537 for the `TYPE POSTGRESQL` slice specifically), not
+a claimed Visual FoxPro 9 command. It does
 not implement `IMPORT DATABASE` of any kind, provider connections, schema
 mutation, or round-trip reconstruction back into a DBC/DBF from any exported
 format.

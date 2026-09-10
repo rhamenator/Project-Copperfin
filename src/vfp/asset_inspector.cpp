@@ -8,6 +8,7 @@
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/dbf_text_encoding.h"
+#include "copperfin/vfp/index_probe.h"
 #include "copperfin/vfp/sidecar_path.h"
 
 #include <algorithm>
@@ -2204,25 +2205,29 @@ DatabaseExportResult export_database_as_json(
     return {.ok = true, .error = {}, .json = json.str()};
 }
 
-DatabaseSqlExportResult export_database_as_sql(
-    const std::string& dbc_path,
-    std::size_t max_rows_per_table) {
+namespace {
 
-    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
-    if (!snapshot.ok) {
-        return {.ok = false, .error = snapshot.error, .sql = {}};
-    }
+// Shared by export_database_as_sql() and export_database_as_postgresql_sql():
+// both dialects accept the exact same CREATE TABLE/INSERT shape (double-
+// quoted identifiers, DECIMAL/INTEGER/DOUBLE PRECISION/BOOLEAN/DATE/
+// TIMESTAMP/VARCHAR/TEXT column types, single-quoted string literals) --
+// see export_database_as_postgresql_sql()'s own comment for why real
+// PostgreSQL already accepts this portable/ANSI-ish dialect verbatim.
+// Returns every successfully-parsed table (a failed one already got its
+// own skip comment written here and is omitted), so a caller needing the
+// parsed field list for something else -- export_database_as_postgresql_sql()'s
+// CREATE INDEX generation -- does not have to re-open and re-parse the
+// same .dbf a second time.
+struct ParsedSqlExportTable {
+    DatabaseCatalogSnapshot::ResolvedTable resolved;
+    DbfTable table;
+};
 
-    std::ostringstream sql;
-    sql.imbue(std::locale::classic());
-    sql << "-- Copperfin EXPORT DATABASE ... TYPE SQL\n";
-    sql << "-- database: " << sql_sanitize_comment_text(snapshot.db_name) << "\n";
-    sql << "-- source: " << sql_sanitize_comment_text(dbc_path) << "\n\n";
-
-    const std::size_t row_limit = (max_rows_per_table == 0U)
-        ? std::numeric_limits<std::size_t>::max()
-        : max_rows_per_table;
-
+std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
+    std::ostringstream& sql,
+    const DatabaseCatalogSnapshot& snapshot,
+    std::size_t row_limit) {
+    std::vector<ParsedSqlExportTable> parsed_tables;
     for (const auto& rt : snapshot.resolved_tables) {
         const DbfTableParseResult tbl = parse_dbf_table_from_file(
             copperfin::platform::path_to_utf8_string(rt.path), row_limit);
@@ -2318,6 +2323,129 @@ DatabaseSqlExportResult export_database_as_sql(
             sql << ");\n";
         }
         sql << "\n";
+        parsed_tables.push_back({.resolved = rt, .table = tbl.table});
+    }
+    return parsed_tables;
+}
+
+// #5537: a tag's key_expression_hint maps to a plain column reference
+// only when it is (trimmed, case-insensitively) an exact match for one of
+// the table's own column names -- a composite expression (concatenation,
+// function call, multiple columns) does not map cleanly to a single-
+// column CREATE INDEX and is deliberately not guessed at here.
+std::optional<std::string> plain_column_name_for_index_tag(
+    const std::string& key_expression_hint,
+    const std::vector<DbfFieldDescriptor>& fields) {
+    const std::string trimmed = trim_copy(key_expression_hint);
+    if (trimmed.empty()) {
+        return std::nullopt;
+    }
+    const std::string upper_trimmed = uppercase_copy(trimmed);
+    for (const auto& field : fields) {
+        if (uppercase_copy(field.name) == upper_trimmed) {
+            return field.name;
+        }
+    }
+    return std::nullopt;
+}
+
+// #5537: emits a CREATE INDEX statement for each of `table`'s production
+// CDX tags whose key expression is a plain column reference (see
+// plain_column_name_for_index_tag()'s own comment), or a "-- skipped
+// index" comment for one that is not -- never silently dropped. Only a
+// same-base-name ".cdx" sidecar is consulted (VFP's conventional
+// "production" compound index, auto-opened alongside the table); a
+// single-file .idx/.ndx/.mdx/.ntx companion is not scanned in this first
+// slice. No per-tag uniqueness is captured by index_probe.cpp's CDX tag
+// reader, so every emitted index is a plain (non-unique) CREATE INDEX.
+void write_postgresql_create_indexes(
+    std::ostringstream& sql,
+    const DatabaseCatalogSnapshot::ResolvedTable& rt,
+    const std::vector<DbfFieldDescriptor>& fields) {
+    std::filesystem::path cdx_path = rt.path;
+    cdx_path.replace_extension(".cdx");
+    std::error_code exists_error;
+    if (!std::filesystem::exists(cdx_path, exists_error) || exists_error) {
+        return;
+    }
+    const IndexParseResult index_result =
+        parse_index_probe_from_file(copperfin::platform::path_to_utf8_string(cdx_path));
+    if (!index_result.ok || index_result.probe.kind != IndexKind::cdx) {
+        return;
+    }
+
+    const std::string quoted_table = sql_quote_identifier(rt.name);
+    bool wrote_anything = false;
+    for (const IndexTagProbe& tag : index_result.probe.tags) {
+        const auto column = plain_column_name_for_index_tag(tag.key_expression_hint, fields);
+        const std::string tag_label = tag.name_hint.empty() ? std::string("(unnamed tag)") : tag.name_hint;
+        if (!column.has_value()) {
+            sql << "-- skipped index " << sql_sanitize_comment_text(tag_label)
+                << " on " << sql_sanitize_comment_text(rt.name)
+                << ": key expression is not a plain column reference\n";
+            wrote_anything = true;
+            continue;
+        }
+        const std::string index_name = rt.name + "_" + *column + "_idx";
+        sql << "CREATE INDEX " << sql_quote_identifier(index_name)
+            << " ON " << quoted_table << " (" << sql_quote_identifier(*column) << ");\n";
+        wrote_anything = true;
+    }
+    if (wrote_anything) {
+        sql << "\n";
+    }
+}
+
+}  // namespace
+
+DatabaseSqlExportResult export_database_as_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        return {.ok = false, .error = snapshot.error, .sql = {}};
+    }
+
+    std::ostringstream sql;
+    sql.imbue(std::locale::classic());
+    sql << "-- Copperfin EXPORT DATABASE ... TYPE SQL\n";
+    sql << "-- database: " << sql_sanitize_comment_text(snapshot.db_name) << "\n";
+    sql << "-- source: " << sql_sanitize_comment_text(dbc_path) << "\n\n";
+
+    const std::size_t row_limit = (max_rows_per_table == 0U)
+        ? std::numeric_limits<std::size_t>::max()
+        : max_rows_per_table;
+
+    write_sql_tables_and_data(sql, snapshot, row_limit);
+
+    return {.ok = true, .error = {}, .sql = sql.str()};
+}
+
+DatabaseSqlExportResult export_database_as_postgresql_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        return {.ok = false, .error = snapshot.error, .sql = {}};
+    }
+
+    std::ostringstream sql;
+    sql.imbue(std::locale::classic());
+    sql << "-- Copperfin EXPORT DATABASE ... TYPE POSTGRESQL\n";
+    sql << "-- database: " << sql_sanitize_comment_text(snapshot.db_name) << "\n";
+    sql << "-- source: " << sql_sanitize_comment_text(dbc_path) << "\n\n";
+
+    const std::size_t row_limit = (max_rows_per_table == 0U)
+        ? std::numeric_limits<std::size_t>::max()
+        : max_rows_per_table;
+
+    const std::vector<ParsedSqlExportTable> parsed_tables =
+        write_sql_tables_and_data(sql, snapshot, row_limit);
+
+    for (const auto& parsed : parsed_tables) {
+        write_postgresql_create_indexes(sql, parsed.resolved, parsed.table.fields);
     }
 
     return {.ok = true, .error = {}, .sql = sql.str()};

@@ -2431,6 +2431,156 @@ void test_export_database_as_sql_maps_currency_datetime_and_blank_numeric() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5537: a dedicated two-tag synthetic CDX, mirroring
+// make_synthetic_cdx_family_bytes()'s own verified byte layout (same tag-
+// entry/tag-page structure and offsets), but with key expressions that
+// are themselves legal real VFP field names (<= 10 bytes,
+// dbf_free_table_field_name_max_bytes in src/vfp/dbf_table.cpp) for the
+// plain-column case -- make_synthetic_cdx_family_bytes()'s own
+// "customer_id"/"company_name" strings exceed that real limit, since
+// those existing tests only exercise CDX-format parsing in isolation,
+// decoupled from any real DBF field-name constraint.
+std::vector<std::uint8_t> make_synthetic_cdx_bytes_for_postgresql_index_test() {
+    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x04U;
+    bytes[12] = 0x0AU;
+    bytes[14] = 0xE0U;
+    bytes[15] = 0x01U;
+    bytes[1024U] = 0x03U;
+    write_le_u16(bytes, 1026U, 2U);
+    write_le_u32(bytes, 1028U, 11U * 512U);
+    write_le_u32(bytes, 1032U, 4U * 512U);
+    write_le_u16(bytes, 11U * 512U, 0x0001U);
+    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
+    write_le_u16(bytes, 4U * 512U, 0x0003U);
+    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
+    write_ascii(bytes, (3U * 512U) - 20U, "CUST_ID");
+    write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_N");
+    write_ascii(bytes, (4U * 512U) + 24U, "UPPER(company_name)");
+    write_ascii(bytes, (11U * 512U) + 24U, "cust_id");
+    return bytes;
+}
+
+void test_export_database_as_postgresql_sql_maps_types_and_creates_indexes() {
+    // #5537 (parent #137, first vendor-dialect slice): real PostgreSQL
+    // already accepts export_database_as_sql()'s double-quoted
+    // identifiers, single-quoted string literals, and DECIMAL/INTEGER/
+    // DOUBLE PRECISION/BOOLEAN/DATE/TIMESTAMP/VARCHAR/TEXT column types
+    // verbatim (per PostgreSQL's own public SQL/DDL documentation), so
+    // this proves export_database_as_postgresql_sql()'s genuinely new
+    // piece: CREATE INDEX statements derived from a table's production
+    // CDX tags. The synthetic CDX's two tags are exactly the "plain
+    // column reference" and "composite expression" cases this exporter
+    // must tell apart: CUST_ID -> "cust_id" (a plain column), COMPANY_N
+    // -> "UPPER(company_name)" (not translatable to a single-column
+    // index in this first slice).
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_postgresql_sql_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "customers.dbf";
+    const fs::path cdx_path = temp_dir / "customers.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"DATABASE", "Sales", "", ""}, {"TABLE", "customers", "Sales", ""}});
+    expect(dbc_create.ok, "PostgreSQL export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "CUST_ID", .type = 'N', .offset = 1U, .length = 6U, .decimal_count = 0U},
+        {.name = "COMPANY", .type = 'C', .offset = 7U, .length = 40U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{"1001", "Acme Corp"}});
+    expect(table_create.ok, "PostgreSQL export test: DBF fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_cdx_bytes_for_postgresql_index_test();
+        std::ofstream output(cdx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_postgresql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_postgresql_sql should resolve the customers fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("CREATE TABLE \"customers\"") != std::string::npos,
+           "export_database_as_postgresql_sql should quote identifiers with double quotes, matching real PostgreSQL");
+    expect(result.sql.find("\"CUST_ID\" DECIMAL(6, 0)") != std::string::npos,
+           "export_database_as_postgresql_sql should map a numeric field to DECIMAL, a real PostgreSQL type");
+    expect(result.sql.find("\"COMPANY\" VARCHAR(40)") != std::string::npos,
+           "export_database_as_postgresql_sql should map a character field to VARCHAR(length)");
+    expect(result.sql.find("INSERT INTO \"customers\"") != std::string::npos,
+           "export_database_as_postgresql_sql should emit an INSERT for the table's row");
+    expect(result.sql.find("'Acme Corp'") != std::string::npos,
+           "export_database_as_postgresql_sql should quote a character value as a standard SQL string literal");
+
+    expect(result.sql.find("CREATE INDEX \"customers_CUST_ID_idx\" ON \"customers\" (\"CUST_ID\");") != std::string::npos,
+           "export_database_as_postgresql_sql should emit a CREATE INDEX for a tag whose key expression is a plain column reference");
+    expect(result.sql.find("-- skipped index") != std::string::npos &&
+               result.sql.find("COMPANY_N") != std::string::npos,
+           "export_database_as_postgresql_sql should report a composite-expression tag as a skipped index, not silently drop or mistranslate it");
+    expect(result.sql.find("UPPER(company_name)") == std::string::npos,
+           "export_database_as_postgresql_sql must never emit a raw VFP key expression as if it were valid PostgreSQL syntax");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_postgresql_sql_omits_indexes_without_cdx() {
+    // A table with no companion .cdx (or none at the conventional same-
+    // base-name path) should still export cleanly -- no CREATE INDEX
+    // statements, no error, matching this exporter's read-only,
+    // best-effort index-derivation scope.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_postgresql_sql_no_cdx_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "PostgreSQL no-CDX export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "SKU", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"W-1"}});
+    expect(table_create.ok, "PostgreSQL no-CDX export test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_postgresql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_postgresql_sql should succeed without a companion CDX: " + result.error);
+    expect(result.sql.find("CREATE TABLE \"widgets\"") != std::string::npos,
+           "export_database_as_postgresql_sql should still emit the table without any index information");
+    expect(result.sql.find("CREATE INDEX") == std::string::npos,
+           "export_database_as_postgresql_sql should not emit any CREATE INDEX when no companion CDX exists");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_access_sql_maps_currency_datetime_and_dates() {
     // #5475: export_database_as_access_sql() shares export_database_as_sql()'s
     // catalog/table-walking logic but swaps in the Access/Jet SQL dialect --
@@ -3606,6 +3756,8 @@ int main() {
     test_inspect_asset_resolves_explicit_unicode_memo_sidecar();
     test_export_database_as_json_resolves_unicode_catalog_table_path();
     test_export_database_as_sql_maps_currency_datetime_and_blank_numeric();
+    test_export_database_as_postgresql_sql_maps_types_and_creates_indexes();
+    test_export_database_as_postgresql_sql_omits_indexes_without_cdx();
     test_export_database_as_access_sql_maps_currency_datetime_and_dates();
     test_export_database_as_access_sql_escapes_bracket_in_identifier();
     test_export_database_as_access_sql_clamps_decimal_precision();

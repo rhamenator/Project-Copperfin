@@ -8037,9 +8037,11 @@
                 const bool is_json = (export_type == "json");
                 const bool is_sql = (export_type == "sql");
                 const bool is_access = (export_type == "access");
+                const bool is_postgresql = (export_type == "postgresql");
                 if (!is_quoted_path_operand(source_operand) ||
                     !is_quoted_path_operand(destination_operand) ||
-                    source_raw.empty() || destination_raw.empty() || (!is_json && !is_sql && !is_access))
+                    source_raw.empty() || destination_raw.empty() ||
+                    (!is_json && !is_sql && !is_access && !is_postgresql))
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonSyntax");
@@ -8063,7 +8065,7 @@
                 destination_path = destination_path.lexically_normal();
                 if (destination_path.extension().empty())
                 {
-                    destination_path += (is_sql || is_access) ? ".sql" : ".json";
+                    destination_path += (is_sql || is_access || is_postgresql) ? ".sql" : ".json";
                 }
 
                 // A destination that resolves to the same file as the
@@ -8127,6 +8129,21 @@
                     }
                     output_text = export_result.sql;
                 }
+                else if (is_postgresql)
+                {
+                    const auto export_result = vfp::export_database_as_postgresql_sql(
+                        copperfin::platform::path_to_utf8_string(source_path));
+                    if (!export_result.ok)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.ExportDatabasePostgresqlSqlFailed",
+                            {{"errorMessage", export_result.error}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    output_text = export_result.sql;
+                }
                 else
                 {
                     const auto export_result = vfp::export_database_as_sql(
@@ -8148,15 +8165,32 @@
                 {
                     fs::create_directories(destination_path.parent_path(), directory_error);
                 }
+                const char* open_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonOpenOutputFailed";
+                const char* write_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonWriteOutputFailed";
+                const char* event_category = "runtime.export_database_json";
+                if (is_access)
+                {
+                    open_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlOpenOutputFailed";
+                    write_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlWriteOutputFailed";
+                    event_category = "runtime.export_database_access_sql";
+                }
+                else if (is_postgresql)
+                {
+                    open_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabasePostgresqlSqlOpenOutputFailed";
+                    write_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabasePostgresqlSqlWriteOutputFailed";
+                    event_category = "runtime.export_database_postgresql_sql";
+                }
+                else if (is_sql)
+                {
+                    open_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlOpenOutputFailed";
+                    write_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlWriteOutputFailed";
+                    event_category = "runtime.export_database_sql";
+                }
+
                 std::ofstream output(destination_path, std::ios::binary | std::ios::trunc);
                 if (!output.good())
                 {
-                    last_error_message = runtime_text(
-                        is_access
-                            ? "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlOpenOutputFailed"
-                            : is_sql
-                                ? "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlOpenOutputFailed"
-                                : "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonOpenOutputFailed");
+                    last_error_message = runtime_text(open_failed_key);
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -8165,19 +8199,12 @@
                 output.close();
                 if (!output.good())
                 {
-                    last_error_message = runtime_text(
-                        is_access
-                            ? "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlWriteOutputFailed"
-                            : is_sql
-                                ? "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlWriteOutputFailed"
-                                : "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonWriteOutputFailed");
+                    last_error_message = runtime_text(write_failed_key);
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                events.push_back({.category = is_access
-                                      ? "runtime.export_database_access_sql"
-                                      : is_sql ? "runtime.export_database_sql" : "runtime.export_database_json",
+                events.push_back({.category = event_category,
                                   .detail = copperfin::platform::path_to_utf8_string(destination_path),
                                   .location = statement.location});
                 return {};
