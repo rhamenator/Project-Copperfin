@@ -1669,6 +1669,77 @@ std::string sql_quote_string_literal(const std::string& value) {
     return quoted;
 }
 
+// Both export_database_as_sql() and export_database_as_access_sql() emit
+// a numeric (N/F/I/B/Y) field's decoded display_value token *unquoted*,
+// since a real numeric literal needs no string quoting -- but that means,
+// unlike a string value (which sql_quote_string_literal() always escapes
+// into a safely delimited literal), there is no quoting layer standing
+// between this text and the generated SQL. A table genuinely written by
+// this codebase's own writer
+// always decodes N/F to a plain optionally-signed decimal string, but a
+// crafted or corrupted source is not bound by that: a numeric-overflow
+// marker ("*****", dBASE-family's own convention for a value too wide for
+// its field) or arbitrary injected text would otherwise be emitted
+// unquoted and unescaped, silently producing invalid DDL/DML at best and
+// letting untrusted legacy data inject additional SQL statements at
+// worst. Validates that `text` is a plain optionally-signed decimal
+// number (at most one leading '+' or '-', digits, at most one '.')
+// before it is trusted to appear unquoted. '+' is accepted alongside
+// '-' -- not just for symmetry, but because this codebase's own value
+// parsing (e.g. parse_scaled_currency_value(), dbf_table.cpp) already
+// treats a leading '+' as valid numeric input elsewhere, so a genuinely
+// real (not crafted) "+123.45" reaching here must not be misclassified
+// as unsafe and silently turned into NULL.
+bool looks_like_safe_unquoted_sql_numeric_literal(const std::string& text) {
+    if (text.empty()) {
+        return false;
+    }
+    std::size_t index = (text.front() == '-' || text.front() == '+') ? 1U : 0U;
+    if (index >= text.size()) {
+        return false;
+    }
+    bool seen_digit = false;
+    bool seen_decimal_point = false;
+    for (; index < text.size(); ++index) {
+        const char character = text[index];
+        if (character == '.') {
+            if (seen_decimal_point) {
+                return false;
+            }
+            seen_decimal_point = true;
+            continue;
+        }
+        if (std::isdigit(static_cast<unsigned char>(character)) == 0) {
+            return false;
+        }
+        seen_digit = true;
+    }
+    return seen_digit;
+}
+
+// export_database_as_access_sql() embeds a 'D' field's decoded
+// display_value directly inside Access SQL's #...# date-literal
+// delimiters, the same "no quoting layer to escape it with" situation
+// looks_like_safe_unquoted_sql_numeric_literal() documents for numeric
+// tokens. decode_value()'s 'D' case (dbf_table.cpp) only formats the
+// value as "YYYY-MM-DD" when the raw field is exactly 8 bytes wide;
+// anything else -- a differently-sized or genuinely corrupt/crafted
+// field -- falls back to returning the trimmed raw bytes verbatim,
+// which could contain a literal '#' and break out of the delimiter.
+// Validates the exact "YYYY-MM-DD" shape (4 digits, '-', 2 digits, '-',
+// 2 digits) before trusting it to appear inside #...#.
+bool looks_like_safe_access_sql_date_literal(const std::string& text) {
+    if (text.size() != 10U) {
+        return false;
+    }
+    for (const std::size_t digit_index : {0U, 1U, 2U, 3U, 5U, 6U, 8U, 9U}) {
+        if (std::isdigit(static_cast<unsigned char>(text[digit_index])) == 0) {
+            return false;
+        }
+    }
+    return text[4U] == '-' && text[7U] == '-';
+}
+
 // Maps a DBF field descriptor to a portable/ANSI-ish SQL column type.
 // Memo/general/picture pointer fields (M/G/P) map to TEXT: their content is
 // not resolved by the shared catalog/table-reading path this exporter
@@ -1706,6 +1777,88 @@ std::string sql_column_type(char field_type, std::uint8_t length, std::uint8_t d
         default:
             // M, G, P, and any other/unrecognized storage type.
             return "TEXT";
+    }
+}
+
+// Access/Jet SQL identifier quoting for export_database_as_access_sql():
+// square brackets, per the publicly documented Access SQL/DDL dialect (see
+// docs/66-access-container-format-notes.md's "logical surface is citable"
+// finding). A real Access UI forbids "]" in object names, but this
+// exporter's input is DBC/DBF catalog metadata, which a crafted or
+// corrupt source file does not have to obey that rule for -- so an
+// embedded "]" is escaped by doubling it (the Jet/ACE bracket-escape
+// convention), matching sql_quote_identifier()'s own embedded-quote
+// handling for the ANSI dialect, rather than assumed to be impossible.
+std::string access_quote_identifier(const std::string& name) {
+    std::string quoted = "[";
+    for (const char character : name) {
+        if (character == ']') {
+            quoted += "]]";
+        } else {
+            quoted += character;
+        }
+    }
+    quoted += "]";
+    return quoted;
+}
+
+// Maps a DBF field descriptor to an Access/Jet SQL native column type,
+// rather than reusing sql_column_type()'s portable/ANSI-ish vocabulary --
+// per docs/66, the Access SQL/DDL dialect (unlike the physical MDB/ACCDB
+// byte layout) is legitimately citable public documentation, so this
+// dialect-specific mapping is grounded rather than guessed. Two notable
+// departures from sql_column_type(): 'Y' (VFP currency) maps to Access's
+// own CURRENCY type -- an exact fixed-point match, not the DECIMAL(19, 4)
+// approximation the ANSI exporter uses -- and Access's Short Text (TEXT)
+// type caps at 255 characters, so a wider Character field must fall back
+// to MEMO (Access's unbounded text type) rather than an invalid TEXT(n)
+// declaration.
+std::string access_column_type(char field_type, std::uint8_t length, std::uint8_t decimal_count) {
+    const char normalized = static_cast<char>(std::toupper(static_cast<unsigned char>(field_type)));
+    switch (normalized) {
+        case 'N':
+        case 'F': {
+            // A crafted/corrupt DBF header does not have to keep
+            // decimal_count <= length the way a table genuinely written
+            // by this codebase's own writer always does, and Access/Jet
+            // SQL's own DECIMAL type caps precision at 28 -- emitting an
+            // unclamped value here would produce DDL Access itself
+            // rejects (invalid precision, or scale > precision). Clamp
+            // into Access-valid ranges rather than trust the header.
+            constexpr std::uint8_t max_access_decimal_precision = 28U;
+            const std::uint8_t precision = std::min(
+                std::max(length, static_cast<std::uint8_t>(1U)),
+                max_access_decimal_precision);
+            const std::uint8_t scale = std::min(decimal_count, precision);
+            return "DECIMAL(" + std::to_string(precision) + ", " + std::to_string(scale) + ")";
+        }
+        case 'Y':
+            return "CURRENCY";
+        case 'I':
+            return "LONG";
+        case 'B':
+            return "DOUBLE";
+        case 'L':
+            return "YESNO";
+        case 'D':
+            // Access has no date-only column type distinct from DATETIME;
+            // a date-only value is simply a DATETIME with a zero time
+            // component, which Access's UI formats per the column's
+            // display format rather than a separate storage type.
+            return "DATETIME";
+        case 'T':
+            return "DATETIME";
+        case 'C':
+        case 'V':
+            // length is a uint8_t (max 255), which already fits Access
+            // Short Text's own 255-character ceiling -- so any nonzero
+            // length is safely representable as TEXT(length); only a
+            // (theoretically impossible here, but checked for honesty)
+            // zero length falls back to MEMO.
+            return (length > 0U) ? ("TEXT(" + std::to_string(length) + ")") : "MEMO";
+        default:
+            // M, G, P, and any other/unrecognized storage type.
+            return "MEMO";
     }
 }
 
@@ -2007,7 +2160,14 @@ DatabaseSqlExportResult export_database_as_sql(
             // reader of the script can see every catalog table was
             // considered, matching how the JSON exporter emits an empty
             // fields/records entry rather than omitting the key entirely.
-            sql << "-- skipped table " << rt.name << ": " << tbl.error << "\n\n";
+            // rt.name and tbl.error both come from data a crafted DBC/DBF
+            // could influence (a catalog table name; a parse-error message
+            // that can itself echo untrusted content) -- sanitized the
+            // same way the database-name/source-path header lines already
+            // are, so neither can embed a newline and escape this
+            // single-line "-- ..." comment into executable SQL.
+            sql << "-- skipped table " << sql_sanitize_comment_text(rt.name) << ": "
+                << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
 
@@ -2061,7 +2221,15 @@ DatabaseSqlExportResult export_database_as_sql(
                     // (not is_null) -- emit NULL rather than an empty string
                     // literal, which is not valid syntax inside a DECIMAL/
                     // INTEGER/DOUBLE PRECISION column on real SQL engines.
-                    sql << (rv.display_value.empty() ? "NULL" : rv.display_value);
+                    // A non-blank value that isn't a safe plain decimal
+                    // literal (a numeric-overflow marker, or crafted/
+                    // corrupted content) also becomes NULL rather than
+                    // being trusted unquoted and unescaped -- see
+                    // looks_like_safe_unquoted_sql_numeric_literal()'s own
+                    // comment for why this can't be validated by quoting.
+                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
+                        ? rv.display_value
+                        : "NULL");
                 } else if (is_datetime) {
                     // The DBF decoder's T-type display_value is this
                     // codebase's internal "julian:<day> millis:<ms>" storage
@@ -2071,6 +2239,126 @@ DatabaseSqlExportResult export_database_as_sql(
                     // column declared TIMESTAMP.
                     const auto converted = sql_datetime_literal_from_storage(rv.display_value);
                     sql << (converted.has_value() ? sql_quote_string_literal(*converted) : "NULL");
+                } else {
+                    sql << sql_quote_string_literal(rv.display_value);
+                }
+                sql << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ");\n";
+        }
+        sql << "\n";
+    }
+
+    return {.ok = true, .error = {}, .sql = sql.str()};
+}
+
+DatabaseSqlExportResult export_database_as_access_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        return {.ok = false, .error = snapshot.error, .sql = {}};
+    }
+
+    std::ostringstream sql;
+    sql.imbue(std::locale::classic());
+    // Unlike export_database_as_sql()'s ANSI dialect, this script carries
+    // no "-- ..." header/provenance or skipped-table comment lines at
+    // all: independently verified research confirms native Jet/ACE SQL
+    // (the engine actually executing this text, whether through Access's
+    // interactive SQL View or a DAO/ADO Execute() call) has no supported
+    // in-band comment syntax -- neither "--" nor "/* */" -- so embedding
+    // one here would make the generated script fail exactly where this
+    // function's whole purpose is to succeed. A skipped table (one whose
+    // underlying .dbf failed to parse) therefore simply contributes
+    // nothing to the output, the same as it would for a table with zero
+    // rows, rather than a diagnostic comment a real engine cannot run.
+
+    const std::size_t row_limit = (max_rows_per_table == 0U)
+        ? std::numeric_limits<std::size_t>::max()
+        : max_rows_per_table;
+
+    for (const auto& rt : snapshot.resolved_tables) {
+        const DbfTableParseResult tbl = parse_dbf_table_from_file(
+            copperfin::platform::path_to_utf8_string(rt.path), row_limit);
+        if (!tbl.ok) {
+            continue;
+        }
+
+        const std::string quoted_table = access_quote_identifier(rt.name);
+        sql << "CREATE TABLE " << quoted_table << " (\n";
+        for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
+            const auto& fld = tbl.table.fields[fi];
+            const bool last_field = (fi + 1U == tbl.table.fields.size());
+            sql << "    " << access_quote_identifier(fld.name) << " "
+                << access_column_type(fld.type, fld.length, fld.decimal_count)
+                << (last_field ? "\n" : ",\n");
+        }
+        sql << ");\n\n";
+
+        for (const auto& rec : tbl.table.records) {
+            if (rec.deleted) {
+                continue;
+            }
+            sql << "INSERT INTO " << quoted_table << " (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                sql << access_quote_identifier(rec.values[vi].field_name)
+                    << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ") VALUES (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                const auto& rv = rec.values[vi];
+                const char ft = static_cast<char>(
+                    std::toupper(static_cast<unsigned char>(rv.field_type)));
+                const bool is_numeric = (ft == 'N' || ft == 'F' || ft == 'I' || ft == 'B' || ft == 'Y');
+                const bool is_logical = (ft == 'L');
+                const bool is_date = (ft == 'D');
+                const bool is_datetime = (ft == 'T');
+                if (rv.is_null) {
+                    sql << "NULL";
+                } else if (is_logical) {
+                    const std::string& lv = rv.display_value;
+                    if (lv == "true") {
+                        sql << "TRUE";
+                    } else if (lv == "false") {
+                        sql << "FALSE";
+                    } else {
+                        sql << "NULL";
+                    }
+                } else if (is_numeric) {
+                    // See looks_like_safe_unquoted_sql_numeric_literal()'s
+                    // comment: a non-blank value that isn't a safe plain
+                    // decimal literal (overflow marker, crafted/corrupted
+                    // content) becomes NULL rather than being trusted
+                    // unquoted, matching export_database_as_sql()'s own
+                    // established blank-cell-to-NULL behavior.
+                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
+                        ? rv.display_value
+                        : "NULL");
+                } else if (is_date) {
+                    // decode_value()'s 'D' case (dbf_table.cpp) formats a
+                    // well-formed value as "YYYY-MM-DD" (empty string for
+                    // a blank date), which embeds directly inside Access
+                    // SQL's #...# date-literal delimiters -- ISO form
+                    // specifically, since Access accepts it unambiguously
+                    // regardless of the connection's regional date format,
+                    // unlike locale-dependent MM/DD/YYYY. A value that
+                    // isn't blank and doesn't match that exact shape (a
+                    // corrupt/crafted source whose 'D' field isn't the
+                    // expected 8 raw bytes) becomes NULL instead of being
+                    // trusted to embed safely -- see
+                    // looks_like_safe_access_sql_date_literal()'s comment.
+                    if (rv.display_value.empty()) {
+                        sql << "NULL";
+                    } else if (looks_like_safe_access_sql_date_literal(rv.display_value)) {
+                        sql << "#" << rv.display_value << "#";
+                    } else {
+                        sql << "NULL";
+                    }
+                } else if (is_datetime) {
+                    const auto converted = sql_datetime_literal_from_storage(rv.display_value);
+                    sql << (converted.has_value() ? ("#" + *converted + "#") : "NULL");
                 } else {
                     sql << sql_quote_string_literal(rv.display_value);
                 }

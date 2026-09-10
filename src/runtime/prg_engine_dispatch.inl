@@ -8036,9 +8036,10 @@
                     unquote_string(trim_copy(statement.tertiary_expression)));
                 const bool is_json = (export_type == "json");
                 const bool is_sql = (export_type == "sql");
+                const bool is_access = (export_type == "access");
                 if (!is_quoted_path_operand(source_operand) ||
                     !is_quoted_path_operand(destination_operand) ||
-                    source_raw.empty() || destination_raw.empty() || (!is_json && !is_sql))
+                    source_raw.empty() || destination_raw.empty() || (!is_json && !is_sql && !is_access))
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonSyntax");
@@ -8062,7 +8063,37 @@
                 destination_path = destination_path.lexically_normal();
                 if (destination_path.extension().empty())
                 {
-                    destination_path += is_sql ? ".sql" : ".json";
+                    destination_path += (is_sql || is_access) ? ".sql" : ".json";
+                }
+
+                // A destination that resolves to the same file as the
+                // source (e.g. EXPORT DATABASE 'data.dbc' TO 'data.dbc'
+                // TYPE ACCESS, where an explicit extension skips the
+                // .sql/.json default above) would otherwise read the
+                // source successfully and then truncate that same file
+                // when opening the output -- irreversibly destroying the
+                // database container being exported. weakly_canonical()
+                // resolves the existing-source portion through the real
+                // filesystem (symlinks, actual on-disk case) even though
+                // the destination need not exist yet, and the comparison
+                // uses this platform's real filesystem case-sensitivity
+                // (case-insensitive on Windows, case-sensitive elsewhere),
+                // matching path_equal_case_insensitive()'s own approach.
+                std::error_code source_canonical_error;
+                std::error_code destination_canonical_error;
+                const fs::path canonical_source_path =
+                    fs::weakly_canonical(source_path, source_canonical_error);
+                const fs::path canonical_destination_path =
+                    fs::weakly_canonical(destination_path, destination_canonical_error);
+                if (!source_canonical_error && !destination_canonical_error &&
+                    copperfin::platform::path_component_equal_for_platform(
+                        canonical_source_path, canonical_destination_path))
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ExportDatabaseDestinationAliasesSource");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
 
                 std::string output_text;
@@ -8080,6 +8111,21 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     output_text = export_result.json;
+                }
+                else if (is_access)
+                {
+                    const auto export_result = vfp::export_database_as_access_sql(
+                        copperfin::platform::path_to_utf8_string(source_path));
+                    if (!export_result.ok)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlFailed",
+                            {{"errorMessage", export_result.error}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    output_text = export_result.sql;
                 }
                 else
                 {
@@ -8106,9 +8152,11 @@
                 if (!output.good())
                 {
                     last_error_message = runtime_text(
-                        is_sql
-                            ? "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlOpenOutputFailed"
-                            : "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonOpenOutputFailed");
+                        is_access
+                            ? "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlOpenOutputFailed"
+                            : is_sql
+                                ? "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlOpenOutputFailed"
+                                : "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonOpenOutputFailed");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -8118,14 +8166,18 @@
                 if (!output.good())
                 {
                     last_error_message = runtime_text(
-                        is_sql
-                            ? "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlWriteOutputFailed"
-                            : "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonWriteOutputFailed");
+                        is_access
+                            ? "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlWriteOutputFailed"
+                            : is_sql
+                                ? "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlWriteOutputFailed"
+                                : "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonWriteOutputFailed");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                events.push_back({.category = is_sql ? "runtime.export_database_sql" : "runtime.export_database_json",
+                events.push_back({.category = is_access
+                                      ? "runtime.export_database_access_sql"
+                                      : is_sql ? "runtime.export_database_sql" : "runtime.export_database_json",
                                   .detail = copperfin::platform::path_to_utf8_string(destination_path),
                                   .location = statement.location});
                 return {};

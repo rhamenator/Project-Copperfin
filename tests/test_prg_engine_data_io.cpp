@@ -80,6 +80,8 @@ int main() {
     test_copy_to_type_json_and_append_from_type_json_round_trip();
     test_export_database_type_json_writes_catalog_snapshot();
     test_export_database_type_sql_writes_ddl_and_inserts();
+    test_export_database_type_access_writes_jet_dialect_ddl_and_inserts();
+    test_export_database_rejects_destination_aliasing_source();
     test_import_database_type_json_round_trips_via_export();
     test_import_database_type_sql_round_trips_via_export();
     test_copy_to_array_fills_2d_runtime_array();
