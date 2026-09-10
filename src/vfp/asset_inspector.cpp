@@ -1672,10 +1672,10 @@ std::string sql_quote_string_literal(const std::string& value) {
 // Both export_database_as_sql() and export_database_as_access_sql() emit
 // a numeric (N/F/I/B/Y) field's decoded display_value token *unquoted*,
 // since a real numeric literal needs no string quoting -- but that means,
-// unlike a string value (which sql_quote_string_literal()/
-// access_quote_identifier() always escape into a safely delimited
-// literal), there is no quoting layer standing between this text and the
-// generated SQL. A table genuinely written by this codebase's own writer
+// unlike a string value (which sql_quote_string_literal() always escapes
+// into a safely delimited literal), there is no quoting layer standing
+// between this text and the generated SQL. A table genuinely written by
+// this codebase's own writer
 // always decodes N/F to a plain optionally-signed decimal string, but a
 // crafted or corrupted source is not bound by that: a numeric-overflow
 // marker ("*****", dBASE-family's own convention for a value too wide for
