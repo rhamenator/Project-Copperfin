@@ -1683,13 +1683,18 @@ std::string sql_quote_string_literal(const std::string& value) {
 // unquoted and unescaped, silently producing invalid DDL/DML at best and
 // letting untrusted legacy data inject additional SQL statements at
 // worst. Validates that `text` is a plain optionally-signed decimal
-// number (at most one leading '-', digits, at most one '.') before it is
-// trusted to appear unquoted.
+// number (at most one leading '+' or '-', digits, at most one '.')
+// before it is trusted to appear unquoted. '+' is accepted alongside
+// '-' -- not just for symmetry, but because this codebase's own value
+// parsing (e.g. parse_scaled_currency_value(), dbf_table.cpp) already
+// treats a leading '+' as valid numeric input elsewhere, so a genuinely
+// real (not crafted) "+123.45" reaching here must not be misclassified
+// as unsafe and silently turned into NULL.
 bool looks_like_safe_unquoted_sql_numeric_literal(const std::string& text) {
     if (text.empty()) {
         return false;
     }
-    std::size_t index = (text.front() == '-') ? 1U : 0U;
+    std::size_t index = (text.front() == '-' || text.front() == '+') ? 1U : 0U;
     if (index >= text.size()) {
         return false;
     }
@@ -1710,6 +1715,29 @@ bool looks_like_safe_unquoted_sql_numeric_literal(const std::string& text) {
         seen_digit = true;
     }
     return seen_digit;
+}
+
+// export_database_as_access_sql() embeds a 'D' field's decoded
+// display_value directly inside Access SQL's #...# date-literal
+// delimiters, the same "no quoting layer to escape it with" situation
+// looks_like_safe_unquoted_sql_numeric_literal() documents for numeric
+// tokens. decode_value()'s 'D' case (dbf_table.cpp) only formats the
+// value as "YYYY-MM-DD" when the raw field is exactly 8 bytes wide;
+// anything else -- a differently-sized or genuinely corrupt/crafted
+// field -- falls back to returning the trimmed raw bytes verbatim,
+// which could contain a literal '#' and break out of the delimiter.
+// Validates the exact "YYYY-MM-DD" shape (4 digits, '-', 2 digits, '-',
+// 2 digits) before trusting it to appear inside #...#.
+bool looks_like_safe_access_sql_date_literal(const std::string& text) {
+    if (text.size() != 10U) {
+        return false;
+    }
+    for (const std::size_t digit_index : {0U, 1U, 2U, 3U, 5U, 6U, 8U, 9U}) {
+        if (std::isdigit(static_cast<unsigned char>(text[digit_index])) == 0) {
+            return false;
+        }
+    }
+    return text[4U] == '-' && text[7U] == '-';
 }
 
 // Maps a DBF field descriptor to a portable/ANSI-ish SQL column type.
@@ -2309,14 +2337,25 @@ DatabaseSqlExportResult export_database_as_access_sql(
                         ? rv.display_value
                         : "NULL");
                 } else if (is_date) {
-                    // decode_value()'s 'D' case (dbf_table.cpp) already
-                    // formats the value as "YYYY-MM-DD" (empty string for a
-                    // blank date), so it can be embedded directly inside
-                    // Access SQL's #...# date-literal delimiters -- ISO
-                    // form specifically, since Access accepts it
-                    // unambiguously regardless of the connection's regional
-                    // date format, unlike locale-dependent MM/DD/YYYY.
-                    sql << (rv.display_value.empty() ? "NULL" : ("#" + rv.display_value + "#"));
+                    // decode_value()'s 'D' case (dbf_table.cpp) formats a
+                    // well-formed value as "YYYY-MM-DD" (empty string for
+                    // a blank date), which embeds directly inside Access
+                    // SQL's #...# date-literal delimiters -- ISO form
+                    // specifically, since Access accepts it unambiguously
+                    // regardless of the connection's regional date format,
+                    // unlike locale-dependent MM/DD/YYYY. A value that
+                    // isn't blank and doesn't match that exact shape (a
+                    // corrupt/crafted source whose 'D' field isn't the
+                    // expected 8 raw bytes) becomes NULL instead of being
+                    // trusted to embed safely -- see
+                    // looks_like_safe_access_sql_date_literal()'s comment.
+                    if (rv.display_value.empty()) {
+                        sql << "NULL";
+                    } else if (looks_like_safe_access_sql_date_literal(rv.display_value)) {
+                        sql << "#" << rv.display_value << "#";
+                    } else {
+                        sql << "NULL";
+                    }
                 } else if (is_datetime) {
                     const auto converted = sql_datetime_literal_from_storage(rv.display_value);
                     sql << (converted.has_value() ? ("#" + *converted + "#") : "NULL");

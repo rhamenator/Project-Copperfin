@@ -26,7 +26,13 @@
   supported comment syntax; and `EXPORT DATABASE` now rejects a
   destination that resolves to the same file as the source (for all
   three `TYPE` variants), which would otherwise read the source
-  successfully and then truncate it when opening the output.
+  successfully and then truncate it when opening the output. A second
+  review pass caught two more gaps: the numeric-literal safety check
+  initially accepted only a leading `-`, silently turning a genuinely
+  real leading-`+` value into `NULL`; and a `'D'` field's date value was
+  embedded inside `#...#` delimiters without validating it was actually
+  digits, so a corrupted field could smuggle a literal `#` past the
+  delimiter -- both fixed, with regression tests for each.
 
 - 2026-09-09: Fixes #5532: added `preview_xbase_table_import()`, a
   dry-run/report mode for `IMPORT DATABASE ... TYPE XBASE` that performs

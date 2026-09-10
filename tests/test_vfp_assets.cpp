@@ -1480,6 +1480,120 @@ void test_export_database_as_access_sql_rejects_unsafe_numeric_token() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_export_database_as_access_sql_accepts_leading_plus_sign_numeric() {
+    // #5475 re-review (Copilot): looks_like_safe_unquoted_sql_numeric_literal()
+    // initially accepted only a leading '-', not '+' -- but this codebase's
+    // own value parsing elsewhere (e.g. parse_scaled_currency_value(),
+    // dbf_table.cpp) already treats a leading '+' as valid numeric input,
+    // so a genuinely real "+42" value must still round-trip unquoted, not
+    // be misclassified as unsafe and silently turned into NULL.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_access_sql_plus_sign_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path),
+        dbc_fields,
+        {{"DATABASE", "Sensors", "", ""}, {"TABLE", "readings", "Sensors", ""}});
+    expect(dbc_create.ok, "Access SQL plus-sign test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "VALUE", .type = 'N', .offset = 1U, .length = 5U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"+42"}});
+    expect(table_create.ok, "Access SQL plus-sign test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_access_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_access_sql should resolve the plus-sign fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("VALUES (+42);") != std::string::npos,
+           "export_database_as_access_sql should emit a leading-'+' numeric value unquoted, not NULL");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_access_sql_rejects_unsafe_date_literal() {
+    // #5475 re-review (Copilot): the 'D' field branch embedded
+    // display_value directly inside #...# delimiters. decode_value()'s
+    // 'D' case (dbf_table.cpp) assembles "YYYY-MM-DD" by slicing raw
+    // bytes at fixed positions without validating they're digits, so a
+    // corrupt/crafted date field can smuggle a literal '#' straight into
+    // the formatted value and break out of the delimiter. Corrupt one
+    // byte of an otherwise well-formed 8-byte date field directly (the
+    // public writer always produces genuinely valid digits, so this
+    // models a source Copperfin did not write) and confirm the exporter
+    // now falls back to NULL instead of embedding it.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_access_sql_date_injection_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "events.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path),
+        dbc_fields,
+        {{"DATABASE", "Events", "", ""}, {"TABLE", "events", "Events", ""}});
+    expect(dbc_create.ok, "Access SQL date-injection test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "OCCURRED", .type = 'D', .offset = 1U, .length = 8U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"20240117"}});
+    expect(table_create.ok, "Access SQL date-injection test: DBF fixture should be created");
+    {
+        // Single field, single record: header_length = 32 (header) +
+        // 32 (one descriptor) + 1 (terminator) = 65; the field's own
+        // offset within a record is 1 (byte 0 is the deletion flag), so
+        // the 8-byte date value starts at absolute byte 66. Corrupt its
+        // 5th byte (the "MM" tens digit) to '#'.
+        std::fstream patch(table_path, std::ios::binary | std::ios::in | std::ios::out);
+        expect(static_cast<bool>(patch), "Access SQL date-injection test: DBF fixture should be patchable");
+        patch.seekp(66 + 4, std::ios::beg);
+        const char injected_hash = '#';
+        patch.write(&injected_hash, 1);
+    }
+
+    const auto result = copperfin::vfp::export_database_as_access_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_access_sql should resolve the date-injection fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("VALUES (NULL);") != std::string::npos,
+           "export_database_as_access_sql should emit NULL for a corrupt date value rather than embed it unvalidated");
+    expect(result.sql.find("2024-#1-17") == std::string::npos,
+           "export_database_as_access_sql must never let an injected '#' break out of the date-literal delimiter");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_database_json_import_plan_admits_exporter_unreadable_table_marker() {
     namespace fs = std::filesystem;
     const fs::path temp_dir =
@@ -2265,6 +2379,8 @@ int main() {
     test_export_database_as_access_sql_escapes_bracket_in_identifier();
     test_export_database_as_access_sql_clamps_decimal_precision();
     test_export_database_as_access_sql_rejects_unsafe_numeric_token();
+    test_export_database_as_access_sql_accepts_leading_plus_sign_numeric();
+    test_export_database_as_access_sql_rejects_unsafe_date_literal();
     test_database_json_import_plan_admits_exporter_unreadable_table_marker();
     test_parse_real_vfp_cdx_when_available();
     test_parse_additional_real_vfp_cdx_samples_when_available();
