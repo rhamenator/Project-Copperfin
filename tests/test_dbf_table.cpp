@@ -1010,6 +1010,135 @@ void test_import_xbase_table_to_vfp_native_round_trips_clipper_compatible_source
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_preview_xbase_table_import_reports_clean_source() {
+    // #5532: dry-run mode against a source with no unmappable fields
+    // should report ok=true with the full field-mapping list, matching
+    // what a real import of this exact source would produce, without
+    // ever writing anything (no destination_path is even accepted).
+    const auto preview = copperfin::vfp::preview_xbase_table_import(
+        legacy_dbase_fixture_path("dbase_83.dbf").string());
+    expect(preview.ok, "previewing a fully-importable source should report ok");
+    expect(preview.error.empty(), "a clean preview should not set a table-level error");
+    expect(preview.field_issues.empty(), "a clean preview should report no field issues");
+    expect(preview.record_count == 67U, "the preview should report the source's real record count");
+    expect(preview.field_mappings.size() == 15U, "the preview should report every field's mapping");
+}
+
+void test_preview_xbase_table_import_reports_all_unmappable_fields() {
+    // #5532: unlike the committing path (which fails closed on the first
+    // unmappable field it finds), the dry-run preview should collect
+    // *every* unmappable field so a caller can see the complete picture
+    // before deciding whether to import at all. Synthetic two-field
+    // dBASE III source: FIELD1 is 'B' (binary DBT payload), FIELD2 is
+    // '@' (Julian-day timestamp) -- both unsupported, for two genuinely
+    // different reasons.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_preview_multi_unmappable_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    std::vector<std::uint8_t> bytes(32U + 32U + 32U + 1U + 19U + 1U, 0U);
+    bytes[0] = 0x03U;
+    write_le_u32(bytes, 4U, 1U);
+    write_le_u16(bytes, 8U, 32U + 32U + 32U + 1U);
+    write_le_u16(bytes, 10U, 19U);
+    write_ascii(bytes, 32U, "FIELD1");
+    bytes[32U + 11U] = static_cast<std::uint8_t>('B');
+    bytes[32U + 16U] = 10U;
+    write_ascii(bytes, 64U, "FIELD2");
+    bytes[64U + 11U] = static_cast<std::uint8_t>('@');
+    bytes[64U + 16U] = 8U;
+    bytes[96U] = 0x0DU;
+    bytes.back() = 0x1AU;
+    bytes[97U] = static_cast<std::uint8_t>(' ');
+
+    const fs::path source = temp_dir / "multi_unmappable.dbf";
+    expect(write_binary_file(source, bytes), "the synthetic multi-unmappable-field fixture should be writable");
+
+    const auto preview = copperfin::vfp::preview_xbase_table_import(source.string());
+    expect(!preview.ok, "previewing a source with unmappable fields should report not ok");
+    expect(preview.error.empty(), "field-level issues should not set the table-level error");
+    expect(preview.field_issues.size() == 2U, "the preview should report both unmappable fields, not just the first");
+    if (preview.field_issues.size() == 2U) {
+        expect(preview.field_issues[0U].field_name == "FIELD1" && preview.field_issues[0U].source_type == 'B',
+            "the first reported issue should identify FIELD1's type");
+        expect(preview.field_issues[1U].field_name == "FIELD2" && preview.field_issues[1U].source_type == '@',
+            "the second reported issue should identify FIELD2's type");
+    }
+    std::size_t temp_dir_entry_count = 0U;
+    for ([[maybe_unused]] const auto& entry : fs::directory_iterator(temp_dir, ignored)) {
+        ++temp_dir_entry_count;
+    }
+    expect(temp_dir_entry_count == 1U,
+        "a dry-run preview must never create any destination file (temp_dir should contain only the source fixture)");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_preview_xbase_table_import_reports_table_level_errors() {
+    // #5532: a table-level failure (unsupported source family, unsupported
+    // code page) should still be reported via `error`, distinct from
+    // per-field issues, and should stop before any field enumeration.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_preview_table_level_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto bytes = make_synthetic_dbase_iii_fixture('C', 10U, "hello", /*code_page_mark=*/0x01U);
+    const fs::path source = temp_dir / "non_default_code_page.dbf";
+    expect(write_binary_file(source, bytes), "the synthetic non-default-code-page fixture should be writable");
+
+    const auto preview = copperfin::vfp::preview_xbase_table_import(source.string());
+    expect(!preview.ok, "previewing a non-default-code-page source should report not ok");
+    expect(!preview.error.empty(), "a table-level failure should set the error field");
+    expect(preview.field_issues.empty(), "a table-level failure should stop before enumerating fields");
+    expect(preview.field_mappings.empty(), "a table-level failure should report no field mappings");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_preview_xbase_table_import_reports_unresolved_memo_payload() {
+    // #5532 review (Copilot/Codex): the preview's upfront validation must
+    // include the same unresolved-memo-payload check the committing path
+    // performs -- issue #5532's own acceptance criteria lists it
+    // explicitly -- not just format-family/code-page/field-type mapping.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_preview_unresolved_memo_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    auto bytes = make_synthetic_dbase_iii_fixture('M', 10U, "0000000001");
+    bytes[0] = 0x83U;
+    const fs::path source = temp_dir / "unresolved_memo_source.dbf";
+    expect(write_binary_file(source, bytes), "the synthetic unresolved-memo fixture should be writable");
+
+    const auto preview = copperfin::vfp::preview_xbase_table_import(source.string());
+    expect(!preview.ok, "previewing a source with an unresolvable memo payload should report not ok");
+    expect(!preview.error.empty(), "an unresolved memo payload should set the table-level error");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_preview_xbase_table_import_reports_record_value_too_wide() {
+    // #5532 review (Codex): a source whose declared code page is 0 but
+    // whose actual bytes are not valid UTF-8 can map every field
+    // successfully while still failing once the committing path tries to
+    // actually write a record -- see
+    // test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes.
+    // The preview must catch this too, rather than reporting ok=true for
+    // a source that cannot really be imported.
+    const auto preview = copperfin::vfp::preview_xbase_table_import(
+        legacy_foxpro_fixture_path("dbase_f5.dbf").string());
+    expect(!preview.ok, "previewing this real FoxPro fixture should report not ok due to its non-UTF-8-safe COMN field");
+    expect(!preview.error.empty(), "a record value that would not fit should set the table-level error");
+}
+
 void test_import_xbase_table_to_vfp_native_rejects_foxpro_general_field() {
     // #5526 review: classic FoxPro (0xF5) tables can legitimately contain
     // 'G' (General) and 'P' (Picture) fields, which this slice explicitly
@@ -3223,6 +3352,11 @@ int main(int argc, char* argv[]) {
     test_dbf_reader_uses_dbase_iii_layout_for_0xfb();
     test_import_xbase_table_to_vfp_native_round_trips_0xfb_foxbase();
     test_import_xbase_table_to_vfp_native_round_trips_clipper_compatible_source();
+    test_preview_xbase_table_import_reports_clean_source();
+    test_preview_xbase_table_import_reports_all_unmappable_fields();
+    test_preview_xbase_table_import_reports_table_level_errors();
+    test_preview_xbase_table_import_reports_unresolved_memo_payload();
+    test_preview_xbase_table_import_reports_record_value_too_wide();
     test_import_xbase_table_to_vfp_native_rejects_foxpro_general_field();
     test_import_xbase_table_to_vfp_native_rejects_foxpro_field_with_non_utf8_bytes();
     test_import_xbase_table_to_vfp_native_round_trips_synthetic_foxpro();

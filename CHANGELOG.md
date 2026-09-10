@@ -1,3 +1,22 @@
+- 2026-09-09: Fixes #5532: added `preview_xbase_table_import()`, a
+  dry-run/report mode for `IMPORT DATABASE ... TYPE XBASE` that performs
+  the same source-family, code-page, and per-field mapping checks as
+  `import_xbase_table_to_vfp_native()` without ever writing anything (no
+  `destination_path` at all, since nothing is created). Extracted the
+  shared validation logic into a new `plan_field_mapping()` helper so the
+  committing and preview paths can never drift out of sync on what
+  counts as importable; the one deliberate difference is that the
+  committing path still fails closed on the first unmappable field it
+  finds, while the preview collects every one into
+  `DbfImportPreviewResult::field_issues` so a caller can see the whole
+  picture before deciding whether to import. The preview also checks for
+  unresolved memo payloads and for record values that would not fit
+  their destination field once re-encoded (both report via `error`,
+  matching the committing path's fail-fast behavior for those two
+  conditions); it only skips destination-side checks (existing-file or
+  memo-sidecar conflicts), since it is never given a `destination_path`
+  to check against.
+
 - 2026-09-09: Fixes #5530: confirmed and documented that Clipper source
   support in `IMPORT DATABASE ... TYPE XBASE` already worked, requiring
   no new code. Clipper's default (non-DBFCDX) RDD writes DBF/DBT tables

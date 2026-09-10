@@ -1,9 +1,10 @@
 # dBASE/FoxBASE/FoxPro Import Field Mapping
 
-Written field-type mapping for issues #5523, #5525, #5528, and #5530
-(parent #5517, #137), the first concrete slices of the
+Written field-type mapping for issues #5523, #5525, #5528, #5530, and
+#5532 (parent #5517, #137), the first concrete slices of the
 `IMPORT DATABASE ... TYPE XBASE` wizard:
-`copperfin::vfp::import_xbase_table_to_vfp_native()` in
+`copperfin::vfp::import_xbase_table_to_vfp_native()` and
+`copperfin::vfp::preview_xbase_table_import()` in
 `src/vfp/dbf_import.cpp`. This covers dBASE-family (`DbfFormatFamily::dbase`)
 and, as of #5525/#5528, the whole FoxBASE family (`DbfFormatFamily::foxbase`,
 both `0x02` and `0xFB` -- see below) and FoxPro (`DbfFormatFamily::foxpro`)
@@ -78,6 +79,41 @@ distinct `clipper` value: Clipper-produced tables already classify as
 proves this with the same real dBASE III + memo fixture #5484 used for
 the equivalent read-side claim, rather than leaving it undemonstrated.
 
+### Dry-run/report mode (#5532)
+
+`preview_xbase_table_import(source_path, source_memo_sidecar_path = {})`
+performs the same source-family, code-page, and per-field mapping checks
+as the committing import, without ever writing anything -- it takes no
+`destination_path` at all, since nothing is created. It shares its
+validation logic with the committing path (`plan_field_mapping()`,
+`src/vfp/dbf_import.cpp`) so the two can never drift out of sync on what
+counts as importable.
+
+The one deliberate behavioral difference: the committing path fails
+closed on the *first* unmappable field it finds (a safety property --
+never write a partial or silently-lossy table), while the preview
+collects *every* unmappable field into `DbfImportPreviewResult::field_issues`,
+so a caller can see the complete picture before deciding whether to
+import at all.
+
+The preview also checks for unresolved memo payloads (the reader's
+`"<memo block N>"` diagnostic placeholder) and for record values that
+would not fit their destination field once re-encoded -- a real
+possibility even for a code-page-0 source, since `code_page_mark == 0`
+is Copperfin's own reinterpretation as "UTF-8," not a guarantee about
+the original file's real bytes (see the `#5525 finding` callout below;
+`dbase_f5.dbf`'s `COMN` field is the concrete real-world example). Both
+checks report through `DbfImportPreviewResult::error`, matching the
+committing path's own single fail-fast behavior for these two
+conditions -- they are not enumerated into `field_issues`, which is
+reserved for field-*type* mapping problems.
+
+The only checks the preview does *not* perform are destination-side: an
+existing-file conflict or a memo-sidecar collision. Both are properties
+of a specific destination/write attempt, and `preview_xbase_table_import()`
+is never given a `destination_path` at all, so there is nothing for it to
+check.
+
 An unsupported source field type fails the whole import closed *before* any
 destination file is created or written -- see
 `test_import_dbase_table_to_vfp_native_rejects_unsupported_field_type` in
@@ -140,9 +176,10 @@ destination file is created or written -- see
 - No NTX index import -- the importer doesn't handle indexes for any
   source family yet; this is broader scope than Clipper specifically.
 - No DBC container import.
-- No dry-run/report mode -- this slice fails closed on the first unmappable
-  field rather than producing a pre-commit report of every issue in the
-  source table.
+- No raw-bytes memo write path -- this is why `B`/`G`/`P` remain
+  unsupported (see the table above); adding it is a separate, larger
+  slice touching core `dbf_table.cpp` write internals used by many other
+  callers, not just this importer.
 - No deleted-record-flag preservation: every source record (deleted or not)
   is imported as an active record in the destination table. A future slice
   may choose to either preserve the flag or offer a `PACK`-equivalent

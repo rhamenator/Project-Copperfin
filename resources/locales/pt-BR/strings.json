@@ -1746,6 +1746,7 @@
   "Vfp.DbfHeader.Version.VisualFoxProAutoincrement": "Visual FoxPro com autoincremento",
   "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar": "Visual FoxPro varbinary/varchar",
   "Vfp.DbfImport.Error.DestinationExists": "O destino da importacao ja existe; a tabela de origem nao foi importada.",
+  "Vfp.DbfImport.Error.RecordValueWouldNotFit": "O campo {fieldName} no registro {recordNumber} contem um valor que nao caberia no campo de destino apos a recodificacao; uma importacao real desta origem falharia.",
   "Vfp.DbfImport.Error.UnresolvedMemoPayload": "O campo {fieldName} no registro {recordNumber} faz referencia a um conteudo de memo que nao pode ser lido da origem; a tabela nao foi importada.",
   "Vfp.DbfImport.Error.UnsupportedCodePage": "Somente tabelas de origem com pagina de codigos 0 (UTF-8) sao suportadas por esta fatia de importacao.",
   "Vfp.DbfImport.Error.UnsupportedFieldType": "O campo {fieldName} tem o tipo de origem '{fieldType}', que esta fatia de importacao nao suporta.",
