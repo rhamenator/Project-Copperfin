@@ -245,14 +245,46 @@ CdxWriteResult create_vfp_cdx_single_tag_index_file(
     const std::vector<CdxIndexEntry>& entries) {
     CdxWriteResult result;
 
-    if (tag_name.empty() || tag_name.size() > kPageSize) {
+    // The tag name is stored right-aligned at the END of the 512-byte
+    // tag-table page (page 2), but that same page's first 32 bytes hold
+    // required header fields (docs/77's "Tag-table page" layout). A name
+    // longer than kPageSize - 32 would overlap and corrupt those fields.
+    constexpr std::size_t kTagTableHeaderSize = 32U;
+    if (tag_name.empty() || tag_name.size() > (kPageSize - kTagTableHeaderSize)) {
         result.error = cdx_writer_text("Vfp.CdxWriter.Error.InvalidTagName");
+        return result;
+    }
+
+    // cdx_header.cpp's own reader treats key_length == 0 or > page_size
+    // as unparseable (it can't locate a tag directory at all in that
+    // case), so a file built with such a value would be silently
+    // unreadable by this codebase's own tooling, not just unusual.
+    if (key_length == 0U || key_length > kPageSize) {
+        result.error = cdx_writer_text("Vfp.CdxWriter.Error.InvalidKeyLength");
+        return result;
+    }
+
+    // The key-expression page stores the expression verbatim starting
+    // at byte 0 and relies on the page's own zero-initialization to
+    // supply a NUL terminator immediately after it; an expression that
+    // fills (or exceeds) the whole page would leave no such terminator
+    // and silently drop everything past the page boundary.
+    if (key_expression.size() >= kPageSize) {
+        result.error = cdx_writer_text("Vfp.CdxWriter.Error.KeyExpressionTooLong");
         return result;
     }
 
     std::vector<ResolvedEntry> resolved;
     resolved.reserve(entries.size());
     for (const CdxIndexEntry& entry : entries) {
+        // The leaf entry format's own record-number field is a single
+        // byte (docs/77's "Known gaps"): validate the caller's wider
+        // value BEFORE narrowing it, rather than narrowing first and
+        // losing the out-of-range information.
+        if (entry.record_number > 0xFFU) {
+            result.error = cdx_writer_text("Vfp.CdxWriter.Error.RecordNumberOutOfRange");
+            return result;
+        }
         const std::string trimmed = rtrim_copy(entry.key_field_value);
         if (trimmed.size() > key_length) {
             result.error = cdx_writer_text("Vfp.CdxWriter.Error.KeyExceedsDeclaredLength");
@@ -267,7 +299,7 @@ CdxWriteResult create_vfp_cdx_single_tag_index_file(
             result.error = cdx_writer_text("Vfp.CdxWriter.Error.KeyLengthUnsupported");
             return result;
         }
-        resolved.push_back({.record_number = entry.record_number, .key = trimmed});
+        resolved.push_back({.record_number = static_cast<std::uint8_t>(entry.record_number), .key = trimmed});
     }
     std::sort(resolved.begin(), resolved.end(), [](const ResolvedEntry& left, const ResolvedEntry& right) {
         return left.key < right.key;
@@ -276,12 +308,6 @@ CdxWriteResult create_vfp_cdx_single_tag_index_file(
     const LeafBuildResult leaf = build_leaf_page(resolved);
     if (!leaf.ok) {
         result.error = leaf.error;
-        return result;
-    }
-
-    const DbfWriteResult flag_result = mark_dbf_table_has_production_index(dbf_path);
-    if (!flag_result.ok) {
-        result.error = flag_result.error;
         return result;
     }
 
@@ -297,15 +323,46 @@ CdxWriteResult create_vfp_cdx_single_tag_index_file(
     append_page(build_key_expression_page(key_expression));
     append_page(leaf.page);
 
-    std::ofstream output(platform::path_from_utf8_string(cdx_path), std::ios::binary | std::ios::trunc);
-    if (!output) {
-        result.error = cdx_writer_text("Vfp.CdxWriter.Error.OpenFileFailed");
+    // Staged write: build the complete file under a temporary sibling
+    // name and only rename it over the real destination once every byte
+    // is confirmed durable, so a mid-write failure (disk full, I/O
+    // error) can never leave a truncated/partial CDX at `cdx_path`, and
+    // never destroys a pre-existing usable CDX there in the process.
+    const std::filesystem::path destination_path = platform::path_from_utf8_string(cdx_path);
+    const std::filesystem::path temp_path = platform::path_from_utf8_string(cdx_path + ".cptmp");
+    std::error_code remove_ec;
+    std::filesystem::remove(temp_path, remove_ec);
+
+    {
+        std::ofstream output(temp_path, std::ios::binary | std::ios::trunc);
+        if (!output) {
+            result.error = cdx_writer_text("Vfp.CdxWriter.Error.OpenFileFailed");
+            return result;
+        }
+        output.write(reinterpret_cast<const char*>(file_bytes.data()), static_cast<std::streamsize>(file_bytes.size()));
+        output.flush();
+        if (!output.good()) {
+            std::filesystem::remove(temp_path, remove_ec);
+            result.error = cdx_writer_text("Vfp.CdxWriter.Error.WriteFileFailed");
+            return result;
+        }
+    }
+
+    std::error_code rename_ec;
+    std::filesystem::rename(temp_path, destination_path, rename_ec);
+    if (rename_ec) {
+        std::filesystem::remove(temp_path, remove_ec);
+        result.error = cdx_writer_text("Vfp.CdxWriter.Error.WriteFileFailed");
         return result;
     }
-    output.write(reinterpret_cast<const char*>(file_bytes.data()), static_cast<std::streamsize>(file_bytes.size()));
-    output.flush();
-    if (!output.good()) {
-        result.error = cdx_writer_text("Vfp.CdxWriter.Error.WriteFileFailed");
+
+    // Only now, with the new CDX durably in place, mark the table as
+    // having a production index -- setting this flag before the CDX is
+    // known-good would leave the pair inconsistent (flag set, index
+    // missing or truncated) on any failure above.
+    const DbfWriteResult flag_result = mark_dbf_table_has_production_index(dbf_path);
+    if (!flag_result.ok) {
+        result.error = flag_result.error;
         return result;
     }
 

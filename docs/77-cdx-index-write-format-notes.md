@@ -279,6 +279,42 @@ usable by real VFP9 despite being byte-correct CDX content.
   `APPEND`ing a new key to an existing index) were not tested and may
   depend on these fields more strictly.
 
+## PR review follow-up (PR #5552)
+
+Real-fixture-verified byte format aside, PR #5552's review round found
+several implementation-level robustness gaps in `create_vfp_cdx_single_
+tag_index_file()` unrelated to the format itself, all now fixed:
+
+- **DBF flag set before the CDX was known-durable.** The
+  `has_production_index` flag was being set before the CDX file was
+  written at all, so a write failure left the table falsely claiming a
+  structural index it didn't have. The writer now stages the CDX
+  content in a temporary sibling file, `rename()`s it over the real
+  destination only once every byte is confirmed written, and sets the
+  DBF flag only after that succeeds.
+- **Non-atomic overwrite of an existing CDX.** Opening the destination
+  directly with `std::ios::trunc` destroyed any existing usable CDX
+  before the new content was confirmed durable. The same staged
+  temp-file-then-rename fix addresses this too.
+- **Tag names of 481-512 bytes overwrote the tag-table page's own
+  header fields.** The old bound (`<= 512`) didn't account for the
+  32 bytes of required header fields at the start of that page; the
+  writer now caps tag names at 480 bytes.
+- **Oversized key expressions were silently truncated.** An expression
+  of 512+ bytes lost everything past the page boundary (and exactly
+  512 bytes left no NUL terminator) instead of failing closed.
+- **`key_length` was never validated.** A zero or over-one-page value
+  produces a file this codebase's own reader can't parse at all
+  (`cdx_header.cpp`'s tag-directory scan requires `0 < key_length <=
+  page_size`); now rejected up front.
+- **Record numbers above 255 could not actually be rejected.**
+  `CdxIndexEntry::record_number` was already `std::uint8_t`, so a
+  caller converting a record number of 256 before constructing the
+  struct got a silently wrapped 0 -- the documented "fails closed above
+  255" behavior was unenforceable because the out-of-range information
+  was already gone by the time this function saw it. The field is now
+  a wider `std::uint32_t`, validated explicitly before narrowing.
+
 ## Relationship to #5534's own two-piece framing
 
 This is the index-*rebuild* half #5534's own text anticipated as

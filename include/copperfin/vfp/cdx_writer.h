@@ -49,9 +49,15 @@ namespace copperfin::vfp {
 // oversight -- fails closed with a structured error rather than
 // producing a file whose correctness for that case was never verified.
 struct CdxIndexEntry {
-    // 0-255 only, this slice's scope (see the "record numbers beyond
-    // 255" gap in docs/77).
-    std::uint8_t record_number = 0;
+    // Deliberately wider than the single byte the leaf entry format can
+    // actually hold (0-255, see the "record numbers beyond 255" gap in
+    // docs/77): a caller-side narrowing straight to std::uint8_t would
+    // silently wrap a record number of, say, 256 down to 0 before this
+    // API could ever see the out-of-range value. create_vfp_cdx_single_
+    // tag_index_file() itself validates this and fails closed
+    // (Vfp.CdxWriter.Error.RecordNumberOutOfRange) rather than narrowing
+    // an unchecked value.
+    std::uint32_t record_number = 0;
     // The field's own raw value (space-padded or not); trailing spaces
     // are trimmed internally before front-compression, matching VFP's
     // own observed character-key storage convention.
