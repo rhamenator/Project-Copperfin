@@ -1696,6 +1696,7 @@
   "Vfp.AccessMSysObjects.Error.NotAnAccessContainer": "File does not look like a recognized Jet or ACE database container.",
   "Vfp.AccessMSysObjects.Error.OpenFileFailed": "Unable to open file.",
   "Vfp.AccessMSysObjects.Error.ReadPageFailed": "Unable to read a complete page from the container.",
+  "Vfp.AccessMSysObjects.Error.RowCountExceedsDeclared": "Found {found} non-deleted catalog rows, more than the table definition declares ({declared}); the container may contain a stale or freed page.",
   "Vfp.AccessMSysObjects.Error.RowStructureInvalid": "Row structure is inconsistent with its own column offsets.",
   "Vfp.AccessMSysObjects.Error.RowTooShort": "Row is too short to hold its own declared structure.",
   "Vfp.AccessMSysObjects.Error.UnexpectedSchema": "MSysObjects table definition does not match the expected column layout.",

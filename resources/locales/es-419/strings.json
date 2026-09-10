@@ -1696,6 +1696,7 @@
   "Vfp.AccessMSysObjects.Error.NotAnAccessContainer": "El archivo no parece ser un contenedor de base de datos Jet o ACE reconocido.",
   "Vfp.AccessMSysObjects.Error.OpenFileFailed": "No se pudo abrir el archivo.",
   "Vfp.AccessMSysObjects.Error.ReadPageFailed": "No se pudo leer una pagina completa del contenedor.",
+  "Vfp.AccessMSysObjects.Error.RowCountExceedsDeclared": "Se encontraron {found} filas de catalogo no eliminadas, mas de las que declara la definicion de tabla ({declared}); el contenedor podria tener una pagina obsoleta o liberada.",
   "Vfp.AccessMSysObjects.Error.RowStructureInvalid": "La estructura de la fila es incoherente con sus propios desplazamientos de columna.",
   "Vfp.AccessMSysObjects.Error.RowTooShort": "La fila es demasiado corta para contener su propia estructura declarada.",
   "Vfp.AccessMSysObjects.Error.UnexpectedSchema": "La definicion de la tabla MSysObjects no coincide con el diseno de columnas esperado.",

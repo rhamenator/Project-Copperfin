@@ -34,10 +34,12 @@ struct AccessCatalogEntry {
     std::uint32_t parent_id = 0;
     std::string name;
     // MSysObjects.Type: 1 = table, other values cover queries/forms/
-    // reports/relationships/etc. This slice only surfaces Type == 1 rows
-    // in scan_access_msysobjects_catalog()'s result, per its own scope
-    // (table-name enumeration), but the field is exposed on every decoded
-    // entry regardless in case a future caller needs the raw catalog.
+    // reports/relationships/etc. scan_access_msysobjects_catalog()
+    // decodes and returns every row regardless of Type (see
+    // AccessMSysObjectsScanResult::entries's own comment) -- this
+    // slice's table-name-enumeration scope only means callers wanting
+    // just tables (e.g. scan_access_container_schema()'s own use of
+    // this) filter on type == 1 themselves.
     std::int16_t type = 0;
     // id & 0x00FFFFFF -- the candidate TDEF page number, per mdbtools'
     // own mdb_read_catalog() precedent (cited during this issue's review

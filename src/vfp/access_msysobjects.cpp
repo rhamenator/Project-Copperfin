@@ -230,8 +230,14 @@ DecodedRow decode_row(
             const std::uint32_t span_start = boundaries[var_slot];
             const std::uint32_t span_end = boundaries[var_slot + 1U];
             ++var_slot;
-            value.is_null = !not_null || span_start == span_end;
-            if (!value.is_null) {
+            // #5543 review (Copilot): nullity is governed solely by the
+            // null-mask bit, matching the fixed-column branch above. A
+            // zero-length span (span_start == span_end) only means "no
+            // bytes stored" -- it must not itself imply null, or a
+            // genuinely not-null-but-empty value (a real, distinct SQL
+            // state from NULL) would be silently collapsed into null.
+            value.is_null = !not_null;
+            if (!value.is_null && span_start != span_end) {
                 value.bytes.assign(
                     row_bytes.begin() + static_cast<std::ptrdiff_t>(span_start),
                     row_bytes.begin() + static_cast<std::ptrdiff_t>(span_end));
@@ -403,6 +409,34 @@ AccessMSysObjectsScanResult scan_access_msysobjects_catalog(const std::string& p
     // via the same lightweight 8-byte-per-page header probe
     // scan_access_container_schema() uses -- never buffering the whole
     // file, only one page at a time for pages actually decoded.
+    //
+    // #5543 review (Codex, P1): this header-byte scan does not consult
+    // MSysObjects's own page-usage bitmap (documented in mdbtools'
+    // HACKING.md as a materially more involved sub-format -- a fixed-
+    // size inline bitmap for smaller files, or a chain of indirection
+    // pages for larger ones), so a page that MSysObjects has since
+    // freed (deleted rows or table shrinkage) but that has not been
+    // zeroed or reused by another table could still be picked up here
+    // with a stale tdef_pg == 2 header, and its rows subsequently
+    // treated as live catalog content. Implementing full usage-bitmap-
+    // based page discovery was deliberately not attempted in this
+    // slice: neither real fixture available during development ever
+    // exercised this scenario (both are small, lightly-modified
+    // databases unlikely to have freed a former MSysObjects page), so
+    // there is no way to verify such an implementation against real
+    // evidence the way this slice's other decode logic was -- matching
+    // this same file's own jump-table/compressed-unicode deferrals and
+    // docs/68's original caution about this whole algorithm having no
+    // independently-checkable invariant. As a partial, honest
+    // mitigation rather than silently accepting the risk: the total
+    // number of rows decoded across every discovered page is checked
+    // against MSysObjects's own TDEF-declared row_count below, and the
+    // whole scan fails closed on a mismatch rather than proceeding with
+    // catalog content of uncertain provenance. This does not fully
+    // close the gap (a stale page could coincidentally leave the count
+    // unchanged), but converts the common accidental case into a clear
+    // failure rather than a silent wrong answer. Full usage-map-based
+    // page discovery remains tracked as follow-up work (see docs/72).
     std::vector<std::uint32_t> data_pages;
     std::vector<std::uint8_t> header_probe(8U);
     for (std::uint32_t page_index = 0U; page_index < page_count; ++page_index) {
@@ -417,6 +451,14 @@ AccessMSysObjectsScanResult scan_access_msysobjects_catalog(const std::string& p
             data_pages.push_back(page_index);
         }
     }
+
+    // Counts every non-deleted row slot found across all discovered
+    // pages (whether successfully decoded into `entries` or recorded in
+    // `skipped` for a row-level reason such as the jump-table/
+    // compressed-unicode gaps) -- checked against MSysObjects's own
+    // TDEF-declared row_count below as a partial mitigation for the
+    // stale/freed-page risk documented above this loop.
+    std::size_t total_non_deleted_row_slots = 0U;
 
     std::vector<std::uint8_t> page_bytes(page_size);
     for (const std::uint32_t page_index : data_pages) {
@@ -434,16 +476,51 @@ AccessMSysObjectsScanResult scan_access_msysobjects_catalog(const std::string& p
         const std::size_t header_size = is_jet3 ? 10U : 14U;
         const std::size_t num_rows_offset = is_jet3 ? 8U : 12U;
         const std::uint16_t num_rows = read_le_u16(page_bytes, num_rows_offset);
+        // #5543 review (Codex, P2): a corrupt page could declare more
+        // rows than its own row-offset directory (or even the page
+        // itself) has room for. The original version silently truncated
+        // the directory at the page boundary and still reported the
+        // overall scan as ok=true, omitting declared rows without any
+        // indication anything was wrong. Validating the complete
+        // directory span up front, and failing the whole page closed
+        // rather than partially decoding it, matches this codebase's
+        // established fail-closed discipline for a page that declares
+        // more than it has room for (e.g.
+        // access_table_definition.cpp's own oversized-index-count
+        // guard).
+        const std::size_t directory_size = static_cast<std::size_t>(num_rows) * 2U;
+        if (directory_size > page_bytes.size() - header_size) {
+            result.skipped.push_back({
+                .page_number = page_index,
+                .row_index = 0U,
+                .reason = access_msysobjects_text("Vfp.AccessMSysObjects.Error.RowStructureInvalid")});
+            continue;
+        }
+        const std::size_t directory_end = header_size + directory_size;
+
         std::vector<std::pair<std::uint16_t, std::uint16_t>> row_slots;  // (offset, flags)
         row_slots.reserve(num_rows);
+        bool directory_valid = true;
         for (std::uint16_t row_index = 0U; row_index < num_rows; ++row_index) {
             const std::size_t slot_position = header_size + static_cast<std::size_t>(row_index) * 2U;
-            if (slot_position + 2U > page_bytes.size()) {
+            const std::uint16_t raw_slot = read_le_u16(page_bytes, slot_position);
+            const auto row_offset = static_cast<std::uint16_t>(raw_slot & 0x3FFFU);
+            // A row's content must begin at or beyond the end of the
+            // directory itself -- otherwise the declared offset points
+            // into the directory (or another row's slot entries), which
+            // would then be misread as row payload bytes.
+            if (row_offset < directory_end) {
+                directory_valid = false;
                 break;
             }
-            const std::uint16_t raw_slot = read_le_u16(page_bytes, slot_position);
-            row_slots.push_back({static_cast<std::uint16_t>(raw_slot & 0x3FFFU),
-                                  static_cast<std::uint16_t>(raw_slot & 0xC000U)});
+            row_slots.push_back({row_offset, static_cast<std::uint16_t>(raw_slot & 0xC000U)});
+        }
+        if (!directory_valid) {
+            result.skipped.push_back({
+                .page_number = page_index,
+                .row_index = 0U,
+                .reason = access_msysobjects_text("Vfp.AccessMSysObjects.Error.RowStructureInvalid")});
+            continue;
         }
 
         for (std::size_t row_index = 0U; row_index < row_slots.size(); ++row_index) {
@@ -451,6 +528,7 @@ AccessMSysObjectsScanResult scan_access_msysobjects_catalog(const std::string& p
             if ((flags & 0x8000U) != 0U) {
                 continue;  // deleted row -- silently excluded, not an error.
             }
+            ++total_non_deleted_row_slots;
             if ((flags & 0x4000U) != 0U) {
                 result.skipped.push_back({
                     .page_number = page_index,
@@ -518,6 +596,23 @@ AccessMSysObjectsScanResult scan_access_msysobjects_catalog(const std::string& p
             entry.candidate_page_number = entry.id & 0x00FFFFFFU;
             result.entries.push_back(std::move(entry));
         }
+    }
+
+    // A stale/freed page that still carries MSysObjects's tdef_pg header
+    // (see this function's own comment above the page-discovery scan)
+    // would surface here as MORE non-deleted row slots than
+    // MSysObjects's own TDEF declares -- fail the whole scan closed
+    // rather than returning catalog content (including possibly
+    // misattributed table names) of uncertain provenance.
+    if (total_non_deleted_row_slots > tdef.row_count) {
+        result.ok = false;
+        result.entries.clear();
+        result.skipped.clear();
+        result.error = access_msysobjects_text(
+            "Vfp.AccessMSysObjects.Error.RowCountExceedsDeclared",
+            {{"found", std::to_string(total_non_deleted_row_slots)},
+             {"declared", std::to_string(tdef.row_count)}});
+        return result;
     }
 
     result.ok = true;

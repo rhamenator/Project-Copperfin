@@ -1278,7 +1278,14 @@ std::filesystem::path write_synthetic_msysobjects_container(
     const std::string& filename,
     bool is_jet3,
     const std::vector<SyntheticAccessColumn>& msysobjects_columns,
-    const std::vector<std::vector<std::uint8_t>>& trailing_pages) {
+    const std::vector<std::vector<std::uint8_t>>& trailing_pages,
+    // #5543 review (Codex, P1 mitigation): scan_access_msysobjects_catalog()
+    // now fails closed if it finds more non-deleted row slots than
+    // MSysObjects's own TDEF declares via row_count (a partial guard
+    // against stale/freed pages -- see that function's own comment).
+    // Callers must pass the real number of non-deleted rows their
+    // synthetic data pages contain for that check to pass.
+    std::uint32_t msysobjects_row_count = 0U) {
     const std::size_t page_size = is_jet3 ? 2048U : 4096U;
     std::vector<std::uint8_t> file_bytes(page_size * (3U + trailing_pages.size()), 0U);
 
@@ -1291,8 +1298,8 @@ std::filesystem::path write_synthetic_msysobjects_container(
     file_bytes[0x14] = is_jet3 ? 0x00U : 0x01U;
 
     const auto tdef_page = is_jet3
-        ? make_synthetic_jet3_tdef_page(msysobjects_columns, 0x53U, 0U)
-        : make_synthetic_jet4_tdef_page(msysobjects_columns, 0x53U, 0U);
+        ? make_synthetic_jet3_tdef_page(msysobjects_columns, 0x53U, msysobjects_row_count)
+        : make_synthetic_jet4_tdef_page(msysobjects_columns, 0x53U, msysobjects_row_count);
     std::copy(tdef_page.begin(), tdef_page.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(page_size * 2U));
 
     for (std::size_t index = 0U; index < trailing_pages.size(); ++index) {
@@ -1656,7 +1663,7 @@ void test_scan_access_msysobjects_catalog_decodes_jet3_row() {
     const auto data_page = make_synthetic_data_page(2048U, 2U, true, {{.bytes = row}});
 
     const auto container_path = write_synthetic_msysobjects_container(
-        temp_dir, "jet3.mdb", true, columns, {data_page});
+        temp_dir, "jet3.mdb", true, columns, {data_page}, 1U);
 
     const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
         copperfin::platform::path_to_utf8_string(container_path));
@@ -1694,7 +1701,7 @@ void test_scan_access_msysobjects_catalog_decodes_jet4_row() {
     const auto data_page = make_synthetic_data_page(4096U, 2U, false, {{.bytes = row}});
 
     const auto container_path = write_synthetic_msysobjects_container(
-        temp_dir, "jet4.mdb", false, columns, {data_page});
+        temp_dir, "jet4.mdb", false, columns, {data_page}, 1U);
 
     const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
         copperfin::platform::path_to_utf8_string(container_path));
@@ -1754,7 +1761,7 @@ void test_scan_access_msysobjects_catalog_handles_alphabetized_column_storage_or
     const auto data_page = make_synthetic_data_page(2048U, 2U, true, {{.bytes = row}});
 
     const auto container_path = write_synthetic_msysobjects_container(
-        temp_dir, "alphabetized.mdb", true, columns, {data_page});
+        temp_dir, "alphabetized.mdb", true, columns, {data_page}, 1U);
 
     const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
         copperfin::platform::path_to_utf8_string(container_path));
@@ -1797,7 +1804,7 @@ void test_scan_access_msysobjects_catalog_skips_deleted_and_lookup_overflow_rows
         });
 
     const auto container_path = write_synthetic_msysobjects_container(
-        temp_dir, "flags.mdb", true, columns, {data_page});
+        temp_dir, "flags.mdb", true, columns, {data_page}, 2U);
 
     const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
         copperfin::platform::path_to_utf8_string(container_path));
@@ -1843,7 +1850,7 @@ void test_scan_access_msysobjects_catalog_fails_closed_on_jet3_row_at_or_above_2
     const auto data_page = make_synthetic_data_page(2048U, 2U, true, {{.bytes = row}});
 
     const auto container_path = write_synthetic_msysobjects_container(
-        temp_dir, "jumptable.mdb", true, columns, {data_page});
+        temp_dir, "jumptable.mdb", true, columns, {data_page}, 1U);
 
     const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
         copperfin::platform::path_to_utf8_string(container_path));
@@ -1880,7 +1887,7 @@ void test_scan_access_msysobjects_catalog_fails_closed_on_jet4_compressed_unicod
     const auto data_page = make_synthetic_data_page(4096U, 2U, false, {{.bytes = row}});
 
     const auto container_path = write_synthetic_msysobjects_container(
-        temp_dir, "compressed.mdb", false, columns, {data_page});
+        temp_dir, "compressed.mdb", false, columns, {data_page}, 1U);
 
     const auto result = copperfin::vfp::scan_access_msysobjects_catalog(
         copperfin::platform::path_to_utf8_string(container_path));
@@ -1934,7 +1941,7 @@ void test_scan_access_container_schema_attaches_names_from_catalog() {
     const std::string signature = "Standard Jet DB";
     std::copy(signature.begin(), signature.end(), file_bytes.begin() + 4);
     file_bytes[0x14] = 0x00U;
-    const auto tdef_page = make_synthetic_jet3_tdef_page(msysobjects_columns, 0x53U, 0U);
+    const auto tdef_page = make_synthetic_jet3_tdef_page(msysobjects_columns, 0x53U, 2U);
     std::copy(tdef_page.begin(), tdef_page.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(2048U * 2U));
     std::copy(user_table_page.begin(), user_table_page.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(2048U * 3U));
     std::copy(data_page.begin(), data_page.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(2048U * 4U));
@@ -1982,6 +1989,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AccessMSysObjects.Error.NotAnAccessContainer",
         "Vfp.AccessMSysObjects.Error.OpenFileFailed",
         "Vfp.AccessMSysObjects.Error.ReadPageFailed",
+        "Vfp.AccessMSysObjects.Error.RowCountExceedsDeclared",
         "Vfp.AccessMSysObjects.Error.RowStructureInvalid",
         "Vfp.AccessMSysObjects.Error.RowTooShort",
         "Vfp.AccessMSysObjects.Error.UnexpectedSchema",
