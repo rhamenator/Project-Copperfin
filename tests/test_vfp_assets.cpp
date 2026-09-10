@@ -2440,6 +2440,118 @@ void test_scan_access_saved_queries_skips_query_with_undecodable_clause_text() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5551 review (Codex P1): a query sorted by two or more fields must
+// have every ORDER BY expression preserved, not just the first.
+void test_scan_access_saved_queries_appends_multiple_order_by_expressions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_saved_queries_multi_order_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto msysobjects_columns = make_msysobjects_test_columns();
+    const auto msysobjects_row = make_synthetic_msysobjects_row_bytes(
+        msysobjects_columns,
+        {le_bytes32(100U), le_bytes32(0U), std::vector<std::uint8_t>{'M', 'u', 'l', 't', 'i', 'O', 'r', 'd', 'e', 'r'},
+         le_bytes16(5U), std::nullopt},
+        true);
+    const auto msysqueries_catalog_row = make_synthetic_msysobjects_row_bytes(
+        msysobjects_columns,
+        {le_bytes32(4U), le_bytes32(0U),
+         std::vector<std::uint8_t>{'M', 'S', 'y', 's', 'Q', 'u', 'e', 'r', 'i', 'e', 's'}, le_bytes16(1U),
+         std::nullopt},
+        true);
+    const auto msysobjects_data_page = make_synthetic_data_page(
+        2048U, 2U, true, {{.bytes = msysobjects_row}, {.bytes = msysqueries_catalog_row}});
+
+    const auto msysqueries_columns = make_msysqueries_test_columns();
+    const auto msysqueries_tdef_page = make_synthetic_jet3_tdef_page(msysqueries_columns, 0x4EU, 3U);
+
+    const auto table_row = make_synthetic_msysobjects_row_bytes(
+        msysqueries_columns,
+        {le_bytes32(100U), std::vector<std::uint8_t>{5U}, le_bytes16(0U),
+         std::vector<std::uint8_t>{'T'}, std::nullopt, std::nullopt},
+        true);
+    const auto order_a_row = make_synthetic_msysobjects_row_bytes(
+        msysqueries_columns,
+        {le_bytes32(100U), std::vector<std::uint8_t>{11U}, le_bytes16(0U),
+         std::vector<std::uint8_t>{'D'}, std::nullopt, make_inline_memo_bytes("T.A")},
+        true);
+    const auto order_b_row = make_synthetic_msysobjects_row_bytes(
+        msysqueries_columns,
+        {le_bytes32(100U), std::vector<std::uint8_t>{11U}, le_bytes16(0U), std::nullopt, std::nullopt,
+         make_inline_memo_bytes("T.B")},
+        true);
+    const auto msysqueries_data_page = make_synthetic_data_page(
+        2048U, 4U, true, {{.bytes = table_row}, {.bytes = order_a_row}, {.bytes = order_b_row}});
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "multiorder.mdb", true, msysobjects_columns,
+        {msysobjects_data_page, msysqueries_tdef_page, msysqueries_data_page}, 2U);
+
+    const auto result = copperfin::vfp::scan_access_saved_queries(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan should succeed: " + result.error);
+    expect(result.queries.size() == 1U, "exactly one query should be discovered");
+    if (result.queries.size() == 1U) {
+        expect(result.queries[0].sql == "SELECT  FROM [T] ORDER BY T.A DESCENDING,T.B",
+               "both ORDER BY expressions should be preserved, comma-separated: got '" + result.queries[0].sql + "'");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5551 review (Codex P1, Copilot): a query with clause rows but no
+// table reference (Attribute 5) must not be reconstructed as a
+// fabricated SELECT with an empty FROM clause.
+void test_scan_access_saved_queries_skips_query_with_no_table_reference() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_saved_queries_no_table_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto msysobjects_columns = make_msysobjects_test_columns();
+    const auto msysobjects_row = make_synthetic_msysobjects_row_bytes(
+        msysobjects_columns,
+        {le_bytes32(100U), le_bytes32(0U),
+         std::vector<std::uint8_t>{'N', 'o', 'T', 'a', 'b', 'l', 'e'}, le_bytes16(5U), std::nullopt},
+        true);
+    const auto msysqueries_catalog_row = make_synthetic_msysobjects_row_bytes(
+        msysobjects_columns,
+        {le_bytes32(4U), le_bytes32(0U),
+         std::vector<std::uint8_t>{'M', 'S', 'y', 's', 'Q', 'u', 'e', 'r', 'i', 'e', 's'}, le_bytes16(1U),
+         std::nullopt},
+        true);
+    const auto msysobjects_data_page = make_synthetic_data_page(
+        2048U, 2U, true, {{.bytes = msysobjects_row}, {.bytes = msysqueries_catalog_row}});
+
+    const auto msysqueries_columns = make_msysqueries_test_columns();
+    const auto msysqueries_tdef_page = make_synthetic_jet3_tdef_page(msysqueries_columns, 0x4EU, 1U);
+
+    // Only an Attribute==6 (column) row -- no Attribute==5 (table) row at
+    // all, mimicking what a non-SELECT query type might look like.
+    const auto column_row = make_synthetic_msysobjects_row_bytes(
+        msysqueries_columns,
+        {le_bytes32(100U), std::vector<std::uint8_t>{6U}, le_bytes16(0U), std::nullopt, std::nullopt,
+         make_inline_memo_bytes("SomeExpression")},
+        true);
+    const auto msysqueries_data_page = make_synthetic_data_page(2048U, 4U, true, {{.bytes = column_row}});
+
+    const auto container_path = write_synthetic_msysobjects_container(
+        temp_dir, "notable.mdb", true, msysobjects_columns,
+        {msysobjects_data_page, msysqueries_tdef_page, msysqueries_data_page}, 2U);
+
+    const auto result = copperfin::vfp::scan_access_saved_queries(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan should still succeed: " + result.error);
+    expect(result.queries.empty(), "a query with no table reference should not be reconstructed as a fabricated SELECT");
+    expect(result.skipped.size() == 1U && result.skipped[0].name == "NoTable",
+           "the query should be reported as skipped for lacking a table reference");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_scan_access_saved_queries_reports_ok_with_no_queries() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_saved_queries_none_tests";
@@ -4373,6 +4485,8 @@ int main() {
     test_scan_access_container_schema_attaches_names_from_catalog();
     test_scan_access_saved_queries_reconstructs_select_from_where();
     test_scan_access_saved_queries_skips_query_with_undecodable_clause_text();
+    test_scan_access_saved_queries_appends_multiple_order_by_expressions();
+    test_scan_access_saved_queries_skips_query_with_no_table_reference();
     test_scan_access_saved_queries_reports_ok_with_no_queries();
     test_parse_access_long_value_field_descriptor_decodes_header();
     test_parse_access_long_value_field_descriptor_rejects_short_input();

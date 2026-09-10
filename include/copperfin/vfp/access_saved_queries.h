@@ -62,10 +62,19 @@ namespace copperfin::vfp {
 // This is a best-effort SQL reconstruction (matching mdb-queries.c's own
 // scope, not a claim of full Access SQL/QBE fidelity): non-SELECT query
 // types (action queries: INSERT/UPDATE/DELETE/crosstab/union/pass-
-// through/data-definition) are not specifically handled and will
-// reconstruct an incomplete or empty SELECT rather than their real
-// semantics -- recorded in `skipped`, not silently misrepresented as a
-// complete SELECT.
+// through/data-definition) are not positively identified, since no
+// currently-allowed evidence source (neither mdb-queries.c nor any real
+// fixture available during this slice's development) documents how
+// MSysQueries's own row structure distinguishes them. A query with
+// clause rows but no `Attribute == 5` (table) row at all -- which no
+// real SELECT-shaped query this slice's development observed ever
+// lacked -- is treated as unreconstructable and recorded in `skipped`
+// rather than returned as a fabricated `SELECT ... FROM ` with an empty
+// FROM clause. This is a partial mitigation, not full query-type
+// detection: a non-SELECT query that references tables the same way a
+// SELECT would (plausible for UPDATE/DELETE) is not caught by this check
+// and may still produce SQL text that does not reflect its real
+// semantics.
 struct AccessSavedQuery {
     std::string name;
     std::string sql;

@@ -11,6 +11,7 @@
 
 #include "copperfin/localization/localization.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -332,6 +333,7 @@ ClauseRowScanResult scan_msysqueries_rows(
     std::uint32_t page_size,
     bool is_jet3,
     std::uint32_t msysqueries_page_number,
+    std::uint32_t msysqueries_declared_row_count,
     const std::vector<AccessColumnDefinition>& raw_columns) {
     ClauseRowScanResult result;
 
@@ -352,6 +354,14 @@ ClauseRowScanResult scan_msysqueries_rows(
     std::optional<std::size_t> expression_index;
     std::vector<RowColumnLayout> columns(ordered.size());
     for (std::size_t index = 0U; index < ordered.size(); ++index) {
+        if (ordered[index] == nullptr) {
+            // #5551 review (Copilot): a non-dense column_number sequence
+            // (a gap) would otherwise leave this slot null and crash on
+            // dereference below -- fail closed instead, matching
+            // access_msysobjects.cpp's own column_number_seen precedent.
+            result.error = access_saved_queries_text("Vfp.AccessSavedQueries.Error.UnexpectedSchema");
+            return result;
+        }
         columns[index] = {
             .type = ordered[index]->type,
             .fixed_length = ordered[index]->fixed_length,
@@ -404,6 +414,13 @@ ClauseRowScanResult scan_msysqueries_rows(
         }
     }
 
+    // #5551 review (Codex, P2): a stale/freed page that still carries
+    // MSysQueries's own tdef_pg header would otherwise be silently
+    // incorporated -- matching access_msysobjects.cpp's own
+    // RowCountExceedsDeclared precedent, this is checked against the
+    // TDEF's own declared row_count after the scan below.
+    std::size_t total_non_deleted_row_slots = 0U;
+
     std::vector<std::uint8_t> page_bytes(page_size);
     for (const std::uint32_t page_index : data_pages) {
         input.seekg(static_cast<std::streamoff>(static_cast<std::uint64_t>(page_index) * page_size), std::ios::beg);
@@ -446,6 +463,7 @@ ClauseRowScanResult scan_msysqueries_rows(
             if ((flags & 0x8000U) != 0U) {
                 continue;  // deleted row.
             }
+            ++total_non_deleted_row_slots;
             if ((flags & 0x4000U) != 0U) {
                 result.any_unattributed_row_skipped = true;
                 continue;  // lookup-overflow row, not followed.
@@ -466,10 +484,18 @@ ClauseRowScanResult scan_msysqueries_rows(
                 continue;
             }
 
-            QueryClauseRow clause_row;
-            if (!decoded.columns[*object_id_index].is_null) {
-                clause_row.object_id = decode_signed_le(decoded.columns[*object_id_index].bytes);
+            if (decoded.columns[*object_id_index].is_null) {
+                // #5551 review (Copilot): a NULL ObjectId cannot be
+                // attributed to a specific query -- treating it as 0
+                // would risk misattributing this row to whatever query
+                // happens to have Id 0 (or silently to nothing). Matches
+                // this function's own unattributed-failure precedent for
+                // other structurally-anomalous rows.
+                result.any_unattributed_row_skipped = true;
+                continue;
             }
+            QueryClauseRow clause_row;
+            clause_row.object_id = decode_signed_le(decoded.columns[*object_id_index].bytes);
             if (!decoded.columns[*attribute_index].is_null) {
                 clause_row.attribute = static_cast<std::uint8_t>(
                     decode_signed_le(decoded.columns[*attribute_index].bytes));
@@ -530,6 +556,12 @@ ClauseRowScanResult scan_msysqueries_rows(
         }
     }
 
+    if (total_non_deleted_row_slots > msysqueries_declared_row_count) {
+        result.rows.clear();
+        result.error = access_saved_queries_text("Vfp.AccessSavedQueries.Error.RowCountExceedsDeclared");
+        return result;
+    }
+
     result.ok = true;
     return result;
 }
@@ -576,11 +608,16 @@ std::string reconstruct_sql(const std::vector<const QueryClauseRow*>& clause_row
                 where_clause = row->expression;
                 break;
             case 11U:  // sorting
-                if (sorting.empty()) {
-                    sorting = "ORDER BY " + row->expression;
-                    if (row->name1 == "D") {
-                        sorting += " DESCENDING";
-                    }
+                // #5551 review (Codex P1): a query sorted by two or more
+                // fields has one MSysQueries row per sort expression --
+                // append every one, comma-separated, rather than
+                // discarding all but the first.
+                if (!sorting.empty()) {
+                    sorting += ",";
+                }
+                sorting += row->expression;
+                if (row->name1 == "D") {
+                    sorting += " DESCENDING";
                 }
                 break;
             default:
@@ -593,7 +630,7 @@ std::string reconstruct_sql(const std::vector<const QueryClauseRow*>& clause_row
         sql += " WHERE " + where_clause;
     }
     if (!sorting.empty()) {
-        sql += " " + sorting;
+        sql += " ORDER BY " + sorting;
     }
     return sql;
 }
@@ -655,7 +692,7 @@ AccessSavedQueriesScanResult scan_access_saved_queries(const std::string& path) 
 
     const ClauseRowScanResult clause_scan = scan_msysqueries_rows(
         path, header_result.header.generation, static_cast<std::uint32_t>(page_size), is_jet3,
-        msysqueries->page_number, msysqueries->columns);
+        msysqueries->page_number, msysqueries->row_count, msysqueries->columns);
     if (!clause_scan.ok) {
         result.error = clause_scan.error;
         return result;
@@ -694,6 +731,32 @@ AccessSavedQueriesScanResult scan_access_saved_queries(const std::string& path) 
         if (it == rows_by_object_id.end() || it->second.empty()) {
             result.skipped.push_back({.name = name, .reason = access_saved_queries_text(
                 "Vfp.AccessSavedQueries.Error.NoClauseRows")});
+            continue;
+        }
+        // #5551 review (Codex P1, Copilot, duplicate finding): neither
+        // mdb-queries.c nor any currently-allowed evidence source
+        // documents how to positively identify a non-SELECT query type
+        // (action/crosstab/union/pass-through/data-definition) from
+        // MSysQueries's own row structure -- guessing at undocumented
+        // Attribute values is exactly what this codebase's discipline
+        // avoids. What IS a defensible, evidence-grounded minimum sanity
+        // bar: every real SELECT-shaped query this slice's development
+        // observed had at least one Attribute==5 (table) row. A query
+        // with clause rows but no table reference at all cannot be a
+        // sensible SELECT -- skip it rather than returning a fabricated
+        // "SELECT ... FROM " with an empty FROM clause. This is a
+        // partial mitigation, not full query-type detection: a non-
+        // SELECT query that DOES reference tables the same way a SELECT
+        // would (plausible for UPDATE/DELETE) is not caught by this
+        // check and may still produce misleading SQL text -- see this
+        // file's own header comment and docs/76 for the documented scope
+        // boundary this leaves.
+        const bool has_table_reference = std::any_of(
+            it->second.begin(), it->second.end(),
+            [](const QueryClauseRow* row) { return row->attribute == 5U; });
+        if (!has_table_reference) {
+            result.skipped.push_back({.name = name, .reason = access_saved_queries_text(
+                "Vfp.AccessSavedQueries.Error.NoTableReference")});
             continue;
         }
         result.queries.push_back({.name = name, .sql = reconstruct_sql(it->second)});

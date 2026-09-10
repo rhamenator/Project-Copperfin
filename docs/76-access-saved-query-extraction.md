@@ -80,6 +80,46 @@ truth:
   proven beyond noting the mechanism difference. Documented here rather
   than silently resolved in either direction.
 
+## PR review follow-up
+
+Six findings from #5551's review round were addressed:
+
+- **Multiple `ORDER BY` columns collapsed to one (Codex P1).** The
+  original `sorting.empty()` guard kept only the first `Attribute == 11`
+  row. Fixed to append every sort expression, comma-separated. Re-running
+  against the same real Jet4 fixture confirms the fix is a genuine
+  improvement, not just a synthetic-test concern: `Print Resumes` now
+  reconstructs a 5-column `ORDER BY`, while `mdb-queries` itself still
+  only emits the first column (`ORDER BY [Document List].MergeDocument`)
+  -- this specific divergence from `mdb-queries`' own ground truth is
+  expected and correct, since `mdb-queries.c` has this exact limitation.
+- **Unsupported query types silently fabricated as `SELECT` (Codex P1,
+  Copilot, duplicate finding).** Neither `mdb-queries.c` nor any
+  currently-allowed evidence source documents how to positively identify
+  a non-SELECT query type from `MSysQueries`'s own row structure, so
+  guessing at undocumented `Attribute` values was not attempted. Added
+  the one defensible, evidence-grounded minimum sanity bar instead: a
+  query with clause rows but no `Attribute == 5` (table) row -- which no
+  real SELECT-shaped query this slice's development observed ever lacked
+  -- is now skipped rather than returned as a fabricated
+  `SELECT ... FROM ` with an empty FROM clause. Documented as a partial
+  mitigation, not full query-type detection (see this file's header
+  comment).
+- **Stale/freed MSysQueries page not checked against the TDEF's declared
+  row count (Codex P2).** `scan_msysqueries_rows()` now tracks
+  non-deleted row slots and fails the whole scan closed if that exceeds
+  `MSysQueries`'s own declared `row_count`, matching
+  `access_msysobjects.cpp`'s own `RowCountExceedsDeclared` precedent.
+- **Crash on a non-dense `column_number` sequence (Copilot).** A gap in
+  declared column numbers left an `ordered[]` slot null, which was then
+  dereferenced unconditionally. Now fails closed with
+  `UnexpectedSchema` instead.
+- **`NULL` `ObjectId` silently treated as `0` (Copilot).** A
+  structurally-decoded row with a `NULL` `ObjectId` could previously be
+  misattributed to whatever query happens to have `Id == 0`. Now treated
+  as an unattributable-row failure (the same category as other
+  structural anomalies), not silently defaulted.
+
 ## What this slice implements
 
 - `scan_access_saved_queries()`: for every `MSysObjects` catalog entry
