@@ -1,3 +1,26 @@
+- 2026-09-10: Progress on #5476 (parent #141): added
+  `parse_access_table_definition_page()` and
+  `scan_access_container_schema()`
+  (`src/vfp/access_table_definition.cpp`), the first Access/JET
+  table-schema reader -- decodes a Table Definition (TDEF) page's
+  column names/types/lengths for both Jet3 and Jet4, and discovers
+  every TDEF page in a container. Grounded in mdbtools' `HACKING.md`
+  (`docs/68-access-mdb-jet-physical-page-layout-notes.md`) and
+  independently cross-checked against real Jet3/Jet4 `.mdb` fixtures
+  during development: decoded `MSysObjects` column names matched
+  Access's well-known real system-catalog schema exactly for both
+  generations, and every column's internal consistency (fixed-length
+  columns landing at sane offsets; variable-length columns showing
+  uninitialized bytes in their unused offset field) corroborated the
+  layout -- see `docs/71-access-table-definition-schema-inspection.md`
+  for the full evidence trail. Does not by itself close #5476: table
+  *names* require decoding `MSysObjects`'s rows via the general Jet
+  data-row algorithm, which `docs/68` already flagged as materially
+  higher-risk than TDEF-page parsing; filed as the explicit follow-up
+  #5539 rather than attempted in this pass. Multi-page TDEFs and
+  in-TDEF index metadata are separate, documented (not silently
+  unhandled) gaps.
+
 - 2026-09-09: Fixes #5475: added `EXPORT DATABASE ... TYPE ACCESS`
   (phase 1 of #141), a non-VFP-extension command that emits an
   Access/Jet-dialect SQL script from a DBC/DBF database container,

@@ -5,6 +5,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/access_container.h"
+#include "copperfin/vfp/access_table_definition.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/cdx_header.h"
 #include "copperfin/vfp/dbf_header.h"
@@ -805,6 +806,15 @@ void test_inspect_database_container_collects_dcx_companion() {
     fs::remove(temp_dir, ignored);
 }
 
+bool write_binary_file(const std::filesystem::path& path, const std::vector<std::uint8_t>& bytes) {
+    std::ofstream output(path, std::ios::binary);
+    if (!output) {
+        return false;
+    }
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    return static_cast<bool>(output);
+}
+
 std::vector<std::uint8_t> make_access_container_bytes(std::string_view signature, std::uint8_t generation_byte) {
     std::vector<std::uint8_t> bytes(64U, 0U);
     bytes[0] = 0x00U;
@@ -894,6 +904,305 @@ void test_access_container_errors_resolve_through_localization_catalog() {
         "#5521: parse_access_container_header should preserve the default localized short-header error");
 }
 
+// #5476: synthetic Jet3/Jet4 Table Definition (TDEF) page builders,
+// reproducing the byte layout documented in
+// docs/68-access-mdb-jet-physical-page-layout-notes.md and independently
+// cross-checked against real Jet3/Jet4 .mdb fixtures during this slice's
+// development (see that header's own comment for the specifics). Building
+// these from the verified layout, rather than reusing an actual fixture
+// file, keeps the committed test suite free of any real Access file --
+// real fixtures available locally include ones the user has said contain
+// genuine personal data, and this project's practice is not to commit
+// such files or their content regardless of which specific file a test
+// happens to need.
+struct SyntheticAccessColumn {
+    std::string name;
+    std::uint8_t type = 0U;
+    std::uint16_t length = 0U;
+    bool fixed = true;
+};
+
+std::vector<std::uint8_t> make_synthetic_jet3_tdef_page(
+    const std::vector<SyntheticAccessColumn>& columns,
+    std::uint8_t table_type,
+    std::uint32_t num_rows) {
+    std::vector<std::uint8_t> page(2048U, 0U);
+    page[0] = 0x02U;
+    page[1] = 0x01U;
+    page[2] = 'V';
+    page[3] = 'C';
+    // next_pg (bytes 4-7) stays 0: a single-page TDEF.
+
+    std::size_t offset = 8U;
+    const auto num_cols = static_cast<std::uint16_t>(columns.size());
+    write_le_u32(page, offset, 0U); offset += 4U;  // tdef_len (not validated by the parser)
+    write_le_u32(page, offset, num_rows); offset += 4U;
+    write_le_u32(page, offset, 0U); offset += 4U;  // autonumber
+    page[offset] = table_type; offset += 1U;
+    write_le_u16(page, offset, num_cols); offset += 2U;  // max_cols
+    std::uint16_t num_var_cols = 0U;
+    for (const auto& column : columns) {
+        if (!column.fixed) {
+            ++num_var_cols;
+        }
+    }
+    write_le_u16(page, offset, num_var_cols); offset += 2U;
+    write_le_u16(page, offset, num_cols); offset += 2U;  // num_cols
+    write_le_u32(page, offset, 0U); offset += 4U;  // num_idx
+    write_le_u32(page, offset, 0U); offset += 4U;  // num_real_idx = 0 (no index-info block to skip)
+    write_le_u32(page, offset, 0U); offset += 4U;  // used_pages
+    write_le_u32(page, offset, 0U); offset += 4U;  // free_pages
+
+    std::uint16_t fixed_offset_cursor = 0U;
+    for (std::size_t index = 0U; index < columns.size(); ++index) {
+        const auto& column = columns[index];
+        page[offset] = column.type; offset += 1U;
+        write_le_u16(page, offset, static_cast<std::uint16_t>(index)); offset += 2U;  // col_num
+        write_le_u16(page, offset, 0U); offset += 2U;  // offset_V
+        write_le_u16(page, offset, static_cast<std::uint16_t>(index)); offset += 2U;  // col_num (repeat)
+        write_le_u16(page, offset, 0x409U); offset += 2U;  // sort_order
+        write_le_u16(page, offset, 0U); offset += 2U;  // misc
+        write_le_u16(page, offset, 0U); offset += 2U;  // unknown
+        page[offset] = column.fixed ? 0x01U : 0x00U; offset += 1U;  // bitmask
+        write_le_u16(page, offset, column.fixed ? fixed_offset_cursor : 0U); offset += 2U;  // offset_F
+        write_le_u16(page, offset, column.length); offset += 2U;  // col_len
+        if (column.fixed) {
+            fixed_offset_cursor = static_cast<std::uint16_t>(fixed_offset_cursor + column.length);
+        }
+    }
+    for (const auto& column : columns) {
+        page[offset] = static_cast<std::uint8_t>(column.name.size()); offset += 1U;
+        std::copy(column.name.begin(), column.name.end(), page.begin() + static_cast<std::ptrdiff_t>(offset));
+        offset += column.name.size();
+    }
+    return page;
+}
+
+std::vector<std::uint8_t> make_synthetic_jet4_tdef_page(
+    const std::vector<SyntheticAccessColumn>& columns,
+    std::uint8_t table_type,
+    std::uint32_t num_rows) {
+    std::vector<std::uint8_t> page(4096U, 0U);
+    page[0] = 0x02U;
+    page[1] = 0x01U;
+    // next_pg (bytes 4-7) stays 0: a single-page TDEF.
+
+    std::size_t offset = 8U;
+    const auto num_cols = static_cast<std::uint16_t>(columns.size());
+    write_le_u32(page, offset, 0U); offset += 4U;  // tdef_len
+    write_le_u32(page, offset, 0U); offset += 4U;  // unknown
+    write_le_u32(page, offset, num_rows); offset += 4U;
+    write_le_u32(page, offset, 0U); offset += 4U;  // autonumber
+    page[offset] = 0x01U; offset += 1U;  // autonum_flag
+    offset += 3U;  // unknown
+    write_le_u32(page, offset, 0U); offset += 4U;  // ct_autonum
+    offset += 8U;  // unknown
+    page[offset] = table_type; offset += 1U;
+    write_le_u16(page, offset, num_cols); offset += 2U;  // max_cols
+    std::uint16_t num_var_cols = 0U;
+    for (const auto& column : columns) {
+        if (!column.fixed) {
+            ++num_var_cols;
+        }
+    }
+    write_le_u16(page, offset, num_var_cols); offset += 2U;
+    write_le_u16(page, offset, num_cols); offset += 2U;  // num_cols
+    write_le_u32(page, offset, 0U); offset += 4U;  // num_idx
+    write_le_u32(page, offset, 0U); offset += 4U;  // num_real_idx = 0
+    write_le_u32(page, offset, 0U); offset += 4U;  // used_pages
+    write_le_u32(page, offset, 0U); offset += 4U;  // free_pages
+
+    std::uint16_t fixed_offset_cursor = 0U;
+    for (std::size_t index = 0U; index < columns.size(); ++index) {
+        const auto& column = columns[index];
+        page[offset] = column.type; offset += 1U;
+        offset += 4U;  // unknown
+        write_le_u16(page, offset, static_cast<std::uint16_t>(index)); offset += 2U;  // col_num
+        write_le_u16(page, offset, 0U); offset += 2U;  // offset_V
+        write_le_u16(page, offset, static_cast<std::uint16_t>(index)); offset += 2U;  // col_num (repeat)
+        write_le_u16(page, offset, 0x409U); offset += 2U;  // misc
+        write_le_u16(page, offset, 0U); offset += 2U;  // misc_ext
+        page[offset] = column.fixed ? 0x01U : 0x00U; offset += 1U;  // bitmask
+        page[offset] = 0U; offset += 1U;  // misc_flags
+        offset += 4U;  // unknown
+        write_le_u16(page, offset, column.fixed ? fixed_offset_cursor : 0U); offset += 2U;  // offset_F
+        write_le_u16(page, offset, column.length); offset += 2U;  // col_len
+        if (column.fixed) {
+            fixed_offset_cursor = static_cast<std::uint16_t>(fixed_offset_cursor + column.length);
+        }
+    }
+    for (const auto& column : columns) {
+        write_le_u16(page, offset, static_cast<std::uint16_t>(column.name.size() * 2U)); offset += 2U;
+        for (const char character : column.name) {
+            page[offset] = static_cast<std::uint8_t>(character);
+            page[offset + 1U] = 0U;
+            offset += 2U;
+        }
+    }
+    return page;
+}
+
+void test_parse_access_table_definition_page_decodes_jet3_columns() {
+    const std::vector<SyntheticAccessColumn> columns{
+        {.name = "Id", .type = 0x04U, .length = 4U, .fixed = true},
+        {.name = "Name", .type = 0x0AU, .length = 50U, .fixed = false},
+        {.name = "Flags", .type = 0x04U, .length = 4U, .fixed = true},
+    };
+    const auto page = make_synthetic_jet3_tdef_page(columns, 0x53U, 21U);
+
+    const auto result = copperfin::vfp::parse_access_table_definition_page(
+        page, copperfin::vfp::AccessContainerGeneration::jet3, 2U);
+    expect(result.ok, "parse_access_table_definition_page should decode a well-formed Jet3 TDEF page: " + result.error);
+    expect(result.page_number == 2U, "the decoded table should record its own page number");
+    expect(result.is_system_table, "table_type 0x53 should classify as a system table");
+    expect(result.row_count == 21U, "row_count should come from the TDEF block's num_rows field");
+    expect(result.columns.size() == 3U, "every synthesized column should be decoded");
+    if (result.columns.size() == 3U) {
+        expect(result.columns[0].name == "Id" &&
+                   result.columns[0].type == copperfin::vfp::AccessColumnType::long_integer &&
+                   result.columns[0].length == 4U && result.columns[0].fixed_length,
+               "the first column should decode as a fixed-length LONGINT named Id");
+        expect(result.columns[1].name == "Name" &&
+                   result.columns[1].type == copperfin::vfp::AccessColumnType::text &&
+                   result.columns[1].length == 50U && !result.columns[1].fixed_length,
+               "the second column should decode as a variable-length TEXT(50) named Name");
+        expect(result.columns[2].name == "Flags" &&
+                   result.columns[2].type == copperfin::vfp::AccessColumnType::long_integer,
+               "the third column should decode as a LONGINT named Flags");
+    }
+}
+
+void test_parse_access_table_definition_page_decodes_jet4_columns() {
+    const std::vector<SyntheticAccessColumn> columns{
+        {.name = "Id", .type = 0x04U, .length = 4U, .fixed = true},
+        {.name = "Name", .type = 0x0AU, .length = 100U, .fixed = false},
+    };
+    const auto page = make_synthetic_jet4_tdef_page(columns, 0x4EU, 7U);
+
+    const auto result = copperfin::vfp::parse_access_table_definition_page(
+        page, copperfin::vfp::AccessContainerGeneration::jet4, 17U);
+    expect(result.ok, "parse_access_table_definition_page should decode a well-formed Jet4 TDEF page: " + result.error);
+    expect(!result.is_system_table, "table_type 0x4E should classify as a user table, not a system table");
+    expect(result.row_count == 7U, "row_count should come from the TDEF block's num_rows field");
+    expect(result.columns.size() == 2U, "every synthesized column should be decoded");
+    if (result.columns.size() == 2U) {
+        expect(result.columns[0].name == "Id" && result.columns[0].type == copperfin::vfp::AccessColumnType::long_integer,
+               "the first column should decode as LONGINT named Id, with UCS-2 column names round-tripping to plain ASCII");
+        expect(result.columns[1].name == "Name" && result.columns[1].length == 100U,
+               "the second column should decode with its Jet4 byte-count length preserved");
+    }
+}
+
+void test_parse_access_table_definition_page_rejects_wrong_page_size() {
+    std::vector<std::uint8_t> undersized_page(100U, 0U);
+    const auto result = copperfin::vfp::parse_access_table_definition_page(
+        undersized_page, copperfin::vfp::AccessContainerGeneration::jet3, 2U);
+    expect(!result.ok, "parse_access_table_definition_page should reject a page that isn't exactly the generation's page size");
+}
+
+void test_parse_access_table_definition_page_rejects_non_tdef_page() {
+    std::vector<std::uint8_t> data_page(2048U, 0U);
+    data_page[0] = 0x01U;  // data page, not a TDEF page
+    const auto result = copperfin::vfp::parse_access_table_definition_page(
+        data_page, copperfin::vfp::AccessContainerGeneration::jet3, 5U);
+    expect(!result.ok, "parse_access_table_definition_page should reject a page whose leading byte isn't 0x02");
+}
+
+void test_parse_access_table_definition_page_rejects_multi_page_tdef() {
+    auto page = make_synthetic_jet3_tdef_page({{.name = "Id", .type = 0x04U, .length = 4U, .fixed = true}}, 0x4EU, 0U);
+    write_le_u32(page, 4U, 9U);  // next_pg != 0: a spanning TDEF this slice does not support
+    const auto result = copperfin::vfp::parse_access_table_definition_page(
+        page, copperfin::vfp::AccessContainerGeneration::jet3, 2U);
+    expect(!result.ok, "parse_access_table_definition_page should fail closed on a multi-page TDEF rather than parse only the first page");
+}
+
+void test_parse_access_table_definition_page_rejects_structure_out_of_bounds() {
+    auto page = make_synthetic_jet3_tdef_page({{.name = "Id", .type = 0x04U, .length = 4U, .fixed = true}}, 0x4EU, 0U);
+    // Declare far more columns than the page actually has room for (the
+    // column-name-length offset in the TDEF block), modeling a crafted or
+    // corrupt page rather than trusting it to read past its own end.
+    write_le_u16(page, 8U + 4U + 4U + 4U + 1U + 2U + 2U, 5000U);
+    const auto result = copperfin::vfp::parse_access_table_definition_page(
+        page, copperfin::vfp::AccessContainerGeneration::jet3, 2U);
+    expect(!result.ok, "parse_access_table_definition_page should fail closed rather than read past the page for an inflated column count");
+}
+
+void test_scan_access_container_schema_discovers_tables_and_skips_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_schema_scan_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+    const fs::path container_path = temp_dir / "container.mdb";
+
+    constexpr std::size_t page_size = 2048U;
+    std::vector<std::uint8_t> file_bytes(page_size * 5U, 0U);
+
+    // Page 0: database definition page, carrying the container-level
+    // signature/generation bytes this file already relies on
+    // (parse_access_container_header_from_file()).
+    file_bytes[0] = 0x00U;
+    file_bytes[1] = 0x01U;
+    file_bytes[2] = 0x00U;
+    file_bytes[3] = 0x00U;
+    const std::string signature = "Standard Jet DB";
+    std::copy(signature.begin(), signature.end(), file_bytes.begin() + 4);
+    file_bytes[0x14] = 0x00U;  // Jet3
+
+    // Page 2: a genuine single-page TDEF (the discoverable table).
+    const auto table_page = make_synthetic_jet3_tdef_page(
+        {{.name = "Id", .type = 0x04U, .length = 4U, .fixed = true}}, 0x4EU, 3U);
+    std::copy(table_page.begin(), table_page.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(page_size * 2U));
+
+    // Page 3: a TDEF-typed page (leading byte 0x02) that is a continuation
+    // of an earlier chain -- page 4 below points its next_pg at this page,
+    // so it must not be counted as its own independent table.
+    file_bytes[page_size * 3U] = 0x02U;
+
+    // Page 4: a TDEF whose next_pg points at page 3 -- a multi-page TDEF
+    // this slice deliberately fails closed on (see
+    // test_parse_access_table_definition_page_rejects_multi_page_tdef),
+    // reported in `skipped` rather than silently dropped or crashing the
+    // whole scan.
+    auto spanning_page = make_synthetic_jet3_tdef_page(
+        {{.name = "Wide", .type = 0x0AU, .length = 50U, .fixed = false}}, 0x4EU, 0U);
+    write_le_u32(spanning_page, 4U, 3U);
+    std::copy(spanning_page.begin(), spanning_page.end(), file_bytes.begin() + static_cast<std::ptrdiff_t>(page_size * 4U));
+
+    expect(write_binary_file(container_path, file_bytes), "the synthetic multi-page container fixture should be writable");
+
+    const auto result = copperfin::vfp::scan_access_container_schema(
+        copperfin::platform::path_to_utf8_string(container_path));
+    expect(result.ok, "scan_access_container_schema should succeed for a well-formed synthetic container: " + result.error);
+    expect(result.tables.size() == 1U, "only the genuine single-page TDEF at page 2 should be reported as a discovered table");
+    if (result.tables.size() == 1U) {
+        expect(result.tables[0].page_number == 2U, "the discovered table should be the one at page 2");
+    }
+    expect(result.skipped.size() == 1U, "the multi-page TDEF chain-start at page 4 should be reported as skipped, not silently dropped");
+    if (result.skipped.size() == 1U) {
+        expect(result.skipped[0].page_number == 4U, "the skipped entry should identify the chain-start page, not the continuation page");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_scan_access_container_schema_rejects_non_access_file() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_schema_scan_rejection_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+    const fs::path not_a_container = temp_dir / "not-access.bin";
+    expect(write_binary_file(not_a_container, std::vector<std::uint8_t>(100U, 0xAAU)),
+           "the non-Access fixture should be writable");
+
+    const auto result = copperfin::vfp::scan_access_container_schema(
+        copperfin::platform::path_to_utf8_string(not_a_container));
+    expect(!result.ok, "scan_access_container_schema should reject a file with no recognizable Access container signature");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_vfp_locale_catalog_parity() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
@@ -904,6 +1213,14 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AccessContainer.Error.OpenFileFailed",
         "Vfp.AccessContainer.Error.ReadHeaderFailed",
         "Vfp.AccessContainer.Error.SignatureMismatch",
+        "Vfp.AccessTableDefinition.Error.MultiPageTdefUnsupported",
+        "Vfp.AccessTableDefinition.Error.NotATdefPage",
+        "Vfp.AccessTableDefinition.Error.NotAnAccessContainer",
+        "Vfp.AccessTableDefinition.Error.OpenFileFailed",
+        "Vfp.AccessTableDefinition.Error.ReadPageFailed",
+        "Vfp.AccessTableDefinition.Error.StructureOutOfBounds",
+        "Vfp.AccessTableDefinition.Error.UnknownGeneration",
+        "Vfp.AccessTableDefinition.Error.WrongPageSize",
         "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
         "Vfp.AssetInspector.Error.DbcPathMissing",
         "Vfp.AssetInspector.Error.DbcReadFailed",
@@ -2368,6 +2685,14 @@ int main() {
     test_parse_access_container_header_for_ace_accdb();
     test_parse_access_container_header_rejects_missing_signature();
     test_parse_access_container_header_rejects_truncated_file();
+    test_parse_access_table_definition_page_decodes_jet3_columns();
+    test_parse_access_table_definition_page_decodes_jet4_columns();
+    test_parse_access_table_definition_page_rejects_wrong_page_size();
+    test_parse_access_table_definition_page_rejects_non_tdef_page();
+    test_parse_access_table_definition_page_rejects_multi_page_tdef();
+    test_parse_access_table_definition_page_rejects_structure_out_of_bounds();
+    test_scan_access_container_schema_discovers_tables_and_skips_continuations();
+    test_scan_access_container_schema_rejects_non_access_file();
     test_access_container_errors_resolve_through_localization_catalog();
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();
