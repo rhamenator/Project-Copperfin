@@ -1,3 +1,20 @@
+- 2026-09-10: Closes #5549 (parent #141): `read_access_long_value_column()`
+  (`src/vfp/access_long_value.cpp`) retrieves a Jet3/Jet4 long-value
+  (memo/OLE) column's full byte content -- the mechanism Access uses for
+  a value too large to fit inline in a row, and the common prerequisite
+  #5477 (forms/reports), #5478 (VBA extraction), and #5479 (saved
+  queries) each need to retrieve their own large blob from a system
+  object's row. Grounded in `mdbtools`' `HACKING.md`, independently
+  real-fixture-verified against real Jet3/Jet4 `.mdb` files for all three
+  documented bitmask cases (inline, single LVAL page, and a real 15-hop
+  chained-page reassembly matching its declared length exactly) -- this
+  cross-validation also caught and corrected an initially-wrong
+  assumption about the LVAL data pointer's own bit layout (row_id in the
+  low byte, page number in the upper 3 bytes -- the opposite of
+  `MSysObjects.Id`'s own masking convention). See
+  `docs/75-access-long-value-column-reading.md` for the full evidence
+  trail.
+
 - 2026-09-10: Progress on #5476 (parent #141), docs-only accuracy update
   -- NOT closing the issue, since its acceptance criteria is conjunctive
   ("representative MDB **and** ACCDB fixtures") and the ACCDB half

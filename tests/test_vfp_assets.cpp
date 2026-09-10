@@ -5,6 +5,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/access_container.h"
+#include "copperfin/vfp/access_long_value.h"
 #include "copperfin/vfp/access_msysobjects.h"
 #include "copperfin/vfp/access_table_definition.h"
 #include "copperfin/vfp/asset_inspector.h"
@@ -23,6 +24,7 @@
 #include <fstream>
 #include <iostream>
 #include <locale>
+#include <map>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -1312,6 +1314,303 @@ std::filesystem::path write_synthetic_msysobjects_container(
     const std::filesystem::path container_path = temp_dir / filename;
     expect(write_binary_file(container_path, file_bytes), "synthetic MSysObjects container fixture should be writable");
     return container_path;
+}
+
+// #5549: an LVAL page has the same header/row-directory shape as a
+// regular data page (make_synthetic_data_page()), except the literal
+// ASCII bytes "LVAL" replace the tdef_pg page pointer at offset 4 -- see
+// read_access_long_value_column()'s own doc comment for the real-fixture
+// evidence this is grounded in.
+std::vector<std::uint8_t> make_synthetic_lval_page(
+    std::size_t page_size,
+    bool is_jet3,
+    const std::vector<SyntheticDataRowSlot>& rows) {
+    std::vector<std::uint8_t> page = make_synthetic_data_page(page_size, 0U, is_jet3, rows);
+    page[4] = 'L';
+    page[5] = 'V';
+    page[6] = 'A';
+    page[7] = 'L';
+    return page;
+}
+
+// Writes a page_count * page_size zero-filled file with specific pages
+// overridden by `pages_by_index` -- read_access_long_value_column() does
+// not itself validate a container header (its caller already knows the
+// generation), so this deliberately omits one; only page geometry matters.
+std::filesystem::path write_synthetic_page_file(
+    const std::filesystem::path& temp_dir,
+    const std::string& filename,
+    std::size_t page_size,
+    std::size_t page_count,
+    const std::map<std::size_t, std::vector<std::uint8_t>>& pages_by_index) {
+    std::vector<std::uint8_t> file_bytes(page_size * page_count, 0U);
+    for (const auto& [index, page_bytes] : pages_by_index) {
+        std::copy(
+            page_bytes.begin(), page_bytes.end(),
+            file_bytes.begin() + static_cast<std::ptrdiff_t>(page_size * index));
+    }
+    const std::filesystem::path path = temp_dir / filename;
+    expect(write_binary_file(path, file_bytes), "synthetic LVAL page fixture should be writable");
+    return path;
+}
+
+std::vector<std::uint8_t> make_long_value_descriptor_bytes(
+    std::uint32_t declared_length, std::uint8_t bitmask, std::uint32_t lval_dp) {
+    std::vector<std::uint8_t> bytes(12U, 0U);
+    bytes[0] = static_cast<std::uint8_t>(declared_length & 0xFFU);
+    bytes[1] = static_cast<std::uint8_t>((declared_length >> 8U) & 0xFFU);
+    bytes[2] = static_cast<std::uint8_t>((declared_length >> 16U) & 0xFFU);
+    bytes[3] = bitmask;
+    write_le_u32(bytes, 4U, lval_dp);
+    return bytes;
+}
+
+void test_parse_access_long_value_field_descriptor_decodes_header() {
+    const auto bytes = make_long_value_descriptor_bytes(490U, 0x40U, 0x00013D00U);
+    const auto descriptor = copperfin::vfp::parse_access_long_value_field_descriptor(bytes);
+    expect(descriptor.has_value(), "a well-formed 12-byte descriptor should parse");
+    if (descriptor.has_value()) {
+        expect(descriptor->declared_length == 490U, "declared_length should match the 3-byte memo_len field");
+        expect(descriptor->bitmask == 0x40U, "bitmask should match byte 3");
+        expect(descriptor->lval_dp == 0x00013D00U, "lval_dp should match the 4-byte LE field");
+    }
+}
+
+void test_parse_access_long_value_field_descriptor_rejects_short_input() {
+    const std::vector<std::uint8_t> bytes(11U, 0U);
+    const auto descriptor = copperfin::vfp::parse_access_long_value_field_descriptor(bytes);
+    expect(!descriptor.has_value(), "fewer than 12 bytes should not parse");
+}
+
+void test_read_access_long_value_column_returns_inline_value() {
+    auto bytes = make_long_value_descriptor_bytes(5U, 0x80U, 0U);
+    const std::vector<std::uint8_t> value{'H', 'e', 'l', 'l', 'o'};
+    bytes.insert(bytes.end(), value.begin(), value.end());
+
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        "", copperfin::vfp::AccessContainerGeneration::jet4, bytes);
+    expect(result.ok, "an inline (bitmask 0x80) value should resolve without touching any file: " + result.error);
+    expect(result.value == value, "the inline value bytes should be returned unchanged");
+}
+
+void test_read_access_long_value_column_rejects_inline_length_mismatch() {
+    auto bytes = make_long_value_descriptor_bytes(5U, 0x80U, 0U);
+    bytes.insert(bytes.end(), {'H', 'i'});  // only 2 bytes, but declared_length says 5
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        "", copperfin::vfp::AccessContainerGeneration::jet4, bytes);
+    expect(!result.ok, "an inline value whose length disagrees with declared_length should fail closed");
+}
+
+void test_read_access_long_value_column_rejects_descriptor_too_short() {
+    const std::vector<std::uint8_t> bytes(10U, 0U);
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        "", copperfin::vfp::AccessContainerGeneration::jet4, bytes);
+    expect(!result.ok, "fewer than 12 bytes of column data should fail closed");
+}
+
+void test_read_access_long_value_column_rejects_unsupported_bitmask() {
+    const auto bytes = make_long_value_descriptor_bytes(5U, 0x20U, 0U);
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        "", copperfin::vfp::AccessContainerGeneration::jet4, bytes);
+    expect(!result.ok, "a bitmask other than 0x80/0x40/0x00 should fail closed");
+}
+
+void test_read_access_long_value_column_reads_single_lval_page() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_long_value_single_page_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::vector<std::uint8_t> value(37U, 0xABU);
+    const auto lval_page = make_synthetic_lval_page(4096U, false, {{.bytes = value}});
+    const auto path = write_synthetic_page_file(temp_dir, "single.bin", 4096U, 10U, {{5U, lval_page}});
+
+    // lval_dp: row_id in the low byte, page number in the upper 3 bytes
+    // (real-fixture-verified this session -- see access_long_value.h).
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(
+        static_cast<std::uint32_t>(value.size()), 0x40U, (5U << 8U) | 0U);
+
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        copperfin::platform::path_to_utf8_string(path),
+        copperfin::vfp::AccessContainerGeneration::jet4,
+        descriptor_bytes);
+    expect(result.ok, "a single-LVAL-page (bitmask 0x40) value should resolve: " + result.error);
+    expect(result.value == value, "the resolved bytes should match the synthetic LVAL page's row content");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_read_access_long_value_column_reads_chained_lval_pages() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_long_value_chained_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    // Hop 1 (page 6, row 0): 4-byte next pointer to (page 7, row 0), then
+    // partial data. Hop 2 (page 7, row 0): 4-byte next pointer of 0 (end
+    // of chain), then the remaining partial data. Mirrors the real 15-hop
+    // chain this session verified byte-for-byte against a real fixture.
+    const std::vector<std::uint8_t> part1(20U, 0x11U);
+    const std::vector<std::uint8_t> part2(15U, 0x22U);
+
+    std::vector<std::uint8_t> hop1_row = le_bytes32((7U << 8U) | 0U);
+    hop1_row.insert(hop1_row.end(), part1.begin(), part1.end());
+    std::vector<std::uint8_t> hop2_row = le_bytes32(0U);
+    hop2_row.insert(hop2_row.end(), part2.begin(), part2.end());
+
+    const auto page6 = make_synthetic_lval_page(2048U, true, {{.bytes = hop1_row}});
+    const auto page7 = make_synthetic_lval_page(2048U, true, {{.bytes = hop2_row}});
+    const auto path = write_synthetic_page_file(
+        temp_dir, "chained.bin", 2048U, 10U, {{6U, page6}, {7U, page7}});
+
+    std::vector<std::uint8_t> expected = part1;
+    expected.insert(expected.end(), part2.begin(), part2.end());
+
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(
+        static_cast<std::uint32_t>(expected.size()), 0x00U, (6U << 8U) | 0U);
+
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        copperfin::platform::path_to_utf8_string(path),
+        copperfin::vfp::AccessContainerGeneration::jet3,
+        descriptor_bytes);
+    expect(result.ok, "a chained (bitmask 0x00) value should resolve across multiple LVAL pages: " + result.error);
+    expect(result.value == expected, "the reassembled bytes should equal the concatenation of every hop's partial data");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_read_access_long_value_column_rejects_page_without_lval_marker() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_long_value_bad_marker_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    // A regular DATA page (tdef_pg == 2, not the "LVAL" marker) at the
+    // target page -- must be rejected, not silently misread as a memo.
+    const auto data_page = make_synthetic_data_page(4096U, 2U, false, {{.bytes = {1U, 2U, 3U}}});
+    const auto path = write_synthetic_page_file(temp_dir, "wrong_marker.bin", 4096U, 10U, {{5U, data_page}});
+
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(3U, 0x40U, (5U << 8U) | 0U);
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        copperfin::platform::path_to_utf8_string(path),
+        copperfin::vfp::AccessContainerGeneration::jet4,
+        descriptor_bytes);
+    expect(!result.ok, "a page missing the literal LVAL marker should fail closed rather than misread as a memo page");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_read_access_long_value_column_rejects_row_index_out_of_range() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_long_value_bad_row_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto lval_page = make_synthetic_lval_page(4096U, false, {{.bytes = {1U, 2U, 3U}}});  // 1 row (row_id 0 only)
+    const auto path = write_synthetic_page_file(temp_dir, "bad_row.bin", 4096U, 10U, {{5U, lval_page}});
+
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(3U, 0x40U, (5U << 8U) | 3U);  // row_id 3, out of range
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        copperfin::platform::path_to_utf8_string(path),
+        copperfin::vfp::AccessContainerGeneration::jet4,
+        descriptor_bytes);
+    expect(!result.ok, "a row_id beyond the page's own declared row count should fail closed");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5550 review (Copilot): a deleted/lookup-overflow directory slot must
+// fail closed, not be read as real payload.
+void test_read_access_long_value_column_rejects_deleted_row_slot() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_long_value_deleted_row_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto lval_page = make_synthetic_lval_page(
+        4096U, false, {{.bytes = {1U, 2U, 3U}, .deleted = true}});
+    const auto path = write_synthetic_page_file(temp_dir, "deleted_row.bin", 4096U, 10U, {{5U, lval_page}});
+
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(3U, 0x40U, (5U << 8U) | 0U);
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        copperfin::platform::path_to_utf8_string(path),
+        copperfin::vfp::AccessContainerGeneration::jet4,
+        descriptor_bytes);
+    expect(!result.ok, "a deleted row slot should fail closed rather than being read as payload");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5550 review (Codex P1, Copilot): a chain whose next-pointer loops
+// back to an already-visited (page, row) pair must fail closed promptly,
+// not re-append the same payload until kMaxChainHops.
+void test_read_access_long_value_column_rejects_cyclic_chain() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_long_value_cyclic_chain_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    // Page 6, row 0 points right back at itself.
+    std::vector<std::uint8_t> self_referencing_row = le_bytes32((6U << 8U) | 0U);
+    self_referencing_row.insert(self_referencing_row.end(), {0xAAU, 0xBBU});
+    const auto page6 = make_synthetic_lval_page(2048U, true, {{.bytes = self_referencing_row}});
+    const auto path = write_synthetic_page_file(temp_dir, "cyclic.bin", 2048U, 10U, {{6U, page6}});
+
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(1000U, 0x00U, (6U << 8U) | 0U);
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        copperfin::platform::path_to_utf8_string(path),
+        copperfin::vfp::AccessContainerGeneration::jet3,
+        descriptor_bytes);
+    expect(!result.ok, "a chain that revisits an already-seen pointer should fail closed rather than looping");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5550 review (Codex P1, Copilot): a chain that keeps growing past its
+// own declared_length must fail as soon as that becomes evident, not
+// only after accumulating far more than the declared length.
+void test_read_access_long_value_column_rejects_length_overrun() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_long_value_overrun_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    // A single hop (terminal, next_dp == 0) whose payload is already
+    // larger than the descriptor's own declared_length.
+    std::vector<std::uint8_t> row = le_bytes32(0U);
+    const std::vector<std::uint8_t> payload(50U, 0xCCU);
+    row.insert(row.end(), payload.begin(), payload.end());
+    const auto page6 = make_synthetic_lval_page(2048U, true, {{.bytes = row}});
+    const auto path = write_synthetic_page_file(temp_dir, "overrun.bin", 2048U, 10U, {{6U, page6}});
+
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(10U, 0x00U, (6U << 8U) | 0U);  // declares only 10 bytes
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        copperfin::platform::path_to_utf8_string(path),
+        copperfin::vfp::AccessContainerGeneration::jet3,
+        descriptor_bytes);
+    expect(!result.ok, "accumulated bytes exceeding declared_length should fail closed");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5550 review (Codex P2): ACE/.accdb (AccessContainerGeneration::later)
+// is only extrapolated from Jet4, not real-fixture-verified for this
+// capability -- must be explicitly rejected rather than silently parsed
+// against the (unverified) Jet4 layout.
+void test_read_access_long_value_column_rejects_later_generation() {
+    // The inline case (0x80) never touches the file/generation, so use
+    // the single-page case (0x40) to actually exercise the check.
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(5U, 0x40U, (5U << 8U) | 0U);
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        "", copperfin::vfp::AccessContainerGeneration::later, descriptor_bytes);
+    expect(!result.ok, "AccessContainerGeneration::later should be explicitly rejected, not parsed as Jet4");
 }
 
 void test_parse_access_table_definition_page_decodes_jet3_columns() {
@@ -3873,6 +4172,20 @@ int main() {
     test_scan_access_msysobjects_catalog_fails_closed_on_jet3_row_at_or_above_256_bytes();
     test_scan_access_msysobjects_catalog_fails_closed_on_jet4_compressed_unicode_name();
     test_scan_access_container_schema_attaches_names_from_catalog();
+    test_parse_access_long_value_field_descriptor_decodes_header();
+    test_parse_access_long_value_field_descriptor_rejects_short_input();
+    test_read_access_long_value_column_returns_inline_value();
+    test_read_access_long_value_column_rejects_inline_length_mismatch();
+    test_read_access_long_value_column_rejects_descriptor_too_short();
+    test_read_access_long_value_column_rejects_unsupported_bitmask();
+    test_read_access_long_value_column_reads_single_lval_page();
+    test_read_access_long_value_column_reads_chained_lval_pages();
+    test_read_access_long_value_column_rejects_page_without_lval_marker();
+    test_read_access_long_value_column_rejects_row_index_out_of_range();
+    test_read_access_long_value_column_rejects_deleted_row_slot();
+    test_read_access_long_value_column_rejects_cyclic_chain();
+    test_read_access_long_value_column_rejects_length_overrun();
+    test_read_access_long_value_column_rejects_later_generation();
     test_access_container_errors_resolve_through_localization_catalog();
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();
