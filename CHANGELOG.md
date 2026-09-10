@@ -1,3 +1,22 @@
+- 2026-09-10: Progress on #5534 (parent #5517's `IMPORT DATABASE ...
+  TYPE XBASE` wizard): `infer_xbase_index_relations()`
+  (`src/vfp/xbase_relation_inference.cpp`) scans a set of tables'
+  companion CDX/IDX/NDX/MDX/NTX index files and suggests candidate
+  relations between tables that both index a same-named plain column --
+  non-directional and never silently applied, matching the issue's own
+  framing. This is only the read-only relation-*inference* half of
+  #5534; the index-*rebuild* half (writing new VFP-native CDX tags on a
+  destination table) has no existing precedent in this codebase (every
+  current index reader is header-probe-only) and remains open. Writing
+  this slice's tests independently discovered a real constraint in
+  `cdx_header.cpp`'s existing real-fixture-tuned candidate heuristics
+  (a plain lowercase key expression under 4 characters, or without an
+  underscore/parens/operator, is silently discarded) -- documented in
+  `docs/74-xbase-relation-inference.md`. Like the existing single-table
+  `import_xbase_table_to_vfp_native()`, this is a standalone library
+  function; #5517's own PRG-level wizard command surface does not exist
+  yet either. Issue #5534 remains open pending the index-rebuild half.
+
 - 2026-09-10: Progress on #5537 (parent #141): `EXPORT DATABASE ... TYPE
   POSTGRESQL` -- the first real-target-engine SQL dialect slice.
   `export_database_as_postgresql_sql()` (`src/vfp/asset_inspector.cpp`)
