@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <mutex>
+#include <set>
 #include <string_view>
 #include <system_error>
 
@@ -108,13 +109,24 @@ ResolvedLvalRow resolve_lval_row(
     const std::size_t directory_end = header_size + directory_size;
 
     std::vector<std::uint16_t> row_offsets(num_rows);
+    std::vector<std::uint16_t> row_flags(num_rows);
     for (std::uint16_t index = 0U; index < num_rows; ++index) {
         const std::uint16_t raw_slot = read_le_u16(page_bytes, header_size + static_cast<std::size_t>(index) * 2U);
         row_offsets[index] = static_cast<std::uint16_t>(raw_slot & 0x3FFFU);
+        row_flags[index] = static_cast<std::uint16_t>(raw_slot & 0xC000U);
         if (row_offsets[index] < directory_end) {
             result.error = access_long_value_text("Vfp.AccessLongValue.Error.RowStructureInvalid");
             return result;
         }
+    }
+
+    // #5550 review (Copilot): a directory slot can carry the same deleted
+    // (0x8000) / lookup-overflow (0x4000) flags access_msysobjects.cpp
+    // already checks for regular data pages -- a flagged LVAL row slot
+    // must fail closed rather than being read as real payload bytes.
+    if (row_flags[row_id] != 0U) {
+        result.error = access_long_value_text("Vfp.AccessLongValue.Error.RowStructureInvalid");
+        return result;
     }
 
     const std::size_t row_offset = row_offsets[row_id];
@@ -201,6 +213,17 @@ AccessLongValueResult read_access_long_value_column(
         return result;
     }
 
+    // #5550 review (Codex, P2): this API's LVAL page/row-directory layout
+    // is only real-fixture-verified for Jet3/Jet4 -- access_container_page_size()
+    // returns a nonzero (but extrapolated, unverified) size for
+    // AccessContainerGeneration::later, which would otherwise let an
+    // ACE/.accdb file silently parse against an unverified layout instead
+    // of failing closed.
+    if (generation != AccessContainerGeneration::jet3 && generation != AccessContainerGeneration::jet4) {
+        result.error = access_long_value_text("Vfp.AccessLongValue.Error.UnsupportedGeneration");
+        return result;
+    }
+
     const std::size_t page_size = access_container_page_size(generation);
     if (page_size == 0U) {
         result.error = access_long_value_text("Vfp.AccessLongValue.Error.UnknownGeneration");
@@ -249,11 +272,29 @@ AccessLongValueResult read_access_long_value_column(
     // Chained (bitmask 0x00): each hop's row is a 4-byte "next" data
     // pointer followed by that hop's partial value bytes; 0 terminates
     // the chain.
+    //
+    // #5550 review (Codex P1, Copilot): a corrupt or malicious chain
+    // could point back at an already-visited (page, row) pair -- without
+    // a check, that would re-append the same payload on every iteration
+    // up to kMaxChainHops (hundreds of MB of allocation before failing).
+    // Tracking visited pointers rejects a cycle the moment it repeats,
+    // and checking accumulated length against declared_length after
+    // every hop (rather than only once at the end) rejects a
+    // non-cyclic-but-never-terminating chain (e.g. a hop that adds no
+    // new bytes) as soon as it becomes impossible to satisfy, rather
+    // than only after kMaxChainHops page reads.
     std::vector<std::uint8_t> collected;
+    std::set<std::uint64_t> visited_pointers;
     std::uint32_t hops = 0U;
     while (true) {
         if (++hops > kMaxChainHops) {
             result.error = access_long_value_text("Vfp.AccessLongValue.Error.ChainTooLong");
+            return result;
+        }
+        const std::uint64_t pointer_key =
+            (static_cast<std::uint64_t>(page_number) << 32U) | static_cast<std::uint64_t>(row_id);
+        if (!visited_pointers.insert(pointer_key).second) {
+            result.error = access_long_value_text("Vfp.AccessLongValue.Error.CyclicChain");
             return result;
         }
         const std::optional<std::vector<std::uint8_t>> page_bytes = read_lval_page_bytes(reader, page_number);
@@ -272,6 +313,10 @@ AccessLongValueResult read_access_long_value_column(
         }
         const std::uint32_t next_dp = read_le_u32(row.bytes, 0U);
         collected.insert(collected.end(), row.bytes.begin() + 4, row.bytes.end());
+        if (collected.size() > descriptor->declared_length) {
+            result.error = access_long_value_text("Vfp.AccessLongValue.Error.DeclaredLengthExceeded");
+            return result;
+        }
         if (next_dp == 0U) {
             break;
         }

@@ -1523,6 +1523,96 @@ void test_read_access_long_value_column_rejects_row_index_out_of_range() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5550 review (Copilot): a deleted/lookup-overflow directory slot must
+// fail closed, not be read as real payload.
+void test_read_access_long_value_column_rejects_deleted_row_slot() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_long_value_deleted_row_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto lval_page = make_synthetic_lval_page(
+        4096U, false, {{.bytes = {1U, 2U, 3U}, .deleted = true}});
+    const auto path = write_synthetic_page_file(temp_dir, "deleted_row.bin", 4096U, 10U, {{5U, lval_page}});
+
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(3U, 0x40U, (5U << 8U) | 0U);
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        copperfin::platform::path_to_utf8_string(path),
+        copperfin::vfp::AccessContainerGeneration::jet4,
+        descriptor_bytes);
+    expect(!result.ok, "a deleted row slot should fail closed rather than being read as payload");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5550 review (Codex P1, Copilot): a chain whose next-pointer loops
+// back to an already-visited (page, row) pair must fail closed promptly,
+// not re-append the same payload until kMaxChainHops.
+void test_read_access_long_value_column_rejects_cyclic_chain() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_long_value_cyclic_chain_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    // Page 6, row 0 points right back at itself.
+    std::vector<std::uint8_t> self_referencing_row = le_bytes32((6U << 8U) | 0U);
+    self_referencing_row.insert(self_referencing_row.end(), {0xAAU, 0xBBU});
+    const auto page6 = make_synthetic_lval_page(2048U, true, {{.bytes = self_referencing_row}});
+    const auto path = write_synthetic_page_file(temp_dir, "cyclic.bin", 2048U, 10U, {{6U, page6}});
+
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(1000U, 0x00U, (6U << 8U) | 0U);
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        copperfin::platform::path_to_utf8_string(path),
+        copperfin::vfp::AccessContainerGeneration::jet3,
+        descriptor_bytes);
+    expect(!result.ok, "a chain that revisits an already-seen pointer should fail closed rather than looping");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5550 review (Codex P1, Copilot): a chain that keeps growing past its
+// own declared_length must fail as soon as that becomes evident, not
+// only after accumulating far more than the declared length.
+void test_read_access_long_value_column_rejects_length_overrun() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_access_long_value_overrun_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    // A single hop (terminal, next_dp == 0) whose payload is already
+    // larger than the descriptor's own declared_length.
+    std::vector<std::uint8_t> row = le_bytes32(0U);
+    const std::vector<std::uint8_t> payload(50U, 0xCCU);
+    row.insert(row.end(), payload.begin(), payload.end());
+    const auto page6 = make_synthetic_lval_page(2048U, true, {{.bytes = row}});
+    const auto path = write_synthetic_page_file(temp_dir, "overrun.bin", 2048U, 10U, {{6U, page6}});
+
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(10U, 0x00U, (6U << 8U) | 0U);  // declares only 10 bytes
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        copperfin::platform::path_to_utf8_string(path),
+        copperfin::vfp::AccessContainerGeneration::jet3,
+        descriptor_bytes);
+    expect(!result.ok, "accumulated bytes exceeding declared_length should fail closed");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5550 review (Codex P2): ACE/.accdb (AccessContainerGeneration::later)
+// is only extrapolated from Jet4, not real-fixture-verified for this
+// capability -- must be explicitly rejected rather than silently parsed
+// against the (unverified) Jet4 layout.
+void test_read_access_long_value_column_rejects_later_generation() {
+    // The inline case (0x80) never touches the file/generation, so use
+    // the single-page case (0x40) to actually exercise the check.
+    const auto descriptor_bytes = make_long_value_descriptor_bytes(5U, 0x40U, (5U << 8U) | 0U);
+    const auto result = copperfin::vfp::read_access_long_value_column(
+        "", copperfin::vfp::AccessContainerGeneration::later, descriptor_bytes);
+    expect(!result.ok, "AccessContainerGeneration::later should be explicitly rejected, not parsed as Jet4");
+}
+
 void test_parse_access_table_definition_page_decodes_jet3_columns() {
     const std::vector<SyntheticAccessColumn> columns{
         {.name = "Id", .type = 0x04U, .length = 4U, .fixed = true},
@@ -4092,6 +4182,10 @@ int main() {
     test_read_access_long_value_column_reads_chained_lval_pages();
     test_read_access_long_value_column_rejects_page_without_lval_marker();
     test_read_access_long_value_column_rejects_row_index_out_of_range();
+    test_read_access_long_value_column_rejects_deleted_row_slot();
+    test_read_access_long_value_column_rejects_cyclic_chain();
+    test_read_access_long_value_column_rejects_length_overrun();
+    test_read_access_long_value_column_rejects_later_generation();
     test_access_container_errors_resolve_through_localization_catalog();
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();
