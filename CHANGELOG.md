@@ -1,3 +1,27 @@
+- 2026-09-10: Progress on #5476 (parent #141), docs-only accuracy update
+  -- NOT closing the issue, since its acceptance criteria is conjunctive
+  ("representative MDB **and** ACCDB fixtures") and the ACCDB half
+  remains unverified. `RQ-CF-MIGRATION-004`'s hazard note was stale: it
+  cited #5539 (`MSysObjects` catalog-row decoding) as the blocking gap
+  for table-*name* enumeration, but #5539 has since merged, and its own
+  requirement row (`RQ-CF-MIGRATION-005`) already documents real-fixture
+  cross-validation of the combined name-attachment join
+  (`scan_access_container_schema()` + `scan_access_msysobjects_catalog()`)
+  against `mdbtools` as ground truth -- so that specific gap is resolved
+  for MDB. Independently reconfirmed this session by running
+  `scan_access_container_schema()` directly against two additional real
+  local `.mdb` fixtures (one Jet3, one Jet4): 24/26 tables resolved a
+  name for the Jet4 fixture (the 2 unresolved are the documented
+  "candidate page number with no matching discovered table" case, not a
+  bug), 8/8 for the Jet3 fixture. `RQ-CF-MIGRATION-004`'s requirement
+  text and hazard note updated to describe page-number as the base
+  table identifier with optional name attachment via the
+  `RQ-CF-MIGRATION-005` join, rather than claiming name decoding is
+  unimplemented. The remaining, explicitly documented gap blocking
+  #5476's actual closure is the ACE/`.accdb` page-size/layout
+  assumption, never verified against a real `.accdb` file -- filed as
+  #5547 rather than left as a vague unaddressed note.
+
 - 2026-09-10: Progress on #5534 (parent #5517's `IMPORT DATABASE ...
   TYPE XBASE` wizard): `infer_xbase_index_relations()`
   (`src/vfp/xbase_relation_inference.cpp`) scans a set of tables'
