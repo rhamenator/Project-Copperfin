@@ -1,3 +1,47 @@
+- 2026-09-10: Progress on #5476 (parent #141): added
+  `parse_access_table_definition_page()` and
+  `scan_access_container_schema()`
+  (`src/vfp/access_table_definition.cpp`), the first Access/JET
+  table-schema reader -- decodes a Table Definition (TDEF) page's
+  column names/types/lengths for both Jet3 and Jet4, and discovers
+  every TDEF page in a container. Grounded in mdbtools' `HACKING.md`
+  (`docs/68-access-mdb-jet-physical-page-layout-notes.md`) and
+  independently cross-checked against real Jet3/Jet4 `.mdb` fixtures
+  during development: decoded `MSysObjects` column names matched
+  Access's well-known real system-catalog schema exactly for both
+  generations, and every column's internal consistency (fixed-length
+  columns landing at sane offsets; variable-length columns showing
+  uninitialized bytes in their unused offset field) corroborated the
+  layout -- see `docs/71-access-table-definition-schema-inspection.md`
+  for the full evidence trail. Does not by itself close #5476: table
+  *names* require decoding `MSysObjects`'s rows via the general Jet
+  data-row algorithm, which `docs/68` already flagged as materially
+  higher-risk than TDEF-page parsing; filed as the explicit follow-up
+  #5539 rather than attempted in this pass. Multi-page TDEFs and
+  in-TDEF index metadata are separate, documented (not silently
+  unhandled) gaps. Review found three real untrusted-data-parsing gaps
+  before merge: an index-entry count multiplied by a fixed stride could
+  overflow and wrap around, silently bypassing the bounds check meant
+  to catch an oversized value -- `PageCursor::skip_repeated()` now
+  divides remaining capacity by stride instead, which cannot overflow;
+  a file size that wasn't an exact multiple of the page size was
+  silently truncated via integer division instead of failing closed;
+  and continuation-page exclusion only followed the first `next_pg`
+  hop, so a TDEF chain longer than two pages could have its own end
+  page misreported as an independent table -- now walks the full chain
+  with cycle protection. A second review pass found two more: a Jet3
+  column name containing a byte that isn't valid UTF-8 on its own (Jet3
+  names are stored in the database's legacy code page, which this
+  slice cannot yet read without decrypting the RC4-obscured Database
+  Definition page) is now replaced with U+FFFD rather than returned as
+  invalid UTF-8; and an unrecognized `table_type` byte is now rejected
+  rather than silently defaulting to "user table." The same pass also
+  restructured `scan_access_container_schema()` from buffering the
+  whole file into a two-pass streaming scan (an 8-byte-per-page header
+  probe, then one page_size buffer reused per page actually decoded),
+  since a real Access database can be up to ~2 GB -- re-verified
+  against the same real Jet3/Jet4 fixtures with unchanged results.
+
 - 2026-09-09: Fixes #5475: added `EXPORT DATABASE ... TYPE ACCESS`
   (phase 1 of #141), a non-VFP-extension command that emits an
   Access/Jet-dialect SQL script from a DBC/DBF database container,
