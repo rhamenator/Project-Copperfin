@@ -12,8 +12,21 @@
   though the physical MDB/ACCDB byte format is not. This is explicitly a
   phase-1 SQL-script export, not a native `.accdb`/`.mdb` binary writer
   -- the output is meant to be run directly against a real Access
-  database (e.g. pasted into Access's SQL View) rather than requiring
-  hand-translation from the ANSI `TYPE SQL` dialect.
+  database rather than requiring hand-translation from the ANSI
+  `TYPE SQL` dialect. Review found and fixed several script-safety gaps
+  before merge: an embedded `]` in a crafted table/field name is now
+  escaped by doubling (the Jet/ACE convention) instead of assumed
+  impossible; `DECIMAL` precision/scale are clamped into Access-valid
+  ranges instead of trusting an untrustworthy header; a numeric field's
+  value is only emitted unquoted when it is a safe plain decimal literal
+  (an overflow marker like `*****` or crafted content becomes `NULL`
+  instead, applied to the sibling `TYPE SQL` exporter too for
+  consistency); no `-- ...` comment lines are emitted at all, since
+  independently verified research found native Jet/ACE SQL has no
+  supported comment syntax; and `EXPORT DATABASE` now rejects a
+  destination that resolves to the same file as the source (for all
+  three `TYPE` variants), which would otherwise read the source
+  successfully and then truncate it when opening the output.
 
 - 2026-09-09: Fixes #5532: added `preview_xbase_table_import()`, a
   dry-run/report mode for `IMPORT DATABASE ... TYPE XBASE` that performs

@@ -201,22 +201,37 @@ It deliberately accepts only the literal `TYPE JSON`, `TYPE SQL`, or `TYPE ACCES
 forms; the source and destination are quoted path operands, not expressions. It
 reads the existing DBC/DBF data before opening the requested output path, creates a
 missing output directory, and reports a localized runtime failure if inspection or
-output writing fails. All three `TYPE` variants share the same DBC catalog/table-
-resolution path (`export_database_as_json()`, `export_database_as_sql()`, and
+output writing fails. A destination that would resolve to the same file as the
+source (e.g. `EXPORT DATABASE 'data.dbc' TO 'data.dbc' TYPE ACCESS`, where an
+explicit extension skips the `.sql`/`.json` default) is rejected before anything is
+read or written, rather than truncating the source database once export succeeds.
+All three `TYPE` variants share the same DBC catalog/table-resolution path
+(`export_database_as_json()`, `export_database_as_sql()`, and
 `export_database_as_access_sql()` all call the same internal loader) so they cannot
 silently drift apart on which tables/rows are considered part of the database --
 only the output serialization differs. `TYPE SQL` emits one portable/ANSI-ish
 dialect (`CREATE TABLE` per table, `INSERT` per row); it does not target a specific
 database engine's SQL dialect quirks. `TYPE ACCESS` (#5475, phase 1 of #141) emits
 the same shape of script using the Access/Jet SQL dialect instead -- square-bracket
-`[identifier]` quoting, Access-native column types (`TEXT`/`MEMO`/`LONG`/`DOUBLE`/
-`CURRENCY`/`DATETIME`/`YESNO`), and `#...#`-delimited date/time literals -- grounded
-in `docs/66-access-container-format-notes.md`'s finding that the *logical* Access
+`[identifier]` quoting (with an embedded `]` escaped by doubling, the Jet/ACE
+convention, since this exporter's input is DBC/DBF catalog metadata that a crafted
+or corrupt source is not bound to keep free of it), Access-native column types
+(`TEXT`/`MEMO`/`LONG`/`DOUBLE`/`CURRENCY`/`DATETIME`/`YESNO`, with `DECIMAL`'s
+precision/scale clamped into Access-valid ranges rather than trusting an
+untrustworthy header), and `#...#`-delimited date/time literals -- grounded in
+`docs/66-access-container-format-notes.md`'s finding that the *logical* Access
 SQL/DDL dialect is citable public documentation, distinct from the physical
 MDB/ACCDB byte format, which is not. It is explicitly a SQL-script export, not a
-native `.accdb`/`.mdb` binary writer; the output is meant to be run directly against
-a real Access database (e.g. pasted into Access's SQL View) rather than requiring
-hand-translation from the ANSI dialect.
+native `.accdb`/`.mdb` binary writer. Unlike `TYPE SQL`, it emits no `-- ...`
+comment lines at all -- independently verified research found native Jet/ACE SQL
+(whether run through Access's interactive SQL View or a DAO/ADO `Execute()` call)
+has no supported comment syntax, so embedding one would make the generated script
+fail exactly where this exporter's purpose is to succeed; a skipped/unreadable
+table simply contributes nothing to the output instead of a diagnostic comment.
+Each `CREATE TABLE`/`INSERT` statement is valid Jet/ACE SQL text on its own, meant
+to be executed in sequence (e.g. via DAO/ADO against a real Access database)
+rather than pasted as one multi-statement block into Access's own SQL View, which
+only ever holds a single statement.
 
 This is a Copperfin modernization extension authorized by the owner-approved
 scope in #140/#141 (see #5471 for the `TYPE SQL` slice and #5475 for the

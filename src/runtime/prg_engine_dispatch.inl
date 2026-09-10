@@ -8066,6 +8066,36 @@
                     destination_path += (is_sql || is_access) ? ".sql" : ".json";
                 }
 
+                // A destination that resolves to the same file as the
+                // source (e.g. EXPORT DATABASE 'data.dbc' TO 'data.dbc'
+                // TYPE ACCESS, where an explicit extension skips the
+                // .sql/.json default above) would otherwise read the
+                // source successfully and then truncate that same file
+                // when opening the output -- irreversibly destroying the
+                // database container being exported. weakly_canonical()
+                // resolves the existing-source portion through the real
+                // filesystem (symlinks, actual on-disk case) even though
+                // the destination need not exist yet, and the comparison
+                // uses this platform's real filesystem case-sensitivity
+                // (case-insensitive on Windows, case-sensitive elsewhere),
+                // matching path_equal_case_insensitive()'s own approach.
+                std::error_code source_canonical_error;
+                std::error_code destination_canonical_error;
+                const fs::path canonical_source_path =
+                    fs::weakly_canonical(source_path, source_canonical_error);
+                const fs::path canonical_destination_path =
+                    fs::weakly_canonical(destination_path, destination_canonical_error);
+                if (!source_canonical_error && !destination_canonical_error &&
+                    copperfin::platform::path_component_equal_for_platform(
+                        canonical_source_path, canonical_destination_path))
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ExportDatabaseDestinationAliasesSource");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
                 std::string output_text;
                 if (is_json)
                 {

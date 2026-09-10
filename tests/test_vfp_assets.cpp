@@ -1298,6 +1298,185 @@ void test_export_database_as_access_sql_maps_currency_datetime_and_dates() {
                "VALUES (123.4500, #2024-01-17 10:20:30#, #2024-01-17#, NULL, 'Jane');") != std::string::npos,
            "export_database_as_access_sql should emit NULL for a blank numeric cell rather than an empty string literal");
 
+    // #5475 review (Codex): independently verified that native Jet/ACE SQL
+    // -- whether run through Access's interactive SQL View or a DAO/ADO
+    // Execute() call -- has no supported comment syntax at all, "--"
+    // included. A script advertised as directly runnable against a real
+    // Access database must not embed one, or it would fail exactly where
+    // this exporter's whole purpose is to succeed.
+    expect(result.sql.find("--") == std::string::npos,
+           "export_database_as_access_sql must not emit any '--' comment; Jet/ACE SQL has no comment syntax to run one through");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_access_sql_escapes_bracket_in_identifier() {
+    // #5475 review (Copilot): a crafted/corrupt DBC's catalog is not bound
+    // by Access's own UI naming restrictions, so a table or field name
+    // containing ']' must be escaped (by doubling, the Jet/ACE bracket-
+    // escape convention), not assumed impossible -- otherwise it would
+    // break out of the [identifier] quoting and inject arbitrary SQL.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_access_sql_bracket_escape_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::string crafted_table_name = "acct]; DROP TABLE [x";
+    // load_database_catalog_snapshot() resolves a table's physical path
+    // by appending ".dbf" to the catalog's own object name, so the
+    // on-disk fixture must be named to match the crafted name exactly,
+    // not a plain "accounts.dbf" the catalog doesn't actually reference.
+    const fs::path table_path = temp_dir / (crafted_table_name + ".dbf");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path),
+        dbc_fields,
+        {{"DATABASE", "Accounts", "", ""}, {"TABLE", crafted_table_name, "Accounts", ""}});
+    expect(dbc_create.ok, "Access SQL bracket-escape test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"Jane"}});
+    expect(table_create.ok, "Access SQL bracket-escape test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_access_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_access_sql should resolve the crafted-name fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("CREATE TABLE [acct]]; DROP TABLE [x] (") != std::string::npos,
+           "export_database_as_access_sql should escape an embedded ']' by doubling it, not leave it unescaped");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_access_sql_clamps_decimal_precision() {
+    // #5475 review (Copilot): a crafted/invalid DBF header can have
+    // decimal_count exceed length, and Access's own DECIMAL type caps
+    // precision at 28 -- both must be clamped into valid ranges rather
+    // than trusted, or the generated DDL is invalid and Access rejects it.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_access_sql_decimal_clamp_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path),
+        dbc_fields,
+        {{"DATABASE", "Sensors", "", ""}, {"TABLE", "readings", "Sensors", ""}});
+    expect(dbc_create.ok, "Access SQL decimal-clamp test: DBC fixture should be created");
+
+    // create_dbf_table_file() itself refuses to create a field with
+    // decimal_count > length (a well-formed writer never produces one),
+    // so a genuinely invalid header -- modeling a crafted/foreign source
+    // this codebase did not write -- has to be synthesized by patching
+    // the raw descriptor byte after creation, not requested through the
+    // public API directly.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "VALUE", .type = 'N', .offset = 1U, .length = 5U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"1.23"}});
+    expect(table_create.ok, "Access SQL decimal-clamp test: DBF fixture should be created");
+    {
+        // Field descriptors start at byte 32 in this writer's layout, one
+        // per field, 32 bytes each; the decimal-count byte is at offset
+        // 17 within its own descriptor (dbf_table.cpp's own
+        // descriptor_decimal_count_offset). VALUE is the only field, so
+        // its descriptor starts at byte 32.
+        std::fstream patch(table_path, std::ios::binary | std::ios::in | std::ios::out);
+        expect(static_cast<bool>(patch), "Access SQL decimal-clamp test: DBF fixture should be patchable");
+        patch.seekp(32 + 17, std::ios::beg);
+        const char corrupted_decimal_count = static_cast<char>(9);
+        patch.write(&corrupted_decimal_count, 1);
+    }
+
+    const auto result = copperfin::vfp::export_database_as_access_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_access_sql should resolve the clamp-test fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("[VALUE] DECIMAL(5, 5)") != std::string::npos,
+           "export_database_as_access_sql should clamp scale down to precision when decimal_count exceeds length");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_access_sql_rejects_unsafe_numeric_token() {
+    // #5475 review (Codex): a numeric field's decoded display_value is
+    // emitted unquoted (a real numeric literal needs no string
+    // delimiters), so unlike a string value there is no quoting layer to
+    // escape a crafted/corrupted value with. An overflow marker like
+    // "*****" (dBASE-family's own convention for a too-wide value) must
+    // become NULL, not be trusted verbatim into the generated SQL.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_access_sql_numeric_safety_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path),
+        dbc_fields,
+        {{"DATABASE", "Sensors", "", ""}, {"TABLE", "readings", "Sensors", ""}});
+    expect(dbc_create.ok, "Access SQL numeric-safety test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "VALUE", .type = 'N', .offset = 1U, .length = 5U, .decimal_count = 0U},
+    };
+    // "*****" is the classic dBASE-family numeric-overflow fill, written
+    // directly via create_dbf_table_file()'s allow_truncation path by
+    // matching the field's exact width so it round-trips as literal text
+    // rather than being rejected as too-wide at write time.
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"*****"}});
+    expect(table_create.ok, "Access SQL numeric-safety test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_access_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_access_sql should resolve the numeric-safety fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("VALUES (NULL);") != std::string::npos,
+           "export_database_as_access_sql should emit NULL for an overflow-marker/non-numeric cell rather than trust it unquoted");
+    expect(result.sql.find("*****") == std::string::npos,
+           "export_database_as_access_sql must never emit an unsafe unquoted numeric token verbatim");
+
     fs::remove_all(temp_dir, ignored);
 }
 
@@ -2083,6 +2262,9 @@ int main() {
     test_export_database_as_json_resolves_unicode_catalog_table_path();
     test_export_database_as_sql_maps_currency_datetime_and_blank_numeric();
     test_export_database_as_access_sql_maps_currency_datetime_and_dates();
+    test_export_database_as_access_sql_escapes_bracket_in_identifier();
+    test_export_database_as_access_sql_clamps_decimal_precision();
+    test_export_database_as_access_sql_rejects_unsafe_numeric_token();
     test_database_json_import_plan_admits_exporter_unreadable_table_marker();
     test_parse_real_vfp_cdx_when_available();
     test_parse_additional_real_vfp_cdx_samples_when_available();

@@ -1669,6 +1669,49 @@ std::string sql_quote_string_literal(const std::string& value) {
     return quoted;
 }
 
+// Both export_database_as_sql() and export_database_as_access_sql() emit
+// a numeric (N/F/I/B/Y) field's decoded display_value token *unquoted*,
+// since a real numeric literal needs no string quoting -- but that means,
+// unlike a string value (which sql_quote_string_literal()/
+// access_quote_identifier() always escape into a safely delimited
+// literal), there is no quoting layer standing between this text and the
+// generated SQL. A table genuinely written by this codebase's own writer
+// always decodes N/F to a plain optionally-signed decimal string, but a
+// crafted or corrupted source is not bound by that: a numeric-overflow
+// marker ("*****", dBASE-family's own convention for a value too wide for
+// its field) or arbitrary injected text would otherwise be emitted
+// unquoted and unescaped, silently producing invalid DDL/DML at best and
+// letting untrusted legacy data inject additional SQL statements at
+// worst. Validates that `text` is a plain optionally-signed decimal
+// number (at most one leading '-', digits, at most one '.') before it is
+// trusted to appear unquoted.
+bool looks_like_safe_unquoted_sql_numeric_literal(const std::string& text) {
+    if (text.empty()) {
+        return false;
+    }
+    std::size_t index = (text.front() == '-') ? 1U : 0U;
+    if (index >= text.size()) {
+        return false;
+    }
+    bool seen_digit = false;
+    bool seen_decimal_point = false;
+    for (; index < text.size(); ++index) {
+        const char character = text[index];
+        if (character == '.') {
+            if (seen_decimal_point) {
+                return false;
+            }
+            seen_decimal_point = true;
+            continue;
+        }
+        if (std::isdigit(static_cast<unsigned char>(character)) == 0) {
+            return false;
+        }
+        seen_digit = true;
+    }
+    return seen_digit;
+}
+
 // Maps a DBF field descriptor to a portable/ANSI-ish SQL column type.
 // Memo/general/picture pointer fields (M/G/P) map to TEXT: their content is
 // not resolved by the shared catalog/table-reading path this exporter
@@ -1712,12 +1755,23 @@ std::string sql_column_type(char field_type, std::uint8_t length, std::uint8_t d
 // Access/Jet SQL identifier quoting for export_database_as_access_sql():
 // square brackets, per the publicly documented Access SQL/DDL dialect (see
 // docs/66-access-container-format-notes.md's "logical surface is citable"
-// finding). Unlike sql_quote_identifier()'s ANSI double-quote form, Access
-// object names cannot themselves contain "]" (it is one of the characters
-// Access forbids in table/field names), so there is no embedded-quote-
-// character case to escape here.
+// finding). A real Access UI forbids "]" in object names, but this
+// exporter's input is DBC/DBF catalog metadata, which a crafted or
+// corrupt source file does not have to obey that rule for -- so an
+// embedded "]" is escaped by doubling it (the Jet/ACE bracket-escape
+// convention), matching sql_quote_identifier()'s own embedded-quote
+// handling for the ANSI dialect, rather than assumed to be impossible.
 std::string access_quote_identifier(const std::string& name) {
-    return "[" + name + "]";
+    std::string quoted = "[";
+    for (const char character : name) {
+        if (character == ']') {
+            quoted += "]]";
+        } else {
+            quoted += character;
+        }
+    }
+    quoted += "]";
+    return quoted;
 }
 
 // Maps a DBF field descriptor to an Access/Jet SQL native column type,
@@ -1735,9 +1789,21 @@ std::string access_column_type(char field_type, std::uint8_t length, std::uint8_
     const char normalized = static_cast<char>(std::toupper(static_cast<unsigned char>(field_type)));
     switch (normalized) {
         case 'N':
-        case 'F':
-            return "DECIMAL(" + std::to_string(length > 0U ? length : 1U) + ", " +
-                std::to_string(decimal_count) + ")";
+        case 'F': {
+            // A crafted/corrupt DBF header does not have to keep
+            // decimal_count <= length the way a table genuinely written
+            // by this codebase's own writer always does, and Access/Jet
+            // SQL's own DECIMAL type caps precision at 28 -- emitting an
+            // unclamped value here would produce DDL Access itself
+            // rejects (invalid precision, or scale > precision). Clamp
+            // into Access-valid ranges rather than trust the header.
+            constexpr std::uint8_t max_access_decimal_precision = 28U;
+            const std::uint8_t precision = std::min(
+                std::max(length, static_cast<std::uint8_t>(1U)),
+                max_access_decimal_precision);
+            const std::uint8_t scale = std::min(decimal_count, precision);
+            return "DECIMAL(" + std::to_string(precision) + ", " + std::to_string(scale) + ")";
+        }
         case 'Y':
             return "CURRENCY";
         case 'I':
@@ -2066,7 +2132,14 @@ DatabaseSqlExportResult export_database_as_sql(
             // reader of the script can see every catalog table was
             // considered, matching how the JSON exporter emits an empty
             // fields/records entry rather than omitting the key entirely.
-            sql << "-- skipped table " << rt.name << ": " << tbl.error << "\n\n";
+            // rt.name and tbl.error both come from data a crafted DBC/DBF
+            // could influence (a catalog table name; a parse-error message
+            // that can itself echo untrusted content) -- sanitized the
+            // same way the database-name/source-path header lines already
+            // are, so neither can embed a newline and escape this
+            // single-line "-- ..." comment into executable SQL.
+            sql << "-- skipped table " << sql_sanitize_comment_text(rt.name) << ": "
+                << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
 
@@ -2120,7 +2193,15 @@ DatabaseSqlExportResult export_database_as_sql(
                     // (not is_null) -- emit NULL rather than an empty string
                     // literal, which is not valid syntax inside a DECIMAL/
                     // INTEGER/DOUBLE PRECISION column on real SQL engines.
-                    sql << (rv.display_value.empty() ? "NULL" : rv.display_value);
+                    // A non-blank value that isn't a safe plain decimal
+                    // literal (a numeric-overflow marker, or crafted/
+                    // corrupted content) also becomes NULL rather than
+                    // being trusted unquoted and unescaped -- see
+                    // looks_like_safe_unquoted_sql_numeric_literal()'s own
+                    // comment for why this can't be validated by quoting.
+                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
+                        ? rv.display_value
+                        : "NULL");
                 } else if (is_datetime) {
                     // The DBF decoder's T-type display_value is this
                     // codebase's internal "julian:<day> millis:<ms>" storage
@@ -2154,9 +2235,17 @@ DatabaseSqlExportResult export_database_as_access_sql(
 
     std::ostringstream sql;
     sql.imbue(std::locale::classic());
-    sql << "-- Copperfin EXPORT DATABASE ... TYPE ACCESS (phase 1: SQL script)\n";
-    sql << "-- database: " << sql_sanitize_comment_text(snapshot.db_name) << "\n";
-    sql << "-- source: " << sql_sanitize_comment_text(dbc_path) << "\n\n";
+    // Unlike export_database_as_sql()'s ANSI dialect, this script carries
+    // no "-- ..." header/provenance or skipped-table comment lines at
+    // all: independently verified research confirms native Jet/ACE SQL
+    // (the engine actually executing this text, whether through Access's
+    // interactive SQL View or a DAO/ADO Execute() call) has no supported
+    // in-band comment syntax -- neither "--" nor "/* */" -- so embedding
+    // one here would make the generated script fail exactly where this
+    // function's whole purpose is to succeed. A skipped table (one whose
+    // underlying .dbf failed to parse) therefore simply contributes
+    // nothing to the output, the same as it would for a table with zero
+    // rows, rather than a diagnostic comment a real engine cannot run.
 
     const std::size_t row_limit = (max_rows_per_table == 0U)
         ? std::numeric_limits<std::size_t>::max()
@@ -2166,7 +2255,6 @@ DatabaseSqlExportResult export_database_as_access_sql(
         const DbfTableParseResult tbl = parse_dbf_table_from_file(
             copperfin::platform::path_to_utf8_string(rt.path), row_limit);
         if (!tbl.ok) {
-            sql << "-- skipped table " << rt.name << ": " << tbl.error << "\n\n";
             continue;
         }
 
@@ -2211,7 +2299,15 @@ DatabaseSqlExportResult export_database_as_access_sql(
                         sql << "NULL";
                     }
                 } else if (is_numeric) {
-                    sql << (rv.display_value.empty() ? "NULL" : rv.display_value);
+                    // See looks_like_safe_unquoted_sql_numeric_literal()'s
+                    // comment: a non-blank value that isn't a safe plain
+                    // decimal literal (overflow marker, crafted/corrupted
+                    // content) becomes NULL rather than being trusted
+                    // unquoted, matching export_database_as_sql()'s own
+                    // established blank-cell-to-NULL behavior.
+                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
+                        ? rv.display_value
+                        : "NULL");
                 } else if (is_date) {
                     // decode_value()'s 'D' case (dbf_table.cpp) already
                     // formats the value as "YYYY-MM-DD" (empty string for a

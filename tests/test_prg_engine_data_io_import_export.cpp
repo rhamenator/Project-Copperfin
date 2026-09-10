@@ -1888,6 +1888,57 @@ void test_export_database_type_access_writes_jet_dialect_ddl_and_inserts() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_export_database_rejects_destination_aliasing_source() {
+    // #5475 review (Codex, P1): a destination with an explicit extension
+    // skips the .sql/.json default-extension step, so
+    // EXPORT DATABASE 'northwind.dbc' TO 'northwind.dbc' TYPE ACCESS would
+    // otherwise read the source successfully and then truncate that same
+    // file when opening the output -- irreversibly destroying the source
+    // database container. Verify the destination-aliases-source check
+    // rejects this before any write, and that the source file is left
+    // completely untouched.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_export_database_alias_guard";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    const fs::path dbc_path = temp_root / "northwind.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> catalog_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .length = 16U},
+        {.name = "OBJECTNAME", .type = 'C', .length = 64U},
+        {.name = "PARENTNAME", .type = 'C', .length = 64U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+    };
+    const auto catalog_create = copperfin::vfp::create_dbf_table_file(
+        dbc_path.string(),
+        catalog_fields,
+        {{"DATABASE", "Northwind", "", ""}, {"TABLE", "People", "Northwind", ""}});
+    expect(catalog_create.ok, "EXPORT DATABASE alias-guard fixture should create the DBC catalog");
+    const std::string original_dbc_bytes = read_text(dbc_path);
+
+    const fs::path main_path = temp_root / "export_database_alias.prg";
+    write_text(
+        main_path,
+        "EXPORT DATABASE 'northwind.dbc' TO 'northwind.dbc' TYPE ACCESS\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed,
+           "EXPORT DATABASE TYPE ACCESS should reject a destination that aliases the source rather than truncate it");
+    expect(state.message ==
+               "EXPORT DATABASE destination resolves to the same file as the source; the source was not overwritten",
+           "EXPORT DATABASE should report the localized destination-aliases-source diagnostic");
+    expect(read_text(dbc_path) == original_dbc_bytes,
+           "EXPORT DATABASE must not modify the source DBC when the destination aliases it");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_import_database_type_json_round_trips_via_export() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_import_database_json";
