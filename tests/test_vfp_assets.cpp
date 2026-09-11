@@ -7,6 +7,7 @@
 #include "copperfin/vfp/access_container.h"
 #include "copperfin/vfp/access_long_value.h"
 #include "copperfin/vfp/access_msysobjects.h"
+#include "copperfin/vfp/access_saveastext_design.h"
 #include "copperfin/vfp/access_saved_queries.h"
 #include "copperfin/vfp/access_table_definition.h"
 #include "copperfin/vfp/asset_inspector.h"
@@ -1365,6 +1366,187 @@ std::vector<std::uint8_t> make_long_value_descriptor_bytes(
     bytes[3] = bitmask;
     write_le_u32(bytes, 4U, lval_dp);
     return bytes;
+}
+
+// #5477: parse_access_saveastext_design() parses Application.SaveAsText's
+// own nested Begin/End text grammar for a form or report. These are
+// hand-built SYNTHETIC fixtures, not real Access output -- the grammar
+// itself (property syntax, NotDefault marker, blob properties,
+// multi-line string continuation with backslash escaping, the
+// CodeBehindForm marker) was derived and verified against real Access
+// 365 automation output this slice's own investigation produced (see
+// docs/78-access-forms-reports-vba-storage-reconnaissance.md and
+// docs/79-access-saveastext-design-format-notes.md), matching this
+// project's established practice of never committing a real Access-
+// derived fixture or its content (#5549/#5551's own precedent).
+void test_parse_access_saveastext_design_parses_form_control_hierarchy() {
+    const std::string text =
+        "Version =19\r\n"
+        "VersionRequired =19\r\n"
+        "Checksum =12345\r\n"
+        "Begin Form\r\n"
+        "    Width =7740\r\n"
+        "    AllowFilters = NotDefault\r\n"
+        "    Caption =\"Order Entry\"\r\n"
+        "    GUID = Begin\r\n"
+        "        0x47766dbfaadd694db98d5c13cfb68711\r\n"
+        "    End\r\n"
+        "    Begin\r\n"
+        "        Begin Label\r\n"
+        "            Name =\"Label1\"\r\n"
+        "            Caption =\"Hello\"\r\n"
+        "        End\r\n"
+        "        Begin CommandButton\r\n"
+        "            Name =\"Option1\"\r\n"
+        "            OnClick =\"=HandleButtonClick(1)\"\r\n"
+        "            Begin\r\n"
+        "                Begin Label\r\n"
+        "                    Name =\"OptionLabel1\"\r\n"
+        "                End\r\n"
+        "            End\r\n"
+        "        End\r\n"
+        "    End\r\n"
+        "End\r\n"
+        "CodeBehindForm\r\n"
+        "Attribute VB_GlobalNameSpace = False\r\n"
+        "Option Compare Database\r\n"
+        "\r\n"
+        "Private Sub Form_Open(Cancel As Integer)\r\n"
+        "End Sub\r\n";
+
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(result.ok, "well-formed synthetic form design text should parse: " + result.error);
+    expect(result.version == 19, "should decode the Version header field");
+    expect(result.version_required == 19, "should decode the VersionRequired header field");
+    expect(result.checksum == 12345, "should decode the Checksum header field");
+    expect(result.root.control_type == "Form", "root control type should be Form");
+    expect(result.root.children.size() == 2U, "root Form should have two direct children (Label, CommandButton)");
+
+    const auto* width = result.root.find_property("Width");
+    expect(width != nullptr && width->value == "7740" && !width->is_string, "Width should be a plain numeric property");
+
+    const auto* allow_filters = result.root.find_property("AllowFilters");
+    expect(allow_filters != nullptr && allow_filters->is_not_default, "AllowFilters should be recognized as the NotDefault marker");
+
+    const auto* caption = result.root.find_property("Caption");
+    expect(caption != nullptr && caption->is_string && caption->value == "Order Entry", "Caption should decode as the string \"Order Entry\"");
+
+    const auto* guid = result.root.find_property("GUID");
+    expect(guid != nullptr && guid->is_blob && guid->blob_lines.size() == 1U &&
+               guid->blob_lines.front() == "0x47766dbfaadd694db98d5c13cfb68711",
+           "GUID should be captured as an opaque one-line blob property");
+
+    if (result.root.children.size() == 2U) {
+        expect(result.root.children[0].control_type == "Label", "first child should be the Label control");
+        expect(result.root.children[1].control_type == "CommandButton", "second child should be the CommandButton control");
+        expect(result.root.children[1].children.size() == 1U && result.root.children[1].children[0].control_type == "Label",
+               "the CommandButton's own nested anonymous Begin/End block should expose its child Label directly, not as a synthetic wrapper node");
+    }
+
+    expect(
+        result.code_behind.find("Private Sub Form_Open(Cancel As Integer)") != std::string::npos,
+        "code_behind should capture the form's own VBA source verbatim after the CodeBehindForm marker");
+    expect(
+        result.code_behind.find("Attribute VB_GlobalNameSpace = False") != std::string::npos,
+        "code_behind should include the class-module Attribute lines verbatim");
+}
+
+void test_parse_access_saveastext_design_accepts_report_root_type() {
+    const std::string text =
+        "Version =19\r\n"
+        "VersionRequired =19\r\n"
+        "Checksum =-999\r\n"
+        "Begin Report\r\n"
+        "    Width =9360\r\n"
+        "End\r\n";
+
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(result.ok, "a Begin Report root block should be accepted: " + result.error);
+    expect(result.root.control_type == "Report", "root control type should be Report");
+    expect(result.checksum == -999, "a negative Checksum value should decode correctly");
+    expect(result.code_behind.empty(), "a design with no CodeBehindForm marker should report an empty code_behind, not an error");
+}
+
+void test_parse_access_saveastext_design_unescapes_multiline_string_continuation() {
+    // Mirrors a real fixture's own BaseInfo/ColumnInfo property shape:
+    // a long string value wrapped across physical lines with no
+    // continuation marker other than each following line itself being
+    // nothing but another quoted chunk, plus backslash-escaped quotes
+    // and backslashes within the value.
+    const std::string text =
+        "Version =19\r\n"
+        "VersionRequired =19\r\n"
+        "Checksum =1\r\n"
+        "Begin Form\r\n"
+        "    BaseInfo =\"\\\"SELECT * FROM [Pay\"\r\n"
+        "        \"ment Methods]\\\";\\\"Primary\"\r\n"
+        "        \"Key\\\"\"\r\n"
+        "    Picture =\"C:\\\\Program Files\\\\demo.gif\"\r\n"
+        "End\r\n";
+
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(result.ok, "a multi-line escaped string property should parse: " + result.error);
+    const auto* base_info = result.root.find_property("BaseInfo");
+    expect(
+        base_info != nullptr && base_info->value == "\"SELECT * FROM [Payment Methods]\";\"PrimaryKey\"",
+        "multi-line string chunks should concatenate in order and unescape as a whole");
+    const auto* picture = result.root.find_property("Picture");
+    expect(
+        picture != nullptr && picture->value == "C:\\Program Files\\demo.gif",
+        "an escaped backslash (\\\\) should unescape to a single literal backslash");
+}
+
+void test_parse_access_saveastext_design_rejects_malformed_header() {
+    const std::string text = "Version =19\r\nVersionRequired =19\r\nBegin Form\r\nEnd\r\n";  // missing Checksum line
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(!result.ok, "a header missing its Checksum line should fail closed");
+}
+
+void test_parse_access_saveastext_design_rejects_unbalanced_block() {
+    const std::string text =
+        "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Form\r\n    Width =100\r\n";  // no closing End
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(!result.ok, "an unclosed Begin block should fail closed rather than return a partial structure");
+}
+
+void test_parse_access_saveastext_design_rejects_unsupported_root_type() {
+    const std::string text = "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Macro\r\nEnd\r\n";
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(!result.ok, "a root block type other than Form or Report should fail closed (this slice's own explicit scope)");
+}
+
+void test_parse_access_saveastext_design_rejects_malformed_property_line() {
+    const std::string text =
+        "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Form\r\n    ThisLineHasNoEqualsSign\r\nEnd\r\n";
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(!result.ok, "a line that is neither Begin/End nor a well-formed property assignment should fail closed");
+}
+
+void test_parse_access_saveastext_design_rejects_unterminated_string() {
+    const std::string text =
+        "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Form\r\n    Caption =\"never closed\r\nEnd\r\n";
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(!result.ok, "a quoted string property missing its closing quote should fail closed");
+}
+
+void test_parse_access_saveastext_design_rejects_unexpected_trailing_content() {
+    const std::string text =
+        "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Form\r\nEnd\r\nSomeUnexpectedTrailer\r\n";
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(!result.ok, "trailing content after the root End that isn't a CodeBehindForm marker should fail closed");
+}
+
+void test_access_saveastext_design_find_property_returns_null_when_absent() {
+    const std::string text = "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Form\r\n    Width =100\r\nEnd\r\n";
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(result.ok, "fixture should parse: " + result.error);
+    expect(result.root.find_property("NoSuchProperty") == nullptr, "find_property should return nullptr for an absent property name");
+}
+
+void test_parse_access_saveastext_design_from_file_reports_open_failure() {
+    const auto result = copperfin::vfp::parse_access_saveastext_design_from_file(
+        "/nonexistent/path/that/should/never/exist.txt");
+    expect(!result.ok, "parse_access_saveastext_design_from_file should fail closed for a missing file");
 }
 
 void test_parse_access_long_value_field_descriptor_decodes_header() {
@@ -3027,6 +3209,14 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AccessContainer.Error.OpenFileFailed",
         "Vfp.AccessContainer.Error.ReadHeaderFailed",
         "Vfp.AccessContainer.Error.SignatureMismatch",
+        "Vfp.AccessDesign.Error.MalformedHeader",
+        "Vfp.AccessDesign.Error.MalformedPropertyLine",
+        "Vfp.AccessDesign.Error.MissingRootBlock",
+        "Vfp.AccessDesign.Error.OpenFileFailed",
+        "Vfp.AccessDesign.Error.UnbalancedBlock",
+        "Vfp.AccessDesign.Error.UnexpectedTrailingContent",
+        "Vfp.AccessDesign.Error.UnsupportedRootType",
+        "Vfp.AccessDesign.Error.UnterminatedString",
         "Vfp.AccessMSysObjects.Error.ColumnCountMismatch",
         "Vfp.AccessMSysObjects.Error.CompressedUnicodeUnsupported",
         "Vfp.AccessMSysObjects.Error.JumpTableUnsupported",
@@ -4942,6 +5132,17 @@ int main() {
     test_create_vfp_cdx_single_tag_index_file_rejects_tag_name_that_would_overwrite_header();
     test_create_vfp_cdx_single_tag_index_file_does_not_set_production_index_flag_when_cdx_write_fails();
     test_create_vfp_cdx_single_tag_index_file_rejects_leaf_page_overflow();
+    test_parse_access_saveastext_design_parses_form_control_hierarchy();
+    test_parse_access_saveastext_design_accepts_report_root_type();
+    test_parse_access_saveastext_design_unescapes_multiline_string_continuation();
+    test_parse_access_saveastext_design_rejects_malformed_header();
+    test_parse_access_saveastext_design_rejects_unbalanced_block();
+    test_parse_access_saveastext_design_rejects_unsupported_root_type();
+    test_parse_access_saveastext_design_rejects_malformed_property_line();
+    test_parse_access_saveastext_design_rejects_unterminated_string();
+    test_parse_access_saveastext_design_rejects_unexpected_trailing_content();
+    test_access_saveastext_design_find_property_returns_null_when_absent();
+    test_parse_access_saveastext_design_from_file_reports_open_failure();
     test_parse_access_long_value_field_descriptor_decodes_header();
     test_parse_access_long_value_field_descriptor_rejects_short_input();
     test_read_access_long_value_column_returns_inline_value();
