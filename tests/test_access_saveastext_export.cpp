@@ -72,6 +72,15 @@ AccessSaveAsTextExportRequest base_request(
     const fs::path& output_dir) {
     AccessSaveAsTextExportRequest request;
     request.powershell_executable_path = utf8_path(powershell);
+    // A genuinely independent field from powershell_executable_path --
+    // see access_saveastext_export.h's own comment on why deriving it
+    // from the executable path itself would be tautological (#5562
+    // review). This test's own powershell binary genuinely does live
+    // under its own parent directory, so this value happens to match
+    // what an auto-derived root would have been, but it is supplied
+    // here as its own explicit value, not computed from
+    // powershell_executable_path.
+    request.powershell_allowed_root = utf8_path(powershell.parent_path());
     request.script_path = utf8_path(script);
     request.script_allowed_root = utf8_path(root);
     request.expected_script_sha256 = hash_of(script);
@@ -167,6 +176,44 @@ void test_invalid_request_never_launches_a_process(
     expect(result.exit_code == -1, "invalid_request must never reach process launch");
 }
 
+// #5562 review (copilot-pull-request-reviewer): a relative path is
+// unsafe here even when nonempty, since the child process and this
+// function's own later manifest read would resolve it against two
+// different directories.
+void test_invalid_request_rejects_relative_output_directory(
+    const fs::path& powershell, const fs::path& script, const fs::path& root) {
+    auto request = base_request(
+        powershell, script, root, root / "unused.mdb", root / "relative_output");
+    request.output_directory = "relative_output_dir";
+    const auto result = run_access_saveastext_export(request);
+    expect(!result.ok, "a relative output_directory should fail before admission");
+    expect(result.error == AccessSaveAsTextExportError::invalid_request,
+           "a relative required path should be reported as invalid_request");
+    expect(result.exit_code == -1, "invalid_request must never reach process launch");
+}
+
+// #5562 review (chatgpt-codex-connector and copilot-pull-request-reviewer,
+// independently): deriving powershell_allowed_root from
+// powershell_executable_path itself made the containment check
+// tautological. This proves the two are now genuinely independent
+// fields: an allowed root that does not actually contain the real
+// PowerShell binary must be rejected, even though the executable path
+// itself is completely unchanged and genuinely valid.
+void test_admission_rejects_powershell_outside_its_claimed_allowed_root(
+    const fs::path& powershell, const fs::path& script, const fs::path& root) {
+    const fs::path unrelated_root = unique_root();
+    std::error_code ignored;
+    fs::create_directories(unrelated_root, ignored);
+    auto request = base_request(
+        powershell, script, root, root / "unused.mdb", root / "wrong_powershell_root_output");
+    request.powershell_allowed_root = utf8_path(unrelated_root);
+    const auto result = run_access_saveastext_export(request);
+    expect(!result.ok, "a PowerShell host outside its claimed allowed root should fail admission");
+    expect(result.error == AccessSaveAsTextExportError::executable_admission_failed,
+           "a containment failure for the host itself should be reported as executable_admission_failed");
+    fs::remove_all(unrelated_root, ignored);
+}
+
 // A small synthetic PowerShell script (not the real export_access_design.ps1)
 // exercises run_access_saveastext_export()'s manifest-parsing code paths
 // via a genuine real-process round trip, without needing real Access
@@ -212,6 +259,67 @@ param(
 )
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 "this is not a JSON array of manifest entries" | Out-File -FilePath (Join-Path $OutputDirectory "manifest.json") -Encoding utf8
+exit 0
+)ps1";
+
+// #5562 review (chatgpt-codex-connector): the real
+// export_access_design.ps1 previously wrapped ConvertTo-Json's own
+// already-correct one-element-array output in a second, redundant pair
+// of brackets, producing "[[{...}]]" for a database with exactly one
+// exported object. This mirrors that script's own now-fixed
+// single-branch serialization exactly (see this file's own comment on
+// that fix) to prove the parser accepts the real shape a one-object
+// database actually produces.
+constexpr const char* kSyntheticSingletonManifestBody = R"ps1(
+param(
+    [Parameter(Mandatory = $true)][string]$DatabasePath,
+    [Parameter(Mandatory = $true)][string]$OutputDirectory
+)
+New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
+$manifest = New-Object System.Collections.ArrayList
+[void]$manifest.Add([PSCustomObject]@{ Kind = "Form"; Name = "frmOnly"; File = (Join-Path $OutputDirectory "Form_frmOnly.txt"); Ok = $true; Error = "" })
+$manifestJson = ConvertTo-Json -InputObject @($manifest) -Depth 4
+$manifestJson | Out-File -FilePath (Join-Path $OutputDirectory "manifest.json") -Encoding utf8
+exit 0
+)ps1";
+
+// #5562 review (chatgpt-codex-connector and copilot-pull-request-reviewer,
+// independently): Windows PowerShell 5.1's `Out-File -Encoding utf8` --
+// the exact encoding the real script uses -- always writes a leading
+// UTF-8 BOM; this dev environment's own PowerShell 7 does not (directly
+// confirmed empirically), which is why this went unnoticed until
+// review. Writes the BOM bytes explicitly via .NET's File API to
+// reproduce that real-target behavior regardless of which PowerShell
+// version actually runs this test.
+constexpr const char* kSyntheticBomManifestBody = R"ps1(
+param(
+    [Parameter(Mandatory = $true)][string]$DatabasePath,
+    [Parameter(Mandatory = $true)][string]$OutputDirectory
+)
+New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
+$manifest = @(
+    [PSCustomObject]@{ Kind = "Form"; Name = "frmBom"; File = (Join-Path $OutputDirectory "Form_frmBom.txt"); Ok = $true; Error = "" }
+)
+$json = ConvertTo-Json -InputObject $manifest -Depth 4
+$bom = [byte[]](0xEF, 0xBB, 0xBF)
+$bytes = $bom + [System.Text.Encoding]::UTF8.GetBytes($json)
+[System.IO.File]::WriteAllBytes((Join-Path $OutputDirectory "manifest.json"), $bytes)
+exit 0
+)ps1";
+
+// #5562 review (copilot-pull-request-reviewer): proves manifest_too_large
+// is reported from the file's own size, not from reading it in full and
+// having the JSON parser reject it afterward -- writes a manifest.json
+// larger than parse_json_document()'s own 1 MiB default document-size
+// limit.
+constexpr const char* kSyntheticOversizedManifestBody = R"ps1(
+param(
+    [Parameter(Mandatory = $true)][string]$DatabasePath,
+    [Parameter(Mandatory = $true)][string]$OutputDirectory
+)
+New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
+$filler = "x" * (2 * 1024 * 1024)
+$filler | Out-File -FilePath (Join-Path $OutputDirectory "manifest.json") -Encoding utf8
 exit 0
 )ps1";
 
@@ -269,6 +377,49 @@ void test_synthetic_invalid_manifest_fails_closed(
     expect(result.manifest.empty(), "no manifest entries should be trusted from an invalid document");
 }
 
+void test_synthetic_singleton_manifest_round_trip(const fs::path& powershell, const fs::path& root) {
+    const fs::path script = write_synthetic_script(root, kSyntheticSingletonManifestBody);
+    const fs::path output_dir = root / "synthetic_singleton_output";
+    auto request = base_request(powershell, script, root, root / "unused.mdb", output_dir);
+    const auto result = run_access_saveastext_export(request);
+
+    expect(result.ok, "a single-object export using the real script's own fixed serialization logic "
+        "should report ok: " + result.error_message + " / stderr: " + result.standard_error);
+    expect(result.manifest.size() == 1U,
+           "exactly one manifest entry should be parsed from the real single-object array shape");
+    if (result.manifest.size() == 1U) {
+        expect(result.manifest[0].kind == "Form" && result.manifest[0].name == "frmOnly" &&
+                   result.manifest[0].ok,
+               "the singleton manifest entry's fields should round-trip exactly");
+    }
+}
+
+void test_synthetic_manifest_with_bom_is_parsed(const fs::path& powershell, const fs::path& root) {
+    const fs::path script = write_synthetic_script(root, kSyntheticBomManifestBody);
+    const fs::path output_dir = root / "synthetic_bom_output";
+    auto request = base_request(powershell, script, root, root / "unused.mdb", output_dir);
+    const auto result = run_access_saveastext_export(request);
+
+    expect(result.ok, "a manifest.json carrying a leading UTF-8 BOM (Windows PowerShell 5.1's own "
+        "Out-File -Encoding utf8 behavior) should still parse successfully: " + result.error_message);
+    expect(result.manifest.size() == 1U, "the BOM-prefixed manifest's single entry should be parsed");
+    if (result.manifest.size() == 1U) {
+        expect(result.manifest[0].name == "frmBom", "the BOM-prefixed manifest entry's fields should round-trip exactly");
+    }
+}
+
+void test_synthetic_oversized_manifest_fails_closed(const fs::path& powershell, const fs::path& root) {
+    const fs::path script = write_synthetic_script(root, kSyntheticOversizedManifestBody);
+    const fs::path output_dir = root / "synthetic_oversized_output";
+    auto request = base_request(powershell, script, root, root / "unused.mdb", output_dir);
+    const auto result = run_access_saveastext_export(request);
+
+    expect(!result.ok, "an oversized manifest.json should not report ok");
+    expect(result.error == AccessSaveAsTextExportError::manifest_too_large,
+           "a manifest.json over the JSON parser's own document-size limit should fail closed as manifest_too_large");
+    expect(result.manifest.empty(), "no manifest entries should be trusted from an oversized document");
+}
+
 }  // namespace
 
 int main() {
@@ -302,10 +453,15 @@ int main() {
         test_real_script_unavailable_access_automation_fails_closed(powershell, script, root);
         test_admission_rejects_tampered_script(powershell, script, root);
         test_admission_rejects_script_outside_allowed_root(powershell, script, root);
+        test_admission_rejects_powershell_outside_its_claimed_allowed_root(powershell, script, root);
         test_invalid_request_never_launches_a_process(powershell, script, root);
+        test_invalid_request_rejects_relative_output_directory(powershell, script, root);
         test_synthetic_success_round_trip(powershell, root);
         test_synthetic_partial_failure_still_exposes_manifest(powershell, root);
         test_synthetic_invalid_manifest_fails_closed(powershell, root);
+        test_synthetic_singleton_manifest_round_trip(powershell, root);
+        test_synthetic_manifest_with_bom_is_parsed(powershell, root);
+        test_synthetic_oversized_manifest_fails_closed(powershell, root);
     }
 
     fs::remove_all(root, error);

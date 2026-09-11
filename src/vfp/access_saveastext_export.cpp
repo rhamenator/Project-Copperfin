@@ -10,9 +10,10 @@
 #include "copperfin/platform/polyglot_supporting_artifact_admission.h"
 #include "copperfin/security/external_process_policy.h"
 
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
-#include <sstream>
+#include <string_view>
 
 #if defined(_WIN32)
 #define NOMINMAX
@@ -27,6 +28,7 @@ namespace {
 using copperfin::platform::admit_polyglot_supporting_artifact;
 using copperfin::platform::BoundedProcessRequest;
 using copperfin::platform::BoundedProcessStatus;
+using copperfin::platform::JsonDocumentLimits;
 using copperfin::platform::JsonSelectionError;
 using copperfin::platform::JsonValueKind;
 using copperfin::platform::parse_json_document;
@@ -60,35 +62,96 @@ AccessSaveAsTextExportResult fail(
     return result;
 }
 
-bool request_is_valid(const AccessSaveAsTextExportRequest& request) {
-    return !request.powershell_executable_path.empty() &&
-        !request.script_path.empty() &&
-        !request.script_allowed_root.empty() &&
-        !request.expected_script_sha256.empty() &&
-        !request.source_database_path.empty() &&
-        !request.output_directory.empty();
+bool is_nonempty_absolute_path(const std::string& value) {
+    if (value.empty()) {
+        return false;
+    }
+    return copperfin::platform::path_from_utf8_string(value).is_absolute();
 }
 
-std::string read_whole_file(const std::string& path, bool& ok) {
+// #5562 review (copilot-pull-request-reviewer): every path field must
+// be absolute -- see run_access_saveastext_export()'s own header
+// comment for why a relative path is unsafe here, not merely
+// inconvenient (the child process and this function's own later
+// manifest read resolve a relative path against two different
+// directories).
+bool request_is_valid(const AccessSaveAsTextExportRequest& request) {
+    return is_nonempty_absolute_path(request.powershell_executable_path) &&
+        is_nonempty_absolute_path(request.powershell_allowed_root) &&
+        is_nonempty_absolute_path(request.script_path) &&
+        is_nonempty_absolute_path(request.script_allowed_root) &&
+        !request.expected_script_sha256.empty() &&
+        is_nonempty_absolute_path(request.source_database_path) &&
+        is_nonempty_absolute_path(request.output_directory);
+}
+
+// Strips exactly one leading UTF-8 byte-order mark, if present. Windows
+// PowerShell 5.1's `Out-File -Encoding utf8` -- the encoding
+// export_access_design.ps1 uses, and the only UTF-8 option that
+// encoding name selects on that specific PowerShell version -- always
+// writes one; PowerShell 7's own `-Encoding utf8` does not, which is
+// why this went unnoticed against this module's own PowerShell-7-based
+// test environment until #5562's review (chatgpt-codex-connector and
+// copilot-pull-request-reviewer, independently) caught it against the
+// documented Windows PowerShell 5.1 target. Without this, every
+// otherwise-successful export on that target would be misreported as
+// manifest_invalid, since a leading BOM is not valid JSON.
+std::string_view strip_utf8_bom(std::string_view text) {
+    constexpr std::string_view bom = "\xEF\xBB\xBF";
+    if (text.substr(0U, bom.size()) == bom) {
+        return text.substr(bom.size());
+    }
+    return text;
+}
+
+// #5562 review (copilot-pull-request-reviewer): reads at most
+// `max_bytes` and reports whether the file was larger, so a caller can
+// reject an oversized manifest.json by its file size alone -- before
+// ever holding its full content in memory -- rather than reading it in
+// full only to have parse_json_document() reject it afterward.
+std::string read_file_up_to(
+    const std::string& path, std::uint64_t max_bytes, bool& ok, bool& too_large) {
     std::ifstream input(
         copperfin::platform::path_from_utf8_string(path), std::ios::binary);
     if (!input.good()) {
         ok = false;
+        too_large = false;
         return {};
     }
-    std::ostringstream buffer;
-    buffer << input.rdbuf();
-    ok = !input.bad();
-    return buffer.str();
+    std::string buffer(max_bytes, '\0');
+    input.read(buffer.data(), static_cast<std::streamsize>(max_bytes));
+    const auto read_bytes = static_cast<std::uint64_t>(input.gcount());
+    if (input.bad()) {
+        ok = false;
+        too_large = false;
+        return {};
+    }
+    buffer.resize(read_bytes);
+    if (read_bytes == max_bytes) {
+        // Either exactly max_bytes long, or longer -- peek one more byte
+        // without reading the rest of a genuinely oversized file.
+        char probe = '\0';
+        input.read(&probe, 1);
+        if (input.gcount() == 1) {
+            ok = true;
+            too_large = true;
+            return {};
+        }
+    }
+    ok = true;
+    too_large = false;
+    return buffer;
 }
 
 // Parses export_access_design.ps1's own manifest.json shape: a JSON
 // array of {Kind, Name, File, Ok, Error} objects (the empty-array and
 // single-element cases are both explicitly normalized by the script
 // itself -- see that script's own comment on why -- so this parser does
-// not need to special-case either).
+// not need to special-case either). `manifest_json` must already have
+// any leading UTF-8 BOM stripped (strip_utf8_bom()) -- a BOM is not
+// valid JSON and would otherwise reject every real manifest outright.
 bool parse_manifest(
-    const std::string& manifest_json,
+    std::string_view manifest_json,
     std::vector<AccessSaveAsTextManifestEntry>& out_entries) {
     const auto parsed = parse_json_document(manifest_json);
     if (!parsed.ok()) {
@@ -146,15 +209,19 @@ AccessSaveAsTextExportResult run_access_saveastext_export(
     }
 
     namespace fs = std::filesystem;
-    const fs::path powershell_path =
-        copperfin::platform::path_from_utf8_string(request.powershell_executable_path);
 
     // The PowerShell host itself is a well-known, OS-shipped executable
     // that changes with every Windows/PowerShell servicing update --
     // pinning it by exact byte digest the way the checked-in script is
     // pinned below would break on the next security patch. It is instead
-    // authorized by physical location (an explicit allowed root, not an
-    // ambient PATH search) -- the same authorize_external_process() path
+    // authorized by physical location -- an *independently* supplied
+    // allowed root (request.powershell_allowed_root), not derived from
+    // request.powershell_executable_path itself (#5562 review,
+    // chatgpt-codex-connector and copilot-pull-request-reviewer,
+    // independently: deriving the root from the same candidate path
+    // being checked makes the containment check tautological -- any
+    // caller-supplied path would automatically be admitted as "inside
+    // its own directory") -- the same authorize_external_process() path
     // policy/publisher/signature check every other admitted executable
     // in this codebase goes through, deliberately distinct from
     // admit_polyglot_supporting_artifact()'s digest-pinning, which is
@@ -162,8 +229,7 @@ AccessSaveAsTextExportResult run_access_saveastext_export(
     // itself.
     ExternalProcessPolicy powershell_policy;
     powershell_policy.executable_name = request.powershell_executable_path;
-    powershell_policy.allowed_path_roots = {
-        copperfin::platform::path_to_utf8_string(powershell_path.parent_path())};
+    powershell_policy.allowed_path_roots = {request.powershell_allowed_root};
     powershell_policy.allowed_publishers = {};
     powershell_policy.require_trusted_signature = false;
     ExternalProcessAuthorizationResult powershell_authorization =
@@ -291,15 +357,24 @@ AccessSaveAsTextExportResult run_access_saveastext_export(
     }
 
     bool read_ok = false;
-    const std::string manifest_text = read_whole_file(result.manifest_path, read_ok);
+    bool manifest_too_large = false;
+    constexpr std::uint64_t max_manifest_bytes = JsonDocumentLimits{}.max_document_bytes;
+    const std::string manifest_text = read_file_up_to(
+        result.manifest_path, max_manifest_bytes, read_ok, manifest_too_large);
     if (!read_ok) {
         result.error = AccessSaveAsTextExportError::manifest_unreadable;
         result.error_message = "failed to read " + result.manifest_path;
         return result;
     }
+    if (manifest_too_large) {
+        result.error = AccessSaveAsTextExportError::manifest_too_large;
+        result.error_message = result.manifest_path + " exceeds the " +
+            std::to_string(max_manifest_bytes) + "-byte manifest size limit";
+        return result;
+    }
 
     std::vector<AccessSaveAsTextManifestEntry> entries;
-    if (!parse_manifest(manifest_text, entries)) {
+    if (!parse_manifest(strip_utf8_bom(manifest_text), entries)) {
         result.error = AccessSaveAsTextExportError::manifest_invalid;
         result.error_message = "manifest.json did not match the expected shape";
         return result;
@@ -344,6 +419,8 @@ const char* access_saveastext_export_error_name(
             return "manifest_unreadable";
         case AccessSaveAsTextExportError::manifest_invalid:
             return "manifest_invalid";
+        case AccessSaveAsTextExportError::manifest_too_large:
+            return "manifest_too_large";
         case AccessSaveAsTextExportError::process_exited_with_failures:
             return "process_exited_with_failures";
     }

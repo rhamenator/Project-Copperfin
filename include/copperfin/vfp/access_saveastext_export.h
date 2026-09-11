@@ -75,6 +75,13 @@ enum class AccessSaveAsTextExportError {
     manifest_missing,
     manifest_unreadable,
     manifest_invalid,
+    // manifest.json exceeded the JSON parser's own document-size limit
+    // -- rejected by its file size alone, before ever being read into
+    // memory (#5562 review, copilot-pull-request-reviewer: reading an
+    // unbounded file first, only to have the parser reject it afterward,
+    // lets an oversized/malformed manifest cause unbounded memory growth
+    // in this process).
+    manifest_too_large,
     // The process exited non-zero, but did write a manifest.json listing
     // which specific object(s) failed -- manifest is still populated so
     // the caller can see exactly what went wrong per-object.
@@ -88,6 +95,19 @@ struct AccessSaveAsTextExportRequest {
     // separately-installed pwsh.exe -- resolving and choosing between
     // them is the caller's responsibility, not this function's.
     std::string powershell_executable_path;
+    // The one explicit, independently trusted physical root the
+    // PowerShell host must live under (e.g. Windows' own
+    // "%SystemRoot%\System32\WindowsPowerShell\v1.0" for the documented
+    // 5.1 target) -- deliberately a *separate* field from
+    // powershell_executable_path, not derived from it (#5562 review,
+    // chatgpt-codex-connector and copilot-pull-request-reviewer,
+    // independently: deriving the allowed root from the same candidate
+    // path being checked makes the containment check tautological --
+    // any caller-supplied executable would automatically be "inside its
+    // own directory" -- exactly the same independent-root relationship
+    // script_allowed_root already has to script_path below, which this
+    // field now mirrors for the executable side too).
+    std::string powershell_allowed_root;
     // export_access_design.ps1's own deployed location on this
     // installation. Must resolve beneath script_allowed_root.
     std::string script_path;
@@ -134,6 +154,16 @@ struct AccessSaveAsTextExportResult {
 // inherits ambient host/agent environment variables, and never launches
 // anything the immediately-preceding revalidation did not just confirm
 // is still the exact admitted file.
+//
+// Every path field must be absolute (#5562 review, copilot-pull-
+// request-reviewer: the child process's own working directory is
+// `request.script_allowed_root`, so a relative `source_database_path`/
+// `output_directory` would resolve there from the child's perspective,
+// while this function's own manifest read afterward resolves a relative
+// `output_directory` against this process's own current directory
+// instead -- a caller-visible relative path could silently write to one
+// location and read back from another). A request with any relative
+// path fails closed as invalid_request before anything is admitted.
 [[nodiscard]] AccessSaveAsTextExportResult run_access_saveastext_export(
     const AccessSaveAsTextExportRequest& request);
 
