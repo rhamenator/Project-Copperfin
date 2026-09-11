@@ -63,34 +63,48 @@ documented payload format -- Access's own form/report control-layout
 binary format has no MS-OVBA-equivalent public specification this
 reconnaissance could find.
 
-### #5478 is further along than this alone suggests: the container half is partly located, just not fully unwrapped
+### #5478 may be further along than this alone suggests -- but only for Jet3/Jet4 MDB, and only as an unvalidated hypothesis so far
 
 A prior investigation pass on #5478 (recorded in that issue's own comment
-history, done after #5549's long-value/OLE reading landed) got closer
-than this session's own fresh page-type probing realized at first:
+history, done after #5549's long-value/OLE reading landed) found a real,
+if not yet structurally validated, lead -- **scoped to Jet3/Jet4 `.mdb`
+only**. Every fixture that pass and this reconnaissance directly
+inspected was a Jet3/Jet4 `.mdb`; no `.accdb` (ACE) fixture was checked
+at all, and `read_access_long_value_column()` deliberately rejects
+`AccessContainerGeneration::later` for page-backed values
+(`access_long_value.cpp`), so this lead does not currently extend to ACE
+even in principle without new work there:
 
-- `MSysModules2` is a real, discovered system table (columns: `Flags`,
-  `Form`, `Module`, `Name`, `ReplicationVersion`, `Type`, `TypeInfo`,
-  `Version`) whose `Module` column is an OLE/long-value field --
-  `read_access_long_value_column()` (#5549) successfully retrieves its
-  bytes from two real fixture rows (5752 and 4113 bytes).
+- `MSysModules2` is a real, discovered Jet3/Jet4 system table (columns:
+  `Flags`, `Form`, `Module`, `Name`, `ReplicationVersion`, `Type`,
+  `TypeInfo`, `Version`) whose `Module` column is an OLE/long-value
+  field -- `read_access_long_value_column()` (#5549) successfully
+  retrieves its bytes from two real Jet3/Jet4 fixture rows (5752 and
+  4113 bytes).
 - Those retrieved bytes are **not themselves a raw OLE Compound File
   Binary (MS-CFB) structure** -- no CFB signature (`D0 CF 11 E0 A1 B1
-  1A E1`) appears anywhere in either value -- but they *do* contain
-  recognizable UTF-16LE substrings `_VBA_MODULE` and `_VBA_PROJECT`,
-  the well-known MS-CFB stream names MS-OVBA's own storage layout uses.
-  This means the MS-OVBA-formatted project **is in there**, wrapped in
-  some other, undocumented Access-internal framing (a length/offset
-  header, Access's own additional compression, or both) that this
-  session did not crack.
+  1A E1`) appears anywhere in either value. They *do* contain
+  recognizable UTF-16LE substrings `_VBA_MODULE` and `_VBA_PROJECT`, the
+  well-known MS-CFB stream names MS-OVBA's own storage layout uses --
+  **but that is the only evidence found, and it is not sufficient on its
+  own to conclude a complete MS-OVBA project (or any CFB blob with
+  recoverable boundaries) is actually present.** Those substrings could
+  just as easily be fragments or metadata within some other Access-
+  internal serialization that happens to reuse MS-CFB's own stream-name
+  strings. This is a **hypothesis pending structural validation**, not a
+  confirmed payload location, and should be treated as such until
+  something can actually parse a boundary, length field, or checksum
+  around those substrings and get a self-consistent result.
 
-So the accurate picture for #5478 is: the column holding the payload is
-known and already extractable with shipped code (`MSysModules2.Module`
-via `read_access_long_value_column()`); what remains undocumented is
-only the wrapper immediately around the MS-OVBA CFB blob, not the whole
-container-to-payload path. This is a narrower, more tractable-looking gap
-than #5477's -- worth revisiting first if a future evidence source
-narrows it further (see "A third, lower-cost path" below).
+So the accurate picture for #5478 is narrower than it might first read:
+for **Jet3/Jet4 `.mdb` only**, there is a real, extractable candidate
+column (`MSysModules2.Module`, retrievable today with shipped code) that
+*might* hold the MS-OVBA payload wrapped in an undocumented framing --
+but this has not been structurally confirmed, and nothing is currently
+known about ACE/`.accdb`'s equivalent (if any) at all. This is worth
+revisiting first if a future evidence source can validate or refute the
+hypothesis (see "A third, lower-cost path" below), not treated as an
+already-solved sub-problem.
 
 ## Methodology and evidence: what this session directly verified
 
@@ -183,24 +197,29 @@ this project's clean-room discipline against guessing. This document
 records what was checked and found, so a future slice -- whichever path
 is chosen -- does not have to re-derive it.
 
-### A third, lower-cost path specific to #5478's narrower remaining gap
+### A third, lower-cost path specific to #5478's Jet3/Jet4 hypothesis
 
-Because #5478's remaining unknown is *only* the wrapper immediately
-around an already-located MS-OVBA CFB blob (see above), there is a
-cheaper option than installing Access on Copperfin's own VM: `rhamenator/
-access-to-foxpro` (see `project_copperfin_access_to_foxpro_reference`
-memory) already extracts real VBA source from real Access databases via
-Access automation on the user's own machine, and the user has separately
-had Codex run it against databases beyond the original employment
-application it was developed against. Once real "wrapper bytes in ->
-correct VBA source out" pairs exist for the *same* real database from
-that tool, byte-diffing the raw `MSysModules2.Module` value against the
-known-correct decompiled source (or a re-compressed round-trip of it)
-could reveal the wrapper's header/compression scheme without requiring
-Access to be installed anywhere in Copperfin's own environment -- turning
-an open-ended reverse-engineering problem into a much more constrained
-"solve for this one framing format" problem. This does not help #5477
-(no equivalent narrowed-down payload location exists there yet).
+Because #5478's Jet3/Jet4 lead is at least narrowed to one candidate
+column (`MSysModules2.Module`, see above) rather than being completely
+unlocated, there is a cheaper option than installing Access on
+Copperfin's own VM to validate or refute it: `rhamenator/access-to-
+foxpro` (see `project_copperfin_access_to_foxpro_reference` memory)
+already extracts real VBA source from real Access databases via Access
+automation on the user's own machine, and the user has separately had
+Codex run it against databases beyond the original employment
+application it was developed against. Once real "raw `MSysModules2.
+Module` bytes in -> correct VBA source out" pairs exist for the *same*
+real Jet3/Jet4 database from that tool, byte-diffing the two (or a
+re-compressed round-trip of the known-correct source) could confirm
+*whether* the `_VBA_MODULE`/`_VBA_PROJECT` substrings really do bound an
+MS-OVBA payload at all, and if so reveal its wrapper's header/compression
+scheme -- without requiring Access to be installed anywhere in
+Copperfin's own environment. This turns an open-ended reverse-engineering
+problem into a much more constrained "test and, if confirmed, solve for
+this one framing format" problem. It applies only to Jet3/Jet4 `.mdb`
+(ACE/`.accdb` has no equivalent lead yet) and does not help #5477 (no
+equivalent narrowed-down payload location exists there yet, for either
+generation).
 
 ## Sources
 

@@ -1,3 +1,22 @@
+- 2026-09-10: Reconnaissance for #5477 (forms/reports) and #5478 (VBA
+  extraction), no code changes. Confirmed Forms/Reports/VBA Modules are
+  Access *application*-layer objects, not Jet/ACE database-engine
+  constructs like tables/queries/indexes -- every tool checked (mdbtools
+  1.0.1's full source, re-fetched fresh; oletools) has zero coverage of
+  locating this storage inside an `.mdb`/`.accdb`. Real-fixture probing
+  (three real Jet3/Jet4 `.mdb` files) disproved that the existing
+  `AccessCatalogEntry::candidate_page_number` heuristic is usable for
+  Form/Report/Module rows -- it lands on unrelated B-tree index pages.
+  Also records an unvalidated Jet3/Jet4-only hypothesis from #5478's own
+  prior investigation (`MSysModules2.Module`, an OLE/long-value column,
+  may hold an MS-OVBA-wrapped VBA project, based on two matching UTF-16LE
+  substrings with no confirmed CFB structure -- explicitly not yet
+  structurally validated, and not known to extend to ACE/`.accdb` at
+  all). See `docs/78-access-forms-reports-vba-storage-reconnaissance.md`
+  for the full evidence trail and the two real paths forward (installing
+  Access on the project's VM, or a lower-cost byte-diffing check against
+  `rhamenator/access-to-foxpro`'s own output). Neither issue is closed.
+
 - 2026-09-10: Progress on #5479 (parent #138): `scan_access_saved_queries()`
   (`src/vfp/access_saved_queries.cpp`) reconstructs Access saved queries
   as SQL text. Investigated alongside sibling issues #5477 (forms/
