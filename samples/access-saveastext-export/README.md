@@ -12,16 +12,23 @@ structured control-hierarchy tree.
 
 ## Status
 
-**Not wired into Copperfin's own runtime or any `IMPORT DATABASE`
-command surface.** This is a tested, working reference script, not a
-finished, security-admitted component. Copperfin's own existing
+**Wired into Copperfin's own runtime as of #5477/#5478's 2026-09-11
+update, but not yet behind any `IMPORT DATABASE` command surface.**
+`copperfin::vfp::run_access_saveastext_export()`
+(`include/copperfin/vfp/access_saveastext_export.h`,
+`src/vfp/access_saveastext_export.cpp`) admits and launches this exact
+script through the same explicit admission model this codebase's other
 external-process invocations (e.g. `samples/polyglot-python-sidecar/`)
-go through an explicit admission model -- a pinned SHA-256 digest, an
-admitted physical root, a fixed command-line argument position,
-revalidation before each launch, and a complete explicit child
-environment instead of ambient host/agent variables. Before this script
-(or a C++ equivalent of it) is actually invoked from Copperfin's own
-code, it needs the same treatment; that work has not been done here.
+already use -- a pinned SHA-256 digest and admitted physical root for
+the script, a fixed command-line argument position for its resolved
+path, revalidation before each launch, and a complete explicit child
+environment instead of ambient host/agent variables -- then reads back
+the `manifest.json` this script writes. No `IMPORT DATABASE` (or other
+PRG-level) command surface calls that function yet (`#5517`'s own
+wizard remains unbuilt), and no single function yet combines this
+export step with `parse_access_saveastext_design()` into one coherent
+per-database result -- see `docs/78`'s own 2026-09-11 "external-process
+admission step landed" update for the full picture of what remains.
 
 Verified end-to-end (2026-09-11) against a real fixture on a licensed
 Access 365 installation (`copperfin-access365-win11`, see

@@ -239,6 +239,18 @@ function(copperfin_configure_native_test_isolation)
             AUDIT complete
         )
     endif()
+    if(TEST test_access_saveastext_export)
+        copperfin_set_test_isolation(test_access_saveastext_export
+            PARALLEL_SAFE
+            FILESYSTEM process-owned
+            ENVIRONMENT child-scoped
+            CHILD_PROCESSES bounded
+            NETWORK none
+            SAMPLES read-only
+            PLATFORM portable
+            AUDIT complete
+        )
+    endif()
     copperfin_set_test_isolation(test_rscript_discovery_contract
         PARALLEL_SAFE
         FILESYSTEM process-owned

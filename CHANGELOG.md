@@ -1,4 +1,110 @@
 - 2026-09-11: PR review (chatgpt-codex-connector and
+  copilot-pull-request-reviewer) on the Access SaveAsText export wiring
+  PR (#5477/#5478) surfaced five real gaps, all fixed in the same PR:
+
+  1. **P1 (both reviewers): a BOM would break every real export.**
+     Windows PowerShell 5.1's own `Out-File -Encoding utf8` -- the
+     exact encoding the checked-in script uses -- always writes a
+     leading UTF-8 BOM (this dev environment's PowerShell 7 does not,
+     directly confirmed empirically, which is why this escaped this
+     slice's own initial testing). A BOM is not valid JSON, so every
+     otherwise-successful export on the actually-documented target
+     platform would have been misreported as `manifest_invalid`. Fixed
+     by stripping exactly one leading BOM before parsing
+     (`strip_utf8_bom()`).
+  2. **P1 (both reviewers): the PowerShell host's own admission was
+     tautological.** `allowed_path_roots` was derived from the same
+     `powershell_executable_path` being checked, so any caller-supplied
+     path was automatically "inside its own directory" -- with
+     publisher/signature checks already disabled, this meant any
+     executable could be admitted as "PowerShell." Fixed by adding a
+     genuinely independent `powershell_allowed_root` request field,
+     mirroring `script_path`/`script_allowed_root`'s existing
+     relationship.
+  3. **P2 (chatgpt-codex-connector): a real bug in the already-merged
+     `export_access_design.ps1` itself.** For a database with exactly
+     one exported object, the script wrapped `ConvertTo-Json`'s own
+     already-correct one-element-array output in a second, redundant
+     pair of brackets, producing `[[{...}]]` instead of `[{...}]` --
+     directly confirmed against a real PowerShell engine before and
+     after the fix. The extra wrap was based on a misunderstanding of
+     `ConvertTo-Json`'s pipeline-input-only singleton-collapse behavior,
+     which does not apply to the `-InputObject @(...)` form this script
+     actually uses. Fixed by removing the erroneous second wrap.
+  4. **P2 (copilot-pull-request-reviewer): relative paths could write to
+     one location and read from another.** The child process's working
+     directory is `script_allowed_root`, so a relative
+     `source_database_path`/`output_directory` would resolve there from
+     the child's perspective, while this function's own later manifest
+     read resolved a relative `output_directory` against this process's
+     own current directory instead. Fixed by requiring every path field
+     to be absolute, rejected as `invalid_request` otherwise.
+  5. **P2 (copilot-pull-request-reviewer): unbounded manifest read.**
+     `read_whole_file()` read an entire manifest.json into memory
+     regardless of size, even though `parse_json_document()` rejects
+     documents over its own 1 MiB default limit. Fixed with
+     `read_file_up_to()`, which checks the file's own size against that
+     same limit before ever holding its content in memory, failing
+     closed as a new, distinct `manifest_too_large` error.
+
+  Six new regression tests added (an independent-PowerShell-root
+  rejection case, a relative-path rejection case, and three further
+  synthetic-script cases -- a real single-object manifest matching the
+  now-fixed script's own serialization shape, a BOM-prefixed manifest
+  written via `.NET`'s `File.WriteAllBytes` to reproduce the real
+  Windows PowerShell 5.1 behavior, and an oversized manifest --
+  alongside the file-size-check itself).
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MIGRATION-010` updated to record all five fixes.
+
+- 2026-09-11: Progress on #5477/#5478 (parent #138): `run_access_saveastext_export()`
+  (`include/copperfin/vfp/access_saveastext_export.h`,
+  `src/vfp/access_saveastext_export.cpp`) wires
+  `samples/access-saveastext-export/export_access_design.ps1` into
+  Copperfin's own C++ runtime with the same external-process admission
+  treatment `samples/polyglot-python-sidecar/` already has: the
+  PowerShell host is authorized by physical location
+  (`authorize_external_process()`, deliberately not digest-pinned, since
+  it is a well-known OS-shipped executable that changes with every
+  servicing update), the checked-in script is admitted with a pinned
+  lowercase SHA-256 digest under one explicit physical root
+  (`admit_polyglot_supporting_artifact()`), both are revalidated
+  immediately before launch, the script's own revalidated resolved path
+  lands at a fixed argument position, the child process receives a
+  complete explicit environment (no ambient host/agent variables), and
+  `manifest.json` is read back into a structured result -- populated
+  even on a partial-failure exit so a caller can see exactly which
+  object(s) failed, distinct from a failure before any manifest was ever
+  written.
+
+  Genuinely tested end-to-end against the real, checked-in script via a
+  real local PowerShell process (`tests/test_access_saveastext_export.cpp`,
+  gated on a locally discovered PowerShell host, matching the existing
+  `test_polyglot_r_sidecar.cpp` optional-interpreter pattern): a run
+  against a nonexistent source database proves the script's own
+  existence check fails first with no output directory ever created; a
+  run against a real-but-fake database file proves the output directory
+  *is* created and real Access automation genuinely fails (unavailable
+  in this environment) before any manifest is written -- both prove the
+  admission-and-launch mechanics work correctly without needing a
+  licensed Access installation. Three further synthetic-script cases
+  (still real process launches, just not the production script) prove
+  full-success manifest parsing, partial-failure manifest exposure, and
+  fail-closed behavior on a malformed manifest. Two admission fail-closed
+  cases (tampered-script digest mismatch, script outside its allowed
+  root) and one invalid-request case round out the coverage.
+
+  Does not close either issue -- no single function yet combines this
+  export step with `parse_access_saveastext_design_from_file()` into one
+  coherent structural-inspection/VBA-extraction result, no PRG-level
+  command surface exists (`#5517`'s own `IMPORT DATABASE` wizard remains
+  unbuilt), no VBA-classification/aggregation logic exists for #5478
+  specifically, and a genuine real-Access end-to-end run remains
+  outstanding. `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MIGRATION-010` added; `docs/78-access-forms-reports-vba-storage-reconnaissance.md`
+  updated with this milestone.
+
+- 2026-09-11: PR review (chatgpt-codex-connector and
   copilot-pull-request-reviewer) on the `EXPORT DATABASE ... TYPE
   SQLSERVER` PR (#5554) surfaced four real gaps, all fixed in the same
   PR:

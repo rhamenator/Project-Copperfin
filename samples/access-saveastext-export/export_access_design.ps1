@@ -106,23 +106,24 @@ try {
 }
 
 $manifestPath = Join-Path $OutputDirectory "manifest.json"
-# ConvertTo-Json's own output shape depends on element count: an empty
-# collection produces no output at all (piping/passing zero objects
-# yields zero pipeline output), and exactly one element serializes as a
-# bare JSON object rather than a one-element array -- both would make
-# manifest.json's on-disk schema depend on how many objects happened to
-# be exported. ConvertTo-Json's own fix for this, -AsArray, requires
-# PowerShell 6.2+; this script targets the Windows PowerShell 5.1 that
-# ships with Windows by default (confirmed via $PSVersionTable.PSVersion
-# on the project's own verification VM), so the count edge cases are
-# handled explicitly instead, guaranteeing an array in every case.
+# ConvertTo-Json's own single-element-collapses-to-a-bare-object
+# behavior (the reason -AsArray exists in PowerShell 6.2+, unavailable
+# on this script's Windows PowerShell 5.1 target) applies to *pipeline*
+# input (e.g. `$manifest | ConvertTo-Json`), not to an array passed via
+# -InputObject the way this script already does. -InputObject
+# @($manifest) -Depth 4 already serializes a one-element array as a
+# proper `[ {...} ]`, directly confirmed against a real PowerShell
+# engine -- an earlier version of this script wrapped that already-
+# correct output in a second, redundant pair of brackets for exactly
+# one object, producing `[[{...}]]`, a real bug caught in #5562's own
+# review (chatgpt-codex-connector and copilot-pull-request-reviewer,
+# independently). Only the genuinely different zero-element case (an
+# empty collection produces no ConvertTo-Json output at all) still
+# needs its own explicit branch.
 if ($manifest.Count -eq 0) {
     $manifestJson = "[]"
 } else {
     $manifestJson = ConvertTo-Json -InputObject @($manifest) -Depth 4
-    if ($manifest.Count -eq 1) {
-        $manifestJson = "[$manifestJson]"
-    }
 }
 $manifestJson | Out-File -FilePath $manifestPath -Encoding utf8
 Write-Output "Exported $($manifest.Count) object(s). Manifest: $manifestPath"

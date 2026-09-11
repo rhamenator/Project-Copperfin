@@ -412,6 +412,7 @@ add_library(cf_vfp_assets
     src/vfp/access_long_value.cpp
     src/vfp/access_msysobjects.cpp
     src/vfp/access_saveastext_design.cpp
+    src/vfp/access_saveastext_export.cpp
     src/vfp/access_saved_queries.cpp
     src/vfp/access_table_definition.cpp
     src/vfp/asset_inspector.cpp
@@ -441,6 +442,12 @@ target_include_directories(cf_vfp_assets
 )
 
 target_link_libraries(cf_vfp_assets PUBLIC cf_localization)
+# access_saveastext_export.cpp's own external-process admission (#5477/
+# #5478): authorize_external_process()/revalidate_external_process_authorization()
+# (cf_security) admit and revalidate the PowerShell host; admit_polyglot_supporting_artifact()/
+# revalidate_polyglot_supporting_artifact_admission() (cf_platform_profile)
+# do the same for the pinned-digest export script.
+target_link_libraries(cf_vfp_assets PRIVATE cf_security cf_platform_profile)
 
 if(NOT WIN32)
     target_link_libraries(cf_vfp_assets PRIVATE Iconv::Iconv)
