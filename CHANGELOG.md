@@ -1,3 +1,23 @@
+- 2026-09-11: Progress on #5477/#5478 (parent #138):
+  `samples/access-saveastext-export/export_access_design.ps1` is a
+  PowerShell reference implementation of the automation-helper half of
+  #5477/#5478's documented architecture (`docs/78`) -- drives Microsoft
+  Access via COM automation to export every Form, Report, and standalone
+  Module in a database as `Application.SaveAsText` output for
+  `parse_access_saveastext_design()` (#5477) to consume. Enumerates all
+  three object kinds (most real-world VBA lives in form/report
+  code-behind, not standalone modules) and forces `AutomationSecurity =
+  msoAutomationSecurityForceDisable` before opening the input database,
+  per `docs/78`'s documented security requirement. Verified end-to-end
+  against a real fixture on the project's licensed Access 365 VM: all 21
+  objects (14 forms, 6 reports, 1 standalone module) exported cleanly,
+  and every one of the resulting 20 form/report text files parsed
+  successfully. Not wired into Copperfin's own runtime or any
+  `IMPORT DATABASE` command surface -- needs the same external-process
+  admission treatment (`samples/polyglot-python-sidecar/`'s pinned
+  digest/admitted-root/revalidation model) this script has not yet
+  received. Does not close #5477 or #5478.
+
 - 2026-09-11: Progress on #5477 (parent #138): `parse_access_saveastext_design()`
   (`src/vfp/access_saveastext_design.cpp`) parses Access
   `Application.SaveAsText`'s own nested `Begin <Type> ... End` text

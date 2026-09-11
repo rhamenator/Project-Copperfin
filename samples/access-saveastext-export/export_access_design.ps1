@@ -34,6 +34,23 @@ function ConvertTo-SafeFileName([string]$name) {
     return ($name -replace '[\\/:*?"<>|]', '_')
 }
 
+# Replacing invalid filename characters is not injective -- distinct
+# Access object names (e.g. "A/B" and "A:B") can sanitize to the same
+# string. Tracks every path this run has already produced and appends a
+# deterministic numeric disambiguator on collision, so two distinct
+# objects can never silently share one output file.
+$usedPaths = New-Object 'System.Collections.Generic.HashSet[string]'
+function Get-UniqueOutputPath([string]$directory, [string]$baseName) {
+    $candidate = Join-Path $directory "$baseName.txt"
+    $suffix = 2
+    while ($usedPaths.Contains($candidate)) {
+        $candidate = Join-Path $directory "$baseName ($suffix).txt"
+        $suffix++
+    }
+    [void]$usedPaths.Add($candidate)
+    return $candidate
+}
+
 $manifest = New-Object System.Collections.ArrayList
 $access = $null
 try {
@@ -59,7 +76,7 @@ try {
         foreach ($item in $export.Items) {
             $name = $item.Name
             $safeName = ConvertTo-SafeFileName $name
-            $outFile = Join-Path $OutputDirectory "$($export.Kind)_$safeName.txt"
+            $outFile = Get-UniqueOutputPath $OutputDirectory "$($export.Kind)_$safeName"
             try {
                 $access.SaveAsText($export.Type, $name, $outFile)
                 [void]$manifest.Add([PSCustomObject]@{
@@ -89,9 +106,31 @@ try {
 }
 
 $manifestPath = Join-Path $OutputDirectory "manifest.json"
-$manifest | ConvertTo-Json -Depth 4 | Out-File -FilePath $manifestPath -Encoding utf8
+# ConvertTo-Json's own output shape depends on element count: an empty
+# collection produces no output at all (piping/passing zero objects
+# yields zero pipeline output), and exactly one element serializes as a
+# bare JSON object rather than a one-element array -- both would make
+# manifest.json's on-disk schema depend on how many objects happened to
+# be exported. ConvertTo-Json's own fix for this, -AsArray, requires
+# PowerShell 6.2+; this script targets the Windows PowerShell 5.1 that
+# ships with Windows by default (confirmed via $PSVersionTable.PSVersion
+# on the project's own verification VM), so the count edge cases are
+# handled explicitly instead, guaranteeing an array in every case.
+if ($manifest.Count -eq 0) {
+    $manifestJson = "[]"
+} else {
+    $manifestJson = ConvertTo-Json -InputObject @($manifest) -Depth 4
+    if ($manifest.Count -eq 1) {
+        $manifestJson = "[$manifestJson]"
+    }
+}
+$manifestJson | Out-File -FilePath $manifestPath -Encoding utf8
 Write-Output "Exported $($manifest.Count) object(s). Manifest: $manifestPath"
-$failures = $manifest | Where-Object { -not $_.Ok }
+# Wrapped in @(...) so a filtered result of exactly one item is still
+# treated as a one-element array rather than an unwrapped scalar
+# PSCustomObject (which has no .Count property, silently evaluating the
+# check below as "no failures" and letting a real failure exit 0).
+$failures = @($manifest | Where-Object { -not $_.Ok })
 if ($failures.Count -gt 0) {
     Write-Output "$($failures.Count) object(s) failed to export:"
     $failures | ForEach-Object { Write-Output "  $($_.Kind) '$($_.Name)': $($_.Error)" }

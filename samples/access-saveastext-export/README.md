@@ -25,10 +25,10 @@ code, it needs the same treatment; that work has not been done here.
 
 Verified end-to-end (2026-09-11) against a real fixture on a licensed
 Access 365 installation (`copperfin-access365-win11`, see
-`project_copperfin_windows_vm` memory): exported all 21 objects (15
+`project_copperfin_windows_vm` memory): exported all 21 objects (14
 forms, 6 reports, 1 standalone module) from a real Jet3 `.mdb`, and
 `parse_access_saveastext_design()` parsed every one of the resulting 20
-form/report text files successfully.
+form/report text files (14 forms + 6 reports) successfully.
 
 ## Requirements
 
