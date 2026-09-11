@@ -2459,6 +2459,34 @@ void write_postgresql_create_indexes(
     }
 }
 
+// #5558 review (chatgpt-codex-connector): SQLite index names are
+// schema-wide, not scoped to their own table -- a table named `a_b`
+// with a tag named `c` and a table named `a` with a tag named `b_c`
+// both concatenate to the identical `a_b_c_idx`, and real SQLite
+// rejects the second `CREATE INDEX` with "index ... already exists"
+// rather than silently accepting it, breaking this exporter's own
+// promise that its output loads without error. `used_index_names`
+// tracks every index name already emitted across the *entire* export
+// (not just the current table), and a colliding candidate gets a
+// deterministic numeric suffix appended until it is unique -- the same
+// disambiguation approach already used for
+// samples/access-saveastext-export/export_access_design.ps1's own
+// output-filename collisions (#5557 review).
+std::string disambiguate_index_name(
+    const std::string& candidate, std::set<std::string>& used_index_names) {
+    if (used_index_names.insert(candidate).second) {
+        return candidate;
+    }
+    std::size_t suffix = 2U;
+    while (true) {
+        const std::string attempt = candidate + "_" + std::to_string(suffix);
+        if (used_index_names.insert(attempt).second) {
+            return attempt;
+        }
+        ++suffix;
+    }
+}
+
 // #5554: SQLite's own CREATE INDEX syntax is identical to PostgreSQL's
 // for this exporter's plain-column-reference case (see
 // write_postgresql_create_indexes()'s own comment for the full scope
@@ -2471,7 +2499,8 @@ void write_postgresql_create_indexes(
 void write_sqlite_create_indexes(
     std::ostringstream& sql,
     const DatabaseCatalogSnapshot::ResolvedTable& rt,
-    const std::vector<DbfFieldDescriptor>& fields) {
+    const std::vector<DbfFieldDescriptor>& fields,
+    std::set<std::string>& used_index_names) {
     const SidecarPathResolution cdx_resolution = resolve_vfp_sidecar_path(rt.path, ".cdx");
     if (!cdx_resolution.path.has_value()) {
         return;
@@ -2499,7 +2528,8 @@ void write_sqlite_create_indexes(
         }
         const std::string tag_identity =
             tag.name_hint.empty() ? ("tag" + std::to_string(tag_index)) : tag.name_hint;
-        const std::string index_name = rt.name + "_" + tag_identity + "_idx";
+        const std::string index_name =
+            disambiguate_index_name(rt.name + "_" + tag_identity + "_idx", used_index_names);
         sql << "CREATE INDEX " << sql_quote_identifier(index_name)
             << " ON " << quoted_table << " (" << sql_quote_identifier(*column) << ");\n";
         wrote_anything = true;
@@ -2586,8 +2616,9 @@ DatabaseSqlExportResult export_database_as_sqlite_sql(
     const std::vector<ParsedSqlExportTable> parsed_tables =
         write_sql_tables_and_data(sql, snapshot, row_limit);
 
+    std::set<std::string> used_index_names;
     for (const auto& parsed : parsed_tables) {
-        write_sqlite_create_indexes(sql, parsed.resolved, parsed.table.fields);
+        write_sqlite_create_indexes(sql, parsed.resolved, parsed.table.fields, used_index_names);
     }
 
     return {.ok = true, .error = {}, .sql = sql.str()};
