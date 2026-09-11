@@ -1,3 +1,48 @@
+- 2026-09-11: PR review (chatgpt-codex-connector and
+  copilot-pull-request-reviewer) on the `EXPORT DATABASE ... TYPE
+  SQLSERVER` PR (#5554) surfaced four real gaps, all fixed in the same
+  PR:
+
+  1. **P1: blank date fields silently invented data.** A blank VFP date
+     field decodes to an empty `display_value` (not `is_null`), and
+     `write_sqlserver_tables_and_data()` emitted it as `''`. Directly
+     confirmed against a real local SQL Server 2022 engine that
+     `CAST('' AS DATE)` silently returns `1900-01-01` rather than
+     erroring -- unlike PostgreSQL/SQLite, which would reject it, this
+     was genuine silent data corruption, not just wrong syntax. Fixed by
+     emitting `NULL` for a blank date.
+  2. **P2: DECIMAL precision/scale could exceed SQL Server's limits.**
+     `length`/`decimal_count` are raw `uint8_t` values from a DBF header
+     this codebase's own writer never produces out of range, but a
+     crafted/foreign source is not bound by that. Directly confirmed
+     against the real engine that `DECIMAL(39, 0)` is rejected while
+     `DECIMAL(38, 38)` succeeds. `sqlserver_column_type()` now clamps
+     precision to 38 and scale to that same clamped precision, matching
+     `access_column_type()`'s existing pattern for Access's own
+     28-digit ceiling.
+  3. **P2: SQL Server's 128-limit on `sysname` is a character count, not
+     a UTF-8 byte count.** `disambiguate_index_name()`'s truncation was
+     a raw byte cut, so a non-ASCII table name would be truncated far
+     short of 128 real characters (or worse, split a multi-byte
+     sequence, emitting malformed UTF-8). Added `IdentifierLengthUnit`
+     (bytes vs. unicode_code_points) and `utf8_safe_truncate()`/
+     `count_utf8_code_points()`/`utf8_sequence_length_at()` helpers;
+     `TYPE SQLSERVER` now truncates by Unicode code point.
+  4. This same review pass found the identical latent defect already
+     shipped in `TYPE POSTGRESQL`'s own byte-based truncation (#5559):
+     a raw `substr(0, 63)` could split a multi-byte UTF-8 sequence in
+     half. `utf8_safe_truncate()`'s byte-mode now backs off to the last
+     complete character boundary, fixing PostgreSQL's truncation too
+     since it shares the same `disambiguate_index_name()` helper -- no
+     separate follow-up issue needed since the fix landed in the same
+     shared function this PR was already touching.
+
+  Four new regression tests added (blank-date-to-NULL, DECIMAL clamp,
+  SQL Server Unicode-code-point truncation, and a PostgreSQL sibling
+  proving the shared UTF-8 character-boundary-safety fix).
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-009` updated to record all four fixes.
+
 - 2026-09-11: Progress on #5554 (parent #137): `EXPORT DATABASE ... TYPE
   SQLSERVER` (`export_database_as_sqlserver_sql()`,
   `src/vfp/asset_inspector.cpp`) is the third vendor-dialect slice of
