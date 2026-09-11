@@ -2459,6 +2459,56 @@ void write_postgresql_create_indexes(
     }
 }
 
+// #5554: SQLite's own CREATE INDEX syntax is identical to PostgreSQL's
+// for this exporter's plain-column-reference case (see
+// write_postgresql_create_indexes()'s own comment for the full scope
+// and documented non-goals -- composite/expression keys skipped as a
+// comment, no per-tag uniqueness captured). Kept as its own dedicated
+// function rather than a shared/renamed one, matching this file's own
+// established per-vendor-dialect precedent (a future vendor-specific
+// divergence has somewhere to go without touching another vendor's
+// code path).
+void write_sqlite_create_indexes(
+    std::ostringstream& sql,
+    const DatabaseCatalogSnapshot::ResolvedTable& rt,
+    const std::vector<DbfFieldDescriptor>& fields) {
+    const SidecarPathResolution cdx_resolution = resolve_vfp_sidecar_path(rt.path, ".cdx");
+    if (!cdx_resolution.path.has_value()) {
+        return;
+    }
+    const std::string quoted_table = sql_quote_identifier(rt.name);
+    const IndexParseResult index_result = parse_index_probe_from_file(
+        copperfin::platform::path_to_utf8_string(*cdx_resolution.path));
+    if (!index_result.ok || index_result.probe.kind != IndexKind::cdx) {
+        sql << "-- skipped indexes on " << sql_sanitize_comment_text(rt.name)
+            << ": companion .cdx exists but could not be read as a compound index\n\n";
+        return;
+    }
+
+    bool wrote_anything = false;
+    for (std::size_t tag_index = 0U; tag_index < index_result.probe.tags.size(); ++tag_index) {
+        const IndexTagProbe& tag = index_result.probe.tags[tag_index];
+        const auto column = plain_column_name_for_index_tag(tag.key_expression_hint, fields);
+        const std::string tag_label = tag.name_hint.empty() ? std::string("(unnamed tag)") : tag.name_hint;
+        if (!column.has_value()) {
+            sql << "-- skipped index " << sql_sanitize_comment_text(tag_label)
+                << " on " << sql_sanitize_comment_text(rt.name)
+                << ": key expression is not a plain column reference\n";
+            wrote_anything = true;
+            continue;
+        }
+        const std::string tag_identity =
+            tag.name_hint.empty() ? ("tag" + std::to_string(tag_index)) : tag.name_hint;
+        const std::string index_name = rt.name + "_" + tag_identity + "_idx";
+        sql << "CREATE INDEX " << sql_quote_identifier(index_name)
+            << " ON " << quoted_table << " (" << sql_quote_identifier(*column) << ");\n";
+        wrote_anything = true;
+    }
+    if (wrote_anything) {
+        sql << "\n";
+    }
+}
+
 }  // namespace
 
 DatabaseSqlExportResult export_database_as_sql(
@@ -2509,6 +2559,35 @@ DatabaseSqlExportResult export_database_as_postgresql_sql(
 
     for (const auto& parsed : parsed_tables) {
         write_postgresql_create_indexes(sql, parsed.resolved, parsed.table.fields);
+    }
+
+    return {.ok = true, .error = {}, .sql = sql.str()};
+}
+
+DatabaseSqlExportResult export_database_as_sqlite_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        return {.ok = false, .error = snapshot.error, .sql = {}};
+    }
+
+    std::ostringstream sql;
+    sql.imbue(std::locale::classic());
+    sql << "-- Copperfin EXPORT DATABASE ... TYPE SQLITE\n";
+    sql << "-- database: " << sql_sanitize_comment_text(snapshot.db_name) << "\n";
+    sql << "-- source: " << sql_sanitize_comment_text(dbc_path) << "\n\n";
+
+    const std::size_t row_limit = (max_rows_per_table == 0U)
+        ? std::numeric_limits<std::size_t>::max()
+        : max_rows_per_table;
+
+    const std::vector<ParsedSqlExportTable> parsed_tables =
+        write_sql_tables_and_data(sql, snapshot, row_limit);
+
+    for (const auto& parsed : parsed_tables) {
+        write_sqlite_create_indexes(sql, parsed.resolved, parsed.table.fields);
     }
 
     return {.ok = true, .error = {}, .sql = sql.str()};

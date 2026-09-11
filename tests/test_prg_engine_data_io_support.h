@@ -106,6 +106,7 @@ void test_export_database_type_json_writes_catalog_snapshot();
 void test_export_database_type_sql_writes_ddl_and_inserts();
 void test_export_database_type_access_writes_jet_dialect_ddl_and_inserts();
 void test_export_database_type_postgresql_writes_portable_ddl_and_inserts();
+void test_export_database_type_sqlite_writes_portable_ddl_and_inserts();
 void test_export_database_rejects_destination_aliasing_source();
 void test_import_database_type_json_round_trips_via_export();
 void test_import_database_type_sql_round_trips_via_export();

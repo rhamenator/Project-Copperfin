@@ -1,3 +1,22 @@
+- 2026-09-11: Progress on #5554 (parent #137): `EXPORT DATABASE ... TYPE
+  SQLITE` (`export_database_as_sqlite_sql()`,
+  `src/vfp/asset_inspector.cpp`) is the second vendor-dialect slice of
+  #141's real-target-engine `EXPORT DATABASE` family, following #5537's
+  PostgreSQL precedent. Real local SQLite (3.46.1) directly confirmed to
+  accept the exact same dialect `TYPE POSTGRESQL` already emits
+  (double-quoted identifiers, `DECIMAL`/`VARCHAR`/`BOOLEAN`/`DATE`/
+  `TIMESTAMP`/`TEXT` column types) via its own "type affinity" rules,
+  plus the identical `CREATE INDEX` derivation from production `.cdx`
+  tags. Directly verified against a real `sqlite3` engine twice: a
+  minimal `CREATE TABLE`/`INSERT`/`CREATE INDEX` script loaded without
+  error, and this exporter's own actual output for a representative
+  two-table fixture (including an embedded-quote `VARCHAR` value and a
+  `BOOLEAN` column) round-tripped every row exactly and a cross-table
+  `JOIN` returned the correct result. Wired into the `EXPORT DATABASE`
+  PRG command dispatch alongside the other four `TYPE` variants. Does
+  not close #5554 -- SQL Server, Oracle, and MySQL remain open follow-
+  ups within that same issue.
+
 - 2026-09-11: Progress on #5477/#5478 (parent #138):
   `samples/access-saveastext-export/export_access_design.ps1` is a
   PowerShell reference implementation of the automation-helper half of

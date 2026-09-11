@@ -3897,6 +3897,124 @@ void test_export_database_as_postgresql_sql_maps_types_and_creates_indexes() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_export_database_as_sqlite_sql_maps_types_and_creates_indexes() {
+    // #5554 (parent #137, second vendor-dialect slice, following #5537's
+    // PostgreSQL precedent): real SQLite (3.46.1) directly confirmed to
+    // accept this exact dialect -- double-quoted identifiers, single-
+    // quoted string literals, DECIMAL/VARCHAR/BOOLEAN/DATE/TIMESTAMP/
+    // TEXT column types (SQLite's own type-affinity rules bucket every
+    // one of these by substring match rather than rejecting them) --
+    // loading a representative CREATE TABLE/INSERT/CREATE INDEX script
+    // shaped exactly like this exporter's own output without error
+    // during this issue's own development. This test proves the same
+    // genuinely new piece #5537's own sibling test proves: CREATE INDEX
+    // statements derived from a table's production CDX tags, correctly
+    // distinguishing a plain column reference from a composite
+    // expression that cannot translate to a single-column index.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sqlite_sql_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "customers.dbf";
+    const fs::path cdx_path = temp_dir / "customers.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"DATABASE", "Sales", "", ""}, {"TABLE", "customers", "Sales", ""}});
+    expect(dbc_create.ok, "SQLite export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "CUST_ID", .type = 'N', .offset = 1U, .length = 6U, .decimal_count = 0U},
+        {.name = "COMPANY", .type = 'C', .offset = 7U, .length = 40U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{"1001", "Acme Corp"}});
+    expect(table_create.ok, "SQLite export test: DBF fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_cdx_bytes_for_postgresql_index_test();
+        std::ofstream output(cdx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_sqlite_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_sqlite_sql should resolve the customers fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("EXPORT DATABASE ... TYPE SQLITE") != std::string::npos,
+           "export_database_as_sqlite_sql should label its own header comment as a SQLite export");
+    expect(result.sql.find("CREATE TABLE \"customers\"") != std::string::npos,
+           "export_database_as_sqlite_sql should quote identifiers with double quotes, matching real SQLite");
+    expect(result.sql.find("\"CUST_ID\" DECIMAL(6, 0)") != std::string::npos,
+           "export_database_as_sqlite_sql should map a numeric field to DECIMAL, which SQLite accepts under NUMERIC affinity");
+    expect(result.sql.find("\"COMPANY\" VARCHAR(40)") != std::string::npos,
+           "export_database_as_sqlite_sql should map a character field to VARCHAR(length), which SQLite accepts under TEXT affinity");
+    expect(result.sql.find("INSERT INTO \"customers\"") != std::string::npos,
+           "export_database_as_sqlite_sql should emit an INSERT for the table's row");
+    expect(result.sql.find("'Acme Corp'") != std::string::npos,
+           "export_database_as_sqlite_sql should quote a character value as a standard SQL string literal");
+
+    expect(result.sql.find("CREATE INDEX \"customers_CUST_ID_idx\" ON \"customers\" (\"CUST_ID\");") != std::string::npos,
+           "export_database_as_sqlite_sql should emit a CREATE INDEX for a tag whose key expression is a plain column reference");
+    expect(result.sql.find("-- skipped index") != std::string::npos &&
+               result.sql.find("COMPANY_N") != std::string::npos,
+           "export_database_as_sqlite_sql should report a composite-expression tag as a skipped index, not silently drop or mistranslate it");
+    expect(result.sql.find("UPPER(company_name)") == std::string::npos,
+           "export_database_as_sqlite_sql must never emit a raw VFP key expression as if it were valid SQLite syntax");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_sqlite_sql_omits_indexes_without_cdx() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sqlite_sql_no_cdx_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "SQLite no-CDX export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "SKU", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"W-1"}});
+    expect(table_create.ok, "SQLite no-CDX export test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_sqlite_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_sqlite_sql should succeed without a companion CDX: " + result.error);
+    expect(result.sql.find("CREATE TABLE \"widgets\"") != std::string::npos,
+           "export_database_as_sqlite_sql should still emit the table without any index information");
+    expect(result.sql.find("CREATE INDEX") == std::string::npos,
+           "export_database_as_sqlite_sql should not emit any CREATE INDEX when no companion CDX exists");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_postgresql_sql_omits_indexes_without_cdx() {
     // A table with no companion .cdx (or none at the conventional same-
     // base-name path) should still export cleanly -- no CREATE INDEX
@@ -5233,6 +5351,8 @@ int main() {
     test_export_database_as_postgresql_sql_maps_types_and_creates_indexes();
     test_export_database_as_postgresql_sql_omits_indexes_without_cdx();
     test_export_database_as_postgresql_sql_disambiguates_indexes_on_same_column();
+    test_export_database_as_sqlite_sql_maps_types_and_creates_indexes();
+    test_export_database_as_sqlite_sql_omits_indexes_without_cdx();
     test_export_database_as_access_sql_maps_currency_datetime_and_dates();
     test_export_database_as_access_sql_escapes_bracket_in_identifier();
     test_export_database_as_access_sql_clamps_decimal_precision();
