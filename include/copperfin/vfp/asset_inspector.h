@@ -237,6 +237,47 @@ struct DatabaseSqlExportResult {
     const std::string& dbc_path,
     std::size_t max_rows_per_table = 0U);
 
+// #5554 (parent #137, second vendor-dialect slice -- SQLite, following
+// #5537/PR #5545's PostgreSQL precedent): produces the same CREATE
+// TABLE/INSERT shape as export_database_as_sql() -- real SQLite already
+// accepts that exporter's double-quoted identifiers, single-quoted
+// string literals, and DECIMAL/INTEGER/DOUBLE PRECISION/BOOLEAN/DATE/
+// TIMESTAMP/VARCHAR/TEXT column types verbatim. Unlike PostgreSQL (whose
+// public SQL/DDL reference documents these types directly), SQLite is
+// dynamically typed per value: any column type declaration syntactically
+// parses, and its own "type affinity" rules (SQLite's public "Datatypes
+// In SQLite" documentation) bucket every one of these exact type names
+// into a definite affinity by substring match (VARCHAR/TEXT -> TEXT via
+// the "CHAR"/"TEXT" substring rule; DECIMAL/BOOLEAN/DATE/TIMESTAMP ->
+// NUMERIC, the default bucket for a name matching none of SQLite's
+// INTEGER/TEXT/BLOB/REAL substring rules) rather than being rejected as
+// unrecognized -- directly confirmed against a real local `sqlite3`
+// engine (3.46.1): this exporter's actual output for a representative
+// two-table DBC fixture (customers/orders, a numeric key, a VARCHAR
+// with an embedded quote, DECIMAL/BOOLEAN/DATE columns; that fixture
+// had no companion `.cdx`, so this check did not exercise `CREATE
+// INDEX` specifically) loaded into a real SQLite database with zero
+// errors, round-tripped every row exactly (including the escaped quote
+// and the TRUE/FALSE -> 1/0 boolean mapping), and a cross-table `JOIN`
+// between the two exported tables returned the correct joined row --
+// not just syntax acceptance, but genuine relational query correctness
+// against the real target engine. `CREATE INDEX`'s own syntax was
+// separately confirmed to load without error against real `sqlite3`
+// during this same investigation (a standalone single-table check, see
+// docs/32's own traceability row for this issue).
+// What this exporter adds beyond export_database_as_sql(): the same
+// CREATE INDEX generation export_database_as_postgresql_sql() already
+// implements (SQLite's own CREATE INDEX syntax is identical to
+// PostgreSQL's for this exporter's plain-column-reference case) -- see
+// that function's own comment for the full index-generation scope and
+// its documented non-goals (composite/expression keys skipped as a
+// comment, no per-tag uniqueness captured). Tables are resolved the
+// same way export_database_as_sql() resolves them; max_rows_per_table
+// has the same meaning.
+[[nodiscard]] DatabaseSqlExportResult export_database_as_sqlite_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table = 0U);
+
 // ---- Whole-database JSON import planning ----
 
 // A validated, in-memory description of a version-1 export snapshot. The

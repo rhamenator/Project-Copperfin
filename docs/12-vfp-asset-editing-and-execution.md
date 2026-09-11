@@ -192,15 +192,18 @@ EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE JSON
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE SQL
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE ACCESS
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE POSTGRESQL
+EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE SQLITE
 ```
 
 The command resolves relative source and destination paths from the current default
 directory, adds `.json` (`TYPE JSON`) or `.sql` (`TYPE SQL`/`TYPE ACCESS`/
-`TYPE POSTGRESQL`) when the destination has no extension, and emits
+`TYPE POSTGRESQL`/`TYPE SQLITE`) when the destination has no extension, and emits
 `runtime.export_database_json`, `runtime.export_database_sql`,
-`runtime.export_database_access_sql`, or `runtime.export_database_postgresql_sql`
+`runtime.export_database_access_sql`, `runtime.export_database_postgresql_sql`, or
+`runtime.export_database_sqlite_sql`
 on success. It deliberately accepts only the literal `TYPE JSON`, `TYPE SQL`,
-`TYPE ACCESS`, or `TYPE POSTGRESQL` forms; the source and destination are quoted
+`TYPE ACCESS`, `TYPE POSTGRESQL`, or `TYPE SQLITE` forms; the source and destination
+are quoted
 path operands, not expressions. It reads the existing DBC/DBF data before opening
 the requested output path, creates a missing output directory, and reports a
 localized runtime failure if inspection or output writing fails. A destination
@@ -208,9 +211,10 @@ that would resolve to the same file as the source (e.g.
 `EXPORT DATABASE 'data.dbc' TO 'data.dbc' TYPE ACCESS`, where an explicit
 extension skips the `.sql`/`.json` default) is rejected before anything is read or
 written, rather than truncating the source database once export succeeds. All
-four `TYPE` variants share the same DBC catalog/table-resolution path
+five `TYPE` variants share the same DBC catalog/table-resolution path
 (`export_database_as_json()`, `export_database_as_sql()`,
-`export_database_as_access_sql()`, and `export_database_as_postgresql_sql()` all
+`export_database_as_access_sql()`, `export_database_as_postgresql_sql()`, and
+`export_database_as_sqlite_sql()` all
 call the same internal loader) so they cannot silently drift apart on which
 tables/rows are considered part of the database -- only the output serialization
 differs. `TYPE SQL` emits one portable/ANSI-ish dialect (`CREATE TABLE` per table,
@@ -222,7 +226,17 @@ double-quoted identifiers, single-quoted string literals, and
 column types verbatim, per PostgreSQL's own public SQL/DDL documentation -- plus
 `CREATE INDEX` statements derived from each table's production `.cdx` index tags,
 for a tag whose key expression is a plain column reference (a composite/expression
-key is recorded as a skipped-index comment instead of guessed at). `TYPE ACCESS`
+key is recorded as a skipped-index comment instead of guessed at). `TYPE SQLITE`
+(#5554, second vendor-dialect slice of #141) emits the identical `TYPE SQL` shape
+again, plus the same `CREATE INDEX` derivation `TYPE POSTGRESQL` implements --
+real SQLite (3.46.1) directly confirmed to accept this exact dialect: unlike
+PostgreSQL's directly-documented types, SQLite is dynamically typed per value and
+buckets every one of these type names into a definite "type affinity" by substring
+match rather than rejecting an unrecognized one, and a representative two-table
+export (with a `VARCHAR` containing an embedded quote, and `DECIMAL`/`BOOLEAN`/
+`DATE` columns) loaded into a real SQLite database with zero errors, round-tripped
+every row exactly, and a cross-table `JOIN` between the two tables returned the
+correct result. `TYPE ACCESS`
 (#5475, phase 1 of #141) emits
 the same shape of script using the Access/Jet SQL dialect instead -- square-bracket
 `[identifier]` quoting (with an embedded `]` escaped by doubling, the Jet/ACE
@@ -247,7 +261,8 @@ only ever holds a single statement.
 
 This is a Copperfin modernization extension authorized by the owner-approved
 scope in #140/#141 (see #5471 for the `TYPE SQL` slice, #5475 for the
-`TYPE ACCESS` slice, and #5537 for the `TYPE POSTGRESQL` slice specifically), not
+`TYPE ACCESS` slice, #5537 for the `TYPE POSTGRESQL` slice, and #5554 for the
+`TYPE SQLITE` slice specifically), not
 a claimed Visual FoxPro 9 command. It does
 not implement `IMPORT DATABASE` of any kind, provider connections, schema
 mutation, or round-trip reconstruction back into a DBC/DBF from any exported
