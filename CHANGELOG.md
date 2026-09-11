@@ -1,3 +1,34 @@
+- 2026-09-11: Progress on #5477 (parent #138): `parse_access_saveastext_design()`
+  (`src/vfp/access_saveastext_design.cpp`) parses Access
+  `Application.SaveAsText`'s own nested `Begin <Type> ... End` text
+  grammar for a form or report into a structured control-hierarchy
+  tree, resolving the reconnaissance blocker recorded 2026-09-10: real
+  Access 365 automation testing (on a VM cloned specifically to install
+  Access without COM-registration conflicts) found that raw Jet/ACE
+  binary parsing was never the right approach for form/report structure
+  at all -- `SaveAsText` gives a complete, human-readable export
+  directly. Handles property assignments, the `NotDefault` inherited-
+  default marker, opaque blob properties (`GUID`/`NameMap`/`RecSrcDt`,
+  captured but not decoded), multi-line string values with backslash-
+  escaped quotes/backslashes (a real-fixture-corrected escaping
+  convention -- an earlier "doubled double-quote" assumption was wrong),
+  and captures the object's own `CodeBehindForm`-delimited VBA
+  code-behind verbatim. Fails closed on a missing/malformed header, an
+  unbalanced block, an unsupported root type, a malformed property
+  line, an unterminated string, or unexpected trailing content, rather
+  than returning a partial structure. This also resolves #5478's own
+  earlier `MSysModules2.Module` binary-wrapper hypothesis: standalone
+  VBA modules export as plain source via the same `SaveAsText`
+  mechanism, no wrapper decoding needed at all. Producing the input
+  text (invoking `SaveAsText` via COM automation) remains a separate,
+  deliberately unimplemented concern. See
+  `docs/79-access-saveastext-design-format-notes.md` for the full
+  grammar-derivation evidence trail and
+  `docs/78-access-forms-reports-vba-storage-reconnaissance.md`'s
+  2026-09-11 update for the architecture finding. Neither #5477 nor
+  #5478 is closed by this slice (the automation-invocation half and the
+  `IMPORT DATABASE` wizard wiring remain).
+
 - 2026-09-10: Reconnaissance for #5477 (forms/reports) and #5478 (VBA
   extraction), no code changes. Confirmed Forms/Reports/VBA Modules are
   Access *application*-layer objects, not Jet/ACE database-engine
