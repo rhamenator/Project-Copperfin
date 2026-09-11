@@ -4011,4 +4011,32 @@ DbfWriteResult zap_dbf_table_file(const std::string& path) {
     return {.ok = true, .error = {}, .record_count = 0U};
 }
 
+DbfWriteResult mark_dbf_table_has_production_index(const std::string& path) {
+    if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
+        return {.ok = false, .error = *error};
+    }
+    if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
+        return *error;
+    }
+    std::vector<std::uint8_t> bytes = read_binary_file(path);
+    if (bytes.empty()) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
+    }
+
+    const DbfParseResult header_result = parse_dbf_header(bytes);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+    if (bytes.size() <= 28U) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableHeaderTruncated"), .record_count = header_result.header.record_count};
+    }
+
+    bytes[28] = static_cast<std::uint8_t>(bytes[28] | 0x01U);
+    if (!write_binary_file(path, bytes)) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header_result.header.record_count};
+    }
+
+    return {.ok = true, .error = {}, .record_count = header_result.header.record_count};
+}
+
 }  // namespace copperfin::vfp

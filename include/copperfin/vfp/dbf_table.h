@@ -138,6 +138,16 @@ DbfWriteResult pack_dbf_table_file(const std::string& path);
 DbfWriteResult pack_dbf_memo_file(const std::string& path);
 DbfWriteResult zap_dbf_table_file(const std::string& path);
 
+// #5534 (index-rebuild half): sets the DBF header's table_flags bit
+// 0x01 (DbfHeader::has_production_index()) on an existing table file.
+// Real VFP9 was found this session to refuse SET ORDER TO TAG ... OF
+// <cdx file> against a table lacking this bit, even when the CDX file
+// is named explicitly -- see docs/77-cdx-index-write-format-notes.md.
+// This codebase's own DBF writers do not currently set this bit at
+// table-creation time, so any code that later builds an index for an
+// existing table needs to set it via this function.
+DbfWriteResult mark_dbf_table_has_production_index(const std::string& path);
+
 // Updates the three DBF header last-update bytes using the local calendar date.
 // Returns false when the supplied buffer is too short or local time is unavailable.
 bool stamp_dbf_last_update_date(std::vector<std::uint8_t>& bytes);

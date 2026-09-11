@@ -11,6 +11,7 @@
 #include "copperfin/vfp/access_table_definition.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/cdx_header.h"
+#include "copperfin/vfp/cdx_writer.h"
 #include "copperfin/vfp/dbf_header.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/index_probe.h"
@@ -2582,6 +2583,440 @@ void test_scan_access_saved_queries_reports_ok_with_no_queries() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5534 (index-rebuild half): create_vfp_cdx_single_tag_index_file() writes
+// a real-VFP9-verified single-tag CDX (see docs/77 for the evidence
+// trail). This codebase's own CDX reader (index_probe.cpp,
+// cdx_header.cpp) is explicitly header-probe-only and its tag/key-
+// expression discovery is a best-effort heuristic tuned against real
+// multi-tag VFP9 output (e.g. it expects a tag's page-offset pointer
+// immediately after the directory-leaf page header, and searches a
+// window derived from that pointer for expression-shaped text) -- it
+// was not built against, and does not reliably round-trip, this
+// writer's own single-tag page layout (confirmed independently
+// correct against real VFP9 itself, per docs/77). So this test
+// verifies the tag name via that reader (which does work, since names
+// are read from a fixed directory-leaf slot the reader already
+// understands) but decodes the key-expression page and the leaf
+// entries' own front-compression bytes directly, against this
+// writer's own documented format, rather than through that reader.
+struct DecodedCdxLeafEntry {
+    std::uint8_t record_number = 0;
+    std::string key;
+};
+
+// Mirrors cdx_writer.cpp's own build_leaf_page() front-compression
+// algorithm in reverse (see that function's comments and docs/77's
+// "Front-compression algorithm" section): the entry array at
+// [24: 24+2*entry_count) holds ascending-order (record_number,
+// control_byte) pairs, and each entry's own trailing/differing suffix
+// text is packed back-to-back working backward from the page end, in
+// the SAME (ascending) entry order -- so entry 0's own trailing text
+// occupies the last bytes of the page, entry 1's sits just before
+// that, and so on.
+std::vector<DecodedCdxLeafEntry> decode_cdx_leaf_page_for_test(
+    const std::vector<std::uint8_t>& file_bytes, std::size_t leaf_page_offset) {
+    std::vector<DecodedCdxLeafEntry> decoded;
+    if (leaf_page_offset + 512U > file_bytes.size()) {
+        return decoded;
+    }
+    const std::uint16_t entry_count = static_cast<std::uint16_t>(
+        file_bytes[leaf_page_offset + 2U] | (static_cast<std::uint16_t>(file_bytes[leaf_page_offset + 3U]) << 8U));
+
+    std::size_t text_cursor = leaf_page_offset + 512U;
+    std::string previous_key;
+    for (std::uint16_t index = 0; index < entry_count; ++index) {
+        const std::size_t entry_offset = leaf_page_offset + 24U + static_cast<std::size_t>(index) * 2U;
+        const std::uint8_t record_number = file_bytes[entry_offset];
+        const std::uint8_t control_byte = file_bytes[entry_offset + 1U];
+        const std::size_t full_length = static_cast<std::size_t>((control_byte >> 4U) & 0x0FU);
+        const std::size_t shared_length = static_cast<std::size_t>(control_byte & 0x0FU);
+        const std::size_t trailing_length = full_length - shared_length;
+        text_cursor -= trailing_length;
+        const std::string trailing(
+            file_bytes.begin() + static_cast<std::ptrdiff_t>(text_cursor),
+            file_bytes.begin() + static_cast<std::ptrdiff_t>(text_cursor + trailing_length));
+        const std::string key = previous_key.substr(0, shared_length) + trailing;
+        decoded.push_back({.record_number = record_number, .key = key});
+        previous_key = key;
+    }
+    return decoded;
+}
+
+void test_create_vfp_cdx_single_tag_index_file_writes_readable_tag_and_sets_production_index_flag() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_happy_path_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const std::vector<std::vector<std::string>> records{{"BANANA"}, {"APPLE"}, {"CHERRY"}};
+
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, records);
+    expect(dbf_create.ok, "CDX writer happy-path test: DBF fixture should be created: " + dbf_create.error);
+
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{
+        {.record_number = 1U, .key_field_value = "BANANA"},
+        {.record_number = 2U, .key_field_value = "APPLE"},
+        {.record_number = 3U, .key_field_value = "CHERRY"}};
+
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "fruitname", "NAME", 10U, entries);
+    expect(write_result.ok, "create_vfp_cdx_single_tag_index_file should succeed for a well-formed single tag: " + write_result.error);
+
+    expect(fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should create the destination file");
+    expect(fs::file_size(cdx_path) == 6U * 512U, "a single-leaf-page CDX should be exactly six 512-byte pages");
+
+    const auto probe_result = copperfin::vfp::parse_index_probe_from_file(cdx_path.string());
+    expect(probe_result.ok, "the written CDX should parse as a valid CDX-family index: " + probe_result.error);
+    expect(probe_result.probe.kind == copperfin::vfp::IndexKind::cdx, "the written CDX should be typed as CDX");
+    expect(!probe_result.probe.tags.empty(), "the written CDX should expose at least one tag");
+    if (!probe_result.probe.tags.empty()) {
+        expect(probe_result.probe.tags.front().name_hint == "FRUITNAME", "the written CDX should expose the tag name, uppercased");
+    }
+
+    std::vector<std::uint8_t> raw_cdx_bytes(static_cast<std::size_t>(fs::file_size(cdx_path)), 0U);
+    {
+        std::ifstream input(cdx_path, std::ios::binary);
+        input.read(reinterpret_cast<char*>(raw_cdx_bytes.data()), static_cast<std::streamsize>(raw_cdx_bytes.size()));
+    }
+
+    // Key-expression page (page 4, byte offset 2048) -- see docs/77.
+    constexpr std::size_t key_expression_page_offset = 4U * 512U;
+    const std::string stored_key_expression(
+        raw_cdx_bytes.begin() + static_cast<std::ptrdiff_t>(key_expression_page_offset),
+        raw_cdx_bytes.begin() + static_cast<std::ptrdiff_t>(key_expression_page_offset + 4U));
+    expect(stored_key_expression == "NAME", "the key-expression page should hold the key expression text verbatim at byte 0");
+    expect(
+        raw_cdx_bytes[key_expression_page_offset + 4U] == 0U,
+        "the key-expression page should be NUL-padded immediately after the expression text");
+
+    // Leaf data page (page 5, byte offset 2560) -- decode the
+    // front-compressed entries directly against this writer's own
+    // documented algorithm and confirm they reconstruct the three
+    // entries, in ascending key order, with their original record
+    // numbers.
+    constexpr std::size_t leaf_page_offset = 5U * 512U;
+    const std::vector<DecodedCdxLeafEntry> decoded_entries =
+        decode_cdx_leaf_page_for_test(raw_cdx_bytes, leaf_page_offset);
+    expect(decoded_entries.size() == 3U, "the leaf page should decode exactly three entries");
+    if (decoded_entries.size() == 3U) {
+        expect(decoded_entries[0].key == "APPLE" && decoded_entries[0].record_number == 2U, "the leaf page's first entry should be APPLE/2 in ascending order");
+        expect(decoded_entries[1].key == "BANANA" && decoded_entries[1].record_number == 1U, "the leaf page's second entry should be BANANA/1 in ascending order");
+        expect(decoded_entries[2].key == "CHERRY" && decoded_entries[2].record_number == 3U, "the leaf page's third entry should be CHERRY/3 in ascending order");
+    }
+
+    const auto dbf_header_result = copperfin::vfp::parse_dbf_header_from_file(dbf_path.string());
+    expect(dbf_header_result.ok, "the DBF fixture should still parse after indexing: " + dbf_header_result.error);
+    expect(
+        dbf_header_result.header.has_production_index(),
+        "create_vfp_cdx_single_tag_index_file should set the DBF's has_production_index flag");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_create_vfp_cdx_single_tag_index_file_rejects_empty_tag_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_empty_tag_name_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"BANANA"}});
+    expect(dbf_create.ok, "CDX writer empty-tag-name test: DBF fixture should be created: " + dbf_create.error);
+
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "BANANA"}};
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "", "NAME", 10U, entries);
+    expect(!write_result.ok, "create_vfp_cdx_single_tag_index_file should reject an empty tag name");
+    expect(!write_result.error.empty(), "an empty-tag-name rejection should carry a localized error message");
+    expect(!fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should not create a file when the tag name is rejected");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_create_vfp_cdx_single_tag_index_file_rejects_key_exceeding_declared_length() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_key_too_long_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 20U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"WATERMELON"}});
+    expect(dbf_create.ok, "CDX writer key-too-long test: DBF fixture should be created: " + dbf_create.error);
+
+    // Declares a key length (5) shorter than the entry's own trimmed
+    // value (10 characters) -- should fail closed rather than silently
+    // truncate the key.
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "WATERMELON"}};
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "fruitname", "NAME", 5U, entries);
+    expect(!write_result.ok, "create_vfp_cdx_single_tag_index_file should reject a key longer than the declared key length");
+    expect(!fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should not create a file when a key is rejected");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_create_vfp_cdx_single_tag_index_file_rejects_key_longer_than_compression_encoding_limit() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_key_length_unsupported_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 20U, .decimal_count = 0U}};
+    // 16 significant characters -- one past the front-compression
+    // control byte's 4-bit length nibble (max 15), even though the
+    // declared key_length (20) is large enough to hold it.
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"SIXTEENCHARACTRS"}});
+    expect(dbf_create.ok, "CDX writer key-length-unsupported test: DBF fixture should be created: " + dbf_create.error);
+
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{
+        {.record_number = 1U, .key_field_value = "SIXTEENCHARACTRS"}};
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "fruitname", "NAME", 20U, entries);
+    expect(
+        !write_result.ok,
+        "create_vfp_cdx_single_tag_index_file should reject a key longer than the front-compression control byte's 4-bit length limit");
+    expect(!fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should not create a file when a key is too long to encode");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// PR #5552 review finding (chatgpt-codex-connector/copilot-pull-request-
+// reviewer): CdxIndexEntry::record_number is deliberately a wider type
+// than the single byte the leaf entry format can hold, precisely so a
+// caller can't silently narrow (e.g. record 256 -> 0) before this
+// function ever sees the out-of-range value; this must fail closed.
+void test_create_vfp_cdx_single_tag_index_file_rejects_record_number_out_of_range() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_record_number_out_of_range_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"BANANA"}});
+    expect(dbf_create.ok, "CDX writer record-number-out-of-range test: DBF fixture should be created: " + dbf_create.error);
+
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 256U, .key_field_value = "BANANA"}};
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "fruitname", "NAME", 10U, entries);
+    expect(!write_result.ok, "create_vfp_cdx_single_tag_index_file should reject a record number above 255");
+    expect(!fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should not create a file when a record number is out of range");
+
+    const auto dbf_header_result = copperfin::vfp::parse_dbf_header_from_file(dbf_path.string());
+    expect(dbf_header_result.ok, "the DBF fixture should still parse after the rejected write: " + dbf_header_result.error);
+    expect(
+        !dbf_header_result.header.has_production_index(),
+        "a rejected write must not set the DBF's has_production_index flag");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// PR #5552 review finding (copilot-pull-request-reviewer): key_length
+// was accepted without validation even though 0 or a value larger than
+// one page makes the resulting file unparseable by this codebase's own
+// CDX reader (cdx_header.cpp's collect_directory_leaf_tags()).
+void test_create_vfp_cdx_single_tag_index_file_rejects_invalid_key_length() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_invalid_key_length_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"BANANA"}});
+    expect(dbf_create.ok, "CDX writer invalid-key-length test: DBF fixture should be created: " + dbf_create.error);
+
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "BANANA"}};
+
+    const auto zero_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "fruitname", "NAME", 0U, entries);
+    expect(!zero_result.ok, "create_vfp_cdx_single_tag_index_file should reject a zero key length");
+
+    const auto oversized_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "fruitname", "NAME", 513U, entries);
+    expect(!oversized_result.ok, "create_vfp_cdx_single_tag_index_file should reject a key length larger than one page");
+
+    expect(!fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should not create a file when the key length is invalid");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// PR #5552 review finding (chatgpt-codex-connector/copilot-pull-request-
+// reviewer): a key expression of 512+ bytes was silently truncated (and
+// an exactly-512-byte expression left with no NUL terminator) rather
+// than rejected.
+void test_create_vfp_cdx_single_tag_index_file_rejects_oversized_key_expression() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_oversized_key_expression_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"BANANA"}});
+    expect(dbf_create.ok, "CDX writer oversized-key-expression test: DBF fixture should be created: " + dbf_create.error);
+
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "BANANA"}};
+    const std::string oversized_expression(512U, 'N');  // exactly one page, no room for a NUL terminator.
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "fruitname", oversized_expression, 10U, entries);
+    expect(!write_result.ok, "create_vfp_cdx_single_tag_index_file should reject a key expression that fills the whole page");
+    expect(!fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should not create a file when the key expression is too long");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// PR #5552 review finding (chatgpt-codex-connector): tag names of
+// 481-512 bytes previously passed the old (too-loose) length check but
+// then overwrote the tag-table page's own required header fields at
+// bytes [0:32) once right-aligned to the page end.
+void test_create_vfp_cdx_single_tag_index_file_rejects_tag_name_that_would_overwrite_header() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_tag_name_overwrite_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"BANANA"}});
+    expect(dbf_create.ok, "CDX writer tag-name-overwrite test: DBF fixture should be created: " + dbf_create.error);
+
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "BANANA"}};
+    const std::string long_tag_name(481U, 'T');  // one byte past the 480-byte safe limit.
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), long_tag_name, "NAME", 10U, entries);
+    expect(!write_result.ok, "create_vfp_cdx_single_tag_index_file should reject a tag name that would overwrite the tag-table page's header fields");
+    expect(!fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should not create a file when the tag name is rejected");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// PR #5552 review finding (chatgpt-codex-connector/copilot-pull-request-
+// reviewer, reported twice each): the DBF has_production_index flag was
+// being set BEFORE the CDX file was known to be durably written, so a
+// write failure left the table falsely claiming a structural index it
+// didn't have. create_vfp_cdx_single_tag_index_file() now durably
+// writes the CDX (via a temp-file-then-rename stage) FIRST and only
+// then sets the flag; this test forces the CDX write itself to fail
+// (an unwritable destination directory) and confirms the flag stays
+// unset.
+void test_create_vfp_cdx_single_tag_index_file_does_not_set_production_index_flag_when_cdx_write_fails() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_write_failure_ordering_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    // A CDX path inside a directory that does not exist: opening the
+    // temp file for writing must fail deterministically, independent of
+    // platform-specific permission behavior.
+    const fs::path cdx_path = temp_dir / "no-such-subdirectory" / "fruit.cdx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"BANANA"}});
+    expect(dbf_create.ok, "CDX writer write-failure-ordering test: DBF fixture should be created: " + dbf_create.error);
+
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "BANANA"}};
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "fruitname", "NAME", 10U, entries);
+    expect(!write_result.ok, "create_vfp_cdx_single_tag_index_file should fail when the CDX destination cannot be opened");
+
+    const auto dbf_header_result = copperfin::vfp::parse_dbf_header_from_file(dbf_path.string());
+    expect(dbf_header_result.ok, "the DBF fixture should still parse after the failed write: " + dbf_header_result.error);
+    expect(
+        !dbf_header_result.header.has_production_index(),
+        "a failed CDX write must not leave the DBF's has_production_index flag set");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_create_vfp_cdx_single_tag_index_file_rejects_leaf_page_overflow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_leaf_overflow_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 15U, .decimal_count = 0U}};
+
+    // 15-byte keys (the writer's own per-key compression-encoding limit,
+    // see the KeyLengthUnsupported test below) whose first three
+    // characters are a base-26 encoding of the entry's own index -- at
+    // most two of 40 entries ever share a first character, and those
+    // two always differ at the second character, so no two entries ever
+    // share more than a 1-byte prefix and front-compression cannot
+    // meaningfully help. Each entry then costs roughly
+    // 2 (record_number, control_byte) + ~14 (trailing text) = 16 bytes,
+    // well over the 512-byte leaf page's ~488 usable bytes once 40 such
+    // entries are combined -- deliberately overflowing the
+    // single-leaf-page scope this writer covers (see docs/77's "Known
+    // gaps").
+    std::vector<std::vector<std::string>> records;
+    std::vector<copperfin::vfp::CdxIndexEntry> entries;
+    for (int index = 0; index < 40; ++index) {
+        std::string key(15U, 'Z');
+        int remainder = index;
+        key[0] = static_cast<char>('A' + (remainder % 26));
+        remainder /= 26;
+        key[1] = static_cast<char>('A' + (remainder % 26));
+        records.push_back({key});
+        entries.push_back({.record_number = static_cast<std::uint8_t>(index + 1), .key_field_value = key});
+    }
+
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, records);
+    expect(dbf_create.ok, "CDX writer leaf-overflow test: DBF fixture should be created: " + dbf_create.error);
+
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "fruitname", "NAME", 15U, entries);
+    expect(!write_result.ok, "create_vfp_cdx_single_tag_index_file should fail closed when entries overflow a single leaf page");
+    expect(!fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should not create a file when the leaf page overflows");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_vfp_locale_catalog_parity() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
@@ -2646,6 +3081,15 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.CdxHeader.Error.OpenFileFailed",
         "Vfp.CdxHeader.Error.ReadProbeFailed",
         "Vfp.CdxHeader.Error.ShortProbe",
+        "Vfp.CdxWriter.Error.InvalidKeyLength",
+        "Vfp.CdxWriter.Error.InvalidTagName",
+        "Vfp.CdxWriter.Error.KeyExceedsDeclaredLength",
+        "Vfp.CdxWriter.Error.KeyExpressionTooLong",
+        "Vfp.CdxWriter.Error.KeyLengthUnsupported",
+        "Vfp.CdxWriter.Error.LeafPageOverflow",
+        "Vfp.CdxWriter.Error.OpenFileFailed",
+        "Vfp.CdxWriter.Error.RecordNumberOutOfRange",
+        "Vfp.CdxWriter.Error.WriteFileFailed",
         "Vfp.DbfHeader.Error.InvalidValues",
         "Vfp.DbfHeader.Error.OpenFileFailed",
         "Vfp.DbfHeader.Error.ReadHeaderFailed",
@@ -4488,6 +4932,16 @@ int main() {
     test_scan_access_saved_queries_appends_multiple_order_by_expressions();
     test_scan_access_saved_queries_skips_query_with_no_table_reference();
     test_scan_access_saved_queries_reports_ok_with_no_queries();
+    test_create_vfp_cdx_single_tag_index_file_writes_readable_tag_and_sets_production_index_flag();
+    test_create_vfp_cdx_single_tag_index_file_rejects_empty_tag_name();
+    test_create_vfp_cdx_single_tag_index_file_rejects_key_exceeding_declared_length();
+    test_create_vfp_cdx_single_tag_index_file_rejects_key_longer_than_compression_encoding_limit();
+    test_create_vfp_cdx_single_tag_index_file_rejects_record_number_out_of_range();
+    test_create_vfp_cdx_single_tag_index_file_rejects_invalid_key_length();
+    test_create_vfp_cdx_single_tag_index_file_rejects_oversized_key_expression();
+    test_create_vfp_cdx_single_tag_index_file_rejects_tag_name_that_would_overwrite_header();
+    test_create_vfp_cdx_single_tag_index_file_does_not_set_production_index_flag_when_cdx_write_fails();
+    test_create_vfp_cdx_single_tag_index_file_rejects_leaf_page_overflow();
     test_parse_access_long_value_field_descriptor_decodes_header();
     test_parse_access_long_value_field_descriptor_rejects_short_input();
     test_read_access_long_value_column_returns_inline_value();
