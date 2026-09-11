@@ -4228,6 +4228,70 @@ void test_export_database_as_postgresql_sql_disambiguates_indexes_on_same_column
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5559: write_postgresql_create_indexes() had the identical cross-table
+// collision bug fixed for SQLite in the #5558 review -- see
+// test_export_database_as_sqlite_sql_disambiguates_indexes_across_tables()'s
+// own comment for the fixture rationale. Real PostgreSQL index names are
+// schema-wide, not per-table, so the same "A_B"/tag "CDEF" vs. "A"/tag
+// "B_CDEF" collision applies unchanged.
+void test_export_database_as_postgresql_sql_disambiguates_indexes_across_tables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_postgresql_sql_cross_table_collision_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "A_B", ""}, {"TABLE", "A", ""}});
+    expect(dbc_create.ok, "PostgreSQL cross-table index-collision test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table1_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A_B.dbf").string(), table_fields, {{"x"}});
+    expect(table1_create.ok, "PostgreSQL cross-table index-collision test: A_B.dbf fixture should be created");
+    const auto table2_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A.dbf").string(), table_fields, {{"y"}});
+    expect(table2_create.ok, "PostgreSQL cross-table index-collision test: A.dbf fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_single_tag_cdx_bytes("CDEF", "COL");
+        std::ofstream output(temp_dir / "A_B.cdx", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+    {
+        const auto cdx_bytes = make_synthetic_single_tag_cdx_bytes("B_CDEF", "COL");
+        std::ofstream output(temp_dir / "A.cdx", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_postgresql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_postgresql_sql should resolve the cross-table collision fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    const std::size_t first_occurrence = result.sql.find("CREATE INDEX \"A_B_CDEF_idx\"");
+    expect(first_occurrence != std::string::npos,
+           "export_database_as_postgresql_sql should emit the first table's own naturally-derived index name unchanged");
+    expect(result.sql.find("CREATE INDEX \"A_B_CDEF_idx\"", first_occurrence + 1U) == std::string::npos,
+           "export_database_as_postgresql_sql must never emit the exact same index name twice across different tables");
+    expect(result.sql.find("CREATE INDEX \"A_B_CDEF_idx_2\"") != std::string::npos,
+           "export_database_as_postgresql_sql should disambiguate the second table's colliding index name with a deterministic suffix");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_access_sql_maps_currency_datetime_and_dates() {
     // #5475: export_database_as_access_sql() shares export_database_as_sql()'s
     // catalog/table-walking logic but swaps in the Access/Jet SQL dialect --
@@ -5451,6 +5515,7 @@ int main() {
     test_export_database_as_postgresql_sql_maps_types_and_creates_indexes();
     test_export_database_as_postgresql_sql_omits_indexes_without_cdx();
     test_export_database_as_postgresql_sql_disambiguates_indexes_on_same_column();
+    test_export_database_as_postgresql_sql_disambiguates_indexes_across_tables();
     test_export_database_as_sqlite_sql_maps_types_and_creates_indexes();
     test_export_database_as_sqlite_sql_omits_indexes_without_cdx();
     test_export_database_as_sqlite_sql_disambiguates_indexes_across_tables();

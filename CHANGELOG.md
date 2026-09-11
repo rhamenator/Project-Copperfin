@@ -1,3 +1,19 @@
+- 2026-09-11: Fixes #5559: `write_postgresql_create_indexes()`
+  (`src/vfp/asset_inspector.cpp`) had the identical cross-table
+  `CREATE INDEX` name collision fixed for `TYPE SQLITE` in the #5558
+  review -- PostgreSQL index names are schema-wide, not scoped to their
+  own table, so a table named `A_B` with a CDX tag named `CDEF` and a
+  table named `A` with a tag named `B_CDEF` both produced the identical
+  `A_B_CDEF_idx`, and real PostgreSQL rejects the second `CREATE INDEX`
+  with "relation ... already exists" rather than silently accepting it.
+  Fixed by threading the same `disambiguate_index_name()` helper (moved
+  ahead of `write_postgresql_create_indexes()` in the file so both
+  vendor paths can call it) and a `std::set<std::string>` of already-
+  emitted index names across the whole `TYPE POSTGRESQL` export, exactly
+  matching the fix already shipped for `TYPE SQLITE`. New regression
+  test `test_export_database_as_postgresql_sql_disambiguates_indexes_across_tables`
+  mirrors the SQLite one byte-for-byte in fixture shape.
+
 - 2026-09-11: Progress on #5554 (parent #137): `EXPORT DATABASE ... TYPE
   SQLITE` (`export_database_as_sqlite_sql()`,
   `src/vfp/asset_inspector.cpp`) is the second vendor-dialect slice of
