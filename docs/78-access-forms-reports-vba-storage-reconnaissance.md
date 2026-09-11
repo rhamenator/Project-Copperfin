@@ -166,7 +166,7 @@ to a Form/Report/Module's own design or code storage, and no public or
 community documentation (checked: mdbtools 1.0.1's full source and
 `HACKING.md`, oletools' own explicit non-coverage) describes one.
 
-## Two real paths forward -- both require infrastructure this session cannot provide
+## Two real paths forward, as first assessed (see the 2026-09-11 update below for what actually happened)
 
 - **(a) Real Access automation**, matching how `rhamenator/access-to-
   foxpro` (see `project_copperfin_access_to_foxpro_reference` memory)
@@ -197,7 +197,160 @@ this project's clean-room discipline against guessing. This document
 records what was checked and found, so a future slice -- whichever path
 is chosen -- does not have to re-derive it.
 
-### A third, lower-cost path specific to #5478's Jet3/Jet4 hypothesis
+## Update 2026-09-11: path (a) is now verified, and it resolves the storage/architecture question for both issues
+
+**This update resolves *where the data lives and how to reach it* for
+both issues -- it does not itself satisfy either issue's acceptance
+criteria (representative-fixture classification, malformed/unsupported-
+input handling, focused tests, `docs/32` traceability, CHANGELOG entry).
+Neither #5477 nor #5478 is closed by this update.**
+
+The user installed Microsoft Access 365 on a clone of the project's
+existing Windows VM (`copperfin-access365-win11`, cloned from
+`copperfin-vfp9-win11` via `virt-clone` specifically to avoid COM-
+registration conflicts between an old MSI-based Access and modern
+Click-to-Run 365) and authorized proceeding with path (a). Real,
+directly observed product behavior against a real fixture
+(`Order Entry1.mdb`, a Jet3 `.mdb`) via COM automation
+(`CreateObject("Access.Application")`, `.Visible = $false`,
+`OpenCurrentDatabase()`, `SaveAsText()`):
+
+- **`SaveAsText(acForm, "Switchboard", path)`** produced a complete,
+  human-readable, structurally nested `Begin <ObjectType> ... End` text
+  file (2080 lines) -- version/checksum header, form-level properties,
+  a `NameMap` binary blob (unrelated GUID/name-resolution bookkeeping,
+  not itself needed for structural inspection), and a fully nested
+  control tree (`Section` containing `Label`/`Rectangle`/`Image`/
+  `CommandButton`/etc., each with its own property list, `OnCurrent`/
+  `OnOpen` event bindings shown as `"[Event Procedure]"` markers). This
+  is a direct, storage-level answer to #5477's acceptance criteria
+  ("control hierarchy, control types, bound field references, basic
+  layout/property metadata") -- an actual conforming implementation
+  still needs to be built and tested against it.
+- **`SaveAsText(acReport, "Invoice", path)`** produced the identical
+  `Version`/`Checksum`/`Begin Report ... End` grammar (1421 lines,
+  same nested `Section`/control-property structure) -- reports and forms
+  share one text format, not two.
+- **`SaveAsText(acModule, "Global Code", path)`** produced the module's
+  **raw, plain VBA source code verbatim** (14 lines, e.g. `Option Compare
+  Database`, a full `Function IsLoaded(...) ... End Function` body) --
+  no wrapper, no CFB structure, no compression.
+- **Crucially, a standalone module is only part of #5478's own scope.**
+  The *same* form export above (`Switchboard`) also contains, after its
+  structural block's closing `End`, a literal `CodeBehindForm` marker
+  line followed by that form's own class-module `Attribute VB_...`
+  lines and its plain VBA source verbatim (confirmed for a report too --
+  the marker is `CodeBehindForm` even for a report, not renamed). **Most
+  real-world Access VBA lives in form/report event handlers, not
+  standalone modules** -- a #5478 implementation that only enumerates
+  `acModule` objects and ignores each form's/report's own code-behind
+  would silently miss most of an application's actual code. A complete
+  VBA-extraction implementation must enumerate all three object kinds
+  (forms, reports, standalone modules) and combine each form's/report's
+  code-behind with every standalone module's own source.
+- Together, these observations mean the `MSysModules2.Module`/MS-OVBA
+  byte-diffing plan recorded earlier in this document is no longer the
+  best next step for the Jet3/Jet4 hypothesis it targeted: `SaveAsText`
+  reaches the same VBA source directly, without needing to crack that
+  wrapper at all, the same way `access-to-foxpro`'s own `access_design.py`
+  already does it (per its `COPPERFIN.md` handoff notes).
+
+This means: **neither #5477 nor #5478 needs any binary Jet/ACE reverse
+engineering to reach the underlying data.** The earlier sections of this
+document (page-type mapping, the disproven `candidate_page_number`
+heuristic, the `MSysModules2.Module`/MS-OVBA hypothesis) remain accurate
+as a record of what was checked, but are no longer the load-bearing path
+forward -- they describe a harder problem than the one that actually
+needs solving.
+
+### Security requirement for any automation helper (real gap found in review)
+
+`OpenCurrentDatabase()` against a database containing an `AutoExec`
+macro, a startup form, or other active content can **execute that
+content under the importing user's own authority** before `SaveAsText`
+ever runs -- automation does not implicitly sandbox this the way a
+read-only inspection tool needs. This directly conflicts with this
+project's own security model (`docs/04-security-model.md`'s Runtime
+Boundary explicitly protects both "COM/interop access" and "macro/eval
+execution"), and turns what should be a read-only inspection path into
+arbitrary code execution for an untrusted or malicious input file.
+
+Any automation helper this architecture eventually ships **must** set
+`Application.AutomationSecurity = msoAutomationSecurityForceDisable`
+(disables all VBA macro execution for automation-opened databases for
+the session) *before* calling `OpenCurrentDatabase()`, and this
+invariant must be preserved in the helper's implementation, not treated
+as optional hardening. This session's own ad hoc verification testing
+(the exports described above) did **not** set this property -- an
+acceptable risk for a single trusted, self-authored sample fixture
+(`Order Entry1.mdb`) inspected interactively, but not a pattern to carry
+into any real, shippable automation helper. `AutomationSecurity` only
+disables macro execution, not the object model itself: this was
+directly re-verified by rerunning the `Switchboard` form export above
+with `AutomationSecurity = 3` set beforehand -- the resulting text file
+was byte-for-byte identical to the original (unsecured) export, so
+forcing macros off does not change or degrade `SaveAsText`'s own output
+in any way.
+
+### Implications for implementation architecture
+
+Copperfin's forms/reports/VBA inspection for Access sources should be
+built on `Application.SaveAsText`'s text output, not on raw container
+parsing:
+
+- **The automation helper must force-disable macros before opening any
+  input database** (`Application.AutomationSecurity =
+  msoAutomationSecurityForceDisable`, set before `OpenCurrentDatabase()`)
+  -- see the security requirement above. This is not optional hardening;
+  omitting it turns a read-only inspection tool into arbitrary code
+  execution for an untrusted input file, directly conflicting with
+  `docs/04-security-model.md`'s Runtime Boundary.
+- **A complete VBA-extraction implementation (#5478) must enumerate
+  all three object kinds** -- forms, reports, and standalone modules --
+  and combine each form's/report's own `CodeBehindForm`-delimited
+  code-behind with every standalone module's own source. Treating
+  `acModule` exports alone as "the VBA" would silently miss most of a
+  typical application's actual code, since event-handler code (by far
+  the most common kind) lives in form/report code-behind, not standalone
+  modules.
+- This is a genuine, real dependency this codebase has not had before:
+  a Windows machine with a licensed Access installation reachable at the
+  time of import. Every other Access slice shipped so far
+  (#5476/#5539/#5549/#5551) reads raw bytes with zero external
+  dependencies. This slice cannot avoid that dependency -- there is no
+  other way to reach this data (see the "central finding" above) -- so
+  the design should isolate it cleanly: a small, separately invoked
+  automation step (a PowerShell/VBScript helper, matching this
+  project's existing "shell out to an external interpreter" precedent
+  already used for its polyglot Python/.NET/R sidecars) produces the
+  `SaveAsText` output files, and Copperfin's own portable C++ code parses
+  *those already-produced text files* -- keeping the COM-automation
+  dependency confined to one narrow, replaceable step, and the actual
+  parsing logic portable and independently testable without Access
+  installed anywhere.
+- The `SaveAsText` text grammar itself (`Begin <Type> ... End`,
+  indented property assignments, nested blocks) is not an officially
+  published Microsoft specification, but it is directly, repeatedly
+  observable from a real licensed installation -- exactly the "observed
+  product behavior" evidence category `docs/07`/`docs/66` already treat
+  as legitimate, and the same standard the CDX writer's real-VFP9
+  verification (`docs/77`) relied on. Parsing it is a clean-room text-
+  grammar problem, not a binary reverse-engineering problem -- a much
+  more tractable and independently verifiable task (more fixtures can be
+  generated on demand from the real installation to check any parsing
+  hypothesis, unlike the binary investigation above, which had no
+  oracle to check guesses against).
+- `NameMap` and other embedded binary blobs inside the text (GUID/name-
+  resolution bookkeeping) can be treated as opaque/skipped for a first
+  slice -- #5477's own acceptance criteria (control hierarchy, control
+  types, basic properties) does not require decoding them.
+
+### A third, lower-cost path specific to #5478's Jet3/Jet4 hypothesis (superseded, kept for the record)
+
+**Superseded by the 2026-09-11 update above** -- `SaveAsText` gives the
+VBA source directly, so this byte-diffing plan is no longer needed.
+Kept here only as a record of a path that was considered before real
+Access automation became available.
 
 Because #5478's Jet3/Jet4 lead is at least narrowed to one candidate
 column (`MSysModules2.Module`, see above) rather than being completely
