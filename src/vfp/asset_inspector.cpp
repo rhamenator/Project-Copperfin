@@ -2415,20 +2415,49 @@ std::optional<std::string> plain_column_name_for_index_tag(
 // `used_index_names` tracks every index name already emitted across the
 // *entire* export (not just the current table) via the same
 // disambiguate_index_name() helper write_sqlite_create_indexes() uses.
+//
+// #5559 review (chatgpt-codex-connector): PostgreSQL silently truncates
+// any identifier over `NAMEDATALEN - 1` (63) bytes to that length, so
+// two distinct candidates that differ only after byte 63 -- or a single
+// candidate at/over that length that needs a numeric suffix -- would
+// still collide, or would have that suffix itself truncated away,
+// inside the *real* engine even though this function's own untruncated
+// bookkeeping saw them as unique. `max_identifier_bytes` (0 = no limit,
+// used by write_sqlite_create_indexes() below, since SQLite imposes no
+// such practical limit) truncates the base candidate to that length
+// before the first uniqueness check, and reserves room for the numeric
+// suffix by truncating further when one is needed, so every name this
+// function actually records and emits is already what the target engine
+// itself would see.
 std::string disambiguate_index_name(
-    const std::string& candidate, std::set<std::string>& used_index_names) {
-    if (used_index_names.insert(candidate).second) {
-        return candidate;
+    const std::string& candidate,
+    std::set<std::string>& used_index_names,
+    std::size_t max_identifier_bytes = 0U) {
+    const std::string base = (max_identifier_bytes > 0U && candidate.size() > max_identifier_bytes)
+        ? candidate.substr(0U, max_identifier_bytes)
+        : candidate;
+    if (used_index_names.insert(base).second) {
+        return base;
     }
     std::size_t suffix = 2U;
     while (true) {
-        const std::string attempt = candidate + "_" + std::to_string(suffix);
+        const std::string suffix_text = "_" + std::to_string(suffix);
+        std::string attempt = base;
+        if (max_identifier_bytes > 0U && attempt.size() + suffix_text.size() > max_identifier_bytes) {
+            attempt = attempt.substr(0U, max_identifier_bytes - suffix_text.size());
+        }
+        attempt += suffix_text;
         if (used_index_names.insert(attempt).second) {
             return attempt;
         }
         ++suffix;
     }
 }
+
+// PostgreSQL's default identifier limit (`NAMEDATALEN` is 64, so 63
+// usable bytes after the implicit terminator) -- see
+// disambiguate_index_name()'s own comment above.
+constexpr std::size_t kPostgresqlMaxIdentifierBytes = 63U;
 
 void write_postgresql_create_indexes(
     std::ostringstream& sql,
@@ -2475,8 +2504,8 @@ void write_postgresql_create_indexes(
         // a shared placeholder string every such tag would collide on.
         const std::string tag_identity =
             tag.name_hint.empty() ? ("tag" + std::to_string(tag_index)) : tag.name_hint;
-        const std::string index_name =
-            disambiguate_index_name(rt.name + "_" + tag_identity + "_idx", used_index_names);
+        const std::string index_name = disambiguate_index_name(
+            rt.name + "_" + tag_identity + "_idx", used_index_names, kPostgresqlMaxIdentifierBytes);
         sql << "CREATE INDEX " << sql_quote_identifier(index_name)
             << " ON " << quoted_table << " (" << sql_quote_identifier(*column) << ");\n";
         wrote_anything = true;
@@ -2586,7 +2615,19 @@ DatabaseSqlExportResult export_database_as_postgresql_sql(
     const std::vector<ParsedSqlExportTable> parsed_tables =
         write_sql_tables_and_data(sql, snapshot, row_limit);
 
+    // #5559 review (chatgpt-codex-connector): PostgreSQL puts tables and
+    // indexes in the same schema-wide relation namespace -- a valid
+    // catalog table literally named e.g. "A_B_CDEF_idx" (already emitted
+    // above by write_sql_tables_and_data()'s own CREATE TABLE) would
+    // collide with an index this function is about to generate for an
+    // unrelated table+tag pair that happens to produce the identical
+    // name. Seeding `used_index_names` with every table name already
+    // emitted lets disambiguate_index_name() catch and suffix that case
+    // exactly like a same-named index from a different table.
     std::set<std::string> used_index_names;
+    for (const auto& parsed : parsed_tables) {
+        used_index_names.insert(parsed.resolved.name);
+    }
     for (const auto& parsed : parsed_tables) {
         write_postgresql_create_indexes(sql, parsed.resolved, parsed.table.fields, used_index_names);
     }

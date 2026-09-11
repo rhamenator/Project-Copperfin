@@ -14,6 +14,32 @@
   test `test_export_database_as_postgresql_sql_disambiguates_indexes_across_tables`
   mirrors the SQLite one byte-for-byte in fixture shape.
 
+  PR review (chatgpt-codex-connector) surfaced two further real gaps in
+  that first pass, both fixed in the same PR: (1) PostgreSQL silently
+  truncates any identifier over its 63-byte (`NAMEDATALEN` - 1) limit,
+  so two distinct candidates agreeing only in their first 63 bytes -- or
+  a single over-length candidate needing a numeric suffix -- would still
+  collide, or have the suffix itself truncated away, inside the *real*
+  engine even though this exporter's own untruncated bookkeeping saw
+  them as unique; `disambiguate_index_name()` now takes an optional
+  `max_identifier_bytes` and truncates the base candidate before the
+  uniqueness check, reserving room for the suffix when one is needed
+  (SQLite's own call site keeps the default unlimited, since it has no
+  such practical limit). (2) PostgreSQL's relation namespace is
+  schema-wide across *both* tables and indexes, not just indexes against
+  each other, so a catalog table literally named after another table's
+  would-be index name (e.g. a table named `A_B_CDEF_idx`) would still
+  collide; `export_database_as_postgresql_sql()` now seeds the
+  disambiguation set with every already-emitted table name before
+  generating any indexes. Three new regression tests added:
+  `test_export_database_as_postgresql_sql_disambiguates_indexes_within_identifier_length_limit`,
+  `test_export_database_as_postgresql_sql_disambiguates_index_colliding_with_table_name`.
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-007` updated to record the schema-wide
+  disambiguation (and its now-stale `<table>_<column>_idx` wording
+  corrected to `<table>_<tag>_idx`, matching the actual naming scheme
+  established since #5545).
+
 - 2026-09-11: Progress on #5554 (parent #137): `EXPORT DATABASE ... TYPE
   SQLITE` (`export_database_as_sqlite_sql()`,
   `src/vfp/asset_inspector.cpp`) is the second vendor-dialect slice of

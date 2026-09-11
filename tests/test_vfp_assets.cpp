@@ -4183,6 +4183,115 @@ std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_two_tags_on_same_column(
     return bytes;
 }
 
+// Parameterized sibling of make_synthetic_cdx_bytes_with_two_tags_on_same_column()
+// above, letting a test choose its own (short, real-tag-name-valid) tag
+// names and shared key expression -- used to prove the 63-byte
+// PostgreSQL identifier truncation case below, where the *table* name
+// itself (chosen by the test, not this fixture) supplies the long
+// common prefix.
+std::vector<std::uint8_t> make_synthetic_two_tag_cdx_bytes(
+    const std::string& tag1_name, const std::string& tag2_name, const std::string& key_expression) {
+    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x04U;
+    bytes[12] = 0x0AU;
+    bytes[14] = 0xE0U;
+    bytes[15] = 0x01U;
+    bytes[1024U] = 0x03U;
+    write_le_u16(bytes, 1026U, 2U);
+    write_le_u32(bytes, 1028U, 11U * 512U);
+    write_le_u32(bytes, 1032U, 4U * 512U);
+    write_le_u16(bytes, 11U * 512U, 0x0001U);
+    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
+    write_le_u16(bytes, 4U * 512U, 0x0003U);
+    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
+    write_ascii(bytes, (3U * 512U) - 20U, tag1_name.c_str());
+    write_ascii(bytes, (3U * 512U) - 10U, tag2_name.c_str());
+    write_ascii(bytes, (4U * 512U) + 24U, key_expression.c_str());
+    write_ascii(bytes, (11U * 512U) + 24U, key_expression.c_str());
+    return bytes;
+}
+
+// #5559 review (chatgpt-codex-connector): PostgreSQL silently truncates
+// any identifier over NAMEDATALEN-1 (63) bytes to that length, so two
+// distinct candidate names that agree only in their first 63 bytes
+// still collide inside the *real* engine even though this exporter's
+// own untruncated bookkeeping would see them as unique -- and a
+// candidate that needs a numeric suffix must have that suffix land
+// inside the 63-byte budget, not be silently truncated away itself.
+// Table "AAAA...A" (60 'A' characters) with tags "TAG1"/"TAG2" on the
+// same column produces raw candidates "AAAA...A_TAG1_idx" and
+// "AAAA...A_TAG2_idx" (69 bytes each) that are identical for their
+// first 63 bytes (index 63 is where "TAG1" and "TAG2" first differ),
+// so both must truncate to the same 63-byte name before this exporter's
+// own uniqueness check can catch the collision and suffix the second
+// one within the same 63-byte budget.
+void test_export_database_as_postgresql_sql_disambiguates_indexes_within_identifier_length_limit() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_postgresql_sql_identifier_length_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::string long_table_name(60U, 'A');
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
+    const fs::path cdx_path = temp_dir / (long_table_name + ".cdx");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", long_table_name, ""}});
+    expect(dbc_create.ok, "PostgreSQL identifier-length test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"x"}});
+    expect(table_create.ok, "PostgreSQL identifier-length test: DBF fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_two_tag_cdx_bytes("TAG1", "TAG2", "COL");
+        std::ofstream output(cdx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_postgresql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_postgresql_sql should resolve the identifier-length fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    // First candidate truncates to exactly 63 bytes: the 60 'A's plus
+    // "_TA" (the first two characters after the underscore that "TAG1"
+    // and "TAG2" still share before diverging at what would be index 63).
+    const std::string first_truncated = long_table_name + "_TA";
+    expect(first_truncated.size() == 63U,
+           "test fixture sanity: the first truncated candidate should be exactly 63 bytes");
+    expect(result.sql.find("CREATE INDEX \"" + first_truncated + "\"") != std::string::npos,
+           "export_database_as_postgresql_sql should truncate the first candidate to PostgreSQL's 63-byte identifier limit");
+
+    // Second candidate collides with the first *after* truncation, so it
+    // must be suffixed -- and that suffix must itself fit inside the
+    // same 63-byte budget rather than being silently truncated away.
+    const std::string second_suffixed = long_table_name + "__2";
+    expect(second_suffixed.size() == 63U,
+           "test fixture sanity: the disambiguated second candidate should still be exactly 63 bytes");
+    expect(result.sql.find("CREATE INDEX \"" + second_suffixed + "\"") != std::string::npos,
+           "export_database_as_postgresql_sql should reserve room for the disambiguating suffix within the 63-byte limit");
+    expect(result.sql.find("CREATE INDEX \"" + first_truncated + "\"", result.sql.find("CREATE INDEX \"" + first_truncated + "\"") + 1U)
+               == std::string::npos,
+           "export_database_as_postgresql_sql must never emit the exact same truncated index name twice");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_postgresql_sql_disambiguates_indexes_on_same_column() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_postgresql_sql_duplicate_column_tests";
@@ -4288,6 +4397,69 @@ void test_export_database_as_postgresql_sql_disambiguates_indexes_across_tables(
            "export_database_as_postgresql_sql must never emit the exact same index name twice across different tables");
     expect(result.sql.find("CREATE INDEX \"A_B_CDEF_idx_2\"") != std::string::npos,
            "export_database_as_postgresql_sql should disambiguate the second table's colliding index name with a deterministic suffix");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5559 review (chatgpt-codex-connector): PostgreSQL puts tables and
+// indexes in the same schema-wide relation namespace, not just indexes
+// against each other -- a catalog table literally named "A_B_CDEF_idx"
+// (a valid, if unusual, VFP table name) collides with the index this
+// exporter would otherwise emit unchanged for table "A_B"'s tag "CDEF".
+// export_database_as_postgresql_sql() must seed its disambiguation set
+// with every table name it has already emitted a CREATE TABLE for, not
+// just with previously-emitted index names.
+void test_export_database_as_postgresql_sql_disambiguates_index_colliding_with_table_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_postgresql_sql_table_index_namespace_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "A_B", ""}, {"TABLE", "A_B_CDEF_idx", ""}});
+    expect(dbc_create.ok, "PostgreSQL table/index namespace test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table1_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A_B.dbf").string(), table_fields, {{"x"}});
+    expect(table1_create.ok, "PostgreSQL table/index namespace test: A_B.dbf fixture should be created");
+    const auto table2_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A_B_CDEF_idx.dbf").string(), table_fields, {{"y"}});
+    expect(table2_create.ok, "PostgreSQL table/index namespace test: A_B_CDEF_idx.dbf fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_single_tag_cdx_bytes("CDEF", "COL");
+        std::ofstream output(temp_dir / "A_B.cdx", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+    // "A_B_CDEF_idx" carries no companion .cdx of its own -- it exists
+    // purely to occupy the relation name the other table's index would
+    // otherwise collide with.
+
+    const auto result = copperfin::vfp::export_database_as_postgresql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_postgresql_sql should resolve the table/index namespace fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("CREATE TABLE \"A_B_CDEF_idx\"") != std::string::npos,
+           "export_database_as_postgresql_sql should still emit the oddly-named table itself");
+    expect(result.sql.find("CREATE INDEX \"A_B_CDEF_idx\"") == std::string::npos,
+           "export_database_as_postgresql_sql must not emit a CREATE INDEX whose name collides with an already-emitted table name");
+    expect(result.sql.find("CREATE INDEX \"A_B_CDEF_idx_2\"") != std::string::npos,
+           "export_database_as_postgresql_sql should disambiguate the index name that collides with a table name");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -5515,7 +5687,9 @@ int main() {
     test_export_database_as_postgresql_sql_maps_types_and_creates_indexes();
     test_export_database_as_postgresql_sql_omits_indexes_without_cdx();
     test_export_database_as_postgresql_sql_disambiguates_indexes_on_same_column();
+    test_export_database_as_postgresql_sql_disambiguates_indexes_within_identifier_length_limit();
     test_export_database_as_postgresql_sql_disambiguates_indexes_across_tables();
+    test_export_database_as_postgresql_sql_disambiguates_index_colliding_with_table_name();
     test_export_database_as_sqlite_sql_maps_types_and_creates_indexes();
     test_export_database_as_sqlite_sql_omits_indexes_without_cdx();
     test_export_database_as_sqlite_sql_disambiguates_indexes_across_tables();
