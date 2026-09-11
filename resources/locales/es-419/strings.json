@@ -1696,6 +1696,7 @@
   "Vfp.AccessDesign.Error.MalformedPropertyLine": "Una linea dentro de un bloque de diseno no es un marcador Begin/End reconocido ni una asignacion de propiedad bien formada.",
   "Vfp.AccessDesign.Error.MissingRootBlock": "El texto no contiene un bloque raiz Begin Form o Begin Report despues de su encabezado.",
   "Vfp.AccessDesign.Error.OpenFileFailed": "No se pudo abrir el archivo.",
+  "Vfp.AccessDesign.Error.ReadFileFailed": "Ocurrio un error al leer el contenido del archivo.",
   "Vfp.AccessDesign.Error.UnbalancedBlock": "Un bloque Begin nunca se cerro con un End correspondiente antes de que terminara el texto.",
   "Vfp.AccessDesign.Error.UnexpectedTrailingContent": "El texto continua despues del End de cierre del bloque raiz con contenido que no es una seccion CodeBehindForm.",
   "Vfp.AccessDesign.Error.UnsupportedRootType": "El tipo del bloque raiz no es Form ni Report.",

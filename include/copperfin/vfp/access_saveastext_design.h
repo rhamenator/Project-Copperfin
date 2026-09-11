@@ -82,8 +82,9 @@ namespace copperfin::vfp {
 struct AccessDesignProperty {
     std::string name;
     // The property's own value text, quotes already stripped for a
-    // string value and `""` already unescaped to `"` (see this header's
-    // own note on that inference) -- empty when `is_blob` is true.
+    // string value, with `\"` unescaped to `"` and `\\` unescaped to
+    // `\` (see this header's own note on the confirmed escaping
+    // convention above) -- empty when `is_blob` is true.
     std::string value;
     bool is_string = false;
     // True when the raw value was the literal `NotDefault` marker

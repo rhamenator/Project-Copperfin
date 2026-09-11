@@ -55,21 +55,33 @@ std::string trim_ascii(const std::string& value) {
     return value.substr(first, last - first + 1);
 }
 
-// Splits on '\n' and strips a trailing '\r' from each line (SaveAsText
-// output is CRLF-terminated on Windows) -- deliberately preserves each
-// line's own original leading/trailing whitespace otherwise, since the
-// code-behind section's exact formatting is meaningful VBA source text,
-// not just cosmetic indentation the way the structural section's is.
-std::vector<std::string> split_lines(const std::string& text) {
-    std::vector<std::string> result;
+// Splits on '\n' and strips a trailing '\r' from each returned line
+// (SaveAsText output is CRLF-terminated on Windows) for structural
+// parsing purposes -- deliberately preserves each line's own original
+// leading/trailing whitespace otherwise (needed for blob-property lines
+// to stay genuinely verbatim). `line_start_offsets[i]` is line `i`'s own
+// start offset in the *original*, untouched `text` -- used to slice the
+// code-behind section directly out of the original string, byte-exact
+// (including its own original line endings, whatever they are), rather
+// than reconstructing it by rejoining already-CR-stripped lines with a
+// fixed '\n' (which would silently normalize CRLF source to LF and
+// break the "verbatim" contract this module's own header documents).
+struct SplitLines {
+    std::vector<std::string> lines;
+    std::vector<std::size_t> line_start_offsets;
+};
+
+SplitLines split_lines(const std::string& text) {
+    SplitLines result;
     std::size_t start = 0;
     while (start <= text.size()) {
+        result.line_start_offsets.push_back(start);
         const std::size_t newline = text.find('\n', start);
         std::string line = (newline == std::string::npos) ? text.substr(start) : text.substr(start, newline - start);
         if (!line.empty() && line.back() == '\r') {
             line.pop_back();
         }
-        result.push_back(std::move(line));
+        result.lines.push_back(std::move(line));
         if (newline == std::string::npos) {
             break;
         }
@@ -192,12 +204,20 @@ bool parse_blob_lines(ParseState& state, std::vector<std::string>& out_lines, st
             error_key = "Vfp.AccessDesign.Error.UnbalancedBlock";
             return false;
         }
-        const std::string trimmed = trim_ascii(state.lines[state.index]);
-        ++state.index;
+        // The trimmed copy is used only to detect the closing `End` --
+        // the stored line itself keeps its own original leading/
+        // trailing whitespace (CR already stripped by split_lines()),
+        // so a blob's raw content stays genuinely verbatim rather than
+        // losing its own indentation, per this module's own header
+        // documentation.
+        const std::string& raw_line = state.lines[state.index];
+        const std::string trimmed = trim_ascii(raw_line);
         if (trimmed == "End") {
+            ++state.index;
             return true;
         }
-        out_lines.push_back(trimmed);
+        out_lines.push_back(raw_line);
+        ++state.index;
     }
 }
 
@@ -299,7 +319,8 @@ const AccessDesignProperty* AccessDesignControl::find_property(std::string_view 
 
 AccessDesignParseResult parse_access_saveastext_design(const std::string& text) {
     AccessDesignParseResult result;
-    const std::vector<std::string> lines = split_lines(text);
+    const SplitLines split = split_lines(text);
+    const std::vector<std::string>& lines = split.lines;
 
     std::size_t index = 0U;
     const auto parse_header_field = [&](std::string_view field_name, std::int64_t& out_value) -> bool {
@@ -359,19 +380,34 @@ AccessDesignParseResult parse_access_saveastext_design(const std::string& text) 
     }
     index = state.index;
 
+    // Blank lines between the root block's own closing `End` and
+    // whatever (if anything) follows are insignificant whitespace, the
+    // same as everywhere else in this grammar -- skip them before
+    // deciding whether what follows is a `CodeBehindForm` marker or
+    // genuinely unexpected trailing content. (A real bug this module's
+    // own review caught: checking only the single line immediately
+    // after `End` let a blank line there silently swallow either an
+    // actual trailing-content violation or, worse, an entire
+    // `CodeBehindForm` section -- dropping all of an object's own VBA
+    // source without any error.)
+    while (index < lines.size() && trim_ascii(lines[index]).empty()) {
+        ++index;
+    }
     if (index < lines.size()) {
         const std::string trimmed = trim_ascii(lines[index]);
         if (trimmed == "CodeBehindForm") {
             ++index;
-            std::string code_behind;
-            for (std::size_t line_index = index; line_index < lines.size(); ++line_index) {
-                code_behind += lines[line_index];
-                if (line_index + 1U < lines.size()) {
-                    code_behind += "\n";
-                }
-            }
-            result.code_behind = std::move(code_behind);
-        } else if (!trimmed.empty()) {
+            // Sliced directly from the original `text`, byte-exact
+            // (including whatever line endings it actually has), rather
+            // than reconstructed from already-CR-stripped lines rejoined
+            // with a fixed '\n' -- the latter would silently normalize a
+            // real CRLF-terminated export to LF, breaking this field's
+            // own "verbatim" contract (a real bug this module's own
+            // review caught).
+            result.code_behind = (index < split.line_start_offsets.size())
+                ? text.substr(split.line_start_offsets[index])
+                : std::string{};
+        } else {
             result.error = access_saveastext_design_text("Vfp.AccessDesign.Error.UnexpectedTrailingContent");
             return result;
         }
@@ -390,6 +426,11 @@ AccessDesignParseResult parse_access_saveastext_design_from_file(const std::stri
     }
     std::ostringstream buffer;
     buffer << input.rdbuf();
+    if (input.bad()) {
+        AccessDesignParseResult result;
+        result.error = access_saveastext_design_text("Vfp.AccessDesign.Error.ReadFileFailed");
+        return result;
+    }
     return parse_access_saveastext_design(buffer.str());
 }
 

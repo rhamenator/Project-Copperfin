@@ -1433,8 +1433,8 @@ void test_parse_access_saveastext_design_parses_form_control_hierarchy() {
 
     const auto* guid = result.root.find_property("GUID");
     expect(guid != nullptr && guid->is_blob && guid->blob_lines.size() == 1U &&
-               guid->blob_lines.front() == "0x47766dbfaadd694db98d5c13cfb68711",
-           "GUID should be captured as an opaque one-line blob property");
+               guid->blob_lines.front() == "        0x47766dbfaadd694db98d5c13cfb68711",
+           "GUID should be captured as an opaque one-line blob property, preserving its own original indentation verbatim");
 
     if (result.root.children.size() == 2U) {
         expect(result.root.children[0].control_type == "Label", "first child should be the Label control");
@@ -1534,6 +1534,63 @@ void test_parse_access_saveastext_design_rejects_unexpected_trailing_content() {
         "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Form\r\nEnd\r\nSomeUnexpectedTrailer\r\n";
     const auto result = copperfin::vfp::parse_access_saveastext_design(text);
     expect(!result.ok, "trailing content after the root End that isn't a CodeBehindForm marker should fail closed");
+}
+
+// PR #5556 review finding (chatgpt-codex-connector/copilot-pull-request-
+// reviewer): the original implementation examined only the single line
+// immediately following the root End; a blank line there let it silently
+// skip past genuinely unexpected trailing content without erroring.
+void test_parse_access_saveastext_design_rejects_trailing_content_after_blank_line() {
+    const std::string text =
+        "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Form\r\nEnd\r\n\r\nSomeUnexpectedTrailer\r\n";
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(
+        !result.ok,
+        "unexpected trailing content separated from the root End by a blank line should still fail closed, not be silently skipped");
+}
+
+// Same review finding, the other half: a blank line before a genuine
+// CodeBehindForm marker must not cause the whole code-behind section to
+// be silently dropped.
+void test_parse_access_saveastext_design_finds_code_behind_after_blank_line() {
+    const std::string text =
+        "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Form\r\nEnd\r\n\r\nCodeBehindForm\r\nOption Compare Database\r\n";
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(result.ok, "a blank line before CodeBehindForm should not cause a parse failure: " + result.error);
+    expect(
+        result.code_behind.find("Option Compare Database") != std::string::npos,
+        "code_behind must still be captured when a blank line separates the root End from the CodeBehindForm marker");
+}
+
+// PR #5556 review finding: code_behind must be byte-exact, including
+// its own original line endings -- reconstructing it by rejoining
+// already-CR-stripped lines with a fixed '\n' would silently convert a
+// real CRLF-terminated export to LF.
+void test_parse_access_saveastext_design_preserves_crlf_in_code_behind() {
+    const std::string text =
+        "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Form\r\nEnd\r\nCodeBehindForm\r\nLine one\r\nLine two\r\n";
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(result.ok, "fixture should parse: " + result.error);
+    expect(
+        result.code_behind == "Line one\r\nLine two\r\n",
+        "code_behind should preserve the source's own original CRLF line endings verbatim, not normalize them to LF");
+}
+
+// PR #5556 review finding: a blob property's own raw lines were being
+// stored fully whitespace-trimmed, discarding the leading/trailing
+// indentation real SaveAsText output has -- the only lossless
+// representation available for content this parser deliberately does
+// not otherwise decode.
+void test_parse_access_saveastext_design_preserves_blob_line_whitespace() {
+    const std::string text =
+        "Version =19\r\nVersionRequired =19\r\nChecksum =1\r\nBegin Form\r\n    GUID = Begin\r\n        0xABCDEF  \r\n    End\r\nEnd\r\n";
+    const auto result = copperfin::vfp::parse_access_saveastext_design(text);
+    expect(result.ok, "fixture should parse: " + result.error);
+    const auto* guid = result.root.find_property("GUID");
+    expect(guid != nullptr && guid->is_blob, "GUID should be captured as a blob property");
+    expect(
+        guid != nullptr && guid->blob_lines.size() == 1U && guid->blob_lines.front() == "        0xABCDEF  ",
+        "a blob property's own raw line should keep its original leading/trailing whitespace rather than being fully trimmed");
 }
 
 void test_access_saveastext_design_find_property_returns_null_when_absent() {
@@ -3213,6 +3270,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AccessDesign.Error.MalformedPropertyLine",
         "Vfp.AccessDesign.Error.MissingRootBlock",
         "Vfp.AccessDesign.Error.OpenFileFailed",
+        "Vfp.AccessDesign.Error.ReadFileFailed",
         "Vfp.AccessDesign.Error.UnbalancedBlock",
         "Vfp.AccessDesign.Error.UnexpectedTrailingContent",
         "Vfp.AccessDesign.Error.UnsupportedRootType",
@@ -5141,6 +5199,10 @@ int main() {
     test_parse_access_saveastext_design_rejects_malformed_property_line();
     test_parse_access_saveastext_design_rejects_unterminated_string();
     test_parse_access_saveastext_design_rejects_unexpected_trailing_content();
+    test_parse_access_saveastext_design_rejects_trailing_content_after_blank_line();
+    test_parse_access_saveastext_design_finds_code_behind_after_blank_line();
+    test_parse_access_saveastext_design_preserves_crlf_in_code_behind();
+    test_parse_access_saveastext_design_preserves_blob_line_whitespace();
     test_access_saveastext_design_find_property_returns_null_when_absent();
     test_parse_access_saveastext_design_from_file_reports_open_failure();
     test_parse_access_long_value_field_descriptor_decodes_header();
