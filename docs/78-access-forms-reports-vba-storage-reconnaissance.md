@@ -166,7 +166,7 @@ to a Form/Report/Module's own design or code storage, and no public or
 community documentation (checked: mdbtools 1.0.1's full source and
 `HACKING.md`, oletools' own explicit non-coverage) describes one.
 
-## Two real paths forward -- both require infrastructure this session cannot provide
+## Two real paths forward, as first assessed (see the 2026-09-11 update below for what actually happened)
 
 - **(a) Real Access automation**, matching how `rhamenator/access-to-
   foxpro` (see `project_copperfin_access_to_foxpro_reference` memory)
@@ -197,7 +197,95 @@ this project's clean-room discipline against guessing. This document
 records what was checked and found, so a future slice -- whichever path
 is chosen -- does not have to re-derive it.
 
-### A third, lower-cost path specific to #5478's Jet3/Jet4 hypothesis
+## Update 2026-09-11: path (a) is now verified, and it fully resolves both issues
+
+The user installed Microsoft Access 365 on a clone of the project's
+existing Windows VM (`copperfin-access365-win11`, cloned from
+`copperfin-vfp9-win11` via `virt-clone` specifically to avoid COM-
+registration conflicts between an old MSI-based Access and modern
+Click-to-Run 365) and authorized proceeding with path (a). Real,
+directly observed product behavior against a real fixture
+(`Order Entry1.mdb`, a Jet3 `.mdb`) via COM automation
+(`CreateObject("Access.Application")`, `.Visible = $false`,
+`OpenCurrentDatabase()`, `SaveAsText()`):
+
+- **`SaveAsText(acForm, "Switchboard", path)`** produced a complete,
+  human-readable, structurally nested `Begin <ObjectType> ... End` text
+  file (2080 lines) -- version/checksum header, form-level properties,
+  a `NameMap` binary blob (unrelated GUID/name-resolution bookkeeping,
+  not itself needed for structural inspection), and a fully nested
+  control tree (`Section` containing `Label`/`Rectangle`/`Image`/
+  `CommandButton`/etc., each with its own property list, `OnCurrent`/
+  `OnOpen` event bindings shown as `"[Event Procedure]"` markers). This
+  is a complete, direct answer to #5477's acceptance criteria ("control
+  hierarchy, control types, bound field references, basic layout/
+  property metadata").
+- **`SaveAsText(acReport, "Invoice", path)`** produced the identical
+  `Version`/`Checksum`/`Begin Report ... End` grammar (1421 lines,
+  same nested `Section`/control-property structure) -- reports and forms
+  share one text format, not two.
+- **`SaveAsText(acModule, "Global Code", path)`** produced the module's
+  **raw, plain VBA source code verbatim** (14 lines, e.g. `Option Compare
+  Database`, a full `Function IsLoaded(...) ... End Function` body) --
+  no wrapper, no CFB structure, no compression. This **fully resolves**
+  #5478's own open hypothesis from earlier in this document: the
+  `MSysModules2.Module` byte-diffing plan is no longer needed at all,
+  because `SaveAsText` bypasses the raw Jet/ACE storage entirely and
+  gives the VBA source directly, exactly the way `access-to-foxpro`'s
+  own `access_design.py` already uses it (per its `COPPERFIN.md` handoff
+  notes).
+
+This means: **neither #5477 nor #5478 needs any binary Jet/ACE reverse
+engineering at all.** The earlier sections of this document (page-type
+mapping, the disproven `candidate_page_number` heuristic, the
+`MSysModules2.Module`/MS-OVBA hypothesis) remain accurate as a record of
+what was checked, but are no longer the load-bearing path forward -- they
+describe a harder problem than the one that actually needs solving.
+
+### Implications for implementation architecture
+
+Copperfin's forms/reports/VBA inspection for Access sources should be
+built on `Application.SaveAsText`'s text output, not on raw container
+parsing:
+
+- This is a genuine, real dependency this codebase has not had before:
+  a Windows machine with a licensed Access installation reachable at the
+  time of import. Every other Access slice shipped so far
+  (#5476/#5539/#5549/#5551) reads raw bytes with zero external
+  dependencies. This slice cannot avoid that dependency -- there is no
+  other way to reach this data (see the "central finding" above) -- so
+  the design should isolate it cleanly: a small, separately invoked
+  automation step (a PowerShell/VBScript helper, matching this
+  project's existing "shell out to an external interpreter" precedent
+  already used for its polyglot Python/.NET/R sidecars) produces the
+  `SaveAsText` output files, and Copperfin's own portable C++ code parses
+  *those already-produced text files* -- keeping the COM-automation
+  dependency confined to one narrow, replaceable step, and the actual
+  parsing logic portable and independently testable without Access
+  installed anywhere.
+- The `SaveAsText` text grammar itself (`Begin <Type> ... End`,
+  indented property assignments, nested blocks) is not an officially
+  published Microsoft specification, but it is directly, repeatedly
+  observable from a real licensed installation -- exactly the "observed
+  product behavior" evidence category `docs/07`/`docs/66` already treat
+  as legitimate, and the same standard the CDX writer's real-VFP9
+  verification (`docs/77`) relied on. Parsing it is a clean-room text-
+  grammar problem, not a binary reverse-engineering problem -- a much
+  more tractable and independently verifiable task (more fixtures can be
+  generated on demand from the real installation to check any parsing
+  hypothesis, unlike the binary investigation above, which had no
+  oracle to check guesses against).
+- `NameMap` and other embedded binary blobs inside the text (GUID/name-
+  resolution bookkeeping) can be treated as opaque/skipped for a first
+  slice -- #5477's own acceptance criteria (control hierarchy, control
+  types, basic properties) does not require decoding them.
+
+### A third, lower-cost path specific to #5478's Jet3/Jet4 hypothesis (superseded, kept for the record)
+
+**Superseded by the 2026-09-11 update above** -- `SaveAsText` gives the
+VBA source directly, so this byte-diffing plan is no longer needed.
+Kept here only as a record of a path that was considered before real
+Access automation became available.
 
 Because #5478's Jet3/Jet4 lead is at least narrowed to one candidate
 column (`MSysModules2.Module`, see above) rather than being completely
