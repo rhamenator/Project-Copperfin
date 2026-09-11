@@ -1,3 +1,50 @@
+- 2026-09-11: Progress on #5477/#5478 (parent #138): `run_access_saveastext_export()`
+  (`include/copperfin/vfp/access_saveastext_export.h`,
+  `src/vfp/access_saveastext_export.cpp`) wires
+  `samples/access-saveastext-export/export_access_design.ps1` into
+  Copperfin's own C++ runtime with the same external-process admission
+  treatment `samples/polyglot-python-sidecar/` already has: the
+  PowerShell host is authorized by physical location
+  (`authorize_external_process()`, deliberately not digest-pinned, since
+  it is a well-known OS-shipped executable that changes with every
+  servicing update), the checked-in script is admitted with a pinned
+  lowercase SHA-256 digest under one explicit physical root
+  (`admit_polyglot_supporting_artifact()`), both are revalidated
+  immediately before launch, the script's own revalidated resolved path
+  lands at a fixed argument position, the child process receives a
+  complete explicit environment (no ambient host/agent variables), and
+  `manifest.json` is read back into a structured result -- populated
+  even on a partial-failure exit so a caller can see exactly which
+  object(s) failed, distinct from a failure before any manifest was ever
+  written.
+
+  Genuinely tested end-to-end against the real, checked-in script via a
+  real local PowerShell process (`tests/test_access_saveastext_export.cpp`,
+  gated on a locally discovered PowerShell host, matching the existing
+  `test_polyglot_r_sidecar.cpp` optional-interpreter pattern): a run
+  against a nonexistent source database proves the script's own
+  existence check fails first with no output directory ever created; a
+  run against a real-but-fake database file proves the output directory
+  *is* created and real Access automation genuinely fails (unavailable
+  in this environment) before any manifest is written -- both prove the
+  admission-and-launch mechanics work correctly without needing a
+  licensed Access installation. Three further synthetic-script cases
+  (still real process launches, just not the production script) prove
+  full-success manifest parsing, partial-failure manifest exposure, and
+  fail-closed behavior on a malformed manifest. Two admission fail-closed
+  cases (tampered-script digest mismatch, script outside its allowed
+  root) and one invalid-request case round out the coverage.
+
+  Does not close either issue -- no single function yet combines this
+  export step with `parse_access_saveastext_design_from_file()` into one
+  coherent structural-inspection/VBA-extraction result, no PRG-level
+  command surface exists (`#5517`'s own `IMPORT DATABASE` wizard remains
+  unbuilt), no VBA-classification/aggregation logic exists for #5478
+  specifically, and a genuine real-Access end-to-end run remains
+  outstanding. `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MIGRATION-010` added; `docs/78-access-forms-reports-vba-storage-reconnaissance.md`
+  updated with this milestone.
+
 - 2026-09-11: PR review (chatgpt-codex-connector and
   copilot-pull-request-reviewer) on the `EXPORT DATABASE ... TYPE
   SQLSERVER` PR (#5554) surfaced four real gaps, all fixed in the same

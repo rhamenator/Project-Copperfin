@@ -345,6 +345,40 @@ parsing:
   slice -- #5477's own acceptance criteria (control hierarchy, control
   types, basic properties) does not require decoding them.
 
+### Update 2026-09-11 (continued): the external-process admission step landed
+
+The "implications for implementation architecture" section above named
+the remaining piece: a small, separately invoked automation step, given
+the same external-process admission treatment
+`samples/polyglot-python-sidecar/` already has (pinned digest, admitted
+root, revalidation). That piece now exists --
+`run_access_saveastext_export()`
+(`include/copperfin/vfp/access_saveastext_export.h`,
+`src/vfp/access_saveastext_export.cpp`) admits and revalidates both the
+PowerShell host (by physical location, `authorize_external_process()` --
+not digest-pinned, since it is a well-known OS-shipped executable that
+changes with every servicing update) and the checked-in
+`export_access_design.ps1` script (digest-pinned,
+`admit_polyglot_supporting_artifact()`), launches it with the script's
+own revalidated resolved path bound to a fixed argument position, and
+reads back the `manifest.json` it writes.
+
+This is genuinely tested end-to-end against the real, checked-in
+script and a real local PowerShell process -- including a run against a
+real-but-fake database file that gets far enough to create the output
+directory before real Access automation itself (unavailable in this
+development environment) fails, proving the admission-and-launch
+mechanics work without needing a licensed Access installation to verify
+them. It does **not** close either #5477 or #5478 on its own: no single
+function yet combines this export step with
+`parse_access_saveastext_design_from_file()` into one coherent per-
+database structural-inspection or VBA-extraction result, no PRG-level
+command surface exists (`#5517`'s own `IMPORT DATABASE` wizard remains
+unbuilt), no VBA-classification/aggregation logic exists for #5478
+specifically, and a genuine real-Access end-to-end run (this session's
+own environment has no licensed Windows Access installation) remains
+outstanding.
+
 ### A third, lower-cost path specific to #5478's Jet3/Jet4 hypothesis (superseded, kept for the record)
 
 **Superseded by the 2026-09-11 update above** -- `SaveAsText` gives the

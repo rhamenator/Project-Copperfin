@@ -342,6 +342,25 @@ add_test(
 
 find_program(COPPERFIN_PYTHON3_EXECUTABLE NAMES python3 python)
 find_program(COPPERFIN_RSCRIPT_EXECUTABLE NAMES Rscript Rscript.exe)
+find_program(COPPERFIN_POWERSHELL_EXECUTABLE NAMES pwsh pwsh.exe powershell powershell.exe)
+if(COPPERFIN_POWERSHELL_EXECUTABLE AND COPPERFIN_POWERSHELL_EXECUTABLE MATCHES "^/snap/bin/")
+    # A snap-installed pwsh's /snap/bin/ alias is a symlink chain that
+    # terminates at /usr/bin/snap, a single multiplexed dispatcher binary
+    # that reads its own invocation path/argv[0] to decide which snap
+    # app to run -- fully resolving that chain (as
+    # authorize_external_process()'s own weakly_canonical() containment
+    # check does) launches the dispatcher directly with PowerShell's own
+    # CLI flags, which it rejects as unrecognized snap-CLI syntax. The
+    # real, standalone ELF binary snap mounts underneath does not have
+    # this problem; prefer it here when present, purely a local snap-
+    # packaging accommodation for this test's own PowerShell discovery,
+    # not a change to any admission/execution code under test.
+    file(GLOB COPPERFIN_SNAP_POWERSHELL_REAL_BINARY
+        "/snap/powershell/*/opt/powershell/pwsh")
+    if(COPPERFIN_SNAP_POWERSHELL_REAL_BINARY)
+        list(GET COPPERFIN_SNAP_POWERSHELL_REAL_BINARY -1 COPPERFIN_POWERSHELL_EXECUTABLE)
+    endif()
+endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/CopperfinRscriptDiscovery.cmake)
 copperfin_select_rscript_executable(
     "${COPPERFIN_RSCRIPT_EXECUTABLE}"
@@ -4870,6 +4889,18 @@ if(COPPERFIN_RSCRIPT_EXECUTABLE)
         COPPERFIN_POLYGLOT_R_SIDECAR_PATH="${CMAKE_SOURCE_DIR}/samples/polyglot-r-sidecar/candidate.R"
     )
     set_tests_properties(test_polyglot_r_sidecar PROPERTIES TIMEOUT 45)
+endif()
+
+if(COPPERFIN_POWERSHELL_EXECUTABLE)
+    copperfin_add_test(test_access_saveastext_export
+        "cf_vfp_assets;cf_security;cf_platform_profile;cf_platform_support"
+        test_access_saveastext_export.cpp
+    )
+    target_compile_definitions(test_access_saveastext_export PRIVATE
+        COPPERFIN_POLYGLOT_POWERSHELL_EXECUTABLE="${COPPERFIN_POWERSHELL_EXECUTABLE}"
+        COPPERFIN_ACCESS_SAVEASTEXT_EXPORT_SCRIPT_PATH="${CMAKE_SOURCE_DIR}/samples/access-saveastext-export/export_access_design.ps1"
+    )
+    set_tests_properties(test_access_saveastext_export PROPERTIES TIMEOUT 60)
 endif()
 
 copperfin_add_test(test_polyglot_route_execution
