@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
-#include "copperfin/platform/executable_path.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/security/sha256.h"
 #include "copperfin/vfp/access_saveastext_export.h"
@@ -428,13 +427,21 @@ int main() {
         return 1;
     }
 
+    // Matches test_polyglot_r_sidecar.cpp's own resolution exactly --
+    // CMake's find_program() already returns an absolute path, so no
+    // further PATH-search resolution is needed or appropriate here.
+    // fs::canonical() alone still resolves through any symlink the
+    // discovered path itself is.
     std::error_code error;
     const fs::path powershell = fs::canonical(
-        copperfin::platform::resolve_executable_invocation_path(
-            COPPERFIN_POLYGLOT_POWERSHELL_EXECUTABLE),
-        error);
-    expect(!error && fs::is_regular_file(powershell),
-           "the configured PowerShell host should resolve to a regular file");
+        fs::path(COPPERFIN_POLYGLOT_POWERSHELL_EXECUTABLE), error);
+    const bool powershell_resolved = !error && fs::is_regular_file(powershell);
+    expect(powershell_resolved, "the configured PowerShell host should resolve to a regular file");
+    if (!powershell_resolved) {
+        std::cerr << "configured path: " << COPPERFIN_POLYGLOT_POWERSHELL_EXECUTABLE
+                   << "\ncanonical result: " << powershell.string()
+                   << "\nerror: " << error.message() << '\n';
+    }
 
     const fs::path root = unique_root();
     fs::create_directories(root, error);
@@ -448,7 +455,7 @@ int main() {
         error);
     expect(!error, "the checked-in export script should copy into its admitted root");
 
-    if (!error) {
+    if (powershell_resolved && !error) {
         test_real_script_missing_database_fails_before_any_output(powershell, script, root);
         test_real_script_unavailable_access_automation_fails_closed(powershell, script, root);
         test_admission_rejects_tampered_script(powershell, script, root);
