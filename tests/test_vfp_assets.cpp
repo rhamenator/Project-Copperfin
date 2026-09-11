@@ -4464,6 +4464,282 @@ void test_export_database_as_postgresql_sql_disambiguates_index_colliding_with_t
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_export_database_as_sqlserver_sql_maps_types_and_creates_indexes() {
+    // #5554 (parent #137, third vendor-dialect slice, following #5537's
+    // PostgreSQL and #5558's SQLite precedent): real SQL Server 2022
+    // (Developer Edition, verified against a local container during
+    // this issue's own development) directly confirmed to accept this
+    // exact dialect -- square-bracket identifiers, single-quoted string
+    // literals, and DECIMAL/MONEY/INT/FLOAT/BIT/DATE/DATETIME2/
+    // VARCHAR(length)/VARCHAR(MAX) column types -- loading a
+    // representative CREATE TABLE/INSERT/CREATE INDEX script shaped
+    // exactly like this exporter's own output without error, including
+    // a cross-table JOIN returning the correct row. This test proves the
+    // same genuinely new piece #5537's own sibling test proves (CREATE
+    // INDEX statements derived from a table's production CDX tags,
+    // correctly distinguishing a plain column reference from a
+    // composite expression), plus the BIT column's 1/0 literal
+    // requirement: real T-SQL rejects `INSERT ... VALUES (TRUE)` with
+    // "Invalid column name 'TRUE'" (T-SQL has no boolean-literal syntax
+    // outside a predicate context), directly confirmed against the same
+    // real engine.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sqlserver_sql_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "customers.dbf";
+    const fs::path cdx_path = temp_dir / "customers.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"DATABASE", "Sales", "", ""}, {"TABLE", "customers", "Sales", ""}});
+    expect(dbc_create.ok, "SQL Server export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "CUST_ID", .type = 'N', .offset = 1U, .length = 6U, .decimal_count = 0U},
+        {.name = "COMPANY", .type = 'C', .offset = 7U, .length = 40U, .decimal_count = 0U},
+        {.name = "ACTIVE", .type = 'L', .offset = 47U, .length = 1U, .decimal_count = 0U},
+        {.name = "BALANCE", .type = 'Y', .offset = 48U, .length = 8U, .decimal_count = 4U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{"1001", "Acme Corp", "T", "123.45"}});
+    expect(table_create.ok, "SQL Server export test: DBF fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_cdx_bytes_for_postgresql_index_test();
+        std::ofstream output(cdx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_sqlserver_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_sqlserver_sql should resolve the customers fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("EXPORT DATABASE ... TYPE SQLSERVER") != std::string::npos,
+           "export_database_as_sqlserver_sql should label its own header comment as a SQL Server export");
+    expect(result.sql.find("CREATE TABLE [customers]") != std::string::npos,
+           "export_database_as_sqlserver_sql should quote identifiers with square brackets, matching real T-SQL");
+    expect(result.sql.find("[CUST_ID] DECIMAL(6, 0)") != std::string::npos,
+           "export_database_as_sqlserver_sql should map a numeric field to DECIMAL, a real T-SQL type");
+    expect(result.sql.find("[COMPANY] VARCHAR(40)") != std::string::npos,
+           "export_database_as_sqlserver_sql should map a character field to VARCHAR(length)");
+    expect(result.sql.find("[ACTIVE] BIT") != std::string::npos,
+           "export_database_as_sqlserver_sql should map a logical field to BIT, since T-SQL has no BOOLEAN type");
+    expect(result.sql.find("[BALANCE] MONEY") != std::string::npos,
+           "export_database_as_sqlserver_sql should map VFP currency to MONEY, an exact match for its own 4-decimal-digit scale");
+    expect(result.sql.find("INSERT INTO [customers]") != std::string::npos,
+           "export_database_as_sqlserver_sql should emit an INSERT for the table's row");
+    expect(result.sql.find("'Acme Corp'") != std::string::npos,
+           "export_database_as_sqlserver_sql should quote a character value as a standard SQL string literal");
+    expect(result.sql.find("(1001, 'Acme Corp', 1, 123.45)") != std::string::npos ||
+               result.sql.find(", 1, 123.4500)") != std::string::npos,
+           "export_database_as_sqlserver_sql should emit 1 (not the TRUE keyword) for a true logical value");
+    expect(result.sql.find("TRUE") == std::string::npos && result.sql.find("FALSE") == std::string::npos,
+           "export_database_as_sqlserver_sql must never emit the TRUE/FALSE keywords, which real T-SQL rejects in a VALUES list");
+
+    expect(result.sql.find("CREATE INDEX [customers_CUST_ID_idx] ON [customers] ([CUST_ID]);") != std::string::npos,
+           "export_database_as_sqlserver_sql should emit a CREATE INDEX for a tag whose key expression is a plain column reference");
+    expect(result.sql.find("-- skipped index") != std::string::npos &&
+               result.sql.find("COMPANY_N") != std::string::npos,
+           "export_database_as_sqlserver_sql should report a composite-expression tag as a skipped index, not silently drop or mistranslate it");
+    expect(result.sql.find("UPPER(company_name)") == std::string::npos,
+           "export_database_as_sqlserver_sql must never emit a raw VFP key expression as if it were valid T-SQL syntax");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_sqlserver_sql_omits_indexes_without_cdx() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sqlserver_sql_no_cdx_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "SQL Server no-CDX export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "SKU", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"W-1"}});
+    expect(table_create.ok, "SQL Server no-CDX export test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_sqlserver_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_sqlserver_sql should succeed without a companion CDX: " + result.error);
+    expect(result.sql.find("CREATE TABLE [widgets]") != std::string::npos,
+           "export_database_as_sqlserver_sql should still emit the table without any index information");
+    expect(result.sql.find("CREATE INDEX") == std::string::npos,
+           "export_database_as_sqlserver_sql should not emit any CREATE INDEX when no companion CDX exists");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// Unlike PostgreSQL and SQLite (#5559, #5558), a real SQL Server 2022
+// engine directly confirmed during this issue's own development that
+// T-SQL index names are scoped *per table*, not schema-wide: two
+// different tables can each carry an index of the identical name with
+// no error. This is a positive test locking in that real, verified
+// divergence -- table "A_B"'s tag "CDEF" and table "A"'s tag "B_CDEF"
+// would collide under #5559's cross-table disambiguation on the other
+// two dialects, but on SQL Server both must emit the exact same
+// "A_B_CDEF_idx" name unchanged, since each is scoped to its own table.
+void test_export_database_as_sqlserver_sql_allows_identical_index_name_across_tables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sqlserver_sql_same_name_across_tables_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "A_B", ""}, {"TABLE", "A", ""}});
+    expect(dbc_create.ok, "SQL Server same-name-across-tables test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table1_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A_B.dbf").string(), table_fields, {{"x"}});
+    expect(table1_create.ok, "SQL Server same-name-across-tables test: A_B.dbf fixture should be created");
+    const auto table2_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A.dbf").string(), table_fields, {{"y"}});
+    expect(table2_create.ok, "SQL Server same-name-across-tables test: A.dbf fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_single_tag_cdx_bytes("CDEF", "COL");
+        std::ofstream output(temp_dir / "A_B.cdx", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+    {
+        const auto cdx_bytes = make_synthetic_single_tag_cdx_bytes("B_CDEF", "COL");
+        std::ofstream output(temp_dir / "A.cdx", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_sqlserver_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_sqlserver_sql should resolve the same-name-across-tables fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("CREATE INDEX [A_B_CDEF_idx] ON [A_B] ([COL]);") != std::string::npos,
+           "export_database_as_sqlserver_sql should emit the first table's own naturally-derived index name unchanged");
+    expect(result.sql.find("CREATE INDEX [A_B_CDEF_idx] ON [A] ([COL]);") != std::string::npos,
+           "export_database_as_sqlserver_sql should also emit the identical index name unchanged for the second table -- real SQL Server scopes index names per table, not schema-wide");
+    expect(result.sql.find("CREATE INDEX [A_B_CDEF_idx_2]") == std::string::npos,
+           "export_database_as_sqlserver_sql must not disambiguate a cross-table index name that real SQL Server does not actually collide on");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// Unlike PostgreSQL's silent truncation, a real SQL Server 2022 engine
+// directly confirmed during this issue's own development that it
+// *rejects* (error 103) any identifier over 128 characters outright --
+// so this exporter must never construct one. A 125-character table name
+// with two tags ("TAG1"/"TAG2") on the same column produces raw
+// candidates that are identical for their first 128 bytes (index 128 is
+// where "TAG1"/"TAG2" first differ), exercising the one collision that
+// *can* still occur under SQL Server's real per-table scoping:
+// truncation erasing the tag-derived suffix entirely when the table
+// name alone is already at or beyond the limit.
+void test_export_database_as_sqlserver_sql_disambiguates_indexes_within_identifier_length_limit() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sqlserver_sql_identifier_length_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::string long_table_name(125U, 'A');
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
+    const fs::path cdx_path = temp_dir / (long_table_name + ".cdx");
+    // OBJECTNAME must be wide enough to hold the 125-byte long_table_name
+    // itself (unlike the postgres/sqlite 63-byte-limit sibling tests,
+    // whose 60-byte table name fit the usual 64-byte OBJECTNAME field).
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 150U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 167U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", long_table_name, ""}});
+    expect(dbc_create.ok, "SQL Server identifier-length test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"x"}});
+    expect(table_create.ok, "SQL Server identifier-length test: DBF fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_two_tag_cdx_bytes("TAG1", "TAG2", "COL");
+        std::ofstream output(cdx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_sqlserver_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_sqlserver_sql should resolve the identifier-length fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    // First candidate truncates to exactly 128 bytes: the 125 'A's plus
+    // "_TA" (the two characters after the underscore "TAG1"/"TAG2" still
+    // share before diverging at what would be index 128).
+    const std::string first_truncated = long_table_name + "_TA";
+    expect(first_truncated.size() == 128U,
+           "test fixture sanity: the first truncated candidate should be exactly 128 bytes");
+    expect(result.sql.find("CREATE INDEX [" + first_truncated + "]") != std::string::npos,
+           "export_database_as_sqlserver_sql should truncate the first candidate to SQL Server's 128-byte identifier limit");
+
+    const std::string second_suffixed = long_table_name + "__2";
+    expect(second_suffixed.size() == 128U,
+           "test fixture sanity: the disambiguated second candidate should still be exactly 128 bytes");
+    expect(result.sql.find("CREATE INDEX [" + second_suffixed + "]") != std::string::npos,
+           "export_database_as_sqlserver_sql should reserve room for the disambiguating suffix within the 128-byte limit");
+    expect(result.sql.find("CREATE INDEX [" + first_truncated + "]", result.sql.find("CREATE INDEX [" + first_truncated + "]") + 1U)
+               == std::string::npos,
+           "export_database_as_sqlserver_sql must never emit the exact same truncated index name twice on the same table");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_access_sql_maps_currency_datetime_and_dates() {
     // #5475: export_database_as_access_sql() shares export_database_as_sql()'s
     // catalog/table-walking logic but swaps in the Access/Jet SQL dialect --
@@ -5692,6 +5968,10 @@ int main() {
     test_export_database_as_postgresql_sql_disambiguates_index_colliding_with_table_name();
     test_export_database_as_sqlite_sql_maps_types_and_creates_indexes();
     test_export_database_as_sqlite_sql_omits_indexes_without_cdx();
+    test_export_database_as_sqlserver_sql_maps_types_and_creates_indexes();
+    test_export_database_as_sqlserver_sql_omits_indexes_without_cdx();
+    test_export_database_as_sqlserver_sql_allows_identical_index_name_across_tables();
+    test_export_database_as_sqlserver_sql_disambiguates_indexes_within_identifier_length_limit();
     test_export_database_as_sqlite_sql_disambiguates_indexes_across_tables();
     test_export_database_as_access_sql_maps_currency_datetime_and_dates();
     test_export_database_as_access_sql_escapes_bracket_in_identifier();

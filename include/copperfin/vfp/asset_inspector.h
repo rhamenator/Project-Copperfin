@@ -278,6 +278,59 @@ struct DatabaseSqlExportResult {
     const std::string& dbc_path,
     std::size_t max_rows_per_table = 0U);
 
+// #5554 (parent #137, third vendor-dialect slice -- Microsoft SQL Server,
+// following #5537/PR #5545's PostgreSQL precedent and #5558's SQLite
+// slice): its own dedicated code path (not an alias to any other
+// exporter), matching "one TYPE <VENDOR> variant per target engine."
+// T-SQL's dialect diverges from the portable/ANSI-ish baseline enough
+// that this exporter does not reuse write_sql_tables_and_data() at all
+// (the same reason export_database_as_access_sql() has its own inline
+// loop rather than sharing it): square-bracket `[identifier]` quoting
+// (doubling an embedded `]`, matching export_database_as_access_sql()'s
+// own bracket-escaping convention, per Microsoft's own public
+// "Delimited Identifiers" T-SQL reference), MONEY for VFP currency
+// (an exact match for VFP's own fixed 4-decimal-digit scaled-integer
+// semantics, the same reasoning export_database_as_access_sql() applies
+// to its CURRENCY choice), BIT for logical (T-SQL has no BOOLEAN type,
+// and -- unlike this codebase's other three dialects, which all accept
+// the TRUE/FALSE keyword -- a BIT column's literal must be 1/0; T-SQL
+// has no TRUE/FALSE literal syntax at all outside a boolean predicate
+// context), DATE/DATETIME2 for VFP date/datetime (DATETIME2 specifically,
+// Microsoft's own documented modern replacement for the legacy DATETIME
+// type), VARCHAR(length) for character fields, and VARCHAR(MAX) --
+// rather than the deprecated TEXT type -- for memo/general/picture and
+// any other unrecognized storage type, again per Microsoft's own public
+// documentation that TEXT is deprecated in favor of VARCHAR(MAX). Adds
+// the same CREATE INDEX generation export_database_as_postgresql_sql()
+// already implements (T-SQL's own CREATE INDEX syntax is identical to
+// PostgreSQL's for this exporter's plain-column-reference case), with
+// index-name disambiguation (disambiguate_index_name(), #5559) scoped to
+// SQL Server's own 128-character identifier limit -- a materially
+// different (and, unlike PostgreSQL's own silent-truncation behavior,
+// hard-*rejecting*) limit from PostgreSQL's 63-byte one. Unlike
+// PostgreSQL and SQLite, though, that disambiguation set is scoped *per
+// table*, not across the whole export: directly confirmed against a
+// real local SQL Server 2022 engine that, unlike PostgreSQL/SQLite's
+// schema-wide relation namespace (#5559), T-SQL index names only have
+// to be unique within their own table -- two different tables can carry
+// an identically-named index, and a table can share a name with an
+// unrelated table's own index, with no error either way. Both this and
+// the 128-character limit were directly confirmed against a real local
+// SQL Server 2022 (Developer Edition) engine during this issue's own
+// development, alongside this exporter's exact planned CREATE TABLE/
+// INSERT/CREATE INDEX shape (bracket identifiers, MONEY/BIT/DATE/
+// DATETIME2/VARCHAR(MAX) types, 1/0 boolean literals, `]]`-escaped
+// embedded bracket in an identifier, and a cross-table JOIN returning
+// the correct joined row) -- not just syntax acceptance, but genuine
+// relational query correctness against the real target engine, matching
+// the verification bar #5554's own SQLite slice established. Tables are
+// resolved the same way
+// export_database_as_sql() resolves them; max_rows_per_table has the
+// same meaning.
+[[nodiscard]] DatabaseSqlExportResult export_database_as_sqlserver_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table = 0U);
+
 // ---- Whole-database JSON import planning ----
 
 // A validated, in-memory description of a version-1 export snapshot. The

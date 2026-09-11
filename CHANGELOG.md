@@ -1,3 +1,51 @@
+- 2026-09-11: Progress on #5554 (parent #137): `EXPORT DATABASE ... TYPE
+  SQLSERVER` (`export_database_as_sqlserver_sql()`,
+  `src/vfp/asset_inspector.cpp`) is the third vendor-dialect slice of
+  #141's real-target-engine `EXPORT DATABASE` family, following #5537's
+  PostgreSQL and #5558's SQLite precedent. Its own dedicated code path
+  entirely (not a reuse of `write_sql_tables_and_data()` at all, the
+  same reason `TYPE ACCESS` has its own inline loop): square-bracket
+  `[identifier]` quoting, `MONEY` for VFP currency, `BIT` for logical
+  (with `1`/`0` literals -- T-SQL has no `TRUE`/`FALSE` literal syntax,
+  unlike the other three dialects), `DATE`/`DATETIME2` for date/
+  datetime, `VARCHAR(length)`/`VARCHAR(MAX)` for character/memo fields
+  (not the deprecated `TEXT` type), plus the same `CREATE INDEX`
+  derivation from production `.cdx` tags the PostgreSQL/SQLite slices
+  already implement. Directly verified against a real local SQL Server
+  2022 (Developer Edition) engine, run via a local Docker container for
+  this issue's own development: the exact planned dialect loaded and
+  queried correctly (including a cross-table `JOIN`); `INSERT ...
+  VALUES (TRUE)` was directly confirmed to fail on real T-SQL,
+  motivating the `1`/`0` literal choice; and this exporter's own actual
+  generated output for a representative two-table fixture loaded with
+  zero errors.
+
+  Two real, materially different dialect facts were discovered and
+  built into the implementation from the start rather than copied
+  blind from the PostgreSQL/SQLite precedent: (1) SQL Server's own
+  identifier limit is 128 characters, not PostgreSQL's 63, and a real
+  SQL Server *rejects* (error 103) an over-length identifier outright
+  rather than silently truncating it -- directly confirmed empirically
+  before writing any disambiguation code. (2) Unlike PostgreSQL and
+  SQLite, T-SQL index names are scoped *per table*, not schema-wide --
+  directly confirmed empirically (two different tables may carry an
+  identically-named index, and a table may share a name with an
+  unrelated table's own index, both with no error) -- so
+  `write_sqlserver_create_indexes()` deliberately does *not* thread a
+  whole-export disambiguation set the way the PostgreSQL/SQLite
+  exporters do (#5559); it keeps a fresh per-table set instead, scoped
+  to the one collision that can actually occur (truncation erasing a
+  tag-derived suffix when a table name alone is already at or beyond
+  128 bytes).
+
+  New regression tests include a positive case proving two different
+  tables may emit the identical index name unchanged (the deliberate
+  inverse of #5559's own PostgreSQL/SQLite disambiguation), and a
+  128-byte identifier-length truncation case mirroring #5559's own
+  63-byte one. `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-009` added. Does not close #5554 -- Oracle and
+  MySQL remain open follow-ups within that same issue.
+
 - 2026-09-11: Fixes #5559: `write_postgresql_create_indexes()`
   (`src/vfp/asset_inspector.cpp`) had the identical cross-table
   `CREATE INDEX` name collision fixed for `TYPE SQLITE` in the #5558

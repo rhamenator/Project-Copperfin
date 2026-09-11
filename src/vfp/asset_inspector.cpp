@@ -1939,6 +1939,75 @@ std::string access_column_type(char field_type, std::uint8_t length, std::uint8_
     }
 }
 
+// #5554: T-SQL identifier quoting for export_database_as_sqlserver_sql() --
+// square brackets, per Microsoft's own public "Delimited Identifiers"
+// T-SQL reference. Kept as its own dedicated function rather than an
+// alias for access_quote_identifier() (even though the escaping rule is
+// byte-identical), matching this file's own established per-vendor
+// precedent, so a future SQL-Server-specific divergence has somewhere to
+// go without touching Access's own code path. Directly confirmed against
+// a real local SQL Server 2022 engine: an identifier containing an
+// embedded "]", doubled per this function's own escaping, round-tripped
+// through CREATE TABLE and back out of sys.tables unchanged.
+std::string sqlserver_quote_identifier(const std::string& name) {
+    std::string quoted = "[";
+    for (const char character : name) {
+        if (character == ']') {
+            quoted += "]]";
+        } else {
+            quoted += character;
+        }
+    }
+    quoted += "]";
+    return quoted;
+}
+
+// Maps a DBF field descriptor to a T-SQL native column type, grounded in
+// Microsoft's own public T-SQL data-type reference (not the ANSI-ish
+// vocabulary sql_column_type() emits, nor Access/Jet's -- T-SQL has its
+// own distinct type names and quirks). 'Y' (VFP currency) maps to
+// MONEY, an exact match for VFP currency's own fixed 4-decimal-digit
+// scaled-integer semantics (mirroring why export_database_as_access_sql()
+// picks Access's own CURRENCY type over a DECIMAL approximation). 'L'
+// (logical) maps to BIT -- T-SQL has no BOOLEAN type. 'T' (VFP
+// datetime) maps to DATETIME2, Microsoft's own documented modern
+// replacement for the legacy DATETIME type. The memo/general/picture
+// and any-other-unrecognized fallback maps to VARCHAR(MAX) rather than
+// the legacy TEXT type, which Microsoft's own documentation marks
+// deprecated in favor of VARCHAR(MAX)/NVARCHAR(MAX)/VARBINARY(MAX).
+// Directly confirmed against a real local SQL Server 2022 engine: a
+// CREATE TABLE using every one of these exact type names, followed by
+// INSERT statements exercising each, loaded and queried back correctly.
+std::string sqlserver_column_type(char field_type, std::uint8_t length, std::uint8_t decimal_count) {
+    const char normalized = static_cast<char>(std::toupper(static_cast<unsigned char>(field_type)));
+    switch (normalized) {
+        case 'N':
+        case 'F':
+            return "DECIMAL(" + std::to_string(length > 0U ? length : 1U) + ", " +
+                std::to_string(decimal_count) + ")";
+        case 'Y':
+            return "MONEY";
+        case 'I':
+            return "INT";
+        case 'B':
+            // T-SQL's bare FLOAT defaults to FLOAT(53) -- IEEE double
+            // precision, matching VFP's own 'B' (double) field width.
+            return "FLOAT";
+        case 'L':
+            return "BIT";
+        case 'D':
+            return "DATE";
+        case 'T':
+            return "DATETIME2";
+        case 'C':
+        case 'V':
+            return "VARCHAR(" + std::to_string(length > 0U ? length : 255U) + ")";
+        default:
+            // M, G, P, and any other/unrecognized storage type.
+            return "VARCHAR(MAX)";
+    }
+}
+
 // Strips C0 control characters (CR/LF in particular) from text destined for
 // a single-line "-- ..." SQL comment. export_database_as_sql()'s database
 // name and source path both come from data an untrusted/crafted DBC could
@@ -2567,6 +2636,179 @@ void write_sqlite_create_indexes(
     }
 }
 
+// #5554: T-SQL's dialect diverges from the portable/ANSI-ish baseline
+// write_sql_tables_and_data() emits enough that this exporter does not
+// reuse it at all (the same reason export_database_as_access_sql() has
+// its own inline loop) -- bracket identifiers and T-SQL-native column
+// types via sqlserver_quote_identifier()/sqlserver_column_type(), and
+// (the one INSERT-value-encoding difference from the shared writer) a
+// BIT column's logical literal must be 1/0, not the TRUE/FALSE keyword
+// the other three dialects all accept -- directly confirmed against a
+// real local SQL Server 2022 engine: `INSERT ... VALUES (TRUE)` fails
+// with "Invalid column name 'TRUE'" (T-SQL has no boolean-literal syntax
+// outside a predicate context), while 1/0 loads and round-trips
+// correctly. Kept as its own dedicated function per this file's
+// established per-vendor precedent. Returns every successfully-parsed
+// table the same way write_sql_tables_and_data() does, so
+// write_sqlserver_create_indexes() doesn't have to re-open and re-parse
+// the same .dbf a second time.
+std::vector<ParsedSqlExportTable> write_sqlserver_tables_and_data(
+    std::ostringstream& sql,
+    const DatabaseCatalogSnapshot& snapshot,
+    std::size_t row_limit) {
+    std::vector<ParsedSqlExportTable> parsed_tables;
+    for (const auto& rt : snapshot.resolved_tables) {
+        DbfTableParseResult tbl = parse_dbf_table_from_file(
+            copperfin::platform::path_to_utf8_string(rt.path), row_limit);
+        if (!tbl.ok) {
+            sql << "-- skipped table " << sql_sanitize_comment_text(rt.name) << ": "
+                << sql_sanitize_comment_text(tbl.error) << "\n\n";
+            continue;
+        }
+
+        const std::string quoted_table = sqlserver_quote_identifier(rt.name);
+        sql << "CREATE TABLE " << quoted_table << " (\n";
+        for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
+            const auto& fld = tbl.table.fields[fi];
+            const bool last_field = (fi + 1U == tbl.table.fields.size());
+            sql << "    " << sqlserver_quote_identifier(fld.name) << " "
+                << sqlserver_column_type(fld.type, fld.length, fld.decimal_count)
+                << (last_field ? "\n" : ",\n");
+        }
+        sql << ");\n\n";
+
+        for (const auto& rec : tbl.table.records) {
+            if (rec.deleted) {
+                continue;
+            }
+            sql << "INSERT INTO " << quoted_table << " (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                sql << sqlserver_quote_identifier(rec.values[vi].field_name)
+                    << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ") VALUES (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                const auto& rv = rec.values[vi];
+                const char ft = static_cast<char>(
+                    std::toupper(static_cast<unsigned char>(rv.field_type)));
+                const bool is_numeric = (ft == 'N' || ft == 'F' || ft == 'I' || ft == 'B' || ft == 'Y');
+                const bool is_logical = (ft == 'L');
+                const bool is_datetime = (ft == 'T');
+                if (rv.is_null) {
+                    sql << "NULL";
+                } else if (is_logical) {
+                    // T-SQL BIT literals are 1/0, not TRUE/FALSE -- see
+                    // this function's own comment above.
+                    const std::string& lv = rv.display_value;
+                    if (lv == "true") {
+                        sql << "1";
+                    } else if (lv == "false") {
+                        sql << "0";
+                    } else {
+                        sql << "NULL";
+                    }
+                } else if (is_numeric) {
+                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
+                        ? rv.display_value
+                        : "NULL");
+                } else if (is_datetime) {
+                    const auto converted = sql_datetime_literal_from_storage(rv.display_value);
+                    sql << (converted.has_value() ? sql_quote_string_literal(*converted) : "NULL");
+                } else {
+                    sql << sql_quote_string_literal(rv.display_value);
+                }
+                sql << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ");\n";
+        }
+        sql << "\n";
+        parsed_tables.push_back({.resolved = rt, .table = std::move(tbl.table)});
+    }
+    return parsed_tables;
+}
+
+// SQL Server's own identifier limit (`sysname` is `NVARCHAR(128)`) --
+// see disambiguate_index_name()'s own comment above. Unlike PostgreSQL,
+// which silently truncates an over-length identifier, a real SQL Server
+// directly confirmed during this issue's own development *rejects*
+// (error 103, "identifier ... is too long") any identifier over 128
+// characters outright rather than truncating it -- so this exporter
+// truncates its own generated candidate to this limit *before* emission
+// (the same disambiguate_index_name() mechanism #5559 already uses for
+// PostgreSQL's 63-byte limit) to guarantee it never constructs a name
+// the real engine would reject, even though a realistic VFP table+tag
+// concatenation is very unlikely to reach 128 characters in practice.
+constexpr std::size_t kSqlServerMaxIdentifierBytes = 128U;
+
+// #5554: T-SQL's own CREATE INDEX syntax is identical to PostgreSQL's
+// for this exporter's plain-column-reference case (see
+// write_postgresql_create_indexes()'s own comment for the full scope
+// and documented non-goals -- composite/expression keys skipped as a
+// comment, no per-tag uniqueness captured). Kept as its own dedicated
+// function rather than a shared/renamed one, matching this file's own
+// established per-vendor-dialect precedent.
+//
+// Unlike PostgreSQL and SQLite (#5559, #5558), T-SQL index names are
+// *not* schema-wide -- directly confirmed against a real local SQL
+// Server 2022 engine: two different tables can each carry an index of
+// the identical name with no error at all, and a table can be named
+// identically to an unrelated table's own index without collision
+// either. An index name only has to be unique *within the table it
+// belongs to* (and, by construction, a CDX tag's own name is already
+// unique within its own compound index, so two tags on the *same* table
+// can never generate the same `<table>_<tag>_idx` candidate before
+// truncation). The one place a same-table collision can still arise is
+// truncation itself: if `rt.name` alone is at or beyond the 128-byte
+// limit, two different tags' full candidates could truncate to the
+// identical first-128-byte prefix (the tag-derived suffix never
+// survives truncation at all). `used_index_names` is therefore a fresh,
+// per-table set (not threaded in from the caller across the whole
+// export, unlike write_postgresql_create_indexes()/
+// write_sqlite_create_indexes()) -- exactly scoped to the collision that
+// can actually occur on this engine.
+void write_sqlserver_create_indexes(
+    std::ostringstream& sql,
+    const DatabaseCatalogSnapshot::ResolvedTable& rt,
+    const std::vector<DbfFieldDescriptor>& fields) {
+    const SidecarPathResolution cdx_resolution = resolve_vfp_sidecar_path(rt.path, ".cdx");
+    if (!cdx_resolution.path.has_value()) {
+        return;
+    }
+    const std::string quoted_table = sqlserver_quote_identifier(rt.name);
+    const IndexParseResult index_result = parse_index_probe_from_file(
+        copperfin::platform::path_to_utf8_string(*cdx_resolution.path));
+    if (!index_result.ok || index_result.probe.kind != IndexKind::cdx) {
+        sql << "-- skipped indexes on " << sql_sanitize_comment_text(rt.name)
+            << ": companion .cdx exists but could not be read as a compound index\n\n";
+        return;
+    }
+
+    std::set<std::string> used_index_names;
+    bool wrote_anything = false;
+    for (std::size_t tag_index = 0U; tag_index < index_result.probe.tags.size(); ++tag_index) {
+        const IndexTagProbe& tag = index_result.probe.tags[tag_index];
+        const auto column = plain_column_name_for_index_tag(tag.key_expression_hint, fields);
+        const std::string tag_label = tag.name_hint.empty() ? std::string("(unnamed tag)") : tag.name_hint;
+        if (!column.has_value()) {
+            sql << "-- skipped index " << sql_sanitize_comment_text(tag_label)
+                << " on " << sql_sanitize_comment_text(rt.name)
+                << ": key expression is not a plain column reference\n";
+            wrote_anything = true;
+            continue;
+        }
+        const std::string tag_identity =
+            tag.name_hint.empty() ? ("tag" + std::to_string(tag_index)) : tag.name_hint;
+        const std::string index_name = disambiguate_index_name(
+            rt.name + "_" + tag_identity + "_idx", used_index_names, kSqlServerMaxIdentifierBytes);
+        sql << "CREATE INDEX " << sqlserver_quote_identifier(index_name)
+            << " ON " << quoted_table << " (" << sqlserver_quote_identifier(*column) << ");\n";
+        wrote_anything = true;
+    }
+    if (wrote_anything) {
+        sql << "\n";
+    }
+}
+
 }  // namespace
 
 DatabaseSqlExportResult export_database_as_sql(
@@ -2780,6 +3022,48 @@ DatabaseSqlExportResult export_database_as_access_sql(
             sql << ");\n";
         }
         sql << "\n";
+    }
+
+    return {.ok = true, .error = {}, .sql = sql.str()};
+}
+
+DatabaseSqlExportResult export_database_as_sqlserver_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        return {.ok = false, .error = snapshot.error, .sql = {}};
+    }
+
+    std::ostringstream sql;
+    sql.imbue(std::locale::classic());
+    // Unlike export_database_as_access_sql()'s Jet/ACE dialect, T-SQL
+    // does support "-- ..." line comments (directly confirmed against a
+    // real local SQL Server 2022 engine alongside this exporter's whole
+    // dialect), so this script carries the same header/provenance and
+    // skipped-table comment lines export_database_as_sql()/
+    // export_database_as_postgresql_sql()/export_database_as_sqlite_sql()
+    // already do.
+    sql << "-- Copperfin EXPORT DATABASE ... TYPE SQLSERVER\n";
+    sql << "-- database: " << sql_sanitize_comment_text(snapshot.db_name) << "\n";
+    sql << "-- source: " << sql_sanitize_comment_text(dbc_path) << "\n\n";
+
+    const std::size_t row_limit = (max_rows_per_table == 0U)
+        ? std::numeric_limits<std::size_t>::max()
+        : max_rows_per_table;
+
+    const std::vector<ParsedSqlExportTable> parsed_tables =
+        write_sqlserver_tables_and_data(sql, snapshot, row_limit);
+
+    // Unlike export_database_as_postgresql_sql()/export_database_as_sqlite_sql(),
+    // no whole-export used_index_names set is threaded through here --
+    // write_sqlserver_create_indexes() keeps its own fresh per-table set
+    // internally, matching SQL Server's real per-table (not schema-wide)
+    // index-name scoping. See that function's own comment for the
+    // real-engine verification this is grounded in.
+    for (const auto& parsed : parsed_tables) {
+        write_sqlserver_create_indexes(sql, parsed.resolved, parsed.table.fields);
     }
 
     return {.ok = true, .error = {}, .sql = sql.str()};
