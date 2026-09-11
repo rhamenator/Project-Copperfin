@@ -1717,7 +1717,7 @@ void test_export_database_type_json_writes_catalog_snapshot() {
     expect(!expression_state.completed,
            "EXPORT DATABASE TYPE JSON should reject an expression source in its quoted-path-only first slice");
     expect(expression_state.message ==
-               "EXPORT DATABASE requires a DBC source, an output destination, and TYPE JSON, TYPE SQL, TYPE ACCESS, TYPE POSTGRESQL, or TYPE SQLITE",
+               "EXPORT DATABASE requires a DBC source, an output destination, and TYPE JSON, TYPE SQL, TYPE ACCESS, TYPE POSTGRESQL, TYPE SQLITE, or TYPE SQLSERVER",
            "EXPORT DATABASE TYPE JSON should report the localized quoted-path-only syntax diagnostic");
     expect(!fs::exists(temp_root / "not-created.json"),
            "EXPORT DATABASE TYPE JSON should reject an expression operand before creating output");
@@ -1737,7 +1737,7 @@ void test_export_database_type_json_writes_catalog_snapshot() {
     expect(!double_quoted_state.completed,
            "EXPORT DATABASE TYPE JSON should reject a double-quoted operand rather than mishandle it");
     expect(double_quoted_state.message ==
-               "EXPORT DATABASE requires a DBC source, an output destination, and TYPE JSON, TYPE SQL, TYPE ACCESS, TYPE POSTGRESQL, or TYPE SQLITE",
+               "EXPORT DATABASE requires a DBC source, an output destination, and TYPE JSON, TYPE SQL, TYPE ACCESS, TYPE POSTGRESQL, TYPE SQLITE, or TYPE SQLSERVER",
            "EXPORT DATABASE TYPE JSON should report the localized quoted-path-only syntax diagnostic for a double-quoted operand");
     expect(!fs::exists(temp_root / "not-created-double-quoted.json"),
            "EXPORT DATABASE TYPE JSON should reject a double-quoted operand before creating output");
@@ -2030,6 +2030,87 @@ void test_export_database_type_sqlite_writes_portable_ddl_and_inserts() {
             return event.category == "runtime.export_database_sqlite_sql" && event.detail == output_path.string();
         });
     expect(has_sqlite_event, "EXPORT DATABASE TYPE SQLITE should emit its own distinct runtime event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_export_database_type_sqlserver_writes_tsql_dialect_ddl_and_inserts() {
+    // #5554 (parent #137, third vendor-dialect slice, following #5537's
+    // PostgreSQL and #5558's SQLite precedent): EXPORT DATABASE ... TYPE
+    // SQLSERVER shares TYPE SQL's dispatch path -- verify the runtime
+    // wiring (parsing, extension defaulting, output writing, event
+    // emission), not the dialect mapping or CREATE INDEX derivation
+    // itself (covered directly against export_database_as_sqlserver_sql()
+    // in tests/test_vfp_assets.cpp, including this issue's own direct
+    // verification against a real local SQL Server 2022 engine).
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_export_database_sqlserver";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    const fs::path dbc_path = temp_root / "northwind.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> catalog_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .length = 16U},
+        {.name = "OBJECTNAME", .type = 'C', .length = 64U},
+        {.name = "PARENTNAME", .type = 'C', .length = 64U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+    };
+    const auto catalog_create = copperfin::vfp::create_dbf_table_file(
+        dbc_path.string(),
+        catalog_fields,
+        {{"DATABASE", "Northwind", "", ""}, {"TABLE", "People", "Northwind", ""}});
+    expect(catalog_create.ok, "EXPORT DATABASE TYPE SQLSERVER fixture should create the DBC catalog");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NAME", .type = 'C', .length = 32U},
+        {.name = "AGE", .type = 'N', .length = 3U, .decimal_count = 0U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        (temp_root / "People.dbf").string(), table_fields, {{"Alice", "30", "T"}});
+    expect(table_create.ok, "EXPORT DATABASE TYPE SQLSERVER fixture should create the catalog table");
+
+    const fs::path main_path = temp_root / "export_database_sqlserver.prg";
+    write_text(
+        main_path,
+        "EXPORT DATABASE 'northwind.dbc' TO 'snapshot' TYPE SQLSERVER\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "EXPORT DATABASE TYPE SQLSERVER script should complete: " + state.message);
+
+    const fs::path output_path = temp_root / "snapshot.sql";
+    expect(fs::exists(output_path),
+           "EXPORT DATABASE TYPE SQLSERVER should append the .sql extension and create its output");
+    if (fs::exists(output_path)) {
+        const std::string snapshot = read_text(output_path);
+        expect(snapshot.find("CREATE TABLE [People]") != std::string::npos,
+               "EXPORT DATABASE TYPE SQLSERVER should emit a CREATE TABLE with square-bracket identifiers");
+        expect(snapshot.find("[NAME] VARCHAR(32)") != std::string::npos,
+               "EXPORT DATABASE TYPE SQLSERVER should map a character field to VARCHAR(length)");
+        expect(snapshot.find("[AGE] DECIMAL(3, 0)") != std::string::npos,
+               "EXPORT DATABASE TYPE SQLSERVER should map a numeric field to DECIMAL");
+        expect(snapshot.find("[ACTIVE] BIT") != std::string::npos,
+               "EXPORT DATABASE TYPE SQLSERVER should map a logical field to BIT, a real T-SQL type");
+        expect(snapshot.find("INSERT INTO [People]") != std::string::npos,
+               "EXPORT DATABASE TYPE SQLSERVER should emit an INSERT for the catalog table's row");
+        expect(snapshot.find("'Alice'") != std::string::npos,
+               "EXPORT DATABASE TYPE SQLSERVER should quote a character value as a string literal");
+        expect(snapshot.find(", 1)") != std::string::npos || snapshot.find(", 1);") != std::string::npos,
+               "EXPORT DATABASE TYPE SQLSERVER should emit 1/0 for a BIT value, not the TRUE/FALSE keyword real T-SQL rejects");
+        expect(snapshot.find("TRUE") == std::string::npos,
+               "EXPORT DATABASE TYPE SQLSERVER must never emit the TRUE keyword, which real T-SQL rejects as an invalid column name in a VALUES list");
+    }
+    const bool has_sqlserver_event = std::any_of(state.events.begin(), state.events.end(),
+        [&](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "runtime.export_database_sqlserver_sql" && event.detail == output_path.string();
+        });
+    expect(has_sqlserver_event, "EXPORT DATABASE TYPE SQLSERVER should emit its own distinct runtime event");
 
     fs::remove_all(temp_root, ignored);
 }

@@ -8039,10 +8039,11 @@
                 const bool is_access = (export_type == "access");
                 const bool is_postgresql = (export_type == "postgresql");
                 const bool is_sqlite = (export_type == "sqlite");
+                const bool is_sqlserver = (export_type == "sqlserver");
                 if (!is_quoted_path_operand(source_operand) ||
                     !is_quoted_path_operand(destination_operand) ||
                     source_raw.empty() || destination_raw.empty() ||
-                    (!is_json && !is_sql && !is_access && !is_postgresql && !is_sqlite))
+                    (!is_json && !is_sql && !is_access && !is_postgresql && !is_sqlite && !is_sqlserver))
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonSyntax");
@@ -8066,7 +8067,7 @@
                 destination_path = destination_path.lexically_normal();
                 if (destination_path.extension().empty())
                 {
-                    destination_path += (is_sql || is_access || is_postgresql || is_sqlite) ? ".sql" : ".json";
+                    destination_path += (is_sql || is_access || is_postgresql || is_sqlite || is_sqlserver) ? ".sql" : ".json";
                 }
 
                 // A destination that resolves to the same file as the
@@ -8160,6 +8161,21 @@
                     }
                     output_text = export_result.sql;
                 }
+                else if (is_sqlserver)
+                {
+                    const auto export_result = vfp::export_database_as_sqlserver_sql(
+                        copperfin::platform::path_to_utf8_string(source_path));
+                    if (!export_result.ok)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlserverSqlFailed",
+                            {{"errorMessage", export_result.error}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    output_text = export_result.sql;
+                }
                 else
                 {
                     const auto export_result = vfp::export_database_as_sql(
@@ -8201,6 +8217,12 @@
                     open_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseSqliteSqlOpenOutputFailed";
                     write_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseSqliteSqlWriteOutputFailed";
                     event_category = "runtime.export_database_sqlite_sql";
+                }
+                else if (is_sqlserver)
+                {
+                    open_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlserverSqlOpenOutputFailed";
+                    write_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlserverSqlWriteOutputFailed";
+                    event_category = "runtime.export_database_sqlserver_sql";
                 }
                 else if (is_sql)
                 {
