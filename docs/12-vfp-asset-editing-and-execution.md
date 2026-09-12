@@ -222,7 +222,17 @@ seven `TYPE` variants share the same DBC catalog/table-resolution path
 `export_database_as_oracle_sql()` all
 call the same internal loader) so they cannot silently drift apart on which
 tables/rows are considered part of the database -- only the output serialization
-differs. `TYPE SQL` emits one portable/ANSI-ish dialect (`CREATE TABLE` per table,
+differs. Every exporter also fails closed with a localized
+`Vfp.AssetInspector.Validation.ExportTableHasNoFields` diagnostic if a cataloged
+member DBF's field-descriptor block parses "successfully" with zero fields --
+a real, accepted shape (an aligned terminator immediately after the 32-byte
+header) that would otherwise emit invalid `CREATE TABLE "name" ( );` DDL on
+every SQL dialect, or an ambiguous `"fields": []` JSON marker indistinguishable
+from that exporter's own deliberate unreadable-source-table marker (#5697,
+found by an automated Codex code-review pass). The source-level asset
+inspector reports this same shape as a validation error
+(`dbf.field_count_zero`) rather than silently returning no diagnostic.
+`TYPE SQL` emits one portable/ANSI-ish dialect (`CREATE TABLE` per table,
 `INSERT` per row); it does not target a specific database engine's SQL dialect
 quirks. `TYPE POSTGRESQL` (#5537, first vendor-dialect slice of #141) emits the
 same `CREATE TABLE`/`INSERT` shape -- real PostgreSQL already accepts `TYPE SQL`'s

@@ -3309,6 +3309,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned",
         "Vfp.AssetInspector.Validation.DbfDescriptorTerminatorMissing",
         "Vfp.AssetInspector.Validation.DbfDescriptorTerminatorNoRoom",
+        "Vfp.AssetInspector.Validation.DbfFieldCountZero",
         "Vfp.AssetInspector.Validation.DbfFieldLayoutOverflow",
         "Vfp.AssetInspector.Validation.DbfFieldLayoutOverlap",
         "Vfp.AssetInspector.Validation.DbfFieldNameBlank",
@@ -3320,6 +3321,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AssetInspector.Validation.DbfRecordLengthMismatch",
         "Vfp.AssetInspector.Validation.DbfRecordStorageLengthMismatch",
         "Vfp.AssetInspector.Validation.DbfRecordStorageTruncated",
+        "Vfp.AssetInspector.Validation.ExportTableHasNoFields",
         "Vfp.AssetInspector.Validation.IndexCompanionParseFailed",
         "Vfp.AssetInspector.Validation.IndexStructuralSidecarMissing",
         "Vfp.AssetInspector.Validation.MemoBlockSizeInvalid",
@@ -6971,6 +6973,129 @@ void test_database_json_import_plan_admits_exporter_unreadable_table_marker() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5697: a member DBF whose field-descriptor block parses "successfully"
+// with zero fields (an immediately-encountered terminator, a real shape
+// parse_dbf_field_descriptor_block() accepts) previously let every
+// exporter either emit unusable output (invalid `CREATE TABLE ( );` DDL
+// on every SQL dialect) or an ambiguous marker (JSON's `"fields": []`,
+// indistinguishable from its own deliberate unreadable-table marker) and
+// still report the migration successful. This fixture is a raw-byte
+// zero-field DBF (an aligned terminator immediately after the 32-byte
+// header, matching parse_dbf_field_descriptor_block()'s own accepted
+// shape) rather than one built through create_dbf_table_file(), which
+// already rejects an empty field list on the write side and so cannot
+// produce this fixture itself. Verified to reliably fail against the
+// pre-fix code (each exporter previously returned ok=true here) and
+// reliably pass against the fix, for all eight EXPORT DATABASE TYPE
+// variants that share this one class of gap.
+void test_export_database_family_fails_closed_on_zero_field_table() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_zero_field_export_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "empty.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "empty", ""}});
+    expect(dbc_create.ok, "zero-field export test: DBC fixture should be created");
+
+    // Raw VFP-style DBF bytes: 32-byte header, header_length = 33 (an
+    // aligned field-descriptor terminator immediately at offset 32, zero
+    // descriptors between), record_length = 1 (delete flag only), zero
+    // records.
+    std::vector<std::uint8_t> table_bytes(34U, 0U);
+    table_bytes[0] = 0x30U;  // VFP version byte
+    write_le_u32(table_bytes, 4U, 0U);   // record count = 0
+    write_le_u16(table_bytes, 8U, 33U);  // header_length
+    write_le_u16(table_bytes, 10U, 1U);  // record_length
+    table_bytes[32U] = 0x0DU;  // field-descriptor terminator -> zero fields
+    table_bytes[33U] = 0x1AU;  // EOF marker
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()),
+                      static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    const std::string dbc_utf8 = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const auto json_result = copperfin::vfp::export_database_as_json(dbc_utf8);
+    expect(!json_result.ok,
+           "export_database_as_json must fail closed on a zero-field member table, not report a usable schema");
+
+    const auto sql_result = copperfin::vfp::export_database_as_sql(dbc_utf8);
+    expect(!sql_result.ok,
+           "export_database_as_sql must fail closed on a zero-field member table rather than emit invalid CREATE TABLE ( ) DDL");
+
+    const auto postgresql_result = copperfin::vfp::export_database_as_postgresql_sql(dbc_utf8);
+    expect(!postgresql_result.ok,
+           "export_database_as_postgresql_sql must fail closed on a zero-field member table");
+
+    const auto sqlite_result = copperfin::vfp::export_database_as_sqlite_sql(dbc_utf8);
+    expect(!sqlite_result.ok,
+           "export_database_as_sqlite_sql must fail closed on a zero-field member table");
+
+    const auto sqlserver_result = copperfin::vfp::export_database_as_sqlserver_sql(dbc_utf8);
+    expect(!sqlserver_result.ok,
+           "export_database_as_sqlserver_sql must fail closed on a zero-field member table");
+
+    const auto oracle_result = copperfin::vfp::export_database_as_oracle_sql(dbc_utf8);
+    expect(!oracle_result.ok,
+           "export_database_as_oracle_sql must fail closed on a zero-field member table");
+
+    const auto mysql_result = copperfin::vfp::export_database_as_mysql_sql(dbc_utf8);
+    expect(!mysql_result.ok,
+           "export_database_as_mysql_sql must fail closed on a zero-field member table");
+
+    const auto access_result = copperfin::vfp::export_database_as_access_sql(dbc_utf8);
+    expect(!access_result.ok,
+           "export_database_as_access_sql must fail closed on a zero-field member table");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5697: validate_dbf_field_descriptors() (src/vfp/asset_inspector.cpp)
+// previously returned silently, with no diagnostic at all, when an aligned
+// field-descriptor terminator was found immediately at the descriptor
+// start -- a real, accepted shape (matching parse_dbf_field_descriptor_
+// block()'s own permissive parse), but one that produces a schema with no
+// usable columns. Verified to reliably fail against the pre-fix code (no
+// validation issue at all) and reliably pass against the fix.
+void test_inspect_asset_reports_zero_field_dbf_as_error() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_zero_field_dbf_inspect_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "empty.dbf";
+    std::vector<std::uint8_t> table_bytes(34U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 0U);
+    write_le_u16(table_bytes, 8U, 33U);
+    write_le_u16(table_bytes, 10U, 1U);
+    table_bytes[32U] = 0x0DU;
+    table_bytes[33U] = 0x1AU;
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()),
+                      static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::inspect_asset(copperfin::platform::path_to_utf8_string(table_path));
+    expect(has_validation_issue(result, "dbf.field_count_zero"),
+           "inspect_asset should report a zero-field DBF schema as a validation error");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_parse_real_vfp_cdx_when_available() {
     const std::filesystem::path sample_path =
         "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Tastrade\\Data\\customer.cdx";
@@ -7829,6 +7954,8 @@ int main() {
     test_export_database_as_access_sql_accepts_leading_plus_sign_numeric();
     test_export_database_as_access_sql_rejects_unsafe_date_literal();
     test_database_json_import_plan_admits_exporter_unreadable_table_marker();
+    test_export_database_family_fails_closed_on_zero_field_table();
+    test_inspect_asset_reports_zero_field_dbf_as_error();
     test_parse_real_vfp_cdx_when_available();
     test_parse_additional_real_vfp_cdx_samples_when_available();
     test_parse_real_vfp_dcx_samples_when_available();
