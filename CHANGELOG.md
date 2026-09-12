@@ -49,6 +49,24 @@
   `docs/32-recovered-requirements-traceability.md` row
   `RQ-CF-MODERNIZATION-001` updated.
 
+  A PR review round on this fix (chatgpt-codex-connector) caught that
+  `json_escape_str()` only escapes quotes, backslashes, and C0 controls
+  -- by design, since it is also used for genuine multi-byte UTF-8 field
+  names/values elsewhere, which it must pass through unchanged -- so a
+  raw field-type byte >= 0x80 standing alone (never part of a real
+  multi-byte UTF-8 sequence on its own) was still passed through
+  unescaped by the structural-escaping fix above, producing a document
+  that is syntactically valid JSON but not valid UTF-8 text, which
+  `parse_json_document()` itself rejects. Every real VFP field-type
+  letter is plain ASCII, so fixed by additionally failing the whole
+  export closed for a type byte outside the printable ASCII range, with
+  a new localized `Vfp.AssetInspector.Validation.UnsafeJsonFieldTypeByte`
+  diagnostic naming the table and column. New regression test
+  (`test_export_database_as_json_fails_closed_on_non_ascii_field_type_byte`)
+  verified to reliably fail against the code as it stood right after the
+  structural-escaping fix and reliably pass against this additional
+  check.
+
 - 2026-09-12: Closed a data-integrity gap affecting every SQL-family
   `EXPORT DATABASE` exporter (`src/vfp/asset_inspector.cpp`, #5698, found
   by an automated Codex code-review pass): a non-blank numeric cell that

@@ -2564,6 +2564,28 @@ DatabaseExportResult export_database_as_json(
             // display_value does below, just in the schema description
             // rather than a data value. Routed through json_escape_str()
             // the same way fld.name already is, rather than embedded raw.
+            //
+            // #5630 PR review (chatgpt-codex-connector, P2): json_escape_
+            // str() only escapes quotes, backslashes, and C0 controls --
+            // by design, since it is also used for genuine multi-byte
+            // UTF-8 field names/values elsewhere, which it must pass
+            // through unchanged. A raw byte >= 0x80 standing alone (never
+            // part of a real multi-byte UTF-8 sequence on its own) is
+            // therefore passed through unescaped too, producing a
+            // document that is syntactically valid JSON but not valid
+            // UTF-8 text, which parse_json_document() itself rejects --
+            // this fix's own struct-preserving escaping did not, by
+            // itself, cover that case. Every real VFP field-type letter
+            // is plain ASCII, so a byte outside the printable ASCII range
+            // is never a genuine type in the first place; fail the whole
+            // export closed for it rather than invent an escaping
+            // convention for data that was never valid to begin with.
+            if (static_cast<unsigned char>(fld.type) < 0x20U ||
+                static_cast<unsigned char>(fld.type) > 0x7EU) {
+                return {.ok = false, .error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeJsonFieldTypeByte",
+                    {{"table", rt.name}, {"column", fld.name}}), .json = {}};
+            }
             json << "        {\"name\": \""    << json_escape_str(fld.name)   << "\""
                  << ", \"type\": \""           << json_escape_str(std::string(1U, fld.type)) << "\""
                  << ", \"length\": "           << static_cast<int>(fld.length)
