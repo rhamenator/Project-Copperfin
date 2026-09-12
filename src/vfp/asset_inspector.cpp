@@ -2633,6 +2633,7 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
                     std::toupper(static_cast<unsigned char>(rv.field_type)));
                 const bool is_numeric = (ft == 'N' || ft == 'F' || ft == 'I' || ft == 'B' || ft == 'Y');
                 const bool is_logical = (ft == 'L');
+                const bool is_date = (ft == 'D');
                 const bool is_datetime = (ft == 'T');
                 if (rv.is_null) {
                     sql << "NULL";
@@ -2665,6 +2666,23 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
                     sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
                         ? rv.display_value
                         : "NULL");
+                } else if (is_date) {
+                    // #5696: a blank VFP date field decodes to an empty
+                    // display_value (not is_null), same as a blank numeric
+                    // cell above -- emitting it as an empty string literal
+                    // into a column declared DATE is invalid input on
+                    // PostgreSQL (rejected outright) and silently stores the
+                    // wrong SQL storage class on SQLite (a TEXT value in a
+                    // NUMERIC-affinity column) rather than preserving the
+                    // blank. Mirrors the fix already applied to the SQL
+                    // Server/Oracle/MySQL writers (see
+                    // write_sqlserver_tables_and_data()'s own comment for
+                    // the real-engine-confirmed behavior). A non-blank
+                    // value already decodes to a plain "YYYY-MM-DD" string
+                    // (dbf_table.cpp's decode_value() 'D' case), which loads
+                    // correctly as a DATE literal with no further handling
+                    // needed here.
+                    sql << (rv.display_value.empty() ? "NULL" : sql_quote_string_literal(rv.display_value));
                 } else if (is_datetime) {
                     // The DBF decoder's T-type display_value is this
                     // codebase's internal "julian:<day> millis:<ms>" storage

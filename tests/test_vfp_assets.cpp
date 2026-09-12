@@ -3991,6 +3991,88 @@ void test_export_database_as_sql_preserves_exponent_form_double_values() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5696: a blank VFP date field decodes to an empty display_value (not
+// is_null), same as a blank numeric cell -- write_sql_tables_and_data()
+// (the shared row writer behind export_database_as_sql(),
+// export_database_as_postgresql_sql(), and export_database_as_sqlite_sql())
+// had no 'D'/Date branch at all, so a blank date fell through to the
+// generic string path and was emitted as a plain `''` literal into a
+// column declared DATE. Real PostgreSQL rejects `''` as invalid DATE
+// input outright; SQLite's dynamic typing accepts the statement but
+// stores a TEXT value in the DATE/NUMERIC-affinity column, silently
+// preserving the wrong SQL storage class. Mirrors the fix already
+// applied to the SQL Server/Oracle/MySQL writers (see
+// test_export_database_as_sqlserver_sql_preserves_blank_dates_as_null()).
+// Verified to reliably fail against the pre-fix code (missing is_date
+// branch) and reliably pass against the fix, for all three exporters
+// that share write_sql_tables_and_data().
+void test_export_database_as_sql_family_preserves_blank_dates_as_null() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sql_family_blank_date_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "events.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "events", ""}});
+    expect(dbc_create.ok, "SQL family blank-date test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "OCCURRED", .type = 'D', .offset = 1U, .length = 8U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{"20260115"}, {""}});
+    expect(table_create.ok, "SQL family blank-date test: DBF fixture should be created");
+
+    const std::string dbc_utf8 = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const auto plain_result = copperfin::vfp::export_database_as_sql(dbc_utf8);
+    expect(plain_result.ok, "export_database_as_sql should resolve the blank-date fixture: " + plain_result.error);
+    if (plain_result.ok) {
+        expect(plain_result.sql.find("VALUES ('2026-01-15')") != std::string::npos,
+               "export_database_as_sql should emit a non-blank date as a normal quoted string literal");
+        expect(plain_result.sql.find("VALUES (NULL)") != std::string::npos,
+               "export_database_as_sql should emit NULL for a blank date rather than an empty string literal");
+        expect(plain_result.sql.find("VALUES ('')") == std::string::npos,
+               "export_database_as_sql must never emit an empty string literal for a DATE column");
+    }
+
+    const auto postgresql_result = copperfin::vfp::export_database_as_postgresql_sql(dbc_utf8);
+    expect(postgresql_result.ok,
+           "export_database_as_postgresql_sql should resolve the blank-date fixture: " + postgresql_result.error);
+    if (postgresql_result.ok) {
+        expect(postgresql_result.sql.find("VALUES ('2026-01-15')") != std::string::npos,
+               "export_database_as_postgresql_sql should emit a non-blank date as a normal quoted string literal");
+        expect(postgresql_result.sql.find("VALUES (NULL)") != std::string::npos,
+               "export_database_as_postgresql_sql should emit NULL for a blank date rather than an empty string literal");
+        expect(postgresql_result.sql.find("VALUES ('')") == std::string::npos,
+               "export_database_as_postgresql_sql must never emit an empty string literal for a DATE column -- real PostgreSQL rejects it as invalid date input");
+    }
+
+    const auto sqlite_result = copperfin::vfp::export_database_as_sqlite_sql(dbc_utf8);
+    expect(sqlite_result.ok,
+           "export_database_as_sqlite_sql should resolve the blank-date fixture: " + sqlite_result.error);
+    if (sqlite_result.ok) {
+        expect(sqlite_result.sql.find("VALUES ('2026-01-15')") != std::string::npos,
+               "export_database_as_sqlite_sql should emit a non-blank date as a normal quoted string literal");
+        expect(sqlite_result.sql.find("VALUES (NULL)") != std::string::npos,
+               "export_database_as_sqlite_sql should emit NULL for a blank date rather than an empty string literal");
+        expect(sqlite_result.sql.find("VALUES ('')") == std::string::npos,
+               "export_database_as_sqlite_sql must never emit an empty string literal for a DATE column -- it would silently store the wrong SQL storage class under dynamic typing");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 // #5537: a dedicated two-tag synthetic CDX, mirroring
 // make_synthetic_cdx_family_bytes()'s own verified byte layout (same tag-
 // entry/tag-page structure and offsets), but with key expressions that
@@ -7908,6 +7990,7 @@ int main() {
 #endif
     test_export_database_as_sql_maps_currency_datetime_and_blank_numeric();
     test_export_database_as_sql_preserves_exponent_form_double_values();
+    test_export_database_as_sql_family_preserves_blank_dates_as_null();
     test_export_database_as_postgresql_sql_maps_types_and_creates_indexes();
     test_export_database_as_postgresql_sql_omits_indexes_without_cdx();
     test_export_database_as_postgresql_sql_disambiguates_indexes_on_same_column();
