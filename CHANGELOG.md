@@ -26,6 +26,32 @@
   against the fix. `docs/32-recovered-requirements-traceability.md` row
   `RQ-CF-MODERNIZATION-010` updated.
 
+  A PR review round on this fix (chatgpt-codex-connector) caught that
+  this codebase does not currently decode a VFP nullable field's own
+  `_NullFlags` record bitmap at all (`DbfFieldDescriptor` drops the
+  descriptor's own nullable flag entirely, and `decode_value()` only
+  ever sets `is_null` when decoding the special type-`0` pseudo-field
+  itself, never applying its bits to the real field it describes) -- so
+  a genuinely null value and a genuinely non-null empty value in a
+  *nullable* field are indistinguishable in this codebase's own
+  in-memory representation, and the fix above's own first draft would
+  have newly rejected a genuinely null field's export the same way it
+  correctly rejects a genuinely non-null empty one. Scoped the check to
+  skip any table that declares a nullable field at all (identified by
+  the presence of the `_NullFlags` pseudo-field in its own descriptor
+  list) -- a table with no such field has no nullable fields, so a
+  blank `C`/`V` value there can only mean "genuinely non-null empty,"
+  with no ambiguity, still closing #5693's own demonstrated repro
+  (an ordinary, non-nullable table). New regression test
+  (`test_export_database_as_oracle_sql_allows_blank_value_in_table_with_nullable_fields`,
+  built from raw DBF bytes directly since `create_dbf_table_file()`
+  itself cannot write a type-`0` field) verified to reliably fail
+  against the unscoped check and reliably pass against the scoped one.
+  Filed #5718 tracking proper `_NullFlags` bitmap decoding as its own
+  foundational, cross-cutting fix (affecting every dialect and format
+  this codebase reads, not specific to Oracle), which should let this
+  scoping workaround be tightened once it lands.
+
 - 2026-09-12: Closed a symlink-following TOCTOU race in
   `write_binary_file()` (`src/vfp/dbf_table.cpp`), the shared staged-write
   helper behind `create_dbf_table_file()` and every other DBF/FPT

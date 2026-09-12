@@ -353,7 +353,12 @@ fallback above -- no `VARCHAR2` literal exists that preserves a
 genuinely non-null empty Character/Varchar value's own non-null-ness.
 This exporter now fails the whole export closed with a diagnostic naming
 the table and column, rather than report a successful export whose
-ordinary load silently corrupts that distinction.
+ordinary load silently corrupts that distinction -- except for a table
+that declares any nullable field at all (identified by its own
+`_NullFlags` pseudo-field), since this codebase does not yet decode that
+field's own record bitmap and so cannot currently tell a genuinely null
+value apart from a genuinely non-null empty one there (#5718 tracks
+proper bitmap decoding as its own foundational fix).
 
 `TYPE MYSQL` (#5554, fifth and final vendor-dialect slice of #141) is close
 enough in overall shape to `TYPE SQLSERVER`'s own precedent to share its

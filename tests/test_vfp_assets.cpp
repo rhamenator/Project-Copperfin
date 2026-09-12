@@ -23,6 +23,7 @@
 #include <array>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -5727,6 +5728,91 @@ void test_export_database_as_oracle_sql_fails_closed_on_non_null_empty_character
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5717 PR review (chatgpt-codex-connector, P1): this codebase does not
+// currently decode a VFP nullable field's own `_NullFlags` record bitmap
+// at all, so a genuinely null value and a genuinely non-null empty value
+// in a *nullable* field are indistinguishable in this codebase's own
+// in-memory representation. The empty-character-value check above must
+// not apply to a table that declares a nullable field (identified here by
+// the presence of the special type-`0` `_NullFlags` pseudo-field in its
+// own descriptor list), since it cannot tell the two cases apart and
+// would otherwise reject a genuinely null value's own (previously
+// correctly working, if by Oracle's own accidental empty-string-is-null
+// behavior) export. create_dbf_table_file() itself cannot write a type-`0`
+// field (it is not among the directly-writable storage types), so this
+// fixture is built from raw DBF bytes directly, modeling a real VFP
+// nullable-field table this codebase's own writer cannot itself produce
+// but a real VFP application routinely can.
+void test_export_database_as_oracle_sql_allows_blank_value_in_table_with_nullable_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_nullable_field_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "Oracle nullable-field test: DBC fixture should be created");
+
+    // Raw VFP-style DBF bytes: one Character field ("NAME", blank) and one
+    // type-'0' _NullFlags pseudo-field (1 byte, content irrelevant to this
+    // test -- only its mere presence in the descriptor list matters).
+    constexpr std::uint16_t record_length = 1U + 10U + 1U;  // delete flag + NAME(10) + _NullFlags(1)
+    constexpr std::uint16_t header_length = 32U + 32U + 32U + 1U;  // header + 2 field descriptors + terminator
+    std::vector<std::uint8_t> bytes(
+        static_cast<std::size_t>(header_length) + record_length + 1U, 0U);
+    bytes[0] = 0x30U;  // VFP version byte
+    bytes[4] = 1U;     // record count (LE u32, 1 record)
+    bytes[8] = static_cast<std::uint8_t>(header_length & 0xFFU);
+    bytes[9] = static_cast<std::uint8_t>((header_length >> 8U) & 0xFFU);
+    bytes[10] = static_cast<std::uint8_t>(record_length & 0xFFU);
+    bytes[11] = static_cast<std::uint8_t>((record_length >> 8U) & 0xFFU);
+
+    const auto write_descriptor = [&](std::size_t offset, const char* name, char type,
+                                       std::uint32_t field_offset, std::uint8_t length) {
+        std::memcpy(bytes.data() + offset, name, std::strlen(name));
+        bytes[offset + 11U] = static_cast<std::uint8_t>(type);
+        bytes[offset + 12U] = static_cast<std::uint8_t>(field_offset & 0xFFU);
+        bytes[offset + 13U] = static_cast<std::uint8_t>((field_offset >> 8U) & 0xFFU);
+        bytes[offset + 14U] = static_cast<std::uint8_t>((field_offset >> 16U) & 0xFFU);
+        bytes[offset + 15U] = static_cast<std::uint8_t>((field_offset >> 24U) & 0xFFU);
+        bytes[offset + 16U] = length;
+    };
+    write_descriptor(32U, "NAME", 'C', 1U, 10U);
+    write_descriptor(64U, "_NullFlags", '0', 11U, 1U);
+    bytes[96] = 0x0DU;  // field descriptor terminator
+
+    const std::size_t record_offset = header_length;
+    bytes[record_offset] = 0x20U;  // not deleted
+    std::memset(bytes.data() + record_offset + 1U, ' ', 10U);  // blank NAME
+    bytes[record_offset + 11U] = 0U;  // _NullFlags byte, content irrelevant here
+    bytes.back() = 0x1AU;  // EOF marker
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok,
+           "export_database_as_oracle_sql should not fail closed on a blank character value in a table that declares a nullable field, since it cannot currently tell a genuine NULL from a genuine empty string there: " + result.error);
+    if (result.ok) {
+        expect(result.sql.find("VALUES ('', NULL)") != std::string::npos,
+               "export_database_as_oracle_sql should still emit a plain '' literal for the blank NAME value in a nullable-field table (the pre-existing, Oracle-accidental-NULL behavior), not reject the export: " + result.sql);
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_mysql_sql_maps_types_and_creates_indexes() {
     // #5554 (parent #137, fifth and final vendor-dialect slice, following
     // #5537's PostgreSQL, #5558's SQLite, #5561's SQL Server, and #5564's
@@ -7522,6 +7608,7 @@ int main() {
     test_export_database_as_oracle_sql_writes_memo_content_as_clob_literals();
     test_export_database_as_oracle_sql_fails_closed_on_colliding_identifiers();
     test_export_database_as_oracle_sql_fails_closed_on_non_null_empty_character_value();
+    test_export_database_as_oracle_sql_allows_blank_value_in_table_with_nullable_fields();
     test_export_database_as_mysql_sql_maps_types_and_creates_indexes();
     test_export_database_as_mysql_sql_omits_indexes_without_cdx();
     test_export_database_as_mysql_sql_allows_identical_index_name_across_tables();
