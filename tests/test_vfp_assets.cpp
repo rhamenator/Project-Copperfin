@@ -8487,6 +8487,7 @@ int main() {
     test_export_database_as_json_prefers_catalog_name_and_casefolded_assets();
     test_build_database_json_import_plan_validates_without_mutation();
     test_materialize_database_json_import_plan_fails_closed_and_round_trips();
+    test_materialize_database_json_import_plan_rejects_case_folded_collisions();
     test_build_database_sql_import_plan_validates_without_mutation();
     test_export_database_as_sql_round_trips_through_import();
     test_read_memo_block_raw_returns_correct_bytes();

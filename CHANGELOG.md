@@ -1,3 +1,69 @@
+- 2026-09-12: Closed a data-integrity gap in `materialize_database_json_
+  import_plan()` (`src/vfp/asset_inspector.cpp`, #5678, found by an
+  automated Codex code-review pass): the shared JSON/SQL database import
+  materializer checked destination existence with exact
+  `std::filesystem::exists()` paths only. On a case-sensitive filesystem,
+  an existing case-folded alias (e.g. a pre-existing `CUSTOMERS.DBF`
+  when the plan names table `customers`) therefore did not count as an
+  existing destination: preflight checks passed, staging succeeded, and
+  `create_hard_link()` published a second physical file representing the
+  same VFP/Windows table identity. The same gap applied to a differently
+  cased DBC destination and to a table's own `.fpt` memo sidecar. This
+  violated #5472's own fail-closed overwrite-consent contract and left
+  output that is not portable to Windows -- and fed the read-side
+  ambiguity #5637 already tracks, since an import could itself create
+  the exact ambiguity that issue's own fix resolves after the fact.
+
+  Fixed by building a case-insensitive index of the destination
+  directory's own existing entries once, up front, and checking every
+  planned destination -- the DBC itself, each table's own `.dbf`, and
+  each table's own `.fpt` memo sidecar -- against it in addition to the
+  exact-case `fs::exists()` check, via a new `find_colliding_destination()`
+  lambda that returns the actual colliding path (whichever casing it
+  happens to be) so the existing `Vfp.AssetInspector.Error.
+  DatabaseImportDestinationExists` diagnostic still names a real file.
+  `build_database_sql_import_plan()` (the `TYPE SQL` import planner)
+  shares this identical materializer at the runtime dispatch layer, so
+  this one fix closes the gap for both `TYPE JSON` and `TYPE SQL`
+  imports without a separate change -- confirmed by reading
+  `src/runtime/prg_engine_dispatch.inl`'s own IMPORT DATABASE dispatch,
+  not assumed.
+
+  New regression test
+  (`test_materialize_database_json_import_plan_rejects_case_folded_
+  collisions`, covering all three collision points: DBC, table `.dbf`,
+  and memo `.fpt`) verified to reliably fail against the pre-fix code (9
+  total failures) and reliably pass against the fix.
+
+  A review round on the fix's own PR (chatgpt-codex-connector) found two
+  further gaps. First, the destination directory's own scan silently
+  discarded a `fs::directory_iterator` construction or increment error
+  (e.g. a directory permitting write/traversal but not listing), so a
+  scan failure was indistinguishable from an empty directory and quietly
+  defeated the fail-closed guarantee precisely when the scan itself was
+  unavailable -- fixed by returning a new `Vfp.AssetInspector.Error.
+  DatabaseImportDestinationScanFailed` failure on any scan error instead
+  of discarding it. Second, two of the new test's own assertions checked
+  `fs::exists()` on a path that is itself a case-folded alias of a
+  pre-existing file (e.g. `container.dbc` when `CONTAINER.DBC` already
+  exists) -- unconditionally true on a real case-insensitive filesystem
+  (Windows, default macOS) regardless of whether the fix behaved
+  correctly, since the OS resolves the alias straight through to the
+  original file. Fixed by asserting directory-entry-count and
+  pre-existing-file content/size invariance instead of alias
+  non-existence.
+
+  This is one of five related defects an automated review pass found in
+  this same function (#5678, #5679, #5680, #5681, #5682); this fix
+  addresses #5678 only. #5679/#5680's own TOCTOU races on the
+  commit/rollback file-identity binding, and #5681/#5682's own
+  ignored-cleanup-error gaps, remain open and are tracked separately --
+  each has a genuinely distinct root cause and needs its own fix, not a
+  single shared change.
+
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-004` updated.
+
 - 2026-09-12: Closed a JSON-structural-injection vulnerability in
   `export_database_as_json()` (`src/vfp/asset_inspector.cpp`, #5630/#5571,
   found by an automated Codex code-review pass): a numeric cell's decoded
