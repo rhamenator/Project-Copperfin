@@ -274,6 +274,23 @@ and was emitted as an invalid `''` literal (rejected outright by real
 PostgreSQL; silently stored as the wrong SQL storage class under SQLite's
 dynamic typing).
 
+`TYPE SQLITE` no longer shares its table/data writer with `TYPE SQL`/
+`TYPE POSTGRESQL` at all (#5694): it now has its own dedicated
+`write_sqlite_tables_and_data()`, since SQLite's own NUMERIC-affinity
+storage (what a `DECIMAL(p,s)` column type actually gets under SQLite,
+which has no true fixed-decimal storage class) silently rounds a
+well-formed decimal literal to a double whenever it isn't representable
+exactly as a 64-bit signed integer -- directly confirmed against a real
+local SQLite 3.46.1 engine that a 20-digit VFP Numeric value and VFP
+Currency's own extreme magnitude both lose trailing digits once stored.
+Each numeric value's own exact representability under SQLite's specific
+storage rules is now independently validated (a canonical-decimal-literal
+comparison against the value's shortest IEEE-754 round-trip form, not a
+reliance on the `DECIMAL(p,s)` spelling alone), failing the whole export
+closed with table/row/column context for a value that would lose
+precision rather than publish a script whose own successful load quietly
+alters it.
+
 `TYPE SQLSERVER` (#5554, third vendor-dialect slice of #141) is its own dedicated
 code path, not a reuse of `TYPE SQL`'s shared table/data writer at all (the same
 reason `TYPE ACCESS` has its own inline loop): T-SQL's dialect diverges enough --
