@@ -85,6 +85,7 @@ int main() {
     test_export_database_type_sqlite_writes_portable_ddl_and_inserts();
     test_export_database_type_sqlserver_writes_tsql_dialect_ddl_and_inserts();
     test_export_database_type_oracle_writes_oracle_dialect_ddl_and_inserts();
+    test_export_database_type_mysql_writes_mysql_dialect_ddl_and_inserts();
     test_export_database_rejects_destination_aliasing_source();
     test_import_database_type_json_round_trips_via_export();
     test_import_database_type_sql_round_trips_via_export();

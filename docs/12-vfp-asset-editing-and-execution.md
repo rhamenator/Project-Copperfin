@@ -199,15 +199,15 @@ EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE ORACLE
 
 The command resolves relative source and destination paths from the current default
 directory, adds `.json` (`TYPE JSON`) or `.sql` (`TYPE SQL`/`TYPE ACCESS`/
-`TYPE POSTGRESQL`/`TYPE SQLITE`/`TYPE SQLSERVER`/`TYPE ORACLE`) when the destination
-has no extension, and emits
+`TYPE POSTGRESQL`/`TYPE SQLITE`/`TYPE SQLSERVER`/`TYPE ORACLE`/`TYPE MYSQL`) when the
+destination has no extension, and emits
 `runtime.export_database_json`, `runtime.export_database_sql`,
 `runtime.export_database_access_sql`, `runtime.export_database_postgresql_sql`,
-`runtime.export_database_sqlite_sql`, `runtime.export_database_sqlserver_sql`, or
-`runtime.export_database_oracle_sql`
+`runtime.export_database_sqlite_sql`, `runtime.export_database_sqlserver_sql`,
+`runtime.export_database_oracle_sql`, or `runtime.export_database_mysql_sql`
 on success. It deliberately accepts only the literal `TYPE JSON`, `TYPE SQL`,
-`TYPE ACCESS`, `TYPE POSTGRESQL`, `TYPE SQLITE`, `TYPE SQLSERVER`, or `TYPE ORACLE`
-forms; the source and destination are quoted
+`TYPE ACCESS`, `TYPE POSTGRESQL`, `TYPE SQLITE`, `TYPE SQLSERVER`, `TYPE ORACLE`, or
+`TYPE MYSQL` forms; the source and destination are quoted
 path operands, not expressions. It reads the existing DBC/DBF data before opening
 the requested output path, creates a missing output directory, and reports a
 localized runtime failure if inspection or output writing fails. A destination
@@ -346,6 +346,65 @@ quoted identifier after this exporter's own embedded-quote stripping
 closed with a diagnostic naming the identifier, rather than silently
 emit a script with a duplicate or wrong-target table/column.
 
+`TYPE MYSQL` (#5554, fifth and final vendor-dialect slice of #141) is close
+enough in overall shape to `TYPE SQLSERVER`'s own precedent to share its
+structure (per-table index-name scoping, `1`/`0` boolean literals, blank-date-
+to-NULL, plain-ISO-string date/datetime literals) but keeps its own dedicated
+code path per this family's established convention. Backtick `` `identifier` ``
+quoting escapes an embedded backtick by doubling it -- like every dialect
+above except Oracle's own lossy stripping (directly confirmed against a real
+local MySQL 8.0 engine that `` `weird``name` `` round-trips losslessly through
+`CREATE TABLE`) -- `DECIMAL(19, 4)` for VFP currency, `INT` (MySQL's own
+4-byte integer), `DOUBLE` for VFP's own double type, `TINYINT(1)` for logical
+(directly confirmed MySQL's own `BOOLEAN` keyword is merely a synonym for
+`TINYINT(1)`, so this exporter declares the underlying type directly), `DATE`/
+`DATETIME` for VFP date/datetime (a plain ISO string loads directly with no
+special literal wrapper needed, unlike Oracle), `VARCHAR(length)` for
+character fields, and `LONGTEXT` -- not the 64 KiB-capped `TEXT` -- for memo/
+general/picture fields. `DECIMAL`'s own precision is clamped to MySQL's real
+65-digit ceiling and its scale to MySQL's own 30-digit ceiling *and* to that
+(already-clamped) precision -- like SQL Server's own `DECIMAL`, and a genuine
+difference from Oracle's own independent scale range, both directly confirmed
+against the real engine (`DECIMAL(66, 0)`/`DECIMAL(10, 31)` both fail;
+`DECIMAL(10, 20)`, scale exceeding precision, fails with "M must be >= D"). A
+blank VFP date/datetime value resolves to `NULL` rather than an empty string
+literal -- directly confirmed against the real engine that MySQL 8.0's own
+default `sql_mode` (including `STRICT_TRANS_TABLES`) rejects an empty-string
+insert into a `DATE`/`DATETIME` column outright with error 1292, a third,
+distinct failure mode from SQL Server's own silent-1900-01-01 invention and
+Oracle's own invalid-syntax rejection, but the same NULL-instead-of-empty-
+string fix applies. The one genuinely MySQL-specific finding: unlike every
+other dialect above (all of which share one doubled-single-quote string-
+literal quoting function), a character-ish value here is quoted through a
+dedicated function that doubles *both* an embedded single quote and an
+embedded backslash, since MySQL's own default `sql_mode` (no
+`NO_BACKSLASH_ESCAPES`) treats a lone backslash as a live escape character
+inside a string literal -- directly confirmed against the real engine that
+plain doubled-quote-only escaping of a Windows path silently misinterprets
+`\t` as an actual TAB character rather than a literal backslash followed by
+`t`, corrupting a genuinely common case for this codebase; doubling the
+backslash too stores the correct literal text. No identifier-collision
+tracking is needed the way Oracle's own lossy quote-stripping requires, since
+an embedded backtick is losslessly escaped. And unlike Oracle's own tight
+4000-byte SQL text-literal ceiling, a plain (correctly escaped) string
+literal is directly confirmed safe for a `LONGTEXT` value with no special
+chunking, and an empty string literal correctly stores as an empty (non-NULL)
+string, unlike Oracle's own silently-NULLed CLOB. `CREATE INDEX` generation
+is scoped to MySQL's own 64-*character* identifier limit (directly confirmed
+the real engine *rejects*, error 1059, rather than silently truncates,
+character-counted like SQL Server's own `sysname` rather than byte-counted
+like PostgreSQL's/Oracle's own limits), with disambiguation scoped *per
+table* -- directly confirmed against the real engine that MySQL index names
+are unique only within their own table, the same as SQL Server's own
+precedent. All of the above was directly confirmed against a real local
+MySQL 8.0 engine during this issue's own development, including this
+exporter's own actual generated output for a representative two-table
+fixture -- covering every mapped column type, a memo containing an actual
+Windows path with both a backslash and an embedded single quote, and a blank
+date/memo on a second row -- loading with zero errors and a cross-table
+`JOIN` returning the correct joined row, with the backslash-containing memo
+round-tripping to its exact original content.
+
 `TYPE ACCESS`
 (#5475, phase 1 of #141) emits
 the same shape of script using the Access/Jet SQL dialect instead -- square-bracket
@@ -372,8 +431,8 @@ only ever holds a single statement.
 This is a Copperfin modernization extension authorized by the owner-approved
 scope in #140/#141 (see #5471 for the `TYPE SQL` slice, #5475 for the
 `TYPE ACCESS` slice, #5537 for the `TYPE POSTGRESQL` slice, and #5554 for the
-`TYPE SQLITE`/`TYPE SQLSERVER`/`TYPE ORACLE` slices specifically), not
-a claimed Visual FoxPro 9 command. It does
+`TYPE SQLITE`/`TYPE SQLSERVER`/`TYPE ORACLE`/`TYPE MYSQL` slices specifically),
+not a claimed Visual FoxPro 9 command. It does
 not implement `IMPORT DATABASE` of any kind, provider connections, schema
 mutation, or round-trip reconstruction back into a DBC/DBF from any exported
 format.

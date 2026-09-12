@@ -397,6 +397,74 @@ struct DatabaseSqlExportResult {
     const std::string& dbc_path,
     std::size_t max_rows_per_table = 0U);
 
+// #5554 (parent #137, fifth and final vendor-dialect slice -- MySQL,
+// following #5537's PostgreSQL, #5558's SQLite, #5561's SQL Server, and
+// #5564's Oracle precedent): its own dedicated code path, close enough in
+// shape to SQL Server's own precedent to share its overall structure
+// (per-table index-name scoping, 1/0 boolean literals, blank-date-to-NULL,
+// plain-ISO-string date/datetime literals) but with backtick `identifier`
+// quoting (an embedded backtick escaped by doubling, like every dialect
+// this file emits except Oracle) and native MySQL column types:
+// DECIMAL(19, 4) for VFP currency, INT (MySQL's own 4-byte integer),
+// DOUBLE (MySQL's true IEEE 754 double, an exact width match unlike
+// arbitrary-precision DECIMAL), TINYINT(1) for logical (directly
+// confirmed against a real local MySQL 8.0 engine that MySQL's own
+// BOOLEAN keyword is merely a synonym for TINYINT(1); this exporter
+// declares the underlying type directly), DATE and DATETIME for VFP
+// date/datetime (a plain ISO string loads directly with no special
+// literal wrapper needed, unlike Oracle), VARCHAR(length) for character
+// fields, and LONGTEXT (not the 64 KiB-capped TEXT) for memo/general/
+// picture and any other unrecognized storage type. DECIMAL's own
+// precision is clamped to MySQL's real 65-digit ceiling and its scale to
+// MySQL's own 30-digit ceiling *and* to that (already-clamped) precision
+// -- like SQL Server's own DECIMAL, and a genuine difference from
+// Oracle's own independent scale range -- both directly confirmed against
+// the real engine (DECIMAL(66, 0) and DECIMAL(10, 31) both fail;
+// DECIMAL(10, 20), scale exceeding precision, fails with "M must be >=
+// D"). A blank VFP date/datetime value resolves to NULL rather than an
+// empty string literal -- directly confirmed against the real engine that
+// MySQL 8.0's own default `sql_mode` (including `STRICT_TRANS_TABLES`)
+// rejects `INSERT INTO ... VALUES ('')` into a DATE/DATETIME column
+// outright with error 1292, a third, distinct failure mode from SQL
+// Server's own silent-1900-01-01 corruption and Oracle's own
+// invalid-syntax rejection, but the same NULL-instead-of-empty-string fix
+// applies. The one genuinely MySQL-specific value-encoding difference
+// from every other dialect this file emits: character-ish values are
+// quoted via a dedicated mysql_quote_string_literal(), not the shared
+// sql_quote_string_literal(), because MySQL's own default sql_mode (no
+// `NO_BACKSLASH_ESCAPES`) treats a backslash as a live escape character
+// inside a string literal -- directly confirmed against the real engine
+// that plain ANSI-style doubled-single-quote escaping alone silently
+// misinterprets an embedded backslash (e.g. `\t` becomes an actual TAB
+// character), corrupting a genuinely common case for this codebase (a
+// Windows path in a VFP character/memo field); doubling the backslash
+// too, alongside the single quote, stores the correct literal text. No
+// identifier-collision tracking is needed the way Oracle's own lossy
+// quote-stripping requires, since an embedded backtick is losslessly
+// escaped by doubling. Unlike Oracle's own tight 4000-byte SQL
+// text-literal ceiling, a plain (correctly escaped) string literal is
+// directly confirmed safe for a LONGTEXT value with no special chunking
+// -- MySQL's own `max_allowed_packet` (64 MiB by default) is the only
+// real ceiling -- and an empty string literal correctly stores as an
+// empty (non-NULL) string, unlike Oracle's own silently-NULLed CLOB. Adds
+// the same CREATE INDEX generation export_database_as_postgresql_sql()
+// already implements, scoped to MySQL's own 64-*character* identifier
+// limit (directly confirmed the real engine *rejects*, error 1059,
+// "Identifier name ... is too long", rather than silently truncates an
+// over-length identifier -- the same hard-rejecting failure mode already
+// established for SQL Server/Oracle, character-counted like SQL Server's
+// own `sysname` rather than byte-counted like PostgreSQL's/Oracle's own
+// limits), with that disambiguation set scoped *per table*, not across
+// the whole export -- directly confirmed against the real engine that,
+// like SQL Server and unlike PostgreSQL/SQLite/Oracle, MySQL index names
+// only have to be unique within their own table, and a table can share a
+// name with an unrelated table's own index with no collision either.
+// Tables are resolved the same way export_database_as_sql() resolves
+// them; max_rows_per_table has the same meaning.
+[[nodiscard]] DatabaseSqlExportResult export_database_as_mysql_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table = 0U);
+
 // ---- Whole-database JSON import planning ----
 
 // A validated, in-memory description of a version-1 export snapshot. The

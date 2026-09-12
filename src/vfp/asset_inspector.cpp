@@ -3665,6 +3665,358 @@ DatabaseSqlExportResult export_database_as_oracle_sql(
     return {.ok = true, .error = {}, .sql = sql.str()};
 }
 
+// #5554: MySQL identifier quoting for export_database_as_mysql_sql() --
+// backticks, per MySQL's own public "Schema Object Names" reference. An
+// embedded backtick is escaped by doubling it, like every other dialect
+// this file emits except Oracle -- directly confirmed against a real
+// local MySQL 8.0 engine: `CREATE TABLE `` weird``name`` `` round-tripped
+// correctly through CREATE TABLE and back out of information_schema.
+std::string mysql_quote_identifier(const std::string& name) {
+    std::string quoted = "`";
+    for (const char character : name) {
+        if (character == '`') {
+            quoted += "``";
+        } else {
+            quoted += character;
+        }
+    }
+    quoted += "`";
+    return quoted;
+}
+
+// #5554 (fifth and final vendor-dialect slice of #141's real-target-engine
+// `EXPORT DATABASE` family): unlike every other dialect this file emits --
+// all of which reuse the shared sql_quote_string_literal()'s plain
+// doubled-single-quote escaping -- MySQL cannot, because backslash is a
+// live escape character *inside* a string literal under MySQL's own
+// default `sql_mode` (specifically, whenever `NO_BACKSLASH_ESCAPES` is
+// *not* set, which is the out-of-the-box default this exporter targets,
+// matching how this file already targets each other engine's own default
+// configuration rather than a non-default hardening mode). Directly
+// confirmed against a real local MySQL 8.0 engine: inserting the literal
+// `'C:\temp''s file'` (correct ANSI-style doubled-quote escaping, the
+// same convention sql_quote_string_literal() already applies) stores only
+// 13 characters, not 14 -- the `\t` was silently interpreted as a TAB
+// character, not a literal backslash followed by `t`, corrupting a
+// genuinely common case for this codebase (a Windows path inside a VFP
+// character or memo field). Doubling the backslash too (`'C:\\temp''s
+// file'`) stores the correct, literal 14-character string. So this
+// function escapes *both* a single quote and a backslash by doubling,
+// unlike every sibling dialect's shared helper.
+std::string mysql_quote_string_literal(const std::string& value) {
+    std::string quoted = "'";
+    for (const char character : value) {
+        if (character == '\'' || character == '\\') {
+            quoted += character;
+        }
+        quoted += character;
+    }
+    quoted += "'";
+    return quoted;
+}
+
+// Maps a DBF field descriptor to a native MySQL column type, grounded in
+// MySQL's own public "Data Types" reference (not the ANSI-ish vocabulary
+// sql_column_type() emits, nor any other dialect's own vocabulary this
+// file already maps to). 'Y' (VFP currency) maps to DECIMAL(19, 4), an
+// exact match for VFP currency's own fixed 4-decimal-digit scaled-integer
+// semantics (the same reasoning every other dialect's own currency choice
+// in this file applies). 'I' maps to INT, MySQL's own 4-byte integer,
+// matching VFP's own 4-byte 'I' field width. 'B' maps to DOUBLE, MySQL's
+// true IEEE 754 double-precision type -- an exact width match, unlike
+// DECIMAL's arbitrary-precision semantics. 'L' maps to TINYINT(1) with
+// 1/0 literals: MySQL's own BOOLEAN keyword is documented as merely a
+// synonym for TINYINT(1) (directly confirmed against a real local MySQL
+// 8.0 engine: `SHOW CREATE TABLE` on a `BOOLEAN` column reports
+// `tinyint(1)` verbatim), so this exporter declares the underlying type
+// directly rather than the alias, matching this file's own convention of
+// targeting each engine's own real physical type. 'D' maps to DATE and
+// 'T' to DATETIME -- unlike Oracle, a plain ISO `'YYYY-MM-DD'`/
+// `'YYYY-MM-DD HH:MM:SS'` string loads directly with no special literal
+// wrapper needed (directly confirmed against the real engine). The
+// memo/general/picture and any-other-unrecognized fallback maps to
+// LONGTEXT (up to ~4 GiB) rather than the 64 KiB-capped TEXT, mirroring
+// why export_database_as_sqlserver_sql() picks VARCHAR(MAX) over the
+// legacy TEXT type -- a real VFP memo is not bound by TEXT's own ceiling.
+std::string mysql_column_type(char field_type, std::uint8_t length, std::uint8_t decimal_count) {
+    const char normalized = static_cast<char>(std::toupper(static_cast<unsigned char>(field_type)));
+    switch (normalized) {
+        case 'N':
+        case 'F': {
+            // #5554: a crafted or corrupt DBF header does not have to keep
+            // length/decimal_count within MySQL's own valid ranges the way
+            // a table genuinely written by this codebase's own writer
+            // always does. Directly confirmed against a real local MySQL
+            // 8.0 engine: DECIMAL(65, 0) succeeds while DECIMAL(66, 0)
+            // fails ("Too-big precision 66 specified... Maximum is 65."),
+            // DECIMAL(65, 30) succeeds while DECIMAL(10, 31) fails
+            // ("Too big scale 31... Maximum is 30."), and -- like SQL
+            // Server's own DECIMAL, a genuine difference from Oracle's own
+            // independent scale range -- scale must not exceed precision
+            // (DECIMAL(10, 20) fails: "M must be >= D"). sqlserver_column_type()
+            // already applies the identical clamp-scale-to-precision
+            // pattern for SQL Server's own 38-digit ceiling.
+            constexpr std::uint8_t max_mysql_decimal_precision = 65U;
+            constexpr std::uint8_t max_mysql_decimal_scale = 30U;
+            const std::uint8_t precision = std::min(
+                std::max(length, static_cast<std::uint8_t>(1U)),
+                max_mysql_decimal_precision);
+            const std::uint8_t scale = std::min(
+                {decimal_count, max_mysql_decimal_scale, precision});
+            return "DECIMAL(" + std::to_string(precision) + ", " + std::to_string(scale) + ")";
+        }
+        case 'Y':
+            return "DECIMAL(19, 4)";
+        case 'I':
+            return "INT";
+        case 'B':
+            return "DOUBLE";
+        case 'L':
+            return "TINYINT(1)";
+        case 'D':
+            return "DATE";
+        case 'T':
+            return "DATETIME";
+        case 'C':
+        case 'V':
+            return "VARCHAR(" + std::to_string(length > 0U ? length : 255U) + ")";
+        default:
+            // M, G, P, and any other/unrecognized storage type.
+            return "LONGTEXT";
+    }
+}
+
+// #5554: MySQL's dialect is close enough to the SQL Server precedent
+// (export_database_as_sqlserver_sql()) to share its overall shape --
+// mysql_quote_identifier()/mysql_column_type() for identifiers/types, and
+// the same 1/0 boolean-literal, blank-date-to-NULL, and plain-ISO-string
+// date/datetime handling -- but keeps its own dedicated function per this
+// file's established per-vendor precedent, and (the one genuinely
+// MySQL-specific value-encoding difference) uses mysql_quote_string_literal()
+// rather than the shared sql_quote_string_literal() for every character-ish
+// value, since MySQL's own default sql_mode treats backslash as a live
+// escape character inside a string literal (see that function's own
+// comment for the real-engine-confirmed data-corruption this avoids).
+// Unlike Oracle, no identifier-collision tracking is needed here: an
+// embedded backtick is losslessly escaped by doubling (like SQL Server's
+// own `]]`), not stripped, so two distinct source names can never
+// sanitize to the same quoted identifier. Directly confirmed against a
+// real local MySQL 8.0 engine that a blank VFP date/datetime field's own
+// empty display_value must resolve to NULL, not an empty string literal:
+// under MySQL 8.0's own default `sql_mode` (which includes
+// `STRICT_TRANS_TABLES`), `INSERT INTO ... VALUES ('')` into a DATE or
+// DATETIME column fails outright with error 1292 ("Incorrect date value:
+// ''"/"Incorrect datetime value: ''") rather than SQL Server's own
+// silent-1900-01-01 data corruption or Oracle's own invalid-syntax
+// rejection -- a third, distinct failure mode from the two dialects this
+// file already handles, but the same NULL-instead-of-empty-string fix
+// applies. And, unlike Oracle's own CLOB, a plain (correctly escaped)
+// string literal is safe for a MySQL LONGTEXT value with no special
+// chunking: directly confirmed a 10,000-byte literal loads correctly in
+// one statement (MySQL's own `max_allowed_packet` -- 64 MiB by default in
+// 8.0 -- is the only real ceiling, nothing like Oracle's tight 4000-byte
+// SQL text-literal limit), and an empty string literal correctly stores
+// as an empty (non-NULL) string, not Oracle's own silently-NULLed CLOB.
+// Returns every successfully-parsed table the same way
+// write_sqlserver_tables_and_data() does, so write_mysql_create_indexes()
+// doesn't have to re-open and re-parse the same .dbf a second time.
+std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
+    std::ostringstream& sql,
+    const DatabaseCatalogSnapshot& snapshot,
+    std::size_t row_limit) {
+    std::vector<ParsedSqlExportTable> parsed_tables;
+    for (const auto& rt : snapshot.resolved_tables) {
+        DbfTableParseResult tbl = parse_dbf_table_from_file(
+            copperfin::platform::path_to_utf8_string(rt.path), row_limit);
+        if (!tbl.ok) {
+            sql << "-- skipped table " << sql_sanitize_comment_text(rt.name) << ": "
+                << sql_sanitize_comment_text(tbl.error) << "\n\n";
+            continue;
+        }
+
+        const std::string quoted_table = mysql_quote_identifier(rt.name);
+        sql << "CREATE TABLE " << quoted_table << " (\n";
+        for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
+            const auto& fld = tbl.table.fields[fi];
+            const bool last_field = (fi + 1U == tbl.table.fields.size());
+            sql << "    " << mysql_quote_identifier(fld.name) << " "
+                << mysql_column_type(fld.type, fld.length, fld.decimal_count)
+                << (last_field ? "\n" : ",\n");
+        }
+        sql << ");\n\n";
+
+        for (const auto& rec : tbl.table.records) {
+            if (rec.deleted) {
+                continue;
+            }
+            sql << "INSERT INTO " << quoted_table << " (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                sql << mysql_quote_identifier(rec.values[vi].field_name)
+                    << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ") VALUES (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                const auto& rv = rec.values[vi];
+                const char ft = static_cast<char>(
+                    std::toupper(static_cast<unsigned char>(rv.field_type)));
+                const bool is_numeric = (ft == 'N' || ft == 'F' || ft == 'I' || ft == 'B' || ft == 'Y');
+                const bool is_logical = (ft == 'L');
+                const bool is_date = (ft == 'D');
+                const bool is_datetime = (ft == 'T');
+                if (rv.is_null) {
+                    sql << "NULL";
+                } else if (is_logical) {
+                    const std::string& lv = rv.display_value;
+                    if (lv == "true") {
+                        sql << "1";
+                    } else if (lv == "false") {
+                        sql << "0";
+                    } else {
+                        sql << "NULL";
+                    }
+                } else if (is_numeric) {
+                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
+                        ? rv.display_value
+                        : "NULL");
+                } else if (is_date) {
+                    // A blank VFP date's own empty display_value must
+                    // become NULL, not an empty string literal -- see
+                    // this function's own comment above for the real
+                    // engine's own strict-mode rejection (error 1292).
+                    sql << (rv.display_value.empty() ? "NULL" : mysql_quote_string_literal(rv.display_value));
+                } else if (is_datetime) {
+                    const auto converted = sql_datetime_literal_from_storage(rv.display_value);
+                    sql << (converted.has_value() ? mysql_quote_string_literal(*converted) : "NULL");
+                } else {
+                    sql << mysql_quote_string_literal(rv.display_value);
+                }
+                sql << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ");\n";
+        }
+        sql << "\n";
+        parsed_tables.push_back({.resolved = rt, .table = std::move(tbl.table)});
+    }
+    return parsed_tables;
+}
+
+// MySQL's own identifier limit (64 *characters*, not bytes -- directly
+// confirmed against a real local MySQL 8.0 engine that a 64-character
+// identifier succeeds while a 65-character one fails outright with error
+// 1059, "Identifier name ... is too long", and that this holds true by
+// character count rather than byte count: 64 two-byte UTF-8 characters
+// (128 bytes) succeeds identically to 64 ASCII characters, while 65 of
+// either fails the same way) -- see utf8_safe_truncate()'s own comment
+// for why this uses IdentifierLengthUnit::unicode_code_points, matching
+// SQL Server's own character-counted `sysname` rather than PostgreSQL's/
+// Oracle's own byte-counted limits. Index names share this identical
+// 64-character ceiling (directly confirmed the same way).
+constexpr std::size_t kMysqlMaxIdentifierCodePoints = 64U;
+
+// #5554: MySQL's own CREATE INDEX syntax is identical to PostgreSQL's for
+// this exporter's plain-column-reference case (see
+// write_postgresql_create_indexes()'s own comment for the full scope and
+// documented non-goals -- composite/expression keys skipped as a
+// comment, no per-tag uniqueness captured). Kept as its own dedicated
+// function rather than a shared/renamed one, matching this file's own
+// established per-vendor-dialect precedent.
+//
+// Like SQL Server (#5561) and *unlike* PostgreSQL/SQLite/Oracle
+// (#5559/#5558/#5564), MySQL index names are *not* schema-wide -- directly
+// confirmed against a real local MySQL 8.0 engine: two different tables
+// can each carry an index of the identical name with no error at all, and
+// a table can be named identically to an unrelated table's own index
+// without collision either (an index's own namespace is scoped to the
+// table it belongs to). `used_index_names` is therefore a fresh, per-table
+// set (not threaded in from the caller across the whole export), exactly
+// mirroring write_sqlserver_create_indexes()'s own scoping and its own
+// stated reasoning for why a same-table collision can still arise purely
+// from truncation once a table name alone is at or beyond the 64-character
+// limit.
+void write_mysql_create_indexes(
+    std::ostringstream& sql,
+    const DatabaseCatalogSnapshot::ResolvedTable& rt,
+    const std::vector<DbfFieldDescriptor>& fields) {
+    const SidecarPathResolution cdx_resolution = resolve_vfp_sidecar_path(rt.path, ".cdx");
+    if (!cdx_resolution.path.has_value()) {
+        return;
+    }
+    const std::string quoted_table = mysql_quote_identifier(rt.name);
+    const IndexParseResult index_result = parse_index_probe_from_file(
+        copperfin::platform::path_to_utf8_string(*cdx_resolution.path));
+    if (!index_result.ok || index_result.probe.kind != IndexKind::cdx) {
+        sql << "-- skipped indexes on " << sql_sanitize_comment_text(rt.name)
+            << ": companion .cdx exists but could not be read as a compound index\n\n";
+        return;
+    }
+
+    std::set<std::string> used_index_names;
+    bool wrote_anything = false;
+    for (std::size_t tag_index = 0U; tag_index < index_result.probe.tags.size(); ++tag_index) {
+        const IndexTagProbe& tag = index_result.probe.tags[tag_index];
+        const auto column = plain_column_name_for_index_tag(tag.key_expression_hint, fields);
+        const std::string tag_label = tag.name_hint.empty() ? std::string("(unnamed tag)") : tag.name_hint;
+        if (!column.has_value()) {
+            sql << "-- skipped index " << sql_sanitize_comment_text(tag_label)
+                << " on " << sql_sanitize_comment_text(rt.name)
+                << ": key expression is not a plain column reference\n";
+            wrote_anything = true;
+            continue;
+        }
+        const std::string tag_identity =
+            tag.name_hint.empty() ? ("tag" + std::to_string(tag_index)) : tag.name_hint;
+        const std::string index_name = disambiguate_index_name(
+            rt.name + "_" + tag_identity + "_idx", used_index_names,
+            kMysqlMaxIdentifierCodePoints, IdentifierLengthUnit::unicode_code_points);
+        sql << "CREATE INDEX " << mysql_quote_identifier(index_name)
+            << " ON " << quoted_table << " (" << mysql_quote_identifier(*column) << ");\n";
+        wrote_anything = true;
+    }
+    if (wrote_anything) {
+        sql << "\n";
+    }
+}
+
+DatabaseSqlExportResult export_database_as_mysql_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        return {.ok = false, .error = snapshot.error, .sql = {}};
+    }
+
+    std::ostringstream sql;
+    sql.imbue(std::locale::classic());
+    // MySQL's own SQL dialect does support "-- ..." line comments
+    // (directly confirmed against a real local MySQL 8.0 engine alongside
+    // this exporter's whole dialect), so this script carries the same
+    // header/provenance and skipped-table comment lines this file's other
+    // TYPE variants already do.
+    sql << "-- Copperfin EXPORT DATABASE ... TYPE MYSQL\n";
+    sql << "-- database: " << sql_sanitize_comment_text(snapshot.db_name) << "\n";
+    sql << "-- source: " << sql_sanitize_comment_text(dbc_path) << "\n\n";
+
+    const std::size_t row_limit = (max_rows_per_table == 0U)
+        ? std::numeric_limits<std::size_t>::max()
+        : max_rows_per_table;
+
+    const std::vector<ParsedSqlExportTable> parsed_tables =
+        write_mysql_tables_and_data(sql, snapshot, row_limit);
+
+    // Unlike export_database_as_postgresql_sql()/export_database_as_sqlite_sql()/
+    // export_database_as_oracle_sql(), no whole-export used_index_names set
+    // is threaded through here -- write_mysql_create_indexes() keeps its own
+    // fresh per-table set internally, matching MySQL's real per-table (not
+    // schema-wide) index-name scoping, the same as SQL Server's own #5561
+    // precedent.
+    for (const auto& parsed : parsed_tables) {
+        write_mysql_create_indexes(sql, parsed.resolved, parsed.table.fields);
+    }
+
+    return {.ok = true, .error = {}, .sql = sql.str()};
+}
+
 DatabaseJsonImportPlanResult build_database_json_import_plan(const std::string_view document) {
     using copperfin::platform::JsonSelectionError;
     using copperfin::platform::JsonValueKind;
