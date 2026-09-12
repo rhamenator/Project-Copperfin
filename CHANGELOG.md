@@ -1,3 +1,27 @@
+- 2026-09-12: Fixed an unbounded-memory regression in `materialize_
+  database_json_import_plan()` (`src/vfp/asset_inspector.cpp`, #5745,
+  found by an automated Codex code-review pass against the just-merged
+  #5678 fix). The case-insensitive destination-directory scan #5678
+  added retained every entry in the destination directory in memory
+  regardless of whether it matched a planned destination, so memory
+  scaled with destination-directory cardinality rather than with the
+  import plan's own size -- a standalone reproduction measured ~24 MiB
+  RSS growth for 50,000 unrelated files in the destination directory
+  (the reported issue measured ~98 MiB for 200,000). Fixed by deriving
+  the plan's own small, bounded set of case-folded destination
+  basenames (the DBC itself, each table's `.dbf`, each table's `.fpt`)
+  before scanning, and discarding any directory entry that doesn't
+  match one of them instead of retaining it -- the same reproduction
+  now measures a 0 KiB RSS delta for the same 50,000 unrelated files.
+  New regression test
+  (`test_materialize_database_json_import_plan_ignores_unrelated_
+  directory_entries`) proves the functional-correctness side: a
+  legitimate import still succeeds, and a real case-folded collision is
+  still detected, among thousands of unrelated directory entries.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-004 updated.
+
 - 2026-09-12: Closed a data-integrity gap in `materialize_database_json_
   import_plan()` (`src/vfp/asset_inspector.cpp`, #5678, found by an
   automated Codex code-review pass): the shared JSON/SQL database import
