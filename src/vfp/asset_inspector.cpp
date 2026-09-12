@@ -2025,6 +2025,105 @@ std::string sqlserver_column_type(char field_type, std::uint8_t length, std::uin
     }
 }
 
+// #5554: Oracle identifier quoting for export_database_as_oracle_sql() --
+// double quotes, per Oracle's own public SQL Language Reference
+// "Database Object Naming Rules". Unlike every other dialect this file
+// emits (all of which escape an embedded quote character by doubling
+// it), Oracle provides *no* escape mechanism for a double quote inside
+// a quoted identifier at all -- directly confirmed against a real local
+// Oracle 23ai engine: `CREATE TABLE "weird""name" (...)` fails outright
+// with ORA-25716 ("The identifier contains a double quotation mark (")
+// character"), not the doubled-quote-survives-as-literal-quote behavior
+// every other dialect's own quoting convention relies on. A crafted or
+// corrupt DBC/DBF is not bound to avoid embedding one, so this strips
+// any embedded `"` outright (a deliberately lossy transformation,
+// unlike the other three dialects' lossless doubling) rather than
+// emit identifier text a real Oracle engine would reject wholesale.
+std::string oracle_quote_identifier(const std::string& name) {
+    std::string quoted = "\"";
+    for (const char character : name) {
+        if (character != '"') {
+            quoted += character;
+        }
+    }
+    quoted += "\"";
+    return quoted;
+}
+
+// Maps a DBF field descriptor to a native Oracle SQL column type,
+// grounded in Oracle's own public SQL Language Reference data types
+// documentation (not the ANSI-ish vocabulary sql_column_type() emits,
+// nor any other dialect's own vocabulary this file already maps to --
+// Oracle has its own distinct type names and numeric-precision/scale
+// rules). 'Y' (VFP currency) maps to NUMBER(19, 4), an exact match for
+// VFP currency's own fixed 4-decimal-digit scaled-integer semantics
+// (the same reasoning export_database_as_sqlserver_sql() applies to its
+// own MONEY choice). 'I' maps to INTEGER, Oracle's own documented ANSI-
+// compatible subtype of NUMBER(38). 'B' (VFP double) maps to
+// BINARY_DOUBLE, Oracle's true IEEE 754 double-precision type -- an
+// exact width match, unlike NUMBER's arbitrary-precision decimal
+// semantics. 'L' (logical) maps to NUMBER(1) with 1/0 literals (see
+// write_oracle_tables_and_data()'s own comment): Oracle has no
+// dedicated BOOLEAN table-column type prior to Oracle 23c, and this
+// exporter targets the traditional, universally-supported convention
+// rather than a feature only the newest Oracle major version has --
+// directly confirmed against a real local Oracle 23ai engine that even
+// there, `INSERT ... VALUES (TRUE)` into a NUMBER(1) column silently
+// converts to 1 rather than erroring, so 1/0 is not merely the safe
+// choice but the one every Oracle version -- old or new -- accepts
+// identically. The memo/general/picture and any-other-unrecognized
+// fallback maps to CLOB, Oracle's own unbounded text type (VARCHAR2
+// caps at 4000 bytes by default, too narrow to assume large enough).
+std::string oracle_column_type(char field_type, std::uint8_t length, std::uint8_t decimal_count) {
+    const char normalized = static_cast<char>(std::toupper(static_cast<unsigned char>(field_type)));
+    switch (normalized) {
+        case 'N':
+        case 'F': {
+            // #5554: a crafted or corrupt DBF header does not have to
+            // keep length/decimal_count within Oracle's own valid
+            // ranges the way a table genuinely written by this
+            // codebase's own writer always does. Directly confirmed
+            // against a real local Oracle 23ai engine: NUMBER(38, 0)
+            // succeeds while NUMBER(39, 0) fails ("numeric precision
+            // specifier is out of range (1 to 38)"), and -- a real,
+            // material difference from SQL Server's own DECIMAL, whose
+            // scale must not exceed its own precision -- Oracle's own
+            // scale is independent of precision entirely, valid from
+            // -84 to 127 regardless of precision (NUMBER(10, 127)
+            // succeeds; NUMBER(10, 128) fails, "numeric scale specifier
+            // is out of range (-84 to 127)"). Clamping scale to
+            // precision the way access_column_type()/sqlserver_column_type()
+            // do would therefore silently narrow a scale Oracle itself
+            // has no problem with.
+            constexpr std::uint8_t max_oracle_number_precision = 38U;
+            constexpr std::uint8_t max_oracle_number_scale = 127U;
+            const std::uint8_t precision = std::min(
+                std::max(length, static_cast<std::uint8_t>(1U)),
+                max_oracle_number_precision);
+            const std::uint8_t scale = std::min(decimal_count, max_oracle_number_scale);
+            return "NUMBER(" + std::to_string(precision) + ", " + std::to_string(scale) + ")";
+        }
+        case 'Y':
+            return "NUMBER(19, 4)";
+        case 'I':
+            return "INTEGER";
+        case 'B':
+            return "BINARY_DOUBLE";
+        case 'L':
+            return "NUMBER(1)";
+        case 'D':
+            return "DATE";
+        case 'T':
+            return "TIMESTAMP";
+        case 'C':
+        case 'V':
+            return "VARCHAR2(" + std::to_string(length > 0U ? length : 255U) + ")";
+        default:
+            // M, G, P, and any other/unrecognized storage type.
+            return "CLOB";
+    }
+}
+
 // Strips C0 control characters (CR/LF in particular) from text destined for
 // a single-line "-- ..." SQL comment. export_database_as_sql()'s database
 // name and source path both come from data an untrusted/crafted DBC could
@@ -2930,6 +3029,209 @@ void write_sqlserver_create_indexes(
     }
 }
 
+// #5554: Oracle's dialect diverges from the portable/ANSI-ish baseline
+// enough that this exporter does not reuse write_sql_tables_and_data()
+// at all (the same reason export_database_as_sqlserver_sql()/
+// export_database_as_access_sql() each have their own inline loop):
+// oracle_quote_identifier()/oracle_column_type() for identifiers/types,
+// and two INSERT-value-encoding differences from the shared writer.
+// First, like SQL Server's own BIT, a NUMBER(1) logical column's
+// literal is 1/0 -- directly confirmed against a real local Oracle 23ai
+// engine that, while `INSERT ... VALUES (TRUE)` does succeed there
+// (Oracle 23c's own new implicit boolean-to-number conversion), this
+// exporter targets 1/0 instead since it is the one literal form every
+// Oracle version -- not just the newest major release -- accepts
+// identically. Second, and unlike every other dialect this file emits
+// (all of which quote a 'D'/'T' value as a plain string that the target
+// engine implicitly converts), a bare `'2026-01-15'` string is *not*
+// safe for an Oracle DATE/TIMESTAMP column: implicit string-to-date
+// conversion depends on the session's own NLS_DATE_FORMAT, which
+// defaults to `DD-MON-RR` (directly confirmed against the real engine:
+// `INSERT INTO ... VALUES ('2026-01-15')` into a DATE column fails with
+// ORA-01861, "literal does not match format string"), not the ISO
+// `YYYY-MM-DD` shape this codebase's own decode_value() produces.
+// Oracle's own ANSI-style `DATE 'YYYY-MM-DD'`/`TIMESTAMP 'YYYY-MM-DD
+// HH:MM:SS'` literal syntax is documented to always parse in that exact
+// ISO shape regardless of NLS settings, directly confirmed against the
+// real engine. A blank VFP date's own empty display_value therefore
+// cannot merely fall back to a quoted empty string the way SQL Server's
+// own (data-corrupting, but at least *not erroring*) blank-date case
+// does: `DATE ''` is not valid syntax at all (directly confirmed:
+// ORA-01841, "(full) year must be between -4713 and +9999, and not be
+// 0") -- so a blank date must resolve to NULL for this exporter to
+// produce a script that loads at all, not merely one that avoids
+// silently inventing data the way SQL Server's own #5562-era fix cared
+// about.
+std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
+    std::ostringstream& sql,
+    const DatabaseCatalogSnapshot& snapshot,
+    std::size_t row_limit) {
+    std::vector<ParsedSqlExportTable> parsed_tables;
+    for (const auto& rt : snapshot.resolved_tables) {
+        DbfTableParseResult tbl = parse_dbf_table_from_file(
+            copperfin::platform::path_to_utf8_string(rt.path), row_limit);
+        if (!tbl.ok) {
+            sql << "-- skipped table " << sql_sanitize_comment_text(rt.name) << ": "
+                << sql_sanitize_comment_text(tbl.error) << "\n\n";
+            continue;
+        }
+
+        const std::string quoted_table = oracle_quote_identifier(rt.name);
+        sql << "CREATE TABLE " << quoted_table << " (\n";
+        for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
+            const auto& fld = tbl.table.fields[fi];
+            const bool last_field = (fi + 1U == tbl.table.fields.size());
+            sql << "    " << oracle_quote_identifier(fld.name) << " "
+                << oracle_column_type(fld.type, fld.length, fld.decimal_count)
+                << (last_field ? "\n" : ",\n");
+        }
+        sql << ");\n\n";
+
+        for (const auto& rec : tbl.table.records) {
+            if (rec.deleted) {
+                continue;
+            }
+            sql << "INSERT INTO " << quoted_table << " (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                sql << oracle_quote_identifier(rec.values[vi].field_name)
+                    << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ") VALUES (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                const auto& rv = rec.values[vi];
+                const char ft = static_cast<char>(
+                    std::toupper(static_cast<unsigned char>(rv.field_type)));
+                const bool is_numeric = (ft == 'N' || ft == 'F' || ft == 'I' || ft == 'B' || ft == 'Y');
+                const bool is_logical = (ft == 'L');
+                const bool is_date = (ft == 'D');
+                const bool is_datetime = (ft == 'T');
+                if (rv.is_null) {
+                    sql << "NULL";
+                } else if (is_logical) {
+                    // Oracle NUMBER(1) literals are 1/0 -- see this
+                    // function's own comment above.
+                    const std::string& lv = rv.display_value;
+                    if (lv == "true") {
+                        sql << "1";
+                    } else if (lv == "false") {
+                        sql << "0";
+                    } else {
+                        sql << "NULL";
+                    }
+                } else if (is_numeric) {
+                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
+                        ? rv.display_value
+                        : "NULL");
+                } else if (is_date) {
+                    // A blank date must become NULL, not `DATE ''` --
+                    // see this function's own comment above for why
+                    // that specific literal form is invalid Oracle
+                    // syntax outright, not merely lossy. A non-blank
+                    // value already decodes to a plain "YYYY-MM-DD"
+                    // string (dbf_table.cpp's decode_value() 'D' case),
+                    // which the ANSI DATE literal wrapper accepts
+                    // exactly, independent of session NLS_DATE_FORMAT.
+                    sql << (rv.display_value.empty()
+                        ? "NULL"
+                        : ("DATE " + sql_quote_string_literal(rv.display_value)));
+                } else if (is_datetime) {
+                    const auto converted = sql_datetime_literal_from_storage(rv.display_value);
+                    sql << (converted.has_value()
+                        ? ("TIMESTAMP " + sql_quote_string_literal(*converted))
+                        : "NULL");
+                } else {
+                    sql << sql_quote_string_literal(rv.display_value);
+                }
+                sql << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ");\n";
+        }
+        sql << "\n";
+        parsed_tables.push_back({.resolved = rt, .table = std::move(tbl.table)});
+    }
+    return parsed_tables;
+}
+
+// Oracle's own identifier limit (128 *bytes* -- a real, material
+// difference from SQL Server's own character-counted `sysname`, see
+// utf8_safe_truncate()'s own comment on why the two need genuinely
+// different IdentifierLengthUnit values): directly confirmed against a
+// real local Oracle 23ai engine that a 128-byte identifier succeeds
+// while a 129-byte one fails outright with ORA-00972 ("identifier ...
+// exceeds the maximum length of 128 bytes") -- the same hard-rejecting
+// (not silently-truncating) failure mode #5554 already established for
+// SQL Server, just byte-counted like PostgreSQL's own 63-byte limit
+// rather than character-counted.
+constexpr std::size_t kOracleMaxIdentifierBytes = 128U;
+
+// #5554: Oracle's own CREATE INDEX syntax is identical to PostgreSQL's
+// for this exporter's plain-column-reference case (see
+// write_postgresql_create_indexes()'s own comment for the full scope
+// and documented non-goals -- composite/expression keys skipped as a
+// comment, no per-tag uniqueness captured). Kept as its own dedicated
+// function rather than a shared/renamed one, matching this file's own
+// established per-vendor-dialect precedent.
+//
+// Oracle's own namespace rules are a genuine hybrid of the other two
+// patterns this file already handles, directly confirmed against a
+// real local Oracle 23ai engine rather than assumed from either
+// precedent: like PostgreSQL/SQLite (#5559, #5558), and *unlike* SQL
+// Server, index names must be unique *schema-wide* -- two different
+// tables cannot each carry an index of the identical name (ORA-00955,
+// "name is already used by an existing object"). But like SQL Server,
+// and *unlike* PostgreSQL, tables and indexes live in *separate*
+// namespaces -- a table can share its own name with an unrelated
+// table's index with no collision at all (Oracle's own public "Schema
+// Object Namespaces" reference documents this: TABLES/VIEWS/SEQUENCES/
+// private synonyms share one namespace, while INDEXES/CLUSTERS have
+// their own). `used_index_names` is therefore threaded across the
+// *whole* export the way PostgreSQL's/SQLite's own sets are, but --
+// unlike PostgreSQL's own #5559 fix -- deliberately *not* seeded with
+// already-emitted table names, since that specific collision cannot
+// occur on this engine.
+void write_oracle_create_indexes(
+    std::ostringstream& sql,
+    const DatabaseCatalogSnapshot::ResolvedTable& rt,
+    const std::vector<DbfFieldDescriptor>& fields,
+    std::set<std::string>& used_index_names) {
+    const SidecarPathResolution cdx_resolution = resolve_vfp_sidecar_path(rt.path, ".cdx");
+    if (!cdx_resolution.path.has_value()) {
+        return;
+    }
+    const std::string quoted_table = oracle_quote_identifier(rt.name);
+    const IndexParseResult index_result = parse_index_probe_from_file(
+        copperfin::platform::path_to_utf8_string(*cdx_resolution.path));
+    if (!index_result.ok || index_result.probe.kind != IndexKind::cdx) {
+        sql << "-- skipped indexes on " << sql_sanitize_comment_text(rt.name)
+            << ": companion .cdx exists but could not be read as a compound index\n\n";
+        return;
+    }
+
+    bool wrote_anything = false;
+    for (std::size_t tag_index = 0U; tag_index < index_result.probe.tags.size(); ++tag_index) {
+        const IndexTagProbe& tag = index_result.probe.tags[tag_index];
+        const auto column = plain_column_name_for_index_tag(tag.key_expression_hint, fields);
+        const std::string tag_label = tag.name_hint.empty() ? std::string("(unnamed tag)") : tag.name_hint;
+        if (!column.has_value()) {
+            sql << "-- skipped index " << sql_sanitize_comment_text(tag_label)
+                << " on " << sql_sanitize_comment_text(rt.name)
+                << ": key expression is not a plain column reference\n";
+            wrote_anything = true;
+            continue;
+        }
+        const std::string tag_identity =
+            tag.name_hint.empty() ? ("tag" + std::to_string(tag_index)) : tag.name_hint;
+        const std::string index_name = disambiguate_index_name(
+            rt.name + "_" + tag_identity + "_idx", used_index_names, kOracleMaxIdentifierBytes);
+        sql << "CREATE INDEX " << oracle_quote_identifier(index_name)
+            << " ON " << quoted_table << " (" << oracle_quote_identifier(*column) << ");\n";
+        wrote_anything = true;
+    }
+    if (wrote_anything) {
+        sql << "\n";
+    }
+}
+
 }  // namespace
 
 DatabaseSqlExportResult export_database_as_sql(
@@ -3185,6 +3487,51 @@ DatabaseSqlExportResult export_database_as_sqlserver_sql(
     // real-engine verification this is grounded in.
     for (const auto& parsed : parsed_tables) {
         write_sqlserver_create_indexes(sql, parsed.resolved, parsed.table.fields);
+    }
+
+    return {.ok = true, .error = {}, .sql = sql.str()};
+}
+
+DatabaseSqlExportResult export_database_as_oracle_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    const DatabaseCatalogSnapshot snapshot = load_database_catalog_snapshot(dbc_path);
+    if (!snapshot.ok) {
+        return {.ok = false, .error = snapshot.error, .sql = {}};
+    }
+
+    std::ostringstream sql;
+    sql.imbue(std::locale::classic());
+    // Oracle's own SQL dialect does support "-- ..." line comments
+    // (directly confirmed against a real local Oracle 23ai engine
+    // alongside this exporter's whole dialect), so this script carries
+    // the same header/provenance and skipped-table comment lines
+    // export_database_as_sql()/export_database_as_postgresql_sql()/
+    // export_database_as_sqlite_sql()/export_database_as_sqlserver_sql()
+    // already do.
+    sql << "-- Copperfin EXPORT DATABASE ... TYPE ORACLE\n";
+    sql << "-- database: " << sql_sanitize_comment_text(snapshot.db_name) << "\n";
+    sql << "-- source: " << sql_sanitize_comment_text(dbc_path) << "\n\n";
+
+    const std::size_t row_limit = (max_rows_per_table == 0U)
+        ? std::numeric_limits<std::size_t>::max()
+        : max_rows_per_table;
+
+    const std::vector<ParsedSqlExportTable> parsed_tables =
+        write_oracle_tables_and_data(sql, snapshot, row_limit);
+
+    // Unlike SQL Server (a fresh per-table set, its own real per-table
+    // index scoping) but like PostgreSQL/SQLite (schema-wide scoping,
+    // #5559/#5558), Oracle index names are unique across the whole
+    // export -- but, unlike PostgreSQL specifically, this set is *not*
+    // seeded with already-emitted table names, since Oracle keeps
+    // tables and indexes in separate namespaces. See
+    // write_oracle_create_indexes()'s own comment for the real-engine
+    // verification this is grounded in.
+    std::set<std::string> used_index_names;
+    for (const auto& parsed : parsed_tables) {
+        write_oracle_create_indexes(sql, parsed.resolved, parsed.table.fields, used_index_names);
     }
 
     return {.ok = true, .error = {}, .sql = sql.str()};

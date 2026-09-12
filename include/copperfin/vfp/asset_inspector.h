@@ -331,6 +331,72 @@ struct DatabaseSqlExportResult {
     const std::string& dbc_path,
     std::size_t max_rows_per_table = 0U);
 
+// #5554 (parent #137, fourth vendor-dialect slice -- Oracle, following
+// #5537's PostgreSQL, #5558's SQLite, and #5561's SQL Server
+// precedent): its own dedicated code path, matching "one TYPE <VENDOR>
+// variant per target engine." Oracle's dialect diverges from the
+// portable/ANSI-ish baseline enough that this exporter does not reuse
+// write_sql_tables_and_data() at all (the same reason
+// export_database_as_sqlserver_sql()/export_database_as_access_sql()
+// each have their own inline loop): double-quoted `"identifier"`
+// quoting with *no* escape mechanism for an embedded quote at all
+// (directly confirmed against a real local Oracle 23ai engine:
+// `CREATE TABLE "weird""name"` fails outright with ORA-25716, a real,
+// material difference from every other dialect this file emits, all of
+// which escape an embedded quote by doubling it -- so an embedded quote
+// is stripped rather than doubled here), `NUMBER(19, 4)` for VFP
+// currency (an exact match for its own fixed 4-decimal-digit scale),
+// `INTEGER` (Oracle's own documented ANSI-compatible `NUMBER(38)`
+// subtype), `BINARY_DOUBLE` (Oracle's true IEEE 754 double, an exact
+// width match unlike arbitrary-precision `NUMBER`), `NUMBER(1)` for
+// logical with `1`/`0` literals (Oracle has no dedicated table-column
+// `BOOLEAN` type before Oracle 23c; this exporter targets the
+// traditional convention every Oracle version accepts identically,
+// directly confirmed that even Oracle 23c's own new `TRUE`/`FALSE`
+// support for a `NUMBER(1)` column silently converts to `1`/`0`
+// anyway), and `CLOB` -- not `VARCHAR2`'s 4000-byte-default-capped text
+// -- for memo/general/picture and any other unrecognized storage type.
+// `NUMBER`'s own precision (clamped to Oracle's real 38-digit ceiling)
+// and scale (clamped to Oracle's real -84..127 range, independent of
+// precision -- a genuine difference from SQL Server's own DECIMAL,
+// whose scale must not exceed its own precision) are both directly
+// confirmed against the real engine. A VFP date/datetime value is
+// wrapped in Oracle's own ANSI-style `DATE 'YYYY-MM-DD'`/
+// `TIMESTAMP 'YYYY-MM-DD HH:MM:SS'` literal syntax rather than emitted
+// as a plain quoted string the way every other dialect's own D/T
+// handling does -- directly confirmed against the real engine that a
+// bare ISO-shaped string is *not* safe here (implicit string-to-date
+// conversion depends on the session's own `NLS_DATE_FORMAT`, which
+// defaults to `DD-MON-RR`, not `YYYY-MM-DD`; `INSERT ... VALUES
+// ('2026-01-15')` into a `DATE` column fails with ORA-01861), while the
+// ANSI literal form is documented to always parse in exactly that ISO
+// shape regardless of session settings. A blank VFP date therefore
+// cannot fall back to a quoted empty string the way SQL Server's own
+// (data-corrupting-but-not-erroring) blank-date case does -- `DATE ''`
+// is invalid syntax outright (ORA-01841) -- so it resolves to `NULL`
+// instead, a correctness requirement here, not merely a data-integrity
+// improvement. Adds the same `CREATE INDEX` generation
+// export_database_as_postgresql_sql() already implements, scoped to
+// Oracle's own 128-*byte* identifier limit (directly confirmed the real
+// engine *rejects*, ORA-00972, rather than silently truncates an
+// over-length identifier, the same hard-rejecting failure mode #5554
+// already established for SQL Server, just byte-counted like
+// PostgreSQL's own 63-byte limit rather than character-counted like SQL
+// Server's), with index-name disambiguation threaded across the *whole*
+// export like PostgreSQL/SQLite's own schema-wide scoping (directly
+// confirmed against the real engine: two different tables cannot each
+// carry an index of the identical name, ORA-00955) but -- a genuine
+// hybrid of both precedents this file already handles, not matching
+// either exactly -- *not* seeded with already-emitted table names the
+// way PostgreSQL's own #5559 fix is, since Oracle keeps tables and
+// indexes in separate namespaces (directly confirmed: a table can share
+// its own name with an unrelated table's index with no collision at
+// all). Tables are resolved the same way export_database_as_sql()
+// resolves them; max_rows_per_table has the same meaning.
+[[nodiscard]] DatabaseSqlExportResult export_database_as_oracle_sql(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table = 0U);
+
 // ---- Whole-database JSON import planning ----
 
 // A validated, in-memory description of a version-1 export snapshot. The

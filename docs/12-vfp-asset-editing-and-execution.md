@@ -194,18 +194,20 @@ EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE ACCESS
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE POSTGRESQL
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE SQLITE
 EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE SQLSERVER
+EXPORT DATABASE 'northwind.dbc' TO 'northwind-snapshot' TYPE ORACLE
 ```
 
 The command resolves relative source and destination paths from the current default
 directory, adds `.json` (`TYPE JSON`) or `.sql` (`TYPE SQL`/`TYPE ACCESS`/
-`TYPE POSTGRESQL`/`TYPE SQLITE`/`TYPE SQLSERVER`) when the destination has no
-extension, and emits
+`TYPE POSTGRESQL`/`TYPE SQLITE`/`TYPE SQLSERVER`/`TYPE ORACLE`) when the destination
+has no extension, and emits
 `runtime.export_database_json`, `runtime.export_database_sql`,
 `runtime.export_database_access_sql`, `runtime.export_database_postgresql_sql`,
-`runtime.export_database_sqlite_sql`, or `runtime.export_database_sqlserver_sql`
+`runtime.export_database_sqlite_sql`, `runtime.export_database_sqlserver_sql`, or
+`runtime.export_database_oracle_sql`
 on success. It deliberately accepts only the literal `TYPE JSON`, `TYPE SQL`,
-`TYPE ACCESS`, `TYPE POSTGRESQL`, `TYPE SQLITE`, or `TYPE SQLSERVER` forms; the
-source and destination are quoted
+`TYPE ACCESS`, `TYPE POSTGRESQL`, `TYPE SQLITE`, `TYPE SQLSERVER`, or `TYPE ORACLE`
+forms; the source and destination are quoted
 path operands, not expressions. It reads the existing DBC/DBF data before opening
 the requested output path, creates a missing output directory, and reports a
 localized runtime failure if inspection or output writing fails. A destination
@@ -213,10 +215,11 @@ that would resolve to the same file as the source (e.g.
 `EXPORT DATABASE 'data.dbc' TO 'data.dbc' TYPE ACCESS`, where an explicit
 extension skips the `.sql`/`.json` default) is rejected before anything is read or
 written, rather than truncating the source database once export succeeds. All
-six `TYPE` variants share the same DBC catalog/table-resolution path
+seven `TYPE` variants share the same DBC catalog/table-resolution path
 (`export_database_as_json()`, `export_database_as_sql()`,
 `export_database_as_access_sql()`, `export_database_as_postgresql_sql()`,
-`export_database_as_sqlite_sql()`, and `export_database_as_sqlserver_sql()` all
+`export_database_as_sqlite_sql()`, `export_database_as_sqlserver_sql()`, and
+`export_database_as_oracle_sql()` all
 call the same internal loader) so they cannot silently drift apart on which
 tables/rows are considered part of the database -- only the output serialization
 differs. `TYPE SQL` emits one portable/ANSI-ish dialect (`CREATE TABLE` per table,
@@ -272,7 +275,56 @@ development: this exporter's own actual generated output for a representative
 two-table (customers/orders) fixture -- covering every mapped column type,
 `1`/`0` boolean literals, and a `CREATE INDEX` on each table -- loaded with zero
 errors, and a cross-table `JOIN` between the two exported tables returned the
-correct joined row. `TYPE ACCESS`
+correct joined row.
+
+`TYPE ORACLE` (#5554, fourth vendor-dialect slice of #141) is likewise its
+own dedicated code path -- Oracle's dialect diverges enough from the
+portable baseline that it does not reuse `TYPE SQL`'s shared writer either.
+Double-quoted `"identifier"` quoting has *no* escape mechanism for an
+embedded quote at all (a real, material difference from every other
+dialect above, all of which escape one by doubling it -- directly
+confirmed against a real Oracle engine that a doubled-quote identifier
+fails outright, so an embedded quote is stripped instead), `NUMBER(19, 4)`
+for VFP currency, `INTEGER` (Oracle's own documented `NUMBER(38)`
+subtype), `BINARY_DOUBLE` for VFP's own double type, `NUMBER(1)` for
+logical with `1`/`0` literals (Oracle has no dedicated table-column
+`BOOLEAN` type before Oracle 23c, and even there a `NUMBER(1)` column's
+own `TRUE` literal silently converts to `1` anyway, directly confirmed --
+so this exporter targets the one literal form every Oracle version
+accepts identically), and `CLOB` -- not `VARCHAR2`'s 4000-byte-default
+text -- for memo/general/picture fields. `NUMBER`'s own precision is
+clamped to Oracle's real 38-digit ceiling and its scale to Oracle's own
+independent -84..127 range (a genuine difference from SQL Server's own
+DECIMAL, whose scale must not exceed its own precision -- Oracle's own
+scale is unrelated to precision entirely, both directly confirmed against
+the real engine). A VFP date/datetime value is wrapped in Oracle's own
+ANSI-style `DATE 'YYYY-MM-DD'`/`TIMESTAMP 'YYYY-MM-DD HH:MM:SS'` literal
+syntax rather than a plain quoted string -- directly confirmed that a bare
+ISO-shaped string is *not* safe here, since implicit string-to-date
+conversion depends on the session's own `NLS_DATE_FORMAT` (which defaults
+to `DD-MON-RR`, not `YYYY-MM-DD`), while the ANSI literal form always
+parses in that exact ISO shape regardless of session settings. A blank
+VFP date therefore resolves to `NULL` rather than a quoted empty string --
+unlike SQL Server's own (data-corrupting-but-not-erroring) blank-date
+case, `DATE ''` is invalid Oracle syntax outright, so this is a basic
+correctness requirement here, not merely a data-integrity improvement.
+`CREATE INDEX` generation is scoped to Oracle's own 128-*byte* identifier
+limit (byte-counted like PostgreSQL's own 63-byte limit, not
+character-counted like SQL Server's), with index-name disambiguation
+threaded across the *whole* export like PostgreSQL/SQLite's own
+schema-wide scoping (directly confirmed: two different tables cannot each
+carry an index of the identical name) but -- a genuine hybrid of both
+precedents above, not matching either exactly -- *not* seeded with
+already-emitted table names the way PostgreSQL's own fix is, since Oracle
+keeps tables and indexes in separate namespaces (directly confirmed: a
+table can share its own name with an unrelated table's index with no
+collision at all). All of the above was directly confirmed against a real
+local Oracle 23ai engine during this issue's own development, including
+this exporter's own actual generated output for a representative
+two-table fixture loading with zero errors and a cross-table `JOIN`
+returning the correct joined row.
+
+`TYPE ACCESS`
 (#5475, phase 1 of #141) emits
 the same shape of script using the Access/Jet SQL dialect instead -- square-bracket
 `[identifier]` quoting (with an embedded `]` escaped by doubling, the Jet/ACE
@@ -298,7 +350,7 @@ only ever holds a single statement.
 This is a Copperfin modernization extension authorized by the owner-approved
 scope in #140/#141 (see #5471 for the `TYPE SQL` slice, #5475 for the
 `TYPE ACCESS` slice, #5537 for the `TYPE POSTGRESQL` slice, and #5554 for the
-`TYPE SQLITE`/`TYPE SQLSERVER` slices specifically), not
+`TYPE SQLITE`/`TYPE SQLSERVER`/`TYPE ORACLE` slices specifically), not
 a claimed Visual FoxPro 9 command. It does
 not implement `IMPORT DATABASE` of any kind, provider connections, schema
 mutation, or round-trip reconstruction back into a DBC/DBF from any exported
