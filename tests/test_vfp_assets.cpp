@@ -3325,6 +3325,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AssetInspector.Validation.MemoSidecarHeaderTruncated",
         "Vfp.AssetInspector.Validation.MemoSidecarMissing",
         "Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize",
+        "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
         "Vfp.CdxHeader.Error.InvalidValues",
         "Vfp.CdxHeader.Error.OpenFileFailed",
         "Vfp.CdxHeader.Error.ReadProbeFailed",
@@ -5010,6 +5011,670 @@ void test_export_database_as_postgresql_sql_truncates_on_utf8_character_boundary
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_export_database_as_oracle_sql_maps_types_and_creates_indexes() {
+    // #5554 (parent #137, fourth vendor-dialect slice, following #5537's
+    // PostgreSQL, #5558's SQLite, and #5561's SQL Server precedent):
+    // real Oracle 23ai (verified against a local container during this
+    // issue's own development) directly confirmed to accept this exact
+    // dialect -- double-quoted identifiers, single-quoted string
+    // literals, NUMBER/VARCHAR2/NUMBER(1)/DATE column types, and the
+    // ANSI DATE 'YYYY-MM-DD' literal form -- loading a representative
+    // CREATE TABLE/INSERT/CREATE INDEX script shaped exactly like this
+    // exporter's own output without error, including a cross-table JOIN
+    // returning the correct row. This test proves the same genuinely
+    // new piece #5537's own sibling test proves (CREATE INDEX
+    // statements derived from a table's production CDX tags, correctly
+    // distinguishing a plain column reference from a composite
+    // expression), plus Oracle's own two real dialect requirements: a
+    // NUMBER(1) column's literal is 1/0 (directly confirmed against the
+    // real engine: unlike T-SQL, Oracle 23c's own TRUE *does* implicitly
+    // convert for a NUMBER(1) column, but this exporter deliberately
+    // targets 1/0 for compatibility with every Oracle version, not just
+    // the newest), and a DATE value must use the ANSI DATE '...'
+    // literal form, not a bare string (directly confirmed: a bare
+    // 'YYYY-MM-DD' string fails with ORA-01861 against the real
+    // engine's own default NLS_DATE_FORMAT).
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "customers.dbf";
+    const fs::path cdx_path = temp_dir / "customers.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"DATABASE", "Sales", "", ""}, {"TABLE", "customers", "Sales", ""}});
+    expect(dbc_create.ok, "Oracle export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "CUST_ID", .type = 'N', .offset = 1U, .length = 6U, .decimal_count = 0U},
+        {.name = "COMPANY", .type = 'C', .offset = 7U, .length = 40U, .decimal_count = 0U},
+        {.name = "ACTIVE", .type = 'L', .offset = 47U, .length = 1U, .decimal_count = 0U},
+        {.name = "BALANCE", .type = 'Y', .offset = 48U, .length = 8U, .decimal_count = 4U},
+        {.name = "SIGNUP", .type = 'D', .offset = 56U, .length = 8U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{"1001", "Acme Corp", "T", "123.45", "20260115"}});
+    expect(table_create.ok, "Oracle export test: DBF fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_cdx_bytes_for_postgresql_index_test();
+        std::ofstream output(cdx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the customers fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("EXPORT DATABASE ... TYPE ORACLE") != std::string::npos,
+           "export_database_as_oracle_sql should label its own header comment as an Oracle export");
+    expect(result.sql.find("CREATE TABLE \"customers\"") != std::string::npos,
+           "export_database_as_oracle_sql should quote identifiers with double quotes, matching real Oracle");
+    expect(result.sql.find("\"CUST_ID\" NUMBER(6, 0)") != std::string::npos,
+           "export_database_as_oracle_sql should map a numeric field to NUMBER, a real Oracle type");
+    expect(result.sql.find("\"COMPANY\" VARCHAR2(40 CHAR)") != std::string::npos,
+           "export_database_as_oracle_sql should map a character field to VARCHAR2(length CHAR), not the reserved/deprecated VARCHAR nor a bare byte-counted VARCHAR2(length)");
+    expect(result.sql.find("\"ACTIVE\" NUMBER(1)") != std::string::npos,
+           "export_database_as_oracle_sql should map a logical field to NUMBER(1), since Oracle has no dedicated table-column BOOLEAN type");
+    expect(result.sql.find("\"BALANCE\" NUMBER(19, 4)") != std::string::npos,
+           "export_database_as_oracle_sql should map VFP currency to NUMBER(19, 4), an exact match for its own 4-decimal-digit scale");
+    expect(result.sql.find("\"SIGNUP\" DATE") != std::string::npos,
+           "export_database_as_oracle_sql should map a date field to DATE, a real Oracle type");
+    expect(result.sql.find("INSERT INTO \"customers\"") != std::string::npos,
+           "export_database_as_oracle_sql should emit an INSERT for the table's row");
+    expect(result.sql.find("'Acme Corp'") != std::string::npos,
+           "export_database_as_oracle_sql should quote a character value as a standard SQL string literal");
+    expect(result.sql.find("DATE '2026-01-15'") != std::string::npos,
+           "export_database_as_oracle_sql should wrap a non-blank date in Oracle's own ANSI DATE literal syntax, not a bare string");
+    expect(result.sql.find(", 1, 123.4500, DATE") != std::string::npos,
+           "export_database_as_oracle_sql should emit 1 (not the TRUE keyword) for a true logical value");
+    expect(result.sql.find("TRUE") == std::string::npos && result.sql.find("FALSE") == std::string::npos,
+           "export_database_as_oracle_sql should not emit the TRUE/FALSE keywords, targeting every Oracle version rather than only 23c's own new boolean-literal support");
+
+    expect(result.sql.find("CREATE INDEX \"customers_CUST_ID_idx\" ON \"customers\" (\"CUST_ID\");") != std::string::npos,
+           "export_database_as_oracle_sql should emit a CREATE INDEX for a tag whose key expression is a plain column reference");
+    expect(result.sql.find("-- skipped index") != std::string::npos &&
+               result.sql.find("COMPANY_N") != std::string::npos,
+           "export_database_as_oracle_sql should report a composite-expression tag as a skipped index, not silently drop or mistranslate it");
+    expect(result.sql.find("UPPER(company_name)") == std::string::npos,
+           "export_database_as_oracle_sql must never emit a raw VFP key expression as if it were valid Oracle syntax");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_oracle_sql_omits_indexes_without_cdx() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_no_cdx_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "Oracle no-CDX export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "SKU", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"W-1"}});
+    expect(table_create.ok, "Oracle no-CDX export test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should succeed without a companion CDX: " + result.error);
+    expect(result.sql.find("CREATE TABLE \"widgets\"") != std::string::npos,
+           "export_database_as_oracle_sql should still emit the table without any index information");
+    expect(result.sql.find("CREATE INDEX") == std::string::npos,
+           "export_database_as_oracle_sql should not emit any CREATE INDEX when no companion CDX exists");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// Unlike SQL Server (#5554) but like PostgreSQL/SQLite (#5559, #5558),
+// a real Oracle 23ai engine directly confirmed during this issue's own
+// development that index names must be unique *schema-wide*: two
+// different tables cannot each carry an index of the identical name
+// (ORA-00955, "name is already used by an existing object"). Mirrors
+// the identical PostgreSQL/SQLite cross-table collision fixtures
+// exactly.
+void test_export_database_as_oracle_sql_disambiguates_indexes_across_tables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_cross_table_collision_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "A_B", ""}, {"TABLE", "A", ""}});
+    expect(dbc_create.ok, "Oracle cross-table index-collision test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table1_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A_B.dbf").string(), table_fields, {{"x"}});
+    expect(table1_create.ok, "Oracle cross-table index-collision test: A_B.dbf fixture should be created");
+    const auto table2_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A.dbf").string(), table_fields, {{"y"}});
+    expect(table2_create.ok, "Oracle cross-table index-collision test: A.dbf fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_single_tag_cdx_bytes("CDEF", "COL");
+        std::ofstream output(temp_dir / "A_B.cdx", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+    {
+        const auto cdx_bytes = make_synthetic_single_tag_cdx_bytes("B_CDEF", "COL");
+        std::ofstream output(temp_dir / "A.cdx", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the cross-table collision fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    const std::size_t first_occurrence = result.sql.find("CREATE INDEX \"A_B_CDEF_idx\"");
+    expect(first_occurrence != std::string::npos,
+           "export_database_as_oracle_sql should emit the first table's own naturally-derived index name unchanged");
+    expect(result.sql.find("CREATE INDEX \"A_B_CDEF_idx\"", first_occurrence + 1U) == std::string::npos,
+           "export_database_as_oracle_sql must never emit the exact same index name twice across different tables");
+    expect(result.sql.find("CREATE INDEX \"A_B_CDEF_idx_2\"") != std::string::npos,
+           "export_database_as_oracle_sql should disambiguate the second table's colliding index name with a deterministic suffix");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// Unlike PostgreSQL (#5559) but like SQL Server (#5554), a real Oracle
+// 23ai engine directly confirmed during this issue's own development
+// that tables and indexes live in *separate* namespaces: a table can
+// share its own name with an unrelated table's index with no collision
+// at all. This is a positive test locking in that real, verified
+// divergence -- a table literally named "A_B_CDEF_idx" must not force
+// table "A_B"'s own naturally-derived "A_B_CDEF_idx" index name to be
+// disambiguated, unlike PostgreSQL's own #5559 fix for the identical-
+// looking scenario.
+void test_export_database_as_oracle_sql_allows_index_named_after_a_table() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_table_index_namespace_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "A_B", ""}, {"TABLE", "A_B_CDEF_idx", ""}});
+    expect(dbc_create.ok, "Oracle table/index namespace test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table1_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A_B.dbf").string(), table_fields, {{"x"}});
+    expect(table1_create.ok, "Oracle table/index namespace test: A_B.dbf fixture should be created");
+    const auto table2_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A_B_CDEF_idx.dbf").string(), table_fields, {{"y"}});
+    expect(table2_create.ok, "Oracle table/index namespace test: A_B_CDEF_idx.dbf fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_single_tag_cdx_bytes("CDEF", "COL");
+        std::ofstream output(temp_dir / "A_B.cdx", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the table/index namespace fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("CREATE TABLE \"A_B_CDEF_idx\"") != std::string::npos,
+           "export_database_as_oracle_sql should still emit the oddly-named table itself");
+    expect(result.sql.find("CREATE INDEX \"A_B_CDEF_idx\"") != std::string::npos,
+           "export_database_as_oracle_sql should emit the index name unchanged -- Oracle keeps tables and indexes in separate namespaces");
+    expect(result.sql.find("CREATE INDEX \"A_B_CDEF_idx_2\"") == std::string::npos,
+           "export_database_as_oracle_sql must not disambiguate an index name that does not actually collide with a table name on this engine");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// A real Oracle 23ai engine directly confirmed during this issue's own
+// development that it *rejects* (ORA-00972, "identifier ... exceeds the
+// maximum length of 128 bytes") any identifier over 128 *bytes*
+// outright -- a byte limit like PostgreSQL's own 63-byte one (#5559),
+// not a character limit like SQL Server's (#5554). Mirrors
+// test_export_database_as_postgresql_sql_disambiguates_indexes_within_identifier_length_limit()'s
+// own fixture shape exactly, just scaled to 128 bytes.
+void test_export_database_as_oracle_sql_disambiguates_indexes_within_identifier_length_limit() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_identifier_length_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::string long_table_name(125U, 'A');
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
+    const fs::path cdx_path = temp_dir / (long_table_name + ".cdx");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 150U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 167U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", long_table_name, ""}});
+    expect(dbc_create.ok, "Oracle identifier-length test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"x"}});
+    expect(table_create.ok, "Oracle identifier-length test: DBF fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_two_tag_cdx_bytes("TAG1", "TAG2", "COL");
+        std::ofstream output(cdx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the identifier-length fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    // 128 bytes: all 125 of the table name's own characters, plus "_TA"
+    // (the two ASCII characters after the underscore "TAG1"/"TAG2"
+    // still share before diverging at what would be byte 128).
+    const std::string first_truncated = long_table_name + "_TA";
+    expect(first_truncated.size() == 128U,
+           "test fixture sanity: the first truncated candidate should be exactly 128 bytes");
+    expect(result.sql.find("CREATE INDEX \"" + first_truncated + "\"") != std::string::npos,
+           "export_database_as_oracle_sql should truncate the first candidate to Oracle's 128-byte identifier limit");
+
+    const std::string second_suffixed = long_table_name + "__2";
+    expect(second_suffixed.size() == 128U,
+           "test fixture sanity: the disambiguated second candidate should still be exactly 128 bytes");
+    expect(result.sql.find("CREATE INDEX \"" + second_suffixed + "\"") != std::string::npos,
+           "export_database_as_oracle_sql should reserve room for the disambiguating suffix within the 128-byte limit");
+    expect(result.sql.find("CREATE INDEX \"" + first_truncated + "\"", result.sql.find("CREATE INDEX \"" + first_truncated + "\"") + 1U)
+               == std::string::npos,
+           "export_database_as_oracle_sql must never emit the exact same truncated index name twice");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5554 PR review pattern applied proactively (matching #5562's own
+// blank-date fix for SQL Server): a blank VFP date field decodes to an
+// empty display_value (not is_null). Unlike SQL Server, where the
+// empty-string form merely silently invents 1900-01-01, Oracle's own
+// `DATE ''` is invalid syntax outright (ORA-01841, directly confirmed
+// against a real local Oracle 23ai engine) -- so this is a basic
+// correctness requirement here, not merely a data-integrity one. A
+// non-blank date must still wrap in the ANSI DATE '...' literal form.
+void test_export_database_as_oracle_sql_preserves_blank_dates_as_null() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_blank_date_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "events.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "events", ""}});
+    expect(dbc_create.ok, "Oracle blank-date test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "OCCURRED", .type = 'D', .offset = 1U, .length = 8U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{"20260115"}, {""}});
+    expect(table_create.ok, "Oracle blank-date test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the blank-date fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("VALUES (DATE '2026-01-15')") != std::string::npos,
+           "export_database_as_oracle_sql should wrap a non-blank date in the ANSI DATE literal form");
+    expect(result.sql.find("VALUES (NULL)") != std::string::npos,
+           "export_database_as_oracle_sql should emit NULL for a blank date rather than an invalid DATE '' literal");
+    expect(result.sql.find("DATE ''") == std::string::npos,
+           "export_database_as_oracle_sql must never emit DATE '' -- real Oracle rejects it outright (ORA-01841), unlike SQL Server's own silently-wrong empty-string case");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5554 PR review pattern applied proactively (matching #5562's own
+// DECIMAL clamp fix for SQL Server): length/decimal_count are raw
+// uint8_t values from a DBF header this codebase's own writer never
+// produces out of range for, but a crafted or foreign source is not
+// bound by that. Real Oracle rejects any NUMBER precision above 38
+// (directly confirmed: NUMBER(38, 0) succeeds, NUMBER(39, 0) fails,
+// "numeric precision specifier is out of range (1 to 38)") and any
+// scale above 127 (NUMBER(10, 127) succeeds, NUMBER(10, 128) fails,
+// "numeric scale specifier is out of range (-84 to 127)") -- but,
+// unlike SQL Server's own DECIMAL, scale is *not* clamped to precision:
+// a scale far exceeding precision is directly confirmed valid on the
+// real engine (NUMBER(10, 20) succeeds), so this test specifically
+// proves scale is clamped to 127 alone, not to the (much smaller)
+// clamped precision the way sqlserver_column_type()'s own clamp works.
+void test_export_database_as_oracle_sql_clamps_number_precision_and_scale() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_number_clamp_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "amounts.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "amounts", ""}});
+    expect(dbc_create.ok, "Oracle NUMBER-clamp test: DBC fixture should be created");
+
+    // A genuinely valid DBF numeric field can never carry length/decimal_count
+    // this large (VFP's own N field caps at 20 digits) -- construct the
+    // descriptor directly (bypassing create_dbf_table_file's own writer,
+    // which would refuse this) to model a crafted/corrupt header.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "AMOUNT", .type = 'N', .offset = 1U, .length = 255U, .decimal_count = 255U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"0"}});
+    expect(table_create.ok, "Oracle NUMBER-clamp test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the NUMBER-clamp fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("\"AMOUNT\" NUMBER(38, 127)") != std::string::npos,
+           "export_database_as_oracle_sql should clamp precision to Oracle's 38-digit maximum and scale to Oracle's own independent 127 maximum, not to the clamped precision");
+    expect(result.sql.find("NUMBER(255") == std::string::npos && result.sql.find(", 255)") == std::string::npos,
+           "export_database_as_oracle_sql must never emit a NUMBER precision or scale real Oracle rejects");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5554 review pattern applied proactively: unlike every other dialect
+// this file emits, Oracle provides no escape mechanism for an embedded
+// double quote inside a quoted identifier at all -- directly confirmed
+// against a real local Oracle 23ai engine that
+// `CREATE TABLE "weird""name" (...)` fails outright with ORA-25716
+// ("The identifier contains a double quotation mark (\") character"),
+// not the doubled-quote-survives-as-literal-quote behavior every other
+// dialect's own doubling convention relies on.
+void test_export_database_as_oracle_sql_strips_embedded_quote_from_identifiers() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_embedded_quote_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "Oracle embedded-quote test: DBC fixture should be created");
+
+    // A genuinely valid VFP field name can never contain a literal `"`
+    // -- construct the descriptor directly to model a crafted/corrupt
+    // source, matching this codebase's own established practice for
+    // exercising fail-closed/lossy-but-safe handling of input a real
+    // writer never produces.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "weird\"name", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"x"}});
+    expect(table_create.ok, "Oracle embedded-quote test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the embedded-quote fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("\"weirdname\"") != std::string::npos,
+           "export_database_as_oracle_sql should strip an embedded double quote from an identifier, since real Oracle has no escape mechanism for one at all");
+    expect(result.sql.find("weird\"\"name") == std::string::npos,
+           "export_database_as_oracle_sql must never emit a doubled-quote escape for an identifier -- real Oracle rejects any embedded quote outright, doubled or not");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_oracle_sql_declares_character_columns_with_char_semantics() {
+    // #5564 PR review (chatgpt-codex-connector, P1): a bare VARCHAR2(n) is
+    // measured in *bytes* under Oracle's own default
+    // NLS_LENGTH_SEMANTICS=BYTE -- directly confirmed against a real local
+    // Oracle 23ai engine -- so a VFP C(n) field's own character count must
+    // be declared with explicit CHAR semantics to guarantee n characters
+    // of capacity regardless of the target session's own NLS settings.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_varchar2_char_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "Oracle VARCHAR2 CHAR-semantics test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"widget-a"}});
+    expect(table_create.ok, "Oracle VARCHAR2 CHAR-semantics test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the VARCHAR2 CHAR-semantics fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("\"NAME\" VARCHAR2(10 CHAR)") != std::string::npos,
+           "export_database_as_oracle_sql should declare a C(n) column as VARCHAR2(n CHAR), since Oracle's own default byte-counted semantics would otherwise reject a real multi-byte UTF-8 value that fits in n characters");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_oracle_sql_writes_memo_content_as_clob_literals() {
+    // #5564 PR review (chatgpt-codex-connector, P1): a CLOB column's own
+    // literal cannot be a plain quoted string -- directly confirmed
+    // against a real local Oracle 23ai engine that an empty string
+    // literal silently becomes NULL for a CLOB column, and that Oracle's
+    // own SQL text-literal limit is 4000 *bytes*. Exercises all three of
+    // oracle_clob_literal()'s own code paths (empty -> EMPTY_CLOB(),
+    // short non-empty -> a single TO_CLOB(...), and content over the
+    // 4000-byte chunk size -> TO_CLOB(...) || TO_CLOB(...) concatenation)
+    // through a real M-type memo field, since the function itself lives
+    // in this file's own anonymous namespace and is not otherwise
+    // directly unit-testable.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_clob_literal_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "Oracle CLOB literal test: DBC fixture should be created");
+
+    const std::string short_note = "short note";
+    const std::string large_note(4500U, 'A');
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NOTES", .type = 'M', .offset = 1U, .length = 4U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{""}, {short_note}, {large_note}});
+    expect(table_create.ok, "Oracle CLOB literal test: DBF fixture with memo content should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the CLOB literal fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("VALUES (EMPTY_CLOB())") != std::string::npos,
+           "export_database_as_oracle_sql should emit EMPTY_CLOB() for a blank memo, since a plain '' literal silently becomes NULL for a real Oracle CLOB column");
+    expect(result.sql.find("VALUES (TO_CLOB('" + short_note + "'))") != std::string::npos,
+           "export_database_as_oracle_sql should emit a single TO_CLOB(...) for a memo well under the 4000-byte chunk size");
+    const std::string first_chunk(4000U, 'A');
+    const std::string second_chunk(500U, 'A');
+    expect(result.sql.find(
+               "TO_CLOB('" + first_chunk + "') || TO_CLOB('" + second_chunk + "')") != std::string::npos,
+           "export_database_as_oracle_sql should split a memo over Oracle's own 4000-byte SQL text-literal limit into TO_CLOB(...) || TO_CLOB(...) concatenation");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_oracle_sql_fails_closed_on_colliding_identifiers() {
+    // #5564 PR review (chatgpt-codex-connector, P2): oracle_quote_identifier()'s
+    // own embedded-quote stripping is not collision-safe -- distinct source
+    // names (e.g. "ab" and "a\"b") can sanitize to the identical quoted
+    // identifier. export_database_as_oracle_sql() must fail the whole
+    // export closed rather than emit a script with a duplicate/wrong-
+    // target column.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_identifier_collision_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "Oracle identifier collision test: DBC fixture should be created");
+
+    // A genuinely valid VFP field name can never contain a literal `"` --
+    // construct the descriptors directly to model a crafted/corrupt
+    // source, matching this file's own established practice (see
+    // test_export_database_as_oracle_sql_strips_embedded_quote_from_identifiers()
+    // above) for exercising fail-closed handling of input a real writer
+    // never produces.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "ab", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+        {.name = "a\"b", .type = 'C', .offset = 11U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"x", "y"}});
+    expect(table_create.ok, "Oracle identifier collision test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(!result.ok,
+           "export_database_as_oracle_sql should fail closed when two column names collide after quote-stripping, rather than emit a script with a duplicate/wrong-target column");
+    expect(result.sql.empty(),
+           "export_database_as_oracle_sql should not return a partial SQL script alongside a failure");
+    expect(result.error.find("\"ab\"") != std::string::npos,
+           "export_database_as_oracle_sql's collision error should name the colliding identifier: " + result.error);
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_access_sql_maps_currency_datetime_and_dates() {
     // #5475: export_database_as_access_sql() shares export_database_as_sql()'s
     // catalog/table-walking logic but swaps in the Access/Jet SQL dialect --
@@ -6246,6 +6911,17 @@ int main() {
     test_export_database_as_sqlserver_sql_clamps_decimal_precision_and_scale();
     test_export_database_as_sqlserver_sql_truncates_by_unicode_character_not_byte_count();
     test_export_database_as_postgresql_sql_truncates_on_utf8_character_boundary();
+    test_export_database_as_oracle_sql_maps_types_and_creates_indexes();
+    test_export_database_as_oracle_sql_omits_indexes_without_cdx();
+    test_export_database_as_oracle_sql_disambiguates_indexes_across_tables();
+    test_export_database_as_oracle_sql_allows_index_named_after_a_table();
+    test_export_database_as_oracle_sql_disambiguates_indexes_within_identifier_length_limit();
+    test_export_database_as_oracle_sql_preserves_blank_dates_as_null();
+    test_export_database_as_oracle_sql_clamps_number_precision_and_scale();
+    test_export_database_as_oracle_sql_strips_embedded_quote_from_identifiers();
+    test_export_database_as_oracle_sql_declares_character_columns_with_char_semantics();
+    test_export_database_as_oracle_sql_writes_memo_content_as_clob_literals();
+    test_export_database_as_oracle_sql_fails_closed_on_colliding_identifiers();
     test_export_database_as_sqlite_sql_disambiguates_indexes_across_tables();
     test_export_database_as_access_sql_maps_currency_datetime_and_dates();
     test_export_database_as_access_sql_escapes_bracket_in_identifier();

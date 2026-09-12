@@ -1,3 +1,118 @@
+- 2026-09-11: PR review (chatgpt-codex-connector) on the `EXPORT DATABASE
+  ... TYPE ORACLE` PR (#5564) surfaced three real gaps, all fixed in the
+  same PR, each verified against a real local Oracle 23ai engine before
+  being implemented:
+
+  1. **P1: `VARCHAR2(n)` is byte-counted, not character-counted, under
+     Oracle's own default `NLS_LENGTH_SEMANTICS=BYTE`.** This codebase
+     decodes legacy DBF text to UTF-8 for every dialect's own output, so
+     a VFP `C(n)` field's own character count needs `n` characters of
+     guaranteed capacity independent of session settings. Directly
+     confirmed against the real engine that a 10-byte `VARCHAR2(10)`
+     rejects 10 non-ASCII characters decoding to 20 UTF-8 bytes
+     (ORA-12899), while explicit `VARCHAR2(10 CHAR)` accepts them
+     regardless of session settings. `oracle_column_type()` now declares
+     character columns with explicit `CHAR` length semantics.
+  2. **P1: a plain quoted-string literal is unsafe for a CLOB column.**
+     Directly confirmed against the real engine that an empty string
+     literal (`''`) silently becomes `NULL` for a CLOB column, and that
+     Oracle's own SQL text-literal limit is 4000 *bytes* (not
+     characters) -- confirmed both with plain ASCII and with 2-byte
+     UTF-8 content, ruling out any per-character interpretation of the
+     limit. New `oracle_clob_literal()` emits `EMPTY_CLOB()` for a blank
+     value, or one-or-more `TO_CLOB('...')` chunks concatenated with
+     `||` (directly confirmed to reconstruct a full-length CLOB), each
+     chunk split on a UTF-8 character boundary via the same
+     `utf8_safe_truncate()` byte-mode #5562's own SQL Server fix already
+     added, so a chunk boundary can never split a multi-byte character.
+  3. **P2: `oracle_quote_identifier()`'s embedded-quote stripping is not
+     collision-safe.** Distinct source names (e.g. `ab` and `a"b`) can
+     sanitize to the identical quoted identifier, since Oracle has no
+     escape mechanism for an embedded quote at all (unlike every other
+     dialect this file emits, which double one). New
+     `oracle_record_identifier_or_detect_collision()` tracks every
+     sanitized table name schema-wide and every sanitized column name
+     per-table; a genuine collision now fails the whole export closed
+     with a new localized `Vfp.AssetInspector.Validation.OracleIdentifierCollision`
+     diagnostic naming the identifier, rather than silently emitting a
+     script with a duplicate or wrong-target table/column.
+
+  Three new regression tests added (VARCHAR2 CHAR-semantics declaration,
+  CLOB literal chunking across all three of `oracle_clob_literal()`'s own
+  code paths via a real memo field, and fail-closed identifier
+  collision). Two pre-existing tests' own expected `VARCHAR2(n)` literal
+  updated to `VARCHAR2(n CHAR)` to match.
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-010` updated to record all three fixes.
+
+- 2026-09-11: Progress on #5554 (parent #137): `EXPORT DATABASE ... TYPE
+  ORACLE` (`export_database_as_oracle_sql()`,
+  `src/vfp/asset_inspector.cpp`) is the fourth vendor-dialect slice of
+  #141's real-target-engine `EXPORT DATABASE` family, following #5537's
+  PostgreSQL, #5558's SQLite, and #5561's SQL Server precedent. Its own
+  dedicated code path entirely (like `TYPE SQLSERVER`, no reuse of
+  `write_sql_tables_and_data()`): double-quoted identifiers with *no*
+  escape mechanism for an embedded quote at all (a real, material
+  difference from every other dialect, all of which double one --
+  directly confirmed against a real local Oracle 23ai engine that
+  `CREATE TABLE "weird""name"` fails outright with ORA-25716, so an
+  embedded quote is stripped rather than doubled), `NUMBER(19, 4)` for
+  VFP currency, `INTEGER` (Oracle's own `NUMBER(38)` subtype),
+  `BINARY_DOUBLE` for VFP's own double, `NUMBER(1)` for logical with
+  `1`/`0` literals (directly confirmed that even Oracle 23c's own new
+  boolean-literal support silently converts `TRUE` to `1` for a
+  `NUMBER(1)` column anyway, so `1`/`0` is the one form every Oracle
+  version accepts identically), and `CLOB` for memo/general/picture
+  fields. `NUMBER`'s precision is clamped to 38 and its scale
+  *independently* clamped to Oracle's own -84..127 range (directly
+  confirmed Oracle's own scale, unlike SQL Server's DECIMAL, is not
+  bounded by precision at all: `NUMBER(10, 20)` succeeds). A VFP
+  date/datetime value is wrapped in Oracle's own ANSI `DATE`/`TIMESTAMP`
+  literal syntax rather than a plain quoted string -- directly confirmed
+  a bare ISO string is *not* safe for Oracle (`NLS_DATE_FORMAT`-dependent
+  implicit conversion defaults to `DD-MON-RR`, not `YYYY-MM-DD`) -- and a
+  blank date resolves to `NULL`, since Oracle's own `DATE ''` is invalid
+  syntax outright (a basic correctness requirement here, not merely a
+  data-integrity improvement the way SQL Server's own #5562 fix was).
+  `CREATE INDEX` generation is scoped to Oracle's own 128-*byte*
+  identifier limit (byte-counted like PostgreSQL, not character-counted
+  like SQL Server), with disambiguation threaded across the *whole*
+  export like PostgreSQL/SQLite's schema-wide scoping (directly
+  confirmed two different tables cannot each carry an index of the
+  identical name) but -- a genuine hybrid matching neither existing
+  precedent exactly -- *not* seeded with table names the way
+  PostgreSQL's own #5559 fix requires, since Oracle keeps tables and
+  indexes in separate namespaces (directly confirmed a table can share
+  its own name with an unrelated table's index with no collision).
+
+  Directly verified against a real local Oracle 23ai engine
+  (`gvenzl/oracle-free:23-slim`, run via a local Docker container for
+  this issue's own development): the exact planned dialect loaded and
+  queried correctly (including a cross-table `JOIN`); the 128-byte
+  identifier limit, the schema-wide index-name uniqueness requirement,
+  the separate table/index namespaces, the NUMBER precision/scale
+  limits and their mutual independence, the `NLS_DATE_FORMAT` pitfall
+  and the ANSI literal's own independence from it, the invalid
+  `DATE ''` literal, and the no-escape-mechanism embedded-quote
+  identifier rejection were all directly confirmed empirically before
+  writing the corresponding code, not assumed from the other three
+  dialects' own precedent.
+
+  Eight new regression tests added, including a positive
+  table/index-namespace case (mirroring, and confirming the deliberate
+  inverse of, PostgreSQL's own #5559 table-name-seeding fix) and a
+  precision/scale-independence case (proving Oracle's scale is *not*
+  clamped to its own precision, unlike SQL Server's DECIMAL).
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-010` added. Does not close #5554 -- MySQL remains
+  an open follow-up within that same issue. Also explicitly documents a
+  known verification gap: Oracle's own identifier-length behavior is
+  version/configuration-dependent in real Oracle history (30 bytes
+  before Oracle 12.2's extended-identifier support), and this
+  exporter's 128-byte ceiling was only verified against the single
+  modern (23ai) engine version available for this issue's own
+  development.
+
 - 2026-09-11: PR review (chatgpt-codex-connector and
   copilot-pull-request-reviewer) on the Access SaveAsText export wiring
   PR (#5477/#5478) surfaced five real gaps, all fixed in the same PR:
