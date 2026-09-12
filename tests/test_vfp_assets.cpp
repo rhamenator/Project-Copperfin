@@ -3326,6 +3326,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AssetInspector.Validation.MemoSidecarMissing",
         "Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize",
         "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong",
+        "Vfp.AssetInspector.Validation.OracleEmptyCharacterValueUnrepresentable",
         "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
         "Vfp.CdxHeader.Error.InvalidValues",
         "Vfp.CdxHeader.Error.OpenFileFailed",
@@ -5676,6 +5677,56 @@ void test_export_database_as_oracle_sql_fails_closed_on_colliding_identifiers() 
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5693: Oracle treats a zero-length VARCHAR2 literal as NULL -- directly
+// confirmed against a real local Oracle 23ai engine (`INSERT INTO ...
+// VALUES ('')` into a VARCHAR2(n CHAR) column leaves it NULL, `IS NULL`
+// reports TRUE). A DBF row can genuinely hold a non-null empty Character
+// value (decode_value()'s own 'C' case never reports is_null for a
+// present-but-blank field, only a genuinely absent one), and there is no
+// VARCHAR2 literal that preserves that value's own non-null-ness -- so
+// export_database_as_oracle_sql() must fail the whole export closed
+// rather than silently corrupt the distinction, matching this exporter's
+// own precedent for blank Memo (EMPTY_CLOB()) and blank Date (NULL, since
+// `DATE ''` is invalid syntax) each already established for their own
+// unrepresentable-or-lossy cases.
+void test_export_database_as_oracle_sql_fails_closed_on_non_null_empty_character_value() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_empty_character_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "Oracle empty-character test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{""}});
+    expect(table_create.ok, "Oracle empty-character test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(!result.ok,
+           "export_database_as_oracle_sql should fail closed on a non-null empty character value, since no VARCHAR2 literal preserves its non-null-ness against a real Oracle engine");
+    expect(result.sql.empty(),
+           "export_database_as_oracle_sql should not return a partial SQL script alongside a failure");
+    expect(result.error.find("widgets") != std::string::npos && result.error.find("NAME") != std::string::npos,
+           "export_database_as_oracle_sql's empty-character error should name the offending table and column: " + result.error);
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_mysql_sql_maps_types_and_creates_indexes() {
     // #5554 (parent #137, fifth and final vendor-dialect slice, following
     // #5537's PostgreSQL, #5558's SQLite, #5561's SQL Server, and #5564's
@@ -7470,6 +7521,7 @@ int main() {
     test_export_database_as_oracle_sql_declares_character_columns_with_char_semantics();
     test_export_database_as_oracle_sql_writes_memo_content_as_clob_literals();
     test_export_database_as_oracle_sql_fails_closed_on_colliding_identifiers();
+    test_export_database_as_oracle_sql_fails_closed_on_non_null_empty_character_value();
     test_export_database_as_mysql_sql_maps_types_and_creates_indexes();
     test_export_database_as_mysql_sql_omits_indexes_without_cdx();
     test_export_database_as_mysql_sql_allows_identical_index_name_across_tables();

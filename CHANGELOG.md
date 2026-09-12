@@ -1,3 +1,31 @@
+- 2026-09-12: Closed a data-integrity gap in `export_database_as_oracle_sql()`
+  (`src/vfp/asset_inspector.cpp`, #5693, found by an automated Codex
+  code-review pass after #5554/#5564's own Oracle slice had already
+  closed): a non-null empty Character/Varchar (`C`/`V`) value was
+  quoted and emitted as a plain `''` literal, which Oracle silently
+  stores as `NULL` rather than an actual empty string -- directly
+  confirmed against a real local Oracle 23ai engine (`INSERT INTO ...
+  VALUES ('')` into a `VARCHAR2(n CHAR)` column leaves it `NULL`, `IS
+  NULL` reports `TRUE`). Unlike a blank Date (which already falls back
+  to a real `NULL` with no distinction lost, since `DATE ''` is invalid
+  Oracle syntax outright) or a blank Memo (which `CLOB`'s own
+  `EMPTY_CLOB()` already represents distinctly from `NULL`), there is no
+  `VARCHAR2` literal at all that preserves a genuinely non-null empty
+  Character/Varchar value's own non-null-ness -- any literal this
+  exporter could emit either isn't empty (wrong value) or is empty
+  (silently becomes `NULL`, corrupting the distinction). Rather than
+  report a successful export whose ordinary load silently changes a
+  non-null empty value to `NULL`, `write_oracle_tables_and_data()` now
+  fails the whole export closed with a new localized
+  `Vfp.AssetInspector.Validation.OracleEmptyCharacterValueUnrepresentable`
+  diagnostic naming the table and column, matching this exporter's own
+  established fail-closed precedent for a case with no safe corrective
+  action. New regression test
+  (`test_export_database_as_oracle_sql_fails_closed_on_non_null_empty_character_value`)
+  verified to reliably fail against the pre-fix code and reliably pass
+  against the fix. `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-010` updated.
+
 - 2026-09-12: Closed a symlink-following TOCTOU race in
   `write_binary_file()` (`src/vfp/dbf_table.cpp`), the shared staged-write
   helper behind `create_dbf_table_file()` and every other DBF/FPT

@@ -3147,7 +3147,7 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
     std::ostringstream& sql,
     const DatabaseCatalogSnapshot& snapshot,
     std::size_t row_limit,
-    std::string& identifier_collision_error) {
+    std::string& hard_failure_error) {
     std::vector<ParsedSqlExportTable> parsed_tables;
     // #5564 PR review (chatgpt-codex-connector, P2): tracks every
     // sanitized-and-quoted table name across the *entire* export (mirroring
@@ -3167,7 +3167,7 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
 
         const std::string quoted_table = oracle_quote_identifier(rt.name);
         if (!oracle_record_identifier_or_detect_collision(quoted_table, used_table_names)) {
-            identifier_collision_error = asset_inspector_text(
+            hard_failure_error = asset_inspector_text(
                 "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
                 {{"identifier", quoted_table}});
             return {};
@@ -3183,7 +3183,7 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
             const auto& fld = tbl.table.fields[fi];
             const std::string quoted_column = oracle_quote_identifier(fld.name);
             if (!oracle_record_identifier_or_detect_collision(quoted_column, used_column_names)) {
-                identifier_collision_error = asset_inspector_text(
+                hard_failure_error = asset_inspector_text(
                     "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
                     {{"identifier", quoted_column}});
                 return {};
@@ -3249,6 +3249,33 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
                         ? ("TIMESTAMP " + sql_quote_string_literal(*converted))
                         : "NULL");
                 } else if (is_character) {
+                    // #5693: Oracle treats a zero-length VARCHAR2 literal
+                    // as NULL -- directly confirmed against a real local
+                    // Oracle 23ai engine (`INSERT INTO ... VALUES ('')`
+                    // into a VARCHAR2(n CHAR) column leaves it NULL, not
+                    // an actual empty string: `IS NULL` reports TRUE).
+                    // Unlike a blank Date (which has a real NULL
+                    // representation to fall back to with no distinction
+                    // lost) or a blank Memo (which CLOB's own EMPTY_CLOB()
+                    // already represents distinctly from NULL, see
+                    // oracle_clob_literal()'s own comment), there is no
+                    // VARCHAR2 literal at all that preserves a genuinely
+                    // non-null empty Character/Varchar value's own
+                    // non-null-ness -- any literal this exporter could
+                    // emit either isn't empty (wrong value) or is empty
+                    // (silently becomes NULL, corrupting the distinction).
+                    // Rather than report a successful export whose
+                    // ordinary load silently turns a non-null empty value
+                    // into NULL, this fails the whole export closed with a
+                    // diagnostic naming the table and column, matching
+                    // this exporter's own established fail-closed
+                    // precedent for a case with no safe corrective action.
+                    if (rv.display_value.empty()) {
+                        hard_failure_error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.OracleEmptyCharacterValueUnrepresentable",
+                            {{"table", rt.name}, {"column", rv.field_name}});
+                        return {};
+                    }
                     // VARCHAR2's own max length (255-CHAR-derived, well
                     // under Oracle's 4000-byte literal ceiling even at
                     // 4 UTF-8 bytes per character) never needs the CLOB
@@ -3637,16 +3664,16 @@ DatabaseSqlExportResult export_database_as_oracle_sql(
         ? std::numeric_limits<std::size_t>::max()
         : max_rows_per_table;
 
-    std::string identifier_collision_error;
+    std::string hard_failure_error;
     const std::vector<ParsedSqlExportTable> parsed_tables =
-        write_oracle_tables_and_data(sql, snapshot, row_limit, identifier_collision_error);
+        write_oracle_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
     // #5564 PR review (chatgpt-codex-connector, P2): a table/column name
     // colliding with another after oracle_quote_identifier()'s own
     // quote-stripping sanitization fails the whole export closed --
     // see write_oracle_tables_and_data()'s own comment for why silently
     // reusing the colliding identifier is not a safe alternative.
-    if (!identifier_collision_error.empty()) {
-        return {.ok = false, .error = identifier_collision_error, .sql = {}};
+    if (!hard_failure_error.empty()) {
+        return {.ok = false, .error = hard_failure_error, .sql = {}};
     }
 
     // Unlike SQL Server (a fresh per-table set, its own real per-table
