@@ -1772,6 +1772,8 @@
   "Vfp.AssetInspector.Error.DbcHeaderParseFailed": "Fallo el analisis del encabezado DBC: {error}",
   "Vfp.AssetInspector.Error.DbcPathMissing": "La ruta DBC no existe: {path}",
   "Vfp.AssetInspector.Error.DbcReadFailed": "No se pudo leer el archivo DBC: {path}",
+  "Vfp.AssetInspector.Error.DbcTableEscapesDirectory": "La tabla de catalogo {table} se resuelve en un archivo fuera del propio directorio de la base de datos.",
+  "Vfp.AssetInspector.Error.DbcTableNameUnsafe": "El nombre de la tabla de catalogo no es un nombre de archivo seguro: {table}",
   "Vfp.AssetInspector.Error.PathMissing": "La ruta no existe.",
   "Vfp.AssetInspector.Error.ReadFailed": "No se pudo leer el activo: {path}",
   "Vfp.AssetInspector.Validation.DbcCatalogEmpty": "El catalogo DBC cargo, pero no se detectaron filas de metadatos de objetos de primera pasada.",

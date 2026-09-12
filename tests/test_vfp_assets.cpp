@@ -3299,6 +3299,8 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
         "Vfp.AssetInspector.Error.DbcPathMissing",
         "Vfp.AssetInspector.Error.DbcReadFailed",
+        "Vfp.AssetInspector.Error.DbcTableEscapesDirectory",
+        "Vfp.AssetInspector.Error.DbcTableNameUnsafe",
         "Vfp.AssetInspector.Error.PathMissing",
         "Vfp.AssetInspector.Error.ReadFailed",
         "Vfp.AssetInspector.Validation.DbcCatalogEmpty",
@@ -3661,6 +3663,138 @@ void test_export_database_as_json_resolves_unicode_catalog_table_path() {
 
     fs::remove_all(temp_dir, ignored);
 }
+
+// #5636: a catalog TABLE object's own name is untrusted data a crafted or
+// foreign-tool-written DBC controls, not something this codebase's own
+// writer is bound to keep free of path syntax. load_database_catalog_snapshot()
+// (shared by every exporter -- JSON, SQL, Access, PostgreSQL, SQLite, SQL
+// Server, Oracle, MySQL) previously built each table's own on-disk path via
+// plain std::filesystem::path concatenation with no rejection of "..",
+// path separators, or an absolute form. Directly reproduced during triage:
+// a DBC placed in a "database" subdirectory, with a table named
+// "../secret" and a real secret.dbf sitting in that subdirectory's own
+// parent, made export_database_as_json() read and disclose the outside
+// file's row content verbatim. This test reproduces the exact scenario and
+// proves the fix fails the whole export closed instead.
+void test_export_database_as_json_rejects_dotdot_table_name_traversal() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_table_traversal_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+    const fs::path database_dir = temp_dir / "database";
+    fs::create_directories(database_dir);
+
+    const fs::path secret_path = temp_dir / "secret.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> secret_fields{
+        {.name = "TOKEN", .type = 'C', .offset = 1U, .length = 30U, .decimal_count = 0U}
+    };
+    const auto secret_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(secret_path), secret_fields,
+        {{"OUTSIDE_DATABASE_SECRET"}});
+    expect(secret_create.ok, "table traversal test: outside-directory secret fixture should be created");
+
+    const fs::path dbc_path = database_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "../secret", ""}});
+    expect(dbc_create.ok, "table traversal test: DBC fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_json(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(!result.ok,
+           "export_database_as_json should reject a \"../\" catalog table name rather than read outside the database directory");
+    expect(result.json.find("OUTSIDE_DATABASE_SECRET") == std::string::npos,
+           "export_database_as_json must never leak an outside-directory file's content, even in a failure result");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5636: an absolute-path catalog table name is a second, distinct way to
+// hit the same underlying bug -- std::filesystem::path's own operator/
+// silently *replaces* the whole left-hand path when the appended component
+// is itself absolute, so a table named e.g. "/etc/hostname"-shaped would
+// bypass dbc_dir entirely rather than merely escaping it via "..".
+void test_export_database_as_json_rejects_absolute_table_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_table_absolute_path_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "/etc/hostname", ""}});
+    expect(dbc_create.ok, "absolute table-name test: DBC fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_json(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(!result.ok,
+           "export_database_as_json should reject an absolute-path catalog table name rather than let it bypass the database directory entirely");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+#if !defined(_WIN32)
+// #5636: a table name that passes the string-level safety check (no
+// separators, no "..") can still name a symlink planted directly inside
+// the database directory that itself points outside it -- the string
+// check alone cannot see through that, so the resolved path's own
+// canonical form must also be verified contained within the database
+// directory's own canonical form.
+void test_export_database_as_json_rejects_symlink_table_escaping_directory() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_table_symlink_escape_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+    const fs::path database_dir = temp_dir / "database";
+    fs::create_directories(database_dir);
+
+    const fs::path secret_path = temp_dir / "secret.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> secret_fields{
+        {.name = "TOKEN", .type = 'C', .offset = 1U, .length = 30U, .decimal_count = 0U}
+    };
+    const auto secret_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(secret_path), secret_fields,
+        {{"OUTSIDE_DATABASE_SECRET"}});
+    expect(secret_create.ok, "symlink escape test: outside-directory secret fixture should be created");
+
+    const fs::path linked_table_path = database_dir / "linked.dbf";
+    fs::create_symlink(secret_path, linked_table_path);
+
+    const fs::path dbc_path = database_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "linked", ""}});
+    expect(dbc_create.ok, "symlink escape test: DBC fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_json(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(!result.ok,
+           "export_database_as_json should reject a catalog table whose on-disk file is a symlink escaping the database directory");
+    expect(result.json.find("OUTSIDE_DATABASE_SECRET") == std::string::npos,
+           "export_database_as_json must never leak the symlink target's own outside-directory content, even in a failure result");
+
+    fs::remove_all(temp_dir, ignored);
+}
+#endif
 
 void test_export_database_as_sql_maps_currency_datetime_and_blank_numeric() {
     namespace fs = std::filesystem;
@@ -7441,6 +7575,11 @@ int main() {
     test_extract_dbc_stored_procedures_source_fails_closed_without_memo_sidecar();
     test_inspect_asset_resolves_explicit_unicode_memo_sidecar();
     test_export_database_as_json_resolves_unicode_catalog_table_path();
+    test_export_database_as_json_rejects_dotdot_table_name_traversal();
+    test_export_database_as_json_rejects_absolute_table_name();
+#if !defined(_WIN32)
+    test_export_database_as_json_rejects_symlink_table_escaping_directory();
+#endif
     test_export_database_as_sql_maps_currency_datetime_and_blank_numeric();
     test_export_database_as_sql_preserves_exponent_form_double_values();
     test_export_database_as_postgresql_sql_maps_types_and_creates_indexes();

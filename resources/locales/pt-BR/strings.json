@@ -1772,6 +1772,8 @@
   "Vfp.AssetInspector.Error.DbcHeaderParseFailed": "Falha ao analisar o cabecalho DBC: {error}",
   "Vfp.AssetInspector.Error.DbcPathMissing": "O caminho DBC nao existe: {path}",
   "Vfp.AssetInspector.Error.DbcReadFailed": "Nao foi possivel ler o arquivo DBC: {path}",
+  "Vfp.AssetInspector.Error.DbcTableEscapesDirectory": "A tabela de catalogo {table} resolve para um arquivo fora do proprio diretorio do banco de dados.",
+  "Vfp.AssetInspector.Error.DbcTableNameUnsafe": "O nome da tabela de catalogo nao e um nome de arquivo seguro: {table}",
   "Vfp.AssetInspector.Error.PathMissing": "O caminho nao existe.",
   "Vfp.AssetInspector.Error.ReadFailed": "Nao foi possivel ler o ativo: {path}",
   "Vfp.AssetInspector.Validation.DbcCatalogEmpty": "O catalogo DBC foi carregado, mas nenhuma linha de metadados de objetos de primeira passagem foi detectada.",

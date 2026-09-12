@@ -1,3 +1,47 @@
+- 2026-09-12: Closed a path-traversal vulnerability in
+  `load_database_catalog_snapshot()` (`src/vfp/asset_inspector.cpp`), the
+  shared DBC catalog loader every `EXPORT DATABASE` exporter uses (JSON,
+  SQL, Access, PostgreSQL, SQLite, SQL Server, Oracle, MySQL) (#5636,
+  found by an automated Codex code-review pass). A catalog `TABLE`
+  object's own name is untrusted data a crafted or foreign-tool-written
+  DBC controls, but the loader built each table's own on-disk path via
+  plain `std::filesystem::path` concatenation with no rejection of `..`,
+  path separators, or an absolute form. `std::filesystem::path`'s own
+  `operator/` silently *replaces* the whole left-hand path when the
+  appended component is itself absolute, and a relative `"../secret"`
+  component resolves outside the database directory at the OS level even
+  though the path string still nominally starts with it. Directly
+  reproduced: a DBC placed in a `database/` subdirectory, with a table
+  named `../secret` and a real `secret.dbf` sitting in that subdirectory's
+  own parent, made `export_database_as_json()` (and, since every exporter
+  shares this one loader, every other `TYPE` variant identically) read and
+  disclose the outside file's row content verbatim. Fixed by rejecting the
+  name via `table_name_is_safe_filesystem_component()` -- the identical
+  check `build_database_json_import_plan()`'s own table-name validation
+  already applies on the `IMPORT DATABASE` side, now shared via a forward
+  declaration rather than duplicated -- before any path is ever
+  constructed from the name, failing the whole snapshot load closed (not
+  just skipping the one unsafe table) with a new localized
+  `Vfp.AssetInspector.Error.DbcTableNameUnsafe` diagnostic. A second,
+  narrower gap the string-level check alone cannot see through: a table
+  name that passes it (no separators, no `..`) can still name a symlink
+  planted directly inside the database directory that itself points
+  outside it. Closed by additionally verifying the *resolved* path's own
+  canonical form (`std::filesystem::weakly_canonical()`) remains contained
+  beneath the database directory's own canonical form before it is
+  trusted, failing closed with a new `Vfp.AssetInspector.Error.DbcTableEscapesDirectory`
+  diagnostic if not. Three new regression tests prove: a `../`-traversal
+  table name is rejected and never leaks the outside file's content even
+  in the failure result; an absolute-path table name is rejected; and (POSIX
+  only) a symlink planted at a string-safe table name pointing outside the
+  database directory is rejected and never leaks the target's content
+  either. All three were verified to reliably fail against the pre-fix
+  code and reliably pass against the fix. Scope note: this closes the
+  demonstrated disclosure vulnerability specifically; it does not address
+  #5636's own broader-scoped acceptance criteria around case-folded lookup
+  ambiguity (tracked separately as #5637) or a replacement race between
+  resolution and read.
+
 - 2026-09-12: PR review (chatgpt-codex-connector) on the `EXPORT DATABASE
   ... TYPE MYSQL` PR (#5582) surfaced one real gap, fixed in the same PR: a
   table name (sourced from the DBC catalog's own `OBJECTNAME` column, a
