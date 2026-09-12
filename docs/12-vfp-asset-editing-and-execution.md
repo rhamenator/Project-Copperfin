@@ -232,6 +232,8 @@ from that exporter's own deliberate unreadable-source-table marker (#5697,
 found by an automated Codex code-review pass). The source-level asset
 inspector reports this same shape as a validation error
 (`dbf.field_count_zero`) rather than silently returning no diagnostic.
+
+The JSON exporter also fails closed with a localized `Vfp.AssetInspector.Validation.UnsafeJsonNumericValue` diagnostic naming the table, row, and column if a non-blank numeric cell cannot be safely represented as an unquoted JSON number (RFC 8259 grammar, which is stricter than the SQL-family exporters' own literal grammar in two ways: no leading `+`, and no leading zero before further digits) -- a crafted or corrupted cell could previously inject an entirely new JSON property into a record object, or produce outright invalid JSON, while the export still reported success (#5630, #5571, found by an automated Codex code-review pass). A field descriptor's own raw type byte is now also escaped the same way its name already is, closing an identical unescaped-raw-byte injection point in the fields array itself.
 `TYPE SQL` emits one portable/ANSI-ish dialect (`CREATE TABLE` per table,
 `INSERT` per row); it does not target a specific database engine's SQL dialect
 quirks. `TYPE POSTGRESQL` (#5537, first vendor-dialect slice of #141) emits the

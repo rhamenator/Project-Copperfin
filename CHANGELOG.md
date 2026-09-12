@@ -1,3 +1,54 @@
+- 2026-09-12: Closed a JSON-structural-injection vulnerability in
+  `export_database_as_json()` (`src/vfp/asset_inspector.cpp`, #5630/#5571,
+  found by an automated Codex code-review pass): a numeric cell's decoded
+  display_value was inserted directly into the JSON stream with no
+  validation at all. Since this codebase's own DBF writer accepts any byte
+  string that fits a fixed-width N/F field's declared width, a crafted or
+  corrupted table could inject an entirely new, distinct JSON property into
+  a record object -- a cell containing `1,"INJECT":true` became two logical
+  properties, not one, while the export still reported success -- and a
+  numeric-overflow marker (e.g. "*****") or a nonfinite binary Double's own
+  decoded text ("nan"/"inf") produced outright invalid JSON. Every SQL
+  exporter already validates the identical decoded value via
+  `looks_like_safe_unquoted_sql_numeric_literal()` before trusting it
+  unquoted; the JSON exporter had no equivalent check.
+
+  Fixed by adding `looks_like_safe_unquoted_json_numeric_literal()`, a
+  JSON-number-grammar validator deliberately distinct from (and stricter
+  than) the existing SQL validator: real JSON grammar (RFC 8259) forbids a
+  leading `+` and a leading zero before further digits, both of which the
+  SQL validator accepts (SQL's own numeric-literal grammar has no such
+  restriction, and this codebase's SQL exporters correctly rely on that).
+  Checked before a numeric value is ever emitted unquoted into the JSON
+  stream, failing the whole export closed with a new localized
+  `Vfp.AssetInspector.Validation.UnsafeJsonNumericValue` diagnostic naming
+  the table, row, and column.
+
+  A proactive sibling-gap check -- performed while fixing the reported
+  numeric-value defect, not in response to a separate report -- found the
+  identical unescaped-raw-byte pattern one property over: the fields
+  array's own `"type"` property embedded a field descriptor's raw type
+  byte directly, with no validation that it's a recognized VFP type
+  letter, exactly the same "no quoting layer to escape it with" situation
+  for a crafted `"` or `\` byte, just describing the schema rather than a
+  data value. Fixed by routing it through the same `json_escape_str()` the
+  field's own `"name"` property already uses.
+
+  New regression tests
+  (`test_export_database_as_json_fails_closed_on_numeric_structural_
+  injection`, `test_export_database_as_json_fails_closed_on_unsafe_
+  numeric_forms` -- covering the overflow marker, leading '+', leading
+  zero, and nonfinite double cases -- `test_export_database_as_json_still_
+  accepts_valid_numeric_forms`, proving genuinely valid numeric values are
+  unaffected; `test_export_database_as_json_escapes_crafted_field_type_
+  byte`, built from raw DBF bytes directly since a crafted out-of-range
+  type byte cannot be produced through the ordinary
+  `create_dbf_table_file()` writer) verified to reliably fail against the
+  pre-fix code (8 total failures) and reliably pass against the fix.
+
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-001` updated.
+
 - 2026-09-12: Closed a data-integrity gap affecting every `EXPORT DATABASE`
   exporter (`src/vfp/asset_inspector.cpp`, #5697, found by an automated
   Codex code-review pass): a cataloged member DBF whose field-descriptor

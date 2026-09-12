@@ -1805,6 +1805,7 @@
   "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong": "The identifier {identifier} is longer than 64 characters, which MySQL does not allow.",
   "Vfp.AssetInspector.Validation.OracleEmptyCharacterValueUnrepresentable": "Table {table}, column {column} contains a non-null empty character value, which Oracle would silently store as NULL. Oracle has no VARCHAR2 literal that preserves this distinction.",
   "Vfp.AssetInspector.Validation.OracleIdentifierCollision": "Two distinct names produced the identical Oracle identifier {identifier} after removing embedded double quotes, which Oracle does not support escaping.",
+  "Vfp.AssetInspector.Validation.UnsafeJsonNumericValue": "Table {table}, row {row}, column {column} contains a non-blank numeric value that cannot be safely represented in the exported JSON.",
   "Vfp.CdxHeader.Error.InvalidValues": "Header values do not look like a CDX-family index file.",
   "Vfp.CdxHeader.Error.OpenFileFailed": "Unable to open file.",
   "Vfp.CdxHeader.Error.ReadProbeFailed": "Unable to read a complete 16-byte CDX header probe.",
