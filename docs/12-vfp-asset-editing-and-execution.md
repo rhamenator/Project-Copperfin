@@ -246,7 +246,14 @@ export (with a `VARCHAR` containing an embedded quote, and `DECIMAL`/`BOOLEAN`/
 `DATE` columns) loaded into a real SQLite database with zero errors, round-tripped
 every row exactly, and a cross-table `JOIN` between the two tables returned the
 correct result; index-name disambiguation is likewise schema-wide, matching
-SQLite's own identical table/index namespace sharing.
+SQLite's own identical table/index namespace sharing. A blank VFP Date cell
+emits `NULL` in `TYPE SQL`/`TYPE POSTGRESQL`/`TYPE SQLITE` (#5696), matching
+`TYPE SQLSERVER`/`TYPE ORACLE`/`TYPE MYSQL`'s own established handling below --
+the shared row writer these three dialects reuse had no `D`/Date branch at
+all until this fix, so a blank Date fell through to the generic string path
+and was emitted as an invalid `''` literal (rejected outright by real
+PostgreSQL; silently stored as the wrong SQL storage class under SQLite's
+dynamic typing).
 
 `TYPE SQLSERVER` (#5554, third vendor-dialect slice of #141) is its own dedicated
 code path, not a reuse of `TYPE SQL`'s shared table/data writer at all (the same

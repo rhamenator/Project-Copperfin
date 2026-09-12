@@ -1,3 +1,39 @@
+- 2026-09-12: Closed a data-integrity gap in `write_sql_tables_and_data()`
+  (`src/vfp/asset_inspector.cpp`, #5696, found by an automated Codex
+  code-review pass), the shared row writer behind `export_database_as_sql()`
+  (portable SQL), `export_database_as_postgresql_sql()`, and
+  `export_database_as_sqlite_sql()`: it had no `D`/Date branch at all,
+  so a blank VFP Date cell (which decodes to an empty `display_value`
+  with `is_null == false`, the same as a blank numeric cell) fell
+  through to the generic string path and was emitted as a plain `''`
+  literal into a column declared `DATE`. Real PostgreSQL rejects `''`
+  as invalid date input outright, so the supposedly loadable script
+  simply fails to load. SQLite's dynamic typing accepts the statement
+  under its NUMERIC/DATE-affinity rules but stores a `TEXT` value in
+  the column rather than the intended null, silently preserving the
+  wrong SQL storage class. The later SQL Server, Oracle, and MySQL
+  writers already had their own explicit blank-date handling (#5554's
+  PR review rounds) and focused tests requiring `NULL` -- this was a
+  coverage and implementation gap specifically in the three earliest
+  exporter slices that share this one row writer. Fixed by adding an
+  `is_date` branch mirroring the existing SQL Server/Oracle/MySQL
+  pattern: emit `NULL` for a blank Date, or the existing quoted
+  "YYYY-MM-DD" string for a non-blank one. New regression test
+  (`test_export_database_as_sql_family_preserves_blank_dates_as_null`)
+  covers all three affected exporters through the one shared function;
+  verified to reliably fail against the pre-fix code (missing
+  `is_date` branch) and reliably pass against the fix. Checked the
+  Access writer for the same gap since it also emits `D`/Date values
+  directly (`export_database_as_access_sql()`) -- it already handles a
+  blank Date correctly (emits `NULL`), so no further sibling gap found.
+  Directly confirmed the fix against both real engines: a generated
+  PostgreSQL script (real local PostgreSQL 16) loaded cleanly and
+  `IS NULL` reported `TRUE` for the blank-date row; a generated SQLite
+  script (real local `sqlite3` 3.46.1) loaded cleanly and `typeof()`
+  reported `null` (not `text`) for the same row.
+  `docs/32-recovered-requirements-traceability.md` rows
+  `RQ-CF-MODERNIZATION-003`/`-007`/`-008` updated.
+
 - 2026-09-12: Closed a path-traversal vulnerability in
   `load_database_catalog_snapshot()` (`src/vfp/asset_inspector.cpp`), the
   shared DBC catalog loader every `EXPORT DATABASE` exporter uses (JSON,
