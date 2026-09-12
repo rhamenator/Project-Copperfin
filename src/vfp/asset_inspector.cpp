@@ -2727,10 +2727,12 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
         }
         sql << ");\n\n";
 
+        std::size_t row_number = 0U;
         for (const auto& rec : tbl.table.records) {
             if (rec.deleted) {
                 continue;
             }
+            ++row_number;
             sql << "INSERT INTO " << quoted_table << " (";
             for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
                 sql << sql_quote_identifier(rec.values[vi].field_name)
@@ -2763,19 +2765,38 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
                         sql << "NULL";
                     }
                 } else if (is_numeric) {
-                    // A blank numeric cell decodes to an empty display_value
-                    // (not is_null) -- emit NULL rather than an empty string
-                    // literal, which is not valid syntax inside a DECIMAL/
-                    // INTEGER/DOUBLE PRECISION column on real SQL engines.
-                    // A non-blank value that isn't a safe plain decimal
-                    // literal (a numeric-overflow marker, or crafted/
-                    // corrupted content) also becomes NULL rather than
-                    // being trusted unquoted and unescaped -- see
+                    // #5698: a blank numeric cell decodes to an empty
+                    // display_value (not is_null) -- emit NULL rather than
+                    // an empty string literal, which is not valid syntax
+                    // inside a DECIMAL/INTEGER/DOUBLE PRECISION column on
+                    // real SQL engines. A *non-blank* value that isn't a
+                    // safe plain decimal literal (a numeric-overflow
+                    // marker, malformed fixed-width numeric text, a
+                    // nonfinite binary Double, or crafted/corrupted
+                    // content) previously also became NULL -- silently
+                    // changing the source data and erasing the reason the
+                    // cell couldn't be represented, indistinguishable from
+                    // a genuinely blank cell in the generated script. Fail
+                    // the whole export closed instead, naming the table,
+                    // row, and column, matching this exporter's own
+                    // established fail-closed precedent (see
+                    // write_oracle_tables_and_data()'s own
+                    // hard_failure_error uses) for a case with no safe
+                    // corrective action -- see
                     // looks_like_safe_unquoted_sql_numeric_literal()'s own
-                    // comment for why this can't be validated by quoting.
-                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
-                        ? rv.display_value
-                        : "NULL");
+                    // comment for why this can't be validated by quoting
+                    // instead.
+                    if (rv.display_value.empty()) {
+                        sql << "NULL";
+                    } else if (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)) {
+                        sql << rv.display_value;
+                    } else {
+                        hard_failure_error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.UnsafeNumericValue",
+                            {{"table", rt.name}, {"row", std::to_string(row_number)},
+                             {"column", rv.field_name}});
+                        return {};
+                    }
                 } else if (is_date) {
                     // #5696: a blank VFP date field decodes to an empty
                     // display_value (not is_null), same as a blank numeric
@@ -3149,10 +3170,12 @@ std::vector<ParsedSqlExportTable> write_sqlserver_tables_and_data(
         }
         sql << ");\n\n";
 
+        std::size_t row_number = 0U;
         for (const auto& rec : tbl.table.records) {
             if (rec.deleted) {
                 continue;
             }
+            ++row_number;
             sql << "INSERT INTO " << quoted_table << " (";
             for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
                 sql << sqlserver_quote_identifier(rec.values[vi].field_name)
@@ -3181,9 +3204,21 @@ std::vector<ParsedSqlExportTable> write_sqlserver_tables_and_data(
                         sql << "NULL";
                     }
                 } else if (is_numeric) {
-                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
-                        ? rv.display_value
-                        : "NULL");
+                    // #5698: see write_sql_tables_and_data()'s own comment
+                    // -- a non-blank value that isn't a safe plain decimal
+                    // literal fails the whole export closed instead of
+                    // silently becoming NULL.
+                    if (rv.display_value.empty()) {
+                        sql << "NULL";
+                    } else if (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)) {
+                        sql << rv.display_value;
+                    } else {
+                        hard_failure_error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.UnsafeNumericValue",
+                            {{"table", rt.name}, {"row", std::to_string(row_number)},
+                             {"column", rv.field_name}});
+                        return {};
+                    }
                 } else if (is_date) {
                     // #5554 PR review (chatgpt-codex-connector, P1): a
                     // blank VFP date field decodes to an empty
@@ -3496,10 +3531,12 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
             tbl.table.fields.begin(), tbl.table.fields.end(),
             [](const DbfFieldDescriptor& field) { return field.type == '0'; });
 
+        std::size_t row_number = 0U;
         for (const auto& rec : tbl.table.records) {
             if (rec.deleted) {
                 continue;
             }
+            ++row_number;
             sql << "INSERT INTO " << quoted_table << " (";
             for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
                 sql << oracle_quote_identifier(rec.values[vi].field_name)
@@ -3529,9 +3566,21 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
                         sql << "NULL";
                     }
                 } else if (is_numeric) {
-                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
-                        ? rv.display_value
-                        : "NULL");
+                    // #5698: see write_sql_tables_and_data()'s own comment
+                    // -- a non-blank value that isn't a safe plain decimal
+                    // literal fails the whole export closed instead of
+                    // silently becoming NULL.
+                    if (rv.display_value.empty()) {
+                        sql << "NULL";
+                    } else if (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)) {
+                        sql << rv.display_value;
+                    } else {
+                        hard_failure_error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.UnsafeNumericValue",
+                            {{"table", rt.name}, {"row", std::to_string(row_number)},
+                             {"column", rv.field_name}});
+                        return {};
+                    }
                 } else if (is_date) {
                     // A blank date must become NULL, not `DATE ''` --
                     // see this function's own comment above for why
@@ -3706,8 +3755,11 @@ DatabaseSqlExportResult export_database_as_sql(
     std::string hard_failure_error;
     write_sql_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
     // #5697: a member table with zero fields fails the whole export
-    // closed rather than emit invalid `CREATE TABLE "name" ( );` DDL --
-    // see write_sql_tables_and_data()'s own comment.
+    // closed rather than emit invalid `CREATE TABLE "name" ( );` DDL.
+    // #5698: a non-blank numeric value that cannot be safely represented
+    // shares this same hard_failure_error path rather than silently
+    // substituting NULL. See write_sql_tables_and_data()'s own comment
+    // for both.
     if (!hard_failure_error.empty()) {
         return {.ok = false, .error = hard_failure_error, .sql = {}};
     }
@@ -3738,8 +3790,11 @@ DatabaseSqlExportResult export_database_as_postgresql_sql(
     const std::vector<ParsedSqlExportTable> parsed_tables =
         write_sql_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
     // #5697: a member table with zero fields fails the whole export
-    // closed rather than emit invalid `CREATE TABLE "name" ( );` DDL --
-    // see write_sql_tables_and_data()'s own comment.
+    // closed rather than emit invalid `CREATE TABLE "name" ( );` DDL.
+    // #5698: a non-blank numeric value that cannot be safely represented
+    // shares this same hard_failure_error path rather than silently
+    // substituting NULL. See write_sql_tables_and_data()'s own comment
+    // for both.
     if (!hard_failure_error.empty()) {
         return {.ok = false, .error = hard_failure_error, .sql = {}};
     }
@@ -3787,8 +3842,11 @@ DatabaseSqlExportResult export_database_as_sqlite_sql(
     const std::vector<ParsedSqlExportTable> parsed_tables =
         write_sql_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
     // #5697: a member table with zero fields fails the whole export
-    // closed rather than emit invalid `CREATE TABLE "name" ( );` DDL --
-    // see write_sql_tables_and_data()'s own comment.
+    // closed rather than emit invalid `CREATE TABLE "name" ( );` DDL.
+    // #5698: a non-blank numeric value that cannot be safely represented
+    // shares this same hard_failure_error path rather than silently
+    // substituting NULL. See write_sql_tables_and_data()'s own comment
+    // for both.
     if (!hard_failure_error.empty()) {
         return {.ok = false, .error = hard_failure_error, .sql = {}};
     }
@@ -3854,10 +3912,12 @@ DatabaseSqlExportResult export_database_as_access_sql(
         }
         sql << ");\n\n";
 
+        std::size_t row_number = 0U;
         for (const auto& rec : tbl.table.records) {
             if (rec.deleted) {
                 continue;
             }
+            ++row_number;
             sql << "INSERT INTO " << quoted_table << " (";
             for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
                 sql << access_quote_identifier(rec.values[vi].field_name)
@@ -3884,15 +3944,20 @@ DatabaseSqlExportResult export_database_as_access_sql(
                         sql << "NULL";
                     }
                 } else if (is_numeric) {
-                    // See looks_like_safe_unquoted_sql_numeric_literal()'s
-                    // comment: a non-blank value that isn't a safe plain
-                    // decimal literal (overflow marker, crafted/corrupted
-                    // content) becomes NULL rather than being trusted
-                    // unquoted, matching export_database_as_sql()'s own
-                    // established blank-cell-to-NULL behavior.
-                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
-                        ? rv.display_value
-                        : "NULL");
+                    // #5698: see write_sql_tables_and_data()'s own comment
+                    // -- a non-blank value that isn't a safe plain decimal
+                    // literal fails the whole export closed instead of
+                    // silently becoming NULL.
+                    if (rv.display_value.empty()) {
+                        sql << "NULL";
+                    } else if (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)) {
+                        sql << rv.display_value;
+                    } else {
+                        return {.ok = false, .error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.UnsafeNumericValue",
+                            {{"table", rt.name}, {"row", std::to_string(row_number)},
+                             {"column", rv.field_name}}), .sql = {}};
+                    }
                 } else if (is_date) {
                     // decode_value()'s 'D' case (dbf_table.cpp) formats a
                     // well-formed value as "YYYY-MM-DD" (empty string for
@@ -3959,7 +4024,9 @@ DatabaseSqlExportResult export_database_as_sqlserver_sql(
     const std::vector<ParsedSqlExportTable> parsed_tables =
         write_sqlserver_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
     // #5697: a member table with zero fields fails the whole export
-    // closed -- see write_sqlserver_tables_and_data()'s own comment.
+    // closed. #5698: a non-blank numeric value that cannot be safely
+    // represented shares this same hard_failure_error path. See
+    // write_sqlserver_tables_and_data()'s own comment for both.
     if (!hard_failure_error.empty()) {
         return {.ok = false, .error = hard_failure_error, .sql = {}};
     }
@@ -4275,10 +4342,12 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
         }
         sql << ");\n\n";
 
+        std::size_t row_number = 0U;
         for (const auto& rec : tbl.table.records) {
             if (rec.deleted) {
                 continue;
             }
+            ++row_number;
             sql << "INSERT INTO " << quoted_table << " (";
             for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
                 sql << mysql_quote_identifier(rec.values[vi].field_name)
@@ -4305,9 +4374,21 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
                         sql << "NULL";
                     }
                 } else if (is_numeric) {
-                    sql << (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)
-                        ? rv.display_value
-                        : "NULL");
+                    // #5698: see write_sql_tables_and_data()'s own comment
+                    // -- a non-blank value that isn't a safe plain decimal
+                    // literal fails the whole export closed instead of
+                    // silently becoming NULL.
+                    if (rv.display_value.empty()) {
+                        sql << "NULL";
+                    } else if (looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)) {
+                        sql << rv.display_value;
+                    } else {
+                        hard_failure_error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.UnsafeNumericValue",
+                            {{"table", rt.name}, {"row", std::to_string(row_number)},
+                             {"column", rv.field_name}});
+                        return {};
+                    }
                 } else if (is_date) {
                     // A blank VFP date's own empty display_value must
                     // become NULL, not an empty string literal -- see
@@ -4428,6 +4509,8 @@ DatabaseSqlExportResult export_database_as_mysql_sql(
     // established collision-safe disambiguation story for a table's own
     // pre-existing column names) is not a safe alternative. #5697: a
     // zero-field member table shares this same hard_failure_error path.
+    // #5698: a non-blank numeric value that cannot be safely represented
+    // shares it too.
     if (!hard_failure_error.empty()) {
         return {.ok = false, .error = hard_failure_error, .sql = {}};
     }
