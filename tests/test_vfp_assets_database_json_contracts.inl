@@ -837,8 +837,26 @@ void test_materialize_database_json_import_plan_rejects_case_folded_collisions()
             plan_result.plan, requested_dbc_path.string());
         expect(!result.ok,
                "materializing must fail closed when a case-folded DBC alias already exists");
-        expect(!fs::exists(requested_dbc_path),
-               "a case-folded DBC collision must not create the exact-case destination either");
+        // #5678 review round: requested_dbc_path ("container.dbc") is a
+        // case-folded alias of the pre-existing "CONTAINER.DBC", so on a
+        // case-insensitive filesystem fs::exists(requested_dbc_path) is
+        // TRUE regardless of whether this fix behaved correctly -- it
+        // resolves straight through to the original file. Verify no new,
+        // distinctly-spelled file was created (directory entry count
+        // unchanged) and the original file's own bytes are untouched,
+        // instead of asserting non-existence of an aliasing path.
+        {
+            std::error_code count_error;
+            const auto entry_count = std::distance(
+                fs::directory_iterator(dbc_case_dir, count_error), fs::directory_iterator());
+            expect(entry_count == 1,
+                   "a case-folded DBC collision must not create any additional directory entry");
+        }
+        std::ifstream verify_input(existing_upper_dbc, std::ios::binary);
+        const std::string verify_content((std::istreambuf_iterator<char>(verify_input)),
+                                          std::istreambuf_iterator<char>());
+        expect(verify_content == "pre-existing",
+               "a case-folded DBC collision must leave the pre-existing file's bytes untouched");
         expect(!fs::exists(dbc_case_dir / "Orders.dbf"),
                "a case-folded DBC collision must not materialize any table either");
     }
@@ -852,6 +870,10 @@ void test_materialize_database_json_import_plan_rejects_case_folded_collisions()
             {{.name = "X", .type = 'C', .length = 1U}},
             {{"z"}});
         expect(pre_existing_table.ok, "table-case fixture should create the pre-existing table");
+        const auto pre_existing_table_path = table_case_dir / "ORDERS.DBF";
+        std::error_code size_error;
+        const auto original_table_size = fs::file_size(pre_existing_table_path, size_error);
+        expect(!size_error, "table-case fixture's pre-existing file size should be readable");
         const fs::path requested_dbc_path = table_case_dir / "fresh.dbc";
         const auto result = copperfin::vfp::materialize_database_json_import_plan(
             plan_result.plan, requested_dbc_path.string());
@@ -859,8 +881,22 @@ void test_materialize_database_json_import_plan_rejects_case_folded_collisions()
                "materializing must fail closed when a case-folded table .dbf alias already exists");
         expect(!fs::exists(requested_dbc_path),
                "a case-folded table collision must not leave a partially materialized DBC behind");
-        expect(!fs::exists(table_case_dir / "Orders.dbf"),
-               "a case-folded table collision must not additionally create the exact-case .dbf");
+        // #5678 review round: table_case_dir / "Orders.dbf" is a
+        // case-folded alias of the pre-existing "ORDERS.DBF", so
+        // fs::exists() on it is TRUE on a case-insensitive filesystem
+        // regardless of this fix's own correctness. Verify no additional
+        // directory entry was created and the pre-existing table's own
+        // size is unchanged instead.
+        {
+            std::error_code count_error;
+            const auto entry_count = std::distance(
+                fs::directory_iterator(table_case_dir, count_error), fs::directory_iterator());
+            expect(entry_count == 1,
+                   "a case-folded table collision must not additionally create the exact-case .dbf");
+        }
+        const auto post_table_size = fs::file_size(pre_existing_table_path, size_error);
+        expect(!size_error && post_table_size == original_table_size,
+               "a case-folded table collision must leave the pre-existing table file untouched");
     }
 
     // Case 3: a differently-cased memo (.fpt) sidecar destination already

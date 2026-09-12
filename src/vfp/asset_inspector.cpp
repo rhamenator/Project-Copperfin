@@ -5418,15 +5418,37 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     std::map<std::string, fs::path> existing_entries_by_casefolded_name;
     {
         std::error_code scan_error;
-        if (fs::exists(dbc_dir_for_scan, scan_error) && !scan_error) {
-            for (const auto& entry :
-                 fs::directory_iterator(dbc_dir_for_scan, scan_error)) {
+        const bool dir_exists = fs::exists(dbc_dir_for_scan, scan_error);
+        if (scan_error) {
+            return failure(asset_inspector_text(
+                "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)}}));
+        }
+        if (dir_exists) {
+            // #5678 review round: a directory that permits write/traversal
+            // but not listing (e.g. a POSIX write+execute-only drop box)
+            // makes fs::exists() succeed while the iterator itself, or an
+            // increment partway through, reports an error. Silently
+            // treating that as "directory is empty" would leave the
+            // collision index empty and defeat this very fix's own
+            // fail-closed guarantee -- so any scan error here must fail
+            // the whole import closed, not be discarded.
+            fs::directory_iterator scan_it(dbc_dir_for_scan, scan_error);
+            if (scan_error) {
+                return failure(asset_inspector_text(
+                    "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed",
+                    {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)}}));
+            }
+            const fs::directory_iterator scan_end;
+            for (; scan_it != scan_end; scan_it.increment(scan_error)) {
                 if (scan_error) {
-                    break;
+                    return failure(asset_inspector_text(
+                        "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed",
+                        {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)}}));
                 }
                 existing_entries_by_casefolded_name.emplace(
-                    lowercase_copy(copperfin::platform::path_to_utf8_string(entry.path().filename())),
-                    entry.path());
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(scan_it->path().filename())),
+                    scan_it->path());
             }
         }
     }

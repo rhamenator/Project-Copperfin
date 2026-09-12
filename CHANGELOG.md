@@ -35,6 +35,24 @@
   and memo `.fpt`) verified to reliably fail against the pre-fix code (9
   total failures) and reliably pass against the fix.
 
+  A review round on the fix's own PR (chatgpt-codex-connector) found two
+  further gaps. First, the destination directory's own scan silently
+  discarded a `fs::directory_iterator` construction or increment error
+  (e.g. a directory permitting write/traversal but not listing), so a
+  scan failure was indistinguishable from an empty directory and quietly
+  defeated the fail-closed guarantee precisely when the scan itself was
+  unavailable -- fixed by returning a new `Vfp.AssetInspector.Error.
+  DatabaseImportDestinationScanFailed` failure on any scan error instead
+  of discarding it. Second, two of the new test's own assertions checked
+  `fs::exists()` on a path that is itself a case-folded alias of a
+  pre-existing file (e.g. `container.dbc` when `CONTAINER.DBC` already
+  exists) -- unconditionally true on a real case-insensitive filesystem
+  (Windows, default macOS) regardless of whether the fix behaved
+  correctly, since the OS resolves the alias straight through to the
+  original file. Fixed by asserting directory-entry-count and
+  pre-existing-file content/size invariance instead of alias
+  non-existence.
+
   This is one of five related defects an automated review pass found in
   this same function (#5678, #5679, #5680, #5681, #5682); this fix
   addresses #5678 only. #5679/#5680's own TOCTOU races on the
