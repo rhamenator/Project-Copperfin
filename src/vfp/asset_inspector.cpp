@@ -3820,10 +3820,50 @@ std::string mysql_column_type(char field_type, std::uint8_t length, std::uint8_t
 // Returns every successfully-parsed table the same way
 // write_sqlserver_tables_and_data() does, so write_mysql_create_indexes()
 // doesn't have to re-open and re-parse the same .dbf a second time.
+//
+// #5582 PR review (chatgpt-codex-connector, P2): a DBC catalog's own
+// OBJECTNAME column (a DBF field this codebase lets a caller size
+// arbitrarily wide, e.g. the fixture in this file's own regression test)
+// permits a table name longer than MySQL's real 64-character identifier
+// limit -- this codebase's own writer never produces one that long, but a
+// crafted/corrupt or foreign-tool-written DBC is not bound by that.
+// Without this check, such a table name would be quoted and emitted
+// unchanged, letting this function return a "successful" export whose
+// very first `CREATE TABLE` a real MySQL engine rejects outright with
+// error 1059 -- the same class of gap `write_mysql_create_indexes()`
+// already guards against for its own generated index names via
+// `disambiguate_index_name()`, just never applied to a table's own
+// pre-existing name. The identical check on each column name is
+// currently unreachable through this codebase's own classic-DBF field
+// descriptor (a hard-structural 10-byte name slot, `dbf_descriptor_name_width`
+// in dbf_table.cpp, well under 64 characters), but is included anyway as
+// defense-in-depth against a future long-field-name storage mechanism or
+// a hand-crafted descriptor bypassing that structural width. Failing the
+// whole export closed with a diagnostic naming the identifier (rather
+// than silently truncating, which risks a same-table column-name
+// collision with no established disambiguation story for that case)
+// matches this codebase's own established fail-closed precedent for a
+// case with no safe corrective action (see
+// `oracle_record_identifier_or_detect_collision()`'s own comment).
+//
+// MySQL's own identifier limit (64 *characters*, not bytes -- directly
+// confirmed against a real local MySQL 8.0 engine that a 64-character
+// identifier succeeds while a 65-character one fails outright with error
+// 1059, "Identifier name ... is too long", and that this holds true by
+// character count rather than byte count: 64 two-byte UTF-8 characters
+// (128 bytes) succeeds identically to 64 ASCII characters, while 65 of
+// either fails the same way) -- see utf8_safe_truncate()'s own comment
+// for why this uses IdentifierLengthUnit::unicode_code_points, matching
+// SQL Server's own character-counted `sysname` rather than PostgreSQL's/
+// Oracle's own byte-counted limits. Index names share this identical
+// 64-character ceiling (directly confirmed the same way).
+constexpr std::size_t kMysqlMaxIdentifierCodePoints = 64U;
+
 std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
     std::ostringstream& sql,
     const DatabaseCatalogSnapshot& snapshot,
-    std::size_t row_limit) {
+    std::size_t row_limit,
+    std::string& identifier_too_long_error) {
     std::vector<ParsedSqlExportTable> parsed_tables;
     for (const auto& rt : snapshot.resolved_tables) {
         DbfTableParseResult tbl = parse_dbf_table_from_file(
@@ -3835,11 +3875,26 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
         }
 
         const std::string quoted_table = mysql_quote_identifier(rt.name);
+        if (identifier_length_in_unit(rt.name, IdentifierLengthUnit::unicode_code_points) >
+            kMysqlMaxIdentifierCodePoints) {
+            identifier_too_long_error = asset_inspector_text(
+                "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong",
+                {{"identifier", quoted_table}});
+            return {};
+        }
         sql << "CREATE TABLE " << quoted_table << " (\n";
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
+            const std::string quoted_column = mysql_quote_identifier(fld.name);
+            if (identifier_length_in_unit(fld.name, IdentifierLengthUnit::unicode_code_points) >
+                kMysqlMaxIdentifierCodePoints) {
+                identifier_too_long_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong",
+                    {{"identifier", quoted_column}});
+                return {};
+            }
             const bool last_field = (fi + 1U == tbl.table.fields.size());
-            sql << "    " << mysql_quote_identifier(fld.name) << " "
+            sql << "    " << quoted_column << " "
                 << mysql_column_type(fld.type, fld.length, fld.decimal_count)
                 << (last_field ? "\n" : ",\n");
         }
@@ -3899,19 +3954,6 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
     }
     return parsed_tables;
 }
-
-// MySQL's own identifier limit (64 *characters*, not bytes -- directly
-// confirmed against a real local MySQL 8.0 engine that a 64-character
-// identifier succeeds while a 65-character one fails outright with error
-// 1059, "Identifier name ... is too long", and that this holds true by
-// character count rather than byte count: 64 two-byte UTF-8 characters
-// (128 bytes) succeeds identically to 64 ASCII characters, while 65 of
-// either fails the same way) -- see utf8_safe_truncate()'s own comment
-// for why this uses IdentifierLengthUnit::unicode_code_points, matching
-// SQL Server's own character-counted `sysname` rather than PostgreSQL's/
-// Oracle's own byte-counted limits. Index names share this identical
-// 64-character ceiling (directly confirmed the same way).
-constexpr std::size_t kMysqlMaxIdentifierCodePoints = 64U;
 
 // #5554: MySQL's own CREATE INDEX syntax is identical to PostgreSQL's for
 // this exporter's plain-column-reference case (see
@@ -4001,8 +4043,18 @@ DatabaseSqlExportResult export_database_as_mysql_sql(
         ? std::numeric_limits<std::size_t>::max()
         : max_rows_per_table;
 
+    std::string identifier_too_long_error;
     const std::vector<ParsedSqlExportTable> parsed_tables =
-        write_mysql_tables_and_data(sql, snapshot, row_limit);
+        write_mysql_tables_and_data(sql, snapshot, row_limit, identifier_too_long_error);
+    // #5582 PR review (chatgpt-codex-connector, P2): a table or column
+    // name longer than MySQL's real 64-character identifier limit fails
+    // the whole export closed -- see write_mysql_tables_and_data()'s own
+    // comment for why silently emitting it (or truncating it, with no
+    // established collision-safe disambiguation story for a table's own
+    // pre-existing column names) is not a safe alternative.
+    if (!identifier_too_long_error.empty()) {
+        return {.ok = false, .error = identifier_too_long_error, .sql = {}};
+    }
 
     // Unlike export_database_as_postgresql_sql()/export_database_as_sqlite_sql()/
     // export_database_as_oracle_sql(), no whole-export used_index_names set

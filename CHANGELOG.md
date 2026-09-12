@@ -1,3 +1,29 @@
+- 2026-09-12: PR review (chatgpt-codex-connector) on the `EXPORT DATABASE
+  ... TYPE MYSQL` PR (#5582) surfaced one real gap, fixed in the same PR: a
+  table name (sourced from the DBC catalog's own `OBJECTNAME` column, a
+  plain Character field a crafted or foreign-tool-written catalog is not
+  bound to keep under 64 characters) or column name exceeding MySQL's own
+  64-character identifier limit was quoted and emitted unchanged, letting
+  `export_database_as_mysql_sql()` return `ok = true` for a script whose
+  very first `CREATE TABLE` a real MySQL engine rejects outright with
+  error 1059 -- the same class of gap this exporter's own `CREATE INDEX`
+  generation already guarded against via `disambiguate_index_name()`, just
+  never applied to a table's own pre-existing name. `write_mysql_tables_and_data()`
+  now fails the whole export closed with a new localized
+  `Vfp.AssetInspector.Validation.MysqlIdentifierTooLong` diagnostic naming
+  the identifier, rather than silently emit an unusable script (a column-
+  name check is included too as defense-in-depth, though currently
+  unreachable through this codebase's own classic-DBF field descriptor,
+  which structurally caps a name at 10 bytes). One new regression test
+  added (a 65-character table name via a widened DBC `OBJECTNAME` field).
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-011` updated, which also now notes this is a
+  genuinely shared gap across the whole `EXPORT DATABASE ... TYPE
+  <VENDOR>` family (PostgreSQL/SQLite/SQL Server/Oracle each already
+  guard their own generated index names the same way but never their
+  own table's pre-existing name) -- a follow-up issue should track
+  applying the identical fix to those four sibling dialects.
+
 - 2026-09-12: Progress on #5554 (parent #137): `EXPORT DATABASE ... TYPE
   MYSQL` (`export_database_as_mysql_sql()`, `src/vfp/asset_inspector.cpp`)
   is the fifth and final vendor-dialect slice of #141's real-target-engine

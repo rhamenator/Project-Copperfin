@@ -1798,6 +1798,7 @@
   "Vfp.AssetInspector.Validation.MemoSidecarHeaderTruncated": "The memo sidecar is too short to contain a valid header.",
   "Vfp.AssetInspector.Validation.MemoSidecarMissing": "The DBF-family asset expects a memo sidecar file, but the sidecar is missing.",
   "Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize": "The memo sidecar is shorter than its declared block size.",
+  "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong": "The identifier {identifier} is longer than 64 characters, which MySQL does not allow.",
   "Vfp.AssetInspector.Validation.OracleIdentifierCollision": "Two distinct names produced the identical Oracle identifier {identifier} after removing embedded double quotes, which Oracle does not support escaping.",
   "Vfp.CdxHeader.Error.InvalidValues": "Header values do not look like a CDX-family index file.",
   "Vfp.CdxHeader.Error.OpenFileFailed": "Unable to open file.",

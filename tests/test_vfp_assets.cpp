@@ -3325,6 +3325,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AssetInspector.Validation.MemoSidecarHeaderTruncated",
         "Vfp.AssetInspector.Validation.MemoSidecarMissing",
         "Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize",
+        "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong",
         "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
         "Vfp.CdxHeader.Error.InvalidValues",
         "Vfp.CdxHeader.Error.OpenFileFailed",
@@ -6170,6 +6171,58 @@ void test_export_database_as_mysql_sql_escapes_embedded_backtick_in_identifiers(
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5582 PR review (chatgpt-codex-connector, P2): a DBC catalog's own
+// OBJECTNAME column permits a table name longer than MySQL's real
+// 64-character identifier limit -- directly confirmed against a real
+// local MySQL 8.0 engine that a 65-character identifier fails outright
+// with error 1059. Without a check, export_database_as_mysql_sql() would
+// return ok=true for a script whose first CREATE TABLE a real MySQL
+// engine rejects. A 65-character table name (one character past the
+// limit) must fail the whole export closed rather than emit an unusable
+// script.
+void test_export_database_as_mysql_sql_fails_closed_on_overlong_table_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_mysql_sql_overlong_table_name_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::string long_table_name(65U, 'A');
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
+    // OBJECTNAME must be wide enough to hold the 65-character long_table_name
+    // itself -- a real VFP table name can never be this long, but the DBC
+    // catalog's own OBJECTNAME field is a plain sizable Character column a
+    // crafted or foreign-tool-written catalog is not bound to keep short.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 100U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 117U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", long_table_name, ""}});
+    expect(dbc_create.ok, "MySQL overlong-table-name test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"x"}});
+    expect(table_create.ok, "MySQL overlong-table-name test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_mysql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(!result.ok,
+           "export_database_as_mysql_sql should fail closed when a table name exceeds MySQL's 64-character identifier limit, rather than emit a script real MySQL rejects");
+    expect(result.sql.empty(),
+           "export_database_as_mysql_sql should not return a partial SQL script alongside a failure");
+    expect(result.error.find(long_table_name) != std::string::npos,
+           "export_database_as_mysql_sql's identifier-too-long error should name the offending identifier: " + result.error);
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_access_sql_maps_currency_datetime_and_dates() {
     // #5475: export_database_as_access_sql() shares export_database_as_sql()'s
     // catalog/table-walking logic but swaps in the Access/Jet SQL dialect --
@@ -7425,6 +7478,7 @@ int main() {
     test_export_database_as_mysql_sql_clamps_decimal_precision_and_scale();
     test_export_database_as_mysql_sql_escapes_backslash_in_string_literals();
     test_export_database_as_mysql_sql_escapes_embedded_backtick_in_identifiers();
+    test_export_database_as_mysql_sql_fails_closed_on_overlong_table_name();
     test_export_database_as_sqlite_sql_disambiguates_indexes_across_tables();
     test_export_database_as_access_sql_maps_currency_datetime_and_dates();
     test_export_database_as_access_sql_escapes_bracket_in_identifier();
