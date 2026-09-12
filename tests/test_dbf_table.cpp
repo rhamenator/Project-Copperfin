@@ -21,6 +21,7 @@
 #if defined(_WIN32)
 #include <process.h>
 #else
+#include <sys/stat.h>
 #include <unistd.h>
 #define _getpid getpid
 #endif
@@ -3471,6 +3472,48 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
 
         fs::remove_all(temp_dir, ignored);
     }
+
+    // #5665 PR review (chatgpt-codex-connector, P1): write_new_durable_file()
+    // (the primitive #5614's own fix above uses to create the staged temp
+    // file) hard-codes POSIX mode 0600, and rename() carries that mode into
+    // the promoted file. write_binary_file() is used for a full rewrite of
+    // an *existing* table, not just fresh creation -- without a fix, this
+    // would silently downgrade a table's own real permissions (e.g. 0640,
+    // intentionally group-readable for shared multi-user access) to
+    // owner-only on every single rewrite. Proves the destination's own
+    // existing mode is preserved across a full-rewrite REPLACE.
+    void test_write_binary_file_preserves_existing_file_permissions_on_rewrite() {
+        namespace fs = std::filesystem;
+        const fs::path temp_dir = fs::temp_directory_path() /
+         ("copperfin_dbf_permission_preservation_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / "shared.dbf";
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "NAME", .type = 'C', .length = 10U}
+        };
+        expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, {{"ALPHA"}}).ok,
+            "permission preservation test: setup should create the table");
+
+        constexpr mode_t distinctive_mode = 0640U;
+        expect(::chmod(table_path.c_str(), distinctive_mode) == 0,
+            "permission preservation test: setup should be able to chmod the table to a distinctive mode");
+
+        const auto rewrite_result = copperfin::vfp::replace_record_field_value_full_rewrite(
+            table_path.string(), 0U, "NAME", "BRAVO");
+        expect(rewrite_result.ok,
+            "permission preservation test: full-rewrite REPLACE should succeed: " + rewrite_result.error);
+
+        struct stat after_stat {};
+        expect(::stat(table_path.c_str(), &after_stat) == 0,
+            "permission preservation test: stat should succeed after the rewrite");
+        expect((after_stat.st_mode & 07777U) == distinctive_mode,
+            "permission preservation test: the table's own pre-existing mode must survive a full-rewrite REPLACE, not be silently downgraded to write_new_durable_file()'s own restrictive 0600 default");
+
+        fs::remove_all(temp_dir, ignored);
+    }
 #endif
 
     // #5509: the targeted-I/O fast path for non-memo REPLACE writes trades
@@ -3740,6 +3783,7 @@ int main(int argc, char* argv[]) {
     test_staged_write_rollback_removes_temp_and_preserves_original();
 #if !defined(_WIN32)
     test_create_dbf_table_file_does_not_follow_racing_cptmp_symlink();
+    test_write_binary_file_preserves_existing_file_permissions_on_rewrite();
 #endif
     test_replace_fast_path_rejected_write_leaves_dbf_untouched();
     test_dbf_with_zero_record_length_is_rejected();

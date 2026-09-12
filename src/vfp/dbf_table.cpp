@@ -33,6 +33,11 @@
 #include <string_view>
 #include <unordered_map>
 
+#if !defined(_WIN32)
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
+
 namespace copperfin::vfp {
 namespace {
 
@@ -315,6 +320,17 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
     if (!platform::write_new_durable_file(
             temp_path,
             std::string_view(reinterpret_cast<const char*>(bytes.data()), bytes.size()))) {
+        // #5614 PR review (chatgpt-codex-connector, P2): write_new_durable_file()
+        // can fail after its own exclusive create already succeeded (a
+        // subsequent write/fsync/close error) without unlinking the file it
+        // created -- its own header comment leaves cleanup to the caller.
+        // Without this, a disk-full/quota/I/O failure here would strand a
+        // partial ".copperfin-tmp-*" file on every such failed write,
+        // compounding exactly the kind of exhaustion that caused the
+        // failure in the first place. Safe even if creation failed before
+        // the path ever existed.
+        std::error_code cleanup_ec;
+        std::filesystem::remove(temp_path, cleanup_ec);
         return false;
     }
 
@@ -332,6 +348,35 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
         std::filesystem::remove(temp_path, ec);
         return false;
     }
+
+#if !defined(_WIN32)
+    // #5614 PR review (chatgpt-codex-connector, P1): write_new_durable_file()
+    // hard-codes POSIX mode 0600 for the file it creates, and rename()
+    // preserves that mode into the promoted file -- write_binary_file() is
+    // used for a full rewrite of an *existing* table, not just fresh
+    // creation, so this would silently downgrade a table's own real
+    // permissions (e.g. 0644, intentionally group/world-readable for
+    // shared multi-user access) to owner-only on every single rewrite.
+    // Preserve the destination's existing mode when rewriting one, or fall
+    // back to the umask-derived default a plain creat()/open() with mode
+    // 0666 would have produced for a genuinely new file, matching the
+    // previous std::ofstream-based implementation's own real-world
+    // behavior. Applied to the temp file before it is promoted, since
+    // rename() carries whichever mode the promoted inode already has.
+    {
+        struct stat existing_stat {};
+        const std::string native_target_path = platform::path_to_utf8_string(target_path);
+        mode_t desired_mode;
+        if (::stat(native_target_path.c_str(), &existing_stat) == 0) {
+            desired_mode = existing_stat.st_mode & 07777U;
+        } else {
+            const mode_t current_umask = ::umask(0);
+            ::umask(current_umask);
+            desired_mode = 0666U & ~current_umask;
+        }
+        ::chmod(platform::path_to_utf8_string(temp_path).c_str(), desired_mode);
+    }
+#endif
 
     const bool had_target = std::filesystem::exists(target_path, ec);
     if (should_inject_write_failure("before-backup")) {
