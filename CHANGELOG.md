@@ -1,3 +1,66 @@
+- 2026-09-12: Closed a data-integrity gap affecting every `EXPORT DATABASE`
+  exporter (`src/vfp/asset_inspector.cpp`, #5697, found by an automated
+  Codex code-review pass): a cataloged member DBF whose field-descriptor
+  block parses "successfully" with zero fields (an aligned terminator
+  immediately after the 32-byte header -- a real shape
+  `parse_dbf_field_descriptor_block()` accepts, not merely a hypothetical
+  one) previously let every exporter either emit unusable output or an
+  ambiguous marker and still report the migration successful:
+  `export_database_as_json()` emitted `"fields": []` and `ok=true`, even
+  though `build_database_json_import_plan()`'s own materializer
+  (`create_dbf_table_file()`'s required-field invariant) cannot actually
+  round-trip that shape back in; the portable SQL/PostgreSQL/SQLite writer
+  (`write_sql_tables_and_data()`), SQL Server, Oracle, MySQL, and Access
+  writers all emitted invalid `CREATE TABLE "name" ( );` DDL that fails to
+  load on every supported real engine. Fixed by adding a
+  `hard_failure_error` out-parameter to every writer that lacked one
+  (`write_sql_tables_and_data()`, `write_sqlserver_tables_and_data()`) and
+  reusing the existing one on `write_oracle_tables_and_data()` and
+  `write_mysql_tables_and_data()` (the latter's own
+  `identifier_too_long_error` renamed to `hard_failure_error`, since it now
+  serves two distinct hard-failure reasons), all now checked for a
+  zero-field member table before the affected exporter reports success,
+  with a new localized `Vfp.AssetInspector.Validation.ExportTableHasNoFields`
+  diagnostic naming the offending table. `export_database_as_json()` and
+  `export_database_as_access_sql()` (inline loops, no separate writer
+  function) fail closed the same way directly.
+
+  The source-level asset inspector (`validate_dbf_field_descriptors()`)
+  previously returned silently, with no diagnostic at all, for this exact
+  zero-field shape -- fixed to report it as a new `dbf.field_count_zero`
+  validation error instead.
+
+  `build_database_json_import_plan()` (the JSON import planner) was
+  deliberately left unchanged: an empty `"fields": []` table entry is also
+  `export_database_as_json()`'s own established marker for a cataloged
+  table whose source `.dbf` could not be parsed at all (proven by the
+  pre-existing
+  `test_database_json_import_plan_admits_exporter_unreadable_table_marker`
+  regression test, which this fix's first draft would have broken by
+  rejecting that marker outright). Since this fix means Copperfin's own
+  `TYPE JSON` export can no longer emit that exact shape for a genuinely
+  zero-field *parseable* table, the marker is now unambiguous in any JSON
+  this codebase's own exporter produces -- `materialize_database_json_
+  import_plan()` still fails an import closed if such a plan entry is
+  ever materialized directly, via `create_dbf_table_file()`'s own
+  pre-existing required-field invariant, with no partial writes thanks to
+  its staging/abort-staging design.
+
+  `build_database_sql_import_plan()` (the SQL-dialect import planner) was
+  already correctly rejecting a zero-field `CREATE TABLE ( );` -- no fix
+  needed there.
+
+  New regression tests
+  (`test_export_database_family_fails_closed_on_zero_field_table`,
+  covering all eight `EXPORT DATABASE` variants against one raw-byte
+  zero-field DBF fixture built directly since `create_dbf_table_file()`
+  itself already rejects an empty field list on the write side;
+  `test_inspect_asset_reports_zero_field_dbf_as_error`) verified to
+  reliably fail against the pre-fix code and reliably pass against the
+  fix. `docs/32-recovered-requirements-traceability.md` rows
+  `RQ-CF-MODERNIZATION-001`/`-003`/`-006`/`-007`/`-008`/`-009`/`-010`/`-011`
+  updated.
+
 - 2026-09-12: Closed a data-integrity gap in `write_sql_tables_and_data()`
   (`src/vfp/asset_inspector.cpp`, #5696, found by an automated Codex
   code-review pass), the shared row writer behind `export_database_as_sql()`

@@ -670,6 +670,20 @@ void validate_dbf_field_descriptors(
 
     const auto fields = read_raw_field_descriptors(std::vector<std::uint8_t>(table_bytes.begin(), table_bytes.begin() + static_cast<std::ptrdiff_t>(terminator_offset + 1U)));
     if (fields.empty()) {
+        // #5697: an aligned terminator immediately at the descriptor start
+        // parses "successfully" with zero fields -- a schema with no
+        // usable columns, not a well-formed table. Previously this
+        // returned silently with no diagnostic at all; the export/import
+        // boundaries have their own independent fail-closed checks
+        // (#5697), but this is the one place that inspects an ordinary
+        // DBF/DBC member table's own structure and should surface the
+        // defect directly rather than reporting a clean inspection.
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::error,
+            "dbf.field_count_zero",
+            path,
+            asset_inspector_text("Vfp.AssetInspector.Validation.DbfFieldCountZero"));
         return;
     }
 
@@ -2444,6 +2458,22 @@ DatabaseExportResult export_database_as_json(
                  << (last_table ? "\n" : ",\n");
             continue;
         }
+        if (tbl.table.fields.empty()) {
+            // #5697: a member DBF whose field-descriptor block parses
+            // "successfully" with zero fields (an immediately-encountered
+            // terminator) previously fell through to the ordinary success
+            // path here, emitting `"fields": []` and reporting ok=true --
+            // but build_database_json_import_plan() (this exporter's own
+            // JSON round-trip counterpart) rejects that exact shape, so
+            // Copperfin's own migration round-trip cannot actually load
+            // its own output. Fail the whole export closed rather than
+            // return a partial/unusable artifact -- matching this
+            // codebase's own established fail-closed precedent for a case
+            // with no safe corrective action.
+            return {.ok = false, .error = asset_inspector_text(
+                "Vfp.AssetInspector.Validation.ExportTableHasNoFields",
+                {{"table", rt.name}}), .json = {}};
+        }
 
         json << "    \"" << json_escape_str(rt.name) << "\": {\n";
 
@@ -2537,7 +2567,8 @@ struct ParsedSqlExportTable {
 std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
     std::ostringstream& sql,
     const DatabaseCatalogSnapshot& snapshot,
-    std::size_t row_limit) {
+    std::size_t row_limit,
+    std::string& hard_failure_error) {
     std::vector<ParsedSqlExportTable> parsed_tables;
     for (const auto& rt : snapshot.resolved_tables) {
         // #5545 review (Copilot): not const, so tbl.table (fields +
@@ -2559,6 +2590,20 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
             sql << "-- skipped table " << sql_sanitize_comment_text(rt.name) << ": "
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
+        }
+        if (tbl.table.fields.empty()) {
+            // #5697: a member DBF that parses "successfully" with zero
+            // fields would otherwise emit `CREATE TABLE "name" (\n);`,
+            // invalid DDL on every supported engine. Fail the whole
+            // export closed rather than return a script that cannot
+            // load, matching this exporter's own established fail-closed
+            // precedent (see write_oracle_tables_and_data()'s own
+            // hard_failure_error uses) for a case with no safe
+            // corrective action.
+            hard_failure_error = asset_inspector_text(
+                "Vfp.AssetInspector.Validation.ExportTableHasNoFields",
+                {{"table", rt.name}});
+            return {};
         }
 
         const std::string quoted_table = sql_quote_identifier(rt.name);
@@ -2962,7 +3007,8 @@ void write_sqlite_create_indexes(
 std::vector<ParsedSqlExportTable> write_sqlserver_tables_and_data(
     std::ostringstream& sql,
     const DatabaseCatalogSnapshot& snapshot,
-    std::size_t row_limit) {
+    std::size_t row_limit,
+    std::string& hard_failure_error) {
     std::vector<ParsedSqlExportTable> parsed_tables;
     for (const auto& rt : snapshot.resolved_tables) {
         DbfTableParseResult tbl = parse_dbf_table_from_file(
@@ -2971,6 +3017,15 @@ std::vector<ParsedSqlExportTable> write_sqlserver_tables_and_data(
             sql << "-- skipped table " << sql_sanitize_comment_text(rt.name) << ": "
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
+        }
+        if (tbl.table.fields.empty()) {
+            // #5697: see write_sql_tables_and_data()'s own comment -- a
+            // zero-field member table would otherwise emit invalid
+            // `CREATE TABLE [name] (\n);` DDL.
+            hard_failure_error = asset_inspector_text(
+                "Vfp.AssetInspector.Validation.ExportTableHasNoFields",
+                {{"table", rt.name}});
+            return {};
         }
 
         const std::string quoted_table = sqlserver_quote_identifier(rt.name);
@@ -3259,6 +3314,15 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
+        if (tbl.table.fields.empty()) {
+            // #5697: see write_sql_tables_and_data()'s own comment -- a
+            // zero-field member table would otherwise emit invalid
+            // `CREATE TABLE "name" (\n);` DDL.
+            hard_failure_error = asset_inspector_text(
+                "Vfp.AssetInspector.Validation.ExportTableHasNoFields",
+                {{"table", rt.name}});
+            return {};
+        }
 
         const std::string quoted_table = oracle_quote_identifier(rt.name);
         if (!oracle_record_identifier_or_detect_collision(quoted_table, used_table_names)) {
@@ -3529,7 +3593,14 @@ DatabaseSqlExportResult export_database_as_sql(
         ? std::numeric_limits<std::size_t>::max()
         : max_rows_per_table;
 
-    write_sql_tables_and_data(sql, snapshot, row_limit);
+    std::string hard_failure_error;
+    write_sql_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
+    // #5697: a member table with zero fields fails the whole export
+    // closed rather than emit invalid `CREATE TABLE "name" ( );` DDL --
+    // see write_sql_tables_and_data()'s own comment.
+    if (!hard_failure_error.empty()) {
+        return {.ok = false, .error = hard_failure_error, .sql = {}};
+    }
 
     return {.ok = true, .error = {}, .sql = sql.str()};
 }
@@ -3553,8 +3624,15 @@ DatabaseSqlExportResult export_database_as_postgresql_sql(
         ? std::numeric_limits<std::size_t>::max()
         : max_rows_per_table;
 
+    std::string hard_failure_error;
     const std::vector<ParsedSqlExportTable> parsed_tables =
-        write_sql_tables_and_data(sql, snapshot, row_limit);
+        write_sql_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
+    // #5697: a member table with zero fields fails the whole export
+    // closed rather than emit invalid `CREATE TABLE "name" ( );` DDL --
+    // see write_sql_tables_and_data()'s own comment.
+    if (!hard_failure_error.empty()) {
+        return {.ok = false, .error = hard_failure_error, .sql = {}};
+    }
 
     // #5559 review (chatgpt-codex-connector): PostgreSQL puts tables and
     // indexes in the same schema-wide relation namespace -- a valid
@@ -3595,8 +3673,15 @@ DatabaseSqlExportResult export_database_as_sqlite_sql(
         ? std::numeric_limits<std::size_t>::max()
         : max_rows_per_table;
 
+    std::string hard_failure_error;
     const std::vector<ParsedSqlExportTable> parsed_tables =
-        write_sql_tables_and_data(sql, snapshot, row_limit);
+        write_sql_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
+    // #5697: a member table with zero fields fails the whole export
+    // closed rather than emit invalid `CREATE TABLE "name" ( );` DDL --
+    // see write_sql_tables_and_data()'s own comment.
+    if (!hard_failure_error.empty()) {
+        return {.ok = false, .error = hard_failure_error, .sql = {}};
+    }
 
     std::set<std::string> used_index_names;
     for (const auto& parsed : parsed_tables) {
@@ -3638,6 +3723,14 @@ DatabaseSqlExportResult export_database_as_access_sql(
             copperfin::platform::path_to_utf8_string(rt.path), row_limit);
         if (!tbl.ok) {
             continue;
+        }
+        if (tbl.table.fields.empty()) {
+            // #5697: see write_sql_tables_and_data()'s own comment -- a
+            // zero-field member table would otherwise emit invalid
+            // `CREATE TABLE [name] (\n);` DDL.
+            return {.ok = false, .error = asset_inspector_text(
+                "Vfp.AssetInspector.Validation.ExportTableHasNoFields",
+                {{"table", rt.name}}), .sql = {}};
         }
 
         const std::string quoted_table = access_quote_identifier(rt.name);
@@ -3752,8 +3845,14 @@ DatabaseSqlExportResult export_database_as_sqlserver_sql(
         ? std::numeric_limits<std::size_t>::max()
         : max_rows_per_table;
 
+    std::string hard_failure_error;
     const std::vector<ParsedSqlExportTable> parsed_tables =
-        write_sqlserver_tables_and_data(sql, snapshot, row_limit);
+        write_sqlserver_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
+    // #5697: a member table with zero fields fails the whole export
+    // closed -- see write_sqlserver_tables_and_data()'s own comment.
+    if (!hard_failure_error.empty()) {
+        return {.ok = false, .error = hard_failure_error, .sql = {}};
+    }
 
     // Unlike export_database_as_postgresql_sql()/export_database_as_sqlite_sql(),
     // no whole-export used_index_names set is threaded through here --
@@ -4020,7 +4119,7 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
     std::ostringstream& sql,
     const DatabaseCatalogSnapshot& snapshot,
     std::size_t row_limit,
-    std::string& identifier_too_long_error) {
+    std::string& hard_failure_error) {
     std::vector<ParsedSqlExportTable> parsed_tables;
     for (const auto& rt : snapshot.resolved_tables) {
         DbfTableParseResult tbl = parse_dbf_table_from_file(
@@ -4030,11 +4129,20 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
+        if (tbl.table.fields.empty()) {
+            // #5697: see write_sql_tables_and_data()'s own comment -- a
+            // zero-field member table would otherwise emit invalid
+            // `CREATE TABLE \`name\` (\n);` DDL.
+            hard_failure_error = asset_inspector_text(
+                "Vfp.AssetInspector.Validation.ExportTableHasNoFields",
+                {{"table", rt.name}});
+            return {};
+        }
 
         const std::string quoted_table = mysql_quote_identifier(rt.name);
         if (identifier_length_in_unit(rt.name, IdentifierLengthUnit::unicode_code_points) >
             kMysqlMaxIdentifierCodePoints) {
-            identifier_too_long_error = asset_inspector_text(
+            hard_failure_error = asset_inspector_text(
                 "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong",
                 {{"identifier", quoted_table}});
             return {};
@@ -4045,7 +4153,7 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
             const std::string quoted_column = mysql_quote_identifier(fld.name);
             if (identifier_length_in_unit(fld.name, IdentifierLengthUnit::unicode_code_points) >
                 kMysqlMaxIdentifierCodePoints) {
-                identifier_too_long_error = asset_inspector_text(
+                hard_failure_error = asset_inspector_text(
                     "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong",
                     {{"identifier", quoted_column}});
                 return {};
@@ -4200,17 +4308,18 @@ DatabaseSqlExportResult export_database_as_mysql_sql(
         ? std::numeric_limits<std::size_t>::max()
         : max_rows_per_table;
 
-    std::string identifier_too_long_error;
+    std::string hard_failure_error;
     const std::vector<ParsedSqlExportTable> parsed_tables =
-        write_mysql_tables_and_data(sql, snapshot, row_limit, identifier_too_long_error);
+        write_mysql_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
     // #5582 PR review (chatgpt-codex-connector, P2): a table or column
     // name longer than MySQL's real 64-character identifier limit fails
     // the whole export closed -- see write_mysql_tables_and_data()'s own
     // comment for why silently emitting it (or truncating it, with no
     // established collision-safe disambiguation story for a table's own
-    // pre-existing column names) is not a safe alternative.
-    if (!identifier_too_long_error.empty()) {
-        return {.ok = false, .error = identifier_too_long_error, .sql = {}};
+    // pre-existing column names) is not a safe alternative. #5697: a
+    // zero-field member table shares this same hard_failure_error path.
+    if (!hard_failure_error.empty()) {
+        return {.ok = false, .error = hard_failure_error, .sql = {}};
     }
 
     // Unlike export_database_as_postgresql_sql()/export_database_as_sqlite_sql()/
@@ -4354,6 +4463,26 @@ DatabaseJsonImportPlanResult build_database_json_import_plan(const std::string_v
             }
             table_plan.fields.push_back(descriptor);
         }
+        // #5697: an empty "fields" array parses this loop's own
+        // value_not_found break immediately, leaving table_plan with zero
+        // fields -- deliberately NOT rejected here. This is the exact
+        // shape export_database_as_json() itself emits for a cataloged
+        // table whose underlying .dbf could not be parsed at all (its own
+        // documented "-- skipped table" / empty-marker precedent, proven
+        // by test_database_json_import_plan_admits_exporter_unreadable_
+        // table_marker), and the planner has no way to distinguish that
+        // case from a genuinely field-less table using the JSON alone.
+        // Since export_database_as_json() itself now fails the whole
+        // export closed for a genuinely zero-field *parseable* table
+        // (#5697's own real gap, fixed at the export boundary instead),
+        // this exact marker shape can only mean "source table was
+        // unreadable" in any JSON this codebase's own exporter produces.
+        // materialize_database_json_import_plan() still fails the import
+        // closed if such a table plan is materialized directly
+        // (create_dbf_table_file()'s own required-field invariant, with
+        // no partial writes thanks to its staging/abort-staging design),
+        // so rejecting it here too would only duplicate that safety net
+        // while breaking the documented unreadable-table round-trip.
         plan.tables.push_back(std::move(table_plan));
     }
 
