@@ -23,13 +23,20 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <limits>
 #include <locale>
 #include <mutex>
 #include <optional>
+#include <random>
 #include <sstream>
 #include <string_view>
 #include <unordered_map>
+
+#if !defined(_WIN32)
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
 
 namespace copperfin::vfp {
 namespace {
@@ -220,6 +227,39 @@ std::vector<std::uint8_t> read_binary_file(const std::string& path) {
     };
 }
 
+// #5614: generates an unguessable path, in the same directory as
+// target_path, that write_binary_file()'s own staging cannot have been
+// pre-planted with a symlink for, since nothing in this process (or any
+// other) can predict it in advance -- 64 bits of std::random_device
+// entropy, not a fixed ".cptmp"/".cpbak" suffix or anything derived from
+// the pid/timestamp/target path itself, none of which an attacker able to
+// watch this directory would need to guess. Deliberately *not* built by
+// appending a suffix onto target_path's own filename the way the fixed
+// ".cptmp"/".cpbak" names it replaces were: a long (but individually
+// valid) table/column name -- this codebase already has real fixtures
+// exercising VFP identifier lengths right up against a real filesystem's
+// own NAME_MAX -- appended with even a compact random suffix could still
+// overflow that limit, exactly the same way a longer fixed suffix would
+// (directly caught by this fix's own review pass: a 244-byte target
+// filename plus a 39-byte sibling suffix overflowed a 255-byte NAME_MAX
+// that the original 6-byte ".cptmp" suffix comfortably fit under). A
+// short, independent name in the same directory has a constant length
+// regardless of target_path's own length, so it can never contribute to
+// that overflow at all. The leading "." also keeps it out of an ordinary
+// directory listing while it exists, a modest bonus, not the goal.
+std::filesystem::path make_unguessable_sibling_path(const std::filesystem::path& target_path) {
+    std::random_device entropy_source;
+    std::ostringstream suffix;
+    suffix << std::hex << std::setfill('0');
+    for (int word_index = 0; word_index < 2; ++word_index) {
+        suffix << std::setw(8) << entropy_source();
+    }
+    const std::filesystem::path parent_directory = target_path.has_parent_path()
+        ? target_path.parent_path()
+        : std::filesystem::path(".");
+    return parent_directory / (".copperfin-tmp-" + suffix.str());
+}
+
 bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>& bytes) {
     const auto should_inject_write_failure = [&path](const char* stage) {
         const auto marker =
@@ -257,42 +297,95 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
     };
 
     const std::filesystem::path target_path = platform::path_from_utf8_string(path);
-    const std::filesystem::path temp_path = platform::path_from_utf8_string(
-        platform::path_to_utf8_string(target_path) + ".cptmp");
-    const std::filesystem::path backup_path = platform::path_from_utf8_string(
-        platform::path_to_utf8_string(target_path) + ".cpbak");
 
-    std::error_code ec;
-    std::filesystem::remove(temp_path, ec);
-    std::filesystem::remove(backup_path, ec);
-
+    // #5614 PR review (chatgpt-codex-connector, P1): the previous
+    // implementation removed a *fixed* ".cptmp" sibling name and then
+    // reopened it by that same name via a plain std::ofstream -- two
+    // separate pathname operations, and ofstream follows a symlink. A
+    // process able to write this directory could recreate ".cptmp" as a
+    // symlink to any file it wanted overwritten in the window between the
+    // remove() and the open(), and Copperfin would then truncate and
+    // overwrite that file with the generated DBF/FPT bytes -- directly
+    // reproduced against this exact function during triage. Using an
+    // unguessable sibling name (make_unguessable_sibling_path()) together
+    // with write_new_durable_file()'s own exclusive, no-follow creation
+    // (O_EXCL|O_NOFOLLOW on POSIX, CREATE_NEW on Windows) closes the race
+    // entirely: there is no separate remove-then-open step at all, so a
+    // pre-planted symlink at any name this call could plausibly guess is
+    // simply never the file that gets written through.
     if (should_inject_write_failure("temp-open")) {
         return false;
     }
-
-    std::ofstream output(temp_path, std::ios::binary | std::ios::trunc);
-    if (!output) {
+    const std::filesystem::path temp_path = make_unguessable_sibling_path(target_path);
+    if (!platform::write_new_durable_file(
+            temp_path,
+            std::string_view(reinterpret_cast<const char*>(bytes.data()), bytes.size()))) {
+        // #5614 PR review (chatgpt-codex-connector, P2): write_new_durable_file()
+        // can fail after its own exclusive create already succeeded (a
+        // subsequent write/fsync/close error) without unlinking the file it
+        // created -- its own header comment leaves cleanup to the caller.
+        // Without this, a disk-full/quota/I/O failure here would strand a
+        // partial ".copperfin-tmp-*" file on every such failed write,
+        // compounding exactly the kind of exhaustion that caused the
+        // failure in the first place. Safe even if creation failed before
+        // the path ever existed.
+        std::error_code cleanup_ec;
+        std::filesystem::remove(temp_path, cleanup_ec);
         return false;
     }
 
-    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
-    if (!output) {
+    std::error_code ec;
+    // A destination that is itself a symlink is rejected outright rather
+    // than silently replaced -- std::filesystem::rename() below operates on
+    // the link itself (POSIX rename() never dereferences its destination
+    // argument), so promoting through it would not corrupt whatever the
+    // link points to, but silently retargeting a symlink a caller may have
+    // set up deliberately (e.g. redirected table storage) is still a
+    // surprising, undiagnosed identity change this function should refuse
+    // rather than perform quietly.
+    const auto destination_status = std::filesystem::symlink_status(target_path, ec);
+    if (!ec && std::filesystem::is_symlink(destination_status)) {
         std::filesystem::remove(temp_path, ec);
         return false;
     }
 
-    output.close();
-    if (!output) {
-        std::filesystem::remove(temp_path, ec);
-        return false;
+#if !defined(_WIN32)
+    // #5614 PR review (chatgpt-codex-connector, P1): write_new_durable_file()
+    // hard-codes POSIX mode 0600 for the file it creates, and rename()
+    // preserves that mode into the promoted file -- write_binary_file() is
+    // used for a full rewrite of an *existing* table, not just fresh
+    // creation, so this would silently downgrade a table's own real
+    // permissions (e.g. 0644, intentionally group/world-readable for
+    // shared multi-user access) to owner-only on every single rewrite.
+    // Preserve the destination's existing mode when rewriting one, or fall
+    // back to the umask-derived default a plain creat()/open() with mode
+    // 0666 would have produced for a genuinely new file, matching the
+    // previous std::ofstream-based implementation's own real-world
+    // behavior. Applied to the temp file before it is promoted, since
+    // rename() carries whichever mode the promoted inode already has.
+    {
+        struct stat existing_stat {};
+        const std::string native_target_path = platform::path_to_utf8_string(target_path);
+        mode_t desired_mode;
+        if (::stat(native_target_path.c_str(), &existing_stat) == 0) {
+            desired_mode = existing_stat.st_mode & 07777U;
+        } else {
+            const mode_t current_umask = ::umask(0);
+            ::umask(current_umask);
+            desired_mode = 0666U & ~current_umask;
+        }
+        ::chmod(platform::path_to_utf8_string(temp_path).c_str(), desired_mode);
     }
+#endif
 
     const bool had_target = std::filesystem::exists(target_path, ec);
     if (should_inject_write_failure("before-backup")) {
         std::filesystem::remove(temp_path, ec);
         return false;
     }
+    std::filesystem::path backup_path;
     if (had_target) {
+        backup_path = make_unguessable_sibling_path(target_path);
         std::filesystem::rename(target_path, backup_path, ec);
         if (ec) {
             std::filesystem::remove(temp_path, ec);
