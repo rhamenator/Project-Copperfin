@@ -4359,10 +4359,19 @@ void test_export_database_family_fails_closed_on_invalid_utf8_field_name() {
            "export_database_as_json must fail closed on an invalid UTF-8 field name rather than emit invalid-UTF-8 JSON");
     expect(json_result.json.empty(),
            "export_database_as_json must never emit a partial document on this failure");
+    // #5743 PR review (chatgpt-codex-connector, P2): the diagnostic itself
+    // must not propagate the very same invalid-UTF-8 bytes it is reporting
+    // -- PRG dispatch embeds this error text verbatim in its own failure
+    // message, and any UI or log consuming it must be able to treat it as
+    // plain text.
+    expect(json_result.error.find(static_cast<char>(0xFFU)) == std::string::npos,
+           "export_database_as_json's own diagnostic must not embed the raw invalid byte verbatim");
 
     const auto sql_result = copperfin::vfp::export_database_as_sql(dbc_utf8);
     expect(!sql_result.ok,
            "export_database_as_sql must fail closed on an invalid UTF-8 field name");
+    expect(sql_result.error.find(static_cast<char>(0xFFU)) == std::string::npos,
+           "export_database_as_sql's own diagnostic must not embed the raw invalid byte verbatim");
 
     const auto postgresql_result = copperfin::vfp::export_database_as_postgresql_sql(dbc_utf8);
     expect(!postgresql_result.ok,

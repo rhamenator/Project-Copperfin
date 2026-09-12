@@ -1539,6 +1539,33 @@ bool is_valid_utf8(const std::string_view value) noexcept {
     return true;
 }
 
+// #5743 PR review (chatgpt-codex-connector, P2): the whole point of
+// UnsafeFieldNameBytes is that fld.name is known to contain invalid UTF-8
+// when it fires -- naively embedding it verbatim in the {"column", ...}
+// diagnostic placeholder would propagate the exact same undecodable bytes
+// one level up, into a message that PRG dispatch embeds verbatim in its own
+// failure text and that any UI or log consuming it must also treat as
+// text. Valid UTF-8 passes through unchanged (the common case, every other
+// diagnostic in this file); invalid input is rendered as a plain-ASCII hex
+// byte dump instead, which is trivially valid UTF-8 in any context.
+std::string describe_field_name_for_diagnostic(const std::string& name) {
+    if (is_valid_utf8(name)) {
+        return name;
+    }
+    static constexpr char kHexDigits[] = "0123456789ABCDEF";
+    std::string hex;
+    hex.reserve(name.size() * 3U);
+    for (std::size_t index = 0U; index < name.size(); ++index) {
+        if (index != 0U) {
+            hex += ' ';
+        }
+        const auto byte = static_cast<unsigned char>(name[index]);
+        hex += kHexDigits[(byte >> 4U) & 0xFU];
+        hex += kHexDigits[byte & 0xFU];
+    }
+    return "<invalid UTF-8 bytes: " + hex + ">";
+}
+
 std::string json_escape_str(const std::string& s) {
     std::string out;
     out.reserve(s.size() + 4U);
@@ -2623,7 +2650,7 @@ DatabaseExportResult export_database_as_json(
             if (!is_valid_utf8(fld.name)) {
                 return {.ok = false, .error = asset_inspector_text(
                     "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", fld.name}}), .json = {}};
+                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}}), .json = {}};
             }
             // #5630 review (self, proactive sibling-gap check): fld.type
             // is a single raw byte read directly from the field
@@ -2654,7 +2681,7 @@ DatabaseExportResult export_database_as_json(
                 static_cast<unsigned char>(fld.type) > 0x7EU) {
                 return {.ok = false, .error = asset_inspector_text(
                     "Vfp.AssetInspector.Validation.UnsafeJsonFieldTypeByte",
-                    {{"table", rt.name}, {"column", fld.name}}), .json = {}};
+                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}}), .json = {}};
             }
             json << "        {\"name\": \""    << json_escape_str(fld.name)   << "\""
                  << ", \"type\": \""           << json_escape_str(std::string(1U, fld.type)) << "\""
@@ -2821,7 +2848,7 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
             if (!is_valid_utf8(fld.name)) {
                 hard_failure_error = asset_inspector_text(
                     "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", fld.name}});
+                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}});
                 return {};
             }
             sql << "    " << sql_quote_identifier(fld.name) << " "
@@ -3272,7 +3299,7 @@ std::vector<ParsedSqlExportTable> write_sqlserver_tables_and_data(
             if (!is_valid_utf8(fld.name)) {
                 hard_failure_error = asset_inspector_text(
                     "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", fld.name}});
+                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}});
                 return {};
             }
             sql << "    " << sqlserver_quote_identifier(fld.name) << " "
@@ -3601,7 +3628,7 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
             if (!is_valid_utf8(fld.name)) {
                 hard_failure_error = asset_inspector_text(
                     "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", fld.name}});
+                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}});
                 return {};
             }
             const std::string quoted_column = oracle_quote_identifier(fld.name);
@@ -4030,7 +4057,7 @@ DatabaseSqlExportResult export_database_as_access_sql(
             if (!is_valid_utf8(fld.name)) {
                 return {.ok = false, .error = asset_inspector_text(
                     "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", fld.name}}), .sql = {}};
+                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}}), .sql = {}};
             }
             sql << "    " << access_quote_identifier(fld.name) << " "
                 << access_column_type(fld.type, fld.length, fld.decimal_count)
@@ -4461,7 +4488,7 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
             if (!is_valid_utf8(fld.name)) {
                 hard_failure_error = asset_inspector_text(
                     "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", fld.name}});
+                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}});
                 return {};
             }
             const std::string quoted_column = mysql_quote_identifier(fld.name);
