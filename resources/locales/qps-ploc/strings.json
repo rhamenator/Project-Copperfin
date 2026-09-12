@@ -1772,6 +1772,8 @@
   "Vfp.AssetInspector.Error.DbcHeaderParseFailed": "DBC header parse failed: {error}",
   "Vfp.AssetInspector.Error.DbcPathMissing": "DBC path does not exist: {path}",
   "Vfp.AssetInspector.Error.DbcReadFailed": "Unable to read DBC file: {path}",
+  "Vfp.AssetInspector.Error.DbcTableEscapesDirectory": "Catalog table {table} resolves to a file outside the database's own directory.",
+  "Vfp.AssetInspector.Error.DbcTableNameUnsafe": "Catalog table name is not a safe file name: {table}",
   "Vfp.AssetInspector.Error.PathMissing": "Path does not exist.",
   "Vfp.AssetInspector.Error.ReadFailed": "Unable to read asset: {path}",
   "Vfp.AssetInspector.Validation.DbcCatalogEmpty": "The DBC catalog loaded but no first-pass object metadata rows were detected.",

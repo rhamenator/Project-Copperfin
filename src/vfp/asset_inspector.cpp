@@ -1539,6 +1539,11 @@ bool is_single_printable_ascii_character(const std::string& value) {
            static_cast<unsigned char>(value.front()) <= 0x7EU;
 }
 
+// Defined later in this file (reused by the JSON import materializer); a
+// forward declaration lets load_database_catalog_snapshot() below share
+// the identical validation rather than duplicating or drifting from it.
+bool table_name_is_safe_filesystem_component(const std::string& name);
+
 // Shared by export_database_as_json() and export_database_as_sql(): loads
 // and decodes the DBC catalog, derives the database display name, and
 // resolves which catalog TABLE objects have an existing .dbf on disk --
@@ -1655,12 +1660,63 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
         snapshot.db_name = database_object->object_name;
     }
 
+    // #5636: a catalog TABLE object's own name is untrusted data from the
+    // DBC a crafted or foreign-tool-written bundle controls, not a name
+    // this codebase's own writer is bound to keep free of path syntax.
+    // std::filesystem::path's own operator/ silently *replaces* the whole
+    // left-hand path when the appended component is absolute, and a
+    // relative "../secret" component resolves outside dbc_dir at the OS
+    // level even though the path string still nominally starts with it --
+    // directly reproduced during triage: a table object named "../secret"
+    // made every exporter (they all share this one loader) read and
+    // disclose a sibling directory's own .dbf verbatim. Rejecting via
+    // table_name_is_safe_filesystem_component() -- the identical check
+    // build_database_json_import_plan()'s own table-name validation
+    // already applies on the import side -- happens before any path is
+    // ever constructed from the name, matching that function's own stated
+    // reasoning, and fails the whole snapshot load closed rather than
+    // silently skipping just the one unsafe table (a crafted catalog is
+    // not the kind of "missing/unreadable table" #5537's own established
+    // skipped-table comment convention exists for).
     const fs::path dbc_dir = snapshot.dbc_fs_path.parent_path();
+    std::error_code canonical_dbc_dir_error;
+    const fs::path canonical_dbc_dir = fs::weakly_canonical(
+        dbc_dir.empty() ? fs::path(".") : dbc_dir, canonical_dbc_dir_error);
+    // #5685 PR review (chatgpt-codex-connector, P1): a string-safe table
+    // name (no separators, no "..") can still name a symlink/junction
+    // planted directly inside dbc_dir that itself points outside it -- the
+    // string check alone cannot see through that, so a *resolved* path's
+    // own canonical form must be verified still contained beneath
+    // dbc_dir's own canonical form before it is trusted. Shared as one
+    // lambda (rather than only checking the primary .dbf path, the
+    // original narrower fix's own scope) because the same disclosure
+    // applies identically to a table's own memo (.fpt) sidecar: an
+    // in-directory foo.dbf with memo fields alongside a foo.fpt that is
+    // itself a symlink to a memo file outside dbc_dir lets
+    // parse_dbf_table_from_file() independently resolve and read that
+    // unchecked sidecar later, disclosing its content the same way the
+    // primary-path check alone was meant to prevent.
+    const auto path_escapes_database_directory = [&](const fs::path& resolved) {
+        std::error_code canonical_error;
+        const fs::path canonical_resolved = fs::weakly_canonical(resolved, canonical_error);
+        const auto containment_mismatch = std::mismatch(
+            canonical_dbc_dir.begin(), canonical_dbc_dir.end(),
+            canonical_resolved.begin(), canonical_resolved.end());
+        return canonical_error || canonical_dbc_dir_error ||
+            containment_mismatch.first != canonical_dbc_dir.end();
+    };
     for (const auto& obj : snapshot.catalog) {
         if (obj.deleted || obj.object_type != "table" || obj.object_name.empty()) {
             continue;
         }
         const std::string& tname = obj.object_name;
+        if (!table_name_is_safe_filesystem_component(tname)) {
+            snapshot = {};
+            snapshot.dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
+            snapshot.error = asset_inspector_text(
+                "Vfp.AssetInspector.Error.DbcTableNameUnsafe", {{"table", tname}});
+            return snapshot;
+        }
         const auto make_table_path = [&](const std::string& name) {
             return dbc_dir / copperfin::platform::path_from_utf8_string(name);
         };
@@ -1671,6 +1727,27 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
         });
         if (!resolved_table_path.has_value()) {
             continue;
+        }
+        if (path_escapes_database_directory(*resolved_table_path)) {
+            snapshot = {};
+            snapshot.dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
+            snapshot.error = asset_inspector_text(
+                "Vfp.AssetInspector.Error.DbcTableEscapesDirectory", {{"table", tname}});
+            return snapshot;
+        }
+        // The table's own memo sidecar (if one exists on disk at all) gets
+        // the identical containment check -- see this loop's own comment
+        // above for why a per-table skip on the primary path alone is not
+        // sufficient.
+        const SidecarPathResolution table_memo_resolution =
+            resolve_vfp_memo_sidecar_path(*resolved_table_path);
+        if (table_memo_resolution.path.has_value() &&
+            path_escapes_database_directory(*table_memo_resolution.path)) {
+            snapshot = {};
+            snapshot.dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
+            snapshot.error = asset_inspector_text(
+                "Vfp.AssetInspector.Error.DbcTableEscapesDirectory", {{"table", tname}});
+            return snapshot;
         }
         snapshot.resolved_tables.push_back({tname, *resolved_table_path});
     }
