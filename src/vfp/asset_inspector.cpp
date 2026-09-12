@@ -3147,7 +3147,7 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
     std::ostringstream& sql,
     const DatabaseCatalogSnapshot& snapshot,
     std::size_t row_limit,
-    std::string& identifier_collision_error) {
+    std::string& hard_failure_error) {
     std::vector<ParsedSqlExportTable> parsed_tables;
     // #5564 PR review (chatgpt-codex-connector, P2): tracks every
     // sanitized-and-quoted table name across the *entire* export (mirroring
@@ -3167,7 +3167,7 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
 
         const std::string quoted_table = oracle_quote_identifier(rt.name);
         if (!oracle_record_identifier_or_detect_collision(quoted_table, used_table_names)) {
-            identifier_collision_error = asset_inspector_text(
+            hard_failure_error = asset_inspector_text(
                 "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
                 {{"identifier", quoted_table}});
             return {};
@@ -3183,7 +3183,7 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
             const auto& fld = tbl.table.fields[fi];
             const std::string quoted_column = oracle_quote_identifier(fld.name);
             if (!oracle_record_identifier_or_detect_collision(quoted_column, used_column_names)) {
-                identifier_collision_error = asset_inspector_text(
+                hard_failure_error = asset_inspector_text(
                     "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
                     {{"identifier", quoted_column}});
                 return {};
@@ -3194,6 +3194,38 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
                 << (last_field ? "\n" : ",\n");
         }
         sql << ");\n\n";
+
+        // #5717 PR review (chatgpt-codex-connector, P1): this codebase does
+        // not currently decode a VFP nullable field's own `_NullFlags`
+        // record bitmap at all -- `DbfFieldDescriptor` drops the
+        // descriptor's own nullable flag entirely, and `decode_value()`
+        // only ever sets `is_null` when decoding the special type-`0`
+        // pseudo-field itself, never applying its bits back to the real
+        // field the bitmap actually describes. That means, right now, a
+        // genuinely non-null empty value and a genuinely null value in a
+        // *nullable* field are indistinguishable in this codebase's own
+        // in-memory representation (both are `is_null=false,
+        // display_value=""`) -- the empty-character check below cannot
+        // safely apply to a table that declares any nullable field at
+        // all, since it would then reject exports of a genuinely null
+        // field the same way it (correctly) rejects a genuinely non-null
+        // empty one, a real regression from this fix's own first version,
+        // caught by this review round rather than shipped. A table with
+        // *no* `_NullFlags` pseudo-field, however, has no nullable fields
+        // at all -- VFP only ever adds that hidden bookkeeping field when
+        // at least one real field is marked nullable -- so a blank `C`/`V`
+        // value there can only ever mean "genuinely non-null empty," never
+        // "null," with no ambiguity. Scoping the check to that unambiguous
+        // case specifically (rather than dropping it entirely) still
+        // closes #5693's own demonstrated repro, which used an ordinary
+        // table with no nullable fields declared. Proper `_NullFlags`
+        // bitmap decoding -- needed to close the ambiguous case too -- is
+        // tracked separately as a foundational, cross-cutting gap
+        // affecting every dialect and format this codebase reads, not
+        // something specific to Oracle's own export.
+        const bool table_declares_nullable_fields = std::any_of(
+            tbl.table.fields.begin(), tbl.table.fields.end(),
+            [](const DbfFieldDescriptor& field) { return field.type == '0'; });
 
         for (const auto& rec : tbl.table.records) {
             if (rec.deleted) {
@@ -3249,6 +3281,36 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
                         ? ("TIMESTAMP " + sql_quote_string_literal(*converted))
                         : "NULL");
                 } else if (is_character) {
+                    // #5693: Oracle treats a zero-length VARCHAR2 literal
+                    // as NULL -- directly confirmed against a real local
+                    // Oracle 23ai engine (`INSERT INTO ... VALUES ('')`
+                    // into a VARCHAR2(n CHAR) column leaves it NULL, not
+                    // an actual empty string: `IS NULL` reports TRUE).
+                    // Unlike a blank Date (which has a real NULL
+                    // representation to fall back to with no distinction
+                    // lost) or a blank Memo (which CLOB's own EMPTY_CLOB()
+                    // already represents distinctly from NULL, see
+                    // oracle_clob_literal()'s own comment), there is no
+                    // VARCHAR2 literal at all that preserves a genuinely
+                    // non-null empty Character/Varchar value's own
+                    // non-null-ness -- any literal this exporter could
+                    // emit either isn't empty (wrong value) or is empty
+                    // (silently becomes NULL, corrupting the distinction).
+                    // Rather than report a successful export whose
+                    // ordinary load silently turns a non-null empty value
+                    // into NULL, this fails the whole export closed with a
+                    // diagnostic naming the table and column, matching
+                    // this exporter's own established fail-closed
+                    // precedent for a case with no safe corrective action
+                    // -- but see this loop's own comment above for why
+                    // this only applies unambiguously to a table with no
+                    // nullable fields at all.
+                    if (!table_declares_nullable_fields && rv.display_value.empty()) {
+                        hard_failure_error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.OracleEmptyCharacterValueUnrepresentable",
+                            {{"table", rt.name}, {"column", rv.field_name}});
+                        return {};
+                    }
                     // VARCHAR2's own max length (255-CHAR-derived, well
                     // under Oracle's 4000-byte literal ceiling even at
                     // 4 UTF-8 bytes per character) never needs the CLOB
@@ -3637,16 +3699,16 @@ DatabaseSqlExportResult export_database_as_oracle_sql(
         ? std::numeric_limits<std::size_t>::max()
         : max_rows_per_table;
 
-    std::string identifier_collision_error;
+    std::string hard_failure_error;
     const std::vector<ParsedSqlExportTable> parsed_tables =
-        write_oracle_tables_and_data(sql, snapshot, row_limit, identifier_collision_error);
+        write_oracle_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
     // #5564 PR review (chatgpt-codex-connector, P2): a table/column name
     // colliding with another after oracle_quote_identifier()'s own
     // quote-stripping sanitization fails the whole export closed --
     // see write_oracle_tables_and_data()'s own comment for why silently
     // reusing the colliding identifier is not a safe alternative.
-    if (!identifier_collision_error.empty()) {
-        return {.ok = false, .error = identifier_collision_error, .sql = {}};
+    if (!hard_failure_error.empty()) {
+        return {.ok = false, .error = hard_failure_error, .sql = {}};
     }
 
     // Unlike SQL Server (a fresh per-table set, its own real per-table

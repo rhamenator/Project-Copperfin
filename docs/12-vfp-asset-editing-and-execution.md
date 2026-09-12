@@ -344,7 +344,21 @@ character. And two distinct source names that sanitize to the identical
 quoted identifier after this exporter's own embedded-quote stripping
 (Oracle has no escape mechanism for one at all) now fail the whole export
 closed with a diagnostic naming the identifier, rather than silently
-emit a script with a duplicate or wrong-target table/column.
+emit a script with a duplicate or wrong-target table/column. A later,
+independently-found gap (#5693): Oracle treats a zero-length `VARCHAR2`
+literal as `NULL` (directly confirmed: `INSERT ... VALUES ('')` leaves a
+`VARCHAR2` column `NULL`, not an empty string), and unlike a blank Date
+or blank Memo -- each already given a real, distinction-preserving
+fallback above -- no `VARCHAR2` literal exists that preserves a
+genuinely non-null empty Character/Varchar value's own non-null-ness.
+This exporter now fails the whole export closed with a diagnostic naming
+the table and column, rather than report a successful export whose
+ordinary load silently corrupts that distinction -- except for a table
+that declares any nullable field at all (identified by its own
+`_NullFlags` pseudo-field), since this codebase does not yet decode that
+field's own record bitmap and so cannot currently tell a genuinely null
+value apart from a genuinely non-null empty one there (#5718 tracks
+proper bitmap decoding as its own foundational fix).
 
 `TYPE MYSQL` (#5554, fifth and final vendor-dialect slice of #141) is close
 enough in overall shape to `TYPE SQLSERVER`'s own precedent to share its
