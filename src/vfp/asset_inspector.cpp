@@ -1885,6 +1885,79 @@ bool looks_like_safe_unquoted_sql_numeric_literal(const std::string& text) {
     return seen_digit;
 }
 
+// #5630/#5571: export_database_as_json() inserts a numeric field's decoded
+// display_value directly into the JSON stream unquoted, the identical
+// "no quoting layer to escape a crafted/corrupted value with" situation
+// looks_like_safe_unquoted_sql_numeric_literal() documents for the SQL
+// exporters -- but decode_value()'s 'N'/'F' case (dbf_table.cpp) returns
+// fixed-width DBF storage text completely unvalidated, and this codebase's
+// own DBF field-write path accepts any byte string that fits the field's
+// declared width for those types (a numeric-overflow marker, or arbitrary
+// crafted/corrupted content, round-trips as literal text exactly like a
+// genuine value would). Reusing the SQL validator here would itself be
+// unsafe: real JSON number grammar (RFC 8259) is *stricter* than SQL's own
+// numeric-literal grammar in two ways the SQL validator deliberately
+// accepts -- a leading '+' (SQL accepts it; JSON's grammar has no leading-
+// plus production at all) and a leading zero before further digits (SQL
+// accepts "0123"; JSON's grammar requires the integer part be either a
+// bare "0" or a nonzero digit followed by more digits, never a leading
+// zero followed by another digit). A value the SQL check would accept but
+// this stricter JSON grammar rejects must still fail closed here, not
+// silently reuse the more permissive SQL validator and ship syntactically
+// invalid (or JSON-valid-but-shape-changing) JSON. Also rejects a
+// nonfinite binary Double's own decoded text ("nan"/"inf"/"-inf", none of
+// which are valid JSON number tokens), which correctly and independently
+// falls through this same digit-only grammar check with no special-casing
+// needed.
+bool looks_like_safe_unquoted_json_numeric_literal(const std::string& text) {
+    if (text.empty()) {
+        return false;
+    }
+    std::size_t index = 0U;
+    if (text.front() == '-') {
+        index = 1U;
+    }
+    if (index >= text.size()) {
+        return false;
+    }
+    if (text[index] == '0') {
+        ++index;
+    } else {
+        if (std::isdigit(static_cast<unsigned char>(text[index])) == 0) {
+            return false;
+        }
+        while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
+            ++index;
+        }
+    }
+    if (index < text.size() && text[index] == '.') {
+        ++index;
+        bool seen_fraction_digit = false;
+        while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
+            ++index;
+            seen_fraction_digit = true;
+        }
+        if (!seen_fraction_digit) {
+            return false;
+        }
+    }
+    if (index < text.size() && (text[index] == 'e' || text[index] == 'E')) {
+        ++index;
+        if (index < text.size() && (text[index] == '-' || text[index] == '+')) {
+            ++index;
+        }
+        bool seen_exponent_digit = false;
+        while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
+            ++index;
+            seen_exponent_digit = true;
+        }
+        if (!seen_exponent_digit) {
+            return false;
+        }
+    }
+    return index == text.size();
+}
+
 // export_database_as_access_sql() embeds a 'D' field's decoded
 // display_value directly inside Access SQL's #...# date-literal
 // delimiters, the same "no quoting layer to escape it with" situation
@@ -2482,8 +2555,39 @@ DatabaseExportResult export_database_as_json(
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
             const bool last_field = (fi + 1U == tbl.table.fields.size());
+            // #5630 review (self, proactive sibling-gap check): fld.type
+            // is a single raw byte read directly from the field
+            // descriptor block with no validation that it's one of the
+            // recognized VFP type letters -- a crafted/corrupted DBF can
+            // set it to a literal '"' or '\' and break out of this
+            // string's own delimiters exactly like an unvalidated numeric
+            // display_value does below, just in the schema description
+            // rather than a data value. Routed through json_escape_str()
+            // the same way fld.name already is, rather than embedded raw.
+            //
+            // #5630 PR review (chatgpt-codex-connector, P2): json_escape_
+            // str() only escapes quotes, backslashes, and C0 controls --
+            // by design, since it is also used for genuine multi-byte
+            // UTF-8 field names/values elsewhere, which it must pass
+            // through unchanged. A raw byte >= 0x80 standing alone (never
+            // part of a real multi-byte UTF-8 sequence on its own) is
+            // therefore passed through unescaped too, producing a
+            // document that is syntactically valid JSON but not valid
+            // UTF-8 text, which parse_json_document() itself rejects --
+            // this fix's own struct-preserving escaping did not, by
+            // itself, cover that case. Every real VFP field-type letter
+            // is plain ASCII, so a byte outside the printable ASCII range
+            // is never a genuine type in the first place; fail the whole
+            // export closed for it rather than invent an escaping
+            // convention for data that was never valid to begin with.
+            if (static_cast<unsigned char>(fld.type) < 0x20U ||
+                static_cast<unsigned char>(fld.type) > 0x7EU) {
+                return {.ok = false, .error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeJsonFieldTypeByte",
+                    {{"table", rt.name}, {"column", fld.name}}), .json = {}};
+            }
             json << "        {\"name\": \""    << json_escape_str(fld.name)   << "\""
-                 << ", \"type\": \""           << fld.type                     << "\""
+                 << ", \"type\": \""           << json_escape_str(std::string(1U, fld.type)) << "\""
                  << ", \"length\": "           << static_cast<int>(fld.length)
                  << ", \"decimals\": "         << static_cast<int>(fld.decimal_count)
                  << "}" << (last_field ? "\n" : ",\n");
@@ -2528,6 +2632,34 @@ DatabaseExportResult export_database_as_json(
                               lv == "Y"    || lv == "y")
                              ? "true" : "false");
                 } else if (is_numeric && !rv.display_value.empty()) {
+                    // #5630/#5571 (found by an automated Codex code-review
+                    // pass): a numeric cell's decoded display_value was
+                    // previously inserted here completely unvalidated. A
+                    // crafted or corrupted DBF can contain arbitrary byte
+                    // content in a fixed-width N/F field (this codebase's
+                    // own DBF writer accepts any byte string that fits the
+                    // declared width for those types), so an unvalidated
+                    // value like `1,"INJECT":true` doesn't just produce
+                    // invalid JSON -- it injects an entirely new, distinct
+                    // JSON property into the record object, silently
+                    // changing the document's own shape while the export
+                    // still reports success. A numeric-overflow marker
+                    // (e.g. "****") or a nonfinite binary Double's own
+                    // decoded text ("nan"/"inf"/"-inf") instead produces
+                    // outright invalid JSON. Fail the whole export closed
+                    // with table/row/column context rather than publish
+                    // either outcome -- see
+                    // looks_like_safe_unquoted_json_numeric_literal()'s
+                    // own comment for why the existing SQL validator
+                    // cannot simply be reused here (JSON's own number
+                    // grammar is stricter: no leading '+', no leading
+                    // zero before further digits).
+                    if (!looks_like_safe_unquoted_json_numeric_literal(rv.display_value)) {
+                        return {.ok = false, .error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.UnsafeJsonNumericValue",
+                            {{"table", rt.name}, {"row", std::to_string(row_emit)},
+                             {"column", rv.field_name}}), .json = {}};
+                    }
                     json << rv.display_value;
                 } else {
                     json << "\"" << json_escape_str(rv.display_value) << "\"";

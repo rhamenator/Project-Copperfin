@@ -241,7 +241,11 @@ content) -- rather than silently substituting `NULL`, which previously changed
 the source data and reported the migration successful with no way to detect
 the loss (#5698, found by an automated Codex code-review pass). A genuinely
 blank numeric cell (an empty decoded value, not merely one that fails the
-safety check) still emits `NULL` as before. `TYPE SQL` emits one portable/ANSI-ish dialect (`CREATE TABLE` per table,
+safety check) still emits `NULL` as before.
+
+The JSON exporter also fails closed with a localized `Vfp.AssetInspector.Validation.UnsafeJsonNumericValue` diagnostic naming the table, row, and column if a non-blank numeric cell cannot be safely represented as an unquoted JSON number (RFC 8259 grammar, which is stricter than the SQL-family exporters' own literal grammar in two ways: no leading `+`, and no leading zero before further digits) -- a crafted or corrupted cell could previously inject an entirely new JSON property into a record object, or produce outright invalid JSON, while the export still reported success (#5630, #5571, found by an automated Codex code-review pass). A field descriptor's own raw type byte is now also escaped the same way its name already is, closing an identical unescaped-raw-byte injection point in the fields array itself.
+
+`TYPE SQL` emits one portable/ANSI-ish dialect (`CREATE TABLE` per table,
 `INSERT` per row); it does not target a specific database engine's SQL dialect
 quirks. `TYPE POSTGRESQL` (#5537, first vendor-dialect slice of #141) emits the
 same `CREATE TABLE`/`INSERT` shape -- real PostgreSQL already accepts `TYPE SQL`'s
