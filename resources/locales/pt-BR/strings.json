@@ -1805,6 +1805,8 @@
   "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong": "O identificador {identifier} tem mais de 64 caracteres, o que o MySQL nao permite.",
   "Vfp.AssetInspector.Validation.OracleEmptyCharacterValueUnrepresentable": "A tabela {table}, coluna {column} contem um valor de caractere vazio nao nulo, que o Oracle armazenaria silenciosamente como NULL. O Oracle nao possui nenhum literal VARCHAR2 que preserve essa distincao.",
   "Vfp.AssetInspector.Validation.OracleIdentifierCollision": "Dois nomes distintos produziram o mesmo identificador Oracle {identifier} apos remover aspas duplas incorporadas, que o Oracle nao suporta escapar.",
+  "Vfp.AssetInspector.Validation.UnsafeJsonFieldTypeByte": "A tabela {table}, coluna {column} declara um byte de tipo de campo fora do intervalo ASCII imprimivel, que nao pode ser representado com seguranca como texto JSON UTF-8 valido.",
+  "Vfp.AssetInspector.Validation.UnsafeJsonNumericValue": "A tabela {table}, linha {row}, coluna {column} contem um valor numerico nao vazio que nao pode ser representado com seguranca no JSON exportado.",
   "Vfp.AssetInspector.Validation.UnsafeNumericValue": "A tabela {table}, linha {row}, coluna {column} contem um valor numerico nao vazio que nao pode ser representado com seguranca no SQL exportado.",
   "Vfp.CdxHeader.Error.InvalidValues": "Os valores do cabecalho nao parecem pertencer a um arquivo de indice da familia CDX.",
   "Vfp.CdxHeader.Error.OpenFileFailed": "Nao foi possivel abrir o arquivo.",
