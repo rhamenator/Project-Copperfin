@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
@@ -27,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 namespace copperfin::test_dbf_table {
@@ -3388,6 +3390,89 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         fs::remove_all(temp_dir, ignored);
     }
 
+#if !defined(_WIN32)
+    // #5614: write_binary_file() previously removed a *fixed* ".cptmp"
+    // sibling name and reopened it by that same name via a plain
+    // std::ofstream -- two separate pathname operations, and ofstream
+    // follows a symlink. A process able to write the table's own directory
+    // could recreate ".cptmp" as a symlink to an arbitrary victim file in
+    // the narrow window between the remove() and the open(), and Copperfin
+    // would then truncate and overwrite that victim with the generated DBF
+    // bytes -- reproduced during triage with a background thread
+    // continuously reinstalling that exact symlink while writes ran.
+    // Because that window is real but narrow, a single-shot pre-plant
+    // before a single write call is not a reliable reproduction (the old
+    // code's own remove() step, run once before the open with no
+    // concurrent racer, simply deletes a pre-existing symlink outright
+    // before ever reaching the open -- proving nothing about the actual
+    // race). This test instead races a background thread that continuously
+    // reinstalls the legacy fixed name as a symlink to a victim file
+    // against many repeated create_dbf_table_file() calls, matching the
+    // issue's own reproduction methodology. Proving the fix (an
+    // unguessable sibling name created via write_new_durable_file()'s own
+    // O_EXCL|O_NOFOLLOW semantics, with no remove-then-open step against
+    // any name an attacker could have pre-populated) means the outcome no
+    // longer depends on timing at all: the victim must stay byte-identical
+    // across every attempt, not just probably.
+    void test_create_dbf_table_file_does_not_follow_racing_cptmp_symlink() {
+        namespace fs = std::filesystem;
+        const fs::path temp_dir = fs::temp_directory_path() /
+         ("copperfin_dbf_cptmp_symlink_race_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path victim_path = temp_dir / "victim.txt";
+        const std::string victim_original_content = "DO NOT MODIFY";
+        {
+            std::ofstream victim(victim_path, std::ios::binary);
+            victim << victim_original_content;
+        }
+
+        const fs::path table_path = temp_dir / "race.dbf";
+        const fs::path legacy_temp_path = temp_dir / "race.dbf.cptmp";
+
+        std::atomic<bool> stop_racing{false};
+        std::thread racer([&]() {
+            while (!stop_racing.load(std::memory_order_relaxed)) {
+                std::error_code race_ec;
+                fs::remove(legacy_temp_path, race_ec);
+                fs::create_symlink(victim_path, legacy_temp_path, race_ec);
+            }
+        });
+
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "NAME", .type = 'C', .length = 10U}
+        };
+        bool any_create_failed = false;
+        constexpr int attempt_count = 200;
+        for (int attempt = 0; attempt < attempt_count; ++attempt) {
+            std::error_code remove_ec;
+            fs::remove(table_path, remove_ec);
+            const auto create_result = copperfin::vfp::create_dbf_table_file(
+                table_path.string(), fields, {{"ALPHA"}});
+            if (!create_result.ok) {
+                any_create_failed = true;
+            }
+        }
+
+        stop_racing.store(true, std::memory_order_relaxed);
+        racer.join();
+        fs::remove(legacy_temp_path, ignored);
+
+        expect(!any_create_failed,
+            "#5614: create_dbf_table_file should succeed on every attempt even while something races to reinstall .cptmp as a symlink");
+
+        std::ifstream victim_after(victim_path, std::ios::binary);
+        const std::string victim_after_content{
+            std::istreambuf_iterator<char>(victim_after), std::istreambuf_iterator<char>()};
+        expect(victim_after_content == victim_original_content,
+            "#5614: the victim file a racing .cptmp symlink points to must remain byte-identical across every attempt -- write_binary_file() must never write through a name it did not itself create, no matter how the race lands");
+
+        fs::remove_all(temp_dir, ignored);
+    }
+#endif
+
     // #5509: the targeted-I/O fast path for non-memo REPLACE writes trades
     // write_binary_file()'s whole-file atomic rewrite for a direct seek to
     // just the target record -- but it still only ever writes to the real
@@ -3653,6 +3738,9 @@ int main(int argc, char* argv[]) {
     test_replace_write_failure_leaves_original_dbf_intact();
     test_memo_sidecar_write_failure_leaves_dbf_header_consistent();
     test_staged_write_rollback_removes_temp_and_preserves_original();
+#if !defined(_WIN32)
+    test_create_dbf_table_file_does_not_follow_racing_cptmp_symlink();
+#endif
     test_replace_fast_path_rejected_write_leaves_dbf_untouched();
     test_dbf_with_zero_record_length_is_rejected();
     test_dbf_with_header_shorter_than_minimum_is_rejected();

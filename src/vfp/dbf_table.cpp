@@ -23,10 +23,12 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <limits>
 #include <locale>
 #include <mutex>
 #include <optional>
+#include <random>
 #include <sstream>
 #include <string_view>
 #include <unordered_map>
@@ -220,6 +222,39 @@ std::vector<std::uint8_t> read_binary_file(const std::string& path) {
     };
 }
 
+// #5614: generates an unguessable path, in the same directory as
+// target_path, that write_binary_file()'s own staging cannot have been
+// pre-planted with a symlink for, since nothing in this process (or any
+// other) can predict it in advance -- 64 bits of std::random_device
+// entropy, not a fixed ".cptmp"/".cpbak" suffix or anything derived from
+// the pid/timestamp/target path itself, none of which an attacker able to
+// watch this directory would need to guess. Deliberately *not* built by
+// appending a suffix onto target_path's own filename the way the fixed
+// ".cptmp"/".cpbak" names it replaces were: a long (but individually
+// valid) table/column name -- this codebase already has real fixtures
+// exercising VFP identifier lengths right up against a real filesystem's
+// own NAME_MAX -- appended with even a compact random suffix could still
+// overflow that limit, exactly the same way a longer fixed suffix would
+// (directly caught by this fix's own review pass: a 244-byte target
+// filename plus a 39-byte sibling suffix overflowed a 255-byte NAME_MAX
+// that the original 6-byte ".cptmp" suffix comfortably fit under). A
+// short, independent name in the same directory has a constant length
+// regardless of target_path's own length, so it can never contribute to
+// that overflow at all. The leading "." also keeps it out of an ordinary
+// directory listing while it exists, a modest bonus, not the goal.
+std::filesystem::path make_unguessable_sibling_path(const std::filesystem::path& target_path) {
+    std::random_device entropy_source;
+    std::ostringstream suffix;
+    suffix << std::hex << std::setfill('0');
+    for (int word_index = 0; word_index < 2; ++word_index) {
+        suffix << std::setw(8) << entropy_source();
+    }
+    const std::filesystem::path parent_directory = target_path.has_parent_path()
+        ? target_path.parent_path()
+        : std::filesystem::path(".");
+    return parent_directory / (".copperfin-tmp-" + suffix.str());
+}
+
 bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>& bytes) {
     const auto should_inject_write_failure = [&path](const char* stage) {
         const auto marker =
@@ -257,32 +292,43 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
     };
 
     const std::filesystem::path target_path = platform::path_from_utf8_string(path);
-    const std::filesystem::path temp_path = platform::path_from_utf8_string(
-        platform::path_to_utf8_string(target_path) + ".cptmp");
-    const std::filesystem::path backup_path = platform::path_from_utf8_string(
-        platform::path_to_utf8_string(target_path) + ".cpbak");
 
-    std::error_code ec;
-    std::filesystem::remove(temp_path, ec);
-    std::filesystem::remove(backup_path, ec);
-
+    // #5614 PR review (chatgpt-codex-connector, P1): the previous
+    // implementation removed a *fixed* ".cptmp" sibling name and then
+    // reopened it by that same name via a plain std::ofstream -- two
+    // separate pathname operations, and ofstream follows a symlink. A
+    // process able to write this directory could recreate ".cptmp" as a
+    // symlink to any file it wanted overwritten in the window between the
+    // remove() and the open(), and Copperfin would then truncate and
+    // overwrite that file with the generated DBF/FPT bytes -- directly
+    // reproduced against this exact function during triage. Using an
+    // unguessable sibling name (make_unguessable_sibling_path()) together
+    // with write_new_durable_file()'s own exclusive, no-follow creation
+    // (O_EXCL|O_NOFOLLOW on POSIX, CREATE_NEW on Windows) closes the race
+    // entirely: there is no separate remove-then-open step at all, so a
+    // pre-planted symlink at any name this call could plausibly guess is
+    // simply never the file that gets written through.
     if (should_inject_write_failure("temp-open")) {
         return false;
     }
-
-    std::ofstream output(temp_path, std::ios::binary | std::ios::trunc);
-    if (!output) {
+    const std::filesystem::path temp_path = make_unguessable_sibling_path(target_path);
+    if (!platform::write_new_durable_file(
+            temp_path,
+            std::string_view(reinterpret_cast<const char*>(bytes.data()), bytes.size()))) {
         return false;
     }
 
-    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
-    if (!output) {
-        std::filesystem::remove(temp_path, ec);
-        return false;
-    }
-
-    output.close();
-    if (!output) {
+    std::error_code ec;
+    // A destination that is itself a symlink is rejected outright rather
+    // than silently replaced -- std::filesystem::rename() below operates on
+    // the link itself (POSIX rename() never dereferences its destination
+    // argument), so promoting through it would not corrupt whatever the
+    // link points to, but silently retargeting a symlink a caller may have
+    // set up deliberately (e.g. redirected table storage) is still a
+    // surprising, undiagnosed identity change this function should refuse
+    // rather than perform quietly.
+    const auto destination_status = std::filesystem::symlink_status(target_path, ec);
+    if (!ec && std::filesystem::is_symlink(destination_status)) {
         std::filesystem::remove(temp_path, ec);
         return false;
     }
@@ -292,7 +338,9 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
         std::filesystem::remove(temp_path, ec);
         return false;
     }
+    std::filesystem::path backup_path;
     if (had_target) {
+        backup_path = make_unguessable_sibling_path(target_path);
         std::filesystem::rename(target_path, backup_path, ec);
         if (ec) {
             std::filesystem::remove(temp_path, ec);

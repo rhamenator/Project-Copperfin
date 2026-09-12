@@ -1,3 +1,61 @@
+- 2026-09-12: Closed a symlink-following TOCTOU race in
+  `write_binary_file()` (`src/vfp/dbf_table.cpp`), the shared staged-write
+  helper behind `create_dbf_table_file()` and every other DBF/FPT
+  (memo sidecar) write in this codebase (#5614, found by an automated
+  Codex code-review pass). The previous implementation removed a *fixed*
+  `<target>.cptmp` sibling name and then reopened that same name via a
+  plain `std::ofstream` -- two separate pathname operations, and
+  `ofstream` follows a symlink. A process able to write the table's own
+  directory could reinstall `.cptmp` as a symlink to any file it wanted
+  overwritten in the window between the `remove()` and the `open()`, and
+  Copperfin would then truncate and overwrite that victim with the
+  generated DBF/FPT bytes -- reproduced with a background thread
+  continuously reinstalling the symlink while writes ran; it succeeded on
+  effectively every attempt. Fixed by replacing the temp file's creation
+  with an unguessable, independently-named file in the same directory (64
+  bits of `std::random_device` entropy, not a fixed suffix or anything
+  derived from the pid/timestamp/target path) written via the existing
+  `write_new_durable_file()` primitive, whose own `O_EXCL|O_NOFOLLOW`
+  (POSIX) / `CREATE_NEW` (Windows) semantics mean there is no separate
+  remove-then-open step at all -- a pre-planted symlink at any name an
+  attacker could plausibly guess is simply never the file that gets
+  written through, regardless of timing. Deliberately *not* built by
+  appending a suffix onto the target's own filename the way the fixed
+  `.cptmp`/`.cpbak` names it replaces were: a first attempt that did so
+  broke an existing test fixture exercising a 244-byte table filename
+  (deliberately calibrated up against a real filesystem's 255-byte
+  `NAME_MAX` to prove SQL Server's own Unicode-character-count identifier
+  truncation) once the longer random suffix pushed the temp file's own
+  name over that limit -- caught by the full test suite before landing,
+  not shipped. An independent short name has a constant length regardless
+  of the target's own length, so it can never contribute to that overflow
+  at all. The `.cpbak` backup sibling is now similarly unguessable rather
+  than fixed. Also added an explicit check that a pre-existing destination
+  is not itself a symlink before promoting onto it (rather than silently
+  replacing the link the way `rename()` alone would, which -- since POSIX
+  `rename()` never dereferences its destination argument -- would not
+  have corrupted whatever the link pointed to, but would have silently
+  retargeted a symlink a caller may have set up deliberately). Preserves
+  the existing `COPPERFIN_TEST_FAIL_WRITE_STAGE` fault-injection contract
+  (`temp-open`/`before-backup`/`before-promote`) and rollback guarantees
+  exactly, so the wide existing test coverage relying on it
+  (`test_dbf_table`, `test_visual_asset_editor`,
+  `test_prg_engine_runtime_surface_functions`, and others) needed no
+  changes and all continue to pass. New regression test
+  (`test_create_dbf_table_file_does_not_follow_racing_cptmp_symlink`)
+  races a background thread reinstalling the legacy fixed `.cptmp` name
+  as a symlink to a victim file against 200 repeated
+  `create_dbf_table_file()` calls: reliably fails against the pre-fix code
+  (the victim's content changes and/or the create call itself fails) and
+  reliably passes against the fix, since the fix removes the race
+  possibility structurally rather than merely narrowing its window. Scope
+  note: this fixes the write path's own symlink-following vulnerability
+  specifically; the fuller acceptance criteria #5614 itself lists (Windows
+  reparse-point/hard-link-alias adversarial testing, cross-platform parent-
+  directory fsync durability, coordinating temp-naming with #5588's own
+  crash-recovery generations) remain open follow-up work, not claimed as
+  covered by this fix.
+
 - 2026-09-12: PR review (chatgpt-codex-connector) on the `EXPORT DATABASE
   ... TYPE MYSQL` PR (#5582) surfaced one real gap, fixed in the same PR: a
   table name (sourced from the DBC catalog's own `OBJECTNAME` column, a
