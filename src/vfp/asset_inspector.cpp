@@ -1682,6 +1682,29 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
     std::error_code canonical_dbc_dir_error;
     const fs::path canonical_dbc_dir = fs::weakly_canonical(
         dbc_dir.empty() ? fs::path(".") : dbc_dir, canonical_dbc_dir_error);
+    // #5685 PR review (chatgpt-codex-connector, P1): a string-safe table
+    // name (no separators, no "..") can still name a symlink/junction
+    // planted directly inside dbc_dir that itself points outside it -- the
+    // string check alone cannot see through that, so a *resolved* path's
+    // own canonical form must be verified still contained beneath
+    // dbc_dir's own canonical form before it is trusted. Shared as one
+    // lambda (rather than only checking the primary .dbf path, the
+    // original narrower fix's own scope) because the same disclosure
+    // applies identically to a table's own memo (.fpt) sidecar: an
+    // in-directory foo.dbf with memo fields alongside a foo.fpt that is
+    // itself a symlink to a memo file outside dbc_dir lets
+    // parse_dbf_table_from_file() independently resolve and read that
+    // unchecked sidecar later, disclosing its content the same way the
+    // primary-path check alone was meant to prevent.
+    const auto path_escapes_database_directory = [&](const fs::path& resolved) {
+        std::error_code canonical_error;
+        const fs::path canonical_resolved = fs::weakly_canonical(resolved, canonical_error);
+        const auto containment_mismatch = std::mismatch(
+            canonical_dbc_dir.begin(), canonical_dbc_dir.end(),
+            canonical_resolved.begin(), canonical_resolved.end());
+        return canonical_error || canonical_dbc_dir_error ||
+            containment_mismatch.first != canonical_dbc_dir.end();
+    };
     for (const auto& obj : snapshot.catalog) {
         if (obj.deleted || obj.object_type != "table" || obj.object_name.empty()) {
             continue;
@@ -1705,19 +1728,21 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
         if (!resolved_table_path.has_value()) {
             continue;
         }
-        // A string-safe name (no separators, no "..") can still name a
-        // symlink/junction planted directly inside dbc_dir that itself
-        // points outside it -- the string check alone cannot see through
-        // that, so the *resolved* path's own canonical form is verified to
-        // still be contained beneath dbc_dir's own canonical form before
-        // it is trusted.
-        std::error_code canonical_error;
-        const fs::path canonical_resolved = fs::weakly_canonical(*resolved_table_path, canonical_error);
-        const auto containment_mismatch = std::mismatch(
-            canonical_dbc_dir.begin(), canonical_dbc_dir.end(),
-            canonical_resolved.begin(), canonical_resolved.end());
-        if (canonical_error || canonical_dbc_dir_error ||
-            containment_mismatch.first != canonical_dbc_dir.end()) {
+        if (path_escapes_database_directory(*resolved_table_path)) {
+            snapshot = {};
+            snapshot.dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
+            snapshot.error = asset_inspector_text(
+                "Vfp.AssetInspector.Error.DbcTableEscapesDirectory", {{"table", tname}});
+            return snapshot;
+        }
+        // The table's own memo sidecar (if one exists on disk at all) gets
+        // the identical containment check -- see this loop's own comment
+        // above for why a per-table skip on the primary path alone is not
+        // sufficient.
+        const SidecarPathResolution table_memo_resolution =
+            resolve_vfp_memo_sidecar_path(*resolved_table_path);
+        if (table_memo_resolution.path.has_value() &&
+            path_escapes_database_directory(*table_memo_resolution.path)) {
             snapshot = {};
             snapshot.dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
             snapshot.error = asset_inspector_text(

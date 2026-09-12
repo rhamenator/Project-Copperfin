@@ -3794,6 +3794,69 @@ void test_export_database_as_json_rejects_symlink_table_escaping_directory() {
 
     fs::remove_all(temp_dir, ignored);
 }
+
+// #5685 PR review (chatgpt-codex-connector, P1): the previous fix above
+// only verified the primary .dbf path's own canonical containment. A
+// table's own memo (.fpt) sidecar is resolved independently, later, by
+// parse_dbf_table_from_file() -- an in-directory table.dbf sitting
+// alongside a table.fpt that is itself a symlink to a memo file outside
+// the database directory lets that later, unchecked resolution disclose
+// the outside memo content the same way the primary-path check alone was
+// meant to prevent. Proves the identical containment check now also
+// applies to the resolved memo sidecar.
+void test_export_database_as_json_rejects_symlink_memo_sidecar_escaping_directory() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_memo_sidecar_symlink_escape_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+    const fs::path database_dir = temp_dir / "database";
+    fs::create_directories(database_dir);
+
+    // A real memo-backed table outside the database directory, whose own
+    // .fpt this test's crafted sidecar will point to.
+    const fs::path secret_table_path = temp_dir / "secret.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> secret_fields{
+        {.name = "BODY", .type = 'M', .offset = 1U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto secret_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(secret_table_path), secret_fields,
+        {{"OUTSIDE_DATABASE_MEMO_SECRET"}});
+    expect(secret_create.ok, "memo sidecar symlink escape test: outside-directory secret fixture should be created");
+    const fs::path secret_memo_path = temp_dir / "secret.fpt";
+    expect(fs::exists(secret_memo_path),
+           "memo sidecar symlink escape test: outside-directory secret fixture should have created a memo sidecar");
+
+    // The in-directory table itself is entirely ordinary and safe -- only
+    // its own memo sidecar is a symlink escaping the database directory.
+    const fs::path table_path = database_dir / "linked.dbf";
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), secret_fields, {{"harmless"}});
+    expect(table_create.ok, "memo sidecar symlink escape test: in-directory table fixture should be created");
+    const fs::path table_memo_path = database_dir / "linked.fpt";
+    fs::remove(table_memo_path, ignored);
+    fs::create_symlink(secret_memo_path, table_memo_path);
+
+    const fs::path dbc_path = database_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "linked", ""}});
+    expect(dbc_create.ok, "memo sidecar symlink escape test: DBC fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_json(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(!result.ok,
+           "export_database_as_json should reject a catalog table whose memo sidecar is a symlink escaping the database directory");
+    expect(result.json.find("OUTSIDE_DATABASE_MEMO_SECRET") == std::string::npos,
+           "export_database_as_json must never leak the memo symlink target's own outside-directory content, even in a failure result");
+
+    fs::remove_all(temp_dir, ignored);
+}
 #endif
 
 void test_export_database_as_sql_maps_currency_datetime_and_blank_numeric() {
@@ -7579,6 +7642,7 @@ int main() {
     test_export_database_as_json_rejects_absolute_table_name();
 #if !defined(_WIN32)
     test_export_database_as_json_rejects_symlink_table_escaping_directory();
+    test_export_database_as_json_rejects_symlink_memo_sidecar_escaping_directory();
 #endif
     test_export_database_as_sql_maps_currency_datetime_and_blank_numeric();
     test_export_database_as_sql_preserves_exponent_form_double_values();
