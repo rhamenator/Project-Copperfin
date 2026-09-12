@@ -936,3 +936,80 @@ void test_materialize_database_json_import_plan_rejects_case_folded_collisions()
 
     fs::remove_all(temp_dir, ignored);
 }
+
+// #5745: the destination-directory scan added for #5678 must only retain
+// entries that match one of the plan's own (small, bounded) set of
+// destination basenames, not every unrelated entry -- a large destination
+// directory should neither prevent a legitimate import nor stop the
+// collision check from working correctly. This proves both directions
+// functionally; the memory-bound claim itself (RSS scaling with directory
+// cardinality before this fix, ~0 growth after) was verified with a
+// standalone reproduction outside the test suite, since portable in-process
+// RSS measurement has no existing convention in this codebase.
+void test_materialize_database_json_import_plan_ignores_unrelated_directory_entries() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_database_json_large_directory_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    constexpr int kUnrelatedEntryCount = 3000;
+    for (int i = 0; i < kUnrelatedEntryCount; ++i) {
+        std::ofstream(temp_dir / ("unrelated_" + std::to_string(i) + ".tmp"));
+    }
+
+    const std::string document = R"JSON({
+  "schema_version": 1,
+  "database": {"path": "/source/Orders.dbc", "name": "Orders"},
+  "catalog": [{"record_index": 1}],
+  "tables": {
+    "Orders": {
+      "fields": [{"name": "ORDERID", "type": "N", "length": 8, "decimals": 0}],
+      "records": [{"ORDERID": 7}]
+    }
+  }
+})JSON";
+    const auto plan_result = copperfin::vfp::build_database_json_import_plan(document);
+    expect(plan_result.ok, "large-directory fixture plan should build successfully");
+    if (!plan_result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    // Positive case: thousands of unrelated entries must not stop a
+    // legitimate import that has no real collision.
+    {
+        const fs::path requested_dbc_path = temp_dir / "fresh.dbc";
+        const auto result = copperfin::vfp::materialize_database_json_import_plan(
+            plan_result.plan, requested_dbc_path.string());
+        expect(result.ok,
+               "a large destination directory with no real collision must still import successfully");
+        expect(fs::exists(requested_dbc_path),
+               "a successful import into a large destination directory must create the DBC");
+        expect(fs::exists(temp_dir / "Orders.dbf"),
+               "a successful import into a large destination directory must create the table");
+    }
+
+    // Negative case: a real case-folded collision must still be detected
+    // even when thousands of unrelated entries are scanned past first.
+    {
+        const fs::path collision_dir = temp_dir / "collision";
+        fs::create_directories(collision_dir, ignored);
+        for (int i = 0; i < kUnrelatedEntryCount; ++i) {
+            std::ofstream(collision_dir / ("unrelated_" + std::to_string(i) + ".tmp"));
+        }
+        {
+            std::ofstream output(collision_dir / "ORDERS.DBF", std::ios::binary);
+            output << "pre-existing";
+        }
+        const fs::path requested_dbc_path = collision_dir / "fresh.dbc";
+        const auto result = copperfin::vfp::materialize_database_json_import_plan(
+            plan_result.plan, requested_dbc_path.string());
+        expect(!result.ok,
+               "a real case-folded collision must still be detected among thousands of unrelated entries");
+        expect(!fs::exists(requested_dbc_path),
+               "a detected collision among many unrelated entries must not leave a partial DBC behind");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}

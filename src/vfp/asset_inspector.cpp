@@ -5414,6 +5414,28 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     // destination -- the DBC itself, each table's own .dbf, and each
     // table's own .fpt memo sidecar -- against it in addition to the
     // exact-case fs::exists() check.
+    // #5745: the scan below only needs to know whether an existing
+    // directory entry's case-folded name matches one of this plan's own
+    // (small, bounded) set of destination basenames -- retaining every
+    // unrelated entry in the directory made memory scale with destination-
+    // directory cardinality (e.g. ~98 MiB for 200,000 unrelated files)
+    // rather than with the import plan's own size. Derive that bounded set
+    // up front so the scan can discard everything else as it goes.
+    std::set<std::string> planned_casefolded_basenames;
+    planned_casefolded_basenames.insert(
+        lowercase_copy(copperfin::platform::path_to_utf8_string(dbc_fs_path.filename())));
+    for (const auto& table_plan : plan.tables) {
+        planned_casefolded_basenames.insert(lowercase_copy(table_plan.name + ".dbf"));
+        const bool table_plan_has_memo_field = std::any_of(
+            table_plan.fields.begin(), table_plan.fields.end(),
+            [](const DbfFieldDescriptor& field) {
+                return field.type == 'M' || field.type == 'G' || field.type == 'P';
+            });
+        if (table_plan_has_memo_field) {
+            planned_casefolded_basenames.insert(lowercase_copy(table_plan.name + ".fpt"));
+        }
+    }
+
     const fs::path dbc_dir_for_scan = dbc_dir.empty() ? fs::path(".") : dbc_dir;
     std::map<std::string, fs::path> existing_entries_by_casefolded_name;
     {
@@ -5446,9 +5468,13 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
                         "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed",
                         {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)}}));
                 }
+                std::string entry_casefolded_name =
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(scan_it->path().filename()));
+                if (planned_casefolded_basenames.count(entry_casefolded_name) == 0U) {
+                    continue;
+                }
                 existing_entries_by_casefolded_name.emplace(
-                    lowercase_copy(copperfin::platform::path_to_utf8_string(scan_it->path().filename())),
-                    scan_it->path());
+                    std::move(entry_casefolded_name), scan_it->path());
             }
         }
     }
