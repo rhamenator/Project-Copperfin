@@ -1,3 +1,62 @@
+- 2026-09-12: Closed a data-integrity gap affecting every SQL-family
+  `EXPORT DATABASE` exporter (`src/vfp/asset_inspector.cpp`, #5698, found
+  by an automated Codex code-review pass): a non-blank numeric cell that
+  `looks_like_safe_unquoted_sql_numeric_literal()` could not validate (a
+  dBASE/VFP numeric-overflow marker such as `*****`, malformed fixed-width
+  numeric text, a nonfinite binary Double, or crafted/corrupted content)
+  was silently rewritten to `NULL` and the migration still reported
+  successful. `NULL` is safe SQL syntax, but it changes the source data
+  and erases the reason the cell could not be represented -- a genuinely
+  non-null overflow marker became indistinguishable from a genuinely
+  blank/null value in the generated script, with no way for either the
+  target engine or the caller to detect the loss. The existing Access
+  regression `test_export_database_as_access_sql_rejects_unsafe_numeric_
+  token()` explicitly proved this behavior (a `*****` cell produced
+  `VALUES (NULL);` and the export still returned `ok=true`); the
+  identical branch shape was copied across the shared portable
+  SQL/PostgreSQL/SQLite writer, SQL Server, Oracle, and MySQL.
+
+  Fixed by distinguishing a genuinely blank numeric cell (an empty decoded
+  `display_value`, which still safely emits `NULL`, unchanged) from a
+  *non-blank* value that fails the safety check (which now fails the
+  whole export closed instead). Added a `hard_failure_error`
+  out-parameter to `write_sql_tables_and_data()` and
+  `write_sqlserver_tables_and_data()` (the same mechanism #5697 added for
+  a different reason on the same functions), reused the existing one on
+  `write_oracle_tables_and_data()` and `write_mysql_tables_and_data()`,
+  and added an inline direct return to `export_database_as_access_sql()`
+  (no separate writer function). Each failure names the table, row, and
+  column via a new localized `Vfp.AssetInspector.Validation.
+  UnsafeNumericValue` diagnostic, per the issue's own completion
+  criteria that the diagnostic carry table/row/field context. A per-table
+  row counter (incremented only for non-deleted, emitted rows) was added
+  to each writer's own record loop to supply the row number.
+
+  `export_database_as_json()`'s own numeric handling is deliberately
+  untouched here -- it has its own differently-shaped, still-open issues
+  (#5571, #5630) tracking a JSON-structural-injection risk rather than
+  this SQL-specific silent-substitution one; the two import planners
+  (`sql_import_value_to_json()` for `TYPE SQL` re-import,
+  `extract_import_table_rows()` for `TYPE JSON` re-import) were checked
+  for the analogous gap and already correctly fail closed on a
+  non-numeric token/value, so neither needed a fix.
+
+  New regression tests
+  (`test_export_database_family_fails_closed_on_unsafe_numeric_value`,
+  covering the six non-Access exporters against one overflow-marker DBF
+  fixture; `test_export_database_as_sql_still_preserves_blank_numeric_
+  as_null`, proving the genuinely-blank case is unaffected) verified to
+  reliably fail against the pre-fix code (8 total failures across all
+  seven exporters plus the diagnostic-content check) and reliably pass
+  against the fix. The pre-existing
+  `test_export_database_as_access_sql_rejects_unsafe_numeric_token`
+  regression, which previously asserted the old NULL-substitution
+  behavior, was updated to assert the new fail-closed behavior instead.
+
+  `docs/32-recovered-requirements-traceability.md` rows
+  `RQ-CF-MODERNIZATION-003`/`-006`/`-007`/`-008`/`-009`/`-010`/`-011`
+  updated.
+
 - 2026-09-12: Closed a data-integrity gap in `write_sql_tables_and_data()`
   (`src/vfp/asset_inspector.cpp`, #5696, found by an automated Codex
   code-review pass), the shared row writer behind `export_database_as_sql()`

@@ -3331,6 +3331,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong",
         "Vfp.AssetInspector.Validation.OracleEmptyCharacterValueUnrepresentable",
         "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
+        "Vfp.AssetInspector.Validation.UnsafeNumericValue",
         "Vfp.CdxHeader.Error.InvalidValues",
         "Vfp.CdxHeader.Error.OpenFileFailed",
         "Vfp.CdxHeader.Error.ReadProbeFailed",
@@ -4066,6 +4067,126 @@ void test_export_database_as_sql_family_preserves_blank_dates_as_null() {
                "export_database_as_sqlite_sql should emit NULL for a blank date rather than an empty string literal");
         expect(sqlite_result.sql.find("VALUES ('')") == std::string::npos,
                "export_database_as_sqlite_sql must never emit an empty string literal for a DATE column -- it would silently store the wrong SQL storage class under dynamic typing");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5698 (found by an automated Codex code-review pass): every SQL exporter
+// silently rewrote a nonblank numeric cell it couldn't validate as `NULL`
+// and still reported the migration successful. A dBASE/VFP numeric
+// overflow marker such as `*****` became indistinguishable from a
+// genuinely null/blank value in the generated script, with no way for
+// either the target engine or the caller to detect the loss. This fixture
+// covers the shared portable SQL/PostgreSQL/SQLite writer plus SQL
+// Server, Oracle, and MySQL (Access has its own dedicated regression,
+// test_export_database_as_access_sql_rejects_unsafe_numeric_token, above,
+// since it has no separate writer function to share this fixture with).
+// Verified to reliably fail against the pre-fix code (all six exporters
+// previously returned ok=true with `VALUES (NULL)`) and reliably pass
+// against the fix.
+void test_export_database_family_fails_closed_on_unsafe_numeric_value() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_unsafe_numeric_export_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "readings", ""}});
+    expect(dbc_create.ok, "unsafe-numeric export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "VALUE", .type = 'N', .offset = 1U, .length = 5U, .decimal_count = 0U},
+    };
+    // "*****" is the classic dBASE-family numeric-overflow fill -- see
+    // test_export_database_as_access_sql_rejects_unsafe_numeric_token's
+    // own comment for why this round-trips as literal text via
+    // create_dbf_table_file()'s allow_truncation path.
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"*****"}});
+    expect(table_create.ok, "unsafe-numeric export test: DBF fixture should be created");
+
+    const std::string dbc_utf8 = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const auto plain_result = copperfin::vfp::export_database_as_sql(dbc_utf8);
+    expect(!plain_result.ok,
+           "export_database_as_sql must fail closed on an overflow-marker/non-numeric cell rather than silently substitute NULL");
+
+    const auto postgresql_result = copperfin::vfp::export_database_as_postgresql_sql(dbc_utf8);
+    expect(!postgresql_result.ok,
+           "export_database_as_postgresql_sql must fail closed on an overflow-marker/non-numeric cell");
+
+    const auto sqlite_result = copperfin::vfp::export_database_as_sqlite_sql(dbc_utf8);
+    expect(!sqlite_result.ok,
+           "export_database_as_sqlite_sql must fail closed on an overflow-marker/non-numeric cell");
+
+    const auto sqlserver_result = copperfin::vfp::export_database_as_sqlserver_sql(dbc_utf8);
+    expect(!sqlserver_result.ok,
+           "export_database_as_sqlserver_sql must fail closed on an overflow-marker/non-numeric cell");
+
+    const auto oracle_result = copperfin::vfp::export_database_as_oracle_sql(dbc_utf8);
+    expect(!oracle_result.ok,
+           "export_database_as_oracle_sql must fail closed on an overflow-marker/non-numeric cell");
+
+    const auto mysql_result = copperfin::vfp::export_database_as_mysql_sql(dbc_utf8);
+    expect(!mysql_result.ok,
+           "export_database_as_mysql_sql must fail closed on an overflow-marker/non-numeric cell");
+
+    // The diagnostic must name the table, row, and column -- not just
+    // report a generic failure -- per #5698's own completion criteria.
+    expect(plain_result.error.find("readings") != std::string::npos &&
+               plain_result.error.find("VALUE") != std::string::npos,
+           "export_database_as_sql's failure diagnostic should name the offending table and column: " +
+               plain_result.error);
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// A genuinely blank numeric cell (empty display_value, not an unsafe
+// nonblank one) must still emit NULL and succeed -- #5698's own fix
+// distinguishes these two cases; this proves the blank case is
+// unaffected by the new fail-closed path for the unsafe case.
+void test_export_database_as_sql_still_preserves_blank_numeric_as_null() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_blank_numeric_export_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "readings", ""}});
+    expect(dbc_create.ok, "blank-numeric export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "VALUE", .type = 'N', .offset = 1U, .length = 5U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{""}});
+    expect(table_create.ok, "blank-numeric export test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_sql should still succeed for a genuinely blank numeric cell: " + result.error);
+    if (result.ok) {
+        expect(result.sql.find("VALUES (NULL)") != std::string::npos,
+               "export_database_as_sql should still emit NULL for a genuinely blank numeric cell");
     }
 
     fs::remove_all(temp_dir, ignored);
@@ -6847,7 +6968,17 @@ void test_export_database_as_access_sql_rejects_unsafe_numeric_token() {
     // delimiters), so unlike a string value there is no quoting layer to
     // escape a crafted/corrupted value with. An overflow marker like
     // "*****" (dBASE-family's own convention for a too-wide value) must
-    // become NULL, not be trusted verbatim into the generated SQL.
+    // never be trusted verbatim into the generated SQL -- this part is
+    // unchanged.
+    //
+    // #5698 (found by an automated Codex code-review pass): this test
+    // originally asserted the export still succeeded, silently
+    // substituting NULL for the unsafe token -- proving the exact bug
+    // #5698 reports: a nonblank numeric cell that cannot be validated
+    // became indistinguishable from a genuinely blank/null value, with
+    // the migration still reported successful. Updated to assert the
+    // export now fails the whole table closed instead, naming the table,
+    // row, and column, rather than silently changing the source data.
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_access_sql_numeric_safety_tests";
     std::error_code ignored;
@@ -6881,14 +7012,8 @@ void test_export_database_as_access_sql_rejects_unsafe_numeric_token() {
 
     const auto result = copperfin::vfp::export_database_as_access_sql(
         copperfin::platform::path_to_utf8_string(dbc_path));
-    expect(result.ok, "export_database_as_access_sql should resolve the numeric-safety fixture: " + result.error);
-    if (!result.ok) {
-        fs::remove_all(temp_dir, ignored);
-        return;
-    }
-
-    expect(result.sql.find("VALUES (NULL);") != std::string::npos,
-           "export_database_as_access_sql should emit NULL for an overflow-marker/non-numeric cell rather than trust it unquoted");
+    expect(!result.ok,
+           "export_database_as_access_sql must fail closed on an overflow-marker/non-numeric cell rather than silently substitute NULL");
     expect(result.sql.find("*****") == std::string::npos,
            "export_database_as_access_sql must never emit an unsafe unquoted numeric token verbatim");
 
@@ -7866,6 +7991,8 @@ int main() {
     test_export_database_as_sql_maps_currency_datetime_and_blank_numeric();
     test_export_database_as_sql_preserves_exponent_form_double_values();
     test_export_database_as_sql_family_preserves_blank_dates_as_null();
+    test_export_database_family_fails_closed_on_unsafe_numeric_value();
+    test_export_database_as_sql_still_preserves_blank_numeric_as_null();
     test_export_database_as_postgresql_sql_maps_types_and_creates_indexes();
     test_export_database_as_postgresql_sql_omits_indexes_without_cdx();
     test_export_database_as_postgresql_sql_disambiguates_indexes_on_same_column();

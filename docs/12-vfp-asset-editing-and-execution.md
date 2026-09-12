@@ -222,7 +222,16 @@ seven `TYPE` variants share the same DBC catalog/table-resolution path
 `export_database_as_oracle_sql()` all
 call the same internal loader) so they cannot silently drift apart on which
 tables/rows are considered part of the database -- only the output serialization
-differs. `TYPE SQL` emits one portable/ANSI-ish dialect (`CREATE TABLE` per table,
+differs. Every SQL-family exporter (all but `TYPE JSON`) also fails closed with
+a localized `Vfp.AssetInspector.Validation.UnsafeNumericValue` diagnostic
+naming the table, row, and column if a non-blank numeric cell cannot be safely
+represented as an unquoted SQL literal (a numeric-overflow marker, malformed
+fixed-width numeric text, a nonfinite binary Double, or crafted/corrupted
+content) -- rather than silently substituting `NULL`, which previously changed
+the source data and reported the migration successful with no way to detect
+the loss (#5698, found by an automated Codex code-review pass). A genuinely
+blank numeric cell (an empty decoded value, not merely one that fails the
+safety check) still emits `NULL` as before. `TYPE SQL` emits one portable/ANSI-ish dialect (`CREATE TABLE` per table,
 `INSERT` per row); it does not target a specific database engine's SQL dialect
 quirks. `TYPE POSTGRESQL` (#5537, first vendor-dialect slice of #141) emits the
 same `CREATE TABLE`/`INSERT` shape -- real PostgreSQL already accepts `TYPE SQL`'s
