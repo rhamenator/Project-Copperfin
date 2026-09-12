@@ -222,9 +222,19 @@ seven `TYPE` variants share the same DBC catalog/table-resolution path
 `export_database_as_oracle_sql()` all
 call the same internal loader) so they cannot silently drift apart on which
 tables/rows are considered part of the database -- only the output serialization
-differs. Every SQL-family exporter (all but `TYPE JSON`) also fails closed with
-a localized `Vfp.AssetInspector.Validation.UnsafeNumericValue` diagnostic
-naming the table, row, and column if a non-blank numeric cell cannot be safely
+differs. Every exporter also fails closed with a localized
+`Vfp.AssetInspector.Validation.ExportTableHasNoFields` diagnostic if a cataloged
+member DBF's field-descriptor block parses "successfully" with zero fields --
+a real, accepted shape (an aligned terminator immediately after the 32-byte
+header) that would otherwise emit invalid `CREATE TABLE "name" ( );` DDL on
+every SQL dialect, or an ambiguous `"fields": []` JSON marker indistinguishable
+from that exporter's own deliberate unreadable-source-table marker (#5697,
+found by an automated Codex code-review pass). The source-level asset
+inspector reports this same shape as a validation error
+(`dbf.field_count_zero`) rather than silently returning no diagnostic. Every
+SQL-family exporter (all but `TYPE JSON`) also fails closed with a localized
+`Vfp.AssetInspector.Validation.UnsafeNumericValue` diagnostic naming the
+table, row, and column if a non-blank numeric cell cannot be safely
 represented as an unquoted SQL literal (a numeric-overflow marker, malformed
 fixed-width numeric text, a nonfinite binary Double, or crafted/corrupted
 content) -- rather than silently substituting `NULL`, which previously changed
