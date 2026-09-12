@@ -1795,6 +1795,7 @@
   "Vfp.AssetInspector.Validation.MemoSidecarHeaderTruncated": "El archivo complementario de memo es demasiado corto para contener un encabezado valido.",
   "Vfp.AssetInspector.Validation.MemoSidecarMissing": "El asset de la familia DBF espera un archivo complementario de memo, pero el complementario falta.",
   "Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize": "El archivo complementario de memo es mas corto que el tamano de bloque declarado.",
+  "Vfp.AssetInspector.Validation.OracleIdentifierCollision": "Dos nombres distintos produjeron el mismo identificador de Oracle {identifier} al eliminar las comillas dobles incrustadas, que Oracle no admite escapar.",
   "Vfp.CdxHeader.Error.InvalidValues": "Los valores del encabezado no parecen corresponder a un archivo indice de la familia CDX.",
   "Vfp.CdxHeader.Error.OpenFileFailed": "No se pudo abrir el archivo.",
   "Vfp.CdxHeader.Error.ReadProbeFailed": "No se pudo leer una sonda completa de 16 bytes del encabezado CDX.",

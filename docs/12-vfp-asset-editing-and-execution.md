@@ -324,6 +324,28 @@ this exporter's own actual generated output for a representative
 two-table fixture loading with zero errors and a cross-table `JOIN`
 returning the correct joined row.
 
+A #5564 PR review round found three further real gaps, each independently
+verified against the same real Oracle 23ai engine before being fixed.
+Character columns now declare explicit `CHAR` length semantics --
+`VARCHAR2(n CHAR)`, not a bare `VARCHAR2(n)` -- since Oracle's own default
+`NLS_LENGTH_SEMANTICS=BYTE` counts a plain `VARCHAR2(n)` in bytes, and this
+codebase decodes legacy DBF text to UTF-8 for every dialect's own output
+(directly confirmed: a 10-byte `VARCHAR2(10)` rejects 10 non-ASCII
+characters that decode to 20 UTF-8 bytes, while `VARCHAR2(10 CHAR)`
+accepts them regardless of session settings). A CLOB column's own literal
+is no longer a plain quoted string -- directly confirmed that an empty
+string literal silently becomes `NULL` for a real CLOB column, and that
+Oracle's own SQL text-literal limit is 4000 *bytes* (not characters,
+confirmed with both ASCII and multi-byte UTF-8 content) -- so a blank
+memo now emits `EMPTY_CLOB()` and a longer one emits one-or-more
+`TO_CLOB('...')` chunks concatenated with `||`, each chunk split on a
+UTF-8 character boundary so a chunk can never divide a multi-byte
+character. And two distinct source names that sanitize to the identical
+quoted identifier after this exporter's own embedded-quote stripping
+(Oracle has no escape mechanism for one at all) now fail the whole export
+closed with a diagnostic naming the identifier, rather than silently
+emit a script with a duplicate or wrong-target table/column.
+
 `TYPE ACCESS`
 (#5475, phase 1 of #141) emits
 the same shape of script using the Access/Jet SQL dialect instead -- square-bracket

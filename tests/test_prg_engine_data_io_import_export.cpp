@@ -2173,8 +2173,8 @@ void test_export_database_type_oracle_writes_oracle_dialect_ddl_and_inserts() {
         const std::string snapshot = read_text(output_path);
         expect(snapshot.find("CREATE TABLE \"People\"") != std::string::npos,
                "EXPORT DATABASE TYPE ORACLE should emit a CREATE TABLE with double-quoted identifiers");
-        expect(snapshot.find("\"NAME\" VARCHAR2(32)") != std::string::npos,
-               "EXPORT DATABASE TYPE ORACLE should map a character field to VARCHAR2(length)");
+        expect(snapshot.find("\"NAME\" VARCHAR2(32 CHAR)") != std::string::npos,
+               "EXPORT DATABASE TYPE ORACLE should map a character field to VARCHAR2(length CHAR), since Oracle's own default byte-counted semantics would otherwise reject a real multi-byte UTF-8 value that fits in length characters");
         expect(snapshot.find("\"AGE\" NUMBER(3, 0)") != std::string::npos,
                "EXPORT DATABASE TYPE ORACLE should map a numeric field to NUMBER");
         expect(snapshot.find("\"ACTIVE\" NUMBER(1)") != std::string::npos,

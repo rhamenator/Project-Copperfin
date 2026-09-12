@@ -3325,6 +3325,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AssetInspector.Validation.MemoSidecarHeaderTruncated",
         "Vfp.AssetInspector.Validation.MemoSidecarMissing",
         "Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize",
+        "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
         "Vfp.CdxHeader.Error.InvalidValues",
         "Vfp.CdxHeader.Error.OpenFileFailed",
         "Vfp.CdxHeader.Error.ReadProbeFailed",
@@ -5085,8 +5086,8 @@ void test_export_database_as_oracle_sql_maps_types_and_creates_indexes() {
            "export_database_as_oracle_sql should quote identifiers with double quotes, matching real Oracle");
     expect(result.sql.find("\"CUST_ID\" NUMBER(6, 0)") != std::string::npos,
            "export_database_as_oracle_sql should map a numeric field to NUMBER, a real Oracle type");
-    expect(result.sql.find("\"COMPANY\" VARCHAR2(40)") != std::string::npos,
-           "export_database_as_oracle_sql should map a character field to VARCHAR2(length), not the reserved/deprecated VARCHAR");
+    expect(result.sql.find("\"COMPANY\" VARCHAR2(40 CHAR)") != std::string::npos,
+           "export_database_as_oracle_sql should map a character field to VARCHAR2(length CHAR), not the reserved/deprecated VARCHAR nor a bare byte-counted VARCHAR2(length)");
     expect(result.sql.find("\"ACTIVE\" NUMBER(1)") != std::string::npos,
            "export_database_as_oracle_sql should map a logical field to NUMBER(1), since Oracle has no dedicated table-column BOOLEAN type");
     expect(result.sql.find("\"BALANCE\" NUMBER(19, 4)") != std::string::npos,
@@ -5512,6 +5513,164 @@ void test_export_database_as_oracle_sql_strips_embedded_quote_from_identifiers()
            "export_database_as_oracle_sql should strip an embedded double quote from an identifier, since real Oracle has no escape mechanism for one at all");
     expect(result.sql.find("weird\"\"name") == std::string::npos,
            "export_database_as_oracle_sql must never emit a doubled-quote escape for an identifier -- real Oracle rejects any embedded quote outright, doubled or not");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_oracle_sql_declares_character_columns_with_char_semantics() {
+    // #5564 PR review (chatgpt-codex-connector, P1): a bare VARCHAR2(n) is
+    // measured in *bytes* under Oracle's own default
+    // NLS_LENGTH_SEMANTICS=BYTE -- directly confirmed against a real local
+    // Oracle 23ai engine -- so a VFP C(n) field's own character count must
+    // be declared with explicit CHAR semantics to guarantee n characters
+    // of capacity regardless of the target session's own NLS settings.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_varchar2_char_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "Oracle VARCHAR2 CHAR-semantics test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"widget-a"}});
+    expect(table_create.ok, "Oracle VARCHAR2 CHAR-semantics test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the VARCHAR2 CHAR-semantics fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("\"NAME\" VARCHAR2(10 CHAR)") != std::string::npos,
+           "export_database_as_oracle_sql should declare a C(n) column as VARCHAR2(n CHAR), since Oracle's own default byte-counted semantics would otherwise reject a real multi-byte UTF-8 value that fits in n characters");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_oracle_sql_writes_memo_content_as_clob_literals() {
+    // #5564 PR review (chatgpt-codex-connector, P1): a CLOB column's own
+    // literal cannot be a plain quoted string -- directly confirmed
+    // against a real local Oracle 23ai engine that an empty string
+    // literal silently becomes NULL for a CLOB column, and that Oracle's
+    // own SQL text-literal limit is 4000 *bytes*. Exercises all three of
+    // oracle_clob_literal()'s own code paths (empty -> EMPTY_CLOB(),
+    // short non-empty -> a single TO_CLOB(...), and content over the
+    // 4000-byte chunk size -> TO_CLOB(...) || TO_CLOB(...) concatenation)
+    // through a real M-type memo field, since the function itself lives
+    // in this file's own anonymous namespace and is not otherwise
+    // directly unit-testable.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_clob_literal_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "Oracle CLOB literal test: DBC fixture should be created");
+
+    const std::string short_note = "short note";
+    const std::string large_note(4500U, 'A');
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NOTES", .type = 'M', .offset = 1U, .length = 4U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{""}, {short_note}, {large_note}});
+    expect(table_create.ok, "Oracle CLOB literal test: DBF fixture with memo content should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_oracle_sql should resolve the CLOB literal fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("VALUES (EMPTY_CLOB())") != std::string::npos,
+           "export_database_as_oracle_sql should emit EMPTY_CLOB() for a blank memo, since a plain '' literal silently becomes NULL for a real Oracle CLOB column");
+    expect(result.sql.find("VALUES (TO_CLOB('" + short_note + "'))") != std::string::npos,
+           "export_database_as_oracle_sql should emit a single TO_CLOB(...) for a memo well under the 4000-byte chunk size");
+    const std::string first_chunk(4000U, 'A');
+    const std::string second_chunk(500U, 'A');
+    expect(result.sql.find(
+               "TO_CLOB('" + first_chunk + "') || TO_CLOB('" + second_chunk + "')") != std::string::npos,
+           "export_database_as_oracle_sql should split a memo over Oracle's own 4000-byte SQL text-literal limit into TO_CLOB(...) || TO_CLOB(...) concatenation");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_oracle_sql_fails_closed_on_colliding_identifiers() {
+    // #5564 PR review (chatgpt-codex-connector, P2): oracle_quote_identifier()'s
+    // own embedded-quote stripping is not collision-safe -- distinct source
+    // names (e.g. "ab" and "a\"b") can sanitize to the identical quoted
+    // identifier. export_database_as_oracle_sql() must fail the whole
+    // export closed rather than emit a script with a duplicate/wrong-
+    // target column.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_oracle_sql_identifier_collision_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "Oracle identifier collision test: DBC fixture should be created");
+
+    // A genuinely valid VFP field name can never contain a literal `"` --
+    // construct the descriptors directly to model a crafted/corrupt
+    // source, matching this file's own established practice (see
+    // test_export_database_as_oracle_sql_strips_embedded_quote_from_identifiers()
+    // above) for exercising fail-closed handling of input a real writer
+    // never produces.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "ab", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+        {.name = "a\"b", .type = 'C', .offset = 11U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"x", "y"}});
+    expect(table_create.ok, "Oracle identifier collision test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_oracle_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(!result.ok,
+           "export_database_as_oracle_sql should fail closed when two column names collide after quote-stripping, rather than emit a script with a duplicate/wrong-target column");
+    expect(result.sql.empty(),
+           "export_database_as_oracle_sql should not return a partial SQL script alongside a failure");
+    expect(result.error.find("\"ab\"") != std::string::npos,
+           "export_database_as_oracle_sql's collision error should name the colliding identifier: " + result.error);
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -6760,6 +6919,9 @@ int main() {
     test_export_database_as_oracle_sql_preserves_blank_dates_as_null();
     test_export_database_as_oracle_sql_clamps_number_precision_and_scale();
     test_export_database_as_oracle_sql_strips_embedded_quote_from_identifiers();
+    test_export_database_as_oracle_sql_declares_character_columns_with_char_semantics();
+    test_export_database_as_oracle_sql_writes_memo_content_as_clob_literals();
+    test_export_database_as_oracle_sql_fails_closed_on_colliding_identifiers();
     test_export_database_as_sqlite_sql_disambiguates_indexes_across_tables();
     test_export_database_as_access_sql_maps_currency_datetime_and_dates();
     test_export_database_as_access_sql_escapes_bracket_in_identifier();

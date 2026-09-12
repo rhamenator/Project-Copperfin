@@ -1,3 +1,50 @@
+- 2026-09-11: PR review (chatgpt-codex-connector) on the `EXPORT DATABASE
+  ... TYPE ORACLE` PR (#5564) surfaced three real gaps, all fixed in the
+  same PR, each verified against a real local Oracle 23ai engine before
+  being implemented:
+
+  1. **P1: `VARCHAR2(n)` is byte-counted, not character-counted, under
+     Oracle's own default `NLS_LENGTH_SEMANTICS=BYTE`.** This codebase
+     decodes legacy DBF text to UTF-8 for every dialect's own output, so
+     a VFP `C(n)` field's own character count needs `n` characters of
+     guaranteed capacity independent of session settings. Directly
+     confirmed against the real engine that a 10-byte `VARCHAR2(10)`
+     rejects 10 non-ASCII characters decoding to 20 UTF-8 bytes
+     (ORA-12899), while explicit `VARCHAR2(10 CHAR)` accepts them
+     regardless of session settings. `oracle_column_type()` now declares
+     character columns with explicit `CHAR` length semantics.
+  2. **P1: a plain quoted-string literal is unsafe for a CLOB column.**
+     Directly confirmed against the real engine that an empty string
+     literal (`''`) silently becomes `NULL` for a CLOB column, and that
+     Oracle's own SQL text-literal limit is 4000 *bytes* (not
+     characters) -- confirmed both with plain ASCII and with 2-byte
+     UTF-8 content, ruling out any per-character interpretation of the
+     limit. New `oracle_clob_literal()` emits `EMPTY_CLOB()` for a blank
+     value, or one-or-more `TO_CLOB('...')` chunks concatenated with
+     `||` (directly confirmed to reconstruct a full-length CLOB), each
+     chunk split on a UTF-8 character boundary via the same
+     `utf8_safe_truncate()` byte-mode #5562's own SQL Server fix already
+     added, so a chunk boundary can never split a multi-byte character.
+  3. **P2: `oracle_quote_identifier()`'s embedded-quote stripping is not
+     collision-safe.** Distinct source names (e.g. `ab` and `a"b`) can
+     sanitize to the identical quoted identifier, since Oracle has no
+     escape mechanism for an embedded quote at all (unlike every other
+     dialect this file emits, which double one). New
+     `oracle_record_identifier_or_detect_collision()` tracks every
+     sanitized table name schema-wide and every sanitized column name
+     per-table; a genuine collision now fails the whole export closed
+     with a new localized `Vfp.AssetInspector.Validation.OracleIdentifierCollision`
+     diagnostic naming the identifier, rather than silently emitting a
+     script with a duplicate or wrong-target table/column.
+
+  Three new regression tests added (VARCHAR2 CHAR-semantics declaration,
+  CLOB literal chunking across all three of `oracle_clob_literal()`'s own
+  code paths via a real memo field, and fail-closed identifier
+  collision). Two pre-existing tests' own expected `VARCHAR2(n)` literal
+  updated to `VARCHAR2(n CHAR)` to match.
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-010` updated to record all three fixes.
+
 - 2026-09-11: Progress on #5554 (parent #137): `EXPORT DATABASE ... TYPE
   ORACLE` (`export_database_as_oracle_sql()`,
   `src/vfp/asset_inspector.cpp`) is the fourth vendor-dialect slice of

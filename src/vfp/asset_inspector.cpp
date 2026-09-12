@@ -2117,7 +2117,21 @@ std::string oracle_column_type(char field_type, std::uint8_t length, std::uint8_
             return "TIMESTAMP";
         case 'C':
         case 'V':
-            return "VARCHAR2(" + std::to_string(length > 0U ? length : 255U) + ")";
+            // #5564 PR review (chatgpt-codex-connector, P1): a bare
+            // `VARCHAR2(n)` is measured in *bytes* under Oracle's own
+            // default `NLS_LENGTH_SEMANTICS=BYTE` -- directly confirmed
+            // against a real local Oracle 23ai engine that a 10-byte
+            // (BYTE-semantics) `VARCHAR2(10)` rejects 10 non-ASCII
+            // characters that decode to 20 UTF-8 bytes (ORA-12899),
+            // while explicit `VARCHAR2(10 CHAR)` accepts the identical
+            // 10 characters regardless of session settings. This
+            // codebase decodes legacy single-byte DBF text into UTF-8
+            // for every dialect's own output, so a VFP `C(n)` field's
+            // own length (always a *character* count) must be declared
+            // with `CHAR` semantics here to guarantee `n` characters of
+            // capacity independent of the target session's own NLS
+            // configuration.
+            return "VARCHAR2(" + std::to_string(length > 0U ? length : 255U) + " CHAR)";
         default:
             // M, G, P, and any other/unrecognized storage type.
             return "CLOB";
@@ -3029,6 +3043,73 @@ void write_sqlserver_create_indexes(
     }
 }
 
+// #5564 PR review (chatgpt-codex-connector, P1): a CLOB column's own
+// literal cannot be a plain quoted string the way every other
+// character-ish dialect's own memo/text fallback emits one. An empty
+// string literal silently becomes NULL for a CLOB column -- directly
+// confirmed against a real local Oracle 23ai engine (`INSERT INTO ...
+// VALUES ('')` leaves the column NULL, not an actual empty CLOB) --
+// corrupting a genuinely blank memo into a NULL one. And Oracle's own
+// SQL text-literal limit is 4000 *bytes*, not characters -- directly
+// confirmed: a 4000-byte literal succeeds, a 4001-byte one fails with
+// ORA-01704 ("string literal too long"), and 2000 two-byte UTF-8
+// characters (4000 bytes) succeed while 2001 of them (4002 bytes) fail
+// the identical way -- a real VFP memo can easily exceed that, which
+// would otherwise silently truncate the entire generated script
+// partway through a single `INSERT`. `EMPTY_CLOB()` and chunked
+// `TO_CLOB('...') || TO_CLOB('...')` concatenation (each chunk within
+// the 4000-byte limit, split on a UTF-8 character boundary via the
+// same `utf8_safe_truncate()` byte-mode this file's own identifier
+// truncation already uses, so a chunk boundary can never split a
+// multi-byte character) are both directly confirmed against the real
+// engine to produce a correct, full-length, non-NULL CLOB value.
+std::string oracle_clob_literal(const std::string& text) {
+    if (text.empty()) {
+        return "EMPTY_CLOB()";
+    }
+    constexpr std::size_t max_chunk_bytes = 4000U;
+    std::string result;
+    std::string remaining = text;
+    while (!remaining.empty()) {
+        const std::string chunk =
+            utf8_safe_truncate(remaining, max_chunk_bytes, IdentifierLengthUnit::bytes);
+        if (chunk.empty()) {
+            // utf8_safe_truncate() only returns empty here if even the
+            // first character's own byte sequence exceeds
+            // max_chunk_bytes, which cannot happen for any valid UTF-8
+            // character (at most 4 bytes) against a 4000-byte budget --
+            // guarded defensively rather than looping forever on
+            // malformed input.
+            break;
+        }
+        if (!result.empty()) {
+            result += " || ";
+        }
+        result += "TO_CLOB(" + sql_quote_string_literal(chunk) + ")";
+        remaining.erase(0U, chunk.size());
+    }
+    return result;
+}
+
+// #5564 PR review (chatgpt-codex-connector, P2): oracle_quote_identifier()'s
+// own embedded-quote stripping is not collision-safe -- distinct source
+// names (e.g. "ab" and "a\"b") can sanitize to the identical quoted
+// identifier. Silently emitting a colliding identifier a second time
+// would produce a script that either fails outright (Oracle rejects a
+// duplicate column name in one `CREATE TABLE`) or, worse, succeeds
+// while silently targeting the wrong column/table. Returns true (and
+// records `quoted_identifier`) the first time a given sanitized
+// identifier is seen in `used_identifiers`; returns false on a genuine
+// collision, letting the caller fail the export closed rather than
+// report success for an unusable script -- this codebase's own
+// established practice for a case with no safe corrective action
+// (matching, e.g., an unbalanced `Begin`/`End` block failing closed in
+// `parse_access_saveastext_design()` rather than guessing a repair).
+bool oracle_record_identifier_or_detect_collision(
+    const std::string& quoted_identifier, std::set<std::string>& used_identifiers) {
+    return used_identifiers.insert(quoted_identifier).second;
+}
+
 // #5554: Oracle's dialect diverges from the portable/ANSI-ish baseline
 // enough that this exporter does not reuse write_sql_tables_and_data()
 // at all (the same reason export_database_as_sqlserver_sql()/
@@ -3065,8 +3146,16 @@ void write_sqlserver_create_indexes(
 std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
     std::ostringstream& sql,
     const DatabaseCatalogSnapshot& snapshot,
-    std::size_t row_limit) {
+    std::size_t row_limit,
+    std::string& identifier_collision_error) {
     std::vector<ParsedSqlExportTable> parsed_tables;
+    // #5564 PR review (chatgpt-codex-connector, P2): tracks every
+    // sanitized-and-quoted table name across the *entire* export (mirroring
+    // the schema-wide scope oracle_quote_identifier()'s own output
+    // occupies) so two distinct source table names that collide after
+    // quote-stripping are caught here rather than producing a script with
+    // a duplicate/wrong-target CREATE TABLE.
+    std::set<std::string> used_table_names;
     for (const auto& rt : snapshot.resolved_tables) {
         DbfTableParseResult tbl = parse_dbf_table_from_file(
             copperfin::platform::path_to_utf8_string(rt.path), row_limit);
@@ -3077,11 +3166,30 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
         }
 
         const std::string quoted_table = oracle_quote_identifier(rt.name);
+        if (!oracle_record_identifier_or_detect_collision(quoted_table, used_table_names)) {
+            identifier_collision_error = asset_inspector_text(
+                "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
+                {{"identifier", quoted_table}});
+            return {};
+        }
+
         sql << "CREATE TABLE " << quoted_table << " (\n";
+        // Scoped to this one table -- two distinct column names
+        // colliding after sanitization is a per-table concern (Oracle's
+        // own column namespace is per-table, unlike its schema-wide
+        // table/index namespaces).
+        std::set<std::string> used_column_names;
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
+            const std::string quoted_column = oracle_quote_identifier(fld.name);
+            if (!oracle_record_identifier_or_detect_collision(quoted_column, used_column_names)) {
+                identifier_collision_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
+                    {{"identifier", quoted_column}});
+                return {};
+            }
             const bool last_field = (fi + 1U == tbl.table.fields.size());
-            sql << "    " << oracle_quote_identifier(fld.name) << " "
+            sql << "    " << quoted_column << " "
                 << oracle_column_type(fld.type, fld.length, fld.decimal_count)
                 << (last_field ? "\n" : ",\n");
         }
@@ -3105,6 +3213,7 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
                 const bool is_logical = (ft == 'L');
                 const bool is_date = (ft == 'D');
                 const bool is_datetime = (ft == 'T');
+                const bool is_character = (ft == 'C' || ft == 'V');
                 if (rv.is_null) {
                     sql << "NULL";
                 } else if (is_logical) {
@@ -3139,8 +3248,18 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
                     sql << (converted.has_value()
                         ? ("TIMESTAMP " + sql_quote_string_literal(*converted))
                         : "NULL");
-                } else {
+                } else if (is_character) {
+                    // VARCHAR2's own max length (255-CHAR-derived, well
+                    // under Oracle's 4000-byte literal ceiling even at
+                    // 4 UTF-8 bytes per character) never needs the CLOB
+                    // chunking below -- a plain literal is always safe.
                     sql << sql_quote_string_literal(rv.display_value);
+                } else {
+                    // M, G, P, and any other/unrecognized storage type
+                    // -- see oracle_clob_literal()'s own comment for
+                    // why a CLOB column cannot share the plain-literal
+                    // handling above.
+                    sql << oracle_clob_literal(rv.display_value);
                 }
                 sql << (vi + 1U == rec.values.size() ? "" : ", ");
             }
@@ -3518,8 +3637,17 @@ DatabaseSqlExportResult export_database_as_oracle_sql(
         ? std::numeric_limits<std::size_t>::max()
         : max_rows_per_table;
 
+    std::string identifier_collision_error;
     const std::vector<ParsedSqlExportTable> parsed_tables =
-        write_oracle_tables_and_data(sql, snapshot, row_limit);
+        write_oracle_tables_and_data(sql, snapshot, row_limit, identifier_collision_error);
+    // #5564 PR review (chatgpt-codex-connector, P2): a table/column name
+    // colliding with another after oracle_quote_identifier()'s own
+    // quote-stripping sanitization fails the whole export closed --
+    // see write_oracle_tables_and_data()'s own comment for why silently
+    // reusing the colliding identifier is not a safe alternative.
+    if (!identifier_collision_error.empty()) {
+        return {.ok = false, .error = identifier_collision_error, .sql = {}};
+    }
 
     // Unlike SQL Server (a fresh per-table set, its own real per-table
     // index scoping) but like PostgreSQL/SQLite (schema-wide scoping,
