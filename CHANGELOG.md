@@ -1,3 +1,48 @@
+- 2026-09-12: Closed a data-integrity/safety gap across every database
+  export dialect (`src/vfp/asset_inspector.cpp`, #5743, found by an
+  automated Codex code-review pass -- a sibling gap to closed
+  #5630/#5571's own field-TYPE-byte fix, this time for field NAMES).
+  DBF field-descriptor name bytes are read raw by `read_ascii_name()`
+  (`src/vfp/dbf_table.cpp`) with no charset validation, and every
+  exporter -- JSON and all five SQL dialects (portable SQL/PostgreSQL,
+  SQL Server, Oracle, Access, MySQL) -- trusted them as already-valid
+  UTF-8. A crafted or corrupted field name containing an isolated high
+  byte (e.g. `0xFF`, never valid standalone UTF-8) reached JSON output
+  verbatim via `json_escape_str()` (which only escapes syntax characters
+  and C0 controls, by design, since it must also pass genuine
+  multi-byte UTF-8 names through unchanged), producing text no
+  conforming UTF-8-based JSON parser can accept, and reached every SQL
+  dialect's identifier quoting the same way via `sql_quote_identifier()`
+  and its per-vendor siblings (which only double embedded quote
+  characters).
+
+  Fixed by adding a new `is_valid_utf8()` validator (the same
+  well-tested UTF-8 state machine already used by
+  `src/platform/json.cpp`) and checking every field name against it
+  before it is ever quoted or escaped, failing the whole export closed
+  with a new `Vfp.AssetInspector.Validation.UnsafeFieldNameBytes`
+  diagnostic if it is not valid UTF-8 -- one check point per writer's
+  own per-field loop, which by construction also covers every record's
+  own field-name-keyed property/column, since `DbfTableParseResult`
+  copies each record value's `field_name` directly from the same field
+  descriptor list. Full codepage-aware conversion of legacy-encoded
+  names to Unicode (this issue's own broader completion criteria) is
+  not attempted here; this closes the immediate correctness/safety gap
+  only.
+
+  New regression tests
+  (`test_export_database_family_fails_closed_on_invalid_utf8_field_name`,
+  covering all six export dialects;
+  `test_export_database_family_still_accepts_valid_multibyte_utf8_field_name`,
+  proving a genuine multi-byte UTF-8 name is not rejected) verified to
+  reliably fail against the pre-fix code (7 of 8 assertions; Oracle's
+  own pre-existing identifier-collision logic happened to already
+  reject this exact crafted input for an unrelated reason) and reliably
+  pass against the fix.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-001 updated.
+
 - 2026-09-12: Fixed an unbounded-memory regression in `materialize_
   database_json_import_plan()` (`src/vfp/asset_inspector.cpp`, #5745,
   found by an automated Codex code-review pass against the just-merged

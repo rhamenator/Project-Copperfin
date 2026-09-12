@@ -4294,6 +4294,175 @@ void test_export_database_as_json_fails_closed_on_non_ascii_field_type_byte() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5743: DBF field-descriptor NAME bytes (as opposed to the field TYPE byte
+// #5630/#5571 already covers) are read raw by read_ascii_name() in
+// dbf_table.cpp with no charset validation, and every exporter trusted them
+// as already-valid UTF-8. A crafted or corrupted name containing an
+// isolated high byte (never valid standalone UTF-8) previously reached
+// JSON output verbatim via json_escape_str() (which only escapes syntax
+// characters and C0 controls, by design, since it must also pass genuine
+// multi-byte UTF-8 names through unchanged) and reached every SQL dialect's
+// identifier quoting the same way. Built from raw DBF bytes directly, since
+// an invalid name cannot be produced through create_dbf_table_file()'s own
+// writer. Verified to reliably fail (a JSON document containing a raw 0xFF
+// byte, which no conforming UTF-8-based JSON parser can accept) against the
+// pre-fix code and reliably pass against the fix, for all six export
+// dialects.
+void test_export_database_family_fails_closed_on_invalid_utf8_field_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_export_invalid_field_name_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "readings", ""}});
+    expect(dbc_create.ok, "invalid field-name test: DBC fixture should be created");
+
+    // Raw VFP-style DBF bytes: one Character field descriptor (valid type
+    // byte) whose NAME contains a raw 0xFF byte -- never valid standalone
+    // UTF-8, and never producible through create_dbf_table_file()'s own
+    // ASCII-only name writer.
+    constexpr std::uint16_t record_length = 1U + 10U;
+    constexpr std::uint16_t header_length = 32U + 32U + 1U;
+    std::vector<std::uint8_t> bytes(
+        static_cast<std::size_t>(header_length) + record_length + 1U, 0U);
+    bytes[0] = 0x30U;
+    write_le_u32(bytes, 4U, 1U);
+    write_le_u16(bytes, 8U, header_length);
+    write_le_u16(bytes, 10U, record_length);
+    write_ascii(bytes, 32U, "V");
+    bytes[32U + 1U] = 0xFFU;   // crafted invalid-UTF-8 field-name byte
+    bytes[32U + 11U] = 'C';    // valid, plain-ASCII field type
+    bytes[32U + 16U] = 10U;    // length
+    bytes[64U] = 0x0DU;        // field descriptor terminator
+    bytes[header_length] = 0x20U;  // not deleted
+    std::memset(bytes.data() + header_length + 1U, ' ', 10U);
+    bytes.back() = 0x1AU;  // EOF marker
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const std::string dbc_utf8 = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const auto json_result = copperfin::vfp::export_database_as_json(dbc_utf8);
+    expect(!json_result.ok,
+           "export_database_as_json must fail closed on an invalid UTF-8 field name rather than emit invalid-UTF-8 JSON");
+    expect(json_result.json.empty(),
+           "export_database_as_json must never emit a partial document on this failure");
+    // #5743 PR review (chatgpt-codex-connector, P2): the diagnostic itself
+    // must not propagate the very same invalid-UTF-8 bytes it is reporting
+    // -- PRG dispatch embeds this error text verbatim in its own failure
+    // message, and any UI or log consuming it must be able to treat it as
+    // plain text.
+    expect(json_result.error.find(static_cast<char>(0xFFU)) == std::string::npos,
+           "export_database_as_json's own diagnostic must not embed the raw invalid byte verbatim");
+
+    const auto sql_result = copperfin::vfp::export_database_as_sql(dbc_utf8);
+    expect(!sql_result.ok,
+           "export_database_as_sql must fail closed on an invalid UTF-8 field name");
+    expect(sql_result.error.find(static_cast<char>(0xFFU)) == std::string::npos,
+           "export_database_as_sql's own diagnostic must not embed the raw invalid byte verbatim");
+
+    const auto postgresql_result = copperfin::vfp::export_database_as_postgresql_sql(dbc_utf8);
+    expect(!postgresql_result.ok,
+           "export_database_as_postgresql_sql must fail closed on an invalid UTF-8 field name");
+
+    const auto sqlserver_result = copperfin::vfp::export_database_as_sqlserver_sql(dbc_utf8);
+    expect(!sqlserver_result.ok,
+           "export_database_as_sqlserver_sql must fail closed on an invalid UTF-8 field name");
+
+    const auto oracle_result = copperfin::vfp::export_database_as_oracle_sql(dbc_utf8);
+    expect(!oracle_result.ok,
+           "export_database_as_oracle_sql must fail closed on an invalid UTF-8 field name");
+
+    const auto access_result = copperfin::vfp::export_database_as_access_sql(dbc_utf8);
+    expect(!access_result.ok,
+           "export_database_as_access_sql must fail closed on an invalid UTF-8 field name");
+
+    const auto mysql_result = copperfin::vfp::export_database_as_mysql_sql(dbc_utf8);
+    expect(!mysql_result.ok,
+           "export_database_as_mysql_sql must fail closed on an invalid UTF-8 field name");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5743: a genuine multi-byte UTF-8 field name (as opposed to an invalid
+// isolated high byte) must still export successfully -- the fix must not
+// reject well-formed non-ASCII names.
+void test_export_database_family_still_accepts_valid_multibyte_utf8_field_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_export_valid_utf8_field_name_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "readings", ""}});
+    expect(dbc_create.ok, "valid UTF-8 field-name test: DBC fixture should be created");
+
+    // Raw VFP-style DBF bytes: one Character field descriptor whose name is
+    // "VAL\xC3\xA9" ("VALé") -- a genuine two-byte UTF-8 sequence (U+00E9),
+    // not producible through create_dbf_table_file()'s own ASCII-only name
+    // writer, but perfectly valid UTF-8 text.
+    constexpr std::uint16_t record_length = 1U + 10U;
+    constexpr std::uint16_t header_length = 32U + 32U + 1U;
+    std::vector<std::uint8_t> bytes(
+        static_cast<std::size_t>(header_length) + record_length + 1U, 0U);
+    bytes[0] = 0x30U;
+    write_le_u32(bytes, 4U, 1U);
+    write_le_u16(bytes, 8U, header_length);
+    write_le_u16(bytes, 10U, record_length);
+    bytes[32U + 0U] = 'V';
+    bytes[32U + 1U] = 'A';
+    bytes[32U + 2U] = 'L';
+    bytes[32U + 3U] = 0xC3U;
+    bytes[32U + 4U] = 0xA9U;
+    bytes[32U + 11U] = 'C';    // valid, plain-ASCII field type
+    bytes[32U + 16U] = 10U;    // length
+    bytes[64U] = 0x0DU;        // field descriptor terminator
+    bytes[header_length] = 0x20U;  // not deleted
+    std::memset(bytes.data() + header_length + 1U, ' ', 10U);
+    bytes.back() = 0x1AU;  // EOF marker
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const std::string dbc_utf8 = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const auto json_result = copperfin::vfp::export_database_as_json(dbc_utf8);
+    expect(json_result.ok,
+           "export_database_as_json must still accept a genuine multi-byte UTF-8 field name: " + json_result.error);
+    if (json_result.ok) {
+        expect(json_result.json.find("VAL\xC3\xA9") != std::string::npos,
+               "export_database_as_json should preserve the genuine multi-byte UTF-8 field name");
+    }
+
+    const auto sql_result = copperfin::vfp::export_database_as_sql(dbc_utf8);
+    expect(sql_result.ok,
+           "export_database_as_sql must still accept a genuine multi-byte UTF-8 field name: " + sql_result.error);
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 // #5696: a blank VFP date field decodes to an empty display_value (not
 // is_null), same as a blank numeric cell -- write_sql_tables_and_data()
 // (the shared row writer behind export_database_as_sql(),
@@ -8422,6 +8591,8 @@ int main() {
     test_export_database_as_json_still_accepts_valid_numeric_forms();
     test_export_database_as_json_escapes_crafted_field_type_byte();
     test_export_database_as_json_fails_closed_on_non_ascii_field_type_byte();
+    test_export_database_family_fails_closed_on_invalid_utf8_field_name();
+    test_export_database_family_still_accepts_valid_multibyte_utf8_field_name();
     test_export_database_as_sql_family_preserves_blank_dates_as_null();
     test_export_database_family_fails_closed_on_unsafe_numeric_value();
     test_export_database_as_sql_still_preserves_blank_numeric_as_null();
