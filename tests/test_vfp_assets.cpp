@@ -3325,6 +3325,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AssetInspector.Validation.MemoSidecarHeaderTruncated",
         "Vfp.AssetInspector.Validation.MemoSidecarMissing",
         "Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize",
+        "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong",
         "Vfp.AssetInspector.Validation.OracleIdentifierCollision",
         "Vfp.CdxHeader.Error.InvalidValues",
         "Vfp.CdxHeader.Error.OpenFileFailed",
@@ -5675,6 +5676,553 @@ void test_export_database_as_oracle_sql_fails_closed_on_colliding_identifiers() 
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_export_database_as_mysql_sql_maps_types_and_creates_indexes() {
+    // #5554 (parent #137, fifth and final vendor-dialect slice, following
+    // #5537's PostgreSQL, #5558's SQLite, #5561's SQL Server, and #5564's
+    // Oracle precedent): real MySQL 8.0 (verified against a local
+    // container during this issue's own development) directly confirmed
+    // to accept this exact dialect -- backtick identifiers, single-quoted
+    // string literals, and DECIMAL/INT/DOUBLE/TINYINT(1)/DATE/DATETIME/
+    // VARCHAR(length)/LONGTEXT column types -- loading a representative
+    // CREATE TABLE/INSERT/CREATE INDEX script shaped exactly like this
+    // exporter's own output without error. This test proves the same
+    // genuinely new piece #5537's own sibling test proves (CREATE INDEX
+    // statements derived from a table's production CDX tags, correctly
+    // distinguishing a plain column reference from a composite
+    // expression), plus the TINYINT(1) column's 1/0 literal, matching
+    // this file's own established cross-version-safe convention (real
+    // MySQL 8.0 does also accept TRUE/FALSE, directly confirmed, but this
+    // exporter targets the one literal form every dialect in this file
+    // already uses consistently).
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_mysql_sql_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "customers.dbf";
+    const fs::path cdx_path = temp_dir / "customers.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 145U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"DATABASE", "Sales", "", ""}, {"TABLE", "customers", "Sales", ""}});
+    expect(dbc_create.ok, "MySQL export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "CUST_ID", .type = 'N', .offset = 1U, .length = 6U, .decimal_count = 0U},
+        {.name = "COMPANY", .type = 'C', .offset = 7U, .length = 40U, .decimal_count = 0U},
+        {.name = "ACTIVE", .type = 'L', .offset = 47U, .length = 1U, .decimal_count = 0U},
+        {.name = "BALANCE", .type = 'Y', .offset = 48U, .length = 8U, .decimal_count = 4U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{"1001", "Acme Corp", "T", "123.45"}});
+    expect(table_create.ok, "MySQL export test: DBF fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_cdx_bytes_for_postgresql_index_test();
+        std::ofstream output(cdx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_mysql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_mysql_sql should resolve the customers fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("EXPORT DATABASE ... TYPE MYSQL") != std::string::npos,
+           "export_database_as_mysql_sql should label its own header comment as a MySQL export");
+    expect(result.sql.find("CREATE TABLE `customers`") != std::string::npos,
+           "export_database_as_mysql_sql should quote identifiers with backticks, matching real MySQL");
+    expect(result.sql.find("`CUST_ID` DECIMAL(6, 0)") != std::string::npos,
+           "export_database_as_mysql_sql should map a numeric field to DECIMAL, a real MySQL type");
+    expect(result.sql.find("`COMPANY` VARCHAR(40)") != std::string::npos,
+           "export_database_as_mysql_sql should map a character field to VARCHAR(length)");
+    expect(result.sql.find("`ACTIVE` TINYINT(1)") != std::string::npos,
+           "export_database_as_mysql_sql should map a logical field to TINYINT(1), MySQL's own real underlying type for BOOLEAN");
+    expect(result.sql.find("`BALANCE` DECIMAL(19, 4)") != std::string::npos,
+           "export_database_as_mysql_sql should map VFP currency to DECIMAL(19, 4), an exact match for its own 4-decimal-digit scale");
+    expect(result.sql.find("INSERT INTO `customers`") != std::string::npos,
+           "export_database_as_mysql_sql should emit an INSERT for the table's row");
+    expect(result.sql.find("'Acme Corp'") != std::string::npos,
+           "export_database_as_mysql_sql should quote a character value as a standard SQL string literal");
+    expect(result.sql.find("(1001, 'Acme Corp', 1, 123.45)") != std::string::npos ||
+               result.sql.find(", 1, 123.4500)") != std::string::npos,
+           "export_database_as_mysql_sql should emit 1 (not the TRUE keyword) for a true logical value");
+    expect(result.sql.find("TRUE") == std::string::npos && result.sql.find("FALSE") == std::string::npos,
+           "export_database_as_mysql_sql must never emit the TRUE/FALSE keywords, matching this file's own cross-version-safe convention");
+
+    expect(result.sql.find("CREATE INDEX `customers_CUST_ID_idx` ON `customers` (`CUST_ID`);") != std::string::npos,
+           "export_database_as_mysql_sql should emit a CREATE INDEX for a tag whose key expression is a plain column reference");
+    expect(result.sql.find("-- skipped index") != std::string::npos &&
+               result.sql.find("COMPANY_N") != std::string::npos,
+           "export_database_as_mysql_sql should report a composite-expression tag as a skipped index, not silently drop or mistranslate it");
+    expect(result.sql.find("UPPER(company_name)") == std::string::npos,
+           "export_database_as_mysql_sql must never emit a raw VFP key expression as if it were valid MySQL syntax");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_mysql_sql_omits_indexes_without_cdx() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_mysql_sql_no_cdx_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "MySQL no-CDX export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "SKU", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"W-1"}});
+    expect(table_create.ok, "MySQL no-CDX export test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_mysql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_mysql_sql should succeed without a companion CDX: " + result.error);
+    expect(result.sql.find("CREATE TABLE `widgets`") != std::string::npos,
+           "export_database_as_mysql_sql should still emit the table without any index information");
+    expect(result.sql.find("CREATE INDEX") == std::string::npos,
+           "export_database_as_mysql_sql should not emit any CREATE INDEX when no companion CDX exists");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// Like SQL Server (#5561) and unlike PostgreSQL/SQLite (#5559/#5558), a
+// real MySQL 8.0 engine directly confirmed during this issue's own
+// development that index names are scoped *per table*, not schema-wide:
+// two different tables can each carry an index of the identical name
+// with no error. This is a positive test locking in that real, verified
+// divergence -- table "A_B"'s tag "CDEF" and table "A"'s tag "B_CDEF"
+// would collide under #5559's cross-table disambiguation on the other
+// two dialects, but on MySQL both must emit the exact same
+// "A_B_CDEF_idx" name unchanged, since each is scoped to its own table.
+void test_export_database_as_mysql_sql_allows_identical_index_name_across_tables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_mysql_sql_same_name_across_tables_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "A_B", ""}, {"TABLE", "A", ""}});
+    expect(dbc_create.ok, "MySQL same-name-across-tables test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table1_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A_B.dbf").string(), table_fields, {{"x"}});
+    expect(table1_create.ok, "MySQL same-name-across-tables test: A_B.dbf fixture should be created");
+    const auto table2_create = copperfin::vfp::create_dbf_table_file(
+        (temp_dir / "A.dbf").string(), table_fields, {{"y"}});
+    expect(table2_create.ok, "MySQL same-name-across-tables test: A.dbf fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_single_tag_cdx_bytes("CDEF", "COL");
+        std::ofstream output(temp_dir / "A_B.cdx", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+    {
+        const auto cdx_bytes = make_synthetic_single_tag_cdx_bytes("B_CDEF", "COL");
+        std::ofstream output(temp_dir / "A.cdx", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_mysql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_mysql_sql should resolve the same-name-across-tables fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("CREATE INDEX `A_B_CDEF_idx` ON `A_B` (`COL`);") != std::string::npos,
+           "export_database_as_mysql_sql should emit the first table's own naturally-derived index name unchanged");
+    expect(result.sql.find("CREATE INDEX `A_B_CDEF_idx` ON `A` (`COL`);") != std::string::npos,
+           "export_database_as_mysql_sql should also emit the identical index name unchanged for the second table -- real MySQL scopes index names per table, not schema-wide");
+    expect(result.sql.find("CREATE INDEX `A_B_CDEF_idx_2`") == std::string::npos,
+           "export_database_as_mysql_sql must not disambiguate a cross-table index name that real MySQL does not actually collide on");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// Unlike PostgreSQL's silent truncation, a real MySQL 8.0 engine directly
+// confirmed during this issue's own development that it *rejects* (error
+// 1059) any identifier over 64 characters outright -- so this exporter
+// must never construct one. A 61-character table name with two tags
+// ("TAG1"/"TAG2") on the same column produces raw candidates that are
+// identical for their first 64 characters (index 64 is where "TAG1"/
+// "TAG2" first differ), exercising the one collision that *can* still
+// occur under MySQL's real per-table scoping: truncation erasing the
+// tag-derived suffix entirely when the table name alone is already at or
+// beyond the limit.
+void test_export_database_as_mysql_sql_disambiguates_indexes_within_identifier_length_limit() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_mysql_sql_identifier_length_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::string long_table_name(61U, 'A');
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
+    const fs::path cdx_path = temp_dir / (long_table_name + ".cdx");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 150U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 167U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", long_table_name, ""}});
+    expect(dbc_create.ok, "MySQL identifier-length test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"x"}});
+    expect(table_create.ok, "MySQL identifier-length test: DBF fixture should be created");
+
+    {
+        const auto cdx_bytes = make_synthetic_two_tag_cdx_bytes("TAG1", "TAG2", "COL");
+        std::ofstream output(cdx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(cdx_bytes.data()), static_cast<std::streamsize>(cdx_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::export_database_as_mysql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_mysql_sql should resolve the identifier-length fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    // First candidate truncates to exactly 64 characters: the 61 'A's
+    // plus "_TA" (the two characters after the underscore "TAG1"/"TAG2"
+    // still share before diverging at what would be index 64).
+    const std::string first_truncated = long_table_name + "_TA";
+    expect(first_truncated.size() == 64U,
+           "test fixture sanity: the first truncated candidate should be exactly 64 characters");
+    expect(result.sql.find("CREATE INDEX `" + first_truncated + "`") != std::string::npos,
+           "export_database_as_mysql_sql should truncate the first candidate to MySQL's 64-character identifier limit");
+
+    const std::string second_suffixed = long_table_name + "__2";
+    expect(second_suffixed.size() == 64U,
+           "test fixture sanity: the disambiguated second candidate should still be exactly 64 characters");
+    expect(result.sql.find("CREATE INDEX `" + second_suffixed + "`") != std::string::npos,
+           "export_database_as_mysql_sql should reserve room for the disambiguating suffix within the 64-character limit");
+    expect(result.sql.find("CREATE INDEX `" + first_truncated + "`", result.sql.find("CREATE INDEX `" + first_truncated + "`") + 1U)
+               == std::string::npos,
+           "export_database_as_mysql_sql must never emit the exact same truncated index name twice on the same table");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// A blank VFP date/datetime field decodes to an empty display_value (not
+// is_null). Directly confirmed against a real local MySQL 8.0 engine
+// (whose default sql_mode includes STRICT_TRANS_TABLES) that
+// `INSERT INTO ... VALUES ('')` into a DATE or DATETIME column fails
+// outright with error 1292 ("Incorrect date/datetime value: ''") -- a
+// third, distinct failure mode from SQL Server's own silent
+// 1900-01-01 data corruption and Oracle's own invalid-DATE-''-syntax
+// rejection, but the same NULL-instead-of-empty-string fix applies here
+// too. A non-blank date/datetime must still emit as a normal quoted ISO
+// string, unaffected by this fix.
+void test_export_database_as_mysql_sql_preserves_blank_dates_as_null() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_mysql_sql_blank_date_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "events.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "events", ""}});
+    expect(dbc_create.ok, "MySQL blank-date test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "OCCURRED", .type = 'D', .offset = 1U, .length = 8U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{"20260115"}, {""}});
+    expect(table_create.ok, "MySQL blank-date test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_mysql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_mysql_sql should resolve the blank-date fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("VALUES ('2026-01-15')") != std::string::npos,
+           "export_database_as_mysql_sql should emit a non-blank date as a normal quoted ISO string literal");
+    expect(result.sql.find("VALUES (NULL)") != std::string::npos,
+           "export_database_as_mysql_sql should emit NULL for a blank date rather than an empty string literal");
+    expect(result.sql.find("VALUES ('')") == std::string::npos,
+           "export_database_as_mysql_sql must never emit an empty string literal for a DATE column -- real MySQL's own strict sql_mode rejects it outright (error 1292)");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// A crafted or corrupt DBF header does not have to keep length/decimal_count
+// within MySQL's own valid ranges the way a table genuinely written by
+// this codebase's own writer always does. Directly confirmed against a
+// real local MySQL 8.0 engine: DECIMAL(65, 0) succeeds while DECIMAL(66, 0)
+// fails ("Too-big precision 66... Maximum is 65"), DECIMAL(65, 30)
+// succeeds while DECIMAL(10, 31) fails ("Too big scale 31... Maximum is
+// 30"), and DECIMAL(10, 20) -- scale exceeding precision -- fails
+// outright ("M must be >= D"), a genuine difference from Oracle's own
+// independent scale range and matching SQL Server's own clamp-scale-to-
+// precision requirement instead. Exercises both clamp boundaries in one
+// table: a (255, 255) descriptor proves the 65/30 ceilings, and a
+// (10, 255) descriptor -- whose precision is well under 65 -- proves
+// scale is additionally clamped to that (already-clamped) precision, not
+// just to the flat 30-digit ceiling.
+void test_export_database_as_mysql_sql_clamps_decimal_precision_and_scale() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_mysql_sql_decimal_clamp_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "amounts.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "amounts", ""}});
+    expect(dbc_create.ok, "MySQL DECIMAL-clamp test: DBC fixture should be created");
+
+    // A genuinely valid DBF numeric field can never carry length/decimal_count
+    // this large (VFP's own N field caps at 20 digits) -- construct the
+    // descriptors directly (bypassing create_dbf_table_file's own writer,
+    // which would refuse this) to model a crafted/corrupt header.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "AMOUNT", .type = 'N', .offset = 1U, .length = 255U, .decimal_count = 255U},
+        {.name = "SMALLAMT", .type = 'N', .offset = 2U, .length = 10U, .decimal_count = 255U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"0", "0"}});
+    expect(table_create.ok, "MySQL DECIMAL-clamp test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_mysql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_mysql_sql should resolve the DECIMAL-clamp fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("`AMOUNT` DECIMAL(65, 30)") != std::string::npos,
+           "export_database_as_mysql_sql should clamp precision to MySQL's 65-digit maximum and scale to its own 30-digit maximum");
+    expect(result.sql.find("`SMALLAMT` DECIMAL(10, 10)") != std::string::npos,
+           "export_database_as_mysql_sql should additionally clamp scale to a smaller precision when that precision is itself under 30, since real MySQL rejects a DECIMAL whose scale exceeds its own precision");
+    expect(result.sql.find("DECIMAL(255") == std::string::npos,
+           "export_database_as_mysql_sql must never emit a DECIMAL precision real MySQL rejects");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5554: unlike every other dialect this file emits -- all of which
+// reuse the shared sql_quote_string_literal()'s plain doubled-single-
+// quote escaping -- MySQL's own default sql_mode (no
+// NO_BACKSLASH_ESCAPES) treats a backslash as a live escape character
+// inside a string literal. Directly confirmed against a real local MySQL
+// 8.0 engine: inserting the literal `'C:\temp''s file'` (plain ANSI-style
+// doubled-quote escaping) stores only 13 characters, not 14 -- the `\t`
+// was silently interpreted as a TAB character rather than a literal
+// backslash followed by `t`. Doubling the backslash too (`'C:\\temp''s
+// file'`) stores the correct, literal 14-character string. A Windows
+// path inside a VFP character or memo field is a genuinely common case
+// for this codebase, not a contrived one.
+void test_export_database_as_mysql_sql_escapes_backslash_in_string_literals() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_mysql_sql_backslash_escape_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "paths.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "paths", ""}});
+    expect(dbc_create.ok, "MySQL backslash-escape test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "WINPATH", .type = 'C', .offset = 1U, .length = 30U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{"C:\\temp's file"}});
+    expect(table_create.ok, "MySQL backslash-escape test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_mysql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_mysql_sql should resolve the backslash-escape fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("'C:\\\\temp''s file'") != std::string::npos,
+           "export_database_as_mysql_sql should double both the embedded backslash and the embedded single quote, since real MySQL's own default sql_mode treats a lone backslash as a live escape character inside a string literal");
+    expect(result.sql.find("'C:\\temp''s file'") == std::string::npos,
+           "export_database_as_mysql_sql must never emit a single un-doubled backslash inside a string literal -- real MySQL would silently reinterpret it as an escape sequence rather than store it literally");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// A genuinely valid VFP field name can never contain a literal backtick --
+// construct the descriptor directly to model a crafted/corrupt source,
+// matching this file's own established practice (see
+// test_export_database_as_oracle_sql_strips_embedded_quote_from_identifiers()
+// above) for exercising fail-closed/lossy-but-safe handling of input a
+// real writer never produces. Unlike Oracle's own lossy quote-stripping,
+// MySQL provides a real escape mechanism for an embedded backtick
+// (doubling it, like every dialect this file emits except Oracle) --
+// directly confirmed against a real local MySQL 8.0 engine that
+// `` `weird``name` `` round-trips losslessly through CREATE TABLE.
+void test_export_database_as_mysql_sql_escapes_embedded_backtick_in_identifiers() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_mysql_sql_embedded_backtick_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "widgets.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "widgets", ""}});
+    expect(dbc_create.ok, "MySQL embedded-backtick test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "weird`name", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"x"}});
+    expect(table_create.ok, "MySQL embedded-backtick test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_mysql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_mysql_sql should resolve the embedded-backtick fixture: " + result.error);
+    if (!result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    expect(result.sql.find("`weird``name`") != std::string::npos,
+           "export_database_as_mysql_sql should escape an embedded backtick by doubling it, since real MySQL provides a real (lossless) escape mechanism for one, unlike Oracle's own embedded double quote");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5582 PR review (chatgpt-codex-connector, P2): a DBC catalog's own
+// OBJECTNAME column permits a table name longer than MySQL's real
+// 64-character identifier limit -- directly confirmed against a real
+// local MySQL 8.0 engine that a 65-character identifier fails outright
+// with error 1059. Without a check, export_database_as_mysql_sql() would
+// return ok=true for a script whose first CREATE TABLE a real MySQL
+// engine rejects. A 65-character table name (one character past the
+// limit) must fail the whole export closed rather than emit an unusable
+// script.
+void test_export_database_as_mysql_sql_fails_closed_on_overlong_table_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_mysql_sql_overlong_table_name_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::string long_table_name(65U, 'A');
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / (long_table_name + ".dbf");
+    // OBJECTNAME must be wide enough to hold the 65-character long_table_name
+    // itself -- a real VFP table name can never be this long, but the DBC
+    // catalog's own OBJECTNAME field is a plain sizable Character column a
+    // crafted or foreign-tool-written catalog is not bound to keep short.
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 100U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 117U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", long_table_name, ""}});
+    expect(dbc_create.ok, "MySQL overlong-table-name test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "COL", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"x"}});
+    expect(table_create.ok, "MySQL overlong-table-name test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_mysql_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(!result.ok,
+           "export_database_as_mysql_sql should fail closed when a table name exceeds MySQL's 64-character identifier limit, rather than emit a script real MySQL rejects");
+    expect(result.sql.empty(),
+           "export_database_as_mysql_sql should not return a partial SQL script alongside a failure");
+    expect(result.error.find(long_table_name) != std::string::npos,
+           "export_database_as_mysql_sql's identifier-too-long error should name the offending identifier: " + result.error);
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_access_sql_maps_currency_datetime_and_dates() {
     // #5475: export_database_as_access_sql() shares export_database_as_sql()'s
     // catalog/table-walking logic but swaps in the Access/Jet SQL dialect --
@@ -6922,6 +7470,15 @@ int main() {
     test_export_database_as_oracle_sql_declares_character_columns_with_char_semantics();
     test_export_database_as_oracle_sql_writes_memo_content_as_clob_literals();
     test_export_database_as_oracle_sql_fails_closed_on_colliding_identifiers();
+    test_export_database_as_mysql_sql_maps_types_and_creates_indexes();
+    test_export_database_as_mysql_sql_omits_indexes_without_cdx();
+    test_export_database_as_mysql_sql_allows_identical_index_name_across_tables();
+    test_export_database_as_mysql_sql_disambiguates_indexes_within_identifier_length_limit();
+    test_export_database_as_mysql_sql_preserves_blank_dates_as_null();
+    test_export_database_as_mysql_sql_clamps_decimal_precision_and_scale();
+    test_export_database_as_mysql_sql_escapes_backslash_in_string_literals();
+    test_export_database_as_mysql_sql_escapes_embedded_backtick_in_identifiers();
+    test_export_database_as_mysql_sql_fails_closed_on_overlong_table_name();
     test_export_database_as_sqlite_sql_disambiguates_indexes_across_tables();
     test_export_database_as_access_sql_maps_currency_datetime_and_dates();
     test_export_database_as_access_sql_escapes_bracket_in_identifier();

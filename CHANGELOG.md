@@ -1,3 +1,95 @@
+- 2026-09-12: PR review (chatgpt-codex-connector) on the `EXPORT DATABASE
+  ... TYPE MYSQL` PR (#5582) surfaced one real gap, fixed in the same PR: a
+  table name (sourced from the DBC catalog's own `OBJECTNAME` column, a
+  plain Character field a crafted or foreign-tool-written catalog is not
+  bound to keep under 64 characters) or column name exceeding MySQL's own
+  64-character identifier limit was quoted and emitted unchanged, letting
+  `export_database_as_mysql_sql()` return `ok = true` for a script whose
+  very first `CREATE TABLE` a real MySQL engine rejects outright with
+  error 1059 -- the same class of gap this exporter's own `CREATE INDEX`
+  generation already guarded against via `disambiguate_index_name()`, just
+  never applied to a table's own pre-existing name. `write_mysql_tables_and_data()`
+  now fails the whole export closed with a new localized
+  `Vfp.AssetInspector.Validation.MysqlIdentifierTooLong` diagnostic naming
+  the identifier, rather than silently emit an unusable script (a column-
+  name check is included too as defense-in-depth, though currently
+  unreachable through this codebase's own classic-DBF field descriptor,
+  which structurally caps a name at 10 bytes). One new regression test
+  added (a 65-character table name via a widened DBC `OBJECTNAME` field).
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-011` updated, which also now notes this is a
+  genuinely shared gap across the whole `EXPORT DATABASE ... TYPE
+  <VENDOR>` family (PostgreSQL/SQLite/SQL Server/Oracle each already
+  guard their own generated index names the same way but never their
+  own table's pre-existing name) -- a follow-up issue should track
+  applying the identical fix to those four sibling dialects.
+
+- 2026-09-12: Progress on #5554 (parent #137): `EXPORT DATABASE ... TYPE
+  MYSQL` (`export_database_as_mysql_sql()`, `src/vfp/asset_inspector.cpp`)
+  is the fifth and final vendor-dialect slice of #141's real-target-engine
+  `EXPORT DATABASE` family, following #5537's PostgreSQL, #5558's SQLite,
+  #5561's SQL Server, and #5564's Oracle precedent. Close enough in shape
+  to SQL Server's own precedent to share its structure (per-table
+  index-name scoping, `1`/`0` boolean literals, blank-date-to-NULL,
+  plain-ISO-string date/datetime literals) but its own dedicated code path:
+  backtick identifiers with an embedded backtick escaped by doubling (like
+  every dialect except Oracle's own lossy stripping), `DECIMAL(19, 4)` for
+  VFP currency, `INT`, `DOUBLE`, `TINYINT(1)` for logical (directly
+  confirmed MySQL's own `BOOLEAN` keyword is merely a synonym for
+  `TINYINT(1)`), `DATE`/`DATETIME` accepting a plain ISO string with no
+  special literal wrapper (unlike Oracle), `VARCHAR(length)`, and
+  `LONGTEXT` (not the 64 KiB-capped `TEXT`) for memo/general/picture
+  fields. `DECIMAL` precision is clamped to 65 and scale to 30 *and* to
+  that clamped precision -- like SQL Server, and a genuine difference from
+  Oracle's own independent scale range (directly confirmed `DECIMAL(10,
+  20)` fails with "M must be >= D"). A blank date/datetime resolves to
+  `NULL` -- directly confirmed MySQL 8.0's own default `sql_mode`
+  (`STRICT_TRANS_TABLES`) rejects an empty-string insert with error 1292, a
+  third distinct failure mode from SQL Server's own silent-1900-01-01
+  invention and Oracle's own invalid-syntax rejection.
+
+  The standout new finding this slice surfaced (directly confirmed against
+  a real local MySQL 8.0 engine before implementing the fix): unlike every
+  other dialect in this family, which share one doubled-single-quote
+  string-literal quoting function, MySQL's own default `sql_mode` (no
+  `NO_BACKSLASH_ESCAPES`) treats a lone backslash as a live escape
+  character inside a string literal. Plain ANSI-style doubled-quote-only
+  escaping of a Windows path (a genuinely common case for this codebase)
+  silently misinterprets `\t` as an actual TAB character rather than a
+  literal backslash followed by `t` -- confirmed empirically: inserting
+  `'C:\temp''s file'` stored only 13 characters, not 14. A new
+  `mysql_quote_string_literal()` doubles both the embedded single quote and
+  the embedded backslash, storing the correct literal text. No
+  identifier-collision tracking is needed (unlike Oracle's own lossy quote-
+  stripping), since an embedded backtick is losslessly escaped. Unlike
+  Oracle's own tight 4000-byte SQL text-literal ceiling, a plain (correctly
+  escaped) string literal is directly confirmed safe for a `LONGTEXT` value
+  with no special chunking, and an empty string literal correctly stores as
+  an empty (non-NULL) string, unlike Oracle's own silently-NULLed CLOB.
+  `CREATE INDEX` generation is scoped to MySQL's own 64-*character*
+  identifier limit (directly confirmed the real engine *rejects*, error
+  1059, rather than silently truncates, and confirmed character-counted
+  even for 2-byte UTF-8 content), with per-table disambiguation scoping
+  matching SQL Server's own precedent (directly confirmed two different
+  tables may carry an identically-named index with no error).
+
+  Eight new regression tests added, including a dedicated backslash-
+  escaping test (the standout new finding) and a dedicated embedded-
+  backtick-identifier test (the deliberate inverse of Oracle's own lossy
+  quote-stripping). Beyond the committed synthetic-fixture suite, this
+  issue's own development directly verified real-engine acceptance against
+  a real local MySQL 8.0 engine (official `mysql:8.0` Docker image): this
+  exporter's own actual generated output for a representative two-table
+  fixture -- including a memo containing a real Windows path with both a
+  backslash and an embedded single quote, and a blank date/memo on a
+  second row -- loaded with zero errors, a cross-table `JOIN` returned the
+  correct joined row, and the backslash-containing memo round-tripped to
+  its exact original 24-byte content.
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-011` added. This is the fifth and final slice within
+  #5554's own scope (SQL Server, Oracle, MySQL, SQLite) -- #5554 itself may
+  now be closed once this PR merges.
+
 - 2026-09-11: PR review (chatgpt-codex-connector) on the `EXPORT DATABASE
   ... TYPE ORACLE` PR (#5564) surfaced three real gaps, all fixed in the
   same PR, each verified against a real local Oracle 23ai engine before

@@ -8041,10 +8041,11 @@
                 const bool is_sqlite = (export_type == "sqlite");
                 const bool is_sqlserver = (export_type == "sqlserver");
                 const bool is_oracle = (export_type == "oracle");
+                const bool is_mysql = (export_type == "mysql");
                 if (!is_quoted_path_operand(source_operand) ||
                     !is_quoted_path_operand(destination_operand) ||
                     source_raw.empty() || destination_raw.empty() ||
-                    (!is_json && !is_sql && !is_access && !is_postgresql && !is_sqlite && !is_sqlserver && !is_oracle))
+                    (!is_json && !is_sql && !is_access && !is_postgresql && !is_sqlite && !is_sqlserver && !is_oracle && !is_mysql))
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonSyntax");
@@ -8068,7 +8069,7 @@
                 destination_path = destination_path.lexically_normal();
                 if (destination_path.extension().empty())
                 {
-                    destination_path += (is_sql || is_access || is_postgresql || is_sqlite || is_sqlserver || is_oracle) ? ".sql" : ".json";
+                    destination_path += (is_sql || is_access || is_postgresql || is_sqlite || is_sqlserver || is_oracle || is_mysql) ? ".sql" : ".json";
                 }
 
                 // A destination that resolves to the same file as the
@@ -8192,6 +8193,21 @@
                     }
                     output_text = export_result.sql;
                 }
+                else if (is_mysql)
+                {
+                    const auto export_result = vfp::export_database_as_mysql_sql(
+                        copperfin::platform::path_to_utf8_string(source_path));
+                    if (!export_result.ok)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.ExportDatabaseMysqlSqlFailed",
+                            {{"errorMessage", export_result.error}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    output_text = export_result.sql;
+                }
                 else
                 {
                     const auto export_result = vfp::export_database_as_sql(
@@ -8245,6 +8261,12 @@
                     open_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseOracleSqlOpenOutputFailed";
                     write_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseOracleSqlWriteOutputFailed";
                     event_category = "runtime.export_database_oracle_sql";
+                }
+                else if (is_mysql)
+                {
+                    open_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseMysqlSqlOpenOutputFailed";
+                    write_failed_key = "Runtime.Prg.Dispatch.Error.ExportDatabaseMysqlSqlWriteOutputFailed";
+                    event_category = "runtime.export_database_mysql_sql";
                 }
                 else if (is_sql)
                 {
