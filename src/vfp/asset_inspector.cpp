@@ -5267,10 +5267,55 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     const fs::path dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
     const fs::path dbc_dir = dbc_fs_path.parent_path();
 
-    std::error_code exists_error;
-    if (fs::exists(dbc_fs_path, exists_error)) {
+    // #5678: fs::exists() only matches the exact-case pathname, so a
+    // case-folded alias already sitting in the destination directory
+    // (e.g. a pre-existing "CUSTOMERS.DBF" when this plan names table
+    // "customers") is invisible to it on a case-sensitive filesystem.
+    // VFP/Windows both treat table identity case-insensitively, so
+    // publishing "customers.dbf" alongside an existing "CUSTOMERS.DBF"
+    // would create two files representing the same table identity --
+    // not portable to Windows, and feeding the read-side ambiguity
+    // #5637 already tracks (that issue fixes resolving pre-existing
+    // ambiguity; it does not prevent an import from creating it). Build
+    // a case-insensitive index of the destination directory's own
+    // existing entries once, up front, and check every planned
+    // destination -- the DBC itself, each table's own .dbf, and each
+    // table's own .fpt memo sidecar -- against it in addition to the
+    // exact-case fs::exists() check.
+    const fs::path dbc_dir_for_scan = dbc_dir.empty() ? fs::path(".") : dbc_dir;
+    std::map<std::string, fs::path> existing_entries_by_casefolded_name;
+    {
+        std::error_code scan_error;
+        if (fs::exists(dbc_dir_for_scan, scan_error) && !scan_error) {
+            for (const auto& entry :
+                 fs::directory_iterator(dbc_dir_for_scan, scan_error)) {
+                if (scan_error) {
+                    break;
+                }
+                existing_entries_by_casefolded_name.emplace(
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(entry.path().filename())),
+                    entry.path());
+            }
+        }
+    }
+    const auto find_colliding_destination =
+        [&](const fs::path& candidate) -> std::optional<fs::path> {
+        std::error_code candidate_exists_error;
+        if (fs::exists(candidate, candidate_exists_error)) {
+            return candidate;
+        }
+        const auto found = existing_entries_by_casefolded_name.find(
+            lowercase_copy(copperfin::platform::path_to_utf8_string(candidate.filename())));
+        if (found != existing_entries_by_casefolded_name.end()) {
+            return found->second;
+        }
+        return std::nullopt;
+    };
+
+    if (const auto colliding = find_colliding_destination(dbc_fs_path)) {
         return failure(asset_inspector_text(
-            "Vfp.AssetInspector.Error.DatabaseImportDestinationExists", {{"path", dbc_path}}));
+            "Vfp.AssetInspector.Error.DatabaseImportDestinationExists",
+            {{"path", copperfin::platform::path_to_utf8_string(*colliding)}}));
     }
 
     // Resolve and pre-check every table's destination path up front -- one
@@ -5295,10 +5340,10 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         }
         const fs::path table_path = dbc_dir /
             copperfin::platform::path_from_utf8_string(table_plan.name + ".dbf");
-        if (fs::exists(table_path, exists_error)) {
+        if (const auto colliding = find_colliding_destination(table_path)) {
             return failure(asset_inspector_text(
                 "Vfp.AssetInspector.Error.DatabaseImportDestinationExists",
-                {{"path", copperfin::platform::path_to_utf8_string(table_path)}}));
+                {{"path", copperfin::platform::path_to_utf8_string(*colliding)}}));
         }
         const bool table_has_memo_field = std::any_of(
             table_plan.fields.begin(), table_plan.fields.end(),
@@ -5308,10 +5353,10 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         if (table_has_memo_field) {
             fs::path memo_path = table_path;
             memo_path.replace_extension(".fpt");
-            if (fs::exists(memo_path, exists_error)) {
+            if (const auto colliding = find_colliding_destination(memo_path)) {
                 return failure(asset_inspector_text(
                     "Vfp.AssetInspector.Error.DatabaseImportDestinationExists",
-                    {{"path", copperfin::platform::path_to_utf8_string(memo_path)}}));
+                    {{"path", copperfin::platform::path_to_utf8_string(*colliding)}}));
             }
         }
         table_destinations.push_back({&table_plan, table_path});

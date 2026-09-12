@@ -784,3 +784,119 @@ void test_export_database_as_sql_round_trips_through_import() {
 
     fs::remove_all(temp_dir, ignored);
 }
+
+// #5678 (found by an automated Codex code-review pass): the shared JSON/SQL
+// database import materializer checked destination existence with exact
+// std::filesystem::exists() paths only. On a case-sensitive filesystem, an
+// existing case-folded alias (e.g. a pre-existing "ORDERS.DBF" when the
+// plan names table "Orders") therefore did not count as an existing
+// destination, letting an import publish a second physical file
+// representing the same VFP/Windows table identity -- not portable to
+// Windows, and violating #5472's own fail-closed overwrite-consent
+// contract. Covers all three collision points the issue itself names: the
+// destination DBC, a table's own .dbf, and a table's own .fpt memo
+// sidecar. Verified to reliably fail against the pre-fix code (each
+// scenario below previously returned ok=true and created a second,
+// case-differing file) and reliably pass against the fix.
+void test_materialize_database_json_import_plan_rejects_case_folded_collisions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_database_json_case_collision_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::string document = R"JSON({
+  "schema_version": 1,
+  "database": {"path": "/source/Orders.dbc", "name": "Orders"},
+  "catalog": [{"record_index": 1}],
+  "tables": {
+    "Orders": {
+      "fields": [{"name": "ORDERID", "type": "N", "length": 8, "decimals": 0}],
+      "records": [{"ORDERID": 7}]
+    }
+  }
+})JSON";
+    const auto plan_result = copperfin::vfp::build_database_json_import_plan(document);
+    expect(plan_result.ok, "case-collision fixture plan should build successfully");
+    if (!plan_result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    // Case 1: a differently-cased DBC destination already exists.
+    {
+        const fs::path dbc_case_dir = temp_dir / "dbc_case";
+        fs::create_directories(dbc_case_dir, ignored);
+        const fs::path existing_upper_dbc = dbc_case_dir / "CONTAINER.DBC";
+        {
+            std::ofstream output(existing_upper_dbc, std::ios::binary);
+            output << "pre-existing";
+        }
+        const fs::path requested_dbc_path = dbc_case_dir / "container.dbc";
+        const auto result = copperfin::vfp::materialize_database_json_import_plan(
+            plan_result.plan, requested_dbc_path.string());
+        expect(!result.ok,
+               "materializing must fail closed when a case-folded DBC alias already exists");
+        expect(!fs::exists(requested_dbc_path),
+               "a case-folded DBC collision must not create the exact-case destination either");
+        expect(!fs::exists(dbc_case_dir / "Orders.dbf"),
+               "a case-folded DBC collision must not materialize any table either");
+    }
+
+    // Case 2: a differently-cased table .dbf destination already exists.
+    {
+        const fs::path table_case_dir = temp_dir / "table_case";
+        fs::create_directories(table_case_dir, ignored);
+        const auto pre_existing_table = copperfin::vfp::create_dbf_table_file(
+            (table_case_dir / "ORDERS.DBF").string(),
+            {{.name = "X", .type = 'C', .length = 1U}},
+            {{"z"}});
+        expect(pre_existing_table.ok, "table-case fixture should create the pre-existing table");
+        const fs::path requested_dbc_path = table_case_dir / "fresh.dbc";
+        const auto result = copperfin::vfp::materialize_database_json_import_plan(
+            plan_result.plan, requested_dbc_path.string());
+        expect(!result.ok,
+               "materializing must fail closed when a case-folded table .dbf alias already exists");
+        expect(!fs::exists(requested_dbc_path),
+               "a case-folded table collision must not leave a partially materialized DBC behind");
+        expect(!fs::exists(table_case_dir / "Orders.dbf"),
+               "a case-folded table collision must not additionally create the exact-case .dbf");
+    }
+
+    // Case 3: a differently-cased memo (.fpt) sidecar destination already
+    // exists for a table whose plan declares a memo field.
+    {
+        const fs::path memo_case_dir = temp_dir / "memo_case";
+        fs::create_directories(memo_case_dir, ignored);
+        {
+            std::ofstream output(memo_case_dir / "ORDERS.FPT", std::ios::binary);
+            output << "pre-existing memo";
+        }
+        const std::string memo_document = R"JSON({
+  "schema_version": 1,
+  "database": {"path": "/source/Orders.dbc", "name": "Orders"},
+  "catalog": [{"record_index": 1}],
+  "tables": {
+    "Orders": {
+      "fields": [{"name": "NOTES", "type": "M", "length": 4, "decimals": 0}],
+      "records": [{"NOTES": "hello"}]
+    }
+  }
+})JSON";
+        const auto memo_plan_result = copperfin::vfp::build_database_json_import_plan(memo_document);
+        expect(memo_plan_result.ok, "memo case-collision fixture plan should build successfully");
+        if (memo_plan_result.ok) {
+            const fs::path requested_dbc_path = memo_case_dir / "fresh.dbc";
+            const auto result = copperfin::vfp::materialize_database_json_import_plan(
+                memo_plan_result.plan, requested_dbc_path.string());
+            expect(!result.ok,
+                   "materializing must fail closed when a case-folded memo .fpt alias already exists");
+            expect(!fs::exists(requested_dbc_path),
+                   "a case-folded memo collision must not leave a partially materialized DBC behind");
+            expect(!fs::exists(memo_case_dir / "Orders.dbf"),
+                   "a case-folded memo collision must not materialize the table's own .dbf either");
+        }
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
