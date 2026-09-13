@@ -1223,11 +1223,22 @@ AssetInspectionResult inspect_asset(
 //     0x02 (N): 8-byte IEEE 754 double LE
 //     0x03 (L): 1 byte
 //     0x04 (D): 8 ASCII bytes YYYYMMDD
-//     0x05 (T): 8 bytes stored verbatim as hex for now
+//     0x05 (T): 8 bytes -- two little-endian 32-bit components (Julian day
+//                count, milliseconds since midnight), decoded the same way
+//                decode_value()'s own 'T' case in dbf_table.cpp decodes a
+//                table-level DateTime field; a (0, 0) pair is VFP's own
+//                blank/null DateTime storage and decodes to an empty value
 //     0x06 (I): 4-byte LE int32
 //
-// This format is reverse-engineered from community analysis of real .DBC files.
-// Unknown type codes are preserved as hex strings so nothing is silently dropped.
+// This format is reverse-engineered from community analysis of real .DBC
+// files, so only these six types are documented and supported. #5798: an
+// unrecognized type code's own value length is unknown by construction (no
+// separate length field exists to fall back on), so decode_dbc_properties_
+// blob() fails the whole decode closed on one rather than guess at a value
+// boundary and desynchronize from the real property stream -- a previous
+// "preserve as hex and advance one byte" attempt did exactly that, silently
+// fabricating bogus properties or dropping real ones past the first
+// unrecognized entry.
 
 namespace {
 
@@ -1243,22 +1254,28 @@ char vfp_type_for_code(std::uint8_t code) noexcept {
     }
 }
 
-std::string hex_bytes(const std::vector<std::uint8_t>& blob, std::size_t offset, std::size_t length) {
-    static constexpr std::array<char, 16U> kHex{
-        '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-    std::string out;
-    out.reserve(2U * length);
-    for (std::size_t i = 0U; i < length && (offset + i) < blob.size(); ++i) {
-        const auto b = static_cast<std::uint8_t>(blob[offset + i]);
-        out.push_back(kHex[(b >> 4U) & 0x0FU]);
-        out.push_back(kHex[b & 0x0FU]);
-    }
-    return out;
-}
+// #5797/#5798: decode_dbc_properties_blob() used to return a bare
+// std::vector<DbcProperty> with no success/failure signal at all -- every
+// bounds failure (`goto done`/`break`) silently returned whatever prefix had
+// already been decoded, and load_database_catalog_snapshot() reported that
+// prefix as a fully successful snapshot/export. A structured result lets a
+// truncated or malformed PROPERTIES memo fail the whole catalog load closed
+// instead of silently dropping metadata.
+struct DbcPropertiesDecodeResult {
+    bool ok = false;
+    std::vector<DbcProperty> properties;
+    std::string error;
+};
 
-std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8_t>& blob) {
+DbcPropertiesDecodeResult decode_dbc_properties_blob(const std::vector<std::uint8_t>& blob) {
     std::vector<DbcProperty> props;
     std::size_t pos = 0U;
+
+    const auto fail = [](const char* key, std::size_t offset) {
+        return DbcPropertiesDecodeResult{
+            .ok = false, .properties = {},
+            .error = asset_inspector_text(key, {{"offset", std::to_string(offset)}})};
+    };
 
     while (pos < blob.size()) {
         const auto type_code = static_cast<std::uint8_t>(blob[pos]);
@@ -1272,7 +1289,7 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
 
         // Need type byte + 2-byte name length
         if (pos + 3U > blob.size()) {
-            break;
+            return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
         }
 
         const auto name_len = static_cast<std::uint16_t>(
@@ -1281,7 +1298,7 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
         pos += 3U;
 
         if (name_len == 0U || pos + name_len > blob.size()) {
-            break;
+            return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
         }
 
         std::string name(reinterpret_cast<const char*>(blob.data() + pos), name_len);
@@ -1293,18 +1310,24 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
 
         switch (type_code) {
             case 0x01U: {  // Character — 2-byte LE length prefix
-                if (pos + 2U > blob.size()) { goto done; }
+                if (pos + 2U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 const auto val_len = static_cast<std::uint16_t>(
                     static_cast<std::uint16_t>(blob[pos]) |
                     (static_cast<std::uint16_t>(blob[pos + 1U]) << 8U));
                 pos += 2U;
-                if (pos + val_len > blob.size()) { goto done; }
+                if (pos + val_len > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 prop.value = std::string(reinterpret_cast<const char*>(blob.data() + pos), val_len);
                 pos += val_len;
                 break;
             }
             case 0x02U: {  // Numeric — 8-byte IEEE 754 double LE
-                if (pos + 8U > blob.size()) { goto done; }
+                if (pos + 8U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 double d = 0.0;
                 std::memcpy(&d, blob.data() + pos, 8U);
                 pos += 8U;
@@ -1316,13 +1339,17 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
                 break;
             }
             case 0x03U: {  // Logical — 1 byte
-                if (pos + 1U > blob.size()) { goto done; }
+                if (pos + 1U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 prop.value = (blob[pos] != 0U) ? "true" : "false";
                 ++pos;
                 break;
             }
             case 0x04U: {  // Date — 8 ASCII bytes YYYYMMDD
-                if (pos + 8U > blob.size()) { goto done; }
+                if (pos + 8U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 const std::string raw(reinterpret_cast<const char*>(blob.data() + pos), 8U);
                 pos += 8U;
                 // Format as YYYY-MM-DD if it looks like digits
@@ -1336,14 +1363,41 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
                 }
                 break;
             }
-            case 0x05U: {  // DateTime — 8 bytes, emit as hex pending full decode
-                if (pos + 8U > blob.size()) { goto done; }
-                prop.value = hex_bytes(blob, pos, 8U);
+            case 0x05U: {
+                // #5796: previously emitted as hex "pending full decode".
+                // Decoded the same way decode_value()'s own 'T' case in
+                // dbf_table.cpp decodes a table-level DateTime field --
+                // two little-endian 32-bit components (Julian day count,
+                // milliseconds since midnight) -- reusing that exact
+                // "julian:<N> millis:<M>" text representation for
+                // consistency with the already-established table-level
+                // DateTime convention, rather than inventing a second one.
+                // A (0, 0) pair is VFP's own blank/null DateTime storage
+                // (matching write_field_bytes()'s 'T' case, which writes
+                // exactly this for a null/blank value on the way in) and
+                // decodes to an empty value, mirroring this codebase's
+                // established "blank field displays as empty string"
+                // convention for Date/Numeric fields elsewhere.
+                if (pos + 8U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
+                const std::uint32_t julian_day = read_le_u32(blob, pos);
+                const std::uint32_t millis = read_le_u32(blob, pos + 4U);
                 pos += 8U;
+                if (julian_day == 0U && millis == 0U) {
+                    prop.value.clear();
+                } else {
+                    std::ostringstream stream;
+                    stream.imbue(std::locale::classic());
+                    stream << "julian:" << julian_day << " millis:" << millis;
+                    prop.value = stream.str();
+                }
                 break;
             }
             case 0x06U: {  // Integer — 4-byte LE int32
-                if (pos + 4U > blob.size()) { goto done; }
+                if (pos + 4U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 std::int32_t val = 0;
                 std::memcpy(&val, blob.data() + pos, 4U);
                 pos += 4U;
@@ -1351,19 +1405,28 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
                 break;
             }
             default: {
-                // Unknown type: store one byte as hex and advance past it so we
-                // do not spin on the same byte forever.
-                prop.value = "<type:0x" + hex_bytes(blob, pos > 0U ? pos - 1U : 0U, 1U) + ">";
-                ++pos;
-                break;
+                // #5798: an unrecognized type code's own value length is,
+                // by definition, unknown -- this format has exactly six
+                // documented types (see this decoder's own header
+                // comment), reverse-engineered from community analysis,
+                // and there is no length field anywhere else to fall back
+                // on. The previous behavior ("store one byte as hex and
+                // advance past it") treated the value's own first byte as
+                // if it were independent trailing data and resumed parsing
+                // one byte later as a brand new property header -- which
+                // desynchronizes from the real property stream and can
+                // fabricate bogus properties, drop real ones, or return a
+                // partial prefix while still reporting success. Failing
+                // closed here is the only safe option without truly
+                // understanding every legal property type.
+                return fail("Vfp.AssetInspector.Error.DbcPropertyTypeUnsupported", pos);
             }
         }
 
         props.push_back(std::move(prop));
     }
 
-done:
-    return props;
+    return {.ok = true, .properties = std::move(props), .error = {}};
 }
 
 // Resolve and collect the raw PROPERTIES bytes for every record in a DBC.
@@ -1711,13 +1774,42 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
         obj.object_name   = raw.object_name;
         obj.parent_name   = raw.parent_name;
 
-        if (raw.properties_block != 0U && has_dct) {
+        // #5830 PR review (chatgpt-codex-connector, P2): a deleted catalog
+        // row is excluded from both table resolution (the loop below skips
+        // `obj.deleted`) and catalog serialization (export_database_as_
+        // json()'s own catalog block does too) -- its own PROPERTIES memo,
+        // however corrupted, is never actually surfaced to anything. #5797's
+        // own fail-closed behavior must not make an otherwise exportable,
+        // live database unusable just because a *deleted* row's stale memo
+        // pointer references truncated or unsupported data; skip decoding
+        // entirely for a deleted row rather than decode-then-discard.
+        if (!raw.deleted && raw.properties_block != 0U && has_dct) {
             const std::vector<std::uint8_t> prop_bytes =
                 read_memo_block_raw(
                     copperfin::platform::path_to_utf8_string(*dct_path),
                     raw.properties_block);
             if (!prop_bytes.empty()) {
-                obj.properties = decode_dbc_properties_blob(prop_bytes);
+                // #5797: a truncated or otherwise malformed PROPERTIES memo
+                // on a *live* row must fail the whole catalog snapshot (and
+                // every exporter that shares it) closed, not silently
+                // return whichever properties happened to decode before the
+                // malformed tail while still reporting success.
+                // `raw.object_name` is a reference into the local raw_rows
+                // vector (not snapshot.catalog), so it stays valid across
+                // the `snapshot = {}` reset below -- see #5817's own fix
+                // earlier in this function for why that distinction
+                // matters here.
+                const DbcPropertiesDecodeResult props_result =
+                    decode_dbc_properties_blob(prop_bytes);
+                if (!props_result.ok) {
+                    snapshot = {};
+                    snapshot.dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
+                    snapshot.error = asset_inspector_text(
+                        "Vfp.AssetInspector.Error.DbcPropertiesDecodeFailed",
+                        {{"table", raw.object_name}, {"error", props_result.error}});
+                    return snapshot;
+                }
+                obj.properties = props_result.properties;
             }
         }
         // #5544 review (Codex, P2): load_database_catalog_snapshot() is
