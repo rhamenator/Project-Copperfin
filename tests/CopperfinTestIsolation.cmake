@@ -1269,6 +1269,17 @@ function(copperfin_configure_native_test_isolation)
         PLATFORM portable
         AUDIT complete
     )
+
+    copperfin_set_test_isolation(test_staged_import_publish
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
     foreach(copperfin_dbf_header_robustness_target IN ITEMS
             test_dbf_header_robustness
             test_dbf_header_robustness_sanitized)

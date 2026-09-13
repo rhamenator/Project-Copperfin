@@ -1,3 +1,55 @@
+- 2026-09-13: Fixed #5679 and #5680 (found by an automated Codex code-review
+  pass against `materialize_database_json_import_plan()`, the shared
+  `IMPORT DATABASE ... TYPE JSON`/`TYPE SQL` materializer): the commit loop
+  published each staged file via plain path-based `fs::create_hard_link()`
+  and rolled back via unconditional `fs::remove()`, neither of which
+  verified that the name it acted on still referred to the exact object
+  staged/published earlier. #5680: a staged file replaced between its own
+  creation and the commit loop reaching it could have its substituted
+  content published under the original, verified name. #5679: a final
+  destination replaced by an unrelated concurrent actor after this
+  transaction published it there could be deleted by rollback instead of
+  preserved.
+
+  Added a new module (`include/copperfin/vfp/staged_import_publish.h`,
+  `src/vfp/staged_import_publish.cpp`) that opens and identity-pins every
+  staged file (table, memo sidecar, catalog) immediately after it is
+  written, held from staging through publication and any later rollback.
+  On Windows the open handle denies other processes write/delete/rename
+  sharing for its whole lifetime, preventing the race outright rather than
+  merely detecting it; rollback deletes only through a handle-based
+  `FILE_DISPOSITION_INFO` set, after re-confirming the destination's
+  identity still matches. On POSIX (no equivalent share-deny exists, and a
+  `/proc/self/fd`/`/dev/fd` + `linkat(AT_SYMLINK_FOLLOW)` resurrection
+  attempt was tried and empirically confirmed not to survive an inode's
+  link count reaching zero), publication instead re-verifies the staged
+  file's device/inode identity immediately before linking and fails that
+  entry closed on any mismatch; rollback removal uses the same re-check-
+  then-act pattern. Both POSIX paths hold their original descriptor open
+  for their entire lifetime specifically to block inode-number reuse from
+  fooling a later identity check; a narrow residual race remains between
+  each re-check and its corresponding link()/unlink() syscall, documented
+  as the best available mitigation in standard POSIX without added
+  privilege. A rollback entry that cannot be safely reclaimed now returns
+  a distinct `Vfp.AssetInspector.Error.DatabaseImportCommitFailedUnreclaimedEntry`
+  diagnostic instead of being silently skipped.
+
+  New `test_staged_import_publish` suite verifies both security properties
+  deterministically (no threading needed -- the module's API lets a test
+  swap the underlying file out from under an already-open handle before
+  invoking the call under test), each confirmed via fail-then-pass: the
+  rollback-preservation property against a reverted blind-`unlink()`
+  implementation, and the publish property against its own first-attempt
+  `linkat()`-based implementation, which this same test caught failing
+  before it was replaced with the re-check-based fix. The full existing
+  `test_vfp_assets` materializer suite (round-trips, memo handling,
+  case-folded collisions, path traversal, table-name collisions) continues
+  to pass unchanged.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-004 updated. #5681/#5682's own ignored-cleanup-error
+  gaps in the same function remain open, tracked separately.
+
 - 2026-09-13: While merging `origin/v1-development` into the pending
   #5694 (SQLite decimal precision) branch, found that
   `write_sqlite_tables_and_data()` was implemented and merged

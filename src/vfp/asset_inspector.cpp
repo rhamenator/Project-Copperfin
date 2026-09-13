@@ -10,6 +10,7 @@
 #include "copperfin/vfp/dbf_text_encoding.h"
 #include "copperfin/vfp/index_probe.h"
 #include "copperfin/vfp/sidecar_path.h"
+#include "copperfin/vfp/staged_import_publish.h"
 
 #include <algorithm>
 #include <array>
@@ -5946,6 +5947,13 @@ std::string generate_import_staging_suffix() {
 struct StagedImportFile {
     std::filesystem::path staged_path;
     std::filesystem::path final_path;
+    // #5679/#5680: opened immediately after the staged file is written and
+    // verified, and kept alive through publication (publish_staged_import_
+    // file()) and any later rollback (remove_published_import_file_if_
+    // identity_matches()) -- see staged_import_publish.h. Default-
+    // constructed (invalid) for an entry that has not been through that
+    // path yet.
+    StagedImportFileHandle handle;
 };
 
 void remove_staged_import_files_and_directory(
@@ -6271,7 +6279,18 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         if (!write_result.ok) {
             return abort_staging(write_result.error);
         }
-        staged.push_back({staged_path, destination.path});
+        // #5680: open and identity-pin the staged file the instant after
+        // create_dbf_table_file() closes it, rather than trusting
+        // staged_path to still name the same bytes by the time the commit
+        // loop below reaches it -- publish_staged_import_file() then
+        // publishes through this handle instead of re-resolving staged_path
+        // by name.
+        StagedImportFileHandle staged_handle = open_staged_import_file_for_publish(staged_path);
+        if (!staged_handle.valid()) {
+            return abort_staging(asset_inspector_text(
+                "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed"));
+        }
+        staged.push_back({staged_path, destination.path, std::move(staged_handle)});
 
         // A table with an M/G/P field gets a .fpt memo sidecar written
         // alongside the .dbf by create_dbf_table_file() -- it must be
@@ -6287,14 +6306,15 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         if (has_memo_field) {
             fs::path staged_memo_path = staged_path;
             staged_memo_path.replace_extension(".fpt");
-            std::error_code memo_exists_error;
-            if (!fs::exists(staged_memo_path, memo_exists_error)) {
-                return abort_staging(
-                    asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportStagingFailed"));
+            StagedImportFileHandle staged_memo_handle =
+                open_staged_import_file_for_publish(staged_memo_path);
+            if (!staged_memo_handle.valid()) {
+                return abort_staging(asset_inspector_text(
+                    "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed"));
             }
             fs::path final_memo_path = destination.path;
             final_memo_path.replace_extension(".fpt");
-            staged.push_back({staged_memo_path, final_memo_path});
+            staged.push_back({staged_memo_path, final_memo_path, std::move(staged_memo_handle)});
         }
     }
 
@@ -6321,34 +6341,54 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     if (!catalog_result.ok) {
         return abort_staging(catalog_result.error);
     }
-    staged.push_back({staged_dbc_path, dbc_fs_path});
+    StagedImportFileHandle staged_dbc_handle = open_staged_import_file_for_publish(staged_dbc_path);
+    if (!staged_dbc_handle.valid()) {
+        return abort_staging(asset_inspector_text(
+            "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed"));
+    }
+    staged.push_back({staged_dbc_path, dbc_fs_path, std::move(staged_dbc_handle)});
 
     // Commit: tables before the catalog (already the staged order above),
-    // one file at a time via create_hard_link() rather than rename().
-    // std::filesystem::rename() replaces an existing destination on POSIX,
-    // which would silently defeat the fail-closed preflight checks above
-    // against anything created during the staging window; create_hard_link()
-    // fails instead of replacing when the destination already exists, so a
-    // race during that window is caught here too, not just at preflight.
-    // If any commit fails partway, every already-committed file is removed
-    // so the destination is left exactly as it was found -- nothing
-    // partial. The staging copies themselves are cleaned up afterward by
-    // removing staging_dir; each committed file is now an independent hard
-    // link to the same data, unaffected by that removal.
+    // one file at a time via publish_staged_import_file() rather than
+    // rename() or a plain path-based create_hard_link(). rename() replaces
+    // an existing destination on POSIX, which would silently defeat the
+    // fail-closed preflight checks above against anything created during
+    // the staging window; publish_staged_import_file() fails instead of
+    // replacing when the destination already exists (like create_hard_link()
+    // did), and additionally re-verifies each entry's identity-pinned
+    // handle (opened above, immediately after that entry's own staged file
+    // was written) against staged_path's current contents right before
+    // linking, so a staged file replaced during the staging or commit
+    // window fails that entry's publish closed rather than letting the
+    // substituted content reach the final destination under the original,
+    // verified name (#5680). If any commit fails partway, every already-committed file is
+    // removed -- via remove_published_import_file_if_identity_matches(),
+    // which refuses to remove an entry whose final_path no longer refers to
+    // the exact object this transaction published there, so a final_path
+    // externally replaced after commit is preserved rather than deleted
+    // (#5679) -- so the destination is left exactly as it was found for
+    // every entry that could be safely reclaimed. The staging copies
+    // themselves are cleaned up afterward by removing staging_dir; each
+    // committed file is now an independent hard link to the same data,
+    // unaffected by that removal.
     std::vector<StagedImportFile> committed;
     committed.reserve(staged.size());
-    for (const auto& file : staged) {
-        std::error_code link_error;
-        fs::create_hard_link(file.staged_path, file.final_path, link_error);
-        if (link_error) {
-            std::error_code ignored;
-            for (const auto& done : committed) {
-                fs::remove(done.final_path, ignored);
+    bool rollback_left_unreclaimed_entry = false;
+    for (auto& file : staged) {
+        if (!publish_staged_import_file(file.handle, file.staged_path, file.final_path)) {
+            for (auto& done : committed) {
+                if (!remove_published_import_file_if_identity_matches(
+                        done.handle, done.final_path)) {
+                    rollback_left_unreclaimed_entry = true;
+                }
             }
             remove_staged_import_files_and_directory(staged, staging_dir);
-            return failure(asset_inspector_text("Vfp.AssetInspector.Error.DatabaseImportCommitFailed"));
+            return failure(asset_inspector_text(
+                rollback_left_unreclaimed_entry
+                    ? "Vfp.AssetInspector.Error.DatabaseImportCommitFailedUnreclaimedEntry"
+                    : "Vfp.AssetInspector.Error.DatabaseImportCommitFailed"));
         }
-        committed.push_back(file);
+        committed.push_back({file.staged_path, file.final_path, std::move(file.handle)});
     }
 
     std::error_code cleanup_error;
