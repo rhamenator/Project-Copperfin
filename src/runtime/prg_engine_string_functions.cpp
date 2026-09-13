@@ -388,13 +388,20 @@ std::optional<PrgValue> evaluate_string_function(
                                   ? value_as_string(arguments[2])[0]
                                   : ' ';
         if (src.size() > width) {
-            if (function == "padl") {
-                src = src.substr(src.size() - width);
-            } else if (function == "padr") {
-                src = src.substr(0U, width);
-            } else {
-                src = src.substr((src.size() - width) / 2U, width);
-            }
+            // #5948: real VFP9 SP2 truncates an over-length source to its
+            // leftmost `width` characters for PADL(), PADR(), and PADC()
+            // alike, regardless of which side each function pads on when
+            // the source is too short. Confirmed against actual VFP9
+            // output for all three (retained differential evidence:
+            // /home/rich/temp/vfp9-probes/pad-contract-78.{prg,out}):
+            // PADL('abcdef',3), PADR('abcdef',3), and PADC('abcdef',3)
+            // all return "abc". The prior implementation only got
+            // PADR() right by coincidence -- PADL() kept the *rightmost*
+            // width characters (a plausible-seeming but wrong mirror of
+            // its padding side) and PADC() centered the clip -- neither
+            // matches VFP9's actual, side-independent leftmost-retention
+            // rule.
+            src = src.substr(0U, width);
         }
         if (function == "padl") {
             src = std::string(width - src.size(), pad_char) + src;

@@ -718,11 +718,18 @@ void test_sql_result_cursor_command_padl_truncation_temporary_order_parity() {
         "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
         "SELECT sqlcust\n"
         "SET ORDER TO UPPER(PADL(NAME, 3))\n"
-        "SEEK 'LIE'\n"
+        // #5948: PADL() truncates an over-length source to its leftmost
+        // width characters in real VFP9 (e.g. PADL('CHARLIE', 3) is
+        // "CHA", not "LIE"), so the derived order keys here are "ALP",
+        // "BRA", and "CHA" -- not the pre-fix implementation's own wrong
+        // rightmost-truncation keys "LIE"/"AVO" this test used to search
+        // for, which happened to "work" only because Copperfin's own bug
+        // produced them, not because real VFP9 does.
+        "SEEK 'CHA'\n"
         "lFoundCmd = FOUND()\n"
         "nRecCmd = RECNO()\n"
         "GO TOP\n"
-        "lFoundFn = SEEK('AVO', 'sqlcust', 'UPPER(PADL(NAME, 3))')\n"
+        "lFoundFn = SEEK('BRA', 'sqlcust', 'UPPER(PADL(NAME, 3))')\n"
         "nRecFn = RECNO()\n"
         "lDisc = SQLDISCONNECT(nConn)\n"
         "RETURN\n");
@@ -752,13 +759,13 @@ void test_sql_result_cursor_command_padl_truncation_temporary_order_parity() {
         expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before SQL truncating PADL() temporary-order checks");
     }
     if (found_cmd != state.globals.end()) {
-        expect(copperfin::runtime::format_value(found_cmd->second) == "true", "command SEEK should match truncating PADL()-derived SQL right-edge keys");
+        expect(copperfin::runtime::format_value(found_cmd->second) == "true", "command SEEK should match truncating PADL()-derived SQL leftmost keys");
     }
     if (rec_cmd != state.globals.end()) {
         expect(copperfin::runtime::format_value(rec_cmd->second) == "3", "command SEEK should land on the truncating PADL()-derived CHARLIE SQL match");
     }
     if (found_fn != state.globals.end()) {
-        expect(copperfin::runtime::format_value(found_fn->second) == "true", "SEEK() should match truncating PADL()-derived SQL right-edge keys");
+        expect(copperfin::runtime::format_value(found_fn->second) == "true", "SEEK() should match truncating PADL()-derived SQL leftmost keys");
     }
     if (rec_fn != state.globals.end()) {
         expect(copperfin::runtime::format_value(rec_fn->second) == "2", "SEEK() should land on the truncating PADL()-derived BRAVO SQL match");

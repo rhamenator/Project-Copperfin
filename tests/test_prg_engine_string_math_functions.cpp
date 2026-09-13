@@ -592,9 +592,16 @@ namespace
         check("padl_default", "  fox");
         check("padr_default", "fox  ");
         check("padc_default", "  fox  ");
-        check("padl_truncate", "def");
+        // #5948: these two expectations were "def" and "bcd" before the
+        // fix -- an assumption, not real VFP9 output. Real VFP9 SP2
+        // truncates an over-length source to its leftmost width
+        // characters for PADL()/PADC() (as PADR() already did), so
+        // PADL('abcdef', 3) and PADC('abcdef', 3) are both "abc" (see
+        // test_padl_padr_padc_truncate_to_leftmost_characters below for
+        // the full retained differential evidence).
+        check("padl_truncate", "abc");
         check("padr_truncate", "abc");
-        check("padc_truncate", "bcd");
+        check("padc_truncate", "abc");
         check("pad_custom", "007");
         check("like_hit", "true");
         check("like_miss", "false");
@@ -744,6 +751,16 @@ namespace
             "index-expression RTRIM() should trim only trailing spaces and preserve tabs");
     }
 
+    // #5948: this test's own expectations ("AVO", "LIE" -- keeping the
+    // rightmost characters) were themselves an unverified assumption, not
+    // real VFP9 output. Real VFP9 SP2 truncates an over-length source to
+    // its leftmost width characters for PADL() (PADL('CHARLIE', 3) is
+    // "CHA", not "LIE"; retained differential evidence:
+    // /home/rich/temp/vfp9-probes/pad-contract-78.{prg,out}), matching
+    // evaluate_string_function()'s own PADL() behavior -- this test's
+    // whole point is confirming the index-expression evaluator used for
+    // index/order/SEEK keys agrees with that, not encodes a separate,
+    // wrong contract of its own.
     void test_index_expression_padl_truncation_matches_runtime_padl()
     {
         copperfin::vfp::DbfRecord bravo_record;
@@ -753,11 +770,11 @@ namespace
         charlie_record.values.push_back({"NAME", 'C', false, "CHARLIE", 0});
 
         expect(
-            copperfin::runtime::evaluate_index_expression("UPPER(PADL(NAME, 3))", bravo_record) == "AVO",
-            "index-expression PADL() should keep the rightmost characters when truncating BRAVO to width 3");
+            copperfin::runtime::evaluate_index_expression("UPPER(PADL(NAME, 3))", bravo_record) == "BRA",
+            "index-expression PADL() should keep the leftmost characters when truncating BRAVO to width 3");
         expect(
-            copperfin::runtime::evaluate_index_expression("UPPER(PADL(NAME, 3))", charlie_record) == "LIE",
-            "index-expression PADL() should keep the rightmost characters when truncating CHARLIE to width 3");
+            copperfin::runtime::evaluate_index_expression("UPPER(PADL(NAME, 3))", charlie_record) == "CHA",
+            "index-expression PADL() should keep the leftmost characters when truncating CHARLIE to width 3");
     }
 
     void test_financial_and_misc_expression_functions()
@@ -1599,6 +1616,59 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5948: real VFP9 SP2 output for these exact three expressions was
+    // "PADL_LONG=[abc]\nPADR_LONG=[abc]\nPADC_LONG=[abc]" (retained
+    // differential evidence:
+    // /home/rich/temp/vfp9-probes/pad-contract-78.{prg,out}). VFP9
+    // truncates an over-length source to its leftmost width characters
+    // for PADL(), PADR(), and PADC() alike, regardless of which side
+    // each function pads on when the source is too short. PADR() was
+    // already correct; PADL() previously kept the rightmost characters
+    // (a plausible-seeming but wrong mirror of its own padding side) and
+    // PADC() centered the clip -- neither matches VFP9's actual,
+    // side-independent leftmost-retention rule. This is distinct from
+    // #5907, which covers repeating a multi-character pad string when
+    // padding (not truncating) -- not attempted here.
+    void test_padl_padr_padc_truncate_to_leftmost_characters()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_pad_truncate_leftmost";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "pad_truncate_leftmost.prg";
+        write_text(
+            main_path,
+            "cPadlLong = PADL('abcdef', 3)\n"
+            "cPadrLong = PADR('abcdef', 3)\n"
+            "cPadcLong = PADC('abcdef', 3)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "PADL/PADR/PADC leftmost-truncation script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + ": expected \"" + expected + "\", got \"" +
+                           copperfin::runtime::format_value(it->second) + "\"");
+            }
+        };
+
+        check("cpadllong", "abc");
+        check("cpadrlong", "abc");
+        check("cpadclong", "abc");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1743,6 +1813,7 @@ int main()
     test_trim_family_matches_whole_parse_string_tokens();
     test_space_and_replicate_reject_oversized_requests();
     test_space_and_replicate_accept_values_truncating_to_the_ceiling();
+    test_padl_padr_padc_truncate_to_leftmost_characters();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();
