@@ -201,14 +201,18 @@ std::optional<PrgValue> evaluate_numeric_function(
     if (function == "round" && !arguments.empty()) {
         const double value = value_as_number(arguments[0]);
         const double requested_decimals = arguments.size() >= 2U ? value_as_number(arguments[1]) : 0.0;
-        const double rounded_decimals = std::round(requested_decimals);
-        const int decimals = !std::isfinite(rounded_decimals)
+        // #5899: VFP9 truncates nDecimalPlaces toward zero (0.6 and -0.6
+        // both act as 0; 2.4 and 2.6 both act as 2), not std::round()'s
+        // round-to-nearest -- confirmed against real VFP9 output for all
+        // four differential vectors below.
+        const double truncated_decimals = std::trunc(requested_decimals);
+        const int decimals = !std::isfinite(truncated_decimals)
                                  ? 0
-                                 : rounded_decimals > static_cast<double>(std::numeric_limits<int>::max())
+                                 : truncated_decimals > static_cast<double>(std::numeric_limits<int>::max())
                                        ? std::numeric_limits<int>::max()
-                                       : rounded_decimals < static_cast<double>(std::numeric_limits<int>::min())
+                                       : truncated_decimals < static_cast<double>(std::numeric_limits<int>::min())
                                              ? std::numeric_limits<int>::min()
-                                             : static_cast<int>(rounded_decimals);
+                                             : static_cast<int>(truncated_decimals);
         if (const auto rounded = round_decimal_value(value, decimals); rounded.has_value()) {
             return make_number_value(*rounded);
         }
