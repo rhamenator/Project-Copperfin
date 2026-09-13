@@ -6,6 +6,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <vector>
 
 namespace copperfin::vfp {
 
@@ -84,5 +85,24 @@ private:
 [[nodiscard]] bool remove_published_import_file_if_identity_matches(
     const StagedImportFileHandle& handle,
     const std::filesystem::path& published_path);
+
+// Releases every handle in `handles` (its own identity-binding protection
+// is no longer needed once execution reaches this point -- every caller of
+// this function is done deciding whether each corresponding entry gets
+// published or rolled back), then removes `staged_paths[i]` for each
+// released `handles[i]` (`handles.size()` must equal `staged_paths.size()`),
+// and finally removes `staging_dir` itself. Every removal is attempted
+// regardless of an earlier one failing (best-effort, not fail-fast).
+// Returns true only if every one of those removals succeeded -- an
+// already-absent path counts as success, matching
+// std::filesystem::remove()'s own convention -- and false if any staged
+// alias and/or the staging directory itself may still remain (#5681/
+// #5682): a caller must not report this as complete cleanup, since a
+// remaining staged file is a live hard-link alias to already-published
+// data, not harmless empty scratch state.
+[[nodiscard]] bool release_and_remove_staged_files(
+    std::vector<StagedImportFileHandle>& handles,
+    const std::vector<std::filesystem::path>& staged_paths,
+    const std::filesystem::path& staging_dir);
 
 }  // namespace copperfin::vfp

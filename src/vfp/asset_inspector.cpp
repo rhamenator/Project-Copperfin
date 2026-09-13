@@ -5956,30 +5956,24 @@ struct StagedImportFile {
     StagedImportFileHandle handle;
 };
 
-void remove_staged_import_files_and_directory(
+// #5681/#5682: returns whether every staged file and staging_dir itself
+// were actually removed, rather than discarding that outcome -- see
+// release_and_remove_staged_files()'s own doc comment for why an ignored
+// removal error here is a real data-integrity concern (a surviving staged
+// file is a live hard-link alias to already-committed or about-to-be-
+// rolled-back data), not harmless leftover scratch state.
+bool remove_staged_import_files_and_directory(
     std::vector<StagedImportFile>& staged,
     const std::filesystem::path& staging_dir) {
-    std::error_code ignored;
+    std::vector<StagedImportFileHandle> handles;
+    std::vector<std::filesystem::path> staged_paths;
+    handles.reserve(staged.size());
+    staged_paths.reserve(staged.size());
     for (auto& file : staged) {
-        // #5941 PR review (chatgpt-codex-connector, P1): on Windows, every
-        // entry's own handle was opened denying write/delete sharing for
-        // as long as it stays open (see staged_import_publish.cpp) -- a
-        // handle still open here would make this very removal (and, for a
-        // successfully committed entry, the staging directory's own
-        // cleanup below) fail with a sharing violation against the
-        // caller's own still-held handle, silently leaving the whole
-        // staging tree (and, for a committed entry, hard-linked aliases
-        // to already-published data) behind since its error is ignored.
-        // Releasing each handle here -- after it has done its job of
-        // protecting the entry through publish and any rollback decision,
-        // and immediately before this transaction is done with that
-        // entry either way -- has no bearing on the identity-binding
-        // guarantee itself, which is already resolved by this point for
-        // every entry reaching this loop.
-        file.handle = StagedImportFileHandle{};
-        std::filesystem::remove(file.staged_path, ignored);
+        handles.push_back(std::move(file.handle));
+        staged_paths.push_back(file.staged_path);
     }
-    std::filesystem::remove_all(staging_dir, ignored);
+    return release_and_remove_staged_files(handles, staged_paths, staging_dir);
 }
 
 struct TableRowExtractionResult {
@@ -6398,11 +6392,25 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
                     rollback_left_unreclaimed_entry = true;
                 }
             }
-            remove_staged_import_files_and_directory(staged, staging_dir);
-            return failure(asset_inspector_text(
-                rollback_left_unreclaimed_entry
-                    ? "Vfp.AssetInspector.Error.DatabaseImportCommitFailedUnreclaimedEntry"
-                    : "Vfp.AssetInspector.Error.DatabaseImportCommitFailed"));
+            // #5682: also check whether every staged file and the staging
+            // directory itself were actually removed, rather than
+            // discarding that outcome (as the prior implementation did)
+            // and collapsing every rollback failure into one generic
+            // message. rollback_left_unreclaimed_entry takes priority in
+            // the diagnostic chosen below since a still-committed final_
+            // path (potentially holding this transaction's actual data,
+            // rather than a now-redundant staged copy of it) is the more
+            // severe of the two residual states.
+            const bool staging_cleanup_ok =
+                remove_staged_import_files_and_directory(staged, staging_dir);
+            std::string commit_failed_key = "Vfp.AssetInspector.Error.DatabaseImportCommitFailed";
+            if (rollback_left_unreclaimed_entry) {
+                commit_failed_key = "Vfp.AssetInspector.Error.DatabaseImportCommitFailedUnreclaimedEntry";
+            } else if (!staging_cleanup_ok) {
+                commit_failed_key =
+                    "Vfp.AssetInspector.Error.DatabaseImportCommitFailedStagingCleanupIncomplete";
+            }
+            return failure(asset_inspector_text(commit_failed_key));
         }
         committed.push_back({file.staged_path, file.final_path, std::move(file.handle)});
     }
@@ -6422,9 +6430,22 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     // removes staging_dir itself; each committed file at its own
     // final_path is an independent hard link to the same data, unaffected
     // by removing the staged_path name or the directory that held it.
-    remove_staged_import_files_and_directory(committed, staging_dir);
+    const bool staging_cleanup_ok = remove_staged_import_files_and_directory(committed, staging_dir);
 
-    return {.ok = true, .error = {}, .table_count = table_destinations.size()};
+    // #5681: report a distinct, non-generic-success result when cleanup
+    // did not fully complete rather than an unqualified "ok" -- the
+    // destination database itself is complete and valid (every table and
+    // the catalog are already committed above), but a still-present
+    // staging alias is live hard-link content, not harmless scratch state,
+    // so a caller must be able to tell this case apart from a fully clean
+    // import.
+    return {.ok = true, .error = {}, .table_count = table_destinations.size(),
+            .cleanup_incomplete = !staging_cleanup_ok,
+            .cleanup_warning = staging_cleanup_ok
+                ? std::string{}
+                : asset_inspector_text(
+                      "Vfp.AssetInspector.Warning.DatabaseImportStagingCleanupIncomplete",
+                      {{"path", copperfin::platform::path_to_utf8_string(staging_dir)}})};
 }
 
 }  // namespace copperfin::vfp

@@ -514,6 +514,15 @@ struct DatabaseJsonImportResult {
     bool ok = false;
     std::string error;
     std::size_t table_count = 0;
+    // #5681: true when every table/catalog file committed successfully
+    // (ok == true, the destination database is complete and valid) but the
+    // staging directory or one of the now-redundant staged aliases within
+    // it could not be fully removed afterward -- a caller must not treat
+    // this as a fully clean import: a hidden staging directory may still
+    // hold live hard-link aliases to the imported data. Always false when
+    // ok == false. See cleanup_warning for a human-readable diagnostic.
+    bool cleanup_incomplete = false;
+    std::string cleanup_warning;
 };
 
 // Materializes an already-validated import plan into a new DBC catalog and
