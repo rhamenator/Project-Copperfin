@@ -1370,6 +1370,58 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5928: real VFP9 SP2 output for these exact five expressions was
+    // "l=Abc\nr=Abc\na=Abc\nli=abc\nmulti=ABC" (retained differential
+    // evidence: /home/rich/temp/vfp9-probes/trim-parse-56.{prg,out}).
+    // LTRIM/RTRIM/ALLTRIM's optional nFlags/cParseStringN arguments strip
+    // a character SET (not a literal substring) from the requested
+    // edge(s); flag 0/omitted compares case-sensitively, flag 1
+    // case-insensitively; multiple parse-string arguments contribute to
+    // one combined character set.
+    void test_trim_family_supports_parse_characters_and_flags()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_trim_parse_characters";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "trim_parse.prg";
+        write_text(
+            main_path,
+            "cLeft = LTRIM('xxAbc', 0, 'x')\n"
+            "cRight = RTRIM('Abcxx', 0, 'x')\n"
+            "cBoth = ALLTRIM('xxAbcxx', 0, 'x')\n"
+            "cLeftInsensitive = LTRIM('XXabc', 1, 'x')\n"
+            "cMulti = ALLTRIM('xyABCyx', 0, 'x', 'y')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "TRIM-family parse-character script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + ": expected \"" + expected + "\", got \"" +
+                           copperfin::runtime::format_value(it->second) + "\"");
+            }
+        };
+
+        check("cleft", "Abc");
+        check("cright", "Abc");
+        check("cboth", "Abc");
+        check("cleftinsensitive", "abc");
+        check("cmulti", "ABC");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1510,6 +1562,7 @@ int main()
     test_chr_and_str_truncate_fractional_arguments();
     test_chr_rejects_out_of_range_character_code();
     test_str_rejects_oversized_width_instead_of_allocating();
+    test_trim_family_supports_parse_characters_and_flags();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();

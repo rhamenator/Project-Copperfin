@@ -1,3 +1,38 @@
+- 2026-09-13: Fixed #5928 (found during the same review as #5899/#5900):
+  `LTRIM()`, `RTRIM()`/`TRIM()`, and `ALLTRIM()` silently ignored their
+  optional `nFlags` and `cParseString1..cParseString23` arguments,
+  trimming only spaces regardless. Real VFP9 SP2 uses those arguments to
+  strip a character set (not a literal substring) from the requested
+  edge(s): `LTRIM('xxAbc', 0, 'x')` is `"Abc"` (Copperfin returned the
+  input unchanged), `RTRIM('Abcxx', 0, 'x')` is `"Abc"`,
+  `ALLTRIM('xxAbcxx', 0, 'x')` is `"Abc"`, `LTRIM('XXabc', 1, 'x')` is
+  `"abc"` (flag 1 = case-insensitive matching), and
+  `ALLTRIM('xyABCyx', 0, 'x', 'y')` is `"ABC"` (multiple parse-string
+  arguments contribute to one combined character set).
+
+  Added a shared `trim_with_parse_characters()` helper used by all three
+  functions when a `cParseStringN` argument is present (plain space
+  trimming is unchanged when none is given): flag 0/omitted compares
+  case-sensitively, flag 1 case-insensitively, and every character
+  across every `cParseStringN` argument contributes to one combined
+  strippable-character set for the applicable edge(s).
+
+  New `test_trim_family_supports_parse_characters_and_flags` covers all
+  five differential vectors from the issue using real, retained VFP9 SP2
+  output (`/home/rich/temp/vfp9-probes/trim-parse-56.{prg,out}`) as
+  expected values; verified fail-then-pass against a reverted
+  implementation. The issue's own "up to 23 parse strings" and "enforce
+  compatible arity, flag, type, and maximum-parse-string errors" bullets
+  were only partly attempted: the implementation accepts any number of
+  parse-string arguments actually passed (matching this codebase's
+  existing convention of not hard-capping other variadic string-function
+  argument counts) but does not raise a distinct error beyond 23, since
+  no retained VFP9 evidence pins down the exact error VFP9 raises there.
+  Varbinary zero-byte trimming (a separate acceptance-criteria bullet)
+  was not attempted -- Varbinary is not yet a modeled value kind in this
+  runtime at all, a materially larger, pre-existing gap unrelated to this
+  fix's own scope.
+
 - 2026-09-13: Fixed #5900 (found during the same review as #5899):
   `CHR()` and `STR()` both rounded a fractional integral argument to the
   nearest integer (`std::llround()`) instead of truncating it toward

@@ -27,6 +27,54 @@ namespace {
 
 #include "prg_engine_string_function_helpers.inl"
 
+// #5928: shared parse-character trimming for LTRIM/RTRIM/TRIM/ALLTRIM's
+// optional nFlags/cParseStringN arguments. This is documented VFP9
+// behavior, not merely observed: cParseString1..cParseString23 each
+// contribute a set of individual characters to strip repeatedly from the
+// requested edge(s) -- a multi-character parse-string argument is a
+// character class, not a literal substring to match as a whole -- and
+// flag 0 or omitted compares case-sensitively, flag 1 case-insensitively.
+// Verified against real VFP9 SP2 output for single- and multi-argument
+// parse sets and both flag values (retained differential evidence:
+// /home/rich/temp/vfp9-probes/trim-parse-56.{prg,out}).
+std::string trim_with_parse_characters(
+    const std::string& source,
+    bool trim_left,
+    bool trim_right,
+    const std::vector<PrgValue>& arguments) {
+    const bool case_insensitive = arguments.size() >= 2U &&
+        static_cast<long long>(std::llround(value_as_number(arguments[1]))) == 1;
+    std::string parse_characters;
+    for (std::size_t index = 2U; index < arguments.size(); ++index) {
+        parse_characters += value_as_string(arguments[index]);
+    }
+    const auto is_parse_character = [&](char ch) {
+        for (const char candidate : parse_characters) {
+            const bool matches = case_insensitive
+                ? std::tolower(static_cast<unsigned char>(ch)) ==
+                      std::tolower(static_cast<unsigned char>(candidate))
+                : ch == candidate;
+            if (matches) {
+                return true;
+            }
+        }
+        return false;
+    };
+    std::size_t start = 0U;
+    std::size_t end = source.size();
+    if (trim_left) {
+        while (start < end && is_parse_character(source[start])) {
+            ++start;
+        }
+    }
+    if (trim_right) {
+        while (end > start && is_parse_character(source[end - 1U])) {
+            --end;
+        }
+    }
+    return source.substr(start, end - start);
+}
+
 }  // namespace
 
 std::string format_value_for_display(
@@ -109,9 +157,17 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(std::move(s));
     }
     if (function == "ltrim" && !arguments.empty()) {
+        if (arguments.size() >= 3U) {
+            return make_string_value(trim_with_parse_characters(
+                value_as_string(arguments[0]), true, false, arguments));
+        }
         return make_string_value(ltrim_space_copy(value_as_string(arguments[0])));
     }
     if ((function == "rtrim" || function == "trim") && !arguments.empty()) {
+        if (arguments.size() >= 3U) {
+            return make_string_value(trim_with_parse_characters(
+                value_as_string(arguments[0]), false, true, arguments));
+        }
         return make_string_value(rtrim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "space" && !arguments.empty()) {
@@ -584,6 +640,10 @@ std::optional<PrgValue> evaluate_string_function(
             value_as_string(arguments[0]), start, length, value_as_string(arguments[3])));
     }
     if (function == "alltrim" && !arguments.empty()) {
+        if (arguments.size() >= 3U) {
+            return make_string_value(trim_with_parse_characters(
+                value_as_string(arguments[0]), true, true, arguments));
+        }
         return make_string_value(trim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "chr" && !arguments.empty()) {
