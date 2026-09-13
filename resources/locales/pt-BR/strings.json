@@ -3032,6 +3032,7 @@
   "Runtime.Prg.String.Error.InvalidCharacterCode": "O valor, o tipo ou a quantidade do argumento da função é inválido.",
   "Runtime.Prg.String.Error.InvalidOccurrence": "O valor, o tipo ou a quantidade do argumento da função é inválido.",
   "Runtime.Prg.String.Error.InvalidStrWidth": "O valor, o tipo ou a quantidade do argumento da função é inválido.",
+  "Runtime.Prg.String.Error.StringTooLong": "A cadeia de caracteres é muito longa para caber.",
   "Studio.EditMenu": "\u0026Editar",
   "Studio.ProjectMenu": "\u0026Projeto",
   "Studio.BuildProjectMenu": "\u0026Compilar projeto",

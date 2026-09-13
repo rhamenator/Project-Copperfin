@@ -27,6 +27,20 @@ namespace {
 
 #include "prg_engine_string_function_helpers.inl"
 
+// #5946: VFP9's well-known, documented maximum length for a Character
+// string (not a memo/general field, which has its own much larger limit)
+// is 16,777,184 bytes. Real VFP9 SP2 rejects SPACE(300000000) with error
+// 1903 ("String is too long to fit."), confirmed against actual VFP9
+// output (retained differential evidence:
+// /home/rich/temp/vfp9-probes/space-allocation-74.{prg,out}); the exact
+// boundary value itself is well-established VFP9 documentation/community
+// knowledge rather than something freshly boundary-probed in this
+// session (no VFP9 access was available to test exactly at, one below,
+// and one above the limit). This is a data-type-level constraint on any
+// Character string, not specific to one function, so the same ceiling
+// applies to SPACE() and REPLICATE() alike.
+constexpr double kVfpMaxCharacterStringLength = 16'777'184.0;
+
 // #5928/#5956 PR review (chatgpt-codex-connector, P1): a first version of
 // this function treated every character across every cParseStringN
 // argument as a union/character-class, so a multi-character parse string
@@ -200,12 +214,32 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(rtrim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "space" && !arguments.empty()) {
-        const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[0])));
+        // #5946: check the finite double directly against the VFP ceiling
+        // before ever narrowing to std::size_t -- a huge or nonfinite
+        // requested count would otherwise be undefined behavior on the
+        // narrowing cast, not just an oversized allocation.
+        const double requested = value_as_number(arguments[0]);
+        if (!std::isfinite(requested) || requested > kVfpMaxCharacterStringLength) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.StringTooLong"), 1903);
+        }
+        const std::size_t n = static_cast<std::size_t>(std::max(0.0, requested));
         return make_string_value(std::string(n, ' '));
     }
     if (function == "replicate" && arguments.size() >= 2U) {
         const std::string src = value_as_string(arguments[0]);
-        const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
+        const double requested_count = value_as_number(arguments[1]);
+        if (!std::isfinite(requested_count)) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.StringTooLong"), 1903);
+        }
+        // #5946: compare the product in double precision -- src.size() *
+        // n could otherwise overflow std::size_t itself for an
+        // adversarial huge count, silently wrapping to a small value that
+        // would then pass a post-multiplication check.
+        if (static_cast<double>(src.size()) * std::max(0.0, requested_count) >
+            kVfpMaxCharacterStringLength) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.StringTooLong"), 1903);
+        }
+        const std::size_t n = static_cast<std::size_t>(std::max(0.0, requested_count));
         std::string result;
         result.reserve(src.size() * n);
         for (std::size_t i = 0; i < n; ++i) {
