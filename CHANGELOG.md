@@ -1,3 +1,40 @@
+- 2026-09-13: Fixed #5948 (found during the same review as
+  #5899/#5900/#5928/#5946): `PADC()` used a centered-clip when its source
+  exceeded the requested width, and `PADL()` (discovered while
+  investigating the same retained evidence, not explicitly named in the
+  issue's own "Observed behavior" section) kept the *rightmost*
+  characters instead. Real VFP9 SP2 truncates an over-length source to
+  its leftmost width characters for `PADL()`, `PADR()`, and `PADC()`
+  alike, regardless of which side each function pads on when the source
+  is too short: `PADL('abcdef', 3)`, `PADR('abcdef', 3)`, and
+  `PADC('abcdef', 3)` all return `"abc"` (confirmed against actual VFP9
+  output, retained differential evidence:
+  `/home/rich/temp/vfp9-probes/pad-contract-78.{prg,out}`). `PADR()` was
+  already correct.
+
+  This same wrong "keep rightmost" logic for `PADL()` also existed in a
+  second, independent implementation: the index/order/SEEK expression
+  evaluator (`evaluate_index_expression()` in `prg_engine_helpers.cpp`,
+  used for index/tag expressions, SQL temporary orders, and `SEEK()`),
+  fixed the same way. Two pre-existing tests directly encoded the old,
+  wrong assumption as their own expected values rather than real VFP9
+  output -- `test_index_expression_padl_truncation_matches_runtime_padl`
+  (asserting `PADL()` "should keep the rightmost characters") and
+  `test_sql_result_cursor_command_padl_truncation_temporary_order_parity`
+  (searching for the wrong, rightmost-truncated SQL temporary-order
+  keys) -- both corrected to real VFP9-verified leftmost-truncation
+  values.
+
+  New `test_padl_padr_padc_truncate_to_leftmost_characters` covers the
+  three-function retained differential vector directly; both fixes
+  (the main string-function evaluator and the index-expression
+  evaluator) verified fail-then-pass independently. This is distinct
+  from #5907, which covers repeating a multi-character pad string when
+  *padding* (not truncating) -- not attempted here, and left for a
+  separate pass given it touches the same two evaluators plus additional
+  consistency requirements across SQL temporary orders and SEEK
+  evaluation.
+
 - 2026-09-13: Fixed #5946 (safety, found during the same review as
   #5899/#5900/#5928): `SPACE()` and `REPLICATE()` ignored VFP9's
   documented Character string-length ceiling (16,777,184 bytes) and

@@ -766,11 +766,17 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
 
         const std::size_t target_length = static_cast<std::size_t>(requested);
         if (value.size() > target_length) {
-            if (left_pad) {
-                value = value.substr(value.size() - target_length);
-            } else {
-                value.resize(target_length);
-            }
+            // #5948: real VFP9 truncates an over-length source to its
+            // leftmost target_length characters for both PADL() and
+            // PADR(), regardless of which side each function pads on when
+            // the source is too short (confirmed against actual VFP9
+            // output: PADL('abcdef',3) is "abc", not "def" -- see the
+            // same fix and evidence in evaluate_string_function()'s own
+            // PADL/PADR/PADC handling in prg_engine_string_functions.cpp).
+            // The prior left_pad branch here kept the *rightmost*
+            // target_length characters, a plausible-seeming but wrong
+            // mirror of PADL's own padding side.
+            value.resize(target_length);
             return value;
         }
 
