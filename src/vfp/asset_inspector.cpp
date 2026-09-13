@@ -12,7 +12,12 @@
 #include "copperfin/vfp/sidecar_path.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
+#include <cerrno>
+#include <charconv>
+#include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -2964,6 +2969,181 @@ namespace {
 // TIMESTAMP/VARCHAR/TEXT column types, single-quoted string literals) --
 // see export_database_as_postgresql_sql()'s own comment for why real
 // PostgreSQL already accepts this portable/ANSI-ish dialect verbatim.
+// #5694: SQLite's NUMERIC column affinity (what every N/F/Y field's
+// `DECIMAL(p,s)` column type declaration actually gets under SQLite's own
+// type-affinity rules -- SQLite has no true fixed-decimal storage class at
+// all) stores a well-formed integer literal as a real 64-bit INTEGER only
+// if it fits within that range; otherwise, and for any literal with a
+// decimal point or exponent, it is parsed and stored as an IEEE-754
+// REAL (double), silently rounding away any digits beyond what a double
+// can represent exactly. A 20-digit VFP Numeric value or a VFP Currency
+// extreme can therefore load into real SQLite with its own trailing
+// digits silently altered while the generated script still loads without
+// error -- directly confirmed against a real local SQLite 3.46.1 engine
+// (`INSERT INTO t VALUES (12345678901234567890)` followed by
+// `SELECT quote(n) FROM t` returns `12345678901234570000`, not the
+// original value). This decomposes a well-formed decimal literal (one
+// already accepted by looks_like_safe_unquoted_sql_numeric_literal()) into
+// a canonical (sign, significant-digit-string with no leading or trailing
+// zeros, decimal-exponent) form, so two literals written in different
+// notations (plain vs. scientific, trailing zeros, etc.) that represent
+// the identical exact real number compare equal.
+struct CanonicalDecimalLiteral {
+    bool negative = false;
+    std::string significant_digits;
+    int exponent = 0;
+};
+
+bool operator==(const CanonicalDecimalLiteral& lhs, const CanonicalDecimalLiteral& rhs) {
+    return lhs.negative == rhs.negative &&
+        lhs.significant_digits == rhs.significant_digits &&
+        lhs.exponent == rhs.exponent;
+}
+
+// `text` must already be a well-formed literal per
+// looks_like_safe_unquoted_sql_numeric_literal()'s own grammar (optional
+// leading sign, digits, at most one '.', optional 'e'/'E' exponent).
+CanonicalDecimalLiteral canonicalize_decimal_literal(const std::string& text) {
+    CanonicalDecimalLiteral result;
+    std::size_t index = 0U;
+    if (text[index] == '-') {
+        result.negative = true;
+        ++index;
+    } else if (text[index] == '+') {
+        ++index;
+    }
+
+    std::string integer_digits;
+    while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
+        integer_digits += text[index];
+        ++index;
+    }
+    std::string fraction_digits;
+    if (index < text.size() && text[index] == '.') {
+        ++index;
+        while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
+            fraction_digits += text[index];
+            ++index;
+        }
+    }
+
+    const std::string all_digits = integer_digits + fraction_digits;
+    const std::size_t first_nonzero = all_digits.find_first_not_of('0');
+    // #5935 PR review (chatgpt-codex-connector, P2): a syntactically valid
+    // literal like "0e999999999999999999999999" has a genuinely zero
+    // significand no matter how large its own exponent is -- short-circuit
+    // before ever parsing the exponent digits, so an exponent that cannot
+    // fit in an int (std::stoi would throw std::out_of_range on it,
+    // terminating the whole export instead of returning a result, since
+    // this function's own caller has no catch for it) never needs parsing
+    // at all for this case.
+    if (first_nonzero == std::string::npos) {
+        result.negative = false;
+        result.significant_digits.clear();
+        result.exponent = 0;
+        return result;
+    }
+
+    int written_exponent = 0;
+    if (index < text.size() && (text[index] == 'e' || text[index] == 'E')) {
+        ++index;
+        bool exponent_negative = false;
+        if (index < text.size() && (text[index] == '-' || text[index] == '+')) {
+            exponent_negative = (text[index] == '-');
+            ++index;
+        }
+        const char* exponent_begin = text.data() + index;
+        const char* exponent_end = text.data() + text.size();
+        int exponent_magnitude = 0;
+        const auto exponent_parse = std::from_chars(exponent_begin, exponent_end, exponent_magnitude);
+        if (exponent_parse.ec == std::errc::result_out_of_range) {
+            // #5935 PR review: reaching here with a *nonzero* significand
+            // and an exponent too large for int would already have made
+            // strtod() report ERANGE in this function's own caller before
+            // canonicalize_decimal_literal() is ever invoked -- this
+            // saturating fallback exists only so a pathological/adversarial
+            // literal fails a comparison instead of throwing.
+            exponent_magnitude = std::numeric_limits<int>::max();
+        }
+        written_exponent = exponent_magnitude * (exponent_negative ? -1 : 1);
+    }
+
+    const int decimal_point_position = static_cast<int>(integer_digits.size()) + written_exponent;
+    const std::string leading_trimmed = all_digits.substr(first_nonzero);
+    const std::size_t last_nonzero = leading_trimmed.find_last_not_of('0');
+    result.significant_digits = leading_trimmed.substr(0U, last_nonzero + 1U);
+    result.exponent = decimal_point_position - static_cast<int>(first_nonzero);
+    return result;
+}
+
+// Returns whether SQLite's own NUMERIC-affinity storage of `text` (already
+// validated as a safe, well-formed decimal literal) preserves every digit
+// exactly: an integer-shaped literal (no '.', no exponent) is exact iff it
+// fits within a signed 64-bit integer, matching SQLite's own INTEGER
+// storage class boundary; any other well-formed literal is always stored
+// as a double under SQLite's own rules, so this parses it to a double and
+// compares its shortest round-tripping decimal representation (in
+// canonical form, so notation differences don't matter) back against the
+// original -- a mismatch means SQLite's own REAL storage would silently
+// alter the value.
+//
+// #5935 PR review (chatgpt-codex-connector, P1): a VFP 'B' (binary
+// Double) field's own decoded text is deliberately emitted at
+// max_digits10 precision (see decode_value()'s own 'B' case in
+// dbf_table.cpp) so re-parsing it reproduces the exact original IEEE-754
+// value -- e.g. an ordinary 0.1 is decoded as "0.10000000000000001", not
+// "0.1". The canonical-decimal-text comparison this function otherwise
+// performs is the wrong test for that case: std::to_chars() reformats
+// the *same* double as the shorter "0.1", so the two canonical decimal
+// forms legitimately differ even though both parse to the bit-identical
+// double -- and SQLite's own REAL storage class is itself an IEEE-754
+// double, so any text that reproduces the correct double is trivially
+// exact under SQLite's own storage, with no decimal-text comparison
+// needed at all. `field_type` lets the caller identify this case; every
+// other numeric VFP type ('N'/'F'/'Y' -- genuinely fixed-decimal storage
+// -- and 'I', whose values are always exact 32-bit integers) still gets
+// the full check.
+bool sqlite_numeric_value_round_trips_exactly(const std::string& text, char field_type) {
+    const bool has_decimal_point = text.find('.') != std::string::npos;
+    const bool has_exponent = text.find_first_of("eE") != std::string::npos;
+    if (!has_decimal_point && !has_exponent) {
+        // #5935 PR review (chatgpt-codex-connector, P2): std::from_chars
+        // for integers never accepts a leading '+' (only '-'), but
+        // looks_like_safe_unquoted_sql_numeric_literal() -- which this
+        // codebase already runs before ever calling this function --
+        // deliberately accepts one; skip it before parsing so a value
+        // already treated as valid and exact elsewhere (e.g. "+42") isn't
+        // rejected here as a false precision-loss failure.
+        const std::string_view digits =
+            (!text.empty() && text.front() == '+') ? std::string_view(text).substr(1U)
+                                                    : std::string_view(text);
+        std::int64_t parsed_integer = 0;
+        const auto parse_result = std::from_chars(
+            digits.data(), digits.data() + digits.size(), parsed_integer);
+        return parse_result.ec == std::errc() &&
+            parse_result.ptr == digits.data() + digits.size();
+    }
+    if (field_type == 'B') {
+        return true;
+    }
+
+    errno = 0;
+    char* parse_end = nullptr;
+    const double parsed_double = std::strtod(text.c_str(), &parse_end);
+    if (parse_end != text.c_str() + text.size() || errno == ERANGE) {
+        return false;
+    }
+
+    std::array<char, 64> round_trip_buffer{};
+    const auto conversion = std::to_chars(
+        round_trip_buffer.data(), round_trip_buffer.data() + round_trip_buffer.size(), parsed_double);
+    if (conversion.ec != std::errc()) {
+        return false;
+    }
+    const std::string round_tripped(round_trip_buffer.data(), conversion.ptr);
+    return canonicalize_decimal_literal(text) == canonicalize_decimal_literal(round_tripped);
+}
+
 // Returns every successfully-parsed table (a failed one already got its
 // own skip comment written here and is omitted), so a caller needing the
 // parsed field list for something else -- export_database_as_postgresql_sql()'s
@@ -3133,6 +3313,149 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
                     // it, or emit NULL if conversion isn't possible, rather
                     // than quoting the raw internal representation into a
                     // column declared TIMESTAMP.
+                    const auto converted = sql_datetime_literal_from_storage(rv.display_value);
+                    sql << (converted.has_value() ? sql_quote_string_literal(*converted) : "NULL");
+                } else {
+                    sql << sql_quote_string_literal(rv.display_value);
+                }
+                sql << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ");\n";
+        }
+        sql << "\n";
+        parsed_tables.push_back({.resolved = rt, .table = std::move(tbl.table)});
+    }
+    return parsed_tables;
+}
+
+// #5694: SQLite's own dedicated writer, forked from write_sql_tables_and_
+// data() rather than sharing it (the same "one dedicated writer per
+// engine" convention this exporter family already established for SQL
+// Server/Oracle/MySQL/Access, and the reason `TYPE SQLITE`'s own
+// `RQ-CF-MODERNIZATION-008` traceability row explicitly reserves this
+// exporter its own code path -- "so a future SQLite-specific divergence
+// has somewhere to go without touching another vendor's code path").
+// Identical to write_sql_tables_and_data() in every respect except the
+// numeric branch, which adds sqlite_numeric_value_round_trips_exactly()
+// on top of the already-shared looks_like_safe_unquoted_sql_numeric_
+// literal() check: a value that is a syntactically safe, well-formed
+// decimal literal (so it would pass on every other SQL dialect
+// unchanged) can still silently lose trailing digits under SQLite's own
+// NUMERIC-affinity storage rules specifically -- see that function's own
+// comment for the real-engine-confirmed mechanism. Rather than emit a
+// column type spelling (`DECIMAL(p,s)`) that merely looks fixed-decimal
+// without SQLite actually enforcing that semantics, this validates each
+// value's own exact representability and fails the whole export closed,
+// naming the table/row/column, for one that isn't -- the column type
+// itself is left unchanged (SQLite's storage decision is driven by the
+// value's own text shape, not the declared type name, so once every
+// admitted value is independently confirmed exact, `DECIMAL(p,s)`
+// remains a safe, honest column declaration for it).
+std::vector<ParsedSqlExportTable> write_sqlite_tables_and_data(
+    std::ostringstream& sql,
+    const DatabaseCatalogSnapshot& snapshot,
+    std::size_t row_limit,
+    std::string& hard_failure_error) {
+    std::vector<ParsedSqlExportTable> parsed_tables;
+    for (const auto& rt : snapshot.resolved_tables) {
+        DbfTableParseResult tbl = parse_dbf_table_from_file(
+            copperfin::platform::path_to_utf8_string(rt.path), row_limit);
+        if (!tbl.ok) {
+            sql << "-- skipped table " << sql_sanitize_comment_text(rt.name) << ": "
+                << sql_sanitize_comment_text(tbl.error) << "\n\n";
+            continue;
+        }
+        {
+            // #5743/#5827 (this function was forked off write_sql_tables_
+            // and_data() for #5694 and predates both fixes -- applying the
+            // same field-name UTF-8/code-page decode-and-validate step
+            // here for consistency with every other writer, since a
+            // crafted or legacy code-page-encoded field name is exactly as
+            // reachable through TYPE SQLITE as any other dialect).
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                hard_failure_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}});
+                return {};
+            }
+        }
+        if (tbl.table.fields.empty()) {
+            hard_failure_error = asset_inspector_text(
+                "Vfp.AssetInspector.Validation.ExportTableHasNoFields",
+                {{"table", rt.name}});
+            return {};
+        }
+
+        const std::string quoted_table = sql_quote_identifier(rt.name);
+        sql << "CREATE TABLE " << quoted_table << " (\n";
+        for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
+            const auto& fld = tbl.table.fields[fi];
+            const bool last_field = (fi + 1U == tbl.table.fields.size());
+            sql << "    " << sql_quote_identifier(fld.name) << " "
+                << sql_column_type(fld.type, fld.length, fld.decimal_count)
+                << (last_field ? "\n" : ",\n");
+        }
+        sql << ");\n\n";
+
+        std::size_t row_number = 0U;
+        for (const auto& rec : tbl.table.records) {
+            if (rec.deleted) {
+                continue;
+            }
+            ++row_number;
+            sql << "INSERT INTO " << quoted_table << " (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                sql << sql_quote_identifier(rec.values[vi].field_name)
+                    << (vi + 1U == rec.values.size() ? "" : ", ");
+            }
+            sql << ") VALUES (";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                const auto& rv = rec.values[vi];
+                const char ft = static_cast<char>(
+                    std::toupper(static_cast<unsigned char>(rv.field_type)));
+                const bool is_numeric = (ft == 'N' || ft == 'F' || ft == 'I' || ft == 'B' || ft == 'Y');
+                const bool is_logical = (ft == 'L');
+                const bool is_date = (ft == 'D');
+                const bool is_datetime = (ft == 'T');
+                if (rv.is_null) {
+                    sql << "NULL";
+                } else if (is_logical) {
+                    const std::string& lv = rv.display_value;
+                    if (lv == "true") {
+                        sql << "TRUE";
+                    } else if (lv == "false") {
+                        sql << "FALSE";
+                    } else {
+                        sql << "NULL";
+                    }
+                } else if (is_numeric) {
+                    if (rv.display_value.empty()) {
+                        sql << "NULL";
+                    } else if (!looks_like_safe_unquoted_sql_numeric_literal(rv.display_value)) {
+                        hard_failure_error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.UnsafeNumericValue",
+                            {{"table", rt.name}, {"row", std::to_string(row_number)},
+                             {"column", rv.field_name}});
+                        return {};
+                    } else if (!sqlite_numeric_value_round_trips_exactly(rv.display_value, ft)) {
+                        // #5694: a syntactically safe decimal literal that
+                        // SQLite's own NUMERIC-affinity storage cannot
+                        // preserve exactly -- see this function's own
+                        // comment, and sqlite_numeric_value_round_trips_
+                        // exactly()'s own comment for the real-engine-
+                        // confirmed rounding this closes.
+                        hard_failure_error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.SqliteNumericPrecisionLoss",
+                            {{"table", rt.name}, {"row", std::to_string(row_number)},
+                             {"column", rv.field_name}});
+                        return {};
+                    } else {
+                        sql << rv.display_value;
+                    }
+                } else if (is_date) {
+                    sql << (rv.display_value.empty() ? "NULL" : sql_quote_string_literal(rv.display_value));
+                } else if (is_datetime) {
                     const auto converted = sql_datetime_literal_from_storage(rv.display_value);
                     sql << (converted.has_value() ? sql_quote_string_literal(*converted) : "NULL");
                 } else {
@@ -4174,13 +4497,15 @@ DatabaseSqlExportResult export_database_as_sqlite_sql(
 
     std::string hard_failure_error;
     const std::vector<ParsedSqlExportTable> parsed_tables =
-        write_sql_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
+        write_sqlite_tables_and_data(sql, snapshot, row_limit, hard_failure_error);
     // #5697: a member table with zero fields fails the whole export
     // closed rather than emit invalid `CREATE TABLE "name" ( );` DDL.
     // #5698: a non-blank numeric value that cannot be safely represented
     // shares this same hard_failure_error path rather than silently
-    // substituting NULL. See write_sql_tables_and_data()'s own comment
-    // for both.
+    // substituting NULL. #5694: a syntactically safe numeric value that
+    // SQLite's own NUMERIC-affinity storage cannot preserve exactly
+    // shares it too. See write_sqlite_tables_and_data()'s own comment
+    // for all three.
     if (!hard_failure_error.empty()) {
         return {.ok = false, .error = hard_failure_error, .sql = {}};
     }

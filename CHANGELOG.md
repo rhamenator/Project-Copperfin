@@ -1,3 +1,24 @@
+- 2026-09-13: While merging `origin/v1-development` into the pending
+  #5694 (SQLite decimal precision) branch, found that
+  `write_sqlite_tables_and_data()` was implemented and merged
+  independently of, and predates, #5743/#5827's own field-name UTF-8/
+  code-page decode-and-validation work -- it never received that
+  treatment through the normal PR sequence, since #5694's own branch
+  was opened before #5743 existed. Added the identical
+  `decode_dbf_table_field_names_in_place()` call the other six export
+  dialects already carry, right after parsing, mirroring
+  `write_sql_tables_and_data()`'s own placement. New assertions in
+  `test_export_database_family_fails_closed_on_invalid_utf8_field_name`
+  and
+  `test_export_database_family_still_accepts_valid_multibyte_utf8_field_name`
+  extend both existing regressions to cover
+  `export_database_as_sqlite_sql()`, verified to reliably fail against
+  the code as merged (before this addition) and reliably pass against
+  the fix.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-008 updated.
+
 - 2026-09-13: Fixed a usability regression in database export field-name
   handling (`src/vfp/asset_inspector.cpp`, #5827, found by an automated
   Codex code-review pass against the merged #5743 fix itself). That
@@ -428,6 +449,70 @@
   verified to reliably fail against the code as it stood right after the
   structural-escaping fix and reliably pass against this additional
   check.
+- 2026-09-12: Closed a data-integrity gap in `EXPORT DATABASE ... TYPE
+  SQLITE` (`src/vfp/asset_inspector.cpp`, #5694): SQLite's own
+  NUMERIC-affinity storage -- what an N/F/Y field's `DECIMAL(p,s)` column
+  type declaration actually gets under SQLite, which has no true
+  fixed-decimal storage class at all -- silently rounds a well-formed
+  decimal literal to an IEEE-754 double whenever it isn't representable
+  exactly as a 64-bit signed integer. Directly confirmed against a real
+  local SQLite 3.46.1 engine: `INSERT INTO t VALUES
+  (12345678901234567890)` followed by `SELECT quote(n) FROM t` returns
+  `12345678901234570000`, not the original value, and this exporter's
+  script still loaded and "succeeded." VFP Currency's own extreme
+  magnitude and other high-precision fractional values inherit the same
+  loss whenever NUMERIC affinity doesn't store them as an exact integer.
+
+  Since `export_database_as_sqlite_sql()` previously shared
+  `write_sql_tables_and_data()` with the portable SQL and PostgreSQL
+  exporters -- neither of which has this problem, PostgreSQL's own
+  `NUMERIC`/`DECIMAL` being genuinely exact arbitrary-precision -- a
+  SQLite-specific check could not simply be added to the shared function
+  without wrongly restricting the other two dialects. Gave `TYPE SQLITE`
+  its own dedicated `write_sqlite_tables_and_data()` writer, forked from
+  the shared one, matching the "one dedicated writer per engine"
+  convention SQL Server/Oracle/MySQL/Access already established (and
+  which `RQ-CF-MODERNIZATION-008`'s own original traceability text had
+  already anticipated SQLite would eventually need).
+
+  Added `sqlite_numeric_value_round_trips_exactly()`: an integer-shaped
+  literal (no decimal point or exponent) is exact iff it fits within a
+  signed 64-bit integer, matching SQLite's own INTEGER storage class
+  boundary; any other well-formed literal is always stored as a double
+  under SQLite's own rules, so this parses it to a double, reformats the
+  shortest round-tripping decimal representation via `std::to_chars`, and
+  compares both the original and round-tripped text in a canonical
+  (sign, significant-digit-string, decimal-exponent) form via a new
+  `canonicalize_decimal_literal()` helper -- so differing notations
+  (plain vs. scientific, trailing zeros) for the identical exact value
+  still compare equal, while a genuine precision loss is caught
+  regardless of which notation either string happens to use. A mismatch
+  fails the whole export closed with a new localized
+  `Vfp.AssetInspector.Validation.SqliteNumericPrecisionLoss` diagnostic
+  naming the table, row, and column, rather than relying on the
+  `DECIMAL(p,s)` column-type spelling alone to imply fixed-decimal
+  semantics SQLite does not actually provide.
+
+  New regression tests
+  (`test_export_database_as_sqlite_sql_fails_closed_on_precision_loss`,
+  covering a 20-digit integer, the int64-boundary-plus-one case, a VFP
+  Currency extreme, and a high-precision fraction;
+  `test_export_database_as_sqlite_sql_still_accepts_exact_numeric_values`,
+  proving small integers, the exact int64 boundary, and ordinary
+  fractional values remain unaffected) verified to reliably fail against
+  the pre-fix code and reliably pass against the fix. The
+  exactness-check logic itself was independently verified against a real
+  local SQLite 3.46.1 engine before writing any test code (each of the
+  above boundary cases' own classification matched the engine's actual
+  `quote()`/`typeof()` behavior), and the accepted-value fixture's own
+  generated script was additionally loaded into real SQLite and confirmed
+  to round-trip every value exactly.
+
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-008` updated, including a correction to that row's
+  own prior text describing `TYPE SQLITE` as sharing
+  `write_sql_tables_and_data()` (true before this fix, no longer true
+  after it).
 
 - 2026-09-12: Closed a data-integrity gap affecting every SQL-family
   `EXPORT DATABASE` exporter (`src/vfp/asset_inspector.cpp`, #5698, found
