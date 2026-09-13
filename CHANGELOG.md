@@ -1,3 +1,36 @@
+- 2026-09-13: Fixed #5900 (found during the same review as #5899):
+  `CHR()` and `STR()` both rounded a fractional integral argument to the
+  nearest integer (`std::llround()`) instead of truncating it toward
+  zero, and `CHR()` silently narrowed a character code outside its
+  accepted [0, 255] byte range instead of raising an error. Real VFP9 SP2
+  returns character code 65 for `CHR(65.9)` (Copperfin returned 66), a
+  four-character string for `STR(12, 4.9)` (Copperfin returned five
+  characters), and error 11 for `CHR(-1)`, `CHR(256)`, and `CHR(300)`
+  (Copperfin silently narrowed them to bytes 255, 0, and 44). `STR()`'s
+  decimal-count argument already truncated correctly and was untouched.
+
+  Fixed by truncating both arguments toward zero (`std::trunc()`, with a
+  saturating conversion to `int` to avoid undefined behavior on an
+  out-of-range or nonfinite width), and by throwing the same
+  `PrgCompatibilityError`-based VFP error 11 the existing `AT_C()`
+  invalid-occurrence case already uses (new
+  `Runtime.Prg.String.Error.InvalidCharacterCode` diagnostic) when
+  `CHR()`'s truncated code falls outside [0, 255] or is nonfinite.
+
+  New `test_chr_and_str_truncate_fractional_arguments` covers the
+  differential vectors from the issue using real, retained VFP9 SP2
+  output (`/home/rich/temp/vfp9-probes/chr-str-fractional-15.{prg,out}`)
+  as expected values. New `test_chr_rejects_out_of_range_character_code`
+  (modeled on `test_prg_engine_functions.cpp`'s existing
+  `test_at_c_rejects_nonpositive_occurrence`) verifies `CHR(-1)`,
+  `CHR(256)`, `CHR(300)`, and a nonfinite argument all recover through
+  `ON ERROR` with code 11, matching real VFP9 SP2 output
+  (`/home/rich/temp/vfp9-probes/chr-range-16.{prg,out}`). Both new tests
+  verified fail-then-pass against a reverted implementation. The issue's
+  own broader "audit other string position/count/code arguments" bullet
+  was not attempted -- scoped to `CHR()`/`STR()` specifically, matching
+  the issue's own differential evidence.
+
 - 2026-09-13: Fixed #5899 (found during the repository owner's requested
   read-only whole-codebase review): `ROUND(nExpression, nDecimalPlaces)`
   applied `std::round()` to a fractional `nDecimalPlaces` argument before

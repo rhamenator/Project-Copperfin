@@ -587,7 +587,21 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(trim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "chr" && !arguments.empty()) {
-        return make_string_value(std::string(1U, static_cast<char>(std::llround(value_as_number(arguments[0])))));
+        // #5900: VFP9 truncates a fractional character-code argument
+        // toward zero (CHR(65.9) is 'A', character code 65, not 66) and
+        // raises error 11 for any code outside its accepted [0, 255]
+        // byte range (confirmed against real VFP9 output for CHR(-1),
+        // CHR(256), and CHR(300), all ERR11) rather than narrowing it.
+        // A nonfinite argument cannot round-trip through any valid VFP
+        // literal or reach here without a prior division-by-zero-style
+        // fault, but is treated the same way (out of range -> error 11)
+        // for a checked, UB-free conversion rather than an unchecked cast.
+        const double truncated_code = std::trunc(value_as_number(arguments[0]));
+        if (!std::isfinite(truncated_code) || truncated_code < 0.0 || truncated_code > 255.0) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidCharacterCode"), 11);
+        }
+        return make_string_value(
+            std::string(1U, static_cast<char>(static_cast<unsigned char>(truncated_code))));
     }
     if (function == "str" && !arguments.empty()) {
         const int decimals = arguments.size() >= 3U
@@ -597,9 +611,23 @@ std::optional<PrgValue> evaluate_string_function(
         stream.imbue(std::locale::classic());
         stream << std::fixed << std::setprecision(decimals) << value_as_number(arguments[0]);
         std::string result = stream.str();
-        const int width = arguments.size() >= 2U
-                              ? static_cast<int>(std::llround(value_as_number(arguments[1])))
-                              : 10;
+        // #5900: VFP9 truncates a fractional width argument toward zero
+        // (STR(12, 4.9) is 4 characters wide, not 5), the same rule
+        // already applied correctly to the decimals argument above.
+        // Nonfinite/out-of-int-range values saturate rather than
+        // triggering undefined behavior on the narrowing cast; the
+        // existing width > 0 guard below is unchanged and continues to
+        // govern zero/negative width exactly as before this fix.
+        const double truncated_width = arguments.size() >= 2U
+                                           ? std::trunc(value_as_number(arguments[1]))
+                                           : 10.0;
+        const int width = !std::isfinite(truncated_width)
+                              ? 0
+                              : truncated_width > static_cast<double>(std::numeric_limits<int>::max())
+                                    ? std::numeric_limits<int>::max()
+                                    : truncated_width < static_cast<double>(std::numeric_limits<int>::min())
+                                          ? std::numeric_limits<int>::min()
+                                          : static_cast<int>(truncated_width);
         if (width > 0) {
             if (result.size() > static_cast<std::size_t>(width)) {
                 return make_string_value(std::string(static_cast<std::size_t>(width), '*'));
