@@ -3026,6 +3026,24 @@ CanonicalDecimalLiteral canonicalize_decimal_literal(const std::string& text) {
             ++index;
         }
     }
+
+    const std::string all_digits = integer_digits + fraction_digits;
+    const std::size_t first_nonzero = all_digits.find_first_not_of('0');
+    // #5935 PR review (chatgpt-codex-connector, P2): a syntactically valid
+    // literal like "0e999999999999999999999999" has a genuinely zero
+    // significand no matter how large its own exponent is -- short-circuit
+    // before ever parsing the exponent digits, so an exponent that cannot
+    // fit in an int (std::stoi would throw std::out_of_range on it,
+    // terminating the whole export instead of returning a result, since
+    // this function's own caller has no catch for it) never needs parsing
+    // at all for this case.
+    if (first_nonzero == std::string::npos) {
+        result.negative = false;
+        result.significant_digits.clear();
+        result.exponent = 0;
+        return result;
+    }
+
     int written_exponent = 0;
     if (index < text.size() && (text[index] == 'e' || text[index] == 'E')) {
         ++index;
@@ -3034,24 +3052,23 @@ CanonicalDecimalLiteral canonicalize_decimal_literal(const std::string& text) {
             exponent_negative = (text[index] == '-');
             ++index;
         }
-        std::string exponent_digits;
-        while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
-            exponent_digits += text[index];
-            ++index;
+        const char* exponent_begin = text.data() + index;
+        const char* exponent_end = text.data() + text.size();
+        int exponent_magnitude = 0;
+        const auto exponent_parse = std::from_chars(exponent_begin, exponent_end, exponent_magnitude);
+        if (exponent_parse.ec == std::errc::result_out_of_range) {
+            // #5935 PR review: reaching here with a *nonzero* significand
+            // and an exponent too large for int would already have made
+            // strtod() report ERANGE in this function's own caller before
+            // canonicalize_decimal_literal() is ever invoked -- this
+            // saturating fallback exists only so a pathological/adversarial
+            // literal fails a comparison instead of throwing.
+            exponent_magnitude = std::numeric_limits<int>::max();
         }
-        written_exponent = std::stoi(exponent_digits) * (exponent_negative ? -1 : 1);
+        written_exponent = exponent_magnitude * (exponent_negative ? -1 : 1);
     }
 
-    const std::string all_digits = integer_digits + fraction_digits;
     const int decimal_point_position = static_cast<int>(integer_digits.size()) + written_exponent;
-
-    const std::size_t first_nonzero = all_digits.find_first_not_of('0');
-    if (first_nonzero == std::string::npos) {
-        result.negative = false;
-        result.significant_digits.clear();
-        result.exponent = 0;
-        return result;
-    }
     const std::string leading_trimmed = all_digits.substr(first_nonzero);
     const std::size_t last_nonzero = leading_trimmed.find_last_not_of('0');
     result.significant_digits = leading_trimmed.substr(0U, last_nonzero + 1U);
@@ -3069,15 +3086,45 @@ CanonicalDecimalLiteral canonicalize_decimal_literal(const std::string& text) {
 // canonical form, so notation differences don't matter) back against the
 // original -- a mismatch means SQLite's own REAL storage would silently
 // alter the value.
-bool sqlite_numeric_value_round_trips_exactly(const std::string& text) {
+//
+// #5935 PR review (chatgpt-codex-connector, P1): a VFP 'B' (binary
+// Double) field's own decoded text is deliberately emitted at
+// max_digits10 precision (see decode_value()'s own 'B' case in
+// dbf_table.cpp) so re-parsing it reproduces the exact original IEEE-754
+// value -- e.g. an ordinary 0.1 is decoded as "0.10000000000000001", not
+// "0.1". The canonical-decimal-text comparison this function otherwise
+// performs is the wrong test for that case: std::to_chars() reformats
+// the *same* double as the shorter "0.1", so the two canonical decimal
+// forms legitimately differ even though both parse to the bit-identical
+// double -- and SQLite's own REAL storage class is itself an IEEE-754
+// double, so any text that reproduces the correct double is trivially
+// exact under SQLite's own storage, with no decimal-text comparison
+// needed at all. `field_type` lets the caller identify this case; every
+// other numeric VFP type ('N'/'F'/'Y' -- genuinely fixed-decimal storage
+// -- and 'I', whose values are always exact 32-bit integers) still gets
+// the full check.
+bool sqlite_numeric_value_round_trips_exactly(const std::string& text, char field_type) {
     const bool has_decimal_point = text.find('.') != std::string::npos;
     const bool has_exponent = text.find_first_of("eE") != std::string::npos;
     if (!has_decimal_point && !has_exponent) {
+        // #5935 PR review (chatgpt-codex-connector, P2): std::from_chars
+        // for integers never accepts a leading '+' (only '-'), but
+        // looks_like_safe_unquoted_sql_numeric_literal() -- which this
+        // codebase already runs before ever calling this function --
+        // deliberately accepts one; skip it before parsing so a value
+        // already treated as valid and exact elsewhere (e.g. "+42") isn't
+        // rejected here as a false precision-loss failure.
+        const std::string_view digits =
+            (!text.empty() && text.front() == '+') ? std::string_view(text).substr(1U)
+                                                    : std::string_view(text);
         std::int64_t parsed_integer = 0;
         const auto parse_result = std::from_chars(
-            text.data(), text.data() + text.size(), parsed_integer);
+            digits.data(), digits.data() + digits.size(), parsed_integer);
         return parse_result.ec == std::errc() &&
-            parse_result.ptr == text.data() + text.size();
+            parse_result.ptr == digits.data() + digits.size();
+    }
+    if (field_type == 'B') {
+        return true;
     }
 
     errno = 0;
@@ -3391,7 +3438,7 @@ std::vector<ParsedSqlExportTable> write_sqlite_tables_and_data(
                             {{"table", rt.name}, {"row", std::to_string(row_number)},
                              {"column", rv.field_name}});
                         return {};
-                    } else if (!sqlite_numeric_value_round_trips_exactly(rv.display_value)) {
+                    } else if (!sqlite_numeric_value_round_trips_exactly(rv.display_value, ft)) {
                         // #5694: a syntactically safe decimal literal that
                         // SQLite's own NUMERIC-affinity storage cannot
                         // preserve exactly -- see this function's own

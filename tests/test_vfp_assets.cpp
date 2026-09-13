@@ -5170,6 +5170,142 @@ void test_export_database_as_sqlite_sql_still_accepts_exact_numeric_values() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5935 PR review (chatgpt-codex-connector, P1): a VFP 'B' (binary Double)
+// field's own decoded text is deliberately emitted at max_digits10
+// precision (e.g. an ordinary 0.1 decodes as "0.10000000000000001", not
+// "0.1") so re-parsing reproduces the exact original IEEE-754 value. The
+// canonical-decimal-text comparison sqlite_numeric_value_round_trips_
+// exactly() otherwise performs is the wrong test for this case:
+// std::to_chars() reformats the identical double as the shorter "0.1", so
+// the two canonical forms legitimately differ even though both parse to
+// the bit-identical double, and SQLite's own REAL storage class is itself
+// an IEEE-754 double -- an earlier version of the #5694 fix would have
+// wrongly rejected this ordinary, exactly-representable value.
+void test_export_database_as_sqlite_sql_accepts_binary_double_at_max_precision() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sqlite_binary_double_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "readings", ""}});
+    expect(dbc_create.ok, "SQLite binary-double test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "VALUE", .type = 'B', .offset = 1U, .length = 8U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"0.1"}});
+    expect(table_create.ok, "SQLite binary-double test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_sqlite_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok,
+           "export_database_as_sqlite_sql must accept an ordinary binary Double value at max_digits10 "
+           "precision rather than reject it as false precision loss: " + result.error);
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5935 PR review (chatgpt-codex-connector, P2): std::from_chars for
+// integers never accepts a leading '+' (only '-'), but
+// looks_like_safe_unquoted_sql_numeric_literal() -- which already runs
+// before sqlite_numeric_value_round_trips_exactly() is ever called --
+// deliberately accepts one, so a plus-prefixed integer this codebase
+// already treats as valid and exact (e.g. "+42") must not be rejected as
+// false precision loss.
+void test_export_database_as_sqlite_sql_accepts_leading_plus_integer() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sqlite_leading_plus_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "readings", ""}});
+    expect(dbc_create.ok, "SQLite leading-plus test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "VALUE", .type = 'N', .offset = 1U, .length = 5U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"+42"}});
+    expect(table_create.ok, "SQLite leading-plus test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_sqlite_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok,
+           "export_database_as_sqlite_sql must accept a plus-prefixed exact integer rather than reject it "
+           "as false precision loss: " + result.error);
+    if (result.ok) {
+        expect(result.sql.find("VALUES (+42)") != std::string::npos,
+               "export_database_as_sqlite_sql should emit the plus-prefixed integer unquoted, unmodified");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5935 PR review (chatgpt-codex-connector, P2): a syntactically valid
+// literal with a genuinely zero significand but an exponent far too large
+// to fit in an int (e.g. "0e999999999999999999999999") must not crash the
+// export -- canonicalize_decimal_literal()'s own exponent parsing
+// previously used std::stoi(), which throws std::out_of_range on an
+// exponent this large, with no catch anywhere in the call chain. SQLite
+// itself stores this value as exact zero (strtod() also correctly parses
+// it to 0.0 with no error), so the export should succeed.
+void test_export_database_as_sqlite_sql_accepts_zero_with_oversized_exponent() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_sqlite_oversized_exponent_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "readings", ""}});
+    expect(dbc_create.ok, "SQLite oversized-exponent test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "VALUE", .type = 'N', .offset = 1U, .length = 30U, .decimal_count = 0U},
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields,
+        {{"0e999999999999999999999999"}});
+    expect(table_create.ok, "SQLite oversized-exponent test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_sqlite_sql(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok,
+           "export_database_as_sqlite_sql must not crash and must accept a zero-significand literal with an "
+           "oversized exponent: " + result.error);
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 // #5558 review (chatgpt-codex-connector): SQLite index names are
 // schema-wide, not scoped to their own table -- a table named "A_B"
 // with a tag named "CDEF" and a table named "A" with a tag named
@@ -8922,6 +9058,9 @@ int main() {
     test_export_database_as_sqlite_sql_maps_types_and_creates_indexes();
     test_export_database_as_sqlite_sql_fails_closed_on_precision_loss();
     test_export_database_as_sqlite_sql_still_accepts_exact_numeric_values();
+    test_export_database_as_sqlite_sql_accepts_binary_double_at_max_precision();
+    test_export_database_as_sqlite_sql_accepts_leading_plus_integer();
+    test_export_database_as_sqlite_sql_accepts_zero_with_oversized_exponent();
     test_export_database_as_sqlite_sql_omits_indexes_without_cdx();
     test_export_database_as_sqlserver_sql_maps_types_and_creates_indexes();
     test_export_database_as_sqlserver_sql_omits_indexes_without_cdx();
