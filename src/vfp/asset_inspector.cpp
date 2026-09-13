@@ -1810,7 +1810,17 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
         if (obj.deleted || obj.object_type != "table" || obj.object_name.empty()) {
             continue;
         }
-        const std::string& tname = obj.object_name;
+        // #5817 (found by an automated Codex code-review pass, ASan/TSan
+        // heap-use-after-free): this was a `const std::string&` referencing
+        // a string stored inside `snapshot.catalog`. All three rejection
+        // branches below do `snapshot = {}` to reset the whole snapshot
+        // before building their error message -- which destroys the
+        // catalog vector `tname` refers into -- and then read `tname`
+        // again to format `{{"table", tname}}`, a heap-use-after-free on
+        // every crafted/malicious DBC these branches exist to reject. An
+        // owning copy decouples this string's lifetime from the snapshot
+        // being reset.
+        const std::string tname = obj.object_name;
         if (!table_name_is_safe_filesystem_component(tname)) {
             snapshot = {};
             snapshot.dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);

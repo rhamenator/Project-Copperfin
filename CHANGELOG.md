@@ -1,3 +1,42 @@
+- 2026-09-12: Fixed a heap-use-after-free in `load_database_catalog_
+  snapshot()` (`src/vfp/asset_inspector.cpp`, #5817, found by an
+  automated Codex code-review pass running the full Clang ASan/UBSan
+  and ThreadSanitizer suites -- a regression introduced by closed
+  #5636's own containment fix, PR #5685). This loader -- shared by
+  every JSON and SQL-family exporter -- held `tname` as a
+  `const std::string&` referencing a string stored inside
+  `snapshot.catalog`, then in all three rejection branches (unsafe
+  table name, table path escaping the database directory, memo-sidecar
+  path escaping the database directory) reset the whole snapshot via
+  `snapshot = {}` -- destroying the catalog vector `tname` referenced
+  into -- before reading `tname` again to format the rejection
+  diagnostic. A crafted DBC intended to be rejected could therefore
+  trigger a heap-use-after-free while constructing the error result.
+  The ordinary GCC Release `ctest` suite passed because the freed heap
+  storage happened to remain readable; only a sanitizer build actually
+  caught it.
+
+  Fixed by making `tname` an owning `const std::string` copy instead of
+  a reference, decoupling its lifetime from the snapshot being reset --
+  a one-line change covering all three branches, since they share the
+  same `tname` declared once per loop iteration.
+
+  Independently reproduced with a standalone Clang ASan/UBSan build of
+  `test_vfp_assets` against the existing
+  `test_export_database_as_json_rejects_dotdot_table_name_traversal`
+  regression (a clean heap-use-after-free abort at the exact reported
+  line, matching the report) before the fix, and confirmed the full
+  suite passes clean under the same sanitizer build after it. No new
+  regression test was needed: all four existing containment-rejection
+  tests already exercise this exact code path and now serve as the
+  sanitizer regression guard. Adding permanent ASan/UBSan/TSan coverage
+  to CI for this test family (this issue's own broader completion
+  criteria) was not attempted here -- scoped to the memory-safety fix
+  itself.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-001 updated.
+
 - 2026-09-12: Closed a data-integrity/safety gap across every database
   export dialect (`src/vfp/asset_inspector.cpp`, #5743, found by an
   automated Codex code-review pass -- a sibling gap to closed
