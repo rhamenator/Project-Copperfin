@@ -500,7 +500,27 @@ std::optional<PrgValue> evaluate_string_function(
                                       ? value_as_string(arguments[function == "getwordcount" ? 1U : 2U])
                                       : std::string{" \t\r\n"};
         if (delim.empty()) {
-            return function == "getwordcount" ? make_number_value(1.0) : make_string_value(src);
+            // #5949: real VFP9 SP2 counts a nonempty source as exactly
+            // one word and an empty source as zero words when the
+            // delimiter is empty (GETWORDCOUNT('','') is 0,
+            // GETWORDCOUNT('abc','') is 1); for GETWORDNUM(), only word
+            // index 1 of a nonempty source returns the source -- zero,
+            // negative, and any index other than 1 return an empty
+            // string, matching GETWORDNUM('','',1)'s own empty result
+            // (confirmed against actual VFP9 output, retained
+            // differential evidence:
+            // /home/rich/temp/vfp9-probes/getword-empty-delimiter-80.
+            // {prg,out} and -81.{prg,out}). The prior implementation
+            // counted an empty source as one word and returned the
+            // source unconditionally for GETWORDNUM() regardless of the
+            // requested index. A fractional index truncates toward zero,
+            // matching this file's established convention for other
+            // count/index arguments.
+            if (function == "getwordcount") {
+                return make_number_value(src.empty() ? 0.0 : 1.0);
+            }
+            const double truncated_index = std::trunc(value_as_number(arguments[1]));
+            return make_string_value(!src.empty() && truncated_index == 1.0 ? src : std::string{});
         }
         std::vector<std::string> words;
         std::size_t start = 0U;

@@ -1,3 +1,26 @@
+- 2026-09-13: Fixed #5949 (found during the same review as
+  #5899/#5900/#5928/#5946/#5948): `GETWORDCOUNT()`/`GETWORDNUM()`
+  special-cased an empty delimiter argument before checking either
+  source emptiness or the requested word index, making an empty source
+  count as one word and returning the source unconditionally for
+  `GETWORDNUM()` regardless of index. Real VFP9 SP2 counts a nonempty
+  source (even one that is only spaces, since an empty delimiter never
+  matches to split on) as exactly one word and an empty source as zero
+  words; `GETWORDNUM()` returns the source only for word index 1 of a
+  nonempty source, and an empty string for every other index (zero,
+  negative, or greater than 1) or an empty source (confirmed against
+  actual VFP9 output, retained differential evidence:
+  `/home/rich/temp/vfp9-probes/getword-empty-delimiter-80.{prg,out}` and
+  `-81.{prg,out}`).
+
+  Fixed by checking source emptiness for `GETWORDCOUNT()`, and both
+  source emptiness and a truncated-toward-zero requested index against
+  1 for `GETWORDNUM()`, before falling back to the single-word
+  interpretation. New `test_getword_functions_handle_empty_delimiter`
+  covers all eight differential vectors from the issue's two retained
+  evidence files; verified fail-then-pass against a reverted
+  implementation.
+
 - 2026-09-13: Fixed #5948 (found during the same review as
   #5899/#5900/#5928/#5946): `PADC()` used a centered-clip when its source
   exceeded the requested width, and `PADL()` (discovered while
