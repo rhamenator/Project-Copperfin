@@ -575,7 +575,12 @@ namespace
         check("strtran_flags_start_count", "aBc X abc");
         check("strtran_negative_count", "XXX");
         check("strtran_negative_count_flags", "X X X");
-        check("proper_value", "Legacy Fox-Pro App");
+        // #5927: this expectation was "Legacy Fox-Pro App" before the fix
+        // -- an assumption, not real VFP9 output. Real VFP9 SP2 does not
+        // restart capitalization after a hyphen (PROPER('MARY-JANE') is
+        // "Mary-jane"; see test_proper_does_not_capitalize_after_internal_
+        // punctuation below for the full retained differential evidence).
+        check("proper_value", "Legacy Fox-pro App");
         check("strconv_lower", "mixed");
         check("strconv_upper", "MIXED");
         check("strconv_passthrough", "MiXeD");
@@ -1370,6 +1375,56 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5927: real VFP9 SP2 output for these exact four expressions was
+    // "digit=Abc1def\napost=O'connor\nhyphen=Mary-jane\nunder=Abc_def"
+    // (retained differential evidence:
+    // /home/rich/temp/vfp9-probes/proper-55.{prg,out}). VFP9 restarts
+    // capitalization only after whitespace -- a digit, apostrophe,
+    // hyphen, or underscore mid-word does not start a new word, unlike
+    // the prior implementation's "any non-letter, non-digit byte resets
+    // capitalization" rule.
+    void test_proper_does_not_capitalize_after_internal_punctuation()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_proper_internal_punctuation";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "proper_punctuation.prg";
+        write_text(
+            main_path,
+            "cDigit = PROPER('ABC1DEF')\n"
+            "cApostrophe = PROPER(\"O'CONNOR\")\n"
+            "cHyphen = PROPER('MARY-JANE')\n"
+            "cUnderscore = PROPER('ABC_DEF')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "PROPER internal-punctuation script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + ": expected \"" + expected + "\", got \"" +
+                           copperfin::runtime::format_value(it->second) + "\"");
+            }
+        };
+
+        check("cdigit", "Abc1def");
+        check("capostrophe", "O'connor");
+        check("chyphen", "Mary-jane");
+        check("cunderscore", "Abc_def");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1510,6 +1565,7 @@ int main()
     test_chr_and_str_truncate_fractional_arguments();
     test_chr_rejects_out_of_range_character_code();
     test_str_rejects_oversized_width_instead_of_allocating();
+    test_proper_does_not_capitalize_after_internal_punctuation();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();

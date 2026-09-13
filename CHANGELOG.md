@@ -1,3 +1,35 @@
+- 2026-09-13: Fixed #5927 (found during the same review as #5899/#5900):
+  `PROPER()` treated every non-letter, non-digit byte (apostrophe,
+  hyphen, underscore, punctuation) as a new-word boundary, restarting
+  capitalization after it. Real VFP9 SP2 restarts capitalization only
+  after whitespace: `PROPER("O'CONNOR")` is `"O'connor"` (Copperfin
+  returned `"O'Connor"`), `PROPER('MARY-JANE')` is `"Mary-jane"`
+  (Copperfin returned `"Mary-Jane"`), and `PROPER('ABC_DEF')` is
+  `"Abc_def"` (Copperfin returned `"Abc_Def"`); `PROPER('ABC1DEF')` was
+  already correct (`"Abc1def"` both ways, since a digit already did not
+  reset capitalization before this fix).
+
+  Fixed by changing the word-boundary condition from "any non-alpha,
+  non-digit byte" to "whitespace only" -- a digit, apostrophe, hyphen,
+  underscore, or any other non-alpha, non-space byte is now passed
+  through unchanged and leaves the word-boundary state as it already
+  was. A pre-existing test's own expected value
+  (`PROPER('legacy fox-pro APP')` = `"Legacy Fox-Pro App"`) was itself
+  an unverified assumption, not real VFP9 output, and is corrected to
+  `"Legacy Fox-pro App"` to match. New
+  `test_proper_does_not_capitalize_after_internal_punctuation` covers
+  all four differential vectors from the issue using real, retained
+  VFP9 SP2 output (`/home/rich/temp/vfp9-probes/proper-55.{prg,out}`) as
+  expected values; verified fail-then-pass against a reverted
+  implementation.
+
+  The issue's own broader "respect the active VFP code page for
+  high-byte letters" bullet was not attempted -- `UPPER()`/`LOWER()`
+  share the same pre-existing ASCII-only `std::toupper`/`std::tolower`
+  limitation, so a code-page-aware fix would need a new shared
+  case-conversion utility across all three functions, a materially
+  larger change than this issue's own reported word-boundary bug.
+
 - 2026-09-13: Fixed #5900 (found during the same review as #5899):
   `CHR()` and `STR()` both rounded a fractional integral argument to the
   nearest integer (`std::llround()`) instead of truncating it toward

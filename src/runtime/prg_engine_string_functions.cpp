@@ -296,6 +296,16 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(std::move(result));
     }
     if (function == "proper" && !arguments.empty()) {
+        // #5927: VFP9 restarts capitalization only after whitespace, not
+        // after every non-letter, non-digit byte -- confirmed against
+        // real VFP9 output: PROPER("O'CONNOR") is "O'connor",
+        // PROPER('MARY-JANE') is "Mary-jane", and PROPER('ABC_DEF') is
+        // "Abc_def" (apostrophe, hyphen, and underscore do not start a
+        // new word), while PROPER('ABC1DEF') is "Abc1def" (a digit
+        // already correctly did not reset capitalization before this
+        // fix). A digit, apostrophe, hyphen, underscore, or any other
+        // non-alpha, non-space byte is passed through unchanged and
+        // leaves the word-boundary state as it already was.
         std::string src = value_as_string(arguments[0]);
         bool start_word = true;
         for (char& ch : src) {
@@ -303,7 +313,7 @@ std::optional<PrgValue> evaluate_string_function(
             if (std::isalpha(raw) != 0) {
                 ch = static_cast<char>(start_word ? std::toupper(raw) : std::tolower(raw));
                 start_word = false;
-            } else if (std::isdigit(raw) == 0) {
+            } else if (std::isspace(raw) != 0) {
                 start_word = true;
             }
         }
