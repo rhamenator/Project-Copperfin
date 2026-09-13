@@ -43,6 +43,20 @@
   table's code page and cannot carry arbitrary binary property
   content.
 
+  A PR review round (chatgpt-codex-connector, P2) caught that the new
+  fail-closed behavior applied unconditionally to every catalog row,
+  including a *deleted* one -- but a deleted row's own PROPERTIES
+  memo, however corrupted, is never actually surfaced to anything
+  (deleted rows are excluded from both table resolution and catalog
+  serialization elsewhere in this same function), so a stale memo
+  pointer on a logically-deleted row could make an otherwise
+  exportable, live database unusable. Fixed by skipping PROPERTIES
+  decoding entirely for a deleted row instead of decoding corrupted,
+  never-used data only to discard it. New regression test
+  `test_export_database_as_json_ignores_corrupt_properties_on_deleted_
+  row` proves a truncated memo on a deleted row does not fail the
+  export, while the live row's own data still exports correctly.
+
   docs/32-recovered-requirements-traceability.md row
   RQ-CF-MODERNIZATION-001 updated.
 

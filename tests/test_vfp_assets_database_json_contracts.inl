@@ -368,6 +368,67 @@ void test_export_database_as_json_fails_closed_on_truncated_properties_memo() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5830 PR review (chatgpt-codex-connector, P2): a deleted catalog row is
+// excluded from both table resolution and catalog serialization -- its own
+// PROPERTIES memo, however corrupted, is never actually surfaced to
+// anything. #5797's own fail-closed behavior must not make an otherwise
+// exportable, live database unusable just because a *deleted* row's stale
+// memo pointer references truncated data.
+void test_export_database_as_json_ignores_corrupt_properties_on_deleted_row() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_props_deleted_row_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::string dbc_utf8_path = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"DATABASE", "sample", "", ""},
+        {"TABLE", "Customers", "sample", ""},
+        {"TABLE", "DeletedGhost", "sample", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_utf8_path, fields, records);
+    expect(create_result.ok, "deleted-row properties test: DBC fixture should be created");
+
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(dbc_utf8_path, 2U, true);
+    expect(delete_result.ok, "deleted-row properties test: record should be markable deleted");
+
+    // A truncated PROPERTIES memo on the now-deleted row -- identical shape
+    // to test_export_database_as_json_fails_closed_on_truncated_properties_
+    // memo's own fixture, which does fail a *live* row's export closed.
+    std::string truncated_blob;
+    truncated_blob += '\x01';
+    truncated_blob += '\x07'; truncated_blob += '\x00';
+    truncated_blob += "Comment";
+    truncated_blob += '\x64'; truncated_blob += '\x00';  // value_len = 100
+    truncated_blob += "short";                            // only 5 bytes present
+
+    expect(patch_dbc_properties_blob_raw(dbc_path, 2U, 81U, truncated_blob),
+           "deleted-row properties test: PROPERTIES memo should be patchable with raw binary content");
+
+    const auto result = copperfin::vfp::export_database_as_json(dbc_utf8_path);
+    expect(result.ok,
+           "export_database_as_json must not fail on a corrupt PROPERTIES memo belonging to a "
+           "deleted (never-surfaced) catalog row: " + result.error);
+    if (result.ok) {
+        expect(result.json.find("DeletedGhost") == std::string::npos,
+               "export_database_as_json must not surface a deleted catalog row's own metadata");
+        expect(result.json.find("Customers") != std::string::npos,
+               "export_database_as_json must still export the live table unaffected by the "
+               "deleted row's own corrupt properties");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 // #5798: an unrecognized PROPERTIES type code has an unknown value length by
 // construction (no separate length field to fall back on). The previous
 // "preserve as hex and advance one byte" behavior treated the value's own

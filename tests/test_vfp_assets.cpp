@@ -8657,6 +8657,7 @@ int main() {
     test_export_database_as_json_decodes_properties_blob();
     test_export_database_as_json_decodes_datetime_property();
     test_export_database_as_json_fails_closed_on_truncated_properties_memo();
+    test_export_database_as_json_ignores_corrupt_properties_on_deleted_row();
     test_export_database_as_json_fails_closed_on_unsupported_property_type();
     test_export_database_as_json_prefers_catalog_name_and_casefolded_assets();
     test_build_database_json_import_plan_validates_without_mutation();

@@ -1774,20 +1774,29 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
         obj.object_name   = raw.object_name;
         obj.parent_name   = raw.parent_name;
 
-        if (raw.properties_block != 0U && has_dct) {
+        // #5830 PR review (chatgpt-codex-connector, P2): a deleted catalog
+        // row is excluded from both table resolution (the loop below skips
+        // `obj.deleted`) and catalog serialization (export_database_as_
+        // json()'s own catalog block does too) -- its own PROPERTIES memo,
+        // however corrupted, is never actually surfaced to anything. #5797's
+        // own fail-closed behavior must not make an otherwise exportable,
+        // live database unusable just because a *deleted* row's stale memo
+        // pointer references truncated or unsupported data; skip decoding
+        // entirely for a deleted row rather than decode-then-discard.
+        if (!raw.deleted && raw.properties_block != 0U && has_dct) {
             const std::vector<std::uint8_t> prop_bytes =
                 read_memo_block_raw(
                     copperfin::platform::path_to_utf8_string(*dct_path),
                     raw.properties_block);
             if (!prop_bytes.empty()) {
                 // #5797: a truncated or otherwise malformed PROPERTIES memo
-                // must fail the whole catalog snapshot (and every exporter
-                // that shares it) closed, not silently return whichever
-                // properties happened to decode before the malformed tail
-                // while still reporting success. `raw.object_name` is a
-                // reference into the local raw_rows vector (not
-                // snapshot.catalog), so it stays valid across the
-                // `snapshot = {}` reset below -- see #5817's own fix
+                // on a *live* row must fail the whole catalog snapshot (and
+                // every exporter that shares it) closed, not silently
+                // return whichever properties happened to decode before the
+                // malformed tail while still reporting success.
+                // `raw.object_name` is a reference into the local raw_rows
+                // vector (not snapshot.catalog), so it stays valid across
+                // the `snapshot = {}` reset below -- see #5817's own fix
                 // earlier in this function for why that distinction
                 // matters here.
                 const DbcPropertiesDecodeResult props_result =
