@@ -1820,6 +1820,44 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_at_family_accepts_positive_subunit_occurrence()
+    {
+        // #5951 review: a positive sub-unit occurrence (0 < n < 1) is valid
+        // input, not an error, and maps to occurrence 1 — matching this
+        // codebase's pre-existing documented positive-fraction behavior.
+        // Regression test for a review finding on the fix that made
+        // AT()/ATC()/ATCC()/RAT()/RATC() reject invalid occurrences: an
+        // over-eager truncation of 0.5 to 0 would make these report no
+        // match instead of the occurrence-1 match.
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_at_family_subunit_occurrence";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "at_family_subunit_occurrence.prg";
+        write_text(
+            main_path,
+            "nAt = AT('a', 'banana', 0.5)\n"
+            "nRat = RAT('a', 'banana', 0.5)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "AT-family positive-subunit-occurrence script should complete: " + state.message);
+
+        const auto at_value = state.globals.find("nat");
+        expect(at_value != state.globals.end() && copperfin::runtime::format_value(at_value->second) == "2",
+               "AT('a', 'banana', 0.5) should match occurrence 1, not reject or return no match");
+        const auto rat_value = state.globals.find("nrat");
+        expect(rat_value != state.globals.end() && copperfin::runtime::format_value(rat_value->second) == "6",
+               "RAT('a', 'banana', 0.5) should match occurrence 1 from the right, not reject or return no match");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1967,6 +2005,7 @@ int main()
     test_padl_padr_padc_truncate_to_leftmost_characters();
     test_getword_functions_handle_empty_delimiter();
     test_at_family_rejects_invalid_occurrence();
+    test_at_family_accepts_positive_subunit_occurrence();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();

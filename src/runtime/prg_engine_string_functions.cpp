@@ -131,7 +131,11 @@ std::size_t require_valid_occurrence_argument(const PrgValue& argument) {
     if (!std::isfinite(requested_occurrence) || requested_occurrence <= 0.0) {
         throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
     }
-    return static_cast<std::size_t>(requested_occurrence);
+    // A positive sub-unit occurrence (0 < n < 1) is valid and maps to
+    // occurrence 1, matching this codebase's pre-existing documented
+    // positive-fraction behavior; only reject actual nonpositive/non-finite
+    // values above.
+    return static_cast<std::size_t>(std::max(1.0, requested_occurrence));
 }
 
 }  // namespace

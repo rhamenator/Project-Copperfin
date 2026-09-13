@@ -24,6 +24,18 @@
   invalid-occurrence test's `ON ERROR` capture pattern; verified
   fail-then-pass against a reverted implementation.
 
+  Review round (chatgpt-codex-connector, P2): the first version of
+  `require_valid_occurrence_argument()` rejected only nonpositive/
+  non-finite input, then cast the raw occurrence straight to
+  `std::size_t` — truncating a valid positive sub-unit occurrence
+  (0 < n < 1, e.g. `AT('a', 'a', 0.5)`) to `0`, so the search counter
+  could never equal it and these five functions would wrongly report no
+  match. Restored the pre-existing `std::max(1.0, ...)` lower bound
+  after the reject check, so a positive fraction still maps to
+  occurrence 1 as before. New `test_at_family_accepts_positive_subunit_occurrence`
+  covers `AT('a', 'banana', 0.5)` and `RAT('a', 'banana', 0.5)`; verified
+  fail-then-pass against the reviewer's exact counter-example.
+
 - 2026-09-13: Fixed #5949 (found during the same review as
   #5899/#5900/#5928/#5946/#5948): `GETWORDCOUNT()`/`GETWORDNUM()`
   special-cased an empty delimiter argument before checking either
