@@ -1444,6 +1444,7 @@
   "Vfp.AssetInspector.Error.DatabaseImportCommitFailed": "IMPORT DATABASE TYPE JSON: unable to commit staged files to their destination; attempted to remove anything already committed",
   "Vfp.AssetInspector.Error.DatabaseImportDestinationExists": "IMPORT DATABASE TYPE JSON: destination already exists: {path}",
   "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed": "IMPORT DATABASE TYPE JSON: unable to scan destination directory for existing files: {path}",
+  "Vfp.AssetInspector.Error.DatabaseImportDestinationScanTooLarge": "IMPORT DATABASE TYPE JSON: destination directory {path} has more than {limit} entries; refusing to scan it for existing files",
   "Vfp.AssetInspector.Error.DatabaseImportDuplicateTableName": "IMPORT DATABASE TYPE JSON: duplicate table name (case-insensitive): {table}",
   "Vfp.AssetInspector.Error.DatabaseImportInvalidRecords": "IMPORT DATABASE TYPE JSON: invalid record data for table {table}",
   "Vfp.AssetInspector.Error.DatabaseImportNoTables": "IMPORT DATABASE TYPE JSON: the import plan contains no tables",

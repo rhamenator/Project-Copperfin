@@ -5628,6 +5628,15 @@ TableRowExtractionResult extract_import_table_rows(
 
 }  // namespace
 
+// #5828: an unbounded destination-directory scan can keep an import in
+// preflight indefinitely against a huge or slow (e.g. network-mounted)
+// directory. This does not need to be exact -- it only needs to fail
+// closed with a clear diagnostic well before a scan becomes a de facto
+// hang, while staying generous enough that an ordinary large real-world
+// directory (the #5745 reproduction used 200,000 files) is nowhere close
+// to it.
+constexpr std::size_t kMaxDestinationScanEntries = 1'000'000U;
+
 DatabaseJsonImportResult materialize_database_json_import_plan(
     const DatabaseJsonImportPlan& plan,
     const std::string& dbc_path) {
@@ -5706,19 +5715,39 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
                     {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)}}));
             }
             const fs::directory_iterator scan_end;
-            for (; scan_it != scan_end; scan_it.increment(scan_error)) {
+            // #5828: a `for (; it != end; it.increment(ec))` loop checked
+            // `ec` only at the top of the *next* iteration's body -- but
+            // directory_iterator::increment() sets the iterator equal to
+            // its own end sentinel on failure (per its documented
+            // contract), so a failing increment made the loop's own
+            // condition (`scan_it != scan_end`) false and exit the loop
+            // before that iteration's body, and therefore its `scan_error`
+            // check, ever ran. An error partway through the directory was
+            // silently accepted as a complete listing, exactly the
+            // fail-closed guarantee this scan exists to provide. Using a
+            // `while` loop with the error check immediately after each
+            // `increment()` call closes that gap -- the check can never be
+            // skipped by the loop's own condition re-evaluation.
+            std::size_t scanned_entry_count = 0U;
+            while (scan_it != scan_end) {
+                if (++scanned_entry_count > kMaxDestinationScanEntries) {
+                    return failure(asset_inspector_text(
+                        "Vfp.AssetInspector.Error.DatabaseImportDestinationScanTooLarge",
+                        {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)},
+                         {"limit", std::to_string(kMaxDestinationScanEntries)}}));
+                }
+                std::string entry_casefolded_name =
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(scan_it->path().filename()));
+                if (planned_casefolded_basenames.count(entry_casefolded_name) != 0U) {
+                    existing_entries_by_casefolded_name.emplace(
+                        std::move(entry_casefolded_name), scan_it->path());
+                }
+                scan_it.increment(scan_error);
                 if (scan_error) {
                     return failure(asset_inspector_text(
                         "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed",
                         {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)}}));
                 }
-                std::string entry_casefolded_name =
-                    lowercase_copy(copperfin::platform::path_to_utf8_string(scan_it->path().filename()));
-                if (planned_casefolded_basenames.count(entry_casefolded_name) == 0U) {
-                    continue;
-                }
-                existing_entries_by_casefolded_name.emplace(
-                    std::move(entry_casefolded_name), scan_it->path());
             }
         }
     }

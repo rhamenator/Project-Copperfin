@@ -1765,6 +1765,7 @@
   "Vfp.AssetInspector.Error.DatabaseImportCommitFailed": "IMPORT DATABASE TYPE JSON: nao conseguiu confirmar os arquivos preparados no destino; tentou remover tudo que ja havia sido confirmado",
   "Vfp.AssetInspector.Error.DatabaseImportDestinationExists": "IMPORT DATABASE TYPE JSON: o destino ja existe: {path}",
   "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed": "IMPORT DATABASE TYPE JSON: nao foi possivel varrer o diretorio de destino em busca de arquivos existentes: {path}",
+  "Vfp.AssetInspector.Error.DatabaseImportDestinationScanTooLarge": "IMPORT DATABASE TYPE JSON: o diretorio de destino {path} tem mais de {limit} entradas; recusando-se a varre-lo em busca de arquivos existentes",
   "Vfp.AssetInspector.Error.DatabaseImportDuplicateTableName": "IMPORT DATABASE TYPE JSON: nome de tabela duplicado (sem diferenciar maiusculas/minusculas): {table}",
   "Vfp.AssetInspector.Error.DatabaseImportInvalidRecords": "IMPORT DATABASE TYPE JSON: dados de registro invalidos para a tabela {table}",
   "Vfp.AssetInspector.Error.DatabaseImportNoTables": "IMPORT DATABASE TYPE JSON: o plano de importacao nao contem tabelas",

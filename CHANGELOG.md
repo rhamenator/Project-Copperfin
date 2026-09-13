@@ -1,3 +1,45 @@
+- 2026-09-13: Fixed two gaps in `materialize_database_json_import_
+  plan()`'s destination-directory scan (`src/vfp/asset_inspector.cpp`,
+  #5828, found by an automated Codex code-review pass reviewing the
+  merged #5745 fix itself). First, a genuine correctness bug: the
+  `for (; scan_it != scan_end; scan_it.increment(scan_error)) { if
+  (scan_error) {...} ... }` loop checked `scan_error` only at the top
+  of the *next* iteration's body -- but `directory_iterator::
+  increment()` sets the iterator equal to its own end sentinel on
+  failure (its documented contract), so a failing increment made the
+  loop's own condition false and exited the loop before that
+  iteration's body, and therefore its `scan_error` check, ever ran. A
+  scan error partway through the destination directory was silently
+  accepted as a complete listing, defeating the exact fail-closed
+  guarantee the scan exists to provide. Fixed by replacing the `for`
+  loop with a `while` loop that checks `scan_error` immediately after
+  each `increment()` call, which cannot be skipped by the loop's own
+  condition re-evaluation -- verifiable by inspection against
+  `directory_iterator::increment(error_code&)`'s own documented
+  contract, rather than requiring a live reproduction of an inherently
+  racy, hard-to-force-deterministically OS-level directory read
+  failure.
+
+  Second, the scan had no entry/time bound at all, so a huge or slow
+  mounted directory could keep an import in preflight indefinitely.
+  Fixed by adding a `kMaxDestinationScanEntries` cap (1,000,000,
+  generously above the ~200,000-entry adversarial case #5745 itself
+  was reported against) with a new localized `Vfp.AssetInspector.
+  Error.DatabaseImportDestinationScanTooLarge` diagnostic -- not
+  verified with a dedicated large-file test given the prohibitive
+  runtime of creating over a million files, but the bound check itself
+  is a single integer comparison, low-risk to get wrong.
+
+  **Scope note:** #5828's third claim -- that publication via
+  `create_hard_link()` after this scan can still be raced by a
+  case-aliasing file created during staging -- is the same TOCTOU
+  shape already tracked separately (#5679/#5680, needing
+  fd-relative/handle-based identity binding rather than pathname
+  re-resolution) and was not attempted here.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-004 updated.
+
 - 2026-09-12: Fixed three distinct defects in `decode_dbc_properties_
   blob()` (`src/vfp/asset_inspector.cpp`, #5796/#5797/#5798, found by
   an automated Codex code-review pass), the binary decoder for a DBC's
