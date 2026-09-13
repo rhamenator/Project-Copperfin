@@ -1550,6 +1550,55 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5968 PR review (chatgpt-codex-connector, P2): the ceiling check
+    // must compare against the same truncated-toward-zero value the
+    // allocation itself uses, not the raw fractional argument --
+    // SPACE(16777184.5) truncates to exactly the permitted 16,777,184
+    // bytes and must succeed, and REPLICATE() with a ten-byte source and
+    // a count of 1677718.5 truncates to a count of 1677718 (product
+    // 16,777,180 bytes, under the ceiling) and must also succeed. An
+    // earlier version of the fix compared the ceiling against the raw
+    // double and wrongly rejected both.
+    void test_space_and_replicate_accept_values_truncating_to_the_ceiling()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_space_replicate_ceiling_boundary";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "space_replicate_ceiling_boundary.prg";
+        write_text(
+            main_path,
+            "nSpaceAtCeiling = LEN(SPACE(16777184.5))\n"
+            "nReplicateAtCeiling = LEN(REPLICATE('0123456789', 1677718.5))\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "SPACE/REPLICATE values truncating to the ceiling should succeed, not raise error 1903: " +
+                   state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + ": expected \"" + expected + "\", got \"" +
+                           copperfin::runtime::format_value(it->second) + "\"");
+            }
+        };
+
+        check("nspaceatceiling", "16777184");
+        check("nreplicateatceiling", "16777180");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1693,6 +1742,7 @@ int main()
     test_trim_family_supports_parse_characters_and_flags();
     test_trim_family_matches_whole_parse_string_tokens();
     test_space_and_replicate_reject_oversized_requests();
+    test_space_and_replicate_accept_values_truncating_to_the_ceiling();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();

@@ -214,15 +214,24 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(rtrim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "space" && !arguments.empty()) {
-        // #5946: check the finite double directly against the VFP ceiling
-        // before ever narrowing to std::size_t -- a huge or nonfinite
-        // requested count would otherwise be undefined behavior on the
-        // narrowing cast, not just an oversized allocation.
+        // #5946/#5968 PR review (chatgpt-codex-connector, P2): compare the
+        // ceiling against the same truncated-toward-zero value the
+        // subsequent std::size_t conversion actually produces, not the
+        // raw fractional double -- otherwise a value like 16777184.5
+        // (which truncates to exactly the permitted 16,777,184 bytes)
+        // was wrongly rejected. Still checked as a double, before ever
+        // narrowing to std::size_t, so a huge or nonfinite requested
+        // count remains undefined-behavior-free rather than merely an
+        // oversized allocation.
         const double requested = value_as_number(arguments[0]);
-        if (!std::isfinite(requested) || requested > kVfpMaxCharacterStringLength) {
+        if (!std::isfinite(requested)) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.StringTooLong"), 1903);
         }
-        const std::size_t n = static_cast<std::size_t>(std::max(0.0, requested));
+        const double truncated = std::trunc(std::max(0.0, requested));
+        if (truncated > kVfpMaxCharacterStringLength) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.StringTooLong"), 1903);
+        }
+        const std::size_t n = static_cast<std::size_t>(truncated);
         return make_string_value(std::string(n, ' '));
     }
     if (function == "replicate" && arguments.size() >= 2U) {
@@ -231,15 +240,19 @@ std::optional<PrgValue> evaluate_string_function(
         if (!std::isfinite(requested_count)) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.StringTooLong"), 1903);
         }
-        // #5946: compare the product in double precision -- src.size() *
-        // n could otherwise overflow std::size_t itself for an
-        // adversarial huge count, silently wrapping to a small value that
-        // would then pass a post-multiplication check.
-        if (static_cast<double>(src.size()) * std::max(0.0, requested_count) >
-            kVfpMaxCharacterStringLength) {
+        // #5946/#5968 PR review (chatgpt-codex-connector, P2): same
+        // truncate-before-compare fix as SPACE() above -- compare the
+        // product against the truncated count that will actually be
+        // used, not the raw fractional double. Still compared in double
+        // precision -- src.size() * n could otherwise overflow
+        // std::size_t itself for an adversarial huge count, silently
+        // wrapping to a small value that would then pass a
+        // post-multiplication check.
+        const double truncated_count = std::trunc(std::max(0.0, requested_count));
+        if (static_cast<double>(src.size()) * truncated_count > kVfpMaxCharacterStringLength) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.StringTooLong"), 1903);
         }
-        const std::size_t n = static_cast<std::size_t>(std::max(0.0, requested_count));
+        const std::size_t n = static_cast<std::size_t>(truncated_count);
         std::string result;
         result.reserve(src.size() * n);
         for (std::size_t i = 0; i < n; ++i) {

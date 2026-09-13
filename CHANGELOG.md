@@ -36,6 +36,17 @@
   `REPLICATE()` specifically, which is what the retained evidence covers
   and what the issue's own title names.
 
+  A PR review round (chatgpt-codex-connector, P2) caught that the
+  ceiling check compared the raw fractional argument against the
+  ceiling while the subsequent `std::size_t` conversion truncates it
+  toward zero, so `SPACE(16777184.5)` (which truncates to exactly the
+  permitted 16,777,184 bytes) was wrongly rejected, and similarly for
+  `REPLICATE()`. Fixed by truncating first, then comparing the
+  already-truncated value against the ceiling -- the same value that
+  actually gets allocated. New
+  `test_space_and_replicate_accept_values_truncating_to_the_ceiling`
+  covers both cases; verified fail-then-pass.
+
 - 2026-09-13: Fixed #5928 (found during the same review as #5899/#5900):
   `LTRIM()`, `RTRIM()`/`TRIM()`, and `ALLTRIM()` silently ignored their
   optional `nFlags` and `cParseString1..cParseString23` arguments,
