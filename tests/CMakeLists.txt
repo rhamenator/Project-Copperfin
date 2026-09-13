@@ -4562,6 +4562,10 @@ copperfin_add_test(test_dbf_text_encoding cf_vfp_assets
     test_dbf_text_encoding.cpp
 )
 
+copperfin_add_test(test_staged_import_publish cf_vfp_assets
+    test_staged_import_publish.cpp
+)
+
 # Bounded, deterministic defense-in-depth robustness coverage for the DBF
 # header parser (docs/36-dbf-header-parser-robustness-testing.md). These
 # targets exist only when explicitly requested. When the local compiler

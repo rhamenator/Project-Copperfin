@@ -424,6 +424,7 @@ add_library(cf_vfp_assets
     src/vfp/dbf_table.cpp
     src/vfp/index_probe.cpp
     src/vfp/sidecar_path.cpp
+    src/vfp/staged_import_publish.cpp
     src/vfp/xbase_relation_inference.cpp
     src/vfp/visual_asset_editor_shared_helpers.cpp
     src/vfp/visual_asset_editor_method_blobs.cpp
