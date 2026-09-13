@@ -4,6 +4,7 @@
 
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/platform/invariant_numeric.h"
+#include "copperfin/localization/localization.h"
 #include "../src/runtime/prg_engine_helpers.h"
 #include "../src/runtime/prg_engine_string_functions.h"
 #include "prg_engine_test_support.h"
@@ -1189,6 +1190,186 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5900: real VFP9 SP2 output for these exact expressions was
+    // "65|4|>  12<|8|>     1.2<" (retained differential evidence:
+    // /home/rich/temp/vfp9-probes/chr-str-fractional-15.{prg,out}). VFP9
+    // truncates CHR()'s character-code argument and STR()'s width
+    // argument toward zero rather than rounding to the nearest integer;
+    // STR()'s decimal-count argument already truncated correctly before
+    // this fix and is included here only as an unaffected regression
+    // check.
+    void test_chr_and_str_truncate_fractional_arguments()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_chr_str_fractional_arguments";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "chr_str_fractional.prg";
+        write_text(
+            main_path,
+            "nAscChr = ASC(CHR(65.9))\n"
+            "nLenStr = LEN(STR(12, 4.9))\n"
+            "cStrValue = STR(12, 4.9)\n"
+            "nLenStrDecimals = LEN(STR(1.234, 8, 1.9))\n"
+            "cStrDecimalsValue = STR(1.234, 8, 1.9)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "CHR/STR fractional-argument script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + ": expected \"" + expected + "\", got \"" +
+                           copperfin::runtime::format_value(it->second) + "\"");
+            }
+        };
+
+        check("nascchr", "65");
+        check("nlenstr", "4");
+        check("cstrvalue", "  12");
+        check("nlenstrdecimals", "8");
+        check("cstrdecimalsvalue", "     1.2");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    // #5900: real VFP9 SP2 output for CHR(-1), CHR(256), and CHR(300) was
+    // "ERR11|ERR11|ERR11" (retained differential evidence:
+    // /home/rich/temp/vfp9-probes/chr-range-16.{prg,out}) -- VFP9 raises
+    // error 11 for a character code outside its accepted [0, 255] byte
+    // range rather than narrowing it. Modeled on the AT_C invalid-
+    // occurrence test's ON ERROR capture pattern in
+    // test_prg_engine_functions.cpp; a nonfinite argument (EXP(10000),
+    // the same construction that test uses) is included on the same
+    // "out of range" basis as the three VFP9-verified boundary values,
+    // since CHR() has no valid finite representation for it either.
+    void test_chr_rejects_out_of_range_character_code()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_chr_out_of_range_code";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "chr_out_of_range.prg";
+        write_text(
+            main_path,
+            "PUBLIC nCapturedCode\n"
+            "PUBLIC nCapturedCount\n"
+            "PUBLIC cCapturedMessage\n"
+            "PUBLIC nAfterError\n"
+            "nCapturedCode = 0\n"
+            "nCapturedCount = 0\n"
+            "cCapturedMessage = ''\n"
+            "nAfterError = 0\n"
+            "ON ERROR DO HandleChrError\n"
+            "cUnexpectedNegative = CHR(-1)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleChrError\n"
+            "cUnexpectedTooHigh = CHR(256)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleChrError\n"
+            "cUnexpectedWayTooHigh = CHR(300)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleChrError\n"
+            "cUnexpectedNonfinite = CHR(EXP(10000))\n"
+            "ON ERROR\n"
+            "nAfterError = 42\n"
+            "RETURN\n"
+            "PROCEDURE HandleChrError\n"
+            "nCapturedCount = nCapturedCount + 1\n"
+            "nCapturedCode = ERROR()\n"
+            "cCapturedMessage = MESSAGE()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "CHR out-of-range script should recover through ON ERROR: " + state.message);
+
+        const auto code = state.globals.find("ncapturedcode");
+        const auto message = state.globals.find("ccapturedmessage");
+        const auto after_error = state.globals.find("naftererror");
+        expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "11",
+               "CHR() outside [0, 255] should report VFP error 11");
+        const auto count = state.globals.find("ncapturedcount");
+        expect(count != state.globals.end() && copperfin::runtime::format_value(count->second) == "4",
+               "CHR(-1), CHR(256), CHR(300), and a nonfinite argument should all report through ON ERROR");
+        const std::string captured_message = message == state.globals.end()
+            ? std::string{}
+            : copperfin::runtime::format_value(message->second);
+        const auto catalog = copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+        const std::string expected_message = catalog.translate(
+            "Runtime.Prg.String.Error.InvalidCharacterCode");
+        expect(message != state.globals.end() && captured_message == expected_message,
+               "CHR() out-of-range should use the active locale's invalid-argument message");
+        expect(after_error != state.globals.end() && copperfin::runtime::format_value(after_error->second) == "42",
+               "CHR() out-of-range should resume after its ON ERROR handler");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    // #5947 PR review (chatgpt-codex-connector, P2): an earlier version of
+    // the #5900 fix saturated an out-of-range STR() width to INT_MAX
+    // instead of rejecting it, so STR(1, 1e100) attempted to allocate
+    // roughly 2 GiB of padding spaces -- a real denial-of-service risk,
+    // not just a narrowing-cast correctness concern. STR() must instead
+    // report VFP error 11 for a width beyond its supported bound without
+    // ever attempting the oversized allocation.
+    void test_str_rejects_oversized_width_instead_of_allocating()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_str_oversized_width";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "str_oversized_width.prg";
+        write_text(
+            main_path,
+            "PUBLIC nCapturedCode\n"
+            "PUBLIC nAfterError\n"
+            "nCapturedCode = 0\n"
+            "nAfterError = 0\n"
+            "ON ERROR DO HandleStrError\n"
+            "cUnexpected = STR(1, 1e100)\n"
+            "ON ERROR\n"
+            "nAfterError = 42\n"
+            "RETURN\n"
+            "PROCEDURE HandleStrError\n"
+            "nCapturedCode = ERROR()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "STR() oversized-width script should recover through ON ERROR rather than attempting a huge "
+               "allocation: " + state.message);
+
+        const auto code = state.globals.find("ncapturedcode");
+        expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "11",
+               "STR() with a width far beyond any supported bound should report VFP error 11");
+        const auto after_error = state.globals.find("naftererror");
+        expect(after_error != state.globals.end() && copperfin::runtime::format_value(after_error->second) == "42",
+               "STR() oversized width should resume after its ON ERROR handler");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1326,6 +1507,9 @@ int main()
     test_nested_macro_eval_textmerge_execscript_semantics();
     test_round_uses_decimal_half_away_from_zero_behavior();
     test_round_truncates_fractional_decimal_places_argument();
+    test_chr_and_str_truncate_fractional_arguments();
+    test_chr_rejects_out_of_range_character_code();
+    test_str_rejects_oversized_width_instead_of_allocating();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();
