@@ -1137,6 +1137,58 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5899: real VFP9 SP2 output for these exact four expressions was
+    // "1|1|1.23|1.23" (retained differential evidence:
+    // /home/rich/temp/vfp9-probes/round-decimals-12.{prg,out}). VFP9
+    // truncates a fractional nDecimalPlaces argument toward zero --
+    // 0.6 and -0.6 both act as 0 decimal places, and 2.4 and 2.6 both
+    // act as 2 -- rather than rounding it to the nearest integer first.
+    void test_round_truncates_fractional_decimal_places_argument()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_round_fractional_decimals";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "round_fractional.prg";
+        write_text(
+            main_path,
+            // Written as 0.6/-0.6 rather than VFP's .6/-.6 shorthand --
+            // Copperfin's parser does not yet accept a leading-decimal
+            // numeric literal without an integer part (tracked separately
+            // as #5879); unrelated to this ROUND-specific fix.
+            "nPositiveFraction = ROUND(1.25, 0.6)\n"
+            "nNegativeFraction = ROUND(1.25, -0.6)\n"
+            "nTruncateNotRoundDown = ROUND(1.2345, 2.4)\n"
+            "nTruncateNotRoundUp = ROUND(1.2345, 2.6)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "ROUND fractional-decimals script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + ": expected \"" + expected + "\", got \"" +
+                           copperfin::runtime::format_value(it->second) + "\"");
+            }
+        };
+
+        check("npositivefraction", "1");
+        check("nnegativefraction", "1");
+        check("ntruncatenotrounddown", "1.23");
+        check("ntruncatenotroundup", "1.23");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1273,6 +1325,7 @@ int main()
     test_textmerge_set_state_and_delimiters();
     test_nested_macro_eval_textmerge_execscript_semantics();
     test_round_uses_decimal_half_away_from_zero_behavior();
+    test_round_truncates_fractional_decimal_places_argument();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();

@@ -1,3 +1,21 @@
+- 2026-09-13: Fixed #5899 (found during the repository owner's requested
+  read-only whole-codebase review): `ROUND(nExpression, nDecimalPlaces)`
+  applied `std::round()` to a fractional `nDecimalPlaces` argument before
+  converting it to an integer decimal-places count, rounding it to the
+  nearest integer. Real VFP9 SP2 instead truncates it toward zero --
+  `ROUND(1.25, 0.6)` and `ROUND(1.25, -0.6)` both act as 0 decimal places,
+  and `ROUND(1.2345, 2.4)` and `ROUND(1.2345, 2.6)` both act as 2 -- so
+  Copperfin returned `1.3|0|1.23|1.24` for the four differential vectors
+  where real VFP9 returns `1|1|1.23|1.23`. Fixed by using `std::trunc()`
+  instead of `std::round()` for that normalization step; the existing
+  decimal-exact `round_decimal_value()` rounding helper itself (tie-
+  breaking, negative places, carry propagation) was already correct and
+  untouched. New `test_round_truncates_fractional_decimal_places_argument`
+  covers all four differential vectors from the issue, using real,
+  retained VFP9 SP2 output as the expected values rather than deriving
+  them from C++ rounding primitives; verified fail-then-pass against a
+  reverted `std::round()` implementation.
+
 - 2026-09-13: Partial fix for #5681 and #5682 (found by the same automated
   Codex code-review pass as #5679/#5680, against the same
   `materialize_database_json_import_plan()`; both issues left open --
