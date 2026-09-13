@@ -5957,10 +5957,26 @@ struct StagedImportFile {
 };
 
 void remove_staged_import_files_and_directory(
-    const std::vector<StagedImportFile>& staged,
+    std::vector<StagedImportFile>& staged,
     const std::filesystem::path& staging_dir) {
     std::error_code ignored;
-    for (const auto& file : staged) {
+    for (auto& file : staged) {
+        // #5941 PR review (chatgpt-codex-connector, P1): on Windows, every
+        // entry's own handle was opened denying write/delete sharing for
+        // as long as it stays open (see staged_import_publish.cpp) -- a
+        // handle still open here would make this very removal (and, for a
+        // successfully committed entry, the staging directory's own
+        // cleanup below) fail with a sharing violation against the
+        // caller's own still-held handle, silently leaving the whole
+        // staging tree (and, for a committed entry, hard-linked aliases
+        // to already-published data) behind since its error is ignored.
+        // Releasing each handle here -- after it has done its job of
+        // protecting the entry through publish and any rollback decision,
+        // and immediately before this transaction is done with that
+        // entry either way -- has no bearing on the identity-binding
+        // guarantee itself, which is already resolved by this point for
+        // every entry reaching this loop.
+        file.handle = StagedImportFileHandle{};
         std::filesystem::remove(file.staged_path, ignored);
     }
     std::filesystem::remove_all(staging_dir, ignored);
@@ -6391,8 +6407,22 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         committed.push_back({file.staged_path, file.final_path, std::move(file.handle)});
     }
 
-    std::error_code cleanup_error;
-    fs::remove_all(staging_dir, cleanup_error);
+    // #5941 PR review (chatgpt-codex-connector, P1): every committed
+    // entry's own handle is still open at this point (opened denying
+    // write/delete sharing for as long as it stays open -- see
+    // staged_import_publish.cpp) -- on Windows, removing staging_dir here
+    // without releasing them first would fail with a sharing violation on
+    // every staged file it contains, and since remove_all()'s error is
+    // ignored, the whole hidden staging tree (full of hard-link aliases to
+    // now-published data) would be silently left behind on every
+    // successful import. remove_staged_import_files_and_directory()
+    // releases each entry's handle before removing its staged_path name
+    // (the transaction has fully succeeded by this point, so there is no
+    // further rollback to protect against for any of these entries), then
+    // removes staging_dir itself; each committed file at its own
+    // final_path is an independent hard link to the same data, unaffected
+    // by removing the staged_path name or the directory that held it.
+    remove_staged_import_files_and_directory(committed, staging_dir);
 
     return {.ok = true, .error = {}, .table_count = table_destinations.size()};
 }

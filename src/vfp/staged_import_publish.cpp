@@ -130,6 +130,20 @@ bool remove_published_import_file_if_identity_matches(
     if (!handle.valid()) {
         return false;
     }
+    const std::uint64_t expected_volume_serial = handle.impl_->volume_serial;
+    const std::uint64_t expected_file_index = handle.impl_->file_index;
+    // #5941 PR review (chatgpt-codex-connector, P1): Windows enforces
+    // sharing across every hard-linked name to one file object, not per
+    // name -- reopening published_path with DELETE access below would
+    // otherwise always fail with a sharing violation against handle's own
+    // still-open FILE_SHARE_READ-only handle to the very same file object
+    // (staged_path and published_path are hard links to it after a
+    // successful publish), making every rollback on Windows fail
+    // unconditionally. The identity values captured above do not depend
+    // on the handle staying open, so releasing it first is safe and lets
+    // the reopen below succeed.
+    handle.impl_->handle.reset();
+
     auto reopened = open_exclusive_regular_file(published_path, GENERIC_READ | DELETE);
     if (!reopened.valid()) {
         return false;
@@ -139,7 +153,7 @@ bool remove_published_import_file_if_identity_matches(
     if (!file_identity_from_handle(reopened.get(), volume_serial, file_index)) {
         return false;
     }
-    if (volume_serial != handle.impl_->volume_serial || file_index != handle.impl_->file_index) {
+    if (volume_serial != expected_volume_serial || file_index != expected_file_index) {
         return false;
     }
     FILE_DISPOSITION_INFO disposition{};
