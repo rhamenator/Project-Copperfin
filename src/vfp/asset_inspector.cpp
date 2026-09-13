@@ -1644,42 +1644,53 @@ std::string describe_field_name_for_diagnostic(const std::string& name) {
 // file (json_escape_str(fld.name), sql_quote_identifier(fld.name), the
 // record-value loops, etc.) needs no separate change: by the time any of
 // them runs, every name reachable through `tbl` is already guaranteed
-// valid UTF-8. A name already valid UTF-8 is left untouched (the common
-// case, and the only case create_dbf_table_file()'s own ASCII-only name
-// writer can produce) rather than needlessly round-tripped through the
-// code page. Fails (returns false, with the offending raw name described
-// via describe_field_name_for_diagnostic()) only for a name that is
-// genuinely undecodable even through the table's own declared code page
-// -- the same fail-closed outcome #5743 already established for that
-// case.
+// valid UTF-8. Fails (returns false, with the offending raw name
+// described via describe_field_name_for_diagnostic()) only for a name
+// that is genuinely undecodable even through the table's own declared
+// code page -- the same fail-closed outcome #5743 already established
+// for that case.
+//
+// #5827 PR review (chatgpt-codex-connector, P2): an earlier version of
+// this function skipped decode_dbf_text() entirely whenever a raw name
+// already looked like valid UTF-8 (an "is it already UTF-8?" fast path).
+// That is unsound whenever the table declares a nonzero legacy code
+// page: valid-UTF-8-shaped bytes are not the same thing as bytes that
+// were actually *meant* as UTF-8. For example, CP1252 bytes 0xC3 0xA9
+// are valid UTF-8 for U+00E9 ('é'), but under a declared CP1252 mark
+// they are two separate CP1252 characters, 'Ã' (0xC3) and '©' (0xA9) --
+// the fast path would silently export the wrong identifier, and could
+// even collide with a different field whose name genuinely decodes to
+// the preserved spelling. Every field name is now routed through
+// decode_dbf_text() unconditionally, regardless of whether the raw
+// bytes happen to already look like valid UTF-8 -- decode_dbf_text()
+// itself already handles code_page_mark == 0 as UTF-8 compatibility
+// mode (effectively validating already-UTF-8 input), so this adds no
+// special-casing and removes the exact ambiguity the fast path had.
 //
 // Scope note: this does not attempt every acceptance criterion #5827
 // itself lists -- collision detection between two distinct raw names
 // that decode to the identical UTF-8 string is not implemented (a
-// pre-existing, separate concern: two ordinary ASCII names already
-// differing only in the bytes decode_dbf_text() would treat identically
-// could theoretically collide too, and this codebase has no general
-// post-normalization collision detector for field names today); nor is
+// pre-existing, more general gap this codebase has no post-
+// normalization collision detector for field names today); nor is
 // index-metadata or import-round-trip consistency specifically
 // re-verified, since import always writes fresh UTF-8-encoded names
-// (decode_dbf_text()'s own "no code-page mark" compatibility mode) that
-// the is_valid_utf8() fast path above already passes through unchanged
-// on any subsequent re-export.
+// (decode_dbf_text()'s own "no code-page mark" compatibility mode)
+// that this same function already passes through unchanged (as
+// code_page_mark == 0) on any subsequent re-export.
 bool decode_dbf_table_field_names_in_place(
     DbfTableParseResult& tbl, std::string& invalid_field_name_for_diagnostic) {
     std::map<std::string, std::string> decoded_name_by_raw_name;
     for (auto& fld : tbl.table.fields) {
-        if (is_valid_utf8(fld.name)) {
-            continue;
-        }
         const DbfTextConversionResult decoded =
             decode_dbf_text(tbl.table.header.code_page_mark, fld.name);
         if (!decoded.ok) {
             invalid_field_name_for_diagnostic = describe_field_name_for_diagnostic(fld.name);
             return false;
         }
-        decoded_name_by_raw_name.emplace(fld.name, decoded.text);
-        fld.name = decoded.text;
+        if (decoded.text != fld.name) {
+            decoded_name_by_raw_name.emplace(fld.name, decoded.text);
+            fld.name = decoded.text;
+        }
     }
     if (!decoded_name_by_raw_name.empty()) {
         for (auto& rec : tbl.table.records) {

@@ -35,13 +35,36 @@
   collision detector for today); index-metadata and import-round-trip
   consistency are not separately re-verified, since import always
   writes fresh UTF-8-encoded names (`decode_dbf_text()`'s own "no
-  code-page mark" compatibility mode) that the `is_valid_utf8()` fast
-  path already passes through unchanged on any subsequent re-export;
-  per-code-page encode/decode correctness itself (CP1252, OEM, DBCS,
-  etc.) is not re-tested here since `decode_dbf_text()` already has its
-  own dedicated test coverage (`test_dbf_text_encoding.cpp`) -- this
-  fix only proves the field-name export path correctly wires that
-  existing, already-tested function in.
+  code-page mark" compatibility mode) that this same function already
+  passes through unchanged (as `code_page_mark == 0`) on any subsequent
+  re-export; per-code-page encode/decode correctness itself (CP1252,
+  OEM, DBCS, etc.) is not re-tested here since `decode_dbf_text()`
+  already has its own dedicated test coverage
+  (`test_dbf_text_encoding.cpp`) -- this fix only proves the
+  field-name export path correctly wires that existing, already-tested
+  function in.
+
+  A further PR review round (chatgpt-codex-connector, P2) caught that
+  this initial fix's own "is it already valid UTF-8?" fast path
+  (skipping `decode_dbf_text()` entirely whenever the raw bytes already
+  parsed as valid UTF-8) was itself unsound whenever a table declares a
+  nonzero legacy code page: valid-UTF-8-shaped bytes are not the same
+  thing as bytes actually *meant* as UTF-8. CP1252 bytes `0xC3 0xA9`
+  are valid standalone UTF-8 for U+00E9 ('é'), but under a declared
+  CP1252 mark they are two separate CP1252 characters, 'Ã' (U+00C3)
+  and '©' (U+00A9) -- the fast path would have silently exported the
+  wrong identifier for exactly this input, and could even collide with
+  a different field whose name genuinely decodes to the preserved
+  spelling. Fixed by removing the fast path entirely: every field name
+  is now routed through `decode_dbf_text()` unconditionally, regardless
+  of whether the raw bytes happen to already look like valid UTF-8 --
+  `decode_dbf_text()` itself already handles `code_page_mark == 0` as
+  UTF-8 compatibility mode (effectively validating already-UTF-8
+  input), so this adds no special-casing and removes the ambiguity
+  outright. New regression test `test_export_database_family_decodes_
+  code_page_field_name_shaped_like_utf8` (the reviewer's own
+  CP1252-bytes-that-look-like-UTF-8 example) verified to reliably fail
+  against the pre-review-round code and reliably pass against the fix.
 
   docs/32-recovered-requirements-traceability.md row
   RQ-CF-MODERNIZATION-001 updated.

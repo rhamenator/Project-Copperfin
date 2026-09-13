@@ -4549,6 +4549,84 @@ void test_export_database_family_decodes_legacy_code_page_field_name() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5827 PR review (chatgpt-codex-connector, P2): a raw field-name byte
+// sequence that happens to already form a *valid* (but different-meaning)
+// UTF-8 sequence, under a table that declares a nonzero legacy code page,
+// must still be decoded through that declared code page -- not passed
+// through unchanged just because it happens to parse as valid UTF-8. CP1252
+// bytes 0xC3 0xA9 are valid standalone UTF-8 for U+00E9 ('é'), but under a
+// declared CP1252 mark they are two separate CP1252 characters: 0xC3 is
+// 'Ã' (U+00C3) and 0xA9 is '©' (U+00A9). An earlier fix that skipped
+// decode_dbf_text() whenever the raw bytes already looked like valid UTF-8
+// would have exported the wrong identifier ("é" instead of "Ã©") for
+// exactly this input.
+void test_export_database_family_decodes_code_page_field_name_shaped_like_utf8() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_export_code_page_utf8_shaped_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "readings", ""}});
+    expect(dbc_create.ok, "code-page UTF-8-shaped field-name test: DBC fixture should be created");
+
+    // Raw VFP-style DBF bytes: one Character field descriptor whose raw
+    // name is exactly the two bytes 0xC3 0xA9 under DBF code-page mark
+    // 0x03 (Windows-1252). Under CP1252 this decodes to "Ã©"
+    // (U+00C3 U+00A9 -> UTF-8 C3 83 C2 A9), NOT the "é" a naive
+    // "is it already valid UTF-8?" fast path would have preserved.
+    constexpr std::uint16_t record_length = 1U + 10U;
+    constexpr std::uint16_t header_length = 32U + 32U + 1U;
+    std::vector<std::uint8_t> bytes(
+        static_cast<std::size_t>(header_length) + record_length + 1U, 0U);
+    bytes[0] = 0x30U;
+    write_le_u32(bytes, 4U, 1U);
+    write_le_u16(bytes, 8U, header_length);
+    write_le_u16(bytes, 10U, record_length);
+    bytes[29U] = 0x03U;  // code_page_mark: Windows-1252
+    bytes[32U + 0U] = 0xC3U;
+    bytes[32U + 1U] = 0xA9U;
+    bytes[32U + 11U] = 'C';    // valid, plain-ASCII field type
+    bytes[32U + 16U] = 10U;    // length
+    bytes[64U] = 0x0DU;        // field descriptor terminator
+    bytes[header_length] = 0x20U;  // not deleted
+    std::memset(bytes.data() + header_length + 1U, ' ', 10U);
+    bytes.back() = 0x1AU;  // EOF marker
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const std::string dbc_utf8 = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const auto json_result = copperfin::vfp::export_database_as_json(dbc_utf8);
+    expect(json_result.ok,
+           "export_database_as_json must accept a CP1252 name shaped like valid UTF-8: " + json_result.error);
+    if (json_result.ok) {
+        expect(json_result.json.find("\xC3\x83\xC2\xA9") != std::string::npos,
+               "export_database_as_json must decode CP1252 0xC3 0xA9 as \"\xC3\x83\xC2\xA9\" (U+00C3 U+00A9), "
+               "not pass the raw bytes through as if they were already UTF-8 for U+00E9");
+        // The wrong, UTF-8-for-U+00E9 ("é") reading is the literal two-byte
+        // sequence 0xC3 0xA9 -- this never occurs as a substring of the
+        // correctly-decoded 4-byte sequence C3 83 C2 A9 (whose only
+        // adjacent byte pairs are C3-83 and C2-A9), so a plain absence
+        // check is unambiguous.
+        expect(json_result.json.find("\xC3\xA9") == std::string::npos,
+               "export_database_as_json must not export the wrong \"e-acute\" reading of CP1252 0xC3 0xA9");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 // #5696: a blank VFP date field decodes to an empty display_value (not
 // is_null), same as a blank numeric cell -- write_sql_tables_and_data()
 // (the shared row writer behind export_database_as_sql(),
@@ -8680,6 +8758,7 @@ int main() {
     test_export_database_family_fails_closed_on_invalid_utf8_field_name();
     test_export_database_family_still_accepts_valid_multibyte_utf8_field_name();
     test_export_database_family_decodes_legacy_code_page_field_name();
+    test_export_database_family_decodes_code_page_field_name_shaped_like_utf8();
     test_export_database_as_sql_family_preserves_blank_dates_as_null();
     test_export_database_family_fails_closed_on_unsafe_numeric_value();
     test_export_database_as_sql_still_preserves_blank_numeric_as_null();
