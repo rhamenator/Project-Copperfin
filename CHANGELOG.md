@@ -1,3 +1,51 @@
+- 2026-09-12: Fixed three distinct defects in `decode_dbc_properties_
+  blob()` (`src/vfp/asset_inspector.cpp`, #5796/#5797/#5798, found by
+  an automated Codex code-review pass), the binary decoder for a DBC's
+  own PROPERTIES memo:
+
+  1. (#5796) A DateTime property (type `0x05`) was emitted as raw hex
+     "pending full decode" instead of a real decoded value.
+  2. (#5797) The decoder returned a bare `std::vector<DbcProperty>`
+     with no success/failure signal, so a truncated or malformed
+     memo silently returned whichever properties had already decoded
+     while `load_database_catalog_snapshot()` still reported the
+     whole snapshot/export successful.
+  3. (#5798) An unrecognized property type's own value length is
+     unknown by construction (the format has exactly six documented
+     types, reverse-engineered from community analysis, with no
+     separate length field to fall back on), yet the previous
+     behavior stored the value's first byte as hex and resumed
+     parsing one byte later as a brand-new property header --
+     desynchronizing from the real property stream and risking
+     fabricated bogus properties or dropped real ones.
+
+  Fixed together since (2) and (3) share the same control flow: the
+  decoder now returns a `DbcPropertiesDecodeResult {ok, properties,
+  error}`, and every bounds failure or unrecognized type code fails
+  the whole decode (and thus the whole catalog snapshot and every
+  exporter that shares it) closed with a new localized diagnostic
+  naming the byte offset, instead of silently truncating or guessing.
+  The DateTime case is now decoded the same way a table-level DateTime
+  field already is (two little-endian 32-bit components -- Julian day
+  count, milliseconds since midnight -- as `"julian:<N> millis:<M>"`,
+  matching that established convention); a `(0, 0)` pair is VFP's own
+  blank/null DateTime storage and decodes to an empty value, mirroring
+  this codebase's "blank field displays as empty string" convention.
+
+  New regression tests (`test_export_database_as_json_decodes_
+  datetime_property`, `..._fails_closed_on_truncated_properties_memo`,
+  `..._fails_closed_on_unsupported_property_type`) verified to
+  reliably fail against the pre-fix code (6 assertion failures across
+  all three) and reliably pass against the fix -- the two
+  binary-content fixtures needed a raw `.dct` memo-block byte patch
+  rather than the ordinary `replace_record_field_value()` API, since
+  that API validates its value as UTF-8 text round-tripped through the
+  table's code page and cannot carry arbitrary binary property
+  content.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-001 updated.
+
 - 2026-09-12: Fixed a heap-use-after-free in `load_database_catalog_
   snapshot()` (`src/vfp/asset_inspector.cpp`, #5817, found by an
   automated Codex code-review pass running the full Clang ASan/UBSan
