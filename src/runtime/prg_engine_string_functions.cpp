@@ -27,6 +27,83 @@ namespace {
 
 #include "prg_engine_string_function_helpers.inl"
 
+// #5928/#5956 PR review (chatgpt-codex-connector, P1): a first version of
+// this function treated every character across every cParseStringN
+// argument as a union/character-class, so a multi-character parse string
+// like "xy" would strip a leading lone 'x' even when the complete "xy"
+// token isn't actually present (e.g. LTRIM('xHello', 0, 'xy') wrongly
+// returned "Hello" instead of leaving "xHello" untouched). Real VFP9
+// treats each cParseStringN as a whole removable token: at the requested
+// edge, repeatedly try every provided token (in the order given) against
+// the current edge and remove the first one that matches completely,
+// continuing until no full token matches. This still reproduces every
+// verified real VFP9 SP2 vector from the original fix (retained
+// differential evidence: /home/rich/temp/vfp9-probes/trim-parse-56.
+// {prg,out}) since every one of those tokens happens to be exactly one
+// character long, where "whole token" and "character class" degenerate
+// to the same behavior -- the two models only diverge for a
+// multi-character token, which is exactly the case this review caught.
+// Flag 0 or omitted compares case-sensitively, flag 1 case-insensitively.
+std::string trim_with_parse_characters(
+    const std::string& source,
+    bool trim_left,
+    bool trim_right,
+    const std::vector<PrgValue>& arguments) {
+    const bool case_insensitive = arguments.size() >= 2U &&
+        static_cast<long long>(std::llround(value_as_number(arguments[1]))) == 1;
+    std::vector<std::string> parse_tokens;
+    for (std::size_t index = 2U; index < arguments.size(); ++index) {
+        std::string token = value_as_string(arguments[index]);
+        if (!token.empty()) {
+            parse_tokens.push_back(std::move(token));
+        }
+    }
+    const auto tokens_equal = [&](std::string_view a, std::string_view b) {
+        if (a.size() != b.size()) {
+            return false;
+        }
+        for (std::size_t index = 0U; index < a.size(); ++index) {
+            const bool matches = case_insensitive
+                ? std::tolower(static_cast<unsigned char>(a[index])) ==
+                      std::tolower(static_cast<unsigned char>(b[index]))
+                : a[index] == b[index];
+            if (!matches) {
+                return false;
+            }
+        }
+        return true;
+    };
+    std::size_t start = 0U;
+    std::size_t end = source.size();
+    if (trim_left) {
+        for (bool matched = true; matched;) {
+            matched = false;
+            for (const auto& token : parse_tokens) {
+                if (end - start >= token.size() &&
+                    tokens_equal(std::string_view(source).substr(start, token.size()), token)) {
+                    start += token.size();
+                    matched = true;
+                    break;
+                }
+            }
+        }
+    }
+    if (trim_right) {
+        for (bool matched = true; matched;) {
+            matched = false;
+            for (const auto& token : parse_tokens) {
+                if (end - start >= token.size() &&
+                    tokens_equal(std::string_view(source).substr(end - token.size(), token.size()), token)) {
+                    end -= token.size();
+                    matched = true;
+                    break;
+                }
+            }
+        }
+    }
+    return source.substr(start, end - start);
+}
+
 }  // namespace
 
 std::string format_value_for_display(
@@ -109,9 +186,17 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(std::move(s));
     }
     if (function == "ltrim" && !arguments.empty()) {
+        if (arguments.size() >= 3U) {
+            return make_string_value(trim_with_parse_characters(
+                value_as_string(arguments[0]), true, false, arguments));
+        }
         return make_string_value(ltrim_space_copy(value_as_string(arguments[0])));
     }
     if ((function == "rtrim" || function == "trim") && !arguments.empty()) {
+        if (arguments.size() >= 3U) {
+            return make_string_value(trim_with_parse_characters(
+                value_as_string(arguments[0]), false, true, arguments));
+        }
         return make_string_value(rtrim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "space" && !arguments.empty()) {
@@ -584,6 +669,10 @@ std::optional<PrgValue> evaluate_string_function(
             value_as_string(arguments[0]), start, length, value_as_string(arguments[3])));
     }
     if (function == "alltrim" && !arguments.empty()) {
+        if (arguments.size() >= 3U) {
+            return make_string_value(trim_with_parse_characters(
+                value_as_string(arguments[0]), true, true, arguments));
+        }
         return make_string_value(trim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "chr" && !arguments.empty()) {
