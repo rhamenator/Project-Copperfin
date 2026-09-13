@@ -1,3 +1,52 @@
+- 2026-09-13: Fixed #5946 (safety, found during the same review as
+  #5899/#5900/#5928): `SPACE()` and `REPLICATE()` ignored VFP9's
+  documented Character string-length ceiling (16,777,184 bytes) and
+  allocated directly, letting a tiny PRG expression drive an unbounded,
+  multiply-amplified allocation in the runtime process. Real VFP9 SP2
+  rejects `SPACE(300000000)` immediately with error 1903 ("String is too
+  long to fit."), confirmed against actual VFP9 output (retained
+  differential evidence:
+  `/home/rich/temp/vfp9-probes/space-allocation-74.{prg,out}`); the same
+  call measured over 1 GiB peak RSS in Copperfin before this fix.
+
+  Fixed by checking the requested length (for `SPACE()`) or the
+  overflow-safe double-precision product of the source string's length
+  and the requested repeat count (for `REPLICATE()`) against the ceiling
+  *before* ever narrowing to `std::size_t` or allocating, raising the
+  same VFP error 1903 the real product does. Checking in double
+  precision avoids `std::size_t` multiplication overflow for an
+  adversarial huge repeat count silently wrapping to a small value that
+  would otherwise pass a post-multiplication check, and checking the
+  finite double directly (before any narrowing cast) avoids undefined
+  behavior on a nonfinite or out-of-range requested count.
+
+  New `test_space_and_replicate_reject_oversized_requests` covers
+  `SPACE(300000000)` (the exact retained VFP9 vector), an oversized
+  `REPLICATE()` product, and an overflow-scale `REPLICATE()` count;
+  verified fail-then-pass by reverting the fix and running under a
+  memory cap and timeout for safety (the reverted code's own undefined
+  behavior on the overflow-scale case makes its outcome
+  platform-dependent, so the reproduction was deliberately bounded
+  rather than run unconstrained). The exact 16,777,184-byte ceiling is
+  well-established VFP9 documentation/community knowledge rather than a
+  freshly boundary-probed value in this session (no VFP9 access was
+  available to test exactly at, one below, and one above the limit); the
+  issue's own broader "audit all string-producing functions and
+  concatenation paths" ask was not attempted beyond `SPACE()`/
+  `REPLICATE()` specifically, which is what the retained evidence covers
+  and what the issue's own title names.
+
+  A PR review round (chatgpt-codex-connector, P2) caught that the
+  ceiling check compared the raw fractional argument against the
+  ceiling while the subsequent `std::size_t` conversion truncates it
+  toward zero, so `SPACE(16777184.5)` (which truncates to exactly the
+  permitted 16,777,184 bytes) was wrongly rejected, and similarly for
+  `REPLICATE()`. Fixed by truncating first, then comparing the
+  already-truncated value against the ceiling -- the same value that
+  actually gets allocated. New
+  `test_space_and_replicate_accept_values_truncating_to_the_ceiling`
+  covers both cases; verified fail-then-pass.
+
 - 2026-09-13: Fixed #5928 (found during the same review as #5899/#5900):
   `LTRIM()`, `RTRIM()`/`TRIM()`, and `ALLTRIM()` silently ignored their
   optional `nFlags` and `cParseString1..cParseString23` arguments,

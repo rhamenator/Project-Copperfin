@@ -1470,6 +1470,135 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5946: real VFP9 SP2 rejects SPACE(300000000) with error 1903,
+    // "String is too long to fit." (retained differential evidence:
+    // /home/rich/temp/vfp9-probes/space-allocation-74.{prg,out}), while
+    // Copperfin previously attempted the allocation directly (measured
+    // over 1 GiB peak RSS for that one call). SPACE() and REPLICATE()
+    // must both reject a request beyond VFP9's documented Character
+    // string-length ceiling before ever allocating, modeled on the same
+    // ON ERROR capture pattern as test_at_c_rejects_nonpositive_occurrence
+    // in test_prg_engine_functions.cpp.
+    void test_space_and_replicate_reject_oversized_requests()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_space_replicate_oversized";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "space_replicate_oversized.prg";
+        write_text(
+            main_path,
+            "PUBLIC nCapturedCode\n"
+            "PUBLIC nCapturedCount\n"
+            "PUBLIC cCapturedMessage\n"
+            "PUBLIC nAfterError\n"
+            "nCapturedCode = 0\n"
+            "nCapturedCount = 0\n"
+            "cCapturedMessage = ''\n"
+            "nAfterError = 0\n"
+            "ON ERROR DO HandleOversizedError\n"
+            "cUnexpectedSpace = SPACE(300000000)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleOversizedError\n"
+            "cUnexpectedReplicate = REPLICATE('ab', 20000000)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleOversizedError\n"
+            "cUnexpectedReplicateOverflow = REPLICATE('a', 1e20)\n"
+            "ON ERROR\n"
+            "nAfterError = 42\n"
+            "RETURN\n"
+            "PROCEDURE HandleOversizedError\n"
+            "nCapturedCount = nCapturedCount + 1\n"
+            "nCapturedCode = ERROR()\n"
+            "cCapturedMessage = MESSAGE()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "SPACE/REPLICATE oversized-request script should recover through ON ERROR rather than "
+               "allocating: " + state.message);
+
+        const auto code = state.globals.find("ncapturedcode");
+        expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "1903",
+               "an oversized SPACE()/REPLICATE() request should report VFP error 1903");
+        const auto count = state.globals.find("ncapturedcount");
+        expect(count != state.globals.end() && copperfin::runtime::format_value(count->second) == "3",
+               "SPACE(300000000), REPLICATE('ab', 20000000), and an overflow-scale REPLICATE count should "
+               "all report through ON ERROR");
+        const std::string captured_message = [&] {
+            const auto message = state.globals.find("ccapturedmessage");
+            return message == state.globals.end() ? std::string{}
+                                                   : copperfin::runtime::format_value(message->second);
+        }();
+        const auto catalog = copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+        const std::string expected_message = catalog.translate(
+            "Runtime.Prg.String.Error.StringTooLong");
+        expect(captured_message == expected_message,
+               "an oversized SPACE()/REPLICATE() request should use the active locale's string-too-long "
+               "message");
+        const auto after_error = state.globals.find("naftererror");
+        expect(after_error != state.globals.end() && copperfin::runtime::format_value(after_error->second) == "42",
+               "SPACE/REPLICATE oversized requests should resume after their ON ERROR handler");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    // #5968 PR review (chatgpt-codex-connector, P2): the ceiling check
+    // must compare against the same truncated-toward-zero value the
+    // allocation itself uses, not the raw fractional argument --
+    // SPACE(16777184.5) truncates to exactly the permitted 16,777,184
+    // bytes and must succeed, and REPLICATE() with a ten-byte source and
+    // a count of 1677718.5 truncates to a count of 1677718 (product
+    // 16,777,180 bytes, under the ceiling) and must also succeed. An
+    // earlier version of the fix compared the ceiling against the raw
+    // double and wrongly rejected both.
+    void test_space_and_replicate_accept_values_truncating_to_the_ceiling()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_space_replicate_ceiling_boundary";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "space_replicate_ceiling_boundary.prg";
+        write_text(
+            main_path,
+            "nSpaceAtCeiling = LEN(SPACE(16777184.5))\n"
+            "nReplicateAtCeiling = LEN(REPLICATE('0123456789', 1677718.5))\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "SPACE/REPLICATE values truncating to the ceiling should succeed, not raise error 1903: " +
+                   state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + ": expected \"" + expected + "\", got \"" +
+                           copperfin::runtime::format_value(it->second) + "\"");
+            }
+        };
+
+        check("nspaceatceiling", "16777184");
+        check("nreplicateatceiling", "16777180");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1612,6 +1741,8 @@ int main()
     test_str_rejects_oversized_width_instead_of_allocating();
     test_trim_family_supports_parse_characters_and_flags();
     test_trim_family_matches_whole_parse_string_tokens();
+    test_space_and_replicate_reject_oversized_requests();
+    test_space_and_replicate_accept_values_truncating_to_the_ceiling();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();
