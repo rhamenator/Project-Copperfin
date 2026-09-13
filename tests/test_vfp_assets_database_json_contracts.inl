@@ -169,6 +169,327 @@ void test_export_database_as_json_decodes_properties_blob() {
     fs::remove_all(temp_dir, ignored);
 }
 
+namespace {
+void append_dbc_property_le_u32(std::string& blob, std::uint32_t value) {
+    blob += static_cast<char>(value & 0xFFU);
+    blob += static_cast<char>((value >> 8U) & 0xFFU);
+    blob += static_cast<char>((value >> 16U) & 0xFFU);
+    blob += static_cast<char>((value >> 24U) & 0xFFU);
+}
+
+// A raw DBC PROPERTIES blob is binary, not text -- it routinely contains
+// bytes with the high bit set (an IEEE-754 double, a raw type-code byte,
+// this test's own crafted invalid bytes) that are not valid UTF-8 on their
+// own. replace_record_field_value() treats its `value` argument as text and
+// round-trips it through the table's own code page (matching this
+// codebase's own "std::string means UTF-8" convention everywhere else), so
+// it cannot carry arbitrary binary content -- passing raw bytes there fails
+// with "Text cannot be represented in the table's code page." Instead:
+// first write a same-length plain-ASCII placeholder through the normal
+// (validated) write path, purely to allocate a correctly-sized memo block
+// and record the block number, then patch that block's own payload bytes
+// directly in the .fpt file with the real binary content. Mirrors this
+// session's established "poke raw bytes directly for a fixture the public
+// write API cannot produce" pattern used elsewhere in this test suite for
+// crafted DBF header/field-descriptor bytes.
+bool patch_dbc_properties_blob_raw(
+    const std::filesystem::path& dbc_path, std::size_t record_index,
+    std::size_t properties_field_offset, const std::string& raw_blob) {
+    namespace fs = std::filesystem;
+    const std::string placeholder(raw_blob.size(), 'X');
+    const auto write_result = copperfin::vfp::replace_record_field_value(
+        copperfin::platform::path_to_utf8_string(dbc_path), record_index, "PROPERTIES", placeholder);
+    if (!write_result.ok) {
+        return false;
+    }
+
+    std::vector<std::uint8_t> dbc_bytes;
+    {
+        std::ifstream input(dbc_path, std::ios::binary);
+        if (!input) { return false; }
+        dbc_bytes.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+    }
+    if (dbc_bytes.size() < 32U) { return false; }
+    const auto header_length = static_cast<std::size_t>(
+        static_cast<std::uint16_t>(dbc_bytes[8]) | (static_cast<std::uint16_t>(dbc_bytes[9]) << 8U));
+    const auto record_length = static_cast<std::size_t>(
+        static_cast<std::uint16_t>(dbc_bytes[10]) | (static_cast<std::uint16_t>(dbc_bytes[11]) << 8U));
+    const std::size_t field_byte_offset =
+        header_length + (record_index * record_length) + properties_field_offset;
+    if (field_byte_offset + 4U > dbc_bytes.size()) { return false; }
+    const std::uint32_t block_number =
+        static_cast<std::uint32_t>(dbc_bytes[field_byte_offset]) |
+        (static_cast<std::uint32_t>(dbc_bytes[field_byte_offset + 1U]) << 8U) |
+        (static_cast<std::uint32_t>(dbc_bytes[field_byte_offset + 2U]) << 16U) |
+        (static_cast<std::uint32_t>(dbc_bytes[field_byte_offset + 3U]) << 24U);
+    if (block_number == 0U) { return false; }
+
+    // The DBC's own PROPERTIES memo lives in its .dct sidecar (VFP's own
+    // DBC-specific memo file extension), not the ordinary .fpt a ordinary
+    // table's own memo fields would use -- see load_database_catalog_
+    // snapshot()'s own dct_path/has_dct handling.
+    const fs::path fpt_path = fs::path(dbc_path).replace_extension(".dct");
+    std::vector<std::uint8_t> fpt_bytes;
+    {
+        std::ifstream input(fpt_path, std::ios::binary);
+        if (!input) { return false; }
+        fpt_bytes.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+    }
+    if (fpt_bytes.size() < 512U) { return false; }
+    const auto block_size = static_cast<std::size_t>(
+        (static_cast<std::uint16_t>(fpt_bytes[6]) << 8U) | static_cast<std::uint16_t>(fpt_bytes[7]));
+    if (block_size == 0U) { return false; }
+    const std::size_t block_offset = static_cast<std::size_t>(block_number) * block_size;
+    const std::size_t payload_offset = block_offset + 8U;
+    if (payload_offset + raw_blob.size() > fpt_bytes.size()) { return false; }
+
+    std::copy(raw_blob.begin(), raw_blob.end(), fpt_bytes.begin() + static_cast<std::ptrdiff_t>(payload_offset));
+    std::ofstream output(fpt_path, std::ios::binary | std::ios::trunc);
+    if (!output) { return false; }
+    output.write(reinterpret_cast<const char*>(fpt_bytes.data()), static_cast<std::streamsize>(fpt_bytes.size()));
+    return output.good();
+}
+}  // namespace
+
+// #5796: a DBC PROPERTIES DateTime value (type 0x05) previously exported as
+// raw hex "pending full decode". Now decoded the same way a table-level
+// DateTime field is (two little-endian 32-bit components: Julian day count,
+// milliseconds since midnight), matching that established convention's own
+// "julian:<N> millis:<M>" text representation. A (0, 0) pair is VFP's own
+// blank/null DateTime storage and decodes to an empty value.
+void test_export_database_as_json_decodes_datetime_property() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_props_datetime_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::string dbc_utf8_path = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"DATABASE", "sample", "", ""},
+        {"TABLE", "Customers", "sample", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_utf8_path, fields, records);
+    expect(create_result.ok, "datetime-property test: DBC fixture should be created");
+
+    std::string props_blob;
+    // Created = a real DateTime (type 0x05)
+    props_blob += '\x05';
+    props_blob += '\x07'; props_blob += '\x00';  // name_len = 7
+    props_blob += "Created";
+    append_dbc_property_le_u32(props_blob, 2461234U);   // Julian day
+    append_dbc_property_le_u32(props_blob, 43200000U);  // millis (noon)
+    // Modified = a blank DateTime (type 0x05, all zero)
+    props_blob += '\x05';
+    props_blob += '\x08'; props_blob += '\x00';  // name_len = 8
+    props_blob += "Modified";
+    append_dbc_property_le_u32(props_blob, 0U);
+    append_dbc_property_le_u32(props_blob, 0U);
+    props_blob += '\x00';  // end marker
+
+    expect(patch_dbc_properties_blob_raw(dbc_path, 1U, 81U, props_blob),
+           "datetime-property test: PROPERTIES memo should be patchable with raw binary content");
+
+    const auto result = copperfin::vfp::export_database_as_json(dbc_utf8_path);
+    expect(result.ok, "export_database_as_json should decode a DateTime property: " + result.error);
+    if (result.ok) {
+        expect(result.json.find("\"Created\": \"julian:2461234 millis:43200000\"") != std::string::npos,
+               "export JSON should decode a non-blank DateTime property as julian:<N> millis:<M>");
+        expect(result.json.find("\"Modified\": \"\"") != std::string::npos,
+               "export JSON should decode a blank (0,0) DateTime property as an empty value");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5797: a truncated PROPERTIES memo previously returned whichever prefix of
+// properties had already decoded, and load_database_catalog_snapshot() still
+// reported the whole snapshot/export successful. Now fails the whole export
+// closed instead of silently dropping catalog metadata.
+void test_export_database_as_json_fails_closed_on_truncated_properties_memo() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_props_truncated_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::string dbc_utf8_path = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"DATABASE", "sample", "", ""},
+        {"TABLE", "Customers", "sample", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_utf8_path, fields, records);
+    expect(create_result.ok, "truncated-properties test: DBC fixture should be created");
+
+    std::string props_blob;
+    // One valid Character property first, so a naive fix that merely
+    // stopped emitting output but still reported the pre-truncation prefix
+    // as "success" would be caught too.
+    props_blob += '\x01';
+    props_blob += '\x07'; props_blob += '\x00';
+    props_blob += "Caption";
+    props_blob += '\x09'; props_blob += '\x00';
+    props_blob += "Customers";
+    // A second Character property declaring a value_length far longer than
+    // the bytes actually present -- truncated mid-value.
+    props_blob += '\x01';
+    props_blob += '\x07'; props_blob += '\x00';
+    props_blob += "Comment";
+    props_blob += '\x64'; props_blob += '\x00';  // value_len = 100
+    props_blob += "short";                        // only 5 bytes present
+
+    const auto write_result = copperfin::vfp::replace_record_field_value(
+        dbc_utf8_path, 1U, "PROPERTIES", props_blob);
+    expect(write_result.ok, "truncated-properties test: PROPERTIES memo should be writable");
+
+    const auto result = copperfin::vfp::export_database_as_json(dbc_utf8_path);
+    expect(!result.ok,
+           "export_database_as_json must fail closed on a truncated PROPERTIES memo rather than "
+           "silently return the properties decoded before the truncation");
+    expect(result.json.empty(),
+           "export_database_as_json must never emit a partial document on this failure");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5830 PR review (chatgpt-codex-connector, P2): a deleted catalog row is
+// excluded from both table resolution and catalog serialization -- its own
+// PROPERTIES memo, however corrupted, is never actually surfaced to
+// anything. #5797's own fail-closed behavior must not make an otherwise
+// exportable, live database unusable just because a *deleted* row's stale
+// memo pointer references truncated data.
+void test_export_database_as_json_ignores_corrupt_properties_on_deleted_row() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_props_deleted_row_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::string dbc_utf8_path = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"DATABASE", "sample", "", ""},
+        {"TABLE", "Customers", "sample", ""},
+        {"TABLE", "DeletedGhost", "sample", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_utf8_path, fields, records);
+    expect(create_result.ok, "deleted-row properties test: DBC fixture should be created");
+
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(dbc_utf8_path, 2U, true);
+    expect(delete_result.ok, "deleted-row properties test: record should be markable deleted");
+
+    // A truncated PROPERTIES memo on the now-deleted row -- identical shape
+    // to test_export_database_as_json_fails_closed_on_truncated_properties_
+    // memo's own fixture, which does fail a *live* row's export closed.
+    std::string truncated_blob;
+    truncated_blob += '\x01';
+    truncated_blob += '\x07'; truncated_blob += '\x00';
+    truncated_blob += "Comment";
+    truncated_blob += '\x64'; truncated_blob += '\x00';  // value_len = 100
+    truncated_blob += "short";                            // only 5 bytes present
+
+    expect(patch_dbc_properties_blob_raw(dbc_path, 2U, 81U, truncated_blob),
+           "deleted-row properties test: PROPERTIES memo should be patchable with raw binary content");
+
+    const auto result = copperfin::vfp::export_database_as_json(dbc_utf8_path);
+    expect(result.ok,
+           "export_database_as_json must not fail on a corrupt PROPERTIES memo belonging to a "
+           "deleted (never-surfaced) catalog row: " + result.error);
+    if (result.ok) {
+        expect(result.json.find("DeletedGhost") == std::string::npos,
+               "export_database_as_json must not surface a deleted catalog row's own metadata");
+        expect(result.json.find("Customers") != std::string::npos,
+               "export_database_as_json must still export the live table unaffected by the "
+               "deleted row's own corrupt properties");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5798: an unrecognized PROPERTIES type code has an unknown value length by
+// construction (no separate length field to fall back on). The previous
+// "preserve as hex and advance one byte" behavior treated the value's own
+// first byte as independent trailing data and resumed parsing one byte
+// later as a brand new property header, desynchronizing from the real
+// property stream. Now fails the whole export closed instead.
+void test_export_database_as_json_fails_closed_on_unsupported_property_type() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_props_unsupported_type_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const std::string dbc_utf8_path = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"DATABASE", "sample", "", ""},
+        {"TABLE", "Customers", "sample", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_utf8_path, fields, records);
+    expect(create_result.ok, "unsupported-property-type test: DBC fixture should be created");
+
+    std::string props_blob;
+    // One valid Character property first.
+    props_blob += '\x01';
+    props_blob += '\x07'; props_blob += '\x00';
+    props_blob += "Caption";
+    props_blob += '\x09'; props_blob += '\x00';
+    props_blob += "Customers";
+    // An unrecognized type code (0x99 is not one of the six documented
+    // types) with a plausible-looking name and trailing bytes that a
+    // guessed-boundary parser could misinterpret as a new property header.
+    props_blob += '\x99';
+    props_blob += '\x06'; props_blob += '\x00';
+    props_blob += "Weird1";
+    props_blob += '\x01'; props_blob += '\x04'; props_blob += '\x00';
+    props_blob += "Fake";
+    props_blob += '\x00';  // end marker
+
+    expect(patch_dbc_properties_blob_raw(dbc_path, 1U, 81U, props_blob),
+           "unsupported-property-type test: PROPERTIES memo should be patchable with raw binary content");
+
+    const auto result = copperfin::vfp::export_database_as_json(dbc_utf8_path);
+    expect(!result.ok,
+           "export_database_as_json must fail closed on an unrecognized property type rather than "
+           "guess at its value boundary and desynchronize from the property stream");
+    expect(result.json.empty(),
+           "export_database_as_json must never emit a partial document on this failure");
+    expect(result.json.find("Fake") == std::string::npos,
+           "export_database_as_json must never fabricate a bogus property from misinterpreted bytes");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_json_prefers_catalog_name_and_casefolded_assets() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_casefold_export_tests";
@@ -780,6 +1101,235 @@ void test_export_database_as_sql_round_trips_through_import() {
                    (reexported_timestamp_literal.has_value() ? *reexported_timestamp_literal : "<none>") + "'");
         expect(reexported_sql.sql.find("MAGNITUDE") != std::string::npos,
                "the SQL round trip should preserve the DOUBLE PRECISION column itself");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5678 (found by an automated Codex code-review pass): the shared JSON/SQL
+// database import materializer checked destination existence with exact
+// std::filesystem::exists() paths only. On a case-sensitive filesystem, an
+// existing case-folded alias (e.g. a pre-existing "ORDERS.DBF" when the
+// plan names table "Orders") therefore did not count as an existing
+// destination, letting an import publish a second physical file
+// representing the same VFP/Windows table identity -- not portable to
+// Windows, and violating #5472's own fail-closed overwrite-consent
+// contract. Covers all three collision points the issue itself names: the
+// destination DBC, a table's own .dbf, and a table's own .fpt memo
+// sidecar. Verified to reliably fail against the pre-fix code (each
+// scenario below previously returned ok=true and created a second,
+// case-differing file) and reliably pass against the fix.
+void test_materialize_database_json_import_plan_rejects_case_folded_collisions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_database_json_case_collision_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::string document = R"JSON({
+  "schema_version": 1,
+  "database": {"path": "/source/Orders.dbc", "name": "Orders"},
+  "catalog": [{"record_index": 1}],
+  "tables": {
+    "Orders": {
+      "fields": [{"name": "ORDERID", "type": "N", "length": 8, "decimals": 0}],
+      "records": [{"ORDERID": 7}]
+    }
+  }
+})JSON";
+    const auto plan_result = copperfin::vfp::build_database_json_import_plan(document);
+    expect(plan_result.ok, "case-collision fixture plan should build successfully");
+    if (!plan_result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    // Case 1: a differently-cased DBC destination already exists.
+    {
+        const fs::path dbc_case_dir = temp_dir / "dbc_case";
+        fs::create_directories(dbc_case_dir, ignored);
+        const fs::path existing_upper_dbc = dbc_case_dir / "CONTAINER.DBC";
+        {
+            std::ofstream output(existing_upper_dbc, std::ios::binary);
+            output << "pre-existing";
+        }
+        const fs::path requested_dbc_path = dbc_case_dir / "container.dbc";
+        const auto result = copperfin::vfp::materialize_database_json_import_plan(
+            plan_result.plan, requested_dbc_path.string());
+        expect(!result.ok,
+               "materializing must fail closed when a case-folded DBC alias already exists");
+        // #5678 review round: requested_dbc_path ("container.dbc") is a
+        // case-folded alias of the pre-existing "CONTAINER.DBC", so on a
+        // case-insensitive filesystem fs::exists(requested_dbc_path) is
+        // TRUE regardless of whether this fix behaved correctly -- it
+        // resolves straight through to the original file. Verify no new,
+        // distinctly-spelled file was created (directory entry count
+        // unchanged) and the original file's own bytes are untouched,
+        // instead of asserting non-existence of an aliasing path.
+        {
+            std::error_code count_error;
+            const auto entry_count = std::distance(
+                fs::directory_iterator(dbc_case_dir, count_error), fs::directory_iterator());
+            expect(entry_count == 1,
+                   "a case-folded DBC collision must not create any additional directory entry");
+        }
+        std::ifstream verify_input(existing_upper_dbc, std::ios::binary);
+        const std::string verify_content((std::istreambuf_iterator<char>(verify_input)),
+                                          std::istreambuf_iterator<char>());
+        expect(verify_content == "pre-existing",
+               "a case-folded DBC collision must leave the pre-existing file's bytes untouched");
+        expect(!fs::exists(dbc_case_dir / "Orders.dbf"),
+               "a case-folded DBC collision must not materialize any table either");
+    }
+
+    // Case 2: a differently-cased table .dbf destination already exists.
+    {
+        const fs::path table_case_dir = temp_dir / "table_case";
+        fs::create_directories(table_case_dir, ignored);
+        const auto pre_existing_table = copperfin::vfp::create_dbf_table_file(
+            (table_case_dir / "ORDERS.DBF").string(),
+            {{.name = "X", .type = 'C', .length = 1U}},
+            {{"z"}});
+        expect(pre_existing_table.ok, "table-case fixture should create the pre-existing table");
+        const auto pre_existing_table_path = table_case_dir / "ORDERS.DBF";
+        std::error_code size_error;
+        const auto original_table_size = fs::file_size(pre_existing_table_path, size_error);
+        expect(!size_error, "table-case fixture's pre-existing file size should be readable");
+        const fs::path requested_dbc_path = table_case_dir / "fresh.dbc";
+        const auto result = copperfin::vfp::materialize_database_json_import_plan(
+            plan_result.plan, requested_dbc_path.string());
+        expect(!result.ok,
+               "materializing must fail closed when a case-folded table .dbf alias already exists");
+        expect(!fs::exists(requested_dbc_path),
+               "a case-folded table collision must not leave a partially materialized DBC behind");
+        // #5678 review round: table_case_dir / "Orders.dbf" is a
+        // case-folded alias of the pre-existing "ORDERS.DBF", so
+        // fs::exists() on it is TRUE on a case-insensitive filesystem
+        // regardless of this fix's own correctness. Verify no additional
+        // directory entry was created and the pre-existing table's own
+        // size is unchanged instead.
+        {
+            std::error_code count_error;
+            const auto entry_count = std::distance(
+                fs::directory_iterator(table_case_dir, count_error), fs::directory_iterator());
+            expect(entry_count == 1,
+                   "a case-folded table collision must not additionally create the exact-case .dbf");
+        }
+        const auto post_table_size = fs::file_size(pre_existing_table_path, size_error);
+        expect(!size_error && post_table_size == original_table_size,
+               "a case-folded table collision must leave the pre-existing table file untouched");
+    }
+
+    // Case 3: a differently-cased memo (.fpt) sidecar destination already
+    // exists for a table whose plan declares a memo field.
+    {
+        const fs::path memo_case_dir = temp_dir / "memo_case";
+        fs::create_directories(memo_case_dir, ignored);
+        {
+            std::ofstream output(memo_case_dir / "ORDERS.FPT", std::ios::binary);
+            output << "pre-existing memo";
+        }
+        const std::string memo_document = R"JSON({
+  "schema_version": 1,
+  "database": {"path": "/source/Orders.dbc", "name": "Orders"},
+  "catalog": [{"record_index": 1}],
+  "tables": {
+    "Orders": {
+      "fields": [{"name": "NOTES", "type": "M", "length": 4, "decimals": 0}],
+      "records": [{"NOTES": "hello"}]
+    }
+  }
+})JSON";
+        const auto memo_plan_result = copperfin::vfp::build_database_json_import_plan(memo_document);
+        expect(memo_plan_result.ok, "memo case-collision fixture plan should build successfully");
+        if (memo_plan_result.ok) {
+            const fs::path requested_dbc_path = memo_case_dir / "fresh.dbc";
+            const auto result = copperfin::vfp::materialize_database_json_import_plan(
+                memo_plan_result.plan, requested_dbc_path.string());
+            expect(!result.ok,
+                   "materializing must fail closed when a case-folded memo .fpt alias already exists");
+            expect(!fs::exists(requested_dbc_path),
+                   "a case-folded memo collision must not leave a partially materialized DBC behind");
+            expect(!fs::exists(memo_case_dir / "Orders.dbf"),
+                   "a case-folded memo collision must not materialize the table's own .dbf either");
+        }
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+// #5745: the destination-directory scan added for #5678 must only retain
+// entries that match one of the plan's own (small, bounded) set of
+// destination basenames, not every unrelated entry -- a large destination
+// directory should neither prevent a legitimate import nor stop the
+// collision check from working correctly. This proves both directions
+// functionally; the memory-bound claim itself (RSS scaling with directory
+// cardinality before this fix, ~0 growth after) was verified with a
+// standalone reproduction outside the test suite, since portable in-process
+// RSS measurement has no existing convention in this codebase.
+void test_materialize_database_json_import_plan_ignores_unrelated_directory_entries() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_database_json_large_directory_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    constexpr int kUnrelatedEntryCount = 3000;
+    for (int i = 0; i < kUnrelatedEntryCount; ++i) {
+        std::ofstream(temp_dir / ("unrelated_" + std::to_string(i) + ".tmp"));
+    }
+
+    const std::string document = R"JSON({
+  "schema_version": 1,
+  "database": {"path": "/source/Orders.dbc", "name": "Orders"},
+  "catalog": [{"record_index": 1}],
+  "tables": {
+    "Orders": {
+      "fields": [{"name": "ORDERID", "type": "N", "length": 8, "decimals": 0}],
+      "records": [{"ORDERID": 7}]
+    }
+  }
+})JSON";
+    const auto plan_result = copperfin::vfp::build_database_json_import_plan(document);
+    expect(plan_result.ok, "large-directory fixture plan should build successfully");
+    if (!plan_result.ok) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    // Positive case: thousands of unrelated entries must not stop a
+    // legitimate import that has no real collision.
+    {
+        const fs::path requested_dbc_path = temp_dir / "fresh.dbc";
+        const auto result = copperfin::vfp::materialize_database_json_import_plan(
+            plan_result.plan, requested_dbc_path.string());
+        expect(result.ok,
+               "a large destination directory with no real collision must still import successfully");
+        expect(fs::exists(requested_dbc_path),
+               "a successful import into a large destination directory must create the DBC");
+        expect(fs::exists(temp_dir / "Orders.dbf"),
+               "a successful import into a large destination directory must create the table");
+    }
+
+    // Negative case: a real case-folded collision must still be detected
+    // even when thousands of unrelated entries are scanned past first.
+    {
+        const fs::path collision_dir = temp_dir / "collision";
+        fs::create_directories(collision_dir, ignored);
+        for (int i = 0; i < kUnrelatedEntryCount; ++i) {
+            std::ofstream(collision_dir / ("unrelated_" + std::to_string(i) + ".tmp"));
+        }
+        {
+            std::ofstream output(collision_dir / "ORDERS.DBF", std::ios::binary);
+            output << "pre-existing";
+        }
+        const fs::path requested_dbc_path = collision_dir / "fresh.dbc";
+        const auto result = copperfin::vfp::materialize_database_json_import_plan(
+            plan_result.plan, requested_dbc_path.string());
+        expect(!result.ok,
+               "a real case-folded collision must still be detected among thousands of unrelated entries");
+        expect(!fs::exists(requested_dbc_path),
+               "a detected collision among many unrelated entries must not leave a partial DBC behind");
     }
 
     fs::remove_all(temp_dir, ignored);

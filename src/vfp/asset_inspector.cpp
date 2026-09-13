@@ -1228,11 +1228,22 @@ AssetInspectionResult inspect_asset(
 //     0x02 (N): 8-byte IEEE 754 double LE
 //     0x03 (L): 1 byte
 //     0x04 (D): 8 ASCII bytes YYYYMMDD
-//     0x05 (T): 8 bytes stored verbatim as hex for now
+//     0x05 (T): 8 bytes -- two little-endian 32-bit components (Julian day
+//                count, milliseconds since midnight), decoded the same way
+//                decode_value()'s own 'T' case in dbf_table.cpp decodes a
+//                table-level DateTime field; a (0, 0) pair is VFP's own
+//                blank/null DateTime storage and decodes to an empty value
 //     0x06 (I): 4-byte LE int32
 //
-// This format is reverse-engineered from community analysis of real .DBC files.
-// Unknown type codes are preserved as hex strings so nothing is silently dropped.
+// This format is reverse-engineered from community analysis of real .DBC
+// files, so only these six types are documented and supported. #5798: an
+// unrecognized type code's own value length is unknown by construction (no
+// separate length field exists to fall back on), so decode_dbc_properties_
+// blob() fails the whole decode closed on one rather than guess at a value
+// boundary and desynchronize from the real property stream -- a previous
+// "preserve as hex and advance one byte" attempt did exactly that, silently
+// fabricating bogus properties or dropping real ones past the first
+// unrecognized entry.
 
 namespace {
 
@@ -1248,22 +1259,28 @@ char vfp_type_for_code(std::uint8_t code) noexcept {
     }
 }
 
-std::string hex_bytes(const std::vector<std::uint8_t>& blob, std::size_t offset, std::size_t length) {
-    static constexpr std::array<char, 16U> kHex{
-        '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-    std::string out;
-    out.reserve(2U * length);
-    for (std::size_t i = 0U; i < length && (offset + i) < blob.size(); ++i) {
-        const auto b = static_cast<std::uint8_t>(blob[offset + i]);
-        out.push_back(kHex[(b >> 4U) & 0x0FU]);
-        out.push_back(kHex[b & 0x0FU]);
-    }
-    return out;
-}
+// #5797/#5798: decode_dbc_properties_blob() used to return a bare
+// std::vector<DbcProperty> with no success/failure signal at all -- every
+// bounds failure (`goto done`/`break`) silently returned whatever prefix had
+// already been decoded, and load_database_catalog_snapshot() reported that
+// prefix as a fully successful snapshot/export. A structured result lets a
+// truncated or malformed PROPERTIES memo fail the whole catalog load closed
+// instead of silently dropping metadata.
+struct DbcPropertiesDecodeResult {
+    bool ok = false;
+    std::vector<DbcProperty> properties;
+    std::string error;
+};
 
-std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8_t>& blob) {
+DbcPropertiesDecodeResult decode_dbc_properties_blob(const std::vector<std::uint8_t>& blob) {
     std::vector<DbcProperty> props;
     std::size_t pos = 0U;
+
+    const auto fail = [](const char* key, std::size_t offset) {
+        return DbcPropertiesDecodeResult{
+            .ok = false, .properties = {},
+            .error = asset_inspector_text(key, {{"offset", std::to_string(offset)}})};
+    };
 
     while (pos < blob.size()) {
         const auto type_code = static_cast<std::uint8_t>(blob[pos]);
@@ -1277,7 +1294,7 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
 
         // Need type byte + 2-byte name length
         if (pos + 3U > blob.size()) {
-            break;
+            return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
         }
 
         const auto name_len = static_cast<std::uint16_t>(
@@ -1286,7 +1303,7 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
         pos += 3U;
 
         if (name_len == 0U || pos + name_len > blob.size()) {
-            break;
+            return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
         }
 
         std::string name(reinterpret_cast<const char*>(blob.data() + pos), name_len);
@@ -1298,18 +1315,24 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
 
         switch (type_code) {
             case 0x01U: {  // Character — 2-byte LE length prefix
-                if (pos + 2U > blob.size()) { goto done; }
+                if (pos + 2U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 const auto val_len = static_cast<std::uint16_t>(
                     static_cast<std::uint16_t>(blob[pos]) |
                     (static_cast<std::uint16_t>(blob[pos + 1U]) << 8U));
                 pos += 2U;
-                if (pos + val_len > blob.size()) { goto done; }
+                if (pos + val_len > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 prop.value = std::string(reinterpret_cast<const char*>(blob.data() + pos), val_len);
                 pos += val_len;
                 break;
             }
             case 0x02U: {  // Numeric — 8-byte IEEE 754 double LE
-                if (pos + 8U > blob.size()) { goto done; }
+                if (pos + 8U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 double d = 0.0;
                 std::memcpy(&d, blob.data() + pos, 8U);
                 pos += 8U;
@@ -1321,13 +1344,17 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
                 break;
             }
             case 0x03U: {  // Logical — 1 byte
-                if (pos + 1U > blob.size()) { goto done; }
+                if (pos + 1U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 prop.value = (blob[pos] != 0U) ? "true" : "false";
                 ++pos;
                 break;
             }
             case 0x04U: {  // Date — 8 ASCII bytes YYYYMMDD
-                if (pos + 8U > blob.size()) { goto done; }
+                if (pos + 8U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 const std::string raw(reinterpret_cast<const char*>(blob.data() + pos), 8U);
                 pos += 8U;
                 // Format as YYYY-MM-DD if it looks like digits
@@ -1341,14 +1368,41 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
                 }
                 break;
             }
-            case 0x05U: {  // DateTime — 8 bytes, emit as hex pending full decode
-                if (pos + 8U > blob.size()) { goto done; }
-                prop.value = hex_bytes(blob, pos, 8U);
+            case 0x05U: {
+                // #5796: previously emitted as hex "pending full decode".
+                // Decoded the same way decode_value()'s own 'T' case in
+                // dbf_table.cpp decodes a table-level DateTime field --
+                // two little-endian 32-bit components (Julian day count,
+                // milliseconds since midnight) -- reusing that exact
+                // "julian:<N> millis:<M>" text representation for
+                // consistency with the already-established table-level
+                // DateTime convention, rather than inventing a second one.
+                // A (0, 0) pair is VFP's own blank/null DateTime storage
+                // (matching write_field_bytes()'s 'T' case, which writes
+                // exactly this for a null/blank value on the way in) and
+                // decodes to an empty value, mirroring this codebase's
+                // established "blank field displays as empty string"
+                // convention for Date/Numeric fields elsewhere.
+                if (pos + 8U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
+                const std::uint32_t julian_day = read_le_u32(blob, pos);
+                const std::uint32_t millis = read_le_u32(blob, pos + 4U);
                 pos += 8U;
+                if (julian_day == 0U && millis == 0U) {
+                    prop.value.clear();
+                } else {
+                    std::ostringstream stream;
+                    stream.imbue(std::locale::classic());
+                    stream << "julian:" << julian_day << " millis:" << millis;
+                    prop.value = stream.str();
+                }
                 break;
             }
             case 0x06U: {  // Integer — 4-byte LE int32
-                if (pos + 4U > blob.size()) { goto done; }
+                if (pos + 4U > blob.size()) {
+                    return fail("Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated", pos);
+                }
                 std::int32_t val = 0;
                 std::memcpy(&val, blob.data() + pos, 4U);
                 pos += 4U;
@@ -1356,19 +1410,28 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
                 break;
             }
             default: {
-                // Unknown type: store one byte as hex and advance past it so we
-                // do not spin on the same byte forever.
-                prop.value = "<type:0x" + hex_bytes(blob, pos > 0U ? pos - 1U : 0U, 1U) + ">";
-                ++pos;
-                break;
+                // #5798: an unrecognized type code's own value length is,
+                // by definition, unknown -- this format has exactly six
+                // documented types (see this decoder's own header
+                // comment), reverse-engineered from community analysis,
+                // and there is no length field anywhere else to fall back
+                // on. The previous behavior ("store one byte as hex and
+                // advance past it") treated the value's own first byte as
+                // if it were independent trailing data and resumed parsing
+                // one byte later as a brand new property header -- which
+                // desynchronizes from the real property stream and can
+                // fabricate bogus properties, drop real ones, or return a
+                // partial prefix while still reporting success. Failing
+                // closed here is the only safe option without truly
+                // understanding every legal property type.
+                return fail("Vfp.AssetInspector.Error.DbcPropertyTypeUnsupported", pos);
             }
         }
 
         props.push_back(std::move(prop));
     }
 
-done:
-    return props;
+    return {.ok = true, .properties = std::move(props), .error = {}};
 }
 
 // Resolve and collect the raw PROPERTIES bytes for every record in a DBC.
@@ -1482,6 +1545,169 @@ std::vector<RawDbcRow> read_raw_dbc_rows(
     }
 
     return rows;
+}
+
+// #5743: DBF field-descriptor name bytes are read raw (read_ascii_name() in
+// dbf_table.cpp copies bytes verbatim, with no charset validation) and every
+// exporter below trusts them as already-valid UTF-8 -- json_escape_str()
+// only escapes JSON syntax characters and C0 controls, by design, since it
+// must also pass genuine multi-byte UTF-8 field names through unchanged;
+// sql_quote_identifier() and its per-vendor siblings likewise only double
+// embedded quote characters. A crafted or corrupted field name containing
+// an invalid UTF-8 byte sequence (e.g. an isolated 0xFF) therefore reaches
+// JSON output as syntactically-valid-but-not-UTF-8 text (which
+// parse_json_document() itself rejects, and which no conforming JSON parser
+// can accept) or reaches a SQL identifier as an undecodable byte sequence.
+// Full codepage-aware conversion of legacy-encoded names to Unicode is
+// tracked separately (issue #5743's own broader completion criteria); this
+// closes the immediate correctness/safety gap by failing every export
+// closed on an invalid name, matching this codebase's own established
+// fail-closed precedent for data that was never safely representable.
+bool is_valid_utf8(const std::string_view value) noexcept {
+    std::size_t position = 0U;
+    while (position < value.size()) {
+        const unsigned char first = static_cast<unsigned char>(value[position++]);
+        if (first < 0x80U) {
+            continue;
+        }
+        std::size_t continuation_count = 0U;
+        std::uint32_t codepoint = 0U;
+        std::uint32_t minimum = 0U;
+        if (first >= 0xC2U && first <= 0xDFU) {
+            continuation_count = 1U;
+            codepoint = first & 0x1FU;
+            minimum = 0x80U;
+        } else if (first >= 0xE0U && first <= 0xEFU) {
+            continuation_count = 2U;
+            codepoint = first & 0x0FU;
+            minimum = 0x800U;
+        } else if (first >= 0xF0U && first <= 0xF4U) {
+            continuation_count = 3U;
+            codepoint = first & 0x07U;
+            minimum = 0x10000U;
+        } else {
+            return false;
+        }
+        if (value.size() - position < continuation_count) {
+            return false;
+        }
+        for (std::size_t index = 0U; index < continuation_count; ++index) {
+            const unsigned char continuation =
+                static_cast<unsigned char>(value[position++]);
+            if ((continuation & 0xC0U) != 0x80U) {
+                return false;
+            }
+            codepoint = (codepoint << 6U) | (continuation & 0x3FU);
+        }
+        if (codepoint < minimum || codepoint > 0x10FFFFU ||
+            (codepoint >= 0xD800U && codepoint <= 0xDFFFU)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// #5743 PR review (chatgpt-codex-connector, P2): the whole point of
+// UnsafeFieldNameBytes is that fld.name is known to contain invalid UTF-8
+// when it fires -- naively embedding it verbatim in the {"column", ...}
+// diagnostic placeholder would propagate the exact same undecodable bytes
+// one level up, into a message that PRG dispatch embeds verbatim in its own
+// failure text and that any UI or log consuming it must also treat as
+// text. Valid UTF-8 passes through unchanged (the common case, every other
+// diagnostic in this file); invalid input is rendered as a plain-ASCII hex
+// byte dump instead, which is trivially valid UTF-8 in any context.
+std::string describe_field_name_for_diagnostic(const std::string& name) {
+    if (is_valid_utf8(name)) {
+        return name;
+    }
+    static constexpr char kHexDigits[] = "0123456789ABCDEF";
+    std::string hex;
+    hex.reserve(name.size() * 3U);
+    for (std::size_t index = 0U; index < name.size(); ++index) {
+        if (index != 0U) {
+            hex += ' ';
+        }
+        const auto byte = static_cast<unsigned char>(name[index]);
+        hex += kHexDigits[(byte >> 4U) & 0xFU];
+        hex += kHexDigits[byte & 0xFU];
+    }
+    return "<invalid UTF-8 bytes: " + hex + ">";
+}
+
+// #5827 (found by an automated Codex code-review pass against the merged
+// #5743 fix): that fix's is_valid_utf8() field-name check rejected every
+// valid legacy code-page-encoded name (e.g. a CP1252 field named "CAFé",
+// whose raw byte 0xE9 is not valid standalone UTF-8) outright, when it
+// should instead be decoded to UTF-8 through the table's own DBF header
+// code_page_mark -- the exact convention decode_dbf_text() already
+// established for field *values* (see e.g. decode_value()'s own 'C' case
+// in dbf_table.cpp). This decodes every field-descriptor name in `tbl`
+// in place -- both the field descriptor's own name and every record
+// value's own copy of it (DbfTableParseResult::records[].values[].
+// field_name, which parse_dbf_table_from_file() copies from the exact
+// same raw source at parse time) -- so every other emission site in this
+// file (json_escape_str(fld.name), sql_quote_identifier(fld.name), the
+// record-value loops, etc.) needs no separate change: by the time any of
+// them runs, every name reachable through `tbl` is already guaranteed
+// valid UTF-8. Fails (returns false, with the offending raw name
+// described via describe_field_name_for_diagnostic()) only for a name
+// that is genuinely undecodable even through the table's own declared
+// code page -- the same fail-closed outcome #5743 already established
+// for that case.
+//
+// #5827 PR review (chatgpt-codex-connector, P2): an earlier version of
+// this function skipped decode_dbf_text() entirely whenever a raw name
+// already looked like valid UTF-8 (an "is it already UTF-8?" fast path).
+// That is unsound whenever the table declares a nonzero legacy code
+// page: valid-UTF-8-shaped bytes are not the same thing as bytes that
+// were actually *meant* as UTF-8. For example, CP1252 bytes 0xC3 0xA9
+// are valid UTF-8 for U+00E9 ('é'), but under a declared CP1252 mark
+// they are two separate CP1252 characters, 'Ã' (0xC3) and '©' (0xA9) --
+// the fast path would silently export the wrong identifier, and could
+// even collide with a different field whose name genuinely decodes to
+// the preserved spelling. Every field name is now routed through
+// decode_dbf_text() unconditionally, regardless of whether the raw
+// bytes happen to already look like valid UTF-8 -- decode_dbf_text()
+// itself already handles code_page_mark == 0 as UTF-8 compatibility
+// mode (effectively validating already-UTF-8 input), so this adds no
+// special-casing and removes the exact ambiguity the fast path had.
+//
+// Scope note: this does not attempt every acceptance criterion #5827
+// itself lists -- collision detection between two distinct raw names
+// that decode to the identical UTF-8 string is not implemented (a
+// pre-existing, more general gap this codebase has no post-
+// normalization collision detector for field names today); nor is
+// index-metadata or import-round-trip consistency specifically
+// re-verified, since import always writes fresh UTF-8-encoded names
+// (decode_dbf_text()'s own "no code-page mark" compatibility mode)
+// that this same function already passes through unchanged (as
+// code_page_mark == 0) on any subsequent re-export.
+bool decode_dbf_table_field_names_in_place(
+    DbfTableParseResult& tbl, std::string& invalid_field_name_for_diagnostic) {
+    std::map<std::string, std::string> decoded_name_by_raw_name;
+    for (auto& fld : tbl.table.fields) {
+        const DbfTextConversionResult decoded =
+            decode_dbf_text(tbl.table.header.code_page_mark, fld.name);
+        if (!decoded.ok) {
+            invalid_field_name_for_diagnostic = describe_field_name_for_diagnostic(fld.name);
+            return false;
+        }
+        if (decoded.text != fld.name) {
+            decoded_name_by_raw_name.emplace(fld.name, decoded.text);
+            fld.name = decoded.text;
+        }
+    }
+    if (!decoded_name_by_raw_name.empty()) {
+        for (auto& rec : tbl.table.records) {
+            for (auto& val : rec.values) {
+                const auto found = decoded_name_by_raw_name.find(val.field_name);
+                if (found != decoded_name_by_raw_name.end()) {
+                    val.field_name = found->second;
+                }
+            }
+        }
+    }
+    return true;
 }
 
 std::string json_escape_str(const std::string& s) {
@@ -1629,13 +1855,42 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
         obj.object_name   = raw.object_name;
         obj.parent_name   = raw.parent_name;
 
-        if (raw.properties_block != 0U && has_dct) {
+        // #5830 PR review (chatgpt-codex-connector, P2): a deleted catalog
+        // row is excluded from both table resolution (the loop below skips
+        // `obj.deleted`) and catalog serialization (export_database_as_
+        // json()'s own catalog block does too) -- its own PROPERTIES memo,
+        // however corrupted, is never actually surfaced to anything. #5797's
+        // own fail-closed behavior must not make an otherwise exportable,
+        // live database unusable just because a *deleted* row's stale memo
+        // pointer references truncated or unsupported data; skip decoding
+        // entirely for a deleted row rather than decode-then-discard.
+        if (!raw.deleted && raw.properties_block != 0U && has_dct) {
             const std::vector<std::uint8_t> prop_bytes =
                 read_memo_block_raw(
                     copperfin::platform::path_to_utf8_string(*dct_path),
                     raw.properties_block);
             if (!prop_bytes.empty()) {
-                obj.properties = decode_dbc_properties_blob(prop_bytes);
+                // #5797: a truncated or otherwise malformed PROPERTIES memo
+                // on a *live* row must fail the whole catalog snapshot (and
+                // every exporter that shares it) closed, not silently
+                // return whichever properties happened to decode before the
+                // malformed tail while still reporting success.
+                // `raw.object_name` is a reference into the local raw_rows
+                // vector (not snapshot.catalog), so it stays valid across
+                // the `snapshot = {}` reset below -- see #5817's own fix
+                // earlier in this function for why that distinction
+                // matters here.
+                const DbcPropertiesDecodeResult props_result =
+                    decode_dbc_properties_blob(prop_bytes);
+                if (!props_result.ok) {
+                    snapshot = {};
+                    snapshot.dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
+                    snapshot.error = asset_inspector_text(
+                        "Vfp.AssetInspector.Error.DbcPropertiesDecodeFailed",
+                        {{"table", raw.object_name}, {"error", props_result.error}});
+                    return snapshot;
+                }
+                obj.properties = props_result.properties;
             }
         }
         // #5544 review (Codex, P2): load_database_catalog_snapshot() is
@@ -1728,7 +1983,17 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
         if (obj.deleted || obj.object_type != "table" || obj.object_name.empty()) {
             continue;
         }
-        const std::string& tname = obj.object_name;
+        // #5817 (found by an automated Codex code-review pass, ASan/TSan
+        // heap-use-after-free): this was a `const std::string&` referencing
+        // a string stored inside `snapshot.catalog`. All three rejection
+        // branches below do `snapshot = {}` to reset the whole snapshot
+        // before building their error message -- which destroys the
+        // catalog vector `tname` refers into -- and then read `tname`
+        // again to format `{{"table", tname}}`, a heap-use-after-free on
+        // every crafted/malicious DBC these branches exist to reject. An
+        // owning copy decouples this string's lifetime from the snapshot
+        // being reset.
+        const std::string tname = obj.object_name;
         if (!table_name_is_safe_filesystem_component(tname)) {
             snapshot = {};
             snapshot.dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
@@ -1888,6 +2153,79 @@ bool looks_like_safe_unquoted_sql_numeric_literal(const std::string& text) {
         seen_digit = true;
     }
     return seen_digit;
+}
+
+// #5630/#5571: export_database_as_json() inserts a numeric field's decoded
+// display_value directly into the JSON stream unquoted, the identical
+// "no quoting layer to escape a crafted/corrupted value with" situation
+// looks_like_safe_unquoted_sql_numeric_literal() documents for the SQL
+// exporters -- but decode_value()'s 'N'/'F' case (dbf_table.cpp) returns
+// fixed-width DBF storage text completely unvalidated, and this codebase's
+// own DBF field-write path accepts any byte string that fits the field's
+// declared width for those types (a numeric-overflow marker, or arbitrary
+// crafted/corrupted content, round-trips as literal text exactly like a
+// genuine value would). Reusing the SQL validator here would itself be
+// unsafe: real JSON number grammar (RFC 8259) is *stricter* than SQL's own
+// numeric-literal grammar in two ways the SQL validator deliberately
+// accepts -- a leading '+' (SQL accepts it; JSON's grammar has no leading-
+// plus production at all) and a leading zero before further digits (SQL
+// accepts "0123"; JSON's grammar requires the integer part be either a
+// bare "0" or a nonzero digit followed by more digits, never a leading
+// zero followed by another digit). A value the SQL check would accept but
+// this stricter JSON grammar rejects must still fail closed here, not
+// silently reuse the more permissive SQL validator and ship syntactically
+// invalid (or JSON-valid-but-shape-changing) JSON. Also rejects a
+// nonfinite binary Double's own decoded text ("nan"/"inf"/"-inf", none of
+// which are valid JSON number tokens), which correctly and independently
+// falls through this same digit-only grammar check with no special-casing
+// needed.
+bool looks_like_safe_unquoted_json_numeric_literal(const std::string& text) {
+    if (text.empty()) {
+        return false;
+    }
+    std::size_t index = 0U;
+    if (text.front() == '-') {
+        index = 1U;
+    }
+    if (index >= text.size()) {
+        return false;
+    }
+    if (text[index] == '0') {
+        ++index;
+    } else {
+        if (std::isdigit(static_cast<unsigned char>(text[index])) == 0) {
+            return false;
+        }
+        while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
+            ++index;
+        }
+    }
+    if (index < text.size() && text[index] == '.') {
+        ++index;
+        bool seen_fraction_digit = false;
+        while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
+            ++index;
+            seen_fraction_digit = true;
+        }
+        if (!seen_fraction_digit) {
+            return false;
+        }
+    }
+    if (index < text.size() && (text[index] == 'e' || text[index] == 'E')) {
+        ++index;
+        if (index < text.size() && (text[index] == '-' || text[index] == '+')) {
+            ++index;
+        }
+        bool seen_exponent_digit = false;
+        while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index])) != 0) {
+            ++index;
+            seen_exponent_digit = true;
+        }
+        if (!seen_exponent_digit) {
+            return false;
+        }
+    }
+    return index == text.size();
 }
 
 // export_database_as_access_sql() embeds a 'D' field's decoded
@@ -2454,7 +2792,7 @@ DatabaseExportResult export_database_as_json(
         const std::size_t row_limit = (max_rows_per_table == 0U)
                                           ? std::numeric_limits<std::size_t>::max()
                                           : max_rows_per_table;
-        const DbfTableParseResult tbl = parse_dbf_table_from_file(
+        DbfTableParseResult tbl = parse_dbf_table_from_file(
             copperfin::platform::path_to_utf8_string(rt.path),
             row_limit);
         if (!tbl.ok) {
@@ -2462,6 +2800,14 @@ DatabaseExportResult export_database_as_json(
             json << "    \"" << json_escape_str(rt.name) << "\": {\"fields\":[], \"records\":[]}"
                  << (last_table ? "\n" : ",\n");
             continue;
+        }
+        {
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                return {.ok = false, .error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}}), .json = {}};
+            }
         }
         if (tbl.table.fields.empty()) {
             // #5697: a member DBF whose field-descriptor block parses
@@ -2487,8 +2833,44 @@ DatabaseExportResult export_database_as_json(
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
             const bool last_field = (fi + 1U == tbl.table.fields.size());
+            // #5743/#5827: fld.name is guaranteed valid UTF-8 here --
+            // decode_dbf_table_field_names_in_place() above already
+            // decoded (or rejected) every field name up front, covering
+            // the record-property key emitted later in this table's
+            // records array too (it shares the same underlying rewrite).
+            // #5630 review (self, proactive sibling-gap check): fld.type
+            // is a single raw byte read directly from the field
+            // descriptor block with no validation that it's one of the
+            // recognized VFP type letters -- a crafted/corrupted DBF can
+            // set it to a literal '"' or '\' and break out of this
+            // string's own delimiters exactly like an unvalidated numeric
+            // display_value does below, just in the schema description
+            // rather than a data value. Routed through json_escape_str()
+            // the same way fld.name already is, rather than embedded raw.
+            //
+            // #5630 PR review (chatgpt-codex-connector, P2): json_escape_
+            // str() only escapes quotes, backslashes, and C0 controls --
+            // by design, since it is also used for genuine multi-byte
+            // UTF-8 field names/values elsewhere, which it must pass
+            // through unchanged. A raw byte >= 0x80 standing alone (never
+            // part of a real multi-byte UTF-8 sequence on its own) is
+            // therefore passed through unescaped too, producing a
+            // document that is syntactically valid JSON but not valid
+            // UTF-8 text, which parse_json_document() itself rejects --
+            // this fix's own struct-preserving escaping did not, by
+            // itself, cover that case. Every real VFP field-type letter
+            // is plain ASCII, so a byte outside the printable ASCII range
+            // is never a genuine type in the first place; fail the whole
+            // export closed for it rather than invent an escaping
+            // convention for data that was never valid to begin with.
+            if (static_cast<unsigned char>(fld.type) < 0x20U ||
+                static_cast<unsigned char>(fld.type) > 0x7EU) {
+                return {.ok = false, .error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeJsonFieldTypeByte",
+                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}}), .json = {}};
+            }
             json << "        {\"name\": \""    << json_escape_str(fld.name)   << "\""
-                 << ", \"type\": \""           << fld.type                     << "\""
+                 << ", \"type\": \""           << json_escape_str(std::string(1U, fld.type)) << "\""
                  << ", \"length\": "           << static_cast<int>(fld.length)
                  << ", \"decimals\": "         << static_cast<int>(fld.decimal_count)
                  << "}" << (last_field ? "\n" : ",\n");
@@ -2533,6 +2915,34 @@ DatabaseExportResult export_database_as_json(
                               lv == "Y"    || lv == "y")
                              ? "true" : "false");
                 } else if (is_numeric && !rv.display_value.empty()) {
+                    // #5630/#5571 (found by an automated Codex code-review
+                    // pass): a numeric cell's decoded display_value was
+                    // previously inserted here completely unvalidated. A
+                    // crafted or corrupted DBF can contain arbitrary byte
+                    // content in a fixed-width N/F field (this codebase's
+                    // own DBF writer accepts any byte string that fits the
+                    // declared width for those types), so an unvalidated
+                    // value like `1,"INJECT":true` doesn't just produce
+                    // invalid JSON -- it injects an entirely new, distinct
+                    // JSON property into the record object, silently
+                    // changing the document's own shape while the export
+                    // still reports success. A numeric-overflow marker
+                    // (e.g. "****") or a nonfinite binary Double's own
+                    // decoded text ("nan"/"inf"/"-inf") instead produces
+                    // outright invalid JSON. Fail the whole export closed
+                    // with table/row/column context rather than publish
+                    // either outcome -- see
+                    // looks_like_safe_unquoted_json_numeric_literal()'s
+                    // own comment for why the existing SQL validator
+                    // cannot simply be reused here (JSON's own number
+                    // grammar is stricter: no leading '+', no leading
+                    // zero before further digits).
+                    if (!looks_like_safe_unquoted_json_numeric_literal(rv.display_value)) {
+                        return {.ok = false, .error = asset_inspector_text(
+                            "Vfp.AssetInspector.Validation.UnsafeJsonNumericValue",
+                            {{"table", rt.name}, {"row", std::to_string(row_emit)},
+                             {"column", rv.field_name}}), .json = {}};
+                    }
                     json << rv.display_value;
                 } else {
                     json << "\"" << json_escape_str(rv.display_value) << "\"";
@@ -2724,6 +3134,15 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
+        {
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                hard_failure_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}});
+                return {};
+            }
+        }
         if (tbl.table.fields.empty()) {
             // #5697: a member DBF that parses "successfully" with zero
             // fields would otherwise emit `CREATE TABLE "name" (\n);`,
@@ -2744,6 +3163,9 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
             const bool last_field = (fi + 1U == tbl.table.fields.size());
+            // #5743/#5827: fld.name is guaranteed valid UTF-8 here --
+            // decode_dbf_table_field_names_in_place() above already
+            // decoded (or rejected) every field name up front.
             sql << "    " << sql_quote_identifier(fld.name) << " "
                 << sql_column_type(fld.type, fld.length, fld.decimal_count)
                 << (last_field ? "\n" : ",\n");
@@ -2895,6 +3317,21 @@ std::vector<ParsedSqlExportTable> write_sqlite_tables_and_data(
             sql << "-- skipped table " << sql_sanitize_comment_text(rt.name) << ": "
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
+        }
+        {
+            // #5743/#5827 (this function was forked off write_sql_tables_
+            // and_data() for #5694 and predates both fixes -- applying the
+            // same field-name UTF-8/code-page decode-and-validate step
+            // here for consistency with every other writer, since a
+            // crafted or legacy code-page-encoded field name is exactly as
+            // reachable through TYPE SQLITE as any other dialect).
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                hard_failure_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}});
+                return {};
+            }
         }
         if (tbl.table.fields.empty()) {
             hard_failure_error = asset_inspector_text(
@@ -3300,6 +3737,15 @@ std::vector<ParsedSqlExportTable> write_sqlserver_tables_and_data(
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
+        {
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                hard_failure_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}});
+                return {};
+            }
+        }
         if (tbl.table.fields.empty()) {
             // #5697: see write_sql_tables_and_data()'s own comment -- a
             // zero-field member table would otherwise emit invalid
@@ -3315,6 +3761,8 @@ std::vector<ParsedSqlExportTable> write_sqlserver_tables_and_data(
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
             const bool last_field = (fi + 1U == tbl.table.fields.size());
+            // #5743/#5827: see write_sql_tables_and_data()'s own comment
+            // -- fld.name is guaranteed valid UTF-8 here.
             sql << "    " << sqlserver_quote_identifier(fld.name) << " "
                 << sqlserver_column_type(fld.type, fld.length, fld.decimal_count)
                 << (last_field ? "\n" : ",\n");
@@ -3610,6 +4058,15 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
+        {
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                hard_failure_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}});
+                return {};
+            }
+        }
         if (tbl.table.fields.empty()) {
             // #5697: see write_sql_tables_and_data()'s own comment -- a
             // zero-field member table would otherwise emit invalid
@@ -3636,6 +4093,8 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
         std::set<std::string> used_column_names;
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
+            // #5743/#5827: see write_sql_tables_and_data()'s own comment
+            // -- fld.name is guaranteed valid UTF-8 here.
             const std::string quoted_column = oracle_quote_identifier(fld.name);
             if (!oracle_record_identifier_or_detect_collision(quoted_column, used_column_names)) {
                 hard_failure_error = asset_inspector_text(
@@ -4040,10 +4499,18 @@ DatabaseSqlExportResult export_database_as_access_sql(
         : max_rows_per_table;
 
     for (const auto& rt : snapshot.resolved_tables) {
-        const DbfTableParseResult tbl = parse_dbf_table_from_file(
+        DbfTableParseResult tbl = parse_dbf_table_from_file(
             copperfin::platform::path_to_utf8_string(rt.path), row_limit);
         if (!tbl.ok) {
             continue;
+        }
+        {
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                return {.ok = false, .error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}}), .sql = {}};
+            }
         }
         if (tbl.table.fields.empty()) {
             // #5697: see write_sql_tables_and_data()'s own comment -- a
@@ -4059,6 +4526,8 @@ DatabaseSqlExportResult export_database_as_access_sql(
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
             const bool last_field = (fi + 1U == tbl.table.fields.size());
+            // #5743/#5827: see write_sql_tables_and_data()'s own comment
+            // -- fld.name is guaranteed valid UTF-8 here.
             sql << "    " << access_quote_identifier(fld.name) << " "
                 << access_column_type(fld.type, fld.length, fld.decimal_count)
                 << (last_field ? "\n" : ",\n");
@@ -4458,6 +4927,19 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
             sql << "-- skipped table " << sql_sanitize_comment_text(rt.name) << ": "
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
+        }
+        {
+            // #5743/#5827: field names must be decoded to (and validated
+            // as) UTF-8 before identifier_length_in_unit() below attempts
+            // to count Unicode code points, which assumes well-formed
+            // UTF-8 input.
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                hard_failure_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}});
+                return {};
+            }
         }
         if (tbl.table.fields.empty()) {
             // #5697: see write_sql_tables_and_data()'s own comment -- a
@@ -5515,6 +5997,25 @@ TableRowExtractionResult extract_import_table_rows(
 
 }  // namespace
 
+// #5828: bounds the destination-directory scan's own *entry count* --
+// an unbounded scan could otherwise iterate an arbitrarily large
+// directory, and this cap fails it closed with a clear diagnostic well
+// before that becomes a de facto hang, while staying generous enough
+// that an ordinary large real-world directory (the #5745 reproduction
+// used 200,000 files) is nowhere close to it.
+//
+// #5828 PR review (chatgpt-codex-connector, P2): this is an entry-count
+// bound only, not a wall-clock time bound -- a single slow or
+// unresponsive individual directory_iterator::increment() call (e.g.
+// against a hung network mount) can still block indefinitely before
+// this counter is ever consulted again, regardless of how few entries
+// the directory actually contains. A genuine deadline-controlled or
+// interruptible enumeration would need a mechanism std::filesystem
+// does not provide on its own (there is no way to cancel an in-flight
+// blocking directory read from another thread without more invasive
+// machinery); not attempted here.
+constexpr std::size_t kMaxDestinationScanEntries = 1'000'000U;
+
 DatabaseJsonImportResult materialize_database_json_import_plan(
     const DatabaseJsonImportPlan& plan,
     const std::string& dbc_path) {
@@ -5530,10 +6031,123 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
     const fs::path dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
     const fs::path dbc_dir = dbc_fs_path.parent_path();
 
-    std::error_code exists_error;
-    if (fs::exists(dbc_fs_path, exists_error)) {
+    // #5678: fs::exists() only matches the exact-case pathname, so a
+    // case-folded alias already sitting in the destination directory
+    // (e.g. a pre-existing "CUSTOMERS.DBF" when this plan names table
+    // "customers") is invisible to it on a case-sensitive filesystem.
+    // VFP/Windows both treat table identity case-insensitively, so
+    // publishing "customers.dbf" alongside an existing "CUSTOMERS.DBF"
+    // would create two files representing the same table identity --
+    // not portable to Windows, and feeding the read-side ambiguity
+    // #5637 already tracks (that issue fixes resolving pre-existing
+    // ambiguity; it does not prevent an import from creating it). Build
+    // a case-insensitive index of the destination directory's own
+    // existing entries once, up front, and check every planned
+    // destination -- the DBC itself, each table's own .dbf, and each
+    // table's own .fpt memo sidecar -- against it in addition to the
+    // exact-case fs::exists() check.
+    // #5745: the scan below only needs to know whether an existing
+    // directory entry's case-folded name matches one of this plan's own
+    // (small, bounded) set of destination basenames -- retaining every
+    // unrelated entry in the directory made memory scale with destination-
+    // directory cardinality (e.g. ~98 MiB for 200,000 unrelated files)
+    // rather than with the import plan's own size. Derive that bounded set
+    // up front so the scan can discard everything else as it goes.
+    std::set<std::string> planned_casefolded_basenames;
+    planned_casefolded_basenames.insert(
+        lowercase_copy(copperfin::platform::path_to_utf8_string(dbc_fs_path.filename())));
+    for (const auto& table_plan : plan.tables) {
+        planned_casefolded_basenames.insert(lowercase_copy(table_plan.name + ".dbf"));
+        const bool table_plan_has_memo_field = std::any_of(
+            table_plan.fields.begin(), table_plan.fields.end(),
+            [](const DbfFieldDescriptor& field) {
+                return field.type == 'M' || field.type == 'G' || field.type == 'P';
+            });
+        if (table_plan_has_memo_field) {
+            planned_casefolded_basenames.insert(lowercase_copy(table_plan.name + ".fpt"));
+        }
+    }
+
+    const fs::path dbc_dir_for_scan = dbc_dir.empty() ? fs::path(".") : dbc_dir;
+    std::map<std::string, fs::path> existing_entries_by_casefolded_name;
+    {
+        std::error_code scan_error;
+        const bool dir_exists = fs::exists(dbc_dir_for_scan, scan_error);
+        if (scan_error) {
+            return failure(asset_inspector_text(
+                "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)}}));
+        }
+        if (dir_exists) {
+            // #5678 review round: a directory that permits write/traversal
+            // but not listing (e.g. a POSIX write+execute-only drop box)
+            // makes fs::exists() succeed while the iterator itself, or an
+            // increment partway through, reports an error. Silently
+            // treating that as "directory is empty" would leave the
+            // collision index empty and defeat this very fix's own
+            // fail-closed guarantee -- so any scan error here must fail
+            // the whole import closed, not be discarded.
+            fs::directory_iterator scan_it(dbc_dir_for_scan, scan_error);
+            if (scan_error) {
+                return failure(asset_inspector_text(
+                    "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed",
+                    {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)}}));
+            }
+            const fs::directory_iterator scan_end;
+            // #5828: a `for (; it != end; it.increment(ec))` loop checked
+            // `ec` only at the top of the *next* iteration's body -- but
+            // directory_iterator::increment() sets the iterator equal to
+            // its own end sentinel on failure (per its documented
+            // contract), so a failing increment made the loop's own
+            // condition (`scan_it != scan_end`) false and exit the loop
+            // before that iteration's body, and therefore its `scan_error`
+            // check, ever ran. An error partway through the directory was
+            // silently accepted as a complete listing, exactly the
+            // fail-closed guarantee this scan exists to provide. Using a
+            // `while` loop with the error check immediately after each
+            // `increment()` call closes that gap -- the check can never be
+            // skipped by the loop's own condition re-evaluation.
+            std::size_t scanned_entry_count = 0U;
+            while (scan_it != scan_end) {
+                if (++scanned_entry_count > kMaxDestinationScanEntries) {
+                    return failure(asset_inspector_text(
+                        "Vfp.AssetInspector.Error.DatabaseImportDestinationScanTooLarge",
+                        {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)},
+                         {"limit", std::to_string(kMaxDestinationScanEntries)}}));
+                }
+                std::string entry_casefolded_name =
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(scan_it->path().filename()));
+                if (planned_casefolded_basenames.count(entry_casefolded_name) != 0U) {
+                    existing_entries_by_casefolded_name.emplace(
+                        std::move(entry_casefolded_name), scan_it->path());
+                }
+                scan_it.increment(scan_error);
+                if (scan_error) {
+                    return failure(asset_inspector_text(
+                        "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed",
+                        {{"path", copperfin::platform::path_to_utf8_string(dbc_dir_for_scan)}}));
+                }
+            }
+        }
+    }
+    const auto find_colliding_destination =
+        [&](const fs::path& candidate) -> std::optional<fs::path> {
+        std::error_code candidate_exists_error;
+        if (fs::exists(candidate, candidate_exists_error)) {
+            return candidate;
+        }
+        const auto found = existing_entries_by_casefolded_name.find(
+            lowercase_copy(copperfin::platform::path_to_utf8_string(candidate.filename())));
+        if (found != existing_entries_by_casefolded_name.end()) {
+            return found->second;
+        }
+        return std::nullopt;
+    };
+
+    if (const auto colliding = find_colliding_destination(dbc_fs_path)) {
         return failure(asset_inspector_text(
-            "Vfp.AssetInspector.Error.DatabaseImportDestinationExists", {{"path", dbc_path}}));
+            "Vfp.AssetInspector.Error.DatabaseImportDestinationExists",
+            {{"path", copperfin::platform::path_to_utf8_string(*colliding)}}));
     }
 
     // Resolve and pre-check every table's destination path up front -- one
@@ -5558,10 +6172,10 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         }
         const fs::path table_path = dbc_dir /
             copperfin::platform::path_from_utf8_string(table_plan.name + ".dbf");
-        if (fs::exists(table_path, exists_error)) {
+        if (const auto colliding = find_colliding_destination(table_path)) {
             return failure(asset_inspector_text(
                 "Vfp.AssetInspector.Error.DatabaseImportDestinationExists",
-                {{"path", copperfin::platform::path_to_utf8_string(table_path)}}));
+                {{"path", copperfin::platform::path_to_utf8_string(*colliding)}}));
         }
         const bool table_has_memo_field = std::any_of(
             table_plan.fields.begin(), table_plan.fields.end(),
@@ -5571,10 +6185,10 @@ DatabaseJsonImportResult materialize_database_json_import_plan(
         if (table_has_memo_field) {
             fs::path memo_path = table_path;
             memo_path.replace_extension(".fpt");
-            if (fs::exists(memo_path, exists_error)) {
+            if (const auto colliding = find_colliding_destination(memo_path)) {
                 return failure(asset_inspector_text(
                     "Vfp.AssetInspector.Error.DatabaseImportDestinationExists",
-                    {{"path", copperfin::platform::path_to_utf8_string(memo_path)}}));
+                    {{"path", copperfin::platform::path_to_utf8_string(*colliding)}}));
             }
         }
         table_destinations.push_back({&table_plan, table_path});

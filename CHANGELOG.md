@@ -1,3 +1,454 @@
+- 2026-09-13: While merging `origin/v1-development` into the pending
+  #5694 (SQLite decimal precision) branch, found that
+  `write_sqlite_tables_and_data()` was implemented and merged
+  independently of, and predates, #5743/#5827's own field-name UTF-8/
+  code-page decode-and-validation work -- it never received that
+  treatment through the normal PR sequence, since #5694's own branch
+  was opened before #5743 existed. Added the identical
+  `decode_dbf_table_field_names_in_place()` call the other six export
+  dialects already carry, right after parsing, mirroring
+  `write_sql_tables_and_data()`'s own placement. New assertions in
+  `test_export_database_family_fails_closed_on_invalid_utf8_field_name`
+  and
+  `test_export_database_family_still_accepts_valid_multibyte_utf8_field_name`
+  extend both existing regressions to cover
+  `export_database_as_sqlite_sql()`, verified to reliably fail against
+  the code as merged (before this addition) and reliably pass against
+  the fix.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-008 updated.
+
+- 2026-09-13: Fixed a usability regression in database export field-name
+  handling (`src/vfp/asset_inspector.cpp`, #5827, found by an automated
+  Codex code-review pass against the merged #5743 fix itself). That
+  fix's `is_valid_utf8()` field-name check rejected every valid legacy
+  code-page-encoded name outright (the issue's own reproduction: a
+  Windows-1252 field named "CAFé", whose raw byte `0xE9` is not valid
+  standalone UTF-8) instead of decoding it through the table's own DBF
+  header `code_page_mark` -- the exact convention `decode_dbf_text()`
+  already established for field *values* (see e.g. `decode_value()`'s
+  own `'C'` case in `dbf_table.cpp`).
+
+  Fixed by adding `decode_dbf_table_field_names_in_place()`, called
+  once per writer right after parsing: a name already valid UTF-8 is
+  left untouched (the common case); an invalid one is decoded through
+  `decode_dbf_text(tbl.table.header.code_page_mark, ...)` and, on
+  success, the decoded UTF-8 replaces it everywhere it's reachable
+  through the parsed table -- both the field descriptor's own name and
+  every record value's own copy of it (`DbfTableParseResult::
+  records[].values[].field_name`, copied from the same raw source at
+  parse time) -- so no other emission site needed a separate change.
+  Failure (a name genuinely undecodable even through its own declared
+  code page) still fails the whole export closed exactly as #5743
+  established. Replaces the previous 6 scattered per-writer
+  `is_valid_utf8(fld.name)` checks with one shared, single-call-site
+  function.
+
+  New regression test `test_export_database_family_decodes_legacy_
+  code_page_field_name` (the issue's own CP1252 reproduction, both
+  JSON and portable SQL) verified to reliably fail against the pre-fix
+  code and reliably pass against the fix.
+
+  **Scope note:** collision detection between two distinct raw names
+  that decode to the identical UTF-8 string is not implemented (a
+  pre-existing, more general gap this codebase has no field-name
+  collision detector for today); index-metadata and import-round-trip
+  consistency are not separately re-verified, since import always
+  writes fresh UTF-8-encoded names (`decode_dbf_text()`'s own "no
+  code-page mark" compatibility mode) that this same function already
+  passes through unchanged (as `code_page_mark == 0`) on any subsequent
+  re-export; per-code-page encode/decode correctness itself (CP1252,
+  OEM, DBCS, etc.) is not re-tested here since `decode_dbf_text()`
+  already has its own dedicated test coverage
+  (`test_dbf_text_encoding.cpp`) -- this fix only proves the
+  field-name export path correctly wires that existing, already-tested
+  function in.
+
+  A further PR review round (chatgpt-codex-connector, P2) caught that
+  this initial fix's own "is it already valid UTF-8?" fast path
+  (skipping `decode_dbf_text()` entirely whenever the raw bytes already
+  parsed as valid UTF-8) was itself unsound whenever a table declares a
+  nonzero legacy code page: valid-UTF-8-shaped bytes are not the same
+  thing as bytes actually *meant* as UTF-8. CP1252 bytes `0xC3 0xA9`
+  are valid standalone UTF-8 for U+00E9 ('é'), but under a declared
+  CP1252 mark they are two separate CP1252 characters, 'Ã' (U+00C3)
+  and '©' (U+00A9) -- the fast path would have silently exported the
+  wrong identifier for exactly this input, and could even collide with
+  a different field whose name genuinely decodes to the preserved
+  spelling. Fixed by removing the fast path entirely: every field name
+  is now routed through `decode_dbf_text()` unconditionally, regardless
+  of whether the raw bytes happen to already look like valid UTF-8 --
+  `decode_dbf_text()` itself already handles `code_page_mark == 0` as
+  UTF-8 compatibility mode (effectively validating already-UTF-8
+  input), so this adds no special-casing and removes the ambiguity
+  outright. New regression test `test_export_database_family_decodes_
+  code_page_field_name_shaped_like_utf8` (the reviewer's own
+  CP1252-bytes-that-look-like-UTF-8 example) verified to reliably fail
+  against the pre-review-round code and reliably pass against the fix.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-001 updated.
+
+- 2026-09-13: Fixed two gaps in `materialize_database_json_import_
+  plan()`'s destination-directory scan (`src/vfp/asset_inspector.cpp`,
+  #5828, found by an automated Codex code-review pass reviewing the
+  merged #5745 fix itself). First, a genuine correctness bug: the
+  `for (; scan_it != scan_end; scan_it.increment(scan_error)) { if
+  (scan_error) {...} ... }` loop checked `scan_error` only at the top
+  of the *next* iteration's body -- but `directory_iterator::
+  increment()` sets the iterator equal to its own end sentinel on
+  failure (its documented contract), so a failing increment made the
+  loop's own condition false and exited the loop before that
+  iteration's body, and therefore its `scan_error` check, ever ran. A
+  scan error partway through the destination directory was silently
+  accepted as a complete listing, defeating the exact fail-closed
+  guarantee the scan exists to provide. Fixed by replacing the `for`
+  loop with a `while` loop that checks `scan_error` immediately after
+  each `increment()` call, which cannot be skipped by the loop's own
+  condition re-evaluation -- verifiable by inspection against
+  `directory_iterator::increment(error_code&)`'s own documented
+  contract, rather than requiring a live reproduction of an inherently
+  racy, hard-to-force-deterministically OS-level directory read
+  failure.
+
+  Second, the scan had no bound at all, so a huge or slow mounted
+  directory could keep an import in preflight indefinitely. Fixed by
+  adding a `kMaxDestinationScanEntries` cap (1,000,000, generously
+  above the ~200,000-entry adversarial case #5745 itself was reported
+  against) with a new localized `Vfp.AssetInspector.Error.
+  DatabaseImportDestinationScanTooLarge` diagnostic -- not verified
+  with a dedicated large-file test given the prohibitive runtime of
+  creating over a million files, but the bound check itself is a
+  single integer comparison, low-risk to get wrong.
+
+  A further PR review round (chatgpt-codex-connector, P2) correctly
+  noted this is an *entry-count* bound only, not a wall-clock time
+  bound -- a single slow or unresponsive `directory_iterator::
+  increment()` call (e.g. against a hung network mount) can still
+  block indefinitely before the counter is ever consulted again,
+  regardless of the directory's actual entry count. A genuine
+  deadline-controlled or interruptible enumeration would need
+  machinery `std::filesystem` does not provide on its own (there is no
+  way to cancel an in-flight blocking directory read from another
+  thread); not attempted. The code comment and CHANGELOG text above
+  were corrected to claim only entry-count protection, not a time
+  bound.
+
+  **Scope note:** #5828's third claim -- that publication via
+  `create_hard_link()` after this scan can still be raced by a
+  case-aliasing file created during staging -- is the same TOCTOU
+  shape already tracked separately (#5679/#5680, needing
+  fd-relative/handle-based identity binding rather than pathname
+  re-resolution) and was not attempted here.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-004 updated.
+
+- 2026-09-12: Fixed three distinct defects in `decode_dbc_properties_
+  blob()` (`src/vfp/asset_inspector.cpp`, #5796/#5797/#5798, found by
+  an automated Codex code-review pass), the binary decoder for a DBC's
+  own PROPERTIES memo:
+
+  1. (#5796) A DateTime property (type `0x05`) was emitted as raw hex
+     "pending full decode" instead of a real decoded value.
+  2. (#5797) The decoder returned a bare `std::vector<DbcProperty>`
+     with no success/failure signal, so a truncated or malformed
+     memo silently returned whichever properties had already decoded
+     while `load_database_catalog_snapshot()` still reported the
+     whole snapshot/export successful.
+  3. (#5798) An unrecognized property type's own value length is
+     unknown by construction (the format has exactly six documented
+     types, reverse-engineered from community analysis, with no
+     separate length field to fall back on), yet the previous
+     behavior stored the value's first byte as hex and resumed
+     parsing one byte later as a brand-new property header --
+     desynchronizing from the real property stream and risking
+     fabricated bogus properties or dropped real ones.
+
+  Fixed together since (2) and (3) share the same control flow: the
+  decoder now returns a `DbcPropertiesDecodeResult {ok, properties,
+  error}`, and every bounds failure or unrecognized type code fails
+  the whole decode (and thus the whole catalog snapshot and every
+  exporter that shares it) closed with a new localized diagnostic
+  naming the byte offset, instead of silently truncating or guessing.
+  The DateTime case is now decoded the same way a table-level DateTime
+  field already is (two little-endian 32-bit components -- Julian day
+  count, milliseconds since midnight -- as `"julian:<N> millis:<M>"`,
+  matching that established convention); a `(0, 0)` pair is VFP's own
+  blank/null DateTime storage and decodes to an empty value, mirroring
+  this codebase's "blank field displays as empty string" convention.
+
+  New regression tests (`test_export_database_as_json_decodes_
+  datetime_property`, `..._fails_closed_on_truncated_properties_memo`,
+  `..._fails_closed_on_unsupported_property_type`) verified to
+  reliably fail against the pre-fix code (6 assertion failures across
+  all three) and reliably pass against the fix -- the two
+  binary-content fixtures needed a raw `.dct` memo-block byte patch
+  rather than the ordinary `replace_record_field_value()` API, since
+  that API validates its value as UTF-8 text round-tripped through the
+  table's code page and cannot carry arbitrary binary property
+  content.
+
+  A PR review round (chatgpt-codex-connector, P2) caught that the new
+  fail-closed behavior applied unconditionally to every catalog row,
+  including a *deleted* one -- but a deleted row's own PROPERTIES
+  memo, however corrupted, is never actually surfaced to anything
+  (deleted rows are excluded from both table resolution and catalog
+  serialization elsewhere in this same function), so a stale memo
+  pointer on a logically-deleted row could make an otherwise
+  exportable, live database unusable. Fixed by skipping PROPERTIES
+  decoding entirely for a deleted row instead of decoding corrupted,
+  never-used data only to discard it. New regression test
+  `test_export_database_as_json_ignores_corrupt_properties_on_deleted_
+  row` proves a truncated memo on a deleted row does not fail the
+  export, while the live row's own data still exports correctly.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-001 updated.
+
+- 2026-09-12: Fixed a heap-use-after-free in `load_database_catalog_
+  snapshot()` (`src/vfp/asset_inspector.cpp`, #5817, found by an
+  automated Codex code-review pass running the full Clang ASan/UBSan
+  and ThreadSanitizer suites -- a regression introduced by closed
+  #5636's own containment fix, PR #5685). This loader -- shared by
+  every JSON and SQL-family exporter -- held `tname` as a
+  `const std::string&` referencing a string stored inside
+  `snapshot.catalog`, then in all three rejection branches (unsafe
+  table name, table path escaping the database directory, memo-sidecar
+  path escaping the database directory) reset the whole snapshot via
+  `snapshot = {}` -- destroying the catalog vector `tname` referenced
+  into -- before reading `tname` again to format the rejection
+  diagnostic. A crafted DBC intended to be rejected could therefore
+  trigger a heap-use-after-free while constructing the error result.
+  The ordinary GCC Release `ctest` suite passed because the freed heap
+  storage happened to remain readable; only a sanitizer build actually
+  caught it.
+
+  Fixed by making `tname` an owning `const std::string` copy instead of
+  a reference, decoupling its lifetime from the snapshot being reset --
+  a one-line change covering all three branches, since they share the
+  same `tname` declared once per loop iteration.
+
+  Independently reproduced with a standalone Clang ASan/UBSan build of
+  `test_vfp_assets` against the existing
+  `test_export_database_as_json_rejects_dotdot_table_name_traversal`
+  regression (a clean heap-use-after-free abort at the exact reported
+  line, matching the report) before the fix, and confirmed the full
+  suite passes clean under the same sanitizer build after it. No new
+  regression test was needed: all four existing containment-rejection
+  tests already exercise this exact code path and now serve as the
+  sanitizer regression guard. Adding permanent ASan/UBSan/TSan coverage
+  to CI for this test family (this issue's own broader completion
+  criteria) was not attempted here -- scoped to the memory-safety fix
+  itself.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-001 updated.
+
+- 2026-09-12: Closed a data-integrity/safety gap across every database
+  export dialect (`src/vfp/asset_inspector.cpp`, #5743, found by an
+  automated Codex code-review pass -- a sibling gap to closed
+  #5630/#5571's own field-TYPE-byte fix, this time for field NAMES).
+  DBF field-descriptor name bytes are read raw by `read_ascii_name()`
+  (`src/vfp/dbf_table.cpp`) with no charset validation, and every
+  exporter -- JSON and all five SQL dialects (portable SQL/PostgreSQL,
+  SQL Server, Oracle, Access, MySQL) -- trusted them as already-valid
+  UTF-8. A crafted or corrupted field name containing an isolated high
+  byte (e.g. `0xFF`, never valid standalone UTF-8) reached JSON output
+  verbatim via `json_escape_str()` (which only escapes syntax characters
+  and C0 controls, by design, since it must also pass genuine
+  multi-byte UTF-8 names through unchanged), producing text no
+  conforming UTF-8-based JSON parser can accept, and reached every SQL
+  dialect's identifier quoting the same way via `sql_quote_identifier()`
+  and its per-vendor siblings (which only double embedded quote
+  characters).
+
+  Fixed by adding a new `is_valid_utf8()` validator (the same
+  well-tested UTF-8 state machine already used by
+  `src/platform/json.cpp`) and checking every field name against it
+  before it is ever quoted or escaped, failing the whole export closed
+  with a new `Vfp.AssetInspector.Validation.UnsafeFieldNameBytes`
+  diagnostic if it is not valid UTF-8 -- one check point per writer's
+  own per-field loop, which by construction also covers every record's
+  own field-name-keyed property/column, since `DbfTableParseResult`
+  copies each record value's `field_name` directly from the same field
+  descriptor list. Full codepage-aware conversion of legacy-encoded
+  names to Unicode (this issue's own broader completion criteria) is
+  not attempted here; this closes the immediate correctness/safety gap
+  only.
+
+  New regression tests
+  (`test_export_database_family_fails_closed_on_invalid_utf8_field_name`,
+  covering all six export dialects;
+  `test_export_database_family_still_accepts_valid_multibyte_utf8_field_name`,
+  proving a genuine multi-byte UTF-8 name is not rejected) verified to
+  reliably fail against the pre-fix code (7 of 8 assertions; Oracle's
+  own pre-existing identifier-collision logic happened to already
+  reject this exact crafted input for an unrelated reason) and reliably
+  pass against the fix.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-001 updated.
+
+- 2026-09-12: Fixed an unbounded-memory regression in `materialize_
+  database_json_import_plan()` (`src/vfp/asset_inspector.cpp`, #5745,
+  found by an automated Codex code-review pass against the just-merged
+  #5678 fix). The case-insensitive destination-directory scan #5678
+  added retained every entry in the destination directory in memory
+  regardless of whether it matched a planned destination, so memory
+  scaled with destination-directory cardinality rather than with the
+  import plan's own size -- a standalone reproduction measured ~24 MiB
+  RSS growth for 50,000 unrelated files in the destination directory
+  (the reported issue measured ~98 MiB for 200,000). Fixed by deriving
+  the plan's own small, bounded set of case-folded destination
+  basenames (the DBC itself, each table's `.dbf`, each table's `.fpt`)
+  before scanning, and discarding any directory entry that doesn't
+  match one of them instead of retaining it -- the same reproduction
+  now measures a 0 KiB RSS delta for the same 50,000 unrelated files.
+  New regression test
+  (`test_materialize_database_json_import_plan_ignores_unrelated_
+  directory_entries`) proves the functional-correctness side: a
+  legitimate import still succeeds, and a real case-folded collision is
+  still detected, among thousands of unrelated directory entries.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-004 updated.
+
+- 2026-09-12: Closed a data-integrity gap in `materialize_database_json_
+  import_plan()` (`src/vfp/asset_inspector.cpp`, #5678, found by an
+  automated Codex code-review pass): the shared JSON/SQL database import
+  materializer checked destination existence with exact
+  `std::filesystem::exists()` paths only. On a case-sensitive filesystem,
+  an existing case-folded alias (e.g. a pre-existing `CUSTOMERS.DBF`
+  when the plan names table `customers`) therefore did not count as an
+  existing destination: preflight checks passed, staging succeeded, and
+  `create_hard_link()` published a second physical file representing the
+  same VFP/Windows table identity. The same gap applied to a differently
+  cased DBC destination and to a table's own `.fpt` memo sidecar. This
+  violated #5472's own fail-closed overwrite-consent contract and left
+  output that is not portable to Windows -- and fed the read-side
+  ambiguity #5637 already tracks, since an import could itself create
+  the exact ambiguity that issue's own fix resolves after the fact.
+
+  Fixed by building a case-insensitive index of the destination
+  directory's own existing entries once, up front, and checking every
+  planned destination -- the DBC itself, each table's own `.dbf`, and
+  each table's own `.fpt` memo sidecar -- against it in addition to the
+  exact-case `fs::exists()` check, via a new `find_colliding_destination()`
+  lambda that returns the actual colliding path (whichever casing it
+  happens to be) so the existing `Vfp.AssetInspector.Error.
+  DatabaseImportDestinationExists` diagnostic still names a real file.
+  `build_database_sql_import_plan()` (the `TYPE SQL` import planner)
+  shares this identical materializer at the runtime dispatch layer, so
+  this one fix closes the gap for both `TYPE JSON` and `TYPE SQL`
+  imports without a separate change -- confirmed by reading
+  `src/runtime/prg_engine_dispatch.inl`'s own IMPORT DATABASE dispatch,
+  not assumed.
+
+  New regression test
+  (`test_materialize_database_json_import_plan_rejects_case_folded_
+  collisions`, covering all three collision points: DBC, table `.dbf`,
+  and memo `.fpt`) verified to reliably fail against the pre-fix code (9
+  total failures) and reliably pass against the fix.
+
+  A review round on the fix's own PR (chatgpt-codex-connector) found two
+  further gaps. First, the destination directory's own scan silently
+  discarded a `fs::directory_iterator` construction or increment error
+  (e.g. a directory permitting write/traversal but not listing), so a
+  scan failure was indistinguishable from an empty directory and quietly
+  defeated the fail-closed guarantee precisely when the scan itself was
+  unavailable -- fixed by returning a new `Vfp.AssetInspector.Error.
+  DatabaseImportDestinationScanFailed` failure on any scan error instead
+  of discarding it. Second, two of the new test's own assertions checked
+  `fs::exists()` on a path that is itself a case-folded alias of a
+  pre-existing file (e.g. `container.dbc` when `CONTAINER.DBC` already
+  exists) -- unconditionally true on a real case-insensitive filesystem
+  (Windows, default macOS) regardless of whether the fix behaved
+  correctly, since the OS resolves the alias straight through to the
+  original file. Fixed by asserting directory-entry-count and
+  pre-existing-file content/size invariance instead of alias
+  non-existence.
+
+  This is one of five related defects an automated review pass found in
+  this same function (#5678, #5679, #5680, #5681, #5682); this fix
+  addresses #5678 only. #5679/#5680's own TOCTOU races on the
+  commit/rollback file-identity binding, and #5681/#5682's own
+  ignored-cleanup-error gaps, remain open and are tracked separately --
+  each has a genuinely distinct root cause and needs its own fix, not a
+  single shared change.
+
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-004` updated.
+
+- 2026-09-12: Closed a JSON-structural-injection vulnerability in
+  `export_database_as_json()` (`src/vfp/asset_inspector.cpp`, #5630/#5571,
+  found by an automated Codex code-review pass): a numeric cell's decoded
+  display_value was inserted directly into the JSON stream with no
+  validation at all. Since this codebase's own DBF writer accepts any byte
+  string that fits a fixed-width N/F field's declared width, a crafted or
+  corrupted table could inject an entirely new, distinct JSON property into
+  a record object -- a cell containing `1,"INJECT":true` became two logical
+  properties, not one, while the export still reported success -- and a
+  numeric-overflow marker (e.g. "*****") or a nonfinite binary Double's own
+  decoded text ("nan"/"inf") produced outright invalid JSON. Every SQL
+  exporter already validates the identical decoded value via
+  `looks_like_safe_unquoted_sql_numeric_literal()` before trusting it
+  unquoted; the JSON exporter had no equivalent check.
+
+  Fixed by adding `looks_like_safe_unquoted_json_numeric_literal()`, a
+  JSON-number-grammar validator deliberately distinct from (and stricter
+  than) the existing SQL validator: real JSON grammar (RFC 8259) forbids a
+  leading `+` and a leading zero before further digits, both of which the
+  SQL validator accepts (SQL's own numeric-literal grammar has no such
+  restriction, and this codebase's SQL exporters correctly rely on that).
+  Checked before a numeric value is ever emitted unquoted into the JSON
+  stream, failing the whole export closed with a new localized
+  `Vfp.AssetInspector.Validation.UnsafeJsonNumericValue` diagnostic naming
+  the table, row, and column.
+
+  A proactive sibling-gap check -- performed while fixing the reported
+  numeric-value defect, not in response to a separate report -- found the
+  identical unescaped-raw-byte pattern one property over: the fields
+  array's own `"type"` property embedded a field descriptor's raw type
+  byte directly, with no validation that it's a recognized VFP type
+  letter, exactly the same "no quoting layer to escape it with" situation
+  for a crafted `"` or `\` byte, just describing the schema rather than a
+  data value. Fixed by routing it through the same `json_escape_str()` the
+  field's own `"name"` property already uses.
+
+  New regression tests
+  (`test_export_database_as_json_fails_closed_on_numeric_structural_
+  injection`, `test_export_database_as_json_fails_closed_on_unsafe_
+  numeric_forms` -- covering the overflow marker, leading '+', leading
+  zero, and nonfinite double cases -- `test_export_database_as_json_still_
+  accepts_valid_numeric_forms`, proving genuinely valid numeric values are
+  unaffected; `test_export_database_as_json_escapes_crafted_field_type_
+  byte`, built from raw DBF bytes directly since a crafted out-of-range
+  type byte cannot be produced through the ordinary
+  `create_dbf_table_file()` writer) verified to reliably fail against the
+  pre-fix code (8 total failures) and reliably pass against the fix.
+
+  `docs/32-recovered-requirements-traceability.md` row
+  `RQ-CF-MODERNIZATION-001` updated.
+
+  A PR review round on this fix (chatgpt-codex-connector) caught that
+  `json_escape_str()` only escapes quotes, backslashes, and C0 controls
+  -- by design, since it is also used for genuine multi-byte UTF-8 field
+  names/values elsewhere, which it must pass through unchanged -- so a
+  raw field-type byte >= 0x80 standing alone (never part of a real
+  multi-byte UTF-8 sequence on its own) was still passed through
+  unescaped by the structural-escaping fix above, producing a document
+  that is syntactically valid JSON but not valid UTF-8 text, which
+  `parse_json_document()` itself rejects. Every real VFP field-type
+  letter is plain ASCII, so fixed by additionally failing the whole
+  export closed for a type byte outside the printable ASCII range, with
+  a new localized `Vfp.AssetInspector.Validation.UnsafeJsonFieldTypeByte`
+  diagnostic naming the table and column. New regression test
+  (`test_export_database_as_json_fails_closed_on_non_ascii_field_type_byte`)
+  verified to reliably fail against the code as it stood right after the
+  structural-escaping fix and reliably pass against this additional
+  check.
 - 2026-09-12: Closed a data-integrity gap in `EXPORT DATABASE ... TYPE
   SQLITE` (`src/vfp/asset_inspector.cpp`, #5694): SQLite's own
   NUMERIC-affinity storage -- what an N/F/Y field's `DECIMAL(p,s)` column
