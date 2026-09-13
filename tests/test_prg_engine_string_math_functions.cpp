@@ -1321,6 +1321,55 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5947 PR review (chatgpt-codex-connector, P2): an earlier version of
+    // the #5900 fix saturated an out-of-range STR() width to INT_MAX
+    // instead of rejecting it, so STR(1, 1e100) attempted to allocate
+    // roughly 2 GiB of padding spaces -- a real denial-of-service risk,
+    // not just a narrowing-cast correctness concern. STR() must instead
+    // report VFP error 11 for a width beyond its supported bound without
+    // ever attempting the oversized allocation.
+    void test_str_rejects_oversized_width_instead_of_allocating()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_str_oversized_width";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "str_oversized_width.prg";
+        write_text(
+            main_path,
+            "PUBLIC nCapturedCode\n"
+            "PUBLIC nAfterError\n"
+            "nCapturedCode = 0\n"
+            "nAfterError = 0\n"
+            "ON ERROR DO HandleStrError\n"
+            "cUnexpected = STR(1, 1e100)\n"
+            "ON ERROR\n"
+            "nAfterError = 42\n"
+            "RETURN\n"
+            "PROCEDURE HandleStrError\n"
+            "nCapturedCode = ERROR()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "STR() oversized-width script should recover through ON ERROR rather than attempting a huge "
+               "allocation: " + state.message);
+
+        const auto code = state.globals.find("ncapturedcode");
+        expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "11",
+               "STR() with a width far beyond any supported bound should report VFP error 11");
+        const auto after_error = state.globals.find("naftererror");
+        expect(after_error != state.globals.end() && copperfin::runtime::format_value(after_error->second) == "42",
+               "STR() oversized width should resume after its ON ERROR handler");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1460,6 +1509,7 @@ int main()
     test_round_truncates_fractional_decimal_places_argument();
     test_chr_and_str_truncate_fractional_arguments();
     test_chr_rejects_out_of_range_character_code();
+    test_str_rejects_oversized_width_instead_of_allocating();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();

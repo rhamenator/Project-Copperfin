@@ -3031,6 +3031,7 @@
   "AssetEditor.Summary.LabelDeterministicFirst": "Determinista primero",
   "Runtime.Prg.String.Error.InvalidCharacterCode": "El valor, tipo o cantidad del argumento de la función no es válido.",
   "Runtime.Prg.String.Error.InvalidOccurrence": "El valor, tipo o cantidad del argumento de la función no es válido.",
+  "Runtime.Prg.String.Error.InvalidStrWidth": "El valor, tipo o cantidad del argumento de la función no es válido.",
   "Studio.EditMenu": "\u0026Editar",
   "Studio.ProjectMenu": "\u0026Proyecto",
   "Studio.BuildProjectMenu": "\u0026Compilar proyecto",

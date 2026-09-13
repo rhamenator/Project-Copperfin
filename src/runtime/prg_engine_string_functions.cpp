@@ -614,20 +614,39 @@ std::optional<PrgValue> evaluate_string_function(
         // #5900: VFP9 truncates a fractional width argument toward zero
         // (STR(12, 4.9) is 4 characters wide, not 5), the same rule
         // already applied correctly to the decimals argument above.
-        // Nonfinite/out-of-int-range values saturate rather than
-        // triggering undefined behavior on the narrowing cast; the
-        // existing width > 0 guard below is unchanged and continues to
-        // govern zero/negative width exactly as before this fix.
+        //
+        // #5947 PR review (chatgpt-codex-connector, P2): an earlier
+        // version of this fix saturated an out-of-range width to
+        // std::numeric_limits<int>::max() rather than rejecting it, so a
+        // call like STR(1, 1e100) reached the result.insert() below with
+        // a width around 2^31, attempting to allocate roughly 2 GiB of
+        // spaces -- a real, well-defined-but-unbounded-allocation denial
+        // of service, not just a narrowing-cast correctness concern.
+        // kMaxStrWidth is a conservative safety bound (matching this
+        // codebase's own VFP field-width convention -- DBF field lengths
+        // are a std::uint8_t, max 255 -- not a specifically VFP9-probed
+        // STR()-width limit), well above any realistic legitimate width;
+        // anything beyond it is rejected the same way CHR() rejects an
+        // out-of-range code, rather than attempting the allocation.
+        constexpr double kMaxStrWidth = 255.0;
         const double truncated_width = arguments.size() >= 2U
                                            ? std::trunc(value_as_number(arguments[1]))
                                            : 10.0;
+        if (std::isfinite(truncated_width) && truncated_width > kMaxStrWidth) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidStrWidth"), 11);
+        }
+        // Every width <= 0 takes the same "no padding/truncation" path
+        // below regardless of exact magnitude, so an out-of-int-range
+        // negative value (equally capable of triggering the same class of
+        // narrowing-cast UB as the too-large case above) is clamped to -1
+        // rather than rejected -- behavior-preserving, not just safety-
+        // preserving, since it was already indistinguishable from any
+        // other negative width before this fix.
         const int width = !std::isfinite(truncated_width)
                               ? 0
-                              : truncated_width > static_cast<double>(std::numeric_limits<int>::max())
-                                    ? std::numeric_limits<int>::max()
-                                    : truncated_width < static_cast<double>(std::numeric_limits<int>::min())
-                                          ? std::numeric_limits<int>::min()
-                                          : static_cast<int>(truncated_width);
+                              : truncated_width < 0.0
+                                    ? -1
+                                    : static_cast<int>(truncated_width);
         if (width > 0) {
             if (result.size() > static_cast<std::size_t>(width)) {
                 return make_string_value(std::string(static_cast<std::size_t>(width), '*'));
