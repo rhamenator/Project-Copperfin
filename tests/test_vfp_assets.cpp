@@ -4463,6 +4463,92 @@ void test_export_database_family_still_accepts_valid_multibyte_utf8_field_name()
     fs::remove_all(temp_dir, ignored);
 }
 
+// #5827 (found by an automated Codex code-review pass against the merged
+// #5743 fix): a valid legacy code-page-encoded field name (this is #5827's
+// own reported reproduction: a Windows-1252 field named "CAFé", whose raw
+// byte 0xE9 is not valid standalone UTF-8) must be decoded through the
+// table's own DBF header code_page_mark, not rejected outright the way an
+// isolated invalid byte with no declared code page (code_page_mark == 0,
+// Copperfin's own UTF-8 compatibility mode -- see
+// test_export_database_family_fails_closed_on_invalid_utf8_field_name
+// above) correctly still is. decode_dbf_text() already has its own
+// dedicated, pre-existing test coverage for per-code-page encode/decode
+// correctness (test_dbf_text_encoding.cpp); this only proves
+// asset_inspector.cpp actually wires that existing, already-tested
+// function into the field-name export path.
+void test_export_database_family_decodes_legacy_code_page_field_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_export_code_page_field_name_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir / "readings.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 64U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 81U, .length = 64U, .decimal_count = 0U},
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields,
+        {{"TABLE", "readings", ""}});
+    expect(dbc_create.ok, "code-page field-name test: DBC fixture should be created");
+
+    // Raw VFP-style DBF bytes: one Character field descriptor named
+    // "CAF\xE9" ("CAFé") under DBF code-page mark 0x03 (Windows-1252, per
+    // dbf_code_page_from_mark()) -- 0xE9 is CP1252's own encoding of 'é',
+    // but is not valid standalone UTF-8, and is not producible through
+    // create_dbf_table_file()'s own ASCII-only name writer.
+    constexpr std::uint16_t record_length = 1U + 10U;
+    constexpr std::uint16_t header_length = 32U + 32U + 1U;
+    std::vector<std::uint8_t> bytes(
+        static_cast<std::size_t>(header_length) + record_length + 1U, 0U);
+    bytes[0] = 0x30U;
+    write_le_u32(bytes, 4U, 1U);
+    write_le_u16(bytes, 8U, header_length);
+    write_le_u16(bytes, 10U, record_length);
+    bytes[29U] = 0x03U;  // code_page_mark: Windows-1252
+    bytes[32U + 0U] = 'C';
+    bytes[32U + 1U] = 'A';
+    bytes[32U + 2U] = 'F';
+    bytes[32U + 3U] = 0xE9U;
+    bytes[32U + 11U] = 'C';    // valid, plain-ASCII field type
+    bytes[32U + 16U] = 10U;    // length
+    bytes[64U] = 0x0DU;        // field descriptor terminator
+    bytes[header_length] = 0x20U;  // not deleted
+    std::memset(bytes.data() + header_length + 1U, ' ', 10U);
+    bytes.back() = 0x1AU;  // EOF marker
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const std::string dbc_utf8 = copperfin::platform::path_to_utf8_string(dbc_path);
+
+    const auto json_result = copperfin::vfp::export_database_as_json(dbc_utf8);
+    expect(json_result.ok,
+           "export_database_as_json must decode a valid CP1252 field name rather than reject it: " +
+               json_result.error);
+    if (json_result.ok) {
+        expect(json_result.json.find("CAF\xC3\xA9") != std::string::npos,
+               "export_database_as_json should decode the CP1252 field name to UTF-8 (CAF\\xC3\\xA9)");
+        expect(json_result.json.find("CAF\xE9") == std::string::npos,
+               "export_database_as_json must never emit the raw CP1252 byte verbatim");
+    }
+
+    const auto sql_result = copperfin::vfp::export_database_as_sql(dbc_utf8);
+    expect(sql_result.ok,
+           "export_database_as_sql must decode a valid CP1252 field name rather than reject it: " +
+               sql_result.error);
+    if (sql_result.ok) {
+        expect(sql_result.sql.find("CAF\xC3\xA9") != std::string::npos,
+               "export_database_as_sql should decode the CP1252 field name to UTF-8 (CAF\\xC3\\xA9)");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 // #5696: a blank VFP date field decodes to an empty display_value (not
 // is_null), same as a blank numeric cell -- write_sql_tables_and_data()
 // (the shared row writer behind export_database_as_sql(),
@@ -8593,6 +8679,7 @@ int main() {
     test_export_database_as_json_fails_closed_on_non_ascii_field_type_byte();
     test_export_database_family_fails_closed_on_invalid_utf8_field_name();
     test_export_database_family_still_accepts_valid_multibyte_utf8_field_name();
+    test_export_database_family_decodes_legacy_code_page_field_name();
     test_export_database_as_sql_family_preserves_blank_dates_as_null();
     test_export_database_family_fails_closed_on_unsafe_numeric_value();
     test_export_database_as_sql_still_preserves_blank_numeric_as_null();

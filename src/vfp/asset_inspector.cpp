@@ -1629,6 +1629,71 @@ std::string describe_field_name_for_diagnostic(const std::string& name) {
     return "<invalid UTF-8 bytes: " + hex + ">";
 }
 
+// #5827 (found by an automated Codex code-review pass against the merged
+// #5743 fix): that fix's is_valid_utf8() field-name check rejected every
+// valid legacy code-page-encoded name (e.g. a CP1252 field named "CAFé",
+// whose raw byte 0xE9 is not valid standalone UTF-8) outright, when it
+// should instead be decoded to UTF-8 through the table's own DBF header
+// code_page_mark -- the exact convention decode_dbf_text() already
+// established for field *values* (see e.g. decode_value()'s own 'C' case
+// in dbf_table.cpp). This decodes every field-descriptor name in `tbl`
+// in place -- both the field descriptor's own name and every record
+// value's own copy of it (DbfTableParseResult::records[].values[].
+// field_name, which parse_dbf_table_from_file() copies from the exact
+// same raw source at parse time) -- so every other emission site in this
+// file (json_escape_str(fld.name), sql_quote_identifier(fld.name), the
+// record-value loops, etc.) needs no separate change: by the time any of
+// them runs, every name reachable through `tbl` is already guaranteed
+// valid UTF-8. A name already valid UTF-8 is left untouched (the common
+// case, and the only case create_dbf_table_file()'s own ASCII-only name
+// writer can produce) rather than needlessly round-tripped through the
+// code page. Fails (returns false, with the offending raw name described
+// via describe_field_name_for_diagnostic()) only for a name that is
+// genuinely undecodable even through the table's own declared code page
+// -- the same fail-closed outcome #5743 already established for that
+// case.
+//
+// Scope note: this does not attempt every acceptance criterion #5827
+// itself lists -- collision detection between two distinct raw names
+// that decode to the identical UTF-8 string is not implemented (a
+// pre-existing, separate concern: two ordinary ASCII names already
+// differing only in the bytes decode_dbf_text() would treat identically
+// could theoretically collide too, and this codebase has no general
+// post-normalization collision detector for field names today); nor is
+// index-metadata or import-round-trip consistency specifically
+// re-verified, since import always writes fresh UTF-8-encoded names
+// (decode_dbf_text()'s own "no code-page mark" compatibility mode) that
+// the is_valid_utf8() fast path above already passes through unchanged
+// on any subsequent re-export.
+bool decode_dbf_table_field_names_in_place(
+    DbfTableParseResult& tbl, std::string& invalid_field_name_for_diagnostic) {
+    std::map<std::string, std::string> decoded_name_by_raw_name;
+    for (auto& fld : tbl.table.fields) {
+        if (is_valid_utf8(fld.name)) {
+            continue;
+        }
+        const DbfTextConversionResult decoded =
+            decode_dbf_text(tbl.table.header.code_page_mark, fld.name);
+        if (!decoded.ok) {
+            invalid_field_name_for_diagnostic = describe_field_name_for_diagnostic(fld.name);
+            return false;
+        }
+        decoded_name_by_raw_name.emplace(fld.name, decoded.text);
+        fld.name = decoded.text;
+    }
+    if (!decoded_name_by_raw_name.empty()) {
+        for (auto& rec : tbl.table.records) {
+            for (auto& val : rec.values) {
+                const auto found = decoded_name_by_raw_name.find(val.field_name);
+                if (found != decoded_name_by_raw_name.end()) {
+                    val.field_name = found->second;
+                }
+            }
+        }
+    }
+    return true;
+}
+
 std::string json_escape_str(const std::string& s) {
     std::string out;
     out.reserve(s.size() + 4U);
@@ -2711,7 +2776,7 @@ DatabaseExportResult export_database_as_json(
         const std::size_t row_limit = (max_rows_per_table == 0U)
                                           ? std::numeric_limits<std::size_t>::max()
                                           : max_rows_per_table;
-        const DbfTableParseResult tbl = parse_dbf_table_from_file(
+        DbfTableParseResult tbl = parse_dbf_table_from_file(
             copperfin::platform::path_to_utf8_string(rt.path),
             row_limit);
         if (!tbl.ok) {
@@ -2719,6 +2784,14 @@ DatabaseExportResult export_database_as_json(
             json << "    \"" << json_escape_str(rt.name) << "\": {\"fields\":[], \"records\":[]}"
                  << (last_table ? "\n" : ",\n");
             continue;
+        }
+        {
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                return {.ok = false, .error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}}), .json = {}};
+            }
         }
         if (tbl.table.fields.empty()) {
             // #5697: a member DBF whose field-descriptor block parses
@@ -2744,16 +2817,11 @@ DatabaseExportResult export_database_as_json(
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
             const bool last_field = (fi + 1U == tbl.table.fields.size());
-            // #5743: fld.name is a raw, unvalidated field-descriptor name
-            // (see is_valid_utf8()'s own comment above). Every record's own
-            // rv.field_name is copied from this same field list at parse
-            // time, so validating here also covers the record-property key
-            // emitted later in this table's records array.
-            if (!is_valid_utf8(fld.name)) {
-                return {.ok = false, .error = asset_inspector_text(
-                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}}), .json = {}};
-            }
+            // #5743/#5827: fld.name is guaranteed valid UTF-8 here --
+            // decode_dbf_table_field_names_in_place() above already
+            // decoded (or rejected) every field name up front, covering
+            // the record-property key emitted later in this table's
+            // records array too (it shares the same underlying rewrite).
             // #5630 review (self, proactive sibling-gap check): fld.type
             // is a single raw byte read directly from the field
             // descriptor block with no validation that it's one of the
@@ -2922,6 +2990,15 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
+        {
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                hard_failure_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}});
+                return {};
+            }
+        }
         if (tbl.table.fields.empty()) {
             // #5697: a member DBF that parses "successfully" with zero
             // fields would otherwise emit `CREATE TABLE "name" (\n);`,
@@ -2942,17 +3019,9 @@ std::vector<ParsedSqlExportTable> write_sql_tables_and_data(
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
             const bool last_field = (fi + 1U == tbl.table.fields.size());
-            // #5743: fld.name is a raw, unvalidated field-descriptor name
-            // (see is_valid_utf8()'s own comment). sql_quote_identifier()
-            // only doubles embedded quote characters, so an invalid UTF-8
-            // byte sequence would otherwise reach the emitted SQL
-            // identifier undecodable.
-            if (!is_valid_utf8(fld.name)) {
-                hard_failure_error = asset_inspector_text(
-                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}});
-                return {};
-            }
+            // #5743/#5827: fld.name is guaranteed valid UTF-8 here --
+            // decode_dbf_table_field_names_in_place() above already
+            // decoded (or rejected) every field name up front.
             sql << "    " << sql_quote_identifier(fld.name) << " "
                 << sql_column_type(fld.type, fld.length, fld.decimal_count)
                 << (last_field ? "\n" : ",\n");
@@ -3381,6 +3450,15 @@ std::vector<ParsedSqlExportTable> write_sqlserver_tables_and_data(
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
+        {
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                hard_failure_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}});
+                return {};
+            }
+        }
         if (tbl.table.fields.empty()) {
             // #5697: see write_sql_tables_and_data()'s own comment -- a
             // zero-field member table would otherwise emit invalid
@@ -3396,14 +3474,8 @@ std::vector<ParsedSqlExportTable> write_sqlserver_tables_and_data(
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
             const bool last_field = (fi + 1U == tbl.table.fields.size());
-            // #5743: see write_sql_tables_and_data()'s own comment -- an
-            // invalid UTF-8 field name must not reach a SQL identifier.
-            if (!is_valid_utf8(fld.name)) {
-                hard_failure_error = asset_inspector_text(
-                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}});
-                return {};
-            }
+            // #5743/#5827: see write_sql_tables_and_data()'s own comment
+            // -- fld.name is guaranteed valid UTF-8 here.
             sql << "    " << sqlserver_quote_identifier(fld.name) << " "
                 << sqlserver_column_type(fld.type, fld.length, fld.decimal_count)
                 << (last_field ? "\n" : ",\n");
@@ -3699,6 +3771,15 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
+        {
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                hard_failure_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}});
+                return {};
+            }
+        }
         if (tbl.table.fields.empty()) {
             // #5697: see write_sql_tables_and_data()'s own comment -- a
             // zero-field member table would otherwise emit invalid
@@ -3725,14 +3806,8 @@ std::vector<ParsedSqlExportTable> write_oracle_tables_and_data(
         std::set<std::string> used_column_names;
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
-            // #5743: see write_sql_tables_and_data()'s own comment -- an
-            // invalid UTF-8 field name must not reach a SQL identifier.
-            if (!is_valid_utf8(fld.name)) {
-                hard_failure_error = asset_inspector_text(
-                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}});
-                return {};
-            }
+            // #5743/#5827: see write_sql_tables_and_data()'s own comment
+            // -- fld.name is guaranteed valid UTF-8 here.
             const std::string quoted_column = oracle_quote_identifier(fld.name);
             if (!oracle_record_identifier_or_detect_collision(quoted_column, used_column_names)) {
                 hard_failure_error = asset_inspector_text(
@@ -4135,10 +4210,18 @@ DatabaseSqlExportResult export_database_as_access_sql(
         : max_rows_per_table;
 
     for (const auto& rt : snapshot.resolved_tables) {
-        const DbfTableParseResult tbl = parse_dbf_table_from_file(
+        DbfTableParseResult tbl = parse_dbf_table_from_file(
             copperfin::platform::path_to_utf8_string(rt.path), row_limit);
         if (!tbl.ok) {
             continue;
+        }
+        {
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                return {.ok = false, .error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}}), .sql = {}};
+            }
         }
         if (tbl.table.fields.empty()) {
             // #5697: see write_sql_tables_and_data()'s own comment -- a
@@ -4154,13 +4237,8 @@ DatabaseSqlExportResult export_database_as_access_sql(
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
             const bool last_field = (fi + 1U == tbl.table.fields.size());
-            // #5743: see write_sql_tables_and_data()'s own comment -- an
-            // invalid UTF-8 field name must not reach a SQL identifier.
-            if (!is_valid_utf8(fld.name)) {
-                return {.ok = false, .error = asset_inspector_text(
-                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}}), .sql = {}};
-            }
+            // #5743/#5827: see write_sql_tables_and_data()'s own comment
+            // -- fld.name is guaranteed valid UTF-8 here.
             sql << "    " << access_quote_identifier(fld.name) << " "
                 << access_column_type(fld.type, fld.length, fld.decimal_count)
                 << (last_field ? "\n" : ",\n");
@@ -4561,6 +4639,19 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
                 << sql_sanitize_comment_text(tbl.error) << "\n\n";
             continue;
         }
+        {
+            // #5743/#5827: field names must be decoded to (and validated
+            // as) UTF-8 before identifier_length_in_unit() below attempts
+            // to count Unicode code points, which assumes well-formed
+            // UTF-8 input.
+            std::string invalid_field_name_for_diagnostic;
+            if (!decode_dbf_table_field_names_in_place(tbl, invalid_field_name_for_diagnostic)) {
+                hard_failure_error = asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+                    {{"table", rt.name}, {"column", invalid_field_name_for_diagnostic}});
+                return {};
+            }
+        }
         if (tbl.table.fields.empty()) {
             // #5697: see write_sql_tables_and_data()'s own comment -- a
             // zero-field member table would otherwise emit invalid
@@ -4582,17 +4673,6 @@ std::vector<ParsedSqlExportTable> write_mysql_tables_and_data(
         sql << "CREATE TABLE " << quoted_table << " (\n";
         for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
             const auto& fld = tbl.table.fields[fi];
-            // #5743: see write_sql_tables_and_data()'s own comment -- an
-            // invalid UTF-8 field name must not reach a SQL identifier, and
-            // must be rejected before identifier_length_in_unit() below
-            // attempts to count its Unicode code points (which assumes
-            // well-formed UTF-8 input).
-            if (!is_valid_utf8(fld.name)) {
-                hard_failure_error = asset_inspector_text(
-                    "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
-                    {{"table", rt.name}, {"column", describe_field_name_for_diagnostic(fld.name)}});
-                return {};
-            }
             const std::string quoted_column = mysql_quote_identifier(fld.name);
             if (identifier_length_in_unit(fld.name, IdentifierLengthUnit::unicode_code_points) >
                 kMysqlMaxIdentifierCodePoints) {

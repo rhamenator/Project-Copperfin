@@ -1,3 +1,51 @@
+- 2026-09-13: Fixed a usability regression in database export field-name
+  handling (`src/vfp/asset_inspector.cpp`, #5827, found by an automated
+  Codex code-review pass against the merged #5743 fix itself). That
+  fix's `is_valid_utf8()` field-name check rejected every valid legacy
+  code-page-encoded name outright (the issue's own reproduction: a
+  Windows-1252 field named "CAFé", whose raw byte `0xE9` is not valid
+  standalone UTF-8) instead of decoding it through the table's own DBF
+  header `code_page_mark` -- the exact convention `decode_dbf_text()`
+  already established for field *values* (see e.g. `decode_value()`'s
+  own `'C'` case in `dbf_table.cpp`).
+
+  Fixed by adding `decode_dbf_table_field_names_in_place()`, called
+  once per writer right after parsing: a name already valid UTF-8 is
+  left untouched (the common case); an invalid one is decoded through
+  `decode_dbf_text(tbl.table.header.code_page_mark, ...)` and, on
+  success, the decoded UTF-8 replaces it everywhere it's reachable
+  through the parsed table -- both the field descriptor's own name and
+  every record value's own copy of it (`DbfTableParseResult::
+  records[].values[].field_name`, copied from the same raw source at
+  parse time) -- so no other emission site needed a separate change.
+  Failure (a name genuinely undecodable even through its own declared
+  code page) still fails the whole export closed exactly as #5743
+  established. Replaces the previous 6 scattered per-writer
+  `is_valid_utf8(fld.name)` checks with one shared, single-call-site
+  function.
+
+  New regression test `test_export_database_family_decodes_legacy_
+  code_page_field_name` (the issue's own CP1252 reproduction, both
+  JSON and portable SQL) verified to reliably fail against the pre-fix
+  code and reliably pass against the fix.
+
+  **Scope note:** collision detection between two distinct raw names
+  that decode to the identical UTF-8 string is not implemented (a
+  pre-existing, more general gap this codebase has no field-name
+  collision detector for today); index-metadata and import-round-trip
+  consistency are not separately re-verified, since import always
+  writes fresh UTF-8-encoded names (`decode_dbf_text()`'s own "no
+  code-page mark" compatibility mode) that the `is_valid_utf8()` fast
+  path already passes through unchanged on any subsequent re-export;
+  per-code-page encode/decode correctness itself (CP1252, OEM, DBCS,
+  etc.) is not re-tested here since `decode_dbf_text()` already has its
+  own dedicated test coverage (`test_dbf_text_encoding.cpp`) -- this
+  fix only proves the field-name export path correctly wires that
+  existing, already-tested function in.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-001 updated.
+
 - 2026-09-13: Fixed two gaps in `materialize_database_json_import_
   plan()`'s destination-directory scan (`src/vfp/asset_inspector.cpp`,
   #5828, found by an automated Codex code-review pass reviewing the
