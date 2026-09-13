@@ -1,3 +1,29 @@
+- 2026-09-13: Fixed #5951 (found during the same review as
+  #5899/#5900/#5928/#5946/#5948/#5949): `AT()`, `ATC()`, `ATCC()`,
+  `RAT()`, and `RATC()` clamped a zero, negative, or non-finite
+  occurrence argument to occurrence 1 and returned the first/rightmost
+  match, silently masking invalid input. Real VFP9 SP2 raises catchable
+  error 11 (`Function argument value, type, or count is invalid`) for
+  every such case (confirmed against actual VFP9 output, retained
+  differential evidence:
+  `/home/rich/temp/vfp9-probes/at-occurrence-boundary-82.{prg,out}` and
+  `atcc-occurrence-boundary-83.{prg,out}`). The adjacent `AT_C()`
+  implementation already validated its own occurrence argument this way;
+  the other five just clamped.
+
+  Extracted the validation `AT_C()` already had into a shared
+  `require_valid_occurrence_argument()` helper and applied it to all
+  five functions, replacing each of their own
+  `static_cast<std::size_t>(std::max(1.0, ...))` clamps. `ATLINE()`/
+  `ATCLINE()`/`RATLINE()` (a separate function family not named in this
+  issue) are untouched.
+
+  New `test_at_family_rejects_invalid_occurrence` covers all five
+  differential vectors from the issue's two retained evidence files plus
+  a nonfinite occurrence, modeled on the existing `AT_C()`
+  invalid-occurrence test's `ON ERROR` capture pattern; verified
+  fail-then-pass against a reverted implementation.
+
 - 2026-09-13: Fixed #5949 (found during the same review as
   #5899/#5900/#5928/#5946/#5948): `GETWORDCOUNT()`/`GETWORDNUM()`
   special-cased an empty delimiter argument before checking either

@@ -1730,6 +1730,96 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5951: real VFP9 SP2 output for these exact five expressions was
+    // "AT0_ERR=11\nATCN_ERR=11\nRAT0_ERR=11\nRATCN_ERR=11" and
+    // "ATCC0_ERR=11" (retained differential evidence:
+    // /home/rich/temp/vfp9-probes/at-occurrence-boundary-82.{prg,out}
+    // and atcc-occurrence-boundary-83.{prg,out}) -- VFP9 raises error 11
+    // for a zero, negative, or non-finite occurrence argument to
+    // AT()/ATC()/ATCC()/RAT()/RATC() rather than clamping it to
+    // occurrence 1. Modeled on the AT_C() invalid-occurrence test's
+    // ON ERROR capture pattern in test_prg_engine_functions.cpp; a
+    // nonfinite argument (EXP(10000), the same construction that test
+    // uses) is included on the same "out of range" basis as the
+    // VFP9-verified zero/negative boundary values.
+    void test_at_family_rejects_invalid_occurrence()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_at_family_invalid_occurrence";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "at_family_invalid_occurrence.prg";
+        write_text(
+            main_path,
+            "PUBLIC nCapturedCode\n"
+            "PUBLIC nCapturedCount\n"
+            "PUBLIC cCapturedMessage\n"
+            "PUBLIC nAfterError\n"
+            "nCapturedCode = 0\n"
+            "nCapturedCount = 0\n"
+            "cCapturedMessage = ''\n"
+            "nAfterError = 0\n"
+            "ON ERROR DO HandleAtFamilyError\n"
+            "nUnexpectedAt = AT('a', 'a', 0)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleAtFamilyError\n"
+            "nUnexpectedAtc = ATC('a', 'a', -1)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleAtFamilyError\n"
+            "nUnexpectedAtcc = ATCC('a', 'a', 0)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleAtFamilyError\n"
+            "nUnexpectedRat = RAT('a', 'a', 0)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleAtFamilyError\n"
+            "nUnexpectedRatc = RATC('a', 'a', -1)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleAtFamilyError\n"
+            "nUnexpectedNonfinite = AT('a', 'a', EXP(10000))\n"
+            "ON ERROR\n"
+            "nAfterError = 42\n"
+            "RETURN\n"
+            "PROCEDURE HandleAtFamilyError\n"
+            "nCapturedCount = nCapturedCount + 1\n"
+            "nCapturedCode = ERROR()\n"
+            "cCapturedMessage = MESSAGE()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "AT-family invalid-occurrence script should recover through ON ERROR: " + state.message);
+
+        const auto code = state.globals.find("ncapturedcode");
+        expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "11",
+               "AT()/ATC()/ATCC()/RAT()/RATC() with an invalid occurrence should report VFP error 11");
+        const auto count = state.globals.find("ncapturedcount");
+        expect(count != state.globals.end() && copperfin::runtime::format_value(count->second) == "6",
+               "AT(0), ATC(-1), ATCC(0), RAT(0), RATC(-1), and a nonfinite occurrence should all report "
+               "through ON ERROR");
+        const std::string captured_message = [&] {
+            const auto message = state.globals.find("ccapturedmessage");
+            return message == state.globals.end() ? std::string{}
+                                                   : copperfin::runtime::format_value(message->second);
+        }();
+        const auto catalog = copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+        const std::string expected_message = catalog.translate(
+            "Runtime.Prg.String.Error.InvalidOccurrence");
+        expect(captured_message == expected_message,
+               "AT-family invalid occurrence should use the active locale's invalid-argument message");
+        const auto after_error = state.globals.find("naftererror");
+        expect(after_error != state.globals.end() && copperfin::runtime::format_value(after_error->second) == "42",
+               "AT-family invalid occurrence should resume after its ON ERROR handler");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1876,6 +1966,7 @@ int main()
     test_space_and_replicate_accept_values_truncating_to_the_ceiling();
     test_padl_padr_padc_truncate_to_leftmost_characters();
     test_getword_functions_handle_empty_delimiter();
+    test_at_family_rejects_invalid_occurrence();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();
