@@ -5628,13 +5628,23 @@ TableRowExtractionResult extract_import_table_rows(
 
 }  // namespace
 
-// #5828: an unbounded destination-directory scan can keep an import in
-// preflight indefinitely against a huge or slow (e.g. network-mounted)
-// directory. This does not need to be exact -- it only needs to fail
-// closed with a clear diagnostic well before a scan becomes a de facto
-// hang, while staying generous enough that an ordinary large real-world
-// directory (the #5745 reproduction used 200,000 files) is nowhere close
-// to it.
+// #5828: bounds the destination-directory scan's own *entry count* --
+// an unbounded scan could otherwise iterate an arbitrarily large
+// directory, and this cap fails it closed with a clear diagnostic well
+// before that becomes a de facto hang, while staying generous enough
+// that an ordinary large real-world directory (the #5745 reproduction
+// used 200,000 files) is nowhere close to it.
+//
+// #5828 PR review (chatgpt-codex-connector, P2): this is an entry-count
+// bound only, not a wall-clock time bound -- a single slow or
+// unresponsive individual directory_iterator::increment() call (e.g.
+// against a hung network mount) can still block indefinitely before
+// this counter is ever consulted again, regardless of how few entries
+// the directory actually contains. A genuine deadline-controlled or
+// interruptible enumeration would need a mechanism std::filesystem
+// does not provide on its own (there is no way to cancel an in-flight
+// blocking directory read from another thread without more invasive
+// machinery); not attempted here.
 constexpr std::size_t kMaxDestinationScanEntries = 1'000'000U;
 
 DatabaseJsonImportResult materialize_database_json_import_plan(

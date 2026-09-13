@@ -20,15 +20,28 @@
   racy, hard-to-force-deterministically OS-level directory read
   failure.
 
-  Second, the scan had no entry/time bound at all, so a huge or slow
-  mounted directory could keep an import in preflight indefinitely.
-  Fixed by adding a `kMaxDestinationScanEntries` cap (1,000,000,
-  generously above the ~200,000-entry adversarial case #5745 itself
-  was reported against) with a new localized `Vfp.AssetInspector.
-  Error.DatabaseImportDestinationScanTooLarge` diagnostic -- not
-  verified with a dedicated large-file test given the prohibitive
-  runtime of creating over a million files, but the bound check itself
-  is a single integer comparison, low-risk to get wrong.
+  Second, the scan had no bound at all, so a huge or slow mounted
+  directory could keep an import in preflight indefinitely. Fixed by
+  adding a `kMaxDestinationScanEntries` cap (1,000,000, generously
+  above the ~200,000-entry adversarial case #5745 itself was reported
+  against) with a new localized `Vfp.AssetInspector.Error.
+  DatabaseImportDestinationScanTooLarge` diagnostic -- not verified
+  with a dedicated large-file test given the prohibitive runtime of
+  creating over a million files, but the bound check itself is a
+  single integer comparison, low-risk to get wrong.
+
+  A further PR review round (chatgpt-codex-connector, P2) correctly
+  noted this is an *entry-count* bound only, not a wall-clock time
+  bound -- a single slow or unresponsive `directory_iterator::
+  increment()` call (e.g. against a hung network mount) can still
+  block indefinitely before the counter is ever consulted again,
+  regardless of the directory's actual entry count. A genuine
+  deadline-controlled or interruptible enumeration would need
+  machinery `std::filesystem` does not provide on its own (there is no
+  way to cancel an in-flight blocking directory read from another
+  thread); not attempted. The code comment and CHANGELOG text above
+  were corrected to claim only entry-count protection, not a time
+  bound.
 
   **Scope note:** #5828's third claim -- that publication via
   `create_hard_link()` after this scan can still be raced by a
