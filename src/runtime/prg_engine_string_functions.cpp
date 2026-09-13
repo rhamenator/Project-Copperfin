@@ -27,16 +27,23 @@ namespace {
 
 #include "prg_engine_string_function_helpers.inl"
 
-// #5928: shared parse-character trimming for LTRIM/RTRIM/TRIM/ALLTRIM's
-// optional nFlags/cParseStringN arguments. This is documented VFP9
-// behavior, not merely observed: cParseString1..cParseString23 each
-// contribute a set of individual characters to strip repeatedly from the
-// requested edge(s) -- a multi-character parse-string argument is a
-// character class, not a literal substring to match as a whole -- and
-// flag 0 or omitted compares case-sensitively, flag 1 case-insensitively.
-// Verified against real VFP9 SP2 output for single- and multi-argument
-// parse sets and both flag values (retained differential evidence:
-// /home/rich/temp/vfp9-probes/trim-parse-56.{prg,out}).
+// #5928/#5956 PR review (chatgpt-codex-connector, P1): a first version of
+// this function treated every character across every cParseStringN
+// argument as a union/character-class, so a multi-character parse string
+// like "xy" would strip a leading lone 'x' even when the complete "xy"
+// token isn't actually present (e.g. LTRIM('xHello', 0, 'xy') wrongly
+// returned "Hello" instead of leaving "xHello" untouched). Real VFP9
+// treats each cParseStringN as a whole removable token: at the requested
+// edge, repeatedly try every provided token (in the order given) against
+// the current edge and remove the first one that matches completely,
+// continuing until no full token matches. This still reproduces every
+// verified real VFP9 SP2 vector from the original fix (retained
+// differential evidence: /home/rich/temp/vfp9-probes/trim-parse-56.
+// {prg,out}) since every one of those tokens happens to be exactly one
+// character long, where "whole token" and "character class" degenerate
+// to the same behavior -- the two models only diverge for a
+// multi-character token, which is exactly the case this review caught.
+// Flag 0 or omitted compares case-sensitively, flag 1 case-insensitively.
 std::string trim_with_parse_characters(
     const std::string& source,
     bool trim_left,
@@ -44,32 +51,54 @@ std::string trim_with_parse_characters(
     const std::vector<PrgValue>& arguments) {
     const bool case_insensitive = arguments.size() >= 2U &&
         static_cast<long long>(std::llround(value_as_number(arguments[1]))) == 1;
-    std::string parse_characters;
+    std::vector<std::string> parse_tokens;
     for (std::size_t index = 2U; index < arguments.size(); ++index) {
-        parse_characters += value_as_string(arguments[index]);
+        std::string token = value_as_string(arguments[index]);
+        if (!token.empty()) {
+            parse_tokens.push_back(std::move(token));
+        }
     }
-    const auto is_parse_character = [&](char ch) {
-        for (const char candidate : parse_characters) {
+    const auto tokens_equal = [&](std::string_view a, std::string_view b) {
+        if (a.size() != b.size()) {
+            return false;
+        }
+        for (std::size_t index = 0U; index < a.size(); ++index) {
             const bool matches = case_insensitive
-                ? std::tolower(static_cast<unsigned char>(ch)) ==
-                      std::tolower(static_cast<unsigned char>(candidate))
-                : ch == candidate;
-            if (matches) {
-                return true;
+                ? std::tolower(static_cast<unsigned char>(a[index])) ==
+                      std::tolower(static_cast<unsigned char>(b[index]))
+                : a[index] == b[index];
+            if (!matches) {
+                return false;
             }
         }
-        return false;
+        return true;
     };
     std::size_t start = 0U;
     std::size_t end = source.size();
     if (trim_left) {
-        while (start < end && is_parse_character(source[start])) {
-            ++start;
+        for (bool matched = true; matched;) {
+            matched = false;
+            for (const auto& token : parse_tokens) {
+                if (end - start >= token.size() &&
+                    tokens_equal(std::string_view(source).substr(start, token.size()), token)) {
+                    start += token.size();
+                    matched = true;
+                    break;
+                }
+            }
         }
     }
     if (trim_right) {
-        while (end > start && is_parse_character(source[end - 1U])) {
-            --end;
+        for (bool matched = true; matched;) {
+            matched = false;
+            for (const auto& token : parse_tokens) {
+                if (end - start >= token.size() &&
+                    tokens_equal(std::string_view(source).substr(end - token.size(), token.size()), token)) {
+                    end -= token.size();
+                    matched = true;
+                    break;
+                }
+            }
         }
     }
     return source.substr(start, end - start);

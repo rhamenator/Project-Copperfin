@@ -1422,6 +1422,54 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5956 PR review (chatgpt-codex-connector, P1): a multi-character
+    // cParseStringN argument is a whole removable token, not a union of
+    // individual characters -- LTRIM('xHello', 0, 'xy') must leave
+    // "xHello" untouched (the complete two-character token "xy" is not
+    // present as a prefix; only the character-class-union bug would
+    // wrongly strip the lone leading 'x'), while a string that does
+    // start/end with the complete token has it removed as one unit,
+    // repeated for consecutive whole-token occurrences.
+    void test_trim_family_matches_whole_parse_string_tokens()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_trim_whole_token";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "trim_whole_token.prg";
+        write_text(
+            main_path,
+            "cPartialNoMatch = LTRIM('xHello', 0, 'xy')\n"
+            "cWholeTokenMatch = LTRIM('xyxyHello', 0, 'xy')\n"
+            "cWholeTokenRight = RTRIM('HelloAbAb', 0, 'Ab')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "TRIM-family whole-token script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + ": expected \"" + expected + "\", got \"" +
+                           copperfin::runtime::format_value(it->second) + "\"");
+            }
+        };
+
+        check("cpartialnomatch", "xHello");
+        check("cwholetokenmatch", "Hello");
+        check("cwholetokenright", "Hello");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1563,6 +1611,7 @@ int main()
     test_chr_rejects_out_of_range_character_code();
     test_str_rejects_oversized_width_instead_of_allocating();
     test_trim_family_supports_parse_characters_and_flags();
+    test_trim_family_matches_whole_parse_string_tokens();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();
