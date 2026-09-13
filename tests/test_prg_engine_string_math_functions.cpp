@@ -1669,6 +1669,67 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    // #5949: real VFP9 SP2 output for these exact expressions was
+    // "EMPTY_EMPTY=0\nABC_EMPTY=1\nSPACES_EMPTY=1\nNUM_EMPTY=[]" and
+    // "NUM1=[abc]\nNUM2=[]\nNUM0=[]\nNUMNEG=[]" (retained differential
+    // evidence: /home/rich/temp/vfp9-probes/getword-empty-delimiter-80.
+    // {prg,out} and -81.{prg,out}). With an empty delimiter,
+    // GETWORDCOUNT() counts a nonempty source (even one that is only
+    // spaces, since an empty delimiter never matches to split on) as
+    // exactly one word and an empty source as zero words; GETWORDNUM()
+    // returns the source only for word index 1 of a nonempty source,
+    // and an empty string for every other index (zero, negative, or
+    // greater than 1) or an empty source.
+    void test_getword_functions_handle_empty_delimiter()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_getword_empty_delimiter";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "getword_empty_delimiter.prg";
+        write_text(
+            main_path,
+            "nCountEmptyEmpty = GETWORDCOUNT('', '')\n"
+            "nCountAbcEmpty = GETWORDCOUNT('abc', '')\n"
+            "nCountSpacesEmpty = GETWORDCOUNT('   ', '')\n"
+            "cNumEmptySource = GETWORDNUM('', 1, '')\n"
+            "cNum1 = GETWORDNUM('abc', 1, '')\n"
+            "cNum2 = GETWORDNUM('abc', 2, '')\n"
+            "cNum0 = GETWORDNUM('abc', 0, '')\n"
+            "cNumNeg = GETWORDNUM('abc', -1, '')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "GETWORDCOUNT/GETWORDNUM empty-delimiter script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + ": expected \"" + expected + "\", got \"" +
+                           copperfin::runtime::format_value(it->second) + "\"");
+            }
+        };
+
+        check("ncountemptyempty", "0");
+        check("ncountabcempty", "1");
+        check("ncountspacesempty", "1");
+        check("cnumemptysource", "");
+        check("cnum1", "abc");
+        check("cnum2", "");
+        check("cnum0", "");
+        check("cnumneg", "");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1814,6 +1875,7 @@ int main()
     test_space_and_replicate_reject_oversized_requests();
     test_space_and_replicate_accept_values_truncating_to_the_ceiling();
     test_padl_padr_padc_truncate_to_leftmost_characters();
+    test_getword_functions_handle_empty_delimiter();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();
