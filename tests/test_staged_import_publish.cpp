@@ -10,6 +10,8 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <system_error>
+#include <vector>
 
 namespace {
 
@@ -242,6 +244,84 @@ void test_remove_published_file_fails_closed_when_destination_missing() {
     fs::remove_all(dir, ignored);
 }
 
+// #5681/#5682: the positive path -- every handle released, every staged
+// file and the staging directory itself actually removed, reported as
+// complete success.
+void test_release_and_remove_staged_files_removes_everything_on_success() {
+    const fs::path dir = make_scratch_dir("copperfin_staged_import_publish_release_success");
+    const fs::path staging_dir = dir / "staging";
+    fs::create_directories(staging_dir);
+    const fs::path staged_a = staging_dir / "a.dbf";
+    const fs::path staged_b = staging_dir / "b.dbf";
+    write_file(staged_a, "a bytes");
+    write_file(staged_b, "b bytes");
+
+    std::vector<copperfin::vfp::StagedImportFileHandle> handles;
+    handles.push_back(copperfin::vfp::open_staged_import_file_for_publish(staged_a));
+    handles.push_back(copperfin::vfp::open_staged_import_file_for_publish(staged_b));
+    expect(handles[0].valid() && handles[1].valid(), "opening both staged files should succeed");
+    const std::vector<fs::path> staged_paths{staged_a, staged_b};
+
+    const bool removed_everything =
+        copperfin::vfp::release_and_remove_staged_files(handles, staged_paths, staging_dir);
+    expect(removed_everything,
+           "release_and_remove_staged_files should report complete success on the ordinary path");
+
+    std::error_code exists_error;
+    expect(!fs::exists(staging_dir, exists_error),
+           "the staging directory should no longer exist after a successful cleanup");
+
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+}
+
+// #5681/#5682: the core property these two issues are about -- when a
+// staged file (and consequently the staging directory that holds it)
+// cannot actually be removed, release_and_remove_staged_files() must
+// report that honestly (false) rather than silently discarding the
+// error the way the pre-fix code did. Denying the staging directory's own
+// permissions blocks unlinking its children (POSIX: unlink() needs
+// write+execute on the *parent*, not the child itself), reliably forcing
+// a real removal failure; gracefully skipped when running as root, where
+// permission bits do not restrict access, matching the same defensive
+// pattern used elsewhere in this test suite (see #4354-style tests in
+// test_vfp_assets.cpp) rather than asserting a platform-dependent outcome.
+void test_release_and_remove_staged_files_reports_incomplete_cleanup() {
+#if !defined(_WIN32)
+    const fs::path dir = make_scratch_dir("copperfin_staged_import_publish_release_incomplete");
+    const fs::path staging_dir = dir / "staging";
+    fs::create_directories(staging_dir);
+    const fs::path staged_file = staging_dir / "staged.dbf";
+    write_file(staged_file, "staged bytes");
+
+    std::vector<copperfin::vfp::StagedImportFileHandle> handles;
+    handles.push_back(copperfin::vfp::open_staged_import_file_for_publish(staged_file));
+    expect(handles.back().valid(), "opening the staged file should succeed");
+    const std::vector<fs::path> staged_paths{staged_file};
+
+    std::error_code permission_error;
+    fs::permissions(staging_dir, fs::perms::none, fs::perm_options::replace, permission_error);
+    expect(!permission_error, "removing the staging directory's own permissions should succeed");
+
+    std::ofstream access_probe(staged_file, std::ios::app);
+    const bool access_is_denied = !access_probe.good();
+    access_probe.close();
+
+    if (access_is_denied) {
+        const bool removed_everything = copperfin::vfp::release_and_remove_staged_files(
+            handles, staged_paths, staging_dir);
+        expect(!removed_everything,
+               "release_and_remove_staged_files must report incomplete cleanup when a staged file "
+               "cannot actually be removed, rather than silently claiming success");
+    }
+
+    std::error_code restore_error;
+    fs::permissions(staging_dir, fs::perms::owner_all, fs::perm_options::replace, restore_error);
+    std::error_code ignored;
+    fs::remove_all(dir, ignored);
+#endif
+}
+
 }  // namespace
 
 int main() {
@@ -257,6 +337,8 @@ int main() {
     test_remove_published_file_when_identity_matches();
     test_remove_published_file_preserves_replaced_destination();
     test_remove_published_file_fails_closed_when_destination_missing();
+    test_release_and_remove_staged_files_removes_everything_on_success();
+    test_release_and_remove_staged_files_reports_incomplete_cleanup();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -6,9 +6,11 @@
 
 #include "../platform/scoped_resource.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <utility>
 
 #if !defined(_WIN32)
@@ -49,6 +51,33 @@ bool StagedImportFileHandle::valid() const noexcept {
 #else
     return impl_->fd.valid();
 #endif
+}
+
+bool release_and_remove_staged_files(
+    std::vector<StagedImportFileHandle>& handles,
+    const std::vector<std::filesystem::path>& staged_paths,
+    const std::filesystem::path& staging_dir) {
+    bool all_removed = true;
+    const std::size_t count = std::min(handles.size(), staged_paths.size());
+    for (std::size_t index = 0U; index < count; ++index) {
+        // #5941 PR review, and #5681/#5682: release before removing, for
+        // exactly the reason documented on StagedImportFileHandle's own
+        // callers -- a still-open handle (Windows: FILE_SHARE_READ only)
+        // would otherwise make this very removal fail with a sharing
+        // violation against the caller's own handle.
+        handles[index] = StagedImportFileHandle{};
+        std::error_code remove_error;
+        std::filesystem::remove(staged_paths[index], remove_error);
+        if (remove_error) {
+            all_removed = false;
+        }
+    }
+    std::error_code remove_all_error;
+    std::filesystem::remove_all(staging_dir, remove_all_error);
+    if (remove_all_error) {
+        all_removed = false;
+    }
+    return all_removed;
 }
 
 #if defined(_WIN32)

@@ -1,3 +1,44 @@
+- 2026-09-13: Partial fix for #5681 and #5682 (found by the same automated
+  Codex code-review pass as #5679/#5680, against the same
+  `materialize_database_json_import_plan()`; both issues left open --
+  see below): both the successful-import staging cleanup and the
+  rollback-side staged-file/staging-directory cleanup used
+  `std::error_code ignored;` for every removal, silently discarding a
+  genuine failure (a locked file, a permission issue, a still-open
+  handle) and reporting either unqualified success or one generic
+  commit-failed message regardless of whether staged hard-link aliases
+  to the imported data actually remained on disk.
+
+  Added `release_and_remove_staged_files()` to the `staged_import_publish`
+  module -- directly unit-testable by denying the staging directory's own
+  permissions to force a real POSIX removal failure (`unlink()` needs
+  write+execute on the *parent*, not the file itself), gracefully skipped
+  when running as root; verified fail-then-pass against a reverted
+  always-returns-`true` implementation. It reports whether every staged
+  file and the staging directory itself were actually removed instead of
+  discarding that outcome. `DatabaseJsonImportResult` gained
+  `cleanup_incomplete`/`cleanup_warning` fields for the successful-import
+  case (#5681), surfaced to the PRG runtime as a distinct
+  `runtime.import_database_cleanup_incomplete` event rather than folded
+  into the plain success event. The rollback path (#5682) now also
+  checks staged-side cleanup success and returns a new
+  `Vfp.AssetInspector.Error.DatabaseImportCommitFailedStagingCleanupIncomplete`
+  diagnostic when it fails (subordinate to the existing
+  `...UnreclaimedEntry` diagnostic from the #5679/#5680 fix, since a
+  still-committed final-path destination is more severe).
+
+  Explicitly not attempted: both issues' own central requirement to
+  persist bounded, identity-bound recovery state so a later invocation
+  can safely retry cleanup after a process restart and recognize its own
+  leftovers on the next import rather than treating them as an unrelated
+  collision -- a materially larger, separate feature (durable recovery-
+  state format, dedicated recovery/reconciliation routine, detection
+  wiring at the start of a later import) judged too large for this same
+  sitting. Both issues are left open to track that remaining work.
+
+  docs/32-recovered-requirements-traceability.md row
+  RQ-CF-MODERNIZATION-004 updated.
+
 - 2026-09-13: Fixed #5679 and #5680 (found by an automated Codex code-review
   pass against `materialize_database_json_import_plan()`, the shared
   `IMPORT DATABASE ... TYPE JSON`/`TYPE SQL` materializer): the commit loop

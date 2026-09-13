@@ -8403,6 +8403,18 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                // #5681: a successfully committed import whose own staging
+                // cleanup did not fully complete must not be indistinguishable
+                // from a fully clean one -- surface it as its own event
+                // (import_result.ok is still true; the destination database
+                // itself is complete and valid) rather than silently folding
+                // it into the plain success event below.
+                if (import_result.cleanup_incomplete)
+                {
+                    events.push_back({.category = "runtime.import_database_cleanup_incomplete",
+                                      .detail = import_result.cleanup_warning,
+                                      .location = statement.location});
+                }
                 events.push_back({.category = is_sql ? "runtime.import_database_sql" : "runtime.import_database_json",
                                   .detail = copperfin::platform::path_to_utf8_string(destination_path),
                                   .location = statement.location});
