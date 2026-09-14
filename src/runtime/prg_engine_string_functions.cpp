@@ -1084,10 +1084,11 @@ std::optional<PrgValue> evaluate_string_function(
                         // #6144: same "never leak inf/-inf/nan" policy
                         // already verified for a bare digit-only picture
                         // (format_digit_only_numeric_picture()), extended
-                        // to a symbol-decorated picture (grouping commas,
-                        // decimal point, currency sign) by filling the
-                        // whole picture width with asterisks rather than
-                        // streaming the raw double into
+                        // to the symbol-picture shapes this branch already
+                        // recognizes (a numeric grouping comma and/or a
+                        // decimal point, optionally with a currency sign)
+                        // by filling the template width with asterisks
+                        // rather than streaming the raw double into
                         // apply_numeric_picture_symbols(). Not
                         // independently VFP9-probed for a symbol picture
                         // specifically (only the digit-only and
