@@ -788,6 +788,7 @@ namespace
             "SET SECONDS ON\n"
             "dValue = DATE(2024, 3, 4)\n"
             "tValue = DATETIME(2024, 3, 4, 5, 6, 7)\n"
+            "cDtocOmitted = DTOC(dValue)\n"
             "cDtoc0 = DTOC(dValue, 0)\n"
             "cDtoc1 = DTOC(dValue, 1)\n"
             "cDtocNeg = DTOC(dValue, -1)\n"
@@ -796,6 +797,22 @@ namespace
             "cTtoc2 = TTOC(tValue, 2)\n"
             "cTtocNeg = TTOC(tValue, -1)\n"
             "cTtocOmitted = TTOC(tValue)\n"
+            // Review round (chatgpt-codex-connector, P2): a fractional
+            // argument close to 2 (e.g. 1.5, which std::llround would
+            // have rounded up to 2) must still take the sortable branch
+            // -- only an argument that equals exactly 2 is time-only.
+            "cTtocFractionalBelowTwo = TTOC(tValue, 1.5)\n"
+            "cTtocFractionalAboveTwo = TTOC(tValue, 2.4)\n"
+            // Review round (copilot-pull-request-reviewer): mode 2 must
+            // honor SET HOURS/SET SECONDS across all four combinations,
+            // the same as ordinary TTOC() is already covered elsewhere
+            // in this file.
+            "SET SECONDS OFF\n"
+            "cTtoc2Hours12SecondsOff = TTOC(tValue, 2)\n"
+            "SET HOURS TO 24\n"
+            "cTtoc2Hours24SecondsOff = TTOC(tValue, 2)\n"
+            "SET SECONDS ON\n"
+            "cTtoc2Hours24SecondsOn = TTOC(tValue, 2)\n"
             "RETURN\n");
 
         auto session = copperfin::runtime::PrgRuntimeSession::create(
@@ -811,6 +828,7 @@ namespace
                        name + " should equal '" + expected + "' for DTOC/TTOC flag test");
             }
         };
+        check("cdtocomitted", "2024-03-04");
         check("cdtoc0", "20240304");
         check("cdtoc1", "20240304");
         check("cdtocneg", "20240304");
@@ -819,6 +837,11 @@ namespace
         check("cttoc2", "05:06:07 AM");
         check("cttocneg", "20240304050607");
         check("cttocomitted", "2024-03-04 05:06:07 AM");
+        check("cttocfractionalbelowtwo", "20240304050607");
+        check("cttocfractionalabovetwo", "20240304050607");
+        check("cttoc2hours12secondsoff", "05:06 AM");
+        check("cttoc2hours24secondsoff", "05:06");
+        check("cttoc2hours24secondson", "05:06:07");
 
         fs::remove_all(temp_root, ignored);
     }

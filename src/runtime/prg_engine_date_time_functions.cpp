@@ -1040,12 +1040,19 @@ std::optional<PrgValue> evaluate_date_time_function(
         // /home/rich/temp/vfp9-probes/dtoc-ttoc-flags-6139e/{prg,out}:
         // TTOC(dt,0)=TTOC(dt,1)=TTOC(dt,-1)="20240304050607" but
         // TTOC(dt,2)="05:06:07 AM").
+        // Review round (chatgpt-codex-connector, P2): only an explicit
+        // argument of exactly 2 is documented as special -- comparing
+        // via std::llround (round-half-away-from-zero) wrongly classed
+        // a fractional value like 1.5 as mode 2 (1.5 rounds up to 2),
+        // even though this codebase's own contract says every value
+        // other than exactly 2 produces the sortable form. Compare the
+        // raw numeric argument directly against 2.0 instead of rounding
+        // it first.
         const bool has_format_argument = arguments.size() >= 2U;
-        const int format_mode = has_format_argument
-                                     ? static_cast<int>(std::llround(value_as_number(arguments[1])))
-                                     : 0;
+        const double raw_format_argument = has_format_argument ? value_as_number(arguments[1]) : 0.0;
+        const bool is_time_only_mode = has_format_argument && raw_format_argument == 2.0;
         if (parse_datetime_value_for_set(arguments[0], year, month, day, hour, minute, second, set_callback)) {
-            if (has_format_argument && format_mode == 2) {
+            if (is_time_only_mode) {
                 return make_string_value(format_runtime_time_for_set(hour, minute, second, set_callback));
             }
             if (has_format_argument) {
@@ -1054,7 +1061,7 @@ std::optional<PrgValue> evaluate_date_time_function(
             return make_string_value(format_runtime_datetime_for_set(year, month, day, hour, minute, second, set_callback));
         }
         if (parse_date_value_for_set(arguments[0], year, month, day, set_callback)) {
-            if (has_format_argument && format_mode == 2) {
+            if (is_time_only_mode) {
                 return make_string_value(format_runtime_time_for_set(0, 0, 0, set_callback));
             }
             if (has_format_argument) {

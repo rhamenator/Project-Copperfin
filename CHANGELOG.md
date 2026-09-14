@@ -36,6 +36,32 @@
   were the real regression). Added `RQ-CF-PRG-030` to
   `docs/32-recovered-requirements-traceability.md`.
 
+  Review round (`chatgpt-codex-connector` P2, `copilot-pull-request-reviewer`):
+  (1) the mode-2 check used `std::llround` (round-half-away-from-zero)
+  on the raw argument, so a fractional value like `1.5` -- which only
+  this codebase's own contract, not literal `2`, made special -- rounded
+  up to `2` and was wrongly classed as time-only instead of sortable.
+  Fixed by comparing the raw numeric argument directly against `2.0`
+  instead of rounding it first; new `TTOC(dt, 1.5)`/`TTOC(dt, 2.4)`
+  vectors verify both now correctly return the sortable form, and
+  fail-then-pass confirmed the reverted rounding logic actually
+  misclassifies `1.5`. (2) mode 2 was only tested under one `SET
+  HOURS`/`SET SECONDS` combination; added assertions under all four
+  combinations (12/24-hour × seconds on/off), matching the coverage the
+  existing plain-`TTOC()` test already has elsewhere in this file. Also
+  added a `DTOC()`-omitted-argument vector. (3) two findings raised
+  genuine gaps this fix does **not** close, disclosed explicitly rather
+  than guessed at or silently absorbed: typed-empty `DateTime` values
+  (e.g. `TTOC({}, 1)`) still fall through to an empty string instead of
+  VFP9's fixed-width zero-filled convention -- this is already tracked
+  comprehensively (not just for this issue's mode-2 scope) by the
+  separate, still-open #5998, so left to that issue rather than
+  duplicated here; and this fix has no retained VFP9 evidence for what
+  a non-numeric or otherwise "unsupported" second-argument type should
+  do, so that specific sub-case remains unverified rather than assumed.
+  `RQ-CF-PRG-030` is not a claim of full acceptance-criteria coverage
+  for #6139 -- see its own Exceptions column for both disclosed gaps.
+
 - 2026-09-14: Fixed #6127 (safety, partial -- see below): a memo write
   computed its target FPT block offset and allocation size directly
   from the sidecar's own `next_free_block`/`block_size` header fields,
