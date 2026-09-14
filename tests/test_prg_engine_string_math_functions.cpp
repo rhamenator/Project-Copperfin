@@ -2127,15 +2127,24 @@ namespace
             "PUBLIC cTransformPictureless\n"
             "PUBLIC cTransformDigitPicture\n"
             "PUBLIC cTransformSymbolPicture\n"
+            "PUBLIC cTransformFunctionCodePicture\n"
+            "PUBLIC cTransformNegativePictureless\n"
+            "PUBLIC cTransformNegativeSymbolPicture\n"
             "PUBLIC cStrDefault\n"
             "PUBLIC cStrExplicitWidth\n"
+            "PUBLIC cStrNegativeDefault\n"
             "SET DECIMALS TO 2\n"
             "nOverflow = EXP(1000)\n"
+            "nNegativeOverflow = -EXP(1000)\n"
             "cTransformPictureless = TRANSFORM(nOverflow)\n"
             "cTransformDigitPicture = TRANSFORM(nOverflow, '999')\n"
             "cTransformSymbolPicture = TRANSFORM(nOverflow, '999,999.99')\n"
+            "cTransformFunctionCodePicture = TRANSFORM(nOverflow, '@B 999,999.99')\n"
+            "cTransformNegativePictureless = TRANSFORM(nNegativeOverflow)\n"
+            "cTransformNegativeSymbolPicture = TRANSFORM(nNegativeOverflow, '999,999.99')\n"
             "cStrDefault = STR(nOverflow)\n"
             "cStrExplicitWidth = STR(nOverflow, 20)\n"
+            "cStrNegativeDefault = STR(nNegativeOverflow)\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -2158,8 +2167,48 @@ namespace
         check("ctransformpictureless", "*************");
         check("ctransformdigitpicture", "***");
         check("ctransformsymbolpicture", "**********");
+        check("ctransformfunctioncodepicture", "**********");
+        check("ctransformnegativepictureless", "*************");
+        check("ctransformnegativesymbolpicture", "**********");
         check("cstrdefault", "**********");
         check("cstrexplicitwidth", "********************");
+        check("cstrnegativedefault", "**********");
+
+        // A supported PRG expression cannot currently construct NaN: both
+        // 0/0 and 1/0 raise runtime error 1 before producing a value, while
+        // domain-limited numeric functions reject invalid inputs explicitly.
+        // Copperfin nevertheless retains IEEE NaN as an internal/interoperable
+        // Numeric and contains it at these VFP-facing display boundaries.
+        const auto set_callback = [](const std::string& name) {
+            return name == "DECIMALS" ? std::string{"2"} : std::string{};
+        };
+        const auto nan = copperfin::runtime::make_number_value(
+            std::numeric_limits<double>::quiet_NaN());
+        expect(nan.kind == copperfin::runtime::PrgValueKind::number &&
+                   std::isnan(nan.number_value),
+               "NaN should remain an internal/interoperable Numeric value");
+        expect(copperfin::runtime::format_value_for_display(nan, set_callback) == "*************",
+               "pictureless NaN display should be contained at the VFP-facing boundary");
+
+        const auto nan_transform = copperfin::runtime::evaluate_string_function(
+            "transform",
+            {nan, copperfin::runtime::make_string_value("999,999.99")},
+            false,
+            80U,
+            set_callback);
+        expect(nan_transform.has_value() &&
+                   copperfin::runtime::value_as_string(*nan_transform) == "**********",
+               "symbol-picture TRANSFORM() should contain an interoperable NaN");
+
+        const auto nan_str = copperfin::runtime::evaluate_string_function(
+            "str",
+            {nan, copperfin::runtime::make_number_value(20.0)},
+            false,
+            80U,
+            set_callback);
+        expect(nan_str.has_value() &&
+                   copperfin::runtime::value_as_string(*nan_str) == "********************",
+               "STR() should contain an interoperable NaN at its requested width");
 
         fs::remove_all(temp_root, ignored);
     }

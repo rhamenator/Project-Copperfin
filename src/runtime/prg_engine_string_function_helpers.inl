@@ -667,6 +667,27 @@ std::string picture_payload_after_flag(
     return picture.substr(payload_pos);
 }
 
+// #6144 PR review (chatgpt-codex-connector, P2): a symbol-decorated
+// TRANSFORM() picture may combine one or more leading function codes
+// (e.g. "@B 999,999.99", "@Z 999.99") with a template mask; the codes
+// themselves are not part of the rendered field and must not count
+// toward the field's display width (an earlier version of the
+// overflow asterisk-fill used the raw picture.size(), which wrongly
+// included the "@B " prefix). Real VFP9 TRANSFORM() function-code
+// syntax is "@" followed by one or more code letters, then a single
+// space, then the template; strip that leading section (if present)
+// and return just the template mask.
+std::string numeric_picture_template_mask(const std::string& uppercase_picture) {
+    if (uppercase_picture.empty() || uppercase_picture.front() != '@') {
+        return uppercase_picture;
+    }
+    const std::size_t space_pos = uppercase_picture.find(' ');
+    if (space_pos == std::string::npos) {
+        return std::string{};
+    }
+    return uppercase_picture.substr(space_pos + 1U);
+}
+
 std::string apply_literal_picture_template(const std::string& source, const std::string& picture) {
     std::string transformed;
     transformed.reserve(picture.size());

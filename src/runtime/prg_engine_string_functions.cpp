@@ -1094,7 +1094,15 @@ std::optional<PrgValue> evaluate_string_function(
                         // pictureless cases have retained differential
                         // evidence); this is a same-mechanism
                         // extrapolation, disclosed as such.
-                        transformed = std::string(picture.size(), '*');
+                        //
+                        // #6144 PR review (chatgpt-codex-connector, P2):
+                        // a leading function-code prefix (e.g. "@B ")
+                        // is not part of the rendered field and must be
+                        // excluded from the fill width, or a picture
+                        // like "@B 999,999.99" would wrongly asterisk-
+                        // fill the whole "@B 999,999.99" token instead
+                        // of just its "999,999.99" template mask.
+                        transformed = std::string(numeric_picture_template_mask(picture).size(), '*');
                     } else {
                         std::size_t decimals = 0U;
                         if (decimal_pos != std::string::npos) {
