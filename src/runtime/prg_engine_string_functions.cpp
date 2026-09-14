@@ -118,6 +118,26 @@ std::string trim_with_parse_characters(
     return source.substr(start, end - start);
 }
 
+// #5951: shared occurrence-argument validation for AT()/ATC()/ATCC()/
+// RAT()/RATC(), matching the validation AT_C() already applied to its own
+// occurrence argument. Real VFP9 SP2 raises error 11 for a zero,
+// negative, or non-finite occurrence argument rather than clamping it to
+// occurrence 1 (confirmed against actual VFP9 output, retained
+// differential evidence:
+// /home/rich/temp/vfp9-probes/at-occurrence-boundary-82.{prg,out} and
+// atcc-occurrence-boundary-83.{prg,out}).
+std::size_t require_valid_occurrence_argument(const PrgValue& argument) {
+    const double requested_occurrence = value_as_number(argument);
+    if (!std::isfinite(requested_occurrence) || requested_occurrence <= 0.0) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
+    }
+    // A positive sub-unit occurrence (0 < n < 1) is valid and maps to
+    // occurrence 1, matching this codebase's pre-existing documented
+    // positive-fraction behavior; only reject actual nonpositive/non-finite
+    // values above.
+    return static_cast<std::size_t>(std::max(1.0, requested_occurrence));
+}
+
 }  // namespace
 
 std::string format_value_for_display(
@@ -579,16 +599,8 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(line_index >= 1U && line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
     }
     if ((function == "at_c" || function == "atc" || function == "atcc") && arguments.size() >= 2U) {
-        if (function == "at_c" && arguments.size() >= 3U) {
-            const double requested_occurrence = value_as_number(arguments[2]);
-            if (!std::isfinite(requested_occurrence) || requested_occurrence <= 0.0) {
-                throw PrgCompatibilityError(
-                    runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"),
-                    11);
-            }
-        }
         const std::size_t occurrence = arguments.size() >= 3U
-                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                                           ? require_valid_occurrence_argument(arguments[2])
                                            : 1U;
         if (function == "at_c" || function == "atcc") {
             return make_number_value(static_cast<double>(find_utf8_scalar_occurrence_local(
@@ -621,7 +633,7 @@ std::optional<PrgValue> evaluate_string_function(
         std::string needle = value_as_string(arguments[0]);
         std::string haystack = value_as_string(arguments[1]);
         const std::size_t occurrence = arguments.size() >= 3U
-                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                                           ? require_valid_occurrence_argument(arguments[2])
                                            : 1U;
         if (needle.empty()) {
             return make_number_value(0.0);
@@ -643,7 +655,7 @@ std::optional<PrgValue> evaluate_string_function(
     }
     if (function == "ratc" && arguments.size() >= 2U) {
         const std::size_t occurrence = arguments.size() >= 3U
-                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                                           ? require_valid_occurrence_argument(arguments[2])
                                            : 1U;
         return make_number_value(static_cast<double>(find_utf8_scalar_occurrence_local(
             value_as_string(arguments[0]), value_as_string(arguments[1]), occurrence, true)));
@@ -652,7 +664,7 @@ std::optional<PrgValue> evaluate_string_function(
         std::string needle = value_as_string(arguments[0]);
         std::string haystack = value_as_string(arguments[1]);
         const std::size_t occurrence = arguments.size() >= 3U
-                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                                           ? require_valid_occurrence_argument(arguments[2])
                                            : 1U;
         if (needle.empty()) {
             return make_number_value(0.0);
