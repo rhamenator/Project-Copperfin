@@ -757,6 +757,71 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_dtoc_ttoc_explicit_format_flags_match_vfp9()
+    {
+        // #6139: real VFP9 SP2 treats *any explicitly provided* second
+        // argument as requesting the unseparated sortable form for
+        // DTOC()/TTOC() (0, 1, and -1 all verified for TTOC; DTOC shows
+        // the identical pattern), and only a fully omitted argument as
+        // requesting the normal SET DATE/SET MARK-formatted display.
+        // For TTOC() specifically, an explicit 2 is a further special
+        // case requesting time-only output (honoring SET HOURS/SET
+        // SECONDS like TIME()), not sortable. Confirmed against actual
+        // VFP9 output (retained differential evidence:
+        // /home/rich/temp/vfp9-probes/dtoc-ttoc-flags-6139e/{prg,out}):
+        // DTOC(d,0)=DTOC(d,1)=DTOC(d,-1)="20240304";
+        // TTOC(dt,0)=TTOC(dt,1)=TTOC(dt,-1)="20240304050607";
+        // TTOC(dt,2)="05:06:07 AM".
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_dtoc_ttoc_explicit_flags";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "dtoc_ttoc_flags.prg";
+        write_text(
+            main_path,
+            "SET DATE TO YMD\n"
+            "SET MARK TO '-'\n"
+            "SET CENTURY ON\n"
+            "SET HOURS TO 12\n"
+            "SET SECONDS ON\n"
+            "dValue = DATE(2024, 3, 4)\n"
+            "tValue = DATETIME(2024, 3, 4, 5, 6, 7)\n"
+            "cDtoc0 = DTOC(dValue, 0)\n"
+            "cDtoc1 = DTOC(dValue, 1)\n"
+            "cDtocNeg = DTOC(dValue, -1)\n"
+            "cTtoc0 = TTOC(tValue, 0)\n"
+            "cTtoc1 = TTOC(tValue, 1)\n"
+            "cTtoc2 = TTOC(tValue, 2)\n"
+            "cTtocNeg = TTOC(tValue, -1)\n"
+            "cTtocOmitted = TTOC(tValue)\n"
+            "RETURN\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "DTOC/TTOC explicit-format-flag script should complete: " + state.message);
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable should be present for DTOC/TTOC flag test");
+            if (it != state.globals.end()) {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " should equal '" + expected + "' for DTOC/TTOC flag test");
+            }
+        };
+        check("cdtoc0", "20240304");
+        check("cdtoc1", "20240304");
+        check("cdtocneg", "20240304");
+        check("cttoc0", "20240304050607");
+        check("cttoc1", "20240304050607");
+        check("cttoc2", "05:06:07 AM");
+        check("cttocneg", "20240304050607");
+        check("cttocomitted", "2024-03-04 05:06:07 AM");
+
+        fs::remove_all(temp_root, ignored);
+    }
 
 } // namespace
 
@@ -766,6 +831,7 @@ int main()
     test_date_time_arithmetic_rejects_unsupported_operands_without_ending_the_session();
     test_date_time_ordering_uses_chronological_values();
     test_date_time_ordering_rejects_incompatible_operands_without_ending_the_session();
+    test_dtoc_ttoc_explicit_format_flags_match_vfp9();
 
     if (test_failures() != 0)
     {
