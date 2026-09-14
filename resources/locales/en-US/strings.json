@@ -3034,6 +3034,7 @@
   "Runtime.Prg.String.Error.InvalidCharacterCode": "Function argument value, type, or count is invalid.",
   "Runtime.Prg.String.Error.InvalidOccurrence": "Function argument value, type, or count is invalid.",
   "Runtime.Prg.String.Error.InvalidStrWidth": "Function argument value, type, or count is invalid.",
+  "Runtime.Prg.String.Error.NumericOverflow": "Numeric overflow.",
   "Runtime.Prg.String.Error.StringTooLong": "String is too long to fit.",
   "Studio.EditMenu": "\u0026Edit",
   "Studio.ProjectMenu": "\u0026Project",

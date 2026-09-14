@@ -1963,6 +1963,104 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_val_raises_numeric_overflow_for_out_of_range_magnitudes()
+    {
+        // #6146: VAL() collapsed every std::from_chars range failure --
+        // overflow (magnitude too large) and underflow (magnitude too
+        // small) alike -- to a silently returned 0.0, and never checked
+        // an in-IEEE-double-range value against VFP9's own narrower
+        // numeric ceiling at all. Real VFP9 SP2 raises catchable error
+        // 39 ("Numeric overflow.") for any magnitude exceeding its own
+        // ceiling -- it accepts 1E307 but rejects 1E308, 1.7E308,
+        // 1.8E308, 1E309, and 1E999 (positive or negative sign) -- and
+        // treats underflow (1E-999) as zero, not an error (confirmed
+        // against actual VFP9 output, retained differential evidence:
+        // /home/rich/temp/vfp9-probes/val-overflow-threshold-1789396768987627394/
+        // {main.prg,vfp.out} and
+        // val-boundaries-1789396712129717159/{main.prg,vfp.out}).
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_val_numeric_overflow";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "val_numeric_overflow.prg";
+        write_text(
+            main_path,
+            "PUBLIC nCapturedCount\n"
+            "PUBLIC nCapturedCode\n"
+            "PUBLIC cCapturedMessage\n"
+            "PUBLIC nAfterError\n"
+            "nCapturedCount = 0\n"
+            "nCapturedCode = 0\n"
+            "cCapturedMessage = ''\n"
+            "nAfterError = 0\n"
+            // Accepted magnitudes (including VFP9's own boundary, 1E307)
+            // run outside any ON ERROR handler -- an unexpected error
+            // here would fault the whole script and fail this test via
+            // its completion check.
+            "nVal1e307 = VAL('1E307')\n"
+            "lVal1e307Ok = .T.\n"
+            "nValNeg1e308Underflow = VAL('1E-308')\n"
+            "lValUnderflowOk = .T.\n"
+            "nValExtremeUnderflow = VAL('1E-999')\n"
+            "ON ERROR DO HandleValOverflowError\n"
+            "nUnexpected1 = VAL('1E308')\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleValOverflowError\n"
+            "nUnexpected2 = VAL('1.7E308')\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleValOverflowError\n"
+            "nUnexpected3 = VAL('1.8E308')\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleValOverflowError\n"
+            "nUnexpected4 = VAL('1E309')\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleValOverflowError\n"
+            "nUnexpected5 = VAL('1E999')\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleValOverflowError\n"
+            "nUnexpected6 = VAL('-1E308')\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleValOverflowError\n"
+            "nUnexpected7 = VAL('-1E999')\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleValOverflowError\n"
+            "nUnexpected8 = VAL('$99999999999999999999')\n"
+            "ON ERROR\n"
+            "nAfterError = 42\n"
+            "RETURN\n"
+            "PROCEDURE HandleValOverflowError\n"
+            "nCapturedCount = nCapturedCount + 1\n"
+            "nCapturedCode = ERROR()\n"
+            "cCapturedMessage = MESSAGE()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "VAL numeric-overflow script should recover through ON ERROR and complete: " + state.message);
+
+        const auto check = [&](const char* name, const char* expected) {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end() && copperfin::runtime::format_value(it->second) == expected,
+                   std::string("VAL numeric overflow: ") + name + " expected " + expected);
+        };
+        check("lval1e307ok", "true");
+        check("lvalunderflowok", "true");
+        check("nvalextremeunderflow", "0");
+        check("ncapturedcount", "8");
+        check("ncapturedcode", "39");
+        check("naftererror", "42");
+        const auto message = state.globals.find("ccapturedmessage");
+        expect(message != state.globals.end() && copperfin::runtime::format_value(message->second) == "Numeric overflow.",
+               "VAL numeric overflow should surface real VFP9's error 39 message text");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_strtran_rejects_zero_occurrence_controls()
     {
         // #5952: STRTRAN()'s nStartOccurrence and nCount arguments both
@@ -2197,6 +2295,7 @@ int main()
     test_at_family_accepts_positive_subunit_occurrence();
     test_val_accepts_leading_decimal_point();
     test_val_respects_set_point_decimal_separator();
+    test_val_raises_numeric_overflow_for_out_of_range_magnitudes();
     test_strtran_rejects_zero_occurrence_controls();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();

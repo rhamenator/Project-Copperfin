@@ -417,10 +417,17 @@ std::optional<PrgValue> evaluate_string_function(
         if (!has_integer_digits && !has_fraction_digits) {
             return currency ? make_currency_value(0) : make_number_value(0.0);
         }
+        // #6146: track whether the exponent (if any) is negative, so a
+        // parse failure below (outside the full IEEE-754 double range)
+        // can be classified as overflow (huge positive exponent) versus
+        // underflow (very negative exponent) -- both fail
+        // try_parse_invariant_double() identically otherwise.
+        bool exponent_is_negative = false;
         if (numeric_end < src.size() && (src[numeric_end] == 'E' || src[numeric_end] == 'e')) {
             const std::size_t exponent_start = numeric_end;
             ++numeric_end;
             if (numeric_end < src.size() && (src[numeric_end] == '+' || src[numeric_end] == '-')) {
+                exponent_is_negative = src[numeric_end] == '-';
                 ++numeric_end;
             }
             const std::size_t exponent_digits_start = numeric_end;
@@ -429,9 +436,9 @@ std::optional<PrgValue> evaluate_string_function(
             }
             if (numeric_end == exponent_digits_start) {
                 numeric_end = exponent_start;
+                exponent_is_negative = false;
             }
         }
-        double result = 0.0;
         std::string numeric_text = src.substr(numeric_start, numeric_end - numeric_start);
         if (decimal_point != '.') {
             // parse_currency_scaled_value()/try_parse_invariant_double()
@@ -444,10 +451,56 @@ std::optional<PrgValue> evaluate_string_function(
             }
         }
         if (currency) {
-            return make_currency_value(parse_currency_scaled_value(numeric_text).value_or(0));
+            // #6146: parse_currency_scaled_value() already detects
+            // Currency's own int64-scaled-by-10000 range overflow and
+            // returns std::nullopt, but the caller silently mapped that
+            // to a Currency value of 0 via .value_or(0) -- the same
+            // silent-overflow-to-zero pattern reported for the Double
+            // path below, just for Currency's own (much narrower)
+            // range. Wired to the same error instead.
+            const auto scaled = parse_currency_scaled_value(numeric_text);
+            if (!scaled.has_value()) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 39);
+            }
+            return make_currency_value(*scaled);
         }
-        result = try_parse_invariant_double(numeric_text).value_or(0.0);
-        return make_number_value(result);
+        // #6146: real VFP9 SP2 raises catchable error 39 ("Numeric
+        // overflow.") for a VAL() input whose magnitude exceeds VFP9's
+        // own numeric ceiling -- distinct from, and narrower than, the
+        // full IEEE-754 double range. VFP9 accepts 1E307 but rejects
+        // 1E308, 1.7E308, 1.8E308, and any larger exponent (1E309,
+        // 1E999) with error 39; it treats underflow (e.g. 1E-999) as
+        // zero, not an error (confirmed against actual VFP9 output,
+        // retained differential evidence:
+        // ~/temp/vfp9-probes/val-overflow-threshold-1789396768987627394/
+        // {main.prg,vfp.out} and
+        // val-boundaries-1789396712129717159/{main.prg,vfp.out}). The
+        // prior implementation collapsed every std::from_chars range
+        // failure -- overflow and underflow alike -- to a silently
+        // returned 0.0 via .value_or(0.0), and never checked
+        // in-IEEE-range values (1E307..1.7E308) against VFP9's own
+        // narrower ceiling at all. The exact ceiling constant is
+        // well-established VFP9 documentation/community knowledge
+        // (Numeric/Double range), not independently boundary-probed at
+        // finer-than-power-of-ten granularity in this session.
+        constexpr double kVfpMaxNumericMagnitude = 9.999999999999999e+307;
+        const auto parsed = try_parse_invariant_double(numeric_text);
+        if (parsed.has_value()) {
+            if (std::fabs(*parsed) > kVfpMaxNumericMagnitude) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 39);
+            }
+            return make_number_value(*parsed);
+        }
+        // numeric_text is guaranteed syntactically valid by the scan
+        // above, so a parse failure here can only be an IEEE-double
+        // range failure: overflow (huge magnitude) or underflow
+        // (magnitude too small to represent, including subnormals).
+        // Only a negative exponent can drive this grammar's magnitude
+        // toward zero.
+        if (!exponent_is_negative) {
+            throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 39);
+        }
+        return make_number_value(0.0);
     }
     if (function == "occurs" && arguments.size() >= 2U) {
         const std::string needle = value_as_string(arguments[0]);

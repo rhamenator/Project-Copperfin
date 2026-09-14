@@ -1,3 +1,49 @@
+- 2026-09-14: Fixed #6146: `VAL()` collapsed every out-of-range parse
+  result -- overflow (magnitude too large) and underflow (magnitude too
+  small) alike -- to a silently returned `0.0` via
+  `try_parse_invariant_double(...).value_or(0.0)`, and never checked an
+  in-IEEE-double-range value against VFP9's own narrower numeric
+  ceiling at all. Real VFP9 SP2 raises catchable error 39 ("Numeric
+  overflow.") for a magnitude exceeding its own ceiling -- distinct
+  from, and narrower than, the full IEEE-754 double range: it accepts
+  `1E307` but rejects `1E308`, `1.7E308`, `1.8E308`, and any larger
+  exponent (`1E309`, `1E999`, either sign), while treating underflow
+  (`1E-999`) as zero, not an error (confirmed against actual VFP9
+  output, retained differential evidence:
+  `~/temp/vfp9-probes/val-overflow-threshold-1789396768987627394/{main.prg,vfp.out}`
+  and `val-boundaries-1789396712129717159/{main.prg,vfp.out}`). The
+  Currency-prefixed path had the identical silent-overflow-to-zero
+  pattern: `parse_currency_scaled_value()` already detected Currency's
+  own int64-scaled-by-10000 range overflow and returned
+  `std::nullopt`, but the caller mapped that to Currency `0` via
+  `.value_or(0)` too.
+
+  Fixed in `src/runtime/prg_engine_string_functions.cpp`'s `val`
+  branch: an in-range parse now checks the resulting magnitude against
+  a VFP9-specific ceiling (`9.999999999999999e+307` -- well-established
+  VFP9 documentation/community knowledge for the Numeric/Double range,
+  not independently boundary-probed at finer-than-power-of-ten
+  granularity in this session) before accepting it; a parse failure now
+  distinguishes overflow from underflow by the sign of the value's own
+  exponent (captured during the existing scan) rather than collapsing
+  both to zero; and the Currency path now raises the same error instead
+  of silently zeroing. Both raise a new localized
+  `Runtime.Prg.String.Error.NumericOverflow` error (VFP error 39, added
+  to all four locale catalogs).
+
+  New `test_val_raises_numeric_overflow_for_out_of_range_magnitudes`
+  covers the full retained-evidence matrix (accepted: `1E307`,
+  `1E-308`, `1E-999`→`0`; rejected with error 39: `1E308`, `1.7E308`,
+  `1.8E308`, `1E309`, `1E999`, `-1E308`, `-1E999`, and an overflowing
+  Currency-prefixed value) via the established `ON ERROR` capture
+  pattern. Verified fail-then-pass against a reverted implementation.
+  Added `RQ-CF-PRG-031` to `docs/32-recovered-requirements-traceability.md`.
+  The Currency-overflow error code itself (39, matching the Double
+  path) is an analogous extension of the already-implemented Currency
+  range-overflow *detection*, not independently VFP9-verified in this
+  session -- disclosed as an explicit gap in that row rather than
+  claimed as directly evidenced.
+
 - 2026-09-14: Fixed #6139: `TTOC()`'s documented second-argument
   formatting mode only checked for an explicit `1` (sortable
   `YYYYMMDDHHMMSS`), so the reported mode `2` (time-only, honoring `SET

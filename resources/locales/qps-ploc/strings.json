@@ -3034,6 +3034,7 @@
   "Runtime.Prg.String.Error.InvalidCharacterCode": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",
   "Runtime.Prg.String.Error.InvalidOccurrence": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",
   "Runtime.Prg.String.Error.InvalidStrWidth": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",
+  "Runtime.Prg.String.Error.NumericOverflow": "[!! Ñµmëŕïç øṽëŕƒlöω. !!]",
   "Runtime.Prg.String.Error.StringTooLong": "[!! Šţŕïñğ ïš ţøø löñğ ţø fïţ. !!]",
   "Studio.EditMenu": "[\u0026Edit]",
   "Studio.ProjectMenu": "[\u0026Project]",
