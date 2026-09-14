@@ -225,8 +225,14 @@ std::optional<PrgValue> evaluate_path_function(
         return make_string_value(portable_force_extension(path, value_as_string(arguments[1])));
     }
     if (function == "addbs" && !arguments.empty()) {
+        // #5910: real VFP9 SP2's ADDBS() adds a backslash unless the
+        // nonempty input already ends in a backslash -- a trailing
+        // forward slash does NOT satisfy that contract, so
+        // ADDBS('abc/') == 'abc/\' in real VFP9, not 'abc/' (confirmed
+        // against actual VFP9 output, retained differential evidence:
+        // /home/rich/temp/vfp9-probes/addbs-contract-36.{prg,out}).
         std::string path = value_as_string(arguments[0]);
-        if (!path.empty() && path.back() != '\\' && path.back() != '/') {
+        if (!path.empty() && path.back() != '\\') {
             path += '\\';
         }
         return make_string_value(std::move(path));

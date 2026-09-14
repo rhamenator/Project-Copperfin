@@ -683,6 +683,36 @@ namespace
     }
 #endif
 
+    void test_addbs_matches_vfp9_trailing_separator_contract()
+    {
+        // #5910: real VFP9 SP2's ADDBS() adds a backslash unless the
+        // nonempty input already ends in a backslash -- a trailing
+        // forward slash does NOT satisfy that contract. Confirmed
+        // against actual VFP9 output (retained differential evidence:
+        // /home/rich/temp/vfp9-probes/addbs-contract-36.{prg,out}):
+        // ADDBS('')='', ADDBS('abc')='abc\', ADDBS('abc/')='abc/\',
+        // ADDBS('C:')='C:\', ADDBS('C:\')='C:\' (unchanged).
+        const auto addbs = [](const std::string& input) {
+            copperfin::runtime::PrgValue argument;
+            argument.kind = copperfin::runtime::PrgValueKind::string;
+            argument.string_value = input;
+            const auto result = copperfin::runtime::evaluate_path_function("addbs", {argument}, {});
+            return result.has_value() ? result->string_value : std::string{"<no result>"};
+        };
+
+        expect(addbs("") == "", "ADDBS('') should remain empty");
+        expect(addbs("abc") == "abc\\", "ADDBS('abc') should append a backslash");
+        expect(addbs("abc/") == "abc/\\",
+               "ADDBS('abc/') should append a backslash -- a trailing forward slash is not a "
+               "terminating separator in real VFP9");
+        expect(addbs("abc\\") == "abc\\", "ADDBS('abc\\\\') should leave an existing trailing backslash unchanged");
+        expect(addbs("C:") == "C:\\", "ADDBS('C:') should append a backslash to a bare drive letter");
+        expect(addbs("C:\\") == "C:\\", "ADDBS('C:\\\\') should leave an existing drive-root backslash unchanged");
+        expect(addbs("\\\\server\\share") == "\\\\server\\share\\",
+               "ADDBS() on a UNC path should append a backslash when missing");
+        expect(addbs("\\\\server\\share/") == "\\\\server\\share/\\",
+               "ADDBS() on a UNC path ending in a forward slash should still append a backslash");
+    }
 
 } // namespace
 
@@ -692,6 +722,7 @@ int main()
 #if !defined(_WIN32)
     test_fullpath_handles_unavailable_current_directory();
 #endif
+    test_addbs_matches_vfp9_trailing_separator_contract();
 
     if (test_failures() != 0)
     {

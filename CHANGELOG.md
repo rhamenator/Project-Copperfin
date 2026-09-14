@@ -1,3 +1,21 @@
+- 2026-09-14: Fixed #5910: `ADDBS()` treated either `/` or `\` as an
+  already-present terminating separator, so `ADDBS('abc/')` returned
+  `'abc/'` unchanged. Real VFP9 SP2's `ADDBS()` adds a backslash unless
+  the nonempty input already ends in a backslash specifically -- a
+  trailing forward slash does not satisfy that contract, so
+  `ADDBS('abc/')` is `'abc/\'` (confirmed against actual VFP9 output,
+  retained differential evidence:
+  `/home/rich/temp/vfp9-probes/addbs-contract-36.{prg,out}`). Removed
+  the `path.back() != '/'` half of the check in
+  `src/runtime/prg_engine_path_functions.cpp`'s `addbs` branch, so only
+  an existing trailing backslash is left unchanged.
+
+  New `test_addbs_matches_vfp9_trailing_separator_contract` covers the
+  issue's own evidence (empty, plain, trailing-slash, trailing-backslash,
+  bare drive letter, drive root) plus UNC-path vectors from the issue's
+  acceptance criteria. Verified fail-then-pass against a reverted
+  implementation.
+
 - 2026-09-13: Fixed #5952 (found during the same review as
   #5899/#5900/#5928/#5946/#5948/#5949/#5951/#5953/#5954): `STRTRAN()`'s
   `nStartOccurrence` and `nCount` arguments both silently accepted zero
