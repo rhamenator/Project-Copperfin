@@ -1350,6 +1350,13 @@ DbfWriteResult append_blank_record_bytes(
     std::vector<std::uint8_t>& table_bytes,
     const DbfHeader& header,
     const std::vector<RawFieldDescriptor>& fields) {
+    // #6086: reject before any write when the 32-bit record count is
+    // already at its maximum -- incrementing it would wrap to zero,
+    // silently making every existing record disappear from the header's
+    // point of view while leaving their bytes physically present.
+    if (header.record_count == std::numeric_limits<std::uint32_t>::max()) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordCountLimitReached"), .record_count = header.record_count};
+    }
     const std::size_t insert_offset = header.header_length + (static_cast<std::size_t>(header.record_count) * header.record_length);
     if (insert_offset > table_bytes.size()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableDataTruncated"), .record_count = header.record_count};
@@ -1397,6 +1404,15 @@ std::optional<DbfWriteResult> append_blank_record_to_file_targeted(const std::st
         return std::nullopt;
     }
     const DbfHeader& header = header_result.header;
+
+    // #6086: reject before any write when the 32-bit record count is
+    // already at its maximum -- see the identical guard and rationale in
+    // append_blank_record_bytes() above. Returning a failed result here
+    // (rather than std::nullopt) rejects immediately instead of falling
+    // back to the whole-file path, which hits the same limit anyway.
+    if (header.record_count == std::numeric_limits<std::uint32_t>::max()) {
+        return DbfWriteResult{.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordCountLimitReached"), .record_count = header.record_count};
+    }
 
     std::ifstream descriptor_input(platform::path_from_utf8_string(path), std::ios::binary);
     if (!descriptor_input) {
@@ -3510,6 +3526,25 @@ DbfWriteResult append_blank_record_to_file_full_rewrite(const std::string& path)
     if (const auto error = dbase_read_only_mutation_error(path); error.has_value()) {
         return *error;
     }
+
+    // #6086 review (chatgpt-codex-connector, P2): check the record-count
+    // limit against a lightweight header-only read BEFORE loading the
+    // entire table into memory below -- a structurally valid table at
+    // UINT32_MAX records is already several gigabytes, so relying on
+    // append_blank_record_bytes()'s own guard (which only sees the
+    // already-loaded bytes) would let the full read itself exhaust
+    // memory or throw std::bad_alloc first. A failed lightweight parse
+    // here is not itself an error: fall through to the existing
+    // full-read path, which has its own proper handling for a malformed
+    // header.
+    if (const DbfParseResult early_header_result = parse_dbf_header_from_file(path);
+        early_header_result.ok &&
+        early_header_result.header.record_count == std::numeric_limits<std::uint32_t>::max()) {
+        return {.ok = false,
+                .error = dbf_table_text("Vfp.DbfTable.Error.RecordCountLimitReached"),
+                .record_count = early_header_result.header.record_count};
+    }
+
     std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
