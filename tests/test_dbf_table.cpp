@@ -2885,12 +2885,30 @@ void test_dbf_append_rejects_record_count_at_uint32_max() {
         io.write(&eof_marker, 1);
     };
 
+    // Content fingerprint for the byte-identical check below: the header
+    // bytes plus the file's very last byte (the EOF marker at the
+    // declared logical end). A size-only comparison would miss a
+    // same-length mutation to the header, timestamp, or terminator, so
+    // review round (copilot-pull-request-reviewer) asked for an actual
+    // content check here, not just size.
+    const auto fingerprint = [&](const fs::path& table_path, std::uint16_t header_length) {
+        std::ifstream input(table_path, std::ios::binary);
+        std::vector<char> header_bytes(header_length, 0);
+        input.read(header_bytes.data(), header_length);
+        input.seekg(-1, std::ios::end);
+        char last_byte = 0;
+        input.read(&last_byte, 1);
+        header_bytes.push_back(last_byte);
+        return header_bytes;
+    };
+
     // Boundary: record_count already at UINT32_MAX -- must be rejected,
-    // and the file must be left byte-identical.
+    // and the file must be left byte-identical (size and content).
     const fs::path max_path = temp_dir / "max.dbf";
     make_sparse_table(max_path, std::numeric_limits<std::uint32_t>::max());
     std::error_code before_size_error;
     const std::uintmax_t before_size = fs::file_size(max_path, before_size_error);
+    const std::vector<char> before_fingerprint = fingerprint(max_path, 33U);
     const auto max_result = copperfin::vfp::append_blank_record_to_file(max_path.string());
     expect(!max_result.ok,
            "#6086: appending to a table at UINT32_MAX records must be rejected, not wrap to zero");
@@ -2899,7 +2917,9 @@ void test_dbf_append_rejects_record_count_at_uint32_max() {
     std::error_code after_size_error;
     const std::uintmax_t after_size = fs::file_size(max_path, after_size_error);
     expect(before_size == after_size,
-           "#6086: a rejected append must leave the DBF byte-identical (no size change)");
+           "#6086: a rejected append must leave the DBF's logical size unchanged");
+    expect(before_fingerprint == fingerprint(max_path, 33U),
+           "#6086: a rejected append must leave the DBF's header and EOF marker byte-identical");
 
     // One below the boundary: record_count at UINT32_MAX - 1 -- must
     // still succeed and reach exactly UINT32_MAX, proving the guard
@@ -2911,6 +2931,49 @@ void test_dbf_append_rejects_record_count_at_uint32_max() {
            "#6086: appending one record below the limit should still succeed");
     expect(near_max_result.record_count == std::numeric_limits<std::uint32_t>::max(),
            "#6086: the one-below-limit append should reach exactly UINT32_MAX, not wrap");
+
+    // Review round (chatgpt-codex-connector, P2): the public
+    // append_blank_record_to_file_full_rewrite() API -- reached by the
+    // buffered TABLEUPDATE() path -- must reject at UINT32_MAX records
+    // using only a lightweight header read, *before* loading the whole
+    // table into memory. This tiny header-only fixture (no real
+    // multi-GB file behind it) proves the *functional* correctness of
+    // that rejection (right result, right error, right reported count)
+    // -- exercising a full-rewrite call site this test suite previously
+    // never reached at all. It does NOT, by itself, prove the early
+    // check runs *before* the full-file read rather than after: because
+    // the fixture is only 33 bytes on disk, reading "the whole file" is
+    // just as cheap as the lightweight header read, so
+    // append_blank_record_bytes()'s own inner guard (unchanged by this
+    // review round, and already covered above) would independently
+    // produce the same pass/fail result here even if the early guard
+    // were removed (verified: reverting just the early guard leaves
+    // this fixture passing). The memory-avoidance ordering itself -- the
+    // actual point of this review finding -- is a code-level property
+    // (the check is textually placed before the full-read block),
+    // deliberately not re-verified via a real multi-gigabyte fixture in
+    // this test for the same reason the review comment asked to avoid
+    // one.
+    const fs::path full_rewrite_max_path = temp_dir / "full_rewrite_max.dbf";
+    {
+        constexpr std::uint16_t header_length = 33U;
+        std::vector<std::uint8_t> header_bytes(header_length, 0U);
+        header_bytes[0] = 0x30U;
+        write_le_u32(header_bytes, 4U, std::numeric_limits<std::uint32_t>::max());
+        write_le_u16(header_bytes, 8U, header_length);
+        write_le_u16(header_bytes, 10U, 1U);
+        header_bytes[32] = 0x0DU;
+        std::ofstream output(full_rewrite_max_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(header_bytes.data()),
+                     static_cast<std::streamsize>(header_bytes.size()));
+    }
+    const auto full_rewrite_result =
+        copperfin::vfp::append_blank_record_to_file_full_rewrite(full_rewrite_max_path.string());
+    expect(!full_rewrite_result.ok,
+           "#6086: append_blank_record_to_file_full_rewrite() must reject at UINT32_MAX records "
+           "via a lightweight header check, without loading the whole table");
+    expect(full_rewrite_result.record_count == std::numeric_limits<std::uint32_t>::max(),
+           "#6086: the full-rewrite rejection must report the original record count");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -3129,6 +3192,7 @@ void test_dbf_table_locale_catalog_parity() {
         "Vfp.DbfTable.Error.NumericValueTooLarge",
         "Vfp.DbfTable.Error.OpaqueValueInvalid",
         "Vfp.DbfTable.Error.OpenTableFailed",
+        "Vfp.DbfTable.Error.RecordCountLimitReached",
         "Vfp.DbfTable.Error.RecordDataTruncated",
         "Vfp.DbfTable.Error.RecordFieldCountMismatch",
         "Vfp.DbfTable.Error.RecordIndexOutOfRange",

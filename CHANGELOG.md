@@ -5,10 +5,13 @@
   logically disappear (the bytes remain physically present, but any
   reader trusting the header count sees an empty table). A controlled
   sparse-file probe confirmed `append_blank_record_to_file()` on such a
-  table returns `ok=1 count=0`, with the file's physical size unchanged
-  (retained evidence: `~/temp/copperfin-dbf-record-count-wrap/`). Both
-  single-record append implementations
-  (`append_blank_record_bytes()`/whole-file path,
+  table returns `ok=1 count=0`; the file's *logical* size grew by one
+  byte (`before_size 4294967329` to `after_size 4294967330`, the record
+  and EOF-marker write that produced the wrapped count), while its
+  *physical* on-disk allocation stayed negligible throughout because the
+  probe file is sparse (retained evidence:
+  `~/temp/copperfin-dbf-record-count-wrap/`). Both single-record append
+  implementations (`append_blank_record_bytes()`/whole-file path,
   `append_blank_record_to_file_targeted()`/fast targeted-I/O path)
   incremented `header.record_count` with plain unsigned addition and no
   limit check. The batch append path
@@ -16,18 +19,47 @@
   guard and needed no change.
 
   Fixed by rejecting the append before any write when
-  `header.record_count == UINT32_MAX`, in both single-record paths, with
-  a new localized `Vfp.DbfTable.Error.RecordCountLimitReached` error
+  `header.record_count == UINT32_MAX`, in all three append paths, with a
+  new localized `Vfp.DbfTable.Error.RecordCountLimitReached` error
   (added to all four locale catalogs).
 
   New `test_dbf_append_rejects_record_count_at_uint32_max` reproduces
   the retained probe's exact structurally-minimal sparse-file
   construction (header_length=33, record_length=1, no field
   descriptors) to exercise the ~4GB logical boundary without real disk
-  I/O (sparse `fs::resize_file`, ~8s total test time), covering both the
-  `UINT32_MAX` rejection (and that the file is left byte-identical) and
+  I/O (sparse `fs::resize_file`, ~8s total test time), covering the
+  `UINT32_MAX` rejection with a real content check (header bytes plus
+  EOF marker, not just size) confirming the file is left byte-identical,
   a `UINT32_MAX - 1` append still succeeding and reaching exactly the
-  limit. Verified fail-then-pass against a reverted implementation.
+  limit, and a separate tiny header-only fixture proving the functional
+  correctness of `append_blank_record_to_file_full_rewrite()`'s
+  rejection (right result, right error, right reported count) -- a
+  call site this test suite previously never reached at all. That tiny
+  fixture does not, by itself, prove the early check runs *before* the
+  full-file read rather than after (at 33 bytes on disk, reading "the
+  whole file" is just as cheap as the lightweight header read, so the
+  inner `append_blank_record_bytes()` guard would independently produce
+  the same result either way, confirmed by reverting just the early
+  guard); that memory-avoidance ordering is a code-level property
+  (the check is textually placed before the full-read block),
+  deliberately not re-verified via a real multi-gigabyte fixture for
+  the same reason the review comment asked to avoid one. Verified
+  fail-then-pass against a reverted
+  implementation.
+
+  Review round (`chatgpt-codex-connector` P2, `copilot-pull-request-reviewer`):
+  (1) `append_blank_record_to_file_full_rewrite()` -- reached by the
+  buffered `TABLEUPDATE()` path -- read the entire table into memory
+  *before* the `append_blank_record_bytes()` guard could run, so a
+  structurally valid UINT32_MAX-record table (several gigabytes) could
+  still exhaust memory or throw `std::bad_alloc` on the full read
+  itself; fixed by checking a lightweight header-only read first. (2)
+  the new locale key was missing from
+  `test_dbf_table_locale_catalog_parity()`'s required-key list, added.
+  (3) added the full-rewrite-specific test fixture described above. (4)
+  the byte-identical check compared only file size; added an actual
+  content comparison. (5) corrected this entry's own logical-vs-physical
+  size wording, which had been imprecise.
   Added `RQ-CF-PRG-028` to `docs/32-recovered-requirements-traceability.md`.
 
 - 2026-09-14: Fixed #6060: `FWRITE()` and `FPUTS()` clamped a negative
