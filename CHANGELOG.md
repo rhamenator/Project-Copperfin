@@ -25,6 +25,19 @@
   implementation. Added `RQ-CF-PRG-027` to
   `docs/32-recovered-requirements-traceability.md`.
 
+  Review round (`copilot-pull-request-reviewer`): the first version of
+  this fix checked `std::isfinite(raw_count) && raw_count >= 0.0`, then
+  narrowed the truncated count straight to `std::size_t` before the
+  `requested < text.size()` bounds check that was meant to protect it --
+  a finite double vastly exceeding `SIZE_MAX` (e.g. `1e308`) still
+  triggers undefined behavior on that cast. Fixed by comparing the
+  truncated count against `text.size()` in `double` precision first,
+  only narrowing to `size_t` once confirmed smaller (and therefore
+  always representable), in both the `FWRITE()` and `FPUTS()` branches.
+  New `FWRITE(h, 'abc', 1e308)` vector added to the same test; verified
+  fail-then-pass by reverting to the unguarded cast and running it under
+  a memory cap and timeout for safety.
+
 - 2026-09-14: Documentation only: retroactive traceability catch-up for
   six VFP-compatibility fixes merged before the traceability policy
   established by #5910's review round (see that entry below) took

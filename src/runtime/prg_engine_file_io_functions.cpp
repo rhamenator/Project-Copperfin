@@ -471,9 +471,16 @@ std::optional<PrgValue> evaluate_file_io_function(
             // cast on a value that can't be represented as a size_t.
             const double raw_count = value_as_number(arguments[2]);
             if (std::isfinite(raw_count) && raw_count >= 0.0) {
-                const std::size_t requested = static_cast<std::size_t>(std::trunc(raw_count));
-                if (requested < text.size()) {
-                    text.resize(requested);
+                // Compare the truncated count against text.size() in
+                // double precision before narrowing to std::size_t: a
+                // finite double can still vastly exceed SIZE_MAX (e.g.
+                // 1e308), and casting an out-of-range double to an
+                // integral type is undefined behavior. Once confirmed
+                // smaller than text.size() (itself always representable
+                // as std::size_t), the cast is safe.
+                const double truncated_count = std::trunc(raw_count);
+                if (truncated_count < static_cast<double>(text.size())) {
+                    text.resize(static_cast<std::size_t>(truncated_count));
                 }
             }
         }
@@ -561,9 +568,12 @@ std::optional<PrgValue> evaluate_file_io_function(
             // deliberately left untouched here.
             const double raw_count = value_as_number(arguments[2]);
             if (std::isfinite(raw_count) && raw_count >= 0.0) {
-                const std::size_t max_length = static_cast<std::size_t>(std::trunc(raw_count));
-                if (max_length < text.size()) {
-                    text.resize(max_length);
+                // See the analogous comment in the "fwrite" branch above:
+                // compare in double precision before narrowing, since a
+                // finite double can still exceed SIZE_MAX.
+                const double truncated_count = std::trunc(raw_count);
+                if (truncated_count < static_cast<double>(text.size())) {
+                    text.resize(static_cast<std::size_t>(truncated_count));
                 }
             }
         }

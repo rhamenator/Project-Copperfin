@@ -427,6 +427,14 @@ void test_fwrite_fputs_negative_count_writes_everything()
         "nPutsNeg = FPUTS(hPutsNeg, 'abc', -1)\n"
         "=FCLOSE(hPutsNeg)\n"
         "cPutsNeg = FILETOSTR('puts_neg.bin')\n"
+        // Review round (copilot-pull-request-reviewer): a finite count
+        // vastly exceeding SIZE_MAX (e.g. 1e308) must not reach an
+        // undefined-behavior narrowing cast -- it should behave the same
+        // as any other oversized count and write the complete expression.
+        "hHuge = FCREATE('huge.bin')\n"
+        "nHuge = FWRITE(hHuge, 'abc', 1e308)\n"
+        "=FCLOSE(hHuge)\n"
+        "cHuge = FILETOSTR('huge.bin')\n"
         "RETURN\n");
 
     auto session = copperfin::runtime::PrgRuntimeSession::create(
@@ -451,6 +459,8 @@ void test_fwrite_fputs_negative_count_writes_everything()
     check("cfrac", "");
     check("nputsneg", "4");
     check("cputsneg", "abc\n");
+    check("nhuge", "3");
+    check("chuge", "abc");
 
     fs::remove_all(temp_root, ignored);
 }
