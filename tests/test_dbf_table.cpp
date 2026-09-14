@@ -3188,6 +3188,7 @@ void test_dbf_table_locale_catalog_parity() {
         "Vfp.DbfTable.Error.LogicalValueInvalid",
         "Vfp.DbfTable.Error.MemoSidecarPathMissing",
         "Vfp.DbfTable.Error.MemoFieldWidthTooSmall",
+        "Vfp.DbfTable.Error.MemoAllocationExceedsLimit",
         "Vfp.DbfTable.Error.ReadMemoPayloadFailed",
         "Vfp.DbfTable.Error.NumericValueTooLarge",
         "Vfp.DbfTable.Error.OpaqueValueInvalid",
@@ -3889,6 +3890,7 @@ int main(int argc, char* argv[]) {
     copperfin::test_dbf_table::test_pack_memo_preserves_binary_picture_payloads();
     copperfin::test_dbf_table::test_pack_memo_fails_when_referenced_payload_cannot_be_recovered();
     copperfin::test_dbf_table::test_additive_memo_replace_preserves_raw_payload_and_fails_closed();
+    copperfin::test_dbf_table::test_memo_write_rejects_hostile_fpt_allocation_header();
     copperfin::test_dbf_table::test_schema_rewrites_preserve_raw_memo_and_unaffected_field_bytes();
     test_schema_rewrites_preserve_code_page_marks();
     test_indexed_table_mutations_succeed_with_production_flags_and_companions();

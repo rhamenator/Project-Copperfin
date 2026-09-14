@@ -1,3 +1,52 @@
+- 2026-09-14: Fixed #6127 (safety, partial -- see below): a memo write
+  computed its target FPT block offset and allocation size directly
+  from the sidecar's own `next_free_block`/`block_size` header fields,
+  with no sanity check. A crafted or corrupt 512-byte FPT with
+  `next_free_block=0xFFFFFFFF` and `block_size=0xFFFF` made a one-byte
+  memo write (`replace_record_field_value('memo.dbf', 0, 'NOTE', 'x')`)
+  compute a ~256 TiB target size, which an unconditional
+  `std::vector::resize()` then attempted to allocate, throwing an
+  uncaught `std::bad_alloc` (confirmed against a focused external
+  harness with a 256 MiB address-space limit, retained evidence:
+  `~/temp/copperfin-fpt-next-free-6127/` and
+  `~/temp/vfp9-probes/fpt-next-free-6127/`). The DBF/FPT remained
+  unchanged only because allocation failed before publication; a
+  runtime `REPLACE` reaching the same path terminated the whole PRG run.
+
+  Fixed in the single shared helper both this and every other
+  memo-producing path call
+  (`write_memo_field_bytes()` in `src/vfp/dbf_table.cpp`): the target
+  size is now computed in a fixed-width 64-bit type (not `size_t`,
+  which can be 32-bit, so the multiplication itself can't silently
+  wrap) and rejected with a new localized
+  `Vfp.DbfTable.Error.MemoAllocationExceedsLimit` error *before* ever
+  resizing, when it would exceed a generous 2 GiB ceiling -- a
+  well-established real-world FPT/memo practical file-size limit for
+  the classic FoxPro/dBASE format's 32-bit-oriented file APIs, not a
+  value freshly boundary-probed against real VFP9 in this session.
+
+  New `test_memo_write_rejects_hostile_fpt_allocation_header`
+  reproduces the exact reported header/trigger and confirms rejection
+  with the DBF/FPT left byte-identical. Verified fail-then-pass: the
+  reverted implementation was confirmed to actually crash with an
+  uncaught `std::bad_alloc` under a bounded `ulimit -v`/`timeout`
+  safety net (not just theorized), then the fix confirmed to prevent it
+  cleanly. Added `RQ-CF-PRG-029` to
+  `docs/32-recovered-requirements-traceability.md` (product-safety
+  sourced, not VFP9-differential).
+
+  **This is a deliberately partial fix**, not the issue's full
+  acceptance criteria: it closes the specific reported allocation
+  vulnerability (and, by fixing the one shared helper, every caller of
+  `write_memo_field_bytes()`) but does not attempt the issue's much
+  broader ask -- checked arithmetic and injected-allocation-failure
+  testing throughout every adjacent memo/FPT code path, configurable
+  limits, full atomicity guarantees across PACK/import/visual-asset
+  edits, or exhaustive `std::bad_alloc`/`std::length_error`/filesystem-
+  exception containment at every public mutation boundary. Left open
+  with a comment detailing what's fixed vs. deferred, per this
+  session's established partial-fix precedent (see #5681/#5682).
+
 - 2026-09-14: Fixed #6086 (safety): appending a blank record to a DBF
   whose 32-bit record count was already `UINT32_MAX` wrapped the count
   to zero -- the append wrote the new record and EOF marker, reported

@@ -138,4 +138,69 @@ void test_additive_memo_replace_preserves_raw_payload_and_fails_closed() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_memo_write_rejects_hostile_fpt_allocation_header() {
+    // #6127: a crafted or corrupt FPT header fully controls
+    // next_free_block and block_size, which write_memo_field_bytes()
+    // multiplies together to compute a byte offset/allocation size with
+    // no sanity check. next_free_block=0xFFFFFFFF with block_size=0xFFFF
+    // computes a ~256 TiB target size, which the unconditional resize()
+    // this fix guards against would otherwise attempt to allocate,
+    // throwing std::bad_alloc instead of returning a structured
+    // DbfWriteResult (confirmed against a focused external harness with
+    // a 256 MiB address-space limit, retained evidence:
+    // ~/temp/copperfin-fpt-next-free-6127/ and
+    // ~/temp/vfp9-probes/fpt-next-free-6127/).
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_hostile_fpt_header_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "hostile_fpt.dbf";
+    const fs::path memo_path = temp_dir / "hostile_fpt.fpt";
+
+    std::vector<std::uint8_t> table_bytes(65U + 5U + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 65U);
+    write_le_u16(table_bytes, 10U, 5U);
+    write_field_descriptor(table_bytes, 32U, "NOTE", 'M', 1U, 4U);
+    table_bytes[64U] = 0x0DU;
+    table_bytes[65U] = 0x20U;
+    write_le_u32(table_bytes, 66U, 0U);
+    table_bytes.back() = 0x1AU;
+
+    std::vector<std::uint8_t> memo_bytes(512U, 0U);
+    write_be_u32(memo_bytes, 0U, 0xFFFFFFFFU);
+    write_be_u16(memo_bytes, 6U, 0xFFFFU);
+
+    {
+        std::ofstream table_output(table_path, std::ios::binary);
+        table_output.write(reinterpret_cast<const char*>(table_bytes.data()),
+                           static_cast<std::streamsize>(table_bytes.size()));
+    }
+    {
+        std::ofstream memo_output(memo_path, std::ios::binary);
+        memo_output.write(reinterpret_cast<const char*>(memo_bytes.data()),
+                          static_cast<std::streamsize>(memo_bytes.size()));
+    }
+
+    const auto original_table = read_binary_file(table_path);
+    const auto original_memo = read_binary_file(memo_path);
+
+    const auto result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NOTE", "x");
+    expect(!result.ok,
+           "#6127: writing a memo through a hostile FPT allocation header must be rejected, not "
+           "attempt a huge allocation");
+    expect(result.error == "Memo sidecar allocation exceeds the supported file-size limit.",
+           "#6127: a rejected hostile-header memo write should surface the localized allocation-limit error");
+    expect(read_binary_file(table_path) == original_table,
+           "#6127: a rejected hostile-header memo write should leave the original table bytes intact");
+    expect(read_binary_file(memo_path) == original_memo,
+           "#6127: a rejected hostile-header memo write should leave the original memo sidecar intact");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace copperfin::test_dbf_table

@@ -954,8 +954,33 @@ DbfWriteResult write_memo_field_bytes(
 
     const auto required_bytes = static_cast<std::size_t>(8U + value.size());
     const auto required_blocks = static_cast<std::uint32_t>((required_bytes + block_size - 1U) / block_size);
-    const std::size_t block_offset = static_cast<std::size_t>(next_free_block) * block_size;
-    const std::size_t new_total_size = block_offset + (static_cast<std::size_t>(required_blocks) * block_size);
+    // #6127: next_free_block and block_size both come straight from the
+    // FPT header, which a crafted or corrupt sidecar fully controls --
+    // an untrusted next_free_block of 0xFFFFFFFF with block_size 0xFFFF
+    // computes a ~256 TiB block_offset/new_total_size, which the
+    // unconditional resize() below would then attempt to allocate,
+    // throwing std::bad_alloc instead of returning a structured
+    // DbfWriteResult (confirmed against a focused external harness,
+    // retained evidence: ~/temp/copperfin-fpt-next-free-6127/ and
+    // ~/temp/vfp9-probes/fpt-next-free-6127/). Compute in a fixed-width
+    // 64-bit type (not size_t, which can be 32-bit) so the
+    // multiplication itself can't silently wrap, and reject before ever
+    // resizing when the result would exceed a generous, well-established
+    // real-world FPT/memo practical file-size ceiling (2 GiB -- FoxPro/
+    // dBASE-family table and memo files are widely documented as
+    // constrained to this range by the classic format's 32-bit-oriented
+    // file APIs; not a value freshly boundary-probed against real VFP9
+    // in this session).
+    constexpr std::uint64_t kVfpMaxMemoFileSize = 2ULL * 1024ULL * 1024ULL * 1024ULL;
+    const std::uint64_t wide_block_offset =
+        static_cast<std::uint64_t>(next_free_block) * static_cast<std::uint64_t>(block_size);
+    const std::uint64_t wide_new_total_size =
+        wide_block_offset + (static_cast<std::uint64_t>(required_blocks) * static_cast<std::uint64_t>(block_size));
+    if (wide_new_total_size > kVfpMaxMemoFileSize) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.MemoAllocationExceedsLimit"), .record_count = record_count};
+    }
+    const std::size_t block_offset = static_cast<std::size_t>(wide_block_offset);
+    const std::size_t new_total_size = static_cast<std::size_t>(wide_new_total_size);
     if (memo_bytes.size() < new_total_size) {
         memo_bytes.resize(new_total_size, 0U);
     }
