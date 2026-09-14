@@ -1,3 +1,22 @@
+- 2026-09-14: Documentation only: retroactive traceability catch-up for
+  six VFP-compatibility fixes merged before the traceability policy
+  established by #5910's review round (see that entry below) took
+  effect. Added `RQ-CF-PRG-021` through `RQ-CF-PRG-026` to
+  `docs/32-recovered-requirements-traceability.md`, each scoped like
+  `RQ-CF-PRG-020` (a `recovered`-tier row: testable requirement text,
+  code/test references, focused verification evidence, honest gaps),
+  covering: `RQ-CF-PRG-021` #5946 (`SPACE()`/`REPLICATE()` Character
+  string-length ceiling); `RQ-CF-PRG-022` #5948 (`PADL()`/`PADR()`/
+  `PADC()` leftmost truncation, both evaluator implementations);
+  `RQ-CF-PRG-023` #5949 (`GETWORDCOUNT()`/`GETWORDNUM()` empty
+  delimiter); `RQ-CF-PRG-024` #5951 (`AT()`/`ATC()`/`ATCC()`/`RAT()`/
+  `RATC()` invalid occurrence); `RQ-CF-PRG-025` #5952 (`STRTRAN()` zero
+  occurrence controls); `RQ-CF-PRG-026` #5953/#5954 (`VAL()` leading
+  decimal and `SET POINT`, one shared row since both were fixed together
+  in the same scanner pass). No code or test behavior changed; full
+  local `ctest` re-run to confirm the docs-only change didn't disturb
+  the build.
+
 - 2026-09-14: Fixed #5910: `ADDBS()` treated either `/` or `\` as an
   already-present terminating separator, so `ADDBS('abc/')` returned
   `'abc/'` unchanged. Real VFP9 SP2's `ADDBS()` adds a backslash unless
