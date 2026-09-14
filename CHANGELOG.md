@@ -1,3 +1,72 @@
+- 2026-09-14: Partially fixed #6144 (left open, scope disclosed below):
+  a non-finite `Numeric` (IEEE infinity, reached via a valid VFP9
+  overflow like `EXP(1000)` -- not a catchable error) leaked the raw
+  C++ stream spelling `inf`/`-inf`/`nan` through pictureless
+  `TRANSFORM()`, a symbol-decorated `TRANSFORM()` picture (a grouping
+  comma combined with a numeric placeholder, and/or a decimal point --
+  the picture shapes this codebase's pre-existing symbol-picture branch
+  already recognized), and `STR()`'s default/explicit width. Real VFP9
+  SP2 keeps the VFP Numeric result contract and fills
+  the value's display width with asterisks instead -- the digit-only
+  picture path (`TRANSFORM(x,'999')`) already did this correctly before
+  this fix via `format_digit_only_numeric_picture()` (confirmed against
+  actual VFP9 output, retained differential evidence:
+  `~/temp/vfp9-probes/nonfinite-format-6143a/{main.prg,result.out}` and
+  `nonfinite-results-11.{prg,out}`).
+
+  Fixed in `src/runtime/prg_engine_string_functions.cpp`:
+  `format_value_for_display()`'s non-finite branch (previously an
+  unconditional `value_as_string(value)` delegation, the issue's cited
+  root cause) now fills the VFP9-evidenced default width -- 9 integer
+  digits + the active `SET DECIMALS` count + 1 decimal point + 1 sign
+  (13 under `DECIMALS=2`, matching the retained evidence exactly) --
+  with asterisks; `STR()`'s width handling now asterisk-fills for a
+  non-finite value using its own already-established default/explicit
+  width argument instead of stream-formatting "inf"/"nan" text; and the
+  symbol-decorated `TRANSFORM()` picture branch now fills the numeric
+  template mask with asterisks rather than streaming the raw double into
+  `apply_numeric_picture_symbols()`. A leading function-code prefix such
+  as `@B ` is excluded from that width. Currency-only pictures such as
+  `$999` bypassed this branch before the PR and remain tracked separately
+  by #6168.
+
+  Deliberately incomplete, disclosed rather than guessed at: real VFP9
+  SP2 uses a materially different, much wider default width (40, not
+  13) for overflow produced directly by an inline arithmetic expression
+  (`1E+308 * 1E+308`, `1E+308 + 1E+308`) rather than a function-call
+  result assigned to a variable -- both are non-finite the same way, but
+  VFP9's own numeric-expression width-propagation rules assign them
+  different default display widths. `PrgValue` carries no width/decimals
+  metadata at all, so reproducing that propagation would require
+  threading new tracking through the entire arithmetic engine -- a
+  materially larger architectural change, deferred rather than
+  attempted here. The symbol-decorated-picture fix is an extrapolation
+  of the independently-verified digit-only-picture convention, not
+  itself independently VFP9-probed. `value_as_string()` itself (used for
+  debug output and generic serialization boundaries per the issue's own
+  acceptance criteria) is intentionally untouched and still emits
+  `inf`/`-inf`/`nan` in those non-display contexts. Issue #6144 is left
+  open to track these gaps rather than closed on a partial fix. Negative
+  infinity is covered through `-EXP(1000)`. The supported PRG surface
+  rejects `0/0`, `1/0`, and invalid numeric-function domains before they
+  can produce NaN; Copperfin still preserves an IEEE NaN supplied through
+  an internal or interop boundary as a Numeric value and applies the same
+  asterisk containment at these VFP-facing display functions. A dedicated,
+  session-scoped PRG policy for preserving NaN, converting it to `.NULL.`,
+  or raising an error is tracked separately by #6210.
+
+  New `test_transform_and_str_render_numeric_overflow_as_asterisks`
+  covers pictureless `TRANSFORM(EXP(1000))` (13 asterisks), the
+  pre-existing digit-only-picture path as a non-regression check (3
+  asterisks, unchanged), a symbol-decorated picture and its `@B `-prefixed
+  counterpart (10 asterisks each), the corresponding negative-infinity
+  display paths, `STR()`'s default (10) and an explicit (20) width, and
+  direct internal/interoperable NaN vectors at the pictureless,
+  symbol-picture, and `STR()` display boundaries, all under `SET DECIMALS
+  TO 2`. Verified fail-then-pass against a reverted implementation. Added
+  `RQ-CF-PRG-032` to
+  `docs/32-recovered-requirements-traceability.md`.
+
 - 2026-09-14: Fixed #6146: `VAL()` collapsed every out-of-range parse
   result -- overflow (magnitude too large) and underflow (magnitude too
   small) alike -- to a silently returned `0.0` via

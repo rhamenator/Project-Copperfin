@@ -146,7 +146,7 @@ std::string format_value_for_display(
     if (value.kind == PrgValueKind::currency) {
         return apply_numeric_picture_symbols(value_as_string(value), true, false, set_callback);
     }
-    if (value.kind != PrgValueKind::number || !std::isfinite(value.number_value)) {
+    if (value.kind != PrgValueKind::number) {
         return value_as_string(value);
     }
 
@@ -154,6 +154,42 @@ std::string format_value_for_display(
     try {
         decimals = std::clamp(std::stoi(trim_copy(set_callback("DECIMALS"))), 0, 18);
     } catch (...) {
+    }
+
+    if (!std::isfinite(value.number_value)) {
+        // #6144: real VFP9 SP2 never exposes its own non-finite internal
+        // representation (IEEE infinity/NaN) as literal text -- it keeps
+        // the VFP Numeric result contract and fills the value's default
+        // (pictureless) display width with asterisks, the same
+        // convention format_digit_only_numeric_picture() already applies
+        // for an explicit digit-only picture. Real VFP9 SP2's default
+        // (unconstrained) Numeric-to-Character width is 9 integer digits
+        // + the active SET DECIMALS count + 1 for the decimal point + 1
+        // reserved for a sign -- e.g. 13 under DECIMALS=2 (confirmed
+        // against actual VFP9 output for TRANSFORM(EXP(1000)) assigned
+        // to a variable, retained differential evidence:
+        // ~/temp/vfp9-probes/nonfinite-format-6143a/{main.prg,result.out}).
+        //
+        // Real VFP9 SP2 uses a DIFFERENT, much wider default width for
+        // overflow produced directly by an inline arithmetic expression
+        // (TRANSFORM(1E+308 * 1E+308) and TRANSFORM(1E+308 + 1E+308)
+        // both use 40, not 13 -- retained differential evidence:
+        // ~/temp/vfp9-probes/nonfinite-results-11.{prg,out}), which
+        // reflects VFP9's own numeric-expression width-propagation rules
+        // (tracked per computed value, not derived solely from SET
+        // DECIMALS). Copperfin's PrgValue carries no width/decimals
+        // metadata at all, so reproducing that propagation would require
+        // threading new width/decimals tracking through the arithmetic
+        // engine -- a materially larger, deliberately deferred
+        // architectural change, disclosed explicitly rather than
+        // guessed at. This fix only targets the always-reachable,
+        // evidenced default-variable-width case above and
+        // unconditionally eliminates the "inf"/"-inf"/"nan" leak; it
+        // does not claim expression-width parity for every arithmetic
+        // overflow shape.
+        constexpr int kDefaultIntegerDigits = 9;
+        const std::size_t width = static_cast<std::size_t>(kDefaultIntegerDigits + decimals) + 2U;
+        return std::string(width, '*');
     }
 
     const std::string fixed_setting = normalize_identifier(trim_copy(set_callback("FIXED")));
@@ -994,6 +1030,18 @@ std::optional<PrgValue> evaluate_string_function(
                               : truncated_width < 0.0
                                     ? -1
                                     : static_cast<int>(truncated_width);
+        if (!std::isfinite(value_as_number(arguments[0]))) {
+            // #6144: real VFP9 SP2 never exposes the C++ stream spelling
+            // of a non-finite double ("inf"/"-inf"/"nan") -- it fills
+            // the requested (or default 10-character) width with
+            // asterisks instead, the same convention STR() already
+            // applies when an ordinary too-large finite value overflows
+            // its width below (confirmed against actual VFP9 output for
+            // STR(EXP(1000)), retained differential evidence:
+            // ~/temp/vfp9-probes/nonfinite-format-6143a/{main.prg,result.out}).
+            const std::size_t fill_width = width > 0 ? static_cast<std::size_t>(width) : 10U;
+            return make_string_value(std::string(fill_width, '*'));
+        }
         if (width > 0) {
             if (result.size() > static_cast<std::size_t>(width)) {
                 return make_string_value(std::string(static_cast<std::size_t>(width), '*'));
@@ -1032,22 +1080,48 @@ std::optional<PrgValue> evaluate_string_function(
                 const std::size_t decimal_pos = picture.find('.');
                 if (decimal_pos != std::string::npos ||
                     (picture.find(',') != std::string::npos && picture_has_numeric_placeholders(picture))) {
-                    std::size_t decimals = 0U;
-                    if (decimal_pos != std::string::npos) {
-                        for (std::size_t index = decimal_pos + 1U; index < picture.size(); ++index) {
-                            if (picture[index] == '9' || picture[index] == '#' || picture[index] == '0') {
-                                ++decimals;
+                    if (!std::isfinite(value_as_number(arguments[0]))) {
+                        // #6144: same "never leak inf/-inf/nan" policy
+                        // already verified for a bare digit-only picture
+                        // (format_digit_only_numeric_picture()), extended
+                        // to the symbol-picture shapes this branch already
+                        // recognizes (a numeric grouping comma and/or a
+                        // decimal point, optionally with a currency sign)
+                        // by filling the template width with asterisks
+                        // rather than streaming the raw double into
+                        // apply_numeric_picture_symbols(). Not
+                        // independently VFP9-probed for a symbol picture
+                        // specifically (only the digit-only and
+                        // pictureless cases have retained differential
+                        // evidence); this is a same-mechanism
+                        // extrapolation, disclosed as such.
+                        //
+                        // #6144 PR review (chatgpt-codex-connector, P2):
+                        // a leading function-code prefix (e.g. "@B ")
+                        // is not part of the rendered field and must be
+                        // excluded from the fill width, or a picture
+                        // like "@B 999,999.99" would wrongly asterisk-
+                        // fill the whole "@B 999,999.99" token instead
+                        // of just its "999,999.99" template mask.
+                        transformed = std::string(numeric_picture_template_mask(picture).size(), '*');
+                    } else {
+                        std::size_t decimals = 0U;
+                        if (decimal_pos != std::string::npos) {
+                            for (std::size_t index = decimal_pos + 1U; index < picture.size(); ++index) {
+                                if (picture[index] == '9' || picture[index] == '#' || picture[index] == '0') {
+                                    ++decimals;
+                                }
                             }
                         }
+                        std::ostringstream stream;
+                        stream.imbue(std::locale::classic());
+                        stream << std::fixed << std::setprecision(static_cast<int>(decimals)) << value_as_number(arguments[0]);
+                        transformed = apply_numeric_picture_symbols(
+                            stream.str(),
+                            picture.find(',') != std::string::npos,
+                            picture.find('$') != std::string::npos,
+                            set_callback);
                     }
-                    std::ostringstream stream;
-                    stream.imbue(std::locale::classic());
-                    stream << std::fixed << std::setprecision(static_cast<int>(decimals)) << value_as_number(arguments[0]);
-                    transformed = apply_numeric_picture_symbols(
-                        stream.str(),
-                        picture.find(',') != std::string::npos,
-                        picture.find('$') != std::string::npos,
-                        set_callback);
                 }
             }
         }
