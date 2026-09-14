@@ -1963,6 +1963,90 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_strtran_rejects_zero_occurrence_controls()
+    {
+        // #5952: STRTRAN()'s nStartOccurrence and nCount arguments both
+        // treat zero as invalid, while a negative value is a distinct,
+        // valid sentinel meaning "from/for all occurrences". Real VFP9
+        // SP2 raises catchable error 11 for STRTRAN('aaa','a','x',0) and
+        // STRTRAN('aaa','a','x',1,0), while STRTRAN('aaa','a','x',-1) and
+        // STRTRAN('aaa','a','x',1,-1) both succeed (confirmed against
+        // actual VFP9 output, retained differential evidence:
+        // /home/rich/temp/vfp9-probes/strtran-boundary-84.{prg,out}).
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_strtran_zero_occurrence";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "strtran_zero_occurrence.prg";
+        write_text(
+            main_path,
+            "PUBLIC nCapturedCode\n"
+            "PUBLIC nCapturedCount\n"
+            "PUBLIC cCapturedMessage\n"
+            "PUBLIC nAfterError\n"
+            "PUBLIC cStartNegative\n"
+            "PUBLIC cLimitNegative\n"
+            "nCapturedCode = 0\n"
+            "nCapturedCount = 0\n"
+            "cCapturedMessage = ''\n"
+            "nAfterError = 0\n"
+            "ON ERROR DO HandleStrtranError\n"
+            "cUnexpectedStart = STRTRAN('aaa', 'a', 'x', 0)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleStrtranError\n"
+            "cUnexpectedLimit = STRTRAN('aaa', 'a', 'x', 1, 0)\n"
+            "ON ERROR\n"
+            "cStartNegative = STRTRAN('aaa', 'a', 'x', -1)\n"
+            "cLimitNegative = STRTRAN('aaa', 'a', 'x', 1, -1)\n"
+            "nAfterError = 42\n"
+            "RETURN\n"
+            "PROCEDURE HandleStrtranError\n"
+            "nCapturedCount = nCapturedCount + 1\n"
+            "nCapturedCode = ERROR()\n"
+            "cCapturedMessage = MESSAGE()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "STRTRAN zero-occurrence script should recover through ON ERROR: " + state.message);
+
+        const auto code = state.globals.find("ncapturedcode");
+        expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "11",
+               "STRTRAN() with a zero nStartOccurrence or nCount should report VFP error 11");
+        const auto count = state.globals.find("ncapturedcount");
+        expect(count != state.globals.end() && copperfin::runtime::format_value(count->second) == "2",
+               "STRTRAN('aaa','a','x',0) and STRTRAN('aaa','a','x',1,0) should both report through ON ERROR");
+        const std::string captured_message = [&] {
+            const auto message = state.globals.find("ccapturedmessage");
+            return message == state.globals.end() ? std::string{}
+                                                    : copperfin::runtime::format_value(message->second);
+        }();
+        const auto catalog = copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+        const std::string expected_message = catalog.translate(
+            "Runtime.Prg.String.Error.InvalidOccurrence");
+        expect(captured_message == expected_message,
+               "STRTRAN zero-occurrence error should use the active locale's invalid-argument message");
+        const auto after_error = state.globals.find("naftererror");
+        expect(after_error != state.globals.end() && copperfin::runtime::format_value(after_error->second) == "42",
+               "STRTRAN zero-occurrence error should resume after its ON ERROR handler");
+
+        const auto start_negative = state.globals.find("cstartnegative");
+        expect(start_negative != state.globals.end() && copperfin::runtime::format_value(start_negative->second) == "xxx",
+               "STRTRAN('aaa','a','x',-1) should replace all occurrences, matching real VFP9's negative sentinel");
+        const auto limit_negative = state.globals.find("climitnegative");
+        expect(limit_negative != state.globals.end() && copperfin::runtime::format_value(limit_negative->second) == "xxx",
+               "STRTRAN('aaa','a','x',1,-1) should replace all occurrences, matching real VFP9's negative sentinel");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -2113,6 +2197,7 @@ int main()
     test_at_family_accepts_positive_subunit_occurrence();
     test_val_accepts_leading_decimal_point();
     test_val_respects_set_point_decimal_separator();
+    test_strtran_rejects_zero_occurrence_controls();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();

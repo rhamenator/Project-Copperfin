@@ -284,15 +284,43 @@ std::optional<PrgValue> evaluate_string_function(
         std::string src = value_as_string(arguments[0]);
         const std::string find = value_as_string(arguments[1]);
         const std::string repl = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
-        const std::size_t start_occurrence = arguments.size() >= 4U
-                                                 ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[3])))
-                                                 : 1U;
-        const double raw_occurrence_limit = arguments.size() >= 5U
-                                                 ? value_as_number(arguments[4])
-                                                 : -1.0;
-        const std::size_t occurrence_limit = raw_occurrence_limit < 0.0
-                                                 ? std::numeric_limits<std::size_t>::max()
-                                                 : static_cast<std::size_t>(raw_occurrence_limit);
+        // #5952: STRTRAN()'s nStartOccurrence and nCount arguments both
+        // treat zero as invalid (real VFP9 SP2 raises catchable error 11
+        // for STRTRAN('aaa','a','x',0) and STRTRAN('aaa','a','x',1,0)),
+        // while a negative value is a distinct, valid sentinel meaning
+        // "from/for all occurrences" (STRTRAN('aaa','a','x',-1) and
+        // STRTRAN('aaa','a','x',1,-1) both succeed) -- confirmed against
+        // actual VFP9 output (retained differential evidence:
+        // /home/rich/temp/vfp9-probes/strtran-boundary-84.{prg,out}). A
+        // fractional/non-finite value follows this codebase's existing
+        // occurrence-argument convention: a non-finite value is rejected,
+        // and a positive value below 1 still maps to occurrence 1.
+        std::size_t start_occurrence = 1U;
+        if (arguments.size() >= 4U) {
+            const double raw_start_occurrence = value_as_number(arguments[3]);
+            if (!std::isfinite(raw_start_occurrence)) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
+            }
+            if (raw_start_occurrence == 0.0) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
+            }
+            start_occurrence = raw_start_occurrence < 0.0
+                                    ? 1U
+                                    : static_cast<std::size_t>(std::max(1.0, raw_start_occurrence));
+        }
+        std::size_t occurrence_limit = std::numeric_limits<std::size_t>::max();
+        if (arguments.size() >= 5U) {
+            const double raw_occurrence_limit = value_as_number(arguments[4]);
+            if (!std::isfinite(raw_occurrence_limit)) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
+            }
+            if (raw_occurrence_limit == 0.0) {
+                throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"), 11);
+            }
+            occurrence_limit = raw_occurrence_limit < 0.0
+                                   ? std::numeric_limits<std::size_t>::max()
+                                   : static_cast<std::size_t>(std::max(1.0, raw_occurrence_limit));
+        }
         const std::size_t flags = arguments.size() >= 6U
                                       ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[5])))
                                       : 0U;

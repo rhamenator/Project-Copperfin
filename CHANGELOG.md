@@ -1,3 +1,30 @@
+- 2026-09-13: Fixed #5952 (found during the same review as
+  #5899/#5900/#5928/#5946/#5948/#5949/#5951/#5953/#5954): `STRTRAN()`'s
+  `nStartOccurrence` and `nCount` arguments both silently accepted zero
+  instead of raising an error. Real VFP9 SP2 raises catchable error 11
+  for `STRTRAN('aaa','a','x',0)` and `STRTRAN('aaa','a','x',1,0)`, while
+  a negative value is a distinct, valid sentinel meaning "from/for all
+  occurrences" -- `STRTRAN('aaa','a','x',-1)` and
+  `STRTRAN('aaa','a','x',1,-1)` both succeed and replace every match
+  (confirmed against actual VFP9 output, retained differential evidence:
+  `/home/rich/temp/vfp9-probes/strtran-boundary-84.{prg,out}`). The
+  implementation clamped `nStartOccurrence` with `std::max(1.0, ...)`,
+  silently turning zero into occurrence 1, and converted a zero `nCount`
+  straight to `size_t(0)`; neither path validated VFP's disallowed zero
+  value.
+
+  Both arguments now reject a zero or non-finite value with error 11
+  before conversion. A negative value keeps its existing sentinel
+  meaning (`nStartOccurrence` clamps to 1, `nCount` becomes unbounded).
+  A positive fractional value below 1 still maps to 1, matching this
+  codebase's existing occurrence-argument convention (see #5951's
+  review-round fix).
+
+  New `test_strtran_rejects_zero_occurrence_controls` covers the
+  issue's four differential vectors (zero and negative for both
+  arguments), modeled on the existing `AT()`-family `ON ERROR` capture
+  pattern. Verified fail-then-pass against a reverted implementation.
+
 - 2026-09-13: Fixed #5953 and #5954 (`VAL()`'s numeric scanner, found
   during the same review as #5899/#5900/#5928/#5946/#5948/#5949/#5951):
   `VAL()` scanned for an integer digit before ever checking for a
