@@ -3034,6 +3034,7 @@
   "Runtime.Prg.String.Error.InvalidCharacterCode": "El valor, tipo o cantidad del argumento de la función no es válido.",
   "Runtime.Prg.String.Error.InvalidOccurrence": "El valor, tipo o cantidad del argumento de la función no es válido.",
   "Runtime.Prg.String.Error.InvalidStrWidth": "El valor, tipo o cantidad del argumento de la función no es válido.",
+  "Runtime.Prg.String.Error.NumericOverflow": "Desbordamiento numérico.",
   "Runtime.Prg.String.Error.StringTooLong": "La cadena es demasiado larga para caber.",
   "Studio.EditMenu": "\u0026Editar",
   "Studio.ProjectMenu": "\u0026Proyecto",
