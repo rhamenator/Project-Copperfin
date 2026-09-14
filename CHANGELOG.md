@@ -16,6 +16,24 @@
   acceptance criteria. Verified fail-then-pass against a reverted
   implementation.
 
+  Review round (`copilot-pull-request-reviewer`, the first review from
+  GitHub Copilot this project has received): (1) the original regression
+  test only called `evaluate_path_function()` directly, bypassing the
+  PRG expression parser/dispatch path, so a wiring or packaging
+  regression could still pass; added matching `cAddbs*` vectors to the
+  existing `test_portable_path_expression_functions` PRG script so
+  `ADDBS()` is now verified through both paths, per #5910's own
+  acceptance criteria. (2) flagged a missing row in
+  `docs/32-recovered-requirements-traceability.md`. Investigation showed
+  none of this doc's 84 prior rows, nor any of the small single-function
+  VFP-compatibility fixes merged this session, added one at this
+  granularity -- a real policy question, put to the repository owner,
+  who chose to adopt formal traceability rows going forward for every
+  compatibility fix (including a retroactive catch-up pass for fixes
+  already merged this session). Added `RQ-CF-PRG-020` for `ADDBS()`.
+  Verified fail-then-pass for the new PRG-parser-path coverage
+  specifically, not just the original direct-call coverage.
+
 - 2026-09-13: Fixed #5952 (found during the same review as
   #5899/#5900/#5928/#5946/#5948/#5949/#5951/#5953/#5954): `STRTRAN()`'s
   `nStartOccurrence` and `nCount` arguments both silently accepted zero
