@@ -1888,6 +1888,7 @@
   "Vfp.DbfTable.Error.OpaqueValueInvalid": "Los campos opacos/binarios requieren texto sin procesar que quepa en el ancho del campo o una carga hexadecimal con prefijo 0x.",
   "Vfp.DbfTable.Error.OpenTableFailed": "No se pudo abrir el archivo de tabla.",
   "Vfp.DbfTable.Error.RecordDataTruncated": "Los datos del registro estan truncados.",
+  "Vfp.DbfTable.Error.RecordCountLimitReached": "La tabla ya contiene el numero maximo de registros; no se pueden agregar mas registros.",
   "Vfp.DbfTable.Error.RecordFieldCountMismatch": "La cantidad de campos del registro debe coincidir con el esquema DBF.",
   "Vfp.DbfTable.Error.RecordIndexOutOfRange": "El indice del registro esta fuera de rango.",
   "Vfp.DbfTable.Error.RecordLayoutExceedsSize": "El diseno de campos de la tabla excede el tamano del registro.",

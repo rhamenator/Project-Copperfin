@@ -1888,6 +1888,7 @@
   "Vfp.DbfTable.Error.OpaqueValueInvalid": "Opaque/binary fields require either raw text that fits the field width or a 0x-prefixed hex payload.",
   "Vfp.DbfTable.Error.OpenTableFailed": "Unable to open table file.",
   "Vfp.DbfTable.Error.RecordDataTruncated": "Record data is truncated.",
+  "Vfp.DbfTable.Error.RecordCountLimitReached": "Table already contains the maximum number of records; no more records can be appended.",
   "Vfp.DbfTable.Error.RecordFieldCountMismatch": "Record field counts must match the DBF schema.",
   "Vfp.DbfTable.Error.RecordIndexOutOfRange": "Record index is out of range.",
   "Vfp.DbfTable.Error.RecordLayoutExceedsSize": "Table field layout exceeds the record size.",

@@ -1,3 +1,35 @@
+- 2026-09-14: Fixed #6086 (safety): appending a blank record to a DBF
+  whose 32-bit record count was already `UINT32_MAX` wrapped the count
+  to zero -- the append wrote the new record and EOF marker, reported
+  success, and published header count `0`, making every existing record
+  logically disappear (the bytes remain physically present, but any
+  reader trusting the header count sees an empty table). A controlled
+  sparse-file probe confirmed `append_blank_record_to_file()` on such a
+  table returns `ok=1 count=0`, with the file's physical size unchanged
+  (retained evidence: `~/temp/copperfin-dbf-record-count-wrap/`). Both
+  single-record append implementations
+  (`append_blank_record_bytes()`/whole-file path,
+  `append_blank_record_to_file_targeted()`/fast targeted-I/O path)
+  incremented `header.record_count` with plain unsigned addition and no
+  limit check. The batch append path
+  (`stage_dbf_raw_record_appends()`) already had a correct overflow
+  guard and needed no change.
+
+  Fixed by rejecting the append before any write when
+  `header.record_count == UINT32_MAX`, in both single-record paths, with
+  a new localized `Vfp.DbfTable.Error.RecordCountLimitReached` error
+  (added to all four locale catalogs).
+
+  New `test_dbf_append_rejects_record_count_at_uint32_max` reproduces
+  the retained probe's exact structurally-minimal sparse-file
+  construction (header_length=33, record_length=1, no field
+  descriptors) to exercise the ~4GB logical boundary without real disk
+  I/O (sparse `fs::resize_file`, ~8s total test time), covering both the
+  `UINT32_MAX` rejection (and that the file is left byte-identical) and
+  a `UINT32_MAX - 1` append still succeeding and reaching exactly the
+  limit. Verified fail-then-pass against a reverted implementation.
+  Added `RQ-CF-PRG-028` to `docs/32-recovered-requirements-traceability.md`.
+
 - 2026-09-14: Fixed #6060: `FWRITE()` and `FPUTS()` clamped a negative
   `nCharacters`/optional count argument to zero before truncating the
   write payload, so `FWRITE(h, 'abc', -1)` silently wrote nothing and

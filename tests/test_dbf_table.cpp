@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #if defined(_WIN32)
 #include <process.h>
 #else
@@ -2839,6 +2840,81 @@ void test_dbf_header_record_count_exceeds_file_size_is_rejected() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_dbf_append_rejects_record_count_at_uint32_max() {
+    // #6086: appending to a DBF whose 32-bit record count is already
+    // UINT32_MAX must be rejected before any write -- incrementing it
+    // would silently wrap to zero, making every existing record
+    // disappear from the header's point of view while leaving their
+    // bytes physically present. Mirrors the exact structurally-minimal
+    // sparse-file construction used to confirm the original bug
+    // (retained probe: ~/temp/copperfin-dbf-record-count-wrap/):
+    // header_length=33 (no field descriptors), record_length=1
+    // (deletion marker only), sparse logical file size covering the
+    // declared record region, so the boundary can be exercised without
+    // gigabytes of real disk I/O.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_record_count_wrap_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto make_sparse_table = [&](const fs::path& table_path, std::uint32_t record_count) {
+        constexpr std::uint16_t header_length = 33U;
+        constexpr std::uint16_t record_length = 1U;
+        std::vector<std::uint8_t> header_bytes(header_length, 0U);
+        header_bytes[0] = 0x30U;
+        write_le_u32(header_bytes, 4U, record_count);
+        write_le_u16(header_bytes, 8U, header_length);
+        write_le_u16(header_bytes, 10U, record_length);
+        header_bytes[32] = 0x0DU;
+        {
+            std::ofstream output(table_path, std::ios::binary);
+            output.write(reinterpret_cast<const char*>(header_bytes.data()),
+                         static_cast<std::streamsize>(header_bytes.size()));
+        }
+        const std::uintmax_t insert_offset =
+            static_cast<std::uintmax_t>(header_length) +
+            static_cast<std::uintmax_t>(record_count) * record_length;
+        std::error_code resize_error;
+        fs::resize_file(table_path, insert_offset + 1U, resize_error);
+        expect(!resize_error, "sparse DBF fixture should resize without error");
+        std::fstream io(table_path, std::ios::binary | std::ios::in | std::ios::out);
+        io.seekp(static_cast<std::streamoff>(insert_offset));
+        const char eof_marker = static_cast<char>(0x1A);
+        io.write(&eof_marker, 1);
+    };
+
+    // Boundary: record_count already at UINT32_MAX -- must be rejected,
+    // and the file must be left byte-identical.
+    const fs::path max_path = temp_dir / "max.dbf";
+    make_sparse_table(max_path, std::numeric_limits<std::uint32_t>::max());
+    std::error_code before_size_error;
+    const std::uintmax_t before_size = fs::file_size(max_path, before_size_error);
+    const auto max_result = copperfin::vfp::append_blank_record_to_file(max_path.string());
+    expect(!max_result.ok,
+           "#6086: appending to a table at UINT32_MAX records must be rejected, not wrap to zero");
+    expect(max_result.record_count == std::numeric_limits<std::uint32_t>::max(),
+           "#6086: a rejected append must report the original record count, not a wrapped one");
+    std::error_code after_size_error;
+    const std::uintmax_t after_size = fs::file_size(max_path, after_size_error);
+    expect(before_size == after_size,
+           "#6086: a rejected append must leave the DBF byte-identical (no size change)");
+
+    // One below the boundary: record_count at UINT32_MAX - 1 -- must
+    // still succeed and reach exactly UINT32_MAX, proving the guard
+    // doesn't reject a legitimate near-boundary append.
+    const fs::path near_max_path = temp_dir / "near_max.dbf";
+    make_sparse_table(near_max_path, std::numeric_limits<std::uint32_t>::max() - 1U);
+    const auto near_max_result = copperfin::vfp::append_blank_record_to_file(near_max_path.string());
+    expect(near_max_result.ok,
+           "#6086: appending one record below the limit should still succeed");
+    expect(near_max_result.record_count == std::numeric_limits<std::uint32_t>::max(),
+           "#6086: the one-below-limit append should reach exactly UINT32_MAX, not wrap");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_dbf_field_descriptor_count_exceeds_header_size_is_rejected() {
     // GAP-02: descriptor parsing must honor header_length and not consume
     // descriptor-shaped bytes beyond the declared header boundary.
@@ -3764,6 +3840,7 @@ int main(int argc, char* argv[]) {
     test_replace_field_value_accepts_null_token_for_nonstring_types();
     test_varchar_and_varbinary_field_round_trip();
     test_dbf_header_record_count_exceeds_file_size_is_rejected();
+    test_dbf_append_rejects_record_count_at_uint32_max();
     test_dbf_field_descriptor_count_exceeds_header_size_is_rejected();
     test_dbf_record_width_mismatch_field_sum_is_rejected();
     test_dbf_table_record_value_errors_resolve_through_localization_catalog();
