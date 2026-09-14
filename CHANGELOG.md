@@ -1,3 +1,43 @@
+- 2026-09-14: Fixed #6060: `FWRITE()` and `FPUTS()` clamped a negative
+  `nCharacters`/optional count argument to zero before truncating the
+  write payload, so `FWRITE(h, 'abc', -1)` silently wrote nothing and
+  returned `0`. Real VFP9 SP2 treats a negative count as a write-all
+  sentinel -- `FWRITE(h, 'abc', -1)` writes all 3 bytes and returns `3`,
+  the same as omitting the count entirely, while `FWRITE(h, 'abc', 0)`
+  writes nothing and a positive fractional count truncates toward zero
+  (`FWRITE(h, 'abc', 0.9)` also writes nothing) (confirmed against
+  actual VFP9 output, retained differential evidence:
+  `/home/rich/temp/vfp9-probes/fwrite-count-6060/` and
+  `fputs-negative-6060/`). `FPUTS()` has the identical count-normalization
+  bug and, per the issue's own acceptance criteria, gets the same fix
+  here; its separate CRLF-vs-LF terminator divergence (#5887/#5911) is
+  untouched.
+
+  Fixed by only truncating for a finite, non-negative count (truncated
+  toward zero via `std::trunc`); a negative or non-finite (including
+  `+`/`-Infinity`) count leaves the complete expression to be written,
+  avoiding a narrowing cast on a value that can't be represented as a
+  `size_t`.
+
+  New `test_fwrite_fputs_negative_count_writes_everything` covers
+  omitted, zero, negative, and fractional counts for `FWRITE()` plus the
+  negative case for `FPUTS()`; verified fail-then-pass against a reverted
+  implementation. Added `RQ-CF-PRG-027` to
+  `docs/32-recovered-requirements-traceability.md`.
+
+  Review round (`copilot-pull-request-reviewer`): the first version of
+  this fix checked `std::isfinite(raw_count) && raw_count >= 0.0`, then
+  narrowed the truncated count straight to `std::size_t` before the
+  `requested < text.size()` bounds check that was meant to protect it --
+  a finite double vastly exceeding `SIZE_MAX` (e.g. `1e308`) still
+  triggers undefined behavior on that cast. Fixed by comparing the
+  truncated count against `text.size()` in `double` precision first,
+  only narrowing to `size_t` once confirmed smaller (and therefore
+  always representable), in both the `FWRITE()` and `FPUTS()` branches.
+  New `FWRITE(h, 'abc', 1e308)` vector added to the same test; verified
+  fail-then-pass by reverting to the unguarded cast and running it under
+  a memory cap and timeout for safety.
+
 - 2026-09-14: Documentation only: retroactive traceability catch-up for
   six VFP-compatibility fixes merged before the traceability policy
   established by #5910's review round (see that entry below) took
