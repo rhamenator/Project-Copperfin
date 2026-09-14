@@ -1,3 +1,67 @@
+- 2026-09-14: Fixed #6139: `TTOC()`'s documented second-argument
+  formatting mode only checked for an explicit `1` (sortable
+  `YYYYMMDDHHMMSS`), so the reported mode `2` (time-only, honoring `SET
+  HOURS`/`SET SECONDS` like `TIME()`) silently fell through to the same
+  ordinary date/time display as an omitted argument. Investigating the
+  same retained evidence the issue cited revealed a second, unreported
+  divergence in the SAME check: real VFP9 SP2 treats *any* explicitly
+  provided second argument other than `2` (0 and `-1` both verified,
+  not just `1`) as requesting the sortable form -- so an explicit `0`
+  or `-1` was also silently falling through to the ordinary display.
+  The identical pattern exists in the sibling `DTOC()` (any explicit
+  argument, not just `1`, requests the sortable date form) (confirmed
+  against actual VFP9 output, retained differential evidence:
+  `/home/rich/temp/vfp9-probes/dtoc-ttoc-flags-6139e/{prg,out}`:
+  `DTOC(d,0)=DTOC(d,1)=DTOC(d,-1)="20240304"`;
+  `TTOC(dt,0)=TTOC(dt,1)=TTOC(dt,-1)="20240304050607"` but
+  `TTOC(dt,2)="05:06:07 AM"`).
+
+  Fixed both `DTOC()` and `TTOC()` in
+  `src/runtime/prg_engine_date_time_functions.cpp` to distinguish "an
+  argument was explicitly provided" from "the provided argument equals
+  1" -- any explicit argument now requests the sortable form for
+  `DTOC()`, and any explicit argument other than `2` requests it for
+  `TTOC()` (reusing the existing `format_runtime_time_for_set()` helper,
+  already used by `TIME()`, for mode 2's time-only output). An omitted
+  argument keeps returning the normal `SET DATE`/`SET MARK`-formatted
+  display for both functions.
+
+  New `test_dtoc_ttoc_explicit_format_flags_match_vfp9` covers all
+  vectors from the retained evidence (`DTOC`/`TTOC` with explicit `0`,
+  `1`, `-1`, `TTOC` with `2`, and `TTOC` omitted) under `SET DATE TO
+  YMD`/`SET MARK TO '-'`/`SET CENTURY ON`/`SET HOURS TO 12`/`SET
+  SECONDS ON`. Verified fail-then-pass against a reverted
+  implementation (confirmed the previously-correct explicit-`1` cases
+  still passed on the reverted code, isolating exactly which vectors
+  were the real regression). Added `RQ-CF-PRG-030` to
+  `docs/32-recovered-requirements-traceability.md`.
+
+  Review round (`chatgpt-codex-connector` P2, `copilot-pull-request-reviewer`):
+  (1) the mode-2 check used `std::llround` (round-half-away-from-zero)
+  on the raw argument, so a fractional value like `1.5` -- which only
+  this codebase's own contract, not literal `2`, made special -- rounded
+  up to `2` and was wrongly classed as time-only instead of sortable.
+  Fixed by comparing the raw numeric argument directly against `2.0`
+  instead of rounding it first; new `TTOC(dt, 1.5)`/`TTOC(dt, 2.4)`
+  vectors verify both now correctly return the sortable form, and
+  fail-then-pass confirmed the reverted rounding logic actually
+  misclassifies `1.5`. (2) mode 2 was only tested under one `SET
+  HOURS`/`SET SECONDS` combination; added assertions under all four
+  combinations (12/24-hour × seconds on/off), matching the coverage the
+  existing plain-`TTOC()` test already has elsewhere in this file. Also
+  added a `DTOC()`-omitted-argument vector. (3) two findings raised
+  genuine gaps this fix does **not** close, disclosed explicitly rather
+  than guessed at or silently absorbed: typed-empty `DateTime` values
+  (e.g. `TTOC({}, 1)`) still fall through to an empty string instead of
+  VFP9's fixed-width zero-filled convention -- this is already tracked
+  comprehensively (not just for this issue's mode-2 scope) by the
+  separate, still-open #5998, so left to that issue rather than
+  duplicated here; and this fix has no retained VFP9 evidence for what
+  a non-numeric or otherwise "unsupported" second-argument type should
+  do, so that specific sub-case remains unverified rather than assumed.
+  `RQ-CF-PRG-030` is not a claim of full acceptance-criteria coverage
+  for #6139 -- see its own Exceptions column for both disclosed gaps.
+
 - 2026-09-14: Fixed #6127 (safety, partial -- see below): a memo write
   computed its target FPT block offset and allocation size directly
   from the sidecar's own `next_free_block`/`block_size` header fields,

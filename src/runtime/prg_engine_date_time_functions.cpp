@@ -1003,8 +1003,16 @@ std::optional<PrgValue> evaluate_date_time_function(
         int year = 0;
         int month = 0;
         int day = 0;
+        // #6139: real VFP9 SP2 treats *any explicitly provided* second
+        // argument (0, 1, or -1 all verified) as requesting the
+        // unseparated sortable form, and only a fully omitted argument
+        // as requesting the normal SET DATE/SET MARK-formatted display
+        // -- not just an explicit 1, as previously checked (confirmed
+        // against actual VFP9 output, retained differential evidence:
+        // /home/rich/temp/vfp9-probes/dtoc-ttoc-flags-6139e/{prg,out},
+        // which also motivated the sibling TTOC() fix below).
         if (parse_date_value_for_set(arguments[0], year, month, day, set_callback)) {
-            if (arguments.size() >= 2U && static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1) {
+            if (arguments.size() >= 2U) {
                 return make_string_value(format_sortable_date(year, month, day));
             }
             return make_string_value(format_runtime_date_for_set(year, month, day, set_callback));
@@ -1018,14 +1026,45 @@ std::optional<PrgValue> evaluate_date_time_function(
         int hour = 0;
         int minute = 0;
         int second = 0;
+        // #6139: real VFP9 SP2 treats *any explicitly provided* second
+        // argument other than 2 (0 and 1 both verified) as requesting
+        // the unseparated sortable YYYYMMDDHHMMSS form -- only an
+        // explicit 2 requests time-only output (honoring SET HOURS/SET
+        // SECONDS like TIME()), and only a fully omitted argument
+        // requests the normal date/time display. The previous
+        // implementation checked only for an explicit 1, so both an
+        // explicit non-1/non-2 value (0, -1, confirmed) and the actually
+        // reported mode 2 silently fell through to the same ordinary
+        // date/time output as an omitted argument (confirmed against
+        // actual VFP9 output, retained differential evidence:
+        // /home/rich/temp/vfp9-probes/dtoc-ttoc-flags-6139e/{prg,out}:
+        // TTOC(dt,0)=TTOC(dt,1)=TTOC(dt,-1)="20240304050607" but
+        // TTOC(dt,2)="05:06:07 AM").
+        // Review round (chatgpt-codex-connector, P2): only an explicit
+        // argument of exactly 2 is documented as special -- comparing
+        // via std::llround (round-half-away-from-zero) wrongly classed
+        // a fractional value like 1.5 as mode 2 (1.5 rounds up to 2),
+        // even though this codebase's own contract says every value
+        // other than exactly 2 produces the sortable form. Compare the
+        // raw numeric argument directly against 2.0 instead of rounding
+        // it first.
+        const bool has_format_argument = arguments.size() >= 2U;
+        const double raw_format_argument = has_format_argument ? value_as_number(arguments[1]) : 0.0;
+        const bool is_time_only_mode = has_format_argument && raw_format_argument == 2.0;
         if (parse_datetime_value_for_set(arguments[0], year, month, day, hour, minute, second, set_callback)) {
-            if (arguments.size() >= 2U && static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1) {
+            if (is_time_only_mode) {
+                return make_string_value(format_runtime_time_for_set(hour, minute, second, set_callback));
+            }
+            if (has_format_argument) {
                 return make_string_value(format_sortable_datetime(year, month, day, hour, minute, second));
             }
             return make_string_value(format_runtime_datetime_for_set(year, month, day, hour, minute, second, set_callback));
         }
         if (parse_date_value_for_set(arguments[0], year, month, day, set_callback)) {
-            if (arguments.size() >= 2U && static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1) {
+            if (is_time_only_mode) {
+                return make_string_value(format_runtime_time_for_set(0, 0, 0, set_callback));
+            }
+            if (has_format_argument) {
                 return make_string_value(format_sortable_datetime(year, month, day, 0, 0, 0));
             }
             return make_string_value(format_runtime_datetime_for_set(year, month, day, 0, 0, 0, set_callback));
