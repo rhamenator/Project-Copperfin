@@ -705,7 +705,15 @@ namespace
         check("display_group", "12.345,6789");
         check("fixed_after", "ON");
         check("display_fixed", "1,5000");
-        check("currency_display_transform", "1.234,5678");
+        // #5954: this literal uses '.' as its decimal point, but SET
+        // POINT TO ',' is active at this point in the script, so real
+        // VFP9 SP2 stops parsing at the '.' (treating it as the
+        // alternate/terminating character, not a decimal separator) and
+        // returns 1234 rather than 1234.5678 -- confirmed against actual
+        // VFP9 output. This test previously asserted the fractional
+        // digits survived, which baked in VAL()'s pre-fix bug of always
+        // treating '.' as the decimal separator regardless of SET POINT.
+        check("currency_display_transform", "1.234,0000");
         check("point_reset", ".");
 
         for (const char *name : {"rand_seeded", "rand_next"})
@@ -1858,6 +1866,103 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_val_accepts_leading_decimal_point()
+    {
+        // #5953: VAL() scanned for an integer digit before ever checking
+        // for a decimal point and returned 0 immediately when none was
+        // found, making the leading-decimal branch unreachable for
+        // '.5', '-.5', '+.5', '.5e2', and '$.5'. Real VFP9 SP2 parses a
+        // decimal point followed by at least one digit as a valid
+        // fractional value even without an integer portion (confirmed
+        // against actual VFP9 output, retained differential evidence:
+        // /home/rich/temp/vfp9-probes/val-leading-decimal-87.{prg,out}).
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_val_leading_decimal";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "val_leading_decimal.prg";
+        write_text(
+            main_path,
+            "nPlainLeadingDecimal = VAL('.5')\n"
+            "nNegativeLeadingDecimal = VAL('-.5')\n"
+            "nPositiveLeadingDecimal = VAL('+.5')\n"
+            "nExponentLeadingDecimal = VAL('.5e2')\n"
+            "nCurrencyLeadingDecimal = VAL('$.5')\n"
+            "nBareDot = VAL('.')\n"
+            "nNonNumeric = VAL('abc')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "VAL leading-decimal script should complete: " + state.message);
+
+        const auto check = [&](const char* name, const char* expected) {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end() && copperfin::runtime::format_value(it->second) == expected,
+                   std::string("VAL leading-decimal: ") + name + " expected " + expected);
+        };
+        check("nplainleadingdecimal", "0.5");
+        check("nnegativeleadingdecimal", "-0.5");
+        check("npositiveleadingdecimal", "0.5");
+        check("nexponentleadingdecimal", "50");
+        check("ncurrencyleadingdecimal", "0.5000");
+        check("nbaredot", "0");
+        check("nnonnumeric", "0");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_val_respects_set_point_decimal_separator()
+    {
+        // #5954: VAL() hard-coded '.' as its only decimal separator and
+        // never consulted SET POINT, so localized numeric text parsed
+        // with the wrong magnitude after SET POINT TO ','. Real VFP9 SP2
+        // parses the configured POINT character as the decimal separator
+        // and stops at the alternate character (confirmed against actual
+        // VFP9 output, retained differential evidence:
+        // /home/rich/temp/vfp9-probes/val-set-point-89.{prg,out}).
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_val_set_point";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "val_set_point.prg";
+        write_text(
+            main_path,
+            "nBeforeComma = VAL('1,5')\n"
+            "nBeforeDot = VAL('1.5')\n"
+            "SET POINT TO ','\n"
+            "nCommaAsPoint = VAL('1,5')\n"
+            "nDotStopsAtComma = VAL('1.5')\n"
+            "nCurrencyCommaAsPoint = VAL('$1,5')\n"
+            "SET POINT TO\n"
+            "nRestoredDot = VAL('1.5')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "VAL SET-POINT script should complete: " + state.message);
+
+        const auto check = [&](const char* name, const char* expected) {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end() && copperfin::runtime::format_value(it->second) == expected,
+                   std::string("VAL SET POINT: ") + name + " expected " + expected);
+        };
+        check("nbeforecomma", "1");
+        check("nbeforedot", "1.5");
+        check("ncommaaspoint", "1.5");
+        check("ndotstopsatcomma", "1");
+        check("ncurrencycommaaspoint", "1.5000");
+        check("nrestoreddot", "1.5");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -2006,6 +2111,8 @@ int main()
     test_getword_functions_handle_empty_delimiter();
     test_at_family_rejects_invalid_occurrence();
     test_at_family_accepts_positive_subunit_occurrence();
+    test_val_accepts_leading_decimal_point();
+    test_val_respects_set_point_decimal_separator();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();

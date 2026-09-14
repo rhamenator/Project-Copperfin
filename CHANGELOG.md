@@ -1,3 +1,38 @@
+- 2026-09-13: Fixed #5953 and #5954 (`VAL()`'s numeric scanner, found
+  during the same review as #5899/#5900/#5928/#5946/#5948/#5949/#5951):
+  `VAL()` scanned for an integer digit before ever checking for a
+  decimal point and returned 0 immediately when none was found, making
+  its leading-decimal branch unreachable for inputs like `.5`, `-.5`,
+  `+.5`, `.5e2`, and `$.5` (#5953). Separately, `VAL()` hard-coded `.`
+  as its only decimal separator and never consulted `SET POINT`, so
+  after `SET POINT TO ','` a string like `'1,5'` still parsed as 1
+  instead of 1.5, and `'1.5'` kept parsing past the `.` instead of
+  stopping there (#5954). Both confirmed against actual VFP9 SP2 output
+  (retained differential evidence:
+  `/home/rich/temp/vfp9-probes/val-leading-decimal-87.{prg,out}` and
+  `val-set-point-89.{prg,out}`). #5954 itself asked that its fix "apply
+  the same rule ... to leading-decimal inputs tracked by #5953", so both
+  were fixed together in the same scanner pass.
+
+  The scanner now tracks whether it found integer digits and, if a
+  decimal point (the active `SET POINT` character, reusing the existing
+  `set_symbol()` helper, default `.`) is followed by at least one digit,
+  accepts that as a valid fractional value even without an integer
+  portion. Text with neither integer nor fractional digits still returns
+  0. Because `parse_currency_scaled_value()`/`try_parse_invariant_double()`
+  expect an invariant `.` separator, the scanned substring is normalized
+  (the found `SET POINT` character replaced with `.`) before delegating
+  to them.
+
+  New `test_val_accepts_leading_decimal_point` and
+  `test_val_respects_set_point_decimal_separator` cover the vectors from
+  both issues. A pre-existing assertion in
+  `test_prg_engine_string_math_functions` baked in the old bug: it set
+  `SET POINT TO ','` and then checked that `VAL('$1234.5678')` (a
+  literal using `.`) still kept its fractional digits — real VFP9 stops
+  at the `.` there and returns 1234, corrected accordingly. Verified
+  fail-then-pass against a reverted implementation.
+
 - 2026-09-13: Fixed #5951 (found during the same review as
   #5899/#5900/#5928/#5946/#5948/#5949): `AT()`, `ATC()`, `ATCC()`,
   `RAT()`, and `RATC()` clamped a zero, negative, or non-finite
