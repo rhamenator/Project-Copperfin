@@ -26,11 +26,14 @@
 
   New `test_val_accepts_leading_decimal_point` and
   `test_val_respects_set_point_decimal_separator` cover the vectors from
-  both issues. A pre-existing assertion in
-  `test_prg_engine_string_math_functions` baked in the old bug: it set
+  both issues. Two pre-existing assertions, in
+  `test_prg_engine_string_math_functions` and (found by the full local
+  suite after the initial fix)
+  `test_prg_engine_control_flow_control_flow_basics`'s
+  `test_print_command_emits_event`, baked in the old bug: both set
   `SET POINT TO ','` and then checked that `VAL('$1234.5678')` (a
   literal using `.`) still kept its fractional digits — real VFP9 stops
-  at the `.` there and returns 1234, corrected accordingly. Verified
+  at the `.` there and returns 1234, both corrected accordingly. Verified
   fail-then-pass against a reverted implementation.
 
 - 2026-09-13: Fixed #5951 (found during the same review as
