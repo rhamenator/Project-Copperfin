@@ -1272,10 +1272,18 @@ void test_print_command_emits_event() {
     });
     expect(has_grouped, "SET SEPARATOR should format grouped print output");
 
+    // #5954: this literal uses '.' as its decimal point, but SET POINT TO
+    // ',' is active here, so real VFP9 SP2 stops parsing VAL() at the '.'
+    // (it's the alternate/terminating character, not a decimal separator
+    // once SET POINT is ',') and returns 1234 rather than 1234.5678 --
+    // confirmed against actual VFP9 output. This assertion previously
+    // expected the fractional digits to survive, which baked in VAL()'s
+    // pre-fix bug of always treating '.' as the decimal separator
+    // regardless of SET POINT.
     const bool has_currency = std::any_of(state.events.begin(), state.events.end(), [](const copperfin::runtime::RuntimeEvent& ev) {
-        return ev.category == "runtime.print" && ev.detail == "1.234,5678";
+        return ev.category == "runtime.print" && ev.detail == "1.234,0000";
     });
-    expect(has_currency, "#4914: SET POINT should format Currency print output without losing scaled digits");
+    expect(has_currency, "#4914/#5954: SET POINT should format Currency print output, and VAL() should stop at '.' once SET POINT is ','");
 
     fs::remove_all(temp_root, ignored);
 }

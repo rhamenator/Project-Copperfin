@@ -352,18 +352,42 @@ std::optional<PrgValue> evaluate_string_function(
         if (numeric_end < src.size() && (src[numeric_end] == '+' || src[numeric_end] == '-')) {
             ++numeric_end;
         }
+        // #5954: VAL() consults the active SET POINT character as its
+        // decimal separator rather than hard-coding '.', so localized
+        // numeric text (e.g. after SET POINT TO ',') parses with the
+        // configured separator and stops at the alternate character,
+        // matching real VFP9 SP2 (confirmed against actual VFP9 output,
+        // retained differential evidence:
+        // /home/rich/temp/vfp9-probes/val-set-point-89.{prg,out}).
+        const std::string point_symbol = set_symbol(set_callback, "POINT", ".");
+        const char decimal_point = point_symbol.empty() ? '.' : point_symbol.front();
+
         const std::size_t integer_start = numeric_end;
         while (numeric_end < src.size() && std::isdigit(static_cast<unsigned char>(src[numeric_end]))) {
             ++numeric_end;
         }
-        if (numeric_end == integer_start) {
-            return currency ? make_currency_value(0) : make_number_value(0.0);
-        }
-        if (numeric_end < src.size() && src[numeric_end] == '.') {
-            ++numeric_end;
-            while (numeric_end < src.size() && std::isdigit(static_cast<unsigned char>(src[numeric_end]))) {
-                ++numeric_end;
+        const bool has_integer_digits = numeric_end > integer_start;
+
+        // #5953: a decimal point followed by at least one digit is a
+        // valid numeric token even when the integer portion is omitted
+        // (e.g. VAL('.5')). Real VFP9 SP2 parses this as 0.5 rather than
+        // silently returning 0 (confirmed against actual VFP9 output,
+        // retained differential evidence:
+        // /home/rich/temp/vfp9-probes/val-leading-decimal-87.{prg,out}).
+        bool has_fraction_digits = false;
+        if (numeric_end < src.size() && src[numeric_end] == decimal_point) {
+            const std::size_t fraction_start = numeric_end + 1U;
+            std::size_t fraction_end = fraction_start;
+            while (fraction_end < src.size() && std::isdigit(static_cast<unsigned char>(src[fraction_end]))) {
+                ++fraction_end;
             }
+            has_fraction_digits = fraction_end > fraction_start;
+            if (has_integer_digits || has_fraction_digits) {
+                numeric_end = fraction_end;
+            }
+        }
+        if (!has_integer_digits && !has_fraction_digits) {
+            return currency ? make_currency_value(0) : make_number_value(0.0);
         }
         if (numeric_end < src.size() && (src[numeric_end] == 'E' || src[numeric_end] == 'e')) {
             const std::size_t exponent_start = numeric_end;
@@ -380,7 +404,17 @@ std::optional<PrgValue> evaluate_string_function(
             }
         }
         double result = 0.0;
-        const std::string numeric_text = src.substr(numeric_start, numeric_end - numeric_start);
+        std::string numeric_text = src.substr(numeric_start, numeric_end - numeric_start);
+        if (decimal_point != '.') {
+            // parse_currency_scaled_value()/try_parse_invariant_double()
+            // both expect an invariant '.' decimal separator; the scan
+            // above already used the configured SET POINT character to
+            // find the boundary, so normalize it before delegating.
+            const auto point_pos = numeric_text.find(decimal_point);
+            if (point_pos != std::string::npos) {
+                numeric_text[point_pos] = '.';
+            }
+        }
         if (currency) {
             return make_currency_value(parse_currency_scaled_value(numeric_text).value_or(0));
         }
