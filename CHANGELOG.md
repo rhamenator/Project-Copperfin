@@ -1,3 +1,90 @@
+- 2026-09-14: Fixed #6127 (safety, partial -- see below): a memo write
+  computed its target FPT block offset and allocation size directly
+  from the sidecar's own `next_free_block`/`block_size` header fields,
+  with no sanity check. A crafted or corrupt 512-byte FPT with
+  `next_free_block=0xFFFFFFFF` and `block_size=0xFFFF` made a one-byte
+  memo write (`replace_record_field_value('memo.dbf', 0, 'NOTE', 'x')`)
+  compute a ~256 TiB target size, which an unconditional
+  `std::vector::resize()` then attempted to allocate, throwing an
+  uncaught `std::bad_alloc` (confirmed against a focused external
+  harness with a 256 MiB address-space limit, retained evidence:
+  `~/temp/copperfin-fpt-next-free-6127/` and
+  `~/temp/vfp9-probes/fpt-next-free-6127/`). The DBF/FPT remained
+  unchanged only because allocation failed before publication; a
+  runtime `REPLACE` reaching the same path terminated the whole PRG run.
+
+  Fixed in the single shared helper both this and every other
+  memo-producing path call
+  (`write_memo_field_bytes()` in `src/vfp/dbf_table.cpp`): the target
+  size is now computed in a fixed-width 64-bit type (not `size_t`,
+  which can be 32-bit, so the multiplication itself can't silently
+  wrap) and rejected with a new localized
+  `Vfp.DbfTable.Error.MemoAllocationExceedsLimit` error *before* ever
+  resizing, when it would exceed a generous 2 GiB ceiling -- a
+  well-established real-world FPT/memo practical file-size limit for
+  the classic FoxPro/dBASE format's 32-bit-oriented file APIs, not a
+  value freshly boundary-probed against real VFP9 in this session.
+
+  New `test_memo_write_rejects_hostile_fpt_allocation_header`
+  reproduces the exact reported header/trigger and confirms rejection
+  with the DBF/FPT left byte-identical. Verified fail-then-pass: the
+  reverted implementation was confirmed to actually crash with an
+  uncaught `std::bad_alloc` under a bounded `ulimit -v`/`timeout`
+  safety net (not just theorized), then the fix confirmed to prevent it
+  cleanly. Added `RQ-CF-PRG-029` to
+  `docs/32-recovered-requirements-traceability.md` (product-safety
+  sourced, not VFP9-differential).
+
+  **This is a deliberately partial fix**, not the issue's full
+  acceptance criteria: it closes the specific reported allocation
+  vulnerability (and, by fixing the one shared helper, every caller of
+  `write_memo_field_bytes()`) but does not attempt the issue's much
+  broader ask -- checked arithmetic and injected-allocation-failure
+  testing throughout every adjacent memo/FPT code path, configurable
+  limits, full atomicity guarantees across PACK/import/visual-asset
+  edits, or exhaustive `std::bad_alloc`/`std::length_error`/filesystem-
+  exception containment at every public mutation boundary. Left open
+  with a comment detailing what's fixed vs. deferred, per this
+  session's established partial-fix precedent (see #5681/#5682).
+
+  Review round (`chatgpt-codex-connector` P1, `copilot-pull-request-reviewer`):
+  (1) a fixed 2 GiB ceiling alone doesn't prevent `std::bad_alloc` in
+  every environment -- a crafted header can still request an allocation
+  (e.g. exactly 256 MiB via `block_size=512`,
+  `next_free_block=524287`) that passes any reasonable ceiling yet
+  still exceeds a more memory-constrained caller's actual available
+  memory, reproducing the same uncaught crash the ceiling was meant to
+  prevent. Fixed by also wrapping the `resize()` call itself in
+  `try`/`catch` for `std::bad_alloc` and `std::length_error`,
+  converting either into the same structured error; the ceiling remains
+  as a cheap fast-path rejection for obviously-absurd requests without
+  even attempting an allocation. Manually verified with a standalone
+  probe reproducing this exact counter-example under
+  `ulimit -v 262144` (256 MiB): the ceiling-only version still crashed
+  with an uncaught `std::bad_alloc` exactly as predicted, and the
+  `try`/`catch` version now returns a clean structured failure. This
+  specific verification is not automated-`ctest`-covered -- portably
+  constraining a process's own memory from within a cross-platform test
+  binary (Windows/Linux/macOS) isn't practical, so it's documented here
+  as a manual/standalone verification rather than claimed as covered by
+  the regression suite, matching how the #6086 review round was honest
+  about a fixture's actual proof boundary. (2) the first version of
+  this fix still narrowed `required_blocks` to `std::uint32_t` *before*
+  the 64-bit ceiling check ran, so an accepted `block_size=1` with a
+  payload near `UINT32_MAX` bytes could wrap `required_blocks` first,
+  letting a too-small allocation pass the check while the later
+  `resize()`/`copy()` used a buffer smaller than the real payload -- a
+  genuine memory-safety bug, not just a stricter denial-of-service.
+  Fixed by keeping every intermediate value (`required_bytes`,
+  `required_blocks`, `block_offset`, `new_total_size`) in a fixed-width
+  `uint64_t` from the first computation through the ceiling check,
+  narrowing to `size_t` only afterward. Verified by code inspection
+  and reasoning rather than an executed adversarial-scale test:
+  constructing a real multi-gigabyte in-memory payload solely to
+  trigger this specific wrap is impractical, for the same reason the
+  `#6086` review round declined to build a real multi-gigabyte test
+  fixture.
+
 - 2026-09-14: Fixed #6086 (safety): appending a blank record to a DBF
   whose 32-bit record count was already `UINT32_MAX` wrapped the count
   to zero -- the append wrote the new record and EOF marker, reported

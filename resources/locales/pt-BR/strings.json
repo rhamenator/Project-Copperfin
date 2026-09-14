@@ -1882,6 +1882,7 @@
   "Vfp.DbfTable.Error.LegacyDbaseReadOnly": "As tabelas da familia dBASE sao somente leitura; a modificacao nao e suportada.",
   "Vfp.DbfTable.Error.LegacyFoxproReadOnly": "As tabelas da familia FoxBASE/FoxPro sao somente leitura; a modificacao nao e suportada.",
   "Vfp.DbfTable.Error.MemoSidecarPathMissing": "Nao foi possivel inferir um caminho de arquivo complementar de memo para a tabela.",
+  "Vfp.DbfTable.Error.MemoAllocationExceedsLimit": "A alocacao do arquivo auxiliar de memo excede o limite de tamanho de arquivo suportado.",
   "Vfp.DbfTable.Error.MemoFieldWidthTooSmall": "Campos Memo exigem largura de pelo menos 4 bytes.",
   "Vfp.DbfTable.Error.ReadMemoPayloadFailed": "Nao foi possivel recuperar a carga util de memo do arquivo complementar.",
   "Vfp.DbfTable.Error.NumericValueTooLarge": "O valor numerico ({valueLength} caracteres) e grande demais para o campo {fieldName} ({fieldLength} caracteres de largura) no registro {recordNumber} de {path}. Valor: {valuePreview}",
