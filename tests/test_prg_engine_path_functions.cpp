@@ -108,6 +108,17 @@ namespace
             "cForcedEmptySourcePath = FORCEPATH('', 'D:/generated')\n"
             "cForcedBothEmptyPath = FORCEPATH('', '')\n"
             "cCurrentDir = CURDIR()\n"
+            // #5910: run ADDBS() through the real PRG expression
+            // parser/dispatch, not just a direct evaluate_path_function()
+            // call, so a wiring or packaging regression cannot pass
+            // coverage that only exercises the underlying C++ helper.
+            "cAddbsEmpty = ADDBS('')\n"
+            "cAddbsPlain = ADDBS('abc')\n"
+            "cAddbsTrailingSlash = ADDBS('abc/')\n"
+            "cAddbsTrailingBackslash = ADDBS('abc\\')\n"
+            "cAddbsDriveLetter = ADDBS('C:')\n"
+            "cAddbsDriveRoot = ADDBS('C:\\')\n"
+            "cAddbsUnc = ADDBS('\\\\server\\share')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -638,6 +649,58 @@ namespace
                    "CURDIR should expose the runtime working directory");
         }
 
+        // #5910: ADDBS() vectors run through the real PRG parser/dispatch
+        // path (see the script above), not just a direct C++ call, per
+        // #5910's own acceptance criteria that direct expressions,
+        // generated artifacts, and runtime package execution must agree.
+        // Confirmed against actual VFP9 output (retained differential
+        // evidence: /home/rich/temp/vfp9-probes/addbs-contract-36.{prg,out}).
+        const auto addbs_empty = state.globals.find("caddbsempty");
+        const auto addbs_plain = state.globals.find("caddbsplain");
+        const auto addbs_trailing_slash = state.globals.find("caddbstrailingslash");
+        const auto addbs_trailing_backslash = state.globals.find("caddbstrailingbackslash");
+        const auto addbs_drive_letter = state.globals.find("caddbsdriveletter");
+        const auto addbs_drive_root = state.globals.find("caddbsdriveroot");
+        const auto addbs_unc = state.globals.find("caddbsunc");
+        if (addbs_empty != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(addbs_empty->second).empty(),
+                   "#5910: ADDBS('') should remain empty through the PRG parser/dispatch path");
+        }
+        if (addbs_plain != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(addbs_plain->second) == "abc\\",
+                   "#5910: ADDBS('abc') should append a backslash through the PRG parser/dispatch path");
+        }
+        if (addbs_trailing_slash != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(addbs_trailing_slash->second) == "abc/\\",
+                   "#5910: ADDBS('abc/') should append a backslash -- a trailing forward slash is not a "
+                   "terminating separator in real VFP9, through the PRG parser/dispatch path");
+        }
+        if (addbs_trailing_backslash != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(addbs_trailing_backslash->second) == "abc\\",
+                   "#5910: ADDBS('abc\\\\') should leave an existing trailing backslash unchanged through the "
+                   "PRG parser/dispatch path");
+        }
+        if (addbs_drive_letter != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(addbs_drive_letter->second) == "C:\\",
+                   "#5910: ADDBS('C:') should append a backslash through the PRG parser/dispatch path");
+        }
+        if (addbs_drive_root != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(addbs_drive_root->second) == "C:\\",
+                   "#5910: ADDBS('C:\\\\') should leave an existing drive-root backslash unchanged through the "
+                   "PRG parser/dispatch path");
+        }
+        if (addbs_unc != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(addbs_unc->second) == "\\\\server\\share\\",
+                   "#5910: ADDBS() on a UNC path should append a backslash through the PRG parser/dispatch path");
+        }
+
         fs::remove_all(temp_root, ignored);
     }
 
@@ -683,6 +746,36 @@ namespace
     }
 #endif
 
+    void test_addbs_matches_vfp9_trailing_separator_contract()
+    {
+        // #5910: real VFP9 SP2's ADDBS() adds a backslash unless the
+        // nonempty input already ends in a backslash -- a trailing
+        // forward slash does NOT satisfy that contract. Confirmed
+        // against actual VFP9 output (retained differential evidence:
+        // /home/rich/temp/vfp9-probes/addbs-contract-36.{prg,out}):
+        // ADDBS('')='', ADDBS('abc')='abc\', ADDBS('abc/')='abc/\',
+        // ADDBS('C:')='C:\', ADDBS('C:\')='C:\' (unchanged).
+        const auto addbs = [](const std::string& input) {
+            copperfin::runtime::PrgValue argument;
+            argument.kind = copperfin::runtime::PrgValueKind::string;
+            argument.string_value = input;
+            const auto result = copperfin::runtime::evaluate_path_function("addbs", {argument}, {});
+            return result.has_value() ? result->string_value : std::string{"<no result>"};
+        };
+
+        expect(addbs("") == "", "ADDBS('') should remain empty");
+        expect(addbs("abc") == "abc\\", "ADDBS('abc') should append a backslash");
+        expect(addbs("abc/") == "abc/\\",
+               "ADDBS('abc/') should append a backslash -- a trailing forward slash is not a "
+               "terminating separator in real VFP9");
+        expect(addbs("abc\\") == "abc\\", "ADDBS('abc\\\\') should leave an existing trailing backslash unchanged");
+        expect(addbs("C:") == "C:\\", "ADDBS('C:') should append a backslash to a bare drive letter");
+        expect(addbs("C:\\") == "C:\\", "ADDBS('C:\\\\') should leave an existing drive-root backslash unchanged");
+        expect(addbs("\\\\server\\share") == "\\\\server\\share\\",
+               "ADDBS() on a UNC path should append a backslash when missing");
+        expect(addbs("\\\\server\\share/") == "\\\\server\\share/\\",
+               "ADDBS() on a UNC path ending in a forward slash should still append a backslash");
+    }
 
 } // namespace
 
@@ -692,6 +785,7 @@ int main()
 #if !defined(_WIN32)
     test_fullpath_handles_unavailable_current_directory();
 #endif
+    test_addbs_matches_vfp9_trailing_separator_contract();
 
     if (test_failures() != 0)
     {
