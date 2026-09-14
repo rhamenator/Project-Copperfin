@@ -44,6 +44,43 @@
   session -- disclosed as an explicit gap in that row rather than
   claimed as directly evidenced.
 
+  Review round: the original overflow-vs-underflow classification for a
+  `try_parse_invariant_double()` range failure looked only at the
+  explicit exponent's sign, which is mathematically insufficient (e.g.
+  400 significant digits followed by a small negative exponent is still
+  overflow; many leading fraction zeros followed by a small positive
+  exponent is still underflow). Replaced with an effective-exponent
+  computation: locate the first significant (non-zero) digit across the
+  token's integer/fraction digit runs as literally written, take its
+  base-10 place value, and add the (saturating-parsed) explicit
+  exponent; the result classifies as overflow when `>= 0`, underflow
+  when `< 0` -- correct because a range failure can only occur once the
+  true effective exponent is already far outside the representable
+  double range in one direction or the other. A review comment also
+  flagged that the exponent-scanning block still runs unconditionally
+  for Currency-prefixed input, contradicting the VFP9 contract
+  documented by open issue #5996 (`VAL('$1E3')` should stop at `E` and
+  return Currency `1.0000`, not consume the exponent and return
+  `1000.0000`). Verified via `git diff` against this fix's own parent
+  commit that the exponent-scan block's gating condition was already
+  unconditional *before* this change -- this fix only added tracking
+  logic inside that pre-existing block, so the Currency-exponent-grammar
+  gap predates this PR and is not introduced by it. Left unfixed here
+  and explicitly disclosed rather than folded into this PR's scope: it
+  remains tracked by #5996, whose own acceptance criteria contemplates a
+  possible explicit compatibility-mode control rather than a trivial
+  gate, making it a separate, larger design decision. This PR's own test
+  vectors are unaffected (the Currency-overflow vector uses pure digits,
+  no exponent notation). The weak `lVal1e307Ok`/`lValUnderflowOk`
+  dummy-boolean assertions (which passed even if the accepted boundary
+  values returned the wrong magnitude) were replaced with direct
+  comparisons against the raw parsed `PrgValue.number_value` field
+  within a tight relative tolerance -- not `format_value()`, which was
+  independently found to invoke undefined behavior
+  (`std::llround()` overflow) for Number values at this magnitude, a
+  separate pre-existing bug filed as #6157 and left unfixed here (out of
+  this PR's scope).
+
 - 2026-09-14: Fixed #6139: `TTOC()`'s documented second-argument
   formatting mode only checked for an explicit `1` (sortable
   `YYYYMMDDHHMMSS`), so the reported mode `2` (time-only, honoring `SET

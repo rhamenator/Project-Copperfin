@@ -395,6 +395,7 @@ std::optional<PrgValue> evaluate_string_function(
             ++numeric_end;
         }
         const bool has_integer_digits = numeric_end > integer_start;
+        const std::size_t integer_digits_end = numeric_end;
 
         // #5953: a decimal point followed by at least one digit is a
         // valid numeric token even when the integer portion is omitted
@@ -403,26 +404,31 @@ std::optional<PrgValue> evaluate_string_function(
         // retained differential evidence:
         // /home/rich/temp/vfp9-probes/val-leading-decimal-87.{prg,out}).
         bool has_fraction_digits = false;
+        std::size_t fraction_digits_start = 0;
+        std::size_t fraction_digits_end = 0;
         if (numeric_end < src.size() && src[numeric_end] == decimal_point) {
-            const std::size_t fraction_start = numeric_end + 1U;
-            std::size_t fraction_end = fraction_start;
-            while (fraction_end < src.size() && std::isdigit(static_cast<unsigned char>(src[fraction_end]))) {
-                ++fraction_end;
+            fraction_digits_start = numeric_end + 1U;
+            fraction_digits_end = fraction_digits_start;
+            while (fraction_digits_end < src.size() && std::isdigit(static_cast<unsigned char>(src[fraction_digits_end]))) {
+                ++fraction_digits_end;
             }
-            has_fraction_digits = fraction_end > fraction_start;
+            has_fraction_digits = fraction_digits_end > fraction_digits_start;
             if (has_integer_digits || has_fraction_digits) {
-                numeric_end = fraction_end;
+                numeric_end = fraction_digits_end;
             }
         }
         if (!has_integer_digits && !has_fraction_digits) {
             return currency ? make_currency_value(0) : make_number_value(0.0);
         }
-        // #6146: track whether the exponent (if any) is negative, so a
-        // parse failure below (outside the full IEEE-754 double range)
-        // can be classified as overflow (huge positive exponent) versus
-        // underflow (very negative exponent) -- both fail
-        // try_parse_invariant_double() identically otherwise.
+        // #6146: capture the explicit exponent's sign and digit span (if
+        // any) so a parse failure below (outside the full IEEE-754
+        // double range) can be classified as overflow versus underflow
+        // by combining it with the mantissa's own significant-digit
+        // place value -- see the effective-exponent computation below.
+        bool has_explicit_exponent = false;
         bool exponent_is_negative = false;
+        std::size_t exponent_digits_start = 0;
+        std::size_t exponent_digits_end = 0;
         if (numeric_end < src.size() && (src[numeric_end] == 'E' || src[numeric_end] == 'e')) {
             const std::size_t exponent_start = numeric_end;
             ++numeric_end;
@@ -430,11 +436,13 @@ std::optional<PrgValue> evaluate_string_function(
                 exponent_is_negative = src[numeric_end] == '-';
                 ++numeric_end;
             }
-            const std::size_t exponent_digits_start = numeric_end;
+            exponent_digits_start = numeric_end;
             while (numeric_end < src.size() && std::isdigit(static_cast<unsigned char>(src[numeric_end]))) {
                 ++numeric_end;
             }
-            if (numeric_end == exponent_digits_start) {
+            exponent_digits_end = numeric_end;
+            has_explicit_exponent = exponent_digits_end > exponent_digits_start;
+            if (!has_explicit_exponent) {
                 numeric_end = exponent_start;
                 exponent_is_negative = false;
             }
@@ -495,9 +503,58 @@ std::optional<PrgValue> evaluate_string_function(
         // above, so a parse failure here can only be an IEEE-double
         // range failure: overflow (huge magnitude) or underflow
         // (magnitude too small to represent, including subnormals).
-        // Only a negative exponent can drive this grammar's magnitude
-        // toward zero.
-        if (!exponent_is_negative) {
+        // #6146 review: the explicit exponent's sign alone is NOT
+        // sufficient to classify this -- a long run of significant
+        // digits (e.g. 400 nines) combined with a small/negative
+        // explicit exponent can still overflow, and a long run of
+        // leading fraction zeros combined with a small/positive
+        // explicit exponent can still underflow. Instead, find the
+        // first significant (non-zero) digit in the mantissa as
+        // literally written and compute ITS base-10 place value, then
+        // add the explicit exponent to get the token's true effective
+        // exponent.
+        std::size_t first_significant_place = 0;
+        bool has_significant_digit = false;
+        for (std::size_t i = integer_start; i < integer_digits_end; ++i) {
+            if (src[i] != '0') {
+                first_significant_place = integer_digits_end - 1U - i;
+                has_significant_digit = true;
+                break;
+            }
+        }
+        long long effective_exponent = 0;
+        if (has_significant_digit) {
+            effective_exponent = static_cast<long long>(first_significant_place);
+        } else if (has_fraction_digits) {
+            for (std::size_t i = fraction_digits_start; i < fraction_digits_end; ++i) {
+                if (src[i] != '0') {
+                    effective_exponent = -(static_cast<long long>(i - fraction_digits_start) + 1);
+                    has_significant_digit = true;
+                    break;
+                }
+            }
+        }
+        if (!has_significant_digit) {
+            // Every mantissa digit is zero (e.g. "0.000...0E999"): the
+            // value is exactly zero regardless of the exponent, not an
+            // overflow or underflow.
+            return make_number_value(0.0);
+        }
+        if (has_explicit_exponent) {
+            // Saturate rather than overflow this accumulator for a
+            // pathologically long exponent digit run -- any value this
+            // large already puts the effective exponent far outside
+            // both the overflow and underflow thresholds either way.
+            long long explicit_exponent = 0;
+            for (std::size_t i = exponent_digits_start; i < exponent_digits_end && explicit_exponent < 1'000'000; ++i) {
+                explicit_exponent = explicit_exponent * 10 + (src[i] - '0');
+            }
+            if (explicit_exponent > 1'000'000) {
+                explicit_exponent = 1'000'000;
+            }
+            effective_exponent += exponent_is_negative ? -explicit_exponent : explicit_exponent;
+        }
+        if (effective_exponent >= 0) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.String.Error.NumericOverflow"), 39);
         }
         return make_number_value(0.0);

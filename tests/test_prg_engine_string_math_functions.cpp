@@ -1985,8 +1985,17 @@ namespace
         fs::create_directories(temp_root);
 
         const fs::path main_path = temp_root / "val_numeric_overflow.prg";
-        write_text(
-            main_path,
+        // #6146 review: the classification of a range-failing parse must
+        // use the token's true effective exponent (first significant
+        // digit's place value plus the explicit exponent), not the
+        // explicit exponent's sign alone -- these two adversarial
+        // vectors decouple the two: 400 significant digits with a small
+        // negative exponent is still overflow, and 400 leading fraction
+        // zeros with a small positive exponent is still underflow. A
+        // sign-only heuristic misclassifies both.
+        const std::string adversarial_overflow_digits(400U, '9');
+        const std::string adversarial_underflow_zeros(400U, '0');
+        std::string script =
             "PUBLIC nCapturedCount\n"
             "PUBLIC nCapturedCode\n"
             "PUBLIC cCapturedMessage\n"
@@ -2000,10 +2009,9 @@ namespace
             // here would fault the whole script and fail this test via
             // its completion check.
             "nVal1e307 = VAL('1E307')\n"
-            "lVal1e307Ok = .T.\n"
             "nValNeg1e308Underflow = VAL('1E-308')\n"
-            "lValUnderflowOk = .T.\n"
             "nValExtremeUnderflow = VAL('1E-999')\n"
+            "nValAdversarialUnderflow = VAL('0." + adversarial_underflow_zeros + "1E1')\n"
             "ON ERROR DO HandleValOverflowError\n"
             "nUnexpected1 = VAL('1E308')\n"
             "ON ERROR\n"
@@ -2028,6 +2036,9 @@ namespace
             "ON ERROR DO HandleValOverflowError\n"
             "nUnexpected8 = VAL('$99999999999999999999')\n"
             "ON ERROR\n"
+            "ON ERROR DO HandleValOverflowError\n"
+            "nUnexpected9 = VAL('" + adversarial_overflow_digits + "E-1')\n"
+            "ON ERROR\n"
             "nAfterError = 42\n"
             "RETURN\n"
             "PROCEDURE HandleValOverflowError\n"
@@ -2035,7 +2046,8 @@ namespace
             "nCapturedCode = ERROR()\n"
             "cCapturedMessage = MESSAGE()\n"
             "RETURN\n"
-            "ENDPROC\n");
+            "ENDPROC\n";
+        write_text(main_path, script);
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -2048,10 +2060,36 @@ namespace
             expect(it != state.globals.end() && copperfin::runtime::format_value(it->second) == expected,
                    std::string("VAL numeric overflow: ") + name + " expected " + expected);
         };
-        check("lval1e307ok", "true");
-        check("lvalunderflowok", "true");
+        // #6146 review: assert the accepted boundary values' actual
+        // parsed magnitude, not merely that no error was raised.
+        // format_value()/value_as_string() is unsuitable here -- its
+        // "is this basically an integer" heuristic
+        // (std::abs(x - std::round(x)) < 0.000001) is true for any
+        // finite double at this magnitude (doubles lose sub-integer
+        // precision long before 1E307), which routes it into
+        // std::llround(), an operation whose result is undefined
+        // behavior once the rounded value exceeds a 64-bit integer's
+        // range -- a separate, pre-existing formatting defect (filed
+        // as its own issue) unrelated to VAL()'s own overflow/underflow
+        // detection under test here. Comparing the raw PrgValue field
+        // directly sidesteps that unrelated bug entirely.
+        const auto check_numeric_close = [&](const char* name, double expected_value) {
+            const auto it = state.globals.find(name);
+            const bool found = it != state.globals.end()
+                && it->second.kind == copperfin::runtime::PrgValueKind::number;
+            const double actual = found ? it->second.number_value : 0.0;
+            const double relative_error = found
+                ? std::fabs(actual - expected_value) / std::fabs(expected_value)
+                : std::numeric_limits<double>::infinity();
+            expect(found && relative_error < 1e-9,
+                   std::string("VAL numeric overflow: ") + name + " expected a Number near "
+                       + std::to_string(expected_value));
+        };
+        check_numeric_close("nval1e307", 1e307);
+        check_numeric_close("nvalneg1e308underflow", 1e-308);
         check("nvalextremeunderflow", "0");
-        check("ncapturedcount", "8");
+        check("nvaladversarialunderflow", "0");
+        check("ncapturedcount", "9");
         check("ncapturedcode", "39");
         check("naftererror", "42");
         const auto message = state.globals.find("ccapturedmessage");
