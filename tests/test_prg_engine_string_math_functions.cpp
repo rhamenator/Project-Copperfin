@@ -2099,6 +2099,71 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_transform_and_str_render_numeric_overflow_as_asterisks()
+    {
+        // #6144: a non-finite Numeric (IEEE infinity, reached via
+        // EXP(1000) -- a valid VFP9 Numeric overflow, not a catchable
+        // error) leaked the raw C++ stream spelling "inf"/"-inf"/"nan"
+        // through TRANSFORM()'s pictureless path and STR()'s default/
+        // explicit-width path. Real VFP9 SP2 keeps the VFP Numeric
+        // result contract and fills the value's display width with
+        // asterisks instead (confirmed against actual VFP9 output,
+        // retained differential evidence:
+        // /home/rich/temp/vfp9-probes/nonfinite-format-6143a/
+        // {main.prg,result.out}). TRANSFORM() with a digit-only picture
+        // ('999') already handled this correctly before this fix
+        // (format_digit_only_numeric_picture() already asterisk-fills
+        // non-finite values) and is included here as a non-regression
+        // check, not a new behavior.
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_nonfinite_display";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "nonfinite_display.prg";
+        write_text(
+            main_path,
+            "PUBLIC cTransformPictureless\n"
+            "PUBLIC cTransformDigitPicture\n"
+            "PUBLIC cTransformSymbolPicture\n"
+            "PUBLIC cStrDefault\n"
+            "PUBLIC cStrExplicitWidth\n"
+            "SET DECIMALS TO 2\n"
+            "nOverflow = EXP(1000)\n"
+            "cTransformPictureless = TRANSFORM(nOverflow)\n"
+            "cTransformDigitPicture = TRANSFORM(nOverflow, '999')\n"
+            "cTransformSymbolPicture = TRANSFORM(nOverflow, '999,999.99')\n"
+            "cStrDefault = STR(nOverflow)\n"
+            "cStrExplicitWidth = STR(nOverflow, 20)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "Numeric-overflow display script should complete without faulting: " + state.message);
+
+        const auto check = [&](const char* name, const char* expected) {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end() && copperfin::runtime::format_value(it->second) == expected,
+                   std::string("Numeric overflow display: ") + name + " expected " + expected);
+        };
+        // 9 default integer digits + DECIMALS(2) + 1 decimal point + 1
+        // sign = 13, matching the retained VFP9 evidence exactly for a
+        // function-call result assigned to a variable. VFP9's width for
+        // overflow produced directly by an inline arithmetic expression
+        // (e.g. 1E+308 * 1E+308) differs (40, not 13) and is a disclosed,
+        // deliberately deferred gap -- not covered by this test.
+        check("ctransformpictureless", "*************");
+        check("ctransformdigitpicture", "***");
+        check("ctransformsymbolpicture", "**********");
+        check("cstrdefault", "**********");
+        check("cstrexplicitwidth", "********************");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_strtran_rejects_zero_occurrence_controls()
     {
         // #5952: STRTRAN()'s nStartOccurrence and nCount arguments both
@@ -2334,6 +2399,7 @@ int main()
     test_val_accepts_leading_decimal_point();
     test_val_respects_set_point_decimal_separator();
     test_val_raises_numeric_overflow_for_out_of_range_magnitudes();
+    test_transform_and_str_render_numeric_overflow_as_asterisks();
     test_strtran_rejects_zero_occurrence_controls();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
