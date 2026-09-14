@@ -386,6 +386,75 @@ void test_unicode_paths_survive_prg_file_io_and_includes()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_fwrite_fputs_negative_count_writes_everything()
+{
+    // #6060: real VFP9 SP2 treats a negative nCharacters as a write-all
+    // sentinel for FWRITE() and FPUTS(), not zero -- FWRITE(h, 'abc', -1)
+    // writes all 3 bytes and returns 3, the same as omitting the count
+    // entirely; FWRITE(h, 'abc', 0) writes nothing; and a positive
+    // fractional count truncates toward zero (0.9 also writes nothing)
+    // (confirmed against actual VFP9 output, retained differential
+    // evidence: /home/rich/temp/vfp9-probes/fwrite-count-6060/ and
+    // fputs-negative-6060/). FPUTS()'s CRLF-vs-LF terminator divergence
+    // is a separate, already-tracked issue (#5887/#5911) and is not
+    // covered by this test.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_fwrite_fputs_negative_count";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "negative_count.prg";
+    write_text(
+        main_path,
+        "hOmit = FCREATE('omit.bin')\n"
+        "nOmit = FWRITE(hOmit, 'abc')\n"
+        "=FCLOSE(hOmit)\n"
+        "cOmit = FILETOSTR('omit.bin')\n"
+        "hZero = FCREATE('zero.bin')\n"
+        "nZero = FWRITE(hZero, 'abc', 0)\n"
+        "=FCLOSE(hZero)\n"
+        "cZero = FILETOSTR('zero.bin')\n"
+        "hNeg = FCREATE('neg.bin')\n"
+        "nNeg = FWRITE(hNeg, 'abc', -1)\n"
+        "=FCLOSE(hNeg)\n"
+        "cNeg = FILETOSTR('neg.bin')\n"
+        "hFrac = FCREATE('frac.bin')\n"
+        "nFrac = FWRITE(hFrac, 'abc', 0.9)\n"
+        "=FCLOSE(hFrac)\n"
+        "cFrac = FILETOSTR('frac.bin')\n"
+        "hPutsNeg = FCREATE('puts_neg.bin')\n"
+        "nPutsNeg = FPUTS(hPutsNeg, 'abc', -1)\n"
+        "=FCLOSE(hPutsNeg)\n"
+        "cPutsNeg = FILETOSTR('puts_neg.bin')\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FWRITE/FPUTS negative-count script should complete: " + state.message);
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " variable should be present for negative-count test");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " should equal '" + expected + "' for negative-count test");
+        }
+    };
+    check("nomit", "3");
+    check("comit", "abc");
+    check("nzero", "0");
+    check("czero", "");
+    check("nneg", "3");
+    check("cneg", "abc");
+    check("nfrac", "0");
+    check("cfrac", "");
+    check("nputsneg", "4");
+    check("cputsneg", "abc\n");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 } // namespace
 
 int main()
@@ -394,6 +463,7 @@ int main()
     test_fdate_ftime_runtime_functions();
     test_fcreate_runtime_function();
     test_unicode_paths_survive_prg_file_io_and_includes();
+    test_fwrite_fputs_negative_count_writes_everything();
 
     if (test_failures() != 0)
     {

@@ -457,9 +457,24 @@ std::optional<PrgValue> evaluate_file_io_function(
 
         std::string text = value_as_string(arguments[1]);
         if (arguments.size() >= 3U) {
-            const std::size_t requested = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])));
-            if (requested < text.size()) {
-                text.resize(requested);
+            // #6060: real VFP9 SP2 treats a negative nCharacters as a
+            // write-all sentinel, not zero -- FWRITE(h, 'abc', -1) writes
+            // all 3 bytes and returns 3, the same as omitting the count
+            // entirely, while FWRITE(h, 'abc', 0) writes nothing and a
+            // positive fractional count truncates toward zero
+            // (FWRITE(h, 'abc', 0.9) also writes nothing) (confirmed
+            // against actual VFP9 output, retained differential evidence:
+            // /home/rich/temp/vfp9-probes/fwrite-count-6060/). Only a
+            // finite, non-negative count truncates the write; a negative
+            // or non-finite (including +/-Infinity) count leaves the
+            // complete expression to be written, avoiding a narrowing
+            // cast on a value that can't be represented as a size_t.
+            const double raw_count = value_as_number(arguments[2]);
+            if (std::isfinite(raw_count) && raw_count >= 0.0) {
+                const std::size_t requested = static_cast<std::size_t>(std::trunc(raw_count));
+                if (requested < text.size()) {
+                    text.resize(requested);
+                }
             }
         }
 
@@ -535,9 +550,21 @@ std::optional<PrgValue> evaluate_file_io_function(
 
         std::string text = value_as_string(arguments[1]);
         if (arguments.size() >= 3U) {
-            const std::size_t max_length = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])));
-            if (max_length < text.size()) {
-                text.resize(max_length);
+            // #6060: FPUTS()'s optional count uses the same VFP9
+            // negative-write-all sentinel as FWRITE() -- confirmed
+            // against actual VFP9 output (retained differential
+            // evidence: /home/rich/temp/vfp9-probes/fputs-negative-6060/,
+            // FPUTS(h, 'abc', -1) writes the complete "abc" plus its line
+            // terminator). The terminator itself is a distinct,
+            // separately tracked divergence (#5887/#5911, VFP9 uses CRLF
+            // where this code currently appends LF only) and is
+            // deliberately left untouched here.
+            const double raw_count = value_as_number(arguments[2]);
+            if (std::isfinite(raw_count) && raw_count >= 0.0) {
+                const std::size_t max_length = static_cast<std::size_t>(std::trunc(raw_count));
+                if (max_length < text.size()) {
+                    text.resize(max_length);
+                }
             }
         }
         text.push_back('\n');
