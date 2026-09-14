@@ -27,9 +27,11 @@
 #include <limits>
 #include <locale>
 #include <mutex>
+#include <new>
 #include <optional>
 #include <random>
 #include <sstream>
+#include <stdexcept>
 #include <string_view>
 #include <unordered_map>
 
@@ -952,8 +954,6 @@ DbfWriteResult write_memo_field_bytes(
         write_be_u32(memo_bytes, 0U, next_free_block);
     }
 
-    const auto required_bytes = static_cast<std::size_t>(8U + value.size());
-    const auto required_blocks = static_cast<std::uint32_t>((required_bytes + block_size - 1U) / block_size);
     // #6127: next_free_block and block_size both come straight from the
     // FPT header, which a crafted or corrupt sidecar fully controls --
     // an untrusted next_free_block of 0xFFFFFFFF with block_size 0xFFFF
@@ -962,27 +962,53 @@ DbfWriteResult write_memo_field_bytes(
     // throwing std::bad_alloc instead of returning a structured
     // DbfWriteResult (confirmed against a focused external harness,
     // retained evidence: ~/temp/copperfin-fpt-next-free-6127/ and
-    // ~/temp/vfp9-probes/fpt-next-free-6127/). Compute in a fixed-width
-    // 64-bit type (not size_t, which can be 32-bit) so the
-    // multiplication itself can't silently wrap, and reject before ever
-    // resizing when the result would exceed a generous, well-established
-    // real-world FPT/memo practical file-size ceiling (2 GiB -- FoxPro/
-    // dBASE-family table and memo files are widely documented as
-    // constrained to this range by the classic format's 32-bit-oriented
-    // file APIs; not a value freshly boundary-probed against real VFP9
-    // in this session).
+    // ~/temp/vfp9-probes/fpt-next-free-6127/).
+    //
+    // Review round (copilot-pull-request-reviewer): the first version of
+    // this fix still computed required_blocks by narrowing to
+    // std::uint32_t *before* the 64-bit ceiling check, so an accepted
+    // block_size of 1 with a payload near UINT32_MAX bytes could wrap
+    // required_blocks first, letting a too-small allocation pass the
+    // check while the later resize()/copy() used a buffer smaller than
+    // the real payload. Every intermediate value (required_bytes,
+    // required_blocks, block_offset, new_total_size) now stays in a
+    // fixed-width 64-bit type from the very first computation through
+    // the ceiling check, with narrowing to size_t only after that check
+    // has already bounded the result well within size_t's range on any
+    // supported platform.
+    //
+    // Review round (chatgpt-codex-connector, P1): a fixed ceiling alone
+    // doesn't prevent std::bad_alloc in every environment -- a crafted
+    // header can still request an allocation (e.g. 256 MiB) that passes
+    // any reasonable ceiling yet still exceeds a more memory-constrained
+    // caller's actual available memory, reproducing the same uncaught
+    // crash the ceiling was meant to prevent. The ceiling below remains
+    // as a cheap fast-path rejection for obviously-absurd requests
+    // without even attempting an allocation, but the resize() itself is
+    // now also wrapped to catch std::bad_alloc/std::length_error and
+    // convert either into the same structured failure, so a genuine
+    // allocation failure at runtime -- regardless of the caller's
+    // available memory -- can never leak past this public API.
     constexpr std::uint64_t kVfpMaxMemoFileSize = 2ULL * 1024ULL * 1024ULL * 1024ULL;
-    const std::uint64_t wide_block_offset =
-        static_cast<std::uint64_t>(next_free_block) * static_cast<std::uint64_t>(block_size);
-    const std::uint64_t wide_new_total_size =
-        wide_block_offset + (static_cast<std::uint64_t>(required_blocks) * static_cast<std::uint64_t>(block_size));
+    const std::uint64_t wide_required_bytes = 8ULL + static_cast<std::uint64_t>(value.size());
+    const std::uint64_t wide_block_size = static_cast<std::uint64_t>(block_size);
+    const std::uint64_t wide_required_blocks = (wide_required_bytes + wide_block_size - 1ULL) / wide_block_size;
+    const std::uint64_t wide_block_offset = static_cast<std::uint64_t>(next_free_block) * wide_block_size;
+    const std::uint64_t wide_new_total_size = wide_block_offset + (wide_required_blocks * wide_block_size);
     if (wide_new_total_size > kVfpMaxMemoFileSize) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.MemoAllocationExceedsLimit"), .record_count = record_count};
     }
+    const auto required_blocks = static_cast<std::uint32_t>(wide_required_blocks);
     const std::size_t block_offset = static_cast<std::size_t>(wide_block_offset);
     const std::size_t new_total_size = static_cast<std::size_t>(wide_new_total_size);
     if (memo_bytes.size() < new_total_size) {
-        memo_bytes.resize(new_total_size, 0U);
+        try {
+            memo_bytes.resize(new_total_size, 0U);
+        } catch (const std::bad_alloc&) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.MemoAllocationExceedsLimit"), .record_count = record_count};
+        } catch (const std::length_error&) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.MemoAllocationExceedsLimit"), .record_count = record_count};
+        }
     }
 
     for (std::size_t index = 0; index < 4U; ++index) {
