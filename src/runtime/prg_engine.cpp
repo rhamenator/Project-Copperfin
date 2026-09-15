@@ -553,6 +553,7 @@ namespace copperfin::runtime
             int work_area = 0;
             std::uint64_t binding_identity = 0U;
             std::string alias;
+            bool bind_explicit_designators = false;
             const CursorState *detached_cursor = nullptr;
         };
 

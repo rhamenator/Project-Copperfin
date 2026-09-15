@@ -1234,6 +1234,7 @@
                     .work_area = candidate->first,
                     .binding_identity = ensure_cursor_binding_identity(candidate->second),
                     .alias = normalize_identifier(candidate->second.alias),
+                    .bind_explicit_designators = false,
                     .detached_cursor = nullptr};
             };
 
@@ -1258,6 +1259,7 @@
                 .work_area = cursor->work_area,
                 .binding_identity = cursor->binding_identity,
                 .alias = normalize_identifier(cursor->alias),
+                .bind_explicit_designators = false,
                 .detached_cursor = cursor};
         }
 
@@ -1269,6 +1271,10 @@
             if (trimmed.empty())
             {
                 return true;
+            }
+            if (!reference.bind_explicit_designators)
+            {
+                return false;
             }
             const std::string unquoted =
                 trimmed.size() >= 2U && trimmed.front() == '\'' && trimmed.back() == '\''

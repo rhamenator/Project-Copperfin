@@ -24,9 +24,9 @@ Issue #6270 is open, repository-owner-authored, and carries the exact
 `agent-approved` label. Branch:
 `codex/fix-6270-curval-oldval-cursor-lifetime`.
 
-PR #6283 is open. Its first review round found cross-data-session metadata and
-qualified-field gaps; the local review fix is complete and awaiting commit/push.
-`CURVAL()` and
+PR #6283 is open. Review found cross-data-session metadata/qualified-field gaps
+and then an over-broad ordinary-expression scope; both fixes are complete, with
+the second awaiting commit/push. `CURVAL()` and
 `OLDVAL()` now own record overrides and key them to a stable cursor identity.
 Expression callbacks reacquire the exact data-session/work-area generation
 before field, cursor, and nested-expression continuations. Closing or replacing
@@ -34,15 +34,17 @@ the cursor raises catchable VFP error 12; switching data sessions preserves the
 still-open origin. Qualified alias/work-area fields and field/order/tag metadata
 cannot bind a replacement generation or a conflicting alias in a newly selected
 data session.
+Explicit generation binding is scoped to CURVAL/OLDVAL; an ordinary-expression
+non-regression proves explicit aliases still follow the callback-selected session.
 Exact localized error-message assertions cover compound nested continuations.
 
 Focused buffering, runtime-surface, work-area, and SQL-cursor tests pass.
 Localization/catalog and safety-traceability contracts pass. The retained exact
 CURVAL/OLDVAL probes now report `Variable 'NAME' is not found.`; focused
-Valgrind reports 0 errors and no leaks across 272,347 allocations.
+Valgrind reports 0 errors and no leaks across 280,082 allocations.
 
 Next action: commit the review fix with DCO/signature, push, verify and resolve
-the four review conversations, then merge when CI is green, close #6270, and
+the remaining review conversation, then merge when CI is green, close #6270, and
 select the next approved issue.
 
 ## Workspace preservation

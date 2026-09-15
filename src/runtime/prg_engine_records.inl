@@ -820,7 +820,7 @@
                 {
                     return value;
                 }
-                if (preferred_reference != nullptr)
+                if (preferred_reference != nullptr && preferred_reference->bind_explicit_designators)
                 {
                     return std::nullopt;
                 }
@@ -831,7 +831,7 @@
                 return value;
             }
 
-            if (preferred_reference != nullptr)
+            if (preferred_reference != nullptr && preferred_reference->bind_explicit_designators)
             {
                 return std::nullopt;
             }
@@ -2467,13 +2467,15 @@
                 }
 
                 const vfp::DbfRecord original_record = original->second;
+                CursorExpressionReference cursor_reference = capture_cursor_expression_reference(cursor);
+                cursor_reference.bind_explicit_designators = true;
                 record_evaluation_overrides.push_back(RecordEvaluationOverride{
-                    .cursor_binding_identity = ensure_cursor_binding_identity(*cursor),
+                    .cursor_binding_identity = cursor_reference.binding_identity,
                     .record = original_record});
                 try
                 {
                     const PrgValue result = evaluate_expression(
-                        value_as_string(arguments[0U]), frame, cursor);
+                        value_as_string(arguments[0U]), frame, cursor, cursor_reference);
                     record_evaluation_overrides.pop_back();
                     return result;
                 }
@@ -2514,13 +2516,15 @@
                     return make_empty_value();
                 }
                 const vfp::DbfRecord &on_disk_record = table_result.table.records[cursor->recno - 1U];
+                CursorExpressionReference cursor_reference = capture_cursor_expression_reference(cursor);
+                cursor_reference.bind_explicit_designators = true;
                 record_evaluation_overrides.push_back(RecordEvaluationOverride{
-                    .cursor_binding_identity = ensure_cursor_binding_identity(*cursor),
+                    .cursor_binding_identity = cursor_reference.binding_identity,
                     .record = on_disk_record});
                 try
                 {
                     const PrgValue result = evaluate_expression(
-                        value_as_string(arguments[0U]), frame, cursor);
+                        value_as_string(arguments[0U]), frame, cursor, cursor_reference);
                     record_evaluation_overrides.pop_back();
                     return result;
                 }

@@ -79,6 +79,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path temp_root = fs::temp_directory_path() / "copperfin_curval_oldval_reentrant_cursor";
         const fs::path table_path = temp_root / "people.dbf";
         const fs::path other_table_path = temp_root / "other.dbf";
+        const fs::path other_cdx_path = temp_root / "other.cdx";
         const fs::path program_path = temp_root / "curval_oldval_reentrant_cursor.prg";
         std::error_code ignored;
         fs::remove_all(temp_root, ignored);
@@ -96,18 +97,21 @@ namespace copperfin::runtime_surface_tests
              {.name = "NAME", .type = 'C', .length = 6U}},
             {{"BETA", "BRAVO"}});
         expect(other_create_result.ok, "RQ-CF-PRG-034/#6270: alternate data-session fixture should be writable");
+        write_synthetic_cdx(other_cdx_path, "OTHER", "OTHER");
 
         write_text(
             program_path,
             "SET MULTILOCKS ON\n"
             "SET DATASESSION TO 2\n"
             "USE '" + other_table_path.string() + "' ALIAS cursession\n"
-            "INDEX ON OTHER TAG OTHER\n"
+            "SET ORDER TO TAG OTHER\n"
             "SET DATASESSION TO 1\n"
             "USE '" + table_path.string() + "' ALIAS cursession\n"
             "=CURSORSETPROP('Buffering', 5, 'cursession')\n"
             "cSessionSwitch = CURVAL(\"IIF(SwitchSession(), cursession.NAME + '|' + FIELD(1, 'cursession') + '|' + TRANSFORM(FSIZE('NAME', 'cursession')) + '|' + ORDER('cursession') + '|' + TAG(1, '', 'cursession'), '')\", 'cursession')\n"
             "nSessionAfterCallback = VAL(SET('DATASESSION'))\n"
+            "SET DATASESSION TO 1\n"
+            "cOrdinarySwitch = IIF(SwitchSession(), cursession.NAME + '|' + FIELD(1, 'cursession') + '|' + TRANSFORM(FSIZE('NAME', 'cursession')) + '|' + ORDER('cursession') + '|' + TAG(1, '', 'cursession'), '')\n"
             "SET DATASESSION TO 1\n"
             "USE IN cursession\n"
             "USE '" + table_path.string() + "' ALIAS curclose\n"
@@ -206,6 +210,7 @@ namespace copperfin::runtime_surface_tests
         expect_global("coldreusename", "ALPHA");
         expect_global("cnestedvalues", "ALPHA");
         expect_global("csessionswitch", "ALPHA|ID|10||");
+        expect_global("cordinaryswitch", "BRAVO|OTHER|6|OTHER|OTHER");
         expect_global("nsessionaftercallback", "2");
         expect_global("ccurclosemessage", "Variable 'NAME' is not found.");
         expect_global("coldclosemessage", "Variable 'NAME' is not found.");
