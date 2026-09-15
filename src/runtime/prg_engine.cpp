@@ -1336,6 +1336,14 @@ namespace copperfin::runtime
                 preferred_cursor_reference.bind_explicit_designators &&
                 cursor_expression_reference_matches_designator(preferred_cursor_reference, designator);
         };
+        const auto buffering_alias_is_preferred =
+            [has_preferred_cursor, preferred_cursor_reference](const std::string &alias)
+        {
+            return has_preferred_cursor &&
+                preferred_cursor_reference.bind_explicit_designators &&
+                !preferred_cursor_reference.alias.empty() &&
+                normalize_identifier(trim_copy(alias)) == preferred_cursor_reference.alias;
+        };
         const auto resolve_buffering_cursor =
             [this, buffering_designator_is_preferred, resolve_preferred_cursor](const std::string &designator)
         {
@@ -2849,7 +2857,11 @@ namespace copperfin::runtime
                 }
                 return verified->second;
             },
-            [this, &frame, resolve_buffering_cursor, buffering_designator_is_preferred](
+            [this,
+             &frame,
+             resolve_buffering_cursor,
+             buffering_designator_is_preferred,
+             buffering_alias_is_preferred](
                 const std::string &function,
                 const std::vector<PrgValue> &arguments)
             {
@@ -2858,7 +2870,8 @@ namespace copperfin::runtime
                     arguments,
                     frame,
                     resolve_buffering_cursor,
-                    buffering_designator_is_preferred);
+                    buffering_designator_is_preferred,
+                    buffering_alias_is_preferred);
             },
             [this](const std::string &function, const std::vector<PrgValue> &arguments)
             {

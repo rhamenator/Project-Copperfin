@@ -109,6 +109,7 @@ namespace copperfin::runtime_surface_tests
             "SET DATASESSION TO 1\n"
             "USE '" + table_path.string() + "' ALIAS cursession\n"
             "=CURSORSETPROP('Buffering', 5, 'cursession')\n"
+            "nCursessionArea = SELECT('cursession')\n"
             "SELECT CURVAL(\"IIF(SwitchSession(), q.NAME, q.NAME)\", 'q') AS NAME FROM cursession q INTO ARRAY aQuerySafe\n"
             "SET DATASESSION TO 1\n"
             "cQueryAliasSwitch = aQuerySafe[1]\n"
@@ -121,6 +122,11 @@ namespace copperfin::runtime_surface_tests
             "cSessionCommitted = CURVAL('NAME', 'cursession')\n"
             "REPLACE NAME WITH 'ALPHA' IN cursession\n"
             "=TABLEUPDATE(.T., .F., 'cursession')\n"
+            "TRY\n"
+            "  dQuotedNumericAlias = CURVAL(\"LUPDATE('1')\", 'cursession')\n"
+            "CATCH TO oQuotedNumericAlias\n"
+            "  nQuotedNumericAliasError = oQuotedNumericAlias.ErrorNo\n"
+            "ENDTRY\n"
             "cOrdinarySwitch = IIF(SwitchSession(), cursession.NAME + '|' + FIELD(1, 'cursession') + '|' + TRANSFORM(FSIZE('NAME', 'cursession')) + '|' + ORDER('cursession') + '|' + TAG(1, '', 'cursession'), '')\n"
             "SET DATASESSION TO 1\n"
             "USE IN cursession\n"
@@ -254,8 +260,10 @@ namespace copperfin::runtime_surface_tests
         expect_global("cnestedreusename", "ALPHA");
         expect_global("cnestedvalues", "ALPHA");
         expect_global("csessionswitch", "ALPHA|ID|10|||2|ALPHA");
+        expect_global("ncursessionarea", "1");
         expect_global("lsessionupdate", "true");
         expect_global("csessioncommitted", "CHANGED");
+        expect_global("nquotednumericaliaserror", "13");
         expect_global("cqueryaliasswitch", "ALPHA");
         expect_global("cordinaryswitch", "BRAVO|OTHER|6|OTHER|OTHER");
         expect_global("nsessionaftercallback", "2");

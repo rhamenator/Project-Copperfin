@@ -9,7 +9,8 @@
   available after the source closes. Nested `CURVAL()`/`OLDVAL()` and
   buffering functions also resolve source aliases and work areas through the
   captured generation, preventing a callback-selected or replacement cursor
-  from being read or mutated. Record
+  from being read or mutated. `LUPDATE()` retains the argument's type so a
+  quoted numeric-looking alias is not rebound as a numeric work area. Record
   overrides now own their snapshots and are keyed by generation. Focused row/
   table-buffering coverage exercises current, alias, work-area, modified/deleted,
   close, replacement, alias reuse, session-switch, and nested-success paths.

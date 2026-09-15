@@ -2124,7 +2124,8 @@
             const std::vector<PrgValue> &arguments,
             const Frame &frame,
             const std::function<CursorState *(const std::string &)> &resolve_expression_cursor,
-            const std::function<bool(const std::string &)> &designator_is_preferred)
+            const std::function<bool(const std::string &)> &designator_is_preferred,
+            const std::function<bool(const std::string &)> &alias_is_preferred)
         {
             if (function != "cursorsetprop" && function != "cursorgetprop" &&
                 function != "tableupdate" && function != "tablerevert" &&
@@ -2582,7 +2583,7 @@
                     // general resolve_cursor_target() fallback, do not also match an open
                     // cursor's underlying file path here.
                     const std::string designator = value_as_string(arguments[0U]);
-                    cursor = designator_is_preferred(designator)
+                    cursor = alias_is_preferred(designator)
                         ? resolve_expression_cursor(designator)
                         : find_cursor_by_alias(trim_copy(designator));
                 }
