@@ -362,6 +362,13 @@ namespace copperfin::runtime_surface_tests
             "SET DATASESSION TO 1\n"
             "SELECT switchunlock\n"
             "lSwitchUnlockReleased = NOT ISRLOCKED()\n"
+            "nConn = SQLCONNECT('dsn=Northwind')\n"
+            "nExec = SQLEXEC(nConn, 'select * from customers', 'switchsql')\n"
+            "=RLOCK('switchsql')\n"
+            "UNLOCK RECORD EVALUATE(\"SwitchSession()\") IN switchsql\n"
+            "SET DATASESSION TO 1\n"
+            "SELECT switchsql\n"
+            "lSwitchSqlUnlockReleased = NOT ISRLOCKED()\n"
             "SET EXACT ON\n"
             "USE '" + table_path.string() + "' ALIAS seekorigin AGAIN IN 0\n"
             "SET ORDER TO TAG NAME IN seekorigin\n"
@@ -444,6 +451,7 @@ namespace copperfin::runtime_surface_tests
         expect_global("cunlockreplacement", "ALPHA");
         expect_global("nswitchrecno", "2");
         expect_global("lswitchunlockreleased", "true");
+        expect_global("lswitchsqlunlockreleased", "true");
         expect_global("nseeksessionafter", "2");
         expect_global("lseekoriginfound", "false");
         expect_global("crelationchild", "BRAVO");
@@ -451,7 +459,7 @@ namespace copperfin::runtime_surface_tests
         expect_global("nskipcalls", "1");
         expect_global("nseekcalls", "1");
         expect_global("nunlockcalls", "1");
-        expect_global("nswitchcalls", "2");
+        expect_global("nswitchcalls", "3");
         expect_global("nseekswitchcalls", "1");
         expect_global("nrelationswitchcalls", "1");
 
@@ -468,8 +476,8 @@ namespace copperfin::runtime_surface_tests
                "RQ-CF-PRG-035/#6319: only the valid session-switch SKIP should emit success");
         expect(event_count("runtime.seek") == 1U,
                "RQ-CF-PRG-035/#6319: only the valid session-switch SEEK should emit success");
-        expect(event_count("runtime.unlock") == 1U,
-               "RQ-CF-PRG-035/#6319: only the valid session-switch UNLOCK should emit success");
+        expect(event_count("runtime.unlock") == 2U,
+               "RQ-CF-PRG-035/#6319: only the valid table and remote session-switch UNLOCK commands should emit success");
 
         fs::remove_all(temp_root, ignored);
     }

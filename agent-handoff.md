@@ -32,12 +32,13 @@ relation synchronization, or success-event formatting. Same-alias/work-area
 replacement produces catchable localized error 1002, leaves the replacement
 usable, and emits no false command-success event. Switching data sessions alone
 continues against the still-open origin, including its session-local navigation
-`SET` state, record-lock ownership maps, and parent/child relation graph, then
+`SET` state, table-backed and source-less cursor record-lock ownership maps, and
+parent/child relation graph, then
 restores the callback-selected session. `RQ-CF-PRG-035`, language coverage,
 and the changelog are updated; exact VFP9 error parity is disclosed as an
 evidence gap.
 
-Focused and broader navigation, lock, control-flow, SQL-cursor, locale, and safety-traceability tests pass after the review correction. A fresh Clang ASan/UBSan focused build passes, and Valgrind reports 0 errors and no leaks across 1,481,066 allocations. Next action: commit with DCO/signature, push, resolve the review conversations, and request a fresh review.
+Focused and broader navigation, lock, control-flow, SQL-cursor, locale, and safety-traceability tests pass after the review correction. A fresh Clang ASan/UBSan focused build passes, and Valgrind reports 0 errors and no leaks across 1,482,109 allocations. Next action: commit with DCO/signature, push, resolve the review conversations, and request a fresh review.
 
 ## Workspace preservation
 
