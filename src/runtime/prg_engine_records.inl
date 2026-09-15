@@ -3526,9 +3526,21 @@
             session.record_locks.erase(cursor->work_area);
         }
 
-        void unlock_cursor_record_lock(CursorState &cursor, std::size_t recno)
+        void unlock_cursor_record_lock(
+            CursorState &cursor,
+            std::size_t recno,
+            int target_data_session = 0)
         {
-            DataSessionState &session = current_session_state();
+            // RQ-CF-PRG-035: lock ownership is namespaced by data session; a
+            // reentrant selection change must not redirect the release.
+            const int lock_data_session =
+                target_data_session == 0 ? current_data_session : target_data_session;
+            const auto session_entry = data_sessions.find(lock_data_session);
+            if (session_entry == data_sessions.end())
+            {
+                return;
+            }
+            DataSessionState &session = session_entry->second;
             cursor.buffered_record_locks.erase(recno);
             auto found = session.record_locks.find(cursor.work_area);
             if (found == session.record_locks.end())
@@ -3537,7 +3549,7 @@
             }
 
             found->second.erase(recno);
-            release_shared_record_lock_ownership(cursor, recno, current_data_session);
+            release_shared_record_lock_ownership(cursor, recno, lock_data_session);
             if (found->second.empty())
             {
                 session.record_locks.erase(found);

@@ -31,15 +31,12 @@ The identity persists through direct PRG routine suspension and nested
 relation synchronization, or success-event formatting. Same-alias/work-area
 replacement produces catchable localized error 1002, leaves the replacement
 usable, and emits no false command-success event. Switching data sessions alone
-continues against the still-open origin. `RQ-CF-PRG-035`, language coverage,
+continues against the still-open origin, including its record-lock ownership maps
+and parent/child relation graph. `RQ-CF-PRG-035`, language coverage,
 and the changelog are updated; exact VFP9 error parity is disclosed as an
 evidence gap.
 
-Focused and broader navigation, lock, control-flow, SQL-cursor, locale, and
-safety-traceability tests pass. A fresh Clang ASan/UBSan focused build passes,
-and Valgrind reports 0 errors and no leaks across 1,467,714 allocations. Next
-action: commit with DCO/signature, push and open the PR, then address review and
-CI through merge.
+Focused and broader navigation, lock, control-flow, SQL-cursor, locale, and safety-traceability tests pass after the review correction. A fresh Clang ASan/UBSan focused build passes, and Valgrind reports 0 errors and no leaks across 1,477,267 allocations. Next action: commit with DCO/signature, push, resolve the review conversations, and request a fresh review.
 
 ## Workspace preservation
 

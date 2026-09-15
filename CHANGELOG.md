@@ -5,7 +5,8 @@
   relation synchronization, or success-event formatting. Closing and reopening
   an alias/work area now raises a catchable localized command error without
   touching the replacement or emitting false success; changing data sessions
-  alone continues against the still-open origin. Added `RQ-CF-PRG-035`.
+  alone continues against the still-open origin, including its lock-owner maps
+  and parent/child relations. Added `RQ-CF-PRG-035`.
 
 - 2026-09-14: Fixed #6270: `CURVAL()` and `OLDVAL()` no longer retain raw
   session-owned cursor or record pointers while evaluating expressions that can

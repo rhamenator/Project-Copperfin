@@ -3747,7 +3747,7 @@
                     &used_order_normalization_hint,
                     &used_order_collation_hint,
                     &used_order_descending);
-                synchronize_relations_for_parent(*cursor, frame);
+                synchronize_relations_for_parent(*cursor, frame, cursor_reference.data_session);
                 events.push_back({.category = "runtime.seek",
                                   .detail = format_order_metadata_detail(
                                                 used_order_name.empty() ? std::string{"<default>"} : used_order_name,
@@ -4395,7 +4395,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    unlock_cursor_record_lock(*cursor, recno);
+                    unlock_cursor_record_lock(*cursor, recno, cursor_reference.data_session);
                     events.push_back({.category = "runtime.unlock",
                                       .detail = (cursor->alias.empty() ? std::to_string(cursor->work_area) : cursor->alias) +
                                                 " RECORD " + std::to_string(recno),
@@ -4422,6 +4422,8 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                const CursorGenerationReference cursor_reference =
+                    resumed_command_cursor_reference.value_or(capture_cursor_generation_reference(cursor));
 
                 const std::string destination = uppercase_copy(trim_copy(statement.expression));
                 if (destination == "TOP")
@@ -4441,8 +4443,6 @@
                 }
                 else
                 {
-                    const CursorGenerationReference cursor_reference =
-                        resumed_command_cursor_reference.value_or(capture_cursor_generation_reference(cursor));
                     const auto requested_value = resumed_go_value.has_value()
                                                      ? resumed_go_value
                                                      : evaluate_resumable_expression(frame, statement);
@@ -4468,7 +4468,7 @@
                     move_cursor_to(*cursor, requested);
                 }
 
-                synchronize_relations_for_parent(*cursor, frame);
+                synchronize_relations_for_parent(*cursor, frame, cursor_reference.data_session);
                 events.push_back({.category = "runtime.go",
                                   .detail = destination.empty() ? statement.expression : destination,
                                   .location = statement.location});
@@ -4516,8 +4516,9 @@
                 {
                     cursor->found = false;
                 }
-                (void)synchronize_skip_parent_for_child(*cursor, frame, delta);
-                synchronize_relations_for_parent(*cursor, frame);
+                (void)synchronize_skip_parent_for_child(
+                    *cursor, frame, delta, cursor_reference.data_session);
+                synchronize_relations_for_parent(*cursor, frame, cursor_reference.data_session);
                 events.push_back({.category = "runtime.skip",
                                   .detail = statement.expression,
                                   .location = statement.location});

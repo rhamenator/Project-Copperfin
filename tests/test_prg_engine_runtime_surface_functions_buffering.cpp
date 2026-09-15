@@ -282,6 +282,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path table_path = temp_root / "people.dbf";
         const fs::path other_path = temp_root / "other.dbf";
         const fs::path cdx_path = temp_root / "people.cdx";
+        const fs::path other_cdx_path = temp_root / "other.cdx";
         const fs::path program_path = temp_root / "navigation_reentrant_cursor.prg";
         std::error_code ignored;
         fs::remove_all(temp_root, ignored);
@@ -298,18 +299,24 @@ namespace copperfin::runtime_surface_tests
         expect(create_result.ok && other_result.ok,
                "RQ-CF-PRG-035/#6319: navigation cursor fixtures should be writable");
         write_synthetic_cdx(cdx_path, "NAME", "NAME");
+        write_synthetic_cdx(other_cdx_path, "NAME", "NAME");
 
         write_text(
             program_path,
             "SET MULTILOCKS ON\n"
             "SET DATASESSION TO 2\n"
             "USE '" + other_path.string() + "' ALIAS switchpeople\n"
+            "USE '" + other_path.string() + "' ALIAS relparent AGAIN IN 0\n"
+            "USE '" + other_path.string() + "' ALIAS relchild AGAIN IN 0\n"
+            "SET ORDER TO TAG NAME IN relchild\n"
+            "SET RELATION TO NAME INTO relchild IN relparent\n"
             "SET DATASESSION TO 1\n"
             "nGoCalls = 0\n"
             "nSkipCalls = 0\n"
             "nSeekCalls = 0\n"
             "nUnlockCalls = 0\n"
             "nSwitchCalls = 0\n"
+            "nRelationSwitchCalls = 0\n"
             "USE '" + table_path.string() + "' ALIAS gopeople\n"
             "TRY\n"
             "  GO ReplaceGo() IN gopeople\n"
@@ -345,6 +352,19 @@ namespace copperfin::runtime_surface_tests
             "SKIP EVALUATE(\"SwitchSession()\") IN switchpeople\n"
             "SET DATASESSION TO 1\n"
             "nSwitchRecno = RECNO('switchpeople')\n"
+            "USE '" + table_path.string() + "' ALIAS switchunlock AGAIN IN 0\n"
+            "=RLOCK('switchunlock')\n"
+            "UNLOCK RECORD EVALUATE(\"SwitchSession()\") IN switchunlock\n"
+            "SET DATASESSION TO 1\n"
+            "SELECT switchunlock\n"
+            "lSwitchUnlockReleased = NOT ISRLOCKED()\n"
+            "USE '" + table_path.string() + "' ALIAS relparent AGAIN IN 0\n"
+            "USE '" + table_path.string() + "' ALIAS relchild AGAIN IN 0\n"
+            "SET ORDER TO TAG NAME IN relchild\n"
+            "SET RELATION TO NAME INTO relchild IN relparent\n"
+            "GO SwitchRelationSession() IN relparent\n"
+            "SET DATASESSION TO 1\n"
+            "cRelationChild = relchild.NAME\n"
             "RETURN\n"
             "FUNCTION ReplaceGo\n"
             "nGoCalls = nGoCalls + 1\n"
@@ -374,6 +394,11 @@ namespace copperfin::runtime_surface_tests
             "nSwitchCalls = nSwitchCalls + 1\n"
             "SET DATASESSION TO 2\n"
             "RETURN 1\n"
+            "ENDFUNC\n"
+            "FUNCTION SwitchRelationSession\n"
+            "nRelationSwitchCalls = nRelationSwitchCalls + 1\n"
+            "SET DATASESSION TO 2\n"
+            "RETURN 2\n"
             "ENDFUNC\n");
 
         const auto state = copperfin::runtime::PrgRuntimeSession::create(
@@ -401,11 +426,14 @@ namespace copperfin::runtime_surface_tests
         expect_global("cseekreplacement", "ALPHA");
         expect_global("cunlockreplacement", "ALPHA");
         expect_global("nswitchrecno", "2");
+        expect_global("lswitchunlockreleased", "true");
+        expect_global("crelationchild", "BRAVO");
         expect_global("ngocalls", "1");
         expect_global("nskipcalls", "1");
         expect_global("nseekcalls", "1");
         expect_global("nunlockcalls", "1");
-        expect_global("nswitchcalls", "1");
+        expect_global("nswitchcalls", "2");
+        expect_global("nrelationswitchcalls", "1");
 
         const auto event_count = [&](const std::string &category)
         {
@@ -414,14 +442,14 @@ namespace copperfin::runtime_surface_tests
                 state.events.end(),
                 [&](const auto &event) { return event.category == category; });
         };
-        expect(event_count("runtime.go") == 1U,
-               "RQ-CF-PRG-035/#6319: only the valid session-switch GO should emit success");
+        expect(event_count("runtime.go") == 2U,
+               "RQ-CF-PRG-035/#6319: only the two valid session-switch GO commands should emit success");
         expect(event_count("runtime.skip") == 1U,
                "RQ-CF-PRG-035/#6319: only the valid session-switch SKIP should emit success");
         expect(event_count("runtime.seek") == 0U,
                "RQ-CF-PRG-035/#6319: rejected SEEK should not emit false success");
-        expect(event_count("runtime.unlock") == 0U,
-               "RQ-CF-PRG-035/#6319: rejected UNLOCK should not emit false success");
+        expect(event_count("runtime.unlock") == 1U,
+               "RQ-CF-PRG-035/#6319: only the valid session-switch UNLOCK should emit success");
 
         fs::remove_all(temp_root, ignored);
     }
