@@ -245,6 +245,9 @@
                             array.rows = rows;
                             array.columns = columns;
                             array.values.resize(rows * columns);
+                            // RQ-CF-PRG-033: native-object arrays participate in
+                            // the same reentrant ASCAN binding checks.
+                            array.binding_identity = allocate_array_binding_identity();
                             native_object_arrays[runtime_object->handle][property_name] = std::move(array);
                             runtime_object->properties[property_name] = make_empty_value();
                         }

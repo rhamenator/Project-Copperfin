@@ -242,13 +242,22 @@
 
         RuntimeArray *find_array(const std::string &name)
         {
+            RuntimeArray *result = nullptr;
             if (stack.empty())
             {
                 const auto found = arrays.find(normalize_memory_variable_identifier(name));
-                return found == arrays.end() ? nullptr : &found->second;
+                result = found == arrays.end() ? nullptr : &found->second;
             }
-            return const_cast<RuntimeArray *>(
-                static_cast<const Impl *>(this)->find_array(name, stack.back()));
+            else
+            {
+                result = const_cast<RuntimeArray *>(
+                    static_cast<const Impl *>(this)->find_array(name, stack.back()));
+            }
+            if (result != nullptr && result->binding_identity == 0U)
+            {
+                result->binding_identity = allocate_array_binding_identity();
+            }
+            return result;
         }
 
         const RuntimeArray *find_array(const std::string &name) const
@@ -406,6 +415,26 @@
             return 0U;
         }
 
+        // RQ-CF-PRG-033: every independently stored array binding needs a
+        // stable identity, and every values mutation needs a new generation.
+        std::uint64_t allocate_array_binding_identity()
+        {
+            if (next_array_binding_identity == 0U)
+            {
+                next_array_binding_identity = 1U;
+            }
+            return next_array_binding_identity++;
+        }
+
+        void mark_array_mutated(RuntimeArray &array)
+        {
+            ++array.mutation_generation;
+            if (array.mutation_generation == 0U)
+            {
+                array.binding_identity = allocate_array_binding_identity();
+            }
+        }
+
         void assign_array(const std::string &name, std::vector<PrgValue> values, std::size_t columns = 1U)
         {
             columns = std::max<std::size_t>(1U, columns);
@@ -414,6 +443,7 @@
             array.rows = values.empty() ? 0U : ((values.size() + columns - 1U) / columns);
             array.values = std::move(values);
             array.values.resize(array.rows * array.columns);
+            array.binding_identity = allocate_array_binding_identity();
             if (!stack.empty())
             {
                 if (const auto native_array = find_native_object_array_reference(name, stack.back()); native_array.has_value())
@@ -523,6 +553,7 @@
                 return false;
             }
             array->values[((row - 1U) * array->columns) + (column - 1U)] = value;
+            mark_array_mutated(*array);
             return true;
         }
 
@@ -568,6 +599,7 @@
             if (columns == array->columns)
             {
                 const std::size_t new_size = rows * columns;
+                const bool changed = rows != array->rows || new_size != array->values.size();
                 if (new_size > array->values.size())
                 {
                     // Growing: amortize reallocation cost across a grow loop
@@ -592,6 +624,10 @@
                     array->values = std::move(shrunk);
                 }
                 array->rows = rows;
+                if (changed)
+                {
+                    mark_array_mutated(*array);
+                }
                 return make_number_value(static_cast<double>(array->values.size()));
             }
 
@@ -608,6 +644,7 @@
             array->rows = rows;
             array->columns = columns;
             array->values = std::move(new_values);
+            mark_array_mutated(*array);
             return make_number_value(static_cast<double>(array->values.size()));
         }
 
@@ -667,6 +704,7 @@
             {
                 target->values[target_start - 1U + offset] = snapshot[offset];
             }
+            mark_array_mutated(*target);
             return make_number_value(static_cast<double>(snapshot.size()));
         }
 

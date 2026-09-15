@@ -3031,6 +3031,7 @@
   "AssetEditor.Summary.LabelComplexity": "[Complexity]",
   "AssetEditor.Summary.LabelStrategy": "[Strategy]",
   "AssetEditor.Summary.LabelDeterministicFirst": "[Deterministic First]",
+  "Runtime.Prg.Array.Error.PredicateMutatedSource": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",
   "Runtime.Prg.String.Error.InvalidCharacterCode": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",
   "Runtime.Prg.String.Error.InvalidOccurrence": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",
   "Runtime.Prg.String.Error.InvalidStrWidth": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",
