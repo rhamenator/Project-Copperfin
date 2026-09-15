@@ -669,6 +669,19 @@
             {
                 return raise_unknown_member();
             }
+            if (const auto visibility = target_object->member_visibility.find(child_name);
+                visibility != target_object->member_visibility.end())
+            {
+                const auto owner = target_object->member_visibility_owner.find(child_name);
+                if (!native_member_access_allowed(
+                        *target_object,
+                        visibility->second,
+                        owner == target_object->member_visibility_owner.end() ? std::string{} : owner->second,
+                        frame))
+                {
+                    return raise_unknown_member();
+                }
+            }
 
             const auto child_parent = native_object_parent_reference(**child_object);
             int parent_handle = 0;

@@ -20,8 +20,11 @@ subtree release lifecycle. Child-first `Destroy` callbacks run exactly once;
 runtime handles, event/COM/window bindings, active-form metadata, and references
 held by variables, arrays, collections, and object properties are retired.
 Missing, empty, and hidden targets preserve the graph and raise localized error
-1925. A release-in-progress guard supports reentrant owner release without
-rescheduling the active child. The obsolete detached-child test matrix was
+1925. Declared visibility is enforced before mutation. A release-in-progress
+ownership guard supports reentrant owner release without invalidating the active
+child's `THIS` frame or clearing its outer reservation. Direct invocation
+arguments and suspended expression/command continuations also discard retired
+handles before resuming. The obsolete detached-child test matrix was
 replaced with focused differential lifecycle coverage; adjacent child collection
 and standalone `Release()` tests remain active. `RQ-CF-PRG-036`, language
 coverage, locale catalogs, and the changelog are updated.
@@ -29,9 +32,10 @@ coverage, locale catalogs, and the changelog are updated.
 Validation passes for the runtime-surface, parser-classes, control-flow, locale,
 and safety-traceability tests. A fresh Clang ASan/UBSan build passes the complete
 runtime-surface executable after correcting an unrelated malformed `SYS(2021)`
-DBF test initializer exposed by ASan. Valgrind reports zero errors and no leaks
-across 18,394,406 allocations. Next: create the signed/DCO commit and PR, request
-review, then monitor required checks and conversation resolution.
+DBF test initializer exposed by ASan. After review hardening, Valgrind reports
+zero errors and no leaks across 18,376,113 allocations. PR #6403 is open; next:
+push the signed/DCO review-fix commit, resolve its review conversations, request
+fresh review, then monitor required checks and conversation resolution.
 
 ## Workspace preservation
 

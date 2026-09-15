@@ -4,7 +4,10 @@
   object properties that referenced the destroyed handles. Missing, empty, and
   hidden member targets preserve the object graph and raise localized error
   1925. Reentrant `Destroy` code can release an owner without scheduling the
-  active child twice. Added `RQ-CF-PRG-036` and replaced regressions that
+  active child twice or invalidating its running `THIS` frame. Suspended
+  expression/command continuations and direct invocation argument lists now
+  discard retired handles before resuming, and declared child visibility is
+  enforced before mutation. Added `RQ-CF-PRG-036` and replaced regressions that
   required detached children to remain alive. Corrected the `SYS(2021)` test
   fixture's malformed DBF initializer so sanitizer validation can exercise the
   complete runtime-surface suite without reading past a string literal.

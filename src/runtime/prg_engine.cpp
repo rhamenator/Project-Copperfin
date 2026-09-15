@@ -7370,6 +7370,7 @@ namespace copperfin::runtime
             if (current.handle != runtime_object.handle &&
                 active_native_release_handles.contains(current.handle))
             {
+                scheduled_handles.erase(current.handle);
                 continue;
             }
             if (found->second.native_hwnd.has_value())
@@ -7397,11 +7398,11 @@ namespace copperfin::runtime
         struct ActiveReleaseGuard
         {
             std::set<int> &active_handles;
-            const std::set<int> &scheduled_handles;
+            const std::set<int> &owned_handles;
 
             ~ActiveReleaseGuard()
             {
-                for (const int handle : scheduled_handles)
+                for (const int handle : owned_handles)
                 {
                     active_handles.erase(handle);
                 }
@@ -7409,9 +7410,16 @@ namespace copperfin::runtime
         };
         // RQ-CF-PRG-036: reserve the whole subtree before any Destroy callback
         // so reentrant owner/sibling release cannot schedule a handle twice.
-        active_native_release_handles.insert(scheduled_handles.begin(), scheduled_handles.end());
+        std::set<int> owned_active_release_handles;
+        for (const int handle : scheduled_handles)
+        {
+            if (active_native_release_handles.insert(handle).second)
+            {
+                owned_active_release_handles.insert(handle);
+            }
+        }
         const ActiveReleaseGuard active_release_guard{
-            active_native_release_handles, scheduled_handles};
+            active_native_release_handles, owned_active_release_handles};
 
         for (const int handle : release_order)
         {
@@ -7617,6 +7625,39 @@ namespace copperfin::runtime
                 {
                     invalidate_released_reference(value);
                 }
+            }
+            if (frame.expression_continuation.has_value())
+            {
+                for (auto &[_, checkpoint] : frame.expression_continuation->primary_checkpoints)
+                {
+                    invalidate_released_reference(checkpoint.value);
+                }
+                for (auto &[_, value] : frame.expression_continuation->routine_results)
+                {
+                    invalidate_released_reference(value);
+                }
+            }
+            if (frame.command_argument_continuation.has_value())
+            {
+                for (PrgValue &value : frame.command_argument_continuation->values)
+                {
+                    invalidate_released_reference(value);
+                }
+            }
+            if (frame.use_command_continuation.has_value() &&
+                frame.use_command_continuation->target_value.has_value())
+            {
+                invalidate_released_reference(*frame.use_command_continuation->target_value);
+            }
+            if (frame.copy_file_continuation.has_value() &&
+                frame.copy_file_continuation->source_value.has_value())
+            {
+                invalidate_released_reference(*frame.copy_file_continuation->source_value);
+            }
+            if (frame.rename_file_continuation.has_value() &&
+                frame.rename_file_continuation->source_value.has_value())
+            {
+                invalidate_released_reference(*frame.rename_file_continuation->source_value);
             }
         }
         for (auto &[_, object] : ole_objects)

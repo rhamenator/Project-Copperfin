@@ -1,4 +1,5 @@
 #include "test_prg_engine_runtime_surface_functions_support.h"
+#include "copperfin/localization/localization.h"
 
 namespace copperfin::runtime_surface_tests
 {
@@ -13,12 +14,14 @@ namespace copperfin::runtime_surface_tests
 
         write_text(
             program_path,
-            "PUBLIC gnChildDestroyed, gnGrandDestroyed, gcDestroyOrder, gnReentrantChildDestroyed, gnReentrantOwnerDestroyed\n"
+            "PUBLIC gnChildDestroyed, gnGrandDestroyed, gcDestroyOrder, gnReentrantChildDestroyed, gnReentrantOwnerDestroyed, glReentrantThisSurvived, gcCommandArgType\n"
             "gnChildDestroyed = 0\n"
             "gnGrandDestroyed = 0\n"
             "gcDestroyOrder = ''\n"
             "gnReentrantChildDestroyed = 0\n"
             "gnReentrantOwnerDestroyed = 0\n"
+            "glReentrantThisSurvived = .F.\n"
+            "gcCommandArgType = ''\n"
             "oForm = CREATEOBJECT('DemoForm')\n"
             "oChild = oForm.child\n"
             "oGrand = oChild.grand\n"
@@ -60,7 +63,34 @@ namespace copperfin::runtime_surface_tests
             "lReentrantChildStillObject = VARTYPE(oReentrantChild) == 'O'\n"
             "nReentrantChildDestroyed = gnReentrantChildDestroyed\n"
             "nReentrantOwnerDestroyed = gnReentrantOwnerDestroyed\n"
+            "lReentrantThisSurvived = glReentrantThisSurvived\n"
+            "oDirectForm = CREATEOBJECT('DemoForm')\n"
+            "oDirectChild = oDirectForm.child\n"
+            "cDirectArgType = CaptureArgType(oDirectChild, oDirectForm.RemoveObject('child'))\n"
+            "oResumeForm = CREATEOBJECT('DemoForm')\n"
+            "oResumeChild = oResumeForm.child\n"
+            "cResumeArgType = CaptureArgType(oResumeChild, RemoveChild(oResumeForm))\n"
+            "oCommandForm = CREATEOBJECT('DemoForm')\n"
+            "oCommandChild = oCommandForm.child\n"
+            "DO CaptureCommandArgs WITH oCommandChild, RemoveChild(oCommandForm)\n"
+            "cCommandArgType = gcCommandArgType\n"
+            "oProtected = CREATEOBJECT('ProtectedForm')\n"
+            "TRY\n"
+            "  =oProtected.RemoveObject('child')\n"
+            "CATCH TO oProtectedError\n"
+            "  nProtectedError = oProtectedError.ErrorNo\n"
+            "ENDTRY\n"
+            "lProtectedChildSurvives = PEMSTATUS(oProtected, 'child', 1)\n"
             "RETURN\n"
+            "FUNCTION CaptureArgType(toValue, tlRemoved)\n"
+            "  RETURN VARTYPE(toValue)\n"
+            "ENDFUNC\n"
+            "FUNCTION RemoveChild(toForm)\n"
+            "  RETURN toForm.RemoveObject('child')\n"
+            "ENDFUNC\n"
+            "PROCEDURE CaptureCommandArgs(toValue, tlRemoved)\n"
+            "  gcCommandArgType = VARTYPE(toValue)\n"
+            "ENDPROC\n"
             "DEFINE CLASS DemoForm AS Form\n"
             "  PROCEDURE Init\n"
             "    THIS.AddObject('child', 'DemoChild')\n"
@@ -77,7 +107,13 @@ namespace copperfin::runtime_surface_tests
             "  PROCEDURE Destroy\n"
             "    gnReentrantChildDestroyed = gnReentrantChildDestroyed + 1\n"
             "    THIS.Parent.Release()\n"
+            "    glReentrantThisSurvived = VARTYPE(THIS) == 'O'\n"
+            "    THIS.Release()\n"
             "  ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ProtectedForm AS Form\n"
+            "  PROTECTED child\n"
+            "  ADD OBJECT child AS CommandButton\n"
             "ENDDEFINE\n"
             "DEFINE CLASS DemoChild AS Container\n"
             "  ADD OBJECT grand AS DemoGrand\n"
@@ -93,8 +129,11 @@ namespace copperfin::runtime_surface_tests
             "  ENDPROC\n"
             "ENDDEFINE\n");
 
-        const auto state = copperfin::runtime::PrgRuntimeSession::create(
-                               make_runtime_session_options(program_path.string(), temp_root.string()))
+        auto options = make_runtime_session_options(program_path.string(), temp_root.string());
+        options.localization_catalog = std::make_shared<const copperfin::localization::LocalizedCatalog>(
+            copperfin::localization::load_catalogs(
+                copperfin::localization::resolve_catalog_root(), "en-US"));
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(std::move(options))
                                .run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed,
                "RQ-CF-PRG-036/#6288: REMOVEOBJECT lifecycle script should complete: " + state.message);
@@ -131,6 +170,12 @@ namespace copperfin::runtime_surface_tests
         expect_global("lreentrantchildstillobject", "false");
         expect_global("nreentrantchilddestroyed", "1");
         expect_global("nreentrantownerdestroyed", "1");
+        expect_global("lreentrantthissurvived", "true");
+        expect_global("cdirectargtype", "U");
+        expect_global("cresumeargtype", "U");
+        expect_global("ccommandargtype", "U");
+        expect_global("nprotectederror", "1925");
+        expect_global("lprotectedchildsurvives", "true");
 
         const auto object_is_retired = [&](const std::string &prog_id)
         {
@@ -154,12 +199,12 @@ namespace copperfin::runtime_surface_tests
                     return event.category == category && event.detail == detail;
                 });
         };
-        expect(event_count("prg.object.removeobject", "DemoForm.child") == 1U,
-               "RQ-CF-PRG-036/#6288: successful removal should emit one event");
-        expect(event_count("prg.object.destroy", "DemoGrand.Destroy") == 1U,
-               "RQ-CF-PRG-036/#6288: descendant Destroy should run exactly once");
-        expect(event_count("prg.object.destroy", "DemoChild.Destroy") == 1U,
-               "RQ-CF-PRG-036/#6288: child Destroy should run exactly once");
+        expect(event_count("prg.object.removeobject", "DemoForm.child") == 4U,
+               "RQ-CF-PRG-036/#6288: each successful removal should emit one event");
+        expect(event_count("prg.object.destroy", "DemoGrand.Destroy") == 4U,
+               "RQ-CF-PRG-036/#6288: each descendant Destroy should run exactly once");
+        expect(event_count("prg.object.destroy", "DemoChild.Destroy") == 4U,
+               "RQ-CF-PRG-036/#6288: each child Destroy should run exactly once");
         expect(event_count("prg.object.destroy", "ReentrantChild.Destroy") == 1U,
                "RQ-CF-PRG-036/#6288: reentrant child Destroy should run exactly once");
         expect(event_count("prg.object.destroy", "ReentrantForm.Destroy") == 1U,

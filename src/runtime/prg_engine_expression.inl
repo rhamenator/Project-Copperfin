@@ -2527,6 +2527,19 @@
                     }
                 }
 
+                // RQ-CF-PRG-036: a later argument may synchronously destroy an
+                // object captured by an earlier argument. Retire that local
+                // parser copy before the invocation receives a stale handle.
+                for (PrgValue &argument : invocation.arguments)
+                {
+                    int handle = 0;
+                    std::string prog_id;
+                    if (parse_object_handle_reference(argument, handle, prog_id) &&
+                        resolve_object_callback_(argument) == nullptr)
+                    {
+                        argument = make_empty_value();
+                    }
+                }
                 return invocation;
             }
 
