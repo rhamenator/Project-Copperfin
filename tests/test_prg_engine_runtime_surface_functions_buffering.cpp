@@ -105,9 +105,13 @@ namespace copperfin::runtime_surface_tests
             "SET DATASESSION TO 2\n"
             "USE '" + other_table_path.string() + "' ALIAS cursession\n"
             "SET ORDER TO TAG OTHER\n"
+            "USE '" + other_table_path.string() + "' ALIAS q AGAIN IN 0\n"
             "SET DATASESSION TO 1\n"
             "USE '" + table_path.string() + "' ALIAS cursession\n"
             "=CURSORSETPROP('Buffering', 5, 'cursession')\n"
+            "SELECT CURVAL(\"IIF(SwitchSession(), q.NAME, q.NAME)\", 'q') AS NAME FROM cursession q INTO ARRAY aQuerySafe\n"
+            "SET DATASESSION TO 1\n"
+            "cQueryAliasSwitch = aQuerySafe[1]\n"
             "cSessionSwitch = CURVAL(\"IIF(SwitchSession(), cursession.NAME + '|' + FIELD(1, 'cursession') + '|' + TRANSFORM(FSIZE('NAME', 'cursession')) + '|' + ORDER('cursession') + '|' + TAG(1, '', 'cursession'), '')\", 'cursession')\n"
             "nSessionAfterCallback = VAL(SET('DATASESSION'))\n"
             "SET DATASESSION TO 1\n"
@@ -210,6 +214,7 @@ namespace copperfin::runtime_surface_tests
         expect_global("coldreusename", "ALPHA");
         expect_global("cnestedvalues", "ALPHA");
         expect_global("csessionswitch", "ALPHA|ID|10||");
+        expect_global("cqueryaliasswitch", "ALPHA");
         expect_global("cordinaryswitch", "BRAVO|OTHER|6|OTHER|OTHER");
         expect_global("nsessionaftercallback", "2");
         expect_global("ccurclosemessage", "Variable 'NAME' is not found.");

@@ -1229,11 +1229,15 @@
                 {
                     return std::nullopt;
                 }
+                const auto effective_alias = session.aliases.find(candidate->first);
                 return CursorExpressionReference{
                     .data_session = data_session,
                     .work_area = candidate->first,
                     .binding_identity = ensure_cursor_binding_identity(candidate->second),
-                    .alias = normalize_identifier(candidate->second.alias),
+                    .alias = normalize_identifier(
+                        effective_alias == session.aliases.end()
+                            ? candidate->second.alias
+                            : effective_alias->second),
                     .bind_explicit_designators = false,
                     .detached_cursor = nullptr};
             };
