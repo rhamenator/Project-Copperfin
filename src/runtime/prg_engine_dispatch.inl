@@ -3734,20 +3734,26 @@
                 std::string used_order_normalization_hint;
                 std::string used_order_collation_hint;
                 bool used_order_descending = false;
-                const bool found = execute_seek(
-                    *cursor,
-                    search_key,
-                    frame,
-                    true,
-                    false,
-                    statement.tertiary_expression,
-                    parse_order_direction_override(statement.quaternary_expression),
-                    nullptr,
-                    &used_order_name,
-                    &used_order_normalization_hint,
-                    &used_order_collation_hint,
-                    &used_order_descending);
-                synchronize_relations_for_parent(*cursor, frame, cursor_reference.data_session);
+                bool found = false;
+                {
+                    ScopedDataSessionSelection target_session(
+                        current_data_session, cursor_reference.data_session);
+                    found = execute_seek(
+                        *cursor,
+                        search_key,
+                        frame,
+                        true,
+                        false,
+                        statement.tertiary_expression,
+                        parse_order_direction_override(statement.quaternary_expression),
+                        nullptr,
+                        &used_order_name,
+                        &used_order_normalization_hint,
+                        &used_order_collation_hint,
+                        &used_order_descending);
+                    synchronize_relations_for_parent(
+                        *cursor, frame, cursor_reference.data_session);
+                }
                 events.push_back({.category = "runtime.seek",
                                   .detail = format_order_metadata_detail(
                                                 used_order_name.empty() ? std::string{"<default>"} : used_order_name,
@@ -4426,22 +4432,8 @@
                     resumed_command_cursor_reference.value_or(capture_cursor_generation_reference(cursor));
 
                 const std::string destination = uppercase_copy(trim_copy(statement.expression));
-                if (destination == "TOP")
-                {
-                    (void)seek_visible_record(*cursor, frame, 1, 1, {}, {}, false, true);
-                }
-                else if (destination == "BOTTOM")
-                {
-                    if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false, true) &&
-                        cursor->record_count > 0U)
-                    {
-                        // VFP keeps physical EOF while reporting both boundary flags when the filtered set is empty.
-                        cursor->recno = cursor->record_count + 1U;
-                        cursor->bof = true;
-                        cursor->eof = true;
-                    }
-                }
-                else
+                std::optional<long long> requested_record;
+                if (destination != "TOP" && destination != "BOTTOM")
                 {
                     const auto requested_value = resumed_go_value.has_value()
                                                      ? resumed_go_value
@@ -4464,11 +4456,36 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    const long long requested = std::llround(value_as_number(*requested_value));
-                    move_cursor_to(*cursor, requested);
+                    requested_record = std::llround(value_as_number(*requested_value));
                 }
 
-                synchronize_relations_for_parent(*cursor, frame, cursor_reference.data_session);
+                {
+                    ScopedDataSessionSelection target_session(
+                        current_data_session, cursor_reference.data_session);
+                    if (destination == "TOP")
+                    {
+                        (void)seek_visible_record(*cursor, frame, 1, 1, {}, {}, false, true);
+                    }
+                    else if (destination == "BOTTOM")
+                    {
+                        if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false, true) &&
+                            cursor->record_count > 0U)
+                        {
+                            // VFP keeps physical EOF while reporting both boundary flags when the filtered set is empty.
+                            cursor->recno = cursor->record_count + 1U;
+                            cursor->bof = true;
+                            cursor->eof = true;
+                        }
+                    }
+                    else
+                    {
+                        move_cursor_to(*cursor, *requested_record);
+                    }
+
+                    synchronize_relations_for_parent(
+                        *cursor, frame, cursor_reference.data_session);
+                }
+
                 events.push_back({.category = "runtime.go",
                                   .detail = destination.empty() ? statement.expression : destination,
                                   .location = statement.location});
@@ -4511,14 +4528,19 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                const long long delta = std::llround(value_as_number(*delta_value));
-                if (!move_by_visible_records(*cursor, frame, delta))
                 {
-                    cursor->found = false;
+                    ScopedDataSessionSelection target_session(
+                        current_data_session, cursor_reference.data_session);
+                    const long long delta = std::llround(value_as_number(*delta_value));
+                    if (!move_by_visible_records(*cursor, frame, delta))
+                    {
+                        cursor->found = false;
+                    }
+                    (void)synchronize_skip_parent_for_child(
+                        *cursor, frame, delta, cursor_reference.data_session);
+                    synchronize_relations_for_parent(
+                        *cursor, frame, cursor_reference.data_session);
                 }
-                (void)synchronize_skip_parent_for_child(
-                    *cursor, frame, delta, cursor_reference.data_session);
-                synchronize_relations_for_parent(*cursor, frame, cursor_reference.data_session);
                 events.push_back({.category = "runtime.skip",
                                   .detail = statement.expression,
                                   .location = statement.location});

@@ -315,6 +315,26 @@ namespace copperfin::runtime
             std::uint64_t binding_identity = 0U;
         };
 
+        struct ScopedDataSessionSelection
+        {
+            int &selected_data_session;
+            int previous_data_session;
+
+            ScopedDataSessionSelection(int &selection, int target_data_session)
+                : selected_data_session(selection),
+                  previous_data_session(selection)
+            {
+                // RQ-CF-PRG-035: post-expression navigation reads the target
+                // session's SET state, then restores the callback's selection.
+                selected_data_session = target_data_session;
+            }
+
+            ~ScopedDataSessionSelection()
+            {
+                selected_data_session = previous_data_session;
+            }
+        };
+
         struct ExpressionContinuation
         {
             Statement statement;

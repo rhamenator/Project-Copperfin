@@ -305,7 +305,10 @@ namespace copperfin::runtime_surface_tests
             program_path,
             "SET MULTILOCKS ON\n"
             "SET DATASESSION TO 2\n"
+            "SET EXACT OFF\n"
             "USE '" + other_path.string() + "' ALIAS switchpeople\n"
+            "USE '" + other_path.string() + "' ALIAS seekorigin AGAIN IN 0\n"
+            "SET ORDER TO TAG NAME IN seekorigin\n"
             "USE '" + other_path.string() + "' ALIAS relparent AGAIN IN 0\n"
             "USE '" + other_path.string() + "' ALIAS relchild AGAIN IN 0\n"
             "SET ORDER TO TAG NAME IN relchild\n"
@@ -316,6 +319,7 @@ namespace copperfin::runtime_surface_tests
             "nSeekCalls = 0\n"
             "nUnlockCalls = 0\n"
             "nSwitchCalls = 0\n"
+            "nSeekSwitchCalls = 0\n"
             "nRelationSwitchCalls = 0\n"
             "USE '" + table_path.string() + "' ALIAS gopeople\n"
             "TRY\n"
@@ -358,6 +362,14 @@ namespace copperfin::runtime_surface_tests
             "SET DATASESSION TO 1\n"
             "SELECT switchunlock\n"
             "lSwitchUnlockReleased = NOT ISRLOCKED()\n"
+            "SET EXACT ON\n"
+            "USE '" + table_path.string() + "' ALIAS seekorigin AGAIN IN 0\n"
+            "SET ORDER TO TAG NAME IN seekorigin\n"
+            "SEEK SwitchSeekSession() IN seekorigin\n"
+            "nSeekSessionAfter = VAL(SET('DATASESSION'))\n"
+            "SET DATASESSION TO 1\n"
+            "lSeekOriginFound = FOUND('seekorigin')\n"
+            "SET EXACT OFF\n"
             "USE '" + table_path.string() + "' ALIAS relparent AGAIN IN 0\n"
             "USE '" + table_path.string() + "' ALIAS relchild AGAIN IN 0\n"
             "SET ORDER TO TAG NAME IN relchild\n"
@@ -395,6 +407,11 @@ namespace copperfin::runtime_surface_tests
             "SET DATASESSION TO 2\n"
             "RETURN 1\n"
             "ENDFUNC\n"
+            "FUNCTION SwitchSeekSession\n"
+            "nSeekSwitchCalls = nSeekSwitchCalls + 1\n"
+            "SET DATASESSION TO 2\n"
+            "RETURN 'AL'\n"
+            "ENDFUNC\n"
             "FUNCTION SwitchRelationSession\n"
             "nRelationSwitchCalls = nRelationSwitchCalls + 1\n"
             "SET DATASESSION TO 2\n"
@@ -427,12 +444,15 @@ namespace copperfin::runtime_surface_tests
         expect_global("cunlockreplacement", "ALPHA");
         expect_global("nswitchrecno", "2");
         expect_global("lswitchunlockreleased", "true");
+        expect_global("nseeksessionafter", "2");
+        expect_global("lseekoriginfound", "false");
         expect_global("crelationchild", "BRAVO");
         expect_global("ngocalls", "1");
         expect_global("nskipcalls", "1");
         expect_global("nseekcalls", "1");
         expect_global("nunlockcalls", "1");
         expect_global("nswitchcalls", "2");
+        expect_global("nseekswitchcalls", "1");
         expect_global("nrelationswitchcalls", "1");
 
         const auto event_count = [&](const std::string &category)
@@ -446,8 +466,8 @@ namespace copperfin::runtime_surface_tests
                "RQ-CF-PRG-035/#6319: only the two valid session-switch GO commands should emit success");
         expect(event_count("runtime.skip") == 1U,
                "RQ-CF-PRG-035/#6319: only the valid session-switch SKIP should emit success");
-        expect(event_count("runtime.seek") == 0U,
-               "RQ-CF-PRG-035/#6319: rejected SEEK should not emit false success");
+        expect(event_count("runtime.seek") == 1U,
+               "RQ-CF-PRG-035/#6319: only the valid session-switch SEEK should emit success");
         expect(event_count("runtime.unlock") == 1U,
                "RQ-CF-PRG-035/#6319: only the valid session-switch UNLOCK should emit success");
 
