@@ -61,6 +61,9 @@
         std::optional<PrgValue> resumed_skip_value;
         std::optional<PrgValue> resumed_go_value;
         std::optional<PrgValue> resumed_unlock_record_value;
+        // RQ-CF-PRG-035: copied before evaluate_resumable_expression() clears
+        // its completed continuation, then consumed by the command dispatcher.
+        std::optional<CursorGenerationReference> resumed_command_cursor_reference;
         std::optional<PrgValue> resumed_use_target_value;
         std::optional<PrgValue> resumed_use_alias_value;
         std::optional<PrgValue> resumed_open_database_target_value;
@@ -393,6 +396,7 @@
                 {
                     ExpressionContinuation &continuation =
                         *frame.expression_continuation;
+                    resumed_command_cursor_reference = continuation.command_cursor_reference;
                     if (continuation.awaiting_routine.has_value())
                     {
                         continuation.routine_results[*continuation.awaiting_routine] =
@@ -3689,7 +3693,9 @@
                 return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
             case StatementKind::seek_command:
             {
-                CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+                CursorState *cursor = resumed_command_cursor_reference.has_value()
+                    ? resolve_cursor_generation_reference(*resumed_command_cursor_reference)
+                    : resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
                     last_error_message = runtime_text(
@@ -3699,13 +3705,29 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                const CursorGenerationReference cursor_reference =
+                    resumed_command_cursor_reference.value_or(capture_cursor_generation_reference(cursor));
 
                 const auto search_key_value = resumed_seek_value.has_value()
                                                   ? resumed_seek_value
                                                   : evaluate_resumable_expression(frame, statement);
                 if (!search_key_value.has_value())
                 {
+                    if (frame.expression_continuation.has_value())
+                    {
+                        frame.expression_continuation->command_cursor_reference = cursor_reference;
+                    }
                     return {};
+                }
+                cursor = resolve_cursor_generation_reference(cursor_reference);
+                if (cursor == nullptr)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "SEEK"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
                 const std::string search_key = value_as_string(*search_key_value);
                 std::string used_order_name;
@@ -4319,7 +4341,9 @@
                     return {};
                 }
 
-                CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+                CursorState *cursor = resumed_command_cursor_reference.has_value()
+                    ? resolve_cursor_generation_reference(*resumed_command_cursor_reference)
+                    : resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
                     last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
@@ -4328,6 +4352,8 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                const CursorGenerationReference cursor_reference =
+                    resumed_command_cursor_reference.value_or(capture_cursor_generation_reference(cursor));
 
                 if (!trim_copy(statement.identifier).empty())
                 {
@@ -4343,7 +4369,21 @@
                                                         }());
                     if (!record_value.has_value())
                     {
+                        if (frame.expression_continuation.has_value())
+                        {
+                            frame.expression_continuation->command_cursor_reference = cursor_reference;
+                        }
                         return {};
+                    }
+                    cursor = resolve_cursor_generation_reference(cursor_reference);
+                    if (cursor == nullptr)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "UNLOCK"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
                     }
                     const std::size_t recno = static_cast<std::size_t>(
                         std::max<double>(0.0, std::llround(value_as_number(*record_value))));
@@ -4371,7 +4411,9 @@
             }
             case StatementKind::go_command:
             {
-                CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+                CursorState *cursor = resumed_command_cursor_reference.has_value()
+                    ? resolve_cursor_generation_reference(*resumed_command_cursor_reference)
+                    : resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
                     last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
@@ -4399,12 +4441,28 @@
                 }
                 else
                 {
+                    const CursorGenerationReference cursor_reference =
+                        resumed_command_cursor_reference.value_or(capture_cursor_generation_reference(cursor));
                     const auto requested_value = resumed_go_value.has_value()
                                                      ? resumed_go_value
                                                      : evaluate_resumable_expression(frame, statement);
                     if (!requested_value.has_value())
                     {
+                        if (frame.expression_continuation.has_value())
+                        {
+                            frame.expression_continuation->command_cursor_reference = cursor_reference;
+                        }
                         return {};
+                    }
+                    cursor = resolve_cursor_generation_reference(cursor_reference);
+                    if (cursor == nullptr)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "GO"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
                     }
                     const long long requested = std::llround(value_as_number(*requested_value));
                     move_cursor_to(*cursor, requested);
@@ -4418,7 +4476,9 @@
             }
             case StatementKind::skip_command:
             {
-                CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+                CursorState *cursor = resumed_command_cursor_reference.has_value()
+                    ? resolve_cursor_generation_reference(*resumed_command_cursor_reference)
+                    : resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
                     last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
@@ -4427,13 +4487,29 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                const CursorGenerationReference cursor_reference =
+                    resumed_command_cursor_reference.value_or(capture_cursor_generation_reference(cursor));
 
                 const auto delta_value = resumed_skip_value.has_value()
                                              ? resumed_skip_value
                                              : evaluate_resumable_expression(frame, statement);
                 if (!delta_value.has_value())
                 {
+                    if (frame.expression_continuation.has_value())
+                    {
+                        frame.expression_continuation->command_cursor_reference = cursor_reference;
+                    }
                     return {};
+                }
+                cursor = resolve_cursor_generation_reference(cursor_reference);
+                if (cursor == nullptr)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "SKIP"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
                 const long long delta = std::llround(value_as_number(*delta_value));
                 if (!move_by_visible_records(*cursor, frame, delta))

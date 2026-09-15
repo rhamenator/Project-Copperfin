@@ -1322,6 +1322,31 @@
                 : nullptr;
         }
 
+        CursorGenerationReference capture_cursor_generation_reference(CursorState *cursor)
+        {
+            // RQ-CF-PRG-035: use the same session/work-area generation identity
+            // as nested CURVAL/OLDVAL evaluation without retaining its pointer.
+            const CursorExpressionReference reference = capture_cursor_expression_reference(cursor);
+            return CursorGenerationReference{
+                .data_session = reference.data_session,
+                .work_area = reference.work_area,
+                .binding_identity = reference.binding_identity};
+        }
+
+        CursorState *resolve_cursor_generation_reference(const CursorGenerationReference &reference)
+        {
+            // RQ-CF-PRG-035: an ABA replacement in the same work area is not
+            // the command target captured before expression evaluation.
+            return const_cast<CursorState *>(resolve_cursor_expression_reference(
+                CursorExpressionReference{
+                    .data_session = reference.data_session,
+                    .work_area = reference.work_area,
+                    .binding_identity = reference.binding_identity,
+                    .alias = {},
+                    .bind_explicit_designators = false,
+                    .detached_cursor = nullptr}));
+        }
+
         bool can_open_table_cursor(
             const std::string &resolved_path,
             const std::string &alias,

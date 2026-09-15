@@ -275,6 +275,157 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_navigation_commands_reject_reentrant_cursor_replacement()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_navigation_reentrant_cursor";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path other_path = temp_root / "other.dbf";
+        const fs::path cdx_path = temp_root / "people.cdx";
+        const fs::path program_path = temp_root / "navigation_reentrant_cursor.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 10U}},
+            {{"ALPHA"}, {"BRAVO"}});
+        const auto other_result = copperfin::vfp::create_dbf_table_file(
+            other_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 10U}},
+            {{"OTHER"}, {"SECOND"}});
+        expect(create_result.ok && other_result.ok,
+               "RQ-CF-PRG-035/#6319: navigation cursor fixtures should be writable");
+        write_synthetic_cdx(cdx_path, "NAME", "NAME");
+
+        write_text(
+            program_path,
+            "SET MULTILOCKS ON\n"
+            "SET DATASESSION TO 2\n"
+            "USE '" + other_path.string() + "' ALIAS switchpeople\n"
+            "SET DATASESSION TO 1\n"
+            "nGoCalls = 0\n"
+            "nSkipCalls = 0\n"
+            "nSeekCalls = 0\n"
+            "nUnlockCalls = 0\n"
+            "nSwitchCalls = 0\n"
+            "USE '" + table_path.string() + "' ALIAS gopeople\n"
+            "TRY\n"
+            "  GO ReplaceGo() IN gopeople\n"
+            "CATCH TO oGo\n"
+            "  nGoError = oGo.ErrorNo\n"
+            "ENDTRY\n"
+            "cGoReplacement = gopeople.NAME\n"
+            "USE '" + table_path.string() + "' ALIAS skippeople\n"
+            "TRY\n"
+            "  SKIP EVALUATE(\"ReplaceSkip()\") IN skippeople\n"
+            "CATCH TO oSkip\n"
+            "  nSkipError = oSkip.ErrorNo\n"
+            "ENDTRY\n"
+            "cSkipReplacement = skippeople.NAME\n"
+            "USE '" + table_path.string() + "' ALIAS seekpeople\n"
+            "SET ORDER TO TAG NAME IN seekpeople\n"
+            "TRY\n"
+            "  SEEK ReplaceSeek() IN seekpeople\n"
+            "CATCH TO oSeek\n"
+            "  nSeekError = oSeek.ErrorNo\n"
+            "ENDTRY\n"
+            "cSeekReplacement = seekpeople.NAME\n"
+            "USE '" + table_path.string() + "' ALIAS unlockpeople\n"
+            "=RLOCK('unlockpeople')\n"
+            "TRY\n"
+            "  UNLOCK RECORD EVALUATE(\"ReplaceUnlock()\") IN unlockpeople\n"
+            "CATCH TO oUnlock\n"
+            "  nUnlockError = oUnlock.ErrorNo\n"
+            "ENDTRY\n"
+            "cUnlockReplacement = unlockpeople.NAME\n"
+            "USE '" + table_path.string() + "' ALIAS switchpeople\n"
+            "GO 1 IN switchpeople\n"
+            "SKIP EVALUATE(\"SwitchSession()\") IN switchpeople\n"
+            "SET DATASESSION TO 1\n"
+            "nSwitchRecno = RECNO('switchpeople')\n"
+            "RETURN\n"
+            "FUNCTION ReplaceGo\n"
+            "nGoCalls = nGoCalls + 1\n"
+            "USE IN gopeople\n"
+            "USE '" + table_path.string() + "' ALIAS gopeople\n"
+            "RETURN 2\n"
+            "ENDFUNC\n"
+            "FUNCTION ReplaceSkip\n"
+            "nSkipCalls = nSkipCalls + 1\n"
+            "USE IN skippeople\n"
+            "USE '" + table_path.string() + "' ALIAS skippeople\n"
+            "RETURN 1\n"
+            "ENDFUNC\n"
+            "FUNCTION ReplaceSeek\n"
+            "nSeekCalls = nSeekCalls + 1\n"
+            "USE IN seekpeople\n"
+            "USE '" + table_path.string() + "' ALIAS seekpeople\n"
+            "RETURN 'BRAVO'\n"
+            "ENDFUNC\n"
+            "FUNCTION ReplaceUnlock\n"
+            "nUnlockCalls = nUnlockCalls + 1\n"
+            "USE IN unlockpeople\n"
+            "USE '" + table_path.string() + "' ALIAS unlockpeople\n"
+            "RETURN 1\n"
+            "ENDFUNC\n"
+            "FUNCTION SwitchSession\n"
+            "nSwitchCalls = nSwitchCalls + 1\n"
+            "SET DATASESSION TO 2\n"
+            "RETURN 1\n"
+            "ENDFUNC\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(program_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "RQ-CF-PRG-035/#6319: navigation closure errors should remain catchable: " + state.message);
+        const auto expect_global = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), "RQ-CF-PRG-035/#6319: " + name + " should be captured");
+            if (found != state.globals.end())
+            {
+                const std::string actual = copperfin::runtime::format_value(found->second);
+                expect(actual == expected,
+                       "RQ-CF-PRG-035/#6319: " + name + " expected " + expected + ", got " + actual);
+            }
+        };
+        expect_global("ngoerror", "1002");
+        expect_global("nskiperror", "1002");
+        expect_global("nseekerror", "1002");
+        expect_global("nunlockerror", "1002");
+        expect_global("cgoreplacement", "ALPHA");
+        expect_global("cskipreplacement", "ALPHA");
+        expect_global("cseekreplacement", "ALPHA");
+        expect_global("cunlockreplacement", "ALPHA");
+        expect_global("nswitchrecno", "2");
+        expect_global("ngocalls", "1");
+        expect_global("nskipcalls", "1");
+        expect_global("nseekcalls", "1");
+        expect_global("nunlockcalls", "1");
+        expect_global("nswitchcalls", "1");
+
+        const auto event_count = [&](const std::string &category)
+        {
+            return std::count_if(
+                state.events.begin(),
+                state.events.end(),
+                [&](const auto &event) { return event.category == category; });
+        };
+        expect(event_count("runtime.go") == 1U,
+               "RQ-CF-PRG-035/#6319: only the valid session-switch GO should emit success");
+        expect(event_count("runtime.skip") == 1U,
+               "RQ-CF-PRG-035/#6319: only the valid session-switch SKIP should emit success");
+        expect(event_count("runtime.seek") == 0U,
+               "RQ-CF-PRG-035/#6319: rejected SEEK should not emit false success");
+        expect(event_count("runtime.unlock") == 0U,
+               "RQ-CF-PRG-035/#6319: rejected UNLOCK should not emit false success");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_setfldstate_assigns_buffered_mutation_state()
     {
         namespace fs = std::filesystem;

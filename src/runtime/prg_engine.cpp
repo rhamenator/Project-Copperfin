@@ -306,12 +306,24 @@ namespace copperfin::runtime
             PrgValue value;
         };
 
+        struct CursorGenerationReference
+        {
+            // RQ-CF-PRG-035: expression continuations retain identity, never
+            // a map-node address that a synchronous callback can erase.
+            int data_session = 0;
+            int work_area = 0;
+            std::uint64_t binding_identity = 0U;
+        };
+
         struct ExpressionContinuation
         {
             Statement statement;
             std::map<std::size_t, ExpressionPrimaryCheckpoint> primary_checkpoints;
             std::map<std::pair<std::size_t, std::size_t>, PrgValue> routine_results;
             std::optional<std::pair<std::size_t, std::size_t>> awaiting_routine;
+            // RQ-CF-PRG-035: command expressions can suspend into a PRG
+            // routine, so their target generation must survive the trampoline.
+            std::optional<CursorGenerationReference> command_cursor_reference;
         };
 
         struct ExpressionSuspended
@@ -3661,7 +3673,8 @@ namespace copperfin::runtime
                     .statement = statement,
                     .primary_checkpoints = {},
                     .routine_results = {},
-                    .awaiting_routine = std::nullopt};
+                    .awaiting_routine = std::nullopt,
+                    .command_cursor_reference = std::nullopt};
         }
 
         const bool previous_active = resumable_expression_dispatch_active;
