@@ -296,6 +296,8 @@ namespace copperfin::runtime
             std::size_t rows = 0;
             std::size_t columns = 1;
             std::vector<PrgValue> values;
+            std::uint64_t binding_identity = 0U;
+            std::uint64_t mutation_generation = 0U;
         };
 
         struct ExpressionPrimaryCheckpoint
@@ -928,6 +930,7 @@ namespace copperfin::runtime
         bool last_popped_frame_returned = false;
         std::map<std::string, RuntimeArray> arrays;
         std::map<int, std::map<std::string, RuntimeArray>> native_object_arrays;
+        std::uint64_t next_array_binding_identity = 1U;
         std::set<std::string> public_names;
         std::vector<RuntimeBreakpoint> breakpoints;
         std::optional<SourceLocation> resume_skip_breakpoint_location;

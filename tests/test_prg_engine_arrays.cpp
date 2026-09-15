@@ -314,6 +314,242 @@ void test_ascan_predicate_expression_search() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_ascan_predicate_rejects_reentrant_source_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_ascan_reentrant_mutation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "ascan_reentrant_mutation.prg";
+    write_text(
+        main_path,
+        "_ASCANVALUE = 'saved value'\n"
+        "_ASCANINDEX = 91\n"
+        "_ASCANROW = 92\n"
+        "_ASCANCOLUMN = 93\n"
+        "x = 'saved parameter'\n"
+        "DIMENSION aValues[3], aSource[3]\n"
+        "PUBLIC ARRAY aPublicValues[3]\n"
+        "aValues[1] = 10\n"
+        "aValues[2] = 20\n"
+        "aValues[3] = 30\n"
+        "aSource[1] = 40\n"
+        "aSource[2] = 50\n"
+        "aSource[3] = 60\n"
+        "CREATE CURSOR cScan (cOne C(1), cTwo C(1), cThree C(1))\n"
+        "APPEND BLANK\n"
+        "REPLACE cOne WITH 'a', cTwo WITH 'b', cThree WITH 'c'\n"
+        "TRY\n"
+        "  nShrink = ASCAN(aValues, '{|x| ASIZE(aValues,0)}', -1, -1, -1, 16)\n"
+        "CATCH TO oShrink\n"
+        "  nShrinkError = oShrink.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nGrow = ASCAN(aValues, 'ASIZE(aValues,6)', -1, -1, -1, 16)\n"
+        "CATCH TO oGrow\n"
+        "  nGrowError = oGrow.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nShape = ASCAN(aValues, 'ASIZE(aValues,2,2)', -1, -1, -1, 16)\n"
+        "CATCH TO oShape\n"
+        "  nShapeError = oShape.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nDelete = ASCAN(aValues, 'ADEL(aValues,1)', -1, -1, -1, 16)\n"
+        "CATCH TO oDelete\n"
+        "  nDeleteError = oDelete.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  nInsert = ASCAN(aValues, 'AINS(aValues,1)', -1, -1, -1, 16)\n"
+        "CATCH TO oInsert\n"
+        "  nInsertError = oInsert.ErrorNo\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  nCopy = ASCAN(aValues, 'ACOPY(aSource,aValues)', -1, -1, -1, 16)\n"
+        "CATCH TO oCopy\n"
+        "  nCopyError = oCopy.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nScatter = ASCAN(aValues, 'ScatterScanSource()', -1, -1, -1, 16)\n"
+        "CATCH TO oScatter\n"
+        "  nScatterError = oScatter.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nCallbackThrow = ASCAN(aValues, 'ThrowScanCallback()', -1, -1, -1, 16)\n"
+        "CATCH TO oCallbackThrow\n"
+        "  nCallbackThrowError = oCallbackThrow.ErrorNo\n"
+        "ENDTRY\n"
+        "lLocalThrowBindings = ScanLocalCallbackException()\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nRelease = ASCAN(aValues, 'ReleaseScanSource()', -1, -1, -1, 16)\n"
+        "CATCH TO oRelease\n"
+        "  nReleaseError = oRelease.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nRebind = ASCAN(aValues, 'RebindScanSource()', -1, -1, -1, 16)\n"
+        "CATCH TO oRebind\n"
+        "  nRebindError = oRebind.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nReplaceFirst = ASCAN(aValues, 'ReplaceScanSource(1)', -1, -1, -1, 16)\n"
+        "CATCH TO oReplaceFirst\n"
+        "  nReplaceFirstError = oReplaceFirst.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nReplaceMiddle = ASCAN(aValues, 'ReplaceScanSource(2)', -1, -1, -1, 16)\n"
+        "CATCH TO oReplaceMiddle\n"
+        "  nReplaceMiddleError = oReplaceMiddle.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nReplaceFinal = ASCAN(aValues, 'ReplaceScanSource(3)', -1, -1, -1, 16)\n"
+        "CATCH TO oReplaceFinal\n"
+        "  nReplaceFinalError = oReplaceFinal.ErrorNo\n"
+        "ENDTRY\n"
+        "nLocalError = ScanLocalArray()\n"
+        "nPrivateError = ScanPrivateArray()\n"
+        "TRY\n"
+        "  nPublic = ASCAN(aPublicValues, 'ASIZE(aPublicValues,0)', -1, -1, -1, 16)\n"
+        "CATCH TO oPublic\n"
+        "  nPublicError = oPublic.ErrorNo\n"
+        "ENDTRY\n"
+        "oHolder = CREATEOBJECT('ArrayHolder')\n"
+        "TRY\n"
+        "  nNative = ASCAN(oHolder.aValues, 'ASIZE(oHolder.aValues,0)', -1, -1, -1, 16)\n"
+        "CATCH TO oNative\n"
+        "  nNativeError = oNative.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "aValues[1] = 10\n"
+        "aValues[2] = 20\n"
+        "aValues[3] = 30\n"
+        "nNested = ASCAN(aValues, 'ASCAN(aValues,20) > 0', -1, -1, -1, 16)\n"
+        "nNestedPredicate = ASCAN(aValues, 'ASCAN(aValues,''_ASCANVALUE = 20'',-1,-1,-1,16) > 0', -1, -1, -1, 16)\n"
+        "cSavedValue = _ASCANVALUE\n"
+        "nSavedIndex = _ASCANINDEX\n"
+        "nSavedRow = _ASCANROW\n"
+        "nSavedColumn = _ASCANCOLUMN\n"
+        "cSavedParameter = x\n"
+        "nAfter = aValues[3]\n"
+        "RETURN\n"
+        "FUNCTION ReleaseScanSource\n"
+        "RELEASE aValues\n"
+        "RETURN .F.\n"
+        "ENDFUNC\n"
+        "FUNCTION RebindScanSource\n"
+        "RELEASE aValues\n"
+        "DIMENSION aValues[3]\n"
+        "RETURN .F.\n"
+        "ENDFUNC\n"
+        "FUNCTION ReplaceScanSource(nIndex)\n"
+        "aValues[nIndex] = 99\n"
+        "RETURN .F.\n"
+        "ENDFUNC\n"
+        "FUNCTION ScatterScanSource\n"
+        "SELECT cScan\n"
+        "SCATTER TO aValues\n"
+        "RETURN .F.\n"
+        "ENDFUNC\n"
+        "FUNCTION ThrowScanCallback\n"
+        "RETURN AT('a','a',0)\n"
+        "ENDFUNC\n"
+        "FUNCTION ScanLocalCallbackException\n"
+        "LOCAL _ASCANVALUE, _ASCANINDEX, _ASCANROW, _ASCANCOLUMN, x\n"
+        "LOCAL ARRAY aLocalThrowValues[1]\n"
+        "_ASCANVALUE = 'saved local value'\n"
+        "_ASCANINDEX = 191\n"
+        "_ASCANROW = 192\n"
+        "_ASCANCOLUMN = 193\n"
+        "x = 'saved local parameter'\n"
+        "TRY\n"
+        "  nUnused = ASCAN(aLocalThrowValues, '{|x| ThrowScanCallback()}', -1, -1, -1, 16)\n"
+        "CATCH\n"
+        "  RETURN _ASCANVALUE = 'saved local value' AND _ASCANINDEX = 191 AND _ASCANROW = 192 AND _ASCANCOLUMN = 193 AND x = 'saved local parameter'\n"
+        "ENDTRY\n"
+        "RETURN .F.\n"
+        "ENDFUNC\n"
+        "FUNCTION ScanLocalArray\n"
+        "LOCAL ARRAY aLocalValues[3]\n"
+        "TRY\n"
+        "  nUnused = ASCAN(aLocalValues, 'ASIZE(aLocalValues,0)', -1, -1, -1, 16)\n"
+        "CATCH TO oLocal\n"
+        "  RETURN oLocal.ErrorNo\n"
+        "ENDTRY\n"
+        "RETURN 0\n"
+        "ENDFUNC\n"
+        "FUNCTION ScanPrivateArray\n"
+        "PRIVATE ARRAY aPrivateValues[3]\n"
+        "TRY\n"
+        "  nUnused = ASCAN(aPrivateValues, 'ASIZE(aPrivateValues,0)', -1, -1, -1, 16)\n"
+        "CATCH TO oPrivate\n"
+        "  RETURN oPrivate.ErrorNo\n"
+        "ENDTRY\n"
+        "RETURN 0\n"
+        "ENDFUNC\n"
+        "DEFINE CLASS ArrayHolder AS Custom\n"
+        "  DIMENSION aValues[3]\n"
+        "ENDDEFINE\n");
+
+    const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                           make_runtime_session_options(main_path, temp_root))
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "RQ-CF-PRG-033/#6253: ASCAN source-mutation errors should be catchable without aborting the host: " + state.message);
+
+    const auto expect_global = [&](const std::string& name,
+                                   const std::string& expected,
+                                   const std::string& message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end()) {
+            const std::string actual = copperfin::runtime::format_value(found->second);
+            expect(actual == expected,
+                   message + " (expected " + expected + ", got " + actual + ")");
+        }
+    };
+    for (const std::string name : {
+             "nshrinkerror", "ngrowerror", "nshapeerror",
+             "ndeleteerror", "ninserterror", "ncopyerror", "nscattererror",
+             "nreleaseerror", "nrebinderror", "nreplacefirsterror",
+             "nreplacemiddleerror", "nreplacefinalerror", "nlocalerror",
+             "nprivateerror", "npublicerror", "nnativeerror"}) {
+        expect_global(name, "11",
+                      "RQ-CF-PRG-033/#6253: reentrant source mutation " + name + " should raise VFP error 11");
+    }
+    expect_global("ncallbackthrowerror", "1",
+                  "RQ-CF-PRG-033/#6253: a callback exception should remain catchable while restoring predicate bindings");
+    expect_global("llocalthrowbindings", "true",
+                  "RQ-CF-PRG-033/#6253: callback exceptions should restore the original predicate frame's local bindings");
+    expect_global("nnested", "1",
+                  "RQ-CF-PRG-033/#6253: a non-mutating nested ASCAN should remain supported");
+    expect_global("nnestedpredicate", "1",
+                  "RQ-CF-PRG-033/#6253: a nested predicate ASCAN should remain supported");
+    expect_global("csavedvalue", "saved value",
+                  "RQ-CF-PRG-033/#6253: _ASCANVALUE should be restored after mutation errors");
+    expect_global("nsavedindex", "91",
+                  "RQ-CF-PRG-033/#6253: _ASCANINDEX should be restored after mutation errors");
+    expect_global("nsavedrow", "92",
+                  "RQ-CF-PRG-033/#6253: _ASCANROW should be restored after mutation errors");
+    expect_global("nsavedcolumn", "93",
+                  "RQ-CF-PRG-033/#6253: _ASCANCOLUMN should be restored after mutation errors");
+    expect_global("csavedparameter", "saved parameter",
+                  "RQ-CF-PRG-033/#6253: a predicate parameter should be restored after mutation errors");
+    expect_global("nafter", "30",
+                  "RQ-CF-PRG-033/#6253: later array operations should remain valid after caught mutation errors");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_acopy_two_dimensional_row_and_column_workflows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_acopy_2d";
@@ -2085,6 +2321,7 @@ int main() {
     test_asort_order_values_follow_vfp_contract();
     test_ascan_column_start_uses_column_relative_row();
     test_ascan_predicate_expression_search();
+    test_ascan_predicate_rejects_reentrant_source_mutation();
     test_acopy_two_dimensional_row_and_column_workflows();
     test_acopy_clamps_to_existing_target_capacity();
     test_array_dimension_and_element_assignment();

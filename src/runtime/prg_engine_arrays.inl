@@ -257,6 +257,10 @@
                 const std::string predicate_parameter_name = normalize_memory_variable_identifier(predicate_block.parameter);
                 std::map<std::string, std::optional<PrgValue>> saved_globals;
                 std::map<std::string, std::optional<PrgValue>> saved_locals;
+                const std::optional<std::size_t> predicate_frame_index =
+                    predicate_search && !stack.empty()
+                        ? std::optional<std::size_t>{stack.size() - 1U}
+                        : std::nullopt;
                 auto snapshot_predicate_binding = [&](Frame &predicate_frame, const std::string &name)
                 {
                     if (name.empty() || saved_globals.contains(name))
@@ -291,11 +295,6 @@
                 }
                 auto restore_predicate_bindings = [&]()
                 {
-                    if (stack.empty())
-                    {
-                        return;
-                    }
-                    Frame &predicate_frame = stack.back();
                     for (const auto &[name, value] : saved_globals)
                     {
                         if (value)
@@ -307,6 +306,11 @@
                             globals.erase(name);
                         }
                     }
+                    if (!predicate_frame_index.has_value() || *predicate_frame_index >= stack.size())
+                    {
+                        return;
+                    }
+                    Frame &predicate_frame = stack[*predicate_frame_index];
                     for (const auto &[name, value] : saved_locals)
                     {
                         if (value)
@@ -319,8 +323,14 @@
                         }
                     }
                 };
+                const auto finish_predicate_scan = [&]()
+                {
+                    restore_predicate_bindings();
+                };
                 const std::size_t array_columns = array->columns;
-                const auto predicate_value_matches = [&](const PrgValue &value, std::size_t linear_index)
+                const std::uint64_t array_binding_identity = array->binding_identity;
+                const std::uint64_t array_mutation_generation = array->mutation_generation;
+                const auto predicate_value_matches = [&](PrgValue value, std::size_t linear_index)
                 {
                     if (!predicate_search)
                     {
@@ -341,7 +351,34 @@
                     {
                         assign_variable(predicate_frame, predicate_block.parameter, value);
                     }
-                    return value_as_bool(evaluate_expression(predicate_block.expression, predicate_frame));
+                    try
+                    {
+                        return value_as_bool(evaluate_expression(predicate_block.expression, predicate_frame));
+                    }
+                    catch (...)
+                    {
+                        finish_predicate_scan();
+                        throw;
+                    }
+                };
+                const auto evaluate_predicate_at = [&](std::size_t linear_index)
+                {
+                    // RQ-CF-PRG-033: reentrant predicate code may invalidate both the
+                    // element value and the source array binding before it returns.
+                    const PrgValue value = array->values[linear_index];
+                    const bool matches = predicate_value_matches(value, linear_index);
+                    RuntimeArray *current_array = find_array(array_name);
+                    if (current_array == nullptr ||
+                        current_array->binding_identity != array_binding_identity ||
+                        current_array->mutation_generation != array_mutation_generation)
+                    {
+                        finish_predicate_scan();
+                        throw PrgCompatibilityError(
+                            runtime_text("Runtime.Prg.Array.Error.PredicateMutatedSource"),
+                            11);
+                    }
+                    array = current_array;
+                    return matches;
                 };
                 const std::size_t start = raw_start <= 0.0
                                               ? 1U
@@ -351,7 +388,7 @@
                                               : static_cast<std::size_t>(raw_count);
                 if (start == 0U || start > array->values.size())
                 {
-                    restore_predicate_bindings();
+                    finish_predicate_scan();
                     return make_number_value(0.0);
                 }
                 if (search_column > 0 && array->columns > 1U)
@@ -359,7 +396,7 @@
                     const std::size_t column = static_cast<std::size_t>(search_column);
                     if (column > array->columns)
                     {
-                        restore_predicate_bindings();
+                        finish_predicate_scan();
                         return make_number_value(0.0);
                     }
                     const std::size_t start_row = start - 1U;
@@ -369,17 +406,18 @@
                     {
                         const std::size_t index = (row * array->columns) + (column - 1U);
                         if (index < array->values.size() &&
-                            (predicate_value_matches(array->values[index], index) ||
-                             (!predicate_search && array_value_matches(array->values[index], arguments[1]))))
+                            (predicate_search
+                                 ? evaluate_predicate_at(index)
+                                 : array_value_matches(array->values[index], arguments[1])))
                         {
                             const PrgValue result = make_number_value((flags & 8) != 0
                                                                           ? static_cast<double>(row + 1U)
                                                                           : static_cast<double>(index + 1U));
-                            restore_predicate_bindings();
+                            finish_predicate_scan();
                             return result;
                         }
                     }
-                    restore_predicate_bindings();
+                    finish_predicate_scan();
                     return make_number_value(0.0);
                 }
                 const std::size_t begin_index = start - 1U;
@@ -388,17 +426,18 @@
                 const std::size_t end_index = begin_index + scan_count;
                 for (std::size_t index = begin_index; index < end_index; ++index)
                 {
-                    if (predicate_value_matches(array->values[index], index) ||
-                        (!predicate_search && array_value_matches(array->values[index], arguments[1])))
+                    if (predicate_search
+                            ? evaluate_predicate_at(index)
+                            : array_value_matches(array->values[index], arguments[1]))
                     {
                         const PrgValue result = make_number_value((flags & 8) != 0 && array->columns > 1U
                                                                       ? static_cast<double>((index / array->columns) + 1U)
                                                                       : static_cast<double>(index + 1U));
-                        restore_predicate_bindings();
+                        finish_predicate_scan();
                         return result;
                     }
                 }
-                restore_predicate_bindings();
+                finish_predicate_scan();
                 return make_number_value(0.0);
             }
             if (normalized_function == "adel" && arguments.size() >= 2U)
@@ -459,6 +498,7 @@
                         array->values.back() = make_boolean_value(false);
                     }
                 }
+                mark_array_mutated(*array);
                 return make_number_value(1.0);
             }
             if (normalized_function == "ains" && arguments.size() >= 2U)
@@ -515,6 +555,7 @@
                     }
                     array->values[position - 1U] = make_boolean_value(false);
                 }
+                mark_array_mutated(*array);
                 return make_number_value(1.0);
             }
             if (normalized_function == "asort")
@@ -567,6 +608,7 @@
                     std::sort(array->values.begin() + static_cast<std::ptrdiff_t>(begin_index),
                               array->values.begin() + static_cast<std::ptrdiff_t>(begin_index + count),
                               value_less);
+                    mark_array_mutated(*array);
                     return make_number_value(1.0);
                 }
                 const std::size_t start_index = start - 1U;
@@ -591,6 +633,7 @@
                     std::copy(rows[offset].begin(), rows[offset].end(),
                               array->values.begin() + static_cast<std::ptrdiff_t>(row * array->columns));
                 }
+                mark_array_mutated(*array);
                 return make_number_value(1.0);
             }
             return make_number_value(0.0);

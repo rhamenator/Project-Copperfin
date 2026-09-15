@@ -5910,7 +5910,8 @@
                         arrays[normalized] = RuntimeArray{
                             .rows = dimensions.first,
                             .columns = dimensions.second,
-                            .values = std::vector<PrgValue>(dimensions.first * dimensions.second, make_boolean_value(false))};
+                            .values = std::vector<PrgValue>(dimensions.first * dimensions.second, make_boolean_value(false)),
+                            .binding_identity = allocate_array_binding_identity()};
                     }
                     return {};
                 }
@@ -5956,7 +5957,8 @@
                         frame.local_arrays[normalize_memory_variable_identifier(array_name)] = RuntimeArray{
                             .rows = rows,
                             .columns = columns,
-                            .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false))};
+                            .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false)),
+                            .binding_identity = allocate_array_binding_identity()};
                     }
                     return {};
                 }
@@ -5997,7 +5999,8 @@
                         arrays[normalized] = RuntimeArray{
                             .rows = rows,
                             .columns = columns,
-                            .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false))};
+                            .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false)),
+                            .binding_identity = allocate_array_binding_identity()};
                     }
                     return {};
                 }
@@ -6196,6 +6199,8 @@
                             {
                                 frame.locals.erase(normalized);
                                 frame.local_arrays[normalized] = *source_array;
+                                frame.local_arrays[normalized].binding_identity = allocate_array_binding_identity();
+                                frame.local_arrays[normalized].mutation_generation = 0U;
                             }
                         }
                         else if (caller != nullptr && find_array(reference_name, *caller) != nullptr)
@@ -10012,6 +10017,9 @@
                                     existing_array->values[(index * 2U)] = make_string_value(scattered_field_names[index]);
                                     existing_array->values[(index * 2U) + 1U] = scattered_values[index];
                                 }
+                                // RQ-CF-PRG-033: SCATTER writes can occur inside
+                                // a reentrant ASCAN predicate.
+                                mark_array_mutated(*existing_array);
                             }
                         }
                         else
@@ -10030,6 +10038,7 @@
                                 {
                                     existing_array->values[index] = scattered_values[index];
                                 }
+                                mark_array_mutated(*existing_array);
                             }
                         }
                     }
