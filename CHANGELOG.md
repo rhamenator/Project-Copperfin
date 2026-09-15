@@ -3,13 +3,13 @@
   pointer, shape, or scan bound. Runtime arrays now carry stable binding and
   mutation generations across global, local, private, public, and native-object
   storage. Predicate scans copy the current candidate and validate the source
-  after direct expressions and suspended VFP-style routine callbacks; resize,
-  release, rebind, element replacement, `ACOPY()`, `ADEL()`, or `AINS()` raises
-  catchable VFP error 11. Non-mutating nested scans remain valid, scan metadata
+  after direct expressions and synchronous VFP-style routine callbacks; resize,
+  release, rebind, element replacement, `ACOPY()`, `ADEL()`, `AINS()`, or
+  `SCATTER TO` raises catchable VFP error 11. Non-mutating nested scans remain valid, scan metadata
   and lambda parameters are restored, and later array operations remain safe.
   Focused native coverage exercises shrink, grow, shape change, first/middle/
-  final replacement, every storage class, callback suspension, and the exact
-  crashing reproducer. Added `RQ-CF-PRG-033`.
+  final replacement, every storage class, callback mutation/exception
+  cleanup, and the exact crashing reproducer. Added `RQ-CF-PRG-033`.
 
 - 2026-09-14: Fixed #6173: generated C# `LinqQueryDescriptor` metadata no
   longer treats SQL keyword text inside legal underscore-containing or

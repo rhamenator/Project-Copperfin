@@ -337,6 +337,9 @@ void test_ascan_predicate_rejects_reentrant_source_mutation() {
         "aSource[1] = 40\n"
         "aSource[2] = 50\n"
         "aSource[3] = 60\n"
+        "CREATE CURSOR cScan (cOne C(1), cTwo C(1), cThree C(1))\n"
+        "APPEND BLANK\n"
+        "REPLACE cOne WITH 'a', cTwo WITH 'b', cThree WITH 'c'\n"
         "TRY\n"
         "  nShrink = ASCAN(aValues, '{|x| ASIZE(aValues,0)}', -1, -1, -1, 16)\n"
         "CATCH TO oShrink\n"
@@ -370,6 +373,19 @@ void test_ascan_predicate_rejects_reentrant_source_mutation() {
         "CATCH TO oCopy\n"
         "  nCopyError = oCopy.ErrorNo\n"
         "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nScatter = ASCAN(aValues, 'ScatterScanSource()', -1, -1, -1, 16)\n"
+        "CATCH TO oScatter\n"
+        "  nScatterError = oScatter.ErrorNo\n"
+        "ENDTRY\n"
+        "DIMENSION aValues[3]\n"
+        "TRY\n"
+        "  nCallbackThrow = ASCAN(aValues, 'ThrowScanCallback()', -1, -1, -1, 16)\n"
+        "CATCH TO oCallbackThrow\n"
+        "  nCallbackThrowError = oCallbackThrow.ErrorNo\n"
+        "ENDTRY\n"
+        "lLocalThrowBindings = ScanLocalCallbackException()\n"
         "DIMENSION aValues[3]\n"
         "TRY\n"
         "  nRelease = ASCAN(aValues, 'ReleaseScanSource()', -1, -1, -1, 16)\n"
@@ -439,6 +455,29 @@ void test_ascan_predicate_rejects_reentrant_source_mutation() {
         "aValues[nIndex] = 99\n"
         "RETURN .F.\n"
         "ENDFUNC\n"
+        "FUNCTION ScatterScanSource\n"
+        "SELECT cScan\n"
+        "SCATTER TO aValues\n"
+        "RETURN .F.\n"
+        "ENDFUNC\n"
+        "FUNCTION ThrowScanCallback\n"
+        "RETURN AT('a','a',0)\n"
+        "ENDFUNC\n"
+        "FUNCTION ScanLocalCallbackException\n"
+        "LOCAL _ASCANVALUE, _ASCANINDEX, _ASCANROW, _ASCANCOLUMN, x\n"
+        "LOCAL ARRAY aLocalThrowValues[1]\n"
+        "_ASCANVALUE = 'saved local value'\n"
+        "_ASCANINDEX = 191\n"
+        "_ASCANROW = 192\n"
+        "_ASCANCOLUMN = 193\n"
+        "x = 'saved local parameter'\n"
+        "TRY\n"
+        "  nUnused = ASCAN(aLocalThrowValues, '{|x| ThrowScanCallback()}', -1, -1, -1, 16)\n"
+        "CATCH\n"
+        "  RETURN _ASCANVALUE = 'saved local value' AND _ASCANINDEX = 191 AND _ASCANROW = 192 AND _ASCANCOLUMN = 193 AND x = 'saved local parameter'\n"
+        "ENDTRY\n"
+        "RETURN .F.\n"
+        "ENDFUNC\n"
         "FUNCTION ScanLocalArray\n"
         "LOCAL ARRAY aLocalValues[3]\n"
         "TRY\n"
@@ -473,18 +512,24 @@ void test_ascan_predicate_rejects_reentrant_source_mutation() {
         const auto found = state.globals.find(name);
         expect(found != state.globals.end(), message + " should be captured");
         if (found != state.globals.end()) {
-            expect(copperfin::runtime::format_value(found->second) == expected, message);
+            const std::string actual = copperfin::runtime::format_value(found->second);
+            expect(actual == expected,
+                   message + " (expected " + expected + ", got " + actual + ")");
         }
     };
     for (const std::string name : {
              "nshrinkerror", "ngrowerror", "nshapeerror",
-             "ndeleteerror", "ninserterror", "ncopyerror",
+             "ndeleteerror", "ninserterror", "ncopyerror", "nscattererror",
              "nreleaseerror", "nrebinderror", "nreplacefirsterror",
              "nreplacemiddleerror", "nreplacefinalerror", "nlocalerror",
              "nprivateerror", "npublicerror", "nnativeerror"}) {
         expect_global(name, "11",
                       "RQ-CF-PRG-033/#6253: reentrant source mutation " + name + " should raise VFP error 11");
     }
+    expect_global("ncallbackthrowerror", "1",
+                  "RQ-CF-PRG-033/#6253: a callback exception should remain catchable while restoring predicate bindings");
+    expect_global("llocalthrowbindings", "true",
+                  "RQ-CF-PRG-033/#6253: callback exceptions should restore the original predicate frame's local bindings");
     expect_global("nnested", "1",
                   "RQ-CF-PRG-033/#6253: a non-mutating nested ASCAN should remain supported");
     expect_global("nnestedpredicate", "1",

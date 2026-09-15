@@ -147,7 +147,7 @@
                 return copy_array_values(array_name, target_array_name, source_start, count, target_start);
             }
 
-            if (array == nullptr && normalized_function != "ascan")
+            if (array == nullptr)
             {
                 return make_number_value(0.0);
             }
@@ -182,51 +182,6 @@
                                              ? (flags & 2) != 0
                                              : is_set_enabled("exact");
                 const std::string predicate_text = predicate_search ? trim_copy(value_as_string(arguments[1])) : std::string{};
-                const std::size_t scan_checkpoint_depth = expression_evaluation_depth;
-                ArrayScanCheckpoint *scan_checkpoint = nullptr;
-                if (predicate_search && active_expression_continuation != nullptr)
-                {
-                    const auto existing = active_expression_continuation->array_scan_checkpoints.find(
-                        scan_checkpoint_depth);
-                    if (existing != active_expression_continuation->array_scan_checkpoints.end())
-                    {
-                        scan_checkpoint = &existing->second;
-                    }
-                    else if (array != nullptr)
-                    {
-                        scan_checkpoint = &active_expression_continuation->array_scan_checkpoints.emplace(
-                            scan_checkpoint_depth,
-                            ArrayScanCheckpoint{
-                                .array_name = array_name,
-                                .binding_identity = array->binding_identity,
-                                .mutation_generation = array->mutation_generation})
-                                               .first->second;
-                    }
-                }
-                const auto clear_scan_checkpoint = [&]()
-                {
-                    if (predicate_search && active_expression_continuation != nullptr)
-                    {
-                        active_expression_continuation->array_scan_checkpoints.erase(scan_checkpoint_depth);
-                    }
-                };
-                if (scan_checkpoint != nullptr)
-                {
-                    if (array == nullptr || scan_checkpoint->array_name != array_name ||
-                        array->binding_identity != scan_checkpoint->binding_identity ||
-                        array->mutation_generation != scan_checkpoint->mutation_generation)
-                    {
-                        clear_scan_checkpoint();
-                        throw PrgCompatibilityError(
-                            runtime_text("Runtime.Prg.Array.Error.PredicateMutatedSource"),
-                            11);
-                    }
-                }
-                if (array == nullptr)
-                {
-                    clear_scan_checkpoint();
-                    return make_number_value(0.0);
-                }
                 const auto array_value_matches = [&](const PrgValue &left, const PrgValue &right)
                 {
                     if (left.is_null || right.is_null)
@@ -302,6 +257,10 @@
                 const std::string predicate_parameter_name = normalize_memory_variable_identifier(predicate_block.parameter);
                 std::map<std::string, std::optional<PrgValue>> saved_globals;
                 std::map<std::string, std::optional<PrgValue>> saved_locals;
+                const std::optional<std::size_t> predicate_frame_index =
+                    predicate_search && !stack.empty()
+                        ? std::optional<std::size_t>{stack.size() - 1U}
+                        : std::nullopt;
                 auto snapshot_predicate_binding = [&](Frame &predicate_frame, const std::string &name)
                 {
                     if (name.empty() || saved_globals.contains(name))
@@ -336,11 +295,6 @@
                 }
                 auto restore_predicate_bindings = [&]()
                 {
-                    if (stack.empty())
-                    {
-                        return;
-                    }
-                    Frame &predicate_frame = stack.back();
                     for (const auto &[name, value] : saved_globals)
                     {
                         if (value)
@@ -352,6 +306,11 @@
                             globals.erase(name);
                         }
                     }
+                    if (!predicate_frame_index.has_value() || *predicate_frame_index >= stack.size())
+                    {
+                        return;
+                    }
+                    Frame &predicate_frame = stack[*predicate_frame_index];
                     for (const auto &[name, value] : saved_locals)
                     {
                         if (value)
@@ -367,7 +326,6 @@
                 const auto finish_predicate_scan = [&]()
                 {
                     restore_predicate_bindings();
-                    clear_scan_checkpoint();
                 };
                 const std::size_t array_columns = array->columns;
                 const std::uint64_t array_binding_identity = array->binding_identity;
@@ -396,11 +354,6 @@
                     try
                     {
                         return value_as_bool(evaluate_expression(predicate_block.expression, predicate_frame));
-                    }
-                    catch (const ExpressionSuspended &)
-                    {
-                        restore_predicate_bindings();
-                        throw;
                     }
                     catch (...)
                     {

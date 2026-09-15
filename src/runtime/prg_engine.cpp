@@ -306,19 +306,11 @@ namespace copperfin::runtime
             PrgValue value;
         };
 
-        struct ArrayScanCheckpoint
-        {
-            std::string array_name;
-            std::uint64_t binding_identity = 0U;
-            std::uint64_t mutation_generation = 0U;
-        };
-
         struct ExpressionContinuation
         {
             Statement statement;
             std::map<std::size_t, ExpressionPrimaryCheckpoint> primary_checkpoints;
             std::map<std::pair<std::size_t, std::size_t>, PrgValue> routine_results;
-            std::map<std::size_t, ArrayScanCheckpoint> array_scan_checkpoints;
             std::optional<std::pair<std::size_t, std::size_t>> awaiting_routine;
         };
 
@@ -3575,7 +3567,6 @@ namespace copperfin::runtime
                     .statement = statement,
                     .primary_checkpoints = {},
                     .routine_results = {},
-                    .array_scan_checkpoints = {},
                     .awaiting_routine = std::nullopt};
         }
 
