@@ -266,6 +266,7 @@ struct LinqQueryDescriptor {
     std::vector<std::string> aggregates;
 };
 
+// RQ-CF-MODERNIZATION-012: keep VFP SQL keyword recognition lexical and fail closed.
 bool is_linq_identifier_character(const char ch) {
     const auto byte = static_cast<unsigned char>(ch);
     return std::isalnum(byte) != 0 || ch == '_' || byte >= 0x80U;
@@ -305,6 +306,7 @@ std::size_t find_linq_top_level_keyword(
     bool in_brackets = false;
     bool in_line_comment = false;
     bool in_block_comment = false;
+    bool unmatched_closing_bracket = false;
     bool unmatched_closing_parenthesis = false;
     std::size_t depth = 0U;
     std::size_t found = std::string::npos;
@@ -369,6 +371,10 @@ std::size_t find_linq_top_level_keyword(
             in_brackets = true;
             continue;
         }
+        if (ch == ']') {
+            unmatched_closing_bracket = true;
+            continue;
+        }
         if (ch == '(') {
             ++depth;
             continue;
@@ -394,7 +400,8 @@ std::size_t find_linq_top_level_keyword(
     }
     if (lexically_valid != nullptr) {
         *lexically_valid = !in_single_quote && !in_double_quote && !in_brackets &&
-            !in_block_comment && depth == 0U && !unmatched_closing_parenthesis;
+            !in_block_comment && depth == 0U && !unmatched_closing_bracket &&
+            !unmatched_closing_parenthesis;
     }
     return found;
 }
@@ -408,6 +415,7 @@ std::vector<std::string> split_linq_top_level_csv(
     bool in_brackets = false;
     bool in_line_comment = false;
     bool in_block_comment = false;
+    bool unmatched_closing_bracket = false;
     bool unmatched_closing_parenthesis = false;
     std::size_t depth = 0U;
     std::size_t start = 0U;
@@ -473,6 +481,10 @@ std::vector<std::string> split_linq_top_level_csv(
             in_brackets = true;
             continue;
         }
+        if (!at_end && ch == ']') {
+            unmatched_closing_bracket = true;
+            continue;
+        }
         if (!at_end && ch == '(') {
             ++depth;
             continue;
@@ -495,7 +507,8 @@ std::vector<std::string> split_linq_top_level_csv(
     }
     if (lexically_valid != nullptr) {
         *lexically_valid = !in_single_quote && !in_double_quote && !in_brackets &&
-            !in_block_comment && depth == 0U && !unmatched_closing_parenthesis;
+            !in_block_comment && depth == 0U && !unmatched_closing_bracket &&
+            !unmatched_closing_parenthesis;
     }
     return fields;
 }

@@ -246,7 +246,7 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
                 0U,
                 keyword);
         expect(actual == expected,
-               "#6173: LINQ keyword scanner should " + scenario);
+               "RQ-CF-MODERNIZATION-012/#6173: LINQ keyword scanner should " + scenario);
     };
     for (const auto& [keyword, identifier_keyword] :
          std::vector<std::pair<std::string_view, std::string_view>>{
@@ -303,6 +303,7 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
                "  FROM customer WHERE active = .T.\n"
                "SELECT from_code, where_code, as_code, into_code, union_code, having_code, group_by_code, order_by_code, [from,where] AS quoted_name FROM source_from_code WHERE filter_into_code = .T. GROUP BY group_union_code ORDER BY order_having_code\n"
                "SELECT field FROM source WHERE name = 'unterminated\n"
+               "SELECT field] FROM source\n"
                "DO worker\n"
                "READ EVENTS\n"
                "RETURN\n"
@@ -379,24 +380,27 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
         expect(transpiled.find("\"active = .T.\", \"id, name\", new[] {\"COUNT(*)\"}") != std::string::npos,
                "#57: C# transpilation should preserve filter, grouping, and aggregate structure without executing the query");
         expect(transpiled.find("LinqQueryCatalog.Record(new LinqQueryDescriptor(\"SELECT customer_from_code, order_where_status AS status FROM customer WHERE active = .T.\"") != std::string::npos,
-               "#6173: C# transpilation should preserve the complete keyword-bearing identifier query");
+               "RQ-CF-MODERNIZATION-012/#6173: C# transpilation should preserve the complete keyword-bearing identifier query");
         expect(transpiled.find("new LinqProjectionDescriptor(\"customer_from_code\", \"\")") != std::string::npos &&
                    transpiled.find("new LinqProjectionDescriptor(\"order_where_status\", \"status\")") != std::string::npos &&
                    transpiled.find("\"active = .T.\", \"\", Array.Empty<string>()") != std::string::npos,
-               "#6173: LINQ descriptors should not split underscore-containing identifiers at embedded SQL keywords");
+               "RQ-CF-MODERNIZATION-012/#6173: LINQ descriptors should not split underscore-containing identifiers at embedded SQL keywords");
         for (const std::string_view identifier : {
                  "from_code", "where_code", "as_code", "into_code", "union_code",
                  "having_code", "group_by_code", "order_by_code"}) {
             expect(transpiled.find("new LinqProjectionDescriptor(\"" + std::string(identifier) + "\", \"\")") != std::string::npos,
-                   "#6173: every recognized keyword should remain part of an underscore-containing projection identifier");
+                   "RQ-CF-MODERNIZATION-012/#6173: every recognized keyword should remain part of an underscore-containing projection identifier");
         }
         expect(transpiled.find("new LinqProjectionDescriptor(\"[from,where]\", \"quoted_name\")") != std::string::npos,
-               "#6173: commas and keywords inside bracket-delimited projection text should not split the descriptor");
+               "RQ-CF-MODERNIZATION-012/#6173: commas and keywords inside bracket-delimited projection text should not split the descriptor");
         expect(transpiled.find("\"filter_into_code = .T.\", \"group_union_code\", Array.Empty<string>()") != std::string::npos,
-               "#6173: keyword-bearing identifiers should remain intact in filters and grouping before later clauses");
+               "RQ-CF-MODERNIZATION-012/#6173: keyword-bearing identifiers should remain intact in filters and grouping before later clauses");
         expect(transpiled.find("LinqQueryCatalog.Record(new LinqQueryDescriptor(\"SELECT field FROM source WHERE name = 'unterminated\"") == std::string::npos &&
                    transpiled.find("[\"statementText\"] = \"SELECT field FROM source WHERE name = 'unterminated\"") != std::string::npos,
-               "#6173: lexically invalid supported queries should fail explicitly without publishing partial descriptor metadata");
+               "RQ-CF-MODERNIZATION-012/#6173: an unclosed quote should fail explicitly without publishing partial descriptor metadata");
+        expect(transpiled.find("LinqQueryCatalog.Record(new LinqQueryDescriptor(\"SELECT field] FROM source\"") == std::string::npos &&
+                   transpiled.find("[\"statementText\"] = \"SELECT field] FROM source\"") != std::string::npos,
+               "RQ-CF-MODERNIZATION-012/#6173: an unmatched closing bracket should fail explicitly without publishing partial descriptor metadata");
         expect(transpiled.find("Worker();") != std::string::npos,
                "csharp transpilation should map DO worker to a routine call");
         expect(transpiled.find("public static void worker()") != std::string::npos ||
