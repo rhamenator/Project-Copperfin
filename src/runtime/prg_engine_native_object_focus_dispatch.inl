@@ -38,7 +38,7 @@
         }
 
         const PrgValue runtime_object_reference =
-            make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
+            make_object_reference_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
         std::optional<PrgValue> previous_active_control;
         bool focus_changed = true;
         bool suppress_focus_transition = false;
@@ -539,7 +539,7 @@
     {
         const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
         {
-            return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
+            return make_object_reference_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
         };
         RuntimeOleObjectState *target_object = &runtime_object;
         const std::string leaf = normalize_identifier(
@@ -1425,7 +1425,7 @@
 
         if (leaf == "add" || leaf == "create" || leaf == "open" || leaf == "item")
         {
-            return make_string_value("object:" + target_object->prog_id + "." + effective_member_path + "#" + std::to_string(target_object->handle));
+            return make_object_reference_value("object:" + target_object->prog_id + "." + effective_member_path + "#" + std::to_string(target_object->handle));
         }
         if (arguments.empty())
         {

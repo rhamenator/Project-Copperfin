@@ -326,7 +326,7 @@
 
                 members.push_back({
                     .property_name = property_name,
-                    .child_reference = make_string_value(
+                    .child_reference = make_object_reference_value(
                         "object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)),
                     .child_object = *child_object,
                     .column_order = column_order});
@@ -385,7 +385,7 @@
 
                 NativePageFramePageMember member{
                     .property_name = property_name,
-                    .child_reference = make_string_value(
+                    .child_reference = make_object_reference_value(
                         "object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)),
                     .child_object = *child_object};
                 if (starts_with_insensitive(property_name, "page"))
@@ -499,7 +499,7 @@
                         if (parent_found != ole_objects.end())
                         {
                             const std::string released_reference =
-                                value_as_string(make_string_value(
+                                value_as_string(make_object_reference_value(
                                     "object:" + object_state.prog_id + "#" +
                                     std::to_string(object_state.handle)));
                             auto &parent_properties = parent_found->second.properties;
@@ -614,7 +614,7 @@
                     "grid.columncount",
                     {},
                     {},
-                    make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle)));
+                    make_object_reference_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle)));
                 if (child_object == nullptr)
                 {
                     return false;
@@ -622,7 +622,7 @@
 
                 assign_native_runtime_object_name(*child_object, child_name_text);
                 runtime_object.properties[child_name] =
-                    make_string_value("object:" + child_object->prog_id + "#" + std::to_string(child_object->handle));
+                    make_object_reference_value("object:" + child_object->prog_id + "#" + std::to_string(child_object->handle));
                 if (child_object->properties.contains("columnorder"))
                 {
                     (void)write_native_columnorder_property(
@@ -698,7 +698,7 @@
                     "pageframe.pagecount",
                     {},
                     {},
-                    make_string_value(
+                    make_object_reference_value(
                         "object:" + runtime_object.prog_id + "#" +
                         std::to_string(runtime_object.handle)));
                 if (child_object == nullptr)
@@ -708,7 +708,7 @@
 
                 assign_native_runtime_object_name(*child_object, child_name_text);
                 runtime_object.properties[child_name] =
-                    make_string_value("object:" + child_object->prog_id + "#" +
+                    make_object_reference_value("object:" + child_object->prog_id + "#" +
                                       std::to_string(child_object->handle));
                 page_members = collect_native_pageframe_page_members(runtime_object);
             }

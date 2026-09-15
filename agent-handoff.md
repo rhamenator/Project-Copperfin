@@ -24,9 +24,10 @@ Missing, empty, and hidden targets preserve the graph and raise localized error
 ownership guard supports reentrant owner release without invalidating the active
 child’s `THIS` frame or clearing its outer reservation. Direct invocation
 arguments and suspended expression/command continuations also discard retired
-identities before resuming while ordinary handle-shaped character data remains
-unchanged in globals, direct arguments, and keyed collections through full
-program-id-plus-handle matching. Queued sibling releases run synchronously, and `AddObject()` rejects
+identities before resuming while runtime object-reference provenance keeps
+identically encoded application text unchanged in globals, direct arguments,
+and keyed collections. Direct method dispatch retains the stable source handle
+when the method removes itself before after-source delegates run. Queued sibling releases run synchronously, and `AddObject()` rejects
 new children on an owner already reserved for retirement. Completed sibling
 callbacks remain retired until outer cleanup so aliases cannot dispatch them twice. The obsolete detached-child test matrix was
 replaced with focused differential lifecycle coverage; adjacent child collection
@@ -36,8 +37,8 @@ coverage, locale catalogs, and the changelog are updated.
 Validation passes for the runtime-surface, parser-classes, control-flow, locale,
 and safety-traceability tests. A fresh Clang ASan/UBSan build passes the complete
 runtime-surface executable after correcting an unrelated malformed `SYS(2021)`
-DBF test initializer exposed by ASan. After the second review-hardening pass,
-Valgrind reports zero errors and no leaks across 18,411,361 allocations. PR #6403 is open; next:
+DBF test initializer exposed by ASan. After the final review-hardening pass,
+Valgrind reports zero errors and no leaks across 18,407,099 allocations. PR #6403 is open; next:
 push the signed/DCO review-fix commit, resolve its review conversations, request
 fresh review, then monitor required checks and conversation resolution.
 

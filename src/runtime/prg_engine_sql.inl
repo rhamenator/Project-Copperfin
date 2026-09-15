@@ -1572,9 +1572,5 @@
             {
                 return std::nullopt;
             }
-            if (normalize_identifier(found->second.prog_id) != normalize_identifier(prog_id))
-            {
-                return std::nullopt;
-            }
             return &found->second;
         }

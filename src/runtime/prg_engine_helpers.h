@@ -65,6 +65,7 @@ PrgValue make_null_value();
 PrgValue make_boolean_value(bool value);
 PrgValue make_number_value(double value);
 PrgValue make_string_value(std::string value);
+PrgValue make_object_reference_value(std::string value);
 PrgValue make_date_value(std::string value);
 PrgValue make_date_value(std::string value, int year, int month, int day);
 PrgValue make_datetime_value(std::string value);

@@ -1468,7 +1468,7 @@
                     record_event_callback_(
                         "ole.createobjectex",
                         prog_id + "@" + computer_name + ":" + interface_id);
-                    return make_string_value("object:" + prog_id + "#" + std::to_string(handle));
+                    return make_object_reference_value("object:" + prog_id + "#" + std::to_string(handle));
                 }
                 if ((function == "createobject" || function == "createobj") && !arguments.empty())
                 {
@@ -1497,7 +1497,7 @@
                         return make_null_value();
                     }
                     record_event_callback_("ole.createobject", prog_id);
-                    return make_string_value("object:" + prog_id + "#" + std::to_string(handle));
+                    return make_object_reference_value("object:" + prog_id + "#" + std::to_string(handle));
                 }
                 if (function == "newobject" && !arguments.empty())
                 {
@@ -1593,7 +1593,7 @@
                     record_event_callback_(
                         explicit_local_vcx_library ? "prg.object.newobject" : "ole.newobject",
                         detail);
-                    return make_string_value("object:" + class_name + "#" + std::to_string(handle));
+                    return make_object_reference_value("object:" + class_name + "#" + std::to_string(handle));
                 }
                 if (function == "getobject" && !arguments.empty())
                 {
@@ -1605,7 +1605,7 @@
                     record_event_callback_(
                         "ole.getobject",
                         trim_copy(class_name).empty() ? source : source + " -> " + class_name);
-                    return make_string_value("object:" + resolved_prog_id + "#" + std::to_string(handle));
+                    return make_object_reference_value("object:" + resolved_prog_id + "#" + std::to_string(handle));
                 }
                 if ((function == "sqlconnect" || function == "sqlstringconnect") && !arguments.empty())
                 {

@@ -14,7 +14,7 @@ namespace copperfin::runtime_surface_tests
 
         write_text(
             program_path,
-            "PUBLIC gnChildDestroyed, gnGrandDestroyed, gcDestroyOrder, gnReentrantChildDestroyed, gnReentrantOwnerDestroyed, glReentrantThisSurvived, gcCommandArgType, gcSiblingReleaseOrder, glAddDuringDestroyResult, goFinishedSibling, gnFinishedSiblingDestroyCount\n"
+            "PUBLIC gnChildDestroyed, gnGrandDestroyed, gcDestroyOrder, gnReentrantChildDestroyed, gnReentrantOwnerDestroyed, glReentrantThisSurvived, gcCommandArgType, gcSiblingReleaseOrder, glAddDuringDestroyResult, goFinishedSibling, gnFinishedSiblingDestroyCount, gnSelfRemovalDelegateCount\n"
             "gnChildDestroyed = 0\n"
             "gnGrandDestroyed = 0\n"
             "gcDestroyOrder = ''\n"
@@ -25,17 +25,18 @@ namespace copperfin::runtime_surface_tests
             "gcSiblingReleaseOrder = ''\n"
             "glAddDuringDestroyResult = .T.\n"
             "gnFinishedSiblingDestroyCount = 0\n"
+            "gnSelfRemovalDelegateCount = 0\n"
             "oForm = CREATEOBJECT('DemoForm')\n"
             "oChild = oForm.child\n"
             "oGrand = oChild.grand\n"
-            "cSameHandleLookalike = 'object:NotDemoChild#2'\n"
+            "cSameHandleLookalike = 'object:DemoChild#2'\n"
             "nHandleLikeLiteralLength = LEN('object:Foo#123')\n"
             "DIMENSION aHeld[1]\n"
             "aHeld[1] = oChild\n"
             "oHeld = CREATEOBJECT('Collection')\n"
             "oHeld.Add(oChild, 'child')\n"
-            "oHeld.Add('object:NotDemoChild#2', 'lookalike')\n"
-            "cLiveHandleLiteralAfter = CaptureArgText('object:NotDemoChild#2', oForm.RemoveObject('child'))\n"
+            "oHeld.Add('object:DemoChild#2', 'lookalike')\n"
+            "cLiveHandleLiteralAfter = CaptureArgText('object:DemoChild#2', oForm.RemoveObject('child'))\n"
             "lRemoved = !PEMSTATUS(oForm, 'child', 1)\n"
             "nChildDestroyedAfter = gnChildDestroyed\n"
             "nGrandDestroyedAfter = gnGrandDestroyed\n"
@@ -98,6 +99,13 @@ namespace copperfin::runtime_surface_tests
             "goFinishedSibling = oFinishedForm.branch.a\n"
             "lFinishedBranchRemoved = oFinishedForm.RemoveObject('branch')\n"
             "nFinishedSiblingDestroyCount = gnFinishedSiblingDestroyCount\n"
+            "oSelfForm = CREATEOBJECT('SelfRemovingForm')\n"
+            "oSelfChild = oSelfForm.child\n"
+            "oSelfSink = CREATEOBJECT('SelfRemovalSink')\n"
+            "lSelfBound = BINDEVENT(oSelfChild, 'Ping', oSelfSink, 'OnPing')\n"
+            "=oSelfChild.Ping()\n"
+            "lSelfChildStillObject = VARTYPE(oSelfChild) == 'O'\n"
+            "nSelfRemovalDelegateCount = gnSelfRemovalDelegateCount\n"
             "RETURN\n"
             "FUNCTION CaptureArgType(toValue, tlRemoved)\n"
             "  RETURN VARTYPE(toValue)\n"
@@ -174,6 +182,19 @@ namespace copperfin::runtime_surface_tests
             "    goFinishedSibling.Release()\n"
             "  ENDPROC\n"
             "ENDDEFINE\n"
+            "DEFINE CLASS SelfRemovingForm AS Form\n"
+            "  ADD OBJECT child AS SelfRemovingChild\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SelfRemovingChild AS CommandButton\n"
+            "  PROCEDURE Ping\n"
+            "    THIS.Parent.RemoveObject('child')\n"
+            "  ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SelfRemovalSink AS Custom\n"
+            "  PROCEDURE OnPing\n"
+            "    gnSelfRemovalDelegateCount = gnSelfRemovalDelegateCount + 1\n"
+            "  ENDPROC\n"
+            "ENDDEFINE\n"
             "DEFINE CLASS DemoChild AS Container\n"
             "  ADD OBJECT grand AS DemoGrand\n"
             "  PROCEDURE Destroy\n"
@@ -217,11 +238,11 @@ namespace copperfin::runtime_surface_tests
         expect_global("lgrandaliasstillobject", "false");
         expect_global("larraystillobject", "false");
         expect_global("lcollectionstillobject", "false");
-        expect_global("ccollectionlookalikeafter", "object:NotDemoChild#2");
+        expect_global("ccollectionlookalikeafter", "object:DemoChild#2");
         expect_global("lownerstillhaschild", "false");
         expect_global("lsiblingsurvives", "true");
-        expect_global("csamehandlelookalikeafter", "object:NotDemoChild#2");
-        expect_global("clivehandleliteralafter", "object:NotDemoChild#2");
+        expect_global("csamehandlelookalikeafter", "object:DemoChild#2");
+        expect_global("clivehandleliteralafter", "object:DemoChild#2");
         expect_global("nhandlelikeliterallength", "14");
         expect_global("nmissingerror", "1925");
         expect_global("cmissingmessage", "Unknown member child.");
@@ -244,6 +265,9 @@ namespace copperfin::runtime_surface_tests
         expect_global("laddduringdestroyresult", "false");
         expect_global("lfinishedbranchremoved", "true");
         expect_global("nfinishedsiblingdestroycount", "1");
+        expect_global("lselfbound", "1");
+        expect_global("lselfchildstillobject", "false");
+        expect_global("nselfremovaldelegatecount", "1");
 
         const auto object_is_retired = [&](const std::string &prog_id)
         {

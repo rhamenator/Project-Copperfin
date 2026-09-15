@@ -1953,7 +1953,7 @@ namespace copperfin::runtime
                     if (const RuntimeOleObjectState *runtime_object = representative_active_form_object();
                         runtime_object != nullptr)
                     {
-                        return make_string_value(
+                        return make_object_reference_value(
                             "object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
                     }
                     return make_empty_value();
@@ -2082,7 +2082,7 @@ namespace copperfin::runtime
 
                     if (forms_tail->empty())
                     {
-                        return make_string_value(
+                        return make_object_reference_value(
                             "object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
                     }
 
@@ -3549,7 +3549,7 @@ namespace copperfin::runtime
             }
 
             collection_object->collection_items.push_back(
-                make_string_value("object:" + found->second.prog_id + "#" + std::to_string(found->second.handle)));
+                make_object_reference_value("object:" + found->second.prog_id + "#" + std::to_string(found->second.handle)));
             const auto name = found->second.properties.find("name");
             collection_object->collection_item_keys.push_back(
                 name != found->second.properties.end()
@@ -6025,7 +6025,7 @@ namespace copperfin::runtime
 
         const std::size_t return_depth = stack.size();
         const PrgValue this_reference =
-            make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
+            make_object_reference_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
         push_method_frame(native_method->program->path,
                           native_method_name,
                           *native_method->routine,
@@ -7429,17 +7429,6 @@ namespace copperfin::runtime
             completed_native_release_handles,
             owned_active_release_handles};
 
-        std::set<std::string> scheduled_object_references;
-        for (const int handle : release_order)
-        {
-            const auto found = ole_objects.find(handle);
-            if (found != ole_objects.end())
-            {
-                scheduled_object_references.insert(
-                    "object:" + found->second.prog_id + "#" + std::to_string(handle));
-            }
-        }
-
         for (const int handle : release_order)
         {
             auto found = ole_objects.find(handle);
@@ -7482,7 +7471,7 @@ namespace copperfin::runtime
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                 const std::size_t return_depth = stack.size();
                 const PrgValue this_reference =
-                    make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
+                    make_object_reference_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
                 push_method_frame(destroy_program_path,
                                   destroy_method_name,
                                   *destroy_method,
@@ -7527,7 +7516,7 @@ namespace copperfin::runtime
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     const std::size_t return_depth = stack.size();
                     const PrgValue this_reference =
-                        make_string_value("object:" + lifecycle_object.prog_id + "#" + std::to_string(lifecycle_object.handle));
+                        make_object_reference_value("object:" + lifecycle_object.prog_id + "#" + std::to_string(lifecycle_object.handle));
                     push_method_frame(unload_program_path,
                                       unload_method_name,
                                       *unload_method,
@@ -7561,7 +7550,7 @@ namespace copperfin::runtime
                     if (parent_found != ole_objects.end())
                     {
                         const std::string released_reference =
-                            value_as_string(make_string_value("object:" + released_object.prog_id + "#" + std::to_string(released_object.handle)));
+                            value_as_string(make_object_reference_value("object:" + released_object.prog_id + "#" + std::to_string(released_object.handle)));
                         auto &parent_properties = parent_found->second.properties;
                         for (auto property_it = parent_properties.begin(); property_it != parent_properties.end();)
                         {
@@ -7596,8 +7585,10 @@ namespace copperfin::runtime
         // continue to report VARTYPE() == 'O'.
         const auto invalidate_released_reference = [&](PrgValue &value)
         {
-            if (value.kind == PrgValueKind::string &&
-                scheduled_object_references.contains(value.string_value))
+            int referenced_handle = 0;
+            std::string referenced_prog_id;
+            if (parse_object_handle_reference(value, referenced_handle, referenced_prog_id) &&
+                scheduled_handles.contains(referenced_handle))
             {
                 value = make_empty_value();
             }
@@ -7708,8 +7699,10 @@ namespace copperfin::runtime
             for (std::size_t index = object.collection_items.size(); index > 0U; --index)
             {
                 const PrgValue &item = object.collection_items[index - 1U];
-                if (item.kind == PrgValueKind::string &&
-                    scheduled_object_references.contains(item.string_value))
+                int referenced_handle = 0;
+                std::string referenced_prog_id;
+                if (parse_object_handle_reference(item, referenced_handle, referenced_prog_id) &&
+                    scheduled_handles.contains(referenced_handle))
                 {
                     object.collection_items.erase(
                         object.collection_items.begin() + static_cast<std::ptrdiff_t>(index - 1U));
@@ -9872,7 +9865,7 @@ namespace copperfin::runtime
             application_surface->second.properties["maxwidth"] = make_number_value(-1.0);
             application_surface->second.properties["maxheight"] = make_number_value(-1.0);
             impl->representative_application_surface_handle = application_surface_handle;
-            const PrgValue application_surface_reference = make_string_value(
+            const PrgValue application_surface_reference = make_object_reference_value(
                 "object:" + application_surface->second.prog_id + "#" +
                 std::to_string(application_surface->second.handle));
             const int projects_handle = impl->next_ole_handle++;
@@ -9889,7 +9882,7 @@ namespace copperfin::runtime
             const auto [projects_it, _] = impl->ole_objects.emplace(
                 projects_handle,
                 std::move(projects_state));
-            application_surface->second.properties["projects"] = make_string_value(
+            application_surface->second.properties["projects"] = make_object_reference_value(
                 "object:" + projects_it->second.prog_id + "#" +
                 std::to_string(projects_it->second.handle));
             application_surface->second.properties["activeproject"] = make_empty_value();

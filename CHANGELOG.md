@@ -8,9 +8,11 @@
   expression/command continuations and direct invocation argument lists now
   discard retired handles before resuming, and declared child visibility is
   enforced before mutation. A queued sibling released from `Destroy` now runs
-  synchronously, retiring parents reject late `AddObject()` calls, and reference
-  invalidation matches the complete runtime identity so handle-shaped character
-  data remains intact. Added `RQ-CF-PRG-036` and replaced regressions that
+  synchronously, retiring parents reject late `AddObject()` calls, and runtime
+  object-reference provenance keeps identical handle-shaped application text
+  intact. Direct method dispatch also retains only the stable source handle
+  across a self-removing method before after-source delegates run. Added
+  `RQ-CF-PRG-036` and replaced regressions that
   required detached children to remain alive. Completed lifecycle callbacks
   remain marked until their owning traversal cleans up, preventing a later
   sibling from redispatching an earlier sibling's `Destroy`. Corrected the `SYS(2021)` test
