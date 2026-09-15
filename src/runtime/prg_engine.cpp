@@ -492,6 +492,7 @@ namespace copperfin::runtime
             };
 
             int work_area = 0;
+            std::uint64_t binding_identity = 0U;
             std::string alias;
             std::string source_path;
             std::string dbf_identity;
@@ -542,6 +543,25 @@ namespace copperfin::runtime
         {
             std::string key;
             std::size_t recno = 0;
+        };
+
+        struct CursorExpressionReference
+        {
+            // RQ-CF-PRG-034: never retain a session-owned CursorState address
+            // across arbitrary expression evaluation.
+            int data_session = 0;
+            int work_area = 0;
+            std::uint64_t binding_identity = 0U;
+            std::string alias;
+            const CursorState *detached_cursor = nullptr;
+        };
+
+        struct RecordEvaluationOverride
+        {
+            // RQ-CF-PRG-034: own the record snapshot and key it to the exact
+            // cursor generation that requested the evaluation.
+            std::uint64_t cursor_binding_identity = 0U;
+            vfp::DbfRecord record;
         };
 
         struct CursorPositionSnapshot
@@ -1033,6 +1053,7 @@ namespace copperfin::runtime
         std::size_t max_loop_iterations = 200000;
         std::filesystem::path runtime_temp_directory;
         std::uint64_t runtime_instance_id = 0;
+        std::uint64_t next_cursor_binding_identity = 1U;
         std::size_t next_popup_action_id = 0;
         std::vector<std::filesystem::path> owned_xasset_bootstrap_paths;
         std::size_t scheduler_yield_statement_interval = 4096;
@@ -1046,7 +1067,7 @@ namespace copperfin::runtime
 
         // Index seek optimizer - pattern cache
         std::map<std::string, IndexExpressionPattern> index_pattern_cache;  // Cache analyzed patterns by expression text
-        std::vector<std::pair<const CursorState *, const vfp::DbfRecord *>> record_evaluation_overrides;
+        std::vector<RecordEvaluationOverride> record_evaluation_overrides;
         bool relation_synchronization_active = false;
 
 #include "prg_engine_session.inl"
@@ -1277,27 +1298,39 @@ namespace copperfin::runtime
         } scoped_expression_depth(expression_evaluation_depth);
 
         const std::string effective_expression = apply_with_context(expression, frame);
-        const auto resolve_expression_cursor = [this, preferred_cursor](const std::string &designator)
+        const bool has_preferred_cursor = preferred_cursor != nullptr;
+        const CursorExpressionReference preferred_cursor_reference =
+            capture_cursor_expression_reference(preferred_cursor);
+        const auto resolve_preferred_cursor = [this, preferred_cursor_reference]()
         {
-            if (trim_copy(designator).empty() && preferred_cursor != nullptr)
+            return resolve_cursor_expression_reference(preferred_cursor_reference);
+        };
+        const auto resolve_expression_cursor = [this, has_preferred_cursor, preferred_cursor_reference, resolve_preferred_cursor](const std::string &designator)
+        {
+            if (has_preferred_cursor &&
+                cursor_expression_reference_matches_designator(preferred_cursor_reference, designator))
             {
-                return preferred_cursor;
+                return resolve_preferred_cursor();
             }
             return static_cast<const CursorState *>(resolve_cursor_target(designator));
         };
-        const auto resolve_mutable_expression_cursor = [this, preferred_cursor](const std::string &designator)
+        const auto resolve_mutable_expression_cursor = [this, has_preferred_cursor, preferred_cursor_reference, resolve_preferred_cursor](const std::string &designator)
         {
-            if (trim_copy(designator).empty() && preferred_cursor != nullptr)
+            if (has_preferred_cursor &&
+                cursor_expression_reference_matches_designator(preferred_cursor_reference, designator))
             {
-                return resolve_cursor_target(std::to_string(preferred_cursor->work_area));
+                return const_cast<CursorState *>(resolve_preferred_cursor());
             }
             return resolve_cursor_target(designator);
         };
-        const auto expression_cursor_designator = [preferred_cursor](const std::string &designator)
+        const auto expression_cursor_designator = [has_preferred_cursor, resolve_preferred_cursor](const std::string &designator)
         {
-            return trim_copy(designator).empty() && preferred_cursor != nullptr
-                       ? preferred_cursor->alias
-                       : designator;
+            if (!trim_copy(designator).empty() || !has_preferred_cursor)
+            {
+                return designator;
+            }
+            const CursorState *cursor = resolve_preferred_cursor();
+            return cursor == nullptr ? std::string{"__copperfin_closed_preferred_cursor__"} : cursor->alias;
         };
         const bool handling_try_error = std::any_of(
             frame.tries.begin(),
@@ -1353,17 +1386,13 @@ namespace copperfin::runtime
                 return found == current_session_state().key_assignments.end() ? std::string{} : found->second;
             },
             is_set_enabled("exact"),
-            preferred_cursor == nullptr ? current_selected_work_area() : preferred_cursor->work_area,
+            has_preferred_cursor ? preferred_cursor_reference.work_area : current_selected_work_area(),
             [this]()
             {
                 return next_available_work_area();
             },
-            [resolve_expression_cursor, preferred_cursor](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                if (trim_copy(designator).empty() && preferred_cursor != nullptr)
-                {
-                    return preferred_cursor->work_area;
-                }
                 const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? 0 : cursor->work_area;
             },
@@ -1447,9 +1476,19 @@ namespace copperfin::runtime
             {
                 return runtime_lock_function(function, raw_arguments, arguments);
             },
-            [this, preferred_cursor](const std::string &identifier)
+            [this, has_preferred_cursor, resolve_preferred_cursor](const std::string &identifier)
             {
-                const CursorState *current_cursor = preferred_cursor == nullptr ? resolve_cursor_target({}) : preferred_cursor;
+                const CursorState *current_cursor = has_preferred_cursor
+                    ? resolve_preferred_cursor()
+                    : resolve_cursor_target({});
+                if (has_preferred_cursor && current_cursor == nullptr)
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text(
+                            "Runtime.Prg.Expression.Error.VariableNotFound",
+                            {{"variableName", uppercase_copy(identifier)}}),
+                        12);
+                }
                 return resolve_field_value(identifier, current_cursor);
             },
             [this, &frame](const std::string &name)
@@ -2065,9 +2104,23 @@ namespace copperfin::runtime
                 }
                 return make_string_value("ole:" + runtime_object->prog_id + "." + effective_property_path);
             },
-            [this, &frame, preferred_cursor](const std::string &nested_expression)
+            [this, &frame, has_preferred_cursor, resolve_preferred_cursor](const std::string &nested_expression)
             {
-                return evaluate_expression(nested_expression, frame, preferred_cursor);
+                const CursorState *current_preferred_cursor = has_preferred_cursor
+                    ? resolve_preferred_cursor()
+                    : nullptr;
+                if (has_preferred_cursor && current_preferred_cursor == nullptr)
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text(
+                            "Runtime.Prg.Expression.Error.VariableNotFound",
+                            {{"variableName", uppercase_copy(trim_copy(nested_expression))}}),
+                        12);
+                }
+                return evaluate_expression(
+                    nested_expression,
+                    frame,
+                    current_preferred_cursor);
             },
             [this](const std::string &option_name)
             {

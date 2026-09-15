@@ -73,6 +73,129 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_curval_oldval_reject_reentrant_cursor_replacement()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_curval_oldval_reentrant_cursor";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "curval_oldval_reentrant_cursor.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "ID", .type = 'I', .length = 4U},
+             {.name = "NAME", .type = 'C', .length = 10U}},
+            {{"1", "ALPHA"}});
+        expect(create_result.ok, "RQ-CF-PRG-034/#6270: reentrant CURVAL/OLDVAL fixture should be writable");
+
+        write_text(
+            program_path,
+            "SET MULTILOCKS ON\n"
+            "USE '" + table_path.string() + "' ALIAS cursession\n"
+            "=CURSORSETPROP('Buffering', 5, 'cursession')\n"
+            "cSessionSwitch = CURVAL(\"IIF(SwitchSession(), NAME, NAME)\", 'cursession')\n"
+            "nSessionAfterCallback = VAL(SET('DATASESSION'))\n"
+            "SET DATASESSION TO 1\n"
+            "USE IN cursession\n"
+            "USE '" + table_path.string() + "' ALIAS curclose\n"
+            "=CURSORSETPROP('Buffering', 5, 'curclose')\n"
+            "TRY\n"
+            "  cCurClose = CURVAL(\"IIF(DropCurClose(), NAME, NAME)\")\n"
+            "CATCH TO oCurClose\n"
+            "  nCurCloseError = oCurClose.ErrorNo\n"
+            "ENDTRY\n"
+            "lCurClosed = NOT USED('curclose')\n"
+            "USE '" + table_path.string() + "' ALIAS oldclose\n"
+            "=CURSORSETPROP('Buffering', 3, 'oldclose')\n"
+            "REPLACE NAME WITH 'CHANGED' IN oldclose\n"
+            "DELETE IN oldclose\n"
+            "TRY\n"
+            "  cOldClose = OLDVAL(\"IIF(DropOldClose(), NAME, NAME)\", SELECT('oldclose'))\n"
+            "CATCH TO oOldClose\n"
+            "  nOldCloseError = oOldClose.ErrorNo\n"
+            "ENDTRY\n"
+            "lOldClosed = NOT USED('oldclose')\n"
+            "USE '" + table_path.string() + "' ALIAS curreuse\n"
+            "=CURSORSETPROP('Buffering', 3, 'curreuse')\n"
+            "TRY\n"
+            "  cCurReuse = CURVAL(\"IIF(ReplaceCurReuse(), curreuse.NAME, curreuse.NAME)\", 'curreuse')\n"
+            "CATCH TO oCurReuse\n"
+            "  nCurReuseError = oCurReuse.ErrorNo\n"
+            "ENDTRY\n"
+            "cCurReuseName = curreuse.NAME\n"
+            "USE IN curreuse\n"
+            "USE '" + table_path.string() + "' ALIAS oldreuse\n"
+            "=CURSORSETPROP('Buffering', 5, 'oldreuse')\n"
+            "REPLACE NAME WITH 'CHANGED' IN oldreuse\n"
+            "TRY\n"
+            "  cOldReuse = OLDVAL(\"IIF(ReplaceOldReuse(), oldreuse.NAME, oldreuse.NAME)\", 'oldreuse')\n"
+            "CATCH TO oOldReuse\n"
+            "  nOldReuseError = oOldReuse.ErrorNo\n"
+            "ENDTRY\n"
+            "cOldReuseName = oldreuse.NAME\n"
+            "USE IN oldreuse\n"
+            "USE '" + table_path.string() + "' ALIAS nested\n"
+            "=CURSORSETPROP('Buffering', 5, 'nested')\n"
+            "REPLACE NAME WITH 'CHANGED' IN nested\n"
+            "cNestedValues = CURVAL(\"OLDVAL('NAME','nested')\", 'nested')\n"
+            "RETURN\n"
+            "FUNCTION SwitchSession\n"
+            "SET DATASESSION TO 2\n"
+            "RETURN .T.\n"
+            "ENDFUNC\n"
+            "FUNCTION DropCurClose\n"
+            "USE IN curclose\n"
+            "RETURN .T.\n"
+            "ENDFUNC\n"
+            "FUNCTION DropOldClose\n"
+            "USE IN oldclose\n"
+            "RETURN .T.\n"
+            "ENDFUNC\n"
+            "FUNCTION ReplaceCurReuse\n"
+            "USE IN curreuse\n"
+            "USE '" + table_path.string() + "' ALIAS curreuse\n"
+            "RETURN .T.\n"
+            "ENDFUNC\n"
+            "FUNCTION ReplaceOldReuse\n"
+            "USE IN oldreuse\n"
+            "USE '" + table_path.string() + "' ALIAS oldreuse\n"
+            "RETURN .T.\n"
+            "ENDFUNC\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(program_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "RQ-CF-PRG-034/#6270: reentrant CURVAL/OLDVAL errors should be catchable without invalid memory access: " +
+                   state.message);
+        const auto expect_global = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), "RQ-CF-PRG-034/#6270: " + name + " should be captured");
+            if (found != state.globals.end())
+            {
+                const std::string actual = copperfin::runtime::format_value(found->second);
+                expect(actual == expected,
+                       "RQ-CF-PRG-034/#6270: " + name + " expected " + expected + ", got " + actual);
+            }
+        };
+        expect_global("ncurcloseerror", "12");
+        expect_global("noldcloseerror", "12");
+        expect_global("ncurreuseerror", "12");
+        expect_global("noldreuseerror", "12");
+        expect_global("lcurclosed", "true");
+        expect_global("loldclosed", "true");
+        expect_global("ccurreusename", "ALPHA");
+        expect_global("coldreusename", "ALPHA");
+        expect_global("cnestedvalues", "ALPHA");
+        expect_global("csessionswitch", "ALPHA");
+        expect_global("nsessionaftercallback", "2");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_setfldstate_assigns_buffered_mutation_state()
     {
         namespace fs = std::filesystem;

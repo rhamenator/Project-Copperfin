@@ -352,14 +352,17 @@
                     record_evaluation_overrides.rend(),
                     [&](const auto &entry)
                     {
-                        return entry.first == &cursor;
+                        return entry.cursor_binding_identity != 0U &&
+                            entry.cursor_binding_identity == cursor.binding_identity;
                     }))
             {
                 return true;
             }
 
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
-            record_evaluation_overrides.emplace_back(&cursor, &record);
+            record_evaluation_overrides.push_back(RecordEvaluationOverride{
+                .cursor_binding_identity = ensure_cursor_binding_identity(cursor),
+                .record = record});
             try
             {
                 move_cursor_to(cursor, static_cast<long long>(recno));
@@ -624,11 +627,12 @@
                 record_evaluation_overrides.rend(),
                 [&](const auto &entry)
                 {
-                    return entry.first == &cursor && entry.second != nullptr;
+                    return entry.cursor_binding_identity != 0U &&
+                        entry.cursor_binding_identity == cursor.binding_identity;
                 });
             if (record_override != record_evaluation_overrides.rend())
             {
-                return *record_override->second;
+                return record_override->record;
             }
 
             if (cursor.recno == 0U || cursor.eof)
@@ -2409,6 +2413,10 @@
 
             if (function == "oldval")
             {
+                // RQ-CF-PRG-034: the expression can reenter PRG code and close
+                // or replace this work area. The owned override and stable
+                // cursor identity keep the continuation from using either
+                // freed storage or a replacement cursor generation.
                 if (arguments.empty())
                 {
                     throw PrgCompatibilityError(
@@ -2438,7 +2446,9 @@
                 }
 
                 const vfp::DbfRecord original_record = original->second;
-                record_evaluation_overrides.emplace_back(cursor, &original_record);
+                record_evaluation_overrides.push_back(RecordEvaluationOverride{
+                    .cursor_binding_identity = ensure_cursor_binding_identity(*cursor),
+                    .record = original_record});
                 try
                 {
                     const PrgValue result = evaluate_expression(
@@ -2455,6 +2465,8 @@
 
             if (function == "curval")
             {
+                // RQ-CF-PRG-034: mirror OLDVAL's owned, generation-keyed
+                // evaluation boundary for the current persisted record.
                 if (arguments.empty())
                 {
                     throw PrgCompatibilityError(
@@ -2481,7 +2493,9 @@
                     return make_empty_value();
                 }
                 const vfp::DbfRecord &on_disk_record = table_result.table.records[cursor->recno - 1U];
-                record_evaluation_overrides.emplace_back(cursor, &on_disk_record);
+                record_evaluation_overrides.push_back(RecordEvaluationOverride{
+                    .cursor_binding_identity = ensure_cursor_binding_identity(*cursor),
+                    .record = on_disk_record});
                 try
                 {
                     const PrgValue result = evaluate_expression(
