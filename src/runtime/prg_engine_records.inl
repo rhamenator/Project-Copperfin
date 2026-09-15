@@ -716,7 +716,10 @@
             return true;
         }
 
-        std::optional<PrgValue> resolve_field_value(const std::string &identifier, const CursorState *preferred_cursor)
+        std::optional<PrgValue> resolve_field_value(
+            const std::string &identifier,
+            const CursorState *preferred_cursor,
+            const CursorExpressionReference *preferred_reference = nullptr)
         {
             const auto field_is_visible = [this](const std::string &field_name) -> bool
             {
@@ -803,17 +806,34 @@
             const auto separator = identifier.find('.');
             if (separator != std::string::npos)
             {
+                // RQ-CF-PRG-034: a qualified reference naming the in-flight
+                // cursor remains bound to its captured generation, even when
+                // the callback selected a session with the same alias.
                 const std::string designator = identifier.substr(0U, separator);
                 const std::string field_name = identifier.substr(separator + 1U);
-                if (auto value = value_from_record(resolve_cursor_target(designator), field_name))
+                const CursorState *qualified_cursor =
+                    preferred_reference != nullptr &&
+                        cursor_expression_reference_matches_designator(*preferred_reference, designator)
+                    ? preferred_cursor
+                    : resolve_cursor_target(designator);
+                if (auto value = value_from_record(qualified_cursor, field_name))
                 {
                     return value;
+                }
+                if (preferred_reference != nullptr)
+                {
+                    return std::nullopt;
                 }
             }
 
             if (auto value = value_from_record(preferred_cursor, identifier))
             {
                 return value;
+            }
+
+            if (preferred_reference != nullptr)
+            {
+                return std::nullopt;
             }
 
             return value_from_record(resolve_cursor_target({}), identifier);
@@ -1700,13 +1720,12 @@
             return cursor.local_fields;
         }
 
-        std::string cursor_field_name(const std::string &designator, std::size_t one_based_index)
+        std::string cursor_field_name(const CursorState *cursor, std::size_t one_based_index)
         {
             if (one_based_index == 0U)
             {
                 return {};
             }
-            const CursorState *cursor = resolve_cursor_target(designator);
             if (cursor == nullptr)
             {
                 return {};
@@ -1715,9 +1734,11 @@
             return one_based_index <= fields.size() ? fields[one_based_index - 1U].name : std::string{};
         }
 
-        std::size_t cursor_field_size(const std::string &designator, const std::string &field_name, std::size_t one_based_index)
+        std::size_t cursor_field_size(
+            const CursorState *cursor,
+            const std::string &field_name,
+            std::size_t one_based_index)
         {
-            const CursorState *cursor = resolve_cursor_target(designator);
             if (cursor == nullptr)
             {
                 return 0U;

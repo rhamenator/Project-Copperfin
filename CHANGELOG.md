@@ -3,7 +3,9 @@
   invoke PRG code. Stable cursor-generation references reacquire the originating
   data-session/work-area binding after callbacks and nested expressions; closing
   or replacing it raises catchable VFP error 12 before a field read, while an
-  active-data-session switch continues against the still-open origin. Record
+  active-data-session switch continues against the still-open origin, including
+  qualified fields and field/order/tag metadata when the new session has a
+  conflicting alias. Record
   overrides now own their snapshots and are keyed by generation. Focused row/
   table-buffering coverage exercises current, alias, work-area, modified/deleted,
   close, replacement, alias reuse, session-switch, and nested-success paths.
