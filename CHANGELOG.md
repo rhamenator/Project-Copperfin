@@ -7,7 +7,10 @@
   active child twice or invalidating its running `THIS` frame. Suspended
   expression/command continuations and direct invocation argument lists now
   discard retired handles before resuming, and declared child visibility is
-  enforced before mutation. Added `RQ-CF-PRG-036` and replaced regressions that
+  enforced before mutation. A queued sibling released from `Destroy` now runs
+  synchronously, retiring parents reject late `AddObject()` calls, and reference
+  invalidation matches the complete runtime identity so handle-shaped character
+  data remains intact. Added `RQ-CF-PRG-036` and replaced regressions that
   required detached children to remain alive. Corrected the `SYS(2021)` test
   fixture's malformed DBF initializer so sanitizer validation can exercise the
   complete runtime-surface suite without reading past a string literal.

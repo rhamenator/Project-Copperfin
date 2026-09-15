@@ -2411,6 +2411,7 @@
             struct InvocationArguments
             {
                 std::vector<PrgValue> arguments;
+                std::vector<bool> argument_was_runtime_object;
                 std::vector<std::string> raw_arguments;
                 std::vector<std::optional<std::string>> argument_references;
             };
@@ -2454,6 +2455,8 @@
                                 argument_end = candidate_end;
                                 position_ = candidate_end;
                                 invocation.arguments.push_back(resolve_identifier(reference_name));
+                                invocation.argument_was_runtime_object.push_back(
+                                    resolve_object_callback_(invocation.arguments.back()) != nullptr);
                                 invocation.raw_arguments.push_back(
                                     trim_copy(text_.substr(argument_start, argument_end - argument_start)));
                                 invocation.argument_references.push_back(std::move(argument_reference));
@@ -2513,6 +2516,8 @@
                     {
                         invocation.arguments.back() = array_value_callback_(raw_argument, 1U, 1U);
                     }
+                    invocation.argument_was_runtime_object.push_back(
+                        resolve_object_callback_(invocation.arguments.back()) != nullptr);
                     invocation.argument_references.push_back(std::nullopt);
                     invocation.raw_arguments.push_back(raw_argument);
                     skip_whitespace();
@@ -2530,14 +2535,12 @@
                 // RQ-CF-PRG-036: a later argument may synchronously destroy an
                 // object captured by an earlier argument. Retire that local
                 // parser copy before the invocation receives a stale handle.
-                for (PrgValue &argument : invocation.arguments)
+                for (std::size_t index = 0U; index < invocation.arguments.size(); ++index)
                 {
-                    int handle = 0;
-                    std::string prog_id;
-                    if (parse_object_handle_reference(argument, handle, prog_id) &&
-                        resolve_object_callback_(argument) == nullptr)
+                    if (invocation.argument_was_runtime_object[index] &&
+                        resolve_object_callback_(invocation.arguments[index]) == nullptr)
                     {
-                        argument = make_empty_value();
+                        invocation.arguments[index] = make_empty_value();
                     }
                 }
                 return invocation;

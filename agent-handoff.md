@@ -22,9 +22,11 @@ held by variables, arrays, collections, and object properties are retired.
 Missing, empty, and hidden targets preserve the graph and raise localized error
 1925. Declared visibility is enforced before mutation. A release-in-progress
 ownership guard supports reentrant owner release without invalidating the active
-child's `THIS` frame or clearing its outer reservation. Direct invocation
+child’s `THIS` frame or clearing its outer reservation. Direct invocation
 arguments and suspended expression/command continuations also discard retired
-handles before resuming. The obsolete detached-child test matrix was
+identities before resuming while ordinary handle-shaped character data remains
+unchanged. Queued sibling releases run synchronously, and `AddObject()` rejects
+new children on an owner already reserved for retirement. The obsolete detached-child test matrix was
 replaced with focused differential lifecycle coverage; adjacent child collection
 and standalone `Release()` tests remain active. `RQ-CF-PRG-036`, language
 coverage, locale catalogs, and the changelog are updated.
@@ -32,8 +34,8 @@ coverage, locale catalogs, and the changelog are updated.
 Validation passes for the runtime-surface, parser-classes, control-flow, locale,
 and safety-traceability tests. A fresh Clang ASan/UBSan build passes the complete
 runtime-surface executable after correcting an unrelated malformed `SYS(2021)`
-DBF test initializer exposed by ASan. After review hardening, Valgrind reports
-zero errors and no leaks across 18,376,113 allocations. PR #6403 is open; next:
+DBF test initializer exposed by ASan. After the second review-hardening pass,
+Valgrind reports zero errors and no leaks across 18,401,056 allocations. PR #6403 is open; next:
 push the signed/DCO review-fix commit, resolve its review conversations, request
 fresh review, then monitor required checks and conversation resolution.
 

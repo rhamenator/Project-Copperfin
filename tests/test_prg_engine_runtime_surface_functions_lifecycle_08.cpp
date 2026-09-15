@@ -14,7 +14,7 @@ namespace copperfin::runtime_surface_tests
 
         write_text(
             program_path,
-            "PUBLIC gnChildDestroyed, gnGrandDestroyed, gcDestroyOrder, gnReentrantChildDestroyed, gnReentrantOwnerDestroyed, glReentrantThisSurvived, gcCommandArgType\n"
+            "PUBLIC gnChildDestroyed, gnGrandDestroyed, gcDestroyOrder, gnReentrantChildDestroyed, gnReentrantOwnerDestroyed, glReentrantThisSurvived, gcCommandArgType, gcSiblingReleaseOrder, glAddDuringDestroyResult\n"
             "gnChildDestroyed = 0\n"
             "gnGrandDestroyed = 0\n"
             "gcDestroyOrder = ''\n"
@@ -22,9 +22,13 @@ namespace copperfin::runtime_surface_tests
             "gnReentrantOwnerDestroyed = 0\n"
             "glReentrantThisSurvived = .F.\n"
             "gcCommandArgType = ''\n"
+            "gcSiblingReleaseOrder = ''\n"
+            "glAddDuringDestroyResult = .T.\n"
             "oForm = CREATEOBJECT('DemoForm')\n"
             "oChild = oForm.child\n"
             "oGrand = oChild.grand\n"
+            "cSameHandleLookalike = 'object:NotDemoChild#2'\n"
+            "nHandleLikeLiteralLength = LEN('object:Foo#123')\n"
             "DIMENSION aHeld[1]\n"
             "aHeld[1] = oChild\n"
             "oHeld = CREATEOBJECT('Collection')\n"
@@ -39,6 +43,7 @@ namespace copperfin::runtime_surface_tests
             "lCollectionStillObject = VARTYPE(oHeld.Item('child')) == 'O'\n"
             "lOwnerStillHasChild = PEMSTATUS(oForm, 'child', 1)\n"
             "lSiblingSurvives = VARTYPE(oForm.sibling) == 'O'\n"
+            "cSameHandleLookalikeAfter = cSameHandleLookalike\n"
             "TRY\n"
             "  =oForm.RemoveObject('child')\n"
             "CATCH TO oMissing\n"
@@ -81,6 +86,10 @@ namespace copperfin::runtime_surface_tests
             "  nProtectedError = oProtectedError.ErrorNo\n"
             "ENDTRY\n"
             "lProtectedChildSurvives = PEMSTATUS(oProtected, 'child', 1)\n"
+            "oBranchForm = CREATEOBJECT('BranchForm')\n"
+            "lBranchRemoved = oBranchForm.RemoveObject('branch')\n"
+            "cSiblingReleaseOrder = gcSiblingReleaseOrder\n"
+            "lAddDuringDestroyResult = glAddDuringDestroyResult\n"
             "RETURN\n"
             "FUNCTION CaptureArgType(toValue, tlRemoved)\n"
             "  RETURN VARTYPE(toValue)\n"
@@ -114,6 +123,28 @@ namespace copperfin::runtime_surface_tests
             "DEFINE CLASS ProtectedForm AS Form\n"
             "  PROTECTED child\n"
             "  ADD OBJECT child AS CommandButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BranchForm AS Form\n"
+            "  ADD OBJECT branch AS BranchContainer\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BranchContainer AS Container\n"
+            "  ADD OBJECT a AS ReleaseSiblingA\n"
+            "  ADD OBJECT b AS ReleaseSiblingB\n"
+            "  PROCEDURE Destroy\n"
+            "    glAddDuringDestroyResult = THIS.AddObject('late', 'CommandButton')\n"
+            "  ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ReleaseSiblingA AS CommandButton\n"
+            "  PROCEDURE Destroy\n"
+            "    gcSiblingReleaseOrder = gcSiblingReleaseOrder + 'A1'\n"
+            "    THIS.Parent.b.Release()\n"
+            "    gcSiblingReleaseOrder = gcSiblingReleaseOrder + 'A2'\n"
+            "  ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ReleaseSiblingB AS CommandButton\n"
+            "  PROCEDURE Destroy\n"
+            "    gcSiblingReleaseOrder = gcSiblingReleaseOrder + 'B'\n"
+            "  ENDPROC\n"
             "ENDDEFINE\n"
             "DEFINE CLASS DemoChild AS Container\n"
             "  ADD OBJECT grand AS DemoGrand\n"
@@ -160,6 +191,8 @@ namespace copperfin::runtime_surface_tests
         expect_global("lcollectionstillobject", "false");
         expect_global("lownerstillhaschild", "false");
         expect_global("lsiblingsurvives", "true");
+        expect_global("csamehandlelookalikeafter", "object:NotDemoChild#2");
+        expect_global("nhandlelikeliterallength", "14");
         expect_global("nmissingerror", "1925");
         expect_global("cmissingmessage", "Unknown member child.");
         expect_global("nemptyerror", "1925");
@@ -176,6 +209,9 @@ namespace copperfin::runtime_surface_tests
         expect_global("ccommandargtype", "U");
         expect_global("nprotectederror", "1925");
         expect_global("lprotectedchildsurvives", "true");
+        expect_global("lbranchremoved", "true");
+        expect_global("csiblingreleaseorder", "A1BA2");
+        expect_global("laddduringdestroyresult", "false");
 
         const auto object_is_retired = [&](const std::string &prog_id)
         {

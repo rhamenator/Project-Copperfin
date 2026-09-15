@@ -550,6 +550,12 @@
 
         if (leaf == "addobject" && !target_object->source.empty() && arguments.size() >= 2U)
         {
+            // RQ-CF-PRG-036: a retiring owner cannot acquire a new child after
+            // its release traversal has snapshotted the subtree.
+            if (active_native_release_handles.contains(target_object->handle))
+            {
+                return make_boolean_value(false);
+            }
             const std::string child_name_text = trim_copy(value_as_string(arguments[0]));
             const std::string child_name = normalize_identifier(child_name_text);
             const std::string child_class = trim_copy(value_as_string(arguments[1]));

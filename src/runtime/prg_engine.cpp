@@ -1058,6 +1058,7 @@ namespace copperfin::runtime
         std::set<std::string> active_native_event_keys;
         std::set<std::string> active_native_property_assignments;
         std::set<int> active_native_release_handles;
+        std::set<int> active_native_lifecycle_callback_handles;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
         std::vector<WindowMessageBinding> window_message_bindings;
         std::vector<CurrentWindowMessageContext> active_window_message_contexts;
@@ -7339,7 +7340,7 @@ namespace copperfin::runtime
         RuntimeOleObjectState &runtime_object,
         const std::string &effective_member_path)
     {
-        if (active_native_release_handles.contains(runtime_object.handle))
+        if (active_native_lifecycle_callback_handles.contains(runtime_object.handle))
         {
             return make_boolean_value(true);
         }
@@ -7368,7 +7369,7 @@ namespace copperfin::runtime
                 continue;
             }
             if (current.handle != runtime_object.handle &&
-                active_native_release_handles.contains(current.handle))
+                active_native_lifecycle_callback_handles.contains(current.handle))
             {
                 scheduled_handles.erase(current.handle);
                 continue;
@@ -7421,6 +7422,17 @@ namespace copperfin::runtime
         const ActiveReleaseGuard active_release_guard{
             active_native_release_handles, owned_active_release_handles};
 
+        std::set<std::string> scheduled_object_references;
+        for (const int handle : release_order)
+        {
+            const auto found = ole_objects.find(handle);
+            if (found != ole_objects.end())
+            {
+                scheduled_object_references.insert(
+                    "object:" + found->second.prog_id + "#" + std::to_string(handle));
+            }
+        }
+
         for (const int handle : release_order)
         {
             auto found = ole_objects.find(handle);
@@ -7428,6 +7440,20 @@ namespace copperfin::runtime
             {
                 continue;
             }
+
+            struct LifecycleCallbackGuard
+            {
+                std::set<int> &active_handles;
+                int handle;
+
+                ~LifecycleCallbackGuard()
+                {
+                    active_handles.erase(handle);
+                }
+            };
+            active_native_lifecycle_callback_handles.insert(handle);
+            const LifecycleCallbackGuard lifecycle_callback_guard{
+                active_native_lifecycle_callback_handles, handle};
 
             RuntimeOleObjectState &object_state = found->second;
             std::string destroy_program_path;
@@ -7559,10 +7585,8 @@ namespace copperfin::runtime
         // continue to report VARTYPE() == 'O'.
         const auto invalidate_released_reference = [&](PrgValue &value)
         {
-            int referenced_handle = 0;
-            std::string referenced_prog_id;
-            if (parse_object_handle_reference(value, referenced_handle, referenced_prog_id) &&
-                scheduled_handles.contains(referenced_handle))
+            if (value.kind == PrgValueKind::string &&
+                scheduled_object_references.contains(value.string_value))
             {
                 value = make_empty_value();
             }
