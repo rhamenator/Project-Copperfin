@@ -1610,6 +1610,7 @@
   "Runtime.Prg.Core.Error.OleMemberAccessDenied": "Acceso denegado al miembro PRG nativo: {memberIdentifier}",
   "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation": "No se encontro el miembro OLE para la invocacion del metodo: {memberIdentifier}",
   "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead": "No se encontro el miembro OLE para la lectura de la propiedad: {memberIdentifier}",
+  "Runtime.Prg.Native.Error.UnknownMember": "Miembro desconocido {memberIdentifier}.",
   "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation": "No se encontro el objeto OLE para la invocacion del metodo: {targetIdentifier}",
   "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead": "No se encontro el objeto OLE para la lectura de la propiedad: {propertyPath}",
   "Runtime.Prg.Core.Error.ResourceFilesystemFailure": "Falla de recurso de runtime: error de sistema de archivos: {detail}",

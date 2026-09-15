@@ -2,193 +2,169 @@
 
 namespace copperfin::runtime_surface_tests
 {
-    void test_native_removeobject_detaches_runtime_created_external_base_subtree_and_preserves_classlibrary_provenance()
+    void test_native_removeobject_destroys_subtree_and_invalidates_references()
     {
         namespace fs = std::filesystem;
-        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_removeobject_runtime_created_external_base_subtree";
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_removeobject_destroy_lifecycle";
+        const fs::path program_path = temp_root / "removeobject_destroy_lifecycle.prg";
         std::error_code ignored;
         fs::remove_all(temp_root, ignored);
         fs::create_directories(temp_root);
 
-        const fs::path root_library_path = temp_root / "rootbuttons.prg";
         write_text(
-            root_library_path,
-            "DEFINE CLASS RootButton AS Custom\n"
-            "ENDDEFINE\n");
-
-        const fs::path button_library_path = temp_root / "buttons.prg";
-        write_text(
-            button_library_path,
-            "DEFINE CLASS ParentButton AS RootButton OF rootbuttons.prg\n"
-            "ENDDEFINE\n");
-
-        const fs::path main_path = temp_root / "native_removeobject_runtime_created_external_base_subtree.prg";
-        write_text(
-            main_path,
+            program_path,
+            "PUBLIC gnChildDestroyed, gnGrandDestroyed, gcDestroyOrder, gnReentrantChildDestroyed, gnReentrantOwnerDestroyed\n"
+            "gnChildDestroyed = 0\n"
+            "gnGrandDestroyed = 0\n"
+            "gcDestroyOrder = ''\n"
+            "gnReentrantChildDestroyed = 0\n"
+            "gnReentrantOwnerDestroyed = 0\n"
             "oForm = CREATEOBJECT('DemoForm')\n"
-            "oChild = oForm.cmdSave\n"
-            "oGrandchild = oChild.lblBadge\n"
-            "cChildClassBeforeRemove = oChild.Class\n"
-            "cChildBaseClassBeforeRemove = oChild.BaseClass\n"
-            "cChildParentClassBeforeRemove = oChild.ParentClass\n"
-            "cChildClassLibraryBeforeRemove = GETPEM(oChild, 'ClassLibrary')\n"
-            "lChildHasClassLibraryBeforeRemove = PEMSTATUS(oChild, 'ClassLibrary', 1)\n"
-            "nChildClassCountBeforeRemove = ACLASS(aChildClass, oChild)\n"
-            "cChildClass1BeforeRemove = aChildClass[1]\n"
-            "cChildClass2BeforeRemove = aChildClass[2]\n"
-            "cChildClass3BeforeRemove = aChildClass[3]\n"
-            "cChildClass4BeforeRemove = aChildClass[4]\n"
-            "cChildClass5BeforeRemove = aChildClass[5]\n"
-            "cChildCaptionBeforeRemove = oChild.Caption\n"
-            "cGrandchildCaptionBeforeRemove = oGrandchild.Caption\n"
-            "lRemoved = oForm.RemoveObject('cmdSave')\n"
-            "lRemovedMissing = oForm.RemoveObject('cmdSave')\n"
-            "lHasChildAfterRemove = PEMSTATUS(oForm, 'cmdSave', 1)\n"
-            "xRemovedChild = GETPEM(oForm, 'cmdSave')\n"
-            "lChildHasParentAfterRemove = PEMSTATUS(oChild, 'Parent', 1)\n"
-            "xChildParentAfterRemove = GETPEM(oChild, 'Parent')\n"
-            "lChildHasClassLibraryAfterRemove = PEMSTATUS(oChild, 'ClassLibrary', 1)\n"
-            "cChildClassLibraryAfterRemove = GETPEM(oChild, 'ClassLibrary')\n"
-            "lChildHasGrandchildAfterRemove = PEMSTATUS(oChild, 'lblBadge', 1)\n"
-            "cChildCaptionAfterRemove = oChild.Caption\n"
-            "cGrandchildCaptionAfterRemove = oGrandchild.Caption\n"
-            "lGrandchildHasParentAfterRemove = PEMSTATUS(oGrandchild, 'Parent', 1)\n"
-            "cGrandchildParentCaptionAfterRemove = oGrandchild.Parent.Caption\n"
-            "cGrandchildFromChildAfterRemove = oChild.lblBadge.Caption\n"
-            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
-            "lDictSet = SETPEM(oDict, 'comparemode', 126)\n"
-            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "oChild = oForm.child\n"
+            "oGrand = oChild.grand\n"
+            "DIMENSION aHeld[1]\n"
+            "aHeld[1] = oChild\n"
+            "oHeld = CREATEOBJECT('Collection')\n"
+            "oHeld.Add(oChild, 'child')\n"
+            "lRemoved = oForm.RemoveObject('child')\n"
+            "nChildDestroyedAfter = gnChildDestroyed\n"
+            "nGrandDestroyedAfter = gnGrandDestroyed\n"
+            "cDestroyOrderAfter = gcDestroyOrder\n"
+            "lAliasStillObject = VARTYPE(oChild) == 'O'\n"
+            "lGrandAliasStillObject = VARTYPE(oGrand) == 'O'\n"
+            "lArrayStillObject = VARTYPE(aHeld[1]) == 'O'\n"
+            "lCollectionStillObject = VARTYPE(oHeld.Item('child')) == 'O'\n"
+            "lOwnerStillHasChild = PEMSTATUS(oForm, 'child', 1)\n"
+            "lSiblingSurvives = VARTYPE(oForm.sibling) == 'O'\n"
+            "TRY\n"
+            "  =oForm.RemoveObject('child')\n"
+            "CATCH TO oMissing\n"
+            "  nMissingError = oMissing.ErrorNo\n"
+            "  cMissingMessage = oMissing.Message\n"
+            "ENDTRY\n"
+            "TRY\n"
+            "  =oForm.RemoveObject('')\n"
+            "CATCH TO oEmpty\n"
+            "  nEmptyError = oEmpty.ErrorNo\n"
+            "ENDTRY\n"
+            "TRY\n"
+            "  =oForm.RemoveObject('objects')\n"
+            "CATCH TO oHidden\n"
+            "  nHiddenError = oHidden.ErrorNo\n"
+            "ENDTRY\n"
+            "lSiblingAfterFailures = VARTYPE(oForm.sibling) == 'O'\n"
+            "oReentrant = CREATEOBJECT('ReentrantForm')\n"
+            "oReentrantChild = oReentrant.child\n"
+            "lReentrantRemoved = oReentrant.RemoveObject('child')\n"
+            "lReentrantOwnerStillObject = VARTYPE(oReentrant) == 'O'\n"
+            "lReentrantChildStillObject = VARTYPE(oReentrantChild) == 'O'\n"
+            "nReentrantChildDestroyed = gnReentrantChildDestroyed\n"
+            "nReentrantOwnerDestroyed = gnReentrantOwnerDestroyed\n"
             "RETURN\n"
-            "DEFINE CLASS DemoForm AS Custom\n"
-            "    Caption = 'MainForm'\n"
-            "    PROCEDURE Init\n"
-            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
-            "        RETURN\n"
-            "    ENDPROC\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "  PROCEDURE Init\n"
+            "    THIS.AddObject('child', 'DemoChild')\n"
+            "    THIS.AddObject('sibling', 'CommandButton')\n"
+            "  ENDPROC\n"
             "ENDDEFINE\n"
-            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
-            "    Caption = 'Save'\n"
-            "    PROCEDURE Init\n"
-            "        THIS.AddObject('lblBadge', 'BadgeLabel')\n"
-            "        RETURN\n"
-            "    ENDPROC\n"
+            "DEFINE CLASS ReentrantForm AS Form\n"
+            "  ADD OBJECT child AS ReentrantChild\n"
+            "  PROCEDURE Destroy\n"
+            "    gnReentrantOwnerDestroyed = gnReentrantOwnerDestroyed + 1\n"
+            "  ENDPROC\n"
             "ENDDEFINE\n"
-            "DEFINE CLASS BadgeLabel AS Custom\n"
-            "    Caption = 'Badge'\n"
+            "DEFINE CLASS ReentrantChild AS CommandButton\n"
+            "  PROCEDURE Destroy\n"
+            "    gnReentrantChildDestroyed = gnReentrantChildDestroyed + 1\n"
+            "    THIS.Parent.Release()\n"
+            "  ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoChild AS Container\n"
+            "  ADD OBJECT grand AS DemoGrand\n"
+            "  PROCEDURE Destroy\n"
+            "    gnChildDestroyed = gnChildDestroyed + 1\n"
+            "    gcDestroyOrder = gcDestroyOrder + 'C'\n"
+            "  ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoGrand AS CommandButton\n"
+            "  PROCEDURE Destroy\n"
+            "    gnGrandDestroyed = gnGrandDestroyed + 1\n"
+            "    gcDestroyOrder = gcDestroyOrder + 'G'\n"
+            "  ENDPROC\n"
             "ENDDEFINE\n");
 
-        copperfin::runtime::PrgRuntimeSession session =
-            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
-
-        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(program_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed,
-               std::string("native REMOVEOBJECT runtime-created external-base subtree script should complete: ") + state.message +
-                   " @line=" + std::to_string(state.location.line));
+               "RQ-CF-PRG-036/#6288: REMOVEOBJECT lifecycle script should complete: " + state.message);
 
-        const auto check = [&](const std::string &name, const std::string &expected)
+        const auto expect_global = [&](const std::string &name, const std::string &expected)
         {
-            const auto it = state.globals.find(name);
-            if (it == state.globals.end())
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), "RQ-CF-PRG-036/#6288: " + name + " should be captured");
+            if (found != state.globals.end())
             {
-                expect(false, name + " variable not found");
-                return;
+                const std::string actual = copperfin::runtime::format_value(found->second);
+                expect(actual == expected,
+                       "RQ-CF-PRG-036/#6288: " + name + " expected " + expected + ", got " + actual);
             }
-            expect(copperfin::runtime::format_value(it->second) == expected,
-                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
         };
 
-        check("cchildclassbeforeremove", "SaveButton");
-        check("cchildbaseclassbeforeremove", "ParentButton");
-        check("cchildparentclassbeforeremove", "ParentButton");
-        check("cchildclasslibrarybeforeremove", button_library_path.string());
-        check("lchildhasclasslibrarybeforeremove", "true");
-        check("nchildclasscountbeforeremove", "5");
-        check("cchildclass1beforeremove", "SAVEBUTTON");
-        check("cchildclass2beforeremove", "PARENTBUTTON");
-        check("cchildclass3beforeremove", "ROOTBUTTON");
-        check("cchildclass4beforeremove", "CUSTOM");
-        check("cchildclass5beforeremove", "OBJECT");
-        check("cchildcaptionbeforeremove", "Save");
-        check("cgrandchildcaptionbeforeremove", "Badge");
-        check("lremoved", "true");
-        check("lremovedmissing", "false");
-        check("lhaschildafterremove", "false");
-        check("lchildhasparentafterremove", "false");
-        check("lchildhasclasslibraryafterremove", "true");
-        check("cchildclasslibraryafterremove", button_library_path.string());
-        check("lchildhasgrandchildafterremove", "true");
-        check("cchildcaptionafterremove", "Save");
-        check("cgrandchildcaptionafterremove", "Badge");
-        check("lgrandchildhasparentafterremove", "true");
-        check("cgrandchildparentcaptionafterremove", "Save");
-        check("cgrandchildfromchildafterremove", "Badge");
-        check("ldictset", "true");
-        check("ndictcompare", "126");
+        expect_global("lremoved", "true");
+        expect_global("nchilddestroyedafter", "1");
+        expect_global("ngranddestroyedafter", "1");
+        expect_global("cdestroyorderafter", "GC");
+        expect_global("laliasstillobject", "false");
+        expect_global("lgrandaliasstillobject", "false");
+        expect_global("larraystillobject", "false");
+        expect_global("lcollectionstillobject", "false");
+        expect_global("lownerstillhaschild", "false");
+        expect_global("lsiblingsurvives", "true");
+        expect_global("nmissingerror", "1925");
+        expect_global("cmissingmessage", "Unknown member child.");
+        expect_global("nemptyerror", "1925");
+        expect_global("nhiddenerror", "1925");
+        expect_global("lsiblingafterfailures", "true");
+        expect_global("lreentrantremoved", "true");
+        expect_global("lreentrantownerstillobject", "false");
+        expect_global("lreentrantchildstillobject", "false");
+        expect_global("nreentrantchilddestroyed", "1");
+        expect_global("nreentrantownerdestroyed", "1");
 
-        const auto removed_child = state.globals.find("xremovedchild");
-        expect(removed_child != state.globals.end() &&
-                   removed_child->second.kind == copperfin::runtime::PrgValueKind::empty,
-               "native REMOVEOBJECT runtime-created external-base subtree should invalidate GETPEM() on the owner's removed child slot");
-
-        const auto child_parent_after_remove = state.globals.find("xchildparentafterremove");
-        expect(child_parent_after_remove != state.globals.end() &&
-                   child_parent_after_remove->second.kind == copperfin::runtime::PrgValueKind::empty,
-               "native REMOVEOBJECT runtime-created external-base subtree should clear the detached child's Parent");
-
-        expect(state.ole_objects.size() == 4U,
-               "native REMOVEOBJECT runtime-created external-base subtree should register owner, detached child subtree, and COM objects");
-        if (state.ole_objects.size() == 4U)
+        const auto object_is_retired = [&](const std::string &prog_id)
         {
-            const auto &owner_object = state.ole_objects[0];
-            const auto &child_object = state.ole_objects[1];
-            const auto &grandchild_object = state.ole_objects[2];
-            expect(owner_object.prog_id == "DemoForm",
-                   "native REMOVEOBJECT runtime-created external-base subtree should preserve owner identity");
-            expect(!owner_object.properties.contains("cmdsave"),
-                   "native REMOVEOBJECT runtime-created external-base subtree should detach the child from the owner");
-            expect(child_object.prog_id == "SaveButton",
-                   "native REMOVEOBJECT runtime-created external-base subtree should preserve child identity");
-            expect(child_object.base_class_name == "ParentButton",
-                   "native REMOVEOBJECT runtime-created external-base subtree should preserve the detached child's immediate base-class identity");
-            expect(child_object.source == main_path.string(),
-                   "native REMOVEOBJECT runtime-created external-base subtree should preserve the detached child's defining source path");
-            expect(child_object.class_library == button_library_path.string(),
-                   "native REMOVEOBJECT runtime-created external-base subtree should preserve the detached child's immediate external ClassLibrary path");
-            expect(!child_object.properties.contains("parent"),
-                   "native REMOVEOBJECT runtime-created external-base subtree should clear the detached child's parent property");
-            expect(child_object.properties.contains("lblbadge"),
-                   "native REMOVEOBJECT runtime-created external-base subtree should preserve the held grandchild on the detached child");
-            expect(grandchild_object.prog_id == "BadgeLabel",
-                   "native REMOVEOBJECT runtime-created external-base subtree should preserve detached descendant identity");
-            expect(state.ole_objects[3].prog_id == "Scripting.Dictionary",
-                   "COM NEWOBJECT should remain stable while native REMOVEOBJECT runtime-created external-base subtree lands");
-        }
+            return std::none_of(
+                state.ole_objects.begin(),
+                state.ole_objects.end(),
+                [&](const auto &object) { return object.prog_id == prog_id; });
+        };
+        expect(object_is_retired("DemoChild"),
+               "RQ-CF-PRG-036/#6288: removed child should leave no runtime object snapshot");
+        expect(object_is_retired("DemoGrand"),
+               "RQ-CF-PRG-036/#6288: removed descendant should leave no runtime object snapshot");
 
-        const bool has_removeobject_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        const auto event_count = [&](const std::string &category, const std::string &detail)
         {
-            return event.category == "prg.object.removeobject" &&
-                   event.detail == "DemoForm.cmdsave";
-        });
-        expect(has_removeobject_event,
-               "native REMOVEOBJECT runtime-created external-base subtree should emit a detachment event");
-
-        const bool has_child_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
-        {
-            return event.category == "prg.object.destroy" &&
-                   event.detail == "SaveButton.Destroy";
-        });
-        expect(!has_child_destroy_event,
-               "native REMOVEOBJECT runtime-created external-base subtree should not destroy the detached child");
-
-        const bool has_grandchild_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
-        {
-            return event.category == "prg.object.destroy" &&
-                   event.detail == "BadgeLabel.Destroy";
-        });
-        expect(!has_grandchild_destroy_event,
-               "native REMOVEOBJECT runtime-created external-base subtree should not destroy the detached descendant");
+            return std::count_if(
+                state.events.begin(),
+                state.events.end(),
+                [&](const auto &event)
+                {
+                    return event.category == category && event.detail == detail;
+                });
+        };
+        expect(event_count("prg.object.removeobject", "DemoForm.child") == 1U,
+               "RQ-CF-PRG-036/#6288: successful removal should emit one event");
+        expect(event_count("prg.object.destroy", "DemoGrand.Destroy") == 1U,
+               "RQ-CF-PRG-036/#6288: descendant Destroy should run exactly once");
+        expect(event_count("prg.object.destroy", "DemoChild.Destroy") == 1U,
+               "RQ-CF-PRG-036/#6288: child Destroy should run exactly once");
+        expect(event_count("prg.object.destroy", "ReentrantChild.Destroy") == 1U,
+               "RQ-CF-PRG-036/#6288: reentrant child Destroy should run exactly once");
+        expect(event_count("prg.object.destroy", "ReentrantForm.Destroy") == 1U,
+               "RQ-CF-PRG-036/#6288: reentrant owner release should run Destroy exactly once");
 
         fs::remove_all(temp_root, ignored);
     }
-
 }

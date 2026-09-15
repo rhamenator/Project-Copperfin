@@ -1057,6 +1057,7 @@ namespace copperfin::runtime
             std::make_shared<detail::ExternalEventTokenQueue>();
         std::set<std::string> active_native_event_keys;
         std::set<std::string> active_native_property_assignments;
+        std::set<int> active_native_release_handles;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
         std::vector<WindowMessageBinding> window_message_bindings;
         std::vector<CurrentWindowMessageContext> active_window_message_contexts;
@@ -7338,6 +7339,11 @@ namespace copperfin::runtime
         RuntimeOleObjectState &runtime_object,
         const std::string &effective_member_path)
     {
+        if (active_native_release_handles.contains(runtime_object.handle))
+        {
+            return make_boolean_value(true);
+        }
+
         struct PendingRelease
         {
             int handle = 0;
@@ -7347,6 +7353,7 @@ namespace copperfin::runtime
         std::vector<int> release_order;
         std::vector<PendingRelease> pending;
         std::set<int> scheduled_handles;
+        std::set<std::intptr_t> scheduled_native_hwnds;
         pending.push_back({.handle = runtime_object.handle, .children_queued = false});
         scheduled_handles.insert(runtime_object.handle);
 
@@ -7359,6 +7366,15 @@ namespace copperfin::runtime
             if (found == ole_objects.end())
             {
                 continue;
+            }
+            if (current.handle != runtime_object.handle &&
+                active_native_release_handles.contains(current.handle))
+            {
+                continue;
+            }
+            if (found->second.native_hwnd.has_value())
+            {
+                scheduled_native_hwnds.insert(*found->second.native_hwnd);
             }
 
             if (!current.children_queued)
@@ -7377,6 +7393,25 @@ namespace copperfin::runtime
 
             release_order.push_back(current.handle);
         }
+
+        struct ActiveReleaseGuard
+        {
+            std::set<int> &active_handles;
+            const std::set<int> &scheduled_handles;
+
+            ~ActiveReleaseGuard()
+            {
+                for (const int handle : scheduled_handles)
+                {
+                    active_handles.erase(handle);
+                }
+            }
+        };
+        // RQ-CF-PRG-036: reserve the whole subtree before any Destroy callback
+        // so reentrant owner/sibling release cannot schedule a handle twice.
+        active_native_release_handles.insert(scheduled_handles.begin(), scheduled_handles.end());
+        const ActiveReleaseGuard active_release_guard{
+            active_native_release_handles, scheduled_handles};
 
         for (const int handle : release_order)
         {
@@ -7511,6 +7546,133 @@ namespace copperfin::runtime
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
         }
 
+        // RQ-CF-PRG-036: VFP retires aliases and container-held references
+        // when RemoveObject destroys a subtree; stale handle strings must not
+        // continue to report VARTYPE() == 'O'.
+        const auto invalidate_released_reference = [&](PrgValue &value)
+        {
+            int referenced_handle = 0;
+            std::string referenced_prog_id;
+            if (parse_object_handle_reference(value, referenced_handle, referenced_prog_id) &&
+                scheduled_handles.contains(referenced_handle))
+            {
+                value = make_empty_value();
+            }
+        };
+        const auto invalidate_array = [&](RuntimeArray &array)
+        {
+            for (PrgValue &value : array.values)
+            {
+                invalidate_released_reference(value);
+            }
+        };
+
+        for (auto &[_, value] : globals)
+        {
+            invalidate_released_reference(value);
+        }
+        if (last_return_value.has_value())
+        {
+            invalidate_released_reference(*last_return_value);
+        }
+        for (auto &[_, array] : arrays)
+        {
+            invalidate_array(array);
+        }
+        for (Frame &frame : stack)
+        {
+            for (auto &[_, value] : frame.locals)
+            {
+                invalidate_released_reference(value);
+            }
+            for (PrgValue &value : frame.call_arguments)
+            {
+                invalidate_released_reference(value);
+            }
+            for (auto &[_, array] : frame.local_arrays)
+            {
+                invalidate_array(array);
+            }
+            for (auto &[_, saved_value] : frame.private_saved_values)
+            {
+                if (saved_value.has_value())
+                {
+                    invalidate_released_reference(*saved_value);
+                }
+            }
+            for (auto &[_, saved_array] : frame.private_saved_arrays)
+            {
+                if (saved_array.has_value())
+                {
+                    invalidate_array(*saved_array);
+                }
+            }
+            for (WithState &with_state : frame.withs)
+            {
+                invalidate_released_reference(with_state.target);
+            }
+            for (LoopState &loop : frame.loops)
+            {
+                for (PrgValue &value : loop.each_values)
+                {
+                    invalidate_released_reference(value);
+                }
+            }
+        }
+        for (auto &[_, object] : ole_objects)
+        {
+            for (auto &[__, value] : object.properties)
+            {
+                invalidate_released_reference(value);
+            }
+            for (auto &[__, value] : object.default_properties)
+            {
+                invalidate_released_reference(value);
+            }
+            for (std::size_t index = object.collection_items.size(); index > 0U; --index)
+            {
+                int referenced_handle = 0;
+                std::string referenced_prog_id;
+                if (parse_object_handle_reference(
+                        object.collection_items[index - 1U],
+                        referenced_handle,
+                        referenced_prog_id) &&
+                    scheduled_handles.contains(referenced_handle))
+                {
+                    object.collection_items.erase(
+                        object.collection_items.begin() + static_cast<std::ptrdiff_t>(index - 1U));
+                    if (index <= object.collection_item_keys.size())
+                    {
+                        object.collection_item_keys.erase(
+                            object.collection_item_keys.begin() + static_cast<std::ptrdiff_t>(index - 1U));
+                    }
+                }
+            }
+            for (std::vector<PrgValue> &row : object.list_rows)
+            {
+                for (PrgValue &value : row)
+                {
+                    invalidate_released_reference(value);
+                }
+            }
+            for (PrgValue &value : object.list_item_data)
+            {
+                invalidate_released_reference(value);
+            }
+            if (is_native_collection_object(object))
+            {
+                object.properties["count"] =
+                    make_number_value(static_cast<double>(object.collection_items.size()));
+            }
+        }
+        for (auto &[_, object_arrays] : native_object_arrays)
+        {
+            for (auto &[__, array] : object_arrays)
+            {
+                invalidate_array(array);
+            }
+        }
+
         for (const int handle : release_order)
         {
             native_event_bindings.erase(
@@ -7529,6 +7691,30 @@ namespace copperfin::runtime
             native_object_arrays.erase(handle);
             native_object_class_lineage_by_handle.erase(handle);
             ole_objects.erase(handle);
+        }
+        window_message_bindings.erase(
+            std::remove_if(
+                window_message_bindings.begin(),
+                window_message_bindings.end(),
+                [&scheduled_handles, &scheduled_native_hwnds](const WindowMessageBinding &binding)
+                {
+                    return scheduled_handles.contains(binding.target_handle) ||
+                           scheduled_native_hwnds.contains(binding.window_handle);
+                }),
+            window_message_bindings.end());
+        if (representative_active_form_handle.has_value() &&
+            scheduled_handles.contains(*representative_active_form_handle))
+        {
+            representative_active_form_handle.reset();
+        }
+        if (representative_application_forms_collection_handle.has_value() &&
+            scheduled_handles.contains(*representative_application_forms_collection_handle))
+        {
+            representative_application_forms_collection_handle.reset();
+        }
+        else if (representative_application_forms_collection_handle.has_value())
+        {
+            (void)ensure_representative_application_forms_collection_object();
         }
 
         return make_boolean_value(true);

@@ -637,26 +637,37 @@
         }
         if (leaf == "removeobject" && !target_object->source.empty() && !arguments.empty())
         {
-            const std::string child_name = normalize_identifier(trim_copy(value_as_string(arguments[0])));
+            // RQ-CF-PRG-036: RemoveObject is destructive in VFP9. Missing or
+            // inaccessible members raise 1925 without mutating the owner.
+            const std::string requested_child_name = trim_copy(value_as_string(arguments[0]));
+            const std::string child_name = normalize_identifier(requested_child_name);
+            const auto raise_unknown_member = [&]() -> PrgValue
+            {
+                throw PrgCompatibilityError(
+                    runtime_text(
+                        "Runtime.Prg.Native.Error.UnknownMember",
+                        {{"memberIdentifier", requested_child_name}}),
+                    1925);
+            };
             if (child_name.empty())
             {
-                return make_boolean_value(false);
+                return raise_unknown_member();
             }
 
             const auto child_property = target_object->properties.find(child_name);
             if (child_property == target_object->properties.end())
             {
-                return make_boolean_value(false);
+                return raise_unknown_member();
             }
 
             const auto child_object = resolve_ole_object(child_property->second);
             if (!child_object.has_value())
             {
-                return make_boolean_value(false);
+                return raise_unknown_member();
             }
             if ((*child_object)->hidden_runtime_surface)
             {
-                return make_boolean_value(false);
+                return raise_unknown_member();
             }
 
             const auto child_parent = native_object_parent_reference(**child_object);
@@ -666,18 +677,15 @@
                 !parse_object_handle_reference(*child_parent, parent_handle, parent_prog_id) ||
                 parent_handle != target_object->handle)
             {
-                return make_boolean_value(false);
+                return raise_unknown_member();
             }
 
-            (*child_object)->properties.erase("parent");
-            target_object->properties.erase(child_name);
-            (void)sync_native_owned_children_collection(*target_object);
             target_object->last_action = effective_member_path + "(" + child_name + ")";
             ++target_object->action_count;
             events.push_back({.category = "prg.object.removeobject",
                               .detail = target_object->prog_id + "." + child_name,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-            return make_boolean_value(true);
+            return release_native_object(**child_object, effective_member_path + "(" + child_name + ")");
         }
         if (leaf == "setall" && !target_object->source.empty())
         {
