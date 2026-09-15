@@ -352,14 +352,17 @@
                     record_evaluation_overrides.rend(),
                     [&](const auto &entry)
                     {
-                        return entry.first == &cursor;
+                        return entry.cursor_binding_identity != 0U &&
+                            entry.cursor_binding_identity == cursor.binding_identity;
                     }))
             {
                 return true;
             }
 
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
-            record_evaluation_overrides.emplace_back(&cursor, &record);
+            record_evaluation_overrides.push_back(RecordEvaluationOverride{
+                .cursor_binding_identity = ensure_cursor_binding_identity(cursor),
+                .record = record});
             try
             {
                 move_cursor_to(cursor, static_cast<long long>(recno));
@@ -624,11 +627,12 @@
                 record_evaluation_overrides.rend(),
                 [&](const auto &entry)
                 {
-                    return entry.first == &cursor && entry.second != nullptr;
+                    return entry.cursor_binding_identity != 0U &&
+                        entry.cursor_binding_identity == cursor.binding_identity;
                 });
             if (record_override != record_evaluation_overrides.rend())
             {
-                return *record_override->second;
+                return record_override->record;
             }
 
             if (cursor.recno == 0U || cursor.eof)
@@ -712,7 +716,10 @@
             return true;
         }
 
-        std::optional<PrgValue> resolve_field_value(const std::string &identifier, const CursorState *preferred_cursor)
+        std::optional<PrgValue> resolve_field_value(
+            const std::string &identifier,
+            const CursorState *preferred_cursor,
+            const CursorExpressionReference *preferred_reference = nullptr)
         {
             const auto field_is_visible = [this](const std::string &field_name) -> bool
             {
@@ -799,17 +806,34 @@
             const auto separator = identifier.find('.');
             if (separator != std::string::npos)
             {
+                // RQ-CF-PRG-034: a qualified reference naming the in-flight
+                // cursor remains bound to its captured generation, even when
+                // the callback selected a session with the same alias.
                 const std::string designator = identifier.substr(0U, separator);
                 const std::string field_name = identifier.substr(separator + 1U);
-                if (auto value = value_from_record(resolve_cursor_target(designator), field_name))
+                const CursorState *qualified_cursor =
+                    preferred_reference != nullptr &&
+                        cursor_expression_reference_matches_designator(*preferred_reference, designator)
+                    ? preferred_cursor
+                    : resolve_cursor_target(designator);
+                if (auto value = value_from_record(qualified_cursor, field_name))
                 {
                     return value;
+                }
+                if (preferred_reference != nullptr && preferred_reference->bind_explicit_designators)
+                {
+                    return std::nullopt;
                 }
             }
 
             if (auto value = value_from_record(preferred_cursor, identifier))
             {
                 return value;
+            }
+
+            if (preferred_reference != nullptr && preferred_reference->bind_explicit_designators)
+            {
+                return std::nullopt;
             }
 
             return value_from_record(resolve_cursor_target({}), identifier);
@@ -1696,13 +1720,12 @@
             return cursor.local_fields;
         }
 
-        std::string cursor_field_name(const std::string &designator, std::size_t one_based_index)
+        std::string cursor_field_name(const CursorState *cursor, std::size_t one_based_index)
         {
             if (one_based_index == 0U)
             {
                 return {};
             }
-            const CursorState *cursor = resolve_cursor_target(designator);
             if (cursor == nullptr)
             {
                 return {};
@@ -1711,9 +1734,11 @@
             return one_based_index <= fields.size() ? fields[one_based_index - 1U].name : std::string{};
         }
 
-        std::size_t cursor_field_size(const std::string &designator, const std::string &field_name, std::size_t one_based_index)
+        std::size_t cursor_field_size(
+            const CursorState *cursor,
+            const std::string &field_name,
+            std::size_t one_based_index)
         {
-            const CursorState *cursor = resolve_cursor_target(designator);
             if (cursor == nullptr)
             {
                 return 0U;
@@ -2097,7 +2122,10 @@
         std::optional<PrgValue> cursor_buffering_function(
             const std::string &function,
             const std::vector<PrgValue> &arguments,
-            const Frame &frame)
+            const Frame &frame,
+            const std::function<CursorState *(const std::string &)> &resolve_expression_cursor,
+            const std::function<bool(const std::string &)> &designator_is_preferred,
+            const std::function<bool(const std::string &)> &alias_is_preferred)
         {
             if (function != "cursorsetprop" && function != "cursorgetprop" &&
                 function != "tableupdate" && function != "tablerevert" &&
@@ -2111,8 +2139,8 @@
             const auto cursor_for_argument = [&](std::size_t index) -> CursorState *
             {
                 return index < arguments.size()
-                    ? resolve_cursor_target(value_as_string(arguments[index]))
-                    : resolve_cursor_target({});
+                    ? resolve_expression_cursor(value_as_string(arguments[index]))
+                    : resolve_expression_cursor({});
             };
             const auto require_local_cursor = [&](CursorState *cursor, const std::string &command) -> bool
             {
@@ -2136,7 +2164,7 @@
                 }
                 CursorState *cursor = arguments.size() >= 2U
                     ? cursor_for_argument(1U)
-                    : resolve_cursor_target({});
+                    : resolve_expression_cursor({});
                 if (cursor == nullptr)
                 {
                     throw PrgCompatibilityError(
@@ -2170,7 +2198,7 @@
                 }
                 CursorState *cursor = arguments.size() >= 2U
                     ? cursor_for_argument(1U)
-                    : resolve_cursor_target({});
+                    : resolve_expression_cursor({});
                 if (cursor == nullptr)
                 {
                     throw PrgCompatibilityError(
@@ -2274,7 +2302,7 @@
                 }
                 CursorState *cursor = arguments.size() >= 3U
                     ? cursor_for_argument(2U)
-                    : resolve_cursor_target({});
+                    : resolve_expression_cursor({});
                 if (cursor == nullptr)
                 {
                     throw PrgCompatibilityError(
@@ -2409,6 +2437,10 @@
 
             if (function == "oldval")
             {
+                // RQ-CF-PRG-034: the expression can reenter PRG code and close
+                // or replace this work area. The owned override and stable
+                // cursor identity keep the continuation from using either
+                // freed storage or a replacement cursor generation.
                 if (arguments.empty())
                 {
                     throw PrgCompatibilityError(
@@ -2417,7 +2449,7 @@
                 }
                 CursorState *cursor = arguments.size() >= 2U
                     ? cursor_for_argument(1U)
-                    : resolve_cursor_target({});
+                    : resolve_expression_cursor({});
                 if (cursor == nullptr)
                 {
                     throw PrgCompatibilityError(
@@ -2438,11 +2470,15 @@
                 }
 
                 const vfp::DbfRecord original_record = original->second;
-                record_evaluation_overrides.emplace_back(cursor, &original_record);
+                CursorExpressionReference cursor_reference = capture_cursor_expression_reference(cursor);
+                cursor_reference.bind_explicit_designators = true;
+                record_evaluation_overrides.push_back(RecordEvaluationOverride{
+                    .cursor_binding_identity = cursor_reference.binding_identity,
+                    .record = original_record});
                 try
                 {
                     const PrgValue result = evaluate_expression(
-                        value_as_string(arguments[0U]), frame, cursor);
+                        value_as_string(arguments[0U]), frame, cursor, cursor_reference);
                     record_evaluation_overrides.pop_back();
                     return result;
                 }
@@ -2455,6 +2491,8 @@
 
             if (function == "curval")
             {
+                // RQ-CF-PRG-034: mirror OLDVAL's owned, generation-keyed
+                // evaluation boundary for the current persisted record.
                 if (arguments.empty())
                 {
                     throw PrgCompatibilityError(
@@ -2463,7 +2501,7 @@
                 }
                 CursorState *cursor = arguments.size() >= 2U
                     ? cursor_for_argument(1U)
-                    : resolve_cursor_target({});
+                    : resolve_expression_cursor({});
                 if (cursor == nullptr)
                 {
                     throw PrgCompatibilityError(
@@ -2481,11 +2519,15 @@
                     return make_empty_value();
                 }
                 const vfp::DbfRecord &on_disk_record = table_result.table.records[cursor->recno - 1U];
-                record_evaluation_overrides.emplace_back(cursor, &on_disk_record);
+                CursorExpressionReference cursor_reference = capture_cursor_expression_reference(cursor);
+                cursor_reference.bind_explicit_designators = true;
+                record_evaluation_overrides.push_back(RecordEvaluationOverride{
+                    .cursor_binding_identity = cursor_reference.binding_identity,
+                    .record = on_disk_record});
                 try
                 {
                     const PrgValue result = evaluate_expression(
-                        value_as_string(arguments[0U]), frame, cursor);
+                        value_as_string(arguments[0U]), frame, cursor, cursor_reference);
                     record_evaluation_overrides.pop_back();
                     return result;
                 }
@@ -2513,15 +2555,21 @@
                 CursorState *cursor = nullptr;
                 if (argument_omitted)
                 {
-                    cursor = resolve_cursor_target({});
+                    cursor = resolve_expression_cursor({});
                 }
                 else if (numeric_designator)
                 {
                     // Convert the numeric value directly rather than round-tripping through
                     // value_as_string(): a Currency argument like work area 1 renders as
                     // "1.0000", which a plain integer parse would reject.
+                    const std::string designator = value_as_string(arguments[0U]);
+                    const bool preferred_designator = designator_is_preferred(designator);
+                    if (preferred_designator)
+                    {
+                        cursor = resolve_expression_cursor(designator);
+                    }
                     const double numeric_value = value_as_number(arguments[0U]);
-                    if (std::isfinite(numeric_value) &&
+                    if (!preferred_designator && std::isfinite(numeric_value) &&
                         numeric_value == std::trunc(numeric_value) &&
                         numeric_value >= static_cast<double>(std::numeric_limits<int>::min()) &&
                         numeric_value <= static_cast<double>(std::numeric_limits<int>::max()))
@@ -2534,7 +2582,10 @@
                     // cTableAlias is strictly an alias, not a source path: unlike the
                     // general resolve_cursor_target() fallback, do not also match an open
                     // cursor's underlying file path here.
-                    cursor = find_cursor_by_alias(trim_copy(value_as_string(arguments[0U])));
+                    const std::string designator = value_as_string(arguments[0U]);
+                    cursor = alias_is_preferred(designator)
+                        ? resolve_expression_cursor(designator)
+                        : find_cursor_by_alias(trim_copy(designator));
                 }
                 if (cursor == nullptr)
                 {

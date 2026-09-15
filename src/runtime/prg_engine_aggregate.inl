@@ -1112,9 +1112,8 @@
             return found;
         }
 
-        std::string order_function_value(const std::string &designator, bool include_path) const
+        std::string order_function_value(const CursorState *cursor, bool include_path) const
         {
-            const CursorState *cursor = resolve_cursor_target(designator);
             if (cursor == nullptr || cursor->active_order_name.empty())
             {
                 return {};
@@ -1155,9 +1154,8 @@
         bool descending_function_value(
             const std::string &index_file_name,
             std::optional<std::size_t> tag_number,
-            const std::string &designator) const
+            const CursorState *cursor) const
         {
-            const CursorState *cursor = resolve_cursor_target(designator);
             if (cursor == nullptr)
             {
                 return false;
@@ -1188,9 +1186,11 @@
             return matching_orders[resolved_index]->descending;
         }
 
-        std::string tag_function_value(const std::string &index_file_name, std::size_t tag_number, const std::string &designator) const
+        std::string tag_function_value(
+            const std::string &index_file_name,
+            std::size_t tag_number,
+            const CursorState *cursor) const
         {
-            const CursorState *cursor = resolve_cursor_target(designator);
             if (cursor == nullptr || cursor->orders.empty())
             {
                 return {};
@@ -1243,9 +1243,8 @@
         std::size_t tagno_function_value(
             const std::string &index_name,
             const std::string &index_file_name,
-            const std::string &designator) const
+            const CursorState *cursor) const
         {
-            const CursorState *cursor = resolve_cursor_target(designator);
             if (cursor == nullptr)
             {
                 return 0U;
@@ -1298,9 +1297,11 @@
             return 0U;
         }
 
-        std::string key_function_value(const std::string &index_file_name, std::size_t index_number, const std::string &designator) const
+        std::string key_function_value(
+            const std::string &index_file_name,
+            std::size_t index_number,
+            const CursorState *cursor) const
         {
-            const CursorState *cursor = resolve_cursor_target(designator);
             if (cursor == nullptr || cursor->orders.empty() || index_number == 0U)
             {
                 return {};
@@ -1326,9 +1327,10 @@
             return cursor->orders[resolved_index].expression;
         }
 
-        std::size_t tag_count_function_value(const std::string &index_file_name, const std::string &designator) const
+        std::size_t tag_count_function_value(
+            const std::string &index_file_name,
+            const CursorState *cursor) const
         {
-            const CursorState *cursor = resolve_cursor_target(designator);
             if (cursor == nullptr)
             {
                 return 0U;

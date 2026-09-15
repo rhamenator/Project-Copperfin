@@ -1197,6 +1197,131 @@
             }
         }
 
+        std::uint64_t ensure_cursor_binding_identity(CursorState &cursor)
+        {
+            if (cursor.binding_identity == 0U)
+            {
+                if (next_cursor_binding_identity == 0U)
+                {
+                    throw std::overflow_error("cursor binding identity space exhausted");
+                }
+                cursor.binding_identity = next_cursor_binding_identity++;
+            }
+            return cursor.binding_identity;
+        }
+
+        CursorExpressionReference capture_cursor_expression_reference(const CursorState *cursor)
+        {
+            if (cursor == nullptr)
+            {
+                return {};
+            }
+
+            // RQ-CF-PRG-034: the normal expression path evaluates against a
+            // cursor in the current data session. Locate that binding directly
+            // by work area so cursor-lifetime validation does not add a linear
+            // scan to every field expression.
+            const auto capture_from_session = [this, cursor](int data_session, DataSessionState &session)
+                -> std::optional<CursorExpressionReference>
+            {
+                const auto candidate = session.cursors.find(cursor->work_area);
+                if (candidate == session.cursors.end() || &candidate->second != cursor)
+                {
+                    return std::nullopt;
+                }
+                const auto effective_alias = session.aliases.find(candidate->first);
+                return CursorExpressionReference{
+                    .data_session = data_session,
+                    .work_area = candidate->first,
+                    .binding_identity = ensure_cursor_binding_identity(candidate->second),
+                    .alias = normalize_identifier(
+                        effective_alias == session.aliases.end()
+                            ? candidate->second.alias
+                            : effective_alias->second),
+                    .bind_explicit_designators = false,
+                    .detached_cursor = nullptr};
+            };
+
+            if (auto captured = capture_from_session(current_data_session, current_session_state());
+                captured.has_value())
+            {
+                return *captured;
+            }
+            for (auto &[data_session, session] : data_sessions)
+            {
+                if (data_session == current_data_session)
+                {
+                    continue;
+                }
+                if (auto captured = capture_from_session(data_session, session); captured.has_value())
+                {
+                    return *captured;
+                }
+            }
+            return CursorExpressionReference{
+                .data_session = 0,
+                .work_area = cursor->work_area,
+                .binding_identity = cursor->binding_identity,
+                .alias = normalize_identifier(cursor->alias),
+                .bind_explicit_designators = false,
+                .detached_cursor = cursor};
+        }
+
+        bool cursor_expression_reference_matches_designator(
+            const CursorExpressionReference &reference,
+            const std::string &designator) const
+        {
+            const std::string trimmed = trim_copy(designator);
+            if (trimmed.empty())
+            {
+                return true;
+            }
+            if (!reference.bind_explicit_designators)
+            {
+                return false;
+            }
+            const std::string unquoted =
+                trimmed.size() >= 2U && trimmed.front() == '\'' && trimmed.back() == '\''
+                    ? unquote_string(trimmed)
+                    : trimmed;
+            const bool numeric = !unquoted.empty() &&
+                std::all_of(
+                    unquoted.begin(),
+                    unquoted.end(),
+                    [](unsigned char ch)
+                    {
+                        return std::isdigit(ch) != 0;
+                    });
+            if (numeric)
+            {
+                const auto area = copperfin::platform::try_parse_invariant_integer<int>(unquoted);
+                return area.has_value() && *area == reference.work_area;
+            }
+            return !reference.alias.empty() && normalize_identifier(unquoted) == reference.alias;
+        }
+
+        const CursorState *resolve_cursor_expression_reference(const CursorExpressionReference &reference) const
+        {
+            if (reference.detached_cursor != nullptr)
+            {
+                return reference.detached_cursor;
+            }
+            if (reference.binding_identity == 0U)
+            {
+                return nullptr;
+            }
+            const auto session = data_sessions.find(reference.data_session);
+            if (session == data_sessions.end())
+            {
+                return nullptr;
+            }
+            const auto cursor = session->second.cursors.find(reference.work_area);
+            return cursor != session->second.cursors.end() &&
+                       cursor->second.binding_identity == reference.binding_identity
+                ? &cursor->second
+                : nullptr;
+        }
+
         bool can_open_table_cursor(
             const std::string &resolved_path,
             const std::string &alias,

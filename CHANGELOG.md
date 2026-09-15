@@ -1,3 +1,21 @@
+- 2026-09-14: Fixed #6270: `CURVAL()` and `OLDVAL()` no longer retain raw
+  session-owned cursor or record pointers while evaluating expressions that can
+  invoke PRG code. Stable cursor-generation references reacquire the originating
+  data-session/work-area binding after callbacks and nested expressions; closing
+  or replacing it raises catchable VFP error 12 before a field read, while an
+  active-data-session switch continues against the still-open origin, including
+  qualified fields and field/order/tag metadata when the new session has a
+  conflicting alias. Explicit fields from unrelated, still-open cursors remain
+  available after the source closes. Nested `CURVAL()`/`OLDVAL()` and
+  buffering functions also resolve source aliases and work areas through the
+  captured generation, preventing a callback-selected or replacement cursor
+  from being read or mutated. `LUPDATE()` retains the argument's type so a
+  quoted numeric-looking alias is not rebound as a numeric work area. Record
+  overrides now own their snapshots and are keyed by generation. Focused row/
+  table-buffering coverage exercises current, alias, work-area, modified/deleted,
+  close, replacement, alias reuse, session-switch, and nested-success paths.
+  Added `RQ-CF-PRG-034`.
+
 - 2026-09-14: Fixed #6253: `ASCAN()` predicate expressions can no longer
   invalidate the source array and leave the runtime using a stale element,
   pointer, shape, or scan bound. Runtime arrays now carry stable binding and
