@@ -258,6 +258,7 @@ struct LinqProjectionDescriptor {
 };
 
 struct LinqQueryDescriptor {
+    bool valid = true;
     std::string source_sql;
     std::vector<LinqProjectionDescriptor> projections;
     std::string filter;
@@ -265,17 +266,65 @@ struct LinqQueryDescriptor {
     std::vector<std::string> aggregates;
 };
 
+bool is_linq_identifier_character(const char ch) {
+    const auto byte = static_cast<unsigned char>(ch);
+    return std::isalnum(byte) != 0 || ch == '_' || byte >= 0x80U;
+}
+
+bool has_linq_keyword_boundary_before(const std::string& sql, const std::size_t index) {
+    if (index == 0U) {
+        return true;
+    }
+    const char before = sql[index - 1U];
+    if (is_linq_identifier_character(before) || before == '.') {
+        return false;
+    }
+    return !(before == '>' && index >= 2U && sql[index - 2U] == '-');
+}
+
+bool has_linq_keyword_boundary_after(
+    const std::string& sql,
+    const std::size_t end) {
+    if (end == sql.size()) {
+        return true;
+    }
+    const char after = sql[end];
+    if (is_linq_identifier_character(after) || after == '.') {
+        return false;
+    }
+    return !(after == '-' && end + 1U < sql.size() && sql[end + 1U] == '>');
+}
+
 std::size_t find_linq_top_level_keyword(
-    const std::string& upper_sql,
+    const std::string& lower_sql,
     const std::size_t start,
-    const std::string_view keyword) {
+    const std::string_view keyword,
+    bool* const lexically_valid) {
     bool in_single_quote = false;
     bool in_double_quote = false;
+    bool in_brackets = false;
+    bool in_line_comment = false;
+    bool in_block_comment = false;
+    bool unmatched_closing_parenthesis = false;
     std::size_t depth = 0U;
-    for (std::size_t index = start; index < upper_sql.size(); ++index) {
-        const char ch = upper_sql[index];
+    std::size_t found = std::string::npos;
+    for (std::size_t index = start; index < lower_sql.size(); ++index) {
+        const char ch = lower_sql[index];
+        if (in_line_comment) {
+            if (ch == '\r' || ch == '\n') {
+                in_line_comment = false;
+            }
+            continue;
+        }
+        if (in_block_comment) {
+            if (ch == '*' && index + 1U < lower_sql.size() && lower_sql[index + 1U] == '/') {
+                in_block_comment = false;
+                ++index;
+            }
+            continue;
+        }
         if (in_single_quote) {
-            if (ch == '\'' && index + 1U < upper_sql.size() && upper_sql[index + 1U] == '\'') {
+            if (ch == '\'' && index + 1U < lower_sql.size() && lower_sql[index + 1U] == '\'') {
                 ++index;
             } else if (ch == '\'') {
                 in_single_quote = false;
@@ -283,9 +332,29 @@ std::size_t find_linq_top_level_keyword(
             continue;
         }
         if (in_double_quote) {
-            if (ch == '"') {
+            if (ch == '"' && index + 1U < lower_sql.size() && lower_sql[index + 1U] == '"') {
+                ++index;
+            } else if (ch == '"') {
                 in_double_quote = false;
             }
+            continue;
+        }
+        if (in_brackets) {
+            if (ch == ']' && index + 1U < lower_sql.size() && lower_sql[index + 1U] == ']') {
+                ++index;
+            } else if (ch == ']') {
+                in_brackets = false;
+            }
+            continue;
+        }
+        if (ch == '&' && index + 1U < lower_sql.size() && lower_sql[index + 1U] == '&') {
+            in_line_comment = true;
+            ++index;
+            continue;
+        }
+        if (ch == '/' && index + 1U < lower_sql.size() && lower_sql[index + 1U] == '*') {
+            in_block_comment = true;
+            ++index;
             continue;
         }
         if (ch == '\'') {
@@ -296,6 +365,10 @@ std::size_t find_linq_top_level_keyword(
             in_double_quote = true;
             continue;
         }
+        if (ch == '[') {
+            in_brackets = true;
+            continue;
+        }
         if (ch == '(') {
             ++depth;
             continue;
@@ -303,32 +376,57 @@ std::size_t find_linq_top_level_keyword(
         if (ch == ')') {
             if (depth > 0U) {
                 --depth;
+            } else {
+                unmatched_closing_parenthesis = true;
             }
             continue;
         }
-        if (depth != 0U || index + keyword.size() > upper_sql.size() ||
-            upper_sql.compare(index, keyword.size(), keyword) != 0) {
+        if (depth != 0U || index + keyword.size() > lower_sql.size() ||
+            lower_sql.compare(index, keyword.size(), keyword) != 0) {
             continue;
         }
-        const bool before = index == 0U || !std::isalnum(static_cast<unsigned char>(upper_sql[index - 1U]));
         const std::size_t end = index + keyword.size();
-        const bool after = end == upper_sql.size() || !std::isalnum(static_cast<unsigned char>(upper_sql[end]));
-        if (before && after) {
-            return index;
+        if (has_linq_keyword_boundary_before(lower_sql, index) &&
+            has_linq_keyword_boundary_after(lower_sql, end) &&
+            found == std::string::npos) {
+            found = index;
         }
     }
-    return std::string::npos;
+    if (lexically_valid != nullptr) {
+        *lexically_valid = !in_single_quote && !in_double_quote && !in_brackets &&
+            !in_block_comment && depth == 0U && !unmatched_closing_parenthesis;
+    }
+    return found;
 }
 
-std::vector<std::string> split_linq_top_level_csv(const std::string& text) {
+std::vector<std::string> split_linq_top_level_csv(
+    const std::string& text,
+    bool* const lexically_valid) {
     std::vector<std::string> fields;
     bool in_single_quote = false;
     bool in_double_quote = false;
+    bool in_brackets = false;
+    bool in_line_comment = false;
+    bool in_block_comment = false;
+    bool unmatched_closing_parenthesis = false;
     std::size_t depth = 0U;
     std::size_t start = 0U;
     for (std::size_t index = 0U; index <= text.size(); ++index) {
         const bool at_end = index == text.size();
         const char ch = at_end ? ',' : text[index];
+        if (!at_end && in_line_comment) {
+            if (ch == '\r' || ch == '\n') {
+                in_line_comment = false;
+            }
+            continue;
+        }
+        if (!at_end && in_block_comment) {
+            if (ch == '*' && index + 1U < text.size() && text[index + 1U] == '/') {
+                in_block_comment = false;
+                ++index;
+            }
+            continue;
+        }
         if (!at_end && in_single_quote) {
             if (ch == '\'' && index + 1U < text.size() && text[index + 1U] == '\'') {
                 ++index;
@@ -338,9 +436,29 @@ std::vector<std::string> split_linq_top_level_csv(const std::string& text) {
             continue;
         }
         if (!at_end && in_double_quote) {
-            if (ch == '"') {
+            if (ch == '"' && index + 1U < text.size() && text[index + 1U] == '"') {
+                ++index;
+            } else if (ch == '"') {
                 in_double_quote = false;
             }
+            continue;
+        }
+        if (!at_end && in_brackets) {
+            if (ch == ']' && index + 1U < text.size() && text[index + 1U] == ']') {
+                ++index;
+            } else if (ch == ']') {
+                in_brackets = false;
+            }
+            continue;
+        }
+        if (!at_end && ch == '&' && index + 1U < text.size() && text[index + 1U] == '&') {
+            in_line_comment = true;
+            ++index;
+            continue;
+        }
+        if (!at_end && ch == '/' && index + 1U < text.size() && text[index + 1U] == '*') {
+            in_block_comment = true;
+            ++index;
             continue;
         }
         if (!at_end && ch == '\'') {
@@ -351,6 +469,10 @@ std::vector<std::string> split_linq_top_level_csv(const std::string& text) {
             in_double_quote = true;
             continue;
         }
+        if (!at_end && ch == '[') {
+            in_brackets = true;
+            continue;
+        }
         if (!at_end && ch == '(') {
             ++depth;
             continue;
@@ -358,6 +480,8 @@ std::vector<std::string> split_linq_top_level_csv(const std::string& text) {
         if (!at_end && ch == ')') {
             if (depth > 0U) {
                 --depth;
+            } else {
+                unmatched_closing_parenthesis = true;
             }
             continue;
         }
@@ -369,21 +493,34 @@ std::vector<std::string> split_linq_top_level_csv(const std::string& text) {
             start = index + 1U;
         }
     }
+    if (lexically_valid != nullptr) {
+        *lexically_valid = !in_single_quote && !in_double_quote && !in_brackets &&
+            !in_block_comment && depth == 0U && !unmatched_closing_parenthesis;
+    }
     return fields;
 }
 
 LinqQueryDescriptor describe_linq_query(const Statement& statement) {
     LinqQueryDescriptor descriptor;
     descriptor.source_sql = "SELECT " + trim_copy(statement.expression);
-    const std::string upper_sql = lowercase_copy(descriptor.source_sql);
-    const std::size_t from = find_linq_top_level_keyword(upper_sql, 0U, "from");
+    const std::string lower_sql = lowercase_copy(descriptor.source_sql);
+    const std::size_t from = find_linq_top_level_keyword(
+        lower_sql,
+        0U,
+        "from",
+        &descriptor.valid);
+    if (!descriptor.valid) {
+        return descriptor;
+    }
     const std::size_t projection_end = from == std::string::npos ? descriptor.source_sql.size() : from;
     if (projection_end > 6U) {
+        bool projections_valid = true;
         for (const std::string& raw_projection : split_linq_top_level_csv(
-                 trim_copy(descriptor.source_sql.substr(6U, projection_end - 6U)))) {
+                 trim_copy(descriptor.source_sql.substr(6U, projection_end - 6U)),
+                 &projections_valid)) {
             LinqProjectionDescriptor projection{.expression = raw_projection, .alias = {}};
-            const std::string upper_projection = lowercase_copy(raw_projection);
-            const std::size_t as = find_linq_top_level_keyword(upper_projection, 0U, "as");
+            const std::string lower_projection = lowercase_copy(raw_projection);
+            const std::size_t as = find_linq_top_level_keyword(lower_projection, 0U, "as");
             if (as != std::string::npos) {
                 projection.expression = trim_copy(raw_projection.substr(0U, as));
                 projection.alias = trim_copy(raw_projection.substr(as + 2U));
@@ -393,30 +530,35 @@ LinqQueryDescriptor describe_linq_query(const Statement& statement) {
             }
             descriptor.projections.push_back(std::move(projection));
         }
+        if (!projections_valid) {
+            descriptor.valid = false;
+            descriptor.projections.clear();
+            return descriptor;
+        }
     }
 
     const auto clause_end = [&](const std::size_t start) {
         std::size_t end = descriptor.source_sql.size();
         for (const std::string_view keyword : {"group by", "having", "order by", "into", "union"}) {
-            const std::size_t candidate = find_linq_top_level_keyword(upper_sql, start, keyword);
+            const std::size_t candidate = find_linq_top_level_keyword(lower_sql, start, keyword);
             if (candidate != std::string::npos) {
                 end = std::min(end, candidate);
             }
         }
         return end;
     };
-    const std::size_t where = find_linq_top_level_keyword(upper_sql, 0U, "where");
+    const std::size_t where = find_linq_top_level_keyword(lower_sql, 0U, "where");
     if (where != std::string::npos) {
         descriptor.filter = trim_copy(descriptor.source_sql.substr(where + 5U, clause_end(where + 5U) - (where + 5U)));
     }
-    const std::size_t group_by = find_linq_top_level_keyword(upper_sql, 0U, "group by");
+    const std::size_t group_by = find_linq_top_level_keyword(lower_sql, 0U, "group by");
     if (group_by != std::string::npos) {
         descriptor.grouping = trim_copy(descriptor.source_sql.substr(group_by + 8U, clause_end(group_by + 8U) - (group_by + 8U)));
     }
     for (const auto& projection : descriptor.projections) {
-        const std::string upper_projection = lowercase_copy(projection.expression);
+        const std::string lower_projection = lowercase_copy(projection.expression);
         for (const std::string_view aggregate : {"count(", "sum(", "avg(", "min(", "max("}) {
-            if (upper_projection.find(aggregate) != std::string::npos) {
+            if (lower_projection.find(aggregate) != std::string::npos) {
                 descriptor.aggregates.push_back(projection.expression);
                 break;
             }
@@ -453,6 +595,9 @@ void append_linq_query_catalog_helpers(std::ostringstream& stream) {
 
 std::string transpile_linq_query_to_csharp(const Statement& statement) {
     const LinqQueryDescriptor descriptor = describe_linq_query(statement);
+    if (!descriptor.valid) {
+        return "throw new NotSupportedException(GeneratedLocalization.Translate(\"Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement\", new Dictionary<string, string> { [\"statementText\"] = \"" + json_escape(statement.text) + "\" }));\n";
+    }
     std::ostringstream stream;
     stream << "LinqQueryCatalog.Record(new LinqQueryDescriptor(\"" << json_escape(descriptor.source_sql) << "\", ";
     if (descriptor.projections.empty()) {

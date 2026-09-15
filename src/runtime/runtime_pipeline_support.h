@@ -53,6 +53,11 @@ std::string sanitize_csharp_routine_identifier(std::string value, const std::str
 std::string unquote_literal(std::string value);
 std::string sanitize_csharp_compound_identifier(std::string value, const std::string& fallback);
 std::string join_strings(const std::vector<std::string>& values);
+std::size_t find_linq_top_level_keyword(
+    const std::string& lower_sql,
+    std::size_t start,
+    std::string_view keyword,
+    bool* lexically_valid = nullptr);
 
 // ==== File I/O, path classification, and security-role helpers ====
 BuildOutputKind parse_build_output_kind(const std::string& value);

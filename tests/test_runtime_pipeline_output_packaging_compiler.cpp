@@ -236,10 +236,73 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(project_dir);
 
+    const auto expect_keyword_at = [](const std::string& sql,
+                                      const std::string_view keyword,
+                                      const std::size_t expected,
+                                      const std::string& scenario) {
+        const std::size_t actual =
+            copperfin::runtime::runtime_pipeline_detail::find_linq_top_level_keyword(
+                sql,
+                0U,
+                keyword);
+        expect(actual == expected,
+               "#6173: LINQ keyword scanner should " + scenario);
+    };
+    for (const auto& [keyword, identifier_keyword] :
+         std::vector<std::pair<std::string_view, std::string_view>>{
+             {"from", "from"}, {"where", "where"}, {"as", "as"},
+             {"into", "into"}, {"union", "union"}, {"having", "having"},
+             {"group by", "group_by"}, {"order by", "order_by"}}) {
+        for (const std::string& embedded : {
+                 std::string(identifier_keyword) + "_code",
+                 "code_" + std::string(identifier_keyword) + "_value",
+                 "code_" + std::string(identifier_keyword)}) {
+            const std::string sql = "select " + embedded + " from source";
+            const std::size_t clause_from = sql.rfind(" from ") + 1U;
+            expect_keyword_at(
+                sql,
+                keyword,
+                keyword == "from" ? clause_from : std::string::npos,
+                "keep start/middle/end keyword text inside underscore-containing identifiers");
+        }
+    }
+    {
+        const std::string sql = "select source.from, source->where from source";
+        expect_keyword_at(sql, "from", sql.rfind(" from ") + 1U,
+                          "keep clause text after dot and arrow qualifiers inside identifiers");
+        expect_keyword_at(sql, "where", std::string::npos,
+                          "keep clause text after an arrow qualifier inside an identifier");
+    }
+    {
+        const std::string sql =
+            "select 'it''s from', \"a\"\"where\", [a]]group by], field /* from */ from source where active = .t.";
+        expect_keyword_at(sql, "from", sql.rfind(" from ") + 1U,
+                          "ignore clause text inside quoted, bracketed, and comment content");
+        expect_keyword_at(sql, "where", sql.rfind(" where ") + 1U,
+                          "find the real WHERE after quoted and bracketed keyword text");
+    }
+    {
+        const std::string sql = "select field && from inside comment\nfrom source";
+        expect_keyword_at(sql, "from", sql.rfind("from source"),
+                          "ignore clause text inside a VFP line comment");
+    }
+    {
+        const std::string sql = "select caf\xE9" "from_code from/* where */source where active = .t.";
+        expect_keyword_at(sql, "from", sql.find(" from/*") + 1U,
+                          "keep clause text adjacent to a legacy identifier byte inside that identifier");
+        expect_keyword_at(sql, "where", sql.rfind(" where ") + 1U,
+                          "treat a block comment as token-separating trivia beside a real clause");
+    }
+
     write_text(project_dir / "main.prg",
                "LOCAL nValue\n"
                "nValue = 1\n"
                "SELECT id, name AS customer_name, COUNT(*) AS total FROM customer WHERE active = .T. GROUP BY id, name\n"
+               "SELECT customer_from_code,;\n"
+               "  order_where_status AS status;\n"
+               "  FROM customer WHERE active = .T.\n"
+               "SELECT from_code, where_code, as_code, into_code, union_code, having_code, group_by_code, order_by_code, [from,where] AS quoted_name FROM source_from_code WHERE filter_into_code = .T. GROUP BY group_union_code ORDER BY order_having_code\n"
+               "SELECT field FROM source WHERE name = 'unterminated\n"
                "DO worker\n"
                "READ EVENTS\n"
                "RETURN\n"
@@ -315,6 +378,25 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
                "#57: C# transpilation should preserve projection expressions and explicit aliases structurally");
         expect(transpiled.find("\"active = .T.\", \"id, name\", new[] {\"COUNT(*)\"}") != std::string::npos,
                "#57: C# transpilation should preserve filter, grouping, and aggregate structure without executing the query");
+        expect(transpiled.find("LinqQueryCatalog.Record(new LinqQueryDescriptor(\"SELECT customer_from_code, order_where_status AS status FROM customer WHERE active = .T.\"") != std::string::npos,
+               "#6173: C# transpilation should preserve the complete keyword-bearing identifier query");
+        expect(transpiled.find("new LinqProjectionDescriptor(\"customer_from_code\", \"\")") != std::string::npos &&
+                   transpiled.find("new LinqProjectionDescriptor(\"order_where_status\", \"status\")") != std::string::npos &&
+                   transpiled.find("\"active = .T.\", \"\", Array.Empty<string>()") != std::string::npos,
+               "#6173: LINQ descriptors should not split underscore-containing identifiers at embedded SQL keywords");
+        for (const std::string_view identifier : {
+                 "from_code", "where_code", "as_code", "into_code", "union_code",
+                 "having_code", "group_by_code", "order_by_code"}) {
+            expect(transpiled.find("new LinqProjectionDescriptor(\"" + std::string(identifier) + "\", \"\")") != std::string::npos,
+                   "#6173: every recognized keyword should remain part of an underscore-containing projection identifier");
+        }
+        expect(transpiled.find("new LinqProjectionDescriptor(\"[from,where]\", \"quoted_name\")") != std::string::npos,
+               "#6173: commas and keywords inside bracket-delimited projection text should not split the descriptor");
+        expect(transpiled.find("\"filter_into_code = .T.\", \"group_union_code\", Array.Empty<string>()") != std::string::npos,
+               "#6173: keyword-bearing identifiers should remain intact in filters and grouping before later clauses");
+        expect(transpiled.find("LinqQueryCatalog.Record(new LinqQueryDescriptor(\"SELECT field FROM source WHERE name = 'unterminated\"") == std::string::npos &&
+                   transpiled.find("[\"statementText\"] = \"SELECT field FROM source WHERE name = 'unterminated\"") != std::string::npos,
+               "#6173: lexically invalid supported queries should fail explicitly without publishing partial descriptor metadata");
         expect(transpiled.find("Worker();") != std::string::npos,
                "csharp transpilation should map DO worker to a routine call");
         expect(transpiled.find("public static void worker()") != std::string::npos ||

@@ -1,3 +1,15 @@
+- 2026-09-14: Fixed #6173: generated C# `LinqQueryDescriptor` metadata no
+  longer treats SQL keyword text inside legal underscore-containing or
+  qualified VFP identifiers as clauses. The top-level scanner now skips
+  quoted and bracket-delimited text, doubled quote escapes, nested
+  expressions, and comments; projection splitting applies the same lexical
+  rules. Unbalanced quotes, brackets, block comments, or parentheses emit an
+  explicit unsupported-statement failure instead of publishing partial query
+  metadata. The focused runtime-pipeline regression covers every recognized
+  keyword at identifier starts, middles, and ends, the exact reported query,
+  qualified names, quoted/comment text, parser-normalized continuation syntax,
+  and the fail-closed path. Added `RQ-CF-MODERNIZATION-012`.
+
 - 2026-09-14: Partially fixed #6144 (left open, scope disclosed below):
   a non-finite `Numeric` (IEEE infinity, reached via a valid VFP9
   overflow like `EXP(1000)` -- not a catchable error) leaked the raw
