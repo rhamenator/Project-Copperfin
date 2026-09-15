@@ -1059,6 +1059,7 @@ namespace copperfin::runtime
         std::set<std::string> active_native_property_assignments;
         std::set<int> active_native_release_handles;
         std::set<int> active_native_lifecycle_callback_handles;
+        std::set<int> completed_native_release_handles;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
         std::vector<WindowMessageBinding> window_message_bindings;
         std::vector<CurrentWindowMessageContext> active_window_message_contexts;
@@ -7340,7 +7341,8 @@ namespace copperfin::runtime
         RuntimeOleObjectState &runtime_object,
         const std::string &effective_member_path)
     {
-        if (active_native_lifecycle_callback_handles.contains(runtime_object.handle))
+        if (active_native_lifecycle_callback_handles.contains(runtime_object.handle) ||
+            completed_native_release_handles.contains(runtime_object.handle))
         {
             return make_boolean_value(true);
         }
@@ -7369,7 +7371,8 @@ namespace copperfin::runtime
                 continue;
             }
             if (current.handle != runtime_object.handle &&
-                active_native_lifecycle_callback_handles.contains(current.handle))
+                (active_native_lifecycle_callback_handles.contains(current.handle) ||
+                 completed_native_release_handles.contains(current.handle)))
             {
                 scheduled_handles.erase(current.handle);
                 continue;
@@ -7399,6 +7402,7 @@ namespace copperfin::runtime
         struct ActiveReleaseGuard
         {
             std::set<int> &active_handles;
+            std::set<int> &completed_handles;
             const std::set<int> &owned_handles;
 
             ~ActiveReleaseGuard()
@@ -7406,6 +7410,7 @@ namespace copperfin::runtime
                 for (const int handle : owned_handles)
                 {
                     active_handles.erase(handle);
+                    completed_handles.erase(handle);
                 }
             }
         };
@@ -7420,7 +7425,9 @@ namespace copperfin::runtime
             }
         }
         const ActiveReleaseGuard active_release_guard{
-            active_native_release_handles, owned_active_release_handles};
+            active_native_release_handles,
+            completed_native_release_handles,
+            owned_active_release_handles};
 
         std::set<std::string> scheduled_object_references;
         for (const int handle : release_order)
@@ -7578,6 +7585,10 @@ namespace copperfin::runtime
             events.push_back({.category = "prg.object.release",
                               .detail = released_object.prog_id,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            // RQ-CF-PRG-036: callbacks later in the same outer traversal may
+            // still hold an alias to this not-yet-erased map entry. Its
+            // lifecycle is complete and must not be dispatched a second time.
+            completed_native_release_handles.insert(handle);
         }
 
         // RQ-CF-PRG-036: VFP retires aliases and container-held references

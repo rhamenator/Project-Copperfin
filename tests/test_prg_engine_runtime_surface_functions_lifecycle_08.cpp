@@ -14,7 +14,7 @@ namespace copperfin::runtime_surface_tests
 
         write_text(
             program_path,
-            "PUBLIC gnChildDestroyed, gnGrandDestroyed, gcDestroyOrder, gnReentrantChildDestroyed, gnReentrantOwnerDestroyed, glReentrantThisSurvived, gcCommandArgType, gcSiblingReleaseOrder, glAddDuringDestroyResult\n"
+            "PUBLIC gnChildDestroyed, gnGrandDestroyed, gcDestroyOrder, gnReentrantChildDestroyed, gnReentrantOwnerDestroyed, glReentrantThisSurvived, gcCommandArgType, gcSiblingReleaseOrder, glAddDuringDestroyResult, goFinishedSibling, gnFinishedSiblingDestroyCount\n"
             "gnChildDestroyed = 0\n"
             "gnGrandDestroyed = 0\n"
             "gcDestroyOrder = ''\n"
@@ -24,6 +24,7 @@ namespace copperfin::runtime_surface_tests
             "gcCommandArgType = ''\n"
             "gcSiblingReleaseOrder = ''\n"
             "glAddDuringDestroyResult = .T.\n"
+            "gnFinishedSiblingDestroyCount = 0\n"
             "oForm = CREATEOBJECT('DemoForm')\n"
             "oChild = oForm.child\n"
             "oGrand = oChild.grand\n"
@@ -90,6 +91,10 @@ namespace copperfin::runtime_surface_tests
             "lBranchRemoved = oBranchForm.RemoveObject('branch')\n"
             "cSiblingReleaseOrder = gcSiblingReleaseOrder\n"
             "lAddDuringDestroyResult = glAddDuringDestroyResult\n"
+            "oFinishedForm = CREATEOBJECT('FinishedSiblingForm')\n"
+            "goFinishedSibling = oFinishedForm.branch.a\n"
+            "lFinishedBranchRemoved = oFinishedForm.RemoveObject('branch')\n"
+            "nFinishedSiblingDestroyCount = gnFinishedSiblingDestroyCount\n"
             "RETURN\n"
             "FUNCTION CaptureArgType(toValue, tlRemoved)\n"
             "  RETURN VARTYPE(toValue)\n"
@@ -144,6 +149,23 @@ namespace copperfin::runtime_surface_tests
             "DEFINE CLASS ReleaseSiblingB AS CommandButton\n"
             "  PROCEDURE Destroy\n"
             "    gcSiblingReleaseOrder = gcSiblingReleaseOrder + 'B'\n"
+            "  ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS FinishedSiblingForm AS Form\n"
+            "  ADD OBJECT branch AS FinishedSiblingContainer\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS FinishedSiblingContainer AS Container\n"
+            "  ADD OBJECT a AS FinishedSiblingA\n"
+            "  ADD OBJECT b AS FinishedSiblingB\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS FinishedSiblingA AS CommandButton\n"
+            "  PROCEDURE Destroy\n"
+            "    gnFinishedSiblingDestroyCount = gnFinishedSiblingDestroyCount + 1\n"
+            "  ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS FinishedSiblingB AS CommandButton\n"
+            "  PROCEDURE Destroy\n"
+            "    goFinishedSibling.Release()\n"
             "  ENDPROC\n"
             "ENDDEFINE\n"
             "DEFINE CLASS DemoChild AS Container\n"
@@ -212,6 +234,8 @@ namespace copperfin::runtime_surface_tests
         expect_global("lbranchremoved", "true");
         expect_global("csiblingreleaseorder", "A1BA2");
         expect_global("laddduringdestroyresult", "false");
+        expect_global("lfinishedbranchremoved", "true");
+        expect_global("nfinishedsiblingdestroycount", "1");
 
         const auto object_is_retired = [&](const std::string &prog_id)
         {
