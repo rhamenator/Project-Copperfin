@@ -34,7 +34,9 @@ namespace copperfin::runtime_surface_tests
             "aHeld[1] = oChild\n"
             "oHeld = CREATEOBJECT('Collection')\n"
             "oHeld.Add(oChild, 'child')\n"
-            "lRemoved = oForm.RemoveObject('child')\n"
+            "oHeld.Add('object:NotDemoChild#2', 'lookalike')\n"
+            "cLiveHandleLiteralAfter = CaptureArgText('object:NotDemoChild#2', oForm.RemoveObject('child'))\n"
+            "lRemoved = !PEMSTATUS(oForm, 'child', 1)\n"
             "nChildDestroyedAfter = gnChildDestroyed\n"
             "nGrandDestroyedAfter = gnGrandDestroyed\n"
             "cDestroyOrderAfter = gcDestroyOrder\n"
@@ -42,6 +44,7 @@ namespace copperfin::runtime_surface_tests
             "lGrandAliasStillObject = VARTYPE(oGrand) == 'O'\n"
             "lArrayStillObject = VARTYPE(aHeld[1]) == 'O'\n"
             "lCollectionStillObject = VARTYPE(oHeld.Item('child')) == 'O'\n"
+            "cCollectionLookalikeAfter = oHeld.Item('lookalike')\n"
             "lOwnerStillHasChild = PEMSTATUS(oForm, 'child', 1)\n"
             "lSiblingSurvives = VARTYPE(oForm.sibling) == 'O'\n"
             "cSameHandleLookalikeAfter = cSameHandleLookalike\n"
@@ -98,6 +101,9 @@ namespace copperfin::runtime_surface_tests
             "RETURN\n"
             "FUNCTION CaptureArgType(toValue, tlRemoved)\n"
             "  RETURN VARTYPE(toValue)\n"
+            "ENDFUNC\n"
+            "FUNCTION CaptureArgText(tcValue, tlRemoved)\n"
+            "  RETURN tcValue\n"
             "ENDFUNC\n"
             "FUNCTION RemoveChild(toForm)\n"
             "  RETURN toForm.RemoveObject('child')\n"
@@ -211,9 +217,11 @@ namespace copperfin::runtime_surface_tests
         expect_global("lgrandaliasstillobject", "false");
         expect_global("larraystillobject", "false");
         expect_global("lcollectionstillobject", "false");
+        expect_global("ccollectionlookalikeafter", "object:NotDemoChild#2");
         expect_global("lownerstillhaschild", "false");
         expect_global("lsiblingsurvives", "true");
         expect_global("csamehandlelookalikeafter", "object:NotDemoChild#2");
+        expect_global("clivehandleliteralafter", "object:NotDemoChild#2");
         expect_global("nhandlelikeliterallength", "14");
         expect_global("nmissingerror", "1925");
         expect_global("cmissingmessage", "Unknown member child.");

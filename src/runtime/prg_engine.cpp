@@ -7707,13 +7707,9 @@ namespace copperfin::runtime
             }
             for (std::size_t index = object.collection_items.size(); index > 0U; --index)
             {
-                int referenced_handle = 0;
-                std::string referenced_prog_id;
-                if (parse_object_handle_reference(
-                        object.collection_items[index - 1U],
-                        referenced_handle,
-                        referenced_prog_id) &&
-                    scheduled_handles.contains(referenced_handle))
+                const PrgValue &item = object.collection_items[index - 1U];
+                if (item.kind == PrgValueKind::string &&
+                    scheduled_object_references.contains(item.string_value))
                 {
                     object.collection_items.erase(
                         object.collection_items.begin() + static_cast<std::ptrdiff_t>(index - 1U));

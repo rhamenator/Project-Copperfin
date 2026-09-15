@@ -25,7 +25,8 @@ ownership guard supports reentrant owner release without invalidating the active
 child’s `THIS` frame or clearing its outer reservation. Direct invocation
 arguments and suspended expression/command continuations also discard retired
 identities before resuming while ordinary handle-shaped character data remains
-unchanged. Queued sibling releases run synchronously, and `AddObject()` rejects
+unchanged in globals, direct arguments, and keyed collections through full
+program-id-plus-handle matching. Queued sibling releases run synchronously, and `AddObject()` rejects
 new children on an owner already reserved for retirement. Completed sibling
 callbacks remain retired until outer cleanup so aliases cannot dispatch them twice. The obsolete detached-child test matrix was
 replaced with focused differential lifecycle coverage; adjacent child collection
@@ -36,7 +37,7 @@ Validation passes for the runtime-surface, parser-classes, control-flow, locale,
 and safety-traceability tests. A fresh Clang ASan/UBSan build passes the complete
 runtime-surface executable after correcting an unrelated malformed `SYS(2021)`
 DBF test initializer exposed by ASan. After the second review-hardening pass,
-Valgrind reports zero errors and no leaks across 18,404,274 allocations. PR #6403 is open; next:
+Valgrind reports zero errors and no leaks across 18,411,361 allocations. PR #6403 is open; next:
 push the signed/DCO review-fix commit, resolve its review conversations, request
 fresh review, then monitor required checks and conversation resolution.
 
