@@ -1329,6 +1329,20 @@ namespace copperfin::runtime
             }
             return resolve_cursor_target(designator);
         };
+        const auto buffering_designator_is_preferred =
+            [this, has_preferred_cursor, preferred_cursor_reference](const std::string &designator)
+        {
+            return has_preferred_cursor &&
+                preferred_cursor_reference.bind_explicit_designators &&
+                cursor_expression_reference_matches_designator(preferred_cursor_reference, designator);
+        };
+        const auto resolve_buffering_cursor =
+            [this, buffering_designator_is_preferred, resolve_preferred_cursor](const std::string &designator)
+        {
+            return buffering_designator_is_preferred(designator)
+                ? const_cast<CursorState *>(resolve_preferred_cursor())
+                : resolve_cursor_target(designator);
+        };
         const bool handling_try_error = std::any_of(
             frame.tries.begin(),
             frame.tries.end(),
@@ -2835,9 +2849,16 @@ namespace copperfin::runtime
                 }
                 return verified->second;
             },
-            [this, &frame](const std::string &function, const std::vector<PrgValue> &arguments)
+            [this, &frame, resolve_buffering_cursor, buffering_designator_is_preferred](
+                const std::string &function,
+                const std::vector<PrgValue> &arguments)
             {
-                return cursor_buffering_function(function, arguments, frame);
+                return cursor_buffering_function(
+                    function,
+                    arguments,
+                    frame,
+                    resolve_buffering_cursor,
+                    buffering_designator_is_preferred);
             },
             [this](const std::string &function, const std::vector<PrgValue> &arguments)
             {

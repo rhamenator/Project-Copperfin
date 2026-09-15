@@ -25,9 +25,10 @@ Issue #6270 is open, repository-owner-authored, and carries the exact
 `codex/fix-6270-curval-oldval-cursor-lifetime`.
 
 PR #6283 is open. Review found cross-data-session metadata/qualified-field gaps,
-an over-broad ordinary-expression scope, a query-alias capture gap, and an
-over-eager error for unrelated qualified fields after source closure; all fixes
-are complete, with the latest awaiting commit/push. `CURVAL()` and
+an over-broad ordinary-expression scope, a query-alias capture gap, an
+over-eager error for unrelated qualified fields after source closure, and
+buffering calls that bypassed the captured generation; all fixes are complete,
+with the latest awaiting commit/push. `CURVAL()` and
 `OLDVAL()` now own record overrides and key them to a stable cursor identity.
 Expression callbacks reacquire the exact data-session/work-area generation
 before field, cursor, and nested-expression continuations. Closing or replacing
@@ -38,13 +39,14 @@ data session.
 Explicit generation binding is scoped to CURVAL/OLDVAL; an ordinary-expression
 non-regression proves explicit aliases still follow the callback-selected session.
 Explicit unrelated fields continue resolving against still-open cursors after
-the source closes. Exact localized error-message assertions cover compound
-nested continuations.
+the source closes. Nested buffering reads and mutations remain bound to the
+origin across data-session switches and reject replacement generations. Exact
+localized error-message assertions cover compound nested continuations.
 
 Focused buffering, runtime-surface, work-area, and SQL-cursor tests pass.
 Localization/catalog and safety-traceability contracts pass. The retained exact
 CURVAL/OLDVAL probes now report `Variable 'NAME' is not found.`; focused
-Valgrind reports 0 errors and no leaks across 1,310,742 allocations.
+Valgrind reports 0 errors and no leaks across 1,335,981 allocations.
 
 Next action: commit the review fix with DCO/signature, push, verify and resolve
 the remaining review conversation, then merge when CI is green, close #6270, and

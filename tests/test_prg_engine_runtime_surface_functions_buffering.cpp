@@ -112,9 +112,15 @@ namespace copperfin::runtime_surface_tests
             "SELECT CURVAL(\"IIF(SwitchSession(), q.NAME, q.NAME)\", 'q') AS NAME FROM cursession q INTO ARRAY aQuerySafe\n"
             "SET DATASESSION TO 1\n"
             "cQueryAliasSwitch = aQuerySafe[1]\n"
-            "cSessionSwitch = CURVAL(\"IIF(SwitchSession(), cursession.NAME + '|' + FIELD(1, 'cursession') + '|' + TRANSFORM(FSIZE('NAME', 'cursession')) + '|' + ORDER('cursession') + '|' + TAG(1, '', 'cursession'), '')\", 'cursession')\n"
+            "REPLACE NAME WITH 'CHANGED' IN cursession\n"
+            "cSessionSwitch = CURVAL(\"IIF(SwitchSession(), cursession.NAME + '|' + FIELD(1, 'cursession') + '|' + TRANSFORM(FSIZE('NAME', 'cursession')) + '|' + ORDER('cursession') + '|' + TAG(1, '', 'cursession') + '|' + TRANSFORM(GETFLDSTATE('NAME', 'cursession')) + '|' + CURVAL('NAME', 'cursession'), '')\", 'cursession')\n"
             "nSessionAfterCallback = VAL(SET('DATASESSION'))\n"
             "SET DATASESSION TO 1\n"
+            "lSessionUpdate = CURVAL(\"IIF(SwitchSession(), TABLEUPDATE(.T., .F., 'cursession'), .F.)\", 'cursession')\n"
+            "SET DATASESSION TO 1\n"
+            "cSessionCommitted = CURVAL('NAME', 'cursession')\n"
+            "REPLACE NAME WITH 'ALPHA' IN cursession\n"
+            "=TABLEUPDATE(.T., .F., 'cursession')\n"
             "cOrdinarySwitch = IIF(SwitchSession(), cursession.NAME + '|' + FIELD(1, 'cursession') + '|' + TRANSFORM(FSIZE('NAME', 'cursession')) + '|' + ORDER('cursession') + '|' + TAG(1, '', 'cursession'), '')\n"
             "SET DATASESSION TO 1\n"
             "USE IN cursession\n"
@@ -159,6 +165,15 @@ namespace copperfin::runtime_surface_tests
             "ENDTRY\n"
             "cOldReuseName = oldreuse.NAME\n"
             "USE IN oldreuse\n"
+            "USE '" + table_path.string() + "' ALIAS nestedreuse\n"
+            "=CURSORSETPROP('Buffering', 5, 'nestedreuse')\n"
+            "TRY\n"
+            "  cNestedReuse = CURVAL(\"IIF(ReplaceNestedReuse(), CURVAL('NAME', SELECT('nestedreuse')), '')\", 'nestedreuse')\n"
+            "CATCH TO oNestedReuse\n"
+            "  nNestedReuseError = oNestedReuse.ErrorNo\n"
+            "ENDTRY\n"
+            "cNestedReuseName = nestedreuse.NAME\n"
+            "USE IN nestedreuse\n"
             "USE '" + table_path.string() + "' ALIAS currelated IN 0\n"
             "=CURSORSETPROP('Buffering', 5, 'currelated')\n"
             "USE '" + other_table_path.string() + "' ALIAS otheropen AGAIN IN 0\n"
@@ -201,6 +216,11 @@ namespace copperfin::runtime_surface_tests
             "USE IN oldreuse\n"
             "USE '" + table_path.string() + "' ALIAS oldreuse\n"
             "RETURN .T.\n"
+            "ENDFUNC\n"
+            "FUNCTION ReplaceNestedReuse\n"
+            "USE IN nestedreuse\n"
+            "USE '" + table_path.string() + "' ALIAS nestedreuse\n"
+            "RETURN .T.\n"
             "ENDFUNC\n");
 
         const auto state = copperfin::runtime::PrgRuntimeSession::create(
@@ -230,8 +250,12 @@ namespace copperfin::runtime_surface_tests
         expect_global("coldunrelated", "BRAVO");
         expect_global("ccurreusename", "ALPHA");
         expect_global("coldreusename", "ALPHA");
+        expect_global("nnestedreuseerror", "13");
+        expect_global("cnestedreusename", "ALPHA");
         expect_global("cnestedvalues", "ALPHA");
-        expect_global("csessionswitch", "ALPHA|ID|10||");
+        expect_global("csessionswitch", "ALPHA|ID|10|||2|ALPHA");
+        expect_global("lsessionupdate", "true");
+        expect_global("csessioncommitted", "CHANGED");
         expect_global("cqueryaliasswitch", "ALPHA");
         expect_global("cordinaryswitch", "BRAVO|OTHER|6|OTHER|OTHER");
         expect_global("nsessionaftercallback", "2");

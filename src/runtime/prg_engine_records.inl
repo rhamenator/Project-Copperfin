@@ -2122,7 +2122,9 @@
         std::optional<PrgValue> cursor_buffering_function(
             const std::string &function,
             const std::vector<PrgValue> &arguments,
-            const Frame &frame)
+            const Frame &frame,
+            const std::function<CursorState *(const std::string &)> &resolve_expression_cursor,
+            const std::function<bool(const std::string &)> &designator_is_preferred)
         {
             if (function != "cursorsetprop" && function != "cursorgetprop" &&
                 function != "tableupdate" && function != "tablerevert" &&
@@ -2136,8 +2138,8 @@
             const auto cursor_for_argument = [&](std::size_t index) -> CursorState *
             {
                 return index < arguments.size()
-                    ? resolve_cursor_target(value_as_string(arguments[index]))
-                    : resolve_cursor_target({});
+                    ? resolve_expression_cursor(value_as_string(arguments[index]))
+                    : resolve_expression_cursor({});
             };
             const auto require_local_cursor = [&](CursorState *cursor, const std::string &command) -> bool
             {
@@ -2161,7 +2163,7 @@
                 }
                 CursorState *cursor = arguments.size() >= 2U
                     ? cursor_for_argument(1U)
-                    : resolve_cursor_target({});
+                    : resolve_expression_cursor({});
                 if (cursor == nullptr)
                 {
                     throw PrgCompatibilityError(
@@ -2195,7 +2197,7 @@
                 }
                 CursorState *cursor = arguments.size() >= 2U
                     ? cursor_for_argument(1U)
-                    : resolve_cursor_target({});
+                    : resolve_expression_cursor({});
                 if (cursor == nullptr)
                 {
                     throw PrgCompatibilityError(
@@ -2299,7 +2301,7 @@
                 }
                 CursorState *cursor = arguments.size() >= 3U
                     ? cursor_for_argument(2U)
-                    : resolve_cursor_target({});
+                    : resolve_expression_cursor({});
                 if (cursor == nullptr)
                 {
                     throw PrgCompatibilityError(
@@ -2446,7 +2448,7 @@
                 }
                 CursorState *cursor = arguments.size() >= 2U
                     ? cursor_for_argument(1U)
-                    : resolve_cursor_target({});
+                    : resolve_expression_cursor({});
                 if (cursor == nullptr)
                 {
                     throw PrgCompatibilityError(
@@ -2498,7 +2500,7 @@
                 }
                 CursorState *cursor = arguments.size() >= 2U
                     ? cursor_for_argument(1U)
-                    : resolve_cursor_target({});
+                    : resolve_expression_cursor({});
                 if (cursor == nullptr)
                 {
                     throw PrgCompatibilityError(
@@ -2552,15 +2554,21 @@
                 CursorState *cursor = nullptr;
                 if (argument_omitted)
                 {
-                    cursor = resolve_cursor_target({});
+                    cursor = resolve_expression_cursor({});
                 }
                 else if (numeric_designator)
                 {
                     // Convert the numeric value directly rather than round-tripping through
                     // value_as_string(): a Currency argument like work area 1 renders as
                     // "1.0000", which a plain integer parse would reject.
+                    const std::string designator = value_as_string(arguments[0U]);
+                    const bool preferred_designator = designator_is_preferred(designator);
+                    if (preferred_designator)
+                    {
+                        cursor = resolve_expression_cursor(designator);
+                    }
                     const double numeric_value = value_as_number(arguments[0U]);
-                    if (std::isfinite(numeric_value) &&
+                    if (!preferred_designator && std::isfinite(numeric_value) &&
                         numeric_value == std::trunc(numeric_value) &&
                         numeric_value >= static_cast<double>(std::numeric_limits<int>::min()) &&
                         numeric_value <= static_cast<double>(std::numeric_limits<int>::max()))
@@ -2573,7 +2581,10 @@
                     // cTableAlias is strictly an alias, not a source path: unlike the
                     // general resolve_cursor_target() fallback, do not also match an open
                     // cursor's underlying file path here.
-                    cursor = find_cursor_by_alias(trim_copy(value_as_string(arguments[0U])));
+                    const std::string designator = value_as_string(arguments[0U]);
+                    cursor = designator_is_preferred(designator)
+                        ? resolve_expression_cursor(designator)
+                        : find_cursor_by_alias(trim_copy(designator));
                 }
                 if (cursor == nullptr)
                 {

@@ -6,7 +6,10 @@
   active-data-session switch continues against the still-open origin, including
   qualified fields and field/order/tag metadata when the new session has a
   conflicting alias. Explicit fields from unrelated, still-open cursors remain
-  available after the source closes. Record
+  available after the source closes. Nested `CURVAL()`/`OLDVAL()` and
+  buffering functions also resolve source aliases and work areas through the
+  captured generation, preventing a callback-selected or replacement cursor
+  from being read or mutated. Record
   overrides now own their snapshots and are keyed by generation. Focused row/
   table-buffering coverage exercises current, alias, work-area, modified/deleted,
   close, replacement, alias reuse, session-switch, and nested-success paths.
