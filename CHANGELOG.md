@@ -1,3 +1,24 @@
+- 2026-09-15: Fixed #6288: native `RemoveObject()` now destroys the selected
+  child subtree immediately in child-first lifecycle order, retires runtime
+  handles and bindings, and invalidates variables, arrays, collections, and
+  object properties that referenced the destroyed handles. Missing, empty, and
+  hidden member targets preserve the object graph and raise localized error
+  1925. Reentrant `Destroy` code can release an owner without scheduling the
+  active child twice or invalidating its running `THIS` frame. Suspended
+  expression/command continuations and direct invocation argument lists now
+  discard retired handles before resuming, and declared child visibility is
+  enforced before mutation. A queued sibling released from `Destroy` now runs
+  synchronously, retiring parents reject late `AddObject()` calls, and runtime
+  object-reference provenance keeps identical handle-shaped application text
+  intact. Direct method dispatch also retains only the stable source handle
+  across a self-removing method before after-source delegates run. Added
+  `RQ-CF-PRG-036` and replaced regressions that
+  required detached children to remain alive. Completed lifecycle callbacks
+  remain marked until their owning traversal cleans up, preventing a later
+  sibling from redispatching an earlier sibling's `Destroy`. Corrected the `SYS(2021)` test
+  fixture's malformed DBF initializer so sanitizer validation can exercise the
+  complete runtime-surface suite without reading past a string literal.
+
 - 2026-09-15: Fixed #6319: expression-driven `GO`, `SKIP`, `SEEK`, and
   record-specific `UNLOCK` retain a stable data-session/work-area/cursor
   generation across direct PRG routine suspension and nested `EVALUATE()`.

@@ -69,7 +69,7 @@
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             const std::size_t return_depth = stack.size();
             const PrgValue this_reference =
-                make_string_value("object:" + target_object.prog_id + "#" + std::to_string(target_object.handle));
+                make_object_reference_value("object:" + target_object.prog_id + "#" + std::to_string(target_object.handle));
             push_method_frame(method_program_path,
                               method_name,
                               *method,
@@ -138,7 +138,7 @@
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             const std::size_t return_depth = stack.size();
             const PrgValue this_reference =
-                make_string_value("object:" + target_object.prog_id + "#" + std::to_string(target_object.handle));
+                make_object_reference_value("object:" + target_object.prog_id + "#" + std::to_string(target_object.handle));
             push_method_frame(method_program_path,
                               method_name,
                               *method,
@@ -170,11 +170,15 @@
             *returned_false = false;
         }
         const std::string normalized_identifier = normalize_identifier(identifier);
+        // RQ-CF-PRG-036: the source method may remove and erase itself. Keep
+        // only its stable handle across source-method execution; after-source
+        // delegate dispatch must not dereference the original map reference.
+        const int source_handle = runtime_object.handle;
         std::vector<NativeEventBinding> bindings;
         bindings.reserve(native_event_bindings.size());
         for (const NativeEventBinding &binding : native_event_bindings)
         {
-            if (binding.source_handle == runtime_object.handle &&
+            if (binding.source_handle == source_handle &&
                 binding.event_name == normalized_identifier &&
                 (binding.flags & 2) == 0)
             {
@@ -191,7 +195,7 @@
                 {
                     const auto delegate_result = invoke_native_event_delegate(
                         binding,
-                        {.source_handle = runtime_object.handle,
+                        {.source_handle = source_handle,
                          .event_name = normalized_identifier,
                          .event_type = 2},
                         arguments,
@@ -208,7 +212,7 @@
         };
 
         const std::string active_event_key =
-            std::to_string(runtime_object.handle) + ":" + normalized_identifier;
+            std::to_string(source_handle) + ":" + normalized_identifier;
         const bool already_active =
             active_native_event_keys.find(active_event_key) != active_native_event_keys.end();
 
@@ -1055,7 +1059,7 @@
 
             assign_array(
                 array_name,
-                {make_string_value("object:" + source_found->second.prog_id + "#" + std::to_string(source_found->second.handle)),
+                {make_object_reference_value("object:" + source_found->second.prog_id + "#" + std::to_string(source_found->second.handle)),
                  make_string_value(event_context.event_name),
                  make_number_value(static_cast<double>(event_context.event_type))},
                 1U);
@@ -1107,7 +1111,7 @@
                 values.push_back(
                     target == ole_objects.end()
                         ? make_empty_value()
-                        : make_string_value("object:" + target->second.prog_id + "#" + std::to_string(target->second.handle)));
+                        : make_object_reference_value("object:" + target->second.prog_id + "#" + std::to_string(target->second.handle)));
                 values.push_back(make_string_value(binding.delegate_name));
             }
 
@@ -1145,7 +1149,7 @@
                 values.push_back(
                     source == ole_objects.end()
                         ? make_empty_value()
-                        : make_string_value("object:" + source->second.prog_id + "#" + std::to_string(source->second.handle)));
+                        : make_object_reference_value("object:" + source->second.prog_id + "#" + std::to_string(source->second.handle)));
             }
             else if (binding.target_is_routine)
             {
@@ -1157,7 +1161,7 @@
                 values.push_back(
                     target == ole_objects.end()
                         ? make_empty_value()
-                        : make_string_value("object:" + target->second.prog_id + "#" + std::to_string(target->second.handle)));
+                        : make_object_reference_value("object:" + target->second.prog_id + "#" + std::to_string(target->second.handle)));
             }
             values.push_back(make_string_value(binding.event_name));
             values.push_back(make_string_value(binding.delegate_name));

@@ -1689,7 +1689,7 @@
             };
             auto make_runtime_object_reference = [&](RuntimeOleObjectState *object_state) -> PrgValue
             {
-                return make_string_value("object:" + object_state->prog_id + "#" + std::to_string(object_state->handle));
+                return make_object_reference_value("object:" + object_state->prog_id + "#" + std::to_string(object_state->handle));
             };
             auto create_empty_runtime_object = [&](const std::string &source_tag) -> RuntimeOleObjectState *
             {

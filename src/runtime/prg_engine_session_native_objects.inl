@@ -1421,7 +1421,7 @@
                 .last_action = "column.header",
                 .action_count = 1};
             header.properties["parent"] =
-                make_string_value("object:" + column.prog_id + "#" + std::to_string(column.handle));
+                make_object_reference_value("object:" + column.prog_id + "#" + std::to_string(column.handle));
             header.base_class_name = "Header";
             header.class_hierarchy = {"HEADER", "OBJECT"};
             assign_native_runtime_object_name(header, "Header");
@@ -1433,7 +1433,7 @@
 
             auto [header_it, _] = ole_objects.emplace(handle, std::move(header));
             column.properties["header"] =
-                make_string_value("object:" + header_it->second.prog_id + "#" +
+                make_object_reference_value("object:" + header_it->second.prog_id + "#" +
                                   std::to_string(header_it->second.handle));
             return &header_it->second;
         }
@@ -1506,7 +1506,7 @@
             host_application_surface.properties["name"] = make_string_value("Microsoft Visual FoxPro");
             auto [host_application_it, _] = ole_objects.emplace(host_application_handle, std::move(host_application_surface));
             runtime_object.properties["application"] =
-                make_string_value("object:" + host_application_it->second.prog_id + "#" +
+                make_object_reference_value("object:" + host_application_it->second.prog_id + "#" +
                                   std::to_string(host_application_it->second.handle));
 
             if (!object_surface.properties.contains("application"))
@@ -1522,7 +1522,7 @@
                     make_string_value(representative_olecontrol_application_name(automation_prog_id));
                 auto [object_application_it, __] = ole_objects.emplace(object_application_handle, std::move(object_application_surface));
                 object_surface.properties["application"] =
-                    make_string_value("object:" + object_application_it->second.prog_id + "#" +
+                    make_object_reference_value("object:" + object_application_it->second.prog_id + "#" +
                                       std::to_string(object_application_it->second.handle));
             }
 
@@ -1572,7 +1572,7 @@
             object_surface.methods.push_back("compose");
             auto [object_it, _] = ole_objects.emplace(handle, std::move(object_surface));
             runtime_object.properties["object"] =
-                make_string_value("object:" + object_it->second.prog_id + "#" + std::to_string(object_it->second.handle));
+                make_object_reference_value("object:" + object_it->second.prog_id + "#" + std::to_string(object_it->second.handle));
             (void)ensure_native_olecontrol_application_conflict_surface(runtime_object, object_it->second);
             return &object_it->second;
         }
@@ -1616,13 +1616,13 @@
 
                 child_members.emplace_back(
                     property_name,
-                    make_string_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
+                    make_object_reference_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
                 if (is_native_grid_runtime_object(runtime_object) &&
                     is_native_column_runtime_object(**child_object))
                 {
                     column_members.emplace_back(
                         property_name,
-                        make_string_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
+                        make_object_reference_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
                 }
             }
 
@@ -1664,15 +1664,15 @@
                     collection_state.base_class_name = "Collection";
                     collection_state.class_hierarchy = {"COLLECTION", "OBJECT"};
                     collection_state.properties["parent"] =
-                        make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
+                        make_object_reference_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
                     auto [collection_it, _] = ole_objects.emplace(handle, std::move(collection_state));
                     runtime_object.properties[property_name] =
-                        make_string_value("object:" + collection_it->second.prog_id + "#" + std::to_string(collection_it->second.handle));
+                        make_object_reference_value("object:" + collection_it->second.prog_id + "#" + std::to_string(collection_it->second.handle));
                     collection_object = &collection_it->second;
                 }
 
                 collection_object->properties["parent"] =
-                    make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
+                    make_object_reference_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
                 collection_object->collection_items.clear();
                 collection_object->collection_item_keys.clear();
                 collection_object->collection_items.reserve(members.size());

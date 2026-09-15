@@ -963,11 +963,17 @@ std::optional<PrgValue> evaluate_string_function(
             value_as_string(arguments[0]), start, length, value_as_string(arguments[3])));
     }
     if (function == "alltrim" && !arguments.empty()) {
+        std::string result;
         if (arguments.size() >= 3U) {
-            return make_string_value(trim_with_parse_characters(
-                value_as_string(arguments[0]), true, true, arguments));
+            result = trim_with_parse_characters(
+                value_as_string(arguments[0]), true, true, arguments);
+        } else {
+            result = trim_space_copy(value_as_string(arguments[0]));
         }
-        return make_string_value(trim_space_copy(value_as_string(arguments[0])));
+        if (arguments[0].is_object_reference && result == arguments[0].string_value) {
+            return make_object_reference_value(std::move(result));
+        }
+        return make_string_value(std::move(result));
     }
     if (function == "chr" && !arguments.empty()) {
         // #5900: VFP9 truncates a fractional character-code argument
