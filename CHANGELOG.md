@@ -1,3 +1,14 @@
+- 2026-09-15: Fixed #6319: expression-driven `GO`, `SKIP`, `SEEK`, and
+  record-specific `UNLOCK` retain a stable data-session/work-area/cursor
+  generation across direct PRG routine suspension and nested `EVALUATE()`.
+  Each command reacquires the exact target before navigation, lock mutation,
+  relation synchronization, or success-event formatting. Closing and reopening
+  an alias/work area now raises a catchable localized command error without
+  touching the replacement or emitting false success; changing data sessions
+  alone continues against the still-open origin, including its session-local
+  navigation `SET` state, table-backed and source-less cursor lock-owner maps, and parent/child relations, then
+  restores the callback-selected session. Added `RQ-CF-PRG-035`.
+
 - 2026-09-14: Fixed #6270: `CURVAL()` and `OLDVAL()` no longer retain raw
   session-owned cursor or record pointers while evaluating expressions that can
   invoke PRG code. Stable cursor-generation references reacquire the originating

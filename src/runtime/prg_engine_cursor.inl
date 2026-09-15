@@ -258,8 +258,13 @@
             session.next_work_area = std::min(session.next_work_area, closed_work_area);
         }
 
-        void synchronize_relations_for_parent(CursorState &parent, const Frame &frame)
+        void synchronize_relations_for_parent(
+            CursorState &parent,
+            const Frame &frame,
+            int target_data_session = 0)
         {
+            // RQ-CF-PRG-035: post-expression synchronization belongs to the
+            // captured cursor's session, even if the callback selected another.
             if (relation_synchronization_active)
             {
                 return;
@@ -281,7 +286,14 @@
                 }
             } guard(relation_synchronization_active);
 
-            const auto relations = current_session_state().relations;
+            const int relation_data_session =
+                target_data_session == 0 ? current_data_session : target_data_session;
+            const auto session = data_sessions.find(relation_data_session);
+            if (session == data_sessions.end())
+            {
+                return;
+            }
+            const auto relations = session->second.relations;
             for (const auto &relation : relations)
             {
                 if (relation.parent_work_area != parent.work_area)
@@ -289,7 +301,10 @@
                     continue;
                 }
 
-                CursorState *child = find_cursor_by_area(relation.child_work_area);
+                const auto child_entry = session->second.cursors.find(relation.child_work_area);
+                CursorState *child = child_entry == session->second.cursors.end()
+                    ? nullptr
+                    : &child_entry->second;
                 if (child == nullptr)
                 {
                     continue;
@@ -348,8 +363,11 @@
         bool synchronize_skip_parent_for_child(
             CursorState &child,
             const Frame &frame,
-            long long delta)
+            long long delta,
+            int target_data_session = 0)
         {
+            // RQ-CF-PRG-035: resolve relation peers from the target generation's
+            // session rather than the callback-selected session.
             if (delta == 0)
             {
                 return false;
@@ -357,7 +375,14 @@
 
             const int direction = delta > 0 ? 1 : -1;
             bool adjusted = false;
-            const auto relations = current_session_state().relations;
+            const int relation_data_session =
+                target_data_session == 0 ? current_data_session : target_data_session;
+            const auto session = data_sessions.find(relation_data_session);
+            if (session == data_sessions.end())
+            {
+                return false;
+            }
+            const auto relations = session->second.relations;
             for (const auto &relation : relations)
             {
                 if (!relation.skip_one_to_many || relation.child_work_area != child.work_area)
@@ -365,7 +390,10 @@
                     continue;
                 }
 
-                CursorState *parent = find_cursor_by_area(relation.parent_work_area);
+                const auto parent_entry = session->second.cursors.find(relation.parent_work_area);
+                CursorState *parent = parent_entry == session->second.cursors.end()
+                    ? nullptr
+                    : &parent_entry->second;
                 if (parent == nullptr || relation_matches_current_parent(relation, *parent, child, frame))
                 {
                     continue;
@@ -379,7 +407,7 @@
                         break;
                     }
 
-                    synchronize_relations_for_parent(*parent, frame);
+                    synchronize_relations_for_parent(*parent, frame, relation_data_session);
                     if (!relation_matches_current_parent(relation, *parent, child, frame))
                     {
                         continue;
@@ -1320,6 +1348,31 @@
                        cursor->second.binding_identity == reference.binding_identity
                 ? &cursor->second
                 : nullptr;
+        }
+
+        CursorGenerationReference capture_cursor_generation_reference(CursorState *cursor)
+        {
+            // RQ-CF-PRG-035: use the same session/work-area generation identity
+            // as nested CURVAL/OLDVAL evaluation without retaining its pointer.
+            const CursorExpressionReference reference = capture_cursor_expression_reference(cursor);
+            return CursorGenerationReference{
+                .data_session = reference.data_session,
+                .work_area = reference.work_area,
+                .binding_identity = reference.binding_identity};
+        }
+
+        CursorState *resolve_cursor_generation_reference(const CursorGenerationReference &reference)
+        {
+            // RQ-CF-PRG-035: an ABA replacement in the same work area is not
+            // the command target captured before expression evaluation.
+            return const_cast<CursorState *>(resolve_cursor_expression_reference(
+                CursorExpressionReference{
+                    .data_session = reference.data_session,
+                    .work_area = reference.work_area,
+                    .binding_identity = reference.binding_identity,
+                    .alias = {},
+                    .bind_explicit_designators = false,
+                    .detached_cursor = nullptr}));
         }
 
         bool can_open_table_cursor(

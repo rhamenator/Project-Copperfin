@@ -13,15 +13,19 @@
             return make_lock_owner_key(runtime_instance_id, current_data_session);
         }
 
-        [[nodiscard]] std::string cursor_lock_resource_key(const CursorState &cursor) const
+        [[nodiscard]] std::string cursor_lock_resource_key(
+            const CursorState &cursor,
+            int target_data_session = 0) const
         {
             if (!cursor.source_path.empty())
             {
                 return normalize_path(cursor.source_path);
             }
 
+            const int resource_data_session =
+                target_data_session == 0 ? current_data_session : target_data_session;
             return "runtime:" + std::to_string(runtime_instance_id) +
-                   ":session:" + std::to_string(std::max(1, current_data_session)) +
+                   ":session:" + std::to_string(std::max(1, resource_data_session)) +
                    ":area:" + std::to_string(cursor.work_area);
         }
 
@@ -66,7 +70,7 @@
                                                       int data_session)
         {
             const std::string owner_key = make_lock_owner_key(runtime_instance_id, data_session);
-            const std::string resource_key = cursor_lock_resource_key(cursor);
+            const std::string resource_key = cursor_lock_resource_key(cursor, data_session);
             std::lock_guard<std::mutex> lock(concurrency_state->mutex);
 
             if (session.table_locks.contains(cursor.work_area))
@@ -111,7 +115,7 @@
                                                   int data_session)
         {
             const std::string owner_key = make_lock_owner_key(runtime_instance_id, data_session);
-            const std::string resource_key = cursor_lock_resource_key(cursor);
+            const std::string resource_key = cursor_lock_resource_key(cursor, data_session);
             std::lock_guard<std::mutex> lock(concurrency_state->mutex);
 
             auto shared_record_found = concurrency_state->record_lock_owner_by_resource.find(resource_key);
@@ -133,7 +137,7 @@
         void release_shared_table_lock_ownership(const CursorState &cursor, int data_session)
         {
             const std::string owner_key = make_lock_owner_key(runtime_instance_id, data_session);
-            const std::string resource_key = cursor_lock_resource_key(cursor);
+            const std::string resource_key = cursor_lock_resource_key(cursor, data_session);
             std::lock_guard<std::mutex> lock(concurrency_state->mutex);
 
             const auto table_found = concurrency_state->table_lock_owner_by_resource.find(resource_key);

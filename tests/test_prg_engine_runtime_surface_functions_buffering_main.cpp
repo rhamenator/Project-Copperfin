@@ -22,6 +22,7 @@ int main()
     test_setfldstate_assigns_buffered_mutation_state();
     test_oldval_evaluates_buffered_original_record();
     test_curval_oldval_reject_reentrant_cursor_replacement();
+    test_navigation_commands_reject_reentrant_cursor_replacement();
     test_local_optimistic_table_buffering();
     test_local_optimistic_table_buffering_append_lifecycle();
     test_table_buffer_appends_use_negative_recno_identity();

@@ -2,56 +2,43 @@
 
 ## Last shipped slice
 
-PR #6262 fixed issue #6253 and merged into `v1-development` as
-`921f50a4f3e9148668370b245f711bd3c6e6d596` on 2026-09-14/15. `ASCAN()`
-predicate evaluation now copies its candidate and validates stable array-binding
-and mutation generations after reentrant expressions and synchronous VFP
-routine callbacks. Source resize, release, rebind, element replacement,
-`ACOPY()`, `ADEL()`, `AINS()`, and `SCATTER TO` raise catchable VFP error 11
-before stale storage or bounds can be used. Predicate metadata and lambda
-parameters restore against the original predicate frame on mutation and
-callback exceptions.
+PR #6283 fixed issue #6270 and merged into `v1-development` as
+`d3ed73cb0ca8474bcdc5e37a401f8894ea0d117f` on 2026-09-15. `CURVAL()` and
+`OLDVAL()` now own record overrides and retain stable cursor-generation
+references across reentrant PRG callbacks. Fields, metadata, nested buffering
+calls, and query aliases reacquire the exact originating data-session/work-area
+generation; source closure/replacement raises a catchable localized error before
+stale or replacement state is read, while unrelated explicit cursors and a
+still-open origin across data-session switches remain usable. Typed `LUPDATE()`
+alias/work-area behavior is preserved.
 
-`test_prg_engine_arrays`, localization/catalog tests, and the safety traceability
-contract passed. Valgrind reported 0 errors and no leaks across 7,089,025
-allocations. The callback-frame regression was verified fail-before/pass-after.
-All hosted checks passed, both review conversations were resolved, and a fresh
-Codex review found no major issues. Issue #6253 was manually closed after merge.
+Focused buffering, runtime-surface, work-area, SQL-cursor, locale/catalog, and
+safety-traceability tests passed. Valgrind reported 0 errors and no leaks across
+1,355,882 allocations. All hosted checks passed, every review conversation was
+resolved, and a fresh Codex review found no major issues. Issue #6270 was
+manually closed after merge.
 
 ## Active slice
 
-Issue #6270 is open, repository-owner-authored, and carries the exact
+Issue #6319 is open, repository-owner-authored, and carries the exact
 `agent-approved` label. Branch:
-`codex/fix-6270-curval-oldval-cursor-lifetime`.
+`codex/fix-6319-navigation-cursor-lifetime`.
 
-PR #6283 is open. Review found cross-data-session metadata/qualified-field gaps,
-an over-broad ordinary-expression scope, a query-alias capture gap, an
-over-eager error for unrelated qualified fields after source closure, and
-buffering calls that bypassed the captured generation or erased `LUPDATE()`'s
-alias/work-area type distinction; all fixes are complete, with the latest
-awaiting commit/push. `CURVAL()` and
-`OLDVAL()` now own record overrides and key them to a stable cursor identity.
-Expression callbacks reacquire the exact data-session/work-area generation
-before field, cursor, and nested-expression continuations. Closing or replacing
-the cursor raises catchable VFP error 12; switching data sessions preserves the
-still-open origin. Qualified alias/work-area fields and field/order/tag metadata
-cannot bind a replacement generation or a conflicting alias in a newly selected
-data session.
-Explicit generation binding is scoped to CURVAL/OLDVAL; an ordinary-expression
-non-regression proves explicit aliases still follow the callback-selected session.
-Explicit unrelated fields continue resolving against still-open cursors after
-the source closes. Nested buffering reads and mutations remain bound to the
-origin across data-session switches and reject replacement generations. Exact
-localized error-message assertions cover compound nested continuations.
+Expression-driven `GO`, `SKIP`, `SEEK`, and record-specific `UNLOCK` now capture
+a stable data-session/work-area/cursor generation before expression evaluation.
+The identity persists through direct PRG routine suspension and nested
+`EVALUATE()`; each command reacquires it before navigation, lock mutation,
+relation synchronization, or success-event formatting. Same-alias/work-area
+replacement produces catchable localized error 1002, leaves the replacement
+usable, and emits no false command-success event. Switching data sessions alone
+continues against the still-open origin, including its session-local navigation
+`SET` state, table-backed and source-less cursor record-lock ownership maps, and
+parent/child relation graph, then
+restores the callback-selected session. `RQ-CF-PRG-035`, language coverage,
+and the changelog are updated; exact VFP9 error parity is disclosed as an
+evidence gap.
 
-Focused buffering, runtime-surface, work-area, and SQL-cursor tests pass.
-Localization/catalog and safety-traceability contracts pass. The retained exact
-CURVAL/OLDVAL probes now report `Variable 'NAME' is not found.`; focused
-Valgrind reports 0 errors and no leaks across 1,355,882 allocations.
-
-Next action: commit the review fix with DCO/signature, push, verify and resolve
-the remaining review conversation, then merge when CI is green, close #6270, and
-select the next approved issue.
+Focused and broader navigation, lock, control-flow, SQL-cursor, locale, and safety-traceability tests pass after the review correction. A fresh Clang ASan/UBSan focused build passes, and Valgrind reports 0 errors and no leaks across 1,482,109 allocations. Next action: commit with DCO/signature, push, resolve the review conversations, and request a fresh review.
 
 ## Workspace preservation
 
