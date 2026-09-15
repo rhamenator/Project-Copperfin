@@ -159,6 +159,14 @@ namespace copperfin::runtime_surface_tests
             "ENDTRY\n"
             "cOldReuseName = oldreuse.NAME\n"
             "USE IN oldreuse\n"
+            "USE '" + table_path.string() + "' ALIAS currelated IN 0\n"
+            "=CURSORSETPROP('Buffering', 5, 'currelated')\n"
+            "USE '" + other_table_path.string() + "' ALIAS otheropen AGAIN IN 0\n"
+            "cCurUnrelated = CURVAL(\"IIF(DropCurRelated(), otheropen.NAME, otheropen.NAME)\", 'currelated')\n"
+            "USE '" + table_path.string() + "' ALIAS oldrelated IN 0\n"
+            "=CURSORSETPROP('Buffering', 3, 'oldrelated')\n"
+            "REPLACE NAME WITH 'CHANGED' IN oldrelated\n"
+            "cOldUnrelated = OLDVAL(\"IIF(DropOldRelated(), otheropen.NAME, otheropen.NAME)\", 'oldrelated')\n"
             "USE '" + table_path.string() + "' ALIAS nested\n"
             "=CURSORSETPROP('Buffering', 5, 'nested')\n"
             "REPLACE NAME WITH 'CHANGED' IN nested\n"
@@ -174,6 +182,14 @@ namespace copperfin::runtime_surface_tests
             "ENDFUNC\n"
             "FUNCTION DropOldClose\n"
             "USE IN oldclose\n"
+            "RETURN .T.\n"
+            "ENDFUNC\n"
+            "FUNCTION DropCurRelated\n"
+            "USE IN currelated\n"
+            "RETURN .T.\n"
+            "ENDFUNC\n"
+            "FUNCTION DropOldRelated\n"
+            "USE IN oldrelated\n"
             "RETURN .T.\n"
             "ENDFUNC\n"
             "FUNCTION ReplaceCurReuse\n"
@@ -210,6 +226,8 @@ namespace copperfin::runtime_surface_tests
         expect_global("noldreuseerror", "12");
         expect_global("lcurclosed", "true");
         expect_global("loldclosed", "true");
+        expect_global("ccurunrelated", "BRAVO");
+        expect_global("coldunrelated", "BRAVO");
         expect_global("ccurreusename", "ALPHA");
         expect_global("coldreusename", "ALPHA");
         expect_global("cnestedvalues", "ALPHA");

@@ -1481,7 +1481,13 @@ namespace copperfin::runtime
                 const CursorState *current_cursor = has_preferred_cursor
                     ? resolve_preferred_cursor()
                     : resolve_cursor_target({});
-                if (has_preferred_cursor && current_cursor == nullptr)
+                const auto qualifier_separator = identifier.find('.');
+                const bool references_preferred_cursor =
+                    qualifier_separator == std::string::npos ||
+                    cursor_expression_reference_matches_designator(
+                        preferred_cursor_reference,
+                        identifier.substr(0U, qualifier_separator));
+                if (has_preferred_cursor && current_cursor == nullptr && references_preferred_cursor)
                 {
                     throw PrgCompatibilityError(
                         runtime_text(

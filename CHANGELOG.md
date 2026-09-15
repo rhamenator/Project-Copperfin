@@ -5,7 +5,8 @@
   or replacing it raises catchable VFP error 12 before a field read, while an
   active-data-session switch continues against the still-open origin, including
   qualified fields and field/order/tag metadata when the new session has a
-  conflicting alias. Record
+  conflicting alias. Explicit fields from unrelated, still-open cursors remain
+  available after the source closes. Record
   overrides now own their snapshots and are keyed by generation. Focused row/
   table-buffering coverage exercises current, alias, work-area, modified/deleted,
   close, replacement, alias reuse, session-switch, and nested-success paths.
