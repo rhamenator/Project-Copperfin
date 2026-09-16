@@ -18,6 +18,17 @@
   sibling from redispatching an earlier sibling's `Destroy`. Corrected the `SYS(2021)` test
   fixture's malformed DBF initializer so sanitizer validation can exercise the
   complete runtime-surface suite without reading past a string literal.
+  Fixed a use-after-free (PR #6403 review, P1): `SetFocus()`'s `GotFocus()`
+  and `Valid()` callbacks can themselves call `RemoveObject()` on the very
+  control whose focus transition is in progress (e.g.
+  `THIS.Parent.RemoveObject(THIS.Name)` from inside `GotFocus`), which now
+  destroys the control synchronously mid-callback; `set_native_focus()` no
+  longer dereferences the erased runtime object afterward, instead
+  re-resolving the handle (or the previously focused control's handle,
+  before dispatching `LostFocus`) and skipping the now-stale post-callback
+  work when the object is gone. Reproduced as a real SIGSEGV/Valgrind
+  invalid-read on the pre-fix code and added regression coverage in
+  `tests/test_prg_engine_native_focus_move_events.cpp`.
 
 - 2026-09-15: Fixed #6319: expression-driven `GO`, `SKIP`, `SEEK`, and
   record-specific `UNLOCK` retain a stable data-session/work-area/cursor

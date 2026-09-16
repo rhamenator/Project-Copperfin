@@ -222,11 +222,116 @@ void test_native_focus_and_move_events()
     fs::remove_all(temp_root, ignored);
 }
 
+// #6403 (P1 review finding): a native callback dispatched from
+// set_native_focus() -- GotFocus() on the newly focused control, or Valid()
+// on the previously focused control -- may itself remove/release the very
+// control set_native_focus() still holds a RuntimeOleObjectState& for (e.g.
+// THIS.Parent.RemoveObject(THIS.Name)). Before the fix this was a
+// use-after-free: set_native_focus() kept writing to and reading from the
+// now-erased ole_objects node after the callback returned. This regression
+// exercises both self-removal points and asserts the runtime stays
+// consistent (no crash, Destroy runs exactly once, the alias/membership is
+// invalidated, and a later, unrelated focus change still works).
+void test_native_focus_self_removal_during_callbacks_does_not_use_after_free()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_native_focus_self_removal";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "native_focus_self_removal.prg";
+    write_text(
+        main_path,
+        "PUBLIC gnGotFocusSelfRemoveCount, gnValidSelfRemoveCount, gnSelfRemoveDestroyCount\n"
+        "gnGotFocusSelfRemoveCount = 0\n"
+        "gnValidSelfRemoveCount = 0\n"
+        "gnSelfRemoveDestroyCount = 0\n"
+        "oForm = CREATEOBJECT('SelfRemovalForm')\n"
+        "oSuicideGotFocus = oForm.suicideGotFocus\n"
+        "oForm.suicideGotFocus.SetFocus()\n"
+        "lSuicideGotFocusStillObject = VARTYPE(oSuicideGotFocus) == 'O'\n"
+        "lSuicideGotFocusStillMember = PEMSTATUS(oForm, 'suicideGotFocus', 1)\n"
+        "nGotFocusSelfRemoveCountAfter = gnGotFocusSelfRemoveCount\n"
+        "nDestroyCountAfterGotFocusSuicide = gnSelfRemoveDestroyCount\n"
+        "oForm.survivor.SetFocus()\n"
+        "cActiveAfterSurvivorFocus = oForm.ActiveControl.cId\n"
+        "oSuicideValid = oForm.suicideValid\n"
+        "oForm.suicideValid.SetFocus()\n"
+        "oForm.survivor.SetFocus()\n"
+        "lSuicideValidStillObject = VARTYPE(oSuicideValid) == 'O'\n"
+        "lSuicideValidStillMember = PEMSTATUS(oForm, 'suicideValid', 1)\n"
+        "nValidSelfRemoveCountAfter = gnValidSelfRemoveCount\n"
+        "nDestroyCountAfterValidSuicide = gnSelfRemoveDestroyCount\n"
+        "cActiveAfterSuicideValidFocusMove = oForm.ActiveControl.cId\n"
+        "RETURN\n"
+        "DEFINE CLASS SelfRemovalForm AS Form\n"
+        "    ADD OBJECT survivor AS SurvivorBox\n"
+        "    ADD OBJECT suicideGotFocus AS SuicideGotFocusBox\n"
+        "    ADD OBJECT suicideValid AS SuicideValidBox\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS SurvivorBox AS TextBox\n"
+        "    cId = 'survivor'\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS SuicideGotFocusBox AS TextBox\n"
+        "    cId = 'suicideGotFocus'\n"
+        "    PROCEDURE GotFocus\n"
+        "        gnGotFocusSelfRemoveCount = gnGotFocusSelfRemoveCount + 1\n"
+        "        THIS.Parent.RemoveObject(THIS.Name)\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Destroy\n"
+        "        gnSelfRemoveDestroyCount = gnSelfRemoveDestroyCount + 1\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS SuicideValidBox AS TextBox\n"
+        "    cId = 'suicideValid'\n"
+        "    PROCEDURE Valid\n"
+        "        gnValidSelfRemoveCount = gnValidSelfRemoveCount + 1\n"
+        "        THIS.Parent.RemoveObject(THIS.Name)\n"
+        "        RETURN .T.\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Destroy\n"
+        "        gnSelfRemoveDestroyCount = gnSelfRemoveDestroyCount + 1\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "self-removal focus script should complete without crashing: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " variable should be present");
+        if (it != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("lsuicidegotfocusstillobject", "false");
+    check("lsuicidegotfocusstillmember", "false");
+    check("ngotfocusselfremovecountafter", "1");
+    check("ndestroycountaftergotfocussuicide", "1");
+    check("cactiveaftersurvivorfocus", "survivor");
+    check("lsuicidevalidstillobject", "false");
+    check("lsuicidevalidstillmember", "false");
+    check("nvalidselfremovecountafter", "1");
+    check("ndestroycountaftervalidsuicide", "2");
+    check("cactiveaftersuicidevalidfocusmove", "survivor");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 } // namespace
 
 int main()
 {
     test_native_focus_and_move_events();
+    test_native_focus_self_removal_during_callbacks_does_not_use_after_free();
     if (test_failures() != 0)
     {
         std::cerr << test_failures() << " test(s) failed.\n";

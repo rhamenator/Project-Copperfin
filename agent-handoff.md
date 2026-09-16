@@ -38,9 +38,25 @@ Validation passes for the runtime-surface, parser-classes, control-flow, locale,
 and safety-traceability tests. A fresh Clang ASan/UBSan build passes the complete
 runtime-surface executable after correcting an unrelated malformed `SYS(2021)`
 DBF test initializer exposed by ASan. After the final review-hardening pass,
-Valgrind reports zero errors and no leaks across 18,407,099 allocations. PR #6403 is open; next:
-push the signed/DCO review-fix commit, resolve its review conversations, request
-fresh review, then monitor required checks and conversation resolution.
+Valgrind reports zero errors and no leaks across 18,407,099 allocations. PR #6403 is open.
+
+Owner paused the Codex bug hunt on 2026-09-15 and handed PR #6403 to Claude to
+finish. Of the 15 review threads, 14 were already resolved; the last
+(`chatgpt-codex-connector` P1, `prg_engine_native_object_focus_dispatch.inl:707`,
+databaseId 4018806350) reported that `SetFocus()`'s `GotFocus()`/`Valid()`
+callbacks can call `RemoveObject()` on the very control whose focus
+transition is in progress, and `set_native_focus()` kept dereferencing the
+erased `RuntimeOleObjectState&` afterward. Reproduced as a real SIGSEGV and a
+Valgrind invalid-read at the exact flagged line, fixed by re-resolving both
+the focused-control handle (after `GotFocus`) and the previously-focused
+handle (before `LostFocus`, since `Valid()` can also self-remove) through
+`ole_objects` instead of reusing the possibly-retired reference. New
+regression: `tests/test_prg_engine_native_focus_move_events.cpp`
+(`test_native_focus_self_removal_during_callbacks_does_not_use_after_free`),
+fail-then-pass verified (segfault/valgrind-dirty before, clean after).
+`RQ-CF-PRG-036` and the changelog are updated to cover this fix. Next: push
+the signed/DCO commit, resolve the remaining review thread, run the full
+ctest suite, wait for CI green, merge, close #6288, sync `v1-development`.
 
 ## Workspace preservation
 

@@ -37,6 +37,15 @@
             return false;
         }
 
+        // RQ-CF-PRG-036: Valid()/LostFocus()/GotFocus() below are arbitrary
+        // PRG callbacks and may remove/release the control(s) involved in
+        // this focus transition (e.g. THIS.Parent.RemoveObject(THIS.Name)),
+        // which erases the corresponding ole_objects node. Only the integer
+        // handle survives such a callback; every access to a native object
+        // after dispatching one of these callbacks must re-resolve through
+        // ole_objects rather than keep using a RuntimeOleObjectState&
+        // captured beforehand.
+        const int native_handle = runtime_object.handle;
         const PrgValue runtime_object_reference =
             make_object_reference_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
         std::optional<PrgValue> previous_active_control;
@@ -54,12 +63,14 @@
                 {
                     previous_active_control = *current_active_control;
                 }
+                int previous_handle = 0;
                 if (previous_active_control.has_value())
                 {
                     if (auto previous_control = resolve_ole_object(*previous_active_control);
                         previous_control.has_value())
                     {
-                        focus_changed = (*previous_control)->handle != runtime_object.handle;
+                        previous_handle = (*previous_control)->handle;
+                        focus_changed = previous_handle != native_handle;
                         if (focus_changed)
                         {
                             last_popped_frame_requested_nodefault = false;
@@ -82,21 +93,27 @@
                                 suppress_focus_transition = true;
                             }
                         }
-                        if (focus_changed && !suppress_focus_transition)
-                        {
-                            last_popped_frame_requested_nodefault = false;
-                            bool lost_focus_requested_nodefault = false;
-                            (void)invoke_native_object_method_if_present(
-                                **previous_control,
-                                "lostfocus",
-                                frame,
-                                {},
-                                {},
-                                &lost_focus_requested_nodefault);
-                            (void)consume_last_popped_frame_requested_nodefault();
-                            suppress_focus_transition = lost_focus_requested_nodefault;
-                        }
                     }
+                }
+                // Valid() above may have released `previous_control` (e.g.
+                // it removed itself from its parent); re-resolve by handle
+                // before dispatching LostFocus so we never dereference a
+                // retired map node.
+                const auto previous_control_after_valid = ole_objects.find(previous_handle);
+                if (focus_changed && !suppress_focus_transition &&
+                    previous_control_after_valid != ole_objects.end())
+                {
+                    last_popped_frame_requested_nodefault = false;
+                    bool lost_focus_requested_nodefault = false;
+                    (void)invoke_native_object_method_if_present(
+                        previous_control_after_valid->second,
+                        "lostfocus",
+                        frame,
+                        {},
+                        {},
+                        &lost_focus_requested_nodefault);
+                    (void)consume_last_popped_frame_requested_nodefault();
+                    suppress_focus_transition = lost_focus_requested_nodefault;
                 }
                 if (!suppress_focus_transition)
                 {
@@ -134,10 +151,20 @@
                 (void)consume_last_popped_frame_requested_nodefault();
             }
         }
-        runtime_object.last_action = effective_member_path + "()";
-        ++runtime_object.action_count;
+        // GotFocus() above may have removed/released this same control (e.g.
+        // THIS.Parent.RemoveObject(THIS.Name)); re-resolve before touching
+        // it again instead of dereferencing the possibly-erased map node
+        // that `runtime_object` is bound to.
+        const auto native_object_after_callbacks = ole_objects.find(native_handle);
+        if (native_object_after_callbacks == ole_objects.end())
+        {
+            return true;
+        }
+        RuntimeOleObjectState &settled_object = native_object_after_callbacks->second;
+        settled_object.last_action = effective_member_path + "()";
+        ++settled_object.action_count;
         events.push_back({.category = "prg.object.setfocus",
-                          .detail = runtime_object.prog_id + "." + effective_member_path,
+                          .detail = settled_object.prog_id + "." + effective_member_path,
                           .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
         return true;
     }
