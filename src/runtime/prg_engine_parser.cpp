@@ -2260,6 +2260,12 @@ Program parse_program_impl(
             statement.identifier = upper == "CLEAR ALL" ? "all" : "memory";
         } else if (upper == "CLEAR ERROR") {
             statement.kind = StatementKind::clear_error_command;
+        } else if (starts_with_insensitive(line, "CLEAR ERROR ")) {
+            // #6461 review (Copilot, P2): CLEAR ERROR takes no arguments;
+            // reject trailing text with a catchable syntax error instead of
+            // silently falling through to the generic-expression fallback.
+            statement.kind = StatementKind::clear_error_command;
+            statement.identifier = "malformed";
         } else if (upper == "CANCEL") {
             statement.kind = StatementKind::cancel_statement;
         } else if (upper == "QUIT") {

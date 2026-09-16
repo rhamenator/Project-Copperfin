@@ -8,6 +8,16 @@
   `ON ERROR` handler is active on the call stack (a separate cross-frame
   fault-snapshot mechanism used for `RESUME`/`RETRY`) is not covered by this
   fix and is left as a known, disclosed gap rather than guessed at.
+  Review fixes (PR #6461, Codex + Copilot): `CLEAR ERROR` no longer wipes the
+  active caught `Exception` object's identity (`active_exception_reference`,
+  `thrown_user_value`, `explicit_error_code`, `preserve_fault_context`) -- a
+  blanket reset previously made a bare `THROW` right after `CLEAR ERROR`
+  synthesize a brand-new error-0 object instead of rethrowing the same
+  caught exception, and could carry empty metadata through `FINALLY`
+  propagation; only the ambient SQL/OLE diagnostic-detail fields are cleared
+  now. `CLEAR ERROR` followed by trailing text (e.g. `CLEAR ERROR EXTRA`)
+  now raises a catchable "does not take arguments" error instead of
+  silently falling through to the generic-expression fallback.
 
 - 2026-09-15: Fixed #6288: native `RemoveObject()` now destroys the selected
   child subtree immediately in child-first lifecycle order, retires runtime

@@ -1067,6 +1067,42 @@ void test_clear_error_resets_diagnostic_surface_inside_catch() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_clear_error_rejects_trailing_arguments() {
+    // #6461 review (Copilot, P2): CLEAR ERROR takes no arguments; trailing
+    // text must raise a catchable syntax error instead of silently falling
+    // through to the generic-expression fallback.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_clear_error_trailing_args";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "clear_error_trailing_args.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  CLEAR ERROR EXTRA\n"
+        "  lReachedAfterMalformed = .T.\n"
+        "CATCH TO oErr\n"
+        "  nCaughtErrorNo = oErr.ErrorNo\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6461: CLEAR ERROR EXTRA script should complete: " + state.message);
+
+    expect(state.globals.find("lreachedaftermalformed") == state.globals.end(),
+           "#6461: CLEAR ERROR EXTRA should raise a catchable error rather than execute as CLEAR ERROR");
+    const auto caught_error_no = state.globals.find("ncaughterrorno");
+    expect(caught_error_no != state.globals.end(),
+           "#6461: CLEAR ERROR EXTRA should be caught by an enclosing TRY/CATCH");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_throw_is_catchable_and_preserves_exception_uservalue() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_throw_exception_uservalue";
