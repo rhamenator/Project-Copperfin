@@ -882,7 +882,7 @@ bool has_keyword(const std::string& text, const std::string& keyword) {
 }
 
 bool parse_object_handle_reference(const PrgValue& value, int& handle, std::string& prog_id) {
-    if (value.kind != PrgValueKind::string) {
+    if (value.kind != PrgValueKind::string || !value.is_object_reference) {
         return false;
     }
 
@@ -934,6 +934,12 @@ PrgValue make_string_value(std::string value) {
     PrgValue result;
     result.kind = PrgValueKind::string;
     result.string_value = std::move(value);
+    return result;
+}
+
+PrgValue make_object_reference_value(std::string value) {
+    PrgValue result = make_string_value(std::move(value));
+    result.is_object_reference = true;
     return result;
 }
 

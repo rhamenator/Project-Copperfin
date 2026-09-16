@@ -2,50 +2,68 @@
 
 ## Last shipped slice
 
-PR #6283 fixed issue #6270 and merged into `v1-development` as
-`d3ed73cb0ca8474bcdc5e37a401f8894ea0d117f` on 2026-09-15. `CURVAL()` and
-`OLDVAL()` now own record overrides and retain stable cursor-generation
-references across reentrant PRG callbacks. Fields, metadata, nested buffering
-calls, and query aliases reacquire the exact originating data-session/work-area
-generation; source closure/replacement raises a catchable localized error before
-stale or replacement state is read, while unrelated explicit cursors and a
-still-open origin across data-session switches remain usable. Typed `LUPDATE()`
-alias/work-area behavior is preserved.
-
-Focused buffering, runtime-surface, work-area, SQL-cursor, locale/catalog, and
-safety-traceability tests passed. Valgrind reported 0 errors and no leaks across
-1,355,882 allocations. All hosted checks passed, every review conversation was
-resolved, and a fresh Codex review found no major issues. Issue #6270 was
-manually closed after merge.
+PR #6372 fixed issue #6319 and merged into `v1-development` as
+`bdbc046fe4b974555c71c44527edaed19f28a9db` on 2026-09-15. Expression-driven
+`GO`, `SKIP`, `SEEK`, and record-specific `UNLOCK` now retain and reacquire the
+origin cursor generation and data-session state across reentrant evaluation.
+All hosted checks passed after one unrelated Windows Python-sidecar rerun, every
+review conversation was resolved, issue #6319 was manually closed, and its
+scratch sanitizer build was removed.
 
 ## Active slice
 
-Issue #6319 is open, repository-owner-authored, and carries the exact
-`agent-approved` label. Branch:
-`codex/fix-6319-navigation-cursor-lifetime`.
+Issue #6288 is open, repository-owner-authored, and carries the exact
+`agent-approved` label. Branch: `codex/fix-6288-removeobject-lifecycle`.
 
-Expression-driven `GO`, `SKIP`, `SEEK`, and record-specific `UNLOCK` now capture
-a stable data-session/work-area/cursor generation before expression evaluation.
-The identity persists through direct PRG routine suspension and nested
-`EVALUATE()`; each command reacquires it before navigation, lock mutation,
-relation synchronization, or success-event formatting. Same-alias/work-area
-replacement produces catchable localized error 1002, leaves the replacement
-usable, and emits no false command-success event. Switching data sessions alone
-continues against the still-open origin, including its session-local navigation
-`SET` state, table-backed and source-less cursor record-lock ownership maps, and
-parent/child relation graph, then
-restores the callback-selected session. `RQ-CF-PRG-035`, language coverage,
-and the changelog are updated; exact VFP9 error parity is disclosed as an
-evidence gap.
+Native `RemoveObject()` now routes a validated child through the existing
+subtree release lifecycle. Child-first `Destroy` callbacks run exactly once;
+runtime handles, event/COM/window bindings, active-form metadata, and references
+held by variables, arrays, collections, and object properties are retired.
+Missing, empty, and hidden targets preserve the graph and raise localized error
+1925. Declared visibility is enforced before mutation. A release-in-progress
+ownership guard supports reentrant owner release without invalidating the active
+child’s `THIS` frame or clearing its outer reservation. Direct invocation
+arguments and suspended expression/command continuations also discard retired
+identities before resuming while runtime object-reference provenance keeps
+identically encoded application text unchanged in globals, direct arguments,
+and keyed collections. Direct method dispatch retains the stable source handle
+when the method removes itself before after-source delegates run. Queued sibling releases run synchronously, and `AddObject()` rejects
+new children on an owner already reserved for retirement. Completed sibling
+callbacks remain retired until outer cleanup so aliases cannot dispatch them twice. The obsolete detached-child test matrix was
+replaced with focused differential lifecycle coverage; adjacent child collection
+and standalone `Release()` tests remain active. `RQ-CF-PRG-036`, language
+coverage, locale catalogs, and the changelog are updated.
 
-Focused and broader navigation, lock, control-flow, SQL-cursor, locale, and safety-traceability tests pass after the review correction. A fresh Clang ASan/UBSan focused build passes, and Valgrind reports 0 errors and no leaks across 1,482,109 allocations. Next action: commit with DCO/signature, push, resolve the review conversations, and request a fresh review.
+Validation passes for the runtime-surface, parser-classes, control-flow, locale,
+and safety-traceability tests. A fresh Clang ASan/UBSan build passes the complete
+runtime-surface executable after correcting an unrelated malformed `SYS(2021)`
+DBF test initializer exposed by ASan. After the final review-hardening pass,
+Valgrind reports zero errors and no leaks across 18,407,099 allocations. PR #6403 is open.
+
+Owner paused the Codex bug hunt on 2026-09-15 and handed PR #6403 to Claude to
+finish. Of the 15 review threads, 14 were already resolved; the last
+(`chatgpt-codex-connector` P1, `prg_engine_native_object_focus_dispatch.inl:707`,
+databaseId 4018806350) reported that `SetFocus()`'s `GotFocus()`/`Valid()`
+callbacks can call `RemoveObject()` on the very control whose focus
+transition is in progress, and `set_native_focus()` kept dereferencing the
+erased `RuntimeOleObjectState&` afterward. Reproduced as a real SIGSEGV and a
+Valgrind invalid-read at the exact flagged line, fixed by re-resolving both
+the focused-control handle (after `GotFocus`) and the previously-focused
+handle (before `LostFocus`, since `Valid()` can also self-remove) through
+`ole_objects` instead of reusing the possibly-retired reference. New
+regression: `tests/test_prg_engine_native_focus_move_events.cpp`
+(`test_native_focus_self_removal_during_callbacks_does_not_use_after_free`),
+fail-then-pass verified (segfault/valgrind-dirty before, clean after).
+`RQ-CF-PRG-036` and the changelog are updated to cover this fix. Next: push
+the signed/DCO commit, resolve the remaining review thread, run the full
+ctest suite, wait for CI green, merge, close #6288, sync `v1-development`.
 
 ## Workspace preservation
 
 Preserve these unrelated untracked user files:
 
 - `AGENTS.md`
-- `Z:\home\rich\temp\vfp9-probes\empty-object-205\vfp.out`
+- `Z:\\home\\rich\\temp\\vfp9-probes\\empty-object-205\\vfp.out`
 
 The `continue-copperfin-issue-loop` heartbeat is active every 30 minutes. It
 waits only while CI/CD or external review is pending; after a green, resolved PR

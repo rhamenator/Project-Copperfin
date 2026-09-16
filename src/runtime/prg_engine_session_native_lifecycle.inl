@@ -203,7 +203,7 @@
             const std::size_t construction_event_start = events.size();
             const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
             {
-                return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
+                return make_object_reference_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
             };
             const auto resolve_controlsource_value = [&](const std::string& controlsource_text)
                 -> std::optional<PrgValue>
@@ -695,7 +695,7 @@
 
             auto [inserted, _] = ole_objects.emplace(handle, std::move(object_state));
             const PrgValue reference =
-                make_string_value("object:" + inserted->second.prog_id + "#" + std::to_string(inserted->second.handle));
+                make_object_reference_value("object:" + inserted->second.prog_id + "#" + std::to_string(inserted->second.handle));
             remember_active_exception_reference(reference);
             return reference;
         }

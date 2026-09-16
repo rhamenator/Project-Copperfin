@@ -37,8 +37,17 @@
             return false;
         }
 
+        // RQ-CF-PRG-036: Valid()/LostFocus()/GotFocus() below are arbitrary
+        // PRG callbacks and may remove/release the control(s) involved in
+        // this focus transition (e.g. THIS.Parent.RemoveObject(THIS.Name)),
+        // which erases the corresponding ole_objects node. Only the integer
+        // handle survives such a callback; every access to a native object
+        // after dispatching one of these callbacks must re-resolve through
+        // ole_objects rather than keep using a RuntimeOleObjectState&
+        // captured beforehand.
+        const int native_handle = runtime_object.handle;
         const PrgValue runtime_object_reference =
-            make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
+            make_object_reference_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
         std::optional<PrgValue> previous_active_control;
         bool focus_changed = true;
         bool suppress_focus_transition = false;
@@ -54,12 +63,14 @@
                 {
                     previous_active_control = *current_active_control;
                 }
+                int previous_handle = 0;
                 if (previous_active_control.has_value())
                 {
                     if (auto previous_control = resolve_ole_object(*previous_active_control);
                         previous_control.has_value())
                     {
-                        focus_changed = (*previous_control)->handle != runtime_object.handle;
+                        previous_handle = (*previous_control)->handle;
+                        focus_changed = previous_handle != native_handle;
                         if (focus_changed)
                         {
                             last_popped_frame_requested_nodefault = false;
@@ -82,21 +93,27 @@
                                 suppress_focus_transition = true;
                             }
                         }
-                        if (focus_changed && !suppress_focus_transition)
-                        {
-                            last_popped_frame_requested_nodefault = false;
-                            bool lost_focus_requested_nodefault = false;
-                            (void)invoke_native_object_method_if_present(
-                                **previous_control,
-                                "lostfocus",
-                                frame,
-                                {},
-                                {},
-                                &lost_focus_requested_nodefault);
-                            (void)consume_last_popped_frame_requested_nodefault();
-                            suppress_focus_transition = lost_focus_requested_nodefault;
-                        }
                     }
+                }
+                // Valid() above may have released `previous_control` (e.g.
+                // it removed itself from its parent); re-resolve by handle
+                // before dispatching LostFocus so we never dereference a
+                // retired map node.
+                const auto previous_control_after_valid = ole_objects.find(previous_handle);
+                if (focus_changed && !suppress_focus_transition &&
+                    previous_control_after_valid != ole_objects.end())
+                {
+                    last_popped_frame_requested_nodefault = false;
+                    bool lost_focus_requested_nodefault = false;
+                    (void)invoke_native_object_method_if_present(
+                        previous_control_after_valid->second,
+                        "lostfocus",
+                        frame,
+                        {},
+                        {},
+                        &lost_focus_requested_nodefault);
+                    (void)consume_last_popped_frame_requested_nodefault();
+                    suppress_focus_transition = lost_focus_requested_nodefault;
                 }
                 if (!suppress_focus_transition)
                 {
@@ -134,10 +151,20 @@
                 (void)consume_last_popped_frame_requested_nodefault();
             }
         }
-        runtime_object.last_action = effective_member_path + "()";
-        ++runtime_object.action_count;
+        // GotFocus() above may have removed/released this same control (e.g.
+        // THIS.Parent.RemoveObject(THIS.Name)); re-resolve before touching
+        // it again instead of dereferencing the possibly-erased map node
+        // that `runtime_object` is bound to.
+        const auto native_object_after_callbacks = ole_objects.find(native_handle);
+        if (native_object_after_callbacks == ole_objects.end())
+        {
+            return true;
+        }
+        RuntimeOleObjectState &settled_object = native_object_after_callbacks->second;
+        settled_object.last_action = effective_member_path + "()";
+        ++settled_object.action_count;
         events.push_back({.category = "prg.object.setfocus",
-                          .detail = runtime_object.prog_id + "." + effective_member_path,
+                          .detail = settled_object.prog_id + "." + effective_member_path,
                           .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
         return true;
     }
@@ -539,7 +566,7 @@
     {
         const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
         {
-            return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
+            return make_object_reference_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
         };
         RuntimeOleObjectState *target_object = &runtime_object;
         const std::string leaf = normalize_identifier(
@@ -550,6 +577,12 @@
 
         if (leaf == "addobject" && !target_object->source.empty() && arguments.size() >= 2U)
         {
+            // RQ-CF-PRG-036: a retiring owner cannot acquire a new child after
+            // its release traversal has snapshotted the subtree.
+            if (active_native_release_handles.contains(target_object->handle))
+            {
+                return make_boolean_value(false);
+            }
             const std::string child_name_text = trim_copy(value_as_string(arguments[0]));
             const std::string child_name = normalize_identifier(child_name_text);
             const std::string child_class = trim_copy(value_as_string(arguments[1]));
@@ -637,26 +670,50 @@
         }
         if (leaf == "removeobject" && !target_object->source.empty() && !arguments.empty())
         {
-            const std::string child_name = normalize_identifier(trim_copy(value_as_string(arguments[0])));
+            // RQ-CF-PRG-036: RemoveObject is destructive in VFP9. Missing or
+            // inaccessible members raise 1925 without mutating the owner.
+            const std::string requested_child_name = trim_copy(value_as_string(arguments[0]));
+            const std::string child_name = normalize_identifier(requested_child_name);
+            const auto raise_unknown_member = [&]() -> PrgValue
+            {
+                throw PrgCompatibilityError(
+                    runtime_text(
+                        "Runtime.Prg.Native.Error.UnknownMember",
+                        {{"memberIdentifier", requested_child_name}}),
+                    1925);
+            };
             if (child_name.empty())
             {
-                return make_boolean_value(false);
+                return raise_unknown_member();
             }
 
             const auto child_property = target_object->properties.find(child_name);
             if (child_property == target_object->properties.end())
             {
-                return make_boolean_value(false);
+                return raise_unknown_member();
             }
 
             const auto child_object = resolve_ole_object(child_property->second);
             if (!child_object.has_value())
             {
-                return make_boolean_value(false);
+                return raise_unknown_member();
             }
             if ((*child_object)->hidden_runtime_surface)
             {
-                return make_boolean_value(false);
+                return raise_unknown_member();
+            }
+            if (const auto visibility = target_object->member_visibility.find(child_name);
+                visibility != target_object->member_visibility.end())
+            {
+                const auto owner = target_object->member_visibility_owner.find(child_name);
+                if (!native_member_access_allowed(
+                        *target_object,
+                        visibility->second,
+                        owner == target_object->member_visibility_owner.end() ? std::string{} : owner->second,
+                        frame))
+                {
+                    return raise_unknown_member();
+                }
             }
 
             const auto child_parent = native_object_parent_reference(**child_object);
@@ -666,18 +723,15 @@
                 !parse_object_handle_reference(*child_parent, parent_handle, parent_prog_id) ||
                 parent_handle != target_object->handle)
             {
-                return make_boolean_value(false);
+                return raise_unknown_member();
             }
 
-            (*child_object)->properties.erase("parent");
-            target_object->properties.erase(child_name);
-            (void)sync_native_owned_children_collection(*target_object);
             target_object->last_action = effective_member_path + "(" + child_name + ")";
             ++target_object->action_count;
             events.push_back({.category = "prg.object.removeobject",
                               .detail = target_object->prog_id + "." + child_name,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-            return make_boolean_value(true);
+            return release_native_object(**child_object, effective_member_path + "(" + child_name + ")");
         }
         if (leaf == "setall" && !target_object->source.empty())
         {
@@ -1398,7 +1452,7 @@
 
         if (leaf == "add" || leaf == "create" || leaf == "open" || leaf == "item")
         {
-            return make_string_value("object:" + target_object->prog_id + "." + effective_member_path + "#" + std::to_string(target_object->handle));
+            return make_object_reference_value("object:" + target_object->prog_id + "." + effective_member_path + "#" + std::to_string(target_object->handle));
         }
         if (arguments.empty())
         {

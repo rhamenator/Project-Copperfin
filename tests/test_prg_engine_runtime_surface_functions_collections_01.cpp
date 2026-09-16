@@ -465,9 +465,9 @@ namespace copperfin::runtime_surface_tests
         check("nobjectscountafterremove", "1");
         check("cremainingtag", "badge");
 
-        expect(state.ole_objects.size() == 3U,
-               "native Objects child-collection surface should keep owner and detached child state without exporting the hidden synthetic collection");
-        if (state.ole_objects.size() == 3U)
+        expect(state.ole_objects.size() == 2U,
+               "native Objects child-collection surface should retire the removed child without exporting the hidden synthetic collection");
+        if (state.ole_objects.size() == 2U)
         {
             expect(state.ole_objects[0].prog_id == "DemoForm",
                    "native Objects child-collection surface should keep the owner object visible in exported runtime state");
@@ -551,9 +551,9 @@ namespace copperfin::runtime_surface_tests
         check("ncontrolscountafterremove", "1");
         check("cremainingtag", "badge");
 
-        expect(state.ole_objects.size() == 3U,
-               "native Controls child-collection surface should keep owner and detached child state without exporting the hidden synthetic collections");
-        if (state.ole_objects.size() == 3U)
+        expect(state.ole_objects.size() == 2U,
+               "native Controls child-collection surface should retire the removed child without exporting the hidden synthetic collections");
+        if (state.ole_objects.size() == 2U)
         {
             expect(state.ole_objects[0].prog_id == "DemoForm",
                    "native Controls child-collection surface should keep the owner object visible in exported runtime state");

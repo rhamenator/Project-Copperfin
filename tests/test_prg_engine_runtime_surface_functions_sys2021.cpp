@@ -17,7 +17,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path table_path = temp_root / "people.dbf";
         const fs::path index_path = temp_root / "people.dbf.idx";
         const fs::path filtered_index_path = temp_root / "people.idx";
-        write_simple_dbf(table_path, {{"ALPHA", 20}, {"BRAVO", 30}});
+        write_simple_dbf(table_path, {"ALPHA", "BRAVO"});
         write_synthetic_idx(index_path, "NAME");
         write_synthetic_idx_with_for(filtered_index_path, "UPPER(NAME)", "DELETED() = .F.");
 

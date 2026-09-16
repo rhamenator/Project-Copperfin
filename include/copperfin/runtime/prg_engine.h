@@ -40,6 +40,9 @@ struct PrgValue {
     bool boolean_value = false;
     double number_value = 0.0;
     std::string string_value;
+    // Object references keep their character encoding while retaining
+    // provenance distinct from identical application text.
+    bool is_object_reference = false;
     PrgStringFlavor string_flavor = PrgStringFlavor::none;
     std::int64_t int64_value = 0;
     std::uint64_t uint64_value = 0;
