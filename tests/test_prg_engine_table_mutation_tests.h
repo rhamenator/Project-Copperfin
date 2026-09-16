@@ -40,6 +40,7 @@ namespace copperfin::table_mutation_tests
     void test_replacing_a_used_work_area_releases_prior_table_locks();
     void test_reprocess_contention_retries_and_mutation_lock_timeouts();
     void test_clear_all_releases_table_locks_for_other_data_sessions();
+    void test_clear_all_does_not_leave_stale_relations_for_reused_work_areas();
     void test_reprocess_table_lock_timeouts_are_localized();
     void test_lock_retry_blocking_is_rejected_inside_critical_section();
     void test_rlock_retry_blocking_is_rejected_inside_critical_section();

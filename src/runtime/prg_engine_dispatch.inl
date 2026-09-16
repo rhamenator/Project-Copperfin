@@ -11549,6 +11549,14 @@
                         session.open_cursor_aliases.clear();
                         session.table_locks.clear();
                         session.record_locks.clear();
+                        // #6464 review (Copilot, P2): close_cursor() also
+                        // drops relations anchored to the closed work area;
+                        // every work area in this session is closing, so
+                        // every relation in it is now stale. Leaving them
+                        // behind let a later USE that reuses a numeric work
+                        // area synchronize its new cursor against a relation
+                        // that belonged to a long-gone one.
+                        session.relations.clear();
                     }
                 }
                 events.push_back({.category = "runtime.clear_memory",

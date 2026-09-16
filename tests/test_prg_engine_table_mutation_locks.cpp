@@ -714,18 +714,29 @@ void test_clear_all_releases_table_locks_for_other_data_sessions() {
 
     const fs::path people_path = temp_root / "people.dbf";
     write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    const fs::path records_path = temp_root / "records.dbf";
+    write_people_dbf(records_path, {{"CHARLIE", 30}, {"DELTA", 40}});
     const fs::path main_path = temp_root / "clear_all_lock_release.prg";
     write_text(
         main_path,
         "SET MULTILOCKS ON\n"
         "USE '" + people_path.string() + "' ALIAS PeopleOne SHARED IN 0\n"
         "lHeldLock = FLOCK()\n"
+        // #6464 review (Copilot, P2): a table lock alone doesn't exercise
+        // release_shared_lock_ownership_for_cursor()'s record-lock branch;
+        // hold a genuine record lock on a separate table too.
+        "USE '" + records_path.string() + "' ALIAS RecordOne SHARED IN 0\n"
+        "GO 1\n"
+        "lRecordHeldLock = RLOCK()\n"
         "CLEAR ALL\n"
         "SET DATASESSION TO 2\n"
         "SET MULTILOCKS ON\n"
         "SET REPROCESS TO 0\n"
         "USE '" + people_path.string() + "' ALIAS PeopleTwo SHARED IN 0\n"
         "lRelock = FLOCK()\n"
+        "USE '" + records_path.string() + "' ALIAS RecordTwo SHARED IN 0\n"
+        "GO 1\n"
+        "lRecordRelock = RLOCK()\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -737,12 +748,91 @@ void test_clear_all_releases_table_locks_for_other_data_sessions() {
         return event.category == "runtime.lock" && event.detail == "PeopleOne FLOCK";
     }), "#6455: the initial FLOCK() on data session 1 should succeed before CLEAR ALL");
 
+    // lRecordHeldLock (and lHeldLock above) are themselves wiped by CLEAR
+    // ALL along with every other ordinary global, so their success is
+    // verified through the retained runtime.lock event log instead of
+    // state.globals.
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.lock" && event.detail == "RecordOne RLOCK 1";
+    }), "#6455: the initial RLOCK() on data session 1 should succeed before CLEAR ALL");
+
     const auto relock = state.globals.find("lrelock");
     expect(relock != state.globals.end(), "#6455: the post-CLEAR-ALL relock attempt should be captured");
     if (relock != state.globals.end()) {
         expect(copperfin::runtime::format_value(relock->second) == "true",
                "#6455: CLEAR ALL must release the table lock so a different data session can "
                "immediately reacquire it, even with SET REPROCESS TO 0 (no retries)");
+    }
+
+    const auto record_relock = state.globals.find("lrecordrelock");
+    expect(record_relock != state.globals.end(), "#6455: the post-CLEAR-ALL record relock attempt should be captured");
+    if (record_relock != state.globals.end()) {
+        expect(copperfin::runtime::format_value(record_relock->second) == "true",
+               "#6455: CLEAR ALL must release the record lock so a different data session can "
+               "immediately reacquire it, even with SET REPROCESS TO 0 (no retries)");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_clear_all_does_not_leave_stale_relations_for_reused_work_areas() {
+    // #6464 review (Copilot, P2): close_cursor() also drops relations
+    // anchored to the work area it closes, but the initial CLEAR ALL fix
+    // only released locks and left session.relations untouched. Since
+    // every work area in the session is closing, every relation in it was
+    // stale afterward; if a later USE reused one of those work-area
+    // numbers, the new cursor there could be incorrectly synchronized
+    // against the old relation.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_clear_all_stale_relation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path parent_path = temp_root / "parent.dbf";
+    const fs::path child_path = temp_root / "child.dbf";
+    const fs::path unrelated_path = temp_root / "unrelated.dbf";
+    write_people_dbf(parent_path, {{"PARENT10", 10}, {"PARENT20", 20}});
+    write_people_dbf(child_path, {{"CHILD10", 10}, {"CHILD20", 20}});
+    write_people_dbf(unrelated_path, {{"FIRST", 1}, {"SECOND", 2}});
+
+    const fs::path main_path = temp_root / "clear_all_stale_relation.prg";
+    write_text(
+        main_path,
+        "USE '" + parent_path.string() + "' ALIAS Parent IN 1\n"
+        "USE '" + child_path.string() + "' ALIAS Child IN 2\n"
+        "SET ORDER TO AGE IN Parent\n"
+        "SET ORDER TO AGE IN Child\n"
+        "SELECT Parent\n"
+        "SET RELATION TO AGE INTO Child\n"
+        "CLEAR ALL\n"
+        // Explicit work-area numbers force the same numbers CLEAR ALL just
+        // closed to be reused, exercising the exact scenario the stale
+        // relation would corrupt.
+        "USE '" + parent_path.string() + "' ALIAS ParentAgain IN 1\n"
+        "USE '" + unrelated_path.string() + "' ALIAS UnrelatedAgain IN 2\n"
+        "GO 1 IN UnrelatedAgain\n"
+        "nUnrelatedRecnoBeforeSkip = RECNO('UnrelatedAgain')\n"
+        "SELECT ParentAgain\n"
+        "GO TOP\n"
+        "SKIP 1\n"
+        "nUnrelatedRecnoAfterSkip = RECNO('UnrelatedAgain')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6464: CLEAR ALL stale-relation script should complete: " + state.message);
+
+    const auto before_skip = state.globals.find("nunrelatedrecnobeforeskip");
+    const auto after_skip = state.globals.find("nunrelatedrecnoafterskip");
+    expect(before_skip != state.globals.end(), "#6464: the pre-navigation record number should be captured");
+    expect(after_skip != state.globals.end(), "#6464: the post-navigation record number should be captured");
+    if (before_skip != state.globals.end() && after_skip != state.globals.end()) {
+        expect(copperfin::runtime::format_value(before_skip->second) ==
+                   copperfin::runtime::format_value(after_skip->second),
+               "#6464: CLEAR ALL must clear stale relations so navigating a reused work area does "
+               "not synchronize an unrelated cursor that now occupies the old child's work-area number");
     }
 
     fs::remove_all(temp_root, ignored);
