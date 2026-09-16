@@ -10,6 +10,15 @@
   error instead. Added `RQ-CF-PRG-040`. Broader packaging/dependency-graph
   and compatibility-documentation updates called for by the issue's
   acceptance criteria are out of scope for this fix.
+  Review fixes (PR #6465, Codex + Copilot): the `IN` program target now
+  also searches `SET PATH` (via the same `database_search_directories()`
+  helper already used for database/table path resolution) when it is not
+  found in the current default directory, and a quoted literal or `&macro`
+  `IN` operand is now unquoted/evaluated instead of being treated as raw
+  filesystem text (so `DO Proc IN 'file.prg'` and `DO Proc IN &cProgram`
+  both resolve correctly). An `IN` program that exists but does not define
+  the requested procedure now has dedicated test coverage alongside the
+  missing-program case.
 
 - 2026-09-16: Fixed #6455: `CLEAR ALL` now releases every table and record
   lock it closes, instead of orphaning the shared cross-runtime lock-owner
