@@ -1026,4 +1026,157 @@ void test_return_to_master_from_expression_invoked_routine_raises_catchable_erro
     fs::remove_all(temp_root, ignored);
 }
 
+void test_return_to_master_defaults_return_value_to_logical_true() {
+    // #6442 review fix: RETURN TO MASTER/ProcedureName carry no expression,
+    // so per #6442 they default their runtime return value to logical true
+    // for consistency with an ordinary bare RETURN -- not exercised by the
+    // other #6441 tests above, which only check cLog. The master program
+    // deliberately has no RETURN statement of its own after `DO first`, so
+    // this isolates RETURN TO's own explicit default from the separate
+    // (and here inapplicable, since master is the root frame) implicit
+    // end-of-routine default.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_return_to_return_value";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "return_to_return_value.prg";
+    write_text(
+        main_path,
+        "DO first\n"
+        "PROCEDURE first\n"
+        "DO second\n"
+        "RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE second\n"
+        "RETURN TO MASTER\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6442: RETURN TO MASTER return-value script should complete: " + state.message);
+    expect(state.last_return_value.has_value(),
+           "#6442: RETURN TO MASTER should leave a runtime return value");
+    if (state.last_return_value.has_value()) {
+        expect(copperfin::runtime::format_value(*state.last_return_value) == "true",
+               "#6442: RETURN TO MASTER should default its return value to logical true, got '" +
+                   copperfin::runtime::format_value(*state.last_return_value) + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_faulting_final_statement_does_not_default_return_value_to_logical_true() {
+    // #6442 review fix: execute_current_statement() advances a frame's pc
+    // past a statement BEFORE dispatching it, so when a routine's own last
+    // statement fails, that frame's pc already reads as "ran off the end"
+    // by the time the caller's fault-propagation loop force-unwinds it --
+    // indistinguishable from natural completion by pc alone. A forced
+    // fault unwind must not apply the implicit-return-defaults-to-true
+    // logic and must not corrupt an earlier, unrelated call's still-sticky
+    // last_return_value. NumericValue() sets last_return_value to 42
+    // before Faulty() (whose last statement calls an undefined procedure)
+    // is invoked and caught; last_return_value must still read 42
+    // afterward, not true.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_faulting_last_statement";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "faulting_last_statement.prg";
+    write_text(
+        main_path,
+        "PUBLIC nCaughtErrorNo, nResult\n"
+        "nCaughtErrorNo = 0\n"
+        "nResult = NumericValue()\n"
+        "TRY\n"
+        "  DO Faulty\n"
+        "CATCH TO oErr\n"
+        "  nCaughtErrorNo = oErr.ErrorNo\n"
+        "ENDTRY\n"
+        "FUNCTION NumericValue\n"
+        "RETURN 42\n"
+        "ENDFUNC\n"
+        "PROCEDURE Faulty\n"
+        "localValue = 1\n"
+        "DO NoSuchProcedureXyz\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6442: faulting-last-statement script should complete: " + state.message);
+
+    const auto caught = state.globals.find("ncaughterrorno");
+    expect(caught != state.globals.end(), "#6442: the enclosing TRY/CATCH should observe the fault");
+    if (caught != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caught->second) != "0",
+               "#6442: the caught error number should be nonzero, got '" +
+                   copperfin::runtime::format_value(caught->second) + "'");
+    }
+
+    expect(state.last_return_value.has_value(),
+           "#6442: last_return_value should still be set after the caught fault");
+    if (state.last_return_value.has_value()) {
+        expect(copperfin::runtime::format_value(*state.last_return_value) == "42",
+               "#6442: a forced fault unwind must not overwrite an earlier call's return value with "
+               "logical true, got '" +
+                   copperfin::runtime::format_value(*state.last_return_value) + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_nested_do_program_call_implicit_return_defaults_to_logical_true() {
+    // #6442 review fix: push_main_frame() (a plain top-level ".prg" frame,
+    // as opposed to a FUNCTION/PROCEDURE/METHOD's push_routine_frame()) is
+    // reused for both the session's true root frame and an ordinary
+    // nested `DO child.prg` call. Only the true root should be excluded
+    // from the implicit-return-defaults-to-true behavior; a nested
+    // program-file call reaching its own end without a RETURN statement
+    // must get the same VFP9-correct default as a routine call. child.prg
+    // sets a marker before falling off its own end with no RETURN, so
+    // last_return_value must read true once the whole session completes
+    // (child.prg's own frame is not the root, and nothing after it
+    // overwrites last_return_value).
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_nested_do_program_return";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "main.prg";
+    const fs::path child_path = temp_root / "child.prg";
+    write_text(main_path, "DO " + child_path.string() + "\n");
+    write_text(child_path, "PUBLIC lChildRan\nlChildRan = .T.\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6442: nested DO child.prg script should complete: " + state.message);
+
+    const auto ran = state.globals.find("lchildran");
+    expect(ran != state.globals.end() && copperfin::runtime::format_value(ran->second) == "true",
+           "#6442: child.prg should have run");
+
+    expect(state.last_return_value.has_value(),
+           "#6442: a nested DO child.prg reaching its own end should leave a runtime return value");
+    if (state.last_return_value.has_value()) {
+        expect(copperfin::runtime::format_value(*state.last_return_value) == "true",
+               "#6442: a nested DO child.prg falling off its own end without RETURN should default to "
+               "logical true just like a routine call, got '" +
+                   copperfin::runtime::format_value(*state.last_return_value) + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_control_flow

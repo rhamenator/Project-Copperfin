@@ -677,12 +677,13 @@ namespace
         // empty value. last_return_value is session-wide and is never
         // reset between calls, so this also guards against the implicit
         // case merely inheriting a stale value left over from an earlier,
-        // unrelated call: result1 (an explicit bare RETURN, itself now
-        // fixed to .T.) is deliberately called before result2 (an implicit
-        // fall-off-the-end return with no RETURN statement at all) so a
-        // regression back to "sticky prior value" would still show up
-        // even if some other fix happened to make bare RETURN look right
-        // in isolation.
+        // unrelated call. NumericResult() (an ordinary explicit RETURN 42)
+        // is deliberately called immediately before ImplicitResult() so
+        // that a regression back to "sticky prior value" produces a
+        // detectably wrong 42, not a coincidentally-correct true left over
+        // from some earlier bare-RETURN call -- a plain-true predecessor
+        // would let a broken implicit-return path pass this assertion by
+        // accident.
         namespace fs = std::filesystem;
         const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_bare_implicit_return";
         std::error_code ignored;
@@ -692,12 +693,16 @@ namespace
         const fs::path main_path = temp_root / "bare_implicit_return.prg";
         write_text(
             main_path,
-            "PUBLIC lResult1, lResult2\n"
+            "PUBLIC lResult1, nResult2, lResult3\n"
             "lResult1 = BareResult()\n"
-            "lResult2 = ImplicitResult()\n"
+            "nResult2 = NumericResult()\n"
+            "lResult3 = ImplicitResult()\n"
             "RETURN\n"
             "FUNCTION BareResult\n"
             "RETURN\n"
+            "ENDFUNC\n"
+            "FUNCTION NumericResult\n"
+            "RETURN 42\n"
             "ENDFUNC\n"
             "FUNCTION ImplicitResult\n"
             "localValue = 1\n"
@@ -718,13 +723,23 @@ namespace
                        copperfin::runtime::format_value(result1->second) + "'");
         }
 
-        const auto result2 = state.globals.find("lresult2");
-        expect(result2 != state.globals.end(), "#6442: lResult2 should be captured");
+        const auto result2 = state.globals.find("nresult2");
+        expect(result2 != state.globals.end(), "#6442: nResult2 should be captured");
         if (result2 != state.globals.end())
         {
-            expect(copperfin::runtime::format_value(result2->second) == "true",
-                   "#6442: an implicit RETURN at the end of a routine should default to logical true, got '" +
+            expect(copperfin::runtime::format_value(result2->second) == "42",
+                   "#6442: an explicit numeric RETURN should be preserved as a sanity check, got '" +
                        copperfin::runtime::format_value(result2->second) + "'");
+        }
+
+        const auto result3 = state.globals.find("lresult3");
+        expect(result3 != state.globals.end(), "#6442: lResult3 should be captured");
+        if (result3 != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(result3->second) == "true",
+                   "#6442: an implicit RETURN at the end of a routine should default to logical true "
+                   "rather than inherit the immediately preceding call's 42, got '" +
+                       copperfin::runtime::format_value(result3->second) + "'");
         }
 
         fs::remove_all(temp_root, ignored);

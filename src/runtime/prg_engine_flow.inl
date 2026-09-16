@@ -395,7 +395,18 @@
             }
         }
 
-        void pop_frame()
+        // #6442 review fix: `natural_completion` distinguishes a frame that
+        // is being popped because it genuinely ran out of statements to
+        // execute from one being forcibly unwound (a fault propagating to
+        // an enclosing TRY/CATCH, CANCEL, RETURN TO). Both can leave
+        // `pc >= statements.size()`: execute_current_statement() advances
+        // `pc` past a statement BEFORE dispatching it, so a routine's own
+        // last statement failing already looks "exhausted" by the time the
+        // caller's fault-propagation loop pops this frame, even though the
+        // routine never completed. Callers that perform a forced unwind
+        // must pass `false` explicitly; ordinary "ran out of statements"
+        // call sites keep the default.
+        void pop_frame(bool natural_completion = true)
         {
             if (!stack.empty())
             {
@@ -412,25 +423,27 @@
                 // without this a routine that falls off the end would
                 // leave its caller observing whatever value some earlier,
                 // unrelated RETURN happened to leave behind rather than a
-                // fresh VFP9-correct default. This only affects frames
-                // popped by the "ran out of statements, no pending return"
-                // loop condition; frames forcibly unwound mid-execution
-                // (CANCEL, RETURN TO, TRY/CATCH fault propagation) are
-                // paused with pc still short of the routine's statement
-                // count and are unaffected. Scoped to procedure_context
-                // frames (FUNCTION/PROCEDURE/METHOD calls) rather than the
-                // top-level master program frame: applying it there too
-                // regressed the runtime host's bridge-invocation mechanism,
+                // fresh VFP9-correct default. Scoped to every frame except
+                // the outermost/root one (stack.size() > 1 at this point,
+                // i.e. a caller is still beneath it): push_main_frame() is
+                // reused for both the session's true top-level entry and
+                // an ordinary nested `DO child.prg` call, and a nested
+                // program call reaching its own end should get the same
+                // VFP9-correct default as a FUNCTION/PROCEDURE/METHOD call.
+                // Only the true root frame's own implicit-completion value
+                // is left at its prior behavior: applying this to the
+                // runtime host's synthetic bridge bootstrap script (which
+                // is itself the root frame) regressed the bridge mechanism,
                 // which relies on last_return_value still reflecting the
-                // last explicitly-returned nested call after its synthetic
-                // bootstrap script's own top-level statements (which never
-                // contain their own RETURN) finish running. A top-level
-                // program's own implicit-completion value is not
-                // independently VFP9-differential verified and is a
-                // disclosed, narrower scope than the issue's literal
-                // acceptance criteria.
+                // last explicitly-returned nested call after the
+                // bootstrap's own top-level statements (which never
+                // contain their own RETURN) finish running. That
+                // interaction is not independently VFP9-differential
+                // verified and is a disclosed, narrower scope than the
+                // issue's literal acceptance criteria.
+                const bool is_root_frame = stack.size() <= 1U;
                 const std::optional<PrgValue> saved_return_value =
-                    (!returned_explicitly && naturally_exhausted && stack.back().procedure_context)
+                    (natural_completion && !returned_explicitly && naturally_exhausted && !is_root_frame)
                         ? std::make_optional(make_boolean_value(true))
                         : last_return_value;
                 sync_byref_arguments(stack.back());

@@ -1,3 +1,25 @@
+- 2026-09-16: Review-round fix for #6442 (PR #6467): two further real
+  defects in the bare/implicit-RETURN-defaults-to-true fix. (1) Scoping
+  the implicit default by `procedure_context` incorrectly excluded every
+  ordinary nested `DO child.prg` call too, since `push_main_frame()` is
+  shared between the session's true root frame and a nested program-file
+  call; corrected to exclude only the true root frame
+  (`stack.size() <= 1` at pop time), so a nested `DO child.prg` reaching
+  its own end now correctly gets the same `.T.` default as a routine
+  call. (2) A fault propagating from a routine's own last statement to an
+  enclosing `TRY...CATCH` was misidentified as natural completion and
+  corrupted an unrelated earlier call's `last_return_value` to logical
+  true, because `execute_current_statement()` advances a frame's program
+  counter past a statement before dispatching it, so a routine's own last
+  statement failing already looks "exhausted" by `pc` alone; fixed by
+  adding an explicit `natural_completion` parameter to `pop_frame()`,
+  defaulted true, passed `false` at every forced-unwind call site (both
+  TRY/CATCH fault-propagation loops and the RETURN TO multi-frame
+  unwind). Also added a test asserting `RETURN TO MASTER`/`ProcedureName`
+  default their own return value to logical true, previously unverified.
+  Updated `RQ-CF-PRG-042`. Both defects reproduced first against reverted
+  implementations and reverified with the full 396-test suite passing.
+
 - 2026-09-16: Fixed #6442: a bare `RETURN` (no expression) and an implicit
   `RETURN` performed when a routine reaches its end without ever executing
   `RETURN` now both yield logical `.T.`, not an empty value, matching

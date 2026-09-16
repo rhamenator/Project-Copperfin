@@ -3417,7 +3417,10 @@
                     // criteria describes).
                     while (stack.size() > target_depth)
                     {
-                        pop_frame();
+                        // #6442 review fix: forced unwind, not natural
+                        // completion (last_return_value was already set to
+                        // logical true above, matching a bare return).
+                        pop_frame(false);
                     }
                     return {};
                 }
