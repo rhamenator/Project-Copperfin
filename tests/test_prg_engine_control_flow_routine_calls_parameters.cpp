@@ -806,5 +806,224 @@ void test_set_udfparms_state_is_isolated_between_data_and_runtime_sessions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_return_to_master_unwinds_every_intermediate_procedure() {
+    // #6441: installed VFP9 SP2 evidence shows RETURN TO MASTER unwinds
+    // through every intermediate procedure/program frame back to the
+    // outermost program, skipping the rest of each intermediate routine
+    // (retained: /home/rich/temp/vfp9-probes/return-to-master-6441). The
+    // parser previously evaluated "TO MASTER" as a plain expression and
+    // only unwound the innermost procedure.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_return_to_master";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "return_to_master.prg";
+    write_text(
+        main_path,
+        "PUBLIC cLog\n"
+        "cLog = ''\n"
+        "cLog = cLog + 'main_before;'\n"
+        "DO first\n"
+        "cLog = cLog + 'main_after;'\n"
+        "RETURN\n"
+        "PROCEDURE first\n"
+        "cLog = cLog + 'first_before;'\n"
+        "DO second\n"
+        "cLog = cLog + 'first_after;'\n"
+        "RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE second\n"
+        "cLog = cLog + 'second_before;'\n"
+        "RETURN TO MASTER\n"
+        "cLog = cLog + 'second_after;'\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6441: RETURN TO MASTER script should complete: " + state.message);
+
+    const auto log = state.globals.find("clog");
+    expect(log != state.globals.end(), "#6441: cLog should be captured");
+    if (log != state.globals.end()) {
+        expect(copperfin::runtime::format_value(log->second) ==
+                   "main_before;first_before;second_before;main_after;",
+               "#6441: RETURN TO MASTER should unwind both intermediate procedures and resume "
+               "the master program after its original DO statement, expected "
+               "'main_before;first_before;second_before;main_after;' got '" +
+                   copperfin::runtime::format_value(log->second) + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_return_to_procedure_name_resumes_named_ancestor() {
+    // #6441: RETURN TO ProcedureName resumes the nearest still-active frame
+    // executing that routine, right after its own call into the (now
+    // unwound) deeper chain -- distinct from RETURN TO MASTER, which
+    // always targets the outermost program.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_return_to_procedure";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "return_to_procedure.prg";
+    write_text(
+        main_path,
+        "PUBLIC cLog\n"
+        "cLog = ''\n"
+        "cLog = cLog + 'main_before;'\n"
+        "DO first\n"
+        "cLog = cLog + 'main_after;'\n"
+        "RETURN\n"
+        "PROCEDURE first\n"
+        "cLog = cLog + 'first_before;'\n"
+        "DO second\n"
+        "cLog = cLog + 'first_after;'\n"
+        "RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE second\n"
+        "cLog = cLog + 'second_before;'\n"
+        "DO third\n"
+        "cLog = cLog + 'second_after;'\n"
+        "RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE third\n"
+        "cLog = cLog + 'third_before;'\n"
+        "RETURN TO first\n"
+        "cLog = cLog + 'third_after;'\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6441: RETURN TO first script should complete: " + state.message);
+
+    const auto log = state.globals.find("clog");
+    expect(log != state.globals.end(), "#6441: cLog should be captured");
+    if (log != state.globals.end()) {
+        expect(copperfin::runtime::format_value(log->second) ==
+                   "main_before;first_before;second_before;third_before;first_after;main_after;",
+               "#6441: RETURN TO first should unwind through second/third, skip second_after and "
+               "third_after, and resume first right after its own DO second, expected "
+               "'main_before;first_before;second_before;third_before;first_after;main_after;' got '" +
+                   copperfin::runtime::format_value(log->second) + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_return_to_unknown_procedure_raises_catchable_error() {
+    // #6441: an unresolvable RETURN TO target must fail catchably, not
+    // crash the host or silently continue as a normal return.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_return_to_unknown";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "return_to_unknown.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  DO first\n"
+        "CATCH TO oErr\n"
+        "  nCaughtErrorNo = oErr.ErrorNo\n"
+        "ENDTRY\n"
+        "RETURN\n"
+        "PROCEDURE first\n"
+        "RETURN TO NoSuchProcedure\n"
+        "lReached = .T.\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6441: RETURN TO unknown-target script should complete: " + state.message);
+
+    expect(state.globals.find("lreached") == state.globals.end(),
+           "#6441: RETURN TO an unresolvable target should raise a catchable error rather than continue");
+    expect(state.globals.find("ncaughterrorno") != state.globals.end(),
+           "#6441: RETURN TO an unresolvable target should be caught by an enclosing TRY/CATCH");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_return_to_master_from_expression_invoked_routine_raises_catchable_error() {
+    // #6441 review fix: RETURN TO MASTER issued from inside a routine that
+    // was itself invoked synchronously from an expression (a UDF call, not
+    // a DO statement) must not pop the interpreter stack past the C++
+    // invocation boundary run_expression_invoked_routine_until_return() is
+    // waiting on. Before the fix this either corrupted that boundary check
+    // or surfaced as an uncaught internal "aborted execution" failure;
+    // it must now raise an ordinary catchable PRG error instead.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_return_to_master_expr_boundary";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "return_to_master_expr_boundary.prg";
+    write_text(
+        main_path,
+        "PUBLIC cLog, nCaughtErrorNo\n"
+        "cLog = ''\n"
+        "nCaughtErrorNo = 0\n"
+        "cLog = cLog + 'main_before;'\n"
+        "TRY\n"
+        "  nResult = Probe()\n"
+        "  cLog = cLog + 'try_after_probe;'\n"
+        "CATCH TO oErr\n"
+        "  nCaughtErrorNo = oErr.ErrorNo\n"
+        "ENDTRY\n"
+        "cLog = cLog + 'main_after;'\n"
+        "RETURN\n"
+        "FUNCTION Probe\n"
+        "cLog = cLog + 'probe_before;'\n"
+        "DO deeper\n"
+        "cLog = cLog + 'probe_after;'\n"
+        "RETURN 1\n"
+        "ENDFUNC\n"
+        "PROCEDURE deeper\n"
+        "cLog = cLog + 'deeper_before;'\n"
+        "RETURN TO MASTER\n"
+        "cLog = cLog + 'deeper_after;'\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6441: RETURN TO MASTER crossing an expression-invocation boundary should still let the "
+           "script complete cleanly (raised as a catchable error, not a crash): " + state.message);
+
+    const auto log = state.globals.find("clog");
+    expect(log != state.globals.end(), "#6441: cLog should be captured");
+    if (log != state.globals.end()) {
+        expect(copperfin::runtime::format_value(log->second) ==
+                   "main_before;probe_before;deeper_before;main_after;",
+               "#6441: RETURN TO MASTER crossing an expression-invocation boundary should raise before "
+               "resuming Probe or the TRY body, expected "
+               "'main_before;probe_before;deeper_before;main_after;' got '" +
+                   copperfin::runtime::format_value(log->second) + "'");
+    }
+
+    const auto caught = state.globals.find("ncaughterrorno");
+    expect(caught != state.globals.end(), "#6441: the enclosing TRY/CATCH should observe the error");
+    if (caught != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caught->second) != "0",
+               "#6441: the caught error number should be nonzero, got '" +
+                   copperfin::runtime::format_value(caught->second) + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
 
 }  // namespace cf_test_prg_engine_control_flow

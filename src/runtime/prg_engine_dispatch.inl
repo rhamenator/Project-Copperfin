@@ -3296,6 +3296,124 @@
                 return {};
             }
             case StatementKind::return_statement:
+                if (statement.identifier == "to_master" || statement.identifier == "to_procedure")
+                {
+                    // #6441: RETURN TO MASTER unwinds through every
+                    // intermediate procedure/program frame back to the
+                    // outermost (master) program; RETURN TO ProcedureName
+                    // unwinds back to the nearest (innermost) still-active
+                    // frame executing that routine, resuming right where
+                    // its own execution was suspended -- exactly like an
+                    // ordinary nested RETURN, just applied transitively.
+                    // Searches innermost-to-outermost so recursive
+                    // activations resolve to the closest match; VFP's own
+                    // tie-breaking for ambiguous recursive targets is not
+                    // independently verified.
+                    std::size_t target_depth = 1U;
+                    if (statement.identifier == "to_procedure")
+                    {
+                        const std::string target_name = normalize_identifier(trim_copy(statement.secondary_expression));
+                        std::optional<std::size_t> found_index;
+                        for (std::size_t index = stack.size(); index > 0U; --index)
+                        {
+                            if (normalize_identifier(stack[index - 1U].routine_name) == target_name)
+                            {
+                                found_index = index - 1U;
+                                break;
+                            }
+                        }
+                        if (!found_index.has_value())
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                                {
+                                    {"command", "RETURN TO"},
+                                    {"target", statement.secondary_expression}
+                                });
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        target_depth = *found_index + 1U;
+                    }
+                    // #6441 review fix: reject the unwind up front if it
+                    // would pop past a still-suspended expression-invoked
+                    // routine boundary (e.g. this RETURN TO fires inside a
+                    // UDF called from an expression). There are two distinct
+                    // mechanisms that can be waiting on such a boundary:
+                    //  - The common case: an ordinary "call a UDF from an
+                    //    expression" site (a plain assignment or condition)
+                    //    uses a cooperative suspend/resume scheme, not a
+                    //    synchronous nested C++ call. The caller frame is
+                    //    marked expression_routine_return_pending and stays
+                    //    on the stack below the callee while the callee's
+                    //    statements run through the ordinary top-level
+                    //    dispatch loop. Popping the callee out from under
+                    //    such a pending caller without ever resuming it
+                    //    would leave that caller waiting forever for a
+                    //    routine_results entry that will never arrive.
+                    //  - The narrower case: a native/event callback invokes
+                    //    a routine synchronously via
+                    //    run_expression_invoked_routine_until_return(),
+                    //    which can only observe stack.size() dropping below
+                    //    its own return_depth as an aborted-execution
+                    //    failure, not a legitimate targeted return.
+                    // Either way, raise a normal catchable error here
+                    // instead of corrupting that caller's expectations.
+                    const std::size_t surviving_frame_count = std::min(target_depth, stack.size());
+                    const bool crosses_pending_expression_frame = std::any_of(
+                        stack.begin(),
+                        stack.begin() + static_cast<std::ptrdiff_t>(surviving_frame_count),
+                        [](const Frame &candidate)
+                        {
+                            return candidate.expression_routine_return_pending;
+                        });
+                    const bool crosses_expression_invocation_boundary =
+                        crosses_pending_expression_frame ||
+                        std::any_of(
+                            active_expression_invocation_return_depths.begin(),
+                            active_expression_invocation_return_depths.end(),
+                            [target_depth](std::size_t boundary)
+                            {
+                                return boundary > target_depth;
+                            });
+                    if (crosses_expression_invocation_boundary)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.ReturnToCrossesExpressionInvocationBoundary",
+                            {
+                                {"command", statement.identifier == "to_master" ? "RETURN TO MASTER" : "RETURN TO"}
+                            });
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    last_return_value = make_empty_value();
+                    if (target_depth >= stack.size())
+                    {
+                        // Already at or past the target frame (e.g. RETURN
+                        // TO MASTER issued directly from the master
+                        // program): behave like an ordinary bare return.
+                        frame.return_pending = true;
+                        if (const auto outcome = continue_pending_return(frame); outcome.has_value())
+                        {
+                            return *outcome;
+                        }
+                        return {};
+                    }
+                    // Unwind every intermediate frame directly. This
+                    // matches the existing CANCEL statement's forced
+                    // multi-frame unwind precedent: pending FINALLY blocks
+                    // in an unwound frame are not specially dispatched here
+                    // (a disclosed, narrower scope than the fully general
+                    // TRY/CATCH/FINALLY interaction the issue's acceptance
+                    // criteria describes).
+                    while (stack.size() > target_depth)
+                    {
+                        pop_frame();
+                    }
+                    return {};
+                }
                 if (trim_copy(statement.expression).empty())
                 {
                     last_return_value = make_empty_value();

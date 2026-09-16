@@ -1083,6 +1083,15 @@ namespace copperfin::runtime
         bool fault_pc_valid = false;
         std::optional<std::size_t> event_dispatch_return_depth;
         bool restore_event_loop_after_dispatch = false;
+        // #6441 review fix: every currently-active (not yet returned)
+        // run_expression_invoked_routine_until_return() call pushes its own
+        // return_depth here for the duration of the call. A multi-level
+        // unwind such as RETURN TO MASTER/ProcedureName must never pop the
+        // interpreter stack below any of these boundaries -- doing so would
+        // pop frames a suspended C++ invocation still expects to find, and
+        // that invocation's own stack.size() < return_depth check would then
+        // throw UserRoutineAbortedExecution instead of resuming correctly.
+        std::vector<std::size_t> active_expression_invocation_return_depths;
         std::size_t executed_statement_count = 0;
         std::size_t max_call_depth = 1024;
         std::size_t max_executed_statements = 500000;
@@ -7894,6 +7903,13 @@ namespace copperfin::runtime
 
     PrgValue PrgRuntimeSession::Impl::run_expression_invoked_routine_until_return(std::size_t return_depth)
     {
+        active_expression_invocation_return_depths.push_back(return_depth);
+        struct BoundaryGuard
+        {
+            std::vector<std::size_t> &boundaries;
+            ~BoundaryGuard() { boundaries.pop_back(); }
+        } boundary_guard{active_expression_invocation_return_depths};
+
         bool expression_error_was_handled = false;
         while (true)
         {

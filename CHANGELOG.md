@@ -1,3 +1,48 @@
+- 2026-09-16: Review-round fix for #6441 (PR #6466): the `RETURN TO
+  MASTER`/`RETURN TO ProcedureName` multi-frame unwind now detects and
+  refuses to cross a still-suspended expression-invoked routine boundary
+  instead of corrupting that caller's state. Two review findings: (1) an
+  ordinary UDF call inside an expression (`x = Func()`) uses a cooperative
+  suspend/resume scheme where the caller frame is marked
+  `expression_routine_return_pending` and stays on the stack below the
+  callee; a `RETURN TO MASTER`/`ProcedureName` inside such a callee
+  previously popped the callee out from under the still-pending caller
+  without ever resuming it, silently continuing execution past the
+  assignment as if the call had returned normally (reproduced with a
+  standalone probe: the caller's own `TRY...CATCH` never fired and no error
+  was raised). The narrower synchronous
+  `run_expression_invoked_routine_until_return()` path used by native/event
+  callbacks had the same class of hazard. Both are now guarded by a single
+  check before the unwind runs, raising the new catchable
+  `ReturnToCrossesExpressionInvocationBoundary` error instead. (2) The C#
+  transpiler (`transpile_statement_to_csharp`) emitted a plain `return;`
+  for every `RETURN` statement including `TO MASTER`/`TO ProcedureName`,
+  silently dropping the nonlocal, multi-frame transfer semantics in
+  generated .NET code; it now explicitly rejects targeted returns via the
+  existing `UnsupportedFoxProStatement` diagnostic instead of miscompiling.
+  Updated `RQ-CF-PRG-041`. AST/IR lowering for targeted returns, unwinding
+  a pending `FINALLY` block during the multi-frame return, and VFP's exact
+  tie-breaking for an ambiguous recursive `TO ProcedureName` target remain
+  out of scope.
+
+- 2026-09-16: Fixed #6441: `RETURN TO MASTER` and `RETURN TO ProcedureName`
+  now unwind through every intermediate procedure/program frame instead of
+  just the innermost one. `TO MASTER`/`TO ProcedureName` were previously
+  parsed and evaluated as ordinary `RETURN` expression text, so only the
+  procedure that literally executed the statement returned; installed VFP9
+  SP2 evidence showed both forms unwind past every intervening call and
+  resume the target (the outermost program for `TO MASTER`, or the nearest
+  still-active frame executing the named routine for `TO ProcedureName`)
+  right where its own execution was suspended, skipping the remainder of
+  every unwound routine. An unresolvable `TO ProcedureName` target now
+  raises the existing catchable `CommandTargetResolveFailed` error. Added
+  `RQ-CF-PRG-041`. Matching the existing `CANCEL` statement's own forced
+  multi-frame unwind, a pending `FINALLY` block in an unwound frame is not
+  specially dispatched during the unwind (a disclosed, narrower scope than
+  the issue's full TRY/CATCH/FINALLY interaction request); AST/IR/C#
+  lowering for targeted returns and VFP's exact tie-breaking for an
+  ambiguous recursive `TO ProcedureName` target remain out of scope.
+
 - 2026-09-16: Fixed #6443: `DO ProcedureName IN ProgramName2 [WITH ...]` now
   resolves the `IN` clause and invokes the named procedure from the
   specified program file. The parser previously stored `ProcedureName IN
