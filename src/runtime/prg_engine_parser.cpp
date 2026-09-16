@@ -2312,11 +2312,20 @@ Program parse_program_impl(
             statement.kind = StatementKind::do_command;
             const std::string body = trim_copy(line.substr(3U));
             const std::size_t with_position = find_keyword_top_level(body, "WITH");
-            if (with_position == std::string::npos) {
-                statement.identifier = body;
-            } else {
-                statement.identifier = trim_copy(body.substr(0U, with_position));
+            const std::string before_with =
+                with_position == std::string::npos ? body : trim_copy(body.substr(0U, with_position));
+            if (with_position != std::string::npos) {
                 statement.expression = trim_copy(body.substr(with_position + 4U));
+            }
+            // #6443: DO ProcedureName [IN ProgramName2] [WITH ParameterList]
+            // -- the IN clause selects a specific containing program for the
+            // requested procedure and is distinct from ProcedureName itself.
+            const std::size_t in_position = find_keyword_top_level(before_with, "IN");
+            if (in_position == std::string::npos) {
+                statement.identifier = before_with;
+            } else {
+                statement.identifier = trim_copy(before_with.substr(0U, in_position));
+                statement.secondary_expression = trim_copy(before_with.substr(in_position + 2U));
             }
             } else if (starts_with_insensitive(line, "CALL ")) {
                 statement.kind = StatementKind::call_command;

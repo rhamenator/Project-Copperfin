@@ -113,6 +113,225 @@ void test_set_procedure_registers_external_procedure_for_do_calls() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_do_procedure_in_program_invokes_procedure_from_named_file() {
+    // #6443: DO ProcedureName IN ProgramName2 [WITH ParameterList] selects a
+    // procedure from a specific program file without any SET PROCEDURE
+    // registration. The parser previously stored "ProcedureName IN
+    // ProgramName2" as one undifferentiated identifier, so dispatch never
+    // resolved the IN clause at all and the statement paused/faulted
+    // instead of invoking the requested procedure.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_do_procedure_in_program";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "external_proc.prg",
+        "PROCEDURE TargetProc\n"
+        "LPARAMETERS value\n"
+        "do_in_marker = value\n"
+        "RETURN\n"
+        "ENDPROC\n");
+    write_text(
+        temp_root / "main.prg",
+        "PUBLIC do_in_marker\n"
+        "do_in_marker = 0\n"
+        "DO TargetProc IN external_proc.prg WITH 7\n"
+        "after_do_in = 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "main.prg").string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6443: DO ProcedureName IN ProgramName2 script should complete: " + state.message);
+
+    const auto marker = state.globals.find("do_in_marker");
+    expect(marker != state.globals.end(), "#6443: DO...IN should invoke the named procedure in the target program");
+    if (marker != state.globals.end()) {
+        expect(copperfin::runtime::format_value(marker->second) == "7",
+               "#6443: DO...IN WITH should pass the parameter through to the selected procedure");
+    }
+
+    const auto after = state.globals.find("after_do_in");
+    expect(after != state.globals.end(),
+           "#6443: execution should continue past the DO...IN statement instead of pausing/faulting");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_do_procedure_in_missing_program_raises_catchable_error() {
+    // #6443: a nonexistent IN target must fail catchably, not pause/fault
+    // the host or silently succeed.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_do_procedure_in_missing";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "main.prg",
+        "TRY\n"
+        "  DO TargetProc IN missing_proc.prg\n"
+        "  lReached = .T.\n"
+        "CATCH TO oErr\n"
+        "  nCaughtErrorNo = oErr.ErrorNo\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "main.prg").string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6443: missing DO...IN target script should complete: " + state.message);
+
+    expect(state.globals.find("lreached") == state.globals.end(),
+           "#6443: a missing DO...IN program should raise a catchable error rather than continue");
+    expect(state.globals.find("ncaughterrorno") != state.globals.end(),
+           "#6443: a missing DO...IN program should be caught by an enclosing TRY/CATCH");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_do_procedure_in_existing_program_missing_procedure_raises_catchable_error() {
+    // #6465 review (Copilot, P2): a present IN file with no matching
+    // procedure must independently exercise the same catchable
+    // target-resolution error as a missing file, not the missing-file case
+    // alone.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_do_procedure_in_missing_routine";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "external_proc.prg",
+        "PROCEDURE SomeOtherProc\n"
+        "RETURN\n"
+        "ENDPROC\n");
+    write_text(
+        temp_root / "main.prg",
+        "TRY\n"
+        "  DO TargetProc IN external_proc.prg\n"
+        "  lReached = .T.\n"
+        "CATCH TO oErr\n"
+        "  nCaughtErrorNo = oErr.ErrorNo\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "main.prg").string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6465: missing-procedure DO...IN script should complete: " + state.message);
+
+    expect(state.globals.find("lreached") == state.globals.end(),
+           "#6465: an IN program present but missing the requested procedure should raise a catchable "
+           "error rather than continue");
+    expect(state.globals.find("ncaughterrorno") != state.globals.end(),
+           "#6465: a missing procedure in an existing DO...IN program should be caught by an "
+           "enclosing TRY/CATCH");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_do_procedure_in_program_resolves_via_set_path() {
+    // #6465 review (Codex, P2): RQ-CF-PRG-040 documents SET PATH resolution
+    // for the IN clause; resolve_native_prg_program_path() alone never
+    // searches SET PATH, so a program that exists only in a SET PATH
+    // directory (not the current default directory) must still resolve.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_do_procedure_in_set_path";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path working_dir = temp_root / "working";
+    const fs::path library_dir = temp_root / "library";
+    fs::create_directories(working_dir);
+    fs::create_directories(library_dir);
+
+    write_text(
+        library_dir / "external_proc.prg",
+        "PROCEDURE TargetProc\n"
+        "LPARAMETERS value\n"
+        "do_in_marker = value\n"
+        "RETURN\n"
+        "ENDPROC\n");
+    write_text(
+        working_dir / "main.prg",
+        "PUBLIC do_in_marker\n"
+        "do_in_marker = 0\n"
+        "SET PATH TO '" + library_dir.string() + "'\n"
+        "DO TargetProc IN external_proc.prg WITH 9\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((working_dir / "main.prg").string(), working_dir.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6465: SET PATH DO...IN script should complete: " + state.message);
+
+    const auto marker = state.globals.find("do_in_marker");
+    expect(marker != state.globals.end(), "#6465: SET PATH DO...IN should invoke the named procedure");
+    if (marker != state.globals.end()) {
+        expect(copperfin::runtime::format_value(marker->second) == "9",
+               "#6465: DO...IN should resolve a program found only via SET PATH, not just the default directory");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_do_procedure_in_program_accepts_quoted_and_macro_operand() {
+    // #6465 review (Copilot, P2): a quoted literal or &macro IN operand was
+    // previously treated as raw filesystem text (including the quote
+    // characters), so it never resolved.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_do_procedure_in_quoted";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "external_proc.prg",
+        "PROCEDURE TargetProc\n"
+        "LPARAMETERS value\n"
+        "do_in_marker = value\n"
+        "RETURN\n"
+        "ENDPROC\n");
+    write_text(
+        temp_root / "main.prg",
+        "PUBLIC do_in_marker, cQuotedResult, cMacroResult\n"
+        "do_in_marker = 0\n"
+        "DO TargetProc IN 'external_proc.prg' WITH 3\n"
+        "cQuotedResult = do_in_marker\n"
+        "cProgram = 'external_proc.prg'\n"
+        "DO TargetProc IN &cProgram WITH 5\n"
+        "cMacroResult = do_in_marker\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "main.prg").string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6465: quoted/macro DO...IN script should complete: " + state.message);
+
+    const auto quoted_result = state.globals.find("cquotedresult");
+    expect(quoted_result != state.globals.end(), "#6465: quoted IN operand should invoke the named procedure");
+    if (quoted_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(quoted_result->second) == "3",
+               "#6465: quoted IN operand should resolve and invoke the named procedure");
+    }
+    const auto macro_result = state.globals.find("cmacroresult");
+    expect(macro_result != state.globals.end(), "#6465: &macro IN operand should invoke the named procedure");
+    if (macro_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_result->second) == "5",
+               "#6465: &macro IN operand should resolve and invoke the named procedure");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_procedure_macro_off_clears_saved_procedure_state() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_procedure_macro_off";

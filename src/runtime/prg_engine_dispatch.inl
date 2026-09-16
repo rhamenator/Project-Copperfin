@@ -2011,6 +2011,149 @@
                 frame.copy_file_continuation.reset();
                 frame.rename_file_continuation.reset();
                 Program &program = load_program(frame.file_path);
+                // #6443: DO ProcedureName IN ProgramName2 selects a
+                // specific containing program for the requested procedure;
+                // it is not itself a routine or file name and must not fall
+                // through to the plain "DO ProgramName1" path below (which
+                // would run ProgramName2's IN clause text as a whole
+                // program from its main entry instead of invoking the
+                // requested procedure inside it).
+                if (!statement.secondary_expression.empty())
+                {
+                    // #6465 review (Copilot, P2): unlike the primary DO
+                    // target (evaluate_command_target) and SET PROCEDURE's
+                    // target, a literal quoted IN operand or &macro was
+                    // treated as raw filesystem text, so DO Proc IN
+                    // 'file.prg' looked for a filename containing the quote
+                    // characters and DO Proc IN &cProgram was never
+                    // expanded. This synchronous evaluation (not the fully
+                    // resumable frame.command_target_continuation pattern
+                    // evaluate_command_target uses for the primary target)
+                    // covers the common quoted-literal and single-level
+                    // &macro/(expression) forms; a macro whose own
+                    // evaluation needs to suspend mid-expression is not
+                    // supported here.
+                    std::string in_target_text = trim_copy(statement.secondary_expression);
+                    if (!in_target_text.empty() && in_target_text.front() == '&')
+                    {
+                        const std::string referent = trim_copy(in_target_text.substr(1U));
+                        if (!referent.empty())
+                        {
+                            in_target_text = trim_copy(value_as_string(evaluate_expression(referent, frame)));
+                        }
+                    }
+                    else if (in_target_text.size() >= 2U &&
+                             in_target_text.front() == '(' && in_target_text.back() == ')')
+                    {
+                        in_target_text = trim_copy(value_as_string(evaluate_expression(
+                            in_target_text.substr(1U, in_target_text.size() - 2U), frame)));
+                    }
+                    else
+                    {
+                        in_target_text = unquote_string(in_target_text);
+                    }
+                    std::filesystem::path in_target_candidate =
+                        copperfin::platform::path_from_utf8_string(in_target_text);
+                    if (in_target_candidate.extension().empty())
+                    {
+                        in_target_candidate += ".prg";
+                    }
+                    std::filesystem::path in_target_path;
+                    if (options.require_source_text_overrides)
+                    {
+                        in_target_path = in_target_candidate;
+                        if (in_target_path.is_relative())
+                        {
+                            in_target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                                in_target_path;
+                        }
+                        in_target_path = in_target_path.lexically_normal();
+                        const auto admitted_in_target = find_source_text_override(
+                            copperfin::platform::path_to_utf8_string(in_target_path),
+                            true);
+                        if (admitted_in_target != options.source_text_overrides.end())
+                        {
+                            in_target_path = copperfin::platform::path_from_utf8_string(admitted_in_target->first);
+                        }
+                    }
+                    else
+                    {
+                        in_target_path = copperfin::platform::path_from_utf8_string(
+                            resolve_native_prg_program_path(
+                                copperfin::platform::path_to_utf8_string(in_target_candidate)));
+                        // #6465 review (Codex, P2): resolve_native_prg_program_path()
+                        // only checks the current default directory (plus an
+                        // optional fallback source file, not supplied here);
+                        // it never searches SET PATH. RQ-CF-PRG-040 documents
+                        // SET PATH resolution for the IN clause, so fall back
+                        // to the same search directories
+                        // database_search_directories() already uses for
+                        // USE/database path resolution when the
+                        // default-directory candidate does not exist.
+                        std::error_code in_target_default_exists_error;
+                        if (!std::filesystem::exists(in_target_path, in_target_default_exists_error) ||
+                            in_target_default_exists_error)
+                        {
+                            for (const std::filesystem::path &search_directory : database_search_directories())
+                            {
+                                const std::filesystem::path candidate =
+                                    (search_directory / in_target_candidate).lexically_normal();
+                                std::error_code candidate_exists_error;
+                                if (std::filesystem::exists(candidate, candidate_exists_error) &&
+                                    !candidate_exists_error)
+                                {
+                                    in_target_path = candidate;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    const std::string in_target_path_text =
+                        copperfin::platform::path_to_utf8_string(in_target_path.lexically_normal());
+                    const auto admitted_in_target_source = find_source_text_override(in_target_path_text);
+                    const bool has_admitted_in_target_source =
+                        options.require_source_text_overrides &&
+                        admitted_in_target_source != options.source_text_overrides.end() &&
+                        !admitted_in_target_source->second.empty();
+                    std::error_code in_target_exists_error;
+                    std::optional<RoutineLookup> in_target_routine;
+                    if ((std::filesystem::exists(in_target_path, in_target_exists_error) &&
+                         !in_target_exists_error) ||
+                        has_admitted_in_target_source || options.require_source_text_overrides)
+                    {
+                        Program &in_target_program = load_program(in_target_path_text);
+                        if (const auto found = in_target_program.routines.find(normalize_identifier(target));
+                            found != in_target_program.routines.end())
+                        {
+                            in_target_routine = RoutineLookup{.program = &in_target_program, .routine = &found->second};
+                        }
+                    }
+                    if (!in_target_routine.has_value())
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                            {
+                                {"command", "DO"},
+                                {"target", target + " IN " + statement.secondary_expression}
+                            });
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (!can_push_frame())
+                    {
+                        last_error_message = call_depth_limit_message();
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    push_routine_frame(
+                        in_target_routine->program->path,
+                        *in_target_routine->routine,
+                        std::move(call_arguments),
+                        std::move(call_argument_references));
+                    return {};
+                }
                 if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
                 {
                     if (!can_push_frame())
