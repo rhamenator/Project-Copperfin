@@ -3388,7 +3388,14 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    last_return_value = make_empty_value();
+                    // #6442: RETURN TO MASTER/ProcedureName carries no
+                    // expression, same as a bare RETURN, so it defaults to
+                    // logical true for consistency with the bare-RETURN
+                    // fix rather than an empty value; this specific
+                    // interaction is not independently VFP9-differential
+                    // verified, unlike the bare/implicit RETURN default
+                    // itself.
+                    last_return_value = make_boolean_value(true);
                     if (target_depth >= stack.size())
                     {
                         // Already at or past the target frame (e.g. RETURN
@@ -3410,13 +3417,19 @@
                     // criteria describes).
                     while (stack.size() > target_depth)
                     {
-                        pop_frame();
+                        // #6442 review fix: forced unwind, not natural
+                        // completion (last_return_value was already set to
+                        // logical true above, matching a bare return).
+                        pop_frame(false);
                     }
                     return {};
                 }
                 if (trim_copy(statement.expression).empty())
                 {
-                    last_return_value = make_empty_value();
+                    // #6442: installed VFP9 SP2 evidence shows a bare
+                    // RETURN with no expression yields logical true, not
+                    // an empty value.
+                    last_return_value = make_boolean_value(true);
                 }
                 else
                 {

@@ -655,13 +655,91 @@ namespace
             make_runtime_session_options(empty_path.string(), temp_root.string()));
         const auto empty_state = empty_session.run(copperfin::runtime::DebugResumeAction::continue_run);
 
+        // #6442: installed VFP9 SP2 evidence shows a bare RETURN with no
+        // expression yields logical true, not an empty value.
         expect(empty_state.completed, "bare RETURN script should complete");
         expect(empty_state.last_return_value.has_value(),
-               "bare RETURN should preserve an empty runtime return value");
+               "bare RETURN should preserve a logical-true runtime return value");
         if (empty_state.last_return_value.has_value())
         {
-            expect(copperfin::runtime::format_value(*empty_state.last_return_value).empty(),
-                   "bare RETURN should preserve an empty value representation");
+            expect(copperfin::runtime::format_value(*empty_state.last_return_value) == "true",
+                   "bare RETURN should default to logical true");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_bare_and_implicit_return_default_to_logical_true()
+    {
+        // #6442: installed VFP9 SP2 evidence shows both an explicit bare
+        // RETURN and an implicit RETURN performed at the end of a routine
+        // that never executes RETURN at all yield logical true, not an
+        // empty value. last_return_value is session-wide and is never
+        // reset between calls, so this also guards against the implicit
+        // case merely inheriting a stale value left over from an earlier,
+        // unrelated call. NumericResult() (an ordinary explicit RETURN 42)
+        // is deliberately called immediately before ImplicitResult() so
+        // that a regression back to "sticky prior value" produces a
+        // detectably wrong 42, not a coincidentally-correct true left over
+        // from some earlier bare-RETURN call -- a plain-true predecessor
+        // would let a broken implicit-return path pass this assertion by
+        // accident.
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_bare_implicit_return";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "bare_implicit_return.prg";
+        write_text(
+            main_path,
+            "PUBLIC lResult1, nResult2, lResult3\n"
+            "lResult1 = BareResult()\n"
+            "nResult2 = NumericResult()\n"
+            "lResult3 = ImplicitResult()\n"
+            "RETURN\n"
+            "FUNCTION BareResult\n"
+            "RETURN\n"
+            "ENDFUNC\n"
+            "FUNCTION NumericResult\n"
+            "RETURN 42\n"
+            "ENDFUNC\n"
+            "FUNCTION ImplicitResult\n"
+            "localValue = 1\n"
+            "ENDFUNC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+        expect(state.completed, "#6442: bare/implicit RETURN script should complete: " + state.message);
+
+        const auto result1 = state.globals.find("lresult1");
+        expect(result1 != state.globals.end(), "#6442: lResult1 should be captured");
+        if (result1 != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(result1->second) == "true",
+                   "#6442: an explicit bare RETURN should default to logical true, got '" +
+                       copperfin::runtime::format_value(result1->second) + "'");
+        }
+
+        const auto result2 = state.globals.find("nresult2");
+        expect(result2 != state.globals.end(), "#6442: nResult2 should be captured");
+        if (result2 != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(result2->second) == "42",
+                   "#6442: an explicit numeric RETURN should be preserved as a sanity check, got '" +
+                       copperfin::runtime::format_value(result2->second) + "'");
+        }
+
+        const auto result3 = state.globals.find("lresult3");
+        expect(result3 != state.globals.end(), "#6442: lResult3 should be captured");
+        if (result3 != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(result3->second) == "true",
+                   "#6442: an implicit RETURN at the end of a routine should default to logical true "
+                   "rather than inherit the immediately preceding call's 42, got '" +
+                       copperfin::runtime::format_value(result3->second) + "'");
         }
 
         fs::remove_all(temp_root, ignored);
@@ -835,6 +913,7 @@ int main()
     test_parameter_default_expressions_support_macros();
     test_macro_alias_qualified_field_access();
     test_return_expression_values_are_preserved_in_runtime_state();
+    test_bare_and_implicit_return_default_to_logical_true();
     test_likec_matches_utf8_scalars_without_changing_like();
     test_isleadbyte_uses_configured_code_page();
     test_isleadbyte_invalid_configured_code_page_fails_closed();

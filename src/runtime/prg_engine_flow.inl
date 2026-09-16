@@ -395,13 +395,57 @@
             }
         }
 
-        void pop_frame()
+        // #6442 review fix: `natural_completion` distinguishes a frame that
+        // is being popped because it genuinely ran out of statements to
+        // execute from one being forcibly unwound (a fault propagating to
+        // an enclosing TRY/CATCH, CANCEL, RETURN TO). Both can leave
+        // `pc >= statements.size()`: execute_current_statement() advances
+        // `pc` past a statement BEFORE dispatching it, so a routine's own
+        // last statement failing already looks "exhausted" by the time the
+        // caller's fault-propagation loop pops this frame, even though the
+        // routine never completed. Callers that perform a forced unwind
+        // must pass `false` explicitly; ordinary "ran out of statements"
+        // call sites keep the default.
+        void pop_frame(bool natural_completion = true)
         {
             if (!stack.empty())
             {
                 const bool requested_nodefault = stack.back().requested_nodefault;
                 const bool returned_explicitly = stack.back().return_pending;
-                const std::optional<PrgValue> saved_return_value = last_return_value;
+                const bool naturally_exhausted =
+                    stack.back().routine == nullptr ||
+                    stack.back().pc >= stack.back().routine->statements.size();
+                // #6442: installed VFP9 SP2 evidence shows reaching the end
+                // of a routine without an explicit RETURN performs an
+                // implicit RETURN yielding logical true, same default as a
+                // bare RETURN with no expression. last_return_value is
+                // session-wide and is never reset between calls, so
+                // without this a routine that falls off the end would
+                // leave its caller observing whatever value some earlier,
+                // unrelated RETURN happened to leave behind rather than a
+                // fresh VFP9-correct default. Scoped to every frame except
+                // the outermost/root one (stack.size() > 1 at this point,
+                // i.e. a caller is still beneath it): push_main_frame() is
+                // reused for both the session's true top-level entry and
+                // an ordinary nested `DO child.prg` call, and a nested
+                // program call reaching its own end should get the same
+                // VFP9-correct default as a FUNCTION/PROCEDURE/METHOD call.
+                // Only the true root frame's own implicit-completion value
+                // is left at its prior behavior: applying this to the
+                // runtime host's synthetic bridge bootstrap script (which
+                // is itself the root frame) regressed the bridge mechanism,
+                // which relies on last_return_value still reflecting the
+                // last explicitly-returned nested call after the
+                // bootstrap's own top-level statements (which never
+                // contain their own RETURN) finish running. That
+                // interaction is not independently VFP9-differential
+                // verified and is a disclosed, narrower scope than the
+                // issue's literal acceptance criteria.
+                const bool is_root_frame = stack.size() <= 1U;
+                const std::optional<PrgValue> saved_return_value =
+                    (natural_completion && !returned_explicitly && naturally_exhausted && !is_root_frame)
+                        ? std::make_optional(make_boolean_value(true))
+                        : last_return_value;
                 sync_byref_arguments(stack.back());
                 release_frame_object_bindings(stack.back());
                 restore_private_declarations(stack.back());

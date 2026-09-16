@@ -8000,7 +8000,13 @@ namespace copperfin::runtime
                         {
                             while (stack.size() > depth_at_fault - index)
                             {
-                                pop_frame();
+                                // #6442 review fix: a forced fault unwind, not
+                                // a natural end-of-routine completion -- the
+                                // faulting frame's own pc may already read as
+                                // "exhausted" (advanced past its last
+                                // statement before that statement's own
+                                // execution failed).
+                                pop_frame(false);
                             }
                             if (!stack.empty())
                             {
@@ -9638,7 +9644,12 @@ namespace copperfin::runtime
                                 // Pop intermediate frames back to this parent.
                                 while (stack.size() > depth_at_fault - i)
                                 {
-                                    pop_frame();
+                                    // #6442 review fix: forced fault unwind,
+                                    // not natural completion -- see the
+                                    // matching comment in the
+                                    // run_expression_invoked_routine_until_return
+                                    // fault-propagation loop above.
+                                    pop_frame(false);
                                 }
                                 if (!stack.empty())
                                 {
