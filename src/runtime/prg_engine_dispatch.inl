@@ -11472,7 +11472,26 @@
             {
                 // CLEAR MEMORY — release all public/global variables and arrays
                 // CLEAR ALL — same plus closes all tables and releases procedures
+                // #6438: installed VFP9 SP2's CLEAR Commands help documents that
+                // neither command releases system variables (_SCREEN, _VFP,
+                // APPLICATION); the same three-name check already used by the
+                // memory-display command marks them as internal system
+                // bindings. Preserve their existing session-wide object
+                // reference across the bulk global-map clear below instead of
+                // dropping and losing the runtime's own application surface.
+                std::map<std::string, PrgValue> preserved_system_bindings;
+                for (const char *system_binding_name : {"_screen", "_vfp", "application"})
+                {
+                    if (const auto found = globals.find(system_binding_name); found != globals.end())
+                    {
+                        preserved_system_bindings.emplace(system_binding_name, found->second);
+                    }
+                }
                 globals.clear();
+                for (auto &[name, value] : preserved_system_bindings)
+                {
+                    globals[name] = value;
+                }
                 arrays.clear();
                 public_names.clear();
                 for (auto &active_frame : stack)

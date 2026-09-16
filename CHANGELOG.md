@@ -1,3 +1,18 @@
+- 2026-09-15: Fixed #6438: `CLEAR MEMORY` and `CLEAR ALL` no longer erase
+  `_SCREEN`, `_VFP`, and `APPLICATION`. Installed VFP9 SP2's CLEAR Commands
+  help documents that `CLEAR MEMORY` releases public/private variables and
+  arrays while preserving system variables, and that `CLEAR ALL` does not
+  release system variables either; the previous unconditional
+  `globals.clear()` dropped all three (they alias the same runtime
+  application-surface object) and later use of `_SCREEN`/`_VFP`/`APPLICATION`
+  became an undefined variable. Both commands now preserve the existing
+  object reference (not a freshly reconstructed approximation) across the
+  clear, matching the memory-display command's existing system-binding
+  check. Added `RQ-CF-PRG-038`. Full object-release-path integration for
+  every other cleared user object (COM reference counts, reentrant `Destroy`
+  safety during the bulk clear) remains a separate, disclosed gap tracked as
+  #6462.
+
 - 2026-09-15: Fixed #6439: `CLEAR ERROR` is now a recognized statement that
   resets `ERROR()`, `MESSAGE()`, `AERROR()`'s row count, and `SYS(2018)` to
   their no-error defaults in one operation, matching installed VFP9 SP2's

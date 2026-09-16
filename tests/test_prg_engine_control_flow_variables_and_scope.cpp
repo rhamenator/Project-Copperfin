@@ -980,4 +980,66 @@ void test_clear_memory_clears_current_frame_locals_without_global_leak() {
     fs::remove_all(tmp, ign);
 }
 
+void test_clear_memory_and_clear_all_preserve_system_variables() {
+    // #6438: installed VFP9 SP2 documents that CLEAR MEMORY releases
+    // public/private variables and arrays while preserving system
+    // variables, and that CLEAR ALL does not release system variables
+    // either. _SCREEN/_VFP/APPLICATION must remain live objects afterward.
+    // Two separate scripts/sessions are used because CLEAR ALL itself wipes
+    // ordinary globals -- including whatever this test captured right after
+    // CLEAR MEMORY -- so a single combined script cannot observe both
+    // post-clear states at once.
+    namespace fs = std::filesystem;
+
+    const auto run_and_check = [&](const std::string& clear_command, const std::string& label) {
+        const fs::path tmp = fs::temp_directory_path() /
+            ("copperfin_clear_memory_system_vars_" + clear_command);
+        std::error_code ign;
+        fs::remove_all(tmp, ign);
+        fs::create_directories(tmp);
+        const fs::path prg = tmp / "test.prg";
+        write_text(
+            prg,
+            "p = 42\n"
+            + clear_command + "\n" +
+            "cScreenType = TYPE('_SCREEN')\n"
+            "cVfpType = TYPE('_VFP')\n"
+            "cApplicationType = TYPE('APPLICATION')\n"
+            "lSameObject = COMPOBJ(_SCREEN, _VFP)\n"
+            "lSameObjectApplication = COMPOBJ(_VFP, APPLICATION)\n"
+            "_SCREEN.Caption = 'Still running'\n"
+            "cCaption = _SCREEN.Caption\n"
+            "RETURN\n");
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, label + " script should complete: " + state.message);
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end()) {
+                expect(false, label + ": " + name + " should be captured");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   label + ": " + name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cscreentype", "O");
+        check("cvfptype", "O");
+        check("capplicationtype", "O");
+        check("lsameobject", "true");
+        check("lsameobjectapplication", "true");
+        check("ccaption", "Still running");
+        expect(state.globals.find("p") == state.globals.end(),
+               label + " should still clear ordinary user globals");
+
+        fs::remove_all(tmp, ign);
+    };
+
+    run_and_check("CLEAR MEMORY", "CLEAR MEMORY");
+    run_and_check("CLEAR ALL", "CLEAR ALL");
+}
+
 }  // namespace cf_test_prg_engine_control_flow
