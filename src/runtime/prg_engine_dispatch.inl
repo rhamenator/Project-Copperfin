@@ -11499,6 +11499,69 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::clear_error_command:
+            {
+                // #6461 review (Copilot, P2): CLEAR ERROR takes no arguments.
+                if (statement.identifier == "malformed")
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments",
+                        {{"command", "CLEAR ERROR"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                // #6439: CLEAR ERROR resets the VFP diagnostic surface --
+                // ERROR(), AERROR(), MESSAGE(), the error parameter
+                // (SYS(2018)), and related line/procedure/work-area metadata
+                // -- as if no error had occurred, without disturbing the
+                // active caught Exception object's own properties. This
+                // deliberately leaves error_metadata_stack (the ON ERROR
+                // handler / cross-frame RESUME snapshot used by
+                // current_error_message()/current_error_code() while such a
+                // handler is on the stack) untouched: that snapshot is not
+                // scoped per TRY block, so clearing it here could erase an
+                // unrelated outer handler's still-pending fault context
+                // instead of "the current error." Only ordinary (non
+                // ON-ERROR-nested) TRY...CATCH -- the documented, VFP9
+                // differentially verified scenario for this command -- is
+                // covered; CLEAR ERROR's exact effect while an ON ERROR
+                // handler is active on the call stack is not independently
+                // probed here.
+                last_error_message.clear();
+                last_error_code = 0;
+                last_error_work_area = 0;
+                last_error_procedure.clear();
+                last_fault_location = {};
+                last_fault_statement.clear();
+                // #6461 review (Codex P2 + Copilot): only clear the
+                // ambient SQL/OLE diagnostic-detail fields. thrown_user_value,
+                // explicit_error_code, active_exception_reference, and
+                // preserve_fault_context identify the still-active caught
+                // Exception object and drive a later bare THROW rethrow and
+                // FINALLY fault propagation; wiping them here (the previous
+                // `last_error_compatibility = {}`) made a bare THROW after
+                // CLEAR ERROR synthesize a brand-new error-0 object instead
+                // of rethrowing the same caught exception, and made a fault
+                // propagated through FINALLY carry empty metadata.
+                last_error_compatibility.sql_detail.clear();
+                last_error_compatibility.sql_state.clear();
+                last_error_compatibility.sql_native_code = 0;
+                last_error_compatibility.has_sql_native_code = false;
+                last_error_compatibility.sql_context.clear();
+                last_error_compatibility.sql_payload.clear();
+                last_error_compatibility.ole_detail.clear();
+                last_error_compatibility.ole_app.clear();
+                last_error_compatibility.ole_source.clear();
+                last_error_compatibility.ole_action.clear();
+                last_error_compatibility.ole_native_code = 0;
+                last_error_compatibility.has_ole_native_code = false;
+                events.push_back({.category = "runtime.clear_error",
+                                  .detail = std::string{},
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::cancel_statement:
             {
                 // CANCEL — abort execution and return to top level

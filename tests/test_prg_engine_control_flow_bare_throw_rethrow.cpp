@@ -136,4 +136,76 @@ void test_bare_throw_rethrows_active_exception_object() {
 
     fs::remove_all(temp_root, ignored);
 }
+
+void test_clear_error_before_bare_throw_still_rethrows_same_exception_object() {
+    // #6461 review (Codex P2 + Copilot): CLEAR ERROR must reset only the
+    // ambient diagnostic surface, not the active caught Exception object's
+    // identity. A bare THROW issued right after CLEAR ERROR (still inside
+    // the same CATCH) must rethrow the SAME oInner object to the outer
+    // CATCH -- not synthesize a new error-0 object from the just-cleared
+    // fields.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_clear_error_bare_throw";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "clear_error_bare_throw.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  TRY\n"
+        "    broken = LOG(-1)\n"
+        "  CATCH TO oInner\n"
+        "    cInnerMsg = oInner.Message\n"
+        "    nInnerCode = oInner.ErrorNo\n"
+        "    CLEAR ERROR\n"
+        "    THROW\n"
+        "  ENDTRY\n"
+        "CATCH TO oOuter\n"
+        "  lSameRef = COMPOBJ(oInner, oOuter)\n"
+        "  cOuterMsg = oOuter.Message\n"
+        "  nOuterCode = oOuter.ErrorNo\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CLEAR ERROR + bare THROW script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " should be captured");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("lsameref", "true");
+
+    const auto inner_message = state.globals.find("cinnermsg");
+    const auto outer_message = state.globals.find("coutermsg");
+    const auto inner_code = state.globals.find("ninnercode");
+    const auto outer_code = state.globals.find("noutercode");
+
+    expect(inner_code != state.globals.end() &&
+               copperfin::runtime::format_value(inner_code->second) != "0",
+           "#6461: inner ErrorNo should be nonzero before CLEAR ERROR");
+    if (inner_message != state.globals.end() && outer_message != state.globals.end()) {
+        expect(copperfin::runtime::format_value(outer_message->second) ==
+                   copperfin::runtime::format_value(inner_message->second),
+               "#6461: rethrown Exception Message must match the original, not an empty CLEAR ERROR-synthesized one");
+    }
+    if (inner_code != state.globals.end() && outer_code != state.globals.end()) {
+        expect(copperfin::runtime::format_value(outer_code->second) ==
+                   copperfin::runtime::format_value(inner_code->second),
+               "#6461: rethrown Exception ErrorNo must match the original, not the CLEAR ERROR-reset zero");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
 } // namespace cf_test_prg_engine_control_flow

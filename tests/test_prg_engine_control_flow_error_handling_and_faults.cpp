@@ -981,6 +981,128 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_clear_error_resets_diagnostic_surface_inside_catch() {
+    // #6439: real VFP9 SP2 resets ERROR(), AERROR(), MESSAGE(), and SYS(2018)
+    // as if no error had occurred when CLEAR ERROR runs inside a CATCH block,
+    // while leaving the already-caught Exception object's own properties
+    // (e.g. ErrorNo) untouched.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_clear_error_in_catch";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "clear_error_in_catch.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  fault_val = LOG(-1)\n"
+        "CATCH TO oErr\n"
+        "  nErrorNoBefore = ERROR()\n"
+        "  cMessageBefore = MESSAGE()\n"
+        "  nAerrRowsBefore = AERROR(aErrBefore)\n"
+        "  cSysParamBefore = SYS(2018)\n"
+        "  CLEAR ERROR\n"
+        "  nErrorNoAfter = ERROR()\n"
+        "  cMessageAfter = MESSAGE()\n"
+        "  nAerrRowsAfter = AERROR(aErrAfter)\n"
+        "  cSysParamAfter = SYS(2018)\n"
+        "  nCaughtErrorNoAfterClear = oErr.ErrorNo\n"
+        "  cCaughtMessageAfterClear = oErr.Message\n"
+        "ENDTRY\n"
+        "nErrorNoOutsideCatch = ERROR()\n"
+        "cMessageOutsideCatch = MESSAGE()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6439: CLEAR ERROR script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " should be captured");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    const auto error_no_before = state.globals.find("nerrornobefore");
+    const auto aerr_rows_before = state.globals.find("naerrrowsbefore");
+    expect(error_no_before != state.globals.end() &&
+               copperfin::runtime::format_value(error_no_before->second) != "0",
+           "#6439: ERROR() should be nonzero before CLEAR ERROR");
+    expect(aerr_rows_before != state.globals.end() &&
+               copperfin::runtime::format_value(aerr_rows_before->second) == "1",
+           "#6439: AERROR() should report one row before CLEAR ERROR");
+    const auto message_before = state.globals.find("cmessagebefore");
+    expect(message_before != state.globals.end() &&
+               !copperfin::runtime::format_value(message_before->second).empty(),
+           "#6439: MESSAGE() should be nonempty before CLEAR ERROR");
+
+    check("nerrornoafter", "0");
+    check("cmessageafter", "");
+    check("naerrrowsafter", "0");
+    check("csysparamafter", "");
+    check("nerrornooutsidecatch", "0");
+    check("cmessageoutsidecatch", "");
+
+    const auto caught_error_no_after = state.globals.find("ncaughterrornoafterclear");
+    const auto error_no_before_it = state.globals.find("nerrornobefore");
+    if (caught_error_no_after != state.globals.end() && error_no_before_it != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caught_error_no_after->second) ==
+                   copperfin::runtime::format_value(error_no_before_it->second),
+               "#6439: CLEAR ERROR must not alter the already-caught Exception object's ErrorNo");
+    }
+    const auto caught_message_after = state.globals.find("ccaughtmessageafterclear");
+    if (caught_message_after != state.globals.end() && message_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caught_message_after->second) ==
+                   copperfin::runtime::format_value(message_before->second),
+               "#6439: CLEAR ERROR must not alter the already-caught Exception object's Message");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_clear_error_rejects_trailing_arguments() {
+    // #6461 review (Copilot, P2): CLEAR ERROR takes no arguments; trailing
+    // text must raise a catchable syntax error instead of silently falling
+    // through to the generic-expression fallback.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_clear_error_trailing_args";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "clear_error_trailing_args.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  CLEAR ERROR EXTRA\n"
+        "  lReachedAfterMalformed = .T.\n"
+        "CATCH TO oErr\n"
+        "  nCaughtErrorNo = oErr.ErrorNo\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6461: CLEAR ERROR EXTRA script should complete: " + state.message);
+
+    expect(state.globals.find("lreachedaftermalformed") == state.globals.end(),
+           "#6461: CLEAR ERROR EXTRA should raise a catchable error rather than execute as CLEAR ERROR");
+    const auto caught_error_no = state.globals.find("ncaughterrorno");
+    expect(caught_error_no != state.globals.end(),
+           "#6461: CLEAR ERROR EXTRA should be caught by an enclosing TRY/CATCH");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_throw_is_catchable_and_preserves_exception_uservalue() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_throw_exception_uservalue";

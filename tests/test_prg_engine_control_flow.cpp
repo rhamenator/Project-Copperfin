@@ -132,6 +132,7 @@ int main() {
     test_catch_to_binds_exception_object_with_error_metadata();
     test_throw_is_catchable_and_preserves_exception_uservalue();
     test_bare_throw_rethrows_active_exception_object();
+    test_clear_error_before_bare_throw_still_rethrows_same_exception_object();
     test_bare_throw_without_active_exception_creates_user_thrown_default();
     test_throw_exception_object_chains_outer_uservalue_reference();
     test_catch_when_false_falls_through_to_later_clause();
@@ -229,6 +230,8 @@ int main() {
     test_division_by_zero_dispatches_runtime_error();
     test_numeric_field_overflow_is_diagnosed_not_silently_truncated();
     test_aerror_line_number_is_innermost_faulting_line_not_catch_site();
+    test_clear_error_resets_diagnostic_surface_inside_catch();
+    test_clear_error_rejects_trailing_arguments();
 
     if (!repository_runtime_temp_existed) {
         copperfin::test_support::expect(
