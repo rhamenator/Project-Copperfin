@@ -1,3 +1,16 @@
+- 2026-09-16: Fixed #6443: `DO ProcedureName IN ProgramName2 [WITH ...]` now
+  resolves the `IN` clause and invokes the named procedure from the
+  specified program file. The parser previously stored `ProcedureName IN
+  ProgramName2` as one undifferentiated identifier with no parse or
+  resolution step for the documented `IN` clause, so dispatch tried
+  (and failed) to find a routine or file literally named
+  `"ProcedureName IN ProgramName2"`, leaving the statement paused instead
+  of invoking the requested procedure. Missing programs and missing
+  procedures now raise the existing catchable `CommandTargetResolveFailed`
+  error instead. Added `RQ-CF-PRG-040`. Broader packaging/dependency-graph
+  and compatibility-documentation updates called for by the issue's
+  acceptance criteria are out of scope for this fix.
+
 - 2026-09-16: Fixed #6455: `CLEAR ALL` now releases every table and record
   lock it closes, instead of orphaning the shared cross-runtime lock-owner
   entries. The command directly cleared each data session's `cursors`,

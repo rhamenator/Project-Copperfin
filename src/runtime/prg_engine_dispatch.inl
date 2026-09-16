@@ -2011,6 +2011,91 @@
                 frame.copy_file_continuation.reset();
                 frame.rename_file_continuation.reset();
                 Program &program = load_program(frame.file_path);
+                // #6443: DO ProcedureName IN ProgramName2 selects a
+                // specific containing program for the requested procedure;
+                // it is not itself a routine or file name and must not fall
+                // through to the plain "DO ProgramName1" path below (which
+                // would run ProgramName2's IN clause text as a whole
+                // program from its main entry instead of invoking the
+                // requested procedure inside it).
+                if (!statement.secondary_expression.empty())
+                {
+                    std::filesystem::path in_target_candidate =
+                        copperfin::platform::path_from_utf8_string(statement.secondary_expression);
+                    if (in_target_candidate.extension().empty())
+                    {
+                        in_target_candidate += ".prg";
+                    }
+                    std::filesystem::path in_target_path;
+                    if (options.require_source_text_overrides)
+                    {
+                        in_target_path = in_target_candidate;
+                        if (in_target_path.is_relative())
+                        {
+                            in_target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                                in_target_path;
+                        }
+                        in_target_path = in_target_path.lexically_normal();
+                        const auto admitted_in_target = find_source_text_override(
+                            copperfin::platform::path_to_utf8_string(in_target_path),
+                            true);
+                        if (admitted_in_target != options.source_text_overrides.end())
+                        {
+                            in_target_path = copperfin::platform::path_from_utf8_string(admitted_in_target->first);
+                        }
+                    }
+                    else
+                    {
+                        in_target_path = copperfin::platform::path_from_utf8_string(
+                            resolve_native_prg_program_path(
+                                copperfin::platform::path_to_utf8_string(in_target_candidate)));
+                    }
+                    const std::string in_target_path_text =
+                        copperfin::platform::path_to_utf8_string(in_target_path.lexically_normal());
+                    const auto admitted_in_target_source = find_source_text_override(in_target_path_text);
+                    const bool has_admitted_in_target_source =
+                        options.require_source_text_overrides &&
+                        admitted_in_target_source != options.source_text_overrides.end() &&
+                        !admitted_in_target_source->second.empty();
+                    std::error_code in_target_exists_error;
+                    std::optional<RoutineLookup> in_target_routine;
+                    if ((std::filesystem::exists(in_target_path, in_target_exists_error) &&
+                         !in_target_exists_error) ||
+                        has_admitted_in_target_source || options.require_source_text_overrides)
+                    {
+                        Program &in_target_program = load_program(in_target_path_text);
+                        if (const auto found = in_target_program.routines.find(normalize_identifier(target));
+                            found != in_target_program.routines.end())
+                        {
+                            in_target_routine = RoutineLookup{.program = &in_target_program, .routine = &found->second};
+                        }
+                    }
+                    if (!in_target_routine.has_value())
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                            {
+                                {"command", "DO"},
+                                {"target", target + " IN " + statement.secondary_expression}
+                            });
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (!can_push_frame())
+                    {
+                        last_error_message = call_depth_limit_message();
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    push_routine_frame(
+                        in_target_routine->program->path,
+                        *in_target_routine->routine,
+                        std::move(call_arguments),
+                        std::move(call_argument_references));
+                    return {};
+                }
                 if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
                 {
                     if (!can_push_frame())
