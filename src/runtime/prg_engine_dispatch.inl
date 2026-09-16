@@ -11472,7 +11472,51 @@
             {
                 // CLEAR MEMORY — release all public/global variables and arrays
                 // CLEAR ALL — same plus closes all tables and releases procedures
+                // #6438: installed VFP9 SP2's CLEAR Commands help documents that
+                // neither command releases system variables (_SCREEN, _VFP,
+                // APPLICATION); the same three-name check already used by the
+                // memory-display command marks them as internal system
+                // bindings. Preserve their existing session-wide object
+                // reference across the bulk global-map clear below instead of
+                // dropping and losing the runtime's own application surface.
+                std::map<std::string, PrgValue> preserved_system_bindings;
+                for (const char *system_binding_name : {"_screen", "_vfp", "application"})
+                {
+                    // #6463 review (Codex + Copilot, P2): PRIVATE _SCREEN (or
+                    // PRIVATE ALL) replaces globals[name] with an empty
+                    // placeholder and stashes the real object reference in
+                    // the declaring frame's private_saved_values, which the
+                    // frame-clear loop below then discards. Recover the true
+                    // value from the outermost stack frame that privatized
+                    // this name -- the chronologically first shadow point,
+                    // so it still holds what was in globals before any
+                    // PRIVATE in the current call chain touched it -- before
+                    // falling back to the (possibly already-shadowed)
+                    // current globals entry.
+                    bool recovered = false;
+                    for (Frame &search_frame : stack)
+                    {
+                        if (const auto saved = search_frame.private_saved_values.find(system_binding_name);
+                            saved != search_frame.private_saved_values.end() && saved->second.has_value())
+                        {
+                            preserved_system_bindings.emplace(system_binding_name, *saved->second);
+                            recovered = true;
+                            break;
+                        }
+                    }
+                    if (!recovered)
+                    {
+                        if (const auto found = globals.find(system_binding_name); found != globals.end())
+                        {
+                            preserved_system_bindings.emplace(system_binding_name, found->second);
+                        }
+                    }
+                }
                 globals.clear();
+                for (auto &[name, value] : preserved_system_bindings)
+                {
+                    globals[name] = value;
+                }
                 arrays.clear();
                 public_names.clear();
                 for (auto &active_frame : stack)

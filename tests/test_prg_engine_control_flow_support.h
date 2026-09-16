@@ -110,6 +110,8 @@ void test_release_all_preserves_public_bindings();
 void test_clear_memory_erases_all_globals();
 void test_clear_memory_prevents_private_bindings_from_restoring();
 void test_clear_memory_clears_current_frame_locals_without_global_leak();
+void test_clear_memory_and_clear_all_preserve_system_variables();
+void test_clear_memory_recovers_system_variable_shadowed_by_private();
 
 // ==== Aggregate and TOTAL command tests (SUM/COUNT/CALCULATE/TOTAL) ====
 void test_aggregate_functions_respect_visibility();
