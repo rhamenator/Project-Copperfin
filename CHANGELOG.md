@@ -1,3 +1,15 @@
+- 2026-09-16: Fixed #6455: `CLEAR ALL` now releases every table and record
+  lock it closes, instead of orphaning the shared cross-runtime lock-owner
+  entries. The command directly cleared each data session's `cursors`,
+  `table_locks`, and `record_locks` containers without first routing each
+  closed cursor through `release_shared_lock_ownership_for_cursor()` (the
+  same owner-aware release `close_cursor()` already uses) -- so the local
+  bookkeeping that release depends on was gone by the time anything tried
+  to release the shared `table_lock_owner_by_resource`/
+  `record_lock_owner_by_resource` entries, permanently orphaning the lock
+  for the rest of the runtime family even though no language-visible cursor
+  owned it anymore. Added `RQ-CF-PRG-039`.
+
 - 2026-09-15: Fixed #6438: `CLEAR MEMORY` and `CLEAR ALL` no longer erase
   `_SCREEN`, `_VFP`, and `APPLICATION`. Installed VFP9 SP2's CLEAR Commands
   help documents that `CLEAR MEMORY` releases public/private variables and

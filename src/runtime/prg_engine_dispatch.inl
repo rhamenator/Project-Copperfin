@@ -11529,8 +11529,21 @@
                 if (statement.identifier == "all")
                 {
                     // Also close all open work areas
+                    // #6455: release each closed cursor's shared table/record
+                    // locks through the same owner-aware path close_cursor()
+                    // uses, before dropping the local table_locks/
+                    // record_locks bookkeeping those releases depend on.
+                    // Without this, CLEAR ALL left the shared
+                    // table_lock_owner_by_resource/record_lock_owner_by_resource
+                    // entries behind with no remaining local state able to
+                    // release them, permanently poisoning the table for the
+                    // rest of the runtime family.
                     for (auto &[session_id, session] : data_sessions)
                     {
+                        for (const auto &[_, cursor] : session.cursors)
+                        {
+                            release_shared_lock_ownership_for_cursor(cursor, session, session_id);
+                        }
                         session.cursors.clear();
                         session.aliases.clear();
                         session.open_cursor_aliases.clear();

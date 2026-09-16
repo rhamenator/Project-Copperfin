@@ -691,4 +691,61 @@ void test_flock_retry_blocking_is_rejected_inside_critical_section() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_clear_all_releases_table_locks_for_other_data_sessions() {
+    // #6455: CLEAR ALL directly cleared each data session's cursors,
+    // table_locks, and record_locks containers without routing through
+    // release_shared_lock_ownership_for_cursor() first. The local
+    // table_locks/record_locks bookkeeping that release depends on was gone
+    // by the time anything tried to release the shared
+    // table_lock_owner_by_resource/record_lock_owner_by_resource entries,
+    // permanently orphaning the lock: a different owner could never
+    // reacquire it, even with SET REPROCESS TO 0 (no retries at all).
+    //
+    // SET DATASESSION TO 2 creates a second, independent data session (and
+    // therefore a different lock owner identity) within the same runtime
+    // instance and script, matching the pattern
+    // test_reprocess_table_lock_timeouts_are_localized() already uses to
+    // simulate two independent lock owners without a second process.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_clear_all_lock_release";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    const fs::path main_path = temp_root / "clear_all_lock_release.prg";
+    write_text(
+        main_path,
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleOne SHARED IN 0\n"
+        "lHeldLock = FLOCK()\n"
+        "CLEAR ALL\n"
+        "SET DATASESSION TO 2\n"
+        "SET MULTILOCKS ON\n"
+        "SET REPROCESS TO 0\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleTwo SHARED IN 0\n"
+        "lRelock = FLOCK()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6455: CLEAR ALL lock-release script should complete: " + state.message);
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.lock" && event.detail == "PeopleOne FLOCK";
+    }), "#6455: the initial FLOCK() on data session 1 should succeed before CLEAR ALL");
+
+    const auto relock = state.globals.find("lrelock");
+    expect(relock != state.globals.end(), "#6455: the post-CLEAR-ALL relock attempt should be captured");
+    if (relock != state.globals.end()) {
+        expect(copperfin::runtime::format_value(relock->second) == "true",
+               "#6455: CLEAR ALL must release the table lock so a different data session can "
+               "immediately reacquire it, even with SET REPROCESS TO 0 (no retries)");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 } // namespace copperfin::table_mutation_tests
