@@ -46,6 +46,8 @@ int main()
     test_replacing_a_used_work_area_releases_prior_table_locks();
     test_reprocess_contention_retries_and_mutation_lock_timeouts();
     test_reprocess_table_lock_timeouts_are_localized();
+    test_clear_all_releases_table_locks_for_other_data_sessions();
+    test_clear_all_does_not_leave_stale_relations_for_reused_work_areas();
     test_lock_retry_blocking_is_rejected_inside_critical_section();
     test_rlock_retry_blocking_is_rejected_inside_critical_section();
     test_flock_retry_blocking_is_rejected_inside_critical_section();
