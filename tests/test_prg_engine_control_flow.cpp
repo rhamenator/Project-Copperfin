@@ -169,6 +169,7 @@ int main() {
     test_clear_memory_prevents_private_bindings_from_restoring();
     test_clear_memory_clears_current_frame_locals_without_global_leak();
     test_clear_memory_and_clear_all_preserve_system_variables();
+    test_clear_memory_recovers_system_variable_shadowed_by_private();
     test_cancel_halts_execution();
     test_quit_emits_event();
     test_quit_cancelled_by_callback();

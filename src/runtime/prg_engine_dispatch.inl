@@ -11482,9 +11482,34 @@
                 std::map<std::string, PrgValue> preserved_system_bindings;
                 for (const char *system_binding_name : {"_screen", "_vfp", "application"})
                 {
-                    if (const auto found = globals.find(system_binding_name); found != globals.end())
+                    // #6463 review (Codex + Copilot, P2): PRIVATE _SCREEN (or
+                    // PRIVATE ALL) replaces globals[name] with an empty
+                    // placeholder and stashes the real object reference in
+                    // the declaring frame's private_saved_values, which the
+                    // frame-clear loop below then discards. Recover the true
+                    // value from the outermost stack frame that privatized
+                    // this name -- the chronologically first shadow point,
+                    // so it still holds what was in globals before any
+                    // PRIVATE in the current call chain touched it -- before
+                    // falling back to the (possibly already-shadowed)
+                    // current globals entry.
+                    bool recovered = false;
+                    for (Frame &search_frame : stack)
                     {
-                        preserved_system_bindings.emplace(system_binding_name, found->second);
+                        if (const auto saved = search_frame.private_saved_values.find(system_binding_name);
+                            saved != search_frame.private_saved_values.end() && saved->second.has_value())
+                        {
+                            preserved_system_bindings.emplace(system_binding_name, *saved->second);
+                            recovered = true;
+                            break;
+                        }
+                    }
+                    if (!recovered)
+                    {
+                        if (const auto found = globals.find(system_binding_name); found != globals.end())
+                        {
+                            preserved_system_bindings.emplace(system_binding_name, found->second);
+                        }
                     }
                 }
                 globals.clear();

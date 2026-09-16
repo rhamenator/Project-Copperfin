@@ -1001,13 +1001,21 @@ void test_clear_memory_and_clear_all_preserve_system_variables() {
         write_text(
             prg,
             "p = 42\n"
+            // #6463 review (Copilot, P2): set a sentinel property BEFORE the
+            // clear and read it back AFTER without reassigning it here, so
+            // this test actually proves the SAME pre-existing object
+            // survives -- an implementation that reconstructs a fresh
+            // application-surface object and assigns it to all three names
+            // would fail this (Caption would come back empty), whereas
+            // merely comparing the three names against each other after the
+            // clear would not have caught that.
+            "_SCREEN.Caption = 'sentinel-caption-6438'\n"
             + clear_command + "\n" +
             "cScreenType = TYPE('_SCREEN')\n"
             "cVfpType = TYPE('_VFP')\n"
             "cApplicationType = TYPE('APPLICATION')\n"
             "lSameObject = COMPOBJ(_SCREEN, _VFP)\n"
             "lSameObjectApplication = COMPOBJ(_VFP, APPLICATION)\n"
-            "_SCREEN.Caption = 'Still running'\n"
             "cCaption = _SCREEN.Caption\n"
             "RETURN\n");
         copperfin::runtime::PrgRuntimeSession session =
@@ -1031,7 +1039,7 @@ void test_clear_memory_and_clear_all_preserve_system_variables() {
         check("capplicationtype", "O");
         check("lsameobject", "true");
         check("lsameobjectapplication", "true");
-        check("ccaption", "Still running");
+        check("ccaption", "sentinel-caption-6438");
         expect(state.globals.find("p") == state.globals.end(),
                label + " should still clear ordinary user globals");
 
@@ -1040,6 +1048,62 @@ void test_clear_memory_and_clear_all_preserve_system_variables() {
 
     run_and_check("CLEAR MEMORY", "CLEAR MEMORY");
     run_and_check("CLEAR ALL", "CLEAR ALL");
+}
+
+void test_clear_memory_recovers_system_variable_shadowed_by_private() {
+    // #6463 review (Codex + Copilot, P2): PRIVATE _SCREEN replaces
+    // globals["_screen"] with an undefined placeholder and stashes the real
+    // application-surface reference in the declaring frame's
+    // private_saved_values. A naive fix that only reads globals before the
+    // clear would preserve the undefined shadow and then permanently lose
+    // the real object when the frame's saved values are discarded. CLEAR
+    // MEMORY/CLEAR ALL must recover the true value instead.
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_clear_memory_private_shadow";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(
+        prg,
+        "_SCREEN.Caption = 'sentinel-private-6438'\n"
+        "DO subproc\n"
+        "cScreenTypeAfterReturn = TYPE('_SCREEN')\n"
+        "RETURN\n"
+        "PROCEDURE subproc\n"
+        "PRIVATE _SCREEN\n"
+        // CLEAR MEMORY itself wipes globals/public_names, so the PUBLIC
+        // declarations for the post-clear capture variables must come
+        // AFTER it runs -- otherwise they would be cleared too.
+        "CLEAR MEMORY\n"
+        "PUBLIC cScreenTypeAfterClear, cCaptionAfterClear, lSameObjectAfterClear\n"
+        "cScreenTypeAfterClear = TYPE('_SCREEN')\n"
+        "cCaptionAfterClear = _SCREEN.Caption\n"
+        "lSameObjectAfterClear = COMPOBJ(_SCREEN, _VFP)\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PRIVATE-shadowed CLEAR MEMORY script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " should be captured");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("cscreentypeafterclear", "O");
+    check("ccaptionafterclear", "sentinel-private-6438");
+    check("lsameobjectafterclear", "true");
+    check("cscreentypeafterreturn", "O");
+
+    fs::remove_all(tmp, ign);
 }
 
 }  // namespace cf_test_prg_engine_control_flow
