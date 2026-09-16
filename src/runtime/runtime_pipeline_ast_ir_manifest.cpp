@@ -240,6 +240,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "release_command";
         case StatementKind::clear_memory_command:
             return "clear_memory_command";
+        case StatementKind::clear_error_command:
+            return "clear_error_command";
         case StatementKind::cancel_statement:
             return "cancel_statement";
         case StatementKind::quit_statement:

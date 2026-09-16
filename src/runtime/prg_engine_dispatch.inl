@@ -11499,6 +11499,37 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::clear_error_command:
+            {
+                // #6439: CLEAR ERROR resets the VFP diagnostic surface --
+                // ERROR(), AERROR(), MESSAGE(), the error parameter
+                // (SYS(2018)), and related line/procedure/work-area metadata
+                // -- as if no error had occurred, without disturbing the
+                // active caught Exception object's own properties. This
+                // deliberately leaves error_metadata_stack (the ON ERROR
+                // handler / cross-frame RESUME snapshot used by
+                // current_error_message()/current_error_code() while such a
+                // handler is on the stack) untouched: that snapshot is not
+                // scoped per TRY block, so clearing it here could erase an
+                // unrelated outer handler's still-pending fault context
+                // instead of "the current error." Only ordinary (non
+                // ON-ERROR-nested) TRY...CATCH -- the documented, VFP9
+                // differentially verified scenario for this command -- is
+                // covered; CLEAR ERROR's exact effect while an ON ERROR
+                // handler is active on the call stack is not independently
+                // probed here.
+                last_error_message.clear();
+                last_error_code = 0;
+                last_error_work_area = 0;
+                last_error_procedure.clear();
+                last_fault_location = {};
+                last_fault_statement.clear();
+                last_error_compatibility = {};
+                events.push_back({.category = "runtime.clear_error",
+                                  .detail = std::string{},
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::cancel_statement:
             {
                 // CANCEL — abort execution and return to top level

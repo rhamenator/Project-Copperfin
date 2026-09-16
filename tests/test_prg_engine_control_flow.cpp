@@ -229,6 +229,7 @@ int main() {
     test_division_by_zero_dispatches_runtime_error();
     test_numeric_field_overflow_is_diagnosed_not_silently_truncated();
     test_aerror_line_number_is_innermost_faulting_line_not_catch_site();
+    test_clear_error_resets_diagnostic_surface_inside_catch();
 
     if (!repository_runtime_temp_existed) {
         copperfin::test_support::expect(

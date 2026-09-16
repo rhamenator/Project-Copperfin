@@ -2258,6 +2258,8 @@ Program parse_program_impl(
         } else if (upper == "CLEAR MEMORY" || upper == "CLEAR ALL") {
             statement.kind = StatementKind::clear_memory_command;
             statement.identifier = upper == "CLEAR ALL" ? "all" : "memory";
+        } else if (upper == "CLEAR ERROR") {
+            statement.kind = StatementKind::clear_error_command;
         } else if (upper == "CANCEL") {
             statement.kind = StatementKind::cancel_statement;
         } else if (upper == "QUIT") {

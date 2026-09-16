@@ -1,3 +1,14 @@
+- 2026-09-15: Fixed #6439: `CLEAR ERROR` is now a recognized statement that
+  resets `ERROR()`, `MESSAGE()`, `AERROR()`'s row count, and `SYS(2018)` to
+  their no-error defaults in one operation, matching installed VFP9 SP2's
+  CLEAR Commands help; it previously fell through as an unresolved generic
+  expression and left every diagnostic surface stale. An already-materialized
+  caught `Exception` object's own properties (`ErrorNo`, `Message`, etc.) are
+  left untouched. Added `RQ-CF-PRG-037`. `CLEAR ERROR`'s effect while an
+  `ON ERROR` handler is active on the call stack (a separate cross-frame
+  fault-snapshot mechanism used for `RESUME`/`RETRY`) is not covered by this
+  fix and is left as a known, disclosed gap rather than guessed at.
+
 - 2026-09-15: Fixed #6288: native `RemoveObject()` now destroys the selected
   child subtree immediately in child-first lifecycle order, retires runtime
   handles and bindings, and invalidates variables, arrays, collections, and
