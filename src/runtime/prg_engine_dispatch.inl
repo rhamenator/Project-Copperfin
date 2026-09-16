@@ -3296,6 +3296,72 @@
                 return {};
             }
             case StatementKind::return_statement:
+                if (statement.identifier == "to_master" || statement.identifier == "to_procedure")
+                {
+                    // #6441: RETURN TO MASTER unwinds through every
+                    // intermediate procedure/program frame back to the
+                    // outermost (master) program; RETURN TO ProcedureName
+                    // unwinds back to the nearest (innermost) still-active
+                    // frame executing that routine, resuming right where
+                    // its own execution was suspended -- exactly like an
+                    // ordinary nested RETURN, just applied transitively.
+                    // Searches innermost-to-outermost so recursive
+                    // activations resolve to the closest match; VFP's own
+                    // tie-breaking for ambiguous recursive targets is not
+                    // independently verified.
+                    std::size_t target_depth = 1U;
+                    if (statement.identifier == "to_procedure")
+                    {
+                        const std::string target_name = normalize_identifier(trim_copy(statement.secondary_expression));
+                        std::optional<std::size_t> found_index;
+                        for (std::size_t index = stack.size(); index > 0U; --index)
+                        {
+                            if (normalize_identifier(stack[index - 1U].routine_name) == target_name)
+                            {
+                                found_index = index - 1U;
+                                break;
+                            }
+                        }
+                        if (!found_index.has_value())
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                                {
+                                    {"command", "RETURN TO"},
+                                    {"target", statement.secondary_expression}
+                                });
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        target_depth = *found_index + 1U;
+                    }
+                    last_return_value = make_empty_value();
+                    if (target_depth >= stack.size())
+                    {
+                        // Already at or past the target frame (e.g. RETURN
+                        // TO MASTER issued directly from the master
+                        // program): behave like an ordinary bare return.
+                        frame.return_pending = true;
+                        if (const auto outcome = continue_pending_return(frame); outcome.has_value())
+                        {
+                            return *outcome;
+                        }
+                        return {};
+                    }
+                    // Unwind every intermediate frame directly. This
+                    // matches the existing CANCEL statement's forced
+                    // multi-frame unwind precedent: pending FINALLY blocks
+                    // in an unwound frame are not specially dispatched here
+                    // (a disclosed, narrower scope than the fully general
+                    // TRY/CATCH/FINALLY interaction the issue's acceptance
+                    // criteria describes).
+                    while (stack.size() > target_depth)
+                    {
+                        pop_frame();
+                    }
+                    return {};
+                }
                 if (trim_copy(statement.expression).empty())
                 {
                     last_return_value = make_empty_value();

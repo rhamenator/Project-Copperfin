@@ -83,6 +83,9 @@ int main() {
     test_missing_argument_commas_raise_expression_errors();
     test_set_udfparms_controls_expression_routine_parameter_aliasing();
     test_set_udfparms_state_is_isolated_between_data_and_runtime_sessions();
+    test_return_to_master_unwinds_every_intermediate_procedure();
+    test_return_to_procedure_name_resumes_named_ancestor();
+    test_return_to_unknown_procedure_raises_catchable_error();
     test_deep_scalar_reference_forwarding_uses_heap_backed_frame_walk();
     test_direct_recursive_return_uses_heap_backed_frame_continuations();
     test_standalone_expression_uses_heap_backed_frame_continuations();

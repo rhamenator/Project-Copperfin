@@ -3099,6 +3099,21 @@ Program parse_program_impl(
             statement.kind = StatementKind::return_statement;
             if (starts_with_insensitive(line, "RETURN ")) {
                 statement.expression = trim_copy(line.substr(6U));
+                // #6441: RETURN [eExpression | oObjectName | TO MASTER |
+                // TO ProcedureName] -- the documented targeted-return forms
+                // are distinct from an ordinary expression/object return
+                // and must not be evaluated as expression text.
+                if (starts_with_insensitive(statement.expression, "TO ")) {
+                    const std::string tail = trim_copy(statement.expression.substr(3U));
+                    if (normalize_identifier(tail) == "master") {
+                        statement.identifier = "to_master";
+                        statement.expression.clear();
+                    } else if (!tail.empty() && is_bare_identifier_text(tail)) {
+                        statement.identifier = "to_procedure";
+                        statement.secondary_expression = tail;
+                        statement.expression.clear();
+                    }
+                }
             }
         } else if (upper == "NODEFAULT") {
             statement.kind = StatementKind::nodefault_statement;

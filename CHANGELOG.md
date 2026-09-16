@@ -1,3 +1,21 @@
+- 2026-09-16: Fixed #6441: `RETURN TO MASTER` and `RETURN TO ProcedureName`
+  now unwind through every intermediate procedure/program frame instead of
+  just the innermost one. `TO MASTER`/`TO ProcedureName` were previously
+  parsed and evaluated as ordinary `RETURN` expression text, so only the
+  procedure that literally executed the statement returned; installed VFP9
+  SP2 evidence showed both forms unwind past every intervening call and
+  resume the target (the outermost program for `TO MASTER`, or the nearest
+  still-active frame executing the named routine for `TO ProcedureName`)
+  right where its own execution was suspended, skipping the remainder of
+  every unwound routine. An unresolvable `TO ProcedureName` target now
+  raises the existing catchable `CommandTargetResolveFailed` error. Added
+  `RQ-CF-PRG-041`. Matching the existing `CANCEL` statement's own forced
+  multi-frame unwind, a pending `FINALLY` block in an unwound frame is not
+  specially dispatched during the unwind (a disclosed, narrower scope than
+  the issue's full TRY/CATCH/FINALLY interaction request); AST/IR/C#
+  lowering for targeted returns and VFP's exact tie-breaking for an
+  ambiguous recursive `TO ProcedureName` target remain out of scope.
+
 - 2026-09-16: Fixed #6443: `DO ProcedureName IN ProgramName2 [WITH ...]` now
   resolves the `IN` clause and invokes the named procedure from the
   specified program file. The parser previously stored `ProcedureName IN
