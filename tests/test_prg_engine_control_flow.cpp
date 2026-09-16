@@ -86,6 +86,7 @@ int main() {
     test_return_to_master_unwinds_every_intermediate_procedure();
     test_return_to_procedure_name_resumes_named_ancestor();
     test_return_to_unknown_procedure_raises_catchable_error();
+    test_return_to_master_from_expression_invoked_routine_raises_catchable_error();
     test_deep_scalar_reference_forwarding_uses_heap_backed_frame_walk();
     test_direct_recursive_return_uses_heap_backed_frame_continuations();
     test_standalone_expression_uses_heap_backed_frame_continuations();

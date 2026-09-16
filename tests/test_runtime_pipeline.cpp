@@ -140,6 +140,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_runtime_package_emits_ast_manifest_for_prg_sources();
     test_runtime_package_emits_ir_manifest_with_instruction_mapping();
     test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code();
+    test_runtime_package_csharp_transpilation_rejects_return_to_targeted_forms();
     test_runtime_package_emits_csharp_transpilation_for_class_library_objects();
     test_runtime_manifest_records_generated_compiler_contract_digests();
     test_startup_dbf_companion_assets_are_staged();

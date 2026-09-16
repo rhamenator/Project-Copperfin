@@ -955,5 +955,75 @@ void test_return_to_unknown_procedure_raises_catchable_error() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_return_to_master_from_expression_invoked_routine_raises_catchable_error() {
+    // #6441 review fix: RETURN TO MASTER issued from inside a routine that
+    // was itself invoked synchronously from an expression (a UDF call, not
+    // a DO statement) must not pop the interpreter stack past the C++
+    // invocation boundary run_expression_invoked_routine_until_return() is
+    // waiting on. Before the fix this either corrupted that boundary check
+    // or surfaced as an uncaught internal "aborted execution" failure;
+    // it must now raise an ordinary catchable PRG error instead.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_return_to_master_expr_boundary";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "return_to_master_expr_boundary.prg";
+    write_text(
+        main_path,
+        "PUBLIC cLog, nCaughtErrorNo\n"
+        "cLog = ''\n"
+        "nCaughtErrorNo = 0\n"
+        "cLog = cLog + 'main_before;'\n"
+        "TRY\n"
+        "  nResult = Probe()\n"
+        "  cLog = cLog + 'try_after_probe;'\n"
+        "CATCH TO oErr\n"
+        "  nCaughtErrorNo = oErr.ErrorNo\n"
+        "ENDTRY\n"
+        "cLog = cLog + 'main_after;'\n"
+        "RETURN\n"
+        "FUNCTION Probe\n"
+        "cLog = cLog + 'probe_before;'\n"
+        "DO deeper\n"
+        "cLog = cLog + 'probe_after;'\n"
+        "RETURN 1\n"
+        "ENDFUNC\n"
+        "PROCEDURE deeper\n"
+        "cLog = cLog + 'deeper_before;'\n"
+        "RETURN TO MASTER\n"
+        "cLog = cLog + 'deeper_after;'\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#6441: RETURN TO MASTER crossing an expression-invocation boundary should still let the "
+           "script complete cleanly (raised as a catchable error, not a crash): " + state.message);
+
+    const auto log = state.globals.find("clog");
+    expect(log != state.globals.end(), "#6441: cLog should be captured");
+    if (log != state.globals.end()) {
+        expect(copperfin::runtime::format_value(log->second) ==
+                   "main_before;probe_before;deeper_before;main_after;",
+               "#6441: RETURN TO MASTER crossing an expression-invocation boundary should raise before "
+               "resuming Probe or the TRY body, expected "
+               "'main_before;probe_before;deeper_before;main_after;' got '" +
+                   copperfin::runtime::format_value(log->second) + "'");
+    }
+
+    const auto caught = state.globals.find("ncaughterrorno");
+    expect(caught != state.globals.end(), "#6441: the enclosing TRY/CATCH should observe the error");
+    if (caught != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caught->second) != "0",
+               "#6441: the caught error number should be nonzero, got '" +
+                   copperfin::runtime::format_value(caught->second) + "'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
 
 }  // namespace cf_test_prg_engine_control_flow

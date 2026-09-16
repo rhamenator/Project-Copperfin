@@ -440,6 +440,75 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_csharp_transpilation_rejects_return_to_targeted_forms() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_csharp_return_to_contract";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
 
+    // #6441 review fix: RETURN TO MASTER/ProcedureName are nonlocal,
+    // multi-frame transfers with no direct C# equivalent -- the
+    // transpiler must reject them explicitly rather than emitting a
+    // plain `return;` that would silently drop the unwind.
+    write_text(project_dir / "main.prg",
+               "DO worker\n"
+               "RETURN\n"
+               "PROCEDURE worker\n"
+               "RETURN TO MASTER\n"
+               "ENDPROC\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "returntomasterdemo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "ReturnToMasterDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "ReturnToMasterDemo";
+    workspace.build_plan.output_path = (output_dir / "ReturnToMasterDemo.exe").string();
+    workspace.build_plan.output_kind = "executable";
+    workspace.build_plan.build_target = "x64 Windows executable";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "#6441: csharp-output plan should be created for a RETURN TO MASTER source");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect_materialization(result, "#6441: csharp-output package should materialize for a RETURN TO MASTER source");
+    if (result.ok) {
+        const std::string transpiled = read_text(result.plan.transpiled_csharp_path);
+        expect(
+            transpiled.find("GeneratedLocalization.Translate(\"Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement\"") != std::string::npos &&
+                transpiled.find("[\"statementText\"] = \"RETURN TO MASTER\"") != std::string::npos,
+            "#6441: csharp transpilation should reject RETURN TO MASTER instead of silently lowering it to a plain return");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
 
 }  // namespace cf_test_runtime_pipeline

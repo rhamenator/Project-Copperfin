@@ -671,6 +671,15 @@ std::string transpile_statement_to_csharp(
             }
             break;
         case StatementKind::return_statement:
+            // #6441 review fix: RETURN TO MASTER/RETURN TO ProcedureName are
+            // nonlocal, multi-frame transfers with no C# equivalent to a
+            // plain `return;` -- lowering them that way would silently drop
+            // the intermediate-frame unwind and run subsequent caller code
+            // that VFP9 would never reach. Fall through to the existing
+            // "unsupported statement" rejection instead of miscompiling.
+            if (statement.identifier == "to_master" || statement.identifier == "to_procedure") {
+                break;
+            }
             return "return;\n";
         case StatementKind::select_command:
             return transpile_linq_query_to_csharp(statement);
