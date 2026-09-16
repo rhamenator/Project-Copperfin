@@ -1,3 +1,27 @@
+- 2026-09-16: Fixed #6442: a bare `RETURN` (no expression) and an implicit
+  `RETURN` performed when a routine reaches its end without ever executing
+  `RETURN` now both yield logical `.T.`, not an empty value, matching
+  installed VFP9 SP2 differential evidence. `last_return_value` is
+  session-wide and is never reset between calls, so the implicit case was
+  previously worse than just "wrong default": a routine that fell off the
+  end silently inherited whatever value some earlier, unrelated `RETURN`
+  happened to leave behind. `RETURN TO MASTER`/`RETURN TO ProcedureName`
+  (#6441) also now default to logical `.T.` for consistency, since they
+  likewise carry no expression. Added `RQ-CF-PRG-042`. A full-suite run
+  surfaced a real regression in the runtime host's bridge-invocation
+  mechanism, which reads `last_return_value` after running a synthetic `DO
+  Export` bootstrap script and depends on that bootstrap's own top-level
+  completion not overwriting the exported routine's already-captured
+  return value; fixed by scoping the implicit-return default to named
+  `FUNCTION`/`PROCEDURE`/`METHOD` frames rather than the top-level master
+  program frame. The top-level program's own implicit-completion value (as
+  opposed to an explicit bare `RETURN` inside one) is therefore left at its
+  prior behavior, a narrower scope than the issue's literal acceptance
+  criteria; propagation through macro/`EVALUATE`/`EXECSCRIPT`,
+  `BINDEVENT`/`RAISEEVENT`, COM/`IDispatch`, async tasks, and generated-C#
+  transpilation (coordinated with #5871) is not independently exercised by
+  this fix.
+
 - 2026-09-16: Review-round fix for #6441 (PR #6466): the `RETURN TO
   MASTER`/`RETURN TO ProcedureName` multi-frame unwind now detects and
   refuses to cross a still-suspended expression-invoked routine boundary

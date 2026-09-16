@@ -401,7 +401,38 @@
             {
                 const bool requested_nodefault = stack.back().requested_nodefault;
                 const bool returned_explicitly = stack.back().return_pending;
-                const std::optional<PrgValue> saved_return_value = last_return_value;
+                const bool naturally_exhausted =
+                    stack.back().routine == nullptr ||
+                    stack.back().pc >= stack.back().routine->statements.size();
+                // #6442: installed VFP9 SP2 evidence shows reaching the end
+                // of a routine without an explicit RETURN performs an
+                // implicit RETURN yielding logical true, same default as a
+                // bare RETURN with no expression. last_return_value is
+                // session-wide and is never reset between calls, so
+                // without this a routine that falls off the end would
+                // leave its caller observing whatever value some earlier,
+                // unrelated RETURN happened to leave behind rather than a
+                // fresh VFP9-correct default. This only affects frames
+                // popped by the "ran out of statements, no pending return"
+                // loop condition; frames forcibly unwound mid-execution
+                // (CANCEL, RETURN TO, TRY/CATCH fault propagation) are
+                // paused with pc still short of the routine's statement
+                // count and are unaffected. Scoped to procedure_context
+                // frames (FUNCTION/PROCEDURE/METHOD calls) rather than the
+                // top-level master program frame: applying it there too
+                // regressed the runtime host's bridge-invocation mechanism,
+                // which relies on last_return_value still reflecting the
+                // last explicitly-returned nested call after its synthetic
+                // bootstrap script's own top-level statements (which never
+                // contain their own RETURN) finish running. A top-level
+                // program's own implicit-completion value is not
+                // independently VFP9-differential verified and is a
+                // disclosed, narrower scope than the issue's literal
+                // acceptance criteria.
+                const std::optional<PrgValue> saved_return_value =
+                    (!returned_explicitly && naturally_exhausted && stack.back().procedure_context)
+                        ? std::make_optional(make_boolean_value(true))
+                        : last_return_value;
                 sync_byref_arguments(stack.back());
                 release_frame_object_bindings(stack.back());
                 restore_private_declarations(stack.back());
