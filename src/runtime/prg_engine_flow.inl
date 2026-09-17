@@ -346,12 +346,86 @@
                 }
             }
 
+            // #6445 review fix: a PRIVATE-declared object lives directly in
+            // `globals` for the lifetime of the declaring frame (only the
+            // shadowed prior value is kept in `frame.private_saved_values`,
+            // for restore_private_declarations() to put back afterward), so
+            // it was never discovered by the `frame.locals` scan above --
+            // release_frame_object_bindings() ran before
+            // restore_private_declarations() but never inspected the
+            // globals it was about to overwrite/erase. This affected both
+            // an ordinary frame return and CANCEL equally; check each
+            // PRIVATE name's *current* global value here, before it gets
+            // restored, exactly like a LOCAL binding.
+            std::vector<std::string> private_object_names;
+            for (const auto &[name, saved] : frame.private_saved_values)
+            {
+                if (is_context_alias(name))
+                {
+                    continue;
+                }
+                const auto global_value = globals.find(name);
+                if (global_value == globals.end())
+                {
+                    continue;
+                }
+                const auto handle = object_handle_for_value(global_value->second);
+                if (!handle.has_value() || contextual_handles.contains(*handle) || returned_handles.contains(*handle))
+                {
+                    continue;
+                }
+                private_object_names.push_back(name);
+            }
+
+            std::vector<std::pair<std::string, std::vector<int>>> private_array_objects;
+            for (const auto &[name, saved] : frame.private_saved_arrays)
+            {
+                const auto array_value = arrays.find(name);
+                if (array_value == arrays.end())
+                {
+                    continue;
+                }
+                std::vector<int> handles;
+                for (const PrgValue &value : array_value->second.values)
+                {
+                    if (const auto handle = object_handle_for_value(value);
+                        handle.has_value() && !contextual_handles.contains(*handle) && !returned_handles.contains(*handle))
+                    {
+                        handles.push_back(*handle);
+                    }
+                }
+                if (!handles.empty())
+                {
+                    private_array_objects.emplace_back(name, std::move(handles));
+                }
+            }
+
             std::set<int> released_handles;
             for (const std::string &name : local_object_names)
             {
                 (void)release_object_memory_binding(frame, name, released_handles);
             }
             for (const auto &[name, handles] : local_array_objects)
+            {
+                release_memory_binding(frame, name, true);
+                for (const int handle : handles)
+                {
+                    if (has_live_variable_reference_to_object(handle))
+                    {
+                        continue;
+                    }
+                    const auto object = ole_objects.find(handle);
+                    if (object != ole_objects.end() && released_handles.insert(handle).second)
+                    {
+                        (void)release_native_object(object->second, name);
+                    }
+                }
+            }
+            for (const std::string &name : private_object_names)
+            {
+                (void)release_object_memory_binding(frame, name, released_handles);
+            }
+            for (const auto &[name, handles] : private_array_objects)
             {
                 release_memory_binding(frame, name, true);
                 for (const int handle : handles)
@@ -406,7 +480,12 @@
         // routine never completed. Callers that perform a forced unwind
         // must pass `false` explicitly; ordinary "ran out of statements"
         // call sites keep the default.
-        void pop_frame(bool natural_completion = true)
+        // #6445: `sync_byref` lets a forced-abort unwind (CANCEL) suppress
+        // by-reference parameter writeback into the caller, matching the
+        // documented "abort, do not complete" semantics -- an ordinary
+        // return (natural or forced-fault-propagation-through-an-active-
+        // TRY) still writes back normally.
+        void pop_frame(bool natural_completion = true, bool sync_byref = true)
         {
             if (!stack.empty())
             {
@@ -446,7 +525,10 @@
                     (natural_completion && !returned_explicitly && naturally_exhausted && !is_root_frame)
                         ? std::make_optional(make_boolean_value(true))
                         : last_return_value;
-                sync_byref_arguments(stack.back());
+                if (sync_byref)
+                {
+                    sync_byref_arguments(stack.back());
+                }
                 release_frame_object_bindings(stack.back());
                 restore_private_declarations(stack.back());
                 stack.pop_back();

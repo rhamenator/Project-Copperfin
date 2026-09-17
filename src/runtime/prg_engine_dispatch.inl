@@ -11932,11 +11932,21 @@
                                       .detail = "0",
                                       .location = statement.location});
                 }
-                // Unwind entire call stack
+                // #6445: unwind the entire call stack through pop_frame()
+                // instead of a manual restore_private_declarations() +
+                // stack.pop_back() that bypassed release_frame_object_bindings().
+                // That bypass left every local/private native object created
+                // in a cancelled frame resident in session-owned state with
+                // Destroy never called and its resources never released,
+                // even though no VFP variable could still reach it. This is
+                // a forced abort (natural_completion=false) that also
+                // suppresses by-reference parameter writeback into the
+                // caller (sync_byref=false), matching CANCEL's documented
+                // "abort, do not complete" semantics rather than a normal
+                // return's effects.
                 while (stack.size() > 1U)
                 {
-                    restore_private_declarations(stack.back());
-                    stack.pop_back();
+                    pop_frame(false, false);
                 }
                 if (!stack.empty())
                 {

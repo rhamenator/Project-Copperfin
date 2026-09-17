@@ -1,3 +1,42 @@
+- 2026-09-17: Review-round fix for #6445 (PR #6468): `release_frame_object_bindings()`
+  itself only scanned `frame.locals`/`frame.local_arrays`, so a
+  PRIVATE-declared object -- which lives directly in `globals` for the
+  declaring frame's lifetime, with only the shadowed prior value kept in
+  `frame.private_saved_values` for `restore_private_declarations()` to
+  restore afterward -- was never discovered or released, on `CANCEL` or on
+  an ordinary frame return alike. The fix's own changelog entry and
+  traceability row had claimed LOCAL/PRIVATE coverage while the added
+  regression test covered only LOCAL. `release_frame_object_bindings()`
+  now also scans each PRIVATE name's current global/array value before it
+  is restored, reusing the same `release_object_memory_binding()`/
+  `release_memory_binding()` helpers already used for LOCAL bindings.
+  Added `test_cancel_releases_frame_owned_private_native_objects`,
+  reproducing the same `CANCEL` trigger with a `PRIVATE` object. Updated
+  `RQ-CF-PRG-043`. Verified fail-then-pass. All 396 tests pass.
+
+- 2026-09-16: Fixed #6445: `CANCEL` now unwinds every active call-stack
+  frame through the same resource-release machinery used for a normal
+  frame return (`pop_frame()`) instead of a manual
+  `restore_private_declarations()` + `stack.pop_back()` loop that bypassed
+  `release_frame_object_bindings()`. A `LOCAL`/`PRIVATE` native object
+  created in a procedure that then executes `CANCEL` was previously
+  abandoned in session-owned state with `Destroy` never called and its
+  resources never released, even though every VFP variable that could
+  reach it was gone, unlike a normal frame return (which already performs
+  this cleanup correctly). Since this is a forced abort rather than a
+  normal return, `pop_frame()` gained a `sync_byref` parameter so
+  `CANCEL`'s unwind can suppress by-reference parameter writeback into the
+  caller, and it is exempt from the implicit-return-defaults-to-true
+  behavior (#6442) via the existing `natural_completion` parameter. Added
+  `RQ-CF-PRG-043`. This fix covers only the reported native-object-cleanup
+  trigger; it deliberately does not attempt the issue's full epic-scale
+  acceptance criteria (reentrant `Destroy`-calls-`CANCEL` edge cases,
+  coherent cleanup ordering across active transactions/buffered
+  edits/async tasks/reports/forms/event loops, independent VFP9
+  differential validation of the general cleanup policy, which the owner
+  has required independently of legacy VFP9 behavior). All 396 tests
+  pass. Verified fail-then-pass.
+
 - 2026-09-16: Review-round fix for #6442 (PR #6467): two further real
   defects in the bare/implicit-RETURN-defaults-to-true fix. (1) Scoping
   the implicit default by `procedure_context` incorrectly excluded every

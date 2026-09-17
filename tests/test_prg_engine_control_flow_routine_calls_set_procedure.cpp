@@ -1133,5 +1133,123 @@ void test_scan_predicate_preserves_rest_scope_and_exhaustion_state() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_cancel_releases_frame_owned_native_objects() {
+    // #6445: CANCEL previously unwound the call stack with a manual
+    // restore_private_declarations() + stack.pop_back() loop that bypassed
+    // pop_frame()'s release_frame_object_bindings() call. A LOCAL native
+    // object created in a cancelled frame was therefore abandoned in
+    // session-owned state with Destroy never called and its resources
+    // never released, even though every VFP variable that could reach it
+    // was gone (installed VFP9 SP2's CANCEL help says CANCEL releases all
+    // private variables; releasing an object-bearing binding must not
+    // suppress that object's normal destruction cleanup). This matches
+    // the normal-return path's own behavior, which already calls Destroy
+    // correctly.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_cancel_object_cleanup";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path script_path = temp_root / "cancel_object_cleanup.prg";
+    write_text(
+        script_path,
+        "DO InnerCancel\n"
+        "RETURN\n"
+        "PROCEDURE InnerCancel\n"
+        "LOCAL oLocal\n"
+        "oLocal = CREATEOBJECT('CleanupProbe')\n"
+        "CANCEL\n"
+        "ENDPROC\n"
+        "DEFINE CLASS CleanupProbe AS Custom\n"
+        "PROCEDURE Destroy\n"
+        "PUBLIC cancel_destroy_called\n"
+        "cancel_destroy_called = .T.\n"
+        "ENDPROC\n"
+        "ENDDEFINE\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6445: CANCEL object-cleanup script should complete: " + state.message);
+
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent &event) {
+                   return event.category == "prg.object.destroy";
+               }),
+           "#6445: CANCEL should call Destroy on a frame-owned local object before unwinding it");
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent &event) {
+                   return event.category == "prg.object.release";
+               }),
+           "#6445: CANCEL should release a frame-owned local object's native resources");
+    expect(state.globals.find("cancel_destroy_called") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("cancel_destroy_called")) == "true",
+           "#6445: the cancelled object's own Destroy method should have run");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_cancel_releases_frame_owned_private_native_objects() {
+    // #6445 review fix: release_frame_object_bindings() only scanned
+    // frame.locals/local_arrays, but a PRIVATE-declared object lives
+    // directly in `globals` for the lifetime of the declaring frame (only
+    // the shadowed prior value is kept in frame.private_saved_values, for
+    // restore_private_declarations() to put back afterward). This gap
+    // applied equally to an ordinary frame return, not just CANCEL, but
+    // was only caught here because the #6445 fix and its own regression
+    // test covered LOCAL, not PRIVATE.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_cancel_private_object_cleanup";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path script_path = temp_root / "cancel_private_object_cleanup.prg";
+    write_text(
+        script_path,
+        "DO InnerCancel\n"
+        "RETURN\n"
+        "PROCEDURE InnerCancel\n"
+        "PRIVATE oPrivate\n"
+        "oPrivate = CREATEOBJECT('PrivateCleanupProbe')\n"
+        "CANCEL\n"
+        "ENDPROC\n"
+        "DEFINE CLASS PrivateCleanupProbe AS Custom\n"
+        "PROCEDURE Destroy\n"
+        "PUBLIC private_cancel_destroy_called\n"
+        "private_cancel_destroy_called = .T.\n"
+        "ENDPROC\n"
+        "ENDDEFINE\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6445: CANCEL PRIVATE-object-cleanup script should complete: " + state.message);
+
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent &event) {
+                   return event.category == "prg.object.destroy";
+               }),
+           "#6445: CANCEL should call Destroy on a frame-owned PRIVATE object before unwinding it");
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent &event) {
+                   return event.category == "prg.object.release";
+               }),
+           "#6445: CANCEL should release a frame-owned PRIVATE object's native resources");
+    expect(state.globals.find("private_cancel_destroy_called") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("private_cancel_destroy_called")) == "true",
+           "#6445: the cancelled PRIVATE object's own Destroy method should have run");
+
+    fs::remove_all(temp_root, ignored);
+}
 
 }  // namespace cf_test_prg_engine_control_flow
