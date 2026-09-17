@@ -406,7 +406,12 @@
         // routine never completed. Callers that perform a forced unwind
         // must pass `false` explicitly; ordinary "ran out of statements"
         // call sites keep the default.
-        void pop_frame(bool natural_completion = true)
+        // #6445: `sync_byref` lets a forced-abort unwind (CANCEL) suppress
+        // by-reference parameter writeback into the caller, matching the
+        // documented "abort, do not complete" semantics -- an ordinary
+        // return (natural or forced-fault-propagation-through-an-active-
+        // TRY) still writes back normally.
+        void pop_frame(bool natural_completion = true, bool sync_byref = true)
         {
             if (!stack.empty())
             {
@@ -446,7 +451,10 @@
                     (natural_completion && !returned_explicitly && naturally_exhausted && !is_root_frame)
                         ? std::make_optional(make_boolean_value(true))
                         : last_return_value;
-                sync_byref_arguments(stack.back());
+                if (sync_byref)
+                {
+                    sync_byref_arguments(stack.back());
+                }
                 release_frame_object_bindings(stack.back());
                 restore_private_declarations(stack.back());
                 stack.pop_back();
