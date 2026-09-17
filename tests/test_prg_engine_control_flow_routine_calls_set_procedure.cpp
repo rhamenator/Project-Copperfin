@@ -1252,4 +1252,146 @@ void test_cancel_releases_frame_owned_private_native_objects() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_retry_releases_frame_owned_native_objects() {
+    // #6446: RETRY previously unwound intervening frames back to the
+    // saved fault frame with a manual restore_private_declarations() +
+    // stack.pop_back() loop that bypassed pop_frame()'s
+    // release_frame_object_bindings() call. A LOCAL native object created
+    // in an ON ERROR handler that then successfully RETRYs (after making
+    // the failed operation viable) was therefore abandoned in
+    // session-owned state with Destroy never called and its resources
+    // never released, even though every VFP variable that could reach it
+    // was gone. Matches the issue's own trigger: the handler copies a
+    // prepared .prg into the missing DO target, then RETRYs.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_retry_object_cleanup";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // DO retry_target resolving to a standalone retry_target.prg file runs
+    // that file's own top-level body (not a same-named PROCEDURE inside
+    // it), so the prepared file must be plain top-level code.
+    write_text(
+        temp_root / "prepared_retry.prg",
+        "retry_target_ran = .T.\n");
+
+    const fs::path script_path = temp_root / "retry_object_cleanup.prg";
+    write_text(
+        script_path,
+        "PUBLIC retry_target_ran\n"
+        "ON ERROR DO ErrorHandler\n"
+        "DO retry_target\n"
+        "after_retry = .T.\n"
+        "RETURN\n"
+        "PROCEDURE ErrorHandler\n"
+        "LOCAL oLocal\n"
+        "oLocal = CREATEOBJECT('RetryCleanupProbe')\n"
+        "COPY FILE 'prepared_retry.prg' TO 'retry_target.prg'\n"
+        "RETRY\n"
+        "ENDPROC\n"
+        "DEFINE CLASS RetryCleanupProbe AS Custom\n"
+        "PROCEDURE Destroy\n"
+        "PUBLIC retry_destroy_called\n"
+        "retry_destroy_called = .T.\n"
+        "ENDPROC\n"
+        "ENDDEFINE\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6446: RETRY object-cleanup script should complete: " + state.message);
+
+    expect(state.globals.find("retry_target_ran") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("retry_target_ran")) == "true",
+           "#6446: RETRY should successfully re-execute the faulting DO after recovery");
+    expect(state.globals.find("after_retry") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("after_retry")) == "true",
+           "#6446: the program should continue normally after a successful RETRY");
+
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent &event) {
+                   return event.category == "prg.object.destroy";
+               }),
+           "#6446: RETRY should call Destroy on the error handler's frame-owned local object");
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent &event) {
+                   return event.category == "prg.object.release";
+               }),
+           "#6446: RETRY should release the error handler's frame-owned local object's native resources");
+    expect(state.globals.find("retry_destroy_called") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("retry_destroy_called")) == "true",
+           "#6446: the unwound error handler's object Destroy method should have run");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_resume_releases_frame_owned_native_objects() {
+    // #6446: RESUME's fault-frame unwind loop had the identical bug as
+    // RETRY's (same manual restore_private_declarations() +
+    // stack.pop_back() bypass of release_frame_object_bindings()). The ON
+    // ERROR handler's own frame -- created deeper than the faulting
+    // master frame -- owns a local object; when RESUME continues after
+    // the original faulting statement, the handler's own frame is the
+    // one unwound, and its local object must be released the same way a
+    // normal return from ErrorHandler would release it.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_resume_object_cleanup";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path script_path = temp_root / "resume_object_cleanup.prg";
+    write_text(
+        script_path,
+        "ON ERROR DO ErrorHandler\n"
+        "DO NoSuchProcedureXyz\n"
+        "after_resume = .T.\n"
+        "RETURN\n"
+        "PROCEDURE ErrorHandler\n"
+        "LOCAL oLocal\n"
+        "oLocal = CREATEOBJECT('ResumeCleanupProbe')\n"
+        "RESUME\n"
+        "ENDPROC\n"
+        "DEFINE CLASS ResumeCleanupProbe AS Custom\n"
+        "PROCEDURE Destroy\n"
+        "PUBLIC resume_destroy_called\n"
+        "resume_destroy_called = .T.\n"
+        "ENDPROC\n"
+        "ENDDEFINE\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6446: RESUME object-cleanup script should complete: " + state.message);
+
+    expect(state.globals.find("after_resume") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("after_resume")) == "true",
+           "#6446: the program should continue normally after RESUME");
+
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent &event) {
+                   return event.category == "prg.object.destroy";
+               }),
+           "#6446: RESUME should call Destroy on the error handler's frame-owned local object");
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent &event) {
+                   return event.category == "prg.object.release";
+               }),
+           "#6446: RESUME should release the error handler's frame-owned local object's native resources");
+    expect(state.globals.find("resume_destroy_called") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("resume_destroy_called")) == "true",
+           "#6446: the unwound error handler's object Destroy method should have run");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_control_flow

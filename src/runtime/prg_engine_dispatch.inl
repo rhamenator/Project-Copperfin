@@ -10710,7 +10710,19 @@
                     error_metadata_stack.pop_back();
                 }
                 fault_pc_valid = false;
-                // Unwind to the fault frame
+                // #6446: unwind to the fault frame through pop_frame()
+                // instead of a manual restore_private_declarations() +
+                // stack.pop_back() that bypassed release_frame_object_bindings().
+                // That bypass left every local/private native object owned
+                // by an unwound error-handler (or other intervening) frame
+                // resident in session-owned state with Destroy never
+                // called, even though no VFP variable could still reach
+                // it. This is a forced abort of those frames (not a
+                // normal return), matching CANCEL's own precedent
+                // (#6445): natural_completion=false so the implicit-
+                // return-defaults-to-true behavior does not apply, and
+                // sync_byref=false so no stale by-reference writeback
+                // reaches a caller that is itself being unwound past.
                 while (!stack.empty())
                 {
                     if (stack.back().file_path == fault_frame_file_path &&
@@ -10719,8 +10731,7 @@
                         stack.back().pc = fault_statement_index;
                         return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
                     }
-                    restore_private_declarations(stack.back());
-                    stack.pop_back();
+                    pop_frame(false, false);
                 }
                 return {};
             }
@@ -10941,8 +10952,11 @@
                         stack.back().pc = (r && resume_pc < r->statements.size()) ? resume_pc : (r ? r->statements.size() : 0U);
                         return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
                     }
-                    restore_private_declarations(stack.back());
-                    stack.pop_back();
+                    // #6446: same forced-unwind fix as RETRY above, for
+                    // RESUME's identical fault-frame unwind loop -- an
+                    // intervening frame's local/private native objects
+                    // were abandoned without Destroy the same way.
+                    pop_frame(false, false);
                 }
                 return {};
             }
