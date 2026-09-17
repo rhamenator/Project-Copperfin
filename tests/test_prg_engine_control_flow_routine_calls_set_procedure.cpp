@@ -1380,6 +1380,13 @@ void test_resume_releases_frame_owned_native_objects() {
                    return event.category == "prg.object.destroy";
                }),
            "#6446: RESUME should call Destroy on the error handler's frame-owned local object");
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent &event) {
+                   return event.category == "prg.object.release";
+               }),
+           "#6446: RESUME should release the error handler's frame-owned local object's native resources");
     expect(state.globals.find("resume_destroy_called") != state.globals.end() &&
                copperfin::runtime::format_value(state.globals.at("resume_destroy_called")) == "true",
            "#6446: the unwound error handler's object Destroy method should have run");
