@@ -252,6 +252,8 @@ int main() {
     test_error_command_string_form_raises_user_error_1098();
     test_error_command_routes_through_on_error_handler();
     test_error_command_rejects_too_many_operands();
+    test_error_command_rejects_bare_keyword_with_no_operand();
+    test_error_command_rejects_non_numeric_non_character_operand();
     test_aerror_line_number_is_innermost_faulting_line_not_catch_site();
     test_clear_error_resets_diagnostic_surface_inside_catch();
     test_clear_error_rejects_trailing_arguments();

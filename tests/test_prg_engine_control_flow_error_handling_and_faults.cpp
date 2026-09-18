@@ -2001,4 +2001,106 @@ void test_error_command_rejects_too_many_operands() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_error_command_rejects_bare_keyword_with_no_operand() {
+    // #6440 review fix: a bare ERROR keyword (no operand at all) was not
+    // classified as error_command at all -- starts_with_insensitive(line,
+    // "ERROR ") requires a trailing space -- so it silently fell through
+    // to generic-expression parsing instead of being rejected as
+    // malformed.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_error_command_bare_keyword";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "error_command_bare_keyword.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "    ERROR\n"
+        "    reachedAfterError = .T.\n"
+        "CATCH TO loError\n"
+        "    caughtError = .T.\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6440: bare-ERROR-keyword script should complete: " + state.message);
+
+    expect(state.globals.find("reachedafterror") == state.globals.end(),
+           "#6440: a bare ERROR keyword with no operand should not fall through to the following statement");
+    expect(state.globals.find("caughterror") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughterror")) == "true",
+           "#6440: a bare ERROR keyword with no operand should raise a catchable error rather than run silently");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_error_command_rejects_non_numeric_non_character_operand() {
+    // #6440 review fix: `kind != PrgValueKind::string` is not a
+    // numeric-type check -- EMPTY and logical operands were silently
+    // coerced by value_as_number() (to 0 and 1 respectively) and treated
+    // as the numeric form instead of being rejected as invalid operands.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_error_command_invalid_type";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "error_command_invalid_type.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "    ERROR .T.\n"
+        "    reachedAfterLogical = .T.\n"
+        "CATCH TO loLogicalError\n"
+        "    caughtLogicalError = .T.\n"
+        "    caughtLogicalMessage = loLogicalError.Message\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "    ERROR .NULL.\n"
+        "    reachedAfterEmpty = .T.\n"
+        "CATCH TO loEmptyError\n"
+        "    caughtEmptyError = .T.\n"
+        "    caughtEmptyMessage = loEmptyError.Message\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6440: invalid-operand-type script should complete: " + state.message);
+
+    // A buggy implementation that coerces .T./.NULL. to a number (1/0)
+    // via value_as_number() would ALSO raise a catchable error here (just
+    // the wrong one), so reachedAfter*/caught* alone cannot distinguish
+    // the bug from the fix -- only the specific rejection message can.
+    expect(state.globals.find("reachedafterlogical") == state.globals.end(),
+           "#6440: ERROR .T. should not fall through to the following statement");
+    expect(state.globals.find("caughtlogicalmessage") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughtlogicalmessage")).find("numeric or character") !=
+                   std::string::npos,
+           "#6440: ERROR .T. (a logical operand) should be rejected as an invalid operand type, not silently "
+           "coerced to the number 1, got '" +
+               (state.globals.find("caughtlogicalmessage") != state.globals.end()
+                    ? copperfin::runtime::format_value(state.globals.at("caughtlogicalmessage"))
+                    : std::string("<not caught>")) +
+               "'");
+    expect(state.globals.find("reachedafterempty") == state.globals.end(),
+           "#6440: ERROR .NULL. should not fall through to the following statement");
+    expect(state.globals.find("caughtemptymessage") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughtemptymessage")).find("numeric or character") !=
+                   std::string::npos,
+           "#6440: ERROR .NULL. (an empty operand) should be rejected as an invalid operand type, not silently "
+           "coerced to the number 0, got '" +
+               (state.globals.find("caughtemptymessage") != state.globals.end()
+                    ? copperfin::runtime::format_value(state.globals.at("caughtemptymessage"))
+                    : std::string("<not caught>")) +
+               "'");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_control_flow

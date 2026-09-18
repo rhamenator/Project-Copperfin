@@ -1,3 +1,24 @@
+- 2026-09-17: Review-round fix for #6440's `ERROR` command (PR #6470):
+  Copilot found two additional gaps in the dispatch validation. First, the
+  numeric-operand check only tested `kind != string`, so a logical or
+  empty operand (e.g. `ERROR .T.` or `ERROR .NULL.`) was silently coerced
+  by `value_as_number()` (to 1 and 0) and treated as a valid numeric form
+  instead of being rejected as an invalid operand type. Second, a bare
+  `ERROR` keyword with no operand at all fell through to generic
+  expression parsing (since the parser branch only matched `"ERROR "`
+  with a trailing space) instead of being classified as malformed, so it
+  silently ran as a no-op rather than raising the documented
+  zero-operand syntax error. Both fixed: the numeric check is now an
+  explicit allow-list of the numeric `PrgValueKind` values, and the
+  parser now also matches the bare `"ERROR"` keyword. Added
+  `test_error_command_rejects_non_numeric_non_character_operand` and
+  `test_error_command_rejects_bare_keyword_with_no_operand`; the former
+  was strengthened after fail-then-pass verification showed an initial
+  version passed even against the unfixed code (coercion still raised
+  *a* catchable error, just the wrong one), so it now checks the caught
+  `Exception.Message` text for a distinguishing substring. Updated
+  `RQ-CF-PRG-045`. All 396 tests pass. Verified fail-then-pass.
+
 - 2026-09-17: Fixed #6440: `ERROR` is now a real statement kind instead of
   silently falling through as an unrecognized generic expression. All
   three documented forms are supported: `ERROR nErrorNumber` and `ERROR

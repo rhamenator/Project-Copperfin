@@ -224,6 +224,8 @@ void test_error_command_numeric_form_without_parameter_is_catchable();
 void test_error_command_string_form_raises_user_error_1098();
 void test_error_command_routes_through_on_error_handler();
 void test_error_command_rejects_too_many_operands();
+void test_error_command_rejects_bare_keyword_with_no_operand();
+void test_error_command_rejects_non_numeric_non_character_operand();
 void test_retry_reexecutes_faulting_statement();
 void test_resume_next_continues_after_fault();
 void test_retry_with_no_fault_checkpoint_is_noop();

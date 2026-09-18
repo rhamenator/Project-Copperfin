@@ -11935,7 +11935,27 @@
                 // suspension is not supported here, a disclosed, narrower
                 // scope than most other command dispatches.
                 const PrgValue first_value = evaluate_expression(statement.expression, frame);
-                const bool first_is_numeric = first_value.kind != PrgValueKind::string;
+                // #6440 review fix: `kind != string` is not a numeric-type
+                // check -- EMPTY and logical operands are silently
+                // coerced by value_as_number() (to 0 and 1) instead of
+                // being rejected. Only the documented numeric storage
+                // kinds count as the numeric form; anything that is
+                // neither numeric nor character is an invalid operand.
+                const bool first_is_numeric =
+                    first_value.kind == PrgValueKind::number ||
+                    first_value.kind == PrgValueKind::int64 ||
+                    first_value.kind == PrgValueKind::uint64 ||
+                    first_value.kind == PrgValueKind::currency;
+                const bool first_is_character = first_value.kind == PrgValueKind::string;
+                if (!first_is_numeric && !first_is_character)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandInvalidArgumentType",
+                        {{"command", "ERROR"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
 
                 int error_number = 0;
                 std::string message;

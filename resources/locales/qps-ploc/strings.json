@@ -1449,6 +1449,7 @@
   "Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle": "{command} requires a task handle",
   "Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments": "{command} does not take arguments",
   "Runtime.Prg.Dispatch.Error.CommandInvalidArgumentCount": "{command} requires one or two arguments",
+  "Runtime.Prg.Dispatch.Error.CommandInvalidArgumentType": "{command} requires a numeric or character argument",
   "Runtime.Prg.Dispatch.Error.UserRaisedError": "Error {code}.",
   "Runtime.Prg.Dispatch.Error.UserRaisedErrorWithParameter": "Error {code}: '{parameter}'.",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "Unable to resolve {command} target: {target}",
