@@ -1,3 +1,26 @@
+- 2026-09-17: Fixed #6440: `ERROR` is now a real statement kind instead of
+  silently falling through as an unrecognized generic expression. All
+  three documented forms are supported: `ERROR nErrorNumber` and `ERROR
+  nErrorNumber, cMessageText1` raise the requested standard error number
+  (via the same `explicit_error_code` compatibility hook `THROW` already
+  uses, so `Exception.ErrorNo`/`AERROR()`/`ERROR()` report it correctly);
+  `ERROR cMessageText2` (a character operand) raises user-defined error
+  1098 with that text as the message verbatim. Every form enters the same
+  structured error pipeline as a naturally occurring fault (`TRY...CATCH`,
+  `ON ERROR`) and never falls through to the next statement. More than
+  two operands raises a catchable syntax error. Added `RQ-CF-PRG-045`.
+  This is a deliberately narrower first implementation than the issue's
+  full acceptance criteria: no comprehensive VFP9 standard-error-message
+  catalog exists in this codebase, so the constructed message text for
+  the numeric forms does not reproduce VFP9's exact per-error-number
+  wording -- only the error number and catchability are VFP9-compatible
+  for arbitrary error numbers. Operands are evaluated synchronously, so a
+  UDF call needing multi-turn suspension inside either operand is
+  unsupported. AERROR()'s distinct "error parameter" array element is not
+  separately populated; the existing best-effort quoted-substring
+  extraction is relied on instead. All 396 tests pass. Verified
+  fail-then-pass.
+
 - 2026-09-17: Fixed #6446: `RETRY` and `RESUME` now unwind every
   intervening frame between the current frame and the saved fault frame
   through the same resource-release machinery used for a normal frame

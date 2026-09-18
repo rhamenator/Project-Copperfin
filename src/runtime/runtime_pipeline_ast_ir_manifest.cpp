@@ -242,6 +242,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "clear_memory_command";
         case StatementKind::clear_error_command:
             return "clear_error_command";
+        case StatementKind::error_command:
+            return "error_command";
         case StatementKind::cancel_statement:
             return "cancel_statement";
         case StatementKind::quit_statement:
