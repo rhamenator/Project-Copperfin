@@ -398,14 +398,13 @@ void test_spawn_arguments_use_heap_backed_frame_continuations() {
     const fs::path semantics_path = temp_root / "spawn_argument_semantics.prg";
     write_text(
         semantics_path,
-        "SET UDFPARMS TO REFERENCE\n"
         "first = 2\n"
         "counter = 2\n"
         "second = 3\n"
         "calls = 0\n"
         "order = ''\n"
         "cTarget = resolve_target()\n"
-        "SPAWN &cTarget WITH record_call(first), @counter, record_call(second) TO nTask\n"
+        "SPAWN &cTarget WITH record_call(first), counter, record_call(second) TO nTask\n"
         "AWAIT nTask TO lDone\n"
         "afterCalls = calls\n"
         "afterOrder = order\n"
@@ -459,6 +458,68 @@ void test_spawn_arguments_use_heap_backed_frame_continuations() {
                 return event.category == "runtime.print" && event.detail == "27";
             }),
         "SPAWN should forward resumed argument values into the child routine");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_spawn_rejects_by_reference_argument() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_byref_rejected";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "spawn_byref_rejected.prg";
+    write_text(
+        main_path,
+        "counter = 1\n"
+        "lRejected = .F.\n"
+        "TRY\n"
+        "    SPAWN worker WITH @counter TO task_handle\n"
+        "CATCH TO oErr\n"
+        "    lRejected = .T.\n"
+        "    cErrorMessage = oErr.Message\n"
+        "ENDTRY\n"
+        "counterAfter = counter\n"
+        "RETURN\n"
+        "PROCEDURE worker\n"
+        "LPARAMETERS value\n"
+        "value = 99\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6447: SPAWN by-reference rejection test should complete: " + state.message);
+
+    const auto rejected_it = state.globals.find("lrejected");
+    expect(rejected_it != state.globals.end() && rejected_it->second.boolean_value,
+           "#6447: SPAWN WITH @counter must raise a catchable error instead of silently accepting a "
+           "by-reference argument it cannot honor");
+
+    const auto error_message_it = state.globals.find("cerrormessage");
+    expect(error_message_it != state.globals.end() &&
+               error_message_it->second.string_value.find("counter") != std::string::npos,
+           "#6447: the rejection error should name the offending variable, got '" +
+               (error_message_it != state.globals.end() ? error_message_it->second.string_value : "<missing>") +
+               "'");
+
+    const auto counter_after_it = state.globals.find("counterafter");
+    expect(counter_after_it != state.globals.end() && counter_after_it->second.number_value == 1.0,
+           "#6447: counter must be untouched -- the task must never have started at all, not started and then "
+           "silently lost its writeback");
+
+    const auto spawn_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto &event) { return event.category == "runtime.task.spawn"; });
+    expect(spawn_event == state.events.end(),
+           "#6447: rejecting the by-reference argument must happen before the task is started -- no "
+           "runtime.task.spawn event should be emitted");
+
+    const auto task_handle_it = state.globals.find("task_handle");
+    expect(task_handle_it == state.globals.end(),
+           "#6447: the TO target should never be assigned a task handle when SPAWN itself is rejected");
 
     fs::remove_all(temp_root, ignored);
 }
