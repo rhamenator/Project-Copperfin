@@ -1,3 +1,20 @@
+- 2026-09-18: Review-round fix for #6453 (PR #6472): a Copilot review found
+  that the requirement's own "or normal completion" clause was still
+  unmet. `cleanup_runtime_resources_for_shutdown()` (which includes the
+  lock-owner cleanup) was reachable only from `perform_quit()`, and
+  `Impl`'s destructor is default, so a spawned task that exhausted its
+  frames without an explicit `QUIT` never released its locks (or its
+  other session-owned resources) at all. The `SPAWN` async-task lambda
+  now calls `cleanup_runtime_resources_for_shutdown()` on the child
+  immediately after `child->run()` returns, which is the only place a
+  spawned child's result is ever observed -- `AWAIT` treats it as
+  terminal regardless of pause reason, and nothing re-drives that child
+  afterward -- so this covers every terminal path (`QUIT`, natural
+  fall-off, cancellation, error abort) uniformly; it is idempotent
+  alongside `perform_quit()`'s own call for the `QUIT` case. Added
+  `test_spawn_natural_completion_releases_its_own_locks`. Updated
+  `RQ-CF-PRG-046`. All 396 tests pass. Verified fail-then-pass.
+
 - 2026-09-17: Fixed #6453: a spawned task's shutdown (`QUIT` or normal
   completion) previously released every table/record lock in the whole
   shared lock-owner map, not just its own. `clear_all_shared_lock_ownership()`

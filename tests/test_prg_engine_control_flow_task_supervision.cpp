@@ -583,6 +583,61 @@ void test_spawn_quit_releases_only_its_own_locks_not_the_parents() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_spawn_natural_completion_releases_its_own_locks() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_natural_completion_lock_release";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "spawn_natural_completion_lock_release.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE race (name C(12))\n"
+        "SELECT race\n"
+        "APPEND BLANK\n"
+        "REPLACE name WITH 'ORIGINAL1'\n"
+        "SPAWN worker TO nWorker\n"
+        "DO WHILE CFTASKSTATUS(nWorker) == 'running'\n"
+        "ENDDO\n"
+        "lWorkerAcquiredLock = CFTASKRESULT(nWorker)\n"
+        "AWAIT nWorker TO lWorkerDone\n"
+        "lParentAcquiredLockAfter = FLOCK()\n"
+        "RETURN\n"
+        "PROCEDURE worker\n"
+        "SELECT race\n"
+        "RETURN FLOCK()\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6453: natural-completion lock-release test should complete: " + state.message);
+
+    const auto worker_done_it = state.globals.find("lworkerdone");
+    expect(worker_done_it != state.globals.end() && worker_done_it->second.boolean_value,
+           "#6453: the spawned worker task should be observed as completed");
+
+    const auto worker_lock_it = state.globals.find("lworkeracquiredlock");
+    expect(worker_lock_it != state.globals.end() && worker_lock_it->second.boolean_value,
+           "#6453: the spawned worker should successfully FLOCK() the table before returning naturally");
+
+    const auto parent_lock_after_it = state.globals.find("lparentacquiredlockafter");
+    expect(parent_lock_after_it != state.globals.end() && parent_lock_after_it->second.boolean_value,
+           "#6453: a spawned task that returns naturally (no QUIT) must release its own locks on completion "
+           "just as an explicit QUIT does -- otherwise the parent can never re-acquire the lock the worker "
+           "held, because the worker's owner-scoped lock entries would never be cleared");
+
+    const auto lock_timeout_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto &event) { return event.category == "runtime.lock_timeout"; });
+    expect(lock_timeout_event == state.events.end(),
+           "#6453: the parent's post-completion FLOCK() should succeed immediately, not contend and time out "
+           "against a lock the worker never released");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_request_cancel_txn";
