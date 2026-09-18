@@ -143,6 +143,7 @@ void test_spawn_task_supervision_serializes_same_handle_completion_publication()
 void test_spawn_task_supervision_requests_cooperative_cancellation();
 void test_spawn_arguments_use_heap_backed_frame_continuations();
 void test_spawn_rejects_by_reference_argument();
+void test_spawn_failed_handle_assignment_does_not_leave_orphan_task();
 void test_spawn_cancellation_propagates_to_sibling_tasks();
 void test_spawn_quit_releases_only_its_own_locks_not_the_parents();
 void test_spawn_natural_completion_releases_its_own_locks();

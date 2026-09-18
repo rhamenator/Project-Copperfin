@@ -2480,7 +2480,28 @@
                         std::move(call_argument_references));
                 }
 
+                // #6450: the target routine/file has already resolved and
+                // the child's entry frame is already pushed (so we know the
+                // spawn itself is otherwise going to succeed), but the child
+                // has not yet been started and no task is registered. This
+                // is the last point a target-assignment failure costs
+                // nothing to roll back: `child` simply falls out of scope
+                // unstarted. A failed assignment (a typo, a released
+                // object, an invalid property, a failing setter) must never
+                // leave a live, registered, unreachable worker running, so
+                // the handle is reserved and published to the TO target
+                // before the task is created, started, or registered.
                 const long long handle = allocate_async_task_handle();
+                if (!statement.names.empty() && !statement.names.front().empty())
+                {
+                    ExecutionOutcome outcome = assign_runtime_target_value(
+                        statement.names.front(), make_number_value(static_cast<double>(handle)));
+                    if (!outcome.ok)
+                    {
+                        return outcome;
+                    }
+                }
+
                 auto task = std::make_shared<AsyncTaskState>();
                 task->handle = handle;
                 task->routine_name = target;
@@ -2510,11 +2531,8 @@
                 }
                 if (!statement.names.empty() && !statement.names.front().empty())
                 {
-                    ExecutionOutcome outcome = assign_runtime_target_value(statement.names.front(), make_number_value(static_cast<double>(handle)));
-                    if (!outcome.ok)
-                    {
-                        return outcome;
-                    }
+                    // #6450: the assignment itself already succeeded above,
+                    // before this task (or its handle) existed at all.
                     detail += " assigned=" + statement.names.front();
                 }
                 events.push_back({.category = "runtime.task.spawn",
