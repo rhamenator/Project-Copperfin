@@ -1,3 +1,47 @@
+- 2026-09-17: Review-round fix for #6440's `ERROR` command (PR #6470):
+  Copilot found two additional gaps in the dispatch validation. First, the
+  numeric-operand check only tested `kind != string`, so a logical or
+  empty operand (e.g. `ERROR .T.` or `ERROR .NULL.`) was silently coerced
+  by `value_as_number()` (to 1 and 0) and treated as a valid numeric form
+  instead of being rejected as an invalid operand type. Second, a bare
+  `ERROR` keyword with no operand at all fell through to generic
+  expression parsing (since the parser branch only matched `"ERROR "`
+  with a trailing space) instead of being classified as malformed, so it
+  silently ran as a no-op rather than raising the documented
+  zero-operand syntax error. Both fixed: the numeric check is now an
+  explicit allow-list of the numeric `PrgValueKind` values, and the
+  parser now also matches the bare `"ERROR"` keyword. Added
+  `test_error_command_rejects_non_numeric_non_character_operand` and
+  `test_error_command_rejects_bare_keyword_with_no_operand`; the former
+  was strengthened after fail-then-pass verification showed an initial
+  version passed even against the unfixed code (coercion still raised
+  *a* catchable error, just the wrong one), so it now checks the caught
+  `Exception.Message` text for a distinguishing substring. Updated
+  `RQ-CF-PRG-045`. All 396 tests pass. Verified fail-then-pass.
+
+- 2026-09-17: Fixed #6440: `ERROR` is now a real statement kind instead of
+  silently falling through as an unrecognized generic expression. All
+  three documented forms are supported: `ERROR nErrorNumber` and `ERROR
+  nErrorNumber, cMessageText1` raise the requested standard error number
+  (via the same `explicit_error_code` compatibility hook `THROW` already
+  uses, so `Exception.ErrorNo`/`AERROR()`/`ERROR()` report it correctly);
+  `ERROR cMessageText2` (a character operand) raises user-defined error
+  1098 with that text as the message verbatim. Every form enters the same
+  structured error pipeline as a naturally occurring fault (`TRY...CATCH`,
+  `ON ERROR`) and never falls through to the next statement. More than
+  two operands raises a catchable syntax error. Added `RQ-CF-PRG-045`.
+  This is a deliberately narrower first implementation than the issue's
+  full acceptance criteria: no comprehensive VFP9 standard-error-message
+  catalog exists in this codebase, so the constructed message text for
+  the numeric forms does not reproduce VFP9's exact per-error-number
+  wording -- only the error number and catchability are VFP9-compatible
+  for arbitrary error numbers. Operands are evaluated synchronously, so a
+  UDF call needing multi-turn suspension inside either operand is
+  unsupported. AERROR()'s distinct "error parameter" array element is not
+  separately populated; the existing best-effort quoted-substring
+  extraction is relied on instead. All 396 tests pass. Verified
+  fail-then-pass.
+
 - 2026-09-17: Fixed #6446: `RETRY` and `RESUME` now unwind every
   intervening frame between the current frame and the saved fault frame
   through the same resource-release machinery used for a normal frame

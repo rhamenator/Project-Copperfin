@@ -219,6 +219,13 @@ void test_thrown_expression_fault_aerror_columns_match_error_message_functions()
 void test_repeated_on_error_faults_refresh_normalized_diagnostics();
 void test_division_by_zero_dispatches_runtime_error();
 void test_numeric_field_overflow_is_diagnosed_not_silently_truncated();
+void test_error_command_numeric_form_with_parameter_is_catchable();
+void test_error_command_numeric_form_without_parameter_is_catchable();
+void test_error_command_string_form_raises_user_error_1098();
+void test_error_command_routes_through_on_error_handler();
+void test_error_command_rejects_too_many_operands();
+void test_error_command_rejects_bare_keyword_with_no_operand();
+void test_error_command_rejects_non_numeric_non_character_operand();
 void test_retry_reexecutes_faulting_statement();
 void test_resume_next_continues_after_fault();
 void test_retry_with_no_fault_checkpoint_is_noop();

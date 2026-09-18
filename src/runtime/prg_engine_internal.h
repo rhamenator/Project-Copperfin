@@ -128,6 +128,7 @@ enum class StatementKind {
     release_command,
     clear_memory_command,
     clear_error_command,
+    error_command,
     cancel_statement,
     quit_statement,
     yield_statement,

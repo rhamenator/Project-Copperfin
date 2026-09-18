@@ -11915,6 +11915,100 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::error_command:
+            {
+                // #6440: ERROR nErrorNumber [, cMessageText1] | ERROR cMessageText2.
+                if (statement.identifier == "malformed")
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandInvalidArgumentCount",
+                        {{"command", "ERROR"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                // Operands are evaluated synchronously (not through the
+                // resumable-expression/continuation machinery every other
+                // multi-operand command in this file uses): a UDF call
+                // embedded in either operand that itself needs multi-turn
+                // suspension is not supported here, a disclosed, narrower
+                // scope than most other command dispatches.
+                const PrgValue first_value = evaluate_expression(statement.expression, frame);
+                // #6440 review fix: `kind != string` is not a numeric-type
+                // check -- EMPTY and logical operands are silently
+                // coerced by value_as_number() (to 0 and 1) instead of
+                // being rejected. Only the documented numeric storage
+                // kinds count as the numeric form; anything that is
+                // neither numeric nor character is an invalid operand.
+                const bool first_is_numeric =
+                    first_value.kind == PrgValueKind::number ||
+                    first_value.kind == PrgValueKind::int64 ||
+                    first_value.kind == PrgValueKind::uint64 ||
+                    first_value.kind == PrgValueKind::currency;
+                const bool first_is_character = first_value.kind == PrgValueKind::string;
+                if (!first_is_numeric && !first_is_character)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandInvalidArgumentType",
+                        {{"command", "ERROR"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                int error_number = 0;
+                std::string message;
+                if (first_is_numeric)
+                {
+                    error_number = static_cast<int>(std::llround(value_as_number(first_value)));
+                    if (!statement.secondary_expression.empty())
+                    {
+                        const PrgValue parameter_value =
+                            evaluate_expression(statement.secondary_expression, frame);
+                        const std::string parameter_text = value_as_string(parameter_value);
+                        // #6440: no comprehensive VFP9 standard-error-message
+                        // catalog exists in this codebase (see
+                        // classify_runtime_error_code(), a small heuristic,
+                        // not a full ~2000-entry table); the exact wording
+                        // VFP9 uses for an arbitrary error number is not
+                        // reproduced here. The parameter is still wrapped in
+                        // single quotes so runtime_error_parameter() (used by
+                        // AERROR()) can extract it, matching every other
+                        // parameterized diagnostic in this codebase.
+                        message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.UserRaisedErrorWithParameter",
+                            {
+                                {"code", std::to_string(error_number)},
+                                {"parameter", parameter_text}
+                            });
+                    }
+                    else
+                    {
+                        message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.UserRaisedError",
+                            {{"code", std::to_string(error_number)}});
+                    }
+                }
+                else
+                {
+                    // The string-only form generates user-defined error
+                    // 1098; the message is the caller's text verbatim (no
+                    // template/catalog involved, unlike the numeric forms).
+                    error_number = 1098;
+                    message = value_as_string(first_value);
+                }
+
+                last_error_message = message;
+                last_error_code = error_number;
+                last_error_work_area = current_selected_work_area();
+                last_error_procedure = frame.routine_name;
+                last_error_compatibility = {};
+                last_error_compatibility.explicit_error_code = error_number;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
             case StatementKind::cancel_statement:
             {
                 // CANCEL — abort execution and return to top level

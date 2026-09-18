@@ -2266,6 +2266,31 @@ Program parse_program_impl(
             // silently falling through to the generic-expression fallback.
             statement.kind = StatementKind::clear_error_command;
             statement.identifier = "malformed";
+        } else if (upper == "ERROR" || starts_with_insensitive(line, "ERROR ")) {
+            // #6440: ERROR nErrorNumber [, cMessageText1] | ERROR cMessageText2.
+            // The two-operand numeric form is syntactically distinct (a
+            // top-level comma); the single-operand form's own meaning
+            // (numeric vs the string-only user-error-1098 form) depends on
+            // the runtime type of the evaluated operand and is resolved at
+            // dispatch, not here. A bare ERROR keyword (no operand at all)
+            // must also be classified here rather than falling through to
+            // generic-expression parsing, or the documented zero-operand
+            // rejection never actually runs.
+            statement.kind = StatementKind::error_command;
+            const std::string operands = upper == "ERROR" ? std::string{} : trim_copy(line.substr(6U));
+            const std::vector<std::string> parts = split_csv_like(operands);
+            if (parts.empty() || parts.size() > 2U)
+            {
+                statement.identifier = "malformed";
+            }
+            else
+            {
+                statement.expression = parts[0];
+                if (parts.size() == 2U)
+                {
+                    statement.secondary_expression = parts[1];
+                }
+            }
         } else if (upper == "CANCEL") {
             statement.kind = StatementKind::cancel_statement;
         } else if (upper == "QUIT") {

@@ -1819,4 +1819,288 @@ void test_numeric_field_overflow_is_diagnosed_not_silently_truncated() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_error_command_numeric_form_with_parameter_is_catchable() {
+    // #6440: installed VFP9 SP2 differential evidence: `ERROR 12,
+    // 'MyVariable'` inside TRY...CATCH produces `caught=12` and the
+    // statement after ERROR does not run.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_error_command_numeric_parameter";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "error_command_numeric_parameter.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "    ERROR 12, 'MyVariable'\n"
+        "    reachedAfterError = .T.\n"
+        "CATCH TO loError\n"
+        "    caughtError = .T.\n"
+        "    caughtCode = loError.ErrorNo\n"
+        "    caughtMessage = loError.Message\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6440: ERROR numeric-form script should complete: " + state.message);
+
+    expect(state.globals.find("reachedafterror") == state.globals.end(),
+           "#6440: ERROR should not fall through to the following statement");
+    expect(state.globals.find("caughterror") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughterror")) == "true",
+           "#6440: TRY...CATCH should catch the ERROR command's fault");
+    expect(state.globals.find("caughtcode") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughtcode")) == "12",
+           "#6440: the caught Exception.ErrorNo should be the requested error number");
+    expect(state.globals.find("caughtmessage") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughtmessage")).find("MyVariable") !=
+                   std::string::npos,
+           "#6440: the caught Exception.Message should include the supplied message parameter");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_error_command_numeric_form_without_parameter_is_catchable() {
+    // #6440: the bare numeric form (no message parameter) must still
+    // raise the requested error number.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_error_command_numeric_bare";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "error_command_numeric_bare.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "    ERROR 99\n"
+        "    reachedAfterError = .T.\n"
+        "CATCH TO loError\n"
+        "    caughtCode = loError.ErrorNo\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6440: ERROR bare-numeric-form script should complete: " + state.message);
+
+    expect(state.globals.find("reachedafterror") == state.globals.end(),
+           "#6440: ERROR should not fall through to the following statement");
+    expect(state.globals.find("caughtcode") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughtcode")) == "99",
+           "#6440: the caught Exception.ErrorNo should be the requested error number even with no parameter");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_error_command_string_form_raises_user_error_1098() {
+    // #6440: installed VFP9 SP2 help: the string-only form generates
+    // user-defined error 1098, with the supplied text as the message.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_error_command_string_form";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "error_command_string_form.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "    ERROR 'My custom message'\n"
+        "CATCH TO loError\n"
+        "    caughtCode = loError.ErrorNo\n"
+        "    caughtMessage = loError.Message\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6440: ERROR string-form script should complete: " + state.message);
+
+    expect(state.globals.find("caughtcode") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughtcode")) == "1098",
+           "#6440: the string-only ERROR form should raise user-defined error 1098");
+    expect(state.globals.find("caughtmessage") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughtmessage")) == "My custom message",
+           "#6440: the string-only ERROR form's message should be the caller's text verbatim");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_error_command_routes_through_on_error_handler() {
+    // #6440: ERROR must enter the same structured error pipeline as a
+    // naturally occurring fault, including ON ERROR precedence.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_error_command_on_error";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "error_command_on_error.prg";
+    write_text(
+        main_path,
+        "PUBLIC handlerCode\n"
+        "ON ERROR DO ErrorHandler\n"
+        "ERROR 77\n"
+        "reachedAfterError = .T.\n"
+        "RETURN\n"
+        "PROCEDURE ErrorHandler\n"
+        "handlerCode = ERROR()\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6440: ERROR/ON ERROR routing script should complete: " + state.message);
+
+    expect(state.globals.find("handlercode") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("handlercode")) == "77",
+           "#6440: ON ERROR's handler should observe the ERROR command's requested error number via ERROR()");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_error_command_rejects_too_many_operands() {
+    // #6440: the documented forms take at most two operands; extra
+    // operands must fail catchably instead of silently running as a
+    // generic expression.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_error_command_malformed";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "error_command_malformed.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "    ERROR 1, 2, 3\n"
+        "    reachedAfterError = .T.\n"
+        "CATCH TO loError\n"
+        "    caughtError = .T.\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6440: malformed ERROR script should complete: " + state.message);
+
+    expect(state.globals.find("reachedafterror") == state.globals.end(),
+           "#6440: a malformed ERROR command should not fall through to the following statement");
+    expect(state.globals.find("caughterror") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughterror")) == "true",
+           "#6440: a malformed ERROR command should raise a catchable error rather than run silently");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_error_command_rejects_bare_keyword_with_no_operand() {
+    // #6440 review fix: a bare ERROR keyword (no operand at all) was not
+    // classified as error_command at all -- starts_with_insensitive(line,
+    // "ERROR ") requires a trailing space -- so it silently fell through
+    // to generic-expression parsing instead of being rejected as
+    // malformed.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_error_command_bare_keyword";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "error_command_bare_keyword.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "    ERROR\n"
+        "    reachedAfterError = .T.\n"
+        "CATCH TO loError\n"
+        "    caughtError = .T.\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6440: bare-ERROR-keyword script should complete: " + state.message);
+
+    expect(state.globals.find("reachedafterror") == state.globals.end(),
+           "#6440: a bare ERROR keyword with no operand should not fall through to the following statement");
+    expect(state.globals.find("caughterror") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughterror")) == "true",
+           "#6440: a bare ERROR keyword with no operand should raise a catchable error rather than run silently");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_error_command_rejects_non_numeric_non_character_operand() {
+    // #6440 review fix: `kind != PrgValueKind::string` is not a
+    // numeric-type check -- EMPTY and logical operands were silently
+    // coerced by value_as_number() (to 0 and 1 respectively) and treated
+    // as the numeric form instead of being rejected as invalid operands.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_error_command_invalid_type";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "error_command_invalid_type.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "    ERROR .T.\n"
+        "    reachedAfterLogical = .T.\n"
+        "CATCH TO loLogicalError\n"
+        "    caughtLogicalError = .T.\n"
+        "    caughtLogicalMessage = loLogicalError.Message\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "    ERROR .NULL.\n"
+        "    reachedAfterEmpty = .T.\n"
+        "CATCH TO loEmptyError\n"
+        "    caughtEmptyError = .T.\n"
+        "    caughtEmptyMessage = loEmptyError.Message\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#6440: invalid-operand-type script should complete: " + state.message);
+
+    // A buggy implementation that coerces .T./.NULL. to a number (1/0)
+    // via value_as_number() would ALSO raise a catchable error here (just
+    // the wrong one), so reachedAfter*/caught* alone cannot distinguish
+    // the bug from the fix -- only the specific rejection message can.
+    expect(state.globals.find("reachedafterlogical") == state.globals.end(),
+           "#6440: ERROR .T. should not fall through to the following statement");
+    expect(state.globals.find("caughtlogicalmessage") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughtlogicalmessage")).find("numeric or character") !=
+                   std::string::npos,
+           "#6440: ERROR .T. (a logical operand) should be rejected as an invalid operand type, not silently "
+           "coerced to the number 1, got '" +
+               (state.globals.find("caughtlogicalmessage") != state.globals.end()
+                    ? copperfin::runtime::format_value(state.globals.at("caughtlogicalmessage"))
+                    : std::string("<not caught>")) +
+               "'");
+    expect(state.globals.find("reachedafterempty") == state.globals.end(),
+           "#6440: ERROR .NULL. should not fall through to the following statement");
+    expect(state.globals.find("caughtemptymessage") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("caughtemptymessage")).find("numeric or character") !=
+                   std::string::npos,
+           "#6440: ERROR .NULL. (an empty operand) should be rejected as an invalid operand type, not silently "
+           "coerced to the number 0, got '" +
+               (state.globals.find("caughtemptymessage") != state.globals.end()
+                    ? copperfin::runtime::format_value(state.globals.at("caughtemptymessage"))
+                    : std::string("<not caught>")) +
+               "'");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_control_flow
