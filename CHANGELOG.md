@@ -1,3 +1,40 @@
+- 2026-09-18: Review-round fix for #6453 (PR #6472): a Copilot review found
+  that the requirement's own "or normal completion" clause was still
+  unmet. `cleanup_runtime_resources_for_shutdown()` (which includes the
+  lock-owner cleanup) was reachable only from `perform_quit()`, and
+  `Impl`'s destructor is default, so a spawned task that exhausted its
+  frames without an explicit `QUIT` never released its locks (or its
+  other session-owned resources) at all. The `SPAWN` async-task lambda
+  now calls `cleanup_runtime_resources_for_shutdown()` on the child
+  immediately after `child->run()` returns, which is the only place a
+  spawned child's result is ever observed -- `AWAIT` treats it as
+  terminal regardless of pause reason, and nothing re-drives that child
+  afterward -- so this covers every terminal path (`QUIT`, natural
+  fall-off, cancellation, error abort) uniformly; it is idempotent
+  alongside `perform_quit()`'s own call for the `QUIT` case. Added
+  `test_spawn_natural_completion_releases_its_own_locks`. Updated
+  `RQ-CF-PRG-046`. All 396 tests pass. Verified fail-then-pass.
+
+- 2026-09-17: Fixed #6453: a spawned task's shutdown (`QUIT` or normal
+  completion) previously released every table/record lock in the whole
+  shared lock-owner map, not just its own. `clear_all_shared_lock_ownership()`
+  cleared `concurrency_state->table_lock_owner_by_resource` and
+  `record_lock_owner_by_resource` unconditionally instead of scoping the
+  erase to the shutting-down runtime's own owner key -- so a `SPAWN`
+  parent holding `FLOCK()` on a table lost that lock the instant any
+  sibling spawned task shut down, and a second sibling could then
+  acquire the same "locked" table. Now scoped by the same
+  `make_lock_owner_key(runtime_instance_id, data_session)` identity the
+  targeted release helpers already used, across all of the shutting-down
+  runtime's own data sessions. Added `RQ-CF-PRG-046`. This is the first
+  fix from the newly filed #6471 tracking issue for six related
+  SPAWN/AWAIT architecture bugs; it covers only the lock-ownership leak
+  on shutdown, not the other five (by-reference writeback loss, orphaned
+  tasks from a failed handle assignment, transaction rollback erasing a
+  committed sibling write, a failed `AWAIT` assignment leaving a task
+  alive and replaying its events, and `READ EVENTS` misclassified as
+  `AWAIT` failure). All 396 tests pass. Verified fail-then-pass.
+
 - 2026-09-17: Review-round fix for #6440's `ERROR` command (PR #6470):
   Copilot found two additional gaps in the dispatch validation. First, the
   numeric-operand check only tested `kind != string`, so a logical or

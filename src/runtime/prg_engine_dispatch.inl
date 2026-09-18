@@ -2474,7 +2474,18 @@
                 task->cancel_requested = child->task_cancel_requested;
                 task->future = std::async(std::launch::async, [child]() mutable
                 {
-                    return child->run(DebugResumeAction::continue_run);
+                    RuntimePauseState result = child->run(DebugResumeAction::continue_run);
+                    // #6453: this async lambda's return is the only place a
+                    // spawned child's run() result is ever observed (AWAIT
+                    // treats it as terminal regardless of pause reason, and
+                    // nothing re-drives this child afterward), so this is
+                    // every terminal path -- QUIT, natural fall-off,
+                    // cancellation, and error abort alike. QUIT already runs
+                    // this same cleanup via perform_quit(); the call here is
+                    // a no-op in that case and closes the gap for every
+                    // other exit.
+                    child->cleanup_runtime_resources_for_shutdown();
+                    return result;
                 }).share();
                 register_async_task(task);
 
